@@ -1,0 +1,15 @@
+﻿{
+  "dependencies": {
+    "NETStandard.Library": "1.0.0-rc3-23823",
+    "System.Numerics.Vectors": "4.1.1-rc3-23823",
+    "System.Runtime.InteropServices.RuntimeInformation": "4.0.0-rc3-23823"
+  },
+  "runtimes": {
+    "win10-x64": { },
+    "ubuntu.14.04-x64": { },
+    "osx.10.10-x64": { }
+  },
+  "frameworks": {
+    "dnxcore50": { }
+  }
+}

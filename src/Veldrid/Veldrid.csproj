@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <ProjectGuid>{AE9BC745-284F-42F3-8236-C43FF9731DF2}</ProjectGuid>
+    <AssemblyName>Veldrid</AssemblyName>
+    <RootNamespace>Veldrid</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Renderer.cs" />
+  </ItemGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <ItemGroup>
+    <None Include="project.json" />
+  </ItemGroup>
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+</Project>

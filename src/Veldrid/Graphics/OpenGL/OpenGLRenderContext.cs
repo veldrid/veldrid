@@ -34,19 +34,30 @@ namespace Veldrid.Graphics.OpenGL
             Console.WriteLine($"Created OpenGL Context. Version: {major}.{minor}");
         }
 
+        public override ResourceFactory ResourceFactory => _resourceFactory;
+
         public override WindowInfo WindowInfo { get; }
+
+        public override void BeginFrame()
+        {
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        }
+
+        public override void SwapBuffers()
+        {
+            _openGLGraphicsContext.SwapBuffers();
+        }
+
+
+        public override void DrawIndexedPrimitives(int startingIndex, int indexCount)
+        {
+            GL.DrawElements(PrimitiveType.Triangles, indexCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
+        }
 
         private void OnNativeWindowResized(object sender, EventArgs e)
         {
             _openGLGraphicsContext.Update(_window.WindowInfo);
             OnWindowResized();
-        }
-
-        public override ResourceFactory ResourceFactory => _resourceFactory;
-
-        public override void DrawIndexedPrimitives(int startingVertex, int vertexCount)
-        {
-            GL.DrawElements(PrimitiveType.Triangles, vertexCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
         }
 
         private void SetInitialStates()
@@ -58,19 +69,9 @@ namespace Veldrid.Graphics.OpenGL
             GL.FrontFace(FrontFaceDirection.Cw);
         }
 
-        protected override void SetViewport()
+        protected override void HandleWindowResize()
         {
             GL.Viewport(0, 0, _window.Width, _window.Height);
-        }
-
-        public override void BeginFrame()
-        {
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        }
-
-        public override void SwapBuffers()
-        {
-            _openGLGraphicsContext.SwapBuffers();
         }
     }
 }

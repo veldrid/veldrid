@@ -12,10 +12,20 @@ namespace Veldrid.Graphics
     public class DynamicDataProvider<T> : ConstantBufferDataProvider where T : struct
     {
         private readonly int _dataSizeInBytes;
+        private T _data;
 
-        public T Data { get; set; }
+        public T Data
+        {
+            get
+            {
+                return _data;
+            }
 
-        public int DataSizeInBytes => _dataSizeInBytes;
+            set
+            {
+                _data = value;
+            }
+        }
 
         public DynamicDataProvider(T data)
         {
@@ -28,15 +38,17 @@ namespace Veldrid.Graphics
             _dataSizeInBytes = Marshal.SizeOf<T>();
         }
 
+        public int DataSizeInBytes => _dataSizeInBytes;
+
         public void SetData(ConstantBuffer buffer)
         {
-            buffer.SetData(Data, _dataSizeInBytes);
+            buffer.SetData(ref _data, _dataSizeInBytes);
         }
     }
 
     public class ConstantDataProvider<T> : ConstantBufferDataProvider where T : struct
     {
-        private readonly T _data;
+        private T _data;
         private readonly int _dataSizeInBytes;
 
         public ConstantDataProvider(T data)
@@ -49,7 +61,7 @@ namespace Veldrid.Graphics
 
         public void SetData(ConstantBuffer buffer)
         {
-            buffer.SetData(_data, _dataSizeInBytes);
+            buffer.SetData(ref _data, _dataSizeInBytes);
         }
     }
 }

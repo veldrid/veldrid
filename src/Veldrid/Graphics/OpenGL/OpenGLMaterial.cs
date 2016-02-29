@@ -27,8 +27,8 @@ namespace Veldrid.Graphics.OpenGL
             _globalInputs = globalInputs;
 
             _programID = GL.CreateProgram();
-            GL.AttachShader(_programID, _vertexShader.ID);
-            GL.AttachShader(_programID, _fragmentShader.ID);
+            GL.AttachShader(_programID, _vertexShader.ShaderID);
+            GL.AttachShader(_programID, _fragmentShader.ShaderID);
 
             for (int slot = 0; slot < vertexInputs.Elements.Length; slot++)
             {
@@ -97,6 +97,8 @@ namespace Veldrid.Graphics.OpenGL
             GL.DeleteProgram(_programID);
             _vertexShader.Dispose();
             _fragmentShader.Dispose();
+
+            // TODO: Other things need to be disposed.
         }
 
         private class OpenGLMaterialVertexInput

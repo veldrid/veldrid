@@ -40,16 +40,17 @@ namespace Veldrid.Graphics
                 (float)WindowInfo.Width / (float)WindowInfo.Height,
                 1f,
                 1000f);
-            SetViewport();
+
+            HandleWindowResize();
 
             WindowResized?.Invoke();
         }
 
         public abstract WindowInfo WindowInfo { get; }
-        public abstract void DrawIndexedPrimitives(int startingVertex, int vertexCount);
+        public abstract void DrawIndexedPrimitives(int startingIndex, int indexCount);
         public abstract void BeginFrame();
         public abstract void SwapBuffers();
 
-        protected abstract void SetViewport();
+        protected abstract void HandleWindowResize();
     }
 }

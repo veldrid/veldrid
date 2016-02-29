@@ -12,7 +12,7 @@ namespace Veldrid.Graphics.OpenGL
             dataProvider.SetData(this);
         }
 
-        public void SetData<T>(T data, int dataSizeInBytes) where T : struct
+        public void SetData<T>(ref T data, int dataSizeInBytes) where T : struct
         {
             Bind();
             GL.BufferData(BufferTarget.UniformBuffer, dataSizeInBytes, ref data, BufferUsageHint.DynamicDraw);

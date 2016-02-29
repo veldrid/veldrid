@@ -2,6 +2,6 @@
 {
     public interface ConstantBuffer
     {
-        void SetData<T>(T data, int dataSizeInBytes) where T : struct;
+        void SetData<T>(ref T data, int dataSizeInBytes) where T : struct;
     }
 }

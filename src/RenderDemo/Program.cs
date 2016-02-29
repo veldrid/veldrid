@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using Veldrid.Graphics;
+using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
 
 namespace Veldrid.RenderDemo
@@ -14,7 +15,7 @@ namespace Veldrid.RenderDemo
     {
         private static TexturedCubeRenderer _tcr;
         private static ColoredCubeRenderer _ccr;
-        private static OpenGLRenderContext _rc;
+        private static RenderContext _rc;
 
         public static void Main()
         {
@@ -25,8 +26,8 @@ namespace Veldrid.RenderDemo
                 window.X = 100;
                 window.Y = 100;
 
-                _rc = new OpenGLRenderContext(window);
-                _tcr = new TexturedCubeRenderer(_rc);
+                _rc = new D3DRenderContext(window);
+                //_tcr = new TexturedCubeRenderer(_rc);
                 _ccr = new ColoredCubeRenderer(_rc);
 
                 _ccr.Position += System.Numerics.Vector3.UnitX * 3f;
@@ -57,7 +58,7 @@ namespace Veldrid.RenderDemo
         private static void Draw()
         {
             _rc.BeginFrame();
-            _tcr.Render(_rc);
+            //_tcr.Render(_rc);
             _ccr.Render(_rc);
             _rc.SwapBuffers();
         }

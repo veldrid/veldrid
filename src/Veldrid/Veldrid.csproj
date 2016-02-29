@@ -10,6 +10,13 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Graphics\Direct3D\D3DBuffer.cs" />
+    <Compile Include="Graphics\Direct3D\D3DConstantBuffer.cs" />
+    <Compile Include="Graphics\Direct3D\D3DIndexBuffer.cs" />
+    <Compile Include="Graphics\Direct3D\D3DMaterial.cs" />
+    <Compile Include="Graphics\Direct3D\D3DRenderContext.cs" />
+    <Compile Include="Graphics\Direct3D\D3DResourceFactory.cs" />
+    <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
     <Compile Include="Graphics\MaterialTextureInputs.cs" />
     <Compile Include="Graphics\Texture.cs" />
     <Compile Include="Graphics\TexturedCubeRenderer.cs" />
@@ -71,6 +78,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Graphics\Direct3D\Shaders\" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>

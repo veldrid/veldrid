@@ -5,27 +5,25 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLShader : IDisposable
     {
-        private int _shaderID;
+        public int ShaderID { get; }
 
         public OpenGLShader(string source, ShaderType type)
         {
-            _shaderID = GL.CreateShader(type);
-            GL.ShaderSource(_shaderID, source);
-            GL.CompileShader(_shaderID);
+            ShaderID = GL.CreateShader(type);
+            GL.ShaderSource(ShaderID, source);
+            GL.CompileShader(ShaderID);
             int compileStatus;
-            GL.GetShader(_shaderID, ShaderParameter.CompileStatus, out compileStatus);
+            GL.GetShader(ShaderID, ShaderParameter.CompileStatus, out compileStatus);
             if (compileStatus != 1)
             {
-                string shaderLog = GL.GetShaderInfoLog(_shaderID);
+                string shaderLog = GL.GetShaderInfoLog(ShaderID);
                 throw new InvalidOperationException($"Error compiling {type} shader. {shaderLog}");
             }
         }
 
-        public int ID => _shaderID;
-
         public void Dispose()
         {
-            throw new NotImplementedException();
+            GL.DeleteShader(ShaderID);
         }
     }
 }

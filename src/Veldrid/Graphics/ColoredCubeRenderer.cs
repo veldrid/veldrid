@@ -9,7 +9,8 @@ namespace Veldrid.Graphics
         private IndexBuffer _ib;
         private Material _material;
 
-        private Vector3 _position = Vector3.Zero;
+        public Vector3 Position { get; set; } = Vector3.Zero;
+        public Vector3 Scale { get; set; } = Vector3.One;
 
         private DynamicDataProvider<Matrix4x4> _modelViewProvider = new DynamicDataProvider<Matrix4x4>();
 
@@ -39,16 +40,16 @@ namespace Veldrid.Graphics
                     new MaterialGlobalInputElement("modelviewMatrixUniform", MaterialGlobalInputType.Matrix4x4, _modelViewProvider),
                 });
 
-            _material = factory.CreateMaterial(VertexShaderSource, FragmentShaderSource, materialInputs, globalInputs, null);
+            _material = factory.CreateMaterial(VertexShaderSource, FragmentShaderSource, materialInputs, globalInputs, MaterialTextureInputs.Empty);
         }
 
         public unsafe void Render(RenderContext context)
         {
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             _modelViewProvider.Data =
-                Matrix4x4.CreateScale(2.5f)
+                Matrix4x4.CreateScale(Scale)
                 * Matrix4x4.CreateRotationY(rotationAmount)
-                * Matrix4x4.CreateTranslation(_position)
+                * Matrix4x4.CreateTranslation(Position)
                 * context.ViewMatrixProvider.Data;
 
             context.SetVertexBuffer(_vb);

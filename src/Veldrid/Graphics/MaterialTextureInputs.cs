@@ -1,4 +1,6 @@
-﻿namespace Veldrid.Graphics
+﻿using System;
+
+namespace Veldrid.Graphics
 {
     public class MaterialTextureInputs
     {
@@ -8,6 +10,9 @@
         {
             Elements = elements;
         }
+
+        public static MaterialTextureInputs Empty { get; private set; }
+            = new MaterialTextureInputs(Array.Empty<MaterialTextureInputElement>());
     }
 
     public class MaterialTextureInputElement

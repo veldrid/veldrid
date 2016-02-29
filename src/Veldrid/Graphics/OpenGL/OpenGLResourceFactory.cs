@@ -10,12 +10,12 @@ namespace Veldrid.Graphics.OpenGL
         private static readonly string s_shaderDirectory = "Graphics/OpenGL/Shaders";
         private static readonly string s_shaderFileExtension = "glsl";
 
-        public override ConstantBuffer CreateConstantBuffer()
+        public override ConstantBuffer CreateConstantBuffer(int sizeInBytes)
         {
             return new OpenGLConstantBuffer();
         }
 
-        public override IndexBuffer CreateIndexBuffer()
+        public override IndexBuffer CreateIndexBuffer(int sizeInBytes)
         {
             return new OpenGLIndexBuffer();
         }
@@ -48,7 +48,7 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLMaterial(vertexShader, fragmentShader, inputs, globalInputs, textureInputs);
         }
 
-        public override VertexBuffer CreateVertexBuffer()
+        public override VertexBuffer CreateVertexBuffer(int sizeInBytes)
         {
             return new OpenGLVertexBuffer();
         }

@@ -7,7 +7,7 @@ namespace Veldrid.Graphics.Direct3D
         private readonly Device _device;
         private int _offset;
 
-        public D3DIndexBuffer(Device device) : base(device, BindFlags.IndexBuffer, ResourceUsage.Default)
+        public D3DIndexBuffer(Device device, int sizeInBytes) : base(device, sizeInBytes, BindFlags.IndexBuffer, ResourceUsage.Default)
         {
             _device = device;
         }

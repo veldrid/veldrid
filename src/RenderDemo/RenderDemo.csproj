@@ -15,7 +15,9 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Release|x64' " />

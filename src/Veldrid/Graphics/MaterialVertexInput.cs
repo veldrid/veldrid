@@ -17,12 +17,14 @@ namespace Veldrid.Graphics
     public struct MaterialVertexInputElement
     {
         public string Name { get; }
+        public VertexSemanticType SemanticType { get; }
         public byte SizeInBytes { get; }
         public VertexElementFormat ElementFormat { get; }
 
-        public MaterialVertexInputElement(string name, VertexElementFormat format)
+        public MaterialVertexInputElement(string name, VertexSemanticType semanticType, VertexElementFormat format)
         {
             Name = name;
+            SemanticType = semanticType;
             ElementFormat = format;
             SizeInBytes = GetSizeInBytes(format);
         }

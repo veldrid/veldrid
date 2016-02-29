@@ -6,7 +6,7 @@ namespace Veldrid.Graphics.Direct3D
     {
         private int _stride;
 
-        public D3DVertexBuffer(Device device) : base(device, BindFlags.VertexBuffer, ResourceUsage.Default) { }
+        public D3DVertexBuffer(Device device, int sizeInBytes) : base(device, sizeInBytes, BindFlags.VertexBuffer, ResourceUsage.Default) { }
 
         public void Apply()
         {

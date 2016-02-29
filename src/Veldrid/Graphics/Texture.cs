@@ -6,5 +6,6 @@
         int Height { get; }
         float[] Pixels { get; }
         PixelFormat Format { get; }
+        int PixelSizeInBytes { get; }
     }
 }

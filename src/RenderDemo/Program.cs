@@ -27,7 +27,7 @@ namespace Veldrid.RenderDemo
                 window.Y = 100;
 
                 _rc = new D3DRenderContext(window);
-                //_tcr = new TexturedCubeRenderer(_rc);
+                _tcr = new TexturedCubeRenderer(_rc);
                 _ccr = new ColoredCubeRenderer(_rc);
 
                 _ccr.Position += System.Numerics.Vector3.UnitX * 3f;
@@ -51,14 +51,17 @@ namespace Veldrid.RenderDemo
             catch (Exception e)
             {
                 Console.WriteLine("Error: " + e);
-                Console.WriteLine("GL Error: " + GL.GetError());
+                if (_rc is OpenGLRenderContext)
+                {
+                    Console.WriteLine("GL Error: " + GL.GetError());
+                }
             }
         }
 
         private static void Draw()
         {
             _rc.BeginFrame();
-            //_tcr.Render(_rc);
+            _tcr.Render(_rc);
             _ccr.Render(_rc);
             _rc.SwapBuffers();
         }

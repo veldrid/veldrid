@@ -2,9 +2,9 @@
 {
     public abstract class ResourceFactory
     {
-        public abstract VertexBuffer CreateVertexBuffer();
+        public abstract VertexBuffer CreateVertexBuffer(int sizeInBytes);
 
-        public abstract IndexBuffer CreateIndexBuffer();
+        public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes);
 
         public abstract Material CreateMaterial(
             string vertexShaderName,
@@ -13,6 +13,6 @@
             MaterialGlobalInputs globalInputs,
             MaterialTextureInputs textureInputs);
 
-        public abstract ConstantBuffer CreateConstantBuffer();
+        public abstract ConstantBuffer CreateConstantBuffer(int sizeInBytes);
     }
 }

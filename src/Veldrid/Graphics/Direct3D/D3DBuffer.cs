@@ -7,10 +7,10 @@ namespace Veldrid.Graphics.Direct3D
         public Buffer Buffer { get; }
         protected Device Device { get; }
 
-        public D3DBuffer(Device device, BindFlags bindFlags, ResourceUsage resourceUsage)
+        public D3DBuffer(Device device, int sizeInBytes, BindFlags bindFlags, ResourceUsage resourceUsage)
         {
             Device = device;
-            Buffer = new Buffer(device, new BufferDescription(1, bindFlags, resourceUsage));
+            Buffer = new Buffer(device, new BufferDescription(sizeInBytes, bindFlags, resourceUsage));
         }
 
         public void Dispose()

@@ -18,19 +18,19 @@ namespace Veldrid.Graphics
         {
             ResourceFactory factory = context.ResourceFactory;
 
-            _vb = factory.CreateVertexBuffer();
+            _vb = factory.CreateVertexBuffer(VertexPositionColor.SizeInBytes * s_cubeVertices.Length);
             VertexDescriptor desc = new VertexDescriptor(VertexPositionColor.SizeInBytes, VertexPositionColor.ElementCount, 0, IntPtr.Zero);
             _vb.SetVertexData(s_cubeVertices, desc);
 
-            _ib = factory.CreateIndexBuffer();
+            _ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length);
             _ib.SetIndices(s_cubeIndices, 0, IntPtr.Zero);
 
             MaterialVertexInput materialInputs = new MaterialVertexInput(
                 VertexPositionColor.SizeInBytes,
                 new MaterialVertexInputElement[]
                 {
-                    new MaterialVertexInputElement("in_position", VertexElementFormat.Float3),
-                    new MaterialVertexInputElement("in_color", VertexElementFormat.Float4)
+                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                    new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4)
                 });
 
             MaterialGlobalInputs globalInputs = new MaterialGlobalInputs(

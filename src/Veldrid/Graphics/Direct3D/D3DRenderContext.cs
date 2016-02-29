@@ -79,8 +79,10 @@ namespace Veldrid.Graphics.Direct3D
             CreateSamplerState();
             CreateBlendState();
             _nativeWindow.Resize += OnWindowResized;
-            HandleWindowResize();
+            OnWindowResized();
             SetRegularTargets();
+
+            _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
         }
 
         private void SetRegularTargets()

@@ -7,13 +7,69 @@
     <ProjectGuid>{AE9BC745-284F-42F3-8236-C43FF9731DF2}</ProjectGuid>
     <AssemblyName>Veldrid</AssemblyName>
     <RootNamespace>Veldrid</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Graphics\MaterialTextureInputs.cs" />
+    <Compile Include="Graphics\Texture.cs" />
+    <Compile Include="Graphics\TexturedCubeRenderer.cs" />
+    <Compile Include="Graphics\ColoredCubeRenderer.cs" />
+    <Compile Include="Graphics\ConstantBuffer.cs" />
+    <Compile Include="Graphics\ConstantBufferDataProvider.cs" />
+    <Compile Include="Graphics\ImageProcessorTexture.cs" />
+    <Compile Include="Graphics\IndexBuffer.cs" />
+    <Compile Include="Graphics\Material.cs" />
+    <Compile Include="Graphics\MaterialGlobalInputs.cs" />
+    <Compile Include="Graphics\MaterialGlobalInputType.cs" />
+    <Compile Include="Graphics\MaterialVertexInput.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLBuffer.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLConstantBuffer.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLIndexBuffer.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLMaterial.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLRenderContext.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLResourceFactory.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLShader.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLTextureBuffer.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLVertexBuffer.cs" />
+    <Compile Include="Graphics\PixelFormat.cs" />
+    <Compile Include="Graphics\OpenTKWindowInfo.cs" />
+    <Compile Include="Graphics\RgbaFloat.cs" />
+    <Compile Include="Graphics\VertexDescriptor.cs" />
+    <Compile Include="Graphics\RenderContext.cs" />
+    <Compile Include="Graphics\RenderStateModifier.cs" />
+    <Compile Include="Graphics\ResourceFactory.cs" />
+    <Compile Include="Graphics\VertexBuffer.cs" />
+    <Compile Include="Graphics\VertexFormatHelpers.cs" />
+    <Compile Include="Graphics\VertexPositionColor.cs" />
+    <Compile Include="Graphics\VertexPositionNormalTexture.cs" />
+    <Compile Include="Graphics\VertexPositionTexture.cs" />
+    <Compile Include="Graphics\WindowInfo.cs" />
     <Compile Include="Renderer.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
+    <Content Include="Textures\CubeTexture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">
+      <Name>OpenTK</Name>
+    </Reference>
+    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessor.dll">
+      <Name>ImageProcessor</Name>
+    </Reference>
+    <Content Include="Graphics\OpenGL\Shaders\simple-vertex.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\OpenGL\Shaders\simple-frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\OpenGL\Shaders\textured-frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\OpenGL\Shaders\textured-vertex.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="project.json" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />

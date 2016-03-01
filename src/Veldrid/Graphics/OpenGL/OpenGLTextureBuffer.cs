@@ -3,16 +3,15 @@ using System;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLTextureBuffer
+    public class OpenGLTextureBuffer : RenderStateModifier, IDisposable
     {
-        public int TextureID { get; }
+        private readonly int _textureID;
 
         public OpenGLTextureBuffer(Texture texture)
         {
-            TextureID = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, TextureID);
+            _textureID = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, _textureID);
 
-            //the following code sets certian parameters for the texture
             GL.TexEnv(TextureEnvTarget.TextureEnv,
                    TextureEnvParameter.TextureEnvMode, (float)TextureEnvMode.Modulate);
             GL.TexParameter(TextureTarget.Texture2D,
@@ -20,7 +19,6 @@ namespace Veldrid.Graphics.OpenGL
             GL.TexParameter(TextureTarget.Texture2D,
                    TextureParameterName.TextureMagFilter, (float)TextureMagFilter.Linear);
 
-            // tell OpenGL to build mipmaps out of the bitmap data
             GL.TexParameter(TextureTarget.Texture2D,
                    TextureParameterName.GenerateMipmap, (float)1.0f);
 
@@ -53,7 +51,7 @@ namespace Veldrid.Graphics.OpenGL
                 case PixelFormat.R8_G8_B8_A8:
                     return OpenTK.Graphics.OpenGL.PixelFormat.Bgra;
                 default:
-                    throw new InvalidOperationException("Invalid pixel format: " + format);
+                    throw Illegal.Value<PixelFormat>();
             }
         }
 
@@ -68,8 +66,18 @@ namespace Veldrid.Graphics.OpenGL
                 case PixelFormat.R8_G8_B8_A8:
                     return PixelType.Int;
                 default:
-                    throw new InvalidOperationException("Invalid pixel format: " + format);
+                    throw Illegal.Value<PixelFormat>();
             }
+        }
+
+        public void Apply()
+        {
+            GL.BindTexture(TextureTarget.Texture2D, _textureID);
+        }
+
+        public void Dispose()
+        {
+            GL.DeleteTexture(_textureID);
         }
     }
 }

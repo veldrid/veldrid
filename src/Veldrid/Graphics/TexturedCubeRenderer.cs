@@ -109,6 +109,6 @@ namespace Veldrid.Graphics
 
         private static readonly string VertexShaderSource = "textured-vertex";
         private static readonly string FragmentShaderSource = "textured-frag";
-        private static readonly ImageProcessorTexture s_cubeTexture = new ImageProcessorTexture("Textures/CubeTexture.png");
+        private static readonly ImageProcessorTexture s_cubeTexture = new ImageProcessorTexture(AppContext.BaseDirectory + "/Textures/CubeTexture.png");
     }
 }

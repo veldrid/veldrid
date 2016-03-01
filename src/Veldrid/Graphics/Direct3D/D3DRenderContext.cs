@@ -4,13 +4,12 @@ using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using System;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace Veldrid.Graphics.Direct3D
 {
     public class D3DRenderContext : RenderContext
     {
-        private readonly NativeWindow _nativeWindow;
-        private readonly OpenTKWindowInfo _windowInfo;
 
         private SharpDX.Direct3D11.Device _device;
         private SwapChain _swapChain;
@@ -23,10 +22,8 @@ namespace Veldrid.Graphics.Direct3D
         private RasterizerState _rasterizerState;
         private SamplerState _samplerState;
 
-        public D3DRenderContext(NativeWindow window)
+        public D3DRenderContext()
         {
-            _nativeWindow = window;
-            _windowInfo = new OpenTKWindowInfo(window);
 
             CreateAndInitializeDevice();
 
@@ -35,9 +32,8 @@ namespace Veldrid.Graphics.Direct3D
 
         public override ResourceFactory ResourceFactory { get; }
 
-        public override WindowInfo WindowInfo => _windowInfo;
 
-        public override void ClearBuffer()
+        protected override void PlatformClearBuffer()
         {
             Clear(ClearColor);
         }
@@ -58,8 +54,8 @@ namespace Veldrid.Graphics.Direct3D
             {
                 BufferCount = 1,
                 IsWindowed = true,
-                ModeDescription = new ModeDescription(_nativeWindow.ClientSize.Width, _nativeWindow.ClientSize.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
-                OutputHandle = _nativeWindow.WindowInfo.Handle,
+                ModeDescription = new ModeDescription(NativeWindow.ClientSize.Width, NativeWindow.ClientSize.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
+                OutputHandle = NativeWindow.WindowInfo.Handle,
                 SampleDescription = new SampleDescription(1, 0),
                 SwapEffect = SwapEffect.Discard,
                 Usage = Usage.RenderTargetOutput
@@ -72,13 +68,13 @@ namespace Veldrid.Graphics.Direct3D
             SharpDX.Direct3D11.Device.CreateWithSwapChain(SharpDX.Direct3D.DriverType.Hardware, flags, swapChainDescription, out _device, out _swapChain);
             _deviceContext = _device.ImmediateContext;
             var factory = _swapChain.GetParent<Factory>();
-            factory.MakeWindowAssociation(_nativeWindow.WindowInfo.Handle, WindowAssociationFlags.IgnoreAll);
+            factory.MakeWindowAssociation(NativeWindow.WindowInfo.Handle, WindowAssociationFlags.IgnoreAll);
 
             CreateRasterizerState();
             CreateDepthBufferState();
             CreateSamplerState();
             CreateBlendState();
-            _nativeWindow.Resize += OnWindowResized;
+            NativeWindow.Resize += OnWindowResized;
             OnWindowResized();
             SetRegularTargets();
 
@@ -88,7 +84,7 @@ namespace Veldrid.Graphics.Direct3D
         private void SetRegularTargets()
         {
             // Setup targets and viewport for rendering
-            _deviceContext.Rasterizer.SetViewport(0, 0, _nativeWindow.ClientSize.Width, _nativeWindow.ClientSize.Height);
+            _deviceContext.Rasterizer.SetViewport(0, 0, NativeWindow.ClientSize.Width, NativeWindow.ClientSize.Height);
             _deviceContext.OutputMerger.SetTargets(_depthStencilView, _backBufferView);
         }
 
@@ -156,7 +152,7 @@ namespace Veldrid.Graphics.Direct3D
                 _depthStencilView.Dispose();
             }
 
-            _swapChain.ResizeBuffers(1, _nativeWindow.ClientSize.Width, _nativeWindow.ClientSize.Height, Format.R8G8B8A8_UNorm, SwapChainFlags.AllowModeSwitch);
+            _swapChain.ResizeBuffers(1, NativeWindow.ClientSize.Width, NativeWindow.ClientSize.Height, Format.R8G8B8A8_UNorm, SwapChainFlags.AllowModeSwitch);
 
             // Get the backbuffer from the swapchain
             using (var backBufferTexture = _swapChain.GetBackBuffer<SharpDX.Direct3D11.Texture2D>(0))
@@ -172,8 +168,8 @@ namespace Veldrid.Graphics.Direct3D
                 Format = Format.D16_UNorm,
                 ArraySize = 1,
                 MipLevels = 1,
-                Width = Math.Max(1, _nativeWindow.ClientSize.Width),
-                Height = Math.Max(1, _nativeWindow.ClientSize.Height),
+                Width = Math.Max(1, NativeWindow.ClientSize.Width),
+                Height = Math.Max(1, NativeWindow.ClientSize.Height),
                 SampleDescription = new SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.DepthStencil,

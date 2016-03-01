@@ -12,6 +12,8 @@ namespace Veldrid.Graphics
             _openTKWindow = info;
         }
 
+        public bool Exists => _openTKWindow.Exists;
+
         public int Height
         {
             get
@@ -25,6 +27,19 @@ namespace Veldrid.Graphics
             }
         }
 
+        public string Title
+        {
+            get
+            {
+                return _openTKWindow.Title;
+            }
+
+            set
+            {
+                _openTKWindow.Title = value;
+            }
+        }
+
         public int Width
         {
             get
@@ -35,6 +50,31 @@ namespace Veldrid.Graphics
             set
             {
                 _openTKWindow.Width = value;
+            }
+        }
+
+        public WindowState WindowState
+        {
+            get
+            {
+                switch (_openTKWindow.WindowState)
+                {
+                    case OpenTK.WindowState.Normal:
+                        return WindowState.Normal;
+                    case OpenTK.WindowState.Minimized:
+                        return WindowState.Minimized;
+                    case OpenTK.WindowState.Maximized:
+                        return WindowState.Maximized;
+                    case OpenTK.WindowState.Fullscreen:
+                        return WindowState.FullScreen;
+                    default:
+                        throw Illegal.Value<WindowState>();
+                }
+            }
+
+            set
+            {
+                throw new NotImplementedException();
             }
         }
     }

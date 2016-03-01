@@ -42,7 +42,7 @@ namespace Veldrid.Graphics
                 case VertexElementFormat.Float4:
                     return sizeof(float) * 4;
                 default:
-                    throw new InvalidOperationException("Invalid format: " + format);
+                    throw Illegal.Value<VertexElementFormat>();
             }
         }
     }

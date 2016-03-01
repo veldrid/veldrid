@@ -1,10 +1,44 @@
 ﻿using System;
 using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Veldrid.Graphics
 {
     public abstract class RenderContext
     {
+        private OpenTK.NativeWindow _nativeWindow;
+        private OpenTKWindowInfo _windowInfo;
+        private volatile bool v_needsResizing;
+
+        public RenderContext()
+        {
+            ManualResetEvent initializationEvent = new ManualResetEvent(false);
+            Task.Factory.StartNew(WindowOwnerRoutine, initializationEvent);
+            initializationEvent.WaitOne();
+            initializationEvent.Dispose();
+        }
+
+        private void WindowOwnerRoutine(object state)
+        {
+            ManualResetEvent initializationEvent = (ManualResetEvent)state;
+
+            _nativeWindow = new OpenTK.NativeWindow();
+            _nativeWindow.Visible = true;
+            _nativeWindow.X = 100;
+            _nativeWindow.Y = 100;
+            _nativeWindow.Resize += (s, e) => v_needsResizing = true;
+            _windowInfo = new OpenTKWindowInfo(_nativeWindow);
+            initializationEvent.Set();
+
+            while (_nativeWindow.Exists)
+            {
+                _nativeWindow.ProcessEvents();
+            }
+        }
+
+        public WindowInfo WindowInfo => _windowInfo;
+
         public virtual RgbaFloat ClearColor { get; set; } = RgbaFloat.CornflowerBlue;
 
         public abstract ResourceFactory ResourceFactory { get; }
@@ -48,9 +82,21 @@ namespace Veldrid.Graphics
             WindowResized?.Invoke();
         }
 
-        public abstract WindowInfo WindowInfo { get; }
         public abstract void DrawIndexedPrimitives(int startingIndex, int indexCount);
-        public abstract void ClearBuffer();
+        public void ClearBuffer()
+        {
+            if (v_needsResizing)
+            {
+                OnWindowResized();
+            }
+
+            PlatformClearBuffer();
+        }
+
+        protected OpenTK.NativeWindow NativeWindow => _nativeWindow;
+
+        protected abstract void PlatformClearBuffer();
+
         public abstract void SwapBuffers();
 
         protected abstract void HandleWindowResize();

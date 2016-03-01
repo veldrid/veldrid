@@ -11,11 +11,12 @@ namespace Veldrid.Graphics.Direct3D
         private readonly VertexShader _vertexShader;
         private readonly PixelShader _pixelShader;
         private readonly InputLayout _inputLayout;
+        private readonly ConstantBufferBinding[] _constantBufferBindings;
+        private readonly ResourceViewBinding[] _resourceViewBindings;
+
         private const ShaderFlags defaultShaderFlags
 #if DEBUG
             = ShaderFlags.Debug | ShaderFlags.SkipOptimization;
-        private readonly ConstantBufferBinding[] _constantBufferBindings;
-        private readonly ResourceViewBinding[] _resourceViewBindings;
 #else
             = ShaderFlags.None;
 #endif
@@ -125,7 +126,7 @@ namespace Veldrid.Graphics.Direct3D
                 case VertexSemanticType.Color:
                     return "COLOR";
                 default:
-                    throw new NotSupportedException("The semantic type '" + semanticType + "' is not supported.");
+                    throw Illegal.Value<VertexSemanticType>();
             }
         }
 
@@ -142,7 +143,7 @@ namespace Veldrid.Graphics.Direct3D
                 case VertexElementFormat.Float4:
                     return SharpDX.DXGI.Format.R32G32B32A32_Float;
                 default:
-                    throw new NotSupportedException("The vertex element format '" + elementFormat + "' is not supported.");
+                    throw Illegal.Value<VertexElementFormat>();
             }
         }
 

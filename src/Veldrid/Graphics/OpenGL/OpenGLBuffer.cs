@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
+using System.Diagnostics;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -29,6 +30,33 @@ namespace Veldrid.Graphics.OpenGL
         public void Dispose()
         {
             GL.DeleteBuffer(_bufferID);
+        }
+
+        protected void UpdateBufferData<T>(ref T data, int dataSizeInBytes) where T : struct
+        {
+            Bind();
+            GL.BufferData(_target, dataSizeInBytes, ref data, BufferUsageHint.DynamicDraw);
+            Unbind();
+        }
+
+        protected void UpdateBufferData<T>(T[] data, int dataSizeInBytes) where T : struct
+        {
+            Bind();
+            GL.BufferData(_target, dataSizeInBytes, data, BufferUsageHint.DynamicDraw);
+            Unbind();
+
+            ValidateBufferSize(dataSizeInBytes);
+        }
+
+        [Conditional("Debug")]
+        private void ValidateBufferSize(int expectedSizeInBytes)
+        {
+            int bufferSize;
+            GL.GetBufferParameter(BufferTarget.ElementArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
+            if (expectedSizeInBytes * sizeof(int) != bufferSize)
+            {
+                throw new InvalidOperationException("Vertex array not uploaded correctly");
+            }
         }
     }
 }

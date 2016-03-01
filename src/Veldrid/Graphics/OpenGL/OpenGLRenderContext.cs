@@ -11,18 +11,13 @@ namespace Veldrid.Graphics.OpenGL
     {
         private readonly OpenGLResourceFactory _resourceFactory;
         private readonly GraphicsContext _openGLGraphicsContext;
-        private readonly NativeWindow _window;
 
-        public OpenGLRenderContext(NativeWindow window)
+        public OpenGLRenderContext()
         {
             _resourceFactory = new OpenGLResourceFactory();
 
-            _window = window;
-            _window.Resize += OnNativeWindowResized;
-            WindowInfo = new OpenTKWindowInfo(_window);
-
-            _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, _window.WindowInfo);
-            _openGLGraphicsContext.MakeCurrent(_window.WindowInfo);
+            _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, NativeWindow.WindowInfo);
+            _openGLGraphicsContext.MakeCurrent(NativeWindow.WindowInfo);
             _openGLGraphicsContext.LoadAll();
 
             SetInitialStates();
@@ -35,8 +30,6 @@ namespace Veldrid.Graphics.OpenGL
         }
 
         public override ResourceFactory ResourceFactory => _resourceFactory;
-
-        public override WindowInfo WindowInfo { get; }
 
         public override RgbaFloat ClearColor
         {
@@ -52,7 +45,7 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-        public override void ClearBuffer()
+        protected override void PlatformClearBuffer()
         {
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         }
@@ -70,7 +63,7 @@ namespace Veldrid.Graphics.OpenGL
 
         private void OnNativeWindowResized(object sender, EventArgs e)
         {
-            _openGLGraphicsContext.Update(_window.WindowInfo);
+            _openGLGraphicsContext.Update(NativeWindow.WindowInfo);
             OnWindowResized();
         }
 
@@ -85,7 +78,7 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void HandleWindowResize()
         {
-            GL.Viewport(0, 0, _window.Width, _window.Height);
+            GL.Viewport(0, 0, NativeWindow.Width, NativeWindow.Height);
         }
     }
 }

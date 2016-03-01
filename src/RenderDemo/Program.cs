@@ -21,30 +21,26 @@ namespace Veldrid.RenderDemo
         {
             try
             {
-                var window = new OpenTK.NativeWindow();
-                window.Visible = true;
-                window.X = 100;
-                window.Y = 100;
-
-                _rc = new D3DRenderContext(window);
+                _rc = new D3DRenderContext();
                 _tcr = new TexturedCubeRenderer(_rc);
                 _ccr = new ColoredCubeRenderer(_rc);
 
+                string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
+
                 _ccr.Position += System.Numerics.Vector3.UnitX * 3f;
 
-                FrameTimeAverager fta = new FrameTimeAverager(500, 666);
+                FrameTimeAverager fta = new FrameTimeAverager(666);
 
                 DateTime previousFrameTime = DateTime.UtcNow;
-                while (window.Exists)
+                while (_rc.WindowInfo.Exists)
                 {
                     DateTime currentFrameTime = DateTime.UtcNow;
                     double deltaMilliseconds = (currentFrameTime - previousFrameTime).TotalMilliseconds;
                     previousFrameTime = currentFrameTime;
                     fta.AddTime(deltaMilliseconds);
 
-                    window.Title = fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + fta.CurrentAverageFrameTime.ToString("#00.00 ms");
+                    _rc.WindowInfo.Title = $"[{apiName}] " + fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + fta.CurrentAverageFrameTime.ToString("#00.00 ms");
                     Draw();
-                    window.ProcessEvents();
                 }
 
             }
@@ -68,7 +64,6 @@ namespace Veldrid.RenderDemo
 
         private class FrameTimeAverager
         {
-            private readonly int _numFramesToAverage;
             private readonly double _timeLimit = 666;
 
             private double _accumulatedTime = 0;
@@ -77,17 +72,16 @@ namespace Veldrid.RenderDemo
             public double CurrentAverageFrameTime { get; private set; }
             public double CurrentAverageFramesPerSecond { get { return 1000 / CurrentAverageFrameTime; } }
 
-            public FrameTimeAverager(int maxFrames, double maxTime)
+            public FrameTimeAverager(double maxTimeMilliseconds)
             {
-                _numFramesToAverage = maxFrames;
-                _timeLimit = maxTime;
+                _timeLimit = maxTimeMilliseconds;
             }
 
             public void AddTime(double frameTime)
             {
                 _accumulatedTime += frameTime;
                 _frameCount++;
-                if (_frameCount == _numFramesToAverage || _accumulatedTime >= _timeLimit)
+                if (_accumulatedTime >= _timeLimit)
                 {
                     Average();
                 }

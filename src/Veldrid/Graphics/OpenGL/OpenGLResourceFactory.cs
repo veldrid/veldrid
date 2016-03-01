@@ -55,7 +55,7 @@ namespace Veldrid.Graphics.OpenGL
 
         private string GetShaderPathFromName(string shaderName)
         {
-            return Path.Combine(s_shaderDirectory, shaderName + "." + s_shaderFileExtension);
+            return Path.Combine(AppContext.BaseDirectory, s_shaderDirectory, shaderName + "." + s_shaderFileExtension);
         }
     }
 }

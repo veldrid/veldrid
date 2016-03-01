@@ -87,7 +87,7 @@ namespace Veldrid.Graphics.OpenGL
             {
                 var binding = _textureBindings[i];
                 GL.ActiveTexture(TextureUnit.Texture0 + i);
-                GL.BindTexture(TextureTarget.Texture2D, binding.TextureBuffer.TextureID);
+                binding.TextureBuffer.Apply();
                 GL.Uniform1(binding.UniformLocation, i);
             }
         }
@@ -159,7 +159,7 @@ namespace Veldrid.Graphics.OpenGL
                     case VertexElementFormat.Float4:
                         return VertexAttribPointerType.Float;
                     default:
-                        throw new InvalidOperationException("Invalid format : " + format);
+                        throw Illegal.Value<VertexElementFormat>();
                 }
             }
         }

@@ -14,9 +14,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetData<T>(ref T data, int dataSizeInBytes) where T : struct
         {
-            Bind();
-            GL.BufferData(BufferTarget.UniformBuffer, dataSizeInBytes, ref data, BufferUsageHint.DynamicDraw);
-            Unbind();
+            UpdateBufferData(ref data, dataSizeInBytes);
         }
 
         internal void BindToBlock(int program, int uniformBlockIndex, int dataSize, int uniformBindingIndex)

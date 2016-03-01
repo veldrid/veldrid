@@ -23,25 +23,10 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetIndices(int[] indices, int stride, IntPtr offset)
         {
-            Bind();
-            GL.BufferData(
-                BufferTarget.ElementArrayBuffer, 
-                sizeof(int) * indices.Length, 
-                indices, 
-                BufferUsageHint.StaticDraw);
+            UpdateBufferData(indices, sizeof(int) * indices.Length);
 
             _stride = stride;
             _offset = offset;
-
-#if DEBUG
-            // Validate that the buffer is the correct size
-            int bufferSize;
-            GL.GetBufferParameter(BufferTarget.ElementArrayBuffer, BufferParameterName.BufferSize, out bufferSize);
-            if (indices.Length * sizeof(int) != bufferSize)
-            {
-                throw new InvalidOperationException("Vertex array not uploaded correctly");
-            }
-#endif
         }
     }
 }

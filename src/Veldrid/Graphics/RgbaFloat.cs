@@ -1,4 +1,6 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
+using OpenTK.Graphics;
 
 namespace Veldrid.Graphics
 {
@@ -23,5 +25,11 @@ namespace Veldrid.Graphics
         public static readonly RgbaFloat Grey = new RgbaFloat(.25f, .25f, .25f, 1);
         public static readonly RgbaFloat Cyan = new RgbaFloat(0, 1, 1, 1);
         public static readonly RgbaFloat White = new RgbaFloat(1, 1, 1, 1);
+        public static readonly RgbaFloat CornflowerBlue = new RgbaFloat(0.3921f, 0.5843f, 0.9294f, 1);
+
+        internal static unsafe Color4 ToOpenTKColor(RgbaFloat clearColor)
+        {
+            return *(Color4*)&clearColor;
+        }
     }
 }

@@ -15,7 +15,7 @@ cbuffer WorldMatrixBuffer : register(b2)
 
 struct VertexInput
 {
-    float3 position : POSITION;
+    float4 position : POSITION;
     float2 texCoord : TEXCOORD0;
 };
 
@@ -33,7 +33,7 @@ PixelInput VS(VertexInput input)
     float4x4 viewT = transpose(view);
     float4x4 projectionT = transpose(projection);
 
-    float4 worldPosition = mul(float4(input.position, 1), worldT);
+    float4 worldPosition = mul(input.position, worldT);
     float4 viewPosition = mul(worldPosition, viewT);
     output.position = mul(viewPosition, projectionT);
 

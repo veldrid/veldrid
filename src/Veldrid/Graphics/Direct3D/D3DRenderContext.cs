@@ -37,9 +37,9 @@ namespace Veldrid.Graphics.Direct3D
 
         public override WindowInfo WindowInfo => _windowInfo;
 
-        public override void BeginFrame()
+        public override void ClearBuffer()
         {
-            Clear(RgbaFloat.Blue);
+            Clear(ClearColor);
         }
 
         public override void DrawIndexedPrimitives(int startingVertex, int indexCount)

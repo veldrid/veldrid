@@ -5,6 +5,8 @@ namespace Veldrid.Graphics
 {
     public abstract class RenderContext
     {
+        public virtual RgbaFloat ClearColor { get; set; } = RgbaFloat.CornflowerBlue;
+
         public abstract ResourceFactory ResourceFactory { get; }
 
         public DynamicDataProvider<Matrix4x4> ViewMatrixProvider { get; }
@@ -48,7 +50,7 @@ namespace Veldrid.Graphics
 
         public abstract WindowInfo WindowInfo { get; }
         public abstract void DrawIndexedPrimitives(int startingIndex, int indexCount);
-        public abstract void BeginFrame();
+        public abstract void ClearBuffer();
         public abstract void SwapBuffers();
 
         protected abstract void HandleWindowResize();

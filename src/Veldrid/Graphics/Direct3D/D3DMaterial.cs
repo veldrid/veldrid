@@ -106,6 +106,7 @@ namespace Veldrid.Graphics.Direct3D
                     0,
                     ConvertGenericFormat(genericElement.ElementFormat),
                     currentOffset, 0);
+                currentOffset += genericElement.SizeInBytes;
             }
 
             return new InputLayout(device, shaderBytecode, elements);

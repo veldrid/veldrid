@@ -32,7 +32,7 @@ namespace Veldrid.RenderDemo
 
                 _ccr.Position += System.Numerics.Vector3.UnitX * 3f;
 
-                FrameTimeAverager fta = new FrameTimeAverager(40);
+                FrameTimeAverager fta = new FrameTimeAverager(500, 666);
 
                 DateTime previousFrameTime = DateTime.UtcNow;
                 while (window.Exists)
@@ -60,7 +60,7 @@ namespace Veldrid.RenderDemo
 
         private static void Draw()
         {
-            _rc.BeginFrame();
+            _rc.ClearBuffer();
             _tcr.Render(_rc);
             _ccr.Render(_rc);
             _rc.SwapBuffers();
@@ -68,36 +68,38 @@ namespace Veldrid.RenderDemo
 
         private class FrameTimeAverager
         {
-            private readonly Stack<double> _frameTimes;
             private readonly int _numFramesToAverage;
+            private readonly double _timeLimit = 666;
+
+            private double _accumulatedTime = 0;
+            private int _frameCount = 0;
 
             public double CurrentAverageFrameTime { get; private set; }
             public double CurrentAverageFramesPerSecond { get { return 1000 / CurrentAverageFrameTime; } }
 
-            public FrameTimeAverager(int numFramesToAverage)
+            public FrameTimeAverager(int maxFrames, double maxTime)
             {
-                _numFramesToAverage = numFramesToAverage;
-                _frameTimes = new Stack<double>(numFramesToAverage);
+                _numFramesToAverage = maxFrames;
+                _timeLimit = maxTime;
             }
 
             public void AddTime(double frameTime)
             {
-                _frameTimes.Push(frameTime);
-                if (_frameTimes.Count == _numFramesToAverage)
+                _accumulatedTime += frameTime;
+                _frameCount++;
+                if (_frameCount == _numFramesToAverage || _accumulatedTime >= _timeLimit)
                 {
-                    AverageStack();
+                    Average();
                 }
             }
 
-            private void AverageStack()
+            private void Average()
             {
-                double total = 0.0;
-                for (int i = 0; i < _numFramesToAverage; i++)
-                {
-                    total += _frameTimes.Pop();
-                }
+                double total = _accumulatedTime;
+                CurrentAverageFrameTime = total / _frameCount;
 
-                CurrentAverageFrameTime = total / _numFramesToAverage;
+                _accumulatedTime = 0;
+                _frameCount = 0;
             }
         }
     }

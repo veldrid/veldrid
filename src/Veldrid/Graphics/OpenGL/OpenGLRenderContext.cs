@@ -38,7 +38,21 @@ namespace Veldrid.Graphics.OpenGL
 
         public override WindowInfo WindowInfo { get; }
 
-        public override void BeginFrame()
+        public override RgbaFloat ClearColor
+        {
+            get
+            {
+                return base.ClearColor;
+            }
+            set
+            {
+                base.ClearColor = value;
+                Color4 openTKColor = RgbaFloat.ToOpenTKColor(value);
+                GL.ClearColor(openTKColor);
+            }
+        }
+
+        public override void ClearBuffer()
         {
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         }

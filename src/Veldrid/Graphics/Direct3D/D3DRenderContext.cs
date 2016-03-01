@@ -43,7 +43,7 @@ namespace Veldrid.Graphics.Direct3D
             _device.ImmediateContext.DrawIndexed(indexCount, startingVertex, 0);
         }
 
-        public override void SwapBuffers()
+        protected override void PlatformSwapBuffers()
         {
             _swapChain.Present(0, PresentFlags.None);
         }
@@ -74,7 +74,6 @@ namespace Veldrid.Graphics.Direct3D
             CreateDepthBufferState();
             CreateSamplerState();
             CreateBlendState();
-            NativeWindow.Resize += OnWindowResized;
             OnWindowResized();
             SetRegularTargets();
 
@@ -155,7 +154,7 @@ namespace Veldrid.Graphics.Direct3D
             _swapChain.ResizeBuffers(1, NativeWindow.ClientSize.Width, NativeWindow.ClientSize.Height, Format.R8G8B8A8_UNorm, SwapChainFlags.AllowModeSwitch);
 
             // Get the backbuffer from the swapchain
-            using (var backBufferTexture = _swapChain.GetBackBuffer<SharpDX.Direct3D11.Texture2D>(0))
+            using (var backBufferTexture = _swapChain.GetBackBuffer<Texture2D>(0))
             {
                 // Backbuffer
                 _backBufferView = new RenderTargetView(_device, backBufferTexture);
@@ -163,7 +162,7 @@ namespace Veldrid.Graphics.Direct3D
 
             // Depth buffer
 
-            using (var zbufferTexture = new SharpDX.Direct3D11.Texture2D(_device, new Texture2DDescription()
+            using (var zbufferTexture = new Texture2D(_device, new Texture2DDescription()
             {
                 Format = Format.D16_UNorm,
                 ArraySize = 1,

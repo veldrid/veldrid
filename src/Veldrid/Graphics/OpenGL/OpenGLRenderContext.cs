@@ -50,7 +50,7 @@ namespace Veldrid.Graphics.OpenGL
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         }
 
-        public override void SwapBuffers()
+        protected override void PlatformSwapBuffers()
         {
             _openGLGraphicsContext.SwapBuffers();
         }

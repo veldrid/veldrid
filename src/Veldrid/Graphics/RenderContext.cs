@@ -11,6 +11,10 @@ namespace Veldrid.Graphics
         private OpenTKWindowInfo _windowInfo;
         private volatile bool v_needsResizing;
 
+        private VertexBuffer _vertexBuffer;
+        private IndexBuffer _indexBuffer;
+        private Material _material;
+
         public RenderContext()
         {
             ManualResetEvent initializationEvent = new ManualResetEvent(false);
@@ -56,18 +60,50 @@ namespace Veldrid.Graphics
 
         public void SetVertexBuffer(VertexBuffer vb)
         {
-            vb.Apply();
+            if (vb != _vertexBuffer)
+            {
+                vb.Apply();
+                _vertexBuffer = vb;
+            }
         }
 
         public void SetIndexBuffer(IndexBuffer ib)
         {
-            ib.Apply();
+            if (ib != _indexBuffer)
+            {
+                ib.Apply();
+                _indexBuffer = ib;
+            }
         }
 
         public void SetMaterial(Material material)
         {
-            material.Apply();
+            if (material != _material)
+            {
+                material.Apply();
+                _material = material;
+            }
         }
+
+        public abstract void DrawIndexedPrimitives(int startingIndex, int indexCount);
+
+        public void ClearBuffer()
+        {
+            if (v_needsResizing)
+            {
+                OnWindowResized();
+                v_needsResizing = false;
+            }
+
+            PlatformClearBuffer();
+        }
+
+        public void SwapBuffers()
+        {
+            PlatformSwapBuffers();
+        }
+
+        protected OpenTK.NativeWindow NativeWindow => _nativeWindow;
 
         protected void OnWindowResized()
         {
@@ -82,22 +118,9 @@ namespace Veldrid.Graphics
             WindowResized?.Invoke();
         }
 
-        public abstract void DrawIndexedPrimitives(int startingIndex, int indexCount);
-        public void ClearBuffer()
-        {
-            if (v_needsResizing)
-            {
-                OnWindowResized();
-            }
-
-            PlatformClearBuffer();
-        }
-
-        protected OpenTK.NativeWindow NativeWindow => _nativeWindow;
-
         protected abstract void PlatformClearBuffer();
 
-        public abstract void SwapBuffers();
+        protected abstract void PlatformSwapBuffers();
 
         protected abstract void HandleWindowResize();
     }

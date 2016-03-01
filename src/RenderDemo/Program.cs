@@ -14,7 +14,7 @@ namespace Veldrid.RenderDemo
     public static class Program
     {
         private static TexturedCubeRenderer _tcr;
-        private static ColoredCubeRenderer _ccr;
+        private static ColoredCubeRenderer[] _ccrs;
         private static RenderContext _rc;
 
         public static void Main()
@@ -23,11 +23,23 @@ namespace Veldrid.RenderDemo
             {
                 _rc = new D3DRenderContext();
                 _tcr = new TexturedCubeRenderer(_rc);
-                _ccr = new ColoredCubeRenderer(_rc);
+
+
+                _ccrs = new ColoredCubeRenderer[6 * 6 * 6];
+                for (int x = 0; x < 6; x++)
+                {
+                    for (int y = 0; y < 6; y++)
+                    {
+                        for (int z = 0; z < 6; z++)
+                        {
+                            var ccr = new ColoredCubeRenderer(_rc);
+                            ccr.Position = new System.Numerics.Vector3((x * 1.35f) - 3, (y * 1.35f) - 6, (z * 1.35f) - 10);
+                            _ccrs[x + y * 6 + z * 36] = ccr;
+                        }
+                    }
+                }
 
                 string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
-
-                _ccr.Position += System.Numerics.Vector3.UnitX * 3f;
 
                 FrameTimeAverager fta = new FrameTimeAverager(666);
 
@@ -58,7 +70,7 @@ namespace Veldrid.RenderDemo
         {
             _rc.ClearBuffer();
             _tcr.Render(_rc);
-            _ccr.Render(_rc);
+            foreach (var ccr in _ccrs) { ccr.Render(_rc); }
             _rc.SwapBuffers();
         }
 

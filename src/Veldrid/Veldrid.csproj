@@ -55,7 +55,6 @@
     <Compile Include="Graphics\WindowInfo.cs" />
     <Compile Include="Graphics\WindowState.cs" />
     <Compile Include="IllegalValueException.cs" />
-    <Compile Include="Renderer.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />

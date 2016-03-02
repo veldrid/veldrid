@@ -3,14 +3,11 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using System;
-using System.Numerics;
-using System.Threading.Tasks;
 
 namespace Veldrid.Graphics.Direct3D
 {
     public class D3DRenderContext : RenderContext
     {
-
         private SharpDX.Direct3D11.Device _device;
         private SwapChain _swapChain;
         private DeviceContext _deviceContext;
@@ -21,21 +18,27 @@ namespace Veldrid.Graphics.Direct3D
         private DepthStencilState _depthState;
         private RasterizerState _rasterizerState;
         private SamplerState _samplerState;
+        private DeviceCreationFlags _deviceFlags;
 
-        public D3DRenderContext()
+        public D3DRenderContext() : this(DeviceCreationFlags.None) { }
+
+        public D3DRenderContext(DeviceCreationFlags flags)
         {
-
+            _deviceFlags = flags;
             CreateAndInitializeDevice();
-
             ResourceFactory = new D3DResourceFactory(_device);
         }
 
         public override ResourceFactory ResourceFactory { get; }
 
-
-        protected override void PlatformClearBuffer()
+        protected unsafe override void PlatformClearBuffer()
         {
-            Clear(ClearColor);
+            // Clear the back buffer
+            RgbaFloat clearColor = ClearColor;
+            _deviceContext.ClearRenderTargetView(_backBufferView, *(RawColor4*)&clearColor);
+
+            // Clear the depth buffer
+            _deviceContext.ClearDepthStencilView(_depthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
         }
 
         public override void DrawIndexedPrimitives(int startingVertex, int indexCount)
@@ -61,11 +64,7 @@ namespace Veldrid.Graphics.Direct3D
                 Usage = Usage.RenderTargetOutput
             };
 
-            DeviceCreationFlags flags = DeviceCreationFlags.None;
-#if DEBUG
-            //flags |= DeviceCreationFlags.Debug;
-#endif
-            SharpDX.Direct3D11.Device.CreateWithSwapChain(SharpDX.Direct3D.DriverType.Hardware, flags, swapChainDescription, out _device, out _swapChain);
+            SharpDX.Direct3D11.Device.CreateWithSwapChain(SharpDX.Direct3D.DriverType.Hardware, _deviceFlags, swapChainDescription, out _device, out _swapChain);
             _deviceContext = _device.ImmediateContext;
             var factory = _swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(NativeWindow.WindowInfo.Handle, WindowAssociationFlags.IgnoreAll);
@@ -124,15 +123,6 @@ namespace Veldrid.Graphics.Direct3D
             _deviceContext.OutputMerger.SetBlendState(_blendState);
             _deviceContext.OutputMerger.SetDepthStencilState(_depthState);
             _deviceContext.PixelShader.SetSampler(0, _samplerState);
-        }
-
-        private unsafe void Clear(RgbaFloat color)
-        {
-            // Clear the back buffer
-            _deviceContext.ClearRenderTargetView(_backBufferView, *(RawColor4*)&color);
-
-            // Clear the depth buffer
-            _deviceContext.ClearDepthStencilView(_depthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
         }
 
         private void OnWindowResized(object sender, EventArgs e)

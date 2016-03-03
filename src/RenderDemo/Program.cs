@@ -1,10 +1,6 @@
-using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Numerics;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
@@ -23,7 +19,6 @@ namespace Veldrid.RenderDemo
             {
                 _rc = new D3DRenderContext();
                 _tcr = new TexturedCubeRenderer(_rc);
-
 
                 _ccrs = new ColoredCubeRenderer[6 * 6 * 6];
                 for (int x = 0; x < 6; x++)
@@ -56,7 +51,7 @@ namespace Veldrid.RenderDemo
                 }
 
             }
-            catch (Exception e)
+            catch (Exception e) when (!Debugger.IsAttached)
             {
                 Console.WriteLine("Error: " + e);
                 if (_rc is OpenGLRenderContext)

@@ -10,7 +10,8 @@
             string vertexShaderName,
             string pixelShaderName,
             MaterialVertexInput vertexInputs,
-            MaterialGlobalInputs globalInputs,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
             MaterialTextureInputs textureInputs);
 
         public abstract ConstantBuffer CreateConstantBuffer(int sizeInBytes);

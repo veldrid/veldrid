@@ -1,9 +1,7 @@
 ﻿using System;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Platform;
 using OpenTK.Graphics;
 using OpenTK;
-using System.Numerics;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -52,7 +50,10 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSwapBuffers()
         {
-            _openGLGraphicsContext.SwapBuffers();
+            if (NativeWindow.Exists)
+            {
+                _openGLGraphicsContext.SwapBuffers();
+            }
         }
 
 
@@ -69,7 +70,7 @@ namespace Veldrid.Graphics.OpenGL
 
         private void SetInitialStates()
         {
-            GL.ClearColor(Color.CornflowerBlue);
+            GL.ClearColor(ClearColor.R, ClearColor.G, ClearColor.B, ClearColor.A);
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.PolygonSmooth);
             GL.Enable(EnableCap.CullFace);

@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.Graphics
 {
-    public enum MaterialGlobalInputType
+    public enum MaterialInputType
     {
         Boolean,
         Int1,

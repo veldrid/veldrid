@@ -9,16 +9,19 @@ namespace Veldrid.Graphics.OpenGL
         private readonly OpenGLShader _fragmentShader;
         private readonly int _programID;
         private readonly OpenGLMaterialVertexInput _inputs;
-        private readonly MaterialGlobalInputs _globalInputs;
-        private readonly int[] _uniformBlocks;
-        private readonly OpenGLConstantBuffer[] _constantBuffers;
+        private readonly MaterialInputs<MaterialGlobalInputElement> _globalInputs;
+        private readonly int[] _globalUniformBlocks;
+        private readonly OpenGLConstantBuffer[] _globalConstantBuffers;
+        private readonly int[] _perObjectUniformBlocks;
+        private readonly OpenGLConstantBuffer[] _perObjectConstantBuffers;
         private readonly OpenGLProgramTextureBinding[] _textureBindings;
 
         public OpenGLMaterial(
             OpenGLShader vertexShader,
             OpenGLShader fragmentShader,
             MaterialVertexInput vertexInputs,
-            MaterialGlobalInputs globalInputs,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
             MaterialTextureInputs textureInputs)
         {
             _vertexShader = vertexShader;
@@ -46,13 +49,23 @@ namespace Veldrid.Graphics.OpenGL
             }
 
             int globalInputsCount = globalInputs.Elements.Length;
-            _uniformBlocks = new int[globalInputsCount];
-            _constantBuffers = new OpenGLConstantBuffer[globalInputsCount];
+            _globalUniformBlocks = new int[globalInputsCount];
+            _globalConstantBuffers = new OpenGLConstantBuffer[globalInputsCount];
             for (int i = 0; i < globalInputsCount; i++)
             {
                 var element = globalInputs.Elements[i];
-                _uniformBlocks[i] = GL.GetUniformBlockIndex(_programID, element.Name);
-                _constantBuffers[i] = new OpenGLConstantBuffer(element.DataProvider);
+                _globalUniformBlocks[i] = GL.GetUniformBlockIndex(_programID, element.Name);
+                _globalConstantBuffers[i] = new OpenGLConstantBuffer(element.DataProvider);
+            }
+
+            int perObjectInputsCount = perObjectInputs.Elements.Length;
+            _perObjectUniformBlocks = new int[perObjectInputsCount];
+            _perObjectConstantBuffers = new OpenGLConstantBuffer[perObjectInputsCount];
+            for (int i = 0; i < perObjectInputsCount; i++)
+            {
+                var element = perObjectInputs.Elements[i];
+                _perObjectUniformBlocks[i] = GL.GetUniformBlockIndex(_programID, element.Name);
+                _perObjectConstantBuffers[i] = new OpenGLConstantBuffer();
             }
 
             _textureBindings = new OpenGLProgramTextureBinding[textureInputs.Elements.Length];
@@ -79,8 +92,8 @@ namespace Veldrid.Graphics.OpenGL
 
             for (int i = 0; i < _globalInputs.Elements.Length; i++)
             {
-                _globalInputs.Elements[i].DataProvider.SetData(_constantBuffers[i]);
-                _constantBuffers[i].BindToBlock(_programID, _uniformBlocks[i], _globalInputs.Elements[i].DataProvider.DataSizeInBytes, i);
+                _globalInputs.Elements[i].DataProvider.SetData(_globalConstantBuffers[i]);
+                _globalConstantBuffers[i].BindToBlock(_programID, _globalUniformBlocks[i], _globalInputs.Elements[i].DataProvider.DataSizeInBytes, i);
             }
 
             for (int i = 0; i < _textureBindings.Length; i++)
@@ -89,6 +102,29 @@ namespace Veldrid.Graphics.OpenGL
                 GL.ActiveTexture(TextureUnit.Texture0 + i);
                 binding.TextureBuffer.Apply();
                 GL.Uniform1(binding.UniformLocation, i);
+            }
+        }
+
+        public void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider)
+        {
+            dataProvider.SetData(_perObjectConstantBuffers[0]);
+            _perObjectConstantBuffers[0].BindToBlock(
+                _programID, 
+                _perObjectUniformBlocks[0], 
+                dataProvider.DataSizeInBytes, 
+                _globalInputs.Elements.Length);
+        }
+
+        public void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders)
+        {
+            for (int i = 0; i < dataProviders.Length; i++)
+            {
+                dataProviders[i].SetData(_perObjectConstantBuffers[i]);
+                _perObjectConstantBuffers[i].BindToBlock(
+                    _programID, 
+                    _perObjectUniformBlocks[i], 
+                    dataProviders[i].DataSizeInBytes, 
+                    _globalInputs.Elements.Length + i);
             }
         }
 

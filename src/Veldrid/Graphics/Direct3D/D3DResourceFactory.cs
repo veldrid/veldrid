@@ -27,7 +27,13 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DIndexBuffer(_device, sizeInBytes);
         }
 
-        public override Material CreateMaterial(string vertexShaderName, string pixelShaderName, MaterialVertexInput vertexInputs, MaterialGlobalInputs globalInputs, MaterialTextureInputs textureInputs)
+        public override Material CreateMaterial(
+            string vertexShaderName, 
+            string pixelShaderName, 
+            MaterialVertexInput vertexInputs, 
+            MaterialInputs<MaterialGlobalInputElement> globalInputs, 
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs, 
+            MaterialTextureInputs textureInputs)
         {
             string vertexShaderPath = GetShaderPathFromName(vertexShaderName);
             string pixelShaderPath = GetShaderPathFromName(pixelShaderName);
@@ -38,6 +44,7 @@ namespace Veldrid.Graphics.Direct3D
                 pixelShaderPath,
                 vertexInputs,
                 globalInputs,
+                perObjectInputs,
                 textureInputs);
         }
 

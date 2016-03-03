@@ -42,6 +42,7 @@
     <Compile Include="Graphics\PixelFormat.cs" />
     <Compile Include="Graphics\OpenTKWindowInfo.cs" />
     <Compile Include="Graphics\RgbaFloat.cs" />
+    <Compile Include="Graphics\ThreadedWindow.cs" />
     <Compile Include="Graphics\VertexDescriptor.cs" />
     <Compile Include="Graphics\RenderContext.cs" />
     <Compile Include="Graphics\RenderStateModifier.cs" />

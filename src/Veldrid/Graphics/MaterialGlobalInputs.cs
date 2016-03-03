@@ -1,26 +1,46 @@
 ﻿namespace Veldrid.Graphics
 {
-    public class MaterialGlobalInputs
+    public class MaterialInputs<T> where T : MaterialInputElement
     {
-        public MaterialGlobalInputElement[] Elements { get; }
+        public T[] Elements { get; }
 
-        public MaterialGlobalInputs(MaterialGlobalInputElement[] elements)
+        public MaterialInputs(T[] elements)
         {
             Elements = elements;
         }
     }
 
-    public class MaterialGlobalInputElement
+    public abstract class MaterialInputElement
     {
         public string Name { get; }
-        public MaterialGlobalInputType Type { get; }
-        public ConstantBufferDataProvider DataProvider { get; }
+        public MaterialInputType Type { get; }
 
-        public MaterialGlobalInputElement(string name, MaterialGlobalInputType type, ConstantBufferDataProvider dataProvider)
+        public MaterialInputElement(string name, MaterialInputType type)
         {
             Name = name;
             Type = type;
+        }
+    }
+
+    public class MaterialGlobalInputElement : MaterialInputElement
+    {
+        public ConstantBufferDataProvider DataProvider { get; }
+
+        public MaterialGlobalInputElement(string name, MaterialInputType type, ConstantBufferDataProvider dataProvider)
+            : base(name, type)
+        {
             DataProvider = dataProvider;
+        }
+    }
+
+    public class MaterialPerObjectInputElement : MaterialInputElement
+    {
+        public int BufferSizeInBytes { get; }
+
+        public MaterialPerObjectInputElement(string name, MaterialInputType type, int bufferSizeInBytes)
+            : base(name, type)
+        {
+            BufferSizeInBytes = bufferSizeInBytes;
         }
     }
 }

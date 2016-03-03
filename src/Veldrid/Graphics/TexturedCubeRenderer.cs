@@ -5,9 +5,9 @@ namespace Veldrid.Graphics
 {
     public class TexturedCubeRenderer
     {
-        private VertexBuffer _vb;
-        private IndexBuffer _ib;
-        private Material _material;
+        private static VertexBuffer s_vb;
+        private static IndexBuffer s_ib;
+        private static Material s_material;
 
         private Vector3 _position = Vector3.Zero;
 
@@ -17,35 +17,49 @@ namespace Veldrid.Graphics
         {
             ResourceFactory factory = context.ResourceFactory;
 
-            _vb = factory.CreateVertexBuffer(VertexPositionTexture.SizeInBytes * s_cubeVertices.Length);
-            VertexDescriptor desc = new VertexDescriptor(VertexPositionTexture.SizeInBytes, VertexPositionTexture.ElementCount, 0, IntPtr.Zero);
-            _vb.SetVertexData(s_cubeVertices, desc);
+            if (s_vb == null)
+            {
+                s_vb = factory.CreateVertexBuffer(VertexPositionTexture.SizeInBytes * s_cubeVertices.Length);
+                VertexDescriptor desc = new VertexDescriptor(VertexPositionTexture.SizeInBytes, VertexPositionTexture.ElementCount, 0, IntPtr.Zero);
+                s_vb.SetVertexData(s_cubeVertices, desc);
 
-            _ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length);
-            _ib.SetIndices(s_cubeIndices, 0, IntPtr.Zero);
+                s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length);
+                s_ib.SetIndices(s_cubeIndices, 0, IntPtr.Zero);
 
-            MaterialVertexInput materialInputs = new MaterialVertexInput(
-                VertexPositionTexture.SizeInBytes,
-                new MaterialVertexInputElement[]
-                {
+                MaterialVertexInput materialInputs = new MaterialVertexInput(
+                    VertexPositionTexture.SizeInBytes,
+                    new MaterialVertexInputElement[]
+                    {
                     new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
                     new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
-                });
+                    });
 
-            MaterialGlobalInputs globalInputs = new MaterialGlobalInputs(
-                new MaterialGlobalInputElement[]
-                {
-                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialGlobalInputType.Matrix4x4, context.ProjectionMatrixProvider),
-                    new MaterialGlobalInputElement("viewMatrixUniform", MaterialGlobalInputType.Matrix4x4, context.ViewMatrixProvider),
-                    new MaterialGlobalInputElement("worldMatrixUniform", MaterialGlobalInputType.Matrix4x4, _worldProvider),
-                });
+                MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
+                    new MaterialGlobalInputElement[]
+                    {
+                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.ProjectionMatrixProvider),
+                    new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, context.ViewMatrixProvider),
+                    });
 
-            MaterialTextureInputs textureInputs = new MaterialTextureInputs(
-                new MaterialTextureInputElement[] {
+                MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
+                    new MaterialPerObjectInputElement[]
+                    {
+                    new MaterialPerObjectInputElement("worldMatrixUniform", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
+                    });
+
+                MaterialTextureInputs textureInputs = new MaterialTextureInputs(
+                    new MaterialTextureInputElement[] {
                     new MaterialTextureInputElement("surfaceTexture", s_cubeTexture)
-                });
+                    });
 
-            _material = factory.CreateMaterial(VertexShaderSource, FragmentShaderSource, materialInputs, globalInputs, textureInputs);
+                s_material = factory.CreateMaterial(
+                    VertexShaderSource,
+                    FragmentShaderSource,
+                    materialInputs,
+                    globalInputs,
+                    perObjectInputs,
+                    textureInputs);
+            }
         }
 
         public unsafe void Render(RenderContext context)
@@ -56,9 +70,10 @@ namespace Veldrid.Graphics
                 * Matrix4x4.CreateRotationY(rotationAmount)
                 * Matrix4x4.CreateTranslation(_position);
 
-            context.SetVertexBuffer(_vb);
-            context.SetIndexBuffer(_ib);
-            context.SetMaterial(_material);
+            context.SetVertexBuffer(s_vb);
+            context.SetIndexBuffer(s_ib);
+            context.SetMaterial(s_material);
+            s_material.ApplyPerObjectInput(_worldProvider);
 
             context.DrawIndexedPrimitives(0, s_cubeIndices.Length);
         }

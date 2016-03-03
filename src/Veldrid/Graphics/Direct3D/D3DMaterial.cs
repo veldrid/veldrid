@@ -11,7 +11,8 @@ namespace Veldrid.Graphics.Direct3D
         private readonly VertexShader _vertexShader;
         private readonly PixelShader _pixelShader;
         private readonly InputLayout _inputLayout;
-        private readonly ConstantBufferBinding[] _constantBufferBindings;
+        private readonly ConstantBufferBinding[] _constantBufferBindings; // TODO: Combine these into one array and index accordingly.
+        private readonly ConstantBufferBinding[] _perObjectBufferBindings;
         private readonly ResourceViewBinding[] _resourceViewBindings;
 
         private const ShaderFlags defaultShaderFlags
@@ -26,7 +27,8 @@ namespace Veldrid.Graphics.Direct3D
             string vertexShaderPath,
             string pixelShaderPath,
             MaterialVertexInput vertexInputs,
-            MaterialGlobalInputs globalInputs,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
             MaterialTextureInputs textureInputs)
         {
             _device = device;
@@ -61,6 +63,18 @@ namespace Veldrid.Graphics.Direct3D
                 var genericElement = globalInputs.Elements[i];
                 D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.DataProvider.DataSizeInBytes);
                 _constantBufferBindings[i] = new ConstantBufferBinding(i, constantBuffer, genericElement.DataProvider);
+            }
+
+            int numPerObjectInputs = perObjectInputs.Elements.Length;
+            _perObjectBufferBindings =
+                (numPerObjectInputs > 0)
+                ? new ConstantBufferBinding[numPerObjectInputs]
+                : Array.Empty<ConstantBufferBinding>();
+            for (int i = 0; i < numPerObjectInputs; i++)
+            {
+                var genericElement = perObjectInputs.Elements[i];
+                D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.BufferSizeInBytes);
+                _perObjectBufferBindings[i] = new ConstantBufferBinding(i + numGlobalElements, constantBuffer, null); // TODO: Fix this, shouldn't pass null.
             }
 
             int numTextures = textureInputs.Elements.Length;
@@ -144,6 +158,33 @@ namespace Veldrid.Graphics.Direct3D
                     return SharpDX.DXGI.Format.R32G32B32A32_Float;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
+            }
+        }
+
+        public void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider)
+        {
+            if (_perObjectBufferBindings.Length != 1)
+            {
+                throw new InvalidOperationException(
+                    "ApplyPerObjectInput can only be used when a material has exactly one per-object input.");
+            }
+
+            ConstantBufferBinding cbBinding = _perObjectBufferBindings[0];
+            dataProvider.SetData(cbBinding.ConstantBuffer);
+            _device.ImmediateContext.VertexShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
+            _device.ImmediateContext.PixelShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
+        }
+
+        public void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders)
+        {
+            for (int i = 0; i < _perObjectBufferBindings.Length; i++)
+            {
+                ConstantBufferBinding cbBinding = _perObjectBufferBindings[i];
+                ConstantBufferDataProvider provider = dataProviders[i];
+
+                provider.SetData(cbBinding.ConstantBuffer);
+                _device.ImmediateContext.VertexShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
+                _device.ImmediateContext.PixelShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
             }
         }
 

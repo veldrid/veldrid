@@ -24,7 +24,8 @@ namespace Veldrid.Graphics.OpenGL
             string vertexShaderName,
             string pixelShaderName,
             MaterialVertexInput inputs,
-            MaterialGlobalInputs globalInputs,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
             MaterialTextureInputs textureInputs)
         {
             string vertexShaderPath = GetShaderPathFromName(vertexShaderName);
@@ -45,7 +46,7 @@ namespace Veldrid.Graphics.OpenGL
             OpenGLShader vertexShader = new OpenGLShader(vsSource, ShaderType.VertexShader);
             OpenGLShader fragmentShader = new OpenGLShader(psSource, ShaderType.FragmentShader);
 
-            return new OpenGLMaterial(vertexShader, fragmentShader, inputs, globalInputs, textureInputs);
+            return new OpenGLMaterial(vertexShader, fragmentShader, inputs, globalInputs, perObjectInputs, textureInputs);
         }
 
         public override VertexBuffer CreateVertexBuffer(int sizeInBytes)

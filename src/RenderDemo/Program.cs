@@ -12,6 +12,9 @@ namespace Veldrid.RenderDemo
         private static TexturedCubeRenderer _tcr;
         private static ColoredCubeRenderer[] _ccrs;
         private static RenderContext _rc;
+        private static FrameTimeAverager _fta;
+        private static string _apiName;
+        private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
 
         public static void Main()
         {
@@ -34,19 +37,23 @@ namespace Veldrid.RenderDemo
                     }
                 }
 
-                string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
+                _apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
 
-                FrameTimeAverager fta = new FrameTimeAverager(666);
+                _fta = new FrameTimeAverager(666);
 
                 DateTime previousFrameTime = DateTime.UtcNow;
                 while (_rc.WindowInfo.Exists)
                 {
-                    DateTime currentFrameTime = DateTime.UtcNow;
-                    double deltaMilliseconds = (currentFrameTime - previousFrameTime).TotalMilliseconds;
-                    previousFrameTime = currentFrameTime;
-                    fta.AddTime(deltaMilliseconds);
+                    double deltaMilliseconds = 0;
+                    DateTime currentFrameTime = default(DateTime);
+                    while (deltaMilliseconds < _desiredFrameLengthMilliseconds)
+                    {
+                        currentFrameTime = DateTime.UtcNow;
+                        deltaMilliseconds = (currentFrameTime - previousFrameTime).TotalMilliseconds;
+                    }
 
-                    _rc.WindowInfo.Title = $"[{apiName}] " + fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + fta.CurrentAverageFrameTime.ToString("#00.00 ms");
+                    previousFrameTime = currentFrameTime;
+                    Update(deltaMilliseconds);
                     Draw();
                 }
 
@@ -58,6 +65,25 @@ namespace Veldrid.RenderDemo
                 {
                     Console.WriteLine("GL Error: " + GL.GetError());
                 }
+            }
+        }
+
+        private static void Update(double deltaMilliseconds)
+        {
+            _fta.AddTime(deltaMilliseconds);
+
+            _rc.WindowInfo.Title = $"[{_apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
+
+            var snapshot = _rc.InputProvider.GetInputSnapshot();
+
+            foreach (var ke in snapshot.KeyEvents)
+            {
+                Console.WriteLine(ke.Key + " is " + (ke.Down ? "down." : "up."));
+            }
+
+            foreach (var me in snapshot.MouseEvents)
+            {
+                Console.WriteLine($"MouseButton {me.MouseButton} is {(me.Down ? "down." : "up.")}");
             }
         }
 

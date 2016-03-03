@@ -12,5 +12,7 @@ namespace Veldrid.Graphics
             Key = key;
             Down = down;
         }
+
+        public override string ToString() => $"{Key} {(Down ? "Down" : "Up")}";
     }
 }

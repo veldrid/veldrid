@@ -56,6 +56,7 @@
     <Compile Include="Graphics\VertexPositionTexture.cs" />
     <Compile Include="Graphics\VertexSemanticType.cs" />
     <Compile Include="Graphics\WindowInfo.cs" />
+    <Compile Include="Graphics\WindowInputProvider.cs" />
     <Compile Include="Graphics\WindowState.cs" />
     <Compile Include="IllegalValueException.cs" />
   </ItemGroup>

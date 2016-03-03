@@ -20,6 +20,8 @@ namespace Veldrid.Graphics
 
         public WindowInfo WindowInfo => _window.WindowInfo;
 
+        public WindowInputProvider InputProvider => _window;
+
         public virtual RgbaFloat ClearColor { get; set; } = RgbaFloat.CornflowerBlue;
 
         public abstract ResourceFactory ResourceFactory { get; }

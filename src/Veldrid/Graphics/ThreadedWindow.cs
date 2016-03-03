@@ -3,42 +3,32 @@ using System.Threading;
 using System.Threading.Tasks;
 using System;
 using OpenTK.Input;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Numerics;
 
 namespace Veldrid.Graphics
 {
-    public class ThreadedWindow
+    public class ThreadedWindow : WindowInputProvider
     {
         private NativeWindow _nativeWindow;
         private bool _shouldClose;
 
-        private ConcurrentQueue<KeyEvent> _keyEvents = new ConcurrentQueue<KeyEvent>();
-        private ConcurrentQueue<MouseEvent> _mouseEvents = new ConcurrentQueue<MouseEvent>();
-
         internal volatile bool NeedsResizing;
 
-        private Vector2 _mousePosition;
-        internal Vector2 MousePosition
-        {
-            get
-            {
-                return _mousePosition;
-            }
-            set
-            {
-                _mousePosition = value;
-            }
-        }
+        private ThreadedInputSnapshot _currentSnapshot;
+        private ThreadedInputSnapshot _snapshotBackBuffer;
 
         public ThreadedWindow()
         {
+            _currentSnapshot = new ThreadedInputSnapshot();
+            _snapshotBackBuffer = new ThreadedInputSnapshot();
+
             using (ManualResetEvent mre = new ManualResetEvent(initialState: false))
             {
                 Task.Factory.StartNew(WindowOwnerRoutine, mre, TaskCreationOptions.LongRunning);
                 mre.WaitOne();
             }
         }
-
 
         public WindowInfo WindowInfo { get; private set; }
         public NativeWindow NativeWindow => _nativeWindow;
@@ -72,31 +62,61 @@ namespace Veldrid.Graphics
 
         private void OnMouseMove(object sender, MouseMoveEventArgs e)
         {
+            _currentSnapshot.MousePosition = new System.Numerics.Vector2(e.X, e.Y);
         }
 
         private void OnMouseUp(object sender, MouseButtonEventArgs e)
         {
-            _mouseEvents.Enqueue(new MouseEvent(e.Button, false));
+            _currentSnapshot.MouseEvents.Add(new MouseEvent(e.Button, false));
         }
 
         private void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            _mouseEvents.Enqueue(new MouseEvent(e.Button, true));
+            _currentSnapshot.MouseEvents.Add(new MouseEvent(e.Button, true));
         }
 
         private void OnKeyUp(object sender, KeyboardKeyEventArgs e)
         {
-            _keyEvents.Enqueue(new KeyEvent(e.Key, false));
+            _currentSnapshot.KeyEvents.Add(new KeyEvent(e.Key, false));
         }
 
         private void OnKeyDown(object sender, KeyboardKeyEventArgs e)
         {
-            _keyEvents.Enqueue(new KeyEvent(e.Key, true));
+            _currentSnapshot.KeyEvents.Add(new KeyEvent(e.Key, true));
         }
 
         private void OnWindowResized(object sender, EventArgs e)
         {
             NeedsResizing = true;
+        }
+
+        public InputSnapshot GetInputSnapshot()
+        {
+            _snapshotBackBuffer.Clear();
+            ThreadedInputSnapshot snapshot = Interlocked.Exchange(ref _currentSnapshot, _snapshotBackBuffer);
+            _snapshotBackBuffer = snapshot;
+            return snapshot;
+        }
+
+        private class ThreadedInputSnapshot : InputSnapshot
+        {
+            public List<MouseEvent> MouseEvents = new List<MouseEvent>();
+            public List<KeyEvent> KeyEvents = new List<KeyEvent>();
+            public System.Numerics.Vector2 MousePosition;
+
+            private int __ID = Environment.TickCount;
+
+            IReadOnlyCollection<KeyEvent> InputSnapshot.KeyEvents => KeyEvents;
+
+            IReadOnlyCollection<MouseEvent> InputSnapshot.MouseEvents => MouseEvents;
+
+            System.Numerics.Vector2 InputSnapshot.MousePosition => MousePosition;
+
+            internal void Clear()
+            {
+                KeyEvents.Clear();
+                MouseEvents.Clear();
+            }
         }
     }
 }

@@ -18,7 +18,9 @@
     <Compile Include="Graphics\Direct3D\D3DResourceFactory.cs" />
     <Compile Include="Graphics\Direct3D\D3DTexture.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
+    <Compile Include="Graphics\KeyEvent.cs" />
     <Compile Include="Graphics\MaterialTextureInputs.cs" />
+    <Compile Include="Graphics\MouseEvent.cs" />
     <Compile Include="Graphics\Texture.cs" />
     <Compile Include="Graphics\TexturedCubeRenderer.cs" />
     <Compile Include="Graphics\ColoredCubeRenderer.cs" />

@@ -1,14 +1,8 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Numerics;
 
-namespace Veldrid.Graphics
+namespace Veldrid.Platform
 {
-    public interface WindowInputProvider
-    {
-        InputSnapshot GetInputSnapshot();
-    }
-
     public interface InputSnapshot
     {
         IReadOnlyCollection<KeyEvent> KeyEvents { get; }

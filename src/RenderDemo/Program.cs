@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
+using Veldrid.Platform;
 
 namespace Veldrid.RenderDemo
 {
@@ -15,12 +16,14 @@ namespace Veldrid.RenderDemo
         private static FrameTimeAverager _fta;
         private static string _apiName;
         private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
+        private static OpenTKWindow _window;
 
         public static void Main()
         {
             try
             {
-                _rc = new D3DRenderContext();
+                _window = new DedicatedThreadWindow();
+                _rc = new D3DRenderContext(_window);
                 _tcr = new TexturedCubeRenderer(_rc);
 
                 _ccrs = new ColoredCubeRenderer[6 * 6 * 6];
@@ -42,7 +45,7 @@ namespace Veldrid.RenderDemo
                 _fta = new FrameTimeAverager(666);
 
                 DateTime previousFrameTime = DateTime.UtcNow;
-                while (_rc.WindowInfo.Exists)
+                while (_rc.Window.Exists)
                 {
                     double deltaMilliseconds = 0;
                     DateTime currentFrameTime = default(DateTime);
@@ -72,12 +75,18 @@ namespace Veldrid.RenderDemo
         {
             _fta.AddTime(deltaMilliseconds);
 
-            _rc.WindowInfo.Title = $"[{_apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
+            _rc.Window.Title = $"[{_apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
 
-            var snapshot = _rc.InputProvider.GetInputSnapshot();
+            var snapshot = _window.GetInputSnapshot();
 
             foreach (var ke in snapshot.KeyEvents)
             {
+                if (ke.Key == OpenTK.Input.Key.Escape
+                    || (ke.Key == OpenTK.Input.Key.F4 && (ke.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt))
+                {
+                    _window.Close();
+                }
+
                 Console.WriteLine(ke.Key + " is " + (ke.Down ? "down." : "up."));
             }
 

@@ -1,6 +1,6 @@
 ﻿using OpenTK.Input;
 
-namespace Veldrid.Graphics
+namespace Veldrid.Platform
 {
     public struct MouseEvent
     {

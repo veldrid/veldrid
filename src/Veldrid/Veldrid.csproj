@@ -18,10 +18,11 @@
     <Compile Include="Graphics\Direct3D\D3DResourceFactory.cs" />
     <Compile Include="Graphics\Direct3D\D3DTexture.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
-    <Compile Include="Graphics\KeyEvent.cs" />
-    <Compile Include="Graphics\MainThreadWindow.cs" />
+    <Compile Include="Platform\KeyEvent.cs" />
+    <Compile Include="Platform\SameThreadWindow.cs" />
     <Compile Include="Graphics\MaterialTextureInputs.cs" />
-    <Compile Include="Graphics\MouseEvent.cs" />
+    <Compile Include="Platform\ModifierKeys.cs" />
+    <Compile Include="Platform\MouseEvent.cs" />
     <Compile Include="Graphics\Texture.cs" />
     <Compile Include="Graphics\TexturedCubeRenderer.cs" />
     <Compile Include="Graphics\ColoredCubeRenderer.cs" />
@@ -43,9 +44,9 @@
     <Compile Include="Graphics\OpenGL\OpenGLTextureBuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLVertexBuffer.cs" />
     <Compile Include="Graphics\PixelFormat.cs" />
-    <Compile Include="Graphics\OpenTKWindowInfo.cs" />
+    <Compile Include="Platform\OpenTKWindow.cs" />
     <Compile Include="Graphics\RgbaFloat.cs" />
-    <Compile Include="Graphics\DedicatedThreadWindow.cs" />
+    <Compile Include="Platform\DedicatedThreadWindow.cs" />
     <Compile Include="Graphics\VertexDescriptor.cs" />
     <Compile Include="Graphics\RenderContext.cs" />
     <Compile Include="Graphics\RenderStateModifier.cs" />
@@ -56,9 +57,10 @@
     <Compile Include="Graphics\VertexPositionNormalTexture.cs" />
     <Compile Include="Graphics\VertexPositionTexture.cs" />
     <Compile Include="Graphics\VertexSemanticType.cs" />
-    <Compile Include="Graphics\WindowInfo.cs" />
-    <Compile Include="Graphics\WindowInputProvider.cs" />
-    <Compile Include="Graphics\WindowState.cs" />
+    <Compile Include="Platform\OpenTKWindowBase.cs" />
+    <Compile Include="Window.cs" />
+    <Compile Include="Platform\InputSnapshot.cs" />
+    <Compile Include="Platform\WindowState.cs" />
     <Compile Include="IllegalValueException.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />

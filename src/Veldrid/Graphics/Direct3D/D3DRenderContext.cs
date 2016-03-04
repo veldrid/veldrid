@@ -20,9 +20,10 @@ namespace Veldrid.Graphics.Direct3D
         private SamplerState _samplerState;
         private DeviceCreationFlags _deviceFlags;
 
-        public D3DRenderContext() : this(DeviceCreationFlags.None) { }
+        public D3DRenderContext(Window window) : this(window, DeviceCreationFlags.None) { }
 
-        public D3DRenderContext(DeviceCreationFlags flags)
+        public D3DRenderContext(Window window, DeviceCreationFlags flags)
+            : base(window)
         {
             _deviceFlags = flags;
             CreateAndInitializeDevice();
@@ -57,8 +58,8 @@ namespace Veldrid.Graphics.Direct3D
             {
                 BufferCount = 1,
                 IsWindowed = true,
-                ModeDescription = new ModeDescription(NativeWindow.ClientSize.Width, NativeWindow.ClientSize.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
-                OutputHandle = NativeWindow.WindowInfo.Handle,
+                ModeDescription = new ModeDescription(Window.Width, Window.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
+                OutputHandle = Window.Handle,
                 SampleDescription = new SampleDescription(1, 0),
                 SwapEffect = SwapEffect.Discard,
                 Usage = Usage.RenderTargetOutput
@@ -67,7 +68,7 @@ namespace Veldrid.Graphics.Direct3D
             SharpDX.Direct3D11.Device.CreateWithSwapChain(SharpDX.Direct3D.DriverType.Hardware, _deviceFlags, swapChainDescription, out _device, out _swapChain);
             _deviceContext = _device.ImmediateContext;
             var factory = _swapChain.GetParent<Factory>();
-            factory.MakeWindowAssociation(NativeWindow.WindowInfo.Handle, WindowAssociationFlags.IgnoreAll);
+            factory.MakeWindowAssociation(Window.Handle, WindowAssociationFlags.IgnoreAll);
 
             CreateRasterizerState();
             CreateDepthBufferState();
@@ -82,7 +83,7 @@ namespace Veldrid.Graphics.Direct3D
         private void SetRegularTargets()
         {
             // Setup targets and viewport for rendering
-            _deviceContext.Rasterizer.SetViewport(0, 0, NativeWindow.ClientSize.Width, NativeWindow.ClientSize.Height);
+            _deviceContext.Rasterizer.SetViewport(0, 0, Window.Width, Window.Height);
             _deviceContext.OutputMerger.SetTargets(_depthStencilView, _backBufferView);
         }
 
@@ -136,7 +137,7 @@ namespace Veldrid.Graphics.Direct3D
                 _depthStencilView.Dispose();
             }
 
-            _swapChain.ResizeBuffers(1, NativeWindow.ClientSize.Width, NativeWindow.ClientSize.Height, Format.R8G8B8A8_UNorm, SwapChainFlags.AllowModeSwitch);
+            _swapChain.ResizeBuffers(1, Window.Width, Window.Height, Format.R8G8B8A8_UNorm, SwapChainFlags.AllowModeSwitch);
 
             // Get the backbuffer from the swapchain
             using (var backBufferTexture = _swapChain.GetBackBuffer<Texture2D>(0))
@@ -152,8 +153,8 @@ namespace Veldrid.Graphics.Direct3D
                 Format = Format.D16_UNorm,
                 ArraySize = 1,
                 MipLevels = 1,
-                Width = Math.Max(1, NativeWindow.ClientSize.Width),
-                Height = Math.Max(1, NativeWindow.ClientSize.Height),
+                Width = Math.Max(1, Window.Width),
+                Height = Math.Max(1, Window.Height),
                 SampleDescription = new SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.DepthStencil,

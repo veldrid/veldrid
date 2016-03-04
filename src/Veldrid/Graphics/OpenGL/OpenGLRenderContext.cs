@@ -2,6 +2,7 @@
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
 using OpenTK;
+using Veldrid.Platform;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -10,12 +11,14 @@ namespace Veldrid.Graphics.OpenGL
         private readonly OpenGLResourceFactory _resourceFactory;
         private readonly GraphicsContext _openGLGraphicsContext;
 
-        public OpenGLRenderContext()
+        public OpenGLRenderContext(OpenTKWindow window)
+            : base(window)
         {
             _resourceFactory = new OpenGLResourceFactory();
 
-            _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, NativeWindow.WindowInfo);
-            _openGLGraphicsContext.MakeCurrent(NativeWindow.WindowInfo);
+            _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo);
+            _openGLGraphicsContext.MakeCurrent(window.OpenTKWindowInfo);
+
             _openGLGraphicsContext.LoadAll();
 
             SetInitialStates();
@@ -50,7 +53,7 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSwapBuffers()
         {
-            if (NativeWindow.Exists)
+            if (Window.Exists)
             {
                 _openGLGraphicsContext.SwapBuffers();
             }
@@ -64,7 +67,7 @@ namespace Veldrid.Graphics.OpenGL
 
         private void OnNativeWindowResized(object sender, EventArgs e)
         {
-            _openGLGraphicsContext.Update(NativeWindow.WindowInfo);
+            _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
             OnWindowResized();
         }
 
@@ -79,7 +82,7 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformResize()
         {
-            GL.Viewport(0, 0, NativeWindow.Width, NativeWindow.Height);
+            GL.Viewport(0, 0, Window.Width, Window.Height);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Veldrid.Graphics
+﻿namespace Veldrid.Platform
 {
     public enum WindowState
     {

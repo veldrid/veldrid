@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Threading;
 
 namespace Veldrid.Graphics
 {
@@ -11,12 +12,12 @@ namespace Veldrid.Graphics
         private IndexBuffer _indexBuffer;
         private Material _material;
 
-        private volatile bool v_needsResizing;
+        private int _needsResizing;
 
         public RenderContext(Window window)
         {
             Window = window;
-            window.Resized += () => v_needsResizing = true;
+            window.Resized += () => _needsResizing = 1;
         }
 
         public Window Window { get; }
@@ -65,10 +66,9 @@ namespace Veldrid.Graphics
 
         public void ClearBuffer()
         {
-            if (v_needsResizing)
+            if (Interlocked.CompareExchange(ref _needsResizing, 0, 1) == 1)
             {
                 OnWindowResized();
-                v_needsResizing = false;
             }
 
             PlatformClearBuffer();

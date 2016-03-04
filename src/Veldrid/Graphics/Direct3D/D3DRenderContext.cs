@@ -125,7 +125,7 @@ namespace Veldrid.Graphics.Direct3D
             _deviceContext.PixelShader.SetSampler(0, _samplerState);
         }
 
-        protected override void HandleWindowResize()
+        protected override void PlatformResize()
         {
             if (_backBufferView != null)
             {

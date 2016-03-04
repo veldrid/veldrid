@@ -77,7 +77,7 @@ namespace Veldrid.Graphics.OpenGL
             GL.FrontFace(FrontFaceDirection.Cw);
         }
 
-        protected override void HandleWindowResize()
+        protected override void PlatformResize()
         {
             GL.Viewport(0, 0, NativeWindow.Width, NativeWindow.Height);
         }

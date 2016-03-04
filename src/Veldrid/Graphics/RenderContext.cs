@@ -7,7 +7,7 @@ namespace Veldrid.Graphics
     {
         private readonly OpenTKWindowInfo _windowInfo;
         private readonly float _fieldOfViewRadians = 1.05f;
-        private readonly ThreadedWindow _window;
+        private readonly DedicatdThreadWindow _window;
 
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
@@ -15,7 +15,7 @@ namespace Veldrid.Graphics
 
         public RenderContext()
         {
-            _window = new ThreadedWindow();
+            _window = new DedicatdThreadWindow();
         }
 
         public WindowInfo WindowInfo => _window.WindowInfo;
@@ -98,15 +98,14 @@ namespace Veldrid.Graphics
                 1f,
                 1000f);
 
-            HandleWindowResize();
+            PlatformResize();
             WindowResized?.Invoke();
         }
-
 
         protected abstract void PlatformClearBuffer();
 
         protected abstract void PlatformSwapBuffers();
 
-        protected abstract void HandleWindowResize();
+        protected abstract void PlatformResize();
     }
 }

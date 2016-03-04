@@ -4,11 +4,10 @@ using System.Threading.Tasks;
 using System;
 using OpenTK.Input;
 using System.Collections.Generic;
-using System.Numerics;
 
 namespace Veldrid.Graphics
 {
-    public class ThreadedWindow : WindowInputProvider
+    public class DedicatdThreadWindow : WindowInputProvider
     {
         private NativeWindow _nativeWindow;
         private bool _shouldClose;
@@ -18,7 +17,7 @@ namespace Veldrid.Graphics
         private ThreadedInputSnapshot _currentSnapshot;
         private ThreadedInputSnapshot _snapshotBackBuffer;
 
-        public ThreadedWindow()
+        public DedicatdThreadWindow()
         {
             _currentSnapshot = new ThreadedInputSnapshot();
             _snapshotBackBuffer = new ThreadedInputSnapshot();
@@ -54,9 +53,16 @@ namespace Veldrid.Graphics
 
             initializationEvent.Set();
 
-            while (_nativeWindow.Exists && !_shouldClose)
+            while (_nativeWindow.Exists)
             {
-                _nativeWindow.ProcessEvents();
+                if (_shouldClose)
+                {
+                    _nativeWindow.Close();
+                }
+                else
+                {
+                    _nativeWindow.ProcessEvents();
+                }
             }
         }
 

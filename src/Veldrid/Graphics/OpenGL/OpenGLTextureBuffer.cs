@@ -3,27 +3,36 @@ using System;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLTextureBuffer : RenderStateModifier, IDisposable
+    public class OpenGLTextureBuffer : DeviceTexture, RenderStateModifier, IDisposable
     {
         private readonly int _textureID;
+        private readonly OpenTK.Graphics.OpenGL.PixelFormat _pixelFormat;
+        private readonly PixelType _pixelType;
 
         public OpenGLTextureBuffer(Texture texture)
         {
             _textureID = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, _textureID);
 
-            GL.TexEnv(TextureEnvTarget.TextureEnv,
-                   TextureEnvParameter.TextureEnvMode, (float)TextureEnvMode.Modulate);
-            GL.TexParameter(TextureTarget.Texture2D,
-                   TextureParameterName.TextureMinFilter, (float)TextureMinFilter.LinearMipmapLinear);
-            GL.TexParameter(TextureTarget.Texture2D,
-                   TextureParameterName.TextureMagFilter, (float)TextureMagFilter.Linear);
+            GL.TexEnv(
+                TextureEnvTarget.TextureEnv,
+                TextureEnvParameter.TextureEnvMode,
+                (float)TextureEnvMode.Modulate);
+            GL.TexParameter(
+                TextureTarget.Texture2D,
+                TextureParameterName.TextureMinFilter,
+                (float)TextureMinFilter.LinearMipmapLinear);
+            GL.TexParameter(
+                TextureTarget.Texture2D,
+                TextureParameterName.TextureMagFilter,
+                (float)TextureMagFilter.Linear);
+            GL.TexParameter(
+                TextureTarget.Texture2D,
+                TextureParameterName.GenerateMipmap,
+                1.0f);
 
-            GL.TexParameter(TextureTarget.Texture2D,
-                   TextureParameterName.GenerateMipmap, (float)1.0f);
-
-            var pixelFormat = MapPixelFormat(texture.Format);
-            var pixelType = MapPixelType(texture.Format);
+            _pixelFormat = MapPixelFormat(texture.Format);
+            _pixelType = MapPixelType(texture.Format);
 
             // load the texture
             GL.TexImage2D(
@@ -33,9 +42,8 @@ namespace Veldrid.Graphics.OpenGL
                 texture.Width, texture.Height,
                 0, // border
                 OpenTK.Graphics.OpenGL.PixelFormat.Bgra,
-                pixelType,
-                texture.Pixels
-                );
+                _pixelType,
+                texture.Pixels);
 
             GL.BindTexture(TextureTarget.Texture2D, 0);
         }
@@ -73,6 +81,13 @@ namespace Veldrid.Graphics.OpenGL
         public void Apply()
         {
             GL.BindTexture(TextureTarget.Texture2D, _textureID);
+        }
+
+        public void CopyTo(Texture texture)
+        {
+            GL.BindTexture(TextureTarget.Texture2D, _textureID);
+            GL.GetTexImage(TextureTarget.Texture2D, 0, _pixelFormat, _pixelType, texture.Pixels);
+            GL.BindTexture(TextureTarget.Texture2D, 0);
         }
 
         public void Dispose()

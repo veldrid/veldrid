@@ -6,12 +6,12 @@ namespace Veldrid.Graphics
 {
     public class ImageProcessorTexture : Texture
     {
-        private readonly Image _image;
+        public Image Image { get; }
 
-        public float[] Pixels => _image.Pixels;
+        public float[] Pixels => Image.Pixels;
 
-        public int Width => _image.Width;
-        public int Height => _image.Height;
+        public int Width => Image.Width;
+        public int Height => Image.Height;
 
         public PixelFormat Format => PixelFormat.R32_G32_B32_A32_Float;
 
@@ -21,7 +21,20 @@ namespace Veldrid.Graphics
         {
             using (FileStream fs = File.OpenRead(filePath))
             {
-                _image = new Image(fs);
+                Image = new Image(fs);
+            }
+        }
+
+        public ImageProcessorTexture(Image image)
+        {
+            Image = image;
+        }
+
+        public void SaveToFile(string path)
+        {
+            using (FileStream fs = File.OpenWrite(path))
+            {
+                Image.Save(fs);
             }
         }
     }

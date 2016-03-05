@@ -10,6 +10,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Graphics\DeviceTexture.cs" />
     <Compile Include="Graphics\Direct3D\D3DBuffer.cs" />
     <Compile Include="Graphics\Direct3D\D3DConstantBuffer.cs" />
     <Compile Include="Graphics\Direct3D\D3DIndexBuffer.cs" />
@@ -18,6 +19,8 @@
     <Compile Include="Graphics\Direct3D\D3DResourceFactory.cs" />
     <Compile Include="Graphics\Direct3D\D3DTexture.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
+    <Compile Include="Graphics\Framebuffer.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLFramebuffer.cs" />
     <Compile Include="Platform\KeyEvent.cs" />
     <Compile Include="Platform\SameThreadWindow.cs" />
     <Compile Include="Graphics\MaterialTextureInputs.cs" />

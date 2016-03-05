@@ -7,5 +7,7 @@
         float[] Pixels { get; }
         PixelFormat Format { get; }
         int PixelSizeInBytes { get; }
+
+        void SaveToFile(string v);
     }
 }

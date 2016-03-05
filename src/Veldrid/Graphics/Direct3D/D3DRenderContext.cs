@@ -12,8 +12,8 @@ namespace Veldrid.Graphics.Direct3D
         private SwapChain _swapChain;
         private DeviceContext _deviceContext;
 
-        private RenderTargetView _backBufferView;
-        private DepthStencilView _depthStencilView;
+        private RenderTargetView _defaultBackBufferView;
+        private DepthStencilView _defaultDepthStencilView;
         private BlendState _blendState;
         private DepthStencilState _depthState;
         private RasterizerState _rasterizerState;
@@ -36,10 +36,10 @@ namespace Veldrid.Graphics.Direct3D
         {
             // Clear the back buffer
             RgbaFloat clearColor = ClearColor;
-            _deviceContext.ClearRenderTargetView(_backBufferView, *(RawColor4*)&clearColor);
+            _deviceContext.ClearRenderTargetView(_defaultBackBufferView, *(RawColor4*)&clearColor);
 
             // Clear the depth buffer
-            _deviceContext.ClearDepthStencilView(_depthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
+            _deviceContext.ClearDepthStencilView(_defaultDepthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
         }
 
         public override void DrawIndexedPrimitives(int startingVertex, int indexCount)
@@ -84,7 +84,7 @@ namespace Veldrid.Graphics.Direct3D
         {
             // Setup targets and viewport for rendering
             _deviceContext.Rasterizer.SetViewport(0, 0, Window.Width, Window.Height);
-            _deviceContext.OutputMerger.SetTargets(_depthStencilView, _backBufferView);
+            _deviceContext.OutputMerger.SetTargets(_defaultDepthStencilView, _defaultBackBufferView);
         }
 
         private void CreateBlendState()
@@ -128,13 +128,13 @@ namespace Veldrid.Graphics.Direct3D
 
         protected override void PlatformResize()
         {
-            if (_backBufferView != null)
+            if (_defaultBackBufferView != null)
             {
-                _backBufferView.Dispose();
+                _defaultBackBufferView.Dispose();
             }
-            if (_depthStencilView != null)
+            if (_defaultDepthStencilView != null)
             {
-                _depthStencilView.Dispose();
+                _defaultDepthStencilView.Dispose();
             }
 
             _swapChain.ResizeBuffers(1, Window.Width, Window.Height, Format.R8G8B8A8_UNorm, SwapChainFlags.AllowModeSwitch);
@@ -143,7 +143,7 @@ namespace Veldrid.Graphics.Direct3D
             using (var backBufferTexture = _swapChain.GetBackBuffer<Texture2D>(0))
             {
                 // Backbuffer
-                _backBufferView = new RenderTargetView(_device, backBufferTexture);
+                _defaultBackBufferView = new RenderTargetView(_device, backBufferTexture);
             }
 
             // Depth buffer
@@ -163,9 +163,14 @@ namespace Veldrid.Graphics.Direct3D
             }))
             {
                 // Create the depth buffer view
-                _depthStencilView = new DepthStencilView(_device, zbufferTexture);
+                _defaultDepthStencilView = new DepthStencilView(_device, zbufferTexture);
             }
 
+            SetRegularTargets();
+        }
+
+        protected override void PlatformSetDefaultFramebuffer()
+        {
             SetRegularTargets();
         }
     }

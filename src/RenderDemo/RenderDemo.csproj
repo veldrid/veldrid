@@ -13,7 +13,9 @@
     <RootNamespace>Veldrid.RenderDemo</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ColoredCubeRenderer.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="TexturedCubeRenderer.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
     <UseVSHostingProcess>true</UseVSHostingProcess>
@@ -26,6 +28,9 @@
   <ItemGroup>
     <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">
       <Private>True</Private>
+    </Reference>
+    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessor.dll">
+      <Name>ImageProcessor</Name>
     </Reference>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj">
       <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>

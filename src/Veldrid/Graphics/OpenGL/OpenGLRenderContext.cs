@@ -84,5 +84,10 @@ namespace Veldrid.Graphics.OpenGL
         {
             GL.Viewport(0, 0, Window.Width, Window.Height);
         }
+
+        protected override void PlatformSetDefaultFramebuffer()
+        {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        }
     }
 }

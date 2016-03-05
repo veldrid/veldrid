@@ -82,7 +82,13 @@ namespace Veldrid.Graphics.Direct3D
             for (int i = 0; i < numTextures; i++)
             {
                 var genericElement = textureInputs.Elements[i];
-                D3DTexture texture = new D3DTexture(device, genericElement.Texture);
+                D3DTexture texture = new D3DTexture(
+                    device,
+                    BindFlags.ShaderResource,
+                    ResourceUsage.Default,
+                    CpuAccessFlags.None,
+                    SharpDX.DXGI.Format.R32G32B32A32_Float,
+                    genericElement.Texture);
                 ShaderResourceView resourceView = new ShaderResourceView(device, texture.DeviceTexture);
                 _resourceViewBindings[i] = new ResourceViewBinding(i, resourceView);
             }

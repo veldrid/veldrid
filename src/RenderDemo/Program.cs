@@ -23,7 +23,7 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new D3DRenderContext(_window);
+                _rc = new OpenGLRenderContext(_window);
                 _tcr = new TexturedCubeRenderer(_rc);
 
                 _ccrs = new ColoredCubeRenderer[6 * 6 * 6];
@@ -56,6 +56,9 @@ namespace Veldrid.RenderDemo
                     }
 
                     previousFrameTime = currentFrameTime;
+
+
+
                     Update(deltaMilliseconds);
                     Draw();
                 }

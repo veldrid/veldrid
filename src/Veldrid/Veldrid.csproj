@@ -13,6 +13,7 @@
     <Compile Include="Graphics\DeviceTexture.cs" />
     <Compile Include="Graphics\Direct3D\D3DBuffer.cs" />
     <Compile Include="Graphics\Direct3D\D3DConstantBuffer.cs" />
+    <Compile Include="Graphics\Direct3D\D3DFramebuffer.cs" />
     <Compile Include="Graphics\Direct3D\D3DIndexBuffer.cs" />
     <Compile Include="Graphics\Direct3D\D3DMaterial.cs" />
     <Compile Include="Graphics\Direct3D\D3DRenderContext.cs" />
@@ -44,7 +45,7 @@
     <Compile Include="Graphics\OpenGL\OpenGLRenderContext.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLResourceFactory.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLShader.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLTextureBuffer.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLTexture.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLVertexBuffer.cs" />
     <Compile Include="Graphics\PixelFormat.cs" />
     <Compile Include="Platform\OpenTKWindow.cs" />

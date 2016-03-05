@@ -5,22 +5,57 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLFramebuffer : Framebuffer, IDisposable
     {
-        private readonly int _colorTextureID;
-        private readonly int _depthTextureID;
+        private readonly OpenGLTexture _colorTexture;
+        private readonly OpenGLTexture _depthTexture;
         private readonly int _framebufferID;
 
-        public OpenGLFramebuffer(int colorTextureID, int depthTextureID)
+        public DeviceTexture ColorTexture => _colorTexture;
+
+        public OpenGLFramebuffer(OpenGLTexture colorTexture, OpenGLTexture depthTexture)
         {
-            _colorTextureID = colorTextureID;
-            _depthTextureID = depthTextureID;
+            _colorTexture = colorTexture;
+            _depthTexture = depthTexture;
             _framebufferID = GL.GenFramebuffer();
+
+            Bind();
+
+            GL.ActiveTexture(TextureUnit.Texture0);
+            _colorTexture.Apply();
+            GL.FramebufferTexture2D(
+                FramebufferTarget.Framebuffer,
+                FramebufferAttachment.ColorAttachment0,
+                TextureTarget.Texture2D,
+                _colorTexture.TextureID,
+                0);
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+
+            _depthTexture.Apply();
+            _depthTexture.Apply();
+            GL.FramebufferTexture2D(
+                FramebufferTarget.Framebuffer,
+                FramebufferAttachment.DepthAttachment,
+                TextureTarget.Texture2D,
+                _depthTexture.TextureID,
+                0);
+
+            Unbind();
+        }
+
+        private void Bind()
+        {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _framebufferID);
+            var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+            GL.Viewport(0, 0, 640, 480);
+        }
+
+        private static void Unbind()
+        {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
 
         public void Apply()
         {
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, _colorTextureID, 0);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, _depthTextureID, 0);
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _framebufferID);
+            Bind();
         }
 
         public void Dispose()

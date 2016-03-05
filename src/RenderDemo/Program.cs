@@ -1,6 +1,7 @@
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
@@ -23,8 +24,11 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new OpenGLRenderContext(_window);
+                _rc = new D3DRenderContext(_window);
                 _tcr = new TexturedCubeRenderer(_rc);
+
+                _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
+                _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
 
                 _ccrs = new ColoredCubeRenderer[6 * 6 * 6];
                 for (int x = 0; x < 6; x++)
@@ -57,10 +61,12 @@ namespace Veldrid.RenderDemo
 
                     previousFrameTime = currentFrameTime;
 
+                    _elapsed += deltaMilliseconds;
 
 
-                    Update(deltaMilliseconds);
-                    Draw();
+                    var snapshot = _window.GetInputSnapshot();
+                    Update(snapshot, deltaMilliseconds);
+                    Draw(snapshot);
                 }
 
             }
@@ -74,13 +80,16 @@ namespace Veldrid.RenderDemo
             }
         }
 
-        private static void Update(double deltaMilliseconds)
+        private const double TickDuration = 1000;
+        private static double _elapsed = 0;
+        private static Framebuffer _alternateFramebuffer;
+
+        private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
         {
             _fta.AddTime(deltaMilliseconds);
 
             _rc.Window.Title = $"[{_apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
 
-            var snapshot = _window.GetInputSnapshot();
 
             foreach (var ke in snapshot.KeyEvents)
             {
@@ -88,6 +97,10 @@ namespace Veldrid.RenderDemo
                     || (ke.Key == OpenTK.Input.Key.F4 && (ke.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt))
                 {
                     _window.Close();
+                }
+                if (ke.Key == OpenTK.Input.Key.F9 && ke.Down)
+                {
+                    _takeScreenshot = true;
                 }
 
                 Console.WriteLine(ke.Key + " is " + (ke.Down ? "down." : "up."));
@@ -99,11 +112,33 @@ namespace Veldrid.RenderDemo
             }
         }
 
-        private static void Draw()
+        private static ImageProcessorTexture _altBufferImage;
+        private static bool _takeScreenshot;
+
+        private static void Draw(InputSnapshot input)
         {
             _rc.ClearBuffer();
+
+            if (_takeScreenshot)
+            {
+                _rc.SetFramebuffer(_alternateFramebuffer);
+                _rc.ClearBuffer();
+            }
+
             _tcr.Render(_rc);
-            foreach (var ccr in _ccrs) { ccr.Render(_rc); }
+            foreach (var ccr in _ccrs)
+            {
+                ccr.Render(_rc);
+            }
+
+            if (_takeScreenshot)
+            {
+                _takeScreenshot = false;
+                _rc.SetDefaultFramebuffer();
+                _alternateFramebuffer.ColorTexture.CopyTo(_altBufferImage);
+                _altBufferImage.SaveToFile(Environment.TickCount + ".png");
+            }
+
             _rc.SwapBuffers();
         }
 

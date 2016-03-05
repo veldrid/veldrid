@@ -15,6 +15,23 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLConstantBuffer();
         }
 
+        public override Framebuffer CreateFramebuffer(int width, int height)
+        {
+            OpenGLTexture colorTexture = new OpenGLTexture(
+                width, height,
+                PixelInternalFormat.Rgba32f,
+                OpenTK.Graphics.OpenGL.PixelFormat.Rgba,
+                PixelType.Float);
+            OpenGLTexture depthTexture = new OpenGLTexture(
+                width,
+                height,
+                PixelInternalFormat.DepthComponent24,
+                OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent,
+                PixelType.UnsignedInt);
+
+            return new OpenGLFramebuffer(colorTexture, depthTexture);
+        }
+
         public override IndexBuffer CreateIndexBuffer(int sizeInBytes)
         {
             return new OpenGLIndexBuffer();

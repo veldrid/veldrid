@@ -73,7 +73,7 @@ namespace Veldrid.Graphics.OpenGL
             {
                 var element = textureInputs.Elements[i];
                 int location = GL.GetUniformLocation(_programID, element.Name);
-                OpenGLTextureBuffer textureBuffer = new OpenGLTextureBuffer(element.Texture);
+                OpenGLTexture textureBuffer = new OpenGLTexture(element.Texture);
                 _textureBindings[i] = new OpenGLProgramTextureBinding(location, textureBuffer);
             }
         }
@@ -203,9 +203,9 @@ namespace Veldrid.Graphics.OpenGL
         private struct OpenGLProgramTextureBinding
         {
             public readonly int UniformLocation;
-            public readonly OpenGLTextureBuffer TextureBuffer;
+            public readonly OpenGLTexture TextureBuffer;
 
-            public OpenGLProgramTextureBinding(int location, OpenGLTextureBuffer textureBuffer)
+            public OpenGLProgramTextureBinding(int location, OpenGLTexture textureBuffer)
             {
                 UniformLocation = location;
                 TextureBuffer = textureBuffer;

@@ -16,6 +16,12 @@ namespace Veldrid.Graphics.Direct3D
             DeviceTexture = new Texture2D(device, description);
         }
 
+        public D3DTexture(Device device, Texture2D existingTexture)
+        {
+            _device = device;
+            DeviceTexture = existingTexture;
+        }
+
         public D3DTexture(
             Device device,
             int width, int height,

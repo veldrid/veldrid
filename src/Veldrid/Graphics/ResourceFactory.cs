@@ -15,5 +15,6 @@
             MaterialTextureInputs textureInputs);
 
         public abstract ConstantBuffer CreateConstantBuffer(int sizeInBytes);
+        public abstract Framebuffer CreateFramebuffer(int width, int height);
     }
 }

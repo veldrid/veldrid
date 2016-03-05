@@ -2,5 +2,6 @@
 {
     public interface Framebuffer : RenderStateModifier
     {
+        DeviceTexture ColorTexture { get; }
     }
 }

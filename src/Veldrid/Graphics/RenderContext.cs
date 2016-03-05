@@ -11,7 +11,7 @@ namespace Veldrid.Graphics
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private Material _material;
-        private Framebuffer _framebuffer;
+        public Framebuffer CurrentFramebuffer { get; private set; }
 
         private int _needsResizing;
 
@@ -78,8 +78,9 @@ namespace Veldrid.Graphics
 
         public void SetFramebuffer(Framebuffer framebuffer)
         {
-            if (_framebuffer != framebuffer)
+            if (CurrentFramebuffer != framebuffer)
             {
+                CurrentFramebuffer = framebuffer;
                 framebuffer.Apply();
             }
         }

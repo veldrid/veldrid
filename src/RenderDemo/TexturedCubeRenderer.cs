@@ -2,7 +2,7 @@
 using System.Numerics;
 using Veldrid.Graphics;
 
-namespace RenderDemo
+namespace Veldrid.RenderDemo
 {
     public class TexturedCubeRenderer
     {
@@ -10,9 +10,8 @@ namespace RenderDemo
         private static IndexBuffer s_ib;
         private static Material s_material;
 
-        private Vector3 _position = Vector3.Zero;
-
         private DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
+        public Vector3 Position { get; internal set; }
 
         public TexturedCubeRenderer(RenderContext context)
         {
@@ -67,9 +66,9 @@ namespace RenderDemo
         {
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             _worldProvider.Data =
-                Matrix4x4.CreateScale(2.5f)
+                Matrix4x4.CreateScale(1.5f)
                 * Matrix4x4.CreateRotationY(rotationAmount)
-                * Matrix4x4.CreateTranslation(_position);
+                * Matrix4x4.CreateTranslation(Position);
 
             context.SetVertexBuffer(s_vb);
             context.SetIndexBuffer(s_ib);

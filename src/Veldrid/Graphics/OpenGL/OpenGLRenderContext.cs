@@ -59,16 +59,9 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-
         public override void DrawIndexedPrimitives(int startingIndex, int indexCount)
         {
             GL.DrawElements(PrimitiveType.Triangles, indexCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
-        }
-
-        private void OnNativeWindowResized(object sender, EventArgs e)
-        {
-            _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
-            OnWindowResized();
         }
 
         private void SetInitialStates()
@@ -82,6 +75,7 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformResize()
         {
+            _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
             GL.Viewport(0, 0, Window.Width, Window.Height);
         }
 

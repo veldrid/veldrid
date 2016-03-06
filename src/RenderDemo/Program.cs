@@ -24,8 +24,9 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new D3DRenderContext(_window);
+                _rc = new OpenGLRenderContext(_window);
                 _tcr = new TexturedCubeRenderer(_rc);
+                _tcr.Position = new System.Numerics.Vector3(-5f, 0, -3);
 
                 _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
                 _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
@@ -63,7 +64,6 @@ namespace Veldrid.RenderDemo
 
                     _elapsed += deltaMilliseconds;
 
-
                     var snapshot = _window.GetInputSnapshot();
                     Update(snapshot, deltaMilliseconds);
                     Draw(snapshot);
@@ -89,7 +89,6 @@ namespace Veldrid.RenderDemo
             _fta.AddTime(deltaMilliseconds);
 
             _rc.Window.Title = $"[{_apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
-
 
             foreach (var ke in snapshot.KeyEvents)
             {

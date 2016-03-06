@@ -5,9 +5,10 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLTexture : DeviceTexture, RenderStateModifier, IDisposable
     {
-        public int TextureID { get; }
         private readonly OpenTK.Graphics.OpenGL.PixelFormat _pixelFormat;
         private readonly PixelType _pixelType;
+
+        public int TextureID { get; }
 
         public OpenGLTexture(
             int width,
@@ -105,6 +106,19 @@ namespace Veldrid.Graphics.OpenGL
         {
             GL.BindTexture(TextureTarget.Texture2D, TextureID);
             GL.GetTexImage(TextureTarget.Texture2D, 0, _pixelFormat, _pixelType, texture.Pixels);
+
+            // Need to reverse the rows vertically.
+            int rowPixels = texture.Width * 4;
+            float[] stagingRow = new float[rowPixels];
+            for (int y = texture.Height - 1, destY = 0; y > (texture.Height / 2); y--)
+            {
+                Array.ConstrainedCopy(texture.Pixels, y * rowPixels, stagingRow, 0, rowPixels);
+                Array.ConstrainedCopy(texture.Pixels, destY * rowPixels, texture.Pixels, y * rowPixels, rowPixels);
+                Array.ConstrainedCopy(stagingRow, 0, texture.Pixels, destY * rowPixels, rowPixels);
+
+                destY++;
+            }
+
             GL.BindTexture(TextureTarget.Texture2D, 0);
         }
 

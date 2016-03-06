@@ -10,13 +10,14 @@ namespace Veldrid.Graphics.OpenGL
         private readonly int _framebufferID;
 
         public DeviceTexture ColorTexture => _colorTexture;
+        public DeviceTexture DepthTexture => _depthTexture;
 
         public OpenGLFramebuffer(OpenGLTexture colorTexture, OpenGLTexture depthTexture)
         {
             _colorTexture = colorTexture;
             _depthTexture = depthTexture;
             _framebufferID = GL.GenFramebuffer();
-
+            
             Bind();
 
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -45,7 +46,6 @@ namespace Veldrid.Graphics.OpenGL
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, _framebufferID);
             var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
-            GL.Viewport(0, 0, 640, 480);
         }
 
         private static void Unbind()

@@ -2,7 +2,7 @@
 using System.Numerics;
 using Veldrid.Graphics;
 
-namespace RenderDemo
+namespace Veldrid.RenderDemo
 {
     public class ColoredCubeRenderer
     {
@@ -63,7 +63,9 @@ namespace RenderDemo
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             _modelViewProvider.Data =
                 Matrix4x4.CreateScale(Scale)
+                * Matrix4x4.CreateRotationX((rotationAmount * .5f) * Position.Y)
                 * Matrix4x4.CreateRotationY(rotationAmount)
+                * Matrix4x4.CreateRotationZ((rotationAmount * .33f) * Position.Z)
                 * Matrix4x4.CreateTranslation(Position)
                 * context.ViewMatrixProvider.Data;
 
@@ -103,10 +105,10 @@ namespace RenderDemo
             new VertexPositionColor(new Vector3(-.5f,-.5f,-.5f),   RgbaFloat.Yellow),
             new VertexPositionColor(new Vector3(.5f,-.5f,-.5f),    RgbaFloat.Yellow),
             // Front
-            new VertexPositionColor(new Vector3(-.5f,.5f,.5f),     RgbaFloat.Cyan),
-            new VertexPositionColor(new Vector3(.5f,.5f,.5f),      RgbaFloat.Cyan),
-            new VertexPositionColor(new Vector3(.5f,-.5f,.5f),     RgbaFloat.Cyan),
-            new VertexPositionColor(new Vector3(-.5f,-.5f,.5f),    RgbaFloat.Cyan)
+            new VertexPositionColor(new Vector3(-.5f,.5f,.5f),     RgbaFloat.Green),
+            new VertexPositionColor(new Vector3(.5f,.5f,.5f),      RgbaFloat.Green),
+            new VertexPositionColor(new Vector3(.5f,-.5f,.5f),     RgbaFloat.Green),
+            new VertexPositionColor(new Vector3(-.5f,-.5f,.5f),    RgbaFloat.Green)
         };
 
         private static readonly int[] s_cubeIndices = new int[]

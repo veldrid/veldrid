@@ -28,8 +28,6 @@
     <Compile Include="Platform\ModifierKeys.cs" />
     <Compile Include="Platform\MouseEvent.cs" />
     <Compile Include="Graphics\Texture.cs" />
-    <Compile Include="Graphics\TexturedCubeRenderer.cs" />
-    <Compile Include="Graphics\ColoredCubeRenderer.cs" />
     <Compile Include="Graphics\ConstantBuffer.cs" />
     <Compile Include="Graphics\ConstantBufferDataProvider.cs" />
     <Compile Include="Graphics\ImageProcessorTexture.cs" />

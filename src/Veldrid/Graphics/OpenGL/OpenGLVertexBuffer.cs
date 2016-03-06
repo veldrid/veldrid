@@ -13,7 +13,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetVertexData<T>(T[] vertexData, VertexDescriptor descriptor) where T : struct
         {
-            UpdateBufferData(vertexData, descriptor.VertexSizeInBytes * vertexData.Length);
+            SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Length);
         }
     }
 }

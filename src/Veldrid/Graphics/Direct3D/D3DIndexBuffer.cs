@@ -21,7 +21,7 @@ namespace Veldrid.Graphics.Direct3D
         public void SetIndices(int[] indices, int stride, System.IntPtr offset)
         {
             _offset = offset.ToInt32();
-            UpdateBufferData(indices);
+            SetData(indices, indices.Length * 4);
         }
     }
 }

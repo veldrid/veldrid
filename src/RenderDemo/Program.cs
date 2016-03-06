@@ -24,7 +24,7 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new OpenGLRenderContext(_window);
+                _rc = new D3DRenderContext(_window);
                 _tcr = new TexturedCubeRenderer(_rc);
                 _tcr.Position = new System.Numerics.Vector3(-5f, 0, -3);
 

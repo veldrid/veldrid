@@ -16,7 +16,7 @@ namespace Veldrid.Graphics.Direct3D
         public void SetVertexData<T>(T[] vertexData, VertexDescriptor descriptor) where T : struct
         {
             _stride = descriptor.VertexSizeInBytes;
-            UpdateBufferData(vertexData);
+            SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Length);
         }
     }
 }

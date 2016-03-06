@@ -1,7 +1,6 @@
 ﻿namespace Veldrid.Graphics
 {
-    public interface ConstantBuffer
+    public interface ConstantBuffer : DeviceBuffer
     {
-        void SetData<T>(ref T data, int dataSizeInBytes) where T : struct;
     }
 }

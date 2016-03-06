@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLBuffer : IDisposable
+    public class OpenGLBuffer : DeviceBuffer, IDisposable
     {
         private readonly int _bufferID;
         private readonly BufferTarget _target;
@@ -32,14 +32,14 @@ namespace Veldrid.Graphics.OpenGL
             GL.DeleteBuffer(_bufferID);
         }
 
-        protected void UpdateBufferData<T>(ref T data, int dataSizeInBytes) where T : struct
+        public void SetData<T>(ref T data, int dataSizeInBytes) where T : struct
         {
             Bind();
             GL.BufferData(_target, dataSizeInBytes, ref data, BufferUsageHint.DynamicDraw);
             Unbind();
         }
 
-        protected void UpdateBufferData<T>(T[] data, int dataSizeInBytes) where T : struct
+        public void SetData<T>(T[] data, int dataSizeInBytes) where T : struct
         {
             Bind();
             GL.BufferData(_target, dataSizeInBytes, data, BufferUsageHint.DynamicDraw);
@@ -57,6 +57,16 @@ namespace Veldrid.Graphics.OpenGL
             {
                 throw new InvalidOperationException("Vertex array not uploaded correctly");
             }
+        }
+
+        public void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetData<T>(ref T storageLocation, int storageSizeInBytes) where T : struct
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build;Test" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <AssemblyName>Veldrid.Tests</AssemblyName>
+    <RootNamespace>Veldrid</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CopyNuGetImplementations>true</CopyNuGetImplementations>
+    <ProjectGuid>{0B65FB57-E49C-45DC-8C09-FC758A24E401}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
+  <ItemGroup>
+    <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">
+      <Name>OpenTK</Name>
+    </Reference>
+    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessor.dll">
+      <Name>ImageProcessor</Name>
+    </Reference>
+    <None Include="project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Graphics\VertexPositionColorTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Veldrid\Veldrid.csproj">
+      <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>
+      <Name>Veldrid</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+</Project>

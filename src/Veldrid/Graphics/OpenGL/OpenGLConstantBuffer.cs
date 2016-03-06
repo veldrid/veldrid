@@ -12,11 +12,6 @@ namespace Veldrid.Graphics.OpenGL
             dataProvider.SetData(this);
         }
 
-        public void SetData<T>(ref T data, int dataSizeInBytes) where T : struct
-        {
-            UpdateBufferData(ref data, dataSizeInBytes);
-        }
-
         internal void BindToBlock(int program, int uniformBlockIndex, int dataSize, int uniformBindingIndex)
         {
             Bind();

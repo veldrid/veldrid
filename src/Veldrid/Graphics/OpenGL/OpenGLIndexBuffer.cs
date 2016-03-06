@@ -23,7 +23,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetIndices(int[] indices, int stride, IntPtr offset)
         {
-            UpdateBufferData(indices, sizeof(int) * indices.Length);
+            SetData(indices, sizeof(int) * indices.Length);
 
             _stride = stride;
             _offset = offset;

@@ -99,12 +99,6 @@ namespace Veldrid.Graphics.Direct3D
         {
             RecreateDefaultFramebuffer();
 
-            // TODO: This seems wrong.
-            if (CurrentFramebuffer == null)
-            {
-                SetFramebuffer(_defaultFramebuffer);
-            }
-
             SetRegularTargets();
         }
 
@@ -133,7 +127,7 @@ namespace Veldrid.Graphics.Direct3D
                 OptionFlags = ResourceOptionFlags.None
             }))
             {
-                bool currentlyBound = CurrentFramebuffer == _defaultFramebuffer;
+                bool currentlyBound = CurrentFramebuffer == null || CurrentFramebuffer == _defaultFramebuffer;
                 // Create the depth buffer view
                 _defaultFramebuffer = new D3DFramebuffer(_device, new D3DTexture(_device, backBufferTexture), new D3DTexture(_device, depthBufferTexture));
                 if (currentlyBound)

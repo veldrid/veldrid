@@ -24,11 +24,8 @@ PixelInput VS(VertexInput input)
 {
     PixelInput output;
 
-    float4x4 worldviewT = transpose(worldview);
-    float4x4 projectionT = transpose(projection);
-
-    float4 worldviewPosition = mul(float4(input.position, 1), worldviewT);
-    output.position = mul(worldviewPosition, projectionT);
+    float4 worldViewPosition = mul(worldview, float4(input.position, 1));
+    output.position = mul(projection, worldViewPosition);
 
     output.color = input.color;
 

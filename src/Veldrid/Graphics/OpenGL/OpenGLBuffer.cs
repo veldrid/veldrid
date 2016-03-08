@@ -61,12 +61,12 @@ namespace Veldrid.Graphics.OpenGL
 
         public void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct
         {
-            throw new NotImplementedException();
+            GL.GetBufferSubData(_target, IntPtr.Zero, storageSizeInBytes, storageLocation);
         }
 
         public void GetData<T>(ref T storageLocation, int storageSizeInBytes) where T : struct
         {
-            throw new NotImplementedException();
+            GL.GetBufferSubData(_target, IntPtr.Zero, storageSizeInBytes, ref storageLocation);
         }
     }
 }

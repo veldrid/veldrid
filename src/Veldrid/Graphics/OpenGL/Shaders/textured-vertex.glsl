@@ -24,7 +24,10 @@ out vec2 texCoord;
 
 void main()
 {
-    // works only for orthogonal modelview
-    gl_Position = projection_matrix * view_matrix * world_matrix * vec4(in_position, 1);
-    texCoord = in_texCoord;
+	vec4 worldPos = world_matrix * vec4(in_position, 1);
+	vec4 viewPos = view_matrix * worldPos;
+	vec4 screenPos = projection_matrix * viewPos;
+    gl_Position = screenPos;
+
+    texCoord = in_texCoord; // Pass along unchanged.
 }

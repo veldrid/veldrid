@@ -29,13 +29,9 @@ PixelInput VS(VertexInput input)
 {
     PixelInput output;
 
-    float4x4 worldT = transpose(world);
-    float4x4 viewT = transpose(view);
-    float4x4 projectionT = transpose(projection);
-
-    float4 worldPosition = mul(input.position, worldT);
-    float4 viewPosition = mul(worldPosition, viewT);
-    output.position = mul(viewPosition, projectionT);
+    float4 worldPosition = mul(world, input.position);
+    float4 viewPosition = mul(view, worldPosition);
+    output.position = mul(projection, viewPosition);
 
     output.texCoord = input.texCoord;
 

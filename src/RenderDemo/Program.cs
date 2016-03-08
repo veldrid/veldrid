@@ -18,6 +18,7 @@ namespace Veldrid.RenderDemo
         private static string _apiName;
         private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
         private static OpenTKWindow _window;
+        private static bool _limitFrameRate = false;
 
         public static void Main()
         {
@@ -54,11 +55,11 @@ namespace Veldrid.RenderDemo
                 {
                     double deltaMilliseconds = 0;
                     DateTime currentFrameTime = default(DateTime);
-                    while (deltaMilliseconds < _desiredFrameLengthMilliseconds)
+                    do
                     {
                         currentFrameTime = DateTime.UtcNow;
                         deltaMilliseconds = (currentFrameTime - previousFrameTime).TotalMilliseconds;
-                    }
+                    } while (_limitFrameRate && deltaMilliseconds < _desiredFrameLengthMilliseconds);
 
                     previousFrameTime = currentFrameTime;
 

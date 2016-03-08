@@ -32,20 +32,20 @@ namespace Veldrid.RenderDemo
                     VertexPositionColor.SizeInBytes,
                     new MaterialVertexInputElement[]
                     {
-                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
-                    new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4)
+                        new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                        new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4)
                     });
 
                 MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                     new MaterialGlobalInputElement[]
                     {
-                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.ProjectionMatrixProvider)
+                        new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.ProjectionMatrixProvider)
                     });
 
                 MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
                     new MaterialPerObjectInputElement[]
                     {
-                    new MaterialPerObjectInputElement("modelviewMatrixUniform", MaterialInputType.Matrix4x4, _modelViewProvider.DataSizeInBytes)
+                        new MaterialPerObjectInputElement("modelviewMatrixUniform", MaterialInputType.Matrix4x4, _modelViewProvider.DataSizeInBytes)
                     });
 
                 s_material = factory.CreateMaterial(
@@ -67,6 +67,7 @@ namespace Veldrid.RenderDemo
                 * Matrix4x4.CreateRotationY(rotationAmount)
                 * Matrix4x4.CreateRotationZ((rotationAmount * .33f) * Position.Z)
                 * Matrix4x4.CreateTranslation(Position)
+                * Matrix4x4.CreateTranslation((float)Math.Sin(rotationAmount) * Vector3.UnitY)
                 * context.ViewMatrixProvider.Data;
 
             context.SetVertexBuffer(s_vb);

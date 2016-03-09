@@ -21,9 +21,15 @@
     <Compile Include="Graphics\Direct3D\D3DResourceFactory.cs" />
     <Compile Include="Graphics\Direct3D\D3DTexture.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
+    <Compile Include="Graphics\FlatListVisibilityManager.cs" />
     <Compile Include="Graphics\Framebuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLDefaultFramebuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFramebuffer.cs" />
+    <Compile Include="Graphics\RenderItem.cs" />
+    <Compile Include="Graphics\RenderItemIndex.cs" />
+    <Compile Include="Graphics\RenderOrderKey.cs" />
+    <Compile Include="Graphics\RenderQueue.cs" />
+    <Compile Include="Graphics\VisibiltyManager.cs" />
     <Compile Include="Platform\KeyEvent.cs" />
     <Compile Include="Platform\SameThreadWindow.cs" />
     <Compile Include="Graphics\MaterialTextureInputs.cs" />

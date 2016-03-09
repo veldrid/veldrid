@@ -4,7 +4,7 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
 {
-    public class TexturedCubeRenderer
+    public class TexturedCubeRenderer : RenderItem
     {
         private static VertexBuffer s_vb;
         private static IndexBuffer s_ib;
@@ -76,6 +76,11 @@ namespace Veldrid.RenderDemo
             s_material.ApplyPerObjectInput(_worldProvider);
 
             context.DrawIndexedPrimitives(0, s_cubeIndices.Length);
+        }
+
+        public RenderOrderKey GetRenderOrderKey()
+        {
+            return new RenderOrderKey();
         }
 
         private static readonly VertexPositionTexture[] s_cubeVertices = new VertexPositionTexture[]

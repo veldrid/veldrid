@@ -4,7 +4,7 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
 {
-    public class ColoredCubeRenderer
+    public class ColoredCubeRenderer : RenderItem
     {
         private static VertexBuffer s_vb;
         private static IndexBuffer s_ib;
@@ -76,6 +76,11 @@ namespace Veldrid.RenderDemo
             s_material.ApplyPerObjectInput(_modelViewProvider);
 
             context.DrawIndexedPrimitives(0, s_cubeIndices.Length);
+        }
+
+        public RenderOrderKey GetRenderOrderKey()
+        {
+            return new RenderOrderKey();
         }
 
         private static readonly VertexPositionColor[] s_cubeVertices = new VertexPositionColor[]

@@ -10,6 +10,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Veldrid.Tests", "Veldrid.Tests\Veldrid.Tests.csproj", "{0B65FB57-E49C-45DC-8C09-FC758A24E401}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
@@ -82,8 +85,8 @@ Global
 		{AE9BC745-284F-42F3-8236-C43FF9731DF2}.Ubuntu_Release|x64.Build.0 = Release|x64
 		{AE9BC745-284F-42F3-8236-C43FF9731DF2}.Windows_Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AE9BC745-284F-42F3-8236-C43FF9731DF2}.Windows_Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AE9BC745-284F-42F3-8236-C43FF9731DF2}.Windows_Debug|x64.ActiveCfg = Debug|x64
-		{AE9BC745-284F-42F3-8236-C43FF9731DF2}.Windows_Debug|x64.Build.0 = Debug|x64
+		{AE9BC745-284F-42F3-8236-C43FF9731DF2}.Windows_Debug|x64.ActiveCfg = Debug|Any CPU
+		{AE9BC745-284F-42F3-8236-C43FF9731DF2}.Windows_Debug|x64.Build.0 = Debug|Any CPU
 		{AE9BC745-284F-42F3-8236-C43FF9731DF2}.Windows_Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE9BC745-284F-42F3-8236-C43FF9731DF2}.Windows_Release|Any CPU.Build.0 = Release|Any CPU
 		{AE9BC745-284F-42F3-8236-C43FF9731DF2}.Windows_Release|x64.ActiveCfg = Release|Any CPU

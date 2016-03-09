@@ -8,12 +8,15 @@ namespace Veldrid.Graphics
     {
         private readonly float _fieldOfViewRadians = 1.05f;
 
+        private readonly Vector3 _cameraPosition = new Vector3(0, 3, 5);
+        private readonly Vector3 _cameraDirection = new Vector3(0, -3, -5);
+
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private Material _material;
-        public Framebuffer CurrentFramebuffer { get; private set; }
 
         private int _needsResizing;
+        private RenderQueue _renderQueue = new RenderQueue();
 
         public RenderContext(Window window)
         {
@@ -22,6 +25,8 @@ namespace Veldrid.Graphics
         }
 
         public Window Window { get; }
+
+        public Framebuffer CurrentFramebuffer { get; private set; }
 
         public virtual RgbaFloat ClearColor { get; set; } = RgbaFloat.CornflowerBlue;
 
@@ -35,6 +40,18 @@ namespace Veldrid.Graphics
             = new DynamicDataProvider<Matrix4x4>();
 
         public event Action WindowResized;
+
+        public void RenderFrame(VisibiltyManager visiblityManager)
+        {
+            _renderQueue.Clear();
+            visiblityManager.CollectVisibleObjects(_renderQueue, _cameraPosition, _cameraDirection);
+            foreach (var item in _renderQueue)
+            {
+                // TODO: Investigate putting this "Draw" concept into a separate, higher-level abstraction.
+                // It's a bit awkward passing "this" into the renderable items.
+                item.Render(this);
+            }
+        }
 
         public void SetVertexBuffer(VertexBuffer vb)
         {

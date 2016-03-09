@@ -11,7 +11,7 @@ namespace Veldrid.Graphics.Direct3D
         private readonly VertexShader _vertexShader;
         private readonly PixelShader _pixelShader;
         private readonly InputLayout _inputLayout;
-        private readonly ConstantBufferBinding[] _constantBufferBindings; // TODO: Combine these into one array and index accordingly.
+        private readonly ConstantBufferBinding[] _constantBufferBindings;
         private readonly ConstantBufferBinding[] _perObjectBufferBindings;
         private readonly ResourceViewBinding[] _resourceViewBindings;
 

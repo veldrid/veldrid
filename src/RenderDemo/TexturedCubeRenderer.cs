@@ -10,27 +10,35 @@ namespace Veldrid.RenderDemo
         private static IndexBuffer s_ib;
         private static Material s_material;
 
-        private DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
+        private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
+        private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
+        private readonly ConstantBufferDataProvider[] _perObjectProviders;
+
         public Vector3 Position { get; internal set; }
 
         public TexturedCubeRenderer(RenderContext context)
         {
+            _worldProvider = new DynamicDataProvider<Matrix4x4>();
+            _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
+            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
+
             ResourceFactory factory = context.ResourceFactory;
 
             if (s_vb == null)
             {
-                s_vb = factory.CreateVertexBuffer(VertexPositionTexture.SizeInBytes * s_cubeVertices.Length);
-                VertexDescriptor desc = new VertexDescriptor(VertexPositionTexture.SizeInBytes, VertexPositionTexture.ElementCount, 0, IntPtr.Zero);
+                s_vb = factory.CreateVertexBuffer(VertexPositionNormalTexture.SizeInBytes * s_cubeVertices.Length);
+                VertexDescriptor desc = new VertexDescriptor(VertexPositionNormalTexture.SizeInBytes, VertexPositionNormalTexture.ElementCount, 0, IntPtr.Zero);
                 s_vb.SetVertexData(s_cubeVertices, desc);
 
                 s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length);
                 s_ib.SetIndices(s_cubeIndices, 0, IntPtr.Zero);
 
                 MaterialVertexInput materialInputs = new MaterialVertexInput(
-                    VertexPositionTexture.SizeInBytes,
+                    VertexPositionNormalTexture.SizeInBytes,
                     new MaterialVertexInputElement[]
                     {
                         new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                        new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
                         new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
                     });
 
@@ -39,12 +47,14 @@ namespace Veldrid.RenderDemo
                     {
                         new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.ProjectionMatrixProvider),
                         new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, context.ViewMatrixProvider),
+                        new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, context.DataProviders["LightBuffer"]),
                     });
 
                 MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
                     new MaterialPerObjectInputElement[]
                     {
                         new MaterialPerObjectInputElement("worldMatrixUniform", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
+                        new MaterialPerObjectInputElement("inverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
                     });
 
                 MaterialTextureInputs textureInputs = new MaterialTextureInputs(
@@ -62,6 +72,13 @@ namespace Veldrid.RenderDemo
             }
         }
 
+        private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)
+        {
+            Matrix4x4 inverted;
+            Matrix4x4.Invert(m, out inverted);
+            return Matrix4x4.Transpose(inverted);
+        }
+
         public void Render(RenderContext context)
         {
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
@@ -73,7 +90,7 @@ namespace Veldrid.RenderDemo
             context.SetVertexBuffer(s_vb);
             context.SetIndexBuffer(s_ib);
             context.SetMaterial(s_material);
-            s_material.ApplyPerObjectInput(_worldProvider);
+            s_material.ApplyPerObjectInputs(_perObjectProviders);
 
             context.DrawIndexedPrimitives(0, s_cubeIndices.Length);
         }
@@ -83,38 +100,38 @@ namespace Veldrid.RenderDemo
             return new RenderOrderKey();
         }
 
-        private static readonly VertexPositionTexture[] s_cubeVertices = new VertexPositionTexture[]
+        private static readonly VertexPositionNormalTexture[] s_cubeVertices = new VertexPositionNormalTexture[]
         {
             // Top
-            new VertexPositionTexture(new Vector3(-.5f,.5f,-.5f),    new Vector2(0, 0)),
-            new VertexPositionTexture(new Vector3(.5f,.5f,-.5f),     new Vector2(1, 0)),
-            new VertexPositionTexture(new Vector3(.5f,.5f,.5f),      new Vector2(1, 1)),
-            new VertexPositionTexture(new Vector3(-.5f,.5f,.5f),     new Vector2(0, 1)),
-            // Bottom
-            new VertexPositionTexture(new Vector3(-.5f,-.5f,.5f),    new Vector2(0, 0)),
-            new VertexPositionTexture(new Vector3(.5f,-.5f,.5f),     new Vector2(1, 0)),
-            new VertexPositionTexture(new Vector3(.5f,-.5f,-.5f),    new Vector2(1, 1)),
-            new VertexPositionTexture(new Vector3(-.5f,-.5f,-.5f),   new Vector2(0, 1)),
-            // Left
-            new VertexPositionTexture(new Vector3(-.5f,.5f,-.5f),    new Vector2(0, 0)),
-            new VertexPositionTexture(new Vector3(-.5f,.5f,.5f),     new Vector2(1, 0)),
-            new VertexPositionTexture(new Vector3(-.5f,-.5f,.5f),    new Vector2(1, 1)),
-            new VertexPositionTexture(new Vector3(-.5f,-.5f,-.5f),   new Vector2(0, 1)),
-            // Right
-            new VertexPositionTexture(new Vector3(.5f,.5f,.5f),      new Vector2(0, 0)),
-            new VertexPositionTexture(new Vector3(.5f,.5f,-.5f),     new Vector2(1, 0)),
-            new VertexPositionTexture(new Vector3(.5f,-.5f,-.5f),    new Vector2(1, 1)),
-            new VertexPositionTexture(new Vector3(.5f,-.5f,.5f),     new Vector2(0, 1)),
-            // Back
-            new VertexPositionTexture(new Vector3(.5f,.5f,-.5f),     new Vector2(0, 0)),
-            new VertexPositionTexture(new Vector3(-.5f,.5f,-.5f),    new Vector2(1, 0)),
-            new VertexPositionTexture(new Vector3(-.5f,-.5f,-.5f),   new Vector2(1, 1)),
-            new VertexPositionTexture(new Vector3(.5f,-.5f,-.5f),    new Vector2(0, 1)),
-            // Front
-            new VertexPositionTexture(new Vector3(-.5f,.5f,.5f),     new Vector2(0, 0)),
-            new VertexPositionTexture(new Vector3(.5f,.5f,.5f),      new Vector2(1, 0)),
-            new VertexPositionTexture(new Vector3(.5f,-.5f,.5f),     new Vector2(1, 1)),
-            new VertexPositionTexture(new Vector3(-.5f,-.5f,.5f),    new Vector2(0, 1)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,.5f,-.5f),     new Vector3(0,1,0),     new Vector2(0, 0)),
+            new VertexPositionNormalTexture(new Vector3(.5f,.5f,-.5f),      new Vector3(0,1,0),     new Vector2(1, 0)),
+            new VertexPositionNormalTexture(new Vector3(.5f,.5f,.5f),       new Vector3(0,1,0),     new Vector2(1, 1)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,.5f,.5f),      new Vector3(0,1,0),     new Vector2(0, 1)),
+            // Bottom                                                             
+            new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,.5f),     new Vector3(0,1,0),     new Vector2(0, 0)),
+            new VertexPositionNormalTexture(new Vector3(.5f,-.5f,.5f),      new Vector3(0,1,0),     new Vector2(1, 0)),
+            new VertexPositionNormalTexture(new Vector3(.5f,-.5f,-.5f),     new Vector3(0,1,0),     new Vector2(1, 1)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,-.5f),    new Vector3(0,1,0),     new Vector2(0, 1)),
+            // Left                                                               
+            new VertexPositionNormalTexture(new Vector3(-.5f,.5f,-.5f),     new Vector3(-1,0,0),    new Vector2(0, 0)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,.5f,.5f),      new Vector3(-1,0,0),    new Vector2(1, 0)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,.5f),     new Vector3(-1,0,0),    new Vector2(1, 1)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,-.5f),    new Vector3(-1,0,0),    new Vector2(0, 1)),
+            // Right                                                              
+            new VertexPositionNormalTexture(new Vector3(.5f,.5f,.5f),       new Vector3(1,0,0),     new Vector2(0, 0)),
+            new VertexPositionNormalTexture(new Vector3(.5f,.5f,-.5f),      new Vector3(1,0,0),     new Vector2(1, 0)),
+            new VertexPositionNormalTexture(new Vector3(.5f,-.5f,-.5f),     new Vector3(1,0,0),     new Vector2(1, 1)),
+            new VertexPositionNormalTexture(new Vector3(.5f,-.5f,.5f),      new Vector3(1,0,0),     new Vector2(0, 1)),
+            // Back                                                               
+            new VertexPositionNormalTexture(new Vector3(.5f,.5f,-.5f),      new Vector3(0,0,-1),    new Vector2(0, 0)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,.5f,-.5f),     new Vector3(0,0,-1),    new Vector2(1, 0)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,-.5f),    new Vector3(0,0,-1),    new Vector2(1, 1)),
+            new VertexPositionNormalTexture(new Vector3(.5f,-.5f,-.5f),     new Vector3(0,0,-1),    new Vector2(0, 1)),
+            // Front                                                              
+            new VertexPositionNormalTexture(new Vector3(-.5f,.5f,.5f),      new Vector3(0,0,1),     new Vector2(0, 0)),
+            new VertexPositionNormalTexture(new Vector3(.5f,.5f,.5f),       new Vector3(0,0,1),     new Vector2(1, 0)),
+            new VertexPositionNormalTexture(new Vector3(.5f,-.5f,.5f),      new Vector3(0,0,1),     new Vector2(1, 1)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,.5f),     new Vector3(0,0,1),     new Vector2(0, 1)),
         };
 
         private static readonly int[] s_cubeIndices = new int[]
@@ -128,7 +145,7 @@ namespace Veldrid.RenderDemo
         };
 
         private static readonly string VertexShaderSource = "textured-vertex";
-        private static readonly string FragmentShaderSource = "textured-frag";
+        private static readonly string FragmentShaderSource = "lit-frag";
         private static readonly ImageProcessorTexture s_cubeTexture = new ImageProcessorTexture(AppContext.BaseDirectory + "/Textures/CubeTexture.png");
     }
 }

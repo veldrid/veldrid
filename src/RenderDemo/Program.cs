@@ -1,7 +1,6 @@
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
-using System.Linq;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
@@ -17,7 +16,8 @@ namespace Veldrid.RenderDemo
         private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
         private static OpenTKWindow _window;
         private static bool _limitFrameRate = false;
-        private static FlatListVisibilityManager _visiblityManager = new FlatListVisibilityManager();
+        private static FlatListVisibilityManager _visiblityManager;
+        private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
 
         public static void Main()
         {
@@ -25,25 +25,13 @@ namespace Veldrid.RenderDemo
             {
                 _window = new DedicatedThreadWindow();
                 _rc = new D3DRenderContext(_window);
-                var tcr = new TexturedCubeRenderer(_rc);
-                tcr.Position = new System.Numerics.Vector3(-5f, 0, -3);
-                _visiblityManager.AddRenderItem(tcr);
-
                 _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
                 _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
+                _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
+                    new DirectionalLightBuffer(RgbaFloat.White, new System.Numerics.Vector3(-.3f, -1f, -1f)));
+                _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
 
-                for (int x = 0; x < 6; x++)
-                {
-                    for (int y = 0; y < 6; y++)
-                    {
-                        for (int z = 0; z < 6; z++)
-                        {
-                            var ccr = new ColoredCubeRenderer(_rc);
-                            ccr.Position = new System.Numerics.Vector3((x * 1.35f) - 3, (y * 1.35f) - 6, (z * 1.35f) - 10);
-                            _visiblityManager.AddRenderItem(ccr);
-                        }
-                    }
-                }
+                _visiblityManager = SceneWithBoxes();
 
                 _apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
 
@@ -78,6 +66,29 @@ namespace Veldrid.RenderDemo
                     Console.WriteLine("GL Error: " + GL.GetError());
                 }
             }
+        }
+
+        private static FlatListVisibilityManager SceneWithBoxes()
+        {
+            FlatListVisibilityManager vm = new FlatListVisibilityManager();
+            var tcr = new TexturedCubeRenderer(_rc);
+            tcr.Position = new System.Numerics.Vector3(-5f, 0, -3);
+            vm.AddRenderItem(tcr);
+
+            for (int x = 0; x < 6; x++)
+            {
+                for (int y = 0; y < 6; y++)
+                {
+                    for (int z = 0; z < 6; z++)
+                    {
+                        var ccr = new ColoredCubeRenderer(_rc);
+                        ccr.Position = new System.Numerics.Vector3((x * 1.35f) - 3, (y * 1.35f) - 6, (z * 1.35f) - 10);
+                        vm.AddRenderItem(ccr);
+                    }
+                }
+            }
+
+            return vm;
         }
 
         private const double TickDuration = 1000;

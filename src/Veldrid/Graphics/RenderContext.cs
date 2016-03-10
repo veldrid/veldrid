@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading;
 
@@ -17,6 +18,8 @@ namespace Veldrid.Graphics
 
         private int _needsResizing;
         private RenderQueue _renderQueue = new RenderQueue();
+
+        public Dictionary<string, ConstantBufferDataProvider> DataProviders { get; } = new Dictionary<string, ConstantBufferDataProvider>();
 
         public RenderContext(Window window)
         {

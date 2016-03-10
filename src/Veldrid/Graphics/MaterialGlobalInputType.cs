@@ -12,6 +12,7 @@
         Float3,
         Float4,
         Matrix4x4,
-        Texture2D
+        Texture2D,
+        Custom
     }
 }

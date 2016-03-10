@@ -183,6 +183,12 @@ namespace Veldrid.Graphics.Direct3D
 
         public void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders)
         {
+            if (_perObjectBufferBindings.Length != dataProviders.Length)
+            {
+                throw new InvalidOperationException(
+                    "dataProviders must contain the exact number of per-object buffer bindings used in the material.");
+            }
+
             for (int i = 0; i < _perObjectBufferBindings.Length; i++)
             {
                 ConstantBufferBinding cbBinding = _perObjectBufferBindings[i];

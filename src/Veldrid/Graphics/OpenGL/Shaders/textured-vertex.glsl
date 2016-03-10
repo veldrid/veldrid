@@ -15,11 +15,18 @@ layout(std140) uniform worldMatrixUniform
     mat4 world_matrix;
 };
 
+layout(std140) uniform inverseTransposeWorldMatrixUniform
+{
+    mat4 inverseTransposeWorldMatrix;
+};
+
 uniform sampler2D surfaceTexture;
 
 in vec3 in_position;
+in vec3 in_normal;
 in vec2 in_texCoord;
 
+out vec3 normal;
 out vec2 texCoord;
 
 void main()
@@ -30,4 +37,6 @@ void main()
     gl_Position = screenPos;
 
     texCoord = in_texCoord; // Pass along unchanged.
+
+	normal = normalize(mat3(inverseTransposeWorldMatrix) * in_normal);
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using SharpDX.Direct3D11;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.Direct3D
 {
@@ -72,6 +73,7 @@ namespace Veldrid.Graphics.Direct3D
 
             return new D3DMaterial(
                 _device,
+                this,
                 vertexShaderPath,
                 pixelShaderPath,
                 vertexInputs,
@@ -83,6 +85,38 @@ namespace Veldrid.Graphics.Direct3D
         public override VertexBuffer CreateVertexBuffer(int sizeInBytes)
         {
             return new D3DVertexBuffer(_device, sizeInBytes);
+        }
+
+        public override DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        {
+            GCHandle handle = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
+            D3DTexture texture = new D3DTexture(
+                _device,
+                BindFlags.ShaderResource,
+                ResourceUsage.Default,
+                CpuAccessFlags.None,
+                D3DFormats.ConvertPixelFormat(format),
+                handle.AddrOfPinnedObject(),
+                width,
+                height,
+                width * pixelSizeInBytes);
+            handle.Free();
+            return texture;
+        }
+
+        public override DeviceTexture CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        {
+            D3DTexture texture = new D3DTexture(
+                _device,
+                BindFlags.ShaderResource,
+                ResourceUsage.Default,
+                CpuAccessFlags.None,
+                D3DFormats.ConvertPixelFormat(format),
+                pixelData,
+                width,
+                height,
+                width * pixelSizeInBytes);
+            return texture;
         }
 
         private string GetShaderPathFromName(string shaderName)

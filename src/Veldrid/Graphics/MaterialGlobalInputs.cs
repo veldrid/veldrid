@@ -8,6 +8,8 @@
         {
             Elements = elements;
         }
+
+        public static MaterialInputs<T> Empty { get; } = new MaterialInputs<T>(System.Array.Empty<T>());
     }
 
     public abstract class MaterialInputElement

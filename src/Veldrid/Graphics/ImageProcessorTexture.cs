@@ -4,7 +4,7 @@ using System;
 
 namespace Veldrid.Graphics
 {
-    public class ImageProcessorTexture : Texture
+    public class ImageProcessorTexture : TextureData
     {
         public Image Image { get; }
 
@@ -36,6 +36,16 @@ namespace Veldrid.Graphics
             {
                 Image.Save(fs);
             }
+        }
+
+        public DeviceTexture CreateDeviceTexture(DeviceTextureCreator producer)
+        {
+            return producer.CreateTexture(Pixels, Width, Height, PixelSizeInBytes, Format);
+        }
+
+        public void AcceptPixelData(PixelDataProvider pixelDataProvider)
+        {
+            pixelDataProvider.SetPixelData(Pixels, Width, Height, PixelSizeInBytes);
         }
     }
 }

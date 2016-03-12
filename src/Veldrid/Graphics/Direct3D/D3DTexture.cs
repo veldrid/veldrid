@@ -1,10 +1,11 @@
 ﻿using SharpDX;
 using SharpDX.Direct3D11;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public class D3DTexture : DeviceTexture, IDisposable
+    public class D3DTexture : DeviceTexture, IDisposable, PixelDataProvider
     {
         private readonly Device _device;
 
@@ -41,33 +42,29 @@ namespace Veldrid.Graphics.Direct3D
             ResourceUsage usage,
             CpuAccessFlags cpuAccessFlags,
             SharpDX.DXGI.Format format,
-            Texture texture)
+            IntPtr pixelPtr,
+            int width,
+            int height,
+            int stride)
         {
             _device = device;
 
-            Texture2DDescription desc = CreateDescription(texture.Width, texture.Height, bindFlags, usage, cpuAccessFlags, format);
+            Texture2DDescription desc = CreateDescription(width, height, bindFlags, usage, cpuAccessFlags, format);
 
             unsafe
             {
-                fixed (float* pixelPtr = texture.Pixels)
-                {
-                    int stride = texture.Width * texture.PixelSizeInBytes;
-                    DataRectangle dataRectangle = new DataRectangle(new IntPtr(pixelPtr), stride);
-                    DeviceTexture = new Texture2D(device, desc, dataRectangle);
-                }
+                DataRectangle dataRectangle = new DataRectangle(pixelPtr, stride);
+                DeviceTexture = new Texture2D(device, desc, dataRectangle);
             }
-
-            Texture cpuTextureTest = new ImageProcessorTexture(new ImageProcessor.Image(texture.Width, texture.Height));
-            CopyTo(cpuTextureTest);
         }
 
         private Texture2DDescription CreateDescription(
-            int width,
-            int height,
-            BindFlags bindFlags,
-            ResourceUsage usage,
-            CpuAccessFlags cpuAccessFlags,
-            SharpDX.DXGI.Format format)
+        int width,
+        int height,
+        BindFlags bindFlags,
+        ResourceUsage usage,
+        CpuAccessFlags cpuAccessFlags,
+        SharpDX.DXGI.Format format)
         {
             Texture2DDescription desc;
             desc.Width = width;
@@ -85,12 +82,22 @@ namespace Veldrid.Graphics.Direct3D
             return desc;
         }
 
-        public unsafe void CopyTo(Texture texture)
+        public void CopyTo(TextureData textureData)
+        {
+            textureData.AcceptPixelData(this);
+        }
+
+        public void Dispose()
+        {
+            DeviceTexture.Dispose();
+        }
+
+        public unsafe void SetPixelData<T>(T[] destination, int width, int height, int pixelSizeInBytes) where T : struct
         {
             D3DTexture stagingTexture = new D3DTexture(
                 _device,
-                texture.Width,
-                texture.Height,
+                width,
+                height,
                 BindFlags.None,
                 ResourceUsage.Staging,
                 CpuAccessFlags.Read,
@@ -99,18 +106,18 @@ namespace Veldrid.Graphics.Direct3D
             _device.ImmediateContext.CopyResource(DeviceTexture, stagingTexture.DeviceTexture);
             var box = _device.ImmediateContext.MapSubresource(stagingTexture.DeviceTexture, 0, MapMode.Read, MapFlags.None);
             float* pixelPtr = (float*)box.DataPointer.ToPointer();
-            for (int i = 0; i < texture.Pixels.Length; i++)
-            {
-                texture.Pixels[i] = pixelPtr[i];
-            }
+
+            var destHandle = GCHandle.Alloc(destination, GCHandleType.Pinned);
+
+            System.Buffer.MemoryCopy(
+                pixelPtr,
+                destHandle.AddrOfPinnedObject().ToPointer(),
+                width * height * pixelSizeInBytes,
+                width * height * pixelSizeInBytes);
 
             _device.ImmediateContext.UnmapSubresource(stagingTexture.DeviceTexture, 0);
             stagingTexture.Dispose();
-        }
-
-        public void Dispose()
-        {
-            DeviceTexture.Dispose();
+            destHandle.Free();
         }
     }
 }

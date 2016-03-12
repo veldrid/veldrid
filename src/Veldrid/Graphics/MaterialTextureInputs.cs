@@ -18,12 +18,12 @@ namespace Veldrid.Graphics
     public class MaterialTextureInputElement
     {
         public string Name { get; }
-        public Texture Texture { get; }
+        public TextureData TextureData { get; }
 
-        public MaterialTextureInputElement(string name, Texture texture)
+        public MaterialTextureInputElement(string name, TextureData textureData)
         {
             Name = name;
-            Texture = texture;
+            TextureData = textureData;
         }
     }
 }

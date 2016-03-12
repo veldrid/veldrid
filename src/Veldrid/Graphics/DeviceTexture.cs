@@ -8,7 +8,7 @@
         /// <summary>
         /// Copies the DeviceTexture's pixel data into a CPU-side Texture.
         /// </summary>
-        /// <param name="texture">The Texture to copy the pixel data into.</param>
-        void CopyTo(Texture texture);
+        /// <param name="textureData">The TextureData to copy the pixel data into.</param>
+        void CopyTo(TextureData textureData);
     }
 }

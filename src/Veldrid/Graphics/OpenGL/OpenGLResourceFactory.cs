@@ -63,7 +63,17 @@ namespace Veldrid.Graphics.OpenGL
             OpenGLShader vertexShader = new OpenGLShader(vsSource, ShaderType.VertexShader);
             OpenGLShader fragmentShader = new OpenGLShader(psSource, ShaderType.FragmentShader);
 
-            return new OpenGLMaterial(vertexShader, fragmentShader, inputs, globalInputs, perObjectInputs, textureInputs);
+            return new OpenGLMaterial(this, vertexShader, fragmentShader, inputs, globalInputs, perObjectInputs, textureInputs);
+        }
+
+        public override DeviceTexture CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        {
+            return new OpenGLTexture(width, height, format, pixelData);
+        }
+
+        public override DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        {
+            return OpenGLTexture.Create(pixelData, width, height, pixelSizeInBytes, format);
         }
 
         public override VertexBuffer CreateVertexBuffer(int sizeInBytes)

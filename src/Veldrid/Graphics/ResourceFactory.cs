@@ -1,6 +1,8 @@
-﻿namespace Veldrid.Graphics
+﻿using System;
+
+namespace Veldrid.Graphics
 {
-    public abstract class ResourceFactory
+    public abstract class ResourceFactory : DeviceTextureCreator
     {
         public abstract VertexBuffer CreateVertexBuffer(int sizeInBytes);
 
@@ -15,6 +17,11 @@
             MaterialTextureInputs textureInputs);
 
         public abstract ConstantBuffer CreateConstantBuffer(int sizeInBytes);
+
         public abstract Framebuffer CreateFramebuffer(int width, int height);
+
+        public abstract DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct;
+
+        public abstract DeviceTexture CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format);
     }
 }

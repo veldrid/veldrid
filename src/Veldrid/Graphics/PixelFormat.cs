@@ -9,9 +9,9 @@
         /// <summary>
         /// A format where each pixel is represented by a single byte (0-255) greyscale value.
         /// </summary>
-        Alpha_Int8,
+        Alpha_UInt8,
         /// <summary>
-        /// A format where each pixel has four components (RGBA), each represented by an 8-bit integer value.
+        /// A format where each pixel has four components (RGBA), each represented by an 8-bit unsigned integer value.
         /// </summary>
         R8_G8_B8_A8
     }

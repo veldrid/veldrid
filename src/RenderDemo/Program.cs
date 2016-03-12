@@ -24,7 +24,7 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new D3DRenderContext(_window);
+                _rc = new OpenGLRenderContext(_window);
                 _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
                 _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
@@ -111,6 +111,10 @@ namespace Veldrid.RenderDemo
                 if (ke.Key == OpenTK.Input.Key.F9 && ke.Down)
                 {
                     _takeScreenshot = true;
+                }
+                if (ke.Key == OpenTK.Input.Key.F11 && ke.Down)
+                {
+                    _window.WindowState = _window.WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState.FullScreen;
                 }
 
                 Console.WriteLine(ke.Key + " is " + (ke.Down ? "down." : "up."));

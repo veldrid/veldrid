@@ -10,6 +10,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ArrayEx.cs" />
     <Compile Include="Graphics\DeviceBuffer.cs" />
     <Compile Include="Graphics\DeviceTexture.cs" />
     <Compile Include="Graphics\Direct3D\D3DBuffer.cs" />
@@ -24,9 +25,11 @@
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
     <Compile Include="Graphics\FlatListVisibilityManager.cs" />
     <Compile Include="Graphics\Framebuffer.cs" />
+    <Compile Include="Graphics\IndexFormat.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLDefaultFramebuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFormats.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFramebuffer.cs" />
+    <Compile Include="Graphics\Rectangle.cs" />
     <Compile Include="Graphics\RenderItem.cs" />
     <Compile Include="Graphics\RenderItemIndex.cs" />
     <Compile Include="Graphics\RenderOrderKey.cs" />
@@ -75,7 +78,9 @@
     <Compile Include="Platform\WindowState.cs" />
     <Compile Include="IllegalValueException.cs" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <UseVSHostingProcess>true</UseVSHostingProcess>

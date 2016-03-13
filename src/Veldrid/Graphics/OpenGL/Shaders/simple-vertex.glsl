@@ -17,7 +17,6 @@ out vec4 color;
 
 void main()
 {
-    // works only for orthogonal modelview
     gl_Position = projection_matrix * modelview_matrix * vec4(in_position, 1);
     color = in_color;
 }

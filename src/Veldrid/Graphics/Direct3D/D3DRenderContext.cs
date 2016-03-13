@@ -35,9 +35,10 @@ namespace Veldrid.Graphics.Direct3D
             _deviceContext.ClearDepthStencilView(CurrentFramebuffer.DepthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
         }
 
-        public override void DrawIndexedPrimitives(int startingVertex, int indexCount)
+        public override void DrawIndexedPrimitives(int startingIndex, int indexCount) => DrawIndexedPrimitives(startingIndex, indexCount, 0);
+        public override void DrawIndexedPrimitives(int startingIndex, int indexCount, int startingVertex)
         {
-            _device.ImmediateContext.DrawIndexed(indexCount, startingVertex, 0);
+            _device.ImmediateContext.DrawIndexed(indexCount, startingVertex, startingVertex);
         }
 
         protected override void PlatformSwapBuffers()
@@ -69,6 +70,24 @@ namespace Veldrid.Graphics.Direct3D
             SetFramebuffer(_defaultFramebuffer);
 
             _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
+
+            // Create the blending setup
+            {
+                BlendStateDescription desc = new BlendStateDescription(); //BlendStateDescription.Default();
+
+                desc.AlphaToCoverageEnable = false;
+                desc.RenderTarget[0].IsBlendEnabled = true;
+                desc.RenderTarget[0].SourceBlend = BlendOption.SourceAlpha;
+                desc.RenderTarget[0].DestinationBlend = BlendOption.InverseSourceAlpha;
+                desc.RenderTarget[0].BlendOperation = BlendOperation.Add;
+                desc.RenderTarget[0].SourceAlphaBlend = BlendOption.InverseSourceAlpha;
+                desc.RenderTarget[0].DestinationAlphaBlend = BlendOption.Zero;
+                desc.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
+                desc.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
+                var blendState = new BlendState(_device, desc);
+                RawColor4 blendFactor = new RawColor4(0f, 0f, 0f, 0f);
+                _deviceContext.OutputMerger.SetBlendState(blendState, blendFactor, 0xffffffff);
+            }
         }
 
         private void SetRegularTargets()
@@ -90,8 +109,10 @@ namespace Veldrid.Graphics.Direct3D
         private void CreateRasterizerState()
         {
             var desc = RasterizerStateDescription.Default();
-            desc.IsMultisampleEnabled = true;
-            desc.CullMode = CullMode.Back;
+            desc.FillMode = FillMode.Solid;
+            desc.CullMode = CullMode.None;
+            desc.IsScissorEnabled = true;
+            desc.IsDepthClipEnabled = true;
             _rasterizerState = new RasterizerState(_device, desc);
         }
 
@@ -141,6 +162,11 @@ namespace Veldrid.Graphics.Direct3D
         {
             SetFramebuffer(_defaultFramebuffer);
             SetRegularTargets();
+        }
+
+        protected override void PlatformSetScissorRectangle(Rectangle rectangle)
+        {
+            _device.ImmediateContext.Rasterizer.SetScissorRectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
         }
 
         private new D3DFramebuffer CurrentFramebuffer => (D3DFramebuffer)base.CurrentFramebuffer;

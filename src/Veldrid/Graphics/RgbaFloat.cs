@@ -19,6 +19,8 @@ namespace Veldrid.Graphics
             _channels = new Vector4(r, g, b, a);
         }
 
+        public static readonly int SizeInBytes = 16;
+
         public static readonly RgbaFloat Red = new RgbaFloat(1, 0, 0, 1);
         public static readonly RgbaFloat Green = new RgbaFloat(0, 1, 0, 1);
         public static readonly RgbaFloat Blue = new RgbaFloat(0, 0, 1, 1);

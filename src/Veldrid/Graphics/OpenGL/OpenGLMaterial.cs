@@ -110,9 +110,9 @@ namespace Veldrid.Graphics.OpenGL
         {
             dataProvider.SetData(_perObjectConstantBuffers[0]);
             _perObjectConstantBuffers[0].BindToBlock(
-                _programID, 
-                _perObjectUniformBlocks[0], 
-                dataProvider.DataSizeInBytes, 
+                _programID,
+                _perObjectUniformBlocks[0],
+                dataProvider.DataSizeInBytes,
                 _globalInputs.Elements.Length);
         }
 
@@ -122,9 +122,9 @@ namespace Veldrid.Graphics.OpenGL
             {
                 dataProviders[i].SetData(_perObjectConstantBuffers[i]);
                 _perObjectConstantBuffers[i].BindToBlock(
-                    _programID, 
-                    _perObjectUniformBlocks[i], 
-                    dataProviders[i].DataSizeInBytes, 
+                    _programID,
+                    _perObjectUniformBlocks[i],
+                    dataProviders[i].DataSizeInBytes,
                     _globalInputs.Elements.Length + i);
             }
         }
@@ -195,6 +195,8 @@ namespace Veldrid.Graphics.OpenGL
                     case VertexElementFormat.Float3:
                     case VertexElementFormat.Float4:
                         return VertexAttribPointerType.Float;
+                    case VertexElementFormat.Byte4:
+                        return VertexAttribPointerType.Byte;
                     default:
                         throw Illegal.Value<VertexElementFormat>();
                 }

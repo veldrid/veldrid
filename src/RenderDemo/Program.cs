@@ -1,3 +1,4 @@
+using ImGuiNET;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
@@ -24,7 +25,8 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new OpenGLRenderContext(_window);
+                _rc = new D3DRenderContext(_window);
+                _imguiRenderer = new ImGuiRenderer(_rc);
                 _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
                 _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
@@ -97,6 +99,11 @@ namespace Veldrid.RenderDemo
 
         private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
         {
+            _imguiRenderer.SetPerFrameImGuiData(_rc);
+            _imguiRenderer.UpdateImGuiInput(_window.NativeWindow);
+            ImGui.NewFrame();
+            ImGui.Text("Hello!");
+
             _fta.AddTime(deltaMilliseconds);
 
             _rc.Window.Title = $"[{_apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
@@ -128,8 +135,9 @@ namespace Veldrid.RenderDemo
 
         private static ImageProcessorTexture _altBufferImage;
         private static bool _takeScreenshot;
+        private static ImGuiRenderer _imguiRenderer;
 
-        private static void Draw(InputSnapshot input)
+        private unsafe static void Draw(InputSnapshot input)
         {
             _rc.ClearBuffer();
 
@@ -139,7 +147,10 @@ namespace Veldrid.RenderDemo
                 _rc.ClearBuffer();
             }
 
-            _rc.RenderFrame(_visiblityManager);
+            //_rc.RenderFrame(_visiblityManager);
+
+            ImGui.Render();
+            _imguiRenderer.RenderImDrawData(ImGui.GetDrawData(), _rc);
 
             if (_takeScreenshot)
             {

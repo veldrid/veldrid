@@ -61,7 +61,12 @@ namespace Veldrid.Graphics.OpenGL
 
         public override void DrawIndexedPrimitives(int startingIndex, int indexCount)
         {
-            GL.DrawElements(PrimitiveType.Triangles, indexCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
+            GL.DrawElements(PrimitiveType.Triangles, indexCount, DrawElementsType.UnsignedInt, new IntPtr(startingIndex));
+        }
+
+        public override void DrawIndexedPrimitives(int startingIndex, int indexCount, int startingVertex)
+        {
+            GL.DrawElementsBaseVertex(PrimitiveType.TriangleFan, indexCount, DrawElementsType.UnsignedInt, new IntPtr(startingIndex), startingVertex);
         }
 
         private void SetInitialStates()
@@ -82,6 +87,15 @@ namespace Veldrid.Graphics.OpenGL
         protected override void PlatformSetDefaultFramebuffer()
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        }
+
+        protected override void PlatformSetScissorRectangle(Rectangle rectangle)
+        {
+            GL.Scissor(
+                rectangle.Left,
+                Window.Height - rectangle.Bottom,
+                rectangle.Width,
+                rectangle.Height);
         }
     }
 }

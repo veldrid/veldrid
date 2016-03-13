@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿using System;
+using OpenTK.Graphics.OpenGL;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -9,11 +10,11 @@ namespace Veldrid.Graphics.OpenGL
             switch (format)
             {
                 case PixelFormat.R32_G32_B32_A32_Float:
-                    return OpenTK.Graphics.OpenGL.PixelFormat.Bgra;
+                    return OpenTK.Graphics.OpenGL.PixelFormat.Rgba;
                 case PixelFormat.Alpha_UInt8:
                     return OpenTK.Graphics.OpenGL.PixelFormat.Alpha;
                 case PixelFormat.R8_G8_B8_A8:
-                    return OpenTK.Graphics.OpenGL.PixelFormat.Bgra;
+                    return OpenTK.Graphics.OpenGL.PixelFormat.Rgba;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -28,9 +29,24 @@ namespace Veldrid.Graphics.OpenGL
                 case PixelFormat.Alpha_UInt8:
                     return PixelType.UnsignedByte;
                 case PixelFormat.R8_G8_B8_A8:
-                    return PixelType.Int;
+                    return PixelType.UnsignedByte;
                 default:
                     throw Illegal.Value<PixelFormat>();
+            }
+        }
+
+        internal static DrawElementsType MapIndexFormat(IndexFormat format)
+        {
+            switch (format)
+            {
+                case IndexFormat.UInt32:
+                    return DrawElementsType.UnsignedInt;
+                case IndexFormat.UInt16:
+                    return DrawElementsType.UnsignedShort;
+                case IndexFormat.UInt8:
+                    return DrawElementsType.UnsignedByte;
+                default:
+                    throw Illegal.Value<DrawElementsType>();
             }
         }
 

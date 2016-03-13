@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using Veldrid.Graphics.Direct3D;
 
 namespace Veldrid.Graphics
@@ -22,27 +23,71 @@ namespace Veldrid.Graphics
     public interface PixelDataProvider
     {
         void SetPixelData<T>(T[] pixelData, int width, int height, int pixelSizeInBytes) where T : struct;
+        void SetPixelData(IntPtr pixelData, int width, int height, int pixelSizeInBytes);
     }
 
-    public class RawTextureData<T> : TextureData where T : struct
+    public abstract class RawTextureDataBase : TextureData
     {
         public int Width { get; }
-        public int Height { get; }
 
-        public T[] PixelData { get; }
+        public int Height { get; }
 
         public PixelFormat Format { get; }
 
         public int PixelSizeInBytes { get; }
 
-        public DeviceTexture CreateDeviceTexture(DeviceTextureCreator producer)
+        public abstract DeviceTexture CreateDeviceTexture(DeviceTextureCreator producer);
+
+        public abstract void AcceptPixelData(PixelDataProvider pixelDataProvider);
+
+        public RawTextureDataBase(int width, int height, int pixelSizeInBytes, PixelFormat format)
+        {
+            Width = width;
+            Height = height;
+            PixelSizeInBytes = pixelSizeInBytes;
+            Format = format;
+        }
+    }
+
+    public class RawTextureDataArray<T> : RawTextureDataBase where T : struct
+    {
+        public T[] PixelData { get; }
+
+        public override void AcceptPixelData(PixelDataProvider pixelDataProvider)
+        {
+            pixelDataProvider.SetPixelData(PixelData, Width, Height, PixelSizeInBytes);
+        }
+
+        public override DeviceTexture CreateDeviceTexture(DeviceTextureCreator producer)
         {
             return producer.CreateTexture(PixelData, Width, Height, PixelSizeInBytes, Format);
         }
 
-        public void AcceptPixelData(PixelDataProvider pixelDataProvider)
+        public RawTextureDataArray(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+            : base(width, height, pixelSizeInBytes, format)
+        {
+            PixelData = pixelData;
+        }
+    }
+
+    public class RawTextureDataPtr : RawTextureDataBase
+    {
+        public IntPtr PixelData { get; }
+
+        public override void AcceptPixelData(PixelDataProvider pixelDataProvider)
         {
             pixelDataProvider.SetPixelData(PixelData, Width, Height, PixelSizeInBytes);
+        }
+
+        public override DeviceTexture CreateDeviceTexture(DeviceTextureCreator producer)
+        {
+            return producer.CreateTexture(PixelData, Width, Height, PixelSizeInBytes, Format);
+        }
+
+        public RawTextureDataPtr(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+            : base(width, height, pixelSizeInBytes, format)
+        {
+            PixelData = pixelData;
         }
     }
 }

@@ -10,7 +10,9 @@
     <CopyNuGetImplementations>true</CopyNuGetImplementations>
     <ProjectGuid>{0B65FB57-E49C-45DC-8C09-FC758A24E401}</ProjectGuid>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
   <ItemGroup>
     <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">

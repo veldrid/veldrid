@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -99,6 +100,28 @@ namespace Veldrid.Graphics.OpenGL
                 Array.ConstrainedCopy(pixelData, y * rowPixels, stagingRow, 0, rowPixels);
                 Array.ConstrainedCopy(pixelData, destY * rowPixels, pixelData, y * rowPixels, rowPixels);
                 Array.ConstrainedCopy(stagingRow, 0, pixelData, destY * rowPixels, rowPixels);
+
+                destY++;
+            }
+
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+        }
+
+        public unsafe void SetPixelData(IntPtr pixelData, int width, int height, int pixelSizeInBytes)
+        {
+            GL.BindTexture(TextureTarget.Texture2D, TextureID);
+            GL.GetTexImage(TextureTarget.Texture2D, 0, _pixelFormat, _pixelType, pixelData);
+
+            // Need to reverse the rows vertically.
+            int rowBytes = width * pixelSizeInBytes;
+            IntPtr stagingRow = Marshal.AllocHGlobal(rowBytes);
+            byte* stagingPtr = (byte*)stagingRow.ToPointer();
+            byte* sourcePtr = (byte*)pixelData.ToPointer();
+            for (int y = height - 1, destY = 0; y > (height / 2); y--)
+            {
+                Buffer.MemoryCopy(sourcePtr + (y * rowBytes), stagingPtr, rowBytes, rowBytes);
+                Buffer.MemoryCopy(sourcePtr + (destY * rowBytes), sourcePtr + (y * rowBytes), rowBytes, rowBytes);
+                Buffer.MemoryCopy(stagingPtr, sourcePtr + (destY * rowBytes), rowBytes, rowBytes);
 
                 destY++;
             }

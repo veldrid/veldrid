@@ -16,6 +16,8 @@ namespace Veldrid.Graphics
                     return 3;
                 case VertexElementFormat.Float4:
                     return 4;
+                case VertexElementFormat.Byte4:
+                    return 4;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }

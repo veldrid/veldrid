@@ -11,6 +11,7 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>RenderDemo</AssemblyName>
     <RootNamespace>Veldrid.RenderDemo</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ColoredCubeRenderer.cs" />
@@ -19,7 +20,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="TexturedCubeRenderer.cs" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Release|x64' " />
@@ -32,20 +35,29 @@
     <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessor.dll">
       <Name>ImageProcessor</Name>
     </Reference>
-        <Reference Include="$(DepsDir)\ImGui.NET\ImGui.NET.dll">
+    <Reference Include="$(DepsDir)\ImGui.NET\ImGui.NET.dll">
       <Name>ImageProcessor</Name>
     </Reference>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj">
       <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>
       <Name>Veldrid</Name>
     </ProjectReference>
-    <Content Include="$(RefsDir)\ImGui.NET\win-x64\cimgui.dll" Condition="'$(OSTarget)' == 'Windows'">
+    <Content Include="$(DepsDir)\ImGui.NET\win-x64\cimgui.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(RefsDir)\ImGui.NET\ubuntu-x64\cimgui.so" Condition="'$(OSTarget)' == 'Ubuntu'">
+    <Content Include="$(DepsDir)\ImGui.NET\ubuntu-x64\cimgui.so" Condition="'$(OSTarget)' == 'Ubuntu'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shaders-D3D\imgui-vertex.hlsl">
+    <None Include="Graphics\OpenGL\Shaders\imgui-frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Graphics\OpenGL\Shaders\imgui-vertex.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Content Include="Graphics\Direct3D\Shaders\imgui-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\Direct3D\Shaders\imgui-vertex.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="project.json" />

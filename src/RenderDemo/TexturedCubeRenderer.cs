@@ -31,7 +31,7 @@ namespace Veldrid.RenderDemo
                 s_vb.SetVertexData(s_cubeVertices, desc);
 
                 s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length);
-                s_ib.SetIndices(s_cubeIndices, 0, IntPtr.Zero);
+                s_ib.SetIndices(s_cubeIndices);
 
                 MaterialVertexInput materialInputs = new MaterialVertexInput(
                     VertexPositionNormalTexture.SizeInBytes,

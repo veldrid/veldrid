@@ -18,6 +18,7 @@ namespace Veldrid.Graphics
 
         private int _needsResizing;
         private RenderQueue _renderQueue = new RenderQueue();
+        private Rectangle _scissorRectangle;
 
         public Dictionary<string, ConstantBufferDataProvider> DataProviders { get; } = new Dictionary<string, ConstantBufferDataProvider>();
 
@@ -84,6 +85,7 @@ namespace Veldrid.Graphics
         }
 
         public abstract void DrawIndexedPrimitives(int startingIndex, int indexCount);
+        public abstract void DrawIndexedPrimitives(int startingIndex, int indexCount, int startingVertex);
 
         public void ClearBuffer()
         {
@@ -104,6 +106,18 @@ namespace Veldrid.Graphics
                 framebuffer.Apply();
             }
         }
+
+        public void SetScissorRectangle(int left, int top, int right, int bottom)
+        {
+            Rectangle r = new Rectangle(left, top, right, bottom);
+            if (_scissorRectangle != r)
+            {
+                _scissorRectangle = r;
+                PlatformSetScissorRectangle(_scissorRectangle);
+            }
+        }
+
+        protected abstract void PlatformSetScissorRectangle(Rectangle rectangle);
 
         public void SetDefaultFramebuffer()
         {

@@ -94,6 +94,14 @@ namespace Veldrid.Graphics.Direct3D
 
         public unsafe void SetPixelData<T>(T[] destination, int width, int height, int pixelSizeInBytes) where T : struct
         {
+            var destHandle = GCHandle.Alloc(destination, GCHandleType.Pinned);
+            var destPtr = destHandle.AddrOfPinnedObject();
+            SetPixelData(destPtr, width, height, pixelSizeInBytes);
+            destHandle.Free();
+        }
+
+        public unsafe void SetPixelData(IntPtr destPtr, int width, int height, int pixelSizeInBytes)
+        {
             D3DTexture stagingTexture = new D3DTexture(
                 _device,
                 width,
@@ -107,17 +115,14 @@ namespace Veldrid.Graphics.Direct3D
             var box = _device.ImmediateContext.MapSubresource(stagingTexture.DeviceTexture, 0, MapMode.Read, MapFlags.None);
             float* pixelPtr = (float*)box.DataPointer.ToPointer();
 
-            var destHandle = GCHandle.Alloc(destination, GCHandleType.Pinned);
-
             System.Buffer.MemoryCopy(
                 pixelPtr,
-                destHandle.AddrOfPinnedObject().ToPointer(),
+                destPtr.ToPointer(),
                 width * height * pixelSizeInBytes,
                 width * height * pixelSizeInBytes);
 
             _device.ImmediateContext.UnmapSubresource(stagingTexture.DeviceTexture, 0);
             stagingTexture.Dispose();
-            destHandle.Free();
         }
     }
 }

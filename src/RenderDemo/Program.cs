@@ -102,7 +102,12 @@ namespace Veldrid.RenderDemo
             _imguiRenderer.SetPerFrameImGuiData(_rc);
             _imguiRenderer.UpdateImGuiInput(_window.NativeWindow);
             ImGui.NewFrame();
-            ImGui.Text("Hello!");
+            if (ImGui.BeginWindow("A window"))
+            {
+                ImGui.Text("Hello!");
+                ImGui.EndWindow();
+            }
+
 
             _fta.AddTime(deltaMilliseconds);
 
@@ -147,7 +152,7 @@ namespace Veldrid.RenderDemo
                 _rc.ClearBuffer();
             }
 
-            //_rc.RenderFrame(_visiblityManager);
+            _rc.RenderFrame(_visiblityManager);
 
             ImGui.Render();
             _imguiRenderer.RenderImDrawData(ImGui.GetDrawData(), _rc);

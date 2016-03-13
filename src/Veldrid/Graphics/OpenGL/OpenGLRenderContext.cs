@@ -61,12 +61,14 @@ namespace Veldrid.Graphics.OpenGL
 
         public override void DrawIndexedPrimitives(int startingIndex, int indexCount)
         {
-            GL.DrawElements(PrimitiveType.Triangles, indexCount, DrawElementsType.UnsignedInt, new IntPtr(startingIndex));
+            var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
+            GL.DrawElements(PrimitiveType.Triangles, indexCount, elementsType, new IntPtr(startingIndex));
         }
 
         public override void DrawIndexedPrimitives(int startingIndex, int indexCount, int startingVertex)
         {
-            GL.DrawElementsBaseVertex(PrimitiveType.TriangleFan, indexCount, DrawElementsType.UnsignedInt, new IntPtr(startingIndex), startingVertex);
+            var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
+            GL.DrawElementsBaseVertex(PrimitiveType.TriangleFan, indexCount, elementsType, new IntPtr(startingIndex), startingVertex);
         }
 
         private void SetInitialStates()

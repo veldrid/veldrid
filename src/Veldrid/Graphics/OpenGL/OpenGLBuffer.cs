@@ -100,17 +100,24 @@ namespace Veldrid.Graphics.OpenGL
 
         public void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct
         {
-            GL.GetBufferSubData(_target, IntPtr.Zero, storageSizeInBytes, storageLocation);
+            int bytesToCopy = Math.Max(_bufferSize, storageSizeInBytes);
+            Bind();
+            GL.GetBufferSubData(_target, IntPtr.Zero, bytesToCopy, storageLocation);
+            Unbind();
         }
 
         public void GetData<T>(ref T storageLocation, int storageSizeInBytes) where T : struct
         {
-            GL.GetBufferSubData(_target, IntPtr.Zero, storageSizeInBytes, ref storageLocation);
+            Bind();
+            GL.GetBufferSubData(_target, IntPtr.Zero, _bufferSize, ref storageLocation);
+            Unbind();
         }
 
         public void GetData(IntPtr storageLocation, int storageSizeInBytes)
         {
-            GL.GetBufferSubData(_target, IntPtr.Zero, storageSizeInBytes, storageLocation);
+            Bind();
+            GL.GetBufferSubData(_target, IntPtr.Zero, _bufferSize, storageLocation);
+            Unbind();
         }
 
         private void EnsureBufferSize(int dataSizeInBytes)
@@ -121,7 +128,10 @@ namespace Veldrid.Graphics.OpenGL
                 _bufferID = GL.GenBuffer();
                 GL.BindBuffer(_target, _bufferID);
                 GL.BufferData(_target, dataSizeInBytes, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-                GL.CopyNamedBufferSubData(oldBuffer, _bufferID, IntPtr.Zero, IntPtr.Zero, _bufferSize);
+                if (_bufferSize > 0)
+                {
+                    GL.CopyNamedBufferSubData(oldBuffer, _bufferID, IntPtr.Zero, IntPtr.Zero, _bufferSize);
+                }
                 GL.DeleteBuffer(oldBuffer);
                 _bufferSize = dataSizeInBytes;
             }

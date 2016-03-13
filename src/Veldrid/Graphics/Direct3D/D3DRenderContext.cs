@@ -101,7 +101,6 @@ namespace Veldrid.Graphics.Direct3D
         {
             DepthStencilStateDescription description = DepthStencilStateDescription.Default();
             description.DepthComparison = Comparison.LessEqual;
-            description.IsDepthEnabled = true;
 
             _depthState = new DepthStencilState(_device, description);
         }
@@ -110,7 +109,7 @@ namespace Veldrid.Graphics.Direct3D
         {
             var desc = RasterizerStateDescription.Default();
             desc.FillMode = FillMode.Solid;
-            desc.CullMode = CullMode.None;
+            desc.CullMode = CullMode.Back;
             desc.IsScissorEnabled = true;
             desc.IsDepthClipEnabled = true;
             _rasterizerState = new RasterizerState(_device, desc);

@@ -151,7 +151,7 @@ namespace Veldrid.RenderDemo
             //}
 
             // Store our identifier
-            io.FontAtlas.SetTexID(1);
+            io.FontAtlas.SetTexID(0);
 
             //// Create texture sampler
             //{
@@ -272,9 +272,9 @@ namespace Veldrid.RenderDemo
             //ia.SetIndexBuffer(g_pIB, SharpDX.DXGI.Format.R16_UInt, 0);
             //ia.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
 
-            _vertexBuffer.Apply();
-            _indexBuffer.Apply();
-            _material.Apply();
+            rc.SetVertexBuffer(_vertexBuffer);
+            rc.SetIndexBuffer(_indexBuffer);
+            rc.SetMaterial(_material);
 
             //deviceContext.VertexShader.SetShader(_vertexShader, null, 0);
             //deviceContext.VertexShader.SetConstantBuffer(0, g_pVertexConstantBuffer);
@@ -306,6 +306,7 @@ namespace Veldrid.RenderDemo
                     else
                     {
                         //deviceContext.PixelShader.SetShaderResources(0, 1, new ShaderResourceView(pcmd->TextureId));
+
                         rc.SetScissorRectangle(
                             (int)pcmd->ClipRect.X,
                             (int)pcmd->ClipRect.Y,

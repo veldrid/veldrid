@@ -66,6 +66,7 @@ namespace Veldrid.Graphics
             }
         }
 
+        public IndexBuffer IndexBuffer => _indexBuffer;
         public void SetIndexBuffer(IndexBuffer ib)
         {
             if (ib != _indexBuffer)

@@ -6,7 +6,7 @@ namespace Veldrid.Graphics
     {
         public abstract VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic);
 
-        public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes);
+        public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic);
 
         public abstract Material CreateMaterial(
             string vertexShaderName,

@@ -85,8 +85,8 @@ namespace Veldrid.Graphics
             }
         }
 
-        public abstract void DrawIndexedPrimitives(int startingIndex, int indexCount);
-        public abstract void DrawIndexedPrimitives(int startingIndex, int indexCount, int startingVertex);
+        public abstract void DrawIndexedPrimitives(int count, int startingIndex);
+        public abstract void DrawIndexedPrimitives(int count, int startingIndex, int startingVertex);
 
         public void ClearBuffer()
         {

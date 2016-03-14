@@ -3,13 +3,18 @@ using SharpDX.Direct3D11;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    internal class D3DIndexBuffer : D3DBuffer, IndexBuffer
+    public class D3DIndexBuffer : D3DBuffer, IndexBuffer
     {
         private readonly Device _device;
         private SharpDX.DXGI.Format _format;
         private int _offset = 0;
 
-        public D3DIndexBuffer(Device device, int sizeInBytes) : base(device, sizeInBytes, BindFlags.IndexBuffer, ResourceUsage.Default, CpuAccessFlags.None)
+        public D3DIndexBuffer(Device device, int sizeInBytes, bool isDynamic)
+            : base(device,
+                  sizeInBytes,
+                  BindFlags.IndexBuffer,
+                  isDynamic ? ResourceUsage.Dynamic : ResourceUsage.Default,
+                  isDynamic ? CpuAccessFlags.Write : CpuAccessFlags.None)
         {
             _device = device;
         }

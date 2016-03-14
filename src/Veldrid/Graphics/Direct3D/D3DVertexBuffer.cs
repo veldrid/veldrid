@@ -3,7 +3,7 @@ using SharpDX.Direct3D11;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    internal class D3DVertexBuffer : D3DBuffer, VertexBuffer
+    public class D3DVertexBuffer : D3DBuffer, VertexBuffer
     {
         private int _stride;
 

@@ -41,7 +41,7 @@ namespace Veldrid.Graphics.Direct3D
         public unsafe void SetData<T>(T[] data, int dataSizeInBytes) where T : struct => SetData(data, dataSizeInBytes, 0);
         public unsafe void SetData<T>(T[] data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
         {
-            EnsureBufferSize(dataSizeInBytes);
+            EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
 
             ResourceRegion subregion = new ResourceRegion()
             {
@@ -62,18 +62,18 @@ namespace Veldrid.Graphics.Direct3D
                 throw new System.NotImplementedException();
             }
 
-            EnsureBufferSize(dataSizeInBytes);
+            EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
             Device.ImmediateContext.UpdateSubresource(ref data, Buffer);
         }
 
         public void SetData(System.IntPtr data, int dataSizeInBytes) => SetData(data, dataSizeInBytes, 0);
         public unsafe void SetData(System.IntPtr data, int dataSizeInBytes, int destinationOffsetInBytes)
         {
-            EnsureBufferSize(dataSizeInBytes);
+            EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
 
             if (_resourceUsage == ResourceUsage.Dynamic)
             {
-                DataBox db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteDiscard, MapFlags.None);
+                DataBox db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteNoOverwrite, MapFlags.None);
                 Utilities.CopyMemory(
                     new System.IntPtr((byte*)db.DataPointer.ToPointer() + destinationOffsetInBytes),
                     data,

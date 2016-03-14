@@ -25,7 +25,7 @@ namespace Veldrid.RenderDemo
                 VertexDescriptor desc = new VertexDescriptor(VertexPositionColor.SizeInBytes, VertexPositionColor.ElementCount, 0, IntPtr.Zero);
                 s_vb.SetVertexData(s_cubeVertices, desc);
 
-                s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length);
+                s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length, false);
                 s_ib.SetIndices(s_cubeIndices);
 
                 MaterialVertexInput materialInputs = new MaterialVertexInput(
@@ -75,7 +75,7 @@ namespace Veldrid.RenderDemo
             context.SetMaterial(s_material);
             s_material.ApplyPerObjectInput(_modelViewProvider);
 
-            context.DrawIndexedPrimitives(0, s_cubeIndices.Length);
+            context.DrawIndexedPrimitives(s_cubeIndices.Length, 0);
         }
 
         public RenderOrderKey GetRenderOrderKey()

@@ -8,16 +8,16 @@ namespace Veldrid.Graphics.Direct3D
     public class D3DRenderContext : RenderContext
     {
         //TODO: PRIVATE
-        public SharpDX.Direct3D11.Device _device;
+        private SharpDX.Direct3D11.Device _device;
         private SwapChain _swapChain;
         private DeviceContext _deviceContext;
 
         private D3DFramebuffer _defaultFramebuffer;
-        private DepthStencilState _depthState;
+        private DepthStencilState _depthStencilState;
         private RasterizerState _rasterizerState;
         private DeviceCreationFlags _deviceFlags;
 
-        public D3DRenderContext(Window window) : this(window, DeviceCreationFlags.Debug) { }
+        public D3DRenderContext(Window window) : this(window, DeviceCreationFlags.None) { }
 
         public D3DRenderContext(Window window, DeviceCreationFlags flags)
             : base(window)
@@ -29,6 +29,8 @@ namespace Veldrid.Graphics.Direct3D
 
         public override ResourceFactory ResourceFactory { get; }
 
+        public SharpDX.Direct3D11.Device Device => _device;
+
         protected unsafe override void PlatformClearBuffer()
         {
             RgbaFloat clearColor = ClearColor;
@@ -36,10 +38,10 @@ namespace Veldrid.Graphics.Direct3D
             _deviceContext.ClearDepthStencilView(CurrentFramebuffer.DepthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
         }
 
-        public override void DrawIndexedPrimitives(int startingIndex, int indexCount) => DrawIndexedPrimitives(startingIndex, indexCount, 0);
-        public override void DrawIndexedPrimitives(int startingIndex, int indexCount, int startingVertex)
+        public override void DrawIndexedPrimitives(int count, int startingIndex) => DrawIndexedPrimitives(count, startingIndex, 0);
+        public override void DrawIndexedPrimitives(int count, int startingIndex, int startingVertex)
         {
-            _device.ImmediateContext.DrawIndexed(indexCount, startingVertex, startingVertex);
+            _device.ImmediateContext.DrawIndexed(count, startingIndex, startingVertex);
         }
 
         protected override void PlatformSwapBuffers()
@@ -94,6 +96,7 @@ namespace Veldrid.Graphics.Direct3D
         private void SetRegularTargets()
         {
             // Setup targets and viewport for rendering
+            _device.ImmediateContext.OutputMerger.SetDepthStencilState(_depthStencilState);
             _deviceContext.Rasterizer.SetViewport(0, 0, Window.Width, Window.Height);
             CurrentFramebuffer.Apply();
         }
@@ -102,9 +105,8 @@ namespace Veldrid.Graphics.Direct3D
         {
             DepthStencilStateDescription description = DepthStencilStateDescription.Default();
             description.DepthComparison = Comparison.LessEqual;
-            description.IsDepthEnabled = false;
 
-            _depthState = new DepthStencilState(_device, description);
+            _depthStencilState = new DepthStencilState(_device, description);
         }
 
         private void CreateRasterizerState()
@@ -113,7 +115,7 @@ namespace Veldrid.Graphics.Direct3D
             desc.FillMode = FillMode.Solid;
             desc.CullMode = CullMode.None;
             desc.IsScissorEnabled = true;
-            desc.IsDepthClipEnabled = false;
+            desc.IsDepthClipEnabled = true;
             _rasterizerState = new RasterizerState(_device, desc);
         }
 

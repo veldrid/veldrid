@@ -103,14 +103,14 @@ namespace Veldrid.RenderDemo
 
         private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
         {
-            _imguiRenderer.SetPerFrameImGuiData(_rc);
+            _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
             _imguiRenderer.UpdateImGuiInput(_window.NativeWindow);
 
             if (ImGui.BeginWindow("A window"))
             {
                 ImGui.Text("Hello!");
-                ImGui.EndWindow();
             }
+            ImGui.EndWindow();
 
             _fta.AddTime(deltaMilliseconds);
 
@@ -158,10 +158,6 @@ namespace Veldrid.RenderDemo
                 throw new InvalidOperationException("How did you press an invisible button?");
             }
 
-            if (ImGui.Button("Press this button2."))
-            {
-                throw new InvalidOperationException("How did you press an invisible button?");
-            }
             _imguiRenderer.Render(_rc);
 
             if (_takeScreenshot)

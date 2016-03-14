@@ -1,9 +1,12 @@
 ﻿using ImGuiNET;
 using OpenTK;
 using OpenTK.Input;
+using SharpDX.Direct3D11;
+using SharpDX.Mathematics.Interop;
 using System;
 using System.Numerics;
 using Veldrid.Graphics;
+using Veldrid.Graphics.Direct3D;
 using Veldrid.Platform;
 
 namespace Veldrid.RenderDemo
@@ -16,13 +19,16 @@ namespace Veldrid.RenderDemo
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private float _wheelPosition;
+        private BlendState _blendState;
+        private RasterizerState _rasterizerState;
+        private SamplerState _fontSampler;
 
         public ImGuiRenderer(RenderContext rc)
         {
             ResourceFactory factory = rc.ResourceFactory;
             _vertexBuffer = factory.CreateVertexBuffer(1);
             _indexBuffer = factory.CreateIndexBuffer(1);
-            CreateFontsTexture();
+            CreateFontsTexture(rc);
             _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>(Matrix4x4.CreateOrthographic(rc.Window.Width, rc.Window.Height, 1, 1000));
 
             _material = factory.CreateMaterial("imgui-vertex", "imgui-frag",
@@ -41,33 +47,6 @@ namespace Veldrid.RenderDemo
                 {
                     new MaterialTextureInputElement("surfaceTexture", _fontTexture)
                 }));
-
-
-            //// Create the blending setup
-            //{
-            //    BlendStateDescription desc = new BlendStateDescription(); //BlendStateDescription.Default();
-
-            //    desc.AlphaToCoverageEnable = false;
-            //    desc.RenderTarget[0].IsBlendEnabled = true;
-            //    desc.RenderTarget[0].SourceBlend = BlendOption.SourceAlpha;
-            //    desc.RenderTarget[0].DestinationBlend = BlendOption.InverseSourceAlpha;
-            //    desc.RenderTarget[0].BlendOperation = BlendOperation.Add;
-            //    desc.RenderTarget[0].SourceAlphaBlend = BlendOption.InverseSourceAlpha;
-            //    desc.RenderTarget[0].DestinationAlphaBlend = BlendOption.Zero;
-            //    desc.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
-            //    desc.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
-            //    _blendState = new BlendState(_device, desc);
-            //}
-
-            //// Create the rasterizer state
-            //{
-            //    RasterizerStateDescription desc = new RasterizerStateDescription();
-            //    desc.FillMode = FillMode.Solid;
-            //    desc.CullMode = CullMode.None;
-            //    desc.IsScissorEnabled = true;
-            //    desc.IsDepthClipEnabled = true;
-            //    _rasterizerState = new RasterizerState(_device, desc);
-            //}
         }
 
         public unsafe void SetPerFrameImGuiData(RenderContext rc)
@@ -108,8 +87,9 @@ namespace Veldrid.RenderDemo
             io.MouseWheel = delta;
         }
 
-        private unsafe void CreateFontsTexture()
+        private unsafe void CreateFontsTexture(RenderContext rc)
         {
+            ImGui.LoadDefaultFont();
             IO io = ImGui.GetIO();
 
             // Build
@@ -151,21 +131,21 @@ namespace Veldrid.RenderDemo
             //}
 
             // Store our identifier
-            io.FontAtlas.SetTexID(0);
+            io.FontAtlas.SetTexID(420);
 
-            //// Create texture sampler
-            //{
-            //    SamplerStateDescription samplerDesc = SamplerStateDescription.Default();
-            //    samplerDesc.Filter = Filter.MinMagMipLinear;
-            //    samplerDesc.AddressU = TextureAddressMode.Wrap;
-            //    samplerDesc.AddressV = TextureAddressMode.Wrap;
-            //    samplerDesc.AddressW = TextureAddressMode.Wrap;
-            //    samplerDesc.MipLodBias = 0f;
-            //    samplerDesc.ComparisonFunction = Comparison.Always;
-            //    samplerDesc.MinimumLod = 0f;
-            //    samplerDesc.MaximumLod = 0f;
-            //    _fontSampler = new SamplerState(_device, samplerDesc);
-            //}
+            // Create texture sampler
+            {
+                SamplerStateDescription samplerDesc = SamplerStateDescription.Default();
+                samplerDesc.Filter = Filter.MinMagMipLinear;
+                samplerDesc.AddressU = TextureAddressMode.Wrap;
+                samplerDesc.AddressV = TextureAddressMode.Wrap;
+                samplerDesc.AddressW = TextureAddressMode.Wrap;
+                samplerDesc.MipLodBias = 0f;
+                samplerDesc.ComparisonFunction = Comparison.Always;
+                samplerDesc.MinimumLod = 0f;
+                samplerDesc.MaximumLod = 0f;
+                _fontSampler = new SamplerState(((D3DRenderContext)rc)._device, samplerDesc);
+            }
 
             // Cleanup (don't clear the input data if you want to append new fonts later)
             io.FontAtlas.ClearTexData();
@@ -173,6 +153,38 @@ namespace Veldrid.RenderDemo
 
         public unsafe void RenderImDrawData(DrawData* draw_data, RenderContext rc)
         {
+            D3DRenderContext drc = (D3DRenderContext)rc;
+            var deviceContext = drc._device.ImmediateContext;
+
+            {
+                // Create the blending setup
+                if (_blendState == null)
+                {
+                    BlendStateDescription desc = new BlendStateDescription(); //BlendStateDescription.Default();
+
+                    desc.AlphaToCoverageEnable = false;
+                    desc.RenderTarget[0].IsBlendEnabled = true;
+                    desc.RenderTarget[0].SourceBlend = BlendOption.SourceAlpha;
+                    desc.RenderTarget[0].DestinationBlend = BlendOption.InverseSourceAlpha;
+                    desc.RenderTarget[0].BlendOperation = BlendOperation.Add;
+                    desc.RenderTarget[0].SourceAlphaBlend = BlendOption.InverseSourceAlpha;
+                    desc.RenderTarget[0].DestinationAlphaBlend = BlendOption.Zero;
+                    desc.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
+                    desc.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
+                    _blendState = new BlendState(drc._device, desc);
+                }
+
+                // Create the rasterizer state
+                if (_rasterizerState == null)
+                {
+                    RasterizerStateDescription desc = new RasterizerStateDescription();
+                    desc.FillMode = FillMode.Solid;
+                    desc.CullMode = CullMode.None;
+                    desc.IsScissorEnabled = false; // TODO: Should be true.
+                    desc.IsDepthClipEnabled = false;
+                    _rasterizerState = new RasterizerState(drc._device, desc);
+                }
+            }
             //// Create and grow vertex/index buffers if needed
             //if (g_pVB == null || g_VertexBufferSize < draw_data->TotalVtxCount)
             //{
@@ -250,17 +262,17 @@ namespace Veldrid.RenderDemo
                 _projectionMatrixProvider.Data = mvp;
             }
 
-            //// Setup viewport
-            //{
-            //    RawViewportF vp = new RawViewportF();
-            //    vp.Width = ImGui.GetIO().DisplaySize.X;
-            //    vp.Height = ImGui.GetIO().DisplaySize.Y;
-            //    vp.MinDepth = 0.0f;
-            //    vp.MaxDepth = 1.0f;
-            //    vp.X = 0;
-            //    vp.Y = 0;
-            //    deviceContext.Rasterizer.SetViewport(0, 0, _windowInfo.Width, _windowInfo.Height, 0, 1);
-            //}
+            // Setup viewport
+            {
+                RawViewportF vp = new RawViewportF();
+                vp.Width = ImGui.GetIO().DisplaySize.X;
+                vp.Height = ImGui.GetIO().DisplaySize.Y;
+                vp.MinDepth = 0.0f;
+                vp.MaxDepth = 1.0f;
+                vp.X = 0;
+                vp.Y = 0;
+                deviceContext.Rasterizer.SetViewport(0, 0, rc.Window.Width, rc.Window.Height, 0, 1);
+            }
 
             // Bind shader and vertex buffers
             //int stride = sizeof(DrawVert);
@@ -280,13 +292,13 @@ namespace Veldrid.RenderDemo
             //deviceContext.VertexShader.SetConstantBuffer(0, g_pVertexConstantBuffer);
 
             //deviceContext.PixelShader.SetShader(_pixelShader, null, 0);
-            //deviceContext.PixelShader.SetSamplers(0, 1, _fontSampler);
+            deviceContext.PixelShader.SetSamplers(0, 1, _fontSampler);
 
-            //// Setup render state
-            //RawColor4 blendFactor = new RawColor4(0f, 0f, 0f, 0f);
-            //deviceContext.OutputMerger.SetBlendState(_blendState, blendFactor, 0xffffffff);
+            // Setup render state
+            RawColor4 blendFactor = new RawColor4(0f, 0f, 0f, 0f);
+            deviceContext.OutputMerger.SetBlendState(_blendState, blendFactor, 0xffffffff);
 
-            //deviceContext.Rasterizer.State = _rasterizerState;
+            deviceContext.Rasterizer.State = _rasterizerState;
 
             ImGui.ScaleClipRects(draw_data, ImGui.GetIO().DisplayFramebufferScale);
 
@@ -306,7 +318,7 @@ namespace Veldrid.RenderDemo
                     else
                     {
                         //deviceContext.PixelShader.SetShaderResources(0, 1, new ShaderResourceView(pcmd->TextureId));
-
+                        Console.WriteLine(pcmd->TextureId);
                         rc.SetScissorRectangle(
                             (int)pcmd->ClipRect.X,
                             (int)pcmd->ClipRect.Y,

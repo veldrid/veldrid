@@ -248,3 +248,6 @@ Temporary Items
 Session.vim
 .netrwhist
 *~
+
+*.ini
+*.VC.db

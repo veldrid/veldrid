@@ -93,6 +93,7 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSetScissorRectangle(Rectangle rectangle)
         {
+            GL.Enable(EnableCap.ScissorTest);
             GL.Scissor(
                 rectangle.Left,
                 Window.Height - rectangle.Bottom,

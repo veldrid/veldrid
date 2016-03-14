@@ -7,7 +7,8 @@ namespace Veldrid.Graphics.Direct3D
 {
     public class D3DRenderContext : RenderContext
     {
-        private SharpDX.Direct3D11.Device _device;
+        //TODO: PRIVATE
+        public SharpDX.Direct3D11.Device _device;
         private SwapChain _swapChain;
         private DeviceContext _deviceContext;
 
@@ -101,6 +102,7 @@ namespace Veldrid.Graphics.Direct3D
         {
             DepthStencilStateDescription description = DepthStencilStateDescription.Default();
             description.DepthComparison = Comparison.LessEqual;
+            description.IsDepthEnabled = false;
 
             _depthState = new DepthStencilState(_device, description);
         }
@@ -109,9 +111,9 @@ namespace Veldrid.Graphics.Direct3D
         {
             var desc = RasterizerStateDescription.Default();
             desc.FillMode = FillMode.Solid;
-            desc.CullMode = CullMode.Back;
+            desc.CullMode = CullMode.None;
             desc.IsScissorEnabled = true;
-            desc.IsDepthClipEnabled = true;
+            desc.IsDepthClipEnabled = false;
             _rasterizerState = new RasterizerState(_device, desc);
         }
 

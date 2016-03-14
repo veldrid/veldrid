@@ -9,7 +9,7 @@ namespace Veldrid.Graphics.Direct3D
         private SharpDX.DXGI.Format _format;
         private int _offset = 0;
 
-        public D3DIndexBuffer(Device device, int sizeInBytes) : base(device, sizeInBytes, BindFlags.IndexBuffer, ResourceUsage.Default)
+        public D3DIndexBuffer(Device device, int sizeInBytes) : base(device, sizeInBytes, BindFlags.IndexBuffer, ResourceUsage.Default, CpuAccessFlags.None)
         {
             _device = device;
         }

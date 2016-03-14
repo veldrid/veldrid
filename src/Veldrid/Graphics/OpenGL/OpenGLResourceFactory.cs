@@ -76,7 +76,7 @@ namespace Veldrid.Graphics.OpenGL
             return OpenGLTexture.Create(pixelData, width, height, pixelSizeInBytes, format);
         }
 
-        public override VertexBuffer CreateVertexBuffer(int sizeInBytes)
+        public override VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic)
         {
             return new OpenGLVertexBuffer();
         }

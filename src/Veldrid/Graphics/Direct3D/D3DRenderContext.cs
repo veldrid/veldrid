@@ -17,7 +17,7 @@ namespace Veldrid.Graphics.Direct3D
         private RasterizerState _rasterizerState;
         private DeviceCreationFlags _deviceFlags;
 
-        public D3DRenderContext(Window window) : this(window, DeviceCreationFlags.None) { }
+        public D3DRenderContext(Window window) : this(window, DeviceCreationFlags.Debug) { }
 
         public D3DRenderContext(Window window, DeviceCreationFlags flags)
             : base(window)

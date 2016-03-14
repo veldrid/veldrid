@@ -20,13 +20,17 @@ namespace Veldrid.RenderDemo
         private static FlatListVisibilityManager _visiblityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
 
+        private static ImageProcessorTexture _altBufferImage;
+        private static bool _takeScreenshot;
+        private static ImGuiRenderer _imguiRenderer;
+
         public static void Main()
         {
             try
             {
                 _window = new DedicatedThreadWindow();
                 _rc = new D3DRenderContext(_window);
-                _imguiRenderer = new ImGuiRenderer(_rc);
+                _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
                 _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
                 _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
@@ -101,13 +105,12 @@ namespace Veldrid.RenderDemo
         {
             _imguiRenderer.SetPerFrameImGuiData(_rc);
             _imguiRenderer.UpdateImGuiInput(_window.NativeWindow);
-            ImGui.NewFrame();
+
             if (ImGui.BeginWindow("A window"))
             {
                 ImGui.Text("Hello!");
                 ImGui.EndWindow();
             }
-
 
             _fta.AddTime(deltaMilliseconds);
 
@@ -138,10 +141,6 @@ namespace Veldrid.RenderDemo
             }
         }
 
-        private static ImageProcessorTexture _altBufferImage;
-        private static bool _takeScreenshot;
-        private static ImGuiRenderer _imguiRenderer;
-
         private unsafe static void Draw(InputSnapshot input)
         {
             _rc.ClearBuffer();
@@ -154,8 +153,16 @@ namespace Veldrid.RenderDemo
 
             _rc.RenderFrame(_visiblityManager);
 
-            ImGui.Render();
-            _imguiRenderer.RenderImDrawData(ImGui.GetDrawData(), _rc);
+            if (ImGui.Button("Press this button."))
+            {
+                throw new InvalidOperationException("How did you press an invisible button?");
+            }
+
+            if (ImGui.Button("Press this button2."))
+            {
+                throw new InvalidOperationException("How did you press an invisible button?");
+            }
+            _imguiRenderer.Render(_rc);
 
             if (_takeScreenshot)
             {

@@ -4,29 +4,38 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public class D3DBuffer : DeviceBuffer, System.IDisposable
+    public abstract class D3DBuffer : DeviceBuffer, System.IDisposable
     {
         private readonly BindFlags _bindFlags;
         private readonly ResourceUsage _resourceUsage;
+        private readonly CpuAccessFlags _cpuFlags;
         private int _bufferSizeInBytes;
 
         protected Device Device { get; }
 
         public Buffer Buffer { get; private set; }
 
-        public D3DBuffer(Device device, int sizeInBytes, BindFlags bindFlags, ResourceUsage resourceUsage)
+        public D3DBuffer(Device device, int sizeInBytes, BindFlags bindFlags, ResourceUsage resourceUsage, CpuAccessFlags cpuFlags)
         {
             _bindFlags = bindFlags;
             _resourceUsage = resourceUsage;
+            _cpuFlags = cpuFlags;
+            _bufferSizeInBytes = sizeInBytes;
 
             Device = device;
-            InitializeDeviceBuffer(device, sizeInBytes, bindFlags, resourceUsage);
+            InitializeDeviceBuffer();
         }
 
-        private void InitializeDeviceBuffer(Device device, int sizeInBytes, BindFlags bindFlags, ResourceUsage resourceUsage)
+        private BufferDescription GetBufferDescription()
         {
-            Buffer = new Buffer(device, new BufferDescription(sizeInBytes, bindFlags, resourceUsage));
-            _bufferSizeInBytes = sizeInBytes;
+            return new BufferDescription(_bufferSizeInBytes, _resourceUsage, _bindFlags, _cpuFlags, ResourceOptionFlags.None, 0);
+        }
+
+        protected void InitializeDeviceBuffer()
+        {
+            BufferDescription bd = GetBufferDescription();
+            Buffer = new Buffer(Device, bd);
+            _bufferSizeInBytes = bd.SizeInBytes;
         }
 
         public unsafe void SetData<T>(T[] data, int dataSizeInBytes) where T : struct => SetData(data, dataSizeInBytes, 0);
@@ -34,18 +43,15 @@ namespace Veldrid.Graphics.Direct3D
         {
             EnsureBufferSize(dataSizeInBytes);
 
-            using (var pinnedArray = data.Pin())
+            ResourceRegion subregion = new ResourceRegion()
             {
-                ResourceRegion subregion = new ResourceRegion()
-                {
-                    Left = destinationOffsetInBytes,
-                    Right = dataSizeInBytes + destinationOffsetInBytes,
-                    Bottom = 1,
-                    Back = 1
-                };
+                Left = destinationOffsetInBytes,
+                Right = dataSizeInBytes + destinationOffsetInBytes,
+                Bottom = 1,
+                Back = 1
+            };
 
-                Device.ImmediateContext.UpdateSubresource(data, Buffer, region: subregion);
-            }
+            Device.ImmediateContext.UpdateSubresource(data, Buffer, region: subregion);
         }
 
         public void SetData<T>(ref T data, int dataSizeInBytes) where T : struct => SetData(ref data, dataSizeInBytes, 0);
@@ -61,15 +67,31 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         public void SetData(System.IntPtr data, int dataSizeInBytes) => SetData(data, dataSizeInBytes, 0);
-        public void SetData(System.IntPtr data, int dataSizeInBytes, int destinationOffsetInBytes)
+        public unsafe void SetData(System.IntPtr data, int dataSizeInBytes, int destinationOffsetInBytes)
         {
-            if (destinationOffsetInBytes != 0)
-            {
-                throw new System.NotImplementedException();
-            }
-
             EnsureBufferSize(dataSizeInBytes);
-            Device.ImmediateContext.UpdateSubresource(new DataBox(data), Buffer);
+
+            if (_resourceUsage == ResourceUsage.Dynamic)
+            {
+                DataBox db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteDiscard, MapFlags.None);
+                Utilities.CopyMemory(
+                    new System.IntPtr((byte*)db.DataPointer.ToPointer() + destinationOffsetInBytes),
+                    data,
+                    dataSizeInBytes);
+                Device.ImmediateContext.UnmapSubresource(Buffer, 0);
+            }
+            else
+            {
+                ResourceRegion subregion = new ResourceRegion()
+                {
+                    Left = destinationOffsetInBytes,
+                    Right = dataSizeInBytes + destinationOffsetInBytes,
+                    Bottom = 1,
+                    Back = 1
+                };
+
+                Device.ImmediateContext.UpdateSubresource(new DataBox(data), Buffer, 0, region: subregion);
+            }
         }
 
         private void EnsureBufferSize(int dataSizeInBytes)
@@ -77,10 +99,10 @@ namespace Veldrid.Graphics.Direct3D
             if (_bufferSizeInBytes < dataSizeInBytes)
             {
                 Buffer oldBuffer = Buffer;
-                InitializeDeviceBuffer(Device, dataSizeInBytes, _bindFlags, _resourceUsage);
+                _bufferSizeInBytes = dataSizeInBytes;
+                InitializeDeviceBuffer();
                 Device.ImmediateContext.CopyResource(oldBuffer, Buffer);
                 oldBuffer.Dispose();
-                _bufferSizeInBytes = dataSizeInBytes;
             }
         }
 

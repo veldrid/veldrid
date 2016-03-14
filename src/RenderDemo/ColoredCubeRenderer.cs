@@ -21,7 +21,7 @@ namespace Veldrid.RenderDemo
 
             if (s_vb == null)
             {
-                s_vb = factory.CreateVertexBuffer(VertexPositionColor.SizeInBytes * s_cubeVertices.Length);
+                s_vb = factory.CreateVertexBuffer(VertexPositionColor.SizeInBytes * s_cubeVertices.Length, false);
                 VertexDescriptor desc = new VertexDescriptor(VertexPositionColor.SizeInBytes, VertexPositionColor.ElementCount, 0, IntPtr.Zero);
                 s_vb.SetVertexData(s_cubeVertices, desc);
 

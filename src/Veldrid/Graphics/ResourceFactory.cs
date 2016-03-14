@@ -4,7 +4,7 @@ namespace Veldrid.Graphics
 {
     public abstract class ResourceFactory : DeviceTextureCreator
     {
-        public abstract VertexBuffer CreateVertexBuffer(int sizeInBytes);
+        public abstract VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic);
 
         public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes);
 

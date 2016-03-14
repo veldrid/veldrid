@@ -82,9 +82,9 @@ namespace Veldrid.Graphics.Direct3D
                 textureInputs);
         }
 
-        public override VertexBuffer CreateVertexBuffer(int sizeInBytes)
+        public override VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic)
         {
-            return new D3DVertexBuffer(_device, sizeInBytes);
+            return new D3DVertexBuffer(_device, sizeInBytes, isDynamic);
         }
 
         public override DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)

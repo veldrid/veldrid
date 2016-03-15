@@ -21,13 +21,13 @@ namespace Veldrid.RenderDemo
         public ImGuiRenderer(RenderContext rc, NativeWindow window)
         {
             ResourceFactory factory = rc.ResourceFactory;
-            _vertexBuffer = factory.CreateVertexBuffer(500, true);
-            _indexBuffer = factory.CreateIndexBuffer(200, true);
+            _vertexBuffer = factory.CreateVertexBuffer(500, false);
+            _indexBuffer = factory.CreateIndexBuffer(200, false);
             CreateFontsTexture(rc);
             _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
 
             _material = factory.CreateMaterial("imgui-vertex", "imgui-frag",
-                new MaterialVertexInput(32, new MaterialVertexInputElement[]
+                new MaterialVertexInput(20, new MaterialVertexInputElement[]
                 {
                     new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float2),
                     new MaterialVertexInputElement("in_texcoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2),
@@ -68,7 +68,7 @@ namespace Veldrid.RenderDemo
                 rc.Window.Width,
                 rc.Window.Height);
             io.DisplayFramebufferScale = new System.Numerics.Vector2(1.0f);
-            io.DeltaTime = deltaMilliseconds;
+            io.DeltaTime = deltaMilliseconds / 1000; // DeltaTime is in seconds.
         }
 
         public unsafe void UpdateImGuiInput(NativeWindow window)

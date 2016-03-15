@@ -15,7 +15,6 @@ namespace Veldrid.Graphics
                 case VertexElementFormat.Float3:
                     return 3;
                 case VertexElementFormat.Float4:
-                    return 4;
                 case VertexElementFormat.Byte4:
                     return 4;
                 default:

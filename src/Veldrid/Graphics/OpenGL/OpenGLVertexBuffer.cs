@@ -5,7 +5,9 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLVertexBuffer : OpenGLBuffer, VertexBuffer
     {
-        public OpenGLVertexBuffer() : base(BufferTarget.ArrayBuffer) { }
+        public OpenGLVertexBuffer(bool isDynamic)
+            : base(BufferTarget.ArrayBuffer, isDynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.DynamicDraw)
+        { }
 
         public void Apply()
         {

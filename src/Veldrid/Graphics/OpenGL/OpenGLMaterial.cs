@@ -86,7 +86,7 @@ namespace Veldrid.Graphics.OpenGL
                 var element = _inputs.Elements[slot];
 
                 GL.EnableVertexAttribArray(slot);
-                GL.VertexAttribPointer(slot, element.ElementCount, element.Type, false, _inputs.VertexSizeInBytes, element.Offset);
+                GL.VertexAttribPointer(slot, element.ElementCount, element.Type, element.Normalized, _inputs.VertexSizeInBytes, element.Offset);
             }
 
             GL.UseProgram(_programID);
@@ -169,13 +169,15 @@ namespace Veldrid.Graphics.OpenGL
             public byte ElementCount { get; }
             public VertexAttribPointerType Type { get; }
             public int Offset { get; }
+            public bool Normalized { get; }
 
-            public OpenGLMaterialVertexInputElement(byte sizeInBytes, byte elementCount, VertexAttribPointerType type, int offset)
+            public OpenGLMaterialVertexInputElement(byte sizeInBytes, byte elementCount, VertexAttribPointerType type, int offset, bool normalized)
             {
                 SizeInBytes = sizeInBytes;
                 ElementCount = elementCount;
                 Type = type;
                 Offset = offset;
+                Normalized = normalized;
             }
 
             public OpenGLMaterialVertexInputElement(MaterialVertexInputElement genericElement, int offset)
@@ -184,6 +186,7 @@ namespace Veldrid.Graphics.OpenGL
                 ElementCount = VertexFormatHelpers.GetElementCount(genericElement.ElementFormat);
                 Type = GetGenericFormatType(genericElement.ElementFormat);
                 Offset = offset;
+                Normalized = genericElement.SemanticType == VertexSemanticType.Color && genericElement.ElementFormat == VertexElementFormat.Byte4;
             }
 
             private static VertexAttribPointerType GetGenericFormatType(VertexElementFormat format)
@@ -196,7 +199,7 @@ namespace Veldrid.Graphics.OpenGL
                     case VertexElementFormat.Float4:
                         return VertexAttribPointerType.Float;
                     case VertexElementFormat.Byte4:
-                        return VertexAttribPointerType.Byte;
+                        return VertexAttribPointerType.UnsignedByte;
                     default:
                         throw Illegal.Value<VertexElementFormat>();
                 }

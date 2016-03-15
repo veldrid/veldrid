@@ -29,7 +29,7 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new D3DRenderContext(_window);
+                _rc = new OpenGLRenderContext(_window);
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
                 _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
                 _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));

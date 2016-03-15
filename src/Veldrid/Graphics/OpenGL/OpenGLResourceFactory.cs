@@ -34,7 +34,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic)
         {
-            return new OpenGLIndexBuffer();
+            return new OpenGLIndexBuffer(isDynamic);
         }
 
         public override Material CreateMaterial(
@@ -78,7 +78,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public override VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic)
         {
-            return new OpenGLVertexBuffer();
+            return new OpenGLVertexBuffer(isDynamic);
         }
 
         private string GetShaderPathFromName(string shaderName)

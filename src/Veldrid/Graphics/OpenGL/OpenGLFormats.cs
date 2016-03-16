@@ -50,6 +50,60 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        internal static BlendingFactorSrc ConvertBlendSrc(Blend blend)
+        {
+            switch (blend)
+            {
+                case Blend.Zero:
+                    return BlendingFactorSrc.Zero;
+                case Blend.One:
+                    return BlendingFactorSrc.One;
+                case Blend.SourceAlpha:
+                    return BlendingFactorSrc.SrcAlpha;
+                case Blend.InverseSourceAlpha:
+                    return BlendingFactorSrc.OneMinusSrcAlpha;
+                case Blend.DestinationAlpha:
+                    return BlendingFactorSrc.DstAlpha;
+                case Blend.InverseDestinationAlpha:
+                    return BlendingFactorSrc.OneMinusDstAlpha;
+                case Blend.SourceColor:
+                    return BlendingFactorSrc.SrcColor;
+                case Blend.InverseSourceColor:
+                    return BlendingFactorSrc.OneMinusSrcColor;
+                case Blend.DestinationColor:
+                    return BlendingFactorSrc.DstColor;
+                case Blend.InverseDestinationColor:
+                    return BlendingFactorSrc.OneMinusDstColor;
+                case Blend.BlendFactor:
+                    return BlendingFactorSrc.ConstantColor;
+                case Blend.InverseBlendFactor:
+                    return BlendingFactorSrc.OneMinusConstantColor;
+                default:
+                    throw Illegal.Value<Blend>();
+            }
+        }
+
+        internal static BlendingFactorDest ConvertBlendDest(Blend blend) => (BlendingFactorDest)ConvertBlendSrc(blend);
+
+        public static BlendEquationMode ConvertBlendEquation(BlendFunction function)
+        {
+            switch (function)
+            {
+                case BlendFunction.Add:
+                    return BlendEquationMode.FuncAdd;
+                case BlendFunction.Subtract:
+                    return BlendEquationMode.FuncSubtract;
+                case BlendFunction.ReverseSubtract:
+                    return BlendEquationMode.FuncReverseSubtract;
+                case BlendFunction.Minimum:
+                    return BlendEquationMode.Min;
+                case BlendFunction.Maximum:
+                    return BlendEquationMode.Max;
+                default:
+                    throw Illegal.Value<BlendFunction>();
+            }
+        }
+
         internal static DrawElementsType MapIndexFormat(IndexFormat format)
         {
             switch (format)

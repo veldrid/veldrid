@@ -11,8 +11,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ArrayEx.cs" />
+    <Compile Include="Graphics\BlendState.cs" />
     <Compile Include="Graphics\DeviceBuffer.cs" />
     <Compile Include="Graphics\DeviceTexture.cs" />
+    <Compile Include="Graphics\Direct3D\D3DBlendState.cs" />
     <Compile Include="Graphics\Direct3D\D3DBuffer.cs" />
     <Compile Include="Graphics\Direct3D\D3DConstantBuffer.cs" />
     <Compile Include="Graphics\Direct3D\D3DFormats.cs" />
@@ -26,6 +28,7 @@
     <Compile Include="Graphics\FlatListVisibilityManager.cs" />
     <Compile Include="Graphics\Framebuffer.cs" />
     <Compile Include="Graphics\IndexFormat.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLBlendState.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLDefaultFramebuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFormats.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFramebuffer.cs" />

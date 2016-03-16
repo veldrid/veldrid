@@ -120,6 +120,14 @@ namespace Veldrid.Graphics
 
         protected abstract void PlatformSetScissorRectangle(Rectangle rectangle);
 
+        public void ClearScissorRectangle()
+        {
+            _scissorRectangle = default(Rectangle);
+            PlatformClearScissorRectangle();
+        }
+
+        protected abstract void PlatformClearScissorRectangle();
+
         public void SetDefaultFramebuffer()
         {
             PlatformSetDefaultFramebuffer();

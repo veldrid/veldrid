@@ -81,6 +81,11 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLVertexBuffer(isDynamic);
         }
 
+        public override BlendState CreateCustomBlendState(bool isBlendEnabled, Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc, Blend srcColor, Blend destColor, BlendFunction colorBlendFunc)
+        {
+            return new OpenGLBlendState(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc);
+        }
+
         private string GetShaderPathFromName(string shaderName)
         {
             return Path.Combine(AppContext.BaseDirectory, s_shaderDirectory, shaderName + "." + s_shaderFileExtension);

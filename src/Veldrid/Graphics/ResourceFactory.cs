@@ -23,5 +23,10 @@ namespace Veldrid.Graphics
         public abstract DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct;
 
         public abstract DeviceTexture CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format);
+
+        public abstract BlendState CreateCustomBlendState(
+            bool isBlendEnabled,
+            Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
+            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc);
     }
 }

@@ -87,7 +87,7 @@ namespace Veldrid.Graphics.Direct3D
                 desc.RenderTarget[0].DestinationAlphaBlend = BlendOption.Zero;
                 desc.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
                 desc.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
-                var blendState = new BlendState(_device, desc);
+                var blendState = new SharpDX.Direct3D11.BlendState(_device, desc);
                 RawColor4 blendFactor = new RawColor4(0f, 0f, 0f, 0f);
                 _deviceContext.OutputMerger.SetBlendState(blendState, blendFactor, 0xffffffff);
             }
@@ -170,6 +170,11 @@ namespace Veldrid.Graphics.Direct3D
         protected override void PlatformSetScissorRectangle(Rectangle rectangle)
         {
             _device.ImmediateContext.Rasterizer.SetScissorRectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
+        }
+
+        protected override void PlatformClearScissorRectangle()
+        {
+            _device.ImmediateContext.Rasterizer.SetScissorRectangle(0, 0, Window.Width, Window.Height);
         }
 
         private new D3DFramebuffer CurrentFramebuffer => (D3DFramebuffer)base.CurrentFramebuffer;

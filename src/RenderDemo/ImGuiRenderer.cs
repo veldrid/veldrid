@@ -53,7 +53,6 @@ namespace Veldrid.RenderDemo
         public unsafe void Render(RenderContext rc)
         {
             GL.Disable(EnableCap.DepthTest);
-            GL.Enable(EnableCap.ScissorTest);
 
             ImGui.Render();
             RenderImDrawData(ImGui.GetDrawData(), rc);

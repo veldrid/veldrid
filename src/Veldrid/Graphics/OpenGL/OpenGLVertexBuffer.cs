@@ -31,7 +31,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetVertexData(IntPtr vertexData, VertexDescriptor descriptor, int numVertices, int destinationOffsetInBytes)
         {
-            SetData(vertexData, descriptor.VertexSizeInBytes * numVertices, destinationOffsetInBytes);
+            SetData(vertexData, descriptor.VertexSizeInBytes * numVertices, destinationOffsetInBytes * descriptor.VertexSizeInBytes);
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Veldrid.Graphics.OpenGL
             => SetIndices(indices, format, elementSizeInBytes, count, 0);
         public void SetIndices(IntPtr indices, IndexFormat format, int elementSizeInBytes, int count, int elementOffset)
         {
-            SetData(indices, elementSizeInBytes * count, elementOffset * elementSizeInBytes);
+            SetData(indices, count * elementSizeInBytes, elementOffset * elementSizeInBytes);
             ElementsType = OpenGLFormats.MapIndexFormat(format);
         }
     }

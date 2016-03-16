@@ -65,22 +65,22 @@ namespace Veldrid.Graphics.OpenGL
             GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, data);
             Unbind();
 
-            ValidateBufferSize(dataSizeInBytes);
+            ValidateBufferSize(dataSizeInBytes + destinationOffsetInBytes);
         }
 
-        [Conditional("Debug")]
         private void ValidateBufferSize(int expectedSizeInBytes)
         {
+#if DEBUG
             Bind();
             int bufferSize;
             GL.GetBufferParameter(_target, BufferParameterName.BufferSize, out bufferSize);
-            if (expectedSizeInBytes * sizeof(int) != bufferSize)
+            if (expectedSizeInBytes != bufferSize)
             {
-                throw new InvalidOperationException("Vertex array not uploaded correctly");
+                throw new InvalidOperationException($"Vertex array not uploaded correctly. Expected:{expectedSizeInBytes}, Actual:{bufferSize}");
             }
             Unbind();
+#endif
         }
-
 
         public void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct
         {
@@ -111,6 +111,7 @@ namespace Veldrid.Graphics.OpenGL
             // Buffer must be bound already.
             if (_bufferSize < dataSizeInBytes)
             {
+                Console.WriteLine($"Resizing {_target} {_bufferID} from {_bufferSize} to {dataSizeInBytes}");
                 GL.BufferData(_target, dataSizeInBytes, IntPtr.Zero, _bufferUsage);
                 _bufferSize = dataSizeInBytes;
             }

@@ -41,6 +41,8 @@ namespace Veldrid.Graphics
                     return sizeof(float) * 3;
                 case VertexElementFormat.Float4:
                     return sizeof(float) * 4;
+                case VertexElementFormat.Byte1:
+                    return sizeof(byte) * 1;
                 case VertexElementFormat.Byte4:
                     return sizeof(byte) * 4;
                 default:
@@ -55,6 +57,7 @@ namespace Veldrid.Graphics
         Float2,
         Float3,
         Float4,
+        Byte1,
         Byte4
     }
 }

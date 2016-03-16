@@ -8,7 +8,6 @@ namespace Veldrid.Graphics.OpenGL
     {
         private readonly BufferTarget _target;
         private readonly BufferUsageHint _bufferUsage;
-        private readonly bool _isDynamic;
         private int _bufferID;
         private int _bufferSize;
 
@@ -41,8 +40,6 @@ namespace Veldrid.Graphics.OpenGL
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
             GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, ref data);
             Unbind();
-
-            ValidateBufferSize(dataSizeInBytes);
         }
 
         public void SetData<T>(T[] data, int dataSizeInBytes) where T : struct
@@ -53,8 +50,6 @@ namespace Veldrid.Graphics.OpenGL
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
             GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, data);
             Unbind();
-
-            ValidateBufferSize(dataSizeInBytes);
         }
 
         public void SetData(IntPtr data, int dataSizeInBytes) => SetData(data, dataSizeInBytes, 0);
@@ -64,22 +59,6 @@ namespace Veldrid.Graphics.OpenGL
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
             GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, data);
             Unbind();
-
-            ValidateBufferSize(dataSizeInBytes + destinationOffsetInBytes);
-        }
-
-        private void ValidateBufferSize(int expectedSizeInBytes)
-        {
-#if DEBUG
-            Bind();
-            int bufferSize;
-            GL.GetBufferParameter(_target, BufferParameterName.BufferSize, out bufferSize);
-            if (expectedSizeInBytes != bufferSize)
-            {
-                throw new InvalidOperationException($"Vertex array not uploaded correctly. Expected:{expectedSizeInBytes}, Actual:{bufferSize}");
-            }
-            Unbind();
-#endif
         }
 
         public void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct
@@ -111,10 +90,25 @@ namespace Veldrid.Graphics.OpenGL
             // Buffer must be bound already.
             if (_bufferSize < dataSizeInBytes)
             {
-                Console.WriteLine($"Resizing {_target} {_bufferID} from {_bufferSize} to {dataSizeInBytes}");
+                GL.DeleteBuffer(_bufferID);
+                _bufferID = GL.GenBuffer();
+                GL.BindBuffer(_target, _bufferID);
                 GL.BufferData(_target, dataSizeInBytes, IntPtr.Zero, _bufferUsage);
                 _bufferSize = dataSizeInBytes;
+                ValidateBufferSize(dataSizeInBytes);
             }
+        }
+
+        private void ValidateBufferSize(int expectedSizeInBytes)
+        {
+#if DEBUG
+            int bufferSize;
+            GL.GetBufferParameter(_target, BufferParameterName.BufferSize, out bufferSize);
+            if (expectedSizeInBytes != bufferSize)
+            {
+                throw new InvalidOperationException($"{_target} {_bufferID} not uploaded correctly. Expected:{expectedSizeInBytes}, Actual:{bufferSize}");
+            }
+#endif
         }
 
         public void Dispose()

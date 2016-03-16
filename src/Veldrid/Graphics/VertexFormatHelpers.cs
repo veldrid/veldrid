@@ -8,6 +8,7 @@ namespace Veldrid.Graphics
         {
             switch (format)
             {
+                case VertexElementFormat.Byte1:
                 case VertexElementFormat.Float1:
                     return 1;
                 case VertexElementFormat.Float2:

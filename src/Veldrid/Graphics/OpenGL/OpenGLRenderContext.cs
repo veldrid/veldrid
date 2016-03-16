@@ -62,13 +62,16 @@ namespace Veldrid.Graphics.OpenGL
         public override void DrawIndexedPrimitives(int count, int startingIndex)
         {
             var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
-            GL.DrawElements(PrimitiveType.Triangles, count, elementsType, new IntPtr(startingIndex));
+            int indexSize = OpenGLFormats.GetIndexFormatSize(elementsType);
+
+            GL.DrawElements(PrimitiveType.Triangles, count, elementsType, new IntPtr(startingIndex * indexSize));
         }
 
         public override void DrawIndexedPrimitives(int count, int startingIndex, int startingVertex)
         {
             var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
-            GL.DrawElementsBaseVertex(PrimitiveType.Triangles, count, elementsType, new IntPtr(startingIndex), startingVertex);
+            int indexSize = OpenGLFormats.GetIndexFormatSize(elementsType);
+            GL.DrawElementsBaseVertex(PrimitiveType.Triangles, count, elementsType, new IntPtr(startingIndex * indexSize), startingVertex);
         }
 
         private void SetInitialStates()
@@ -78,6 +81,8 @@ namespace Veldrid.Graphics.OpenGL
             GL.Enable(EnableCap.PolygonSmooth);
             GL.Enable(EnableCap.CullFace);
             GL.FrontFace(FrontFaceDirection.Cw);
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
         }
 
         protected override void PlatformResize()
@@ -93,7 +98,7 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSetScissorRectangle(Rectangle rectangle)
         {
-            GL.Enable(EnableCap.ScissorTest);
+            //GL.Enable(EnableCap.ScissorTest);
             GL.Scissor(
                 rectangle.Left,
                 Window.Height - rectangle.Bottom,

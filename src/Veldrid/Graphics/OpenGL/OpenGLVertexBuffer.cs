@@ -6,7 +6,7 @@ namespace Veldrid.Graphics.OpenGL
     public class OpenGLVertexBuffer : OpenGLBuffer, VertexBuffer
     {
         public OpenGLVertexBuffer(bool isDynamic)
-            : base(BufferTarget.ArrayBuffer, isDynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.DynamicDraw)
+            : base(BufferTarget.ArrayBuffer)
         { }
 
         public void Apply()
@@ -19,9 +19,9 @@ namespace Veldrid.Graphics.OpenGL
             SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Length);
         }
 
-        public void SetVertexData<T>(T[] vertexData, VertexDescriptor descriptor, int offset) where T : struct
+        public void SetVertexData<T>(T[] vertexData, VertexDescriptor descriptor, int destinationOffsetInVertices) where T : struct
         {
-            SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Length, offset);
+            SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Length, destinationOffsetInVertices * vertexData.Length);
         }
 
         public void SetVertexData(IntPtr vertexData, VertexDescriptor descriptor, int numVertices)
@@ -29,9 +29,9 @@ namespace Veldrid.Graphics.OpenGL
             SetData(vertexData, descriptor.VertexSizeInBytes * numVertices);
         }
 
-        public void SetVertexData(IntPtr vertexData, VertexDescriptor descriptor, int numVertices, int destinationOffsetInBytes)
+        public void SetVertexData(IntPtr vertexData, VertexDescriptor descriptor, int numVertices, int destinationOffsetInVertices)
         {
-            SetData(vertexData, descriptor.VertexSizeInBytes * numVertices, destinationOffsetInBytes * descriptor.VertexSizeInBytes);
+            SetData(vertexData, descriptor.VertexSizeInBytes * numVertices, destinationOffsetInVertices * descriptor.VertexSizeInBytes);
         }
     }
 }

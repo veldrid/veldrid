@@ -198,6 +198,7 @@ namespace Veldrid.Graphics.OpenGL
                     case VertexElementFormat.Float3:
                     case VertexElementFormat.Float4:
                         return VertexAttribPointerType.Float;
+                    case VertexElementFormat.Byte1:
                     case VertexElementFormat.Byte4:
                         return VertexAttribPointerType.UnsignedByte;
                     default:

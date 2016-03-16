@@ -157,6 +157,8 @@ namespace Veldrid.Graphics.Direct3D
                     return SharpDX.DXGI.Format.R32G32B32_Float;
                 case VertexElementFormat.Float4:
                     return SharpDX.DXGI.Format.R32G32B32A32_Float;
+                case VertexElementFormat.Byte1:
+                    return SharpDX.DXGI.Format.A8_UNorm;
                 case VertexElementFormat.Byte4:
                     return SharpDX.DXGI.Format.R8G8B8A8_UNorm;
                 default:

@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using SharpDX.Mathematics.Interop;
 using System;
@@ -43,7 +44,7 @@ namespace Veldrid.RenderDemo
                     new MaterialTextureInputElement("surfaceTexture", _fontTexture)
                 }));
 
-            SetPerFrameImGuiData(rc, 1f/60f);
+            SetPerFrameImGuiData(rc, 1f / 60f);
             UpdateImGuiInput(window);
 
             ImGui.NewFrame();
@@ -51,6 +52,9 @@ namespace Veldrid.RenderDemo
 
         public unsafe void Render(RenderContext rc)
         {
+            GL.Disable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.ScissorTest);
+
             ImGui.Render();
             RenderImDrawData(ImGui.GetDrawData(), rc);
             ImGui.NewFrame();
@@ -112,7 +116,7 @@ namespace Veldrid.RenderDemo
                 pixels[i] = ((int*)textureData.Pixels)[i];
             }
 
-            _fontTexture = new RawTextureDataArray<int>(pixels, textureData.Width, textureData.Height, textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8);
+            _fontTexture = new RawTextureDataArray<int>(pixels, textureData.Width, textureData.Height, textureData.BytesPerPixel, Graphics.PixelFormat.R8_G8_B8_A8);
 
             // Store our identifier
             io.FontAtlas.SetTexID(420);
@@ -132,23 +136,6 @@ namespace Veldrid.RenderDemo
             {
                 DrawList* cmd_list = draw_data->CmdLists[i];
 
-                //{
-                //    DrawVert[] tempVerts = new DrawVert[cmd_list->VtxBuffer.Size];
-                //    int[] tempIndices = new int[cmd_list->IdxBuffer.Size];
-
-                //    for (int g = 0; g < tempVerts.Length; g++)
-                //    {
-                //        tempVerts[g] = ((DrawVert*)cmd_list->VtxBuffer.Data)[g];
-                //    }
-                //    for (int g = 0; g < tempIndices.Length; g++)
-                //    {
-                //        tempIndices[g] = ((ushort*)cmd_list->IdxBuffer.Data)[g];
-                //    }
-
-                //    _vertexBuffer.SetVertexData(tempVerts, descriptor, vertexOffsetInVertices);
-                //    _indexBuffer.SetIndices(tempIndices, 0, indexOffsetInElements);
-                //}
-
                 _vertexBuffer.SetVertexData(new IntPtr(cmd_list->VtxBuffer.Data), descriptor, cmd_list->VtxBuffer.Size, vertexOffsetInVertices);
                 _indexBuffer.SetIndices(new IntPtr(cmd_list->IdxBuffer.Data), IndexFormat.UInt16, sizeof(ushort), cmd_list->IdxBuffer.Size, indexOffsetInElements);
 
@@ -159,10 +146,11 @@ namespace Veldrid.RenderDemo
             // Setup orthographic projection matrix into our constant buffer
             {
                 var io = ImGui.GetIO();
+
                 Matrix4x4 mvp = Matrix4x4.CreateOrthographicOffCenter(
-                    0.0f,
+                    0.375f,
                     io.DisplaySize.X / io.DisplayFramebufferScale.X,
-                    io.DisplaySize.Y / io.DisplayFramebufferScale.Y,
+                    io.DisplaySize.Y / io.DisplayFramebufferScale.Y + 0.375f,
                     0.0f,
                     -1.0f,
                     1.0f);
@@ -197,7 +185,7 @@ namespace Veldrid.RenderDemo
                             (int)pcmd->ClipRect.Z,
                             (int)pcmd->ClipRect.W);
 
-                        rc.DrawIndexedPrimitives((int)pcmd->ElemCount, idx_offset , vtx_offset);
+                        rc.DrawIndexedPrimitives((int)pcmd->ElemCount, idx_offset, vtx_offset);
                     }
 
                     idx_offset += (int)pcmd->ElemCount;

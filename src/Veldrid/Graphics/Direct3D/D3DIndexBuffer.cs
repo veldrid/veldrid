@@ -28,7 +28,7 @@ namespace Veldrid.Graphics.Direct3D
         public void SetIndices(int[] indices, int stride, int elementOffset)
         {
             _format = SharpDX.DXGI.Format.R32_UInt;
-            SetData(indices, indices.Length * 4, elementOffset * sizeof(int));
+            SetData(indices, indices.Length * sizeof(int), elementOffset * sizeof(int));
         }
 
         public void SetIndices(IntPtr indices, IndexFormat format, int elementSizeInBytes, int count)

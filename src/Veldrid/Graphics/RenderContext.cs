@@ -147,6 +147,11 @@ namespace Veldrid.Graphics
             PlatformSwapBuffers();
         }
 
+        public void SetBlendState(BlendState blendState)
+        {
+
+        }
+
         protected void OnWindowResized()
         {
             ProjectionMatrixProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(

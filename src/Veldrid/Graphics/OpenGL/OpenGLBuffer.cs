@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -46,10 +47,9 @@ namespace Veldrid.Graphics.OpenGL
             => SetData(data, dataSizeInBytes, 0);
         public void SetData<T>(T[] data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
         {
-            Bind();
-            EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
-            GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, data);
-            Unbind();
+            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            SetData(handle.AddrOfPinnedObject(), dataSizeInBytes, destinationOffsetInBytes);
+            handle.Free();
         }
 
         public void SetData(IntPtr data, int dataSizeInBytes) => SetData(data, dataSizeInBytes, 0);
@@ -57,16 +57,21 @@ namespace Veldrid.Graphics.OpenGL
         {
             Bind();
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
-            GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, data);
+            IntPtr mappedPtr = GL.MapBuffer(_target, BufferAccess.WriteOnly);
+            IntPtr destinationPtr = new IntPtr(((byte*)mappedPtr.ToPointer() + destinationOffsetInBytes));
+            SharpDX.Utilities.CopyMemory(destinationPtr, data, dataSizeInBytes);
+            if (!GL.UnmapBuffer(_target))
+            {
+                throw new InvalidOperationException("UnmapBuffer failed.");
+            }
             Unbind();
         }
 
         public void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct
         {
-            int bytesToCopy = Math.Min(_bufferSize, storageSizeInBytes);
-            Bind();
-            GL.GetBufferSubData(_target, IntPtr.Zero, bytesToCopy, storageLocation);
-            Unbind();
+            GCHandle handle = GCHandle.Alloc(storageLocation, GCHandleType.Pinned);
+            GetData(handle.AddrOfPinnedObject(), storageSizeInBytes);
+            handle.Free();
         }
 
         public void GetData<T>(ref T storageLocation, int storageSizeInBytes) where T : struct
@@ -81,7 +86,12 @@ namespace Veldrid.Graphics.OpenGL
         {
             int bytesToCopy = Math.Min(_bufferSize, storageSizeInBytes);
             Bind();
-            GL.GetBufferSubData(_target, IntPtr.Zero, bytesToCopy, storageLocation);
+            IntPtr mappedPtr = GL.MapBuffer(_target, BufferAccess.ReadOnly);
+            SharpDX.Utilities.CopyMemory(storageLocation, mappedPtr, bytesToCopy);
+            if (!GL.UnmapBuffer(_target))
+            {
+                throw new InvalidOperationException("UnmapBuffer failed.");
+            }
             Unbind();
         }
 

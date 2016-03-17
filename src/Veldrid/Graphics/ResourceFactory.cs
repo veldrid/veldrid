@@ -26,7 +26,14 @@ namespace Veldrid.Graphics
 
         public abstract BlendState CreateCustomBlendState(
             bool isBlendEnabled,
+            Blend srcBlend, Blend destBlend, BlendFunction blendFunc);
+
+
+        public abstract BlendState CreateCustomBlendState(
+            bool isBlendEnabled,
             Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
             Blend srcColor, Blend destColor, BlendFunction colorBlendFunc);
+
+        public abstract DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison);
     }
 }

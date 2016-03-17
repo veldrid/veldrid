@@ -19,6 +19,8 @@ namespace Veldrid.Graphics
         private int _needsResizing;
         private RenderQueue _renderQueue = new RenderQueue();
         private Rectangle _scissorRectangle;
+        private BlendState _blendState;
+        private DepthStencilState _depthStencilState;
 
         public Dictionary<string, ConstantBufferDataProvider> DataProviders { get; } = new Dictionary<string, ConstantBufferDataProvider>();
 
@@ -147,9 +149,38 @@ namespace Veldrid.Graphics
             PlatformSwapBuffers();
         }
 
+        private BlendState _additiveBlend;
+        public BlendState AdditiveBlend
+            => _additiveBlend ?? (_additiveBlend = ResourceFactory.CreateCustomBlendState(true, Blend.SourceAlpha, Blend.One, BlendFunction.Add));
+
+        private BlendState _alphaBlend;
+        public BlendState AlphaBlend
+            => _alphaBlend ?? (_alphaBlend = ResourceFactory.CreateCustomBlendState(true, Blend.SourceAlpha, Blend.InverseSourceAlpha, BlendFunction.Add));
+
+        private BlendState _overrideBlend;
+        public BlendState OverrideBlend
+            => _overrideBlend ?? (_overrideBlend = ResourceFactory.CreateCustomBlendState(true, Blend.One, Blend.Zero, BlendFunction.Add));
+
         public void SetBlendState(BlendState blendState)
         {
+            if (_blendState != blendState)
+            {
+                _blendState = blendState;
+                _blendState.Apply();
+            }
+        }
 
+        private DepthStencilState _defaultDepthStencilState;
+        public DepthStencilState DefaultDepthStencilState
+            => _defaultDepthStencilState ?? (_defaultDepthStencilState = ResourceFactory.CreateDepthStencilState(true, DepthComparison.LessEqual));
+
+        public void SetDepthStencilState(DepthStencilState depthStencilState)
+        {
+            if (_depthStencilState != depthStencilState)
+            {
+                _depthStencilState = depthStencilState;
+                _depthStencilState.Apply();
+            }
         }
 
         protected void OnWindowResized()
@@ -162,6 +193,12 @@ namespace Veldrid.Graphics
 
             PlatformResize();
             WindowResized?.Invoke();
+        }
+
+        protected void PostContextCreated()
+        {
+            SetBlendState(AlphaBlend);
+            SetDepthStencilState(DefaultDepthStencilState);
         }
 
         protected abstract void PlatformClearBuffer();

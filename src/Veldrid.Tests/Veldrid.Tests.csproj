@@ -24,6 +24,8 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Graphics\OpenGL\OpenGLIndexBufferTests.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLVertexBufferTests.cs" />
     <Compile Include="Graphics\Direct3D\D3DIndexBufferTests.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBufferTests.cs" />
     <Compile Include="Graphics\VertexPositionColorTests.cs" />

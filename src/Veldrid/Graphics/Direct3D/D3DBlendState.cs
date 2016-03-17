@@ -30,6 +30,7 @@ namespace Veldrid.Graphics.Direct3D
             desc.RenderTarget[0].DestinationBlend = D3DFormats.ConvertBlend(DestinationColorBlend);
             desc.RenderTarget[0].BlendOperation = D3DFormats.ConvertBlendFunction(ColorBlendFunction);
             desc.RenderTarget[0].IsBlendEnabled = isBlendEnabled;
+            desc.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
 
             _deviceBlendState = new SharpDX.Direct3D11.BlendState(_device, desc);
         }
@@ -50,7 +51,8 @@ namespace Veldrid.Graphics.Direct3D
         {
             _device.ImmediateContext.OutputMerger.SetBlendState(
                 _deviceBlendState,
-                new RawColor4(BlendFactor.R, BlendFactor.G, BlendFactor.B, BlendFactor.A));
+                new RawColor4(BlendFactor.R, BlendFactor.G, BlendFactor.B, BlendFactor.A),
+                0xffffffff);
         }
     }
 }

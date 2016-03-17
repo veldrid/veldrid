@@ -24,10 +24,7 @@ namespace Veldrid.Graphics.OpenGL
             SetInitialStates();
             OnWindowResized();
 
-            int major, minor;
-            GL.GetInteger(GetPName.MajorVersion, out major);
-            GL.GetInteger(GetPName.MinorVersion, out minor);
-            Console.WriteLine($"Created OpenGL Context. Version: {major}.{minor}");
+            PostContextCreated();
         }
 
         public override ResourceFactory ResourceFactory => _resourceFactory;
@@ -77,12 +74,9 @@ namespace Veldrid.Graphics.OpenGL
         private void SetInitialStates()
         {
             GL.ClearColor(ClearColor.R, ClearColor.G, ClearColor.B, ClearColor.A);
-            GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.PolygonSmooth);
             GL.Enable(EnableCap.CullFace);
             GL.FrontFace(FrontFaceDirection.Cw);
-            GL.Enable(EnableCap.Blend);
-            GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
         }
 
         protected override void PlatformResize()

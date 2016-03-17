@@ -13,7 +13,6 @@ namespace Veldrid.Graphics.Direct3D
         private DeviceContext _deviceContext;
 
         private D3DFramebuffer _defaultFramebuffer;
-        private DepthStencilState _depthStencilState;
         private RasterizerState _rasterizerState;
         private DeviceCreationFlags _deviceFlags;
 
@@ -25,6 +24,7 @@ namespace Veldrid.Graphics.Direct3D
             _deviceFlags = flags;
             CreateAndInitializeDevice();
             ResourceFactory = new D3DResourceFactory(_device);
+            PostContextCreated();
         }
 
         public override ResourceFactory ResourceFactory { get; }
@@ -68,45 +68,17 @@ namespace Veldrid.Graphics.Direct3D
             factory.MakeWindowAssociation(Window.Handle, WindowAssociationFlags.IgnoreAll);
 
             CreateRasterizerState();
-            CreateDepthBufferState();
             OnWindowResized();
             SetFramebuffer(_defaultFramebuffer);
 
             _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
-
-            // Create the blending setup
-            {
-                BlendStateDescription desc = new BlendStateDescription(); //BlendStateDescription.Default();
-
-                desc.AlphaToCoverageEnable = false;
-                desc.RenderTarget[0].IsBlendEnabled = true;
-                desc.RenderTarget[0].SourceBlend = BlendOption.SourceAlpha;
-                desc.RenderTarget[0].DestinationBlend = BlendOption.InverseSourceAlpha;
-                desc.RenderTarget[0].BlendOperation = BlendOperation.Add;
-                desc.RenderTarget[0].SourceAlphaBlend = BlendOption.InverseSourceAlpha;
-                desc.RenderTarget[0].DestinationAlphaBlend = BlendOption.Zero;
-                desc.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
-                desc.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
-                var blendState = new SharpDX.Direct3D11.BlendState(_device, desc);
-                RawColor4 blendFactor = new RawColor4(0f, 0f, 0f, 0f);
-                _deviceContext.OutputMerger.SetBlendState(blendState, blendFactor, 0xffffffff);
-            }
         }
 
         private void SetRegularTargets()
         {
             // Setup targets and viewport for rendering
-            _device.ImmediateContext.OutputMerger.SetDepthStencilState(_depthStencilState);
             _deviceContext.Rasterizer.SetViewport(0, 0, Window.Width, Window.Height);
             CurrentFramebuffer.Apply();
-        }
-
-        private void CreateDepthBufferState()
-        {
-            DepthStencilStateDescription description = DepthStencilStateDescription.Default();
-            description.DepthComparison = Comparison.LessEqual;
-
-            _depthStencilState = new DepthStencilState(_device, description);
         }
 
         private void CreateRasterizerState()

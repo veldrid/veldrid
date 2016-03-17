@@ -11,7 +11,7 @@ namespace Veldrid.RenderDemo
         private static Material s_material;
 
         public Vector3 Position { get; set; } = Vector3.Zero;
-        public Vector3 Scale { get; set; } = Vector3.One;
+        public Vector3 Scale { get; set; } = Vector3.One * .75f;
 
         private DynamicDataProvider<Matrix4x4> _modelViewProvider = new DynamicDataProvider<Matrix4x4>();
 
@@ -63,7 +63,7 @@ namespace Veldrid.RenderDemo
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             _modelViewProvider.Data =
                 Matrix4x4.CreateScale(Scale)
-                * Matrix4x4.CreateRotationX((rotationAmount * .5f) * Position.Y)
+                * Matrix4x4.CreateRotationX((rotationAmount * .5f) * Position.X)
                 * Matrix4x4.CreateRotationY(rotationAmount)
                 * Matrix4x4.CreateRotationZ((rotationAmount * .33f) * Position.Z)
                 * Matrix4x4.CreateTranslation(Position)

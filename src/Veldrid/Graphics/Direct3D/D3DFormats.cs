@@ -87,5 +87,29 @@ namespace Veldrid.Graphics.Direct3D
                     throw Illegal.Value<BlendFunction>();
             }
         }
+        public static Comparison ConvertDepthComparison(DepthComparison dc)
+        {
+            switch (dc)
+            {
+                case DepthComparison.Never:
+                    return Comparison.Never;
+                case DepthComparison.Less:
+                    return Comparison.Less;
+                case DepthComparison.Equal:
+                    return Comparison.Equal;
+                case DepthComparison.LessEqual:
+                    return Comparison.LessEqual;
+                case DepthComparison.Greater:
+                    return Comparison.Equal;
+                case DepthComparison.NotEqual:
+                    return Comparison.NotEqual;
+                case DepthComparison.GreaterEqual:
+                    return Comparison.GreaterEqual;
+                case DepthComparison.Always:
+                    return Comparison.Always;
+                default:
+                    throw Illegal.Value<DepthComparison>();
+            }
+        }
     }
 }

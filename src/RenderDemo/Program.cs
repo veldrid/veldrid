@@ -29,13 +29,21 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new OpenGLRenderContext(_window);
+                _rc = new D3DRenderContext(_window);
+                if (_rc is OpenGLRenderContext)
+                {
+                    int major, minor;
+                    GL.GetInteger(GetPName.MajorVersion, out major);
+                    GL.GetInteger(GetPName.MinorVersion, out minor);
+                    Console.WriteLine($"Created OpenGL Context. Version: {major}.{minor}");
+                }
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
                 _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
                 _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
                     new DirectionalLightBuffer(RgbaFloat.White, new System.Numerics.Vector3(-.3f, -1f, -1f)));
                 _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
+                _rc.ClearColor = new RgbaFloat(0.35f, 0.35f, 0.45f, .85f);
 
                 _visiblityManager = SceneWithBoxes();
 

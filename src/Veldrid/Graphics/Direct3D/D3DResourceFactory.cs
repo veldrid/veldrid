@@ -119,6 +119,11 @@ namespace Veldrid.Graphics.Direct3D
             return texture;
         }
 
+        public override BlendState CreateCustomBlendState(bool isBlendEnabled, Blend srcBlend, Blend destBlend, BlendFunction blendFunc)
+        {
+            return new D3DBlendState(_device, isBlendEnabled, srcBlend, destBlend, blendFunc, srcBlend, destBlend, blendFunc);
+        }
+
         public override BlendState CreateCustomBlendState(
             bool isBlendEnabled,
             Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
@@ -130,6 +135,11 @@ namespace Veldrid.Graphics.Direct3D
         private string GetShaderPathFromName(string shaderName)
         {
             return Path.Combine(AppContext.BaseDirectory, s_shaderDirectory, shaderName + "." + s_shaderFileExtension);
+        }
+
+        public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison)
+        {
+            return new D3DDepthStencilState(_device, isDepthEnabled, comparison);
         }
     }
 }

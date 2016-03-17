@@ -21,7 +21,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetVertexData<T>(T[] vertexData, VertexDescriptor descriptor, int destinationOffsetInVertices) where T : struct
         {
-            SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Length, destinationOffsetInVertices * vertexData.Length);
+            SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Length, descriptor.VertexSizeInBytes * destinationOffsetInVertices);
         }
 
         public void SetVertexData(IntPtr vertexData, VertexDescriptor descriptor, int numVertices)
@@ -31,7 +31,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetVertexData(IntPtr vertexData, VertexDescriptor descriptor, int numVertices, int destinationOffsetInVertices)
         {
-            SetData(vertexData, descriptor.VertexSizeInBytes * numVertices, destinationOffsetInVertices * descriptor.VertexSizeInBytes);
+            SetData(vertexData, descriptor.VertexSizeInBytes * numVertices, descriptor.VertexSizeInBytes * destinationOffsetInVertices);
         }
     }
 }

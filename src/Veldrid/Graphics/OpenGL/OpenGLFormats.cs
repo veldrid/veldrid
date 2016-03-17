@@ -20,6 +20,31 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        internal static DepthFunction ConvertDepthComparison(DepthComparison depthComparison)
+        {
+            switch (depthComparison)
+            {
+                case DepthComparison.Never:
+                    return DepthFunction.Never;
+                case DepthComparison.Less:
+                    return DepthFunction.Less;
+                case DepthComparison.Equal:
+                    return DepthFunction.Equal;
+                case DepthComparison.LessEqual:
+                    return DepthFunction.Lequal;
+                case DepthComparison.Greater:
+                    return DepthFunction.Greater;
+                case DepthComparison.NotEqual:
+                    return DepthFunction.Notequal;
+                case DepthComparison.GreaterEqual:
+                    return DepthFunction.Gequal;
+                case DepthComparison.Always:
+                    return DepthFunction.Always;
+                default:
+                    throw Illegal.Value<DepthComparison>();
+            }
+        }
+
         public static PixelType MapPixelType(PixelFormat format)
         {
             switch (format)

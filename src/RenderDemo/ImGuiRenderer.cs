@@ -2,11 +2,9 @@
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
-using SharpDX.Mathematics.Interop;
 using System;
 using System.Numerics;
 using Veldrid.Graphics;
-using Veldrid.Platform;
 
 namespace Veldrid.RenderDemo
 {
@@ -18,6 +16,8 @@ namespace Veldrid.RenderDemo
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private float _wheelPosition;
+        private readonly BlendState _blendState;
+        private DepthStencilState _depthDisabledState;
 
         public ImGuiRenderer(RenderContext rc, NativeWindow window)
         {
@@ -26,7 +26,11 @@ namespace Veldrid.RenderDemo
             _indexBuffer = factory.CreateIndexBuffer(200, false);
             CreateFontsTexture(rc);
             _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
-
+            _blendState = factory.CreateCustomBlendState(
+                true,
+                Blend.InverseSourceAlpha, Blend.Zero, BlendFunction.Add,
+                Blend.SourceAlpha, Blend.InverseSourceAlpha, BlendFunction.Add);
+            _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
             _material = factory.CreateMaterial("imgui-vertex", "imgui-frag",
                 new MaterialVertexInput(20, new MaterialVertexInputElement[]
                 {
@@ -52,8 +56,6 @@ namespace Veldrid.RenderDemo
 
         public unsafe void Render(RenderContext rc)
         {
-            GL.Disable(EnableCap.DepthTest);
-
             ImGui.Render();
             RenderImDrawData(ImGui.GetDrawData(), rc);
             ImGui.NewFrame();
@@ -147,9 +149,9 @@ namespace Veldrid.RenderDemo
                 var io = ImGui.GetIO();
 
                 Matrix4x4 mvp = Matrix4x4.CreateOrthographicOffCenter(
-                    0.375f,
+                    0f,
                     io.DisplaySize.X / io.DisplayFramebufferScale.X,
-                    io.DisplaySize.Y / io.DisplayFramebufferScale.Y + 0.375f,
+                    io.DisplaySize.Y / io.DisplayFramebufferScale.Y,
                     0.0f,
                     -1.0f,
                     1.0f);
@@ -157,6 +159,8 @@ namespace Veldrid.RenderDemo
                 _projectionMatrixProvider.Data = mvp;
             }
 
+            rc.SetBlendState(_blendState);
+            rc.SetDepthStencilState(_depthDisabledState);
             rc.SetVertexBuffer(_vertexBuffer);
             rc.SetIndexBuffer(_indexBuffer);
             rc.SetMaterial(_material);
@@ -191,6 +195,10 @@ namespace Veldrid.RenderDemo
                 }
                 vtx_offset += cmd_list->VtxBuffer.Size;
             }
+
+            rc.ClearScissorRectangle();
+            rc.SetBlendState(rc.OverrideBlend);
+            rc.SetDepthStencilState(rc.DefaultDepthStencilState);
         }
     }
 }

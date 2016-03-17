@@ -31,6 +31,7 @@
     <Compile Include="Graphics\FlatListVisibilityManager.cs" />
     <Compile Include="Graphics\Framebuffer.cs" />
     <Compile Include="Graphics\IndexFormat.cs" />
+    <Compile Include="Graphics\ObjImporter.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLBlendState.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLDefaultFramebuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLDepthStencilState.cs" />
@@ -42,6 +43,7 @@
     <Compile Include="Graphics\RenderOrderKey.cs" />
     <Compile Include="Graphics\RenderQueue.cs" />
     <Compile Include="Graphics\TextureData.cs" />
+    <Compile Include="Graphics\VertexPositionNormalColorTexture.cs" />
     <Compile Include="Graphics\VisibiltyManager.cs" />
     <Compile Include="Platform\KeyEvent.cs" />
     <Compile Include="Platform\SameThreadWindow.cs" />
@@ -134,6 +136,8 @@
     </Content>
     <None Include="project.json" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Graphics\Formats\" />
+  </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>

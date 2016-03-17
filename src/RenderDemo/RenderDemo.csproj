@@ -18,6 +18,7 @@
     <Compile Include="DirectionalLightBuffer.cs" />
     <Compile Include="ImGuiRenderer.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="TeapotRenderer.cs" />
     <Compile Include="TexturedCubeRenderer.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
@@ -58,6 +59,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Graphics\Direct3D\Shaders\imgui-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Models\Teapot.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="project.json" />

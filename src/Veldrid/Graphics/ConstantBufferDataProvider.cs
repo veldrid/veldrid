@@ -51,6 +51,8 @@ namespace Veldrid.Graphics
         private T _data;
         private readonly int _dataSizeInBytes;
 
+        public T Data => _data;
+
         public ConstantDataProvider(T data)
         {
             _data = data;

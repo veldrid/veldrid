@@ -2,6 +2,7 @@ using ImGuiNET;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
+using System.Numerics;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
@@ -19,6 +20,8 @@ namespace Veldrid.RenderDemo
         private static bool _limitFrameRate = false;
         private static FlatListVisibilityManager _visiblityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
+        private static DynamicDataProvider<Matrix4x4> _viewMatrixProvider = new DynamicDataProvider<Matrix4x4>(
+            Matrix4x4.CreateLookAt(new Vector3(0, 3, 5), new Vector3(0, 0, 0), new Vector3(0, 1, 0)));
 
         private static ImageProcessorTexture _altBufferImage;
         private static bool _takeScreenshot;
@@ -30,6 +33,7 @@ namespace Veldrid.RenderDemo
             {
                 _window = new DedicatedThreadWindow();
                 _rc = new D3DRenderContext(_window);
+
                 if (_rc is OpenGLRenderContext)
                 {
                     int major, minor;
@@ -37,15 +41,17 @@ namespace Veldrid.RenderDemo
                     GL.GetInteger(GetPName.MinorVersion, out minor);
                     Console.WriteLine($"Created OpenGL Context. Version: {major}.{minor}");
                 }
+
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
                 _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
                 _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
                     new DirectionalLightBuffer(RgbaFloat.White, new System.Numerics.Vector3(-.3f, -1f, -1f)));
                 _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
+                _rc.DataProviders.Add("ViewMatrix", _viewMatrixProvider);
                 _rc.ClearColor = new RgbaFloat(0.35f, 0.35f, 0.45f, .85f);
 
-                _visiblityManager = SceneWithBoxes();
+                _visiblityManager = SceneWithTeapot();
 
                 _apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
 
@@ -84,39 +90,75 @@ namespace Veldrid.RenderDemo
 
         private static FlatListVisibilityManager SceneWithBoxes()
         {
-            FlatListVisibilityManager vm = new FlatListVisibilityManager();
-            var tcr = new TexturedCubeRenderer(_rc);
-            tcr.Position = new System.Numerics.Vector3(-5f, 0, -3);
-            vm.AddRenderItem(tcr);
-
-            for (int x = 0; x < 6; x++)
+            if (_vm == null)
             {
-                for (int y = 0; y < 6; y++)
+                _vm = new FlatListVisibilityManager();
+                var tcr = new TexturedCubeRenderer(_rc);
+                tcr.Position = new System.Numerics.Vector3(-5f, 0, -3);
+                _vm.AddRenderItem(tcr);
+
+                for (int x = 0; x < 6; x++)
                 {
-                    for (int z = 0; z < 6; z++)
+                    for (int y = 0; y < 6; y++)
                     {
-                        var ccr = new ColoredCubeRenderer(_rc);
-                        ccr.Position = new System.Numerics.Vector3((x * 1.35f) - 3, (y * 1.35f) - 6, (z * 1.35f) - 10);
-                        vm.AddRenderItem(ccr);
+                        for (int z = 0; z < 6; z++)
+                        {
+                            var ccr = new ColoredCubeRenderer(_rc);
+                            ccr.Position = new System.Numerics.Vector3((x * 1.35f) - 3, (y * 1.35f) - 6, (z * 1.35f) - 10);
+                            _vm.AddRenderItem(ccr);
+                        }
                     }
                 }
             }
 
-            return vm;
+            return _vm;
+        }
+
+        private static FlatListVisibilityManager SceneWithTeapot()
+        {
+            if (_teapotVM == null)
+            {
+                _teapotVM = new FlatListVisibilityManager();
+                var teapot = new TeapotRenderer(_rc);
+                teapot.Position = new System.Numerics.Vector3(0, -1, 0);
+                _teapotVM.AddRenderItem(teapot);
+            }
+
+            return _teapotVM;
         }
 
         private const double TickDuration = 1000;
         private static double _elapsed = 0;
         private static Framebuffer _alternateFramebuffer;
+        private static FlatListVisibilityManager _vm;
+        private static FlatListVisibilityManager _teapotVM;
 
         private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
         {
+            float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
+            double circleWidth = 7.0;
+            var position = new Vector3(
+                (float)(Math.Cos(timeFactor) * circleWidth),
+                3 + (float)Math.Sin(timeFactor) * 2,
+                (float)(Math.Sin(timeFactor) * circleWidth));
+            _viewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
+
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
             _imguiRenderer.UpdateImGuiInput(_window.NativeWindow);
 
-            if (ImGui.BeginWindow("A window"))
+            bool opened = false;
+            float width = Math.Min(100, Math.Max(300, _window.Width * .2f));
+            ImGuiNative.igSetNextWindowPos(new Vector2(15, 15), SetCondition.FirstUseEver);
+            if (ImGui.BeginWindow("A window", ref opened, new Vector2(width, 200), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
             {
-                ImGui.Text("Hello!");
+                if (ImGui.Button("Boxes"))
+                {
+                    _visiblityManager = SceneWithBoxes();
+                }
+                if (ImGui.Button("Teapot"))
+                {
+                    _visiblityManager = SceneWithTeapot();
+                }
             }
             ImGui.EndWindow();
 
@@ -160,11 +202,6 @@ namespace Veldrid.RenderDemo
             }
 
             _rc.RenderFrame(_visiblityManager);
-
-            if (ImGui.Button("Press this button."))
-            {
-                throw new InvalidOperationException("How did you press an invisible button?");
-            }
 
             _imguiRenderer.Render(_rc);
 

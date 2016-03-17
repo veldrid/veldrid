@@ -38,10 +38,6 @@ namespace Veldrid.Graphics
 
         public abstract ResourceFactory ResourceFactory { get; }
 
-        public DynamicDataProvider<Matrix4x4> ViewMatrixProvider { get; }
-            = new DynamicDataProvider<Matrix4x4>(
-                Matrix4x4.CreateLookAt(new Vector3(0, 3, 5), new Vector3(0, 0, 0), new Vector3(0, 1, 0)));
-
         public DynamicDataProvider<Matrix4x4> ProjectionMatrixProvider { get; }
             = new DynamicDataProvider<Matrix4x4>();
 

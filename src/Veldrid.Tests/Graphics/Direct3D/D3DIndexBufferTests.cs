@@ -40,7 +40,7 @@ namespace Veldrid.Graphics.Direct3D
                 ib.SetIndices(new IntPtr(dataPtr), IndexFormat.UInt16, 2, 150, 250);
             }
             ushort[] returned = new ushort[indexData.Length + 250];
-            ib.GetData(returned, returned.Length * 4);
+            ib.GetData(returned, returned.Length * sizeof(ushort));
             for (int i = 0; i < 250; i++)
             {
                 Assert.Equal(0, returned[i]);

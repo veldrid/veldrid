@@ -57,9 +57,8 @@ namespace Veldrid.Graphics.OpenGL
         {
             Bind();
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
-            IntPtr mappedPtr = GL.MapBuffer(_target, BufferAccess.WriteOnly);
-            IntPtr destinationPtr = new IntPtr(((byte*)mappedPtr.ToPointer() + destinationOffsetInBytes));
-            SharpDX.Utilities.CopyMemory(destinationPtr, data, dataSizeInBytes);
+            IntPtr mappedPtr = GL.MapBufferRange(_target, (IntPtr)destinationOffsetInBytes, dataSizeInBytes, BufferAccessMask.MapInvalidateRangeBit | BufferAccessMask.MapWriteBit);
+            SharpDX.Utilities.CopyMemory(mappedPtr, data, dataSizeInBytes);
             if (!GL.UnmapBuffer(_target))
             {
                 throw new InvalidOperationException("UnmapBuffer failed.");

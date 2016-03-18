@@ -32,7 +32,7 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new D3DRenderContext(_window);
+                _rc = new OpenGLRenderContext(_window);
 
                 if (_rc is OpenGLRenderContext)
                 {

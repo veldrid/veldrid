@@ -17,7 +17,7 @@ void main()
 {
     outputColor = texture2D(surfaceTexture, texCoord);
 
-    vec4 ambientColor = vec4(.1, .1, .1, 1);
+    vec4 ambientColor = vec4(.4, .4, .4, 1);
 
     vec4 color = texture2D(surfaceTexture, texCoord);
     vec3 lightDir = -normalize(lightDirection);

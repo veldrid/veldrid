@@ -104,7 +104,7 @@ namespace Veldrid.RenderDemo
                         for (int z = 0; z < 6; z++)
                         {
                             var ccr = new ColoredCubeRenderer(_rc);
-                            ccr.Position = new System.Numerics.Vector3((x * 1.35f) - 3, (y * 1.35f) - 6, (z * 1.35f) - 10);
+                            ccr.Position = new Vector3((x * 1.35f) - 3, (y * 1.35f) - 3f, (z * 1.35f) - 3);
                             _vm.AddRenderItem(ccr);
                         }
                     }
@@ -132,15 +132,15 @@ namespace Veldrid.RenderDemo
         private static Framebuffer _alternateFramebuffer;
         private static FlatListVisibilityManager _vm;
         private static FlatListVisibilityManager _teapotVM;
+        private static double _circleWidth = 5.0;
 
         private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
         {
             float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
-            double circleWidth = 7.0;
             var position = new Vector3(
-                (float)(Math.Cos(timeFactor) * circleWidth),
+                (float)(Math.Cos(timeFactor) * _circleWidth),
                 3 + (float)Math.Sin(timeFactor) * 2,
-                (float)(Math.Sin(timeFactor) * circleWidth));
+                (float)(Math.Sin(timeFactor) * _circleWidth));
             _viewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
 
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
@@ -153,10 +153,12 @@ namespace Veldrid.RenderDemo
             {
                 if (ImGui.Button("Boxes"))
                 {
+                    _circleWidth = 12.0;
                     _visiblityManager = SceneWithBoxes();
                 }
                 if (ImGui.Button("Teapot"))
                 {
+                    _circleWidth = 5.0;
                     _visiblityManager = SceneWithTeapot();
                 }
             }

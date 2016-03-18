@@ -3,6 +3,7 @@ using OpenTK.Input;
 using OpenTK.Platform;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Veldrid.Platform
 {
@@ -138,6 +139,8 @@ namespace Veldrid.Platform
         }
 
         IWindowInfo OpenTKWindow.OpenTKWindowInfo => _nativeWindow.WindowInfo;
+
+        public System.Numerics.Vector2 ScaleFactor => System.Numerics.Vector2.One;
 
         public void Close() { throw new NotImplementedException(); }
 

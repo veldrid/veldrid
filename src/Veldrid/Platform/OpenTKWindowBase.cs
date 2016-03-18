@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using OpenTK.Graphics;
 using OpenTK.Input;
 using OpenTK.Platform;
 using System;
@@ -14,6 +15,8 @@ namespace Veldrid.Platform
         public event Action Closing;
         public event Action Closed;
 
+        public System.Numerics.Vector2 ScaleFactor { get; private set; }
+
         protected SimpleInputSnapshot CurrentSnapshot = new SimpleInputSnapshot();
 
         public OpenTKWindowBase()
@@ -23,7 +26,21 @@ namespace Veldrid.Platform
 
         protected virtual void ConstructDefaultWindow()
         {
-            _nativeWindow = new NativeWindow();
+            int desiredWidth = 960;
+            int desiredHeight = 540;
+            _nativeWindow = new NativeWindow(
+                desiredWidth,
+                desiredHeight,
+                "Veldrid Render Window",
+                 GameWindowFlags.Default,
+                 GraphicsMode.Default,
+                 DisplayDevice.Default);
+
+            int actualWidth = _nativeWindow.Width;
+            int actualHeight = _nativeWindow.Height;
+
+            ScaleFactor = new System.Numerics.Vector2((float)actualWidth / desiredWidth, (float)actualHeight / desiredHeight);
+
             _nativeWindow.Visible = true;
             _nativeWindow.X = 100;
             _nativeWindow.Y = 100;

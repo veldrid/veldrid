@@ -46,10 +46,12 @@ namespace Veldrid.RenderDemo
                 _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
                 _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
-                    new DirectionalLightBuffer(RgbaFloat.White, new System.Numerics.Vector3(-.3f, -1f, -1f)));
+                    new DirectionalLightBuffer(RgbaFloat.White, new Vector3(-.3f, -1f, -1f)));
                 _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
                 _rc.DataProviders.Add("ViewMatrix", _viewMatrixProvider);
-                _rc.ClearColor = new RgbaFloat(0.35f, 0.35f, 0.45f, .85f);
+                _rc.ClearColor = RgbaFloat.CornflowerBlue;
+                _wireframeRasterizerState = _rc.ResourceFactory.CreateRasterizerState(
+                    FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
 
                 _visiblityManager = SceneWithTeapot();
 
@@ -133,6 +135,8 @@ namespace Veldrid.RenderDemo
         private static FlatListVisibilityManager _vm;
         private static FlatListVisibilityManager _teapotVM;
         private static double _circleWidth = 5.0;
+        private static RasterizerState _wireframeRasterizerState;
+        private static bool _wireframe;
 
         private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
         {
@@ -144,12 +148,12 @@ namespace Veldrid.RenderDemo
             _viewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
 
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
-            _imguiRenderer.UpdateImGuiInput(_window.NativeWindow);
+            _imguiRenderer.UpdateImGuiInput(_window);
 
             bool opened = false;
             float width = Math.Min(100, Math.Max(300, _window.Width * .2f));
-            ImGuiNative.igSetNextWindowPos(new Vector2(15, 15), SetCondition.FirstUseEver);
-            if (ImGui.BeginWindow("A window", ref opened, new Vector2(width, 200), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
+            ImGuiNative.igSetNextWindowPos(new Vector2(20, 20), SetCondition.Always);
+            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 200), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
             {
                 if (ImGui.Button("Boxes"))
                 {
@@ -160,6 +164,19 @@ namespace Veldrid.RenderDemo
                 {
                     _circleWidth = 5.0;
                     _visiblityManager = SceneWithTeapot();
+                }
+                bool changed = false;
+                if (ImGui.Checkbox("Wireframe", ref changed))
+                {
+                    _wireframe = !_wireframe;
+                    if (_wireframe)
+                    {
+                        _rc.SetRasterizerState(_wireframeRasterizerState);
+                    }
+                    else
+                    {
+                        _rc.SetRasterizerState(_rc.DefaultRasterizerState);
+                    }
                 }
             }
             ImGui.EndWindow();

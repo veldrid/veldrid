@@ -100,5 +100,14 @@ namespace Veldrid.Graphics.OpenGL
         {
             return new OpenGLDepthStencilState(isDepthEnabled, comparison);
         }
+
+        public override RasterizerState CreateRasterizerState(
+            FaceCullingMode cullMode,
+            TriangleFillMode fillMode,
+            bool isDepthClipEnabled,
+            bool isScissorTestEnabled)
+        {
+            return new OpenGLRasterizerState(cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
+        }
     }
 }

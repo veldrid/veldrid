@@ -21,6 +21,7 @@ namespace Veldrid.Graphics
         private Rectangle _scissorRectangle;
         private BlendState _blendState;
         private DepthStencilState _depthStencilState;
+        private RasterizerState _rasterizerState;
 
         public Dictionary<string, ConstantBufferDataProvider> DataProviders { get; } = new Dictionary<string, ConstantBufferDataProvider>();
 
@@ -107,8 +108,9 @@ namespace Veldrid.Graphics
         }
 
         public void SetScissorRectangle(int left, int top, int right, int bottom)
+            => SetScissorRectangle(new Rectangle(left, top, right, bottom));
+        public void SetScissorRectangle(Rectangle r)
         {
-            Rectangle r = new Rectangle(left, top, right, bottom);
             if (_scissorRectangle != r)
             {
                 _scissorRectangle = r;
@@ -116,22 +118,15 @@ namespace Veldrid.Graphics
             }
         }
 
-        protected abstract void PlatformSetScissorRectangle(Rectangle rectangle);
-
         public void ClearScissorRectangle()
         {
-            _scissorRectangle = default(Rectangle);
-            PlatformClearScissorRectangle();
+            SetScissorRectangle(0, 0, Window.Width, Window.Height);
         }
-
-        protected abstract void PlatformClearScissorRectangle();
 
         public void SetDefaultFramebuffer()
         {
             PlatformSetDefaultFramebuffer();
         }
-
-        protected abstract void PlatformSetDefaultFramebuffer();
 
         private void NullInputs()
         {
@@ -168,7 +163,8 @@ namespace Veldrid.Graphics
 
         private DepthStencilState _defaultDepthStencilState;
         public DepthStencilState DefaultDepthStencilState
-            => _defaultDepthStencilState ?? (_defaultDepthStencilState = ResourceFactory.CreateDepthStencilState(true, DepthComparison.LessEqual));
+            => _defaultDepthStencilState ?? (_defaultDepthStencilState
+                = ResourceFactory.CreateDepthStencilState(true, DepthComparison.LessEqual));
 
         public void SetDepthStencilState(DepthStencilState depthStencilState)
         {
@@ -176,6 +172,20 @@ namespace Veldrid.Graphics
             {
                 _depthStencilState = depthStencilState;
                 _depthStencilState.Apply();
+            }
+        }
+
+        private RasterizerState _defaultRasterizerState;
+        public RasterizerState DefaultRasterizerState
+            => _defaultRasterizerState ?? (_defaultRasterizerState
+                = ResourceFactory.CreateRasterizerState(FaceCullingMode.Back, TriangleFillMode.Solid, true, true));
+
+        public void SetRasterizerState(RasterizerState rasterizerState)
+        {
+            if (_rasterizerState != rasterizerState)
+            {
+                _rasterizerState = rasterizerState;
+                _rasterizerState.Apply();
             }
         }
 
@@ -195,7 +205,12 @@ namespace Veldrid.Graphics
         {
             SetBlendState(AlphaBlend);
             SetDepthStencilState(DefaultDepthStencilState);
+            SetRasterizerState(DefaultRasterizerState);
         }
+
+        protected abstract void PlatformSetScissorRectangle(Rectangle rectangle);
+
+        protected abstract void PlatformSetDefaultFramebuffer();
 
         protected abstract void PlatformClearBuffer();
 

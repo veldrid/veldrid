@@ -13,7 +13,6 @@ namespace Veldrid.Graphics.Direct3D
         private DeviceContext _deviceContext;
 
         private D3DFramebuffer _defaultFramebuffer;
-        private RasterizerState _rasterizerState;
         private DeviceCreationFlags _deviceFlags;
 
         public D3DRenderContext(Window window) : this(window, DeviceCreationFlags.None) { }
@@ -67,7 +66,6 @@ namespace Veldrid.Graphics.Direct3D
             var factory = _swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(Window.Handle, WindowAssociationFlags.IgnoreAll);
 
-            CreateRasterizerState();
             OnWindowResized();
             SetFramebuffer(_defaultFramebuffer);
 
@@ -79,16 +77,6 @@ namespace Veldrid.Graphics.Direct3D
             // Setup targets and viewport for rendering
             _deviceContext.Rasterizer.SetViewport(0, 0, Window.Width, Window.Height);
             CurrentFramebuffer.Apply();
-        }
-
-        private void CreateRasterizerState()
-        {
-            var desc = RasterizerStateDescription.Default();
-            desc.FillMode = FillMode.Solid;
-            desc.CullMode = CullMode.None;
-            desc.IsScissorEnabled = true;
-            desc.IsDepthClipEnabled = true;
-            _rasterizerState = new RasterizerState(_device, desc);
         }
 
         protected override void PlatformResize()
@@ -142,11 +130,6 @@ namespace Veldrid.Graphics.Direct3D
         protected override void PlatformSetScissorRectangle(Rectangle rectangle)
         {
             _device.ImmediateContext.Rasterizer.SetScissorRectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
-        }
-
-        protected override void PlatformClearScissorRectangle()
-        {
-            _device.ImmediateContext.Rasterizer.SetScissorRectangle(0, 0, Window.Width, Window.Height);
         }
 
         private new D3DFramebuffer CurrentFramebuffer => (D3DFramebuffer)base.CurrentFramebuffer;

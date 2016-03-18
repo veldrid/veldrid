@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Veldrid.Platform;
 
 namespace Veldrid
@@ -12,6 +13,7 @@ namespace Veldrid
         WindowState WindowState { get; set; }
         bool Exists { get; }
         bool Visible { get; set; }
+        Vector2 ScaleFactor { get; }
 
         event Action Resized;
         event Action Closing;

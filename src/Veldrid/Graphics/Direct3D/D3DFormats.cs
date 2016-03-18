@@ -36,6 +36,34 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
+        internal static FillMode ConvertFillMode(TriangleFillMode fillMode)
+        {
+            switch (fillMode)
+            {
+                case TriangleFillMode.Solid:
+                    return FillMode.Solid;
+                case TriangleFillMode.Wireframe:
+                    return FillMode.Wireframe;
+                default:
+                    throw Illegal.Value<TriangleFillMode>();
+            }
+        }
+
+        internal static CullMode ConvertCullMode(FaceCullingMode cullMode)
+        {
+            switch (cullMode)
+            {
+                case FaceCullingMode.Back:
+                    return CullMode.Back;
+                case FaceCullingMode.Front:
+                    return CullMode.Front;
+                case FaceCullingMode.None:
+                    return CullMode.None;
+                default:
+                    throw Illegal.Value<FaceCullingMode>();
+            }
+        }
+
         public static BlendOption ConvertBlend(Blend blendFactor)
         {
             switch (blendFactor)

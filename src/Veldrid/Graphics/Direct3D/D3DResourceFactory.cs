@@ -141,5 +141,14 @@ namespace Veldrid.Graphics.Direct3D
         {
             return new D3DDepthStencilState(_device, isDepthEnabled, comparison);
         }
+
+        public override RasterizerState CreateRasterizerState(
+            FaceCullingMode cullMode,
+            TriangleFillMode fillMode,
+            bool isDepthClipEnabled,
+            bool isScissorTestEnabled)
+        {
+            return new D3DRasterizerState(_device, cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
+        }
     }
 }

@@ -5,6 +5,7 @@ using OpenTK.Input;
 using System;
 using System.Numerics;
 using Veldrid.Graphics;
+using Veldrid.Platform;
 
 namespace Veldrid.RenderDemo
 {
@@ -49,7 +50,6 @@ namespace Veldrid.RenderDemo
                 }));
 
             SetPerFrameImGuiData(rc, 1f / 60f);
-            UpdateImGuiInput(window);
 
             ImGui.NewFrame();
         }
@@ -72,22 +72,22 @@ namespace Veldrid.RenderDemo
             io.DisplaySize = new System.Numerics.Vector2(
                 rc.Window.Width,
                 rc.Window.Height);
-            io.DisplayFramebufferScale = new System.Numerics.Vector2(1.0f);
+            io.DisplayFramebufferScale = rc.Window.ScaleFactor;
             io.DeltaTime = deltaMilliseconds / 1000; // DeltaTime is in seconds.
         }
 
-        public unsafe void UpdateImGuiInput(NativeWindow window)
+        public unsafe void UpdateImGuiInput(OpenTKWindow window)
         {
             IO io = ImGui.GetIO();
             MouseState cursorState = Mouse.GetCursorState();
             MouseState mouseState = Mouse.GetState();
 
-            if (window.Bounds.Contains(cursorState.X, cursorState.Y))
+            if (window.NativeWindow.Bounds.Contains(cursorState.X, cursorState.Y))
             {
-                Point windowPoint = window.PointToClient(new Point(cursorState.X, cursorState.Y));
+                Point windowPoint = window.NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
                 io.MousePosition = new System.Numerics.Vector2(
-                    windowPoint.X / 1f,
-                    windowPoint.Y / 1f);
+                    windowPoint.X / window.ScaleFactor.X,
+                    windowPoint.Y / window.ScaleFactor.Y);
             }
             else
             {

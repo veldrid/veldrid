@@ -45,6 +45,34 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        internal static PolygonMode ConvertFillMode(TriangleFillMode fillMode)
+        {
+            switch (fillMode)
+            {
+                case TriangleFillMode.Solid:
+                    return PolygonMode.Fill;
+                case TriangleFillMode.Wireframe:
+                    return PolygonMode.Line;
+                default:
+                    throw Illegal.Value<TriangleFillMode>();
+            }
+        }
+
+        internal static CullFaceMode ConvertCullMode(FaceCullingMode cullMode)
+        {
+            switch (cullMode)
+            {
+                case FaceCullingMode.Back:
+                    return CullFaceMode.Back;
+                case FaceCullingMode.Front:
+                    return CullFaceMode.Front;
+                default:
+                    // FaceCullingMode.None should not be converted.
+                    // It translates to GL.Disable(EnableCap.CullFace).
+                    throw Illegal.Value<FaceCullingMode>();
+            }
+        }
+
         public static PixelType MapPixelType(PixelFormat format)
         {
             switch (format)

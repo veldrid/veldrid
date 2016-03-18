@@ -35,5 +35,12 @@ namespace Veldrid.Graphics
             Blend srcColor, Blend destColor, BlendFunction colorBlendFunc);
 
         public abstract DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison);
+
+        public abstract RasterizerState CreateRasterizerState(
+            FaceCullingMode cullMode,
+            TriangleFillMode fillMode,
+            bool isDepthClipEnabled,
+            bool isScissorTestEnabled
+            );
     }
 }

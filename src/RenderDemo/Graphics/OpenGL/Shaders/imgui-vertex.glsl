@@ -1,6 +1,6 @@
-﻿#version 330
+﻿#version 140
 
-layout(std140) uniform ProjectionMatrixUniform
+uniform ProjectionMatrixUniform
 {
     mat4 projection_matrix;
 };

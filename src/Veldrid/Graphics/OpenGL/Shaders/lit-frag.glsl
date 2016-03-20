@@ -1,6 +1,6 @@
-﻿#version 330
+﻿#version 140
 
-layout(std140) uniform LightBuffer
+uniform LightBuffer
 {
     vec4 diffuseColor;
     vec3 lightDirection;

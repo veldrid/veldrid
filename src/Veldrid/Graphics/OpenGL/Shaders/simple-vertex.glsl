@@ -1,11 +1,11 @@
-﻿#version 330
+﻿#version 140
 
-layout(std140) uniform projectionMatrixUniform
+uniform projectionMatrixUniform
 {
     mat4 projection_matrix;
 };
 
-layout(std140) uniform modelviewMatrixUniform
+uniform modelviewMatrixUniform
 {
     mat4 modelview_matrix;
 };

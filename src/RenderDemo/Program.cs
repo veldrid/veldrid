@@ -21,10 +21,16 @@ namespace Veldrid.RenderDemo
         private static FlatListVisibilityManager _visiblityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
         private static DynamicDataProvider<Matrix4x4> _viewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
+        private static FlatListVisibilityManager _boxSceneVM;
+        private static FlatListVisibilityManager _teapotVM;
+        private static double _circleWidth = 5.0;
+        private static bool _wireframe;
 
-        private static ImageProcessorTexture _altBufferImage;
         private static bool _takeScreenshot;
         private static ImGuiRenderer _imguiRenderer;
+
+        private static Framebuffer _screenshotFramebuffer;
+        private static RasterizerState _wireframeRasterizerState;
 
         public static void Main()
         {
@@ -34,7 +40,6 @@ namespace Veldrid.RenderDemo
                 _rc = new D3DRenderContext(_window);
 
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
-                _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
                     new DirectionalLightBuffer(RgbaFloat.White, new Vector3(-.3f, -1f, -1f)));
                 _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
@@ -89,7 +94,7 @@ namespace Veldrid.RenderDemo
 
         private static void CreateScreenshotFramebuffer()
         {
-            _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
+            _screenshotFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
         }
 
         private static FlatListVisibilityManager SceneWithBoxes()
@@ -130,15 +135,6 @@ namespace Veldrid.RenderDemo
 
             return _teapotVM;
         }
-
-        private const double TickDuration = 1000;
-        private static FlatListVisibilityManager _boxSceneVM;
-        private static FlatListVisibilityManager _teapotVM;
-        private static double _circleWidth = 5.0;
-        private static bool _wireframe;
-
-        private static Framebuffer _alternateFramebuffer;
-        private static RasterizerState _wireframeRasterizerState;
 
         private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
         {
@@ -294,7 +290,6 @@ namespace Veldrid.RenderDemo
                 ((IDisposable)_rc).Dispose();
                 _rc = newContext;
 
-                CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
                 if (_wireframe)
                 {
@@ -309,7 +304,8 @@ namespace Veldrid.RenderDemo
 
             if (_takeScreenshot)
             {
-                _rc.SetFramebuffer(_alternateFramebuffer);
+                CreateScreenshotFramebuffer();
+                _rc.SetFramebuffer(_screenshotFramebuffer);
                 _rc.ClearBuffer();
             }
 
@@ -321,8 +317,9 @@ namespace Veldrid.RenderDemo
             {
                 _takeScreenshot = false;
                 _rc.SetDefaultFramebuffer();
-                _alternateFramebuffer.ColorTexture.CopyTo(_altBufferImage);
-                _altBufferImage.SaveToFile(Environment.TickCount + ".png");
+                var screenshotImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
+                _screenshotFramebuffer.ColorTexture.CopyTo(screenshotImage);
+                screenshotImage.SaveToFile(Environment.TickCount + ".png");
             }
 
             _rc.SwapBuffers();

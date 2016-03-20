@@ -25,19 +25,6 @@ namespace Veldrid.Graphics.Direct3D
 
         public D3DTexture(
             Device device,
-            int width, int height,
-            BindFlags bindFlags,
-            ResourceUsage usage,
-            CpuAccessFlags cpuAccessFlags,
-            SharpDX.DXGI.Format format)
-        {
-            _device = device;
-            Texture2DDescription desc = CreateDescription(width, height, bindFlags, usage, cpuAccessFlags, format);
-            DeviceTexture = new Texture2D(device, desc);
-        }
-
-        public D3DTexture(
-            Device device,
             BindFlags bindFlags,
             ResourceUsage usage,
             CpuAccessFlags cpuAccessFlags,
@@ -59,12 +46,12 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         private Texture2DDescription CreateDescription(
-        int width,
-        int height,
-        BindFlags bindFlags,
-        ResourceUsage usage,
-        CpuAccessFlags cpuAccessFlags,
-        SharpDX.DXGI.Format format)
+            int width,
+            int height,
+            BindFlags bindFlags,
+            ResourceUsage usage,
+            CpuAccessFlags cpuAccessFlags,
+            SharpDX.DXGI.Format format)
         {
             Texture2DDescription desc;
             desc.Width = width;
@@ -104,12 +91,14 @@ namespace Veldrid.Graphics.Direct3D
         {
             D3DTexture stagingTexture = new D3DTexture(
                 _device,
-                width,
-                height,
                 BindFlags.None,
                 ResourceUsage.Staging,
                 CpuAccessFlags.Read,
-                SharpDX.DXGI.Format.R32G32B32A32_Float);
+                SharpDX.DXGI.Format.R32G32B32A32_Float,
+                destPtr,
+                width,
+                height,
+                width * pixelSizeInBytes);
 
             _device.ImmediateContext.CopyResource(DeviceTexture, stagingTexture.DeviceTexture);
             var box = _device.ImmediateContext.MapSubresource(stagingTexture.DeviceTexture, 0, MapMode.Read, MapFlags.None);

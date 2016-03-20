@@ -1,21 +1,21 @@
-﻿#version 330
+﻿#version 140
 
-layout(std140) uniform projectionMatrixUniform
+uniform projectionMatrixUniform
 {
     mat4 projection_matrix;
 };
 
-layout(std140) uniform viewMatrixUniform
+uniform viewMatrixUniform
 {
     mat4 view_matrix;
 };
 
-layout(std140) uniform worldMatrixUniform
+uniform worldMatrixUniform
 {
     mat4 world_matrix;
 };
 
-layout(std140) uniform inverseTransposeWorldMatrixUniform
+uniform inverseTransposeWorldMatrixUniform
 {
     mat4 inverseTransposeWorldMatrix;
 };

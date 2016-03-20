@@ -40,6 +40,7 @@
     <Compile Include="Graphics\OpenGL\OpenGLFormats.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFramebuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLRasterizerState.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLUniformStorageAdapter.cs" />
     <Compile Include="Graphics\RasterizerState.cs" />
     <Compile Include="Graphics\Rectangle.cs" />
     <Compile Include="Graphics\RenderItem.cs" />
@@ -141,8 +142,6 @@
     </Content>
     <None Include="project.json" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Graphics\Formats\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>

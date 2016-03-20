@@ -133,7 +133,6 @@ namespace Veldrid.RenderDemo
             _material.ApplyPerObjectInputs(_perObjectProviders);
 
             context.DrawIndexedPrimitives(_teapotMesh.Indices.Length, 0);
-
         }
 
         private static readonly ImageProcessorTexture s_cubeTexture = new ImageProcessorTexture(AppContext.BaseDirectory + "/Textures/CubeTexture.png");

@@ -2,7 +2,7 @@
 
 namespace Veldrid.Graphics
 {
-    public interface IndexBuffer: RenderStateModifier
+    public interface IndexBuffer: RenderStateModifier, IDisposable
     {
         void SetIndices(int[] indices);
         void SetIndices(int[] indices, int stride, int elementOffset);

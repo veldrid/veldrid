@@ -54,5 +54,9 @@ namespace Veldrid.Graphics.OpenGL
                 GL.Disable(EnableCap.DepthClamp);
             }
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

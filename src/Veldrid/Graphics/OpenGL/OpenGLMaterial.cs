@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
+using System.Diagnostics;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -9,11 +10,8 @@ namespace Veldrid.Graphics.OpenGL
         private readonly OpenGLShader _fragmentShader;
         private readonly int _programID;
         private readonly OpenGLMaterialVertexInput _inputs;
-        private readonly MaterialInputs<MaterialGlobalInputElement> _globalInputs;
-        private readonly int[] _globalUniformBlocks;
-        private readonly OpenGLConstantBuffer[] _globalConstantBuffers;
-        private readonly int[] _perObjectUniformBlocks;
-        private readonly OpenGLConstantBuffer[] _perObjectConstantBuffers;
+        private readonly GlobalBindingPair[] _globalUniformBindings;
+        private readonly UniformBinding[] _perObjectBindings;
         private readonly OpenGLProgramTextureBinding[] _textureBindings;
 
         public OpenGLMaterial(
@@ -28,7 +26,6 @@ namespace Veldrid.Graphics.OpenGL
             _vertexShader = vertexShader;
             _fragmentShader = fragmentShader;
             _inputs = new OpenGLMaterialVertexInput(vertexInputs);
-            _globalInputs = globalInputs;
 
             _programID = GL.CreateProgram();
             GL.AttachShader(_programID, _vertexShader.ShaderID);
@@ -50,23 +47,68 @@ namespace Veldrid.Graphics.OpenGL
             }
 
             int globalInputsCount = globalInputs.Elements.Length;
-            _globalUniformBlocks = new int[globalInputsCount];
-            _globalConstantBuffers = new OpenGLConstantBuffer[globalInputsCount];
+            int bindingIndex = 0;
+            _globalUniformBindings = new GlobalBindingPair[globalInputsCount];
             for (int i = 0; i < globalInputsCount; i++)
             {
                 var element = globalInputs.Elements[i];
-                _globalUniformBlocks[i] = GL.GetUniformBlockIndex(_programID, element.Name);
-                _globalConstantBuffers[i] = new OpenGLConstantBuffer(element.DataProvider);
+
+                int blockIndex = GL.GetUniformBlockIndex(_programID, element.Name);
+                if (blockIndex != -1)
+                {
+                    _globalUniformBindings[i] = new GlobalBindingPair(
+                        new UniformBlockBinding(
+                            _programID,
+                            blockIndex,
+                            bindingIndex,
+                            new OpenGLConstantBuffer(element.DataProvider)),
+                        element.DataProvider);
+                    bindingIndex += 1;
+                }
+                else
+                {
+                    int uniformLocation = GL.GetUniformLocation(_programID, element.Name);
+                    if (uniformLocation == -1)
+                    {
+                        throw new InvalidOperationException($"No uniform or uniform block with name {element.Name} was found.");
+                    }
+
+                    _globalUniformBindings[i] = new GlobalBindingPair(
+                        new UniformLocationBinding(
+                            _programID,
+                            uniformLocation),
+                        element.DataProvider);
+                }
             }
 
             int perObjectInputsCount = perObjectInputs.Elements.Length;
-            _perObjectUniformBlocks = new int[perObjectInputsCount];
-            _perObjectConstantBuffers = new OpenGLConstantBuffer[perObjectInputsCount];
+            _perObjectBindings = new UniformBinding[perObjectInputsCount];
             for (int i = 0; i < perObjectInputsCount; i++)
             {
                 var element = perObjectInputs.Elements[i];
-                _perObjectUniformBlocks[i] = GL.GetUniformBlockIndex(_programID, element.Name);
-                _perObjectConstantBuffers[i] = new OpenGLConstantBuffer();
+
+                int blockIndex = GL.GetUniformBlockIndex(_programID, element.Name);
+                if (blockIndex != -1)
+                {
+                    _perObjectBindings[i] = new UniformBlockBinding(
+                            _programID,
+                            blockIndex,
+                            bindingIndex,
+                            new OpenGLConstantBuffer());
+                    bindingIndex += 1;
+                }
+                else
+                {
+                    int uniformLocation = GL.GetUniformLocation(_programID, element.Name);
+                    if (uniformLocation == -1)
+                    {
+                        throw new InvalidOperationException($"No uniform or uniform block with name {element.Name} was found.");
+                    }
+
+                    _perObjectBindings[i] = new UniformLocationBinding(
+                        _programID,
+                        uniformLocation);
+                }
             }
 
             _textureBindings = new OpenGLProgramTextureBinding[textureInputs.Elements.Length];
@@ -91,10 +133,9 @@ namespace Veldrid.Graphics.OpenGL
 
             GL.UseProgram(_programID);
 
-            for (int i = 0; i < _globalInputs.Elements.Length; i++)
+            foreach (var globalBinding in _globalUniformBindings)
             {
-                _globalInputs.Elements[i].DataProvider.SetData(_globalConstantBuffers[i]);
-                _globalConstantBuffers[i].BindToBlock(_programID, _globalUniformBlocks[i], _globalInputs.Elements[i].DataProvider.DataSizeInBytes, i);
+                globalBinding.Bind();
             }
 
             for (int i = 0; i < _textureBindings.Length; i++)
@@ -108,24 +149,14 @@ namespace Veldrid.Graphics.OpenGL
 
         public void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider)
         {
-            dataProvider.SetData(_perObjectConstantBuffers[0]);
-            _perObjectConstantBuffers[0].BindToBlock(
-                _programID,
-                _perObjectUniformBlocks[0],
-                dataProvider.DataSizeInBytes,
-                _globalInputs.Elements.Length);
+            _perObjectBindings[0].Bind(dataProvider);
         }
 
         public void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders)
         {
             for (int i = 0; i < dataProviders.Length; i++)
             {
-                dataProviders[i].SetData(_perObjectConstantBuffers[i]);
-                _perObjectConstantBuffers[i].BindToBlock(
-                    _programID,
-                    _perObjectUniformBlocks[i],
-                    dataProviders[i].DataSizeInBytes,
-                    _globalInputs.Elements.Length + i);
+                _perObjectBindings[i].Bind(dataProviders[i]);
             }
         }
 
@@ -136,6 +167,78 @@ namespace Veldrid.Graphics.OpenGL
             _fragmentShader.Dispose();
 
             // TODO: Other things need to be disposed.
+        }
+
+        private abstract class UniformBinding
+        {
+            public int ProgramID { get; }
+
+            public UniformBinding(int programID)
+            {
+                ProgramID = programID;
+            }
+
+            public abstract void Bind(ConstantBufferDataProvider dataProvider);
+        }
+
+        [DebuggerDisplay("Prog:{ProgramID} BlockInd:{BlockIndex} BindingInd:{BindingIndex}")]
+        private class UniformBlockBinding : UniformBinding
+        {
+            public int BlockIndex { get; }
+            public int BindingIndex { get; }
+            public OpenGLConstantBuffer ConstantBuffer { get; }
+
+            public UniformBlockBinding(
+                int programID,
+                int blockIndex,
+                int bindingIndex,
+                OpenGLConstantBuffer constantBuffer)
+                : base(programID)
+            {
+                BlockIndex = blockIndex;
+                BindingIndex = bindingIndex;
+                ConstantBuffer = constantBuffer;
+            }
+
+            public override void Bind(ConstantBufferDataProvider dataProvider)
+            {
+                dataProvider.SetData(ConstantBuffer);
+                ConstantBuffer.BindToBlock(ProgramID, BlockIndex, dataProvider.DataSizeInBytes, BindingIndex);
+            }
+        }
+
+        private class UniformLocationBinding : UniformBinding
+        {
+            public OpenGLUniformStorageAdapter StorageAdapter { get; }
+
+            public UniformLocationBinding(
+                int programID,
+                int uniformLocation) : base(programID)
+            {
+                StorageAdapter = new OpenGLUniformStorageAdapter(ProgramID, uniformLocation);
+            }
+
+            public override void Bind(ConstantBufferDataProvider dataProvider)
+            {
+                dataProvider.SetData(StorageAdapter);
+            }
+        }
+
+        private struct GlobalBindingPair
+        {
+            public UniformBinding Binding { get; }
+            public ConstantBufferDataProvider DataProvider { get; }
+
+            public GlobalBindingPair(UniformBinding binding, ConstantBufferDataProvider dataProvider)
+            {
+                Binding = binding;
+                DataProvider = dataProvider;
+            }
+
+            public void Bind()
+            {
+                Binding.Bind(DataProvider);
+            }
         }
 
         private class OpenGLMaterialVertexInput

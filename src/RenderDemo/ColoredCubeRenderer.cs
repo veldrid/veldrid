@@ -35,43 +35,46 @@ namespace Veldrid.RenderDemo
 
         private void InitializeContextObjects(RenderContext context)
         {
-            s_currentContext = context;
-            ResourceFactory factory = context.ResourceFactory;
+            if (s_currentContext != context)
+            {
+                s_currentContext = context;
+                ResourceFactory factory = context.ResourceFactory;
 
-            s_vb = factory.CreateVertexBuffer(VertexPositionColor.SizeInBytes * s_cubeVertices.Length, false);
-            VertexDescriptor desc = new VertexDescriptor(VertexPositionColor.SizeInBytes, VertexPositionColor.ElementCount, 0, IntPtr.Zero);
-            s_vb.SetVertexData(s_cubeVertices, desc);
+                s_vb = factory.CreateVertexBuffer(VertexPositionColor.SizeInBytes * s_cubeVertices.Length, false);
+                VertexDescriptor desc = new VertexDescriptor(VertexPositionColor.SizeInBytes, VertexPositionColor.ElementCount, 0, IntPtr.Zero);
+                s_vb.SetVertexData(s_cubeVertices, desc);
 
-            s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length, false);
-            s_ib.SetIndices(s_cubeIndices);
+                s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length, false);
+                s_ib.SetIndices(s_cubeIndices);
 
-            MaterialVertexInput materialInputs = new MaterialVertexInput(
-                VertexPositionColor.SizeInBytes,
-                new MaterialVertexInputElement[]
-                {
+                MaterialVertexInput materialInputs = new MaterialVertexInput(
+                    VertexPositionColor.SizeInBytes,
+                    new MaterialVertexInputElement[]
+                    {
                         new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
                         new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4)
-                });
+                    });
 
-            MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
-                new MaterialGlobalInputElement[]
-                {
+                MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
+                    new MaterialGlobalInputElement[]
+                    {
                         new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.ProjectionMatrixProvider)
-                });
+                    });
 
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
-                new MaterialPerObjectInputElement[]
-                {
+                MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
+                    new MaterialPerObjectInputElement[]
+                    {
                         new MaterialPerObjectInputElement("modelviewMatrixUniform", MaterialInputType.Matrix4x4, _modelViewProvider.DataSizeInBytes)
-                });
+                    });
 
-            s_material = factory.CreateMaterial(
-                VertexShaderSource,
-                FragmentShaderSource,
-                materialInputs,
-                globalInputs,
-                perObjectInputs,
-                MaterialTextureInputs.Empty);
+                s_material = factory.CreateMaterial(
+                    VertexShaderSource,
+                    FragmentShaderSource,
+                    materialInputs,
+                    globalInputs,
+                    perObjectInputs,
+                    MaterialTextureInputs.Empty);
+            }
         }
 
         public void Render(RenderContext context)

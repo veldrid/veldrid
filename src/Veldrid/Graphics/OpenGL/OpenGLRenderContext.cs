@@ -6,7 +6,7 @@ using Veldrid.Platform;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLRenderContext : RenderContext
+    public class OpenGLRenderContext : RenderContext, IDisposable
     {
         private readonly OpenGLResourceFactory _resourceFactory;
         private readonly GraphicsContext _openGLGraphicsContext;
@@ -97,6 +97,11 @@ namespace Veldrid.Graphics.OpenGL
                 Window.Height - rectangle.Bottom,
                 rectangle.Width,
                 rectangle.Height);
+        }
+
+        public void Dispose()
+        {
+            _openGLGraphicsContext.Dispose();
         }
     }
 }

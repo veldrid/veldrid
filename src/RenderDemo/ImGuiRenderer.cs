@@ -9,24 +9,36 @@ using Veldrid.Platform;
 
 namespace Veldrid.RenderDemo
 {
-    public class ImGuiRenderer : RenderItem
+    public class ImGuiRenderer : RenderItem, IDisposable
     {
         private readonly DynamicDataProvider<Matrix4x4> _projectionMatrixProvider;
-        private readonly Material _material;
         private TextureData _fontTexture;
+
+        // Context objects
+        private Material _material;
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
-        private float _wheelPosition;
-        private readonly BlendState _blendState;
+        private BlendState _blendState;
         private DepthStencilState _depthDisabledState;
 
+        private float _wheelPosition;
+
         public ImGuiRenderer(RenderContext rc, NativeWindow window)
+        {
+            CreateFontsTexture(rc);
+            _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
+
+            InitializeContextObjects(rc);
+
+            SetPerFrameImGuiData(rc, 1f / 60f);
+            ImGui.NewFrame();
+        }
+
+        private void InitializeContextObjects(RenderContext rc)
         {
             ResourceFactory factory = rc.ResourceFactory;
             _vertexBuffer = factory.CreateVertexBuffer(500, false);
             _indexBuffer = factory.CreateIndexBuffer(200, false);
-            CreateFontsTexture(rc);
-            _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
             _blendState = factory.CreateCustomBlendState(
                 true,
                 Blend.InverseSourceAlpha, Blend.Zero, BlendFunction.Add,
@@ -48,10 +60,12 @@ namespace Veldrid.RenderDemo
                 {
                     new MaterialTextureInputElement("surfaceTexture", _fontTexture)
                 }));
+        }
 
-            SetPerFrameImGuiData(rc, 1f / 60f);
-
-            ImGui.NewFrame();
+        public void ChangeRenderContext(RenderContext rc)
+        {
+            Dispose();
+            InitializeContextObjects(rc);
         }
 
         public unsafe void Render(RenderContext rc)
@@ -199,6 +213,15 @@ namespace Veldrid.RenderDemo
             rc.ClearScissorRectangle();
             rc.SetBlendState(rc.OverrideBlend);
             rc.SetDepthStencilState(rc.DefaultDepthStencilState);
+        }
+
+        public void Dispose()
+        {
+            ((IDisposable)_vertexBuffer).Dispose();
+            ((IDisposable)_indexBuffer).Dispose();
+            ((IDisposable)_material).Dispose();
+            ((IDisposable)_depthDisabledState).Dispose();
+            ((IDisposable)_blendState).Dispose();
         }
     }
 }

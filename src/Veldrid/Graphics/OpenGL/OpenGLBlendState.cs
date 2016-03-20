@@ -1,8 +1,9 @@
 ﻿using OpenTK.Graphics.OpenGL;
+using System;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLBlendState : BlendState
+    public class OpenGLBlendState : BlendState, IDisposable
     {
         public OpenGLBlendState(
             bool isBlendEnabled,
@@ -46,6 +47,10 @@ namespace Veldrid.Graphics.OpenGL
                     OpenGLFormats.ConvertBlendEquation(ColorBlendFunction),
                     OpenGLFormats.ConvertBlendEquation(AlphaBlendFunction));
             }
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

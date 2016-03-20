@@ -126,7 +126,8 @@ namespace Veldrid.Graphics.Direct3D
                 storageSizeInBytes,
                 _bufferSizeInBytes);
             storageHandle.Free();
-            Device.ImmediateContext.UnmapSubresource(Buffer, 0);
+            Device.ImmediateContext.UnmapSubresource(stagingBuffer, 0);
+            stagingBuffer.Dispose();
         }
 
         public void GetData<T>(ref T storageLocation, int storageSizeInBytes) where T : struct
@@ -141,13 +142,24 @@ namespace Veldrid.Graphics.Direct3D
 
         public unsafe void GetData(System.IntPtr storageLocation, int storageSizeInBytes)
         {
-            DataBox db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.Read, MapFlags.None);
+            Buffer stagingBuffer = new Buffer(Device, new BufferDescription()
+            {
+                BindFlags = BindFlags.None,
+                CpuAccessFlags = CpuAccessFlags.Read,
+                Usage = ResourceUsage.Staging,
+                SizeInBytes = _bufferSizeInBytes
+            });
+
+            Device.ImmediateContext.CopyResource(Buffer, stagingBuffer);
+
+            DataBox db = Device.ImmediateContext.MapSubresource(stagingBuffer, 0, MapMode.Read, MapFlags.None);
             System.Buffer.MemoryCopy(
                 db.DataPointer.ToPointer(),
                 storageLocation.ToPointer(),
                 storageSizeInBytes,
                 _bufferSizeInBytes);
-            Device.ImmediateContext.UnmapSubresource(Buffer, 0);
+            Device.ImmediateContext.UnmapSubresource(stagingBuffer, 0);
+            stagingBuffer.Dispose();
         }
 
         public void Dispose()

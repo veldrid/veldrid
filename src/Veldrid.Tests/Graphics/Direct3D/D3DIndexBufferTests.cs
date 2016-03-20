@@ -41,10 +41,7 @@ namespace Veldrid.Graphics.Direct3D
             }
             ushort[] returned = new ushort[indexData.Length + 250];
             ib.GetData(returned, returned.Length * sizeof(ushort));
-            for (int i = 0; i < 250; i++)
-            {
-                Assert.Equal(0, returned[i]);
-            }
+
             for (int i = 250; i < returned.Length; i++)
             {
                 Assert.Equal(indexData[i - 250], returned[i]);

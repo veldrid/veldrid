@@ -7,6 +7,8 @@ namespace Veldrid.Graphics
     {
         private readonly List<RenderItem> _renderItems = new List<RenderItem>();
 
+        public IReadOnlyCollection<RenderItem> RenderItems => _renderItems;
+
         public void AddRenderItem(RenderItem item) => _renderItems.Add(item);
 
         public void RemoveRenderItem(RenderItem item) => _renderItems.Remove(item);

@@ -4,5 +4,6 @@
     {
         void Render(RenderContext context);
         RenderOrderKey GetRenderOrderKey();
+        void ChangeRenderContext(RenderContext context);
     }
 }

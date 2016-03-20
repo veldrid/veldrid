@@ -52,33 +52,19 @@ namespace Veldrid.Graphics.OpenGL
         [Fact]
         public unsafe void SetAndGet_IntPtr_Offset()
         {
-            for (int g = 0; g < 1000; g++)
-            {
-                OpenGLVertexBuffer vb = (OpenGLVertexBuffer)_factory.CreateVertexBuffer(1, false);
+            OpenGLVertexBuffer vb = (OpenGLVertexBuffer)_factory.CreateVertexBuffer(1, false);
 
-                float[] vertexData = Enumerable.Range(0, 150).Select(i => (float)i).ToArray();
-                fixed (float* dataPtr = vertexData)
-                {
-                    vb.SetVertexData(new IntPtr(dataPtr), new VertexDescriptor(sizeof(float), 1, 0, IntPtr.Zero), 150, 250);
-                }
-                float[] returned = new float[vertexData.Length + 250];
-                vb.GetData(returned, returned.Length * sizeof(float));
-                for (int i = 0; i < 250; i++)
-                {
-                    if (0 != returned[i])
-                    {
-                        Assert.False(true, $"{i}");
-                    }
-                    Assert.Equal(0, returned[i]);
-                }
-                for (int i = 250; i < returned.Length; i++)
-                {
-                    if (vertexData[i - 250] != returned[i])
-                    {
-                        Assert.False(true);
-                    }
-                    Assert.Equal(vertexData[i - 250], returned[i]);
-                }
+            float[] vertexData = Enumerable.Range(0, 150).Select(i => (float)i).ToArray();
+            fixed (float* dataPtr = vertexData)
+            {
+                vb.SetVertexData(new IntPtr(dataPtr), new VertexDescriptor(sizeof(float), 1, 0, IntPtr.Zero), 150, 250);
+            }
+            float[] returned = new float[vertexData.Length + 250];
+            vb.GetData(returned, returned.Length * sizeof(float));
+
+            for (int i = 250; i < returned.Length; i++)
+            {
+                Assert.Equal(vertexData[i - 250], returned[i]);
             }
         }
     }

@@ -3,6 +3,7 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
 using System.Numerics;
+using System.Threading;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
@@ -14,14 +15,12 @@ namespace Veldrid.RenderDemo
     {
         private static RenderContext _rc;
         private static FrameTimeAverager _fta;
-        private static string _apiName;
         private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
         private static OpenTKWindow _window;
         private static bool _limitFrameRate = false;
         private static FlatListVisibilityManager _visiblityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
-        private static DynamicDataProvider<Matrix4x4> _viewMatrixProvider = new DynamicDataProvider<Matrix4x4>(
-            Matrix4x4.CreateLookAt(new Vector3(0, 3, 5), new Vector3(0, 0, 0), new Vector3(0, 1, 0)));
+        private static DynamicDataProvider<Matrix4x4> _viewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
 
         private static ImageProcessorTexture _altBufferImage;
         private static bool _takeScreenshot;
@@ -32,47 +31,39 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new OpenGLRenderContext(_window);
-
-                if (_rc is OpenGLRenderContext)
-                {
-                    int major, minor;
-                    GL.GetInteger(GetPName.MajorVersion, out major);
-                    GL.GetInteger(GetPName.MinorVersion, out minor);
-                    Console.WriteLine($"Created OpenGL Context. Version: {major}.{minor}");
-                }
+                _rc = new D3DRenderContext(_window);
 
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
-                _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
                 _altBufferImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
                     new DirectionalLightBuffer(RgbaFloat.White, new Vector3(-.3f, -1f, -1f)));
                 _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
                 _rc.DataProviders.Add("ViewMatrix", _viewMatrixProvider);
                 _rc.ClearColor = RgbaFloat.CornflowerBlue;
-                _wireframeRasterizerState = _rc.ResourceFactory.CreateRasterizerState(
-                    FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
+
+                CreateScreenshotFramebuffer();
+                CreateWireframeRasterizerState();
 
                 _visiblityManager = SceneWithTeapot();
 
-                _apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
-
                 _fta = new FrameTimeAverager(666);
 
-                DateTime previousFrameTime = DateTime.UtcNow;
+                long previousFrameTicks = 0;
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
                 while (_rc.Window.Exists)
                 {
-                    double deltaMilliseconds = 0;
-                    DateTime currentFrameTime = default(DateTime);
-                    do
+                    long currentFrameTicks = sw.ElapsedTicks;
+                    double deltaMilliseconds = (currentFrameTicks - previousFrameTicks) * (1000.0 / Stopwatch.Frequency);
+
+                    while (_limitFrameRate && deltaMilliseconds < _desiredFrameLengthMilliseconds)
                     {
-                        currentFrameTime = DateTime.UtcNow;
-                        deltaMilliseconds = (currentFrameTime - previousFrameTime).TotalMilliseconds;
-                    } while (_limitFrameRate && deltaMilliseconds < _desiredFrameLengthMilliseconds);
+                        Thread.Sleep(0);
+                        currentFrameTicks = sw.ElapsedTicks;
+                        deltaMilliseconds = (currentFrameTicks - previousFrameTicks) * (1000.0 / Stopwatch.Frequency);
+                    }
 
-                    previousFrameTime = currentFrameTime;
-
-                    _elapsed += deltaMilliseconds;
+                    previousFrameTicks = currentFrameTicks;
 
                     var snapshot = _window.GetInputSnapshot();
                     Update(snapshot, deltaMilliseconds);
@@ -90,14 +81,25 @@ namespace Veldrid.RenderDemo
             }
         }
 
+        private static void CreateWireframeRasterizerState()
+        {
+            _wireframeRasterizerState = _rc.ResourceFactory.CreateRasterizerState(
+                                FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
+        }
+
+        private static void CreateScreenshotFramebuffer()
+        {
+            _alternateFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
+        }
+
         private static FlatListVisibilityManager SceneWithBoxes()
         {
-            if (_vm == null)
+            if (_boxSceneVM == null)
             {
-                _vm = new FlatListVisibilityManager();
+                _boxSceneVM = new FlatListVisibilityManager();
                 var tcr = new TexturedCubeRenderer(_rc);
-                tcr.Position = new System.Numerics.Vector3(-5f, 0, -3);
-                _vm.AddRenderItem(tcr);
+                tcr.Position = new Vector3(-5f, 0, -3);
+                _boxSceneVM.AddRenderItem(tcr);
 
                 for (int x = 0; x < 6; x++)
                 {
@@ -107,13 +109,13 @@ namespace Veldrid.RenderDemo
                         {
                             var ccr = new ColoredCubeRenderer(_rc);
                             ccr.Position = new Vector3((x * 1.35f) - 3, (y * 1.35f) - 3f, (z * 1.35f) - 3);
-                            _vm.AddRenderItem(ccr);
+                            _boxSceneVM.AddRenderItem(ccr);
                         }
                     }
                 }
             }
 
-            return _vm;
+            return _boxSceneVM;
         }
 
         private static FlatListVisibilityManager SceneWithTeapot()
@@ -130,13 +132,13 @@ namespace Veldrid.RenderDemo
         }
 
         private const double TickDuration = 1000;
-        private static double _elapsed = 0;
-        private static Framebuffer _alternateFramebuffer;
-        private static FlatListVisibilityManager _vm;
+        private static FlatListVisibilityManager _boxSceneVM;
         private static FlatListVisibilityManager _teapotVM;
         private static double _circleWidth = 5.0;
-        private static RasterizerState _wireframeRasterizerState;
         private static bool _wireframe;
+
+        private static Framebuffer _alternateFramebuffer;
+        private static RasterizerState _wireframeRasterizerState;
 
         private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
         {
@@ -151,7 +153,7 @@ namespace Veldrid.RenderDemo
             _imguiRenderer.UpdateImGuiInput(_window);
 
             bool opened = false;
-            float width = Math.Min(100, Math.Max(300, _window.Width * .2f));
+            float width = Math.Max(100, Math.Min(200, _window.Width * .4f));
             ImGuiNative.igSetNextWindowPos(new Vector2(20, 20), SetCondition.Always);
             if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 200), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
             {
@@ -178,12 +180,51 @@ namespace Veldrid.RenderDemo
                         _rc.SetRasterizerState(_rc.DefaultRasterizerState);
                     }
                 }
+                bool isD3D11 = _rc is D3DRenderContext;
+                bool isOpenGL = !isD3D11;
+
+                if (isD3D11)
+                {
+                    ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
+                    ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
+                }
+                if (ImGui.Button("D3D11"))
+                {
+                    ChangeRenderContext(d3d: true);
+                }
+                if (isD3D11)
+                {
+                    ImGui.PopStyleColor(2);
+                }
+                if (isOpenGL)
+                {
+                    ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
+                    ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
+                }
+                if (ImGui.Button("OpenGL"))
+                {
+                    ChangeRenderContext(d3d: false);
+                }
+                if (isOpenGL)
+                {
+                    ImGui.PopStyleColor(2);
+                }
+
+                if (ImGui.Checkbox("Limit Framerate", ref _limitFrameRate))
+                {
+                    var threadedWindow = _window as DedicatedThreadWindow;
+                    if (threadedWindow != null)
+                    {
+                        threadedWindow.LimitPollRate = _limitFrameRate;
+                    }
+                }
             }
             ImGui.EndWindow();
 
             _fta.AddTime(deltaMilliseconds);
 
-            _rc.Window.Title = $"[{_apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
+            string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
+            _rc.Window.Title = $"[{apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
 
             foreach (var ke in snapshot.KeyEvents)
             {
@@ -207,6 +248,59 @@ namespace Veldrid.RenderDemo
             foreach (var me in snapshot.MouseEvents)
             {
                 Console.WriteLine($"MouseButton {me.MouseButton} is {(me.Down ? "down." : "up.")}");
+            }
+        }
+
+        private static void ChangeRenderContext(bool d3d)
+        {
+            RenderContext newContext = null;
+            if (d3d)
+            {
+                if (!(_rc is D3DRenderContext))
+                {
+                    newContext = new D3DRenderContext(_window);
+                }
+            }
+            else
+            {
+                if (!(_rc is OpenGLRenderContext))
+                {
+                    newContext = new OpenGLRenderContext(_window);
+                }
+            }
+
+            if (newContext != null)
+            {
+                foreach (var kvp in _rc.DataProviders)
+                {
+                    newContext.DataProviders[kvp.Key] = kvp.Value;
+                }
+
+                if (_teapotVM != null)
+                {
+                    foreach (var item in _teapotVM?.RenderItems)
+                    {
+                        item.ChangeRenderContext(newContext);
+                    }
+                }
+                if (_boxSceneVM != null)
+                {
+                    foreach (var item in _boxSceneVM.RenderItems)
+                    {
+                        item.ChangeRenderContext(newContext);
+                    }
+                }
+                _imguiRenderer.ChangeRenderContext(newContext);
+
+                ((IDisposable)_rc).Dispose();
+                _rc = newContext;
+
+                CreateScreenshotFramebuffer();
+                CreateWireframeRasterizerState();
+                if (_wireframe)
+                {
+                    _rc.SetRasterizerState(_wireframeRasterizerState);
+                }
             }
         }
 
@@ -241,6 +335,7 @@ namespace Veldrid.RenderDemo
 
             private double _accumulatedTime = 0;
             private int _frameCount = 0;
+            private readonly double _decayRate = .3;
 
             public double CurrentAverageFrameTime { get; private set; }
             public double CurrentAverageFramesPerSecond { get { return 1000 / CurrentAverageFrameTime; } }
@@ -248,6 +343,12 @@ namespace Veldrid.RenderDemo
             public FrameTimeAverager(double maxTimeMilliseconds)
             {
                 _timeLimit = maxTimeMilliseconds;
+            }
+
+            public void Reset()
+            {
+                _accumulatedTime = 0;
+                _frameCount = 0;
             }
 
             public void AddTime(double frameTime)
@@ -263,7 +364,9 @@ namespace Veldrid.RenderDemo
             private void Average()
             {
                 double total = _accumulatedTime;
-                CurrentAverageFrameTime = total / _frameCount;
+                CurrentAverageFrameTime =
+                    (CurrentAverageFrameTime * _decayRate)
+                    + ((total / _frameCount) * (1 - _decayRate));
 
                 _accumulatedTime = 0;
                 _frameCount = 0;

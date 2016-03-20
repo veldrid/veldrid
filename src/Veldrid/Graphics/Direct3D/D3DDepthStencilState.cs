@@ -1,8 +1,9 @@
 ﻿using SharpDX.Direct3D11;
+using System;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public class D3DDepthStencilState : DepthStencilState
+    public class D3DDepthStencilState : DepthStencilState, IDisposable
     {
         private readonly Device _device;
         private readonly SharpDX.Direct3D11.DepthStencilState _deviceState;
@@ -27,6 +28,11 @@ namespace Veldrid.Graphics.Direct3D
         public void Apply()
         {
             _device.ImmediateContext.OutputMerger.SetDepthStencilState(_deviceState);
+        }
+
+        public void Dispose()
+        {
+            _deviceState.Dispose();
         }
     }
 }

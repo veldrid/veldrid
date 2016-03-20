@@ -1,8 +1,9 @@
 ﻿using OpenTK.Graphics.OpenGL;
+using System;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLDepthStencilState : DepthStencilState
+    public class OpenGLDepthStencilState : DepthStencilState, IDisposable
     {
         public OpenGLDepthStencilState(bool isDepthEnabled, DepthComparison comparison)
         {
@@ -25,6 +26,10 @@ namespace Veldrid.Graphics.OpenGL
             {
                 GL.Disable(EnableCap.DepthTest);
             }
+        }
+
+        public void Dispose()
+        {
         }
     }
 

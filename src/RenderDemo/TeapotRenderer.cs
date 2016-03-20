@@ -5,17 +5,17 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
 {
-    public class TeapotRenderer : RenderItem
+    public class TeapotRenderer : RenderItem, IDisposable
     {
-        private readonly VertexBuffer _vertexBuffer;
-
-        private static ObjMeshInfo _teapotMesh;
-        private readonly IndexBuffer _indexBuffer;
-        private readonly Material _material;
-
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
+
+        private VertexBuffer _vertexBuffer;
+        private IndexBuffer _indexBuffer;
+        private Material _material;
+
+        private static ObjMeshInfo _teapotMesh;
 
         public Vector3 Position { get; set; }
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
@@ -38,6 +38,15 @@ namespace Veldrid.RenderDemo
 
         public TeapotRenderer(RenderContext rc)
         {
+            _worldProvider = new DynamicDataProvider<Matrix4x4>();
+            _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
+            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
+
+            InitializeContextObjects(rc);
+        }
+
+        private void InitializeContextObjects(RenderContext rc)
+        {
             var factory = rc.ResourceFactory;
             var mesh = LoadTeapotMesh();
 
@@ -46,10 +55,6 @@ namespace Veldrid.RenderDemo
 
             _indexBuffer = factory.CreateIndexBuffer(mesh.Indices.Length * sizeof(int), false);
             _indexBuffer.SetIndices(mesh.Indices);
-
-            _worldProvider = new DynamicDataProvider<Matrix4x4>();
-            _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
-            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
 
             MaterialVertexInput materialInputs = new MaterialVertexInput(
                 VertexPositionNormalTexture.SizeInBytes,
@@ -87,6 +92,19 @@ namespace Veldrid.RenderDemo
                 globalInputs,
                 perObjectInputs,
                 textureInputs);
+        }
+
+        public void ChangeRenderContext(RenderContext rc)
+        {
+            Dispose();
+            InitializeContextObjects(rc);
+        }
+
+        public void Dispose()
+        {
+            ((IDisposable)_vertexBuffer).Dispose();
+            ((IDisposable)_indexBuffer).Dispose();
+            ((IDisposable)_material).Dispose();
         }
 
         private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)

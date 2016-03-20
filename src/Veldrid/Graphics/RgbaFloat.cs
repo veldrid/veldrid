@@ -34,5 +34,10 @@ namespace Veldrid.Graphics
         {
             return *(Color4*)&clearColor;
         }
+
+        public Vector4 ToVector4()
+        {
+            return _channels;
+        }
     }
 }

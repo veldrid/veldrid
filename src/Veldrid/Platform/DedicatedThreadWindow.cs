@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,6 +9,9 @@ namespace Veldrid.Platform
     {
         private SimpleInputSnapshot _snapshotBackBuffer = new SimpleInputSnapshot();
         private bool _shouldClose;
+
+        public double PollIntervalInMs { get; set; } = 1000.0 / 120.0;
+        public bool LimitPollRate { get; set; }
 
         protected override void ConstructDefaultWindow()
         {
@@ -37,6 +41,10 @@ namespace Veldrid.Platform
             base.ConstructDefaultWindow();
             mre.Set();
 
+            double previousPollTimeMs = 0;
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             while (NativeWindow.Exists)
             {
                 if (_shouldClose)
@@ -44,7 +52,17 @@ namespace Veldrid.Platform
                     NativeWindow.Close();
                 }
 
-                NativeWindow.ProcessEvents();
+                double currentTick = sw.ElapsedTicks;
+                double currentTimeMs = sw.ElapsedTicks * (1000.0 / Stopwatch.Frequency);
+                if (LimitPollRate && currentTimeMs - previousPollTimeMs < PollIntervalInMs)
+                {
+                    Thread.Sleep(0);
+                }
+                else
+                {
+                    previousPollTimeMs = currentTimeMs;
+                    NativeWindow.ProcessEvents();
+                }
             }
         }
     }

@@ -4,15 +4,15 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
 {
-    public class TexturedCubeRenderer : RenderItem
+    public class TexturedCubeRenderer : RenderItem, IDisposable
     {
-        private static VertexBuffer s_vb;
-        private static IndexBuffer s_ib;
-        private static Material s_material;
-
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
+
+        private static VertexBuffer s_vb;
+        private static IndexBuffer s_ib;
+        private static Material s_material;
 
         public Vector3 Position { get; internal set; }
 
@@ -22,54 +22,62 @@ namespace Veldrid.RenderDemo
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
 
+            InitializeContextObjects(context);
+        }
+
+        public void ChangeRenderContext(RenderContext rc)
+        {
+            Dispose();
+            InitializeContextObjects(rc);
+        }
+
+        private void InitializeContextObjects(RenderContext context)
+        {
             ResourceFactory factory = context.ResourceFactory;
 
-            if (s_vb == null)
-            {
-                s_vb = factory.CreateVertexBuffer(VertexPositionNormalTexture.SizeInBytes * s_cubeVertices.Length, false);
-                VertexDescriptor desc = new VertexDescriptor(VertexPositionNormalTexture.SizeInBytes, VertexPositionNormalTexture.ElementCount, 0, IntPtr.Zero);
-                s_vb.SetVertexData(s_cubeVertices, desc);
+            s_vb = factory.CreateVertexBuffer(VertexPositionNormalTexture.SizeInBytes * s_cubeVertices.Length, false);
+            VertexDescriptor desc = new VertexDescriptor(VertexPositionNormalTexture.SizeInBytes, VertexPositionNormalTexture.ElementCount, 0, IntPtr.Zero);
+            s_vb.SetVertexData(s_cubeVertices, desc);
 
-                s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length, false);
-                s_ib.SetIndices(s_cubeIndices);
+            s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length, false);
+            s_ib.SetIndices(s_cubeIndices);
 
-                MaterialVertexInput materialInputs = new MaterialVertexInput(
-                    VertexPositionNormalTexture.SizeInBytes,
-                    new MaterialVertexInputElement[]
-                    {
+            MaterialVertexInput materialInputs = new MaterialVertexInput(
+                VertexPositionNormalTexture.SizeInBytes,
+                new MaterialVertexInputElement[]
+                {
                         new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
                         new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
                         new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
-                    });
+                });
 
-                MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
-                    new MaterialGlobalInputElement[]
-                    {
+            MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
+                new MaterialGlobalInputElement[]
+                {
                         new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.ProjectionMatrixProvider),
                         new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ViewMatrix"]),
                         new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, context.DataProviders["LightBuffer"]),
-                    });
+                });
 
-                MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
-                    new MaterialPerObjectInputElement[]
-                    {
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
+                new MaterialPerObjectInputElement[]
+                {
                         new MaterialPerObjectInputElement("worldMatrixUniform", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
                         new MaterialPerObjectInputElement("inverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
-                    });
+                });
 
-                MaterialTextureInputs textureInputs = new MaterialTextureInputs(
-                        new MaterialTextureInputElement[] {
+            MaterialTextureInputs textureInputs = new MaterialTextureInputs(
+                    new MaterialTextureInputElement[] {
                         new MaterialTextureInputElement("surfaceTexture", s_cubeTexture)
-                    });
+                });
 
-                s_material = factory.CreateMaterial(
-                    VertexShaderSource,
-                    FragmentShaderSource,
-                    materialInputs,
-                    globalInputs,
-                    perObjectInputs,
-                    textureInputs);
-            }
+            s_material = factory.CreateMaterial(
+                VertexShaderSource,
+                FragmentShaderSource,
+                materialInputs,
+                globalInputs,
+                perObjectInputs,
+                textureInputs);
         }
 
         private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)
@@ -98,6 +106,13 @@ namespace Veldrid.RenderDemo
         public RenderOrderKey GetRenderOrderKey()
         {
             return new RenderOrderKey();
+        }
+
+        public void Dispose()
+        {
+            ((IDisposable)s_vb).Dispose();
+            ((IDisposable)s_ib).Dispose();
+            ((IDisposable)s_material).Dispose();
         }
 
         private static readonly VertexPositionNormalTexture[] s_cubeVertices = new VertexPositionNormalTexture[]

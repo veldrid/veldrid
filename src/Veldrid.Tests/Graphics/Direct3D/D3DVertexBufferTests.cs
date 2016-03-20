@@ -52,25 +52,19 @@ namespace Veldrid.Graphics.Direct3D
         [Fact]
         public unsafe void SetAndGet_IntPtr_Offset()
         {
-            for (int g = 0; g < 1000; g++)
-            {
-                D3DVertexBuffer vb = (D3DVertexBuffer)_factory.CreateVertexBuffer(1, false);
+            D3DVertexBuffer vb = (D3DVertexBuffer)_factory.CreateVertexBuffer(1, false);
 
-                float[] vertexData = Enumerable.Range(0, 150).Select(i => (float)i).ToArray();
-                fixed (float* dataPtr = vertexData)
-                {
-                    vb.SetVertexData(new IntPtr(dataPtr), new VertexDescriptor(4, 1, 0, IntPtr.Zero), 150, 250);
-                }
-                float[] returned = new float[vertexData.Length + 250];
-                vb.GetData(returned, returned.Length * 4);
-                for (int i = 0; i < 250; i++)
-                {
-                    Assert.Equal(0, returned[i]);
-                }
-                for (int i = 250; i < returned.Length; i++)
-                {
-                    Assert.Equal(vertexData[i - 250], returned[i]);
-                }
+            float[] vertexData = Enumerable.Range(0, 150).Select(i => (float)i).ToArray();
+            fixed (float* dataPtr = vertexData)
+            {
+                vb.SetVertexData(new IntPtr(dataPtr), new VertexDescriptor(4, 1, 0, IntPtr.Zero), 150, 250);
+            }
+            float[] returned = new float[vertexData.Length + 250];
+            vb.GetData(returned, returned.Length * 4);
+
+            for (int i = 250; i < returned.Length; i++)
+            {
+                Assert.Equal(vertexData[i - 250], returned[i]);
             }
         }
     }

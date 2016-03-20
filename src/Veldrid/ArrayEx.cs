@@ -5,7 +5,7 @@ namespace Veldrid
 {
     public static class ArrayEx
     {
-        public static PinnedArray<T> Pin<T>(this T[] array)
+        public static PinnedArray<T> Pin<T>(this T[] array) where T : struct
         {
             return new PinnedArray<T>(array);
         }

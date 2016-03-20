@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    internal class D3DMaterial : Material
+    internal class D3DMaterial : Material, IDisposable
     {
         private readonly Device _device;
         private readonly VertexShader _vertexShader;
@@ -196,6 +196,25 @@ namespace Veldrid.Graphics.Direct3D
                 provider.SetData(cbBinding.ConstantBuffer);
                 _device.ImmediateContext.VertexShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
                 _device.ImmediateContext.PixelShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
+            }
+        }
+
+        public void Dispose()
+        {
+            _vertexShader.Dispose();
+            _pixelShader.Dispose();
+            _inputLayout.Dispose();
+            foreach (var binding in _constantBufferBindings)
+            {
+                binding.ConstantBuffer.Dispose();
+            }
+            foreach (var binding in _perObjectBufferBindings)
+            {
+                binding.ConstantBuffer.Dispose();
+            }
+            foreach (var binding in _resourceViewBindings)
+            {
+                binding.ResourceView.Dispose();
             }
         }
 

@@ -41,22 +41,9 @@ namespace Veldrid.Graphics.OpenGL
             }
             ushort[] returned = new ushort[indexData.Length + 250];
             ib.GetData(returned, returned.Length * sizeof(ushort));
-            for (int i = 0; i < 250; i++)
-            {
-                if (returned[i] != 0)
-                {
-                    Console.Write($"{i} isnt zero.");
 
-                }
-                Assert.Equal(0, returned[i]);
-            }
             for (int i = 250; i < returned.Length; i++)
             {
-                if (indexData[i - 250] != returned[i])
-                {
-                    Console.Write($"{i} isnt the same.");
-                    Assert.False(true);
-                }
                 Assert.Equal(indexData[i - 250], returned[i]);
             }
         }

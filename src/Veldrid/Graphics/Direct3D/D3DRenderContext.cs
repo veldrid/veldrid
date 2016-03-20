@@ -5,7 +5,7 @@ using System;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public class D3DRenderContext : RenderContext
+    public class D3DRenderContext : RenderContext, IDisposable
     {
         //TODO: PRIVATE
         private SharpDX.Direct3D11.Device _device;
@@ -130,6 +130,13 @@ namespace Veldrid.Graphics.Direct3D
         protected override void PlatformSetScissorRectangle(Rectangle rectangle)
         {
             _device.ImmediateContext.Rasterizer.SetScissorRectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
+        }
+
+        public void Dispose()
+        {
+            _defaultFramebuffer.Dispose();
+            _swapChain.Dispose();
+            _device.Dispose();
         }
 
         private new D3DFramebuffer CurrentFramebuffer => (D3DFramebuffer)base.CurrentFramebuffer;

@@ -1,9 +1,10 @@
 ﻿using SharpDX.Direct3D11;
 using SharpDX.Mathematics.Interop;
+using System;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public class D3DBlendState : BlendState
+    public class D3DBlendState : BlendState, IDisposable
     {
         private readonly Device _device;
         private readonly SharpDX.Direct3D11.BlendState _deviceBlendState;
@@ -53,6 +54,11 @@ namespace Veldrid.Graphics.Direct3D
                 _deviceBlendState,
                 new RawColor4(BlendFactor.R, BlendFactor.G, BlendFactor.B, BlendFactor.A),
                 0xffffffff);
+        }
+
+        public void Dispose()
+        {
+            _deviceBlendState.Dispose();
         }
     }
 }

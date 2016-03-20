@@ -167,10 +167,9 @@ namespace Veldrid.RenderDemo
                     _circleWidth = 5.0;
                     _visiblityManager = SceneWithTeapot();
                 }
-                bool changed = false;
-                if (ImGui.Checkbox("Wireframe", ref changed))
+
+                if (ImGui.Checkbox("Wireframe", ref _wireframe))
                 {
-                    _wireframe = !_wireframe;
                     if (_wireframe)
                     {
                         _rc.SetRasterizerState(_wireframeRasterizerState);

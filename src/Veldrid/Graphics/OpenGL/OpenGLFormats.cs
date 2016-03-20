@@ -82,7 +82,7 @@ namespace Veldrid.Graphics.OpenGL
                 case PixelFormat.Alpha_UInt8:
                     return PixelType.UnsignedByte;
                 case PixelFormat.R8_G8_B8_A8:
-                    return PixelType.UnsignedInt8888;
+                    return PixelType.UnsignedByte;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -97,7 +97,7 @@ namespace Veldrid.Graphics.OpenGL
                 case PixelFormat.Alpha_UInt8:
                     return PixelInternalFormat.Alpha;
                 case PixelFormat.R8_G8_B8_A8:
-                    return PixelInternalFormat.Rgba8;
+                    return PixelInternalFormat.Rgba;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }

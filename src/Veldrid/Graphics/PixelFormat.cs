@@ -13,6 +13,30 @@
         /// <summary>
         /// A format where each pixel has four components (RGBA), each represented by an 8-bit unsigned integer value.
         /// </summary>
-        R8_G8_B8_A8
+        R8_G8_B8_A8,
+        /// <summary>
+        /// A format where each pixel is represented by a single UInt16 value.
+        /// </summary>
+        Alpha_UInt16
+    }
+
+    public static class PixelFormatEx
+    {
+        public static int GetSizeInBytes(this PixelFormat format)
+        {
+            switch (format)
+            {
+                case PixelFormat.R32_G32_B32_A32_Float:
+                    return sizeof(float) * 4;
+                case PixelFormat.Alpha_UInt8:
+                    return sizeof(byte);
+                case PixelFormat.R8_G8_B8_A8:
+                    return sizeof(byte) * 4;
+                case PixelFormat.Alpha_UInt16:
+                    return sizeof(ushort);
+                default:
+                    throw Illegal.Value<PixelFormat>();
+            }
+        }
     }
 }

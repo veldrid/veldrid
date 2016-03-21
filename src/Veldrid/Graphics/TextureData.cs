@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using Veldrid.Graphics.Direct3D;
 
 namespace Veldrid.Graphics
 {
@@ -62,6 +60,10 @@ namespace Veldrid.Graphics
         {
             return producer.CreateTexture(PixelData, Width, Height, PixelSizeInBytes, Format);
         }
+
+        public RawTextureDataArray(int width, int height, int pixelSizeInBytes, PixelFormat format)
+            : this(new T[width * height], width, height, pixelSizeInBytes, format)
+        { }
 
         public RawTextureDataArray(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
             : base(width, height, pixelSizeInBytes, format)

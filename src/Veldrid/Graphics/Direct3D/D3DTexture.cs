@@ -94,7 +94,7 @@ namespace Veldrid.Graphics.Direct3D
                 BindFlags.None,
                 ResourceUsage.Staging,
                 CpuAccessFlags.Read,
-                SharpDX.DXGI.Format.R32G32B32A32_Float,
+                DeviceTexture.Description.Format,
                 destPtr,
                 width,
                 height,

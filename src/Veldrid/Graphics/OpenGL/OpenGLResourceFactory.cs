@@ -25,9 +25,9 @@ namespace Veldrid.Graphics.OpenGL
             OpenGLTexture depthTexture = new OpenGLTexture(
                 width,
                 height,
-                PixelInternalFormat.DepthComponent24,
+                PixelInternalFormat.DepthComponent16,
                 OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent,
-                PixelType.UnsignedInt);
+                PixelType.UnsignedShort);
 
             return new OpenGLFramebuffer(colorTexture, depthTexture);
         }

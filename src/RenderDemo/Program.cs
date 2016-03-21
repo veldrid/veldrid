@@ -317,9 +317,24 @@ namespace Veldrid.RenderDemo
             {
                 _takeScreenshot = false;
                 _rc.SetDefaultFramebuffer();
-                var screenshotImage = new ImageProcessorTexture(new ImageProcessor.Image(_window.Width, _window.Height));
-                _screenshotFramebuffer.ColorTexture.CopyTo(screenshotImage);
-                screenshotImage.SaveToFile(Environment.TickCount + ".png");
+                int width = _window.Width;
+                int height = _window.Height;
+                ushort[] depthPixels = new ushort[width * height];
+                fixed (ushort* depthPixelsPtr = depthPixels)
+                {
+                    var cpuDepthTexture = new RawTextureDataPtr(new IntPtr(depthPixelsPtr), width, height, sizeof(ushort), Graphics.PixelFormat.Alpha_UInt16);
+                    _screenshotFramebuffer.DepthTexture.CopyTo(cpuDepthTexture);
+
+                    ImageProcessor.Image image = new ImageProcessor.Image(width, height);
+                    float[] rgba32fPixelData = image.Pixels;
+                    fixed (float* targetPixelPtr = rgba32fPixelData)
+                    {
+                        RgbaFloat* targetPtr = (RgbaFloat*)targetPixelPtr;
+                        PixelFormatConversion.ConvertPixelsUInt16DepthToRgbaFloat(width * height, depthPixels, targetPtr);
+                    }
+                    ImageProcessorTexture rgbaDepthTexture = new ImageProcessorTexture(image);
+                    rgbaDepthTexture.SaveToFile(Environment.TickCount + ".png");
+                }
             }
 
             _rc.SwapBuffers();

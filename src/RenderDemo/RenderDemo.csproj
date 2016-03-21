@@ -17,6 +17,7 @@
     <Compile Include="ColoredCubeRenderer.cs" />
     <Compile Include="DirectionalLightBuffer.cs" />
     <Compile Include="ImGuiRenderer.cs" />
+    <Compile Include="PixelFormatConversion.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="TeapotRenderer.cs" />
     <Compile Include="TexturedCubeRenderer.cs" />

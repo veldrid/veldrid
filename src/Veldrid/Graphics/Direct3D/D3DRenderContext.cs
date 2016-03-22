@@ -72,18 +72,15 @@ namespace Veldrid.Graphics.Direct3D
             _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
         }
 
-        private void SetRegularTargets()
+        private void SetViewport(float left, float top, float width, float height)
         {
-            // Setup targets and viewport for rendering
             _deviceContext.Rasterizer.SetViewport(0, 0, Window.Width, Window.Height);
-            CurrentFramebuffer.Apply();
         }
 
         protected override void PlatformResize()
         {
             RecreateDefaultFramebuffer();
-
-            SetRegularTargets();
+            SetViewport(0, 0, Window.Width, Window.Height);
         }
 
         private void RecreateDefaultFramebuffer()
@@ -124,7 +121,6 @@ namespace Veldrid.Graphics.Direct3D
         protected override void PlatformSetDefaultFramebuffer()
         {
             SetFramebuffer(_defaultFramebuffer);
-            SetRegularTargets();
         }
 
         protected override void PlatformSetScissorRectangle(Rectangle rectangle)

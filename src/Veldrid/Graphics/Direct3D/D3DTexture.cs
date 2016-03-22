@@ -89,28 +89,27 @@ namespace Veldrid.Graphics.Direct3D
 
         public unsafe void SetPixelData(IntPtr destPtr, int width, int height, int pixelSizeInBytes)
         {
-            D3DTexture stagingTexture = new D3DTexture(
-                _device,
-                BindFlags.None,
-                ResourceUsage.Staging,
-                CpuAccessFlags.Read,
-                DeviceTexture.Description.Format,
-                destPtr,
-                width,
-                height,
-                width * pixelSizeInBytes);
+            D3DTexture stagingTexture = new D3DTexture(_device, new Texture2DDescription()
+            {
+                Width = width,
+                Height = height,
+                Usage = ResourceUsage.Staging,
+                BindFlags = BindFlags.None,
+                CpuAccessFlags = CpuAccessFlags.Read,
+                OptionFlags = ResourceOptionFlags.None,
+                MipLevels = 1,
+                ArraySize = 1,
+                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                Format = DeviceTexture.Description.Format
+            });
 
             _device.ImmediateContext.CopyResource(DeviceTexture, stagingTexture.DeviceTexture);
-            var box = _device.ImmediateContext.MapSubresource(stagingTexture.DeviceTexture, 0, MapMode.Read, MapFlags.None);
-            float* pixelPtr = (float*)box.DataPointer.ToPointer();
-
-            System.Buffer.MemoryCopy(
-                pixelPtr,
-                destPtr.ToPointer(),
-                width * height * pixelSizeInBytes,
-                width * height * pixelSizeInBytes);
-
+            DataStream ds;
+            var box = _device.ImmediateContext.MapSubresource(stagingTexture.DeviceTexture, 0, MapMode.Read, MapFlags.None, out ds);
+            IntPtr pixelPtr = ds.DataPointer;
+            Utilities.CopyMemory(destPtr, pixelPtr, width * height * pixelSizeInBytes);
             _device.ImmediateContext.UnmapSubresource(stagingTexture.DeviceTexture, 0);
+
             stagingTexture.Dispose();
         }
     }

@@ -31,7 +31,6 @@ namespace Veldrid.Graphics.OpenGL
             GL.BindTexture(TextureTarget.Texture2D, 0);
 
             _depthTexture.Apply();
-            _depthTexture.Apply();
             GL.FramebufferTexture2D(
                 FramebufferTarget.Framebuffer,
                 FramebufferAttachment.DepthAttachment,

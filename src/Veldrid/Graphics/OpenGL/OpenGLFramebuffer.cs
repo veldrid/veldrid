@@ -44,7 +44,6 @@ namespace Veldrid.Graphics.OpenGL
         private void Bind()
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, _framebufferID);
-            var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         }
 
         private static void Unbind()
@@ -55,6 +54,11 @@ namespace Veldrid.Graphics.OpenGL
         public void Apply()
         {
             Bind();
+            FramebufferErrorCode errorCode = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+            if (errorCode != FramebufferErrorCode.FramebufferComplete)
+            {
+                throw new InvalidOperationException("Framebuffer was not complete: " + errorCode);
+            }
         }
 
         public void Dispose()

@@ -18,8 +18,8 @@
     <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">
       <Name>OpenTK</Name>
     </Reference>
-    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessor.dll">
-      <Name>ImageProcessor</Name>
+    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessorCore.dll">
+      <Name>ImageProcessorCore</Name>
     </Reference>
     <None Include="project.json" />
   </ItemGroup>

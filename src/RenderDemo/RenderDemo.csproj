@@ -12,6 +12,7 @@
     <AssemblyName>RenderDemo</AssemblyName>
     <RootNamespace>Veldrid.RenderDemo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <BaseNuGetRuntimeIdentifier Condition="'$(OSTarget)' == 'Windows_NT'">win7</BaseNuGetRuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ColoredCubeRenderer.cs" />
@@ -34,8 +35,8 @@
     <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">
       <Private>True</Private>
     </Reference>
-    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessor.dll">
-      <Name>ImageProcessor</Name>
+    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessorCore.dll">
+      <Name>ImageProcessorCore</Name>
     </Reference>
     <Reference Include="$(DepsDir)\ImGui.NET\ImGui.NET.dll">
       <Name>ImageProcessor</Name>

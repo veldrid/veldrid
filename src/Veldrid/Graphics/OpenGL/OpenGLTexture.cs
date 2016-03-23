@@ -44,11 +44,6 @@ namespace Veldrid.Graphics.OpenGL
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Clamp);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Clamp);
 
-            //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-            //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-            //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-
             // Set size, load empty data into texture
             GL.TexImage2D(
                 TextureTarget.Texture2D,
@@ -93,28 +88,17 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetPixelData<T>(T[] pixelData, int width, int height, int pixelSizeInBytes) where T : struct
         {
-            GL.BindTexture(TextureTarget.Texture2D, TextureID);
-            GL.GetTexImage(TextureTarget.Texture2D, 0, _pixelFormat, _pixelType, pixelData);
-
-            // Need to reverse the rows vertically.
-            int rowPixels = width * pixelSizeInBytes / System.Runtime.InteropServices.Marshal.SizeOf<T>();
-            float[] stagingRow = new float[rowPixels];
-            for (int y = height - 1, destY = 0; y > (height / 2); y--)
-            {
-                Array.ConstrainedCopy(pixelData, y * rowPixels, stagingRow, 0, rowPixels);
-                Array.ConstrainedCopy(pixelData, destY * rowPixels, pixelData, y * rowPixels, rowPixels);
-                Array.ConstrainedCopy(stagingRow, 0, pixelData, destY * rowPixels, rowPixels);
-
-                destY++;
-            }
-
-            GL.BindTexture(TextureTarget.Texture2D, 0);
+            GCHandle handle = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
+            SetPixelData(handle.AddrOfPinnedObject(), width, height, pixelSizeInBytes);
+            handle.Free();
         }
 
         public unsafe void SetPixelData(IntPtr pixelData, int width, int height, int pixelSizeInBytes)
         {
             GL.BindTexture(TextureTarget.Texture2D, TextureID);
             GL.GetTexImage(TextureTarget.Texture2D, 0, _pixelFormat, _pixelType, pixelData);
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+            GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
 
             // Need to reverse the rows vertically.
             int rowBytes = width * pixelSizeInBytes;
@@ -130,7 +114,8 @@ namespace Veldrid.Graphics.OpenGL
                 destY++;
             }
 
-            GL.BindTexture(TextureTarget.Texture2D, 0);
+            // Reset to default value.
+            GL.PixelStore(PixelStoreParameter.PackAlignment, 4);
         }
 
         public void Dispose()

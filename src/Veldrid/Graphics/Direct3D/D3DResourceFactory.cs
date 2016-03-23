@@ -24,6 +24,9 @@ namespace Veldrid.Graphics.Direct3D
 
         public override Framebuffer CreateFramebuffer(int width, int height)
         {
+            width = Math.Max(1, width);
+            height = Math.Max(1, height);
+
             D3DTexture colorTexture = new D3DTexture(_device, new Texture2DDescription()
             {
                 Format = SharpDX.DXGI.Format.R32G32B32A32_Float,
@@ -43,8 +46,8 @@ namespace Veldrid.Graphics.Direct3D
                 Format = SharpDX.DXGI.Format.D16_UNorm,
                 ArraySize = 1,
                 MipLevels = 1,
-                Width = Math.Max(1, width),
-                Height = Math.Max(1, height),
+                Width = width,
+                Height = height,
                 SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.DepthStencil,

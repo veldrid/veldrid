@@ -1,4 +1,4 @@
-﻿using ImageProcessor;
+﻿using ImageProcessorCore;
 using System.IO;
 using System;
 

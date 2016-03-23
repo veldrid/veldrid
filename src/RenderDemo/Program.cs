@@ -175,6 +175,7 @@ namespace Veldrid.RenderDemo
                         _rc.SetRasterizerState(_rc.DefaultRasterizerState);
                     }
                 }
+
                 bool isD3D11 = _rc is D3DRenderContext;
                 bool isOpenGL = !isD3D11;
 
@@ -228,13 +229,21 @@ namespace Veldrid.RenderDemo
                 {
                     _window.Close();
                 }
-                if (ke.Key == OpenTK.Input.Key.F9 && ke.Down)
+                if (ke.Key == OpenTK.Input.Key.F9 && ke.Down && _window.Width * _window.Height != 0)
                 {
                     _takeScreenshot = true;
                 }
                 if (ke.Key == OpenTK.Input.Key.F11 && ke.Down)
                 {
                     _window.WindowState = _window.WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState.FullScreen;
+                }
+                if (ke.Key == OpenTK.Input.Key.Plus && ke.Down)
+                {
+                    _window.Width += 1;
+                }
+                if (ke.Key == OpenTK.Input.Key.Minus && ke.Down)
+                {
+                    _window.Width -= 1;
                 }
 
                 Console.WriteLine(ke.Key + " is " + (ke.Down ? "down." : "up."));
@@ -320,21 +329,14 @@ namespace Veldrid.RenderDemo
                 int width = _window.Width;
                 int height = _window.Height;
                 ushort[] depthPixels = new ushort[width * height];
-                fixed (ushort* depthPixelsPtr = depthPixels)
-                {
-                    var cpuDepthTexture = new RawTextureDataPtr(new IntPtr(depthPixelsPtr), width, height, sizeof(ushort), Graphics.PixelFormat.Alpha_UInt16);
-                    _screenshotFramebuffer.DepthTexture.CopyTo(cpuDepthTexture);
+                var cpuDepthTexture = new RawTextureDataArray<ushort>(depthPixels, width, height, sizeof(ushort), Graphics.PixelFormat.Alpha_UInt16);
+                _screenshotFramebuffer.DepthTexture.CopyTo(cpuDepthTexture);
 
-                    ImageProcessor.Image image = new ImageProcessor.Image(width, height);
-                    float[] rgba32fPixelData = image.Pixels;
-                    fixed (float* targetPixelPtr = rgba32fPixelData)
-                    {
-                        RgbaFloat* targetPtr = (RgbaFloat*)targetPixelPtr;
-                        PixelFormatConversion.ConvertPixelsUInt16DepthToRgbaFloat(width * height, depthPixels, targetPtr);
-                    }
-                    ImageProcessorTexture rgbaDepthTexture = new ImageProcessorTexture(image);
-                    rgbaDepthTexture.SaveToFile(Environment.TickCount + ".png");
-                }
+                ImageProcessorCore.Image image = new ImageProcessorCore.Image(width, height);
+                PixelFormatConversion.ConvertPixelsUInt16DepthToRgbaFloat(width * height, depthPixels, image.Pixels);
+                ImageProcessorTexture rgbaDepthTexture = new ImageProcessorTexture(image);
+                Console.WriteLine($"Saving file: {width} x {height}, ratio:{(double)width / height}");
+                rgbaDepthTexture.SaveToFile(Environment.TickCount + ".png");
             }
 
             _rc.SwapBuffers();

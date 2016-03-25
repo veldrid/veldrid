@@ -1,6 +1,5 @@
 ﻿using ImGuiNET;
 using OpenTK;
-using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System;
 using System.Numerics;
@@ -217,11 +216,11 @@ namespace Veldrid.RenderDemo
 
         public void Dispose()
         {
-            ((IDisposable)_vertexBuffer).Dispose();
-            ((IDisposable)_indexBuffer).Dispose();
-            ((IDisposable)_material).Dispose();
-            ((IDisposable)_depthDisabledState).Dispose();
-            ((IDisposable)_blendState).Dispose();
+            _vertexBuffer.Dispose();
+            _indexBuffer.Dispose();
+            _material.Dispose();
+            _depthDisabledState.Dispose();
+            _blendState.Dispose();
         }
     }
 }

@@ -104,9 +104,9 @@ namespace Veldrid.RenderDemo
 
         public void Dispose()
         {
-            ((IDisposable)s_vb).Dispose();
-            ((IDisposable)s_ib).Dispose();
-            ((IDisposable)s_material).Dispose();
+            s_vb.Dispose();
+            s_ib.Dispose();
+            s_material.Dispose();
         }
 
         private static readonly VertexPositionColor[] s_cubeVertices = new VertexPositionColor[]

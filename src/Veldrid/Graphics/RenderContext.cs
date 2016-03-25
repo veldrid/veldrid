@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Veldrid.Graphics
 {
-    public abstract class RenderContext
+    public abstract class RenderContext: IDisposable
     {
         private readonly float _fieldOfViewRadians = 1.05f;
 
@@ -217,5 +217,18 @@ namespace Veldrid.Graphics
         protected abstract void PlatformSwapBuffers();
 
         protected abstract void PlatformResize();
+
+        protected abstract void PlatformDispose();
+
+        public void Dispose()
+        {
+            _defaultDepthStencilState.Dispose();
+            _defaultRasterizerState.Dispose();
+            _additiveBlend?.Dispose();
+            _overrideBlend?.Dispose();
+            _alphaBlend?.Dispose();
+            PlatformDispose();
+        }
+
     }
 }

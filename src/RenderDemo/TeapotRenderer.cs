@@ -60,29 +60,30 @@ namespace Veldrid.RenderDemo
                 VertexPositionNormalTexture.SizeInBytes,
                 new MaterialVertexInputElement[]
                 {
-                        new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
-                        new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
-                        new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
+                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                    new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
+                    new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
                 });
 
             MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                 new MaterialGlobalInputElement[]
                 {
-                        new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, rc.ProjectionMatrixProvider),
-                        new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, rc.DataProviders["ViewMatrix"]),
-                        new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, rc.DataProviders["LightBuffer"]),
+                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, rc.ProjectionMatrixProvider),
+                    new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, rc.DataProviders["ViewMatrix"]),
+                    new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, rc.DataProviders["LightBuffer"]),
                 });
 
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
                 new MaterialPerObjectInputElement[]
                 {
-                        new MaterialPerObjectInputElement("worldMatrixUniform", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
-                        new MaterialPerObjectInputElement("inverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("worldMatrixUniform", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("inverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
                 });
 
             MaterialTextureInputs textureInputs = new MaterialTextureInputs(
-                    new MaterialTextureInputElement[] {
-                        new MaterialTextureInputElement("surfaceTexture", s_cubeTexture)
+                new MaterialTextureInputElement[]
+                {
+                    new MaterialTextureInputElement("surfaceTexture", s_cubeTexture)
                 });
 
             _material = factory.CreateMaterial(

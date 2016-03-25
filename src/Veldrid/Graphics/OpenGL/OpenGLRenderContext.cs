@@ -99,7 +99,7 @@ namespace Veldrid.Graphics.OpenGL
                 rectangle.Height);
         }
 
-        public void Dispose()
+        protected override void PlatformDispose()
         {
             _openGLGraphicsContext.Dispose();
         }

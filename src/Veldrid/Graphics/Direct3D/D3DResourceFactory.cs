@@ -7,7 +7,7 @@ namespace Veldrid.Graphics.Direct3D
 {
     public class D3DResourceFactory : ResourceFactory
     {
-        private static readonly string s_shaderDirectory = "Graphics/Direct3D/Shaders";
+        private static readonly string s_shaderDirectory = "HLSL";
         private static readonly string s_shaderFileExtension = "hlsl";
 
         private readonly Device _device;

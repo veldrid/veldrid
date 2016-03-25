@@ -46,29 +46,30 @@ namespace Veldrid.RenderDemo
                 VertexPositionNormalTexture.SizeInBytes,
                 new MaterialVertexInputElement[]
                 {
-                        new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
-                        new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
-                        new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
+                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                    new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
+                    new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
                 });
 
             MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                 new MaterialGlobalInputElement[]
                 {
-                        new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.ProjectionMatrixProvider),
-                        new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ViewMatrix"]),
-                        new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, context.DataProviders["LightBuffer"]),
+                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.ProjectionMatrixProvider),
+                    new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ViewMatrix"]),
+                    new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, context.DataProviders["LightBuffer"]),
                 });
 
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
                 new MaterialPerObjectInputElement[]
                 {
-                        new MaterialPerObjectInputElement("worldMatrixUniform", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
-                        new MaterialPerObjectInputElement("inverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("worldMatrixUniform", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("inverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
                 });
 
             MaterialTextureInputs textureInputs = new MaterialTextureInputs(
-                    new MaterialTextureInputElement[] {
-                        new MaterialTextureInputElement("surfaceTexture", s_cubeTexture)
+                new MaterialTextureInputElement[]
+                {
+                    new MaterialTextureInputElement("surfaceTexture", s_cubeTexture)
                 });
 
             s_material = factory.CreateMaterial(
@@ -110,9 +111,9 @@ namespace Veldrid.RenderDemo
 
         public void Dispose()
         {
-            ((IDisposable)s_vb).Dispose();
-            ((IDisposable)s_ib).Dispose();
-            ((IDisposable)s_material).Dispose();
+            s_vb.Dispose();
+            s_ib.Dispose();
+            s_material.Dispose();
         }
 
         private static readonly VertexPositionNormalTexture[] s_cubeVertices = new VertexPositionNormalTexture[]

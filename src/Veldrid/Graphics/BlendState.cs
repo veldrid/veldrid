@@ -1,6 +1,8 @@
-﻿namespace Veldrid.Graphics
+﻿using System;
+
+namespace Veldrid.Graphics
 {
-    public interface BlendState : RenderStateModifier
+    public interface BlendState : RenderStateModifier, IDisposable
     {
         bool IsBlendEnabled { get; }
 

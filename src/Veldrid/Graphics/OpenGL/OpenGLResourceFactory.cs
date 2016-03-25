@@ -7,7 +7,7 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLResourceFactory : ResourceFactory
     {
-        private static readonly string s_shaderDirectory = "Graphics/OpenGL/Shaders";
+        private static readonly string s_shaderDirectory = "GLSL";
         private static readonly string s_shaderFileExtension = "glsl";
 
         public override ConstantBuffer CreateConstantBuffer(int sizeInBytes)

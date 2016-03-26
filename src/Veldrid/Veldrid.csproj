@@ -50,6 +50,7 @@
     <Compile Include="Graphics\TextureData.cs" />
     <Compile Include="Graphics\TriangleFillMode.cs" />
     <Compile Include="Graphics\VertexPositionNormalColorTexture.cs" />
+    <Compile Include="Graphics\Viewport.cs" />
     <Compile Include="Graphics\VisibiltyManager.cs" />
     <Compile Include="Platform\KeyEvent.cs" />
     <Compile Include="Platform\SameThreadWindow.cs" />

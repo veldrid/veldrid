@@ -82,7 +82,11 @@ namespace Veldrid.Graphics.OpenGL
         protected override void PlatformResize()
         {
             _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
-            GL.Viewport(0, 0, Window.Width, Window.Height);
+        }
+
+        protected override void PlatformSetViewport(int x, int y, int width, int height)
+        {
+            GL.Viewport(x, y, width, height);
         }
 
         protected override void PlatformSetDefaultFramebuffer()

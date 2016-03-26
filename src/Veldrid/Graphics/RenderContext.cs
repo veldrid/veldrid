@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Veldrid.Graphics
 {
-    public abstract class RenderContext: IDisposable
+    public abstract class RenderContext : IDisposable
     {
         private readonly float _fieldOfViewRadians = 1.05f;
 
@@ -19,6 +19,7 @@ namespace Veldrid.Graphics
         private int _needsResizing;
         private RenderQueue _renderQueue = new RenderQueue();
         private Rectangle _scissorRectangle;
+        private Viewport _viewport;
         private BlendState _blendState;
         private DepthStencilState _depthStencilState;
         private RasterizerState _rasterizerState;
@@ -35,12 +36,20 @@ namespace Veldrid.Graphics
 
         public Framebuffer CurrentFramebuffer { get; private set; }
 
+        public Viewport Viewport
+        {
+            get { return _viewport; }
+            set
+            {
+                SetViewport(value.X, value.Y, value.Width, value.Height);
+            }
+        }
+
         public virtual RgbaFloat ClearColor { get; set; } = RgbaFloat.CornflowerBlue;
 
         public abstract ResourceFactory ResourceFactory { get; }
 
-        public DynamicDataProvider<Matrix4x4> ProjectionMatrixProvider { get; }
-            = new DynamicDataProvider<Matrix4x4>();
+        public DynamicDataProvider<Matrix4x4> ProjectionMatrixProvider { get; } = new DynamicDataProvider<Matrix4x4>();
 
         public event Action WindowResized;
 
@@ -189,6 +198,13 @@ namespace Veldrid.Graphics
             }
         }
 
+        public void SetViewport(Viewport viewport) => SetViewport(viewport.X, viewport.Y, viewport.Width, viewport.Height);
+        public void SetViewport(int x, int y, int width, int height)
+        {
+
+            PlatformSetViewport(x, y, width, height);
+        }
+
         protected void OnWindowResized()
         {
             ProjectionMatrixProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
@@ -198,6 +214,7 @@ namespace Veldrid.Graphics
                 1000f);
 
             PlatformResize();
+            SetViewport(0, 0, Window.Width, Window.Height);
             WindowResized?.Invoke();
         }
 
@@ -218,6 +235,8 @@ namespace Veldrid.Graphics
 
         protected abstract void PlatformResize();
 
+        protected abstract void PlatformSetViewport(int x, int y, int width, int height);
+
         protected abstract void PlatformDispose();
 
         public void Dispose()
@@ -229,6 +248,5 @@ namespace Veldrid.Graphics
             _alphaBlend?.Dispose();
             PlatformDispose();
         }
-
     }
 }

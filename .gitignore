@@ -251,3 +251,4 @@ Session.vim
 
 *.ini
 *.VC.db
+*.nvact

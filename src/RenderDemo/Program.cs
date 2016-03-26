@@ -7,12 +7,14 @@ using System.Threading;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
+using Veldrid.Graphics.Pipeline;
 using Veldrid.Platform;
 
 namespace Veldrid.RenderDemo
 {
     public static class Program
     {
+        private static Renderer _renderer;
         private static RenderContext _rc;
         private static FrameTimeAverager _fta;
         private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
@@ -38,6 +40,11 @@ namespace Veldrid.RenderDemo
             {
                 _window = new DedicatedThreadWindow();
                 _rc = new D3DRenderContext(_window);
+                _renderer = new Renderer(_rc, new[]
+                {
+                    new StandardPipelineStage("Standard"),
+                    new StandardPipelineStage("Overlay"),
+                });
 
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
@@ -118,6 +125,8 @@ namespace Veldrid.RenderDemo
                         }
                     }
                 }
+
+                _boxSceneVM.AddRenderItem(_imguiRenderer);
             }
 
             return _boxSceneVM;
@@ -131,6 +140,7 @@ namespace Veldrid.RenderDemo
                 var teapot = new TeapotRenderer(_rc);
                 teapot.Position = new Vector3(0, -1, 0);
                 _teapotVM.AddRenderItem(teapot);
+                _teapotVM.AddRenderItem(_imguiRenderer);
             }
 
             return _teapotVM;
@@ -147,11 +157,12 @@ namespace Veldrid.RenderDemo
 
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
             _imguiRenderer.UpdateImGuiInput(_window);
+            _imguiRenderer.NewFrame();
 
             bool opened = false;
             float width = Math.Max(100, Math.Min(200, _window.Width * .4f));
             ImGuiNative.igSetNextWindowPos(new Vector2(20, 20), SetCondition.Always);
-            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 200), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
+            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 240), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
             {
                 if (ImGui.Button("Boxes"))
                 {
@@ -214,6 +225,20 @@ namespace Veldrid.RenderDemo
                         threadedWindow.LimitPollRate = _limitFrameRate;
                     }
                 }
+
+                ImGui.Text("Pipeline Stages:");
+                if (ImGui.BeginChildFrame(1, new Vector2(width * .75f, 0), WindowFlags.ShowBorders))
+                {
+                    foreach (var stage in _renderer.Stages)
+                    {
+                        bool enabled = stage.Enabled;
+                        if (ImGui.Checkbox(stage.Name, ref enabled))
+                        {
+                            stage.Enabled = !stage.Enabled;
+                        }
+                    }
+                    ImGui.EndChildFrame();
+                }
             }
             ImGui.EndWindow();
 
@@ -253,6 +278,8 @@ namespace Veldrid.RenderDemo
             {
                 Console.WriteLine($"MouseButton {me.MouseButton} is {(me.Down ? "down." : "up.")}");
             }
+
+            _imguiRenderer.UpdateFinished();
         }
 
         private static void ChangeRenderContext(bool d3d)
@@ -304,13 +331,13 @@ namespace Veldrid.RenderDemo
                 {
                     _rc.SetRasterizerState(_wireframeRasterizerState);
                 }
+
+                _renderer.RenderContext = newContext;
             }
         }
 
         private unsafe static void Draw(InputSnapshot input)
         {
-            _rc.ClearBuffer();
-
             if (_takeScreenshot)
             {
                 CreateScreenshotFramebuffer();
@@ -318,9 +345,7 @@ namespace Veldrid.RenderDemo
                 _rc.ClearBuffer();
             }
 
-            _rc.RenderFrame(_visiblityManager);
-
-            _imguiRenderer.Render(_rc);
+            _renderer.RenderFrame(_visiblityManager);
 
             if (_takeScreenshot)
             {
@@ -337,8 +362,6 @@ namespace Veldrid.RenderDemo
                 Console.WriteLine($"Saving file: {width} x {height}, ratio:{(double)width / height}");
                 rgbaDepthTexture.SaveToFile(Environment.TickCount + ".png");
             }
-
-            _rc.SwapBuffers();
         }
 
         private class FrameTimeAverager

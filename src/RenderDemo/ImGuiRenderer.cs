@@ -2,8 +2,10 @@
 using OpenTK;
 using OpenTK.Input;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Veldrid.Graphics;
+using Veldrid.Graphics.Pipeline;
 using Veldrid.Platform;
 
 namespace Veldrid.RenderDemo
@@ -67,11 +69,16 @@ namespace Veldrid.RenderDemo
             InitializeContextObjects(rc);
         }
 
-        public unsafe void Render(RenderContext rc)
+        public IEnumerable<string> GetStagesParticipated()
         {
-            ImGui.Render();
+            yield return "Overlay";
+        }
+
+        public void NewFrame() => ImGui.NewFrame();
+
+        public unsafe void Render(RenderContext rc, string pipelineStage)
+        {
             RenderImDrawData(ImGui.GetDrawData(), rc);
-            ImGui.NewFrame();
         }
 
         public RenderOrderKey GetRenderOrderKey()
@@ -223,6 +230,11 @@ namespace Veldrid.RenderDemo
             _material.Dispose();
             _depthDisabledState.Dispose();
             _blendState.Dispose();
+        }
+
+        internal void UpdateFinished()
+        {
+            ImGui.Render();
         }
     }
 }

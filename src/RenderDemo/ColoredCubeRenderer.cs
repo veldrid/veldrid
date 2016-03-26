@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Veldrid.Graphics;
+using Veldrid.Graphics.Pipeline;
 
 namespace Veldrid.RenderDemo
 {
@@ -77,7 +79,12 @@ namespace Veldrid.RenderDemo
             }
         }
 
-        public void Render(RenderContext context)
+        public IEnumerable<string> GetStagesParticipated()
+        {
+            yield return "Standard";
+        }
+
+        public void Render(RenderContext context, string pipelineStage)
         {
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             _modelViewProvider.Data =

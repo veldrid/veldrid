@@ -129,7 +129,7 @@ namespace Veldrid.RenderDemo
             {
                 _teapotVM = new FlatListVisibilityManager();
                 var teapot = new TeapotRenderer(_rc);
-                teapot.Position = new System.Numerics.Vector3(0, -1, 0);
+                teapot.Position = new Vector3(0, -1, 0);
                 _teapotVM.AddRenderItem(teapot);
             }
 
@@ -328,12 +328,11 @@ namespace Veldrid.RenderDemo
                 _rc.SetDefaultFramebuffer();
                 int width = _window.Width;
                 int height = _window.Height;
-                ushort[] depthPixels = new ushort[width * height];
-                var cpuDepthTexture = new RawTextureDataArray<ushort>(depthPixels, width, height, sizeof(ushort), Graphics.PixelFormat.Alpha_UInt16);
+                var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), Graphics.PixelFormat.Alpha_UInt16);
                 _screenshotFramebuffer.DepthTexture.CopyTo(cpuDepthTexture);
 
                 ImageProcessorCore.Image image = new ImageProcessorCore.Image(width, height);
-                PixelFormatConversion.ConvertPixelsUInt16DepthToRgbaFloat(width * height, depthPixels, image.Pixels);
+                PixelFormatConversion.ConvertPixelsUInt16DepthToRgbaFloat(width * height, cpuDepthTexture.PixelData, image.Pixels);
                 ImageProcessorTexture rgbaDepthTexture = new ImageProcessorTexture(image);
                 Console.WriteLine($"Saving file: {width} x {height}, ratio:{(double)width / height}");
                 rgbaDepthTexture.SaveToFile(Environment.TickCount + ".png");

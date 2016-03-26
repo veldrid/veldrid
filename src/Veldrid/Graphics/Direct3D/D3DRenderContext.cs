@@ -1,28 +1,23 @@
 ﻿using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
-using System;
 using Veldrid.Platform;
 
 namespace Veldrid.Graphics.Direct3D
 {
     public class D3DRenderContext : RenderContext
     {
-        //TODO: PRIVATE
         private SharpDX.Direct3D11.Device _device;
         private SwapChain _swapChain;
         private DeviceContext _deviceContext;
-
         private D3DFramebuffer _defaultFramebuffer;
-        private DeviceCreationFlags _deviceFlags;
 
         public D3DRenderContext(Window window) : this(window, DeviceCreationFlags.None) { }
 
         public D3DRenderContext(Window window, DeviceCreationFlags flags)
             : base(window)
         {
-            _deviceFlags = flags;
-            CreateAndInitializeDevice();
+            CreateAndInitializeDevice(flags);
             ResourceFactory = new D3DResourceFactory(_device);
             PostContextCreated();
         }
@@ -49,7 +44,7 @@ namespace Veldrid.Graphics.Direct3D
             _swapChain.Present(0, PresentFlags.None);
         }
 
-        private void CreateAndInitializeDevice()
+        private void CreateAndInitializeDevice(DeviceCreationFlags creationFlags)
         {
             var swapChainDescription = new SwapChainDescription()
             {
@@ -62,26 +57,30 @@ namespace Veldrid.Graphics.Direct3D
                 Usage = Usage.RenderTargetOutput
             };
 
-            SharpDX.Direct3D11.Device.CreateWithSwapChain(SharpDX.Direct3D.DriverType.Hardware, _deviceFlags, swapChainDescription, out _device, out _swapChain);
+            SharpDX.Direct3D11.Device.CreateWithSwapChain(
+                SharpDX.Direct3D.DriverType.Hardware,
+                creationFlags,
+                swapChainDescription,
+                out _device,
+                out _swapChain);
+
             _deviceContext = _device.ImmediateContext;
             var factory = _swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(Window.Handle, WindowAssociationFlags.IgnoreAll);
 
             OnWindowResized();
             SetFramebuffer(_defaultFramebuffer);
-
             _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
         }
 
-        private void SetViewport(float left, float top, float width, float height)
+        protected override void PlatformSetViewport(int left, int top, int width, int height)
         {
-            _deviceContext.Rasterizer.SetViewport(0, 0, Window.Width, Window.Height);
+            _deviceContext.Rasterizer.SetViewport(left, top, Window.Width, Window.Height);
         }
 
         protected override void PlatformResize()
         {
             RecreateDefaultFramebuffer();
-            SetViewport(0, 0, Window.Width, Window.Height);
         }
 
         private void RecreateDefaultFramebuffer()

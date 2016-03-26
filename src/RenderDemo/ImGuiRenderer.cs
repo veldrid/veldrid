@@ -97,6 +97,7 @@ namespace Veldrid.RenderDemo
 
             if (window.NativeWindow.Bounds.Contains(cursorState.X, cursorState.Y))
             {
+                // TODO: This does not take into account viewport coordinates.
                 Point windowPoint = window.NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
                 io.MousePosition = new System.Numerics.Vector2(
                     windowPoint.X / window.ScaleFactor.X,
@@ -195,6 +196,7 @@ namespace Veldrid.RenderDemo
                     }
                     else
                     {
+                        // TODO: This doesn't take into account viewport coordinates.
                         rc.SetScissorRectangle(
                             (int)pcmd->ClipRect.X,
                             (int)pcmd->ClipRect.Y,

@@ -116,8 +116,8 @@ namespace Veldrid.Graphics.OpenGL
             {
                 var element = textureInputs.Elements[i];
                 int location = GL.GetUniformLocation(_programID, element.Name);
-                OpenGLTexture textureBuffer = (OpenGLTexture)element.TextureData.CreateDeviceTexture(resourceFactory);
-                _textureBindings[i] = new OpenGLProgramTextureBinding(location, textureBuffer);
+                OpenGLTexture deviceTexture = (OpenGLTexture)element.TextureData.CreateDeviceTexture(resourceFactory);
+                _textureBindings[i] = new OpenGLProgramTextureBinding(location, deviceTexture);
             }
         }
 
@@ -142,7 +142,7 @@ namespace Veldrid.Graphics.OpenGL
             {
                 var binding = _textureBindings[i];
                 GL.ActiveTexture(TextureUnit.Texture0 + i);
-                binding.TextureBuffer.Apply();
+                binding.DeviceTexture.Apply();
                 GL.Uniform1(binding.UniformLocation, i);
             }
         }
@@ -166,10 +166,23 @@ namespace Veldrid.Graphics.OpenGL
             _vertexShader.Dispose();
             _fragmentShader.Dispose();
 
-            // TODO: Other things need to be disposed.
+            foreach (var textureBinding in _textureBindings)
+            {
+                textureBinding.DeviceTexture.Dispose();
+            }
+
+            foreach (var globalBinding in _globalUniformBindings)
+            {
+                globalBinding.Binding.Dispose();
+            }
+
+            foreach (var perObjectbinding in _perObjectBindings)
+            {
+                perObjectbinding.Dispose();
+            }
         }
 
-        private abstract class UniformBinding
+        private abstract class UniformBinding: IDisposable
         {
             public int ProgramID { get; }
 
@@ -179,6 +192,7 @@ namespace Veldrid.Graphics.OpenGL
             }
 
             public abstract void Bind(ConstantBufferDataProvider dataProvider);
+            public abstract void Dispose();
         }
 
         [DebuggerDisplay("Prog:{ProgramID} BlockInd:{BlockIndex} BindingInd:{BindingIndex}")]
@@ -205,6 +219,11 @@ namespace Veldrid.Graphics.OpenGL
                 dataProvider.SetData(ConstantBuffer);
                 ConstantBuffer.BindToBlock(ProgramID, BlockIndex, dataProvider.DataSizeInBytes, BindingIndex);
             }
+
+            public override void Dispose()
+            {
+                ConstantBuffer.Dispose();
+            }
         }
 
         private class UniformLocationBinding : UniformBinding
@@ -221,6 +240,10 @@ namespace Veldrid.Graphics.OpenGL
             public override void Bind(ConstantBufferDataProvider dataProvider)
             {
                 dataProvider.SetData(StorageAdapter);
+            }
+
+            public override void Dispose()
+            {
             }
         }
 
@@ -313,12 +336,12 @@ namespace Veldrid.Graphics.OpenGL
         private struct OpenGLProgramTextureBinding
         {
             public readonly int UniformLocation;
-            public readonly OpenGLTexture TextureBuffer;
+            public readonly OpenGLTexture DeviceTexture;
 
-            public OpenGLProgramTextureBinding(int location, OpenGLTexture textureBuffer)
+            public OpenGLProgramTextureBinding(int location, OpenGLTexture deviceTexture)
             {
                 UniformLocation = location;
-                TextureBuffer = textureBuffer;
+                DeviceTexture = deviceTexture;
             }
         }
     }

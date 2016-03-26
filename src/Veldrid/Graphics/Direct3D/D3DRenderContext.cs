@@ -2,6 +2,7 @@
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using System;
+using Veldrid.Platform;
 
 namespace Veldrid.Graphics.Direct3D
 {

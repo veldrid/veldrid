@@ -63,54 +63,26 @@ namespace Veldrid.Platform
 
         public int Height
         {
-            get
-            {
-                return _nativeWindow.Height;
-            }
-
-            set
-            {
-                _nativeWindow.Height = value;
-            }
+            get { return _nativeWindow.Height; }
+            set { _nativeWindow.Height = value; }
         }
 
         public string Title
         {
-            get
-            {
-                return _nativeWindow.Title;
-            }
-
-            set
-            {
-                _nativeWindow.Title = value;
-            }
+            get { return _nativeWindow.Title; }
+            set { _nativeWindow.Title = value; }
         }
 
         public bool Visible
         {
-            get
-            {
-                return _nativeWindow.Visible;
-            }
-
-            set
-            {
-                _nativeWindow.Visible = value;
-            }
+            get { return _nativeWindow.Visible; }
+            set { _nativeWindow.Visible = value; }
         }
 
         public int Width
         {
-            get
-            {
-                return _nativeWindow.Width;
-            }
-
-            set
-            {
-                _nativeWindow.Width = value;
-            }
+            get { return _nativeWindow.Width; }
+            set { _nativeWindow.Width = value; }
         }
 
         public WindowState WindowState

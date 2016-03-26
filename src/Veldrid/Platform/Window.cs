@@ -2,7 +2,7 @@
 using System.Numerics;
 using Veldrid.Platform;
 
-namespace Veldrid
+namespace Veldrid.Platform
 {
     public interface Window
     {

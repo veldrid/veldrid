@@ -88,7 +88,7 @@
     <Compile Include="Graphics\VertexPositionTexture.cs" />
     <Compile Include="Graphics\VertexSemanticType.cs" />
     <Compile Include="Platform\OpenTKWindowBase.cs" />
-    <Compile Include="Window.cs" />
+    <Compile Include="Platform\Window.cs" />
     <Compile Include="Platform\InputSnapshot.cs" />
     <Compile Include="Platform\WindowState.cs" />
     <Compile Include="IllegalValueException.cs" />

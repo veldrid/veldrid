@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading;
+using Veldrid.Platform;
 
 namespace Veldrid.Graphics
 {

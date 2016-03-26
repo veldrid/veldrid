@@ -3,7 +3,7 @@ using System;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLDefaultFramebuffer : Framebuffer
+    public class OpenGLDefaultFramebuffer : Framebuffer, IDisposable
     {
         public DeviceTexture ColorTexture
         {
@@ -24,6 +24,10 @@ namespace Veldrid.Graphics.OpenGL
         public void Apply()
         {
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

@@ -6,7 +6,7 @@ namespace Veldrid.Graphics
     {
         public MaterialTextureInputElement[] Elements { get; }
 
-        public MaterialTextureInputs(MaterialTextureInputElement[] elements)
+        public MaterialTextureInputs(params MaterialTextureInputElement[] elements)
         {
             Elements = elements;
         }

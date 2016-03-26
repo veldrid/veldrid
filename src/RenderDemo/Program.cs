@@ -2,6 +2,7 @@ using ImGuiNET;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Numerics;
 using System.Threading;
 using Veldrid.Graphics;
@@ -25,6 +26,7 @@ namespace Veldrid.RenderDemo
         private static DynamicDataProvider<Matrix4x4> _viewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static FlatListVisibilityManager _boxSceneVM;
         private static FlatListVisibilityManager _teapotVM;
+        private static FlatListVisibilityManager _shadowsScene;
         private static double _circleWidth = 5.0;
         private static bool _wireframe;
 
@@ -33,6 +35,7 @@ namespace Veldrid.RenderDemo
 
         private static Framebuffer _screenshotFramebuffer;
         private static RasterizerState _wireframeRasterizerState;
+        private static readonly TextureData _stoneTextureData = LoadStoneTextureData();
 
         public static void Main()
         {
@@ -144,6 +147,22 @@ namespace Veldrid.RenderDemo
             }
 
             return _teapotVM;
+        }
+
+        private static FlatListVisibilityManager SceneWithShadows()
+        {
+            if (_shadowsScene == null)
+            {
+                _shadowsScene = new FlatListVisibilityManager();
+                using (var fs = File.OpenRead("Models/Sphere.obj"))
+                {
+                    var sphereMeshInfo = ObjImporter.Import(fs).Result;
+                    var sphereRenderer = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, _stoneTextureData);
+                    _shadowsScene.AddRenderItem(sphereRenderer);
+                }
+            }
+
+            return _shadowsScene;
         }
 
         private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
@@ -362,6 +381,11 @@ namespace Veldrid.RenderDemo
                 Console.WriteLine($"Saving file: {width} x {height}, ratio:{(double)width / height}");
                 rgbaDepthTexture.SaveToFile(Environment.TickCount + ".png");
             }
+        }
+
+        private static TextureData LoadStoneTextureData()
+        {
+            return new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures/CubeTexture.png"));
         }
 
         private class FrameTimeAverager

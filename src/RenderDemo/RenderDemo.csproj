@@ -17,9 +17,11 @@
   <ItemGroup>
     <Compile Include="ColoredCubeRenderer.cs" />
     <Compile Include="DirectionalLightBuffer.cs" />
+    <Compile Include="ForwardRendering\ShadowMapStage.cs" />
     <Compile Include="ImGuiRenderer.cs" />
     <Compile Include="PixelFormatConversion.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ShadowCaster.cs" />
     <Compile Include="TeapotRenderer.cs" />
     <Compile Include="TexturedCubeRenderer.cs" />
   </ItemGroup>
@@ -32,6 +34,9 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Release|x64' " />
   <ItemGroup>
+    <Content Include="Textures\CubeTexture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">
       <Private>True</Private>
     </Reference>
@@ -94,6 +99,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GLSL\textured-frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Models\Sphere.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="project.json" />

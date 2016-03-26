@@ -4,7 +4,7 @@
     {
         public T[] Elements { get; }
 
-        public MaterialInputs(T[] elements)
+        public MaterialInputs(params T[] elements)
         {
             Elements = elements;
         }

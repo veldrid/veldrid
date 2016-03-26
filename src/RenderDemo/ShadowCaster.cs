@@ -22,6 +22,10 @@ namespace Veldrid.RenderDemo
         private Material _shadowPassMaterial;
         private Material _regularPassMaterial;
 
+        public Vector3 Position { get; set; }
+        public Quaternion Rotation { get; set; }
+        public Vector3 Scale { get; set; }
+
         public ShadowCaster(RenderContext rc, VertexPositionNormalTexture[] vertices, int[] indices, TextureData surfaceTexture)
         {
             _vertices = vertices;
@@ -100,6 +104,11 @@ namespace Veldrid.RenderDemo
                 _regularPassMaterial.ApplyPerObjectInput(_worldProvider);
             }
 
+            _worldProvider.Data =
+                Matrix4x4.CreateScale(Scale)
+                * Matrix4x4.CreateFromQuaternion(Rotation)
+                * Matrix4x4.CreateTranslation(Position);
+
             _vb.Apply();
             _ib.Apply();
 
@@ -108,7 +117,10 @@ namespace Veldrid.RenderDemo
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _regularPassMaterial.Dispose();
+            _shadowPassMaterial.Dispose();
+            _vb.Dispose();
+            _ib.Dispose();
         }
     }
 }

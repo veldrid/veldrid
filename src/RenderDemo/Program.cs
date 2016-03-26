@@ -10,6 +10,7 @@ using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
 using Veldrid.Graphics.Pipeline;
 using Veldrid.Platform;
+using Veldrid.RenderDemo.Models;
 
 namespace Veldrid.RenderDemo
 {
@@ -35,7 +36,9 @@ namespace Veldrid.RenderDemo
 
         private static Framebuffer _screenshotFramebuffer;
         private static RasterizerState _wireframeRasterizerState;
+
         private static readonly TextureData _stoneTextureData = LoadStoneTextureData();
+        private static readonly TextureData _solidWhiteTexture = LoadWhiteTextureData();
 
         public static void Main()
         {
@@ -160,6 +163,10 @@ namespace Veldrid.RenderDemo
                     var sphereRenderer = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, _stoneTextureData);
                     _shadowsScene.AddRenderItem(sphereRenderer);
                 }
+
+                var plane = new ShadowCaster(_rc, PlaneModel.Vertices, PlaneModel.Indices, _solidWhiteTexture);
+                plane.Position = new Vector3(0, -2, 0);
+                _shadowsScene.AddRenderItem(plane);
             }
 
             return _shadowsScene;
@@ -192,6 +199,11 @@ namespace Veldrid.RenderDemo
                 {
                     _circleWidth = 5.0;
                     _visiblityManager = SceneWithTeapot();
+                }
+                if (ImGui.Button("Shadows"))
+                {
+                    _circleWidth = 5.0;
+                    _visiblityManager = SceneWithShadows();
                 }
 
                 if (ImGui.Checkbox("Wireframe", ref _wireframe))
@@ -340,9 +352,15 @@ namespace Veldrid.RenderDemo
                         item.ChangeRenderContext(newContext);
                     }
                 }
-                _imguiRenderer.ChangeRenderContext(newContext);
+                if (_shadowsScene != null)
+                {
+                    foreach (var item in _shadowsScene.RenderItems)
+                    {
+                        item.ChangeRenderContext(newContext);
+                    }
+                }
 
-                ((IDisposable)_rc).Dispose();
+                _rc.Dispose();
                 _rc = newContext;
 
                 CreateWireframeRasterizerState();
@@ -386,6 +404,13 @@ namespace Veldrid.RenderDemo
         private static TextureData LoadStoneTextureData()
         {
             return new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures/CubeTexture.png"));
+        }
+
+        private static TextureData LoadWhiteTextureData()
+        {
+            var texture = new RawTextureDataArray<RgbaFloat>(1, 1, RgbaFloat.SizeInBytes, Graphics.PixelFormat.R32_G32_B32_A32_Float);
+            texture.PixelData[0] = RgbaFloat.White;
+            return texture;
         }
 
         private class FrameTimeAverager

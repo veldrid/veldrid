@@ -31,6 +31,7 @@ namespace Veldrid.Graphics
         {
             Window = window;
             window.Resized += () => _needsResizing = 1;
+            DataProviders["ProjectionMatrix"] = ProjectionMatrixProvider;
         }
 
         public Window Window { get; }

@@ -2,7 +2,7 @@
 
 namespace Veldrid.Graphics
 {
-    public struct RenderItemIndex : IComparable<RenderOrderKey>
+    public struct RenderItemIndex : IComparable<RenderItemIndex>, IComparable
     {
         public RenderOrderKey Key { get; }
         public int ItemIndex { get; }
@@ -13,9 +13,14 @@ namespace Veldrid.Graphics
             ItemIndex = itemIndex;
         }
 
-        public int CompareTo(RenderOrderKey other)
+        public int CompareTo(object obj)
         {
-            return Key.CompareTo(other);
+            return ((IComparable)Key).CompareTo(obj);
+        }
+
+        public int CompareTo(RenderItemIndex other)
+        {
+            return Key.CompareTo(other.Key);
         }
     }
 }

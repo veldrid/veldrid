@@ -13,6 +13,7 @@ namespace Veldrid.RenderDemo
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
         private readonly MaterialVertexInput _vertexInput;
         private readonly MaterialInputs<MaterialGlobalInputElement> _shadowGlobalInputs;
+        private readonly MaterialInputs<MaterialGlobalInputElement> _regularPassGlobalInputs;
         private readonly MaterialInputs<MaterialPerObjectInputElement> _perObjectInputs;
         private readonly MaterialTextureInputs _textureInputs;
         private readonly TextureData _surfaceTextureData;
@@ -23,8 +24,8 @@ namespace Veldrid.RenderDemo
         private Material _regularPassMaterial;
 
         public Vector3 Position { get; set; }
-        public Quaternion Rotation { get; set; }
-        public Vector3 Scale { get; set; }
+        public Quaternion Rotation { get; set; } = Quaternion.Identity;
+        public Vector3 Scale { get; set; } = Vector3.One;
 
         public ShadowCaster(RenderContext rc, VertexPositionNormalTexture[] vertices, int[] indices, TextureData surfaceTexture)
         {
@@ -38,8 +39,13 @@ namespace Veldrid.RenderDemo
                 new MaterialVertexInputElement("in_texcoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2));
 
             _shadowGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
-                new MaterialGlobalInputElement("ProjectionMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["ProjectionMatrix"]),
-                new MaterialGlobalInputElement("ViewMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["ViewMatrix"]));
+                new MaterialGlobalInputElement("ProjectionMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["LightProjMatrix"]),
+                new MaterialGlobalInputElement("ViewMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["LightViewMatrix"]));
+
+            _regularPassGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
+                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, rc.ProjectionMatrixProvider),
+                    new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, rc.DataProviders["ViewMatrix"]),
+                    new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, rc.DataProviders["LightBuffer"]));
 
             _perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
                 new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes));
@@ -71,17 +77,25 @@ namespace Veldrid.RenderDemo
             _ib.SetIndices(_indices);
 
             _shadowPassMaterial = factory.CreateMaterial(
-                "shadow-vert",
-                "shadow-frag",
+                "shadowmap-vertex",
+                "shadowmap-frag",
                 _vertexInput,
                 _shadowGlobalInputs,
+                _perObjectInputs,
+                _textureInputs);
+
+            _regularPassMaterial = factory.CreateMaterial(
+                "textured-vertex",
+                "lit-frag",
+                _vertexInput,
+                _regularPassGlobalInputs,
                 _perObjectInputs,
                 _textureInputs);
         }
 
         public RenderOrderKey GetRenderOrderKey()
         {
-            throw new NotImplementedException();
+            return new RenderOrderKey();
         }
 
         public IEnumerable<string> GetStagesParticipated()
@@ -90,17 +104,17 @@ namespace Veldrid.RenderDemo
             yield return "Standard";
         }
 
-        public void Render(RenderContext context, string pipelineStage)
+        public void Render(RenderContext rc, string pipelineStage)
         {
             if (pipelineStage == "ShadowMap")
             {
-                _shadowPassMaterial.Apply();
+                rc.SetMaterial(_shadowPassMaterial);
                 _shadowPassMaterial.ApplyPerObjectInput(_worldProvider);
             }
             else
             {
                 Debug.Assert(pipelineStage == "Standard");
-                _regularPassMaterial.Apply();
+                rc.SetMaterial(_regularPassMaterial);
                 _regularPassMaterial.ApplyPerObjectInput(_worldProvider);
             }
 
@@ -109,10 +123,10 @@ namespace Veldrid.RenderDemo
                 * Matrix4x4.CreateFromQuaternion(Rotation)
                 * Matrix4x4.CreateTranslation(Position);
 
-            _vb.Apply();
-            _ib.Apply();
+            rc.SetVertexBuffer(_vb);
+            rc.SetIndexBuffer(_ib);
 
-            context.DrawIndexedPrimitives(_indices.Length, 0);
+            rc.DrawIndexedPrimitives(_indices.Length, 0);
         }
 
         public void Dispose()

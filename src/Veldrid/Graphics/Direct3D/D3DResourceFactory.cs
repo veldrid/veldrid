@@ -22,6 +22,11 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DConstantBuffer(_device, sizeInBytes);
         }
 
+        public override Framebuffer CreateFramebuffer()
+        {
+            return new D3DFramebuffer(_device);
+        }
+
         public override Framebuffer CreateFramebuffer(int width, int height)
         {
             width = Math.Max(1, width);
@@ -120,6 +125,28 @@ namespace Veldrid.Graphics.Direct3D
                 height,
                 width * pixelSizeInBytes);
             return texture;
+        }
+
+        public override DeviceTexture CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)
+        {
+            if (format != PixelFormat.Alpha_UInt16)
+            {
+                throw new NotImplementedException("Alpha_UInt16 is the only supported depth texture format.");
+            }
+
+            return new D3DTexture(_device, new Texture2DDescription()
+            {
+                Format = SharpDX.DXGI.Format.D16_UNorm,
+                ArraySize = 1,
+                MipLevels = 1,
+                Width = width,
+                Height = height,
+                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                Usage = ResourceUsage.Default,
+                BindFlags = BindFlags.DepthStencil,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None
+            });
         }
 
         public override BlendState CreateCustomBlendState(bool isBlendEnabled, Blend srcBlend, Blend destBlend, BlendFunction blendFunc)

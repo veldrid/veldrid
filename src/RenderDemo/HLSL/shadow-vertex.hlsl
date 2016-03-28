@@ -8,12 +8,22 @@ cbuffer ViewMatrixBuffer : register(b1)
     float4x4 view;
 }
 
-cbuffer WorldMatrixBuffer : register(b3)
+cbuffer LightProjectionMatrixBuffer : register(b2)
+{
+    float4x4 lightProjection;
+}
+
+cbuffer LightViewMatrixBuffer : register(b3)
+{
+    float4x4 lightView;
+}
+
+cbuffer WorldMatrixBuffer : register(b5)
 {
     float4x4 world;
 }
 
-cbuffer InverseTransposeWorldMatrixBuffer : register(b4)
+cbuffer InverseTransposeWorldMatrixBuffer : register(b6)
 {
     float4x4 inverseTransposeWorld;
 }
@@ -28,22 +38,26 @@ struct VertexInput
 struct PixelInput
 {
     float4 position : SV_POSITION;
+    float4 lightPosition : TEXCOORD0; //vertex with regard to light view
     float3 normal : NORMAL;
     float2 texCoord : TEXCOORD0;
 };
 
-PixelInput VS(VertexInput input)
+PixelInput VS( VS_INPUT input )
 {
-    PixelInput output;
-
+    PS_INPUT output;
     float4 worldPosition = mul(world, float4(input.position, 1));
     float4 viewPosition = mul(view, worldPosition);
     output.position = mul(projection, viewPosition);
 
     output.normal = mul((float3x3)inverseTransposeWorld, input.normal);
     output.normal = normalize(output.normal);
-
+ 
     output.texCoord = input.texCoord;
 
+    //store worldspace projected to light clip space with
+    //a texcoord semantic to be interpolated across the surface
+    output.lpos = mul(float4(input.position, 1), mul( world, lightViewProj ) );
+ 
     return output;
 }

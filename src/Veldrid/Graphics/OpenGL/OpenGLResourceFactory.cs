@@ -15,6 +15,11 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLConstantBuffer();
         }
 
+        public override Framebuffer CreateFramebuffer()
+        {
+            return new OpenGLFramebuffer();
+        }
+
         public override Framebuffer CreateFramebuffer(int width, int height)
         {
             OpenGLTexture colorTexture = new OpenGLTexture(
@@ -74,6 +79,21 @@ namespace Veldrid.Graphics.OpenGL
         public override DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             return OpenGLTexture.Create(pixelData, width, height, pixelSizeInBytes, format);
+        }
+
+        public override DeviceTexture CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)
+        {
+            if (format != PixelFormat.Alpha_UInt16)
+            {
+                throw new NotImplementedException("Alpha_UInt16 is the only supported depth texture format.");
+            }
+
+            return new OpenGLTexture(
+                width,
+                height,
+                PixelInternalFormat.DepthComponent16,
+                OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent,
+                PixelType.UnsignedShort);
         }
 
         public override VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic)

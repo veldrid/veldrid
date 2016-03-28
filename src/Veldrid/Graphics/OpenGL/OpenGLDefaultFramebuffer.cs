@@ -11,11 +11,21 @@ namespace Veldrid.Graphics.OpenGL
             {
                 throw new NotSupportedException("The default OpenGL framebuffer does not expose its color texture.");
             }
+
+            set
+            {
+                throw new NotSupportedException("The default OpenGL framebuffer does not expose its color texture.");
+            }
         }
 
         public DeviceTexture DepthTexture
         {
             get
+            {
+                throw new NotSupportedException("The default OpenGL framebuffer does not expose its depth texture.");
+            }
+
+            set
             {
                 throw new NotSupportedException("The default OpenGL framebuffer does not expose its depth texture.");
             }

@@ -10,6 +10,7 @@ using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
 using Veldrid.Graphics.Pipeline;
 using Veldrid.Platform;
+using Veldrid.RenderDemo.ForwardRendering;
 using Veldrid.RenderDemo.Models;
 
 namespace Veldrid.RenderDemo
@@ -25,6 +26,8 @@ namespace Veldrid.RenderDemo
         private static FlatListVisibilityManager _visiblityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
         private static DynamicDataProvider<Matrix4x4> _viewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
+        private static DynamicDataProvider<Matrix4x4> _lightViewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
+        private static DynamicDataProvider<Matrix4x4> _lightProjMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static FlatListVisibilityManager _boxSceneVM;
         private static FlatListVisibilityManager _teapotVM;
         private static FlatListVisibilityManager _shadowsScene;
@@ -40,14 +43,18 @@ namespace Veldrid.RenderDemo
         private static readonly TextureData _stoneTextureData = LoadStoneTextureData();
         private static readonly TextureData _solidWhiteTexture = LoadWhiteTextureData();
 
+        private static Vector3 _lightPosition = new Vector3(-5f, 3f, -3f);
+        private static Vector3 _lightDirection = new Vector3(5f, -3f, -3f);
+
         public static void Main()
         {
             try
             {
                 _window = new DedicatedThreadWindow();
                 _rc = new D3DRenderContext(_window);
-                _renderer = new Renderer(_rc, new[]
+                _renderer = new Renderer(_rc, new PipelineStage[]
                 {
+                    new ShadowMapStage(_rc),
                     new StandardPipelineStage("Standard"),
                     new StandardPipelineStage("Overlay"),
                 });
@@ -55,8 +62,14 @@ namespace Veldrid.RenderDemo
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
                     new DirectionalLightBuffer(RgbaFloat.White, new Vector3(-.3f, -1f, -1f)));
+                _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(_lightPosition, Vector3.Zero, Vector3.UnitY);
+
+                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-10, 10, -10, 10, -25, 25);
+
                 _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
                 _rc.DataProviders.Add("ViewMatrix", _viewMatrixProvider);
+                _rc.DataProviders.Add("LightViewMatrix", _lightViewMatrixProvider);
+                _rc.DataProviders.Add("LightProjMatrix", _lightProjMatrixProvider);
                 _rc.ClearColor = RgbaFloat.CornflowerBlue;
 
                 CreateScreenshotFramebuffer();
@@ -115,7 +128,8 @@ namespace Veldrid.RenderDemo
             if (_boxSceneVM == null)
             {
                 _boxSceneVM = new FlatListVisibilityManager();
-                var tcr = new TexturedCubeRenderer(_rc);
+                var sphere = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
+                var tcr = new TexturedMeshRenderer(_rc, sphere.Vertices, sphere.Indices);
                 tcr.Position = new Vector3(-5f, 0, -3);
                 _boxSceneVM.AddRenderItem(tcr);
 
@@ -157,16 +171,22 @@ namespace Veldrid.RenderDemo
             if (_shadowsScene == null)
             {
                 _shadowsScene = new FlatListVisibilityManager();
-                using (var fs = File.OpenRead("Models/Sphere.obj"))
-                {
-                    var sphereMeshInfo = ObjImporter.Import(fs).Result;
-                    var sphereRenderer = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, _stoneTextureData);
-                    _shadowsScene.AddRenderItem(sphereRenderer);
-                }
+                var sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
+
+                var sphere = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, _stoneTextureData);
+                _shadowsScene.AddRenderItem(sphere);
+
+                var sphere2 = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, _stoneTextureData);
+                sphere2.Position = new Vector3(3f, 0f, 0f);
+                _shadowsScene.AddRenderItem(sphere2);
+
 
                 var plane = new ShadowCaster(_rc, PlaneModel.Vertices, PlaneModel.Indices, _solidWhiteTexture);
-                plane.Position = new Vector3(0, -2, 0);
+                plane.Position = new Vector3(0, -2.5f, 0);
+                plane.Scale = new Vector3(20f);
+
                 _shadowsScene.AddRenderItem(plane);
+                _shadowsScene.AddRenderItem(_imguiRenderer);
             }
 
             return _shadowsScene;
@@ -188,7 +208,7 @@ namespace Veldrid.RenderDemo
             bool opened = false;
             float width = Math.Max(100, Math.Min(200, _window.Width * .4f));
             ImGuiNative.igSetNextWindowPos(new Vector2(20, 20), SetCondition.Always);
-            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 240), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
+            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 300), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
             {
                 if (ImGui.Button("Boxes"))
                 {
@@ -271,6 +291,7 @@ namespace Veldrid.RenderDemo
                     ImGui.EndChildFrame();
                 }
             }
+
             ImGui.EndWindow();
 
             _fta.AddTime(deltaMilliseconds);
@@ -288,6 +309,10 @@ namespace Veldrid.RenderDemo
                 if (ke.Key == OpenTK.Input.Key.F9 && ke.Down && _window.Width * _window.Height != 0)
                 {
                     _takeScreenshot = true;
+                }
+                if (ke.Key == OpenTK.Input.Key.F4 && ke.Down)
+                {
+                    ((ShadowMapStage)_renderer.Stages[0]).TakeScreenshot = true;
                 }
                 if (ke.Key == OpenTK.Input.Key.F11 && ke.Down)
                 {

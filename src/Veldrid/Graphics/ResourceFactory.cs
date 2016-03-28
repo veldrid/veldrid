@@ -18,11 +18,15 @@ namespace Veldrid.Graphics
 
         public abstract ConstantBuffer CreateConstantBuffer(int sizeInBytes);
 
+        public abstract Framebuffer CreateFramebuffer();
+
         public abstract Framebuffer CreateFramebuffer(int width, int height);
 
         public abstract DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct;
 
         public abstract DeviceTexture CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format);
+
+        public abstract DeviceTexture CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format);
 
         public abstract BlendState CreateCustomBlendState(
             bool isBlendEnabled,

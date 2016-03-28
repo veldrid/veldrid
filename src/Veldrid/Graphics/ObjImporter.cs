@@ -9,6 +9,14 @@ namespace Veldrid.Graphics
 {
     public class ObjImporter
     {
+        public static ObjMeshInfo LoadFromPath(string path)
+        {
+            using (var fs = File.OpenRead(path))
+            {
+                return Import(fs).Result;
+            }
+        }
+
         public static async Task<ObjMeshInfo> Import(Stream stream)
         {
             StreamReader sr = new StreamReader(stream);

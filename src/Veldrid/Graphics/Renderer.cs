@@ -21,7 +21,7 @@ namespace Veldrid.Graphics
             }
         }
 
-        public IReadOnlyCollection<PipelineStage> Stages => _stages;
+        public IReadOnlyList<PipelineStage> Stages => _stages;
 
         public Renderer(RenderContext rc, PipelineStage[] stages)
         {

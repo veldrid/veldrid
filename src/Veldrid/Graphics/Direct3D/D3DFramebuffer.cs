@@ -1,5 +1,6 @@
 ﻿using System;
 using SharpDX.Direct3D11;
+using System.Diagnostics;
 
 namespace Veldrid.Graphics.Direct3D
 {
@@ -7,13 +8,45 @@ namespace Veldrid.Graphics.Direct3D
     {
         private readonly Device _device;
 
-        public DepthStencilView DepthStencilView { get; }
-        public RenderTargetView RenderTargetView { get; }
-        public D3DTexture RenderTargetTexture { get; }
-        public D3DTexture DepthTexture { get; }
+        public DepthStencilView DepthStencilView { get; private set; }
+        public RenderTargetView RenderTargetView { get; private set; }
+        public D3DTexture RenderTargetTexture { get; private set; }
+        public D3DTexture DepthTexture { get; private set; }
 
-        DeviceTexture Framebuffer.ColorTexture => RenderTargetTexture;
-        DeviceTexture Framebuffer.DepthTexture => DepthTexture;
+        DeviceTexture Framebuffer.ColorTexture
+        {
+            get
+            {
+                return RenderTargetTexture;
+            }
+
+            set
+            {
+                Debug.Assert(value is D3DTexture);
+                RenderTargetTexture = (D3DTexture)value;
+                RenderTargetView = new RenderTargetView(_device, RenderTargetTexture.DeviceTexture);
+            }
+        }
+
+        DeviceTexture Framebuffer.DepthTexture
+        {
+            get
+            {
+                return DepthTexture;
+            }
+
+            set
+            {
+                Debug.Assert(value is D3DTexture);
+                DepthTexture = (D3DTexture)value;
+                DepthStencilView = new DepthStencilView(_device, DepthTexture.DeviceTexture);
+            }
+        }
+
+        public D3DFramebuffer(Device device)
+        {
+            _device = device;
+        }
 
         public D3DFramebuffer(Device device, D3DTexture colorTexture, D3DTexture depthTexture)
         {
@@ -31,8 +64,8 @@ namespace Veldrid.Graphics.Direct3D
 
         public void Dispose()
         {
-            RenderTargetView.Dispose();
-            DepthStencilView.Dispose();
+            RenderTargetView?.Dispose();
+            DepthStencilView?.Dispose();
         }
     }
 }

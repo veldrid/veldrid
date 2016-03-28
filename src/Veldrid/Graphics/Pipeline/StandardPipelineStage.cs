@@ -20,6 +20,8 @@ namespace Veldrid.Graphics.Pipeline
 
         public void ExecuteStage(VisibiltyManager visibilityManager)
         {
+            RenderContext.SetDefaultFramebuffer();
+            RenderContext.SetViewport(0, 0, RenderContext.Window.Width, RenderContext.Window.Height);
             _renderQueue.Clear();
             visibilityManager.CollectVisibleObjects(_renderQueue, Name, Vector3.Zero, Vector3.Zero);
             //_renderQueue.Sort();

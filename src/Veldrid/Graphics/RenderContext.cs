@@ -26,6 +26,7 @@ namespace Veldrid.Graphics
         private RasterizerState _rasterizerState;
 
         public Dictionary<string, ConstantBufferDataProvider> DataProviders { get; } = new Dictionary<string, ConstantBufferDataProvider>();
+        private Dictionary<string, ContextDeviceBinding<DeviceTexture>> _textureProviders { get; } = new Dictionary<string, ContextDeviceBinding<DeviceTexture>>();
 
         public RenderContext(Window window)
         {
@@ -195,6 +196,18 @@ namespace Veldrid.Graphics
             PlatformSetViewport(x, y, width, height);
         }
 
+        public ContextDeviceBinding<DeviceTexture> GetTextureContextBinding(string name)
+        {
+            ContextDeviceBinding<DeviceTexture> value;
+            if (!_textureProviders.TryGetValue(name, out value))
+            {
+                value = new ContextDeviceBinding<DeviceTexture>();
+                _textureProviders.Add(name, value);
+            }
+
+            return value;
+        }
+
         protected void OnWindowResized()
         {
             ProjectionMatrixProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
@@ -237,6 +250,40 @@ namespace Veldrid.Graphics
             _overrideBlend?.Dispose();
             _alphaBlend?.Dispose();
             PlatformDispose();
+        }
+    }
+
+    public class ContextDeviceBinding<T>
+    {
+        private T _value;
+        private bool _valid;
+
+        public T Value
+        {
+            get
+            {
+                if (!_valid)
+                {
+                    throw new InvalidOperationException($"No value has been bound to context binding of type {typeof(T).FullName}");
+                }
+
+                return _value;
+            }
+            set
+            {
+                _value = value;
+                _valid = true;
+            }
+        }
+
+        public ContextDeviceBinding(T value)
+        {
+            _value = value;
+            _valid = true;
+        }
+
+        public ContextDeviceBinding()
+        {
         }
     }
 }

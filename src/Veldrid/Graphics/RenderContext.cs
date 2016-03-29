@@ -8,8 +8,6 @@ namespace Veldrid.Graphics
 {
     public abstract class RenderContext : IDisposable
     {
-        private readonly float _fieldOfViewRadians = 1.05f;
-
         private readonly Vector3 _cameraPosition = new Vector3(0, 3, 5);
         private readonly Vector3 _cameraDirection = new Vector3(0, -3, -5);
 
@@ -32,7 +30,6 @@ namespace Veldrid.Graphics
         {
             Window = window;
             window.Resized += () => _needsResizing = 1;
-            DataProviders["ProjectionMatrix"] = ProjectionMatrixProvider;
         }
 
         public Window Window { get; }
@@ -51,8 +48,6 @@ namespace Veldrid.Graphics
         public virtual RgbaFloat ClearColor { get; set; } = RgbaFloat.CornflowerBlue;
 
         public abstract ResourceFactory ResourceFactory { get; }
-
-        public DynamicDataProvider<Matrix4x4> ProjectionMatrixProvider { get; } = new DynamicDataProvider<Matrix4x4>();
 
         public event Action WindowResized;
 
@@ -210,12 +205,6 @@ namespace Veldrid.Graphics
 
         protected void OnWindowResized()
         {
-            ProjectionMatrixProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
-                _fieldOfViewRadians,
-                Window.Width / (float)Window.Height,
-                1f,
-                1000f);
-
             PlatformResize();
             SetViewport(0, 0, Window.Width, Window.Height);
             WindowResized?.Invoke();

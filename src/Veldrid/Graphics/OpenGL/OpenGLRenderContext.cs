@@ -10,6 +10,7 @@ namespace Veldrid.Graphics.OpenGL
     {
         private readonly OpenGLResourceFactory _resourceFactory;
         private readonly GraphicsContext _openGLGraphicsContext;
+        private readonly OpenGLDefaultFramebuffer _defaultFramebuffer;
 
         public OpenGLRenderContext(OpenTKWindow window)
             : base(window)
@@ -20,6 +21,8 @@ namespace Veldrid.Graphics.OpenGL
             _openGLGraphicsContext.MakeCurrent(window.OpenTKWindowInfo);
 
             _openGLGraphicsContext.LoadAll();
+
+            _defaultFramebuffer = new OpenGLDefaultFramebuffer();
 
             SetInitialStates();
             OnWindowResized();
@@ -91,7 +94,7 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSetDefaultFramebuffer()
         {
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            SetFramebuffer(_defaultFramebuffer);
         }
 
         protected override void PlatformSetScissorRectangle(Rectangle rectangle)

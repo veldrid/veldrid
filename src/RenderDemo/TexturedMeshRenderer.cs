@@ -18,6 +18,7 @@ namespace Veldrid.RenderDemo
         private static Material s_material;
 
         public Vector3 Position { get; internal set; }
+        public Vector3 Scale { get; internal set; } = new Vector3(1f);
 
         public TexturedMeshRenderer(RenderContext context, VertexPositionNormalTexture[] vertices, int[] indices)
         {
@@ -59,7 +60,7 @@ namespace Veldrid.RenderDemo
             MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                 new MaterialGlobalInputElement[]
                 {
-                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.ProjectionMatrixProvider),
+                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ProjectionMatrix"]),
                     new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ViewMatrix"]),
                     new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, context.DataProviders["LightBuffer"]),
                 });
@@ -67,7 +68,7 @@ namespace Veldrid.RenderDemo
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
                 new MaterialPerObjectInputElement[]
                 {
-                    new MaterialPerObjectInputElement("worldMatrixUniform", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
                     new MaterialPerObjectInputElement("inverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
                 });
 
@@ -102,8 +103,7 @@ namespace Veldrid.RenderDemo
         {
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             _worldProvider.Data =
-                Matrix4x4.CreateScale(1.5f)
-                * Matrix4x4.CreateRotationY(rotationAmount)
+                Matrix4x4.CreateScale(Scale)
                 * Matrix4x4.CreateTranslation(Position);
 
             context.SetVertexBuffer(s_vb);

@@ -17,6 +17,7 @@ namespace Veldrid.RenderDemo
         private readonly MaterialInputs<MaterialPerObjectInputElement> _perObjectInputs;
         private readonly MaterialTextureInputs _textureInputs;
         private readonly TextureData _surfaceTextureData;
+        private readonly string[] _stages = new string[] { "ShadowMap", "Standard" };
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
@@ -43,7 +44,7 @@ namespace Veldrid.RenderDemo
                 new MaterialGlobalInputElement("ViewMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["LightViewMatrix"]));
 
             _regularPassGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
-                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, rc.ProjectionMatrixProvider),
+                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, rc.DataProviders["ProjectionMatrix"]),
                     new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, rc.DataProviders["ViewMatrix"]),
                     new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, rc.DataProviders["LightBuffer"]));
 
@@ -98,11 +99,7 @@ namespace Veldrid.RenderDemo
             return new RenderOrderKey();
         }
 
-        public IEnumerable<string> GetStagesParticipated()
-        {
-            yield return "ShadowMap";
-            yield return "Standard";
-        }
+        public IEnumerable<string> GetStagesParticipated() => _stages;
 
         public void Render(RenderContext rc, string pipelineStage)
         {

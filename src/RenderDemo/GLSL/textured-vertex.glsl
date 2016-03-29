@@ -10,7 +10,7 @@ uniform viewMatrixUniform
     mat4 view_matrix;
 };
 
-uniform worldMatrixUniform
+uniform WorldMatrix
 {
     mat4 world_matrix;
 };

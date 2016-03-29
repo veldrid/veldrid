@@ -33,7 +33,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public void Apply()
         {
-            GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
 
         public void Dispose()

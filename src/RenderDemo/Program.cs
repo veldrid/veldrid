@@ -25,6 +25,7 @@ namespace Veldrid.RenderDemo
         private static bool _limitFrameRate = false;
         private static FlatListVisibilityManager _visiblityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
+        private static DynamicDataProvider<Matrix4x4> _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Matrix4x4> _viewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Matrix4x4> _lightViewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Matrix4x4> _lightProjMatrixProvider = new DynamicDataProvider<Matrix4x4>();
@@ -45,6 +46,7 @@ namespace Veldrid.RenderDemo
 
         private static Vector3 _lightPosition = new Vector3(-5f, 3f, -3f);
         private static Vector3 _lightDirection = new Vector3(5f, -3f, -3f);
+        private static float _fieldOfViewRadians = 1.05f;
 
         public static void Main()
         {
@@ -67,10 +69,14 @@ namespace Veldrid.RenderDemo
                 _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-10, 10, -10, 10, -25, 25);
 
                 _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
+                _rc.DataProviders.Add("ProjectionMatrix", _projectionMatrixProvider);
                 _rc.DataProviders.Add("ViewMatrix", _viewMatrixProvider);
                 _rc.DataProviders.Add("LightViewMatrix", _lightViewMatrixProvider);
                 _rc.DataProviders.Add("LightProjMatrix", _lightProjMatrixProvider);
                 _rc.ClearColor = RgbaFloat.CornflowerBlue;
+
+                _rc.WindowResized += OnWindowResized;
+                SetProjectionMatrix();
 
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
@@ -110,6 +116,20 @@ namespace Veldrid.RenderDemo
                     Console.WriteLine("GL Error: " + GL.GetError());
                 }
             }
+        }
+
+        private static void OnWindowResized()
+        {
+            SetProjectionMatrix();
+        }
+
+        private static void SetProjectionMatrix()
+        {
+            _projectionMatrixProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
+                            _fieldOfViewRadians,
+                            _rc.Window.Width / (float)_rc.Window.Height,
+                            1f,
+                            1000f);
         }
 
         private static void CreateWireframeRasterizerState()
@@ -159,7 +179,14 @@ namespace Veldrid.RenderDemo
                 _teapotVM = new FlatListVisibilityManager();
                 var teapot = new TeapotRenderer(_rc);
                 teapot.Position = new Vector3(0, -1, 0);
+                teapot.Scale = new Vector3(1f);
+
+                var plane = new TexturedMeshRenderer(_rc, PlaneModel.Vertices, PlaneModel.Indices);
+                plane.Position = new Vector3(0, -2, 0);
+                plane.Scale = new Vector3(20, 1, 20);
+
                 _teapotVM.AddRenderItem(teapot);
+                _teapotVM.AddRenderItem(plane);
                 _teapotVM.AddRenderItem(_imguiRenderer);
             }
 
@@ -224,6 +251,11 @@ namespace Veldrid.RenderDemo
                 {
                     _circleWidth = 5.0;
                     _visiblityManager = SceneWithShadows();
+                }
+
+                if (ImGui.SliderFloat("FOV", ref _fieldOfViewRadians, 0.05f, (float)Math.PI - .01f, _fieldOfViewRadians.ToString(), 1f))
+                {
+                    SetProjectionMatrix();
                 }
 
                 if (ImGui.Checkbox("Wireframe", ref _wireframe))

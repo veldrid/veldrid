@@ -15,15 +15,43 @@ namespace Veldrid.Graphics
             = new MaterialTextureInputs(Array.Empty<MaterialTextureInputElement>());
     }
 
-    public class MaterialTextureInputElement
+    public abstract class MaterialTextureInputElement
     {
         public string Name { get; }
-        public TextureData TextureData { get; }
 
-        public MaterialTextureInputElement(string name, TextureData textureData)
+        public abstract DeviceTexture GetDeviceTexture(RenderContext rc);
+
+        public MaterialTextureInputElement(string name)
         {
             Name = name;
+        }
+    }
+
+    public class TextureDataInputElement : MaterialTextureInputElement
+    {
+        public TextureData TextureData { get; }
+
+        public TextureDataInputElement(string name, TextureData textureData)
+            : base(name)
+        {
             TextureData = textureData;
+        }
+
+        public override DeviceTexture GetDeviceTexture(RenderContext rc)
+        {
+            return TextureData.CreateDeviceTexture(rc.ResourceFactory);
+        }
+    }
+
+    public class ContextTextureInputElement : MaterialTextureInputElement
+    {
+        public ContextTextureInputElement(string name) : base(name)
+        {
+        }
+
+        public override DeviceTexture GetDeviceTexture(RenderContext rc)
+        {
+            return rc.GetTextureContextBinding(Name).Value;
         }
     }
 }

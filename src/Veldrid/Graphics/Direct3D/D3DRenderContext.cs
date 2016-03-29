@@ -1,4 +1,5 @@
-﻿using SharpDX.Direct3D11;
+﻿using System;
+using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using Veldrid.Platform;
@@ -11,6 +12,8 @@ namespace Veldrid.Graphics.Direct3D
         private SwapChain _swapChain;
         private DeviceContext _deviceContext;
         private D3DFramebuffer _defaultFramebuffer;
+        private SamplerState _regularSamplerState;
+        private SamplerState _shadowMapSampler;
 
         public D3DRenderContext(Window window) : this(window, DeviceCreationFlags.None) { }
 
@@ -18,6 +21,7 @@ namespace Veldrid.Graphics.Direct3D
             : base(window)
         {
             CreateAndInitializeDevice(flags);
+            CreateAndSetSamplers();
             ResourceFactory = new D3DResourceFactory(_device);
             PostContextCreated();
         }
@@ -29,8 +33,14 @@ namespace Veldrid.Graphics.Direct3D
         protected unsafe override void PlatformClearBuffer()
         {
             RgbaFloat clearColor = ClearColor;
-            _deviceContext.ClearRenderTargetView(CurrentFramebuffer.RenderTargetView, *(RawColor4*)&clearColor);
-            _deviceContext.ClearDepthStencilView(CurrentFramebuffer.DepthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
+            if (CurrentFramebuffer.RenderTargetView != null)
+            {
+                _deviceContext.ClearRenderTargetView(CurrentFramebuffer.RenderTargetView, *(RawColor4*)&clearColor);
+            }
+            if (CurrentFramebuffer.DepthStencilView != null)
+            {
+                _deviceContext.ClearDepthStencilView(CurrentFramebuffer.DepthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
+            }
         }
 
         public override void DrawIndexedPrimitives(int count, int startingIndex) => DrawIndexedPrimitives(count, startingIndex, 0);
@@ -72,6 +82,22 @@ namespace Veldrid.Graphics.Direct3D
             SetFramebuffer(_defaultFramebuffer);
             _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
         }
+
+        private void CreateAndSetSamplers()
+        {
+            SamplerStateDescription regularDesc = SamplerStateDescription.Default();
+            _regularSamplerState = new SamplerState(_device, regularDesc);
+            _deviceContext.PixelShader.SetSampler(0, _regularSamplerState);
+
+            SamplerStateDescription shadowSamplerDesc = SamplerStateDescription.Default();
+            shadowSamplerDesc.Filter = Filter.MinMagMipPoint;
+            shadowSamplerDesc.BorderColor = new RawColor4(1f, 1f, 1f, 1f);
+            shadowSamplerDesc.AddressU = TextureAddressMode.Border;
+            shadowSamplerDesc.AddressV = TextureAddressMode.Border;
+            _shadowMapSampler = new SamplerState(_device, shadowSamplerDesc);
+            _deviceContext.PixelShader.SetSampler(1, _shadowMapSampler);
+        }
+
 
         protected override void PlatformSetViewport(int left, int top, int width, int height)
         {

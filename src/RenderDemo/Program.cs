@@ -22,13 +22,14 @@ namespace Veldrid.RenderDemo
         private static FrameTimeAverager _fta;
         private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
         private static OpenTKWindow _window;
-        private static bool _limitFrameRate = false;
+        private static bool _limitFrameRate = true;
         private static FlatListVisibilityManager _visiblityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
         private static DynamicDataProvider<Matrix4x4> _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Matrix4x4> _viewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Matrix4x4> _lightViewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Matrix4x4> _lightProjMatrixProvider = new DynamicDataProvider<Matrix4x4>();
+        private static DynamicDataProvider<Vector4> _lightInfoProvider = new DynamicDataProvider<Vector4>();
         private static FlatListVisibilityManager _boxSceneVM;
         private static FlatListVisibilityManager _teapotVM;
         private static FlatListVisibilityManager _shadowsScene;
@@ -41,12 +42,12 @@ namespace Veldrid.RenderDemo
         private static Framebuffer _screenshotFramebuffer;
         private static RasterizerState _wireframeRasterizerState;
 
-        private static readonly TextureData _stoneTextureData = LoadStoneTextureData();
-        private static readonly TextureData _solidWhiteTexture = LoadWhiteTextureData();
-
-        private static Vector3 _lightPosition = new Vector3(-5f, 3f, -3f);
-        private static Vector3 _lightDirection = new Vector3(5f, -3f, -3f);
+        private static readonly Vector3 _lightPosition = new Vector3(-5f, 3f, -3f);
+        private static readonly Vector3 _lightDirection = new Vector3(5f, -3f, -3f);
         private static float _fieldOfViewRadians = 1.05f;
+        private static bool _moveCamera;
+        private static bool _moveLight = true;
+        private static TexturedMeshRenderer _lightPosMarker;
 
         public static void Main()
         {
@@ -64,15 +65,25 @@ namespace Veldrid.RenderDemo
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
                     new DirectionalLightBuffer(RgbaFloat.White, new Vector3(-.3f, -1f, -1f)));
-                _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(_lightPosition, Vector3.Zero, Vector3.UnitY);
+                _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(_lightPosition * 3f, Vector3.Zero, Vector3.UnitY);
 
-                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-10, 10, -10, 10, -25, 25);
+                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-15, 15, -15, 15, -25, 25);
+
+                _lightInfoProvider.Data = new Vector4(_lightPosition, 1);
+
+                float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
+                var position = new Vector3(
+                    (float)(Math.Cos(timeFactor) * _circleWidth),
+                    3 + (float)Math.Sin(timeFactor) * 2,
+                    (float)(Math.Sin(timeFactor) * _circleWidth));
+                _viewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
 
                 _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
                 _rc.DataProviders.Add("ProjectionMatrix", _projectionMatrixProvider);
                 _rc.DataProviders.Add("ViewMatrix", _viewMatrixProvider);
                 _rc.DataProviders.Add("LightViewMatrix", _lightViewMatrixProvider);
                 _rc.DataProviders.Add("LightProjMatrix", _lightProjMatrixProvider);
+                _rc.DataProviders.Add("LightInfo", _lightInfoProvider);
                 _rc.ClearColor = RgbaFloat.CornflowerBlue;
 
                 _rc.WindowResized += OnWindowResized;
@@ -81,7 +92,7 @@ namespace Veldrid.RenderDemo
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
 
-                _visiblityManager = SceneWithTeapot();
+                _visiblityManager = SceneWithShadows();
 
                 _fta = new FrameTimeAverager(666);
 
@@ -149,7 +160,7 @@ namespace Veldrid.RenderDemo
             {
                 _boxSceneVM = new FlatListVisibilityManager();
                 var sphere = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
-                var tcr = new TexturedMeshRenderer(_rc, sphere.Vertices, sphere.Indices);
+                var tcr = new TexturedMeshRenderer(_rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
                 tcr.Position = new Vector3(-5f, 0, -3);
                 _boxSceneVM.AddRenderItem(tcr);
 
@@ -181,7 +192,7 @@ namespace Veldrid.RenderDemo
                 teapot.Position = new Vector3(0, -1, 0);
                 teapot.Scale = new Vector3(1f);
 
-                var plane = new TexturedMeshRenderer(_rc, PlaneModel.Vertices, PlaneModel.Indices);
+                var plane = new TexturedMeshRenderer(_rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
                 plane.Position = new Vector3(0, -2, 0);
                 plane.Scale = new Vector3(20, 1, 20);
 
@@ -200,15 +211,18 @@ namespace Veldrid.RenderDemo
                 _shadowsScene = new FlatListVisibilityManager();
                 var sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
 
-                var sphere = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, _stoneTextureData);
+                var sphere = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
                 _shadowsScene.AddRenderItem(sphere);
 
-                var sphere2 = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, _stoneTextureData);
+                var sphere2 = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
                 sphere2.Position = new Vector3(3f, 0f, 0f);
                 _shadowsScene.AddRenderItem(sphere2);
 
+                _lightPosMarker = new TexturedMeshRenderer(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
+                _lightPosMarker.Scale = new Vector3(.5f);
+                _shadowsScene.AddRenderItem(_lightPosMarker);
 
-                var plane = new ShadowCaster(_rc, PlaneModel.Vertices, PlaneModel.Indices, _solidWhiteTexture);
+                var plane = new ShadowCaster(_rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
                 plane.Position = new Vector3(0, -2.5f, 0);
                 plane.Scale = new Vector3(20f);
 
@@ -222,11 +236,28 @@ namespace Veldrid.RenderDemo
         private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
         {
             float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
-            var position = new Vector3(
-                (float)(Math.Cos(timeFactor) * _circleWidth),
-                3 + (float)Math.Sin(timeFactor) * 2,
-                (float)(Math.Sin(timeFactor) * _circleWidth));
-            _viewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
+            if (_moveCamera)
+            {
+                var position = new Vector3(
+                    (float)(Math.Cos(timeFactor) * _circleWidth),
+                    3 + (float)Math.Sin(timeFactor) * 2,
+                    (float)(Math.Sin(timeFactor) * _circleWidth));
+                _viewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
+            }
+
+            if (_moveLight)
+            {
+                var position = new Vector3(
+                    (float)(Math.Cos(timeFactor) * _circleWidth),
+                    3 + (float)Math.Sin(timeFactor) * 2,
+                    (float)(Math.Sin(timeFactor) * _circleWidth));
+
+                _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
+                if (_lightPosMarker != null)
+                {
+                    _lightPosMarker.Position = position;
+                }
+            }
 
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
             _imguiRenderer.UpdateImGuiInput(_window);
@@ -235,7 +266,7 @@ namespace Veldrid.RenderDemo
             bool opened = false;
             float width = Math.Max(100, Math.Min(200, _window.Width * .4f));
             ImGuiNative.igSetNextWindowPos(new Vector2(20, 20), SetCondition.Always);
-            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 300), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
+            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 340), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
             {
                 if (ImGui.Button("Boxes"))
                 {
@@ -269,6 +300,7 @@ namespace Veldrid.RenderDemo
                         _rc.SetRasterizerState(_rc.DefaultRasterizerState);
                     }
                 }
+                ImGui.Checkbox("Move Camera", ref _moveCamera);
 
                 bool isD3D11 = _rc is D3DRenderContext;
                 bool isOpenGL = !isD3D11;
@@ -395,6 +427,8 @@ namespace Veldrid.RenderDemo
                     newContext.DataProviders[kvp.Key] = kvp.Value;
                 }
 
+                _renderer.RenderContext = newContext;
+
                 if (_teapotVM != null)
                 {
                     foreach (var item in _teapotVM?.RenderItems)
@@ -425,8 +459,6 @@ namespace Veldrid.RenderDemo
                 {
                     _rc.SetRasterizerState(_wireframeRasterizerState);
                 }
-
-                _renderer.RenderContext = newContext;
             }
         }
 
@@ -461,13 +493,6 @@ namespace Veldrid.RenderDemo
         private static TextureData LoadStoneTextureData()
         {
             return new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures/CubeTexture.png"));
-        }
-
-        private static TextureData LoadWhiteTextureData()
-        {
-            var texture = new RawTextureDataArray<RgbaFloat>(1, 1, RgbaFloat.SizeInBytes, Graphics.PixelFormat.R32_G32_B32_A32_Float);
-            texture.PixelData[0] = RgbaFloat.White;
-            return texture;
         }
 
         private class FrameTimeAverager

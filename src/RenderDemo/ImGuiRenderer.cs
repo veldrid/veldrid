@@ -45,7 +45,9 @@ namespace Veldrid.RenderDemo
                 Blend.InverseSourceAlpha, Blend.Zero, BlendFunction.Add,
                 Blend.SourceAlpha, Blend.InverseSourceAlpha, BlendFunction.Add);
             _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
-            _material = factory.CreateMaterial("imgui-vertex", "imgui-frag",
+            _material = factory.CreateMaterial(
+                rc,
+                "imgui-vertex", "imgui-frag",
                 new MaterialVertexInput(20, new MaterialVertexInputElement[]
                 {
                     new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float2),
@@ -59,7 +61,7 @@ namespace Veldrid.RenderDemo
                 MaterialInputs<MaterialPerObjectInputElement>.Empty,
                 new MaterialTextureInputs(new MaterialTextureInputElement[]
                 {
-                    new MaterialTextureInputElement("surfaceTexture", _fontTexture)
+                    new TextureDataInputElement("surfaceTexture", _fontTexture)
                 }));
         }
 

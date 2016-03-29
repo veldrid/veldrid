@@ -9,6 +9,7 @@ namespace Veldrid.Graphics
         public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic);
 
         public abstract Material CreateMaterial(
+            RenderContext rc,
             string vertexShaderName,
             string pixelShaderName,
             MaterialVertexInput vertexInputs,
@@ -44,7 +45,6 @@ namespace Veldrid.Graphics
             FaceCullingMode cullMode,
             TriangleFillMode fillMode,
             bool isDepthClipEnabled,
-            bool isScissorTestEnabled
-            );
+            bool isScissorTestEnabled);
     }
 }

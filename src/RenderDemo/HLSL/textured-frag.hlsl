@@ -4,7 +4,7 @@
     float2 texCoord : TEXCOORD0;
 };
 
-Texture2D shaderTexture;
+Texture2D shaderTexture : register(t0);
 SamplerState MeshTextureSampler
 {
     Filter = MIN_MAG_MIP_LINEAR;

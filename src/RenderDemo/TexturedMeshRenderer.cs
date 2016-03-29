@@ -12,6 +12,7 @@ namespace Veldrid.RenderDemo
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
         private readonly VertexPositionNormalTexture[] _vertices;
         private readonly int[] _indices;
+        private readonly TextureData _texture;
 
         private static VertexBuffer s_vb;
         private static IndexBuffer s_ib;
@@ -20,13 +21,14 @@ namespace Veldrid.RenderDemo
         public Vector3 Position { get; internal set; }
         public Vector3 Scale { get; internal set; } = new Vector3(1f);
 
-        public TexturedMeshRenderer(RenderContext context, VertexPositionNormalTexture[] vertices, int[] indices)
+        public TexturedMeshRenderer(RenderContext context, VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
         {
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
             _vertices = vertices;
             _indices = indices;
+            _texture = texture;
 
             InitializeContextObjects(context);
         }
@@ -75,10 +77,11 @@ namespace Veldrid.RenderDemo
             MaterialTextureInputs textureInputs = new MaterialTextureInputs(
                 new MaterialTextureInputElement[]
                 {
-                    new MaterialTextureInputElement("surfaceTexture", s_cubeTexture)
+                    new TextureDataInputElement("surfaceTexture", _texture)
                 });
 
             s_material = factory.CreateMaterial(
+                context,
                 VertexShaderSource,
                 FragmentShaderSource,
                 materialInputs,
@@ -128,6 +131,5 @@ namespace Veldrid.RenderDemo
 
         private static readonly string VertexShaderSource = "textured-vertex";
         private static readonly string FragmentShaderSource = "lit-frag";
-        private static readonly ImageProcessorTexture s_cubeTexture = new ImageProcessorTexture(AppContext.BaseDirectory + "/Textures/CubeTexture.png");
     }
 }

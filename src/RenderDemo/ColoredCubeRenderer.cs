@@ -70,6 +70,7 @@ namespace Veldrid.RenderDemo
                     });
 
                 s_material = factory.CreateMaterial(
+                    context,
                     VertexShaderSource,
                     FragmentShaderSource,
                     materialInputs,

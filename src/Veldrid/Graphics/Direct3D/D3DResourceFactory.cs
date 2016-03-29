@@ -69,6 +69,7 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         public override Material CreateMaterial(
+            RenderContext rc,
             string vertexShaderName,
             string pixelShaderName,
             MaterialVertexInput vertexInputs,
@@ -81,7 +82,7 @@ namespace Veldrid.Graphics.Direct3D
 
             return new D3DMaterial(
                 _device,
-                this,
+                (D3DRenderContext)rc,
                 vertexShaderPath,
                 pixelShaderPath,
                 vertexInputs,
@@ -136,14 +137,14 @@ namespace Veldrid.Graphics.Direct3D
 
             return new D3DTexture(_device, new Texture2DDescription()
             {
-                Format = SharpDX.DXGI.Format.D16_UNorm,
+                Format = SharpDX.DXGI.Format.R16_Typeless,
                 ArraySize = 1,
                 MipLevels = 1,
                 Width = width,
                 Height = height,
                 SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.DepthStencil,
+                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
                 CpuAccessFlags = CpuAccessFlags.None,
                 OptionFlags = ResourceOptionFlags.None
             });

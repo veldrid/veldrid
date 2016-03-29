@@ -26,6 +26,7 @@
     <Compile Include="ShadowCaster.cs" />
     <Compile Include="TeapotRenderer.cs" />
     <Compile Include="TexturedMeshRenderer.cs" />
+    <Compile Include="Textures\Textures.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
     <UseVSHostingProcess>true</UseVSHostingProcess>
@@ -43,6 +44,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Textures\CubeTexture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Textures\Wood.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">

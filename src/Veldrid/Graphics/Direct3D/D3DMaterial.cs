@@ -24,7 +24,7 @@ namespace Veldrid.Graphics.Direct3D
 
         public D3DMaterial(
             Device device,
-            D3DResourceFactory resourceFactory,
+            D3DRenderContext rc,
             string vertexShaderPath,
             string pixelShaderPath,
             MaterialVertexInput vertexInputs,
@@ -83,12 +83,29 @@ namespace Veldrid.Graphics.Direct3D
             for (int i = 0; i < numTextures; i++)
             {
                 var genericElement = textureInputs.Elements[i];
-                D3DTexture texture = (D3DTexture)genericElement.TextureData.CreateDeviceTexture(resourceFactory);
-                ShaderResourceView resourceView = new ShaderResourceView(device, texture.DeviceTexture);
+                D3DTexture texture = (D3DTexture)genericElement.GetDeviceTexture(rc);
+
+                ShaderResourceViewDescription srvd = new ShaderResourceViewDescription();
+                srvd.Format = MapFormat(texture.DeviceTexture.Description.Format);
+                srvd.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
+                srvd.Texture2D.MipLevels = texture.DeviceTexture.Description.MipLevels;
+                srvd.Texture2D.MostDetailedMip = 0;
+
+                ShaderResourceView resourceView = new ShaderResourceView(device, texture.DeviceTexture, srvd);
                 _resourceViewBindings[i] = new ResourceViewBinding(i, resourceView);
             }
         }
 
+        private SharpDX.DXGI.Format MapFormat(SharpDX.DXGI.Format format)
+        {
+            switch (format)
+            {
+                case SharpDX.DXGI.Format.R16_Typeless:
+                    return SharpDX.DXGI.Format.R16_UNorm;
+                default:
+                    return format;
+            }
+        }
 
         public void Apply()
         {

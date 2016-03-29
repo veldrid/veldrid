@@ -15,7 +15,7 @@ namespace Veldrid.Graphics.OpenGL
         private readonly OpenGLProgramTextureBinding[] _textureBindings;
 
         public OpenGLMaterial(
-            OpenGLResourceFactory resourceFactory,
+            OpenGLRenderContext rc,
             OpenGLShader vertexShader,
             OpenGLShader fragmentShader,
             MaterialVertexInput vertexInputs,
@@ -116,7 +116,7 @@ namespace Veldrid.Graphics.OpenGL
             {
                 var element = textureInputs.Elements[i];
                 int location = GL.GetUniformLocation(_programID, element.Name);
-                OpenGLTexture deviceTexture = (OpenGLTexture)element.TextureData.CreateDeviceTexture(resourceFactory);
+                OpenGLTexture deviceTexture = (OpenGLTexture)element.GetDeviceTexture(rc);
                 _textureBindings[i] = new OpenGLProgramTextureBinding(location, deviceTexture);
             }
         }

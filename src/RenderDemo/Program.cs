@@ -42,12 +42,18 @@ namespace Veldrid.RenderDemo
         private static Framebuffer _screenshotFramebuffer;
         private static RasterizerState _wireframeRasterizerState;
 
+        private static Vector3 _cameraPosition;
+        private static Matrix4x4 _cameraRotation;
+
         private static readonly Vector3 _lightPosition = new Vector3(-5f, 3f, -3f);
         private static readonly Vector3 _lightDirection = new Vector3(5f, -3f, -3f);
         private static float _fieldOfViewRadians = 1.05f;
-        private static bool _moveCamera;
+        private static bool _autoRotateCamera = false;
         private static bool _moveLight = true;
         private static TexturedMeshRenderer _lightPosMarker;
+
+        private static int _previousMouseX;
+        private static int _previousMouseY;
 
         public static void Main()
         {
@@ -72,11 +78,12 @@ namespace Veldrid.RenderDemo
                 _lightInfoProvider.Data = new Vector4(_lightPosition, 1);
 
                 float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
-                var position = new Vector3(
+                _cameraPosition = new Vector3(
                     (float)(Math.Cos(timeFactor) * _circleWidth),
                     3 + (float)Math.Sin(timeFactor) * 2,
                     (float)(Math.Sin(timeFactor) * _circleWidth));
-                _viewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
+                _cameraRotation = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
+                SetCameraLookMatrix();
 
                 _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
                 _rc.DataProviders.Add("ProjectionMatrix", _projectionMatrixProvider);
@@ -127,6 +134,11 @@ namespace Veldrid.RenderDemo
                     Console.WriteLine("GL Error: " + GL.GetError());
                 }
             }
+        }
+
+        private static void SetCameraLookMatrix()
+        {
+            _viewMatrixProvider.Data = _cameraRotation;
         }
 
         private static void OnWindowResized()
@@ -236,13 +248,14 @@ namespace Veldrid.RenderDemo
         private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
         {
             float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
-            if (_moveCamera)
+            if (_autoRotateCamera)
             {
-                var position = new Vector3(
+                _cameraPosition = new Vector3(
                     (float)(Math.Cos(timeFactor) * _circleWidth),
                     3 + (float)Math.Sin(timeFactor) * 2,
                     (float)(Math.Sin(timeFactor) * _circleWidth));
-                _viewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
+                _cameraRotation = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
+                SetCameraLookMatrix();
             }
 
             if (_moveLight)
@@ -300,7 +313,7 @@ namespace Veldrid.RenderDemo
                         _rc.SetRasterizerState(_rc.DefaultRasterizerState);
                     }
                 }
-                ImGui.Checkbox("Move Camera", ref _moveCamera);
+                ImGui.Checkbox("Auto-Rotate Camera", ref _autoRotateCamera);
 
                 bool isD3D11 = _rc is D3DRenderContext;
                 bool isOpenGL = !isD3D11;
@@ -396,7 +409,31 @@ namespace Veldrid.RenderDemo
 
             foreach (var me in snapshot.MouseEvents)
             {
+                if (me.Down)
+                {
+                    _previousMouseX = OpenTK.Input.Mouse.GetState().X;
+                    _previousMouseY = OpenTK.Input.Mouse.GetState().Y;
+                    Console.WriteLine($"PreviousX: {_previousMouseX}, PreviousY:{_previousMouseY}");
+                }
                 Console.WriteLine($"MouseButton {me.MouseButton} is {(me.Down ? "down." : "up.")}");
+            }
+
+            var mouseState = OpenTK.Input.Mouse.GetState();
+            if (mouseState.IsButtonDown(OpenTK.Input.MouseButton.Left) && !_autoRotateCamera)
+            {
+                int deltaX = mouseState.X - _previousMouseX;
+                int deltaY = mouseState.Y - _previousMouseY;
+
+                Console.WriteLine($"Delta: {deltaX}, {deltaY}");
+
+                Matrix4x4 addedRotation = Matrix4x4.Identity;
+                addedRotation *= Matrix4x4.CreateRotationY(deltaX * 0.02f);
+                addedRotation *= Matrix4x4.CreateRotationX(deltaY * 0.02f);
+                _cameraRotation *= addedRotation;
+                SetCameraLookMatrix();
+
+                _previousMouseX = mouseState.X;
+                _previousMouseY = mouseState.Y;
             }
 
             _imguiRenderer.UpdateFinished();

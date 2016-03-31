@@ -1,12 +1,13 @@
 ﻿cbuffer LightInfoBuffer : register(b4)
 {
-    float4 lightPos;
+    float3 lightDir;
+	float __padding;
 }
 
 struct PixelInput
 {
     float4 position : SV_POSITION;
-    float3 position_world : POSITION;
+    float3 position_worldSpace : POSITION;
     float4 lightPosition : TEXCOORD0; //vertex with regard to light view
     float3 normal : NORMAL;
     float2 texCoord : TEXCOORD1;
@@ -32,25 +33,29 @@ float4 PS(PixelInput input) : SV_Target
         input.lightPosition.y < -1.0f || input.lightPosition.y > 1.0f ||
         input.lightPosition.z < 0.0f  || input.lightPosition.z > 1.0f)
         {
-            return saturate(ambient * surfaceColor);
+            return ambient * surfaceColor;
         }
  
     //transform clip space coords to texture space coords (-1:1 to 0:1)
     input.lightPosition.x = input.lightPosition.x / 2 + 0.5;
     input.lightPosition.y = input.lightPosition.y / -2 + 0.5;
  
+	float shadowMapBias = 0.01f;
+	input.lightPosition.z -= shadowMapBias;
+
     //sample shadow map - point sampler
     float shadowMapDepth = shadowMap.Sample(ShadowMapSampler, input.lightPosition.xy).r;
  
     //if clip space z value greater than shadow map value then pixel is in shadow
-    if ( shadowMapDepth < input.lightPosition.z) 
+    if ( shadowMapDepth < input.lightPosition.z ) 
     {
-        return float4(1, 0, 0, 1);
-        //return saturate(ambient * surfaceColor);
+        return ambient * surfaceColor;
     }
+
+	float3 lightPos = lightDir * 10;
  
     //otherwise calculate ilumination at fragment
-    float3 L = normalize(lightPos.xyz - input.position_world);
+    float3 L = -1 * normalize(lightPos - input.position_worldSpace);
     float ndotl = dot( normalize(input.normal), L);
-    return saturate(ambient * surfaceColor + surfaceColor * ndotl);
+    return ambient * surfaceColor + surfaceColor * ndotl;
 }

@@ -43,7 +43,7 @@ struct VertexInput
 struct PixelInput
 {
     float4 position : SV_POSITION;
-    float3 position_world : POSITION;
+    float3 position_worldSpace : POSITION;
     float4 lightPosition : TEXCOORD0; //vertex with regard to light view
     float3 normal : NORMAL;
     float2 texCoord : TEXCOORD1;
@@ -56,7 +56,7 @@ PixelInput VS( VertexInput input )
     float4 viewPosition = mul(view, worldPosition);
     output.position = mul(projection, viewPosition);
 
-	output.position_world = worldPosition.xyz;
+	output.position_worldSpace = worldPosition.xyz;
 
     output.normal = mul((float3x3)inverseTransposeWorld, input.normal);
     output.normal = normalize(output.normal);
@@ -66,8 +66,8 @@ PixelInput VS( VertexInput input )
     //store worldspace projected to light clip space with
     //a texcoord semantic to be interpolated across the surface
 	output.lightPosition = mul(world, float4(input.position, 1));
-	output.lightPosition = mul(output.lightPosition, lightView);
-	output.lightPosition = mul(output.lightPosition, lightProjection);
+	output.lightPosition = mul(lightView, output.lightPosition);
+	output.lightPosition = mul(lightProjection, output.lightPosition);
  
     return output;
 }

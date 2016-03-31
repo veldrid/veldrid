@@ -115,7 +115,7 @@ namespace Veldrid.Graphics
 
         public void ClearScissorRectangle()
         {
-            SetScissorRectangle(0, 0, Window.Width, Window.Height);
+            SetScissorRectangle(0, 0, int.MaxValue, int.MaxValue);
         }
 
         public void SetDefaultFramebuffer()
@@ -187,8 +187,11 @@ namespace Veldrid.Graphics
         public void SetViewport(Viewport viewport) => SetViewport(viewport.X, viewport.Y, viewport.Width, viewport.Height);
         public void SetViewport(int x, int y, int width, int height)
         {
-
-            PlatformSetViewport(x, y, width, height);
+            if (_viewport.X != x || _viewport.Y != y || _viewport.Width != width || _viewport.Height != height)
+            {
+                PlatformSetViewport(x, y, width, height);
+                _viewport = new Viewport(x, y, width, height);
+            }
         }
 
         public ContextDeviceBinding<DeviceTexture> GetTextureContextBinding(string name)
@@ -206,7 +209,6 @@ namespace Veldrid.Graphics
         protected void OnWindowResized()
         {
             PlatformResize();
-            SetViewport(0, 0, Window.Width, Window.Height);
             WindowResized?.Invoke();
         }
 

@@ -46,7 +46,7 @@ namespace Veldrid.Graphics.Direct3D
         public override void DrawIndexedPrimitives(int count, int startingIndex) => DrawIndexedPrimitives(count, startingIndex, 0);
         public override void DrawIndexedPrimitives(int count, int startingIndex, int startingVertex)
         {
-            _device.ImmediateContext.DrawIndexed(count, startingIndex, startingVertex);
+            _deviceContext.DrawIndexed(count, startingIndex, startingVertex);
         }
 
         protected override void PlatformSwapBuffers()
@@ -91,7 +91,7 @@ namespace Veldrid.Graphics.Direct3D
 
             SamplerStateDescription shadowSamplerDesc = SamplerStateDescription.Default();
             shadowSamplerDesc.Filter = Filter.MinMagMipPoint;
-            shadowSamplerDesc.BorderColor = new RawColor4(1f, 1f, 1f, 1f);
+            shadowSamplerDesc.BorderColor = new RawColor4(0f, 0f, 0f, 0f);
             shadowSamplerDesc.AddressU = TextureAddressMode.Border;
             shadowSamplerDesc.AddressV = TextureAddressMode.Border;
             _shadowMapSampler = new SamplerState(_device, shadowSamplerDesc);
@@ -101,7 +101,7 @@ namespace Veldrid.Graphics.Direct3D
 
         protected override void PlatformSetViewport(int left, int top, int width, int height)
         {
-            _deviceContext.Rasterizer.SetViewport(left, top, Window.Width, Window.Height);
+            _deviceContext.Rasterizer.SetViewport(left, top, width, height);
         }
 
         protected override void PlatformResize()
@@ -151,7 +151,7 @@ namespace Veldrid.Graphics.Direct3D
 
         protected override void PlatformSetScissorRectangle(Rectangle rectangle)
         {
-            _device.ImmediateContext.Rasterizer.SetScissorRectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
+            _deviceContext.Rasterizer.SetScissorRectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
         }
 
         protected override void PlatformDispose()

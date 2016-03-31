@@ -10,8 +10,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
         //TODO REMOVE
         public bool TakeScreenshot = false;
 
-        private const int DepthMapWidth = 1024;
-        private const int DepthMapHeight = 1024;
+        private const int DepthMapWidth = 2048;
+        private const int DepthMapHeight = 2048;
 
         private readonly RenderQueue _queue = new RenderQueue();
 

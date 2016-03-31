@@ -43,17 +43,18 @@ namespace Veldrid.RenderDemo
         private static RasterizerState _wireframeRasterizerState;
 
         private static Vector3 _cameraPosition;
-        private static Matrix4x4 _cameraRotation;
+        private static float _cameraYaw;
+        private static float _cameraPitch;
 
-        private static readonly Vector3 _lightPosition = new Vector3(-5f, 3f, -3f);
-        private static readonly Vector3 _lightDirection = new Vector3(5f, -3f, -3f);
+        private static Vector3 _lightDirection;
         private static float _fieldOfViewRadians = 1.05f;
         private static bool _autoRotateCamera = false;
-        private static bool _moveLight = true;
-        private static TexturedMeshRenderer _lightPosMarker;
+        private static bool _moveLight = false;
 
-        private static int _previousMouseX;
-        private static int _previousMouseY;
+        private static float _previousMouseX;
+        private static float _previousMouseY;
+        private static float _cameraMoveSpeed = 7.5f;
+        private static float _cameraSprintFactor = 2.5f;
 
         public static void Main()
         {
@@ -69,21 +70,27 @@ namespace Veldrid.RenderDemo
                 });
 
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
+
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
                     new DirectionalLightBuffer(RgbaFloat.White, new Vector3(-.3f, -1f, -1f)));
-                _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(_lightPosition * 3f, Vector3.Zero, Vector3.UnitY);
 
-                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-15, 15, -15, 15, -25, 25);
+                // Shader buffers for shadow mapping
+                _lightDirection = Vector3.Normalize(new Vector3(1f, -1f, 0f));
+                Vector3 lightPosition = -_lightDirection * 3f;
 
-                _lightInfoProvider.Data = new Vector4(_lightPosition, 1);
+                _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(lightPosition, Vector3.Zero, Vector3.UnitY);
+
+                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-15, 15, -15, 15, -.5f, 25f);
+
+                _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
 
                 float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
                 _cameraPosition = new Vector3(
                     (float)(Math.Cos(timeFactor) * _circleWidth),
                     3 + (float)Math.Sin(timeFactor) * 2,
                     (float)(Math.Sin(timeFactor) * _circleWidth));
-                _cameraRotation = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
-                SetCameraLookMatrix();
+                var cameraRotation = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
+                SetCameraLookMatrix(cameraRotation);
 
                 _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
                 _rc.DataProviders.Add("ProjectionMatrix", _projectionMatrixProvider);
@@ -121,7 +128,8 @@ namespace Veldrid.RenderDemo
                     previousFrameTicks = currentFrameTicks;
 
                     var snapshot = _window.GetInputSnapshot();
-                    Update(snapshot, deltaMilliseconds);
+                    InputTracker.UpdateFrameInput(snapshot);
+                    Update(deltaMilliseconds);
                     Draw(snapshot);
                 }
 
@@ -136,9 +144,9 @@ namespace Veldrid.RenderDemo
             }
         }
 
-        private static void SetCameraLookMatrix()
+        private static void SetCameraLookMatrix(Matrix4x4 mat)
         {
-            _viewMatrixProvider.Data = _cameraRotation;
+            _viewMatrixProvider.Data = mat;
         }
 
         private static void OnWindowResized()
@@ -149,10 +157,10 @@ namespace Veldrid.RenderDemo
         private static void SetProjectionMatrix()
         {
             _projectionMatrixProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
-                            _fieldOfViewRadians,
-                            _rc.Window.Width / (float)_rc.Window.Height,
-                            1f,
-                            1000f);
+                _fieldOfViewRadians,
+                _rc.Window.Width / (float)_rc.Window.Height,
+                1f,
+                1000f);
         }
 
         private static void CreateWireframeRasterizerState()
@@ -223,16 +231,17 @@ namespace Veldrid.RenderDemo
                 _shadowsScene = new FlatListVisibilityManager();
                 var sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
 
-                var sphere = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
-                _shadowsScene.AddRenderItem(sphere);
+                var cube1 = new ShadowCaster(_rc, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
+                _shadowsScene.AddRenderItem(cube1);
 
-                var sphere2 = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
-                sphere2.Position = new Vector3(3f, 0f, 0f);
-                _shadowsScene.AddRenderItem(sphere2);
+                var cube2 = new ShadowCaster(_rc, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
+                cube2.Position = new Vector3(3f, 5f, 0f);
+                cube2.Scale = new Vector3(3f);
+                _shadowsScene.AddRenderItem(cube2);
 
-                _lightPosMarker = new TexturedMeshRenderer(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
-                _lightPosMarker.Scale = new Vector3(.5f);
-                _shadowsScene.AddRenderItem(_lightPosMarker);
+                var sphere3 = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
+                sphere3.Position = new Vector3(0f, 0f, 5f);
+                _shadowsScene.AddRenderItem(sphere3);
 
                 var plane = new ShadowCaster(_rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
                 plane.Position = new Vector3(0, -2.5f, 0);
@@ -245,7 +254,7 @@ namespace Veldrid.RenderDemo
             return _shadowsScene;
         }
 
-        private static void Update(InputSnapshot snapshot, double deltaMilliseconds)
+        private static void Update(double deltaMilliseconds)
         {
             float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             if (_autoRotateCamera)
@@ -254,8 +263,8 @@ namespace Veldrid.RenderDemo
                     (float)(Math.Cos(timeFactor) * _circleWidth),
                     3 + (float)Math.Sin(timeFactor) * 2,
                     (float)(Math.Sin(timeFactor) * _circleWidth));
-                _cameraRotation = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
-                SetCameraLookMatrix();
+                var cameraRotation = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
+                SetCameraLookMatrix(cameraRotation);
             }
 
             if (_moveLight)
@@ -266,10 +275,7 @@ namespace Veldrid.RenderDemo
                     (float)(Math.Sin(timeFactor) * _circleWidth));
 
                 _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
-                if (_lightPosMarker != null)
-                {
-                    _lightPosMarker.Position = position;
-                }
+                _lightInfoProvider.Data = new Vector4(-position, 1);
             }
 
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
@@ -314,6 +320,7 @@ namespace Veldrid.RenderDemo
                     }
                 }
                 ImGui.Checkbox("Auto-Rotate Camera", ref _autoRotateCamera);
+                ImGui.Checkbox("Auto-Rotate Light", ref _moveLight);
 
                 bool isD3D11 = _rc is D3DRenderContext;
                 bool isOpenGL = !isD3D11;
@@ -376,64 +383,66 @@ namespace Veldrid.RenderDemo
             string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
             _rc.Window.Title = $"[{apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
 
-            foreach (var ke in snapshot.KeyEvents)
+            if (InputTracker.GetKeyDown(OpenTK.Input.Key.F4))
             {
-                if (ke.Key == OpenTK.Input.Key.Escape
-                    || (ke.Key == OpenTK.Input.Key.F4 && (ke.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt))
-                {
-                    _window.Close();
-                }
-                if (ke.Key == OpenTK.Input.Key.F9 && ke.Down && _window.Width * _window.Height != 0)
-                {
-                    _takeScreenshot = true;
-                }
-                if (ke.Key == OpenTK.Input.Key.F4 && ke.Down)
-                {
-                    ((ShadowMapStage)_renderer.Stages[0]).TakeScreenshot = true;
-                }
-                if (ke.Key == OpenTK.Input.Key.F11 && ke.Down)
-                {
-                    _window.WindowState = _window.WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState.FullScreen;
-                }
-                if (ke.Key == OpenTK.Input.Key.Plus && ke.Down)
-                {
-                    _window.Width += 1;
-                }
-                if (ke.Key == OpenTK.Input.Key.Minus && ke.Down)
-                {
-                    _window.Width -= 1;
-                }
-
-                Console.WriteLine(ke.Key + " is " + (ke.Down ? "down." : "up."));
+                ((ShadowMapStage)_renderer.Stages[0]).TakeScreenshot = true;
+            }
+            if (InputTracker.GetKeyDown(OpenTK.Input.Key.F11))
+            {
+                _window.WindowState = _window.WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState.FullScreen;
+            }
+            if (InputTracker.GetKeyDown(OpenTK.Input.Key.Escape))
+            {
+                _window.Close();
             }
 
-            foreach (var me in snapshot.MouseEvents)
+            if ((InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Left) || InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Right)) && !_autoRotateCamera)
             {
-                if (me.Down)
+                float deltaX = InputTracker.MousePosition.X - _previousMouseX;
+                float deltaY = InputTracker.MousePosition.Y - _previousMouseY;
+                _previousMouseX = InputTracker.MousePosition.X;
+                _previousMouseY = InputTracker.MousePosition.Y;
+
+                if (!InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Left) && !InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Right))
                 {
-                    _previousMouseX = OpenTK.Input.Mouse.GetState().X;
-                    _previousMouseY = OpenTK.Input.Mouse.GetState().Y;
-                    Console.WriteLine($"PreviousX: {_previousMouseX}, PreviousY:{_previousMouseY}");
+                    _cameraYaw += -deltaX * .01f;
+                    _cameraPitch += -deltaY * .01f;
+
+                    Quaternion cameraRotation = Quaternion.CreateFromYawPitchRoll(_cameraYaw, _cameraPitch, 0f);
+                    Vector3 cameraForward = Vector3.Transform(-Vector3.UnitZ, cameraRotation);
+                    Matrix4x4 cameraView = Matrix4x4.CreateLookAt(_cameraPosition, _cameraPosition + cameraForward, Vector3.UnitY);
+                    SetCameraLookMatrix(cameraView);
+
+                    Vector3 cameraRight = Vector3.Cross(cameraForward, Vector3.UnitY);
+                    Vector3 cameraUp = Vector3.Cross(cameraRight, cameraForward);
+
+                    float deltaSec = (float)deltaMilliseconds / 1000f;
+                    float sprintFactor = InputTracker.GetKey(OpenTK.Input.Key.LShift) ? _cameraSprintFactor : 1.0f;
+                    if (InputTracker.GetKey(OpenTK.Input.Key.W))
+                    {
+                        _cameraPosition += cameraForward * _cameraMoveSpeed * sprintFactor * deltaSec;
+                    }
+                    if (InputTracker.GetKey(OpenTK.Input.Key.S))
+                    {
+                        _cameraPosition -= cameraForward * _cameraMoveSpeed * sprintFactor * deltaSec;
+                    }
+                    if (InputTracker.GetKey(OpenTK.Input.Key.D))
+                    {
+                        _cameraPosition += cameraRight * _cameraMoveSpeed * sprintFactor * deltaSec;
+                    }
+                    if (InputTracker.GetKey(OpenTK.Input.Key.A))
+                    {
+                        _cameraPosition -= cameraRight * _cameraMoveSpeed * sprintFactor * deltaSec;
+                    }
+                    if (InputTracker.GetKey(OpenTK.Input.Key.E))
+                    {
+                        _cameraPosition += cameraUp * _cameraMoveSpeed * sprintFactor * deltaSec;
+                    }
+                    if (InputTracker.GetKey(OpenTK.Input.Key.Q))
+                    {
+                        _cameraPosition -= cameraUp * _cameraMoveSpeed * sprintFactor * deltaSec;
+                    }
                 }
-                Console.WriteLine($"MouseButton {me.MouseButton} is {(me.Down ? "down." : "up.")}");
-            }
-
-            var mouseState = OpenTK.Input.Mouse.GetState();
-            if (mouseState.IsButtonDown(OpenTK.Input.MouseButton.Left) && !_autoRotateCamera)
-            {
-                int deltaX = mouseState.X - _previousMouseX;
-                int deltaY = mouseState.Y - _previousMouseY;
-
-                Console.WriteLine($"Delta: {deltaX}, {deltaY}");
-
-                Matrix4x4 addedRotation = Matrix4x4.Identity;
-                addedRotation *= Matrix4x4.CreateRotationY(deltaX * 0.02f);
-                addedRotation *= Matrix4x4.CreateRotationX(deltaY * 0.02f);
-                _cameraRotation *= addedRotation;
-                SetCameraLookMatrix();
-
-                _previousMouseX = mouseState.X;
-                _previousMouseY = mouseState.Y;
             }
 
             _imguiRenderer.UpdateFinished();
@@ -464,7 +473,7 @@ namespace Veldrid.RenderDemo
                     newContext.DataProviders[kvp.Key] = kvp.Value;
                 }
 
-                _renderer.RenderContext = newContext;
+                _renderer.SetRenderContext(newContext);
 
                 if (_teapotVM != null)
                 {

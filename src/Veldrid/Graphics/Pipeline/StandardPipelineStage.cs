@@ -24,7 +24,7 @@ namespace Veldrid.Graphics.Pipeline
             RenderContext.SetViewport(0, 0, RenderContext.Window.Width, RenderContext.Window.Height);
             _renderQueue.Clear();
             visibilityManager.CollectVisibleObjects(_renderQueue, Name, Vector3.Zero, Vector3.Zero);
-            //_renderQueue.Sort();
+            _renderQueue.Sort();
 
             foreach (RenderItem item in _renderQueue)
             {

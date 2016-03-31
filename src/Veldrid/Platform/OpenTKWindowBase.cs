@@ -50,7 +50,6 @@ namespace Veldrid.Platform
             _nativeWindow.KeyUp += OnKeyUp;
             _nativeWindow.MouseDown += OnMouseDown;
             _nativeWindow.MouseUp += OnMouseUp;
-            _nativeWindow.MouseMove += OnMouseMove;
             _nativeWindow.Closing += OnWindowClosing;
             _nativeWindow.Closed += OnWindowClosed;
         }
@@ -130,12 +129,15 @@ namespace Veldrid.Platform
 
         public abstract void Close();
 
-        public abstract InputSnapshot GetInputSnapshot();
-
-        private void OnMouseMove(object sender, MouseMoveEventArgs e)
+        public InputSnapshot GetInputSnapshot()
         {
-            CurrentSnapshot.MousePosition = new System.Numerics.Vector2(e.X, e.Y);
+            SimpleInputSnapshot snapshot = GetAvailableSnapshot();
+            var mouseState = Mouse.GetState();
+            snapshot.MousePosition = new System.Numerics.Vector2(mouseState.X, mouseState.Y);
+            return snapshot;
         }
+
+        protected abstract SimpleInputSnapshot GetAvailableSnapshot();
 
         private void OnMouseUp(object sender, MouseButtonEventArgs e)
         {

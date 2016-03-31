@@ -19,6 +19,7 @@
     <Compile Include="DirectionalLightBuffer.cs" />
     <Compile Include="ForwardRendering\ShadowMapStage.cs" />
     <Compile Include="ImGuiRenderer.cs" />
+    <Compile Include="InputTracker.cs" />
     <Compile Include="Models\CubeModel.cs" />
     <Compile Include="Models\PlaneModel.cs" />
     <Compile Include="PixelFormatConversion.cs" />

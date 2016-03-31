@@ -9,7 +9,7 @@ namespace Veldrid.Platform
             NativeWindow.Close();
         }
 
-        public override InputSnapshot GetInputSnapshot()
+        protected override SimpleInputSnapshot GetAvailableSnapshot()
         {
             CurrentSnapshot.Clear();
             NativeWindow.ProcessEvents();

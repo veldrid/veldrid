@@ -27,7 +27,7 @@ namespace Veldrid.Platform
             _shouldClose = true;
         }
 
-        public override InputSnapshot GetInputSnapshot()
+        protected override SimpleInputSnapshot GetAvailableSnapshot()
         {
             _snapshotBackBuffer.Clear();
             SimpleInputSnapshot snapshot = Interlocked.Exchange(ref CurrentSnapshot, _snapshotBackBuffer);

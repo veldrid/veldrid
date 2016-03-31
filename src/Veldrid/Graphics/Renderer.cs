@@ -11,13 +11,14 @@ namespace Veldrid.Graphics
         public RenderContext RenderContext
         {
             get { return _rc; }
-            set
+        }
+
+        public void SetRenderContext(RenderContext value)
+        {
+            _rc = value;
+            foreach (var stage in _stages)
             {
-                _rc = value;
-                foreach (var stage in _stages)
-                {
-                    stage.ChangeRenderContext(_rc);
-                }
+                stage.ChangeRenderContext(_rc);
             }
         }
 
@@ -26,7 +27,7 @@ namespace Veldrid.Graphics
         public Renderer(RenderContext rc, PipelineStage[] stages)
         {
             _stages = stages;
-            RenderContext = rc;
+            SetRenderContext(rc);
         }
 
         public void RenderFrame(VisibiltyManager visibilityManager)

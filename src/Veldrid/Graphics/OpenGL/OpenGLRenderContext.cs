@@ -97,7 +97,7 @@ namespace Veldrid.Graphics.OpenGL
             SetFramebuffer(_defaultFramebuffer);
         }
 
-        protected override void PlatformSetScissorRectangle(Rectangle rectangle)
+        protected override void PlatformSetScissorRectangle(System.Drawing.Rectangle rectangle)
         {
             GL.Scissor(
                 rectangle.Left,

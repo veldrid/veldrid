@@ -107,10 +107,13 @@ namespace Veldrid.RenderDemo
             if (window.NativeWindow.Bounds.Contains(cursorState.X, cursorState.Y))
             {
                 // TODO: This does not take into account viewport coordinates.
-                Point windowPoint = window.NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
-                io.MousePosition = new System.Numerics.Vector2(
-                    windowPoint.X / window.ScaleFactor.X,
-                    windowPoint.Y / window.ScaleFactor.Y);
+                if (window.Exists)
+                {
+                    Point windowPoint = window.NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
+                    io.MousePosition = new System.Numerics.Vector2(
+                        windowPoint.X / window.ScaleFactor.X,
+                        windowPoint.Y / window.ScaleFactor.Y);
+                }
             }
             else
             {

@@ -285,7 +285,7 @@ namespace Veldrid.RenderDemo
             bool opened = false;
             float width = Math.Max(100, Math.Min(200, _window.Width * .4f));
             ImGuiNative.igSetNextWindowPos(new Vector2(20, 20), SetCondition.Always);
-            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 340), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
+            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 360), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
             {
                 if (ImGui.Button("Boxes"))
                 {

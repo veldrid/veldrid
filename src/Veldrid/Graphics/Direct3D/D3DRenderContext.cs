@@ -3,6 +3,7 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using Veldrid.Platform;
+using System.Drawing;
 
 namespace Veldrid.Graphics.Direct3D
 {

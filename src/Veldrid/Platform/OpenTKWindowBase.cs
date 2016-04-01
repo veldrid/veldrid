@@ -127,6 +127,15 @@ namespace Veldrid.Platform
 
         IWindowInfo OpenTKWindow.OpenTKWindowInfo => _nativeWindow.WindowInfo;
 
+        public System.Drawing.Rectangle Bounds
+        {
+            get
+            {
+                var nativeBounds = _nativeWindow.Bounds;
+                return new System.Drawing.Rectangle(nativeBounds.X, nativeBounds.Y, nativeBounds.Width, nativeBounds.Height);
+            }
+        }
+
         public abstract void Close();
 
         public InputSnapshot GetInputSnapshot()
@@ -191,6 +200,12 @@ namespace Veldrid.Platform
         private void OnWindowClosed(object sender, EventArgs e)
         {
             Closed?.Invoke();
+        }
+
+        public System.Drawing.Point ScreenToClient(System.Drawing.Point p)
+        {
+            var tkPoint = _nativeWindow.PointToClient(new OpenTK.Point(p.X, p.Y));
+            return new System.Drawing.Point(tkPoint.X, tkPoint.Y);
         }
 
         protected class SimpleInputSnapshot : InputSnapshot

@@ -22,7 +22,7 @@ SamplerState ShadowMapSampler : register(s1);
 float4 PS(PixelInput input) : SV_Target
 {
     float4 surfaceColor = surfaceTexture.Sample(RegularSampler, input.texCoord);
-    float4 ambient = float4(.6, .6, .6 ,.6);
+    float4 ambient = float4(.4, .4, .4, .4);
 
     //re-homogenize position after interpolation
     input.lightPosition.xyz /= input.lightPosition.w;
@@ -40,7 +40,7 @@ float4 PS(PixelInput input) : SV_Target
     input.lightPosition.x = input.lightPosition.x / 2 + 0.5;
     input.lightPosition.y = input.lightPosition.y / -2 + 0.5;
  
-	float shadowMapBias = 0.01f;
+	float shadowMapBias = 0.005f;
 	input.lightPosition.z -= shadowMapBias;
 
     //sample shadow map - point sampler
@@ -52,10 +52,8 @@ float4 PS(PixelInput input) : SV_Target
         return ambient * surfaceColor;
     }
 
-	float3 lightPos = lightDir * 10;
- 
     //otherwise calculate ilumination at fragment
-    float3 L = -1 * normalize(lightPos - input.position_worldSpace);
+    float3 L = -1 * lightDir;
     float ndotl = dot( normalize(input.normal), L);
     return ambient * surfaceColor + surfaceColor * ndotl;
 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Drawing;
 using System.Numerics;
+using Veldrid.Graphics;
 using Veldrid.Platform;
 
 namespace Veldrid.Platform
@@ -14,12 +16,14 @@ namespace Veldrid.Platform
         bool Exists { get; }
         bool Visible { get; set; }
         Vector2 ScaleFactor { get; }
+        Rectangle Bounds { get; }
 
         event Action Resized;
         event Action Closing;
         event Action Closed;
 
         InputSnapshot GetInputSnapshot();
+        Point ScreenToClient(Point p);
         void Close();
     }
 }

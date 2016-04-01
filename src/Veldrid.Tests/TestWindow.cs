@@ -4,6 +4,7 @@ using OpenTK.Platform;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Drawing;
 
 namespace Veldrid.Platform
 {
@@ -142,6 +143,15 @@ namespace Veldrid.Platform
 
         public System.Numerics.Vector2 ScaleFactor => System.Numerics.Vector2.One;
 
+        public System.Drawing.Rectangle Bounds
+        {
+            get
+            {
+                var nativeBounds = _nativeWindow.Bounds;
+                return new System.Drawing.Rectangle(nativeBounds.X, nativeBounds.Y, nativeBounds.Width, nativeBounds.Height);
+            }
+        }
+
         public void Close() { throw new NotImplementedException(); }
 
         public InputSnapshot GetInputSnapshot() { throw new NotImplementedException(); }
@@ -203,6 +213,12 @@ namespace Veldrid.Platform
         private void OnWindowClosed(object sender, EventArgs e)
         {
             Closed?.Invoke();
+        }
+
+        public System.Drawing.Point ScreenToClient(System.Drawing.Point p)
+        {
+            var tkPoint = _nativeWindow.PointToClient(new OpenTK.Point(p.X, p.Y));
+            return new System.Drawing.Point(tkPoint.X, tkPoint.Y);
         }
 
         protected class SimpleInputSnapshot : InputSnapshot

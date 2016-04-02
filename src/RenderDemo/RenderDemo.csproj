@@ -25,6 +25,7 @@
     <Compile Include="PixelFormatConversion.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ShadowCaster.cs" />
+    <Compile Include="ShadowMapPreview.cs" />
     <Compile Include="TeapotRenderer.cs" />
     <Compile Include="TexturedMeshRenderer.cs" />
     <Compile Include="Textures\Textures.cs" />
@@ -38,6 +39,12 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Release|x64' " />
   <ItemGroup>
+    <None Include="GLSL\shadow-frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="GLSL\shadow-vertex.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="HLSL\shadow-frag.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -96,7 +96,7 @@ namespace Veldrid.Graphics.OpenGL
         public unsafe void SetPixelData(IntPtr pixelData, int width, int height, int pixelSizeInBytes)
         {
             GL.BindTexture(TextureTarget.Texture2D, TextureID);
-            GL.GetTexImage(TextureTarget.Texture2D, 0, _pixelFormat, _pixelType, pixelData);
+            GL.GetTexImage(TextureTarget.Texture2D, 0, OpenTK.Graphics.OpenGL.PixelFormat.Alpha, _pixelType, pixelData);
             GL.BindTexture(TextureTarget.Texture2D, 0);
             GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
 

@@ -47,25 +47,25 @@ namespace Veldrid.RenderDemo
                 VertexPositionNormalTexture.SizeInBytes,
                 new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
                 new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
-                new MaterialVertexInputElement("in_texcoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2));
+                new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2));
 
             _shadowGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                 new MaterialGlobalInputElement("ProjectionMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["LightProjMatrix"]),
                 new MaterialGlobalInputElement("ViewMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["LightViewMatrix"]));
 
             _regularPassGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
-                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, rc.DataProviders["ProjectionMatrix"]),
-                    new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, rc.DataProviders["ViewMatrix"]),
-                    new MaterialGlobalInputElement("LightProjectionMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["LightProjMatrix"]),
-                    new MaterialGlobalInputElement("LightViewMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["LightViewMatrix"]),
-                    new MaterialGlobalInputElement("LightInfo", MaterialInputType.Float4, rc.DataProviders["LightInfo"]));
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, rc.DataProviders["ProjectionMatrix"]),
+                    new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, rc.DataProviders["ViewMatrix"]),
+                    new MaterialGlobalInputElement("LightProjectionMatrixBuffer", MaterialInputType.Matrix4x4, rc.DataProviders["LightProjMatrix"]),
+                    new MaterialGlobalInputElement("LightViewMatrixBuffer", MaterialInputType.Matrix4x4, rc.DataProviders["LightViewMatrix"]),
+                    new MaterialGlobalInputElement("LightInfoBuffer", MaterialInputType.Float4, rc.DataProviders["LightInfo"]));
 
             _shadowMapPerObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
                     new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes));
 
             _perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
-                    new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
-                    new MaterialPerObjectInputElement("InverseTransposeWorldMatrix", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes));
+                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes));
 
             _textureInputs = new MaterialTextureInputs(
                 new TextureDataInputElement("SurfaceTexture", _surfaceTextureData),

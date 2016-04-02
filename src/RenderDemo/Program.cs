@@ -76,11 +76,11 @@ namespace Veldrid.RenderDemo
 
                 // Shader buffers for shadow mapping
                 _lightDirection = Vector3.Normalize(new Vector3(1f, -1f, 0f));
-                Vector3 lightPosition = -_lightDirection * 3f;
+                Vector3 lightPosition = -_lightDirection * 20f;
 
                 _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(lightPosition, Vector3.Zero, Vector3.UnitY);
 
-                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-15, 15, -15, 15, -.5f, 25f);
+                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-18, 18, -18, 18, -10, 60f);
 
                 _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
 
@@ -284,7 +284,7 @@ namespace Veldrid.RenderDemo
 
             bool opened = false;
             float width = Math.Max(100, Math.Min(200, _window.Width * .4f));
-            ImGuiNative.igSetNextWindowPos(new Vector2(20, 20), SetCondition.Always);
+            ImGui.SetNextWindowPos(new Vector2(20, 20), SetCondition.Always);
             if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 360), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
             {
                 if (ImGui.Button("Boxes"))
@@ -319,7 +319,23 @@ namespace Veldrid.RenderDemo
                         _rc.SetRasterizerState(_rc.DefaultRasterizerState);
                     }
                 }
-                ImGui.Checkbox("Auto-Rotate Camera", ref _autoRotateCamera);
+
+                string cameraLabel = _autoRotateCamera ? "Camera: Auto" : "Camera: WASD";
+                bool colorLabel = _autoRotateCamera;
+                if (colorLabel)
+                {
+                    ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
+                    ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
+                }
+                if (ImGui.Button(cameraLabel))
+                {
+                    _autoRotateCamera = !_autoRotateCamera;
+                }
+                if (colorLabel)
+                {
+                    ImGui.PopStyleColor(2);
+                }
+
                 ImGui.Checkbox("Auto-Rotate Light", ref _moveLight);
 
                 bool isD3D11 = _rc is D3DRenderContext;
@@ -413,8 +429,8 @@ namespace Veldrid.RenderDemo
                     Matrix4x4 cameraView = Matrix4x4.CreateLookAt(_cameraPosition, _cameraPosition + cameraForward, Vector3.UnitY);
                     SetCameraLookMatrix(cameraView);
 
-                    Vector3 cameraRight = Vector3.Cross(cameraForward, Vector3.UnitY);
-                    Vector3 cameraUp = Vector3.Cross(cameraRight, cameraForward);
+                    Vector3 cameraRight = Vector3.Normalize(Vector3.Cross(cameraForward, Vector3.UnitY));
+                    Vector3 cameraUp = Vector3.Normalize(Vector3.Cross(cameraRight, cameraForward));
 
                     float deltaSec = (float)deltaMilliseconds / 1000f;
                     float sprintFactor = InputTracker.GetKey(OpenTK.Input.Key.LShift) ? _cameraSprintFactor : 1.0f;

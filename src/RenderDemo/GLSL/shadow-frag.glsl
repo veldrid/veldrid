@@ -11,14 +11,14 @@ in vec4 out_lightPosition; //vertex with regard to light view
 in vec3 out_normal;
 in vec2 out_texCoord;
 
-uniform sampler2D surfaceTexture;
-uniform sampler2D shadowMap;
+uniform sampler2D SurfaceTexture;
+uniform sampler2D ShadowMap;
 
 out vec4 outputColor;
 
 void main()
 {
-    vec4 surfaceColor = texture2D(surfaceTexture, out_texCoord);
+    vec4 surfaceColor = texture2D(SurfaceTexture, out_texCoord);
     vec4 ambient = vec4(.4, .4, .4, 1);
 
     vec4 lightPosition_mod = out_lightPosition;
@@ -39,14 +39,14 @@ void main()
     lightPosition_mod.x = lightPosition_mod.x / 2 + 0.5;
     lightPosition_mod.y = lightPosition_mod.y / -2 + 0.5;
 
-    float shadowMapBias = 0.005f;
-    lightPosition_mod.z -= shadowMapBias;
+    float ShadowMapBias = 0.005f;
+    lightPosition_mod.z -= ShadowMapBias;
 
     //sample shadow map - point sampler
-    float shadowMapDepth = texture2D(shadowMap, lightPosition_mod.xy).r;
+    float ShadowMapDepth = texture2D(ShadowMap, lightPosition_mod.xy).r;
 
     //if clip space z value greater than shadow map value then pixel is in shadow
-    if (shadowMapDepth < lightPosition_mod.z)
+    if (ShadowMapDepth < lightPosition_mod.z)
     {
         outputColor = ambient * surfaceColor;
     }

@@ -19,7 +19,6 @@ namespace Veldrid.Graphics.OpenGL
             int typeVal;
             GL.GetActiveUniforms(_programID, 1, ref uniformLocation, ActiveUniformParameter.UniformType, out typeVal);
             ActiveUniformType uniformType = (ActiveUniformType)typeVal;
-            Console.WriteLine("Uniform of type " + uniformType);
             _setterFunction = GetSetterFunction(uniformType);
         }
 

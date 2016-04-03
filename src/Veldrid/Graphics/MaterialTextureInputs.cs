@@ -21,7 +21,7 @@ namespace Veldrid.Graphics
 
         public abstract DeviceTexture GetDeviceTexture(RenderContext rc);
 
-        public MaterialTextureInputElement(string name)
+        protected MaterialTextureInputElement(string name)
         {
             Name = name;
         }
@@ -45,13 +45,17 @@ namespace Veldrid.Graphics
 
     public class ContextTextureInputElement : MaterialTextureInputElement
     {
-        public ContextTextureInputElement(string name) : base(name)
+        public string ContextKey { get; }
+
+        public ContextTextureInputElement(string name) : this(name, name) { }
+        public ContextTextureInputElement(string name, string contextKey) : base(name)
         {
+            ContextKey = contextKey;
         }
 
         public override DeviceTexture GetDeviceTexture(RenderContext rc)
         {
-            return rc.GetTextureContextBinding(Name).Value;
+            return rc.GetTextureContextBinding(ContextKey).Value;
         }
     }
 }

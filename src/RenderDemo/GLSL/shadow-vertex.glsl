@@ -30,6 +30,9 @@ uniform InverseTransposeWorldMatrixBuffer
     mat4 inverseTransposeWorld;
 };
 
+uniform sampler2D SurfaceTexture;
+uniform sampler2D ShadowMap;
+
 in vec3 in_position;
 in vec3 in_normal;
 in vec2 in_texCoord;

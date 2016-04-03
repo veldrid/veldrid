@@ -247,6 +247,9 @@ namespace Veldrid.RenderDemo
                 plane.Position = new Vector3(0, -2.5f, 0);
                 plane.Scale = new Vector3(20f);
 
+                var shadowMapPreview = new ShadowMapPreview(_rc);
+                _shadowsScene.AddRenderItem(shadowMapPreview);
+
                 _shadowsScene.AddRenderItem(plane);
                 _shadowsScene.AddRenderItem(_imguiRenderer);
             }

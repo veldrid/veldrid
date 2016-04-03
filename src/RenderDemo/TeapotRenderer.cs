@@ -83,10 +83,7 @@ namespace Veldrid.RenderDemo
                 });
 
             MaterialTextureInputs textureInputs = new MaterialTextureInputs(
-                new MaterialTextureInputElement[]
-                {
-                    new TextureDataInputElement("surfaceTexture", s_cubeTexture)
-                });
+                new TextureDataInputElement("surfaceTexture", s_cubeTexture));
 
             _material = factory.CreateMaterial(
                 rc,

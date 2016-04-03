@@ -116,6 +116,14 @@ namespace Veldrid.Graphics.OpenGL
             {
                 var element = textureInputs.Elements[i];
                 int location = GL.GetUniformLocation(_programID, element.Name);
+                if (location == -1)
+                {
+                    Console.WriteLine($"No sampler was found with the name {element.Name}");
+                }
+                else
+                {
+                    Console.WriteLine($"FOUND {element.Name}: {location}");
+                }
                 OpenGLTexture deviceTexture = (OpenGLTexture)element.GetDeviceTexture(rc);
                 _textureBindings[i] = new OpenGLProgramTextureBinding(location, deviceTexture);
             }

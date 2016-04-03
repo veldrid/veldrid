@@ -4,8 +4,8 @@ namespace Veldrid.Graphics
 {
     public struct VertexPositionTexture
     {
-        public static unsafe byte SizeInBytes = (byte)sizeof(VertexPositionTexture);
-        public static unsafe byte TextureCoordinatesOffset = (byte)sizeof(Vector3);
+        public const byte SizeInBytes = 20;
+        public const byte TextureCoordinatesOffset = 12;
         public const byte ElementCount = 2;
 
         public readonly Vector3 Position;

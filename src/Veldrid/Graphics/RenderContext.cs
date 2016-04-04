@@ -98,6 +98,8 @@ namespace Veldrid.Graphics
         {
             if (CurrentFramebuffer != framebuffer)
             {
+                _material = null;
+                PlatformClearMaterialResourceBindings();
                 CurrentFramebuffer = framebuffer;
                 framebuffer.Apply();
             }
@@ -231,6 +233,8 @@ namespace Veldrid.Graphics
         protected abstract void PlatformResize();
 
         protected abstract void PlatformSetViewport(int x, int y, int width, int height);
+
+        protected abstract void PlatformClearMaterialResourceBindings();
 
         protected abstract void PlatformDispose();
 

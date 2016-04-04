@@ -12,8 +12,9 @@ namespace Veldrid.Graphics.OpenGL
         private readonly OpenGLResourceFactory _resourceFactory;
         private readonly GraphicsContext _openGLGraphicsContext;
         private readonly OpenGLDefaultFramebuffer _defaultFramebuffer;
-
         private readonly int _vertexArrayID;
+
+        public DebugSeverity MinimumLogSeverity { get; set; } = DebugSeverity.DebugSeverityLow;
 
         public OpenGLRenderContext(OpenTKWindow window)
             : base(window)
@@ -48,8 +49,11 @@ namespace Veldrid.Graphics.OpenGL
 
         private void DebugCallback(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam)
         {
-            string messageString = Marshal.PtrToStringAnsi(message, length);
-            Console.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
+            if (severity >= MinimumLogSeverity)
+            {
+                string messageString = Marshal.PtrToStringAnsi(message, length);
+                Console.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
+            }
         }
 
         public override ResourceFactory ResourceFactory => _resourceFactory;
@@ -106,7 +110,11 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformResize()
         {
-            _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                // Documentation indicates that this needs to be called on OSX for proper behavior.
+                _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
+            }
         }
 
         protected override void PlatformSetViewport(int x, int y, int width, int height)
@@ -126,6 +134,10 @@ namespace Veldrid.Graphics.OpenGL
                 Window.Height - rectangle.Bottom,
                 rectangle.Width,
                 rectangle.Height);
+        }
+
+        protected override void PlatformClearMaterialResourceBindings()
+        {
         }
 
         protected override void PlatformDispose()

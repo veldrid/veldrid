@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using Veldrid.Graphics;
-using Veldrid.Graphics.Pipeline;
 
 namespace Veldrid.RenderDemo
 {

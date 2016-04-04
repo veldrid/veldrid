@@ -8,76 +8,81 @@ namespace Veldrid.RenderDemo
 {
     public class ColoredCubeRenderer : RenderItem, IDisposable
     {
+        private readonly DynamicDataProvider<Matrix4x4> _modelViewProvider = new DynamicDataProvider<Matrix4x4>();
+
         private static VertexBuffer s_vb;
         private static IndexBuffer s_ib;
         private static Material s_material;
 
+        private static RenderContext s_currentContext;
+
         public Vector3 Position { get; set; } = Vector3.Zero;
         public Vector3 Scale { get; set; } = Vector3.One * .75f;
 
-        private DynamicDataProvider<Matrix4x4> _modelViewProvider = new DynamicDataProvider<Matrix4x4>();
-
         public ColoredCubeRenderer(RenderContext context)
         {
-            if (s_currentContext == null)
-            {
-                InitializeContextObjects(context);
-            }
             if (context != s_currentContext)
             {
-                ChangeRenderContext(context);
+                if (s_currentContext == null)
+                {
+                    InitializeContextObjects(context);
+                }
+                else
+                {
+                    ChangeRenderContext(context);
+                }
             }
         }
 
         public void ChangeRenderContext(RenderContext context)
         {
-            Dispose();
-            InitializeContextObjects(context);
+            if (s_currentContext != context)
+            {
+                Dispose();
+                InitializeContextObjects(context);
+            }
         }
 
         private void InitializeContextObjects(RenderContext context)
         {
-            if (s_currentContext != context)
-            {
-                s_currentContext = context;
-                ResourceFactory factory = context.ResourceFactory;
+            s_currentContext = context;
+            ResourceFactory factory = context.ResourceFactory;
 
-                s_vb = factory.CreateVertexBuffer(VertexPositionColor.SizeInBytes * s_cubeVertices.Length, false);
-                VertexDescriptor desc = new VertexDescriptor(VertexPositionColor.SizeInBytes, VertexPositionColor.ElementCount, 0, IntPtr.Zero);
-                s_vb.SetVertexData(s_cubeVertices, desc);
+            s_vb = factory.CreateVertexBuffer(VertexPositionColor.SizeInBytes * s_cubeVertices.Length, false);
+            VertexDescriptor desc = new VertexDescriptor(VertexPositionColor.SizeInBytes, VertexPositionColor.ElementCount, 0, IntPtr.Zero);
+            s_vb.SetVertexData(s_cubeVertices, desc);
 
-                s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length, false);
-                s_ib.SetIndices(s_cubeIndices);
+            s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length, false);
+            s_ib.SetIndices(s_cubeIndices);
 
-                MaterialVertexInput materialInputs = new MaterialVertexInput(
-                    VertexPositionColor.SizeInBytes,
-                    new MaterialVertexInputElement[]
-                    {
+            MaterialVertexInput materialInputs = new MaterialVertexInput(
+                VertexPositionColor.SizeInBytes,
+                new MaterialVertexInputElement[]
+                {
                         new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
                         new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4)
-                    });
+                });
 
-                MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
-                    new MaterialGlobalInputElement[]
-                    {
+            MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
+                new MaterialGlobalInputElement[]
+                {
                         new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ProjectionMatrix"])
-                    });
+                });
 
-                MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
-                    new MaterialPerObjectInputElement[]
-                    {
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
+                new MaterialPerObjectInputElement[]
+                {
                         new MaterialPerObjectInputElement("modelviewMatrixUniform", MaterialInputType.Matrix4x4, _modelViewProvider.DataSizeInBytes)
-                    });
+                });
 
-                s_material = factory.CreateMaterial(
-                    context,
-                    VertexShaderSource,
-                    FragmentShaderSource,
-                    materialInputs,
-                    globalInputs,
-                    perObjectInputs,
-                    MaterialTextureInputs.Empty);
-            }
+            s_material = factory.CreateMaterial(
+                context,
+                VertexShaderSource,
+                FragmentShaderSource,
+                materialInputs,
+                globalInputs,
+                perObjectInputs,
+                MaterialTextureInputs.Empty);
         }
 
         public IEnumerable<string> GetStagesParticipated()
@@ -163,6 +168,5 @@ namespace Veldrid.RenderDemo
 
         private static readonly string VertexShaderSource = "simple-vertex";
         private static readonly string FragmentShaderSource = "simple-frag";
-        private RenderContext s_currentContext;
     }
 }

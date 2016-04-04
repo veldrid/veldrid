@@ -522,6 +522,7 @@ namespace Veldrid.RenderDemo
 
                 _rc.Dispose();
                 _rc = newContext;
+                _rc.WindowResized += OnWindowResized;
 
                 CreateWireframeRasterizerState();
                 if (_wireframe)

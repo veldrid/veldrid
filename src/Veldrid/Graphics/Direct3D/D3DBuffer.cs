@@ -101,7 +101,8 @@ namespace Veldrid.Graphics.Direct3D
                 Buffer oldBuffer = Buffer;
                 _bufferSizeInBytes = dataSizeInBytes;
                 InitializeDeviceBuffer();
-                Device.ImmediateContext.CopyResource(oldBuffer, Buffer);
+                // TODO: This causes errors in Debug contexts. Investigate that.
+                //Device.ImmediateContext.CopyResource(oldBuffer, Buffer);
                 oldBuffer.Dispose();
             }
         }

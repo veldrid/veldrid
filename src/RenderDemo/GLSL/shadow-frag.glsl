@@ -32,30 +32,35 @@ void main()
         lightPosition_mod.y < -1.0f || lightPosition_mod.y > 1.0f ||
         lightPosition_mod.z < 0.0f || lightPosition_mod.z > 1.0f)
     {
-        outputColor = vec4(1, .2, .2, 1);
-        //outputColor = ambient * surfaceColor;
+        outputColor = ambient * surfaceColor;
+		return;
     }
 
     //transform clip space coords to texture space coords (-1:1 to 0:1)
     lightPosition_mod.x = lightPosition_mod.x / 2 + 0.5;
     lightPosition_mod.y = lightPosition_mod.y / -2 + 0.5;
 
-    float ShadowMapBias = 0.005f;
-    lightPosition_mod.z -= ShadowMapBias;
+    vec3 L = -1 * normalize(lightDir);
+    float ndotl = dot(normalize(out_normal), L);
+
+    float cosTheta = clamp(ndotl, 0, 1);
+    float bias = 0.0005 * tan(acos(cosTheta));
+    bias = clamp(bias, 0, 0.01);
+
+    lightPosition_mod.z -= bias;
 
     //sample shadow map - point sampler
-    float ShadowMapDepth = texture(ShadowMap, lightPosition_mod.xy).r;
+    float shadowMapDepth = texture(ShadowMap, lightPosition_mod.xy).r;
 
     //if clip space z value greater than shadow map value then pixel is in shadow
-    if (ShadowMapDepth < lightPosition_mod.z)
+    if (shadowMapDepth < lightPosition_mod.z)
     {
         outputColor = ambient * surfaceColor;
-        outputColor = vec4(1, .2, .2, 1);
+		return;
     }
 
     //otherwise calculate ilumination at fragment
-    vec3 inverseLightDir = -lightDir;
-    float ndotl = dot(normalize(out_normal), inverseLightDir);
     ndotl = clamp(ndotl, 0, 1);
     outputColor = ambient * surfaceColor + surfaceColor * ndotl;
+	return;
 }

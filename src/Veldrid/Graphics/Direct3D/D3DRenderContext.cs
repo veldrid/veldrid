@@ -9,6 +9,9 @@ namespace Veldrid.Graphics.Direct3D
 {
     public class D3DRenderContext : RenderContext
     {
+        private readonly ShaderResourceView[] _emptySRVs = new ShaderResourceView[MaxShaderResourceViewBindings];
+        private const int MaxShaderResourceViewBindings = 10;
+
         private SharpDX.Direct3D11.Device _device;
         private SwapChain _swapChain;
         private DeviceContext _deviceContext;
@@ -16,7 +19,14 @@ namespace Veldrid.Graphics.Direct3D
         private SamplerState _regularSamplerState;
         private SamplerState _shadowMapSampler;
 
-        public D3DRenderContext(Window window) : this(window, DeviceCreationFlags.None) { }
+        private const DeviceCreationFlags DefaultDeviceFlags
+#if DEBUG
+            = DeviceCreationFlags.Debug;
+#else
+            = DeviceCreationFlags.None;
+#endif
+
+        public D3DRenderContext(Window window) : this(window, DefaultDeviceFlags) { }
 
         public D3DRenderContext(Window window, DeviceCreationFlags flags)
             : base(window)
@@ -160,6 +170,11 @@ namespace Veldrid.Graphics.Direct3D
             _defaultFramebuffer.Dispose();
             _swapChain.Dispose();
             _device.Dispose();
+        }
+
+        protected override void PlatformClearMaterialResourceBindings()
+        {
+            _deviceContext.PixelShader.SetShaderResources(0, _emptySRVs.Length, _emptySRVs);
         }
 
         private new D3DFramebuffer CurrentFramebuffer => (D3DFramebuffer)base.CurrentFramebuffer;

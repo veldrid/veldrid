@@ -14,9 +14,10 @@ namespace Veldrid.RenderDemo
         private readonly int[] _indices;
         private readonly TextureData _texture;
 
-        private static VertexBuffer s_vb;
-        private static IndexBuffer s_ib;
-        private static Material s_material;
+        private RenderContext _currentContext;
+        private VertexBuffer s_vb;
+        private IndexBuffer s_ib;
+        private Material s_material;
 
         public Vector3 Position { get; internal set; }
         public Vector3 Scale { get; internal set; } = new Vector3(1f);
@@ -30,17 +31,31 @@ namespace Veldrid.RenderDemo
             _indices = indices;
             _texture = texture;
 
-            InitializeContextObjects(context);
+            if (context != _currentContext)
+            {
+                if (_currentContext == null)
+                {
+                    InitializeContextObjects(context);
+                }
+                else
+                {
+                    ChangeRenderContext(context);
+                }
+            }
         }
 
         public void ChangeRenderContext(RenderContext rc)
         {
-            Dispose();
-            InitializeContextObjects(rc);
+            if (_currentContext != rc)
+            {
+                Dispose();
+                InitializeContextObjects(rc);
+            }
         }
 
         private void InitializeContextObjects(RenderContext context)
         {
+            _currentContext = context;
             ResourceFactory factory = context.ResourceFactory;
 
             s_vb = factory.CreateVertexBuffer(VertexPositionNormalTexture.SizeInBytes * _vertices.Length, false);

@@ -59,5 +59,6 @@ float4 PS(PixelInput input) : SV_Target
     }
 
     //otherwise calculate ilumination at fragment
+    ndotl = clamp(ndotl, 0, 1);
     return ambient * surfaceColor + surfaceColor * ndotl;
 }

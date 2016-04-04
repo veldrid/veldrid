@@ -39,13 +39,11 @@ namespace Veldrid.Graphics.Direct3D
             {
                 Debug.Assert(value is D3DTexture);
                 DepthTexture = (D3DTexture)value;
-                //DepthStencilView = new DepthStencilView(_device, DepthTexture.DeviceTexture);
                 DepthStencilView = new DepthStencilView(_device, DepthTexture.DeviceTexture, new DepthStencilViewDescription()
                 {
-                     Format = SharpDX.DXGI.Format.D16_UNorm,
-                      Dimension = DepthStencilViewDimension.Texture2D,
-                       Flags = DepthStencilViewFlags.None,
-
+                    Format = SharpDX.DXGI.Format.D16_UNorm,
+                    Dimension = DepthStencilViewDimension.Texture2D,
+                    Flags = DepthStencilViewFlags.None,
                 });
             }
         }

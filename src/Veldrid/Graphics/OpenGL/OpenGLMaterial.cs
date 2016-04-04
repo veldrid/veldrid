@@ -14,6 +14,8 @@ namespace Veldrid.Graphics.OpenGL
         private readonly UniformBinding[] _perObjectBindings;
         private readonly OpenGLProgramTextureBinding[] _textureBindings;
 
+        private static int s_vertexAttribSlotsBound = 0;
+
         public OpenGLMaterial(
             OpenGLRenderContext rc,
             OpenGLShader vertexShader,
@@ -118,14 +120,13 @@ namespace Veldrid.Graphics.OpenGL
                 int location = GL.GetUniformLocation(_programID, element.Name);
                 if (location == -1)
                 {
-                    Console.WriteLine($"No sampler was found with the name {element.Name}");
+                    throw new InvalidOperationException($"No sampler was found with the name {element.Name}");
                 }
                 OpenGLTexture deviceTexture = (OpenGLTexture)element.GetDeviceTexture(rc);
                 _textureBindings[i] = new OpenGLProgramTextureBinding(location, deviceTexture);
             }
         }
 
-        private static int s_vertexAttribSlotsBound = 0;
         public void Apply()
         {
             for (int slot = 0; slot < _inputs.Elements.Length; slot++)

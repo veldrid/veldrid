@@ -120,15 +120,12 @@ namespace Veldrid.Graphics.OpenGL
                 {
                     Console.WriteLine($"No sampler was found with the name {element.Name}");
                 }
-                else
-                {
-                    Console.WriteLine($"FOUND {element.Name}: {location}");
-                }
                 OpenGLTexture deviceTexture = (OpenGLTexture)element.GetDeviceTexture(rc);
                 _textureBindings[i] = new OpenGLProgramTextureBinding(location, deviceTexture);
             }
         }
 
+        private static int s_vertexAttribSlotsBound = 0;
         public void Apply()
         {
             for (int slot = 0; slot < _inputs.Elements.Length; slot++)
@@ -138,6 +135,13 @@ namespace Veldrid.Graphics.OpenGL
                 GL.EnableVertexAttribArray(slot);
                 GL.VertexAttribPointer(slot, element.ElementCount, element.Type, element.Normalized, _inputs.VertexSizeInBytes, element.Offset);
             }
+
+            for (int extraSlot = _inputs.Elements.Length; extraSlot < s_vertexAttribSlotsBound; extraSlot++)
+            {
+                GL.DisableVertexAttribArray(extraSlot);
+            }
+
+            s_vertexAttribSlotsBound = _inputs.Elements.Length;
 
             GL.UseProgram(_programID);
 

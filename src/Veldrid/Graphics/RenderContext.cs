@@ -25,7 +25,7 @@ namespace Veldrid.Graphics
         private RasterizerState _rasterizerState;
 
         public Dictionary<string, ConstantBufferDataProvider> DataProviders { get; } = new Dictionary<string, ConstantBufferDataProvider>();
-        private Dictionary<string, ContextDeviceBinding<DeviceTexture>> _textureProviders { get; } = new Dictionary<string, ContextDeviceBinding<DeviceTexture>>();
+        public Dictionary<string, ContextDeviceBinding<DeviceTexture>> TextureProviders { get; } = new Dictionary<string, ContextDeviceBinding<DeviceTexture>>();
 
         public RenderContext(Window window)
         {
@@ -198,10 +198,10 @@ namespace Veldrid.Graphics
         public ContextDeviceBinding<DeviceTexture> GetTextureContextBinding(string name)
         {
             ContextDeviceBinding<DeviceTexture> value;
-            if (!_textureProviders.TryGetValue(name, out value))
+            if (!TextureProviders.TryGetValue(name, out value))
             {
                 value = new ContextDeviceBinding<DeviceTexture>();
-                _textureProviders.Add(name, value);
+                TextureProviders.Add(name, value);
             }
 
             return value;

@@ -3,6 +3,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
 using OpenTK;
 using Veldrid.Platform;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -12,15 +13,25 @@ namespace Veldrid.Graphics.OpenGL
         private readonly GraphicsContext _openGLGraphicsContext;
         private readonly OpenGLDefaultFramebuffer _defaultFramebuffer;
 
+        private readonly int _vertexArrayID;
+
         public OpenGLRenderContext(OpenTKWindow window)
             : base(window)
         {
             _resourceFactory = new OpenGLResourceFactory();
 
+#if DEBUG
+            _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo, 4, 3, GraphicsContextFlags.Debug);
+#else
             _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo);
+#endif
             _openGLGraphicsContext.MakeCurrent(window.OpenTKWindowInfo);
 
             _openGLGraphicsContext.LoadAll();
+
+            // NOTE: I am binding a single VAO globally. This may or may not be a good idea.
+            _vertexArrayID = GL.GenVertexArray();
+            GL.BindVertexArray(_vertexArrayID);
 
             _defaultFramebuffer = new OpenGLDefaultFramebuffer();
 
@@ -28,6 +39,17 @@ namespace Veldrid.Graphics.OpenGL
             OnWindowResized();
 
             PostContextCreated();
+
+#if DEBUG
+            GL.Enable(EnableCap.DebugOutput);
+            GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
+#endif
+        }
+
+        private void DebugCallback(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam)
+        {
+            string messageString = Marshal.PtrToStringAnsi(message, length);
+            Console.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
         }
 
         public override ResourceFactory ResourceFactory => _resourceFactory;

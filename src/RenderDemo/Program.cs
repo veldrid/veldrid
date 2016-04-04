@@ -61,7 +61,7 @@ namespace Veldrid.RenderDemo
             try
             {
                 _window = new DedicatedThreadWindow();
-                _rc = new D3DRenderContext(_window);
+                _rc = new OpenGLRenderContext(_window);
                 _renderer = new Renderer(_rc, new PipelineStage[]
                 {
                     new ShadowMapStage(_rc),
@@ -106,7 +106,7 @@ namespace Veldrid.RenderDemo
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
 
-                _visiblityManager = SceneWithShadows();
+                _visiblityManager = SceneWithTeapot();
 
                 _fta = new FrameTimeAverager(666);
 
@@ -490,6 +490,10 @@ namespace Veldrid.RenderDemo
                 foreach (var kvp in _rc.DataProviders)
                 {
                     newContext.DataProviders[kvp.Key] = kvp.Value;
+                }
+                foreach (var kvp in _rc.TextureProviders)
+                {
+                    newContext.TextureProviders[kvp.Key] = kvp.Value;
                 }
 
                 _renderer.SetRenderContext(newContext);

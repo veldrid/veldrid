@@ -15,11 +15,11 @@ out vec4 outputColor;
 
 void main()
 {
-    outputColor = texture2D(surfaceTexture, texCoord);
+    outputColor = texture(surfaceTexture, texCoord);
 
     vec4 ambientColor = vec4(.4, .4, .4, 1);
 
-    vec4 color = texture2D(surfaceTexture, texCoord);
+    vec4 color = texture(surfaceTexture, texCoord);
     vec3 lightDir = -normalize(lightDirection);
     float effectiveness = dot(normal, lightDir);
     float lightEffectiveness = clamp(effectiveness, 0, 1);

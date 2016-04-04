@@ -8,6 +8,12 @@ out vec4 outputColor;
 
 void main()
 {
-    float r = texture2D(SurfaceTexture, out_texCoord).r;
+    bool flipTexCoords = true;
+    vec2 texCoord_mod = out_texCoord;
+    if (flipTexCoords)
+    {
+        texCoord_mod.y = 1 - texCoord_mod.y;
+    }
+    float r = texture(SurfaceTexture, texCoord_mod).r;
     outputColor = vec4(r, r, r, 1);
 }

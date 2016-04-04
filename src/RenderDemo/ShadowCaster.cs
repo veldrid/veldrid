@@ -130,6 +130,9 @@ namespace Veldrid.RenderDemo
 
         public void Render(RenderContext rc, string pipelineStage)
         {
+            rc.SetVertexBuffer(_vb);
+            rc.SetIndexBuffer(_ib);
+
             if (pipelineStage == "ShadowMap")
             {
                 rc.SetMaterial(_shadowPassMaterial);
@@ -146,9 +149,6 @@ namespace Veldrid.RenderDemo
                 Matrix4x4.CreateScale(Scale)
                 * Matrix4x4.CreateFromQuaternion(Rotation)
                 * Matrix4x4.CreateTranslation(Position);
-
-            rc.SetVertexBuffer(_vb);
-            rc.SetIndexBuffer(_ib);
 
             rc.DrawIndexedPrimitives(_indices.Length, 0);
         }

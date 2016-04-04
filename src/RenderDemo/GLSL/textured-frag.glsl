@@ -8,6 +8,6 @@ out vec4 outputColor;
 
 void main()
 {
-    outputColor = texture2D(surfaceTexture, texCoord);
+    outputColor = texture(surfaceTexture, texCoord);
     //outputColor = vec4(.5, .5, .5, 1);
 }

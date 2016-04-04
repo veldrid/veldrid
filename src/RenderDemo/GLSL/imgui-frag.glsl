@@ -9,5 +9,5 @@ out vec4 outputColor;
 
 void main()
 {
-    outputColor = color * texture2D(surfaceTexture, texCoord);
+    outputColor = color * texture(surfaceTexture, texCoord);
 }

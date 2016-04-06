@@ -15,9 +15,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
   <ItemGroup>
-    <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">
-      <Name>OpenTK</Name>
-    </Reference>
     <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessorCore.dll">
       <Name>ImageProcessorCore</Name>
     </Reference>

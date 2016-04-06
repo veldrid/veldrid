@@ -69,9 +69,6 @@
     <Content Include="Textures\Wood.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">
-      <Private>True</Private>
-    </Reference>
     <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessorCore.dll">
       <Name>ImageProcessorCore</Name>
     </Reference>

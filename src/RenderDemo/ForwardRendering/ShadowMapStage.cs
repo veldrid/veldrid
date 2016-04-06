@@ -45,6 +45,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         public void ExecuteStage(VisibiltyManager visibilityManager)
         {
+            RenderContext.ClearScissorRectangle();
             RenderContext.SetFramebuffer(_shadowMapFramebuffer);
             RenderContext.ClearBuffer();
             RenderContext.SetViewport(0, 0, DepthMapWidth, DepthMapHeight);

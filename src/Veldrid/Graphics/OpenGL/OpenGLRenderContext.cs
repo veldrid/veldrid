@@ -129,11 +129,17 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSetScissorRectangle(System.Drawing.Rectangle rectangle)
         {
+            GL.Enable(EnableCap.ScissorTest);
             GL.Scissor(
                 rectangle.Left,
                 Window.Height - rectangle.Bottom,
                 rectangle.Width,
                 rectangle.Height);
+        }
+
+        public override void ClearScissorRectangle()
+        {
+            GL.Disable(EnableCap.ScissorTest);
         }
 
         protected override void PlatformClearMaterialResourceBindings()

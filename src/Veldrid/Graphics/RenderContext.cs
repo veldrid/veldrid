@@ -116,7 +116,7 @@ namespace Veldrid.Graphics
             }
         }
 
-        public void ClearScissorRectangle()
+        public virtual void ClearScissorRectangle()
         {
             SetScissorRectangle(0, 0, int.MaxValue, int.MaxValue);
         }

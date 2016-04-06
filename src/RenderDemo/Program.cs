@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
@@ -56,12 +57,31 @@ namespace Veldrid.RenderDemo
         private static float _cameraMoveSpeed = 7.5f;
         private static float _cameraSprintFactor = 2.5f;
 
+        private static bool _onWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
         public static void Main()
         {
             try
             {
-                _window = new DedicatedThreadWindow();
-                _rc = new OpenGLRenderContext(_window);
+                if (_onWindows)
+                {
+                    _window = new DedicatedThreadWindow();
+                }
+                else
+                {
+                    _window = new SameThreadWindow();
+                }
+
+                bool preferD3D = _onWindows;
+                if (preferD3D)
+                {
+                    _rc = new D3DRenderContext(_window);
+                }
+                else
+                {
+                    _rc = new OpenGLRenderContext(_window);
+                }
+
                 _renderer = new Renderer(_rc, new PipelineStage[]
                 {
                     new ShadowMapStage(_rc),
@@ -344,31 +364,34 @@ namespace Veldrid.RenderDemo
                 bool isD3D11 = _rc is D3DRenderContext;
                 bool isOpenGL = !isD3D11;
 
-                if (isD3D11)
+                if (_onWindows)
                 {
-                    ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
-                    ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
-                }
-                if (ImGui.Button("D3D11"))
-                {
-                    ChangeRenderContext(d3d: true);
-                }
-                if (isD3D11)
-                {
-                    ImGui.PopStyleColor(2);
-                }
-                if (isOpenGL)
-                {
-                    ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
-                    ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
-                }
-                if (ImGui.Button("OpenGL"))
-                {
-                    ChangeRenderContext(d3d: false);
-                }
-                if (isOpenGL)
-                {
-                    ImGui.PopStyleColor(2);
+                    if (isD3D11)
+                    {
+                        ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
+                        ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
+                    }
+                    if (ImGui.Button("D3D11"))
+                    {
+                        ChangeRenderContext(d3d: true);
+                    }
+                    if (isD3D11)
+                    {
+                        ImGui.PopStyleColor(2);
+                    }
+                    if (isOpenGL)
+                    {
+                        ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
+                        ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
+                    }
+                    if (ImGui.Button("OpenGL"))
+                    {
+                        ChangeRenderContext(d3d: false);
+                    }
+                    if (isOpenGL)
+                    {
+                        ImGui.PopStyleColor(2);
+                    }
                 }
 
                 if (ImGui.Checkbox("Limit Framerate", ref _limitFrameRate))

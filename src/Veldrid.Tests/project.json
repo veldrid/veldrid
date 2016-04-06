@@ -4,6 +4,7 @@
     "Microsoft.CSharp": "4.0.1-beta-23823",
     "Microsoft.NETCore.TestHost": "1.0.0-rc3-23823",
     "Microsoft.NETCore.Runtime": "1.0.2-rc3-23823",
+    "OpenTK.NETCore":  "1.1.2287.6424",
     "SharpDX": "3.0.1",
     "SharpDX.D3DCompiler": "3.0.1",
     "SharpDX.Direct3D11": "3.0.1",

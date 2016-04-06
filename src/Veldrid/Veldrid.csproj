@@ -107,9 +107,6 @@
     <Content Include="Textures\CubeTexture.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Reference Include="$(DepsDir)\OpenTK\OpenTK.dll">
-      <Name>OpenTK</Name>
-    </Reference>
     <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessorCore.dll">
       <Name>ImageProcessorCore</Name>
     </Reference>

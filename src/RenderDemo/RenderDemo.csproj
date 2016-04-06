@@ -73,7 +73,7 @@
       <Name>ImageProcessorCore</Name>
     </Reference>
     <Reference Include="$(DepsDir)\ImGui.NET\ImGui.NET.dll">
-      <Name>ImageProcessor</Name>
+      <Name>ImGui.NET</Name>
     </Reference>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj">
       <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>

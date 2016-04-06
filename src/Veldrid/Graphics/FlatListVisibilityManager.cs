@@ -6,9 +6,10 @@ namespace Veldrid.Graphics
 {
     public class FlatListVisibilityManager : VisibiltyManager
     {
-        private readonly Dictionary<string, List<RenderItem>> _renderItems = new Dictionary<string, List<RenderItem>>();
+        private readonly Dictionary<string, List<RenderItem>> _renderItemsByStage = new Dictionary<string, List<RenderItem>>();
+        private readonly HashSet<RenderItem> _distinctRenderItems = new HashSet<RenderItem>();
 
-        public IEnumerable<RenderItem> RenderItems => _renderItems.SelectMany(kvp => kvp.Value);
+        public IReadOnlyCollection<RenderItem> RenderItems => _distinctRenderItems;
 
         public void AddRenderItem(RenderItem item)
         {
@@ -17,15 +18,17 @@ namespace Veldrid.Graphics
                 var list = GetStageList(stage);
                 list.Add(item);
             }
+
+            _distinctRenderItems.Add(item);
         }
 
         private List<RenderItem> GetStageList(string stage)
         {
             List<RenderItem> items;
-            if (!_renderItems.TryGetValue(stage, out items))
+            if (!_renderItemsByStage.TryGetValue(stage, out items))
             {
                 items = new List<RenderItem>();
-                _renderItems.Add(stage, items);
+                _renderItemsByStage.Add(stage, items);
             }
 
             return items;
@@ -37,6 +40,8 @@ namespace Veldrid.Graphics
             {
                 GetStageList(stage).Remove(item);
             }
+
+            _distinctRenderItems.Remove(item);
         }
 
         public void CollectVisibleObjects(RenderQueue queue, string pipelineStage, Vector3 position, Vector3 direction)

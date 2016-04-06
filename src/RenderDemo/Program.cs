@@ -126,7 +126,7 @@ namespace Veldrid.RenderDemo
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
 
-                _visiblityManager = SceneWithTeapot();
+                _visiblityManager = SceneWithShadows();
 
                 _fta = new FrameTimeAverager(666);
 
@@ -150,7 +150,7 @@ namespace Veldrid.RenderDemo
                     var snapshot = _window.GetInputSnapshot();
                     InputTracker.UpdateFrameInput(snapshot);
                     Update(deltaMilliseconds);
-                    Draw(snapshot);
+                    Draw();
                 }
 
             }
@@ -186,7 +186,7 @@ namespace Veldrid.RenderDemo
         private static void CreateWireframeRasterizerState()
         {
             _wireframeRasterizerState = _rc.ResourceFactory.CreateRasterizerState(
-                                FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
+                FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
         }
 
         private static void CreateScreenshotFramebuffer()
@@ -286,8 +286,8 @@ namespace Veldrid.RenderDemo
                     (float)(Math.Cos(timeFactor) * _circleWidth),
                     3 + (float)Math.Sin(timeFactor) * 2,
                     (float)(Math.Sin(timeFactor) * _circleWidth));
-                var cameraRotation = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
-                SetCameraLookMatrix(cameraRotation);
+                var cameraRotationMat = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
+                SetCameraLookMatrix(cameraRotationMat);
             }
 
             if (_moveLight)
@@ -438,27 +438,25 @@ namespace Veldrid.RenderDemo
                 _window.Close();
             }
 
+            float deltaX = InputTracker.MousePosition.X - _previousMouseX;
+            float deltaY = InputTracker.MousePosition.Y - _previousMouseY;
+            _previousMouseX = InputTracker.MousePosition.X;
+            _previousMouseY = InputTracker.MousePosition.Y;
+
+            Quaternion cameraRotation = Quaternion.CreateFromYawPitchRoll(_cameraYaw, _cameraPitch, 0f);
+            Vector3 cameraForward = Vector3.Transform(-Vector3.UnitZ, cameraRotation);
+            Vector3 cameraRight = Vector3.Normalize(Vector3.Cross(cameraForward, Vector3.UnitY));
+            Vector3 cameraUp = Vector3.Normalize(Vector3.Cross(cameraRight, cameraForward));
+
+            float deltaSec = (float)deltaMilliseconds / 1000f;
+
             if ((InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Left) || InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Right)) && !_autoRotateCamera)
             {
-                float deltaX = InputTracker.MousePosition.X - _previousMouseX;
-                float deltaY = InputTracker.MousePosition.Y - _previousMouseY;
-                _previousMouseX = InputTracker.MousePosition.X;
-                _previousMouseY = InputTracker.MousePosition.Y;
-
                 if (!InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Left) && !InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Right))
                 {
                     _cameraYaw += -deltaX * .01f;
                     _cameraPitch += -deltaY * .01f;
 
-                    Quaternion cameraRotation = Quaternion.CreateFromYawPitchRoll(_cameraYaw, _cameraPitch, 0f);
-                    Vector3 cameraForward = Vector3.Transform(-Vector3.UnitZ, cameraRotation);
-                    Matrix4x4 cameraView = Matrix4x4.CreateLookAt(_cameraPosition, _cameraPosition + cameraForward, Vector3.UnitY);
-                    SetCameraLookMatrix(cameraView);
-
-                    Vector3 cameraRight = Vector3.Normalize(Vector3.Cross(cameraForward, Vector3.UnitY));
-                    Vector3 cameraUp = Vector3.Normalize(Vector3.Cross(cameraRight, cameraForward));
-
-                    float deltaSec = (float)deltaMilliseconds / 1000f;
                     float sprintFactor = InputTracker.GetKey(OpenTK.Input.Key.LShift) ? _cameraSprintFactor : 1.0f;
                     if (InputTracker.GetKey(OpenTK.Input.Key.W))
                     {
@@ -486,6 +484,17 @@ namespace Veldrid.RenderDemo
                     }
                 }
             }
+
+            if (InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Middle) && !_autoRotateCamera)
+            {
+                if (!InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Middle))
+                {
+                    _cameraPosition += (deltaX * -cameraRight + deltaY * cameraUp) * .01f;
+                }
+            }
+
+            Matrix4x4 cameraView = Matrix4x4.CreateLookAt(_cameraPosition, _cameraPosition + cameraForward, Vector3.UnitY);
+            SetCameraLookMatrix(cameraView);
 
             _imguiRenderer.UpdateFinished();
         }
@@ -555,7 +564,7 @@ namespace Veldrid.RenderDemo
             }
         }
 
-        private unsafe static void Draw(InputSnapshot input)
+        private unsafe static void Draw()
         {
             if (_takeScreenshot)
             {

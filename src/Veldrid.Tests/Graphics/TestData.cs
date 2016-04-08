@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
 using Veldrid.Platform;
@@ -11,11 +12,21 @@ namespace Veldrid.Graphics
     {
         public static IEnumerable<RenderContext> RenderContexts()
         {
-            return new RenderContext[]
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                new D3DRenderContext(new TestWindow()),
-                new OpenGLRenderContext(new TestWindow())
-            };
+                return new RenderContext[]
+                {
+                    new D3DRenderContext(new TestWindow()),
+                    new OpenGLRenderContext(new TestWindow())
+                };
+            }
+            else
+            {
+                return new RenderContext[]
+                {
+                    new OpenGLRenderContext(new TestWindow())
+                };
+            }
         }
 
         internal static IEnumerable<object> DataValueArrays()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Linq;
 using Veldrid.Platform;
 using Xunit;
@@ -17,8 +18,13 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         [Fact]
+        [PlatformSpecific(PlatformID.Windows)]
         public void SetAndGet_Array()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                throw new Exception("Why is this test running");
+            }
             D3DVertexBuffer vb = (D3DVertexBuffer)_factory.CreateVertexBuffer(1, false);
 
             float[] vertexData = Enumerable.Range(0, 150).Select(i => (float)i).ToArray();
@@ -30,6 +36,7 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         [Fact]
+        [PlatformSpecific(PlatformID.Windows)]
         public void SetAndGet_Array_Offset()
         {
             D3DVertexBuffer vb = (D3DVertexBuffer)_factory.CreateVertexBuffer(1, false);
@@ -50,6 +57,7 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         [Fact]
+        [PlatformSpecific(PlatformID.Windows)]
         public unsafe void SetAndGet_IntPtr_Offset()
         {
             D3DVertexBuffer vb = (D3DVertexBuffer)_factory.CreateVertexBuffer(1, false);

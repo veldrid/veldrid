@@ -17,6 +17,7 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         [Fact]
+        [PlatformSpecific(PlatformID.Windows)]
         public void SetAndGet_Array()
         {
             D3DIndexBuffer ib = (D3DIndexBuffer)_factory.CreateIndexBuffer(1, false);
@@ -30,6 +31,7 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         [Fact]
+        [PlatformSpecific(PlatformID.Windows)]
         public unsafe void SetAndGet_IntPtr_Offset()
         {
             D3DIndexBuffer ib = (D3DIndexBuffer)_factory.CreateIndexBuffer(1, false);

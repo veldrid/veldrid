@@ -449,9 +449,11 @@ namespace Veldrid.RenderDemo
             Vector3 cameraUp = Vector3.Normalize(Vector3.Cross(cameraRight, cameraForward));
 
             float deltaSec = (float)deltaMilliseconds / 1000f;
+            bool cameraMoved = false;
 
             if ((InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Left) || InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Right)) && !_autoRotateCamera)
             {
+                cameraMoved = true;
                 if (!InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Left) && !InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Right))
                 {
                     _cameraYaw += -deltaX * .01f;
@@ -489,12 +491,16 @@ namespace Veldrid.RenderDemo
             {
                 if (!InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Middle))
                 {
+                    cameraMoved = true;
                     _cameraPosition += (deltaX * -cameraRight + deltaY * cameraUp) * .01f;
                 }
             }
 
-            Matrix4x4 cameraView = Matrix4x4.CreateLookAt(_cameraPosition, _cameraPosition + cameraForward, Vector3.UnitY);
-            SetCameraLookMatrix(cameraView);
+            if (cameraMoved)
+            {
+                Matrix4x4 cameraView = Matrix4x4.CreateLookAt(_cameraPosition, _cameraPosition + cameraForward, Vector3.UnitY);
+                SetCameraLookMatrix(cameraView);
+            }
 
             _imguiRenderer.UpdateFinished();
         }
@@ -534,21 +540,21 @@ namespace Veldrid.RenderDemo
                 {
                     foreach (var item in _teapotVM?.RenderItems)
                     {
-                        item.ChangeRenderContext(newContext);
+                        ((SwappableRenderItem)item).ChangeRenderContext(newContext);
                     }
                 }
                 if (_boxSceneVM != null)
                 {
                     foreach (var item in _boxSceneVM.RenderItems)
                     {
-                        item.ChangeRenderContext(newContext);
+                        ((SwappableRenderItem)item).ChangeRenderContext(newContext);
                     }
                 }
                 if (_shadowsScene != null)
                 {
                     foreach (var item in _shadowsScene.RenderItems)
                     {
-                        item.ChangeRenderContext(newContext);
+                        ((SwappableRenderItem)item).ChangeRenderContext(newContext);
                     }
                 }
 

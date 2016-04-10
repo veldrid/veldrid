@@ -8,6 +8,5 @@ namespace Veldrid.Graphics
         IEnumerable<string> GetStagesParticipated();
         void Render(RenderContext context, string pipelineStage);
         RenderOrderKey GetRenderOrderKey();
-        void ChangeRenderContext(RenderContext context);
     }
 }

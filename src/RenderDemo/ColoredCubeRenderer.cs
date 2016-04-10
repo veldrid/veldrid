@@ -6,7 +6,7 @@ using Veldrid.Graphics.Pipeline;
 
 namespace Veldrid.RenderDemo
 {
-    public class ColoredCubeRenderer : RenderItem, IDisposable
+    public class ColoredCubeRenderer : SwappableRenderItem, IDisposable
     {
         private readonly DynamicDataProvider<Matrix4x4> _modelViewProvider = new DynamicDataProvider<Matrix4x4>();
 

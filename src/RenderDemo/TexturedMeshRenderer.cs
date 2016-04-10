@@ -5,7 +5,7 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
 {
-    public class TexturedMeshRenderer : RenderItem, IDisposable
+    public class TexturedMeshRenderer : SwappableRenderItem, IDisposable
     {
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;

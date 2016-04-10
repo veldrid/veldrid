@@ -26,6 +26,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="ShadowCaster.cs" />
     <Compile Include="ShadowMapPreview.cs" />
+    <Compile Include="SwappableRenderItem.cs" />
     <Compile Include="TeapotRenderer.cs" />
     <Compile Include="TexturedMeshRenderer.cs" />
     <Compile Include="Textures\Textures.cs" />

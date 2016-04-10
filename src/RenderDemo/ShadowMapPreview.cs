@@ -5,7 +5,7 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
 {
-    public class ShadowMapPreview : RenderItem
+    public class ShadowMapPreview : SwappableRenderItem
     {
         private readonly DynamicDataProvider<Matrix4x4> _worldMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private readonly DynamicDataProvider<Matrix4x4> _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();

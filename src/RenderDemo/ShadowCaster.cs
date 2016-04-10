@@ -6,7 +6,7 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
 {
-    public class ShadowCaster : RenderItem, IDisposable
+    public class ShadowCaster : SwappableRenderItem, IDisposable
     {
         private readonly VertexPositionNormalTexture[] _vertices;
         private readonly int[] _indices;

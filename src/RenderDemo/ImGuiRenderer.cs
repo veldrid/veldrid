@@ -10,7 +10,7 @@ using Veldrid.Platform;
 
 namespace Veldrid.RenderDemo
 {
-    public class ImGuiRenderer : RenderItem, IDisposable
+    public class ImGuiRenderer : SwappableRenderItem, IDisposable
     {
         private readonly DynamicDataProvider<Matrix4x4> _projectionMatrixProvider;
         private TextureData _fontTexture;

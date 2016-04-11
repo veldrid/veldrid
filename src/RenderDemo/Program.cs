@@ -284,7 +284,7 @@ namespace Veldrid.RenderDemo
             {
                 _cameraPosition = new Vector3(
                     (float)(Math.Cos(timeFactor) * _circleWidth),
-                    3 + (float)Math.Sin(timeFactor) * 2,
+                    6 + (float)Math.Sin(timeFactor) * 2,
                     (float)(Math.Sin(timeFactor) * _circleWidth));
                 var cameraRotationMat = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
                 SetCameraLookMatrix(cameraRotationMat);
@@ -293,9 +293,9 @@ namespace Veldrid.RenderDemo
             if (_moveLight)
             {
                 var position = new Vector3(
-                    (float)(Math.Cos(timeFactor) * _circleWidth),
-                    3 + (float)Math.Sin(timeFactor) * 2,
-                    (float)(Math.Sin(timeFactor) * _circleWidth));
+                    (float)(Math.Cos(timeFactor) * 5),
+                    6 + (float)Math.Sin(timeFactor) * 2,
+                    -(float)(Math.Sin(timeFactor) * 5));
 
                 _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
                 _lightInfoProvider.Data = new Vector4(-position, 1);
@@ -322,7 +322,7 @@ namespace Veldrid.RenderDemo
                 }
                 if (ImGui.Button("Shadows"))
                 {
-                    _circleWidth = 5.0;
+                    _circleWidth = 15.0;
                     _visiblityManager = SceneWithShadows();
                 }
 

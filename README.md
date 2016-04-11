@@ -2,4 +2,4 @@
 
 An experimental renderer with OpenGL and Direct3D backends.
 
-![Teapot](http://i.imgur.com/wjUztQw.gif)
+![Shadows](http://i.imgur.com/ucoZCBj.gif)

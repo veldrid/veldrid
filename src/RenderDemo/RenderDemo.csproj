@@ -12,6 +12,7 @@
     <AssemblyName>RenderDemo</AssemblyName>
     <RootNamespace>Veldrid.RenderDemo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NuGetTargetMoniker>.NETCoreApp,Version=v1.0</NuGetTargetMoniker>
     <BaseNuGetRuntimeIdentifier Condition="'$(OSTarget)' == 'Windows_NT'">win7</BaseNuGetRuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>

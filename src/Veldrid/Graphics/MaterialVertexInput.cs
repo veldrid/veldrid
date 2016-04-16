@@ -5,8 +5,8 @@ namespace Veldrid.Graphics
 {
     public class MaterialVertexInput
     {
-        public int VertexSizeInBytes { get; }
-        public MaterialVertexInputElement[] Elements { get; }
+        public int VertexSizeInBytes { get; private set;}
+        public MaterialVertexInputElement[] Elements { get; private set; }
         public MaterialVertexInput(int vertexSizeInBytes, params MaterialVertexInputElement[] elements)
         {
             VertexSizeInBytes = vertexSizeInBytes;
@@ -16,10 +16,10 @@ namespace Veldrid.Graphics
 
     public struct MaterialVertexInputElement
     {
-        public string Name { get; }
-        public VertexSemanticType SemanticType { get; }
-        public byte SizeInBytes { get; }
-        public VertexElementFormat ElementFormat { get; }
+        public string Name { get; set;  }
+        public VertexSemanticType SemanticType { get; set; }
+        public byte SizeInBytes { get; set; }
+        public VertexElementFormat ElementFormat { get; set; }
 
         public MaterialVertexInputElement(string name, VertexSemanticType semanticType, VertexElementFormat format)
         {

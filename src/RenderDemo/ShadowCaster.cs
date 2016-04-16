@@ -1,7 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Numerics;
+using System.Xml.Serialization;
 using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
@@ -71,6 +75,7 @@ namespace Veldrid.RenderDemo
                 new TextureDataInputElement("SurfaceTexture", _surfaceTextureData),
                 new ContextTextureInputElement("ShadowMap"));
 
+            Serialize(ref _vertexInput);
 
             InitializeContextObjects(rc);
         }
@@ -151,6 +156,23 @@ namespace Veldrid.RenderDemo
                 * Matrix4x4.CreateTranslation(Position);
 
             rc.DrawIndexedPrimitives(_indices.Length, 0);
+        }
+
+        private void Serialize<T>(ref T value)
+        {
+            JsonSerializer js = new JsonSerializer();
+            js.TypeNameHandling = TypeNameHandling.All;
+            var fileName = typeof(T).Name + ".json";
+
+            using (var fs = File.CreateText(fileName))
+            {
+                js.Serialize(fs, value);
+            }
+
+            using (var fs = File.OpenText(fileName))
+            {
+                value = js.Deserialize<T>(new JsonTextReader(fs));
+            }
         }
 
         public void Dispose()

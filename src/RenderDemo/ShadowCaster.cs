@@ -75,8 +75,6 @@ namespace Veldrid.RenderDemo
                 new TextureDataInputElement("SurfaceTexture", _surfaceTextureData),
                 new ContextTextureInputElement("ShadowMap"));
 
-            Serialize(ref _vertexInput);
-
             InitializeContextObjects(rc);
         }
 

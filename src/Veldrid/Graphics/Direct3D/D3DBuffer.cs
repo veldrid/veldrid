@@ -98,11 +98,14 @@ namespace Veldrid.Graphics.Direct3D
         {
             if (_bufferSizeInBytes < dataSizeInBytes)
             {
+                System.Console.WriteLine("TOO SMALL, MAKING BIGGER, NEED " + dataSizeInBytes);
                 Buffer oldBuffer = Buffer;
+                int previousWidth = _bufferSizeInBytes;
                 _bufferSizeInBytes = dataSizeInBytes;
                 InitializeDeviceBuffer();
-                // TODO: This causes errors in Debug contexts. Investigate that.
-                //Device.ImmediateContext.CopyResource(oldBuffer, Buffer);
+                ResourceRegion region = new ResourceRegion(0, 0, 0, previousWidth, 1, 1);
+                Device.ImmediateContext.CopySubresourceRegion(oldBuffer, 0, region, Buffer, 0);
+
                 oldBuffer.Dispose();
             }
         }

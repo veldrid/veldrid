@@ -35,7 +35,6 @@ namespace Veldrid.Platform
                  GameWindowFlags.Default,
                  GraphicsMode.Default,
                  DisplayDevice.Default);
-
             int actualWidth = _nativeWindow.Width;
             int actualHeight = _nativeWindow.Height;
 
@@ -48,6 +47,7 @@ namespace Veldrid.Platform
             _nativeWindow.Resize += OnWindowResized;
             _nativeWindow.KeyDown += OnKeyDown;
             _nativeWindow.KeyUp += OnKeyUp;
+            _nativeWindow.KeyPress += OnKeyPress;
             _nativeWindow.MouseDown += OnMouseDown;
             _nativeWindow.MouseUp += OnMouseUp;
             _nativeWindow.Closing += OnWindowClosing;
@@ -163,6 +163,11 @@ namespace Veldrid.Platform
             CurrentSnapshot.KeyEventsList.Add(new KeyEvent(e.Key, false, ConvertModifiers(e.Modifiers)));
         }
 
+        private void OnKeyPress(object sender, KeyPressEventArgs e)
+        {
+            CurrentSnapshot.KeyCharPressesList.Add(e.KeyChar);
+        }
+
         private void OnKeyDown(object sender, KeyboardKeyEventArgs e)
         {
             CurrentSnapshot.KeyEventsList.Add(new KeyEvent(e.Key, true, ConvertModifiers(e.Modifiers)));
@@ -212,10 +217,13 @@ namespace Veldrid.Platform
         {
             public List<KeyEvent> KeyEventsList { get; private set; } = new List<KeyEvent>();
             public List<MouseEvent> MouseEventsList { get; private set; } = new List<MouseEvent>();
+            public List<char> KeyCharPressesList { get; private set; } = new List<char>();
 
             public IReadOnlyCollection<KeyEvent> KeyEvents => KeyEventsList;
 
             public IReadOnlyCollection<MouseEvent> MouseEvents => MouseEventsList;
+
+            public IReadOnlyCollection<char> KeyCharPresses => KeyCharPressesList;
 
             public System.Numerics.Vector2 MousePosition { get; set; }
 
@@ -223,6 +231,7 @@ namespace Veldrid.Platform
             {
                 KeyEventsList.Clear();
                 MouseEventsList.Clear();
+                KeyCharPressesList.Clear();
             }
         }
     }

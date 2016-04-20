@@ -7,6 +7,7 @@ namespace Veldrid.Platform
     {
         IReadOnlyCollection<KeyEvent> KeyEvents { get; }
         IReadOnlyCollection<MouseEvent> MouseEvents { get; }
+        IReadOnlyCollection<char> KeyCharPresses { get; }
         Vector2 MousePosition { get; }
     }
 }

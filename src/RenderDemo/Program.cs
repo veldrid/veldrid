@@ -3,6 +3,7 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -34,6 +35,7 @@ namespace Veldrid.RenderDemo
         private static FlatListVisibilityManager _boxSceneVM;
         private static FlatListVisibilityManager _teapotVM;
         private static FlatListVisibilityManager _shadowsScene;
+        private static FlatListVisibilityManager _editorScene;
         private static double _circleWidth = 5.0;
         private static bool _wireframe;
 
@@ -58,6 +60,7 @@ namespace Veldrid.RenderDemo
         private static float _cameraSprintFactor = 2.5f;
 
         private static bool _onWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        private static MaterialEditorWindow _editorWindow;
 
         public static void Main()
         {
@@ -72,7 +75,7 @@ namespace Veldrid.RenderDemo
                     _window = new SameThreadWindow();
                 }
 
-                bool preferD3D = _onWindows;
+                bool preferD3D = false;
                 if (preferD3D)
                 {
                     _rc = new D3DRenderContext(_window);
@@ -149,7 +152,7 @@ namespace Veldrid.RenderDemo
 
                     var snapshot = _window.GetInputSnapshot();
                     InputTracker.UpdateFrameInput(snapshot);
-                    Update(deltaMilliseconds);
+                    Update(deltaMilliseconds, snapshot);
                     Draw();
                 }
 
@@ -199,7 +202,7 @@ namespace Veldrid.RenderDemo
             if (_boxSceneVM == null)
             {
                 _boxSceneVM = new FlatListVisibilityManager();
-                var sphere = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
+                var sphere = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Assets", "Models", "Sphere.obj"));
                 var tcr = new TexturedMeshRenderer(_rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
                 tcr.Position = new Vector3(-5f, 0, -3);
                 _boxSceneVM.AddRenderItem(tcr);
@@ -249,7 +252,7 @@ namespace Veldrid.RenderDemo
             if (_shadowsScene == null)
             {
                 _shadowsScene = new FlatListVisibilityManager();
-                var sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
+                var sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Assets", "Models", "Sphere.obj"));
 
                 var cube1 = new ShadowCaster(_rc, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
                 _shadowsScene.AddRenderItem(cube1);
@@ -277,7 +280,27 @@ namespace Veldrid.RenderDemo
             return _shadowsScene;
         }
 
-        private static void Update(double deltaMilliseconds)
+        private static FlatListVisibilityManager EditorScene()
+        {
+            _editorScene = new FlatListVisibilityManager();
+
+            var sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Assets", "Models", "Sphere.obj"));
+            var sphere3 = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
+            sphere3.Position = new Vector3(0f, 0f, 5f);
+            _editorScene.AddRenderItem(sphere3);
+
+            var plane = new ShadowCaster(_rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
+            plane.Position = new Vector3(0, -2.5f, 0);
+            plane.Scale = new Vector3(20f);
+
+            _editorScene.AddRenderItem(plane);
+            _editorScene.AddRenderItem(_imguiRenderer);
+            _editorWindow = new MaterialEditorWindow();
+
+            return _editorScene;
+        }
+
+        private static void Update(double deltaMilliseconds, InputSnapshot snapshot)
         {
             float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             if (_autoRotateCamera)
@@ -302,13 +325,15 @@ namespace Veldrid.RenderDemo
             }
 
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
-            _imguiRenderer.UpdateImGuiInput(_window);
+            _imguiRenderer.UpdateImGuiInput(_window, snapshot);
             _imguiRenderer.NewFrame();
+
+            DrawMainMenu();
 
             bool opened = false;
             float width = Math.Max(100, Math.Min(200, _window.Width * .4f));
             ImGui.SetNextWindowPos(new Vector2(20, 20), SetCondition.Always);
-            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 360), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
+            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 380), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
             {
                 if (ImGui.Button("Boxes"))
                 {
@@ -324,6 +349,10 @@ namespace Veldrid.RenderDemo
                 {
                     _circleWidth = 15.0;
                     _visiblityManager = SceneWithShadows();
+                }
+                if (ImGui.Button("Editor"))
+                {
+                    _visiblityManager = EditorScene();
                 }
 
                 if (ImGui.SliderFloat("FOV", ref _fieldOfViewRadians, 0.05f, (float)Math.PI - .01f, _fieldOfViewRadians.ToString(), 1f))
@@ -416,9 +445,10 @@ namespace Veldrid.RenderDemo
                     }
                     ImGui.EndChildFrame();
                 }
-            }
 
+            }
             ImGui.EndWindow();
+
 
             _fta.AddTime(deltaMilliseconds);
 
@@ -451,7 +481,8 @@ namespace Veldrid.RenderDemo
             float deltaSec = (float)deltaMilliseconds / 1000f;
             bool cameraMoved = false;
 
-            if ((InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Left) || InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Right)) && !_autoRotateCamera)
+            if (!ImGui.IsMouseHoveringAnyWindow() && !_autoRotateCamera
+                && (InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Left) || InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Right)))
             {
                 cameraMoved = true;
                 if (!InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Left) && !InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Right))
@@ -502,7 +533,40 @@ namespace Veldrid.RenderDemo
                 SetCameraLookMatrix(cameraView);
             }
 
+            if (_visiblityManager == _editorScene)
+            {
+                _editorWindow.Render(_rc, "Overlay");
+            }
+
             _imguiRenderer.UpdateFinished();
+        }
+
+        private static void DrawMainMenu()
+        {
+            bool triggerPopup = false;
+            if (ImGui.BeginMainMenuBar())
+            {
+                if (ImGui.BeginMenu("About"))
+                {
+                    if (ImGui.MenuItem("About Veldrid", null))
+                    {
+                        triggerPopup = true;
+                    }
+                    ImGui.EndMenu();
+                }
+                ImGui.EndMainMenuBar();
+            }
+
+            if (triggerPopup)
+            {
+                ImGui.OpenPopup("AboutVeldridPopup");
+            }
+            if (ImGui.BeginPopup("AboutVeldridPopup"))
+            {
+                ImGui.Text("Veldrid is an experimental renderer with Direct3D and OpenGL backends, built on top of .NET Core.");
+                ImGui.Text("Source code is freely available at https://github.com/mellinoe/veldrid.");
+                ImGui.EndPopup();
+            }
         }
 
         private static void ChangeRenderContext(bool d3d)
@@ -553,6 +617,13 @@ namespace Veldrid.RenderDemo
                 if (_shadowsScene != null)
                 {
                     foreach (var item in _shadowsScene.RenderItems)
+                    {
+                        ((SwappableRenderItem)item).ChangeRenderContext(newContext);
+                    }
+                }
+                if (_editorScene != null)
+                {
+                    foreach (var item in _editorScene.RenderItems)
                     {
                         ((SwappableRenderItem)item).ChangeRenderContext(newContext);
                     }

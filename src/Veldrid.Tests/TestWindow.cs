@@ -225,10 +225,13 @@ namespace Veldrid.Platform
         {
             public List<KeyEvent> KeyEventsList { get; private set; } = new List<KeyEvent>();
             public List<MouseEvent> MouseEventsList { get; private set; } = new List<MouseEvent>();
+            public List<char> KeyCharPressesList { get; private set; } = new List<char>();
 
             public IReadOnlyCollection<KeyEvent> KeyEvents => KeyEventsList;
 
             public IReadOnlyCollection<MouseEvent> MouseEvents => MouseEventsList;
+
+            public IReadOnlyCollection<char> KeyCharPresses => KeyCharPressesList;
 
             public System.Numerics.Vector2 MousePosition { get; set; }
 

@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Veldrid.Graphics
+﻿namespace Veldrid.Graphics
 {
     public class MaterialVertexInput
     {
-        public int VertexSizeInBytes { get; private set;}
-        public MaterialVertexInputElement[] Elements { get; private set; }
+        public int VertexSizeInBytes { get; }
+        public MaterialVertexInputElement[] Elements { get; }
+
         public MaterialVertexInput(int vertexSizeInBytes, params MaterialVertexInputElement[] elements)
         {
             VertexSizeInBytes = vertexSizeInBytes;
@@ -16,10 +14,10 @@ namespace Veldrid.Graphics
 
     public struct MaterialVertexInputElement
     {
-        public string Name { get; set;  }
+        public string Name { get; set; }
         public VertexSemanticType SemanticType { get; set; }
-        public byte SizeInBytes { get; set; }
         public VertexElementFormat ElementFormat { get; set; }
+        public byte SizeInBytes { get; set; }
 
         public MaterialVertexInputElement(string name, VertexSemanticType semanticType, VertexElementFormat format)
         {

@@ -21,14 +21,16 @@
     <Compile Include="ForwardRendering\ShadowMapStage.cs" />
     <Compile Include="ImGuiRenderer.cs" />
     <Compile Include="InputTracker.cs" />
-    <Compile Include="Models\CubeModel.cs" />
-    <Compile Include="Models\PlaneModel.cs" />
+    <Compile Include="Assets\Models\CubeModel.cs" />
+    <Compile Include="Assets\Models\PlaneModel.cs" />
+    <Compile Include="MaterialEditorWindow.cs" />
     <Compile Include="PixelFormatConversion.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ShadowCaster.cs" />
     <Compile Include="ShadowMapPreview.cs" />
     <Compile Include="SwappableRenderItem.cs" />
     <Compile Include="TeapotRenderer.cs" />
+    <Compile Include="TestItem.cs" />
     <Compile Include="TexturedMeshRenderer.cs" />
     <Compile Include="Textures\Textures.cs" />
   </ItemGroup>
@@ -71,6 +73,9 @@
     <Content Include="Textures\Wood.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Reference Include="$(DepsDir)\SharpYaml\SharpYaml.dll">
+      <Name>SharpYaml</Name>
+    </Reference>
     <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessorCore.dll">
       <Name>ImageProcessorCore</Name>
     </Reference>
@@ -80,6 +85,9 @@
     <ProjectReference Include="..\Veldrid\Veldrid.csproj">
       <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>
       <Name>Veldrid</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Veldrid.Assets\Veldrid.Assets.csproj">
+      <Name>Veldrid.Assets</Name>
     </ProjectReference>
     <Content Include="$(DepsDir)\ImGui.NET\win-x64\cimgui.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -120,7 +128,7 @@
     <Content Include="HLSL\textured-vertex.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Models\Teapot.obj">
+    <Content Include="Assets\Models\Teapot.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GLSL\textured-vertex.glsl">
@@ -138,7 +146,7 @@
     <Content Include="GLSL\textured-frag.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Models\Sphere.obj">
+    <Content Include="Assets\Models\Sphere.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="HLSL\shadowmap-frag.hlsl">

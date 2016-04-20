@@ -30,6 +30,7 @@ namespace Veldrid.RenderDemo
             _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
 
             InitializeContextObjects(rc);
+            SetOpenTKKeyMappings();
 
             SetPerFrameImGuiData(rc, 1f / 60f);
             ImGui.NewFrame();
@@ -39,7 +40,7 @@ namespace Veldrid.RenderDemo
         {
             ResourceFactory factory = rc.ResourceFactory;
             _vertexBuffer = factory.CreateVertexBuffer(500, false);
-            _indexBuffer = factory.CreateIndexBuffer(200, false);
+            _indexBuffer = factory.CreateIndexBuffer(100, false);
             _blendState = factory.CreateCustomBlendState(
                 true,
                 Blend.InverseSourceAlpha, Blend.Zero, BlendFunction.Add,
@@ -98,7 +99,7 @@ namespace Veldrid.RenderDemo
             io.DeltaTime = deltaMilliseconds / 1000; // DeltaTime is in seconds.
         }
 
-        public unsafe void UpdateImGuiInput(OpenTKWindow window)
+        public unsafe void UpdateImGuiInput(OpenTKWindow window, InputSnapshot snapshot)
         {
             IO io = ImGui.GetIO();
             MouseState cursorState = Mouse.GetCursorState();
@@ -128,6 +129,23 @@ namespace Veldrid.RenderDemo
             float delta = newWheelPos - _wheelPosition;
             _wheelPosition = newWheelPos;
             io.MouseWheel = delta;
+
+            foreach (char c in snapshot.KeyCharPresses)
+            {
+                ImGui.AddInputCharacter(c);
+            }
+
+            io.CtrlPressed = false;
+            io.AltPressed = false;
+            io.ShiftPressed = false;
+
+            foreach (var keyEvent in snapshot.KeyEvents)
+            {
+                io.KeysDown[(int)keyEvent.Key] = keyEvent.Down;
+                io.ShiftPressed |= ((keyEvent.Modifiers & ModifierKeys.Shift) != 0);
+                io.CtrlPressed |= ((keyEvent.Modifiers & ModifierKeys.Control) != 0);
+                io.AltPressed |= ((keyEvent.Modifiers & ModifierKeys.Alt) != 0);
+            }
         }
 
         private unsafe void CreateFontsTexture(RenderContext rc)
@@ -150,6 +168,30 @@ namespace Veldrid.RenderDemo
 
             // Cleanup (don't clear the input data if you want to append new fonts later)
             io.FontAtlas.ClearTexData();
+        }
+
+        private static unsafe void SetOpenTKKeyMappings()
+        {
+            IO io = ImGui.GetIO();
+            io.KeyMap[GuiKey.Tab] = (int)Key.Tab;
+            io.KeyMap[GuiKey.LeftArrow] = (int)Key.Left;
+            io.KeyMap[GuiKey.RightArrow] = (int)Key.Right;
+            io.KeyMap[GuiKey.UpArrow] = (int)Key.Up;
+            io.KeyMap[GuiKey.DownArrow] = (int)Key.Down;
+            io.KeyMap[GuiKey.PageUp] = (int)Key.PageUp;
+            io.KeyMap[GuiKey.PageDown] = (int)Key.PageDown;
+            io.KeyMap[GuiKey.Home] = (int)Key.Home;
+            io.KeyMap[GuiKey.End] = (int)Key.End;
+            io.KeyMap[GuiKey.Delete] = (int)Key.Delete;
+            io.KeyMap[GuiKey.Backspace] = (int)Key.BackSpace;
+            io.KeyMap[GuiKey.Enter] = (int)Key.Enter;
+            io.KeyMap[GuiKey.Escape] = (int)Key.Escape;
+            io.KeyMap[GuiKey.A] = (int)Key.A;
+            io.KeyMap[GuiKey.C] = (int)Key.C;
+            io.KeyMap[GuiKey.V] = (int)Key.V;
+            io.KeyMap[GuiKey.X] = (int)Key.X;
+            io.KeyMap[GuiKey.Y] = (int)Key.Y;
+            io.KeyMap[GuiKey.Z] = (int)Key.Z;
         }
 
         private unsafe void RenderImDrawData(DrawData* draw_data, RenderContext rc)

@@ -75,8 +75,8 @@ namespace Veldrid.RenderDemo
                     _window = new SameThreadWindow();
                 }
 
-                bool preferD3D = false;
-                if (preferD3D)
+                bool preferD3D = true;
+                if (preferD3D && _onWindows)
                 {
                     _rc = new D3DRenderContext(_window);
                 }
@@ -129,7 +129,7 @@ namespace Veldrid.RenderDemo
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
 
-                _visiblityManager = SceneWithShadows();
+                _visiblityManager = EditorScene();
 
                 _fta = new FrameTimeAverager(666);
 
@@ -544,6 +544,7 @@ namespace Veldrid.RenderDemo
         private static void DrawMainMenu()
         {
             bool triggerPopup = false;
+
             if (ImGui.BeginMainMenuBar())
             {
                 if (ImGui.BeginMenu("About"))
@@ -561,10 +562,19 @@ namespace Veldrid.RenderDemo
             {
                 ImGui.OpenPopup("AboutVeldridPopup");
             }
+
             if (ImGui.BeginPopup("AboutVeldridPopup"))
             {
-                ImGui.Text("Veldrid is an experimental renderer with Direct3D and OpenGL backends, built on top of .NET Core.");
-                ImGui.Text("Source code is freely available at https://github.com/mellinoe/veldrid.");
+                ImGui.Text(
+@"Veldrid is an experimental renderer with Direct3D
+and OpenGL backends, built with .NET Core.");
+                ImGui.Text(
+@"Source code is freely available at
+https://github.com/mellinoe/veldrid.");
+                ImGui.Text(
+@"OpenGL bindings using OpenTK (https://github.com/opentk/opentk).");
+                ImGui.Text(
+@"Direct3D bindings using SharpDX (https://github.com/sharpdx/sharpdx).");
                 ImGui.EndPopup();
             }
         }

@@ -1,4 +1,6 @@
-﻿namespace Veldrid.Graphics
+﻿using System;
+
+namespace Veldrid.Graphics
 {
     public class MaterialVertexInput
     {
@@ -10,6 +12,8 @@
             VertexSizeInBytes = vertexSizeInBytes;
             Elements = elements;
         }
+
+        public MaterialVertexInput() : this(0, Array.Empty<MaterialVertexInputElement>()) { }
     }
 
     public struct MaterialVertexInputElement

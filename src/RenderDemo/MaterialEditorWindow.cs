@@ -36,7 +36,7 @@ namespace Veldrid.RenderDemo
         public void Render(RenderContext context, string pipelineStage)
         {
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(260, 600), SetCondition.Always);
-            ImGui.SetNextWindowPos(new System.Numerics.Vector2(context.Window.Width - 268, 8), SetCondition.Always);
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(context.Window.Width - 270, 20), SetCondition.Always);
             if (ImGui.BeginWindow("Editor Window", WindowFlags.NoMove | WindowFlags.NoResize))
             {
                 _editor.DrawObject("Material", ref _materialAsset);
@@ -80,7 +80,10 @@ namespace Veldrid.RenderDemo
             { typeof(int), new FuncDrawer<int>(GenericDrawFuncs.DrawInt) },
             { typeof(float), new FuncDrawer<float>(GenericDrawFuncs.DrawSingle) },
             { typeof(string), new FuncDrawer<string>(GenericDrawFuncs.DrawString) },
+            { typeof(bool), new FuncDrawer<bool>(GenericDrawFuncs.DrawBool) }
         };
+
+        private static Dictionary<Type, Drawer> s_newItemDrawers = new Dictionary<Type, Drawer>();
 
         public static Drawer GetDrawer(Type type)
         {
@@ -89,6 +92,18 @@ namespace Veldrid.RenderDemo
             {
                 d = CreateDrawer(type);
                 s_drawers.Add(type, d);
+            }
+
+            return d;
+        }
+
+        public static Drawer GetNewItemDrawer(Type type)
+        {
+            Drawer d;
+            if (!s_newItemDrawers.TryGetValue(type, out d))
+            {
+                d = new NewItemDrawer(type);
+                s_newItemDrawers.Add(type, d);
             }
 
             return d;
@@ -103,7 +118,7 @@ namespace Veldrid.RenderDemo
             }
             else if (ti.IsAbstract)
             {
-                return new NullItemDrawer(type);
+                return new NewItemDrawer(type);
             }
             else
             {
@@ -182,12 +197,19 @@ namespace Veldrid.RenderDemo
 
         public static bool DrawInt(string label, ref int i)
         {
+            ImGui.PushItemWidth(80f);
             return ImGui.DragInt(label, ref i, 1f, int.MinValue, int.MaxValue, i.ToString());
         }
 
         public static bool DrawSingle(string label, ref float f)
         {
+            ImGui.PushItemWidth(40f);
             return ImGui.DragFloat(label, ref f, -1000f, 1000f, 1f, f.ToString(), 1f);
+        }
+
+        public static bool DrawBool(string label, ref bool b)
+        {
+            return ImGui.Checkbox(label, ref b);
         }
     }
 
@@ -252,7 +274,7 @@ namespace Veldrid.RenderDemo
                     }
                     else
                     {
-                        drawer = DrawerCache.GetDrawer(pi.PropertyType);
+                        drawer = DrawerCache.GetNewItemDrawer(pi.PropertyType);
                     }
                     bool changed = drawer.Draw(pi.Name, ref value);
                     if (changed && originalValue != value)
@@ -269,11 +291,11 @@ namespace Veldrid.RenderDemo
         }
     }
 
-    public class NullItemDrawer : Drawer
+    public class NewItemDrawer : Drawer
     {
         private readonly Type[] _subTypes;
 
-        public NullItemDrawer(Type type) : base(type)
+        public NewItemDrawer(Type type) : base(type)
         {
             _subTypes = type.GetTypeInfo().Assembly.GetTypes().Where(t => type.IsAssignableFrom(t) && !t.GetTypeInfo().IsAbstract).ToArray();
         }
@@ -282,7 +304,7 @@ namespace Veldrid.RenderDemo
         {
             if (obj != null)
             {
-                throw new InvalidOperationException($"{nameof(NullItemDrawer)} should not be used for non-null items.");
+                throw new InvalidOperationException($"{nameof(NewItemDrawer)} should not be used for non-null items.");
             }
 
             bool result = false;

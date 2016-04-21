@@ -57,16 +57,17 @@ namespace Veldrid.Graphics.OpenGL
         {
             Bind();
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
-            IntPtr mappedPtr = GL.MapBufferRange(
-                _target,
-                (IntPtr)destinationOffsetInBytes,
-                dataSizeInBytes,
-                BufferAccessMask.MapInvalidateRangeBit | BufferAccessMask.MapWriteBit);
-            SharpDX.Utilities.CopyMemory(mappedPtr, data, dataSizeInBytes);
-            if (!GL.UnmapBuffer(_target))
-            {
-                throw new InvalidOperationException("UnmapBuffer failed.");
-            }
+            GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, data);
+            //IntPtr mappedPtr = GL.MapBufferRange(
+            //    _target,
+            //    (IntPtr)destinationOffsetInBytes,
+            //    dataSizeInBytes,
+            //    BufferAccessMask.MapInvalidateRangeBit | BufferAccessMask.MapWriteBit);
+            //SharpDX.Utilities.CopyMemory(mappedPtr, data, dataSizeInBytes);
+            //if (!GL.UnmapBuffer(_target))
+            //{
+            //    throw new InvalidOperationException("UnmapBuffer failed.");
+            //}
             Unbind();
         }
 
@@ -106,7 +107,7 @@ namespace Veldrid.Graphics.OpenGL
                 GL.DeleteBuffer(_bufferID);
                 _bufferID = GL.GenBuffer();
                 GL.BindBuffer(_target, _bufferID);
-                GL.BufferData(_target, dataSizeInBytes, IntPtr.Zero, _bufferUsage);
+                GL.BufferData(_target, dataSizeInBytes, IntPtr.Zero, BufferUsageHint.DynamicDraw);
                 _bufferSize = dataSizeInBytes;
                 ValidateBufferSize(dataSizeInBytes);
             }

@@ -98,7 +98,6 @@ namespace Veldrid.Graphics.Direct3D
         {
             if (_bufferSizeInBytes < dataSizeInBytes)
             {
-                System.Console.WriteLine("TOO SMALL, MAKING BIGGER, NEED " + dataSizeInBytes);
                 Buffer oldBuffer = Buffer;
                 int previousWidth = _bufferSizeInBytes;
                 _bufferSizeInBytes = dataSizeInBytes;

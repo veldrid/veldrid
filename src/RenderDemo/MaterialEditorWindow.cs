@@ -69,14 +69,18 @@ namespace Veldrid.RenderDemo
         public bool Draw(string label, ref object obj)
         {
             ImGui.PushID(label);
+            bool result;
             if (obj == null)
             {
-                return DrawNewItemSelector(label, ref obj);
+                result = DrawNewItemSelector(label, ref obj);
             }
             else
             {
-                return DrawNonNull(label, ref obj);
+                result = DrawNonNull(label, ref obj);
             }
+            ImGui.PopID();
+
+            return result;
         }
 
         protected abstract bool DrawNonNull(string label, ref object obj);
@@ -84,7 +88,7 @@ namespace Veldrid.RenderDemo
         {
             ImGui.Text(label + ": NULL ");
             ImGui.SameLine();
-            if (ImGui.Button($"Create New##{label}"))
+            if (ImGui.Button($"Create New"))
             {
                 obj = CreateNewObject();
                 return true;
@@ -412,6 +416,7 @@ namespace Veldrid.RenderDemo
         protected override bool DrawNonNull(string label, ref object obj)
         {
             ImGui.PushID(label);
+
             if (ImGui.TreeNode(label))
             {
                 foreach (PropertyInfo pi in _properties)

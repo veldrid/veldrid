@@ -13,6 +13,8 @@ namespace Veldrid.Assets
         public MaterialPerObjectInputElement[] PerObjectInputs { get; private set; }
         public ContextTextureInputElement TextureInputs { get; private set; }
 
+        public int[] TestArrayOfInts { get; private set; }
+
         public Material Create(RenderContext rc)
         {
             var materialTextureInputs = new MaterialTextureInputs(TextureInputs);

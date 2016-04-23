@@ -35,8 +35,8 @@ namespace Veldrid.RenderDemo
 
         public void Render(RenderContext context, string pipelineStage)
         {
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(260, 600), SetCondition.Always);
-            ImGui.SetNextWindowPos(new System.Numerics.Vector2(context.Window.Width - 270, 20), SetCondition.Always);
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(450, 600), SetCondition.Always);
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(context.Window.Width - 470, 20), SetCondition.Always);
             if (ImGui.BeginWindow("Editor Window", WindowFlags.NoMove | WindowFlags.NoResize))
             {
                 _editor.DrawObject("Material", ref _materialAsset);
@@ -66,7 +66,45 @@ namespace Veldrid.RenderDemo
     {
         public Type TypeDrawn { get; }
 
-        public abstract bool Draw(string label, ref object obj);
+        public bool Draw(string label, ref object obj)
+        {
+            ImGui.PushID(label);
+            if (obj == null)
+            {
+                return DrawNewItemSelector(label, ref obj);
+            }
+            else
+            {
+                return DrawNonNull(label, ref obj);
+            }
+        }
+
+        protected abstract bool DrawNonNull(string label, ref object obj);
+        protected virtual bool DrawNewItemSelector(string label, ref object obj)
+        {
+            ImGui.Text(label + ": NULL ");
+            ImGui.SameLine();
+            if (ImGui.Button($"Create New##{label}"))
+            {
+                obj = CreateNewObject();
+                return true;
+            }
+
+            return false;
+        }
+
+        public virtual object CreateNewObject()
+        {
+            try
+            {
+                return Activator.CreateInstance(TypeDrawn);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException("Error creating instance of " + TypeDrawn, e);
+            }
+        }
+
         public Drawer(Type type)
         {
             TypeDrawn = type;
@@ -79,11 +117,10 @@ namespace Veldrid.RenderDemo
         {
             { typeof(int), new FuncDrawer<int>(GenericDrawFuncs.DrawInt) },
             { typeof(float), new FuncDrawer<float>(GenericDrawFuncs.DrawSingle) },
-            { typeof(string), new FuncDrawer<string>(GenericDrawFuncs.DrawString) },
+            { typeof(byte), new FuncDrawer<byte>(GenericDrawFuncs.DrawByte) },
+            { typeof(string), new FuncDrawer<string>(GenericDrawFuncs.DrawString, GenericDrawFuncs.NewString) },
             { typeof(bool), new FuncDrawer<bool>(GenericDrawFuncs.DrawBool) }
         };
-
-        private static Dictionary<Type, Drawer> s_newItemDrawers = new Dictionary<Type, Drawer>();
 
         public static Drawer GetDrawer(Type type)
         {
@@ -97,18 +134,6 @@ namespace Veldrid.RenderDemo
             return d;
         }
 
-        public static Drawer GetNewItemDrawer(Type type)
-        {
-            Drawer d;
-            if (!s_newItemDrawers.TryGetValue(type, out d))
-            {
-                d = new NewItemDrawer(type);
-                s_newItemDrawers.Add(type, d);
-            }
-
-            return d;
-        }
-
         private static Drawer CreateDrawer(Type type)
         {
             TypeInfo ti = type.GetTypeInfo();
@@ -116,9 +141,13 @@ namespace Veldrid.RenderDemo
             {
                 return new EnumDrawer(type);
             }
+            else if (ti.IsArray)
+            {
+                return (Drawer)Activator.CreateInstance(typeof(ArrayDrawer<>).MakeGenericType(type.GetElementType()));
+            }
             else if (ti.IsAbstract)
             {
-                return new NewItemDrawer(type);
+                return new AbstractItemDrawer(type);
             }
             else
             {
@@ -131,7 +160,7 @@ namespace Veldrid.RenderDemo
     {
         public Drawer() : base(typeof(T)) { }
 
-        public sealed override bool Draw(string label, ref object obj)
+        protected sealed override bool DrawNonNull(string label, ref object obj)
         {
             T tObj;
             try
@@ -155,15 +184,29 @@ namespace Veldrid.RenderDemo
     public class FuncDrawer<T> : Drawer<T>
     {
         private readonly DrawFunc<T> _drawFunc;
+        private readonly Func<object> _newFunc;
 
-        public FuncDrawer(DrawFunc<T> drawFunc)
+        public FuncDrawer(DrawFunc<T> drawFunc, Func<object> newFunc = null)
         {
             _drawFunc = drawFunc;
+            _newFunc = newFunc;
         }
 
         public override bool Draw(string label, ref T obj)
         {
             return _drawFunc(label, ref obj);
+        }
+
+        public override object CreateNewObject()
+        {
+            if (_newFunc != null)
+            {
+                return _newFunc();
+            }
+            else
+            {
+                return base.CreateNewObject();
+            }
         }
     }
 
@@ -195,16 +238,39 @@ namespace Veldrid.RenderDemo
             return result;
         }
 
+        public static object NewString()
+        {
+            return string.Empty;
+        }
+
         public static bool DrawInt(string label, ref int i)
         {
-            ImGui.PushItemWidth(80f);
-            return ImGui.DragInt(label, ref i, 1f, int.MinValue, int.MaxValue, i.ToString());
+            ImGui.PushItemWidth(50f);
+            bool result = ImGui.DragInt(label, ref i, 1f, int.MinValue, int.MaxValue, i.ToString());
+            ImGui.PopItemWidth();
+            return result;
         }
 
         public static bool DrawSingle(string label, ref float f)
         {
-            ImGui.PushItemWidth(40f);
-            return ImGui.DragFloat(label, ref f, -1000f, 1000f, 1f, f.ToString(), 1f);
+            ImGui.PushItemWidth(50f);
+            bool result = ImGui.DragFloat(label, ref f, -1000f, 1000f, 1f, f.ToString(), 1f);
+            ImGui.PopItemWidth();
+            return result;
+        }
+
+        public static bool DrawByte(string label, ref byte b)
+        {
+            ImGui.PushItemWidth(50f);
+            int val = b;
+            if (ImGui.DragInt(label, ref val, 1f, byte.MinValue, byte.MaxValue, b.ToString()))
+            {
+                b = (byte)val;
+                ImGui.PopItemWidth();
+                return true;
+            }
+            ImGui.PopItemWidth();
+            return false;
         }
 
         public static bool DrawBool(string label, ref bool b)
@@ -222,10 +288,11 @@ namespace Veldrid.RenderDemo
             _enumOptions = Enum.GetNames(enumType);
         }
 
-        public override bool Draw(string label, ref object obj)
+        protected override bool DrawNonNull(string label, ref object obj)
         {
             bool result = false;
-            if (ImGui.BeginMenu(label))
+            string menuLabel = $"{label}: {obj.ToString()}";
+            if (ImGui.BeginMenu(menuLabel))
             {
                 foreach (string item in _enumOptions)
                 {
@@ -242,6 +309,97 @@ namespace Veldrid.RenderDemo
         }
     }
 
+    public class ArrayDrawer<T> : Drawer
+    {
+        private readonly bool _isValueType;
+
+        public ArrayDrawer() : base(typeof(T[]))
+        {
+            _isValueType = typeof(T).GetTypeInfo().IsValueType;
+        }
+
+        protected override bool DrawNonNull(string label, ref object obj)
+        {
+            T[] arr = (T[])obj;
+            int length = arr.Length;
+            bool newArray = false;
+
+            ImGui.Text($"{TypeDrawn.Name}[{length}]");
+            for (int i = 0; i < length; i++)
+            {
+                ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Red.ToVector4());
+                if (ImGui.Button("X", new System.Numerics.Vector2(15, 15)))
+                {
+                    ShiftArrayDown(arr, i);
+                    Array.Resize(ref arr, length - 1);
+                    newArray = true;
+                    length -= 1;
+                    ImGui.PopStyleColor();
+                    i--;
+                    continue;
+                }
+                ImGui.PopStyleColor();
+                ImGui.SameLine();
+                object element = arr[i];
+                Drawer drawer;
+                if (element == null)
+                {
+                    drawer = DrawerCache.GetDrawer(typeof(T));
+                }
+                else
+                {
+                    Type realType = element.GetType();
+                    drawer = DrawerCache.GetDrawer(realType);
+                }
+
+                bool changed = drawer.Draw($"[{i}]", ref element);
+                if (changed || drawer.TypeDrawn.GetTypeInfo().IsValueType)
+                {
+                    arr[i] = (T)element;
+                }
+            }
+
+            if (!newArray)
+            {
+                if (ImGui.SmallButton("-"))
+                {
+                    int newLength = Math.Max(length - 1, 0);
+                    Array.Resize(ref arr, newLength);
+                    newArray = true;
+                }
+                ImGui.SameLine();
+                ImGui.Spacing();
+                ImGui.SameLine();
+                if (ImGui.SmallButton("+"))
+                {
+                    Array.Resize(ref arr, length + 1);
+                    newArray = true;
+                }
+            }
+
+            if (newArray)
+            {
+                obj = arr;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void ShiftArrayDown(T[] arr, int start)
+        {
+            for (int i = start; i < arr.Length - 1; i++)
+            {
+                arr[i] = arr[i + 1];
+            }
+        }
+
+        public override object CreateNewObject()
+        {
+            return new T[0];
+        }
+    }
+
     public class ComplexItemDrawer : Drawer
     {
         private readonly PropertyInfo[] _properties;
@@ -251,15 +409,8 @@ namespace Veldrid.RenderDemo
             _properties = type.GetTypeInfo().GetProperties();
         }
 
-        public override bool Draw(string label, ref object obj)
+        protected override bool DrawNonNull(string label, ref object obj)
         {
-            if (obj == null)
-            {
-                throw new ArgumentNullException(nameof(obj));
-            }
-
-            bool result = false;
-
             ImGui.PushID(label);
             if (ImGui.TreeNode(label))
             {
@@ -274,7 +425,7 @@ namespace Veldrid.RenderDemo
                     }
                     else
                     {
-                        drawer = DrawerCache.GetNewItemDrawer(pi.PropertyType);
+                        drawer = DrawerCache.GetDrawer(pi.PropertyType);
                     }
                     bool changed = drawer.Draw(pi.Name, ref value);
                     if (changed && originalValue != value)
@@ -287,26 +438,26 @@ namespace Veldrid.RenderDemo
             }
             ImGui.PopID();
 
-            return result;
+            return false;
         }
     }
 
-    public class NewItemDrawer : Drawer
+    public class AbstractItemDrawer : Drawer
     {
         private readonly Type[] _subTypes;
 
-        public NewItemDrawer(Type type) : base(type)
+        public AbstractItemDrawer(Type type) : base(type)
         {
             _subTypes = type.GetTypeInfo().Assembly.GetTypes().Where(t => type.IsAssignableFrom(t) && !t.GetTypeInfo().IsAbstract).ToArray();
         }
 
-        public override bool Draw(string label, ref object obj)
+        protected override bool DrawNonNull(string label, ref object obj)
         {
-            if (obj != null)
-            {
-                throw new InvalidOperationException($"{nameof(NewItemDrawer)} should not be used for non-null items.");
-            }
+            throw new InvalidOperationException("AbstractItemDrawer shouldn't be used for non-null items.");
+        }
 
+        protected override bool DrawNewItemSelector(string label, ref object obj)
+        {
             bool result = false;
 
             ImGui.PushID(label);

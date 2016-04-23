@@ -2,7 +2,7 @@
 {
     public class MaterialInputs<T> where T : MaterialInputElement
     {
-        public T[] Elements { get; }
+        public T[] Elements { get; private set; }
 
         public MaterialInputs(params T[] elements)
         {
@@ -14,8 +14,8 @@
 
     public abstract class MaterialInputElement
     {
-        public string Name { get; }
-        public MaterialInputType Type { get; }
+        public string Name { get; set; }
+        public MaterialInputType Type { get; set; }
 
         public MaterialInputElement(string name, MaterialInputType type)
         {
@@ -26,7 +26,7 @@
 
     public class MaterialGlobalInputElement : MaterialInputElement
     {
-        public ConstantBufferDataProvider DataProvider { get; }
+        public ConstantBufferDataProvider DataProvider { get; private set; }
 
         public MaterialGlobalInputElement(string name, MaterialInputType type, ConstantBufferDataProvider dataProvider)
             : base(name, type)
@@ -37,12 +37,17 @@
 
     public class MaterialPerObjectInputElement : MaterialInputElement
     {
-        public int BufferSizeInBytes { get; }
+        public int BufferSizeInBytes { get; private set; }
 
         public MaterialPerObjectInputElement(string name, MaterialInputType type, int bufferSizeInBytes)
             : base(name, type)
         {
             BufferSizeInBytes = bufferSizeInBytes;
+        }
+
+        public MaterialPerObjectInputElement()
+            : this("<NONAME>", MaterialInputType.Matrix4x4, 16)
+        {
         }
     }
 }

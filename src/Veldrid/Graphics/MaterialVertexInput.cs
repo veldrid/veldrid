@@ -4,8 +4,8 @@ namespace Veldrid.Graphics
 {
     public class MaterialVertexInput
     {
-        public int VertexSizeInBytes { get; }
-        public MaterialVertexInputElement[] Elements { get; }
+        public int VertexSizeInBytes { get; set; }
+        public MaterialVertexInputElement[] Elements { get; set; }
 
         public MaterialVertexInput(int vertexSizeInBytes, params MaterialVertexInputElement[] elements)
         {

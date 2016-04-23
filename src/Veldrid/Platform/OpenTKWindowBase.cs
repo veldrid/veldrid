@@ -38,22 +38,21 @@ namespace Veldrid.Platform
             int actualWidth = _nativeWindow.Width;
             int actualHeight = _nativeWindow.Height;
 
-            Console.WriteLine($"actualWidth:{actualWidth}, desiredWidth:{desiredWidth}");
             ScaleFactor = new System.Numerics.Vector2((float)actualWidth / desiredWidth, (float)actualHeight / desiredHeight);
 
             var resolutions = DisplayDevice.Default.AvailableResolutions;
-            bool hiRes = false;
+            DisplayResolution hiRes = null;
             foreach (var res in resolutions)
             {
-                if (res.Width > 192)
+                if (res.Width > 2200)
                 {
-                    hiRes = true;
+                    hiRes = res;
                 }
             }
 
-            if (hiRes)
+            if (hiRes != null)
             {
-                Console.WriteLine("Hi-resolution display detected. Setting scale factor to 2.0");
+                Console.WriteLine($"Hi-resolution display detected: {hiRes}. Setting scale factor to 2.0");
                 ScaleFactor = new System.Numerics.Vector2(2.0f, 2.0f);
             }
 

@@ -36,7 +36,7 @@ namespace Veldrid.RenderDemo
         public void Render(RenderContext context, string pipelineStage)
         {
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(450, 600), SetCondition.Always);
-            ImGui.SetNextWindowPos(new System.Numerics.Vector2(context.Window.Width / 2 - 470, 20), SetCondition.Always);
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(context.Window.Width / context.Window.ScaleFactor.X - 470, 20), SetCondition.Always);
             if (ImGui.BeginWindow("Editor Window", WindowFlags.NoMove | WindowFlags.NoResize))
             {
                 _editor.DrawObject("Material", ref _materialAsset);

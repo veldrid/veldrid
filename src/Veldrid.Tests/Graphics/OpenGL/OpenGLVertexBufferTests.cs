@@ -39,10 +39,6 @@ namespace Veldrid.Graphics.OpenGL
 
             float[] returned = new float[vertexData.Length + 250];
             vb.GetData(returned, returned.Length * sizeof(float));
-            for (int i = 0; i < 250; i++)
-            {
-                Assert.Equal(0, returned[i]);
-            }
             for (int i = 250; i < returned.Length; i++)
             {
                 Assert.Equal(vertexData[i - 250], returned[i]);

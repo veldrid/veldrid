@@ -52,7 +52,7 @@ namespace Veldrid.Platform
 
             if (hiRes != null)
             {
-                Console.WriteLine($"Hi-resolution display detected: {hiRes}. Setting scale factor to 2.0");
+                Console.WriteLine($"High-resolution display detected: {hiRes}. Setting scale factor to 2.0");
                 ScaleFactor = new System.Numerics.Vector2(2.0f, 2.0f);
             }
 

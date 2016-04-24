@@ -25,9 +25,11 @@
     <Compile Include="Assets\Models\PlaneModel.cs" />
     <Compile Include="MaterialEditorWindow.cs" />
     <Compile Include="PixelFormatConversion.cs" />
+    <Compile Include="Preferences.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ShadowCaster.cs" />
     <Compile Include="ShadowMapPreview.cs" />
+    <Compile Include="SpecialFolders.cs" />
     <Compile Include="SwappableRenderItem.cs" />
     <Compile Include="TeapotRenderer.cs" />
     <Compile Include="TestItem.cs" />

@@ -16,16 +16,24 @@ namespace Veldrid.Graphics.OpenGL
 
         public DebugSeverity MinimumLogSeverity { get; set; } = DebugSeverity.DebugSeverityLow;
 
-        public OpenGLRenderContext(OpenTKWindow window)
+        public OpenGLRenderContext(OpenTKWindow window,
+#if DEBUG
+        bool debugContext = true)
+#else
+        bool debugContext = false)
+#endif
             : base(window)
         {
             _resourceFactory = new OpenGLResourceFactory();
 
-#if DEBUG
-            _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo, 4, 3, GraphicsContextFlags.Debug);
-#else
-            _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo);
-#endif
+            if (debugContext)
+            {
+                _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo, 4, 3, GraphicsContextFlags.Debug);
+            }
+            else
+            {
+                _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo);
+            }
             _openGLGraphicsContext.MakeCurrent(window.OpenTKWindowInfo);
 
             _openGLGraphicsContext.LoadAll();
@@ -41,10 +49,11 @@ namespace Veldrid.Graphics.OpenGL
 
             PostContextCreated();
 
-#if DEBUG
-            GL.Enable(EnableCap.DebugOutput);
-            GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
-#endif
+            if (debugContext)
+            {
+                GL.Enable(EnableCap.DebugOutput);
+                GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
+            }
         }
 
         private void DebugCallback(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam)

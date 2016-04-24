@@ -82,7 +82,11 @@ namespace Veldrid.RenderDemo
                 }
                 else
                 {
-                    _rc = new OpenGLRenderContext(_window);
+                    bool debugContext = false;
+#if DEBUG
+                    debugContext = Preferences.Instance.AllowDebugContexts;
+#endif
+                    _rc = new OpenGLRenderContext(_window, debugContext);
                 }
 
                 _renderer = new Renderer(_rc, new PipelineStage[]
@@ -555,6 +559,11 @@ namespace Veldrid.RenderDemo
                     }
                     ImGui.EndMenu();
                 }
+                if (ImGui.BeginMenu("View"))
+                {
+
+                }
+
                 ImGui.EndMainMenuBar();
             }
 

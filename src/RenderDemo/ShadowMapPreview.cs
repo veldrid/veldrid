@@ -77,7 +77,7 @@ namespace Veldrid.RenderDemo
 
             float width = _imageWidth * rc.Window.ScaleFactor.X;
             _worldMatrixProvider.Data = Matrix4x4.CreateScale(width)
-                * Matrix4x4.CreateTranslation(rc.Window.Width - _imageWidth - 20, 20, 0);
+                * Matrix4x4.CreateTranslation(rc.Window.Width - width - 20, 20 * rc.Window.ScaleFactor.Y, 0);
 
             rc.SetVertexBuffer(_vertexBuffer);
             rc.SetIndexBuffer(_indexBuffer);

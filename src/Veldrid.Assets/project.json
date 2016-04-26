@@ -14,7 +14,6 @@
     "SharpDX.D3DCompiler": "3.0.1",
     "SharpDX.Direct3D11": "3.0.1",
     "SharpDX.DXGI": "3.0.1",
-    "Veldrid": { "target": "project" },
   },
   "frameworks": {
     "netstandard1.5": {

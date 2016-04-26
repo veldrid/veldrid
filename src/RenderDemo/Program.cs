@@ -61,6 +61,7 @@ namespace Veldrid.RenderDemo
 
         private static bool _onWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         private static MaterialEditorWindow _editorWindow;
+        private static bool _preferencesEditorOpened;
 
         public static void Main()
         {
@@ -78,13 +79,21 @@ namespace Veldrid.RenderDemo
                 bool preferD3D = true;
                 if (preferD3D && _onWindows)
                 {
-                    _rc = new D3DRenderContext(_window);
+
+                    SharpDX.Direct3D11.DeviceCreationFlags flags = SharpDX.Direct3D11.DeviceCreationFlags.None;
+#if DEBUG
+                    if (Preferences.Instance.AllowDirect3DDebugDevice)
+                    {
+                        flags |= SharpDX.Direct3D11.DeviceCreationFlags.Debug;
+                    }
+#endif
+                    _rc = new D3DRenderContext(_window, flags);
                 }
                 else
                 {
                     bool debugContext = false;
 #if DEBUG
-                    debugContext = Preferences.Instance.AllowDebugContexts;
+                    debugContext = Preferences.Instance.AllowOpenGLDebugContexts;
 #endif
                     _rc = new OpenGLRenderContext(_window, debugContext);
                 }
@@ -334,126 +343,6 @@ namespace Veldrid.RenderDemo
 
             DrawMainMenu();
 
-            bool opened = false;
-            float width = Math.Max(100, Math.Min(200, _window.Width * .4f));
-            ImGui.SetNextWindowPos(new Vector2(20, 20), SetCondition.Always);
-            if (ImGui.BeginWindow("Scenes", ref opened, new Vector2(width, 380), 0.8f, WindowFlags.NoMove | WindowFlags.NoResize))
-            {
-                if (ImGui.Button("Boxes"))
-                {
-                    _circleWidth = 12.0;
-                    _visiblityManager = SceneWithBoxes();
-                }
-                if (ImGui.Button("Teapot"))
-                {
-                    _circleWidth = 5.0;
-                    _visiblityManager = SceneWithTeapot();
-                }
-                if (ImGui.Button("Shadows"))
-                {
-                    _circleWidth = 15.0;
-                    _visiblityManager = SceneWithShadows();
-                }
-                if (ImGui.Button("Editor"))
-                {
-                    _visiblityManager = EditorScene();
-                }
-
-                if (ImGui.SliderFloat("FOV", ref _fieldOfViewRadians, 0.05f, (float)Math.PI - .01f, _fieldOfViewRadians.ToString(), 1f))
-                {
-                    SetProjectionMatrix();
-                }
-
-                if (ImGui.Checkbox("Wireframe", ref _wireframe))
-                {
-                    if (_wireframe)
-                    {
-                        _rc.SetRasterizerState(_wireframeRasterizerState);
-                    }
-                    else
-                    {
-                        _rc.SetRasterizerState(_rc.DefaultRasterizerState);
-                    }
-                }
-
-                string cameraLabel = _autoRotateCamera ? "Camera: Auto" : "Camera: WASD";
-                bool colorLabel = _autoRotateCamera;
-                if (colorLabel)
-                {
-                    ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
-                    ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
-                }
-                if (ImGui.Button(cameraLabel))
-                {
-                    _autoRotateCamera = !_autoRotateCamera;
-                }
-                if (colorLabel)
-                {
-                    ImGui.PopStyleColor(2);
-                }
-
-                ImGui.Checkbox("Auto-Rotate Light", ref _moveLight);
-
-                bool isD3D11 = _rc is D3DRenderContext;
-                bool isOpenGL = !isD3D11;
-
-                if (_onWindows)
-                {
-                    if (isD3D11)
-                    {
-                        ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
-                        ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
-                    }
-                    if (ImGui.Button("D3D11"))
-                    {
-                        ChangeRenderContext(d3d: true);
-                    }
-                    if (isD3D11)
-                    {
-                        ImGui.PopStyleColor(2);
-                    }
-                    if (isOpenGL)
-                    {
-                        ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
-                        ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
-                    }
-                    if (ImGui.Button("OpenGL"))
-                    {
-                        ChangeRenderContext(d3d: false);
-                    }
-                    if (isOpenGL)
-                    {
-                        ImGui.PopStyleColor(2);
-                    }
-                }
-
-                if (ImGui.Checkbox("Limit Framerate", ref _limitFrameRate))
-                {
-                    var threadedWindow = _window as DedicatedThreadWindow;
-                    if (threadedWindow != null)
-                    {
-                        threadedWindow.LimitPollRate = _limitFrameRate;
-                    }
-                }
-
-                ImGui.Text("Pipeline Stages:");
-                if (ImGui.BeginChildFrame(1, new Vector2(width * .75f, 0), WindowFlags.ShowBorders))
-                {
-                    foreach (var stage in _renderer.Stages)
-                    {
-                        bool enabled = stage.Enabled;
-                        if (ImGui.Checkbox(stage.Name, ref enabled))
-                        {
-                            stage.Enabled = !stage.Enabled;
-                        }
-                    }
-                    ImGui.EndChildFrame();
-                }
-
-            }
-            ImGui.EndWindow();
-
-
             _fta.AddTime(deltaMilliseconds);
 
             string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
@@ -551,6 +440,136 @@ namespace Veldrid.RenderDemo
 
             if (ImGui.BeginMainMenuBar())
             {
+                if (ImGui.BeginMenu("Scenes"))
+                {
+
+                    bool boxScene = _visiblityManager == _boxSceneVM;
+                    if (boxScene)
+                        ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
+                    if (ImGui.MenuItem("Boxes", null))
+                    {
+                        _circleWidth = 12.0;
+                        _visiblityManager = SceneWithBoxes();
+                    }
+                    if (boxScene)
+                        ImGui.PopStyleColor();
+
+                    bool teapotScene = _visiblityManager == _teapotVM;
+                    if (teapotScene)
+                        ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
+                    if (ImGui.MenuItem("Teapot", null))
+                    {
+                        _circleWidth = 5.0;
+                        _visiblityManager = SceneWithTeapot();
+                    }
+                    if (teapotScene)
+                        ImGui.PopStyleColor();
+
+                    bool shadowsScene = _visiblityManager == _shadowsScene;
+                    if (shadowsScene)
+                        ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
+                    if (ImGui.MenuItem("Shadows", null))
+                    {
+                        _circleWidth = 15.0;
+                        _visiblityManager = SceneWithShadows();
+                    }
+                    if (shadowsScene)
+                        ImGui.PopStyleColor();
+
+                    bool editorScene = _visiblityManager == _editorScene;
+                    if (editorScene)
+                        ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
+                    if (ImGui.MenuItem("Editor", null))
+                    {
+                        _visiblityManager = EditorScene();
+                    }
+                    if (editorScene)
+                        ImGui.PopStyleColor();
+                    ImGui.EndMenu();
+                }
+                if (ImGui.BeginMenu("View"))
+                {
+                    if (ImGui.Checkbox("Wireframe", ref _wireframe))
+                    {
+                        if (_wireframe)
+                        {
+                            _rc.SetRasterizerState(_wireframeRasterizerState);
+                        }
+                        else
+                        {
+                            _rc.SetRasterizerState(_rc.DefaultRasterizerState);
+                        }
+                    }
+                    if (ImGui.Checkbox("Limit Framerate", ref _limitFrameRate))
+                    {
+                        var threadedWindow = _window as DedicatedThreadWindow;
+                        if (threadedWindow != null)
+                        {
+                            threadedWindow.LimitPollRate = _limitFrameRate;
+                        }
+                    }
+
+                    ImGui.Checkbox("Auto-Rotate Light", ref _moveLight);
+
+                    string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
+                    if (ImGui.BeginMenu($"Renderer: {apiName}"))
+                    {
+                        if (ImGui.MenuItem("D3D", null))
+                        {
+                            ChangeRenderContext(d3d: true);
+                        }
+                        if (ImGui.MenuItem("OpenGL", null))
+                        {
+                            ChangeRenderContext(d3d: false);
+                        }
+
+                        ImGui.EndMenu();
+                    }
+
+                    if (ImGui.SliderFloat("FOV", ref _fieldOfViewRadians, 0.05f, (float)Math.PI - .01f, _fieldOfViewRadians.ToString(), 1f))
+                    {
+                        SetProjectionMatrix();
+                    }
+
+                    string cameraLabel = _autoRotateCamera ? "Camera: Auto" : "Camera: WASD";
+                    bool colorLabel = _autoRotateCamera;
+                    if (colorLabel)
+                    {
+                        ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Cyan.ToVector4());
+                        ImGui.PushStyleColor(ColorTarget.ButtonHovered, RgbaFloat.Cyan.ToVector4());
+                    }
+                    if (ImGui.Button(cameraLabel))
+                    {
+                        _autoRotateCamera = !_autoRotateCamera;
+                    }
+                    if (colorLabel)
+                    {
+                        ImGui.PopStyleColor(2);
+                    }
+
+                    if (ImGui.BeginMenu("Pipeline Stages"))
+                    {
+                        foreach (var stage in _renderer.Stages)
+                        {
+                            bool enabled = stage.Enabled;
+                            if (ImGui.Checkbox(stage.Name, ref enabled))
+                            {
+                                stage.Enabled = !stage.Enabled;
+                            }
+                        }
+                        ImGui.EndMenu();
+                    }
+
+                    ImGui.EndMenu();
+                }
+                if (ImGui.BeginMenu("Edit"))
+                {
+                    if (ImGui.MenuItem("Edit Preferences", null))
+                    {
+                        _preferencesEditorOpened = true;
+                    }
+                    ImGui.EndMenu();
+                }
                 if (ImGui.BeginMenu("About"))
                 {
                     if (ImGui.MenuItem("About Veldrid", null))
@@ -558,10 +577,6 @@ namespace Veldrid.RenderDemo
                         triggerPopup = true;
                     }
                     ImGui.EndMenu();
-                }
-                if (ImGui.BeginMenu("View"))
-                {
-
                 }
 
                 ImGui.EndMainMenuBar();
@@ -585,6 +600,28 @@ https://github.com/mellinoe/veldrid.");
                 ImGui.Text(
 @"Direct3D bindings using SharpDX (https://github.com/sharpdx/sharpdx).");
                 ImGui.EndPopup();
+            }
+
+            DrawPreferencesEditor();
+        }
+
+        private static void DrawPreferencesEditor()
+        {
+            if (_preferencesEditorOpened)
+            {
+                ImGui.SetNextWindowSize(new Vector2(400, 300), SetCondition.FirstUseEver);
+                if (ImGui.BeginWindow("Preferences Editor", ref _preferencesEditorOpened, WindowFlags.NoCollapse | WindowFlags.ShowBorders))
+                {
+                    object prefs = Preferences.Instance;
+                    Drawer d = new ComplexItemDrawer(typeof(Preferences), false);
+                    ImGui.SetNextTreeNodeOpened(true, SetCondition.FirstUseEver);
+                    d.Draw("Preferences", ref prefs);
+                    if (ImGui.Button("Save"))
+                    {
+                        Preferences.Instance.Save();
+                    }
+                }
+                ImGui.EndWindow();
             }
         }
 

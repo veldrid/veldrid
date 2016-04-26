@@ -407,17 +407,21 @@ namespace Veldrid.RenderDemo
     public class ComplexItemDrawer : Drawer
     {
         private readonly PropertyInfo[] _properties;
+        private readonly bool _drawRootNode;
 
-        public ComplexItemDrawer(Type type) : base(type)
+        public ComplexItemDrawer(Type type) : this(type, true) { }
+        public ComplexItemDrawer(Type type, bool drawRootNode)
+            : base(type)
         {
-            _properties = type.GetTypeInfo().GetProperties();
+            _drawRootNode = drawRootNode;
+            _properties = type.GetTypeInfo().GetProperties(BindingFlags.Instance | BindingFlags.Public);
         }
 
         protected override bool DrawNonNull(string label, ref object obj)
         {
             ImGui.PushID(label);
 
-            if (ImGui.TreeNode(label))
+            if (!_drawRootNode || ImGui.TreeNode(label))
             {
                 foreach (PropertyInfo pi in _properties)
                 {
@@ -439,7 +443,10 @@ namespace Veldrid.RenderDemo
                     }
                 }
 
-                ImGui.TreePop();
+                if (_drawRootNode)
+                {
+                    ImGui.TreePop();
+                }
             }
             ImGui.PopID();
 

@@ -7,9 +7,10 @@ namespace Veldrid.Graphics.OpenGL
     {
         public DrawElementsType ElementsType { get; private set; }
 
-        public OpenGLIndexBuffer(bool isDynamic)
+        public OpenGLIndexBuffer(bool isDynamic, DrawElementsType elementsType = DrawElementsType.UnsignedInt)
             : base(BufferTarget.ElementArrayBuffer)
         {
+            ElementsType = elementsType;
         }
 
         public void Apply()

@@ -67,6 +67,10 @@ namespace Veldrid.Graphics.Direct3D
         {
             return new D3DIndexBuffer(_device, sizeInBytes, isDynamic);
         }
+        public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format)
+        {
+            return new D3DIndexBuffer(_device, sizeInBytes, isDynamic, D3DFormats.ConvertIndexFormat(format));
+        }
 
         public override Material CreateMaterial(
             RenderContext rc,

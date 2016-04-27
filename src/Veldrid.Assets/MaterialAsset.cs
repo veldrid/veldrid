@@ -8,12 +8,10 @@ namespace Veldrid.Assets
         public string Name { get; private set; } = "NONAME";
         public string VertexShader { get; private set; } = "NOVERTEXSHADER";
         public string FragmentShader { get; private set; } = "NOFRAGMENTSHADER";
-        public MaterialVertexInput VertexInputs { get; private set; }
-        public MaterialGlobalInputDescription[] GlobalInputs { get; private set; }
-        public MaterialPerObjectInputElement[] PerObjectInputs { get; private set; }
-        public ContextTextureInputElement TextureInputs { get; private set; }
-
-        public int[] TestArrayOfInts { get; private set; }
+        public MaterialVertexInput VertexInputs { get; private set; } = new MaterialVertexInput();
+        public MaterialGlobalInputDescription[] GlobalInputs { get; private set; } = new MaterialGlobalInputDescription[0];
+        public MaterialPerObjectInputElement[] PerObjectInputs { get; private set; } = new MaterialPerObjectInputElement[0];
+        public ContextTextureInputElement TextureInputs { get; private set; } = new ContextTextureInputElement();
 
         public Material Create(RenderContext rc)
         {

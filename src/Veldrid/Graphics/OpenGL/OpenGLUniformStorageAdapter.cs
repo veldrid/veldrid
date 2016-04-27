@@ -128,5 +128,14 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        public IntPtr MapBuffer(int numBytes)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void UnmapBuffer()
+        {
+            throw new NotSupportedException();
+        }
     }
 }

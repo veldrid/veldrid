@@ -14,5 +14,8 @@ namespace Veldrid.Graphics
         void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct;
         void GetData<T>(ref T storageLocation, int storageSizeInBytes) where T : struct;
         void GetData(IntPtr storageLocation, int storageSizeInBytes);
+
+        IntPtr MapBuffer(int numBytes);
+        void UnmapBuffer();
     }
 }

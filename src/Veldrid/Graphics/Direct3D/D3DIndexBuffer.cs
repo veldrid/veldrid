@@ -9,7 +9,7 @@ namespace Veldrid.Graphics.Direct3D
         private SharpDX.DXGI.Format _format;
         private int _offset = 0;
 
-        public D3DIndexBuffer(Device device, int sizeInBytes, bool isDynamic)
+        public D3DIndexBuffer(Device device, int sizeInBytes, bool isDynamic, SharpDX.DXGI.Format format = SharpDX.DXGI.Format.Unknown)
             : base(device,
                   sizeInBytes,
                   BindFlags.IndexBuffer,
@@ -17,10 +17,15 @@ namespace Veldrid.Graphics.Direct3D
                   isDynamic ? CpuAccessFlags.Write : CpuAccessFlags.None)
         {
             _device = device;
+            _format = format;
         }
 
         public void Apply()
         {
+            if (_format == SharpDX.DXGI.Format.Unknown)
+            {
+                throw new InvalidOperationException("IndexBuffer format is Unknown.");
+            }
             _device.ImmediateContext.InputAssembler.SetIndexBuffer(Buffer, _format, _offset);
         }
 

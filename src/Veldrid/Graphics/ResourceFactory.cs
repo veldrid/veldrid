@@ -7,6 +7,7 @@ namespace Veldrid.Graphics
         public abstract VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic);
 
         public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic);
+        public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format);
 
         public abstract Material CreateMaterial(
             RenderContext rc,

@@ -129,6 +129,20 @@ namespace Veldrid.Graphics.OpenGL
 #endif
         }
 
+        public IntPtr MapBuffer(int numBytes)
+        {
+            EnsureBufferSize(numBytes);
+            return GL.MapBuffer(_target, BufferAccess.WriteOnly);
+        }
+
+        public void UnmapBuffer()
+        {
+            if (GL.UnmapBuffer(_target))
+            {
+                throw new InvalidOperationException("GL.UnmapBuffer failed.");
+            }
+        }
+
         public void Dispose()
         {
             GL.DeleteBuffer(_bufferID);

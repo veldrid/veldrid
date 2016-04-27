@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Veldrid.Graphics;
-using Veldrid.Graphics.Pipeline;
 using Veldrid.Platform;
 
 namespace Veldrid.RenderDemo
@@ -21,6 +20,7 @@ namespace Veldrid.RenderDemo
         private IndexBuffer _indexBuffer;
         private BlendState _blendState;
         private DepthStencilState _depthDisabledState;
+        private RasterizerState _rasterizerState;
 
         private float _wheelPosition;
 
@@ -46,6 +46,7 @@ namespace Veldrid.RenderDemo
                 Blend.InverseSourceAlpha, Blend.Zero, BlendFunction.Add,
                 Blend.SourceAlpha, Blend.InverseSourceAlpha, BlendFunction.Add);
             _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
+            _rasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true);
             _material = factory.CreateMaterial(
                 rc,
                 "imgui-vertex", "imgui-frag",
@@ -229,6 +230,7 @@ namespace Veldrid.RenderDemo
 
             rc.SetBlendState(_blendState);
             rc.SetDepthStencilState(_depthDisabledState);
+            rc.SetRasterizerState(_rasterizerState);
             rc.SetVertexBuffer(_vertexBuffer);
             rc.SetIndexBuffer(_indexBuffer);
             rc.SetMaterial(_material);

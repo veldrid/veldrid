@@ -17,11 +17,15 @@ namespace Veldrid.RenderDemo
 
         private TestItem _testItem = new TestItem();
         private MaterialAsset _materialAsset = new MaterialAsset();
+        private bool _windowOpened = false;
+
         public MaterialAsset MaterialAsset => _materialAsset;
 
         public void ChangeRenderContext(RenderContext rc)
         {
         }
+
+        public void Open() => _windowOpened = true;
 
         public RenderOrderKey GetRenderOrderKey()
         {
@@ -35,13 +39,17 @@ namespace Veldrid.RenderDemo
 
         public void Render(RenderContext context, string pipelineStage)
         {
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(450, 600), SetCondition.Always);
-            ImGui.SetNextWindowPos(new System.Numerics.Vector2(context.Window.Width / context.Window.ScaleFactor.X - 470, 20), SetCondition.Always);
-            if (ImGui.BeginWindow("Editor Window", WindowFlags.NoMove | WindowFlags.NoResize))
+            ImGui.SetNextWindowSize(new System.Numerics.Vector2(450, Math.Min(600, ImGui.GetIO().DisplaySize.Y - 40)), SetCondition.FirstUseEver);
+
+            if (_windowOpened)
             {
-                _editor.DrawObject("Material", ref _materialAsset);
+                if (ImGui.BeginWindow("Editor Window", ref _windowOpened, WindowFlags.ShowBorders))
+                {
+                    _editor.DrawObject("Material", ref _materialAsset);
+                }
+
+                ImGui.EndWindow();
             }
-            ImGui.EndWindow();
         }
     }
 
@@ -69,6 +77,13 @@ namespace Veldrid.RenderDemo
         public bool Draw(string label, ref object obj)
         {
             ImGui.PushID(label);
+
+            const int levelMargin = 5;
+            ImGui.PushItemWidth(levelMargin);
+            ImGui.LabelText("", "");
+            ImGui.PopItemWidth();
+            ImGui.SameLine();
+            ImGuiNative.igBeginGroup();
             bool result;
             if (obj == null)
             {
@@ -78,6 +93,8 @@ namespace Veldrid.RenderDemo
             {
                 result = DrawNonNull(label, ref obj);
             }
+            ImGuiNative.igEndGroup();
+
             ImGui.PopID();
 
             return result;
@@ -93,7 +110,10 @@ namespace Veldrid.RenderDemo
                 obj = CreateNewObject();
                 return true;
             }
-
+            if (ImGui.IsLastItemHovered())
+            {
+                ImGui.ShowTooltip($"Creates a new {TypeDrawn.Name}.");
+            }
             return false;
         }
 
@@ -230,7 +250,10 @@ namespace Veldrid.RenderDemo
             for (int i = 0; i < 200; i++) { ((byte*)stringStorage.ToPointer())[i] = 0; }
             IntPtr ansiStringPtr = Marshal.StringToHGlobalAnsi(s);
             SharpDX.Utilities.CopyMemory(stringStorage, ansiStringPtr, s.Length);
+            float stringWidth = ImGui.GetTextSize(label).X;
+            ImGui.PushItemWidth(ImGui.GetContentRegionAvailableWidth() - stringWidth - 10);
             result |= ImGui.InputText(label, stringStorage, 200, InputTextFlags.Default, null);
+            ImGui.PopItemWidth();
             if (result)
             {
                 string newString = Marshal.PtrToStringAnsi(stringStorage);
@@ -328,57 +351,72 @@ namespace Veldrid.RenderDemo
             int length = arr.Length;
             bool newArray = false;
 
-            ImGui.Text($"{TypeDrawn.Name}[{length}]");
-            for (int i = 0; i < length; i++)
+            if (ImGui.TreeNode($"{label}[{length}]###{label}"))
             {
-                ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Red.ToVector4());
-                if (ImGui.Button("X", new System.Numerics.Vector2(15, 15)))
+                if (ImGui.IsLastItemHovered())
                 {
-                    ShiftArrayDown(arr, i);
-                    Array.Resize(ref arr, length - 1);
-                    newArray = true;
-                    length -= 1;
+                    ImGui.ShowTooltip($"{TypeDrawn.GetElementType()}[{arr.Length}]");
+                }
+
+                if (!newArray)
+                {
+                    if (ImGui.SmallButton("-"))
+                    {
+                        int newLength = Math.Max(length - 1, 0);
+                        Array.Resize(ref arr, newLength);
+                        newArray = true;
+                    }
+                    ImGui.SameLine();
+                    ImGui.Spacing();
+                    ImGui.SameLine();
+                    if (ImGui.SmallButton("+"))
+                    {
+                        Array.Resize(ref arr, length + 1);
+                        newArray = true;
+                    }
+                }
+
+                length = arr.Length;
+
+                for (int i = 0; i < length; i++)
+                {
+                    ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Red.ToVector4());
+                    if (ImGui.Button($"X##{i}", new System.Numerics.Vector2(15, 15)))
+                    {
+                        ShiftArrayDown(arr, i);
+                        Array.Resize(ref arr, length - 1);
+                        newArray = true;
+                        length -= 1;
+                        ImGui.PopStyleColor();
+                        i--;
+                        continue;
+                    }
                     ImGui.PopStyleColor();
-                    i--;
-                    continue;
-                }
-                ImGui.PopStyleColor();
-                ImGui.SameLine();
-                object element = arr[i];
-                Drawer drawer;
-                if (element == null)
-                {
-                    drawer = DrawerCache.GetDrawer(typeof(T));
-                }
-                else
-                {
-                    Type realType = element.GetType();
-                    drawer = DrawerCache.GetDrawer(realType);
+                    ImGui.SameLine();
+                    object element = arr[i];
+                    Drawer drawer;
+                    if (element == null)
+                    {
+                        drawer = DrawerCache.GetDrawer(typeof(T));
+                    }
+                    else
+                    {
+                        Type realType = element.GetType();
+                        drawer = DrawerCache.GetDrawer(realType);
+                    }
+
+                    bool changed = drawer.Draw($"{TypeDrawn.GetElementType().Name}[{i}]", ref element);
+                    if (changed || drawer.TypeDrawn.GetTypeInfo().IsValueType)
+                    {
+                        arr[i] = (T)element;
+                    }
                 }
 
-                bool changed = drawer.Draw($"[{i}]", ref element);
-                if (changed || drawer.TypeDrawn.GetTypeInfo().IsValueType)
-                {
-                    arr[i] = (T)element;
-                }
+                ImGui.TreePop();
             }
-
-            if (!newArray)
+            else if (ImGui.IsLastItemHovered())
             {
-                if (ImGui.SmallButton("-"))
-                {
-                    int newLength = Math.Max(length - 1, 0);
-                    Array.Resize(ref arr, newLength);
-                    newArray = true;
-                }
-                ImGui.SameLine();
-                ImGui.Spacing();
-                ImGui.SameLine();
-                if (ImGui.SmallButton("+"))
-                {
-                    Array.Resize(ref arr, length + 1);
-                    newArray = true;
-                }
+                ImGui.ShowTooltip($"{TypeDrawn.GetElementType()}[{arr.Length}]");
             }
 
             if (newArray)
@@ -421,7 +459,7 @@ namespace Veldrid.RenderDemo
         {
             ImGui.PushID(label);
 
-            if (!_drawRootNode || ImGui.TreeNode(label))
+            if (!_drawRootNode || ImGui.CollapsingHeader(label, label, true, true))
             {
                 foreach (PropertyInfo pi in _properties)
                 {
@@ -442,12 +480,8 @@ namespace Veldrid.RenderDemo
                         pi.SetValue(obj, value);
                     }
                 }
-
-                if (_drawRootNode)
-                {
-                    ImGui.TreePop();
-                }
             }
+
             ImGui.PopID();
 
             return false;

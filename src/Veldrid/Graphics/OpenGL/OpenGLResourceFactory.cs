@@ -41,6 +41,10 @@ namespace Veldrid.Graphics.OpenGL
         {
             return new OpenGLIndexBuffer(isDynamic);
         }
+        public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format)
+        {
+            return new OpenGLIndexBuffer(isDynamic, OpenGLFormats.MapIndexFormat(format));
+        }
 
         public override Material CreateMaterial(
             RenderContext rc,

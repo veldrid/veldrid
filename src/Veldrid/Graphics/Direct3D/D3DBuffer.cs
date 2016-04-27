@@ -165,6 +165,18 @@ namespace Veldrid.Graphics.Direct3D
             stagingBuffer.Dispose();
         }
 
+        public System.IntPtr MapBuffer(int numBytes)
+        {
+            EnsureBufferSize(numBytes);
+            var db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteDiscard, MapFlags.None);
+            return db.DataPointer;
+        }
+
+        public void UnmapBuffer()
+        {
+            Device.ImmediateContext.UnmapSubresource(Buffer, 0);
+        }
+
         public void Dispose()
         {
             Buffer.Dispose();

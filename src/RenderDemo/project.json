@@ -11,6 +11,7 @@
     "SharpDX.DXGI": "3.0.1",
     "System.Linq": "4.1.0-rc3-24019-00",
     "System.ComponentModel": "4.0.1-rc3-24019-00",
+    "System.Diagnostics.Process": "4.1.0-rc3-24019-00",
     "System.Drawing.Primitives": "4.0.0-rc3-24019-00",
     "System.IO.Compression": "4.1.0-rc3-24019-00",
     "System.IO.FileSystem.Watcher": "4.0.0-rc3-24019-00",

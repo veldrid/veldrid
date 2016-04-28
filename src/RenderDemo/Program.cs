@@ -51,7 +51,7 @@ namespace Veldrid.RenderDemo
 
         private static Vector3 _lightDirection;
         private static float _fieldOfViewRadians = 1.05f;
-        private static bool _autoRotateCamera = false;
+        private static bool _autoRotateCamera = true;
         private static bool _moveLight = false;
 
         private static float _previousMouseX;
@@ -520,7 +520,7 @@ namespace Veldrid.RenderDemo
                     string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
                     if (ImGui.BeginMenu($"Renderer: {apiName}"))
                     {
-                        if (ImGui.MenuItem("D3D", null))
+                        if (_onWindows && ImGui.MenuItem("D3D", null))
                         {
                             ChangeRenderContext(d3d: true);
                         }
@@ -605,6 +605,17 @@ namespace Veldrid.RenderDemo
                 }
                 if (ImGui.BeginMenu("About"))
                 {
+                    if (ImGui.MenuItem("View Source", null))
+                    {
+                        if (_onWindows)
+                        {
+                            Process.Start("https://github.com/mellinoe/veldrid");
+                        }
+                        else
+                        {
+                            Process.Start("xdg-open", "https://github.com/mellinoe/veldrid");
+                        }
+                    }
                     if (ImGui.MenuItem("About Veldrid", null))
                     {
                         triggerPopup = true;

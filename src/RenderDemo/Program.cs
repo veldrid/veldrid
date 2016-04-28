@@ -609,7 +609,7 @@ namespace Veldrid.RenderDemo
                     {
                         if (_onWindows)
                         {
-                            Process.Start("https://github.com/mellinoe/veldrid");
+                            Process.Start(new ProcessStartInfo("cmd", "/c start https://github.com/mellinoe/veldrid"));
                         }
                         else
                         {

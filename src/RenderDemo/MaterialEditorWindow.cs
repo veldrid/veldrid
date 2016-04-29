@@ -1,6 +1,8 @@
 ﻿using ImGuiNET;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -9,64 +11,56 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
 {
-    class MaterialEditorWindow : SwappableRenderItem
+    class MaterialEditorWindow
     {
-        private static readonly string[] s_stages = new[] { "Overlay" };
-
-        private readonly ObjectEditor _editor = new ObjectEditor();
-
         private TestItem _testItem = new TestItem();
         private MaterialAsset _materialAsset = new MaterialAsset();
         private bool _windowOpened = false;
+        private string _loadedName;
 
         public MaterialAsset MaterialAsset => _materialAsset;
 
-        public void ChangeRenderContext(RenderContext rc)
-        {
-        }
-
         public void Open() => _windowOpened = true;
 
-        public RenderOrderKey GetRenderOrderKey()
-        {
-            return new RenderOrderKey();
-        }
-
-        public IEnumerable<string> GetStagesParticipated()
-        {
-            return s_stages;
-        }
-
-        public void Render(RenderContext context, string pipelineStage)
+        public void Render()
         {
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(450, Math.Min(600, ImGui.GetIO().DisplaySize.Y - 40)), SetCondition.FirstUseEver);
 
             if (_windowOpened)
             {
+
                 if (ImGui.BeginWindow("Editor Window", ref _windowOpened, WindowFlags.ShowBorders))
                 {
-                    _editor.DrawObject("Material", ref _materialAsset);
-                }
+                    ImGuiNative.igColumns(2, "EditorColumns", true);
+                    ImGuiNative.igSetColumnOffset(1, ImGui.GetWindowWidth() * 0.3f);
+                    string[] materials = AssetDatabase.GetAssetNames<MaterialAsset>();
+                    foreach (string name in materials)
+                    {
+                        if (ImGui.Selectable(name) && _loadedName != name)
+                        {
+                            _materialAsset = AssetDatabase.Load<MaterialAsset>(name);
+                            _loadedName = name;
+                        }
+                    }
+                    ImGuiNative.igNextColumn();
+                    Drawer d = DrawerCache.GetDrawer(_materialAsset.GetType());
+                    object o = _materialAsset;
+                    if (d.Draw("Material", ref o))
+                    {
+                        _materialAsset = (MaterialAsset)o;
+                    }
 
+                    if (ImGui.Button("Save"))
+                    {
+                        string path = AssetDatabase.GetAssetPath<MaterialAsset>(_loadedName);
+                        using (var fs = File.CreateText(path))
+                        {
+                            new JsonSerializer().Serialize(fs, _materialAsset);
+                        }
+                    }
+                }
                 ImGui.EndWindow();
             }
-        }
-    }
-
-    public class ObjectEditor
-    {
-        public void DrawObject<T>(string label, ref T obj)
-        {
-            object orig = obj;
-            object o = obj;
-            DrawObject(label, ref o);
-            obj = (T)o;
-        }
-
-        private void DrawObject(string label, ref object obj)
-        {
-            Drawer drawer = DrawerCache.GetDrawer(obj.GetType());
-            drawer.Draw(label, ref obj);
         }
     }
 
@@ -78,12 +72,6 @@ namespace Veldrid.RenderDemo
         {
             ImGui.PushID(label);
 
-            const int levelMargin = 5;
-            ImGui.PushItemWidth(levelMargin);
-            ImGui.LabelText("", "");
-            ImGui.PopItemWidth();
-            ImGui.SameLine();
-            ImGuiNative.igBeginGroup();
             bool result;
             if (obj == null)
             {
@@ -93,7 +81,6 @@ namespace Veldrid.RenderDemo
             {
                 result = DrawNonNull(label, ref obj);
             }
-            ImGuiNative.igEndGroup();
 
             ImGui.PopID();
 
@@ -112,7 +99,7 @@ namespace Veldrid.RenderDemo
             }
             if (ImGui.IsLastItemHovered())
             {
-                ImGui.ShowTooltip($"Creates a new {TypeDrawn.Name}.");
+                ImGui.ShowTooltip($"Create a new {TypeDrawn.Name}.");
             }
             return false;
         }
@@ -246,8 +233,9 @@ namespace Veldrid.RenderDemo
                 result = true;
             }
 
-            IntPtr stringStorage = Marshal.AllocHGlobal(200);
-            for (int i = 0; i < 200; i++) { ((byte*)stringStorage.ToPointer())[i] = 0; }
+            byte* stackBytes = stackalloc byte[200];
+            IntPtr stringStorage = new IntPtr(stackBytes);
+            for (int i = 0; i < 200; i++) { stackBytes[i] = 0; }
             IntPtr ansiStringPtr = Marshal.StringToHGlobalAnsi(s);
             SharpDX.Utilities.CopyMemory(stringStorage, ansiStringPtr, s.Length);
             float stringWidth = ImGui.GetTextSize(label).X;
@@ -259,7 +247,6 @@ namespace Veldrid.RenderDemo
                 string newString = Marshal.PtrToStringAnsi(stringStorage);
                 s = newString;
             }
-            Marshal.FreeHGlobal(stringStorage);
             Marshal.FreeHGlobal(ansiStringPtr);
 
             return result;
@@ -463,6 +450,15 @@ namespace Veldrid.RenderDemo
             {
                 foreach (PropertyInfo pi in _properties)
                 {
+                    if (_drawRootNode)
+                    {
+                        const int levelMargin = 5;
+                        ImGui.PushItemWidth(levelMargin);
+                        ImGui.LabelText("", "");
+                        ImGui.PopItemWidth();
+                        ImGui.SameLine();
+                    }
+
                     object originalValue = pi.GetValue(obj);
                     object value = originalValue;
                     Drawer drawer;

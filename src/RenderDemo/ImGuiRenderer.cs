@@ -230,6 +230,7 @@ namespace Veldrid.RenderDemo
 
             rc.SetBlendState(_blendState);
             rc.SetDepthStencilState(_depthDisabledState);
+            RasterizerState previousRasterizerState = rc.RasterizerState;
             rc.SetRasterizerState(_rasterizerState);
             rc.SetVertexBuffer(_vertexBuffer);
             rc.SetIndexBuffer(_indexBuffer);
@@ -270,6 +271,7 @@ namespace Veldrid.RenderDemo
             rc.ClearScissorRectangle();
             rc.SetBlendState(rc.OverrideBlend);
             rc.SetDepthStencilState(rc.DefaultDepthStencilState);
+            rc.SetRasterizerState(previousRasterizerState);
         }
 
         public void Dispose()

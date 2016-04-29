@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Xml.Serialization;
+using Veldrid.Assets;
 using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
@@ -19,12 +20,9 @@ namespace Veldrid.RenderDemo
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
 
-        private readonly MaterialVertexInput _vertexInput;
-        private readonly MaterialInputs<MaterialGlobalInputElement> _shadowGlobalInputs;
-        private readonly MaterialInputs<MaterialGlobalInputElement> _regularPassGlobalInputs;
-        private readonly MaterialInputs<MaterialPerObjectInputElement> _shadowMapPerObjectInputs;
-        private readonly MaterialInputs<MaterialPerObjectInputElement> _perObjectInputs;
-        private readonly MaterialTextureInputs _textureInputs;
+        private readonly MaterialAsset _shadowPassMaterialAsset;
+        private readonly MaterialAsset _regularPassMaterialAsset;
+
         private readonly TextureData _surfaceTextureData;
         private readonly string[] _stages = new string[] { "ShadowMap", "Standard" };
 
@@ -43,37 +41,12 @@ namespace Veldrid.RenderDemo
             _indices = indices;
             _surfaceTextureData = surfaceTexture;
 
+            _shadowPassMaterialAsset = AssetDatabase.Load<MaterialAsset>("ShadowCaster_ShadowMap");
+            _regularPassMaterialAsset = AssetDatabase.Load<MaterialAsset>("ShadowCaster_RegularPass");
+
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
-
-            _vertexInput = new MaterialVertexInput(
-                VertexPositionNormalTexture.SizeInBytes,
-                new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
-                new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
-                new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2));
-
-            _shadowGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
-                new MaterialGlobalInputElement("ProjectionMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["LightProjMatrix"]),
-                new MaterialGlobalInputElement("ViewMatrix", MaterialInputType.Matrix4x4, rc.DataProviders["LightViewMatrix"]));
-
-            _regularPassGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, rc.DataProviders["ProjectionMatrix"]),
-                    new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, rc.DataProviders["ViewMatrix"]),
-                    new MaterialGlobalInputElement("LightProjectionMatrixBuffer", MaterialInputType.Matrix4x4, rc.DataProviders["LightProjMatrix"]),
-                    new MaterialGlobalInputElement("LightViewMatrixBuffer", MaterialInputType.Matrix4x4, rc.DataProviders["LightViewMatrix"]),
-                    new MaterialGlobalInputElement("LightInfoBuffer", MaterialInputType.Float4, rc.DataProviders["LightInfo"]));
-
-            _shadowMapPerObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
-                    new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes));
-
-            _perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
-                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
-                    new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes));
-
-            _textureInputs = new MaterialTextureInputs(
-                new TextureDataInputElement("SurfaceTexture", _surfaceTextureData),
-                new ContextTextureInputElement("ShadowMap"));
 
             InitializeContextObjects(rc);
         }
@@ -91,9 +64,9 @@ namespace Veldrid.RenderDemo
             InitializeContextObjects(context);
         }
 
-        private void InitializeContextObjects(RenderContext context)
+        private void InitializeContextObjects(RenderContext rc)
         {
-            ResourceFactory factory = context.ResourceFactory;
+            ResourceFactory factory = rc.ResourceFactory;
             _vb = factory.CreateVertexBuffer(_vertices.Length * VertexPositionNormalTexture.SizeInBytes, false);
             _vb.SetVertexData(
                 _vertices,
@@ -105,23 +78,9 @@ namespace Veldrid.RenderDemo
             _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Length, false);
             _ib.SetIndices(_indices);
 
-            _shadowPassMaterial = factory.CreateMaterial(
-                context,
-                "shadowmap-vertex",
-                "shadowmap-frag",
-                _vertexInput,
-                _shadowGlobalInputs,
-                _shadowMapPerObjectInputs,
-                MaterialTextureInputs.Empty);
-
-            _regularPassMaterial = factory.CreateMaterial(
-                context,
-                "shadow-vertex",
-                "shadow-frag",
-                _vertexInput,
-                _regularPassGlobalInputs,
-                _perObjectInputs,
-                _textureInputs);
+            var surfaceTextureElement = new TextureDataInputElement("SurfaceTexture", _surfaceTextureData);
+            _shadowPassMaterial = _shadowPassMaterialAsset.Create(rc);
+            _regularPassMaterial = _regularPassMaterialAsset.Create(rc, surfaceTextureElement);
         }
 
         public RenderOrderKey GetRenderOrderKey()

@@ -1,0 +1,73 @@
+{
+    "Name": "ShadowCaster_RegularPass",
+    "VertexShader": "shadow-vertex",
+    "FragmentShader": "shadow-frag",
+    "VertexInputs": {
+        "VertexSizeInBytes": 32,
+        "Elements": [
+            {
+                "Name": "in_position",
+                "SemanticType": 0,
+                "ElementFormat": 2,
+                "SizeInBytes": 12
+            },
+            {
+                "Name": "in_normal",
+                "SemanticType": 2,
+                "ElementFormat": 2,
+                "SizeInBytes": 12
+            },
+            {
+                "Name": "in_texCoord",
+                "SemanticType": 1,
+                "ElementFormat": 1,
+                "SizeInBytes": 8
+            }
+        ]
+    },
+    "GlobalInputs": [
+        {
+            "Name": "ProjectionMatrixBuffer",
+            "Type": 9,
+            "ProviderName": "ProjectionMatrix"
+        },
+        {
+            "Name": "ViewMatrixBuffer",
+            "Type": 9,
+            "ProviderName": "ViewMatrix"
+        },
+        {
+            "Name": "LightProjectionMatrixBuffer",
+            "Type": 9,
+            "ProviderName": "LightProjMatrix"
+        },
+        {
+            "Name": "LightViewMatrixBuffer",
+            "Type": 9,
+            "ProviderName": "LightViewMatrix"
+        },
+        {
+            "Name": "LightInfoBuffer",
+            "Type": 8,
+            "ProviderName": "LightInfo"
+        }
+    ],
+    "PerObjectInputs": [
+        {
+            "BufferSizeInBytes": 16,
+            "Name": "WorldMatrixBuffer",
+            "Type": 9
+        },
+        {
+            "BufferSizeInBytes": 16,
+            "Name": "InverseTransposeWorldMatrixBuffer",
+            "Type": 9
+        }
+    ],
+    "ContextTextures": [
+        {
+            "ContextKey": "ShadowMap",
+            "Name": "ShadowMap"
+        }
+    ]
+}

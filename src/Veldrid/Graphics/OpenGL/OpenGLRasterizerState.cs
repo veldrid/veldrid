@@ -38,7 +38,6 @@ namespace Veldrid.Graphics.OpenGL
 
             if (IsScissorTestEnabled)
             {
-                GL.Enable(EnableCap.ScissorTest);
             }
             else
             {

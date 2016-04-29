@@ -1,0 +1,48 @@
+{
+    "Name": "ShadowCaster_ShadowMap",
+    "VertexShader": "shadowmap-vertex",
+    "FragmentShader": "shadowmap-frag",
+    "VertexInputs": {
+        "VertexSizeInBytes": 32,
+        "Elements": [
+            {
+                "Name": "in_position",
+                "SemanticType": 0,
+                "ElementFormat": 2,
+                "SizeInBytes": 12
+            },
+            {
+                "Name": "in_normal",
+                "SemanticType": 2,
+                "ElementFormat": 2,
+                "SizeInBytes": 12
+            },
+            {
+                "Name": "in_texCoord",
+                "SemanticType": 1,
+                "ElementFormat": 1,
+                "SizeInBytes": 8
+            }
+        ]
+    },
+    "GlobalInputs": [
+        {
+            "Name": "ProjectionMatrix",
+            "Type": 9,
+            "ProviderName": "LightProjMatrix"
+        },
+        {
+            "Name": "ViewMatrix",
+            "Type": 9,
+            "ProviderName": "LightViewMatrix"
+        }
+    ],
+    "PerObjectInputs": [
+        {
+            "BufferSizeInBytes": 16,
+            "Name": "WorldMatrix",
+            "Type": 9
+        }
+    ],
+    "ContextTextures": [ ]
+}

@@ -3,7 +3,6 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -75,8 +74,8 @@ namespace Veldrid.RenderDemo
                     _window = new SameThreadWindow();
                 }
 
-                bool preferD3D = true;
-                if (preferD3D && _onWindows)
+                bool preferOpenGL = Preferences.Instance.PreferOpenGL;
+                if (!preferOpenGL && _onWindows)
                 {
 
                     SharpDX.Direct3D11.DeviceCreationFlags flags = SharpDX.Direct3D11.DeviceCreationFlags.None;
@@ -405,7 +404,7 @@ namespace Veldrid.RenderDemo
                 SetCameraLookMatrix(cameraView);
             }
 
-            _editorWindow.Render(_rc, "Overlay");
+            _editorWindow.Render();
 
             _imguiRenderer.UpdateFinished();
         }

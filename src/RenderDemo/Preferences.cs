@@ -6,8 +6,9 @@ namespace Veldrid.RenderDemo
 {
     public class Preferences
     {
-        public bool AllowOpenGLDebugContexts { get; set; } = true;
-        public bool AllowDirect3DDebugDevice { get; set; } = true;
+        public bool AllowOpenGLDebugContexts { get; set; } = false;
+        public bool AllowDirect3DDebugDevice { get; set; } = false;
+        public bool PreferOpenGL { get; set; } = false;
 
         private static Preferences _instance;
         public static Preferences Instance

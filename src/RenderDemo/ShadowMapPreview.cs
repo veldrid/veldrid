@@ -14,6 +14,7 @@ namespace Veldrid.RenderDemo
         private IndexBuffer _indexBuffer;
         private Material _material;
         private float _imageWidth = 200f;
+        private DepthStencilState _depthDisabledState;
 
         public Vector2 ScreenPosition { get; set; }
         public Vector2 Scale { get; set; }
@@ -52,6 +53,8 @@ namespace Veldrid.RenderDemo
                     new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, _projectionMatrixProvider)),
                 MaterialInputs<MaterialPerObjectInputElement>.Empty,
                 new MaterialTextureInputs(new ContextTextureInputElement("SurfaceTexture", "ShadowMap")));
+
+            _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
         }
 
         public RenderOrderKey GetRenderOrderKey()
@@ -82,7 +85,9 @@ namespace Veldrid.RenderDemo
             rc.SetVertexBuffer(_vertexBuffer);
             rc.SetIndexBuffer(_indexBuffer);
             rc.SetMaterial(_material);
+            rc.SetDepthStencilState(_depthDisabledState);
             rc.DrawIndexedPrimitives(6, 0);
+            rc.SetDepthStencilState(rc.DefaultDepthStencilState);
         }
     }
 }

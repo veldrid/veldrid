@@ -373,7 +373,7 @@ namespace Veldrid.RenderDemo
             float deltaSec = (float)deltaMilliseconds / 1000f;
             bool cameraMoved = false;
 
-            if (!ImGui.IsMouseHoveringAnyWindow() && !_autoRotateCamera
+            if (!ImGui.IsMouseHoveringAnyWindow() && !ImGuiNative.igIsAnyItemActive() && !_autoRotateCamera
                 && (InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Left) || InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Right)))
             {
                 cameraMoved = true;

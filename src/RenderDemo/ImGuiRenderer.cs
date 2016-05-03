@@ -75,7 +75,7 @@ namespace Veldrid.RenderDemo
 
         public IEnumerable<string> GetStagesParticipated()
         {
-            yield return "Overlay";
+            yield return "ImGui";
         }
 
         public void NewFrame() => ImGui.NewFrame();

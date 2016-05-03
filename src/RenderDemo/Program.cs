@@ -3,6 +3,7 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -60,6 +61,7 @@ namespace Veldrid.RenderDemo
 
         private static bool _onWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         private static bool _preferencesEditorOpened;
+        private static PipelineStage[] _configurableStages;
 
         private static LooseFileDatabase _db;
         private static MaterialEditorWindow _editorWindow;
@@ -102,12 +104,14 @@ namespace Veldrid.RenderDemo
                     _rc = new OpenGLRenderContext(_window, debugContext);
                 }
 
-                _renderer = new Renderer(_rc, new PipelineStage[]
+                _configurableStages = new PipelineStage[]
                 {
                     new ShadowMapStage(_rc),
                     new StandardPipelineStage("Standard"),
                     new StandardPipelineStage("Overlay"),
-                });
+                };
+
+                _renderer = new Renderer(_rc, _configurableStages.Append(new StandardPipelineStage("ImGui")).ToArray());
 
                 _db = new LooseFileDatabase(AppContext.BaseDirectory);
                 _editorWindow = new MaterialEditorWindow(_db);
@@ -573,7 +577,7 @@ namespace Veldrid.RenderDemo
 
                     if (ImGui.BeginMenu("Pipeline Stages"))
                     {
-                        foreach (var stage in _renderer.Stages)
+                        foreach (var stage in _configurableStages)
                         {
                             bool enabled = stage.Enabled;
                             if (ImGui.Checkbox(stage.Name, ref enabled))

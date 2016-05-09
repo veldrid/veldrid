@@ -65,7 +65,7 @@ namespace Veldrid.RenderDemo
         private static MaterialEditorWindow _editorWindow;
 
         private static bool _perspectiveProjection = true;
-        private static float _orthographicWidth = 10f;
+        private static float _orthographicWidth = 20f;
 
         public static void Main()
         {

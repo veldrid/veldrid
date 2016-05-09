@@ -11,12 +11,20 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
 {
-    class MaterialEditorWindow
+    public class MaterialEditorWindow
     {
         private TestItem _testItem = new TestItem();
         private MaterialAsset _materialAsset = new MaterialAsset();
         private bool _windowOpened = false;
+        private readonly LooseFileDatabase _assetDb;
+
+        private TextInputBuffer _filenameBuffer = new TextInputBuffer(100);
         private string _loadedName;
+
+        public MaterialEditorWindow(LooseFileDatabase lfdb)
+        {
+            _assetDb = lfdb;
+        }
 
         public MaterialAsset MaterialAsset => _materialAsset;
 
@@ -33,13 +41,14 @@ namespace Veldrid.RenderDemo
                 {
                     ImGuiNative.igColumns(2, "EditorColumns", true);
                     ImGuiNative.igSetColumnOffset(1, ImGui.GetWindowWidth() * 0.3f);
-                    string[] materials = AssetDatabase.GetAssetNames<MaterialAsset>();
+                    string[] materials = _assetDb.GetAssetNames<MaterialAsset>();
                     foreach (string name in materials)
                     {
                         if (ImGui.Selectable(name) && _loadedName != name)
                         {
-                            _materialAsset = AssetDatabase.Load<MaterialAsset>(name);
+                            _materialAsset = _assetDb.Load<MaterialAsset>(name);
                             _loadedName = name;
+                            _filenameBuffer.StringValue = name;
                         }
                     }
                     ImGuiNative.igNextColumn();
@@ -50,9 +59,19 @@ namespace Veldrid.RenderDemo
                         _materialAsset = (MaterialAsset)o;
                     }
 
+
+                    ImGui.Text("Asset Name:");
+                    ImGui.PushItemWidth(220);
+                    ImGui.SameLine();
+                    if (ImGui.InputText(" ", _filenameBuffer.Data, _filenameBuffer.ByteCount, InputTextFlags.Default, null))
+                    {
+                        _loadedName = _filenameBuffer.StringValue;
+                    }
+                    ImGui.PopItemWidth();
+                    ImGui.SameLine();
                     if (ImGui.Button("Save"))
                     {
-                        string path = AssetDatabase.GetAssetPath<MaterialAsset>(_loadedName);
+                        string path = _assetDb.GetAssetPath<MaterialAsset>(_loadedName);
                         using (var fs = File.CreateText(path))
                         {
                             new JsonSerializer().Serialize(fs, _materialAsset);

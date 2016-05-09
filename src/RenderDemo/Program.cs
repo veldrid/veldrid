@@ -6,6 +6,7 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Veldrid.Assets;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
@@ -58,8 +59,10 @@ namespace Veldrid.RenderDemo
         private static float _cameraSprintFactor = 2.5f;
 
         private static bool _onWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        private static MaterialEditorWindow _editorWindow = new MaterialEditorWindow();
         private static bool _preferencesEditorOpened;
+
+        private static LooseFileDatabase _db;
+        private static MaterialEditorWindow _editorWindow;
 
         public static void Main()
         {
@@ -102,6 +105,9 @@ namespace Veldrid.RenderDemo
                     new StandardPipelineStage("Standard"),
                     new StandardPipelineStage("Overlay"),
                 });
+
+                _db = new LooseFileDatabase(AppContext.BaseDirectory);
+                _editorWindow = new MaterialEditorWindow(_db);
 
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
 
@@ -265,19 +271,19 @@ namespace Veldrid.RenderDemo
                 _shadowsScene = new FlatListVisibilityManager();
                 var sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Assets", "Models", "Sphere.obj"));
 
-                var cube1 = new ShadowCaster(_rc, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
+                var cube1 = new ShadowCaster(_rc, _db, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
                 _shadowsScene.AddRenderItem(cube1);
 
-                var cube2 = new ShadowCaster(_rc, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
+                var cube2 = new ShadowCaster(_rc, _db, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
                 cube2.Position = new Vector3(3f, 5f, 0f);
                 cube2.Scale = new Vector3(3f);
                 _shadowsScene.AddRenderItem(cube2);
 
-                var sphere3 = new ShadowCaster(_rc, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
+                var sphere3 = new ShadowCaster(_rc, _db, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
                 sphere3.Position = new Vector3(0f, 0f, 5f);
                 _shadowsScene.AddRenderItem(sphere3);
 
-                var plane = new ShadowCaster(_rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
+                var plane = new ShadowCaster(_rc, _db, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
                 plane.Position = new Vector3(0, -2.5f, 0);
                 plane.Scale = new Vector3(20f);
 
@@ -332,7 +338,7 @@ namespace Veldrid.RenderDemo
             }
             if (InputTracker.GetKeyDown(OpenTK.Input.Key.F11))
             {
-                _window.WindowState = _window.WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState.FullScreen;
+                ToggleFullScreenState();
             }
             if (InputTracker.GetKeyDown(OpenTK.Input.Key.Escape))
             {
@@ -409,6 +415,11 @@ namespace Veldrid.RenderDemo
             _imguiRenderer.UpdateFinished();
         }
 
+        private static void ToggleFullScreenState()
+        {
+            _window.WindowState = _window.WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState.FullScreen;
+        }
+
         private static void DrawMainMenu()
         {
             bool triggerPopup = false;
@@ -455,6 +466,10 @@ namespace Veldrid.RenderDemo
                 }
                 if (ImGui.BeginMenu("View"))
                 {
+                    if (ImGui.MenuItem("Full Screen", "F11", _rc.Window.WindowState == WindowState.FullScreen, true))
+                    {
+                        ToggleFullScreenState();
+                    }
                     if (ImGui.Checkbox("Wireframe", ref _wireframe))
                     {
                         if (_wireframe)

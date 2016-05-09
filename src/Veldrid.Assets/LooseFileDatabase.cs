@@ -1,14 +1,18 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.IO;
 using System.Linq;
-using Veldrid.Assets;
 
-namespace Veldrid.RenderDemo
+namespace Veldrid.Assets
 {
-    internal static class AssetDatabase
+    public class LooseFileDatabase : AssetDatabase
     {
         private static readonly JsonSerializer _serializer = CreateDefaultSerializer();
+        private readonly string _rootPath;
+
+        public LooseFileDatabase(string rootPath)
+        {
+            _rootPath = rootPath;
+        }
 
         private static JsonSerializer CreateDefaultSerializer()
         {
@@ -18,14 +22,14 @@ namespace Veldrid.RenderDemo
             };
         }
 
-        public static string[] GetAssetNames<T>()
+        public string[] GetAssetNames<T>()
         {
             string path = GetAssetTypeDirectory<T>();
             var files = Directory.EnumerateFiles(path);
             return files.Select(file => Path.GetFileNameWithoutExtension(file)).ToArray();
         }
 
-        public static T Load<T>(string assetName)
+        public T Load<T>(string assetName)
         {
             string path = GetAssetPath<T>(assetName);
             using (var fs = File.OpenText(path))
@@ -34,7 +38,7 @@ namespace Veldrid.RenderDemo
             }
         }
 
-        public static void Save<T>(T obj, string name)
+        public void Save<T>(T obj, string name)
         {
             string path = GetAssetPath<T>(name);
             using (var fs = File.CreateText(path))
@@ -43,20 +47,20 @@ namespace Veldrid.RenderDemo
             }
         }
 
-        public static string GetAssetPath<T>(string assetName)
+        public string GetAssetPath<T>(string assetName)
         {
             string typeName = typeof(T).Name;
             return Path.Combine(GetAssetTypeDirectory<T>(), assetName + ".json");
         }
 
-        private static string GetAssetTypeDirectory<T>()
+        private string GetAssetTypeDirectory<T>()
         {
             return Path.Combine(GetAssetBase(), typeof(T).Name);
         }
 
-        private static string GetAssetBase()
+        private string GetAssetBase()
         {
-            return Path.Combine(AppContext.BaseDirectory, "Assets");
+            return Path.Combine(_rootPath, "Assets");
         }
     }
 }

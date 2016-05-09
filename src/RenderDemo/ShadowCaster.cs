@@ -35,14 +35,14 @@ namespace Veldrid.RenderDemo
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
         public Vector3 Scale { get; set; } = Vector3.One;
 
-        public ShadowCaster(RenderContext rc, VertexPositionNormalTexture[] vertices, int[] indices, TextureData surfaceTexture)
+        public ShadowCaster(RenderContext rc, AssetDatabase db, VertexPositionNormalTexture[] vertices, int[] indices, TextureData surfaceTexture)
         {
             _vertices = vertices;
             _indices = indices;
             _surfaceTextureData = surfaceTexture;
 
-            _shadowPassMaterialAsset = AssetDatabase.Load<MaterialAsset>("ShadowCaster_ShadowMap");
-            _regularPassMaterialAsset = AssetDatabase.Load<MaterialAsset>("ShadowCaster_RegularPass");
+            _shadowPassMaterialAsset = db.Load<MaterialAsset>("ShadowCaster_ShadowMap");
+            _regularPassMaterialAsset = db.Load<MaterialAsset>("ShadowCaster_RegularPass");
 
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);

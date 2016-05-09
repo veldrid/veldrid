@@ -10,6 +10,8 @@
     <ProjectGuid>{881C55C7-0D91-4A87-B47A-46042C6F4CA0}</ProjectGuid>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AssetDatabase.cs" />
+    <Compile Include="LooseFileDatabase.cs" />
     <Compile Include="MaterialAsset.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />

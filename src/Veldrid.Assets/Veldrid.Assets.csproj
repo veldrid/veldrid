@@ -10,9 +10,13 @@
     <ProjectGuid>{881C55C7-0D91-4A87-B47A-46042C6F4CA0}</ProjectGuid>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Asset.cs" />
     <Compile Include="AssetDatabase.cs" />
+    <Compile Include="AssetLoader.cs" />
     <Compile Include="LooseFileDatabase.cs" />
     <Compile Include="MaterialAsset.cs" />
+    <Compile Include="TextureAsset.cs" />
+    <Compile Include="TextureAssetLoader.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
@@ -21,6 +25,9 @@
       <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>
       <Name>Veldrid</Name>
     </ProjectReference>
+    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessorCore.dll">
+      <Name>ImageProcessorCore</Name>
+    </Reference>
     <Reference Include="$(DepsDir)\SharpYaml\SharpYaml.dll">
       <Name>SharpYaml</Name>
     </Reference>

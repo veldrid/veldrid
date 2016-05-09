@@ -3,7 +3,7 @@ using Veldrid.Graphics;
 
 namespace Veldrid.Assets
 {
-    public class MaterialAsset
+    public class MaterialAsset : AssetRef<Material>
     {
         public string Name { get; set; } = "NONAME";
         public string VertexShader { get; set; } = "NOVERTEXSHADER";

@@ -1,33 +1,37 @@
-﻿using System;
-using Veldrid.Graphics;
+﻿using Veldrid.Graphics;
+using System;
 
 namespace Veldrid.Assets
 {
-    public abstract class TextureAsset : AssetRef<DeviceTexture>
+    public abstract class TextureAsset : AssetDefinition<MaterialTextureInputElement>
     {
         public string Name { get; set; }
-
-        public abstract DeviceTexture Create(RenderContext rc, AssetDatabase ad);
     }
 
-    public class Texture2DAsset
+    public class Texture2DAsset : TextureAsset
     {
+        public AssetRef<ImageProcessorTexture> ImageSource { get; set; }
+
+        public override MaterialTextureInputElement Create(AssetDatabase ad)
+        {
+            ImageProcessorTexture texture = ad.LoadAsset(ImageSource);
+            return new TextureDataInputElement(Name, texture);
+        }
     }
 
     public class CubeMapTextureAsset : TextureAsset
     {
-        public string Image0 { get; set; }
-        public string Image1 { get; set; }
-        public string Image2 { get; set; }
-        public string Image3 { get; set; }
-        public string Image4 { get; set; }
-        public string Image5 { get; set; }
+        public AssetRef<ImageProcessorTexture> Image0 { get; private set; }
+        public AssetRef<ImageProcessorTexture> Image1 { get; private set; }
+        public AssetRef<ImageProcessorTexture> Image2 { get; private set; }
+        public AssetRef<ImageProcessorTexture> Image3 { get; private set; }
+        public AssetRef<ImageProcessorTexture> Image4 { get; private set; }
+        public AssetRef<ImageProcessorTexture> Image5 { get; private set; }
 
-        public override DeviceTexture Create(RenderContext rc, AssetDatabase ad)
+
+        public override MaterialTextureInputElement Create(AssetDatabase ad)
         {
-            ad.Load<Texture2DAsset>(Image0);
-
-            rc.ResourceFactory.CreateCubeMapTexture()
+            throw new NotImplementedException();
         }
     }
 }

@@ -63,7 +63,7 @@ namespace Veldrid.RenderDemo
         private static bool _preferencesEditorOpened;
         private static PipelineStage[] _configurableStages;
 
-        private static LooseFileDatabase _db;
+        private static LooseFileDatabase _ad;
         private static MaterialEditorWindow _editorWindow;
 
         private static bool _perspectiveProjection = true;
@@ -113,8 +113,8 @@ namespace Veldrid.RenderDemo
 
                 _renderer = new Renderer(_rc, _configurableStages.Append(new StandardPipelineStage("ImGui")).ToArray());
 
-                _db = new LooseFileDatabase(AppContext.BaseDirectory);
-                _editorWindow = new MaterialEditorWindow(_db);
+                _ad = new LooseFileDatabase(AppContext.BaseDirectory);
+                _editorWindow = new MaterialEditorWindow(_ad);
 
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
 
@@ -235,7 +235,7 @@ namespace Veldrid.RenderDemo
             {
                 _boxSceneVM = new FlatListVisibilityManager();
                 var sphere = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Assets", "Models", "Sphere.obj"));
-                var tcr = new TexturedMeshRenderer(_rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
+                var tcr = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
                 tcr.Position = new Vector3(-5f, 0, -3);
                 _boxSceneVM.AddRenderItem(tcr);
 
@@ -245,7 +245,7 @@ namespace Veldrid.RenderDemo
                     {
                         for (int z = 0; z < 6; z++)
                         {
-                            var ccr = new ColoredCubeRenderer(_rc);
+                            var ccr = new ColoredCubeRenderer(_ad, _rc);
                             ccr.Position = new Vector3((x * 1.35f) - 3, (y * 1.35f) - 3f, (z * 1.35f) - 3);
                             _boxSceneVM.AddRenderItem(ccr);
                         }
@@ -267,7 +267,7 @@ namespace Veldrid.RenderDemo
                 teapot.Position = new Vector3(0, -1, 0);
                 teapot.Scale = new Vector3(1f);
 
-                var plane = new TexturedMeshRenderer(_rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
+                var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
                 plane.Position = new Vector3(0, -2, 0);
                 plane.Scale = new Vector3(20, 1, 20);
 
@@ -286,23 +286,23 @@ namespace Veldrid.RenderDemo
                 _shadowsScene = new FlatListVisibilityManager();
                 var sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Assets", "Models", "Sphere.obj"));
 
-                var cube1 = new ShadowCaster(_rc, _db, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
+                var cube1 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
                 _shadowsScene.AddRenderItem(cube1);
 
-                var cube2 = new ShadowCaster(_rc, _db, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
+                var cube2 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
                 cube2.Position = new Vector3(3f, 5f, 0f);
                 cube2.Scale = new Vector3(3f);
                 _shadowsScene.AddRenderItem(cube2);
 
-                var sphere3 = new ShadowCaster(_rc, _db, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
+                var sphere3 = new ShadowCaster(_rc, _ad, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
                 sphere3.Position = new Vector3(0f, 0f, 5f);
                 _shadowsScene.AddRenderItem(sphere3);
 
-                var plane = new ShadowCaster(_rc, _db, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
+                var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
                 plane.Position = new Vector3(0, -2.5f, 0);
                 plane.Scale = new Vector3(20f);
 
-                var shadowMapPreview = new ShadowMapPreview(_rc);
+                var shadowMapPreview = new ShadowMapPreview(_ad, _rc);
                 _shadowsScene.AddRenderItem(shadowMapPreview);
 
                 _shadowsScene.AddRenderItem(plane);
@@ -373,7 +373,7 @@ namespace Veldrid.RenderDemo
             float deltaSec = (float)deltaMilliseconds / 1000f;
             bool cameraMoved = false;
 
-            if (!ImGui.IsMouseHoveringAnyWindow() && !ImGuiNative.igIsAnyItemActive() && !_autoRotateCamera
+            if (!ImGui.IsMouseHoveringAnyWindow() && !ImGui.IsAnyItemActive() && !_autoRotateCamera
                 && (InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Left) || InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Right)))
             {
                 cameraMoved = true;
@@ -704,21 +704,21 @@ https://github.com/mellinoe/veldrid.");
                 {
                     foreach (var item in _teapotVM?.RenderItems)
                     {
-                        ((SwappableRenderItem)item).ChangeRenderContext(newContext);
+                        ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
                     }
                 }
                 if (_boxSceneVM != null)
                 {
                     foreach (var item in _boxSceneVM.RenderItems)
                     {
-                        ((SwappableRenderItem)item).ChangeRenderContext(newContext);
+                        ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
                     }
                 }
                 if (_shadowsScene != null)
                 {
                     foreach (var item in _shadowsScene.RenderItems)
                     {
-                        ((SwappableRenderItem)item).ChangeRenderContext(newContext);
+                        ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
                     }
                 }
 

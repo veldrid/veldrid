@@ -39,19 +39,19 @@ namespace Veldrid.RenderDemo
 
                 if (ImGui.BeginWindow("Editor Window", ref _windowOpened, WindowFlags.ShowBorders))
                 {
-                    ImGuiNative.igColumns(2, "EditorColumns", true);
-                    ImGuiNative.igSetColumnOffset(1, ImGui.GetWindowWidth() * 0.3f);
+                    ImGui.Columns(2, "EditorColumns", true);
+                    ImGui.SetColumnOffset(1, ImGui.GetWindowWidth() * 0.3f);
                     string[] materials = _assetDb.GetAssetNames<MaterialAsset>();
                     foreach (string name in materials)
                     {
                         if (ImGui.Selectable(name) && _loadedName != name)
                         {
-                            _materialAsset = _assetDb.Load<MaterialAsset>(name);
+                            _materialAsset = _assetDb.LoadAsset<MaterialAsset>(name);
                             _loadedName = name;
                             _filenameBuffer.StringValue = name;
                         }
                     }
-                    ImGuiNative.igNextColumn();
+                    ImGui.NextColumn();
                     Drawer d = DrawerCache.GetDrawer(_materialAsset.GetType());
                     object o = _materialAsset;
                     if (d.Draw("Material", ref o))
@@ -71,10 +71,12 @@ namespace Veldrid.RenderDemo
                     ImGui.SameLine();
                     if (ImGui.Button("Save"))
                     {
-                        string path = _assetDb.GetAssetPath<MaterialAsset>(_loadedName);
+                        string path = _assetDb.GetAssetPath(_loadedName);
                         using (var fs = File.CreateText(path))
                         {
-                            new JsonSerializer().Serialize(fs, _materialAsset);
+                            var serializer = JsonSerializer.CreateDefault();
+                            serializer.TypeNameHandling = TypeNameHandling.Auto;
+                            serializer.Serialize(fs, _materialAsset);
                         }
                     }
                 }
@@ -118,7 +120,7 @@ namespace Veldrid.RenderDemo
             }
             if (ImGui.IsLastItemHovered())
             {
-                ImGui.ShowTooltip($"Create a new {TypeDrawn.Name}.");
+                ImGui.SetTooltip($"Create a new {TypeDrawn.Name}.");
             }
             return false;
         }
@@ -179,10 +181,15 @@ namespace Veldrid.RenderDemo
             {
                 return new AbstractItemDrawer(type);
             }
-            else
+            else if (type.GetTypeInfo().IsGenericType)
             {
-                return new ComplexItemDrawer(type);
+                if (typeof(AssetRef<>).GetTypeInfo().IsAssignableFrom(type.GetGenericTypeDefinition()))
+                {
+                    return (Drawer)Activator.CreateInstance(typeof(AssetRefDrawer<>).MakeGenericType(type.GenericTypeArguments[0]));
+                }
             }
+
+            return new ComplexItemDrawer(type);
         }
     }
 
@@ -361,7 +368,7 @@ namespace Veldrid.RenderDemo
             {
                 if (ImGui.IsLastItemHovered())
                 {
-                    ImGui.ShowTooltip($"{TypeDrawn.GetElementType()}[{arr.Length}]");
+                    ImGui.SetTooltip($"{TypeDrawn.GetElementType()}[{arr.Length}]");
                 }
 
                 if (!newArray)
@@ -422,7 +429,7 @@ namespace Veldrid.RenderDemo
             }
             else if (ImGui.IsLastItemHovered())
             {
-                ImGui.ShowTooltip($"{TypeDrawn.GetElementType()}[{arr.Length}]");
+                ImGui.SetTooltip($"{TypeDrawn.GetElementType()}[{arr.Length}]");
             }
 
             if (newArray)

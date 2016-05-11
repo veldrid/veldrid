@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using Veldrid.Assets;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Pipeline;
 

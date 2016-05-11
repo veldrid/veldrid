@@ -1,11 +1,15 @@
-﻿namespace Veldrid.Assets
+﻿using System.IO;
+
+namespace Veldrid.Assets
 {
     public interface AssetDatabase
     {
         string[] GetAssetNames<T>();
 
-        T Load<T>(string assetName);
+        T LoadAsset<T>(AssetID assetID);
+        T LoadAsset<T>(AssetRef<T> assetRef);
+        Stream OpenAssetStream(AssetID assetID);
 
-        void Save<T>(T obj, string name);
+        void SaveDefinition<T>(T obj, string name);
     }
 }

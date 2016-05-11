@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Veldrid.Assets;
 using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
@@ -19,12 +20,12 @@ namespace Veldrid.RenderDemo
         public Vector2 ScreenPosition { get; set; }
         public Vector2 Scale { get; set; }
 
-        public ShadowMapPreview(RenderContext rc)
+        public ShadowMapPreview(AssetDatabase ad, RenderContext rc)
         {
-            ChangeRenderContext(rc);
+            ChangeRenderContext(ad, rc);
         }
 
-        public void ChangeRenderContext(RenderContext context)
+        public void ChangeRenderContext(AssetDatabase ad, RenderContext context)
         {
             var factory = context.ResourceFactory;
             _vertexBuffer = factory.CreateVertexBuffer(VertexPositionTexture.SizeInBytes, false);

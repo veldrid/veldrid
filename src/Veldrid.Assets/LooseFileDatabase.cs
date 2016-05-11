@@ -1,13 +1,21 @@
 ﻿using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
+using System;
+using System.Collections.Generic;
+using Veldrid.Graphics;
 
 namespace Veldrid.Assets
 {
     public class LooseFileDatabase : AssetDatabase
     {
-        private static readonly JsonSerializer _serializer = CreateDefaultSerializer();
         private readonly string _rootPath;
+        private Dictionary<Type, AssetLoader> _assetLoaders = new Dictionary<Type, AssetLoader>()
+        {
+            { typeof(ImageProcessorTexture), new PngLoader() }
+        };
+
+        private static readonly JsonSerializer _serializer = CreateDefaultSerializer();
 
         public LooseFileDatabase(string rootPath)
         {
@@ -26,31 +34,46 @@ namespace Veldrid.Assets
         {
             string path = GetAssetTypeDirectory<T>();
             var files = Directory.EnumerateFiles(path);
-            return files.Select(file => Path.GetFileNameWithoutExtension(file)).ToArray();
+            return files.Select(file => Path.ChangeExtension(Path.GetFullPath(file), null)).ToArray();
         }
 
-        public T Load<T>(string assetName)
+        public void SaveDefinition<T>(T obj, string name)
         {
-            string path = GetAssetPath<T>(assetName);
-            using (var fs = File.OpenText(path))
-            {
-                return _serializer.Deserialize<T>(new JsonTextReader(fs));
-            }
-        }
-
-        public void Save<T>(T obj, string name)
-        {
-            string path = GetAssetPath<T>(name);
+            string path = GetAssetPath(name);
             using (var fs = File.CreateText(path))
             {
                 _serializer.Serialize(fs, obj);
             }
         }
 
-        public string GetAssetPath<T>(string assetName)
+        public string GetAssetPath(AssetID assetID)
         {
-            string typeName = typeof(T).Name;
-            return Path.Combine(GetAssetTypeDirectory<T>(), assetName + ".json");
+            return Path.Combine(GetAssetBase(), assetID.Value);
+        }
+
+        public T LoadAsset<T>(AssetRef<T> definition)
+        {
+            AssetLoader<T> loader = GetLoader<T>();
+            using (var s = OpenAssetStream(definition.ID))
+            {
+                return loader.Load(s);
+            }
+        }
+
+        public T LoadAsset<T>(AssetID assetID)
+        {
+            AssetLoader<T> loader = GetLoader<T>();
+            using (var stream = OpenAssetStream(assetID))
+            {
+                return loader.Load(stream);
+            }
+        }
+
+        public Stream OpenAssetStream(AssetID assetID)
+        {
+            string path = GetAssetPath(assetID);
+            return File.OpenRead(path);
+
         }
 
         private string GetAssetTypeDirectory<T>()
@@ -61,6 +84,19 @@ namespace Veldrid.Assets
         private string GetAssetBase()
         {
             return Path.Combine(_rootPath, "Assets");
+        }
+
+        private AssetLoader<T> GetLoader<T>()
+        {
+            AssetLoader ret;
+            if (_assetLoaders.TryGetValue(typeof(T), out ret))
+            {
+                return (AssetLoader<T>)ret;
+            }
+            else
+            {
+                return new TextAssetLoader<T>();
+            }
         }
     }
 }

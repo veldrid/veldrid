@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using Veldrid.Assets;
 using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
@@ -94,7 +95,7 @@ namespace Veldrid.RenderDemo
                 textureInputs);
         }
 
-        public void ChangeRenderContext(RenderContext rc)
+        public void ChangeRenderContext(AssetDatabase ad, RenderContext rc)
         {
             Dispose();
             InitializeContextObjects(rc);

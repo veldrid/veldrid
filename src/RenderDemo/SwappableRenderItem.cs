@@ -1,9 +1,10 @@
-﻿using Veldrid.Graphics;
+﻿using Veldrid.Assets;
+using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
 {
     public interface SwappableRenderItem : RenderItem
     {
-        void ChangeRenderContext(RenderContext rc);
+        void ChangeRenderContext(AssetDatabase ad, RenderContext rc);
     }
 }

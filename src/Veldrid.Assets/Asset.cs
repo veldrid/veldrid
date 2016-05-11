@@ -1,9 +1,16 @@
-﻿using Veldrid.Graphics;
-
-namespace Veldrid.Assets
+﻿namespace Veldrid.Assets
 {
-    public interface AssetRef<T>
+    public class AssetRef<T>
     {
-        T Create(RenderContext rc, AssetDatabase ad);
+        public AssetID ID { get; set; }
+
+        public AssetRef(AssetID id)
+        {
+            ID = id;
+        }
+
+        public AssetRef()
+        {
+        }
     }
 }

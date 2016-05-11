@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Veldrid.Assets;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Pipeline;
 
@@ -19,7 +20,7 @@ namespace Veldrid.RenderDemo
         public Vector3 Position { get; set; } = Vector3.Zero;
         public Vector3 Scale { get; set; } = Vector3.One * .75f;
 
-        public ColoredCubeRenderer(RenderContext context)
+        public ColoredCubeRenderer(AssetDatabase ad, RenderContext context)
         {
             if (context != s_currentContext)
             {
@@ -29,12 +30,12 @@ namespace Veldrid.RenderDemo
                 }
                 else
                 {
-                    ChangeRenderContext(context);
+                    ChangeRenderContext(ad, context);
                 }
             }
         }
 
-        public void ChangeRenderContext(RenderContext context)
+        public void ChangeRenderContext(AssetDatabase ad, RenderContext context)
         {
             if (s_currentContext != context)
             {

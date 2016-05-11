@@ -35,20 +35,20 @@ namespace Veldrid.RenderDemo
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
         public Vector3 Scale { get; set; } = Vector3.One;
 
-        public ShadowCaster(RenderContext rc, AssetDatabase db, VertexPositionNormalTexture[] vertices, int[] indices, TextureData surfaceTexture)
+        public ShadowCaster(RenderContext rc, AssetDatabase ad, VertexPositionNormalTexture[] vertices, int[] indices, TextureData surfaceTexture)
         {
             _vertices = vertices;
             _indices = indices;
             _surfaceTextureData = surfaceTexture;
 
-            _shadowPassMaterialAsset = db.Load<MaterialAsset>("ShadowCaster_ShadowMap");
-            _regularPassMaterialAsset = db.Load<MaterialAsset>("ShadowCaster_RegularPass");
+            _shadowPassMaterialAsset = ad.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_ShadowMap.json");
+            _regularPassMaterialAsset = ad.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_RegularPass.json");
 
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
 
-            InitializeContextObjects(rc);
+            InitializeContextObjects(ad, rc);
         }
 
         private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)
@@ -58,13 +58,13 @@ namespace Veldrid.RenderDemo
             return Matrix4x4.Transpose(inverted);
         }
 
-        public void ChangeRenderContext(RenderContext context)
+        public void ChangeRenderContext(AssetDatabase ad, RenderContext context)
         {
             Dispose();
-            InitializeContextObjects(context);
+            InitializeContextObjects(ad, context);
         }
 
-        private void InitializeContextObjects(RenderContext rc)
+        private void InitializeContextObjects(AssetDatabase ad, RenderContext rc)
         {
             ResourceFactory factory = rc.ResourceFactory;
             _vb = factory.CreateVertexBuffer(_vertices.Length * VertexPositionNormalTexture.SizeInBytes, false);
@@ -79,8 +79,8 @@ namespace Veldrid.RenderDemo
             _ib.SetIndices(_indices);
 
             var surfaceTextureElement = new TextureDataInputElement("SurfaceTexture", _surfaceTextureData);
-            _shadowPassMaterial = _shadowPassMaterialAsset.Create(rc);
-            _regularPassMaterial = _regularPassMaterialAsset.Create(rc, surfaceTextureElement);
+            _shadowPassMaterial = _shadowPassMaterialAsset.Create(ad, rc);
+            _regularPassMaterial = _regularPassMaterialAsset.Create(ad, rc);
         }
 
         public RenderOrderKey GetRenderOrderKey()

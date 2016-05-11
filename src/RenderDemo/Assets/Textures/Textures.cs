@@ -5,8 +5,8 @@ namespace Veldrid.RenderDemo
 {
     public static class Textures
     {
-        public static readonly ImageProcessorTexture CubeTexture = new ImageProcessorTexture(AppContext.BaseDirectory + "/Textures/CubeTexture.png");
-        public static readonly ImageProcessorTexture WoodTexture = new ImageProcessorTexture(AppContext.BaseDirectory + "/Textures/Wood.png");
+        public static readonly ImageProcessorTexture CubeTexture = new ImageProcessorTexture(AppContext.BaseDirectory + "Assets/Textures/CubeTexture.png");
+        public static readonly ImageProcessorTexture WoodTexture = new ImageProcessorTexture(AppContext.BaseDirectory + "Assets/Textures/Wood.png");
         public static readonly TextureData PureWhiteTexture = LoadWhiteTextureData();
 
         private static TextureData LoadWhiteTextureData()

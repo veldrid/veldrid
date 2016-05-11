@@ -69,5 +69,12 @@
             "ContextKey": "ShadowMap",
             "Name": "ShadowMap"
         }
+    ],
+    "TextureInputs": [
+        {
+            "$type": "Veldrid.Assets.Texture2DAsset, Veldrid.Assets",
+            "ImageSource": { "ID": { "Value": "Textures/Wood.png" } },
+            "Name": "SurfaceTexture"
+        }
     ]
 }

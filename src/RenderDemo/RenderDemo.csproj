@@ -16,6 +16,7 @@
     <BaseNuGetRuntimeIdentifier Condition="'$(OSTarget)' == 'Windows_NT'">win7</BaseNuGetRuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AssetRefDrawer.cs" />
     <Compile Include="ColoredCubeRenderer.cs" />
     <Compile Include="DirectionalLightBuffer.cs" />
     <Compile Include="ForwardRendering\ShadowMapStage.cs" />
@@ -35,7 +36,7 @@
     <Compile Include="TestItem.cs" />
     <Compile Include="TextInputBuffer.cs" />
     <Compile Include="TexturedMeshRenderer.cs" />
-    <Compile Include="Textures\Textures.cs" />
+    <Compile Include="Assets\Textures\Textures.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
     <UseVSHostingProcess>true</UseVSHostingProcess>
@@ -76,10 +77,10 @@
     <Content Include="HLSL\simple-2d-vertex.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Textures\CubeTexture.png">
+    <Content Include="Assets\Textures\CubeTexture.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Textures\Wood.png">
+    <Content Include="Assets\Textures\Wood.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Reference Include="$(DepsDir)\SharpYaml\SharpYaml.dll">

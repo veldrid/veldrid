@@ -12,11 +12,14 @@
   <ItemGroup>
     <Compile Include="Asset.cs" />
     <Compile Include="AssetDatabase.cs" />
+    <Compile Include="AssetDefinition.cs" />
+    <Compile Include="AssetID.cs" />
     <Compile Include="AssetLoader.cs" />
     <Compile Include="LooseFileDatabase.cs" />
     <Compile Include="MaterialAsset.cs" />
+    <Compile Include="PngLoader.cs" />
+    <Compile Include="TextAssetLoader.cs" />
     <Compile Include="TextureAsset.cs" />
-    <Compile Include="TextureAssetLoader.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
@@ -32,6 +35,7 @@
       <Name>SharpYaml</Name>
     </Reference>
     <None Include="project.json" />
+    <Reference Include="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />

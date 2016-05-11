@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Veldrid.Assets;
 using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo
@@ -22,7 +23,7 @@ namespace Veldrid.RenderDemo
         public Vector3 Position { get; internal set; }
         public Vector3 Scale { get; internal set; } = new Vector3(1f);
 
-        public TexturedMeshRenderer(RenderContext context, VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
+        public TexturedMeshRenderer(AssetDatabase ad, RenderContext context, VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
         {
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
@@ -39,12 +40,12 @@ namespace Veldrid.RenderDemo
                 }
                 else
                 {
-                    ChangeRenderContext(context);
+                    ChangeRenderContext(ad, context);
                 }
             }
         }
 
-        public void ChangeRenderContext(RenderContext rc)
+        public void ChangeRenderContext(AssetDatabase ad, RenderContext rc)
         {
             if (_currentContext != rc)
             {

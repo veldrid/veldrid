@@ -1,30 +1,16 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.IO;
+﻿using System.IO;
 
 namespace Veldrid.Assets
 {
-    internal interface AssetLoader
+    public interface AssetLoader
     {
-        Type TypeLoaded { get; }
-        object Load(Stream s, string name);
+        object Load(Stream s);
     }
 
-    internal interface AssetLoader<TRet, TAsset> : AssetLoader where TAsset : AssetRef<TRet>
+    public abstract class AssetLoader<TAsset> : AssetLoader
     {
-        new TRet Load(Stream s, string name);
-    }
+        public abstract TAsset Load(Stream s);
 
-    public class GenericAssetLoader
-    {
-        private static readonly JsonSerializer s_defaultSerializer = new JsonSerializer() { TypeNameHandling = TypeNameHandling.Auto };
-
-        public object Load(Stream s, string name, Type t)
-        {
-            using (var sr = new StreamReader(s))
-            {
-                return s_defaultSerializer.Deserialize(sr, t);
-            }
-        }
+        object AssetLoader.Load(Stream s) => Load(s);
     }
 }

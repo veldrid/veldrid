@@ -85,23 +85,11 @@ namespace Veldrid.RenderDemo
                 bool preferOpenGL = Preferences.Instance.PreferOpenGL;
                 if (!preferOpenGL && _onWindows)
                 {
-
-                    SharpDX.Direct3D11.DeviceCreationFlags flags = SharpDX.Direct3D11.DeviceCreationFlags.None;
-#if DEBUG
-                    if (Preferences.Instance.AllowDirect3DDebugDevice)
-                    {
-                        flags |= SharpDX.Direct3D11.DeviceCreationFlags.Debug;
-                    }
-#endif
-                    _rc = new D3DRenderContext(_window, flags);
+                    _rc = CreateDefaultD3dRenderContext();
                 }
                 else
                 {
-                    bool debugContext = false;
-#if DEBUG
-                    debugContext = Preferences.Instance.AllowOpenGLDebugContexts;
-#endif
-                    _rc = new OpenGLRenderContext(_window, debugContext);
+                    _rc = CreateDefaultOpenGLRenderContext();
                 }
 
                 _configurableStages = new PipelineStage[]
@@ -189,6 +177,27 @@ namespace Veldrid.RenderDemo
                     Console.WriteLine("GL Error: " + GL.GetError());
                 }
             }
+        }
+
+        private static OpenGLRenderContext CreateDefaultOpenGLRenderContext()
+        {
+            bool debugContext = false;
+#if DEBUG
+            debugContext = Preferences.Instance.AllowOpenGLDebugContexts;
+#endif
+            return new OpenGLRenderContext(_window, debugContext);
+        }
+
+        private static D3DRenderContext CreateDefaultD3dRenderContext()
+        {
+            SharpDX.Direct3D11.DeviceCreationFlags flags = SharpDX.Direct3D11.DeviceCreationFlags.None;
+#if DEBUG
+            if (Preferences.Instance.AllowDirect3DDebugDevice)
+            {
+                flags |= SharpDX.Direct3D11.DeviceCreationFlags.Debug;
+            }
+#endif
+           return new D3DRenderContext(_window, flags);
         }
 
         private static void SetCameraLookMatrix(Matrix4x4 mat)
@@ -676,14 +685,14 @@ https://github.com/mellinoe/veldrid.");
             {
                 if (!(_rc is D3DRenderContext))
                 {
-                    newContext = new D3DRenderContext(_window);
+                    newContext = CreateDefaultD3dRenderContext();
                 }
             }
             else
             {
                 if (!(_rc is OpenGLRenderContext))
                 {
-                    newContext = new OpenGLRenderContext(_window);
+                    newContext = CreateDefaultOpenGLRenderContext();
                 }
             }
 

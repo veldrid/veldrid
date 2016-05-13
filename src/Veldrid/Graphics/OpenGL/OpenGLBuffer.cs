@@ -108,8 +108,11 @@ namespace Veldrid.Graphics.OpenGL
                 _bufferID = GL.GenBuffer();
                 GL.BindBuffer(_target, _bufferID);
                 GL.BufferData(_target, dataSizeInBytes, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-                GL.BindBuffer(BufferTarget.CopyReadBuffer, oldBufferID);
-                GL.CopyBufferSubData(BufferTarget.CopyReadBuffer, _target, IntPtr.Zero, IntPtr.Zero, _bufferSize);
+                if (_bufferSize > 0)
+                {
+                    GL.BindBuffer(BufferTarget.CopyReadBuffer, oldBufferID);
+                    GL.CopyBufferSubData(BufferTarget.CopyReadBuffer, _target, IntPtr.Zero, IntPtr.Zero, _bufferSize);
+                }
                 _bufferSize = dataSizeInBytes;
                 GL.DeleteBuffer(oldBufferID);
 

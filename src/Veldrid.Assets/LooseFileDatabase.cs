@@ -12,7 +12,8 @@ namespace Veldrid.Assets
         private readonly string _rootPath;
         private Dictionary<Type, AssetLoader> _assetLoaders = new Dictionary<Type, AssetLoader>()
         {
-            { typeof(ImageProcessorTexture), new PngLoader() }
+            { typeof(ImageProcessorTexture), new PngLoader() },
+            { typeof(ObjMeshInfo), new ModelLoader() }
         };
 
         private static readonly JsonSerializer _serializer = CreateDefaultSerializer();
@@ -34,7 +35,7 @@ namespace Veldrid.Assets
         {
             string path = GetAssetTypeDirectory<T>();
             var files = Directory.EnumerateFiles(path);
-            return files.Select(file => Path.ChangeExtension(Path.GetFullPath(file), null)).ToArray();
+            return files.Select(file => Path.GetFullPath(file)).ToArray();
         }
 
         public void SaveDefinition<T>(T obj, string name)

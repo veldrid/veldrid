@@ -17,6 +17,7 @@
     <Compile Include="AssetLoader.cs" />
     <Compile Include="LooseFileDatabase.cs" />
     <Compile Include="MaterialAsset.cs" />
+    <Compile Include="ModelLoader.cs" />
     <Compile Include="PngLoader.cs" />
     <Compile Include="TextAssetLoader.cs" />
     <Compile Include="TextureAsset.cs" />

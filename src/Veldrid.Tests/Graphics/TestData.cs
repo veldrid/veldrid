@@ -17,16 +17,22 @@ namespace Veldrid.Graphics
                 return new RenderContext[]
                 {
                     new D3DRenderContext(new TestWindow()),
-                    new OpenGLRenderContext(new TestWindow())
+                    GetDefaultOpenGLContext(new TestWindow())
                 };
             }
             else
             {
                 return new RenderContext[]
                 {
-                    new OpenGLRenderContext(new TestWindow())
+                    GetDefaultOpenGLContext(new TestWindow())
                 };
             }
+        }
+        
+        private static OpenGLRenderContext GetDefaultOpenGLContext(OpenTKWindow window)
+        {
+            bool debug = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            return new OpenGLRenderContext(window, debug);
         }
 
         internal static IEnumerable<object> DataValueArrays()

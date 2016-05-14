@@ -243,7 +243,7 @@ namespace Veldrid.RenderDemo
             if (_boxSceneVM == null)
             {
                 _boxSceneVM = new FlatListVisibilityManager();
-                var sphere = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Assets", "Models", "Sphere.obj"));
+                var sphere = _ad.LoadAsset<ObjMeshInfo>(new AssetID("Models/Sphere.obj"));
                 var tcr = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
                 tcr.Position = new Vector3(-5f, 0, -3);
                 _boxSceneVM.AddRenderItem(tcr);
@@ -293,21 +293,24 @@ namespace Veldrid.RenderDemo
             if (_shadowsScene == null)
             {
                 _shadowsScene = new FlatListVisibilityManager();
-                var sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Assets", "Models", "Sphere.obj"));
+                var sphereMeshInfo = _ad.LoadAsset<ObjMeshInfo>(new AssetID("Models/Sphere.obj"));
 
-                var cube1 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
+                var stoneMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Stone.json"));
+                var woodMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Wood.json"));
+
+                var cube1 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
                 _shadowsScene.AddRenderItem(cube1);
 
-                var cube2 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, Textures.CubeTexture);
+                var cube2 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
                 cube2.Position = new Vector3(3f, 5f, 0f);
                 cube2.Scale = new Vector3(3f);
                 _shadowsScene.AddRenderItem(cube2);
 
-                var sphere3 = new ShadowCaster(_rc, _ad, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, Textures.PureWhiteTexture);
+                var sphere3 = new ShadowCaster(_rc, _ad, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, stoneMaterial);
                 sphere3.Position = new Vector3(0f, 0f, 5f);
                 _shadowsScene.AddRenderItem(sphere3);
 
-                var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
+                var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
                 plane.Position = new Vector3(0, -2.5f, 0);
                 plane.Scale = new Vector3(20f);
 

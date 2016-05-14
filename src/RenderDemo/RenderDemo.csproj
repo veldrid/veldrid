@@ -47,7 +47,10 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Release|x64' " />
   <ItemGroup>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_RegularPass.json">
+    <Content Include="Assets\MaterialAsset\ShadowCaster_Stone.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\MaterialAsset\ShadowCaster_Wood.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\MaterialAsset\ShadowCaster_ShadowMap.json">

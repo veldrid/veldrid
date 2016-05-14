@@ -23,7 +23,6 @@ namespace Veldrid.RenderDemo
         private readonly MaterialAsset _shadowPassMaterialAsset;
         private readonly MaterialAsset _regularPassMaterialAsset;
 
-        private readonly TextureData _surfaceTextureData;
         private readonly string[] _stages = new string[] { "ShadowMap", "Standard" };
 
         private VertexBuffer _vb;
@@ -35,14 +34,18 @@ namespace Veldrid.RenderDemo
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
         public Vector3 Scale { get; set; } = Vector3.One;
 
-        public ShadowCaster(RenderContext rc, AssetDatabase ad, VertexPositionNormalTexture[] vertices, int[] indices, TextureData surfaceTexture)
+        public ShadowCaster(
+            RenderContext rc,
+            AssetDatabase ad,
+            VertexPositionNormalTexture[] vertices,
+            int[] indices,
+            MaterialAsset regularPassMaterial)
         {
             _vertices = vertices;
             _indices = indices;
-            _surfaceTextureData = surfaceTexture;
 
             _shadowPassMaterialAsset = ad.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_ShadowMap.json");
-            _regularPassMaterialAsset = ad.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_RegularPass.json");
+            _regularPassMaterialAsset = regularPassMaterial;
 
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
@@ -78,7 +81,6 @@ namespace Veldrid.RenderDemo
             _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Length, false);
             _ib.SetIndices(_indices);
 
-            var surfaceTextureElement = new TextureDataInputElement("SurfaceTexture", _surfaceTextureData);
             _shadowPassMaterial = _shadowPassMaterialAsset.Create(ad, rc);
             _regularPassMaterial = _regularPassMaterialAsset.Create(ad, rc);
         }

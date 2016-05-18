@@ -86,24 +86,13 @@ namespace Veldrid.Graphics.Direct3D
                 D3DTexture texture = (D3DTexture)genericElement.GetDeviceTexture(rc);
 
                 ShaderResourceViewDescription srvd = new ShaderResourceViewDescription();
-                srvd.Format = MapFormat(texture.DeviceTexture.Description.Format);
+                srvd.Format = D3DFormats.MapFormatForShaderResourceView(texture.DeviceTexture.Description.Format);
                 srvd.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
                 srvd.Texture2D.MipLevels = texture.DeviceTexture.Description.MipLevels;
                 srvd.Texture2D.MostDetailedMip = 0;
 
                 ShaderResourceView resourceView = new ShaderResourceView(device, texture.DeviceTexture, srvd);
                 _resourceViewBindings[i] = new ResourceViewBinding(i, resourceView);
-            }
-        }
-
-        private SharpDX.DXGI.Format MapFormat(SharpDX.DXGI.Format format)
-        {
-            switch (format)
-            {
-                case SharpDX.DXGI.Format.R16_Typeless:
-                    return SharpDX.DXGI.Format.R16_UNorm;
-                default:
-                    return format;
             }
         }
 
@@ -214,6 +203,17 @@ namespace Veldrid.Graphics.Direct3D
                 _device.ImmediateContext.VertexShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
                 _device.ImmediateContext.PixelShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
             }
+        }
+
+        public void UseTexture(int slot, ShaderTextureBinding binding)
+        {
+            if (!(binding is D3DTextureBinding))
+            {
+                throw new InvalidOperationException("Illegal shader texture binding used.");
+            }
+
+            var srv = ((D3DTextureBinding)binding).ResourceView;
+            _device.ImmediateContext.PixelShader.SetShaderResource(slot, srv);
         }
 
         public void Dispose()

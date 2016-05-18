@@ -123,7 +123,7 @@ namespace Veldrid.Graphics.Direct3D
             // If the pitch exactly matches the row size, we can simply copy all the data.
             if (rowSize == db.RowPitch)
             {
-                Utilities.CopyMemory(destPtr, db.DataPointer, elementCount * pixelSizeInBytes);
+                SharpDX.Utilities.CopyMemory(destPtr, db.DataPointer, elementCount * pixelSizeInBytes);
             }
             else
             {

@@ -154,6 +154,19 @@ namespace Veldrid.Graphics.Direct3D
             });
         }
 
+        public override ShaderTextureBinding CreateShaderTextureBinding(DeviceTexture texture)
+        {
+            D3DTexture d3dTexture = (D3DTexture)texture;
+            ShaderResourceViewDescription srvd = new ShaderResourceViewDescription();
+            srvd.Format = D3DFormats.MapFormatForShaderResourceView(d3dTexture.DeviceTexture.Description.Format);
+            srvd.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
+            srvd.Texture2D.MipLevels = d3dTexture.DeviceTexture.Description.MipLevels;
+            srvd.Texture2D.MostDetailedMip = 0;
+
+            ShaderResourceView srv = new ShaderResourceView(_device, d3dTexture.DeviceTexture, srvd);
+            return new D3DTextureBinding(srv, d3dTexture);
+        }
+
         public override BlendState CreateCustomBlendState(bool isBlendEnabled, Blend srcBlend, Blend destBlend, BlendFunction blendFunc)
         {
             return new D3DBlendState(_device, isBlendEnabled, srcBlend, destBlend, blendFunc, srcBlend, destBlend, blendFunc);

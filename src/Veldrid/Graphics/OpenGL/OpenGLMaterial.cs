@@ -173,6 +173,33 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        public void UseTexture(int slot, ShaderTextureBinding binding)
+        {
+            if (!(binding is OpenGLTextureBinding))
+            {
+                throw new InvalidOperationException("Illegal binding type.");
+            }
+
+            BindTexture(slot, (OpenGLTexture)binding.BoundTexture);
+        }
+
+        private void BindTexture(int slot, OpenGLTexture texture)
+        {
+            GL.ActiveTexture(TextureUnit.Texture0 + slot);
+            texture.Apply();
+            GL.Uniform1(GetTextureUniformLocation(slot), slot);
+        }
+
+        private int GetTextureUniformLocation(int slot)
+        {
+            if (_textureBindings.Length <= slot)
+            {
+                throw new InvalidOperationException("Illegal slot value. There are only  " + _textureBindings.Length + " texture bindings.");
+            }
+
+            return _textureBindings[slot].UniformLocation;
+        }
+
         public void Dispose()
         {
             GL.DeleteProgram(_programID);
@@ -195,7 +222,7 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-        private abstract class UniformBinding: IDisposable
+        private abstract class UniformBinding : IDisposable
         {
             public int ProgramID { get; }
 

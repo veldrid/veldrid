@@ -6,5 +6,6 @@ namespace Veldrid.Graphics
     {
         void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider);
         void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders);
+        void UseTexture(int slot, ShaderTextureBinding binding);
     }
 }

@@ -4,83 +4,126 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Veldrid.Assets;
 using Veldrid.Graphics;
+using Veldrid.RenderDemo.Drawers;
 
 namespace Veldrid.RenderDemo
 {
-    public class MaterialEditorWindow
+    public class AssetEditorWindow
     {
-        private TestItem _testItem = new TestItem();
-        private MaterialAsset _materialAsset = new MaterialAsset();
+        private object _selectedAsset = null;
+
         private bool _windowOpened = false;
         private readonly LooseFileDatabase _assetDb;
 
         private TextInputBuffer _filenameBuffer = new TextInputBuffer(100);
-        private string _loadedName;
+        private string _loadedAssetPath;
+        private bool _columnWidthSet;
 
-        public MaterialEditorWindow(LooseFileDatabase lfdb)
+        public AssetEditorWindow(LooseFileDatabase lfdb)
         {
             _assetDb = lfdb;
         }
 
-        public MaterialAsset MaterialAsset => _materialAsset;
-
         public void Open() => _windowOpened = true;
 
-        public void Render()
+        public void Render(RenderContext rc)
         {
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(450, Math.Min(600, ImGui.GetIO().DisplaySize.Y - 40)), SetCondition.FirstUseEver);
+            Vector2 size = ImGui.GetIO().DisplaySize;
+            ImGui.SetNextWindowSize(size - new Vector2(50, 50), SetCondition.Always);
+            ImGui.SetNextWindowPosCenter(SetCondition.Always);
 
             if (_windowOpened)
             {
-
-                if (ImGui.BeginWindow("Editor Window", ref _windowOpened, WindowFlags.ShowBorders))
+                ImGui.PushStyleVar(StyleVar.WindowRounding, 0f);
+                if (ImGui.BeginWindow("Editor Window", ref _windowOpened, WindowFlags.ShowBorders | WindowFlags.NoCollapse | WindowFlags.NoMove | WindowFlags.NoResize))
                 {
                     ImGui.Columns(2, "EditorColumns", true);
-                    ImGui.SetColumnOffset(1, ImGui.GetWindowWidth() * 0.3f);
-                    string[] materials = _assetDb.GetAssetNames<MaterialAsset>();
-                    foreach (string name in materials)
+                    if (!_columnWidthSet)
                     {
-                        if (ImGui.Selectable(name) && _loadedName != name)
-                        {
-                            _materialAsset = _assetDb.LoadAsset<MaterialAsset>(name);
-                            _loadedName = name;
-                            _filenameBuffer.StringValue = name;
-                        }
+                        _columnWidthSet = true;
+                        float initialOffset = Math.Min(200, ImGui.GetWindowWidth() * 0.3f);
+                        ImGui.SetColumnOffset(1, initialOffset);
                     }
+
+                    DirectoryNode node = _assetDb.GetRootDirectoryGraph();
+                    DrawRecursiveNode(node, false);
+
                     ImGui.NextColumn();
-                    Drawer d = DrawerCache.GetDrawer(_materialAsset.GetType());
-                    object o = _materialAsset;
-                    if (d.Draw("Material", ref o))
+                    if (_selectedAsset != null)
                     {
-                        _materialAsset = (MaterialAsset)o;
-                    }
+                        Drawer d = DrawerCache.GetDrawer(_selectedAsset.GetType());
+                        d.Draw(_selectedAsset.GetType().Name, ref _selectedAsset, rc);
 
-
-                    ImGui.Text("Asset Name:");
-                    ImGui.PushItemWidth(220);
-                    ImGui.SameLine();
-                    if (ImGui.InputText(" ", _filenameBuffer.Data, _filenameBuffer.ByteCount, InputTextFlags.Default, null))
-                    {
-                        _loadedName = _filenameBuffer.StringValue;
-                    }
-                    ImGui.PopItemWidth();
-                    ImGui.SameLine();
-                    if (ImGui.Button("Save"))
-                    {
-                        string path = _assetDb.GetAssetPath(_loadedName);
-                        using (var fs = File.CreateText(path))
+                        ImGui.Text("Asset Name:");
+                        ImGui.PushItemWidth(220);
+                        ImGui.SameLine();
+                        if (ImGui.InputText(" ", _filenameBuffer.Data, _filenameBuffer.CapacityInBytes, InputTextFlags.Default, null))
                         {
-                            var serializer = JsonSerializer.CreateDefault();
-                            serializer.TypeNameHandling = TypeNameHandling.Auto;
-                            serializer.Serialize(fs, _materialAsset);
+                            _loadedAssetPath = _filenameBuffer.StringValue;
+                        }
+                        ImGui.PopItemWidth();
+                        ImGui.SameLine();
+                        if (ImGui.Button("Save"))
+                        {
+                            string path = _assetDb.GetAssetPath(_loadedAssetPath);
+                            using (var fs = File.CreateText(path))
+                            {
+                                var serializer = JsonSerializer.CreateDefault();
+                                serializer.TypeNameHandling = TypeNameHandling.All;
+                                serializer.Serialize(fs, _selectedAsset);
+                            }
                         }
                     }
                 }
                 ImGui.EndWindow();
+                ImGui.PopStyleVar();
+            }
+        }
+
+        private void DrawRecursiveNode(DirectoryNode node, bool pushTreeNode)
+        {
+            if (!pushTreeNode || ImGui.TreeNode(node.FolderName))
+            {
+                foreach (DirectoryNode child in node.Children)
+                {
+                    DrawRecursiveNode(child, pushTreeNode: true);
+                }
+
+                foreach (AssetInfo asset in node.AssetInfos)
+                {
+                    if (ImGui.Selectable(asset.Name) && _loadedAssetPath != asset.Path)
+                    {
+                        _selectedAsset = _assetDb.LoadAsset(asset.Path);
+                        _loadedAssetPath = asset.Path;
+                        _filenameBuffer.StringValue = asset.Name;
+                    }
+                    if (ImGui.IsLastItemHovered())
+                    {
+                        ImGui.SetTooltip(asset.Path);
+                    }
+                    if (ImGui.BeginPopupContextItem(asset.Name + "_context"))
+                    {
+                        if (ImGui.Button("Clone"))
+                        {
+                            _assetDb.CloneAsset(asset.Path);
+                        }
+                        if (ImGui.Button("Delete"))
+                        {
+                            _assetDb.DeleteAsset(asset.Path);
+                        }
+                        ImGui.EndPopup();
+                    }
+                }
+
+                if (pushTreeNode)
+                {
+                    ImGui.TreePop();
+                }
             }
         }
     }
@@ -89,18 +132,18 @@ namespace Veldrid.RenderDemo
     {
         public Type TypeDrawn { get; }
 
-        public bool Draw(string label, ref object obj)
+        public bool Draw(string label, ref object obj, RenderContext rc)
         {
             ImGui.PushID(label);
 
             bool result;
             if (obj == null)
             {
-                result = DrawNewItemSelector(label, ref obj);
+                result = DrawNewItemSelector(label, ref obj, rc);
             }
             else
             {
-                result = DrawNonNull(label, ref obj);
+                result = DrawNonNull(label, ref obj, rc);
             }
 
             ImGui.PopID();
@@ -108,8 +151,8 @@ namespace Veldrid.RenderDemo
             return result;
         }
 
-        protected abstract bool DrawNonNull(string label, ref object obj);
-        protected virtual bool DrawNewItemSelector(string label, ref object obj)
+        protected abstract bool DrawNonNull(string label, ref object obj, RenderContext rc);
+        protected virtual bool DrawNewItemSelector(string label, ref object obj, RenderContext rc)
         {
             ImGui.Text(label + ": NULL ");
             ImGui.SameLine();
@@ -151,7 +194,8 @@ namespace Veldrid.RenderDemo
             { typeof(float), new FuncDrawer<float>(GenericDrawFuncs.DrawSingle) },
             { typeof(byte), new FuncDrawer<byte>(GenericDrawFuncs.DrawByte) },
             { typeof(string), new FuncDrawer<string>(GenericDrawFuncs.DrawString, GenericDrawFuncs.NewString) },
-            { typeof(bool), new FuncDrawer<bool>(GenericDrawFuncs.DrawBool) }
+            { typeof(bool), new FuncDrawer<bool>(GenericDrawFuncs.DrawBool) },
+            {  typeof(ImageProcessorTexture), new TextureDrawer() }
         };
 
         public static Drawer GetDrawer(Type type)
@@ -197,7 +241,7 @@ namespace Veldrid.RenderDemo
     {
         public Drawer() : base(typeof(T)) { }
 
-        protected sealed override bool DrawNonNull(string label, ref object obj)
+        protected sealed override bool DrawNonNull(string label, ref object obj, RenderContext rc)
         {
             T tObj;
             try
@@ -209,15 +253,15 @@ namespace Veldrid.RenderDemo
                 throw new InvalidOperationException($"Invalid type given to Drawer<{typeof(T).Name}>. {obj.GetType().Name} is not a compatible type.");
             }
 
-            bool result = Draw(label, ref tObj);
+            bool result = Draw(label, ref tObj, rc);
             obj = tObj;
             return result;
         }
 
-        public abstract bool Draw(string label, ref T obj);
+        public abstract bool Draw(string label, ref T obj, RenderContext rc);
     }
 
-    public delegate bool DrawFunc<T>(string label, ref T obj);
+    public delegate bool DrawFunc<T>(string label, ref T obj, RenderContext rc);
     public class FuncDrawer<T> : Drawer<T>
     {
         private readonly DrawFunc<T> _drawFunc;
@@ -229,9 +273,9 @@ namespace Veldrid.RenderDemo
             _newFunc = newFunc;
         }
 
-        public override bool Draw(string label, ref T obj)
+        public override bool Draw(string label, ref T obj, RenderContext rc)
         {
-            return _drawFunc(label, ref obj);
+            return _drawFunc(label, ref obj, rc);
         }
 
         public override object CreateNewObject()
@@ -249,7 +293,7 @@ namespace Veldrid.RenderDemo
 
     public static class GenericDrawFuncs
     {
-        public static unsafe bool DrawString(string label, ref string s)
+        public static unsafe bool DrawString(string label, ref string s, RenderContext rc)
         {
             bool result = false;
 
@@ -283,7 +327,7 @@ namespace Veldrid.RenderDemo
             return string.Empty;
         }
 
-        public static bool DrawInt(string label, ref int i)
+        public static bool DrawInt(string label, ref int i, RenderContext rc)
         {
             ImGui.PushItemWidth(50f);
             bool result = ImGui.DragInt(label, ref i, 1f, int.MinValue, int.MaxValue, i.ToString());
@@ -291,7 +335,7 @@ namespace Veldrid.RenderDemo
             return result;
         }
 
-        public static bool DrawSingle(string label, ref float f)
+        public static bool DrawSingle(string label, ref float f, RenderContext rc)
         {
             ImGui.PushItemWidth(50f);
             bool result = ImGui.DragFloat(label, ref f, -1000f, 1000f, 1f, f.ToString(), 1f);
@@ -299,7 +343,7 @@ namespace Veldrid.RenderDemo
             return result;
         }
 
-        public static bool DrawByte(string label, ref byte b)
+        public static bool DrawByte(string label, ref byte b, RenderContext rc)
         {
             ImGui.PushItemWidth(50f);
             int val = b;
@@ -313,7 +357,7 @@ namespace Veldrid.RenderDemo
             return false;
         }
 
-        public static bool DrawBool(string label, ref bool b)
+        public static bool DrawBool(string label, ref bool b, RenderContext rc)
         {
             return ImGui.Checkbox(label, ref b);
         }
@@ -328,7 +372,7 @@ namespace Veldrid.RenderDemo
             _enumOptions = Enum.GetNames(enumType);
         }
 
-        protected override bool DrawNonNull(string label, ref object obj)
+        protected override bool DrawNonNull(string label, ref object obj, RenderContext rc)
         {
             bool result = false;
             string menuLabel = $"{label}: {obj.ToString()}";
@@ -358,7 +402,7 @@ namespace Veldrid.RenderDemo
             _isValueType = typeof(T).GetTypeInfo().IsValueType;
         }
 
-        protected override bool DrawNonNull(string label, ref object obj)
+        protected override bool DrawNonNull(string label, ref object obj, RenderContext rc)
         {
             T[] arr = (T[])obj;
             int length = arr.Length;
@@ -418,7 +462,7 @@ namespace Veldrid.RenderDemo
                         drawer = DrawerCache.GetDrawer(realType);
                     }
 
-                    bool changed = drawer.Draw($"{TypeDrawn.GetElementType().Name}[{i}]", ref element);
+                    bool changed = drawer.Draw($"{TypeDrawn.GetElementType().Name}[{i}]", ref element, rc);
                     if (changed || drawer.TypeDrawn.GetTypeInfo().IsValueType)
                     {
                         arr[i] = (T)element;
@@ -468,7 +512,7 @@ namespace Veldrid.RenderDemo
             _properties = type.GetTypeInfo().GetProperties(BindingFlags.Instance | BindingFlags.Public);
         }
 
-        protected override bool DrawNonNull(string label, ref object obj)
+        protected override bool DrawNonNull(string label, ref object obj, RenderContext rc)
         {
             ImGui.PushID(label);
 
@@ -496,7 +540,7 @@ namespace Veldrid.RenderDemo
                     {
                         drawer = DrawerCache.GetDrawer(pi.PropertyType);
                     }
-                    bool changed = drawer.Draw(pi.Name, ref value);
+                    bool changed = drawer.Draw(pi.Name, ref value, rc);
                     if (changed && originalValue != value)
                     {
                         pi.SetValue(obj, value);
@@ -519,12 +563,12 @@ namespace Veldrid.RenderDemo
             _subTypes = type.GetTypeInfo().Assembly.GetTypes().Where(t => type.IsAssignableFrom(t) && !t.GetTypeInfo().IsAbstract).ToArray();
         }
 
-        protected override bool DrawNonNull(string label, ref object obj)
+        protected override bool DrawNonNull(string label, ref object obj, RenderContext rc)
         {
             throw new InvalidOperationException("AbstractItemDrawer shouldn't be used for non-null items.");
         }
 
-        protected override bool DrawNewItemSelector(string label, ref object obj)
+        protected override bool DrawNewItemSelector(string label, ref object obj, RenderContext rc)
         {
             bool result = false;
 

@@ -10,7 +10,7 @@
     <ProjectGuid>{881C55C7-0D91-4A87-B47A-46042C6F4CA0}</ProjectGuid>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Asset.cs" />
+    <Compile Include="AssetRef.cs" />
     <Compile Include="AssetDatabase.cs" />
     <Compile Include="AssetDefinition.cs" />
     <Compile Include="AssetID.cs" />
@@ -24,6 +24,9 @@
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj">
       <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>
@@ -36,7 +39,6 @@
       <Name>SharpYaml</Name>
     </Reference>
     <None Include="project.json" />
-    <Reference Include="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />

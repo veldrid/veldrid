@@ -101,6 +101,11 @@ namespace Veldrid.Graphics.OpenGL
                 PixelType.UnsignedShort);
         }
 
+        public override ShaderTextureBinding CreateShaderTextureBinding(DeviceTexture texture)
+        {
+            return new OpenGLTextureBinding((OpenGLTexture)texture);
+        }
+
         public override VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic)
         {
             return new OpenGLVertexBuffer(isDynamic);

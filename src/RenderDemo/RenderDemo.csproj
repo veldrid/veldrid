@@ -16,20 +16,22 @@
     <BaseNuGetRuntimeIdentifier Condition="'$(OSTarget)' == 'Windows_NT'">win7</BaseNuGetRuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AssetRefDrawer.cs" />
+    <Compile Include="Drawers\AssetRefDrawer.cs" />
     <Compile Include="ColoredCubeRenderer.cs" />
     <Compile Include="DirectionalLightBuffer.cs" />
+    <Compile Include="Drawers\ModelDrawer.cs" />
     <Compile Include="ForwardRendering\ShadowMapStage.cs" />
+    <Compile Include="ImGuiImageHelper.cs" />
     <Compile Include="ImGuiRenderer.cs" />
     <Compile Include="InputTracker.cs" />
     <Compile Include="Assets\Models\CubeModel.cs" />
     <Compile Include="Assets\Models\PlaneModel.cs" />
-    <Compile Include="MaterialEditorWindow.cs" />
+    <Compile Include="AssetEditorWindow.cs" />
     <Compile Include="PixelFormatConversion.cs" />
     <Compile Include="Preferences.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="ShadowCaster.cs" />
-    <Compile Include="ShadowMapPreview.cs" />
+    <Compile Include="ForwardRendering\ShadowCaster.cs" />
+    <Compile Include="ForwardRendering\ShadowMapPreview.cs" />
     <Compile Include="SpecialFolders.cs" />
     <Compile Include="SwappableRenderItem.cs" />
     <Compile Include="TeapotRenderer.cs" />
@@ -37,6 +39,7 @@
     <Compile Include="TextInputBuffer.cs" />
     <Compile Include="TexturedMeshRenderer.cs" />
     <Compile Include="Assets\Textures\Textures.cs" />
+    <Compile Include="Drawers\TextureDrawer.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
     <UseVSHostingProcess>true</UseVSHostingProcess>

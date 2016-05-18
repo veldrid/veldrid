@@ -64,10 +64,11 @@ namespace Veldrid.RenderDemo
         private static PipelineStage[] _configurableStages;
 
         private static LooseFileDatabase _ad;
-        private static MaterialEditorWindow _editorWindow;
+        private static AssetEditorWindow _editorWindow;
 
         private static bool _perspectiveProjection = true;
         private static float _orthographicWidth = 20f;
+        private static ShadowMapPreview _shadowMapPreview;
 
         public static void Main()
         {
@@ -101,8 +102,8 @@ namespace Veldrid.RenderDemo
 
                 _renderer = new Renderer(_rc, _configurableStages.Append(new StandardPipelineStage("ImGui")).ToArray());
 
-                _ad = new LooseFileDatabase(AppContext.BaseDirectory);
-                _editorWindow = new MaterialEditorWindow(_ad);
+                _ad = new LooseFileDatabase(Path.Combine(AppContext.BaseDirectory, "Assets"));
+                _editorWindow = new AssetEditorWindow(_ad);
 
                 _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
 
@@ -197,7 +198,7 @@ namespace Veldrid.RenderDemo
                 flags |= SharpDX.Direct3D11.DeviceCreationFlags.Debug;
             }
 #endif
-           return new D3DRenderContext(_window, flags);
+            return new D3DRenderContext(_window, flags);
         }
 
         private static void SetCameraLookMatrix(Matrix4x4 mat)
@@ -214,11 +215,11 @@ namespace Veldrid.RenderDemo
         {
             if (_perspectiveProjection)
             {
-            _projectionMatrixProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
-                _fieldOfViewRadians,
-                _rc.Window.Width / (float)_rc.Window.Height,
-                1f,
-                1000f);
+                _projectionMatrixProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
+                    _fieldOfViewRadians,
+                    _rc.Window.Width / (float)_rc.Window.Height,
+                    1f,
+                    1000f);
             }
             else
             {
@@ -314,8 +315,8 @@ namespace Veldrid.RenderDemo
                 plane.Position = new Vector3(0, -2.5f, 0);
                 plane.Scale = new Vector3(20f);
 
-                var shadowMapPreview = new ShadowMapPreview(_ad, _rc);
-                _shadowsScene.AddRenderItem(shadowMapPreview);
+                _shadowMapPreview = new ShadowMapPreview(_ad, _rc);
+                _shadowsScene.AddRenderItem(_shadowMapPreview);
 
                 _shadowsScene.AddRenderItem(plane);
                 _shadowsScene.AddRenderItem(_imguiRenderer);
@@ -350,7 +351,6 @@ namespace Veldrid.RenderDemo
 
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
             _imguiRenderer.UpdateImGuiInput(_window, snapshot);
-            _imguiRenderer.NewFrame();
 
             DrawMainMenu();
 
@@ -359,17 +359,17 @@ namespace Veldrid.RenderDemo
             string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
             _rc.Window.Title = $"[{apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
 
-            if (InputTracker.GetKeyDown(OpenTK.Input.Key.F4))
+            if (InputTracker.GetKeyDown(OpenTK.Input.Key.F4) && (InputTracker.GetKey(OpenTK.Input.Key.AltLeft) || InputTracker.GetKey(OpenTK.Input.Key.AltRight)))
+            {
+                _window.Close();
+            }
+            if (InputTracker.GetKeyDown(OpenTK.Input.Key.PrintScreen))
             {
                 ((ShadowMapStage)_renderer.Stages[0]).TakeScreenshot = true;
             }
             if (InputTracker.GetKeyDown(OpenTK.Input.Key.F11))
             {
                 ToggleFullScreenState();
-            }
-            if (InputTracker.GetKeyDown(OpenTK.Input.Key.Escape))
-            {
-                _window.Close();
             }
 
             float deltaX = InputTracker.MousePosition.X - _previousMouseX;
@@ -447,7 +447,7 @@ namespace Veldrid.RenderDemo
                 SetCameraLookMatrix(cameraView);
             }
 
-            _editorWindow.Render();
+            _editorWindow.Render(_rc);
 
             _imguiRenderer.UpdateFinished();
         }
@@ -552,7 +552,7 @@ namespace Veldrid.RenderDemo
                             _perspectiveProjection = !_perspectiveProjection;
                             SetProjectionMatrix();
                         }
-                        
+
                         if (_perspectiveProjection)
                         {
                             if (ImGui.SliderFloat("FOV", ref _fieldOfViewRadians, 0.05f, (float)Math.PI - .01f, _fieldOfViewRadians.ToString(), 1f))
@@ -567,7 +567,7 @@ namespace Veldrid.RenderDemo
                                 SetProjectionMatrix();
                             }
                         }
-                        
+
                         ImGui.EndMenu();
                     }
 
@@ -671,7 +671,7 @@ https://github.com/mellinoe/veldrid.");
                     object prefs = Preferences.Instance;
                     Drawer d = new ComplexItemDrawer(typeof(Preferences), false);
                     ImGui.SetNextTreeNodeOpened(true, SetCondition.FirstUseEver);
-                    d.Draw("Preferences", ref prefs);
+                    d.Draw("Preferences", ref prefs, _rc);
                     if (ImGui.Button("Save"))
                     {
                         Preferences.Instance.Save();
@@ -756,6 +756,7 @@ https://github.com/mellinoe/veldrid.");
             }
 
             _renderer.RenderFrame(_visiblityManager);
+            _imguiRenderer.NewFrame();
 
             if (_takeScreenshot)
             {

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Veldrid.Graphics;
 
 namespace Veldrid.Assets
@@ -14,12 +15,14 @@ namespace Veldrid.Assets
         public ContextTextureInputElement[] ContextTextures { get; set; } = new ContextTextureInputElement[0];
         public TextureAsset[] TextureInputs { get; set; } = new TextureAsset[0];
 
-        public Material Create(AssetDatabase ad, RenderContext rc)
+        public Material Create(AssetDatabase ad, RenderContext rc, Dictionary<string, ConstantBufferDataProvider> providers = null)
         {
+            providers = providers ?? rc.DataProviders;
             MaterialTextureInputElement[] texElements = TextureInputs.Select(ta => ta.Create(ad)).ToArray();
             var allTextures = texElements.Concat(ContextTextures).ToArray();
             var materialTextureInputs = new MaterialTextureInputs(allTextures);
-            MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(GlobalInputs.Select(mgid => mgid.Create(rc)).ToArray());
+            MaterialInputs<MaterialGlobalInputElement> globalInputs =
+                new MaterialInputs<MaterialGlobalInputElement>(GlobalInputs.Select(mgid => mgid.Create(providers)).ToArray());
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(PerObjectInputs);
             return rc.ResourceFactory.CreateMaterial(rc, VertexShader, FragmentShader, VertexInputs, globalInputs, perObjectInputs, materialTextureInputs);
         }
@@ -43,9 +46,9 @@ namespace Veldrid.Assets
         public MaterialInputType Type { get; set; }
         public string ProviderName { get; set; }
 
-        public MaterialGlobalInputElement Create(RenderContext rc)
+        public MaterialGlobalInputElement Create(Dictionary<string, ConstantBufferDataProvider> providers)
         {
-            return new MaterialGlobalInputElement(Name, Type, rc.DataProviders[ProviderName]);
+            return new MaterialGlobalInputElement(Name, Type, providers[ProviderName]);
         }
     }
 }

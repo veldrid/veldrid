@@ -27,7 +27,6 @@ namespace Veldrid.RenderDemo
         {
             if (_teapotMesh == null)
             {
-
                 string path = Path.Combine(AppContext.BaseDirectory, "Assets", "Models", "Teapot.obj");
                 using (var fs = File.OpenRead(path))
                 {

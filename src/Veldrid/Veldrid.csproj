@@ -28,6 +28,7 @@
     <Compile Include="Graphics\Direct3D\D3DRenderContext.cs" />
     <Compile Include="Graphics\Direct3D\D3DResourceFactory.cs" />
     <Compile Include="Graphics\Direct3D\D3DTexture.cs" />
+    <Compile Include="Graphics\Direct3D\D3DTextureBinding.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
     <Compile Include="Graphics\FaceCullingMode.cs" />
     <Compile Include="Graphics\FlatListVisibilityManager.cs" />
@@ -40,6 +41,7 @@
     <Compile Include="Graphics\OpenGL\OpenGLFormats.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFramebuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLRasterizerState.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLTextureBinding.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLUniformStorageAdapter.cs" />
     <Compile Include="Graphics\Pipeline\PipelineStage.cs" />
     <Compile Include="Graphics\Pipeline\StandardPipelineStage.cs" />
@@ -49,6 +51,7 @@
     <Compile Include="Graphics\RenderItemIndex.cs" />
     <Compile Include="Graphics\RenderOrderKey.cs" />
     <Compile Include="Graphics\RenderQueue.cs" />
+    <Compile Include="Graphics\ShaderTextureBinding.cs" />
     <Compile Include="Graphics\TextureData.cs" />
     <Compile Include="Graphics\TriangleFillMode.cs" />
     <Compile Include="Graphics\VertexPositionNormalColorTexture.cs" />
@@ -95,6 +98,7 @@
     <Compile Include="Platform\InputSnapshot.cs" />
     <Compile Include="Platform\WindowState.cs" />
     <Compile Include="IllegalValueException.cs" />
+    <Compile Include="Utilities.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <UseVSHostingProcess>true</UseVSHostingProcess>

@@ -13,7 +13,8 @@ namespace Veldrid.RenderDemo
     public class ImGuiRenderer : SwappableRenderItem, IDisposable
     {
         private readonly DynamicDataProvider<Matrix4x4> _projectionMatrixProvider;
-        private TextureData _fontTexture;
+        private RawTextureDataArray<int> _fontTexture;
+        private FontTextureData _textureData;
 
         // Context objects
         private Material _material;
@@ -22,8 +23,10 @@ namespace Veldrid.RenderDemo
         private BlendState _blendState;
         private DepthStencilState _depthDisabledState;
         private RasterizerState _rasterizerState;
+        private ShaderTextureBinding _fontTextureBinding;
 
         private float _wheelPosition;
+        private int _fontAtlasID = 1;
 
         public ImGuiRenderer(RenderContext rc, NativeWindow window)
         {
@@ -66,6 +69,9 @@ namespace Veldrid.RenderDemo
                 {
                     new TextureDataInputElement("surfaceTexture", _fontTexture)
                 }));
+
+            var deviceTexture = rc.ResourceFactory.CreateTexture(_fontTexture.PixelData, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8);
+            _fontTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(deviceTexture);
         }
 
         public void ChangeRenderContext(AssetDatabase ad, RenderContext rc)
@@ -156,17 +162,17 @@ namespace Veldrid.RenderDemo
             IO io = ImGui.GetIO();
 
             // Build
-            var textureData = io.FontAtlas.GetTexDataAsRGBA32();
-            int[] pixels = new int[textureData.Width * textureData.Height];
+            _textureData = io.FontAtlas.GetTexDataAsRGBA32();
+            int[] pixels = new int[_textureData.Width * _textureData.Height];
             for (int i = 0; i < pixels.Length; i++)
             {
-                pixels[i] = ((int*)textureData.Pixels)[i];
+                pixels[i] = ((int*)_textureData.Pixels)[i];
             }
 
-            _fontTexture = new RawTextureDataArray<int>(pixels, textureData.Width, textureData.Height, textureData.BytesPerPixel, Graphics.PixelFormat.R8_G8_B8_A8);
+            _fontTexture = new RawTextureDataArray<int>(pixels, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8);
 
             // Store our identifier
-            io.FontAtlas.SetTexID(420);
+            io.FontAtlas.SetTexID(_fontAtlasID);
 
             // Cleanup (don't clear the input data if you want to append new fonts later)
             io.FontAtlas.ClearTexData();
@@ -254,6 +260,19 @@ namespace Veldrid.RenderDemo
                     }
                     else
                     {
+                        if (pcmd->TextureId != IntPtr.Zero)
+                        {
+                            if (pcmd->TextureId == new IntPtr(_fontAtlasID))
+                            {
+                                _material.UseTexture(0, _fontTextureBinding);
+                            }
+                            else
+                            {
+                                ShaderTextureBinding binding = ImGuiImageHelper.GetShaderTextureBinding(pcmd->TextureId);
+                                _material.UseTexture(0, binding);
+                            }
+                        }
+
                         // TODO: This doesn't take into account viewport coordinates.
                         rc.SetScissorRectangle(
                             (int)pcmd->ClipRect.X,
@@ -282,6 +301,7 @@ namespace Veldrid.RenderDemo
             _material.Dispose();
             _depthDisabledState.Dispose();
             _blendState.Dispose();
+            _fontTextureBinding.Dispose();
         }
 
         internal void UpdateFinished()

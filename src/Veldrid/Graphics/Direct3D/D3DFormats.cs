@@ -139,5 +139,16 @@ namespace Veldrid.Graphics.Direct3D
                     throw Illegal.Value<DepthComparison>();
             }
         }
+
+        public static Format MapFormatForShaderResourceView(Format format)
+        {
+            switch (format)
+            {
+                case Format.R16_Typeless:
+                    return Format.R16_UNorm;
+                default:
+                    return format;
+            }
+        }
     }
 }

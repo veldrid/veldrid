@@ -17,6 +17,7 @@ namespace Veldrid.Graphics
         private Material _material;
 
         private int _needsResizing;
+
         private RenderQueue _renderQueue = new RenderQueue();
         private Rectangle _scissorRectangle;
         private Viewport _viewport;

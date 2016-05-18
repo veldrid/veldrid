@@ -1,15 +1,13 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
-using System.Xml.Serialization;
 using Veldrid.Assets;
 using Veldrid.Graphics;
 
-namespace Veldrid.RenderDemo
+namespace Veldrid.RenderDemo.ForwardRendering
 {
     public class ShadowCaster : SwappableRenderItem, IDisposable
     {
@@ -48,17 +46,10 @@ namespace Veldrid.RenderDemo
             _regularPassMaterialAsset = regularPassMaterial;
 
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
-            _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
+            _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, Utilities.CalculateInverseTranspose);
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
 
             InitializeContextObjects(ad, rc);
-        }
-
-        private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)
-        {
-            Matrix4x4 inverted;
-            Matrix4x4.Invert(m, out inverted);
-            return Matrix4x4.Transpose(inverted);
         }
 
         public void ChangeRenderContext(AssetDatabase ad, RenderContext context)

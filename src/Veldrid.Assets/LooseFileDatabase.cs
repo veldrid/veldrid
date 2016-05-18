@@ -4,6 +4,7 @@ using System.Linq;
 using System;
 using System.Collections.Generic;
 using Veldrid.Graphics;
+using System.Diagnostics;
 
 namespace Veldrid.Assets
 {
@@ -16,6 +17,14 @@ namespace Veldrid.Assets
             { typeof(ObjMeshInfo), new ModelLoader() }
         };
 
+        private static readonly Dictionary<string, Type> s_extensionTypeMappings = new Dictionary<string, Type>()
+        {
+            { ".png", typeof(ImageProcessorTexture) },
+            { ".obj", typeof(ObjMeshInfo) }
+        };
+
+        private Dictionary<AssetID, object> _loadedAssets = new Dictionary<AssetID, object>();
+
         private static readonly JsonSerializer _serializer = CreateDefaultSerializer();
 
         public LooseFileDatabase(string rootPath)
@@ -27,15 +36,8 @@ namespace Veldrid.Assets
         {
             return new JsonSerializer()
             {
-                TypeNameHandling = TypeNameHandling.Auto
+                TypeNameHandling = TypeNameHandling.All
             };
-        }
-
-        public string[] GetAssetNames<T>()
-        {
-            string path = GetAssetTypeDirectory<T>();
-            var files = Directory.EnumerateFiles(path);
-            return files.Select(file => Path.GetFullPath(file)).ToArray();
         }
 
         public void SaveDefinition<T>(T obj, string name)
@@ -45,29 +47,65 @@ namespace Veldrid.Assets
             {
                 _serializer.Serialize(fs, obj);
             }
+
+            _loadedAssets[new AssetID(name)] = obj;
         }
 
         public string GetAssetPath(AssetID assetID)
         {
-            return Path.Combine(GetAssetBase(), assetID.Value);
+            return Path.Combine(_rootPath, assetID.Value);
         }
 
-        public T LoadAsset<T>(AssetRef<T> definition)
-        {
-            AssetLoader<T> loader = GetLoader<T>();
-            using (var s = OpenAssetStream(definition.ID))
-            {
-                return loader.Load(s);
-            }
-        }
-
+        public T LoadAsset<T>(AssetRef<T> definition) => LoadAsset<T>(definition.ID);
         public T LoadAsset<T>(AssetID assetID)
         {
-            AssetLoader<T> loader = GetLoader<T>();
-            using (var stream = OpenAssetStream(assetID))
+            object asset;
+            if (!_loadedAssets.TryGetValue(assetID, out asset))
+            {
+                AssetLoader<T> loader = GetLoader<T>();
+                using (var s = OpenAssetStream(assetID))
+                {
+                    asset = loader.Load(s);
+                }
+            }
+
+            return (T)asset;
+        }
+
+        public object LoadAsset(AssetID id)
+        {
+            Type t = GetAssetType(id);
+            AssetLoader loader = GetLoader(t);
+            using (var stream = OpenAssetStream(id))
             {
                 return loader.Load(stream);
             }
+        }
+
+        public Type GetAssetType(AssetID id)
+        {
+            string extension = Path.GetExtension(id.Value);
+            Type type;
+            if (!s_extensionTypeMappings.TryGetValue(extension, out type))
+            {
+                type = typeof(object);
+            }
+
+            return type;
+        }
+
+        public void CloneAsset(string path)
+        {
+            string folder = new FileInfo(path).Directory.FullName;
+            string fileName = Path.GetFileNameWithoutExtension(path);
+            string extension = Path.GetExtension(path);
+            string destination = Path.Combine(folder, fileName + "_Copy." + extension);
+            File.Copy(path, destination);
+        }
+
+        public void DeleteAsset(string path)
+        {
+            File.Delete(path);
         }
 
         public Stream OpenAssetStream(AssetID assetID)
@@ -77,14 +115,15 @@ namespace Veldrid.Assets
 
         }
 
-        private string GetAssetTypeDirectory<T>()
+        public DirectoryNode GetRootDirectoryGraph() => GetDirectoryGraph(_rootPath);
+        private static DirectoryNode GetDirectoryGraph(string path)
         {
-            return Path.Combine(GetAssetBase(), typeof(T).Name);
-        }
+            DirectoryInfo rootDirectory = new DirectoryInfo(path);
 
-        private string GetAssetBase()
-        {
-            return Path.Combine(_rootPath, "Assets");
+            var assetInfos = rootDirectory.EnumerateFiles().Select(fi => new AssetInfo(fi.Name, fi.FullName)).ToArray();
+            var children = rootDirectory.EnumerateDirectories().Select(di => GetDirectoryGraph(di.FullName)).ToArray();
+
+            return new DirectoryNode(path, assetInfos.ToArray(), children);
         }
 
         private AssetLoader<T> GetLoader<T>()
@@ -98,6 +137,47 @@ namespace Veldrid.Assets
             {
                 return new TextAssetLoader<T>();
             }
+        }
+
+        private AssetLoader GetLoader(Type t)
+        {
+            AssetLoader loader;
+            if (!_assetLoaders.TryGetValue(t, out loader))
+            {
+                Debug.Assert(t == typeof(object));
+                loader = new ObjectTextAssetLoader();
+                _assetLoaders.Add(typeof(object), loader);
+            }
+
+            return loader;
+        }
+    }
+
+    public class AssetInfo
+    {
+        public string Name { get; }
+        public string Path { get; }
+
+        public AssetInfo(string name, string path)
+        {
+            Name = name;
+            Path = path;
+        }
+    }
+
+    public class DirectoryNode
+    {
+        public string FullPath { get; }
+        public string FolderName { get; set; }
+        public AssetInfo[] AssetInfos { get; }
+        public DirectoryNode[] Children { get; }
+
+        public DirectoryNode(string path, AssetInfo[] assetInfos, DirectoryNode[] children)
+        {
+            FullPath = path;
+            FolderName = new DirectoryInfo(path).Name;
+            AssetInfos = assetInfos;
+            Children = children;
         }
     }
 }

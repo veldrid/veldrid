@@ -74,7 +74,7 @@ namespace Veldrid.Graphics.Direct3D
             if (_resourceUsage == ResourceUsage.Dynamic)
             {
                 DataBox db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteNoOverwrite, MapFlags.None);
-                Utilities.CopyMemory(
+                SharpDX.Utilities.CopyMemory(
                     new System.IntPtr((byte*)db.DataPointer.ToPointer() + destinationOffsetInBytes),
                     data,
                     dataSizeInBytes);

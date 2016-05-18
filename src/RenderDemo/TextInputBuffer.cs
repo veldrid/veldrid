@@ -6,16 +6,19 @@ namespace Veldrid.RenderDemo
     public class TextInputBuffer : IDisposable
     {
         public readonly IntPtr Data;
-        public readonly uint ByteCount;
+        public readonly uint CapacityInBytes;
+
+        public int Length { get; private set; }
 
         public TextInputBuffer(uint byteCount)
         {
-            ByteCount = byteCount;
+            CapacityInBytes = byteCount;
             Data = Marshal.AllocHGlobal((int)byteCount);
-            SharpDX.Utilities.ClearMemory(Data, 0, (int)ByteCount);
+            SharpDX.Utilities.ClearMemory(Data, 0, (int)CapacityInBytes);
+            Length = 0;
         }
 
-        public string StringValue
+        public unsafe string StringValue
         {
             get
             {
@@ -25,8 +28,10 @@ namespace Veldrid.RenderDemo
             set
             {
                 IntPtr copy = Marshal.StringToHGlobalAnsi(value);
-                uint bytesToCopy = Math.Min(ByteCount, (uint)value.Length);
+                uint bytesToCopy = Math.Min(CapacityInBytes, (uint)value.Length);
                 SharpDX.Utilities.CopyMemory(Data, copy, (int)bytesToCopy);
+                Length = (int)bytesToCopy;
+                SharpDX.Utilities.ClearMemory(new IntPtr((byte*)(Data.ToPointer()) + Length), 0, (int)(CapacityInBytes - Length));
                 Marshal.FreeHGlobal(copy);
             }
         }

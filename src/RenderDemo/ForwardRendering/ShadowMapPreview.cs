@@ -4,7 +4,7 @@ using System.Numerics;
 using Veldrid.Assets;
 using Veldrid.Graphics;
 
-namespace Veldrid.RenderDemo
+namespace Veldrid.RenderDemo.ForwardRendering
 {
     public class ShadowMapPreview : SwappableRenderItem
     {
@@ -25,9 +25,9 @@ namespace Veldrid.RenderDemo
             ChangeRenderContext(ad, rc);
         }
 
-        public void ChangeRenderContext(AssetDatabase ad, RenderContext context)
+        public void ChangeRenderContext(AssetDatabase ad, RenderContext rc)
         {
-            var factory = context.ResourceFactory;
+            var factory = rc.ResourceFactory;
             _vertexBuffer = factory.CreateVertexBuffer(VertexPositionTexture.SizeInBytes, false);
             _vertexBuffer.SetVertexData(new VertexPositionTexture[]
             {
@@ -42,7 +42,7 @@ namespace Veldrid.RenderDemo
             _indexBuffer.SetIndices(new int[] { 0, 1, 2, 0, 2, 3 });
 
             _material = factory.CreateMaterial(
-                context,
+                rc,
                 "simple-2d-vertex",
                 "simple-2d-frag",
                 new MaterialVertexInput(

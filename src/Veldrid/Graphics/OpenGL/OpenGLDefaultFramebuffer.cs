@@ -1,10 +1,18 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
+using Veldrid.Platform;
 
 namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLDefaultFramebuffer : Framebuffer, IDisposable
     {
+        private readonly Window _window;
+
+        public OpenGLDefaultFramebuffer(Window window)
+        {
+            _window = window;
+        }
+
         public DeviceTexture ColorTexture
         {
             get
@@ -30,6 +38,10 @@ namespace Veldrid.Graphics.OpenGL
                 throw new NotSupportedException("The default OpenGL framebuffer does not expose its depth texture.");
             }
         }
+
+        public int Width => _window.Width;
+
+        public int Height => _window.Height;
 
         public void Apply()
         {

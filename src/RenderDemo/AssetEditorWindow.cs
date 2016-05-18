@@ -34,8 +34,8 @@ namespace Veldrid.RenderDemo
         public void Render(RenderContext rc)
         {
             Vector2 size = ImGui.GetIO().DisplaySize;
-            ImGui.SetNextWindowSize(size - new Vector2(50, 50), SetCondition.Always);
-            ImGui.SetNextWindowPosCenter(SetCondition.Always);
+            ImGui.SetNextWindowSize(size - new Vector2(20, 35), SetCondition.Always);
+            ImGui.SetNextWindowPos(new Vector2(10, 25), SetCondition.Always);
 
             if (_windowOpened)
             {
@@ -195,7 +195,8 @@ namespace Veldrid.RenderDemo
             { typeof(byte), new FuncDrawer<byte>(GenericDrawFuncs.DrawByte) },
             { typeof(string), new FuncDrawer<string>(GenericDrawFuncs.DrawString, GenericDrawFuncs.NewString) },
             { typeof(bool), new FuncDrawer<bool>(GenericDrawFuncs.DrawBool) },
-            {  typeof(ImageProcessorTexture), new TextureDrawer() }
+            { typeof(ImageProcessorTexture), new TextureDrawer() },
+            { typeof(ObjMeshInfo), new ModelDrawer() }
         };
 
         public static Drawer GetDrawer(Type type)

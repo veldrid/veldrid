@@ -11,6 +11,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
         //TODO REMOVE
         public bool TakeScreenshot = false;
 
+        private string _contextBindingName = "ShadowMap";
+
         private const int DepthMapWidth = 2048;
         private const int DepthMapHeight = 2048;
 
@@ -25,8 +27,10 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         public RenderContext RenderContext { get; private set; }
 
-        public ShadowMapStage(RenderContext rc)
+        public ShadowMapStage(RenderContext rc, string contextBindingName = "ShadowMap")
         {
+            RenderContext = rc;
+            _contextBindingName = contextBindingName;
             InitializeContextObjects(rc);
         }
 
@@ -41,7 +45,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _depthTexture = rc.ResourceFactory.CreateDepthTexture(DepthMapWidth, DepthMapHeight, sizeof(ushort), PixelFormat.Alpha_UInt16);
             _shadowMapFramebuffer = rc.ResourceFactory.CreateFramebuffer();
             _shadowMapFramebuffer.DepthTexture = _depthTexture;
-            rc.GetTextureContextBinding("ShadowMap").Value = _depthTexture;
+            rc.GetTextureContextBinding(_contextBindingName).Value = _depthTexture;
         }
 
         public void ExecuteStage(VisibiltyManager visibilityManager)

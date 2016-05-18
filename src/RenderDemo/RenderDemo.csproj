@@ -59,6 +59,9 @@
     <Content Include="Assets\MaterialAsset\ShadowCaster_ShadowMap.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\MaterialAsset\ModelPreview.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="GLSL\shadow-frag.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

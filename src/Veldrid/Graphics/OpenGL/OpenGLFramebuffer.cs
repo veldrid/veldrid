@@ -50,6 +50,10 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        public int Width => _colorTexture.Width;
+
+        public int Height => _colorTexture.Height;
+
         public OpenGLFramebuffer()
         {
             _framebufferID = GL.GenFramebuffer();

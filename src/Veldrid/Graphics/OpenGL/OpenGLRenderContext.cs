@@ -1,9 +1,9 @@
 ﻿using System;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
-using OpenTK;
 using Veldrid.Platform;
 using System.Runtime.InteropServices;
+using OpenTK;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -42,7 +42,7 @@ namespace Veldrid.Graphics.OpenGL
             _vertexArrayID = GL.GenVertexArray();
             GL.BindVertexArray(_vertexArrayID);
 
-            _defaultFramebuffer = new OpenGLDefaultFramebuffer();
+            _defaultFramebuffer = new OpenGLDefaultFramebuffer(Window);
 
             SetInitialStates();
             OnWindowResized();
@@ -158,6 +158,16 @@ namespace Veldrid.Graphics.OpenGL
         protected override void PlatformDispose()
         {
             _openGLGraphicsContext.Dispose();
+        }
+
+        protected override System.Numerics.Vector2 GetTopLeftUvCoordinate()
+        {
+            return new System.Numerics.Vector2(0, 1);
+        }
+
+        protected override System.Numerics.Vector2 GetBottomRightUvCoordinate()
+        {
+            return new System.Numerics.Vector2(1, 0);
         }
     }
 }

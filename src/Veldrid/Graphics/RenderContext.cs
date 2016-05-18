@@ -9,8 +9,8 @@ namespace Veldrid.Graphics
 {
     public abstract class RenderContext : IDisposable
     {
-        private readonly Vector3 _cameraPosition = new Vector3(0, 3, 5);
-        private readonly Vector3 _cameraDirection = new Vector3(0, -3, -5);
+        private readonly Vector2 _topLeftUvCoordinate;
+        private readonly Vector2 _bottomRightUvCoordinate;
 
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
@@ -32,6 +32,9 @@ namespace Veldrid.Graphics
         {
             Window = window;
             window.Resized += () => _needsResizing = 1;
+
+            _topLeftUvCoordinate = GetTopLeftUvCoordinate();
+            _bottomRightUvCoordinate = GetBottomRightUvCoordinate();
         }
 
         public Window Window { get; }
@@ -99,6 +102,14 @@ namespace Veldrid.Graphics
 
             PlatformClearBuffer();
             NullInputs();
+        }
+
+        public void ClearBuffer(RgbaFloat color)
+        {
+            RgbaFloat previousColor = ClearColor;
+            ClearColor = color;
+            ClearBuffer();
+            ClearColor = previousColor;
         }
 
         public void SetFramebuffer(Framebuffer framebuffer)
@@ -195,6 +206,7 @@ namespace Veldrid.Graphics
         }
 
         public void SetViewport(Viewport viewport) => SetViewport(viewport.X, viewport.Y, viewport.Width, viewport.Height);
+
         public void SetViewport(int x, int y, int width, int height)
         {
             if (_viewport.X != x || _viewport.Y != y || _viewport.Width != width || _viewport.Height != height)
@@ -203,6 +215,9 @@ namespace Veldrid.Graphics
                 _viewport = new Viewport(x, y, width, height);
             }
         }
+
+        public Vector2 TopLeftUv => _topLeftUvCoordinate;
+        public Vector2 BottomRightUv => _bottomRightUvCoordinate;
 
         public ContextDeviceBinding<DeviceTexture> GetTextureContextBinding(string name)
         {
@@ -228,6 +243,10 @@ namespace Veldrid.Graphics
             SetDepthStencilState(DefaultDepthStencilState);
             SetRasterizerState(DefaultRasterizerState);
         }
+
+        protected abstract Vector2 GetTopLeftUvCoordinate();
+
+        protected abstract Vector2 GetBottomRightUvCoordinate();
 
         protected abstract void PlatformSetScissorRectangle(Rectangle rectangle);
 

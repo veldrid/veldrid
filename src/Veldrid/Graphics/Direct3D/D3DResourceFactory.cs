@@ -41,7 +41,7 @@ namespace Veldrid.Graphics.Direct3D
                 Height = height,
                 SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.RenderTarget,
+                BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
                 CpuAccessFlags = CpuAccessFlags.None,
                 OptionFlags = ResourceOptionFlags.None
             });

@@ -32,6 +32,7 @@ namespace Veldrid.Graphics
 
         public void RenderFrame(VisibiltyManager visibilityManager)
         {
+            _rc.SetDefaultFramebuffer();
             _rc.ClearBuffer();
 
             foreach (PipelineStage stage in _stages)

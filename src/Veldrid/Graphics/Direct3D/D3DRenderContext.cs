@@ -4,6 +4,7 @@ using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using Veldrid.Platform;
 using System.Drawing;
+using System.Numerics;
 
 namespace Veldrid.Graphics.Direct3D
 {
@@ -147,7 +148,12 @@ namespace Veldrid.Graphics.Direct3D
             {
                 bool currentlyBound = CurrentFramebuffer == null || CurrentFramebuffer == _defaultFramebuffer;
                 // Create the depth buffer view
-                _defaultFramebuffer = new D3DFramebuffer(_device, new D3DTexture(_device, backBufferTexture), new D3DTexture(_device, depthBufferTexture));
+                _defaultFramebuffer = new D3DFramebuffer(
+                    _device,
+                    new D3DTexture(_device, backBufferTexture),
+                    new D3DTexture(_device, depthBufferTexture),
+                    backBufferTexture.Description.Width,
+                    backBufferTexture.Description.Height);
                 if (currentlyBound)
                 {
                     SetFramebuffer(_defaultFramebuffer);
@@ -175,6 +181,16 @@ namespace Veldrid.Graphics.Direct3D
         protected override void PlatformClearMaterialResourceBindings()
         {
             _deviceContext.PixelShader.SetShaderResources(0, _emptySRVs.Length, _emptySRVs);
+        }
+
+        protected override Vector2 GetTopLeftUvCoordinate()
+        {
+            return Vector2.Zero;
+        }
+
+        protected override Vector2 GetBottomRightUvCoordinate()
+        {
+            return Vector2.One;
         }
 
         private new D3DFramebuffer CurrentFramebuffer => (D3DFramebuffer)base.CurrentFramebuffer;

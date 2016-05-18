@@ -11,6 +11,10 @@ namespace Veldrid.Graphics.OpenGL
 
         public int TextureID { get; }
 
+        public int Width { get; private set; }
+
+        public int Height { get; private set; }
+
         public OpenGLTexture(
             int width,
             int height,
@@ -23,7 +27,8 @@ namespace Veldrid.Graphics.OpenGL
 
         public OpenGLTexture(int width, int height, PixelFormat format, IntPtr pixelData)
         : this(width, height, OpenGLFormats.MapPixelInternalFormat(format), OpenGLFormats.MapPixelFormat(format), OpenGLFormats.MapPixelType(format), pixelData)
-        { }
+        {
+        }
 
         public OpenGLTexture(
             int width,
@@ -35,6 +40,9 @@ namespace Veldrid.Graphics.OpenGL
         {
             _pixelFormat = pixelFormat;
             _pixelType = pixelType;
+
+            Width = width;
+            Height = height;
 
             TextureID = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, TextureID);
@@ -88,6 +96,9 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetPixelData<T>(T[] pixelData, int width, int height, int pixelSizeInBytes) where T : struct
         {
+            Width = width;
+            Height = height;
+
             GCHandle handle = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
             SetPixelData(handle.AddrOfPinnedObject(), width, height, pixelSizeInBytes);
             handle.Free();
@@ -95,6 +106,9 @@ namespace Veldrid.Graphics.OpenGL
 
         public unsafe void SetPixelData(IntPtr pixelData, int width, int height, int pixelSizeInBytes)
         {
+            Width = width;
+            Height = height;
+
             GL.BindTexture(TextureTarget.Texture2D, TextureID);
             GL.GetTexImage(TextureTarget.Texture2D, 0, OpenTK.Graphics.OpenGL.PixelFormat.Alpha, _pixelType, pixelData);
             GL.BindTexture(TextureTarget.Texture2D, 0);

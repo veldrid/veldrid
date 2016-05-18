@@ -13,15 +13,26 @@ namespace Veldrid.Graphics.Pipeline
 
         public RenderContext RenderContext { get; private set; }
 
-        public StandardPipelineStage(string name)
+        public Framebuffer OverrideFramebuffer { get; set; }
+
+        public StandardPipelineStage(RenderContext rc, string name, Framebuffer framebuffer = null)
         {
+            RenderContext = rc;
             Name = name;
+            OverrideFramebuffer = framebuffer;
         }
 
         public void ExecuteStage(VisibiltyManager visibilityManager)
         {
-            RenderContext.SetDefaultFramebuffer();
-            RenderContext.SetViewport(0, 0, RenderContext.Window.Width, RenderContext.Window.Height);
+            if (OverrideFramebuffer == null)
+            {
+                RenderContext.SetDefaultFramebuffer();
+            }
+            else
+            {
+                RenderContext.SetFramebuffer(OverrideFramebuffer);
+            }
+            RenderContext.SetViewport(0, 0, RenderContext.CurrentFramebuffer.Width, RenderContext.CurrentFramebuffer.Height);
             _renderQueue.Clear();
             visibilityManager.CollectVisibleObjects(_renderQueue, Name, Vector3.Zero, Vector3.Zero);
             _renderQueue.Sort();

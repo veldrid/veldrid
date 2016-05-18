@@ -10,5 +10,8 @@
         /// </summary>
         /// <param name="textureData">The TextureData to copy the pixel data into.</param>
         void CopyTo(TextureData textureData);
+
+        int Width { get; }
+        int Height { get; }
     }
 }

@@ -6,5 +6,8 @@ namespace Veldrid.Graphics
     {
         DeviceTexture ColorTexture { get; set; }
         DeviceTexture DepthTexture { get; set; }
+
+        int Width { get; }
+        int Height { get; }
     }
 }

@@ -1,10 +1,12 @@
-﻿using System;
+﻿using ImGuiNET;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Veldrid.Assets;
 using Veldrid.Graphics;
+using Veldrid.Graphics.Pipeline;
 using Veldrid.RenderDemo.ForwardRendering;
 using Veldrid.RenderDemo.Models;
 
@@ -12,15 +14,56 @@ namespace Veldrid.RenderDemo.Drawers
 {
     public class ModelDrawer : Drawer<ObjMeshInfo>
     {
-        private static readonly ConditionalWeakTable<ObjMeshInfo, PreviewScene> _previewScenes = new ConditionalWeakTable<ObjMeshInfo, PreviewScene>();
+        private static ConditionalWeakTable<ObjMeshInfo, PreviewScene> _previewScenes = new ConditionalWeakTable<ObjMeshInfo, PreviewScene>();
+        private static RenderContext s_validContext;
 
         public override bool Draw(string label, ref ObjMeshInfo obj, RenderContext rc)
         {
-            throw new NotImplementedException();
+            Vector2 region = ImGui.GetContentRegionAvailable();
+            float minDimension = Math.Min(900, Math.Min(region.X, region.Y)) - 50;
+            Vector2 imageDimensions = new Vector2(minDimension, minDimension / (1.33f));
+
+            PreviewScene scene;
+            scene = GetOrCreateScene(obj, rc);
+            scene.Width = (int)imageDimensions.X;
+            scene.Height = (int)imageDimensions.Y;
+            scene.RenderFrame();
+            IntPtr id = ImGuiImageHelper.GetOrCreateImGuiBinding(rc, scene.RenderedScene);
+            ImGui.Image(id, new Vector2(scene.Width, scene.Height), rc.TopLeftUv, rc.BottomRightUv, Vector4.One, Vector4.One);
+
+            return false;
+        }
+
+        private static PreviewScene GetOrCreateScene(ObjMeshInfo obj, RenderContext rc)
+        {
+            if (s_validContext != rc)
+            {
+                s_validContext = rc;
+                _previewScenes = new ConditionalWeakTable<ObjMeshInfo, PreviewScene>();
+            }
+
+            PreviewScene scene;
+            if (!_previewScenes.TryGetValue(obj, out scene))
+            {
+                scene = new PreviewScene(rc, obj);
+                _previewScenes.Add(obj, scene);
+            }
+
+            return scene;
         }
 
         private class PreviewScene
         {
+            private int _width = 500;
+            private int _height = 360;
+
+            public int Width { get { return _width; } set { _width = value; } }
+            public int Height { get; set; } = 360;
+
+            public float Fov { get; set; } = 1.05f;
+
+            public bool AutoRotateCamera { get; set; } = true;
+
             RenderContext _rc;
             private readonly Framebuffer _fb;
 
@@ -29,17 +72,53 @@ namespace Veldrid.RenderDemo.Drawers
 
             private readonly DynamicDataProvider<Matrix4x4> _projection;
             private readonly DynamicDataProvider<Matrix4x4> _view;
+
+            private readonly DynamicDataProvider<Matrix4x4> _lightProjection;
+            private readonly DynamicDataProvider<Matrix4x4> _lightView;
+            private readonly DynamicDataProvider<Vector4> _lightInfo;
+
             private readonly Dictionary<string, ConstantBufferDataProvider> _sceneProviders = new Dictionary<string, ConstantBufferDataProvider>();
+
+            private readonly PipelineStage[] _stages;
+            private readonly FlatListVisibilityManager _visiblityManager;
+            private Vector3 _lightDirection = Vector3.Normalize(new Vector3(-1f, -.6f, -.3f));
+            private Vector3 _cameraPosition;
+            private double _circleWidth = 10.0f;
 
             public PreviewScene(RenderContext rc, ObjMeshInfo previewItem)
             {
                 _rc = rc;
-                int width = 400;
                 ResourceFactory factory = rc.ResourceFactory;
-                _fb = factory.CreateFramebuffer(width, width);
+                _fb = factory.CreateFramebuffer(Width, Height);
+
+                _projection = new DynamicDataProvider<Matrix4x4>(Matrix4x4.CreatePerspectiveFieldOfView(Fov, (float)Width / Height, 0.1f, 100f));
+                _view = new DynamicDataProvider<Matrix4x4>(Matrix4x4.CreateLookAt(Vector3.UnitZ * 7f + Vector3.UnitY * 1.5f, Vector3.Zero, Vector3.UnitY));
+
+                _lightProjection = new DynamicDataProvider<Matrix4x4>(Matrix4x4.CreateOrthographicOffCenter(-18, 18, -18, 18, -10, 60f));
+                _lightView = new DynamicDataProvider<Matrix4x4>(Matrix4x4.CreateLookAt(-_lightDirection * 20f, Vector3.Zero, Vector3.UnitY));
+                _lightInfo = new DynamicDataProvider<Vector4>(new Vector4(_lightDirection, 1));
+
+                _stages = new PipelineStage[]
+                {
+                    new ShadowMapStage(rc, "ShadowMap_Preview"),
+                    new StandardPipelineStage(rc, "Standard", _fb),
+                };
+
+                _sceneProviders.Add("ProjectionMatrix", _projection);
+                _sceneProviders.Add("ViewMatrix", _view);
+                _sceneProviders.Add("LightProjMatrix", _lightProjection);
+                _sceneProviders.Add("LightViewMatrix", _lightView);
+                _sceneProviders.Add("LightInfo", _lightInfo);
 
                 _floor = CreatePreviewModel(PlaneModel.Vertices, PlaneModel.Indices);
+                _floor.WorldMatrix.Data = Matrix4x4.CreateScale(10f, 1f, 10f);
+
                 _previewItem = CreatePreviewModel(previewItem.Vertices, previewItem.Indices);
+                _previewItem.WorldMatrix.Data = Matrix4x4.CreateTranslation(0, 1.5f, 0);
+
+                _visiblityManager = new FlatListVisibilityManager();
+                _visiblityManager.AddRenderItem(_floor);
+                _visiblityManager.AddRenderItem(_previewItem);
             }
 
             public DeviceTexture RenderedScene => _fb.ColorTexture;
@@ -48,10 +127,15 @@ namespace Veldrid.RenderDemo.Drawers
             {
                 AssetDatabase lfd = new LooseFileDatabase(Path.Combine(AppContext.BaseDirectory, "Assets"));
                 VertexBuffer vb = _rc.ResourceFactory.CreateVertexBuffer(vertices.Length * VertexPositionNormalTexture.SizeInBytes, false);
-                IndexBuffer ib = _rc.ResourceFactory.CreateIndexBuffer(indices.Length * sizeof(int), false);
+                vb.SetVertexData(
+                    vertices,
+                    new VertexDescriptor(VertexPositionNormalTexture.SizeInBytes, VertexPositionNormalTexture.ElementCount, 0, IntPtr.Zero));
 
-                MaterialAsset shadowmapAsset = lfd.LoadAsset<MaterialAsset>("Assets/MaterialAsset/ShadowCaster_ShadowMap.json");
-                MaterialAsset surfaceMaterial = lfd.LoadAsset<MaterialAsset>("Assets/MaterialAsset/ModelPreview.json");
+                IndexBuffer ib = _rc.ResourceFactory.CreateIndexBuffer(indices.Length * sizeof(int), false);
+                ib.SetIndices(indices, sizeof(int), 0);
+
+                MaterialAsset shadowmapAsset = lfd.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_ShadowMap.json");
+                MaterialAsset surfaceMaterial = lfd.LoadAsset<MaterialAsset>("MaterialAsset/ModelPreview.json");
                 Material shadowmapMaterial = shadowmapAsset.Create(lfd, _rc, _sceneProviders);
                 Material regularMaterial = surfaceMaterial.Create(lfd, _rc, _sceneProviders);
 
@@ -67,26 +151,45 @@ namespace Veldrid.RenderDemo.Drawers
 
             public void RenderFrame()
             {
+                UpdateCamera();
+
                 _rc.SetFramebuffer(_fb);
-                _rc.ClearBuffer();
-                _floor.Render(false, _rc);
-                _previewItem.Render(false, _rc);
+                _rc.ClearBuffer(RgbaFloat.Clear);
+                foreach (var stage in _stages)
+                {
+                    stage.ExecuteStage(_visiblityManager);
+                }
+            }
+
+            private void UpdateCamera()
+            {
+                float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
+                if (AutoRotateCamera)
+                {
+                    _cameraPosition = new Vector3(
+                        (float)(Math.Cos(timeFactor) * _circleWidth),
+                        6 + (float)Math.Sin(timeFactor) * 2,
+                        (float)(Math.Sin(timeFactor) * _circleWidth));
+                    _view.Data = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
+                }
             }
         }
 
-        private class PreviewModel
+        private class PreviewModel : RenderItem
         {
             private readonly VertexBuffer _vb;
             private readonly IndexBuffer _ib;
             private readonly int _elementCount;
             private readonly Material _shadowmapMaterial;
             private readonly Material _regularMaterial;
-            private readonly ConstantBufferDataProvider _worldProvider;
+            private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
             private readonly ConstantBufferDataProvider _inverseWorldProvider;
             private readonly ConstantBufferDataProvider[] _perObjectInputs;
             private readonly ShaderTextureBinding _textureBinding;
 
-            public ConstantBufferDataProvider WorldMatrix => _worldProvider;
+            private static readonly string[] s_stages = new string[] { "ShadowMap", "Standard" };
+
+            public DynamicDataProvider<Matrix4x4> WorldMatrix => _worldProvider;
 
             public PreviewModel(
                 VertexBuffer vb,
@@ -108,19 +211,36 @@ namespace Veldrid.RenderDemo.Drawers
                 _textureBinding = surfaceTextureBinding;
             }
 
-            public void Render(bool shadowmap, RenderContext rc)
+            public void Render(RenderContext rc, string stage)
             {
                 rc.SetVertexBuffer(_vb);
                 rc.SetIndexBuffer(_ib);
-                Material mat = shadowmap ? _shadowmapMaterial : _regularMaterial;
-                rc.SetMaterial(mat);
-                mat.ApplyPerObjectInputs(_perObjectInputs);
-                if (_textureBinding != null)
+                if (stage == "ShadowMap")
                 {
-                    mat.UseTexture(0, _textureBinding);
+                    rc.SetMaterial(_shadowmapMaterial);
+                    _shadowmapMaterial.ApplyPerObjectInput(_perObjectInputs[0]);
+                }
+                else
+                {
+                    rc.SetMaterial(_regularMaterial);
+                    _regularMaterial.ApplyPerObjectInputs(_perObjectInputs);
+                    if (_textureBinding != null)
+                    {
+                        _regularMaterial.UseTexture(1, _textureBinding);
+                    }
                 }
 
                 rc.DrawIndexedPrimitives(_elementCount, 0);
+            }
+
+            public IEnumerable<string> GetStagesParticipated()
+            {
+                return s_stages;
+            }
+
+            public RenderOrderKey GetRenderOrderKey()
+            {
+                return new RenderOrderKey();
             }
         }
     }

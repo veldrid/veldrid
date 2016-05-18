@@ -26,7 +26,7 @@ namespace Veldrid.RenderDemo.Drawers
             float ratio = (float)obj.Width / obj.Height;
 
             Vector2 region = ImGui.GetContentRegionAvailable();
-            float minDimension = Math.Min(300, Math.Min(region.X, region.Y));
+            float minDimension = Math.Min(500, Math.Min(region.X, region.Y)) - 50;
             Vector2 imageDimensions = new Vector2(minDimension, minDimension / ratio);
 
             ImGui.Image(id, imageDimensions, Vector2.Zero, Vector2.One, Vector4.One, Vector4.One);

@@ -7,6 +7,8 @@ namespace Veldrid.Graphics.Direct3D
     public class D3DFramebuffer : Framebuffer, IDisposable
     {
         private readonly Device _device;
+        private int _width;
+        private int _height;
 
         public DepthStencilView DepthStencilView { get; private set; }
         public RenderTargetView RenderTargetView { get; private set; }
@@ -25,6 +27,8 @@ namespace Veldrid.Graphics.Direct3D
                 Debug.Assert(value is D3DTexture);
                 RenderTargetTexture = (D3DTexture)value;
                 RenderTargetView = new RenderTargetView(_device, RenderTargetTexture.DeviceTexture);
+                _width = value.Width;
+                _height = value.Height;
             }
         }
 
@@ -48,18 +52,29 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
+        public int Width => _width;
+
+        public int Height => _height;
+
         public D3DFramebuffer(Device device)
         {
             _device = device;
         }
 
         public D3DFramebuffer(Device device, D3DTexture colorTexture, D3DTexture depthTexture)
+            : this(device, colorTexture, depthTexture, colorTexture.Width, colorTexture.Height)
+        {
+        }
+
+        public D3DFramebuffer(Device device, D3DTexture colorTexture, D3DTexture depthTexture, int width, int height)
         {
             _device = device;
             RenderTargetView = new RenderTargetView(device, colorTexture.DeviceTexture);
             DepthStencilView = new DepthStencilView(device, depthTexture.DeviceTexture);
             RenderTargetTexture = colorTexture;
             DepthTexture = depthTexture;
+            _width = width;
+            _height = height;
         }
 
         public void Apply()

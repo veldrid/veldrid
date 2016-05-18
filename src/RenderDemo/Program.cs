@@ -96,11 +96,11 @@ namespace Veldrid.RenderDemo
                 _configurableStages = new PipelineStage[]
                 {
                     new ShadowMapStage(_rc),
-                    new StandardPipelineStage("Standard"),
-                    new StandardPipelineStage("Overlay"),
+                    new StandardPipelineStage(_rc, "Standard"),
+                    new StandardPipelineStage(_rc, "Overlay"),
                 };
 
-                _renderer = new Renderer(_rc, _configurableStages.Append(new StandardPipelineStage("ImGui")).ToArray());
+                _renderer = new Renderer(_rc, _configurableStages.Append(new StandardPipelineStage(_rc, "ImGui")).ToArray());
 
                 _ad = new LooseFileDatabase(Path.Combine(AppContext.BaseDirectory, "Assets"));
                 _editorWindow = new AssetEditorWindow(_ad);

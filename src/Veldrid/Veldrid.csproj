@@ -12,6 +12,7 @@
   <ItemGroup>
     <Compile Include="ArrayEx.cs" />
     <Compile Include="Graphics\BlendState.cs" />
+    <Compile Include="Graphics\CubemapTextureInputElement.cs" />
     <Compile Include="Graphics\DepthComparison.cs" />
     <Compile Include="Graphics\DepthStencilState.cs" />
     <Compile Include="Graphics\CubemapTexture.cs" />

@@ -1,5 +1,4 @@
 ﻿using Veldrid.Graphics;
-using System;
 
 namespace Veldrid.Assets
 {
@@ -21,17 +20,23 @@ namespace Veldrid.Assets
 
     public class CubeMapTextureAsset : TextureAsset
     {
-        public AssetRef<ImageProcessorTexture> Image0 { get; private set; }
-        public AssetRef<ImageProcessorTexture> Image1 { get; private set; }
-        public AssetRef<ImageProcessorTexture> Image2 { get; private set; }
-        public AssetRef<ImageProcessorTexture> Image3 { get; private set; }
-        public AssetRef<ImageProcessorTexture> Image4 { get; private set; }
-        public AssetRef<ImageProcessorTexture> Image5 { get; private set; }
-
+        public AssetRef<ImageProcessorTexture> Front { get; private set; }
+        public AssetRef<ImageProcessorTexture> Back { get; private set; }
+        public AssetRef<ImageProcessorTexture> Left { get; private set; }
+        public AssetRef<ImageProcessorTexture> Right { get; private set; }
+        public AssetRef<ImageProcessorTexture> Top { get; private set; }
+        public AssetRef<ImageProcessorTexture> Bottom { get; private set; }
 
         public override MaterialTextureInputElement Create(AssetDatabase ad)
         {
-            throw new NotImplementedException();
+            return new CubemapTextureInputElement(
+                Name,
+                ad.LoadAsset(Front),
+                ad.LoadAsset(Back),
+                ad.LoadAsset(Left),
+                ad.LoadAsset(Right),
+                ad.LoadAsset(Top),
+                ad.LoadAsset(Bottom));
         }
     }
 }

@@ -32,9 +32,6 @@
       <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>
       <Name>Veldrid</Name>
     </ProjectReference>
-    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessorCore.dll">
-      <Name>ImageProcessorCore</Name>
-    </Reference>
     <Reference Include="$(DepsDir)\SharpYaml\SharpYaml.dll">
       <Name>SharpYaml</Name>
     </Reference>

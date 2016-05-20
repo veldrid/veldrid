@@ -117,9 +117,6 @@
     <Content Include="Textures\CubeTexture.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessorCore.dll">
-      <Name>ImageProcessorCore</Name>
-    </Reference>
     <Reference Include="$(DepsDir)\SharpYaml\SharpYaml.dll">
       <Name>SharpYaml</Name>
     </Reference>

@@ -55,7 +55,6 @@ namespace Veldrid.RenderDemo.Drawers
         private class PreviewScene
         {
             private int _width = 500;
-            private int _height = 360;
 
             public int Width { get { return _width; } set { _width = value; } }
             public int Height { get; set; } = 360;

@@ -123,12 +123,6 @@
     <Content Include="Assets\Textures\envmap_stormydays\*.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Reference Include="$(DepsDir)\SharpYaml\SharpYaml.dll">
-      <Name>SharpYaml</Name>
-    </Reference>
-    <Reference Include="$(DepsDir)\ImageProcessor\ImageProcessorCore.dll">
-      <Name>ImageProcessorCore</Name>
-    </Reference>
     <Reference Include="$(DepsDir)\ImGui.NET\ImGui.NET.dll">
       <Name>ImGui.NET</Name>
     </Reference>

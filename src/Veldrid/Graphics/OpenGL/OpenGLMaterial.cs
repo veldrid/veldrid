@@ -122,7 +122,7 @@ namespace Veldrid.Graphics.OpenGL
                 {
                     throw new InvalidOperationException($"No sampler was found with the name {element.Name}");
                 }
-                OpenGLTexture deviceTexture = (OpenGLTexture)element.GetDeviceTexture(rc);
+                OpenGLTexture2D deviceTexture = (OpenGLTexture2D)element.GetDeviceTexture(rc);
                 _textureBindings[i] = new OpenGLProgramTextureBinding(location, deviceTexture);
             }
         }
@@ -155,7 +155,7 @@ namespace Veldrid.Graphics.OpenGL
             {
                 var binding = _textureBindings[i];
                 GL.ActiveTexture(TextureUnit.Texture0 + i);
-                binding.DeviceTexture.Apply();
+                binding.DeviceTexture.Bind();
                 GL.Uniform1(binding.UniformLocation, i);
             }
         }
@@ -175,6 +175,10 @@ namespace Veldrid.Graphics.OpenGL
 
         public void UseTexture(int slot, ShaderTextureBinding binding)
         {
+            //TODO REMOVE
+            if (binding.BoundTexture == null) return;
+            // TODO
+
             if (!(binding is OpenGLTextureBinding))
             {
                 throw new InvalidOperationException("Illegal binding type.");
@@ -186,7 +190,7 @@ namespace Veldrid.Graphics.OpenGL
         private void BindTexture(int slot, OpenGLTexture texture)
         {
             GL.ActiveTexture(TextureUnit.Texture0 + slot);
-            texture.Apply();
+            texture.Bind();
             GL.Uniform1(GetTextureUniformLocation(slot), slot);
         }
 

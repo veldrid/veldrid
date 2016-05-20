@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public class D3DTexture : DeviceTexture, IDisposable, PixelDataProvider
+    public class D3DTexture : DeviceTexture2D, IDisposable, PixelDataProvider
     {
         private readonly Device _device;
 

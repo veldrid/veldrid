@@ -5,13 +5,16 @@
     /// </summary>
     public interface DeviceTexture
     {
+        int Width { get; }
+        int Height { get; }
+    }
+
+    public interface DeviceTexture2D : DeviceTexture
+    {
         /// <summary>
         /// Copies the DeviceTexture's pixel data into a CPU-side Texture.
         /// </summary>
         /// <param name="textureData">The TextureData to copy the pixel data into.</param>
         void CopyTo(TextureData textureData);
-
-        int Width { get; }
-        int Height { get; }
     }
 }

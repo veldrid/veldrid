@@ -38,7 +38,7 @@ namespace Veldrid.Graphics
             }
         }
 
-        public DeviceTexture CreateDeviceTexture(DeviceTextureCreator producer)
+        public DeviceTexture2D CreateDeviceTexture(DeviceTextureCreator producer)
         {
             return producer.CreateTexture(Pixels, Width, Height, PixelSizeInBytes, Format);
         }

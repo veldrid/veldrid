@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Veldrid.Graphics
 {
     public interface RenderItem
     {
         IEnumerable<string> GetStagesParticipated();
-        void Render(RenderContext context, string pipelineStage);
+        void Render(RenderContext rc, string pipelineStage);
         RenderOrderKey GetRenderOrderKey();
     }
 }

@@ -8,14 +8,22 @@ namespace Veldrid.Graphics
         int Height { get; }
         PixelFormat Format { get; }
         int PixelSizeInBytes { get; }
-        DeviceTexture CreateDeviceTexture(DeviceTextureCreator producer);
+        DeviceTexture2D CreateDeviceTexture(DeviceTextureCreator producer);
         void AcceptPixelData(PixelDataProvider pixelDataProvider);
     }
 
     public interface DeviceTextureCreator
     {
-        DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct;
-        DeviceTexture CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeinBytes, PixelFormat format);
+        DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct;
+        DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeinBytes, PixelFormat format);
+        CubemapTexture CreateCubemapTexture(
+            IntPtr pixelsFront,
+            IntPtr pixelsBack,
+            IntPtr pixelsLeft,
+            IntPtr pixelsRight,
+            IntPtr pixelsTop,
+            IntPtr pixelsBottom,
+            int width, int height, int pixelSizeinBytes, PixelFormat format);
     }
 
     public interface PixelDataProvider
@@ -34,7 +42,7 @@ namespace Veldrid.Graphics
 
         public int PixelSizeInBytes { get; }
 
-        public abstract DeviceTexture CreateDeviceTexture(DeviceTextureCreator producer);
+        public abstract DeviceTexture2D CreateDeviceTexture(DeviceTextureCreator producer);
 
         public abstract void AcceptPixelData(PixelDataProvider pixelDataProvider);
 
@@ -56,7 +64,7 @@ namespace Veldrid.Graphics
             pixelDataProvider.SetPixelData(PixelData, Width, Height, PixelSizeInBytes);
         }
 
-        public override DeviceTexture CreateDeviceTexture(DeviceTextureCreator producer)
+        public override DeviceTexture2D CreateDeviceTexture(DeviceTextureCreator producer)
         {
             return producer.CreateTexture(PixelData, Width, Height, PixelSizeInBytes, Format);
         }
@@ -81,7 +89,7 @@ namespace Veldrid.Graphics
             pixelDataProvider.SetPixelData(PixelData, Width, Height, PixelSizeInBytes);
         }
 
-        public override DeviceTexture CreateDeviceTexture(DeviceTextureCreator producer)
+        public override DeviceTexture2D CreateDeviceTexture(DeviceTextureCreator producer)
         {
             return producer.CreateTexture(PixelData, Width, Height, PixelSizeInBytes, Format);
         }

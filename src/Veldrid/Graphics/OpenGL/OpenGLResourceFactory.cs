@@ -1,6 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace Veldrid.Graphics.OpenGL
@@ -22,12 +21,12 @@ namespace Veldrid.Graphics.OpenGL
 
         public override Framebuffer CreateFramebuffer(int width, int height)
         {
-            OpenGLTexture colorTexture = new OpenGLTexture(
+            OpenGLTexture2D colorTexture = new OpenGLTexture2D(
                 width, height,
                 PixelInternalFormat.Rgba32f,
                 OpenTK.Graphics.OpenGL.PixelFormat.Rgba,
                 PixelType.Float);
-            OpenGLTexture depthTexture = new OpenGLTexture(
+            OpenGLTexture2D depthTexture = new OpenGLTexture2D(
                 width,
                 height,
                 PixelInternalFormat.DepthComponent16,
@@ -76,24 +75,24 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLMaterial((OpenGLRenderContext)rc, vertexShader, fragmentShader, inputs, globalInputs, perObjectInputs, textureInputs);
         }
 
-        public override DeviceTexture CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            return new OpenGLTexture(width, height, format, pixelData);
+            return new OpenGLTexture2D(width, height, format, pixelData);
         }
 
-        public override DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        public override DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            return OpenGLTexture.Create(pixelData, width, height, pixelSizeInBytes, format);
+            return OpenGLTexture2D.Create(pixelData, width, height, pixelSizeInBytes, format);
         }
 
-        public override DeviceTexture CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)
+        public override DeviceTexture2D CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             if (format != PixelFormat.Alpha_UInt16)
             {
                 throw new NotImplementedException("Alpha_UInt16 is the only supported depth texture format.");
             }
 
-            return new OpenGLTexture(
+            return new OpenGLTexture2D(
                 width,
                 height,
                 PixelInternalFormat.DepthComponent16,
@@ -103,7 +102,38 @@ namespace Veldrid.Graphics.OpenGL
 
         public override ShaderTextureBinding CreateShaderTextureBinding(DeviceTexture texture)
         {
-            return new OpenGLTextureBinding((OpenGLTexture)texture);
+            if (texture is OpenGLTexture2D)
+            {
+                return new OpenGLTextureBinding((OpenGLTexture2D)texture);
+            }
+            else
+            {
+                return new OpenGLTextureBinding((OpenGLCubemapTexture)texture);
+            }
+        }
+        
+        public override CubemapTexture CreateCubemapTexture(
+            IntPtr pixelsFront,
+            IntPtr pixelsBack,
+            IntPtr pixelsLeft,
+            IntPtr pixelsRight,
+            IntPtr pixelsTop,
+            IntPtr pixelsBottom,
+            int width,
+            int height,
+            int pixelSizeinBytes,
+            PixelFormat format)
+        {
+            return new OpenGLCubemapTexture(
+                pixelsFront,
+                pixelsBack,
+                pixelsLeft,
+                pixelsRight,
+                pixelsTop,
+                pixelsBottom,
+                width,
+                height,
+                format);
         }
 
         public override VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic)

@@ -13,7 +13,7 @@ namespace Veldrid.Graphics.OpenGL
             _window = window;
         }
 
-        public DeviceTexture ColorTexture
+        public DeviceTexture2D ColorTexture
         {
             get
             {
@@ -26,7 +26,7 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-        public DeviceTexture DepthTexture
+        public DeviceTexture2D DepthTexture
         {
             get
             {

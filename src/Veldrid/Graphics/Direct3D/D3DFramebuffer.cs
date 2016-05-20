@@ -15,7 +15,7 @@ namespace Veldrid.Graphics.Direct3D
         public D3DTexture RenderTargetTexture { get; private set; }
         public D3DTexture DepthTexture { get; private set; }
 
-        DeviceTexture Framebuffer.ColorTexture
+        DeviceTexture2D Framebuffer.ColorTexture
         {
             get
             {
@@ -32,7 +32,7 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        DeviceTexture Framebuffer.DepthTexture
+        DeviceTexture2D Framebuffer.DepthTexture
         {
             get
             {

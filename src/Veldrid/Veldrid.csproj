@@ -14,6 +14,7 @@
     <Compile Include="Graphics\BlendState.cs" />
     <Compile Include="Graphics\DepthComparison.cs" />
     <Compile Include="Graphics\DepthStencilState.cs" />
+    <Compile Include="Graphics\CubemapTexture.cs" />
     <Compile Include="Graphics\DeviceBuffer.cs" />
     <Compile Include="Graphics\DeviceTexture.cs" />
     <Compile Include="Graphics\Direct3D\D3DBlendState.cs" />
@@ -36,6 +37,7 @@
     <Compile Include="Graphics\IndexFormat.cs" />
     <Compile Include="Graphics\ObjImporter.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLBlendState.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLCubemapTexture.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLDefaultFramebuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLDepthStencilState.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFormats.cs" />
@@ -78,6 +80,7 @@
     <Compile Include="Graphics\OpenGL\OpenGLResourceFactory.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLShader.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLTexture.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLTexture2D.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLVertexBuffer.cs" />
     <Compile Include="Graphics\PixelFormat.cs" />
     <Compile Include="Platform\OpenTKWindow.cs" />
@@ -89,6 +92,7 @@
     <Compile Include="Graphics\ResourceFactory.cs" />
     <Compile Include="Graphics\VertexBuffer.cs" />
     <Compile Include="Graphics\VertexFormatHelpers.cs" />
+    <Compile Include="Graphics\VertexPosition.cs" />
     <Compile Include="Graphics\VertexPositionColor.cs" />
     <Compile Include="Graphics\VertexPositionNormalTexture.cs" />
     <Compile Include="Graphics\VertexPositionTexture.cs" />

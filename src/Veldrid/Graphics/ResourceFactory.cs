@@ -24,11 +24,22 @@ namespace Veldrid.Graphics
 
         public abstract Framebuffer CreateFramebuffer(int width, int height);
 
-        public abstract DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct;
+        public abstract DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct;
 
-        public abstract DeviceTexture CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format);
+        public abstract DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format);
         public abstract ShaderTextureBinding CreateShaderTextureBinding(DeviceTexture texture);
-        public abstract DeviceTexture CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format);
+        public abstract DeviceTexture2D CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format);
+        public abstract CubemapTexture CreateCubemapTexture(
+            IntPtr pixelsFront,
+            IntPtr pixelsBack,
+            IntPtr pixelsLeft,
+            IntPtr pixelsRight,
+            IntPtr pixelsTop,
+            IntPtr pixelsBottom,
+            int width,
+            int height,
+            int pixelSizeinBytes,
+            PixelFormat format);
 
         public abstract BlendState CreateCustomBlendState(
             bool isBlendEnabled,

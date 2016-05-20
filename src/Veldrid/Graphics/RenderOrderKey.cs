@@ -6,7 +6,7 @@ namespace Veldrid.Graphics
     {
         private readonly long _rawKey;
 
-        internal RenderOrderKey(long rawKey)
+        public RenderOrderKey(long rawKey)
         {
             _rawKey = rawKey;
         }

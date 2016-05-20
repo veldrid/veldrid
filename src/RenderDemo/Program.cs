@@ -314,11 +314,14 @@ namespace Veldrid.RenderDemo
                 var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
                 plane.Position = new Vector3(0, -2.5f, 0);
                 plane.Scale = new Vector3(20f);
+                _shadowsScene.AddRenderItem(plane);
+                
+                var skybox = new Skybox(_rc, _ad);
+                _shadowsScene.AddRenderItem(skybox);
 
                 _shadowMapPreview = new ShadowMapPreview(_ad, _rc);
                 _shadowsScene.AddRenderItem(_shadowMapPreview);
 
-                _shadowsScene.AddRenderItem(plane);
                 _shadowsScene.AddRenderItem(_imguiRenderer);
             }
 

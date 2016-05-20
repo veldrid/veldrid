@@ -19,7 +19,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private readonly RenderQueue _queue = new RenderQueue();
 
         private Framebuffer _shadowMapFramebuffer;
-        private DeviceTexture _depthTexture;
+        private DeviceTexture2D _depthTexture;
 
         public bool Enabled { get; set; } = true;
 

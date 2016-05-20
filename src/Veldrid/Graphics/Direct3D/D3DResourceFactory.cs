@@ -100,7 +100,7 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DVertexBuffer(_device, sizeInBytes, isDynamic);
         }
 
-        public override DeviceTexture CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        public override DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             GCHandle handle = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
             D3DTexture texture = new D3DTexture(
@@ -117,7 +117,7 @@ namespace Veldrid.Graphics.Direct3D
             return texture;
         }
 
-        public override DeviceTexture CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             D3DTexture texture = new D3DTexture(
                 _device,
@@ -132,7 +132,7 @@ namespace Veldrid.Graphics.Direct3D
             return texture;
         }
 
-        public override DeviceTexture CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)
+        public override DeviceTexture2D CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             if (format != PixelFormat.Alpha_UInt16)
             {
@@ -152,6 +152,21 @@ namespace Veldrid.Graphics.Direct3D
                 CpuAccessFlags = CpuAccessFlags.None,
                 OptionFlags = ResourceOptionFlags.None
             });
+        }
+
+        public override CubemapTexture CreateCubemapTexture(
+            IntPtr pixelsFront,
+            IntPtr pixelsBack,
+            IntPtr pixelsLeft,
+            IntPtr pixelsRight,
+            IntPtr pixelsTop,
+            IntPtr pixelsBottom,
+            int width,
+            int height,
+            int pixelSizeinBytes,
+            PixelFormat format)
+        {
+            throw new NotImplementedException();
         }
 
         public override ShaderTextureBinding CreateShaderTextureBinding(DeviceTexture texture)

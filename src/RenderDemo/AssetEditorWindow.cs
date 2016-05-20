@@ -33,12 +33,12 @@ namespace Veldrid.RenderDemo
 
         public void Render(RenderContext rc)
         {
-            Vector2 size = ImGui.GetIO().DisplaySize;
-            ImGui.SetNextWindowSize(size - new Vector2(20, 35), SetCondition.Always);
-            ImGui.SetNextWindowPos(new Vector2(10, 25), SetCondition.Always);
-
             if (_windowOpened)
             {
+                Vector2 size = ImGui.GetIO().DisplaySize / ImGui.GetIO().DisplayFramebufferScale;
+                ImGui.SetNextWindowSize(size - new Vector2(20, 35), SetCondition.Always);
+                ImGui.SetNextWindowPos(new Vector2(10, 25), SetCondition.Always);
+            
                 ImGui.PushStyleVar(StyleVar.WindowRounding, 0f);
                 if (ImGui.BeginWindow("Editor Window", ref _windowOpened, WindowFlags.ShowBorders | WindowFlags.NoCollapse | WindowFlags.NoMove | WindowFlags.NoResize))
                 {

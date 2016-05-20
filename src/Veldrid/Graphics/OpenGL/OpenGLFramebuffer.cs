@@ -8,10 +8,10 @@ namespace Veldrid.Graphics.OpenGL
     {
         private readonly int _framebufferID;
 
-        private OpenGLTexture _colorTexture;
-        private OpenGLTexture _depthTexture;
+        private OpenGLTexture2D _colorTexture;
+        private OpenGLTexture2D _depthTexture;
 
-        DeviceTexture Framebuffer.ColorTexture
+        DeviceTexture2D Framebuffer.ColorTexture
         {
             get
             {
@@ -24,13 +24,13 @@ namespace Veldrid.Graphics.OpenGL
                     _colorTexture = null;
                 }
 
-                Debug.Assert(value is OpenGLTexture);
-                _colorTexture = (OpenGLTexture)value;
+                Debug.Assert(value is OpenGLTexture2D);
+                _colorTexture = (OpenGLTexture2D)value;
                 AttachColorTexture();
             }
         }
 
-        DeviceTexture Framebuffer.DepthTexture
+        DeviceTexture2D Framebuffer.DepthTexture
         {
             get
             {
@@ -44,8 +44,8 @@ namespace Veldrid.Graphics.OpenGL
                     _depthTexture = null;
                 }
 
-                Debug.Assert(value is OpenGLTexture);
-                _depthTexture = (OpenGLTexture)value;
+                Debug.Assert(value is OpenGLTexture2D);
+                _depthTexture = (OpenGLTexture2D)value;
                 AttachDepthTexture();
             }
         }
@@ -59,7 +59,7 @@ namespace Veldrid.Graphics.OpenGL
             _framebufferID = GL.GenFramebuffer();
         }
 
-        public OpenGLFramebuffer(OpenGLTexture colorTexture, OpenGLTexture depthTexture)
+        public OpenGLFramebuffer(OpenGLTexture2D colorTexture, OpenGLTexture2D depthTexture)
             : this()
         {
             _colorTexture = colorTexture;
@@ -74,12 +74,12 @@ namespace Veldrid.Graphics.OpenGL
         private void AttachDepthTexture()
         {
             Bind();
-            _depthTexture.Apply();
+            _depthTexture.Bind();
             GL.FramebufferTexture2D(
                 FramebufferTarget.Framebuffer,
                 FramebufferAttachment.DepthAttachment,
                 TextureTarget.Texture2D,
-                _depthTexture.TextureID,
+                _depthTexture.ID,
                 0);
             Unbind();
         }
@@ -87,12 +87,12 @@ namespace Veldrid.Graphics.OpenGL
         private void AttachColorTexture()
         {
             GL.ActiveTexture(TextureUnit.Texture0);
-            _colorTexture.Apply();
+            _colorTexture.Bind();
             GL.FramebufferTexture2D(
                 FramebufferTarget.Framebuffer,
                 FramebufferAttachment.ColorAttachment0,
                 TextureTarget.Texture2D,
-                _colorTexture.TextureID,
+                _colorTexture.ID,
                 0);
             GL.BindTexture(TextureTarget.Texture2D, 0);
             if (_colorTexture == null)

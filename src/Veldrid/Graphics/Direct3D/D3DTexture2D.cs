@@ -6,29 +6,38 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public class D3DTexture : DeviceTexture2D, IDisposable, PixelDataProvider
+    public abstract class D3DTexture : DeviceTexture
+    {
+        public abstract Texture2D DeviceTexture { get; }
+        public abstract int Width { get; }
+        public abstract int Height { get; }
+
+        public abstract ShaderResourceViewDescription GetShaderResourceViewDescription();
+    }
+
+    public class D3DTexture2D : D3DTexture, DeviceTexture2D, IDisposable, PixelDataProvider
     {
         private readonly Device _device;
 
-        public Texture2D DeviceTexture { get; }
+        public override Texture2D DeviceTexture { get; }
 
-        public int Width => DeviceTexture.Description.Width;
+        public override int Width => DeviceTexture.Description.Width;
 
-        public int Height => DeviceTexture.Description.Height;
+        public override int Height => DeviceTexture.Description.Height;
 
-        public D3DTexture(Device device, Texture2DDescription description)
+        public D3DTexture2D(Device device, Texture2DDescription description)
         {
             _device = device;
             DeviceTexture = new Texture2D(device, description);
         }
 
-        public D3DTexture(Device device, Texture2D existingTexture)
+        public D3DTexture2D(Device device, Texture2D existingTexture)
         {
             _device = device;
             DeviceTexture = existingTexture;
         }
 
-        public D3DTexture(
+        public D3DTexture2D(
             Device device,
             BindFlags bindFlags,
             ResourceUsage usage,
@@ -96,7 +105,7 @@ namespace Veldrid.Graphics.Direct3D
             width = Math.Max(1, width);
             height = Math.Max(1, height);
 
-            D3DTexture stagingTexture = new D3DTexture(_device, new Texture2DDescription()
+            D3DTexture2D stagingTexture = new D3DTexture2D(_device, new Texture2DDescription()
             {
                 Width = width,
                 Height = height,
@@ -147,6 +156,17 @@ namespace Veldrid.Graphics.Direct3D
             }
 
             stagingTexture.Dispose();
+        }
+
+        public override ShaderResourceViewDescription GetShaderResourceViewDescription()
+        {
+            ShaderResourceViewDescription srvd = new ShaderResourceViewDescription();
+            srvd.Format = D3DFormats.MapFormatForShaderResourceView(DeviceTexture.Description.Format);
+            srvd.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
+            srvd.Texture2D.MipLevels = DeviceTexture.Description.MipLevels;
+            srvd.Texture2D.MostDetailedMip = 0;
+
+            return srvd;
         }
     }
 }

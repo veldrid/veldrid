@@ -1,71 +1,68 @@
+﻿using SharpDX;
+using SharpDX.Direct3D11;
 using System;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public class D3DCubemapTexture : CubemapTexture
+    internal class D3DCubemapTexture : D3DTexture, CubemapTexture
     {
-        public DeviceTexture Back
+        public override Texture2D DeviceTexture { get; }
+        public override int Width { get; }
+        public override int Height { get; }
+
+        public D3DCubemapTexture(
+            Device device,
+            IntPtr pixelsFront,
+            IntPtr pixelsBack,
+            IntPtr pixelsLeft,
+            IntPtr pixelsRight,
+            IntPtr pixelsTop,
+            IntPtr pixelsBottom,
+            int width,
+            int height,
+            int pixelSizeInBytes,
+            PixelFormat format)
         {
-            get
+            Width = width;
+            Height = height;
+            int stride = width * pixelSizeInBytes;
+
+            DataRectangle[] dataRectangles = new DataRectangle[]
             {
-                throw new NotImplementedException();
-            }
+                new DataRectangle(pixelsRight, stride),
+                new DataRectangle(pixelsLeft, stride),
+                new DataRectangle(pixelsTop, stride),
+                new DataRectangle(pixelsBottom, stride),
+                new DataRectangle(pixelsBack, stride),
+                new DataRectangle(pixelsFront, stride),
+            };
+
+            DeviceTexture = new Texture2D(
+                device,
+                new Texture2DDescription()
+                {
+                    Format = D3DFormats.ConvertPixelFormat(format),
+                    ArraySize = 6,
+                    MipLevels = 1,
+                    SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                    Usage = ResourceUsage.Default,
+                    BindFlags = BindFlags.ShaderResource,
+                    Width = width,
+                    Height = height,
+                    OptionFlags = ResourceOptionFlags.TextureCube
+                },
+                dataRectangles);
         }
 
-        public DeviceTexture Bottom
+        public override ShaderResourceViewDescription GetShaderResourceViewDescription()
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+            ShaderResourceViewDescription srvd = new ShaderResourceViewDescription();
+            srvd.Format = D3DFormats.MapFormatForShaderResourceView(DeviceTexture.Description.Format);
+            srvd.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.TextureCube;
+            srvd.TextureCube.MipLevels = 1;
+            srvd.TextureCube.MostDetailedMip = 0;
 
-        public DeviceTexture Front
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int Height
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public DeviceTexture Left
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public DeviceTexture Right
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public DeviceTexture Top
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int Width
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            return srvd;
         }
     }
 }

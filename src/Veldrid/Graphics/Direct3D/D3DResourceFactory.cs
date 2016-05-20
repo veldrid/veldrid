@@ -32,7 +32,7 @@ namespace Veldrid.Graphics.Direct3D
             width = Math.Max(1, width);
             height = Math.Max(1, height);
 
-            D3DTexture colorTexture = new D3DTexture(_device, new Texture2DDescription()
+            D3DTexture2D colorTexture = new D3DTexture2D(_device, new Texture2DDescription()
             {
                 Format = SharpDX.DXGI.Format.R32G32B32A32_Float,
                 ArraySize = 1,
@@ -46,7 +46,7 @@ namespace Veldrid.Graphics.Direct3D
                 OptionFlags = ResourceOptionFlags.None
             });
 
-            D3DTexture depthTexture = new D3DTexture(_device, new Texture2DDescription()
+            D3DTexture2D depthTexture = new D3DTexture2D(_device, new Texture2DDescription()
             {
                 Format = SharpDX.DXGI.Format.D16_UNorm,
                 ArraySize = 1,
@@ -103,7 +103,7 @@ namespace Veldrid.Graphics.Direct3D
         public override DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             GCHandle handle = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
-            D3DTexture texture = new D3DTexture(
+            D3DTexture2D texture = new D3DTexture2D(
                 _device,
                 BindFlags.ShaderResource,
                 ResourceUsage.Default,
@@ -119,7 +119,7 @@ namespace Veldrid.Graphics.Direct3D
 
         public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            D3DTexture texture = new D3DTexture(
+            D3DTexture2D texture = new D3DTexture2D(
                 _device,
                 BindFlags.ShaderResource,
                 ResourceUsage.Default,
@@ -139,7 +139,7 @@ namespace Veldrid.Graphics.Direct3D
                 throw new NotImplementedException("Alpha_UInt16 is the only supported depth texture format.");
             }
 
-            return new D3DTexture(_device, new Texture2DDescription()
+            return new D3DTexture2D(_device, new Texture2DDescription()
             {
                 Format = SharpDX.DXGI.Format.R16_Typeless,
                 ArraySize = 1,
@@ -166,18 +166,13 @@ namespace Veldrid.Graphics.Direct3D
             int pixelSizeinBytes,
             PixelFormat format)
         {
-            throw new NotImplementedException();
+            return new D3DCubemapTexture(_device, pixelsFront, pixelsBack, pixelsLeft, pixelsRight, pixelsTop, pixelsBottom, width, height, pixelSizeinBytes, format);
         }
 
         public override ShaderTextureBinding CreateShaderTextureBinding(DeviceTexture texture)
         {
             D3DTexture d3dTexture = (D3DTexture)texture;
-            ShaderResourceViewDescription srvd = new ShaderResourceViewDescription();
-            srvd.Format = D3DFormats.MapFormatForShaderResourceView(d3dTexture.DeviceTexture.Description.Format);
-            srvd.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
-            srvd.Texture2D.MipLevels = d3dTexture.DeviceTexture.Description.MipLevels;
-            srvd.Texture2D.MostDetailedMip = 0;
-
+            ShaderResourceViewDescription srvd = d3dTexture.GetShaderResourceViewDescription();
             ShaderResourceView srv = new ShaderResourceView(_device, d3dTexture.DeviceTexture, srvd);
             return new D3DTextureBinding(srv, d3dTexture);
         }

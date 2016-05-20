@@ -150,8 +150,8 @@ namespace Veldrid.Graphics.Direct3D
                 // Create the depth buffer view
                 _defaultFramebuffer = new D3DFramebuffer(
                     _device,
-                    new D3DTexture(_device, backBufferTexture),
-                    new D3DTexture(_device, depthBufferTexture),
+                    new D3DTexture2D(_device, backBufferTexture),
+                    new D3DTexture2D(_device, depthBufferTexture),
                     backBufferTexture.Description.Width,
                     backBufferTexture.Description.Height);
                 if (currentlyBound)

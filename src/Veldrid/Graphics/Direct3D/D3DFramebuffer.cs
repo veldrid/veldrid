@@ -12,8 +12,8 @@ namespace Veldrid.Graphics.Direct3D
 
         public DepthStencilView DepthStencilView { get; private set; }
         public RenderTargetView RenderTargetView { get; private set; }
-        public D3DTexture RenderTargetTexture { get; private set; }
-        public D3DTexture DepthTexture { get; private set; }
+        public D3DTexture2D RenderTargetTexture { get; private set; }
+        public D3DTexture2D DepthTexture { get; private set; }
 
         DeviceTexture2D Framebuffer.ColorTexture
         {
@@ -24,8 +24,8 @@ namespace Veldrid.Graphics.Direct3D
 
             set
             {
-                Debug.Assert(value is D3DTexture);
-                RenderTargetTexture = (D3DTexture)value;
+                Debug.Assert(value is D3DTexture2D);
+                RenderTargetTexture = (D3DTexture2D)value;
                 RenderTargetView = new RenderTargetView(_device, RenderTargetTexture.DeviceTexture);
                 _width = value.Width;
                 _height = value.Height;
@@ -41,8 +41,8 @@ namespace Veldrid.Graphics.Direct3D
 
             set
             {
-                Debug.Assert(value is D3DTexture);
-                DepthTexture = (D3DTexture)value;
+                Debug.Assert(value is D3DTexture2D);
+                DepthTexture = (D3DTexture2D)value;
                 DepthStencilView = new DepthStencilView(_device, DepthTexture.DeviceTexture, new DepthStencilViewDescription()
                 {
                     Format = SharpDX.DXGI.Format.D16_UNorm,
@@ -61,12 +61,12 @@ namespace Veldrid.Graphics.Direct3D
             _device = device;
         }
 
-        public D3DFramebuffer(Device device, D3DTexture colorTexture, D3DTexture depthTexture)
+        public D3DFramebuffer(Device device, D3DTexture2D colorTexture, D3DTexture2D depthTexture)
             : this(device, colorTexture, depthTexture, colorTexture.Width, colorTexture.Height)
         {
         }
 
-        public D3DFramebuffer(Device device, D3DTexture colorTexture, D3DTexture depthTexture, int width, int height)
+        public D3DFramebuffer(Device device, D3DTexture2D colorTexture, D3DTexture2D depthTexture, int width, int height)
         {
             _device = device;
             RenderTargetView = new RenderTargetView(device, colorTexture.DeviceTexture);

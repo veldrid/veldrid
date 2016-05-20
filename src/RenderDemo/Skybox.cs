@@ -82,7 +82,7 @@ namespace Veldrid.RenderDemo
                     PixelFormat.R32_G32_B32_A32_Float);
                 _cubemapBinding = factory.CreateShaderTextureBinding(cubemapTexture);
             }
-            
+
             _rasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, false, false);
         }
 
@@ -103,7 +103,7 @@ namespace Veldrid.RenderDemo
             rc.SetIndexBuffer(_ib);
             rc.SetMaterial(_material);
             RasterizerState previousRasterState = rc.RasterizerState;
-            rc.SetRasterizerState(_rasterizerState); 
+            rc.SetRasterizerState(_rasterizerState);
             _material.UseTexture(0, _cubemapBinding);
             _material.ApplyPerObjectInput(_perObjectInput);
             rc.DrawIndexedPrimitives(s_indices.Length, 0);

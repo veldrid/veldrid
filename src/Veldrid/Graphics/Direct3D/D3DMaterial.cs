@@ -83,7 +83,7 @@ namespace Veldrid.Graphics.Direct3D
             for (int i = 0; i < numTextures; i++)
             {
                 var genericElement = textureInputs.Elements[i];
-                D3DTexture texture = (D3DTexture)genericElement.GetDeviceTexture(rc);
+                D3DTexture2D texture = (D3DTexture2D)genericElement.GetDeviceTexture(rc);
 
                 ShaderResourceViewDescription srvd = new ShaderResourceViewDescription();
                 srvd.Format = D3DFormats.MapFormatForShaderResourceView(texture.DeviceTexture.Description.Format);

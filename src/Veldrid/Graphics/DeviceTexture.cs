@@ -5,7 +5,14 @@
     /// </summary>
     public interface DeviceTexture
     {
+        /// <summary>
+        /// The width of the texture. For cubemap textures, returns the width of each individual face.
+        /// </summary>
         int Width { get; }
+
+        /// <summary>
+        /// The height of the texture. For cubemap textures, returns the height of each individual face.
+        /// </summary>
         int Height { get; }
     }
 

@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 
 namespace Veldrid.Graphics
 {
+    /// <summary>
+    /// A visiblity list which stores objects in a flat, nonhierarchical list.
+    /// </summary>
     public class FlatListVisibilityManager : VisibiltyManager
     {
         private readonly Dictionary<string, List<RenderItem>> _renderItemsByStage = new Dictionary<string, List<RenderItem>>();
@@ -22,18 +24,6 @@ namespace Veldrid.Graphics
             _distinctRenderItems.Add(item);
         }
 
-        private List<RenderItem> GetStageList(string stage)
-        {
-            List<RenderItem> items;
-            if (!_renderItemsByStage.TryGetValue(stage, out items))
-            {
-                items = new List<RenderItem>();
-                _renderItemsByStage.Add(stage, items);
-            }
-
-            return items;
-        }
-
         public void RemoveRenderItem(RenderItem item)
         {
             foreach (string stage in item.GetStagesParticipated())
@@ -47,6 +37,18 @@ namespace Veldrid.Graphics
         public void CollectVisibleObjects(RenderQueue queue, string pipelineStage, Vector3 position, Vector3 direction)
         {
             queue.AddRange(GetStageList(pipelineStage));
+        }
+
+        private List<RenderItem> GetStageList(string stage)
+        {
+            List<RenderItem> items;
+            if (!_renderItemsByStage.TryGetValue(stage, out items))
+            {
+                items = new List<RenderItem>();
+                _renderItemsByStage.Add(stage, items);
+            }
+
+            return items;
         }
     }
 }

@@ -2,6 +2,9 @@
 
 namespace Veldrid.Graphics
 {
+    /// <summary>
+    /// A generic device buffer, which is used to store generic data on the graphics device.
+    /// </summary>
     public interface DeviceBuffer
     {
         void SetData<T>(T[] data, int dataSizeInBytes) where T : struct;

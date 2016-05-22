@@ -1,5 +1,8 @@
 ﻿namespace Veldrid.Graphics
 {
+    /// <summary>
+    /// An input element describing a cubemap texture.
+    /// </summary>
     public class CubemapTextureInputElement : MaterialTextureInputElement
     {
         private readonly ImageProcessorTexture _front;

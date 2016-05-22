@@ -1,6 +1,7 @@
 ﻿using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -25,8 +26,7 @@ namespace Veldrid.RenderDemo.Drawers
 
             PreviewScene scene;
             scene = GetOrCreateScene(obj, rc);
-            scene.Width = (int)imageDimensions.X;
-            scene.Height = (int)imageDimensions.Y;
+            scene.Size = new Size((int)imageDimensions.X, (int)imageDimensions.Y);
             scene.RenderFrame();
             IntPtr id = ImGuiImageHelper.GetOrCreateImGuiBinding(rc, scene.RenderedScene);
             ImGui.Image(id, new Vector2(scene.Width, scene.Height), rc.TopLeftUv, rc.BottomRightUv, Vector4.One, Vector4.One);
@@ -54,17 +54,18 @@ namespace Veldrid.RenderDemo.Drawers
 
         private class PreviewScene
         {
-            private int _width = 500;
+            private Size _size = new Size(500, 360);
+            public Size Size { get { return _size; } set { if (_size != value) { _size = value; OnSizeChanged(); } } }
 
-            public int Width { get { return _width; } set { _width = value; } }
-            public int Height { get; set; } = 360;
+            public int Width => _size.Width;
+            public int Height => _size.Height;
 
             public float Fov { get; set; } = 1.05f;
 
             public bool AutoRotateCamera { get; set; } = true;
 
             RenderContext _rc;
-            private readonly Framebuffer _fb;
+            private Framebuffer _fb;
 
             private readonly PreviewModel _previewItem;
             private readonly PreviewModel _floor;
@@ -83,6 +84,7 @@ namespace Veldrid.RenderDemo.Drawers
             private Vector3 _lightDirection = Vector3.Normalize(new Vector3(-1f, -.6f, -.3f));
             private Vector3 _cameraPosition;
             private double _circleWidth = 10.0f;
+            private readonly StandardPipelineStage _standardPipelineStage;
 
             public PreviewScene(RenderContext rc, ObjMeshInfo previewItem)
             {
@@ -90,17 +92,19 @@ namespace Veldrid.RenderDemo.Drawers
                 ResourceFactory factory = rc.ResourceFactory;
                 _fb = factory.CreateFramebuffer(Width, Height);
 
-                _projection = new DynamicDataProvider<Matrix4x4>(Matrix4x4.CreatePerspectiveFieldOfView(Fov, (float)Width / Height, 0.1f, 100f));
+                _projection = new DynamicDataProvider<Matrix4x4>();
+                UpdateProjectionData();
                 _view = new DynamicDataProvider<Matrix4x4>(Matrix4x4.CreateLookAt(Vector3.UnitZ * 7f + Vector3.UnitY * 1.5f, Vector3.Zero, Vector3.UnitY));
 
                 _lightProjection = new DynamicDataProvider<Matrix4x4>(Matrix4x4.CreateOrthographicOffCenter(-18, 18, -18, 18, -10, 60f));
                 _lightView = new DynamicDataProvider<Matrix4x4>(Matrix4x4.CreateLookAt(-_lightDirection * 20f, Vector3.Zero, Vector3.UnitY));
                 _lightInfo = new DynamicDataProvider<Vector4>(new Vector4(_lightDirection, 1));
 
+                _standardPipelineStage = new StandardPipelineStage(rc, "Standard", _fb);
                 _stages = new PipelineStage[]
                 {
                     new ShadowMapStage(rc, "ShadowMap_Preview"),
-                    new StandardPipelineStage(rc, "Standard", _fb),
+                    _standardPipelineStage,
                 };
 
                 _sceneProviders.Add("ProjectionMatrix", _projection);
@@ -171,6 +175,19 @@ namespace Veldrid.RenderDemo.Drawers
                         (float)(Math.Sin(timeFactor) * _circleWidth));
                     _view.Data = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
                 }
+            }
+
+            private void UpdateProjectionData()
+            {
+                _projection.Data = Matrix4x4.CreatePerspectiveFieldOfView(Fov, (float)Width / Height, 0.1f, 100f);
+            }
+
+            private void OnSizeChanged()
+            {
+                _fb.Dispose();
+                _fb = _rc.ResourceFactory.CreateFramebuffer(Width, Height);
+                _standardPipelineStage.OverrideFramebuffer = _fb;
+                UpdateProjectionData();
             }
         }
 

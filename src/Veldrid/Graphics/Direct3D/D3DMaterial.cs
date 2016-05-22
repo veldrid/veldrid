@@ -13,7 +13,7 @@ namespace Veldrid.Graphics.Direct3D
         private readonly InputLayout _inputLayout;
         private readonly ConstantBufferBinding[] _constantBufferBindings;
         private readonly ConstantBufferBinding[] _perObjectBufferBindings;
-        private readonly ResourceViewBinding[] _resourceViewBindings;
+        private readonly ResourceViewBinding?[] _resourceViewBindings;
 
         private const ShaderFlags defaultShaderFlags
 #if DEBUG
@@ -79,20 +79,21 @@ namespace Veldrid.Graphics.Direct3D
             }
 
             int numTextures = textureInputs.Elements.Length;
-            _resourceViewBindings = new ResourceViewBinding[numTextures];
+            _resourceViewBindings = new ResourceViewBinding?[numTextures];
             for (int i = 0; i < numTextures; i++)
             {
                 var genericElement = textureInputs.Elements[i];
                 D3DTexture2D texture = (D3DTexture2D)genericElement.GetDeviceTexture(rc);
-
-                ShaderResourceViewDescription srvd = new ShaderResourceViewDescription();
-                srvd.Format = D3DFormats.MapFormatForShaderResourceView(texture.DeviceTexture.Description.Format);
-                srvd.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
-                srvd.Texture2D.MipLevels = texture.DeviceTexture.Description.MipLevels;
-                srvd.Texture2D.MostDetailedMip = 0;
-
-                ShaderResourceView resourceView = new ShaderResourceView(device, texture.DeviceTexture, srvd);
-                _resourceViewBindings[i] = new ResourceViewBinding(i, resourceView);
+                if (texture != null)
+                {
+                    ShaderResourceViewDescription srvd = new ShaderResourceViewDescription();
+                    srvd.Format = D3DFormats.MapFormatForShaderResourceView(texture.DeviceTexture.Description.Format);
+                    srvd.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
+                    srvd.Texture2D.MipLevels = texture.DeviceTexture.Description.MipLevels;
+                    srvd.Texture2D.MostDetailedMip = 0;
+                    ShaderResourceView resourceView = new ShaderResourceView(device, texture.DeviceTexture, srvd);
+                    _resourceViewBindings[i] = new ResourceViewBinding(i, resourceView);
+                }
             }
         }
 
@@ -109,9 +110,12 @@ namespace Veldrid.Graphics.Direct3D
                 _device.ImmediateContext.PixelShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
             }
 
-            foreach (ResourceViewBinding rvBinding in _resourceViewBindings)
+            foreach (ResourceViewBinding? rvBinding in _resourceViewBindings)
             {
-                _device.ImmediateContext.PixelShader.SetShaderResource(rvBinding.Slot, rvBinding.ResourceView);
+                if (rvBinding.HasValue)
+                {
+                    _device.ImmediateContext.PixelShader.SetShaderResource(rvBinding.Value.Slot, rvBinding.Value.ResourceView);
+                }
             }
         }
 
@@ -231,7 +235,10 @@ namespace Veldrid.Graphics.Direct3D
             }
             foreach (var binding in _resourceViewBindings)
             {
-                binding.ResourceView.Dispose();
+                if (binding.HasValue)
+                {
+                    binding.Value.ResourceView.Dispose();
+                }
             }
         }
 

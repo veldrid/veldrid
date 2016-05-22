@@ -1,4 +1,5 @@
-﻿using Veldrid.Graphics;
+﻿using System;
+using Veldrid.Graphics;
 
 namespace Veldrid.Assets
 {
@@ -37,6 +38,14 @@ namespace Veldrid.Assets
                 ad.LoadAsset(Right),
                 ad.LoadAsset(Top),
                 ad.LoadAsset(Bottom));
+        }
+    }
+
+    public class PlaceholderTexture : TextureAsset
+    {
+        public override MaterialTextureInputElement Create(AssetDatabase ad)
+        {
+            return new ManualTextureInput(Name);
         }
     }
 }

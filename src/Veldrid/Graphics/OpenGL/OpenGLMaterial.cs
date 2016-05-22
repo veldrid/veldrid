@@ -154,9 +154,12 @@ namespace Veldrid.Graphics.OpenGL
             for (int i = 0; i < _textureBindings.Length; i++)
             {
                 var binding = _textureBindings[i];
-                GL.ActiveTexture(TextureUnit.Texture0 + i);
-                binding.DeviceTexture.Bind();
-                GL.Uniform1(binding.UniformLocation, i);
+                if (binding.DeviceTexture != null)
+                {
+                    GL.ActiveTexture(TextureUnit.Texture0 + i);
+                    binding.DeviceTexture.Bind();
+                    GL.Uniform1(binding.UniformLocation, i);
+                }
             }
         }
 

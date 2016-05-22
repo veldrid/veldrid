@@ -307,9 +307,11 @@ namespace Veldrid.RenderDemo
                 cube2.Scale = new Vector3(3f);
                 _shadowsScene.AddRenderItem(cube2);
 
-                var sphere3 = new ShadowCaster(_rc, _ad, sphereMeshInfo.Vertices, sphereMeshInfo.Indices, stoneMaterial);
-                sphere3.Position = new Vector3(0f, 0f, 5f);
-                _shadowsScene.AddRenderItem(sphere3);
+                var teapotMeshInfo = _ad.LoadAsset<ObjMeshInfo>("Models/Teapot.obj");
+                var teapot = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
+                teapot.Position = new Vector3(-4f, 0f, 6f);
+                teapot.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
+                _shadowsScene.AddRenderItem(teapot);
 
                 var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
                 plane.Position = new Vector3(0, -2.5f, 0);

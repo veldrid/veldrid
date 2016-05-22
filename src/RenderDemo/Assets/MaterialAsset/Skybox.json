@@ -43,10 +43,15 @@
     },
     "ContextTextures": {
         "$type": "Veldrid.Graphics.ContextTextureInputElement[], Veldrid",
-        "$values": []
+        "$values": [ ]
     },
     "TextureInputs": {
         "$type": "Veldrid.Assets.TextureAsset[], Veldrid.Assets",
-        "$values": []
+        "$values": [
+            {
+                "$type": "Veldrid.Assets.PlaceholderTexture, Veldrid.Assets",
+                "Name": "Skybox"
+            }
+        ]
     }
 }

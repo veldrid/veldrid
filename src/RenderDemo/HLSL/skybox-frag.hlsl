@@ -1,5 +1,5 @@
 sampler sampler0;
-TextureCubeArray skybox;
+TextureCubeArray Skybox;
 
 struct PS_INPUT
 {
@@ -9,5 +9,5 @@ struct PS_INPUT
 
 float4 PS(PS_INPUT input) : SV_Target
 {
-    return skybox.Sample(sampler0, float4(input.TexCoord, 1));
+    return Skybox.Sample(sampler0, float4(input.TexCoord, 1));
 }

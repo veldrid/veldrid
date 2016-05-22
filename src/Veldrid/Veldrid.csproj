@@ -40,6 +40,7 @@
     <Compile Include="Graphics\FlatListVisibilityManager.cs" />
     <Compile Include="Graphics\Framebuffer.cs" />
     <Compile Include="Graphics\IndexFormat.cs" />
+    <Compile Include="Graphics\ManualTextureInput.cs" />
     <Compile Include="Graphics\ObjImporter.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLBlendState.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLCubemapTexture.cs" />

@@ -53,7 +53,7 @@ namespace Veldrid.Graphics.Direct3D
             _device.ImmediateContext.OutputMerger.SetBlendState(
                 _deviceBlendState,
                 new RawColor4(BlendFactor.R, BlendFactor.G, BlendFactor.B, BlendFactor.A),
-                    0xffffffff);
+                0xffffffff);
         }
 
         public void Dispose()

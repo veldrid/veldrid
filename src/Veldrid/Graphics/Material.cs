@@ -2,7 +2,7 @@
 
 namespace Veldrid.Graphics
 {
-    public interface Material : RenderStateModifier, IDisposable
+    public interface Material : IDisposable
     {
         void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider);
         void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders);

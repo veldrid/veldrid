@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using Veldrid.Assets;
 using Veldrid.Graphics;
-using Veldrid.Graphics.Pipeline;
 
 namespace Veldrid.RenderDemo
 {
@@ -60,20 +59,20 @@ namespace Veldrid.RenderDemo
                 VertexPositionColor.SizeInBytes,
                 new MaterialVertexInputElement[]
                 {
-                        new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
-                        new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4)
+                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                    new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4)
                 });
 
             MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                 new MaterialGlobalInputElement[]
                 {
-                        new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ProjectionMatrix"])
+                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ProjectionMatrix"])
                 });
 
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
                 new MaterialPerObjectInputElement[]
                 {
-                        new MaterialPerObjectInputElement("modelviewMatrixUniform", MaterialInputType.Matrix4x4, _modelViewProvider.DataSizeInBytes)
+                    new MaterialPerObjectInputElement("modelviewMatrixUniform", MaterialInputType.Matrix4x4, _modelViewProvider.DataSizeInBytes)
                 });
 
             s_material = factory.CreateMaterial(

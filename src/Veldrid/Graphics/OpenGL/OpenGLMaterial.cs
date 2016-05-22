@@ -175,16 +175,15 @@ namespace Veldrid.Graphics.OpenGL
 
         public void UseTexture(int slot, ShaderTextureBinding binding)
         {
-            //TODO REMOVE
-            if (binding.BoundTexture == null) return;
-            // TODO
-
             if (!(binding is OpenGLTextureBinding))
             {
                 throw new InvalidOperationException("Illegal binding type.");
             }
 
-            BindTexture(slot, (OpenGLTexture)binding.BoundTexture);
+            if (binding.BoundTexture != null)
+            {
+                BindTexture(slot, (OpenGLTexture)binding.BoundTexture);
+            }
         }
 
         private void BindTexture(int slot, OpenGLTexture texture)

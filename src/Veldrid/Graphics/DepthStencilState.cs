@@ -2,7 +2,7 @@
 
 namespace Veldrid.Graphics
 {
-    public interface DepthStencilState : RenderStateModifier, IDisposable
+    public interface DepthStencilState : IDisposable
     {
         bool IsDepthEnabled { get; }
         DepthComparison DepthComparison { get; }

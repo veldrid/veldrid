@@ -171,6 +171,41 @@ namespace Veldrid.Graphics.Direct3D
             _deviceContext.Rasterizer.SetScissorRectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
         }
 
+        protected override void PlatformSetVertexBuffer(VertexBuffer vb)
+        {
+            ((D3DVertexBuffer)vb).Apply();
+        }
+
+        protected override void PlatformSetIndexBuffer(IndexBuffer ib)
+        {
+            ((D3DIndexBuffer)ib).Apply();
+        }
+
+        protected override void PlatformSetMaterial(Material material)
+        {
+            ((D3DMaterial)material).Apply();
+        }
+
+        protected override void PlatformSetFramebuffer(Framebuffer framebuffer)
+        {
+            ((D3DFramebuffer)framebuffer).Apply();
+        }
+
+        protected override void PlatformSetBlendstate(BlendState blendState)
+        {
+            ((D3DBlendState)blendState).Apply();
+        }
+
+        protected override void PlatformSetDepthStencilState(DepthStencilState depthStencilState)
+        {
+            ((D3DDepthStencilState)depthStencilState).Apply();
+        }
+
+        protected override void PlatformSetRasterizerState(RasterizerState rasterizerState)
+        {
+            ((D3DRasterizerState)rasterizerState).Apply();
+        }
+
         protected override void PlatformDispose()
         {
             _defaultFramebuffer.Dispose();

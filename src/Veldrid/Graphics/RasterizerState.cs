@@ -2,7 +2,7 @@
 
 namespace Veldrid.Graphics
 {
-    public interface RasterizerState : RenderStateModifier, IDisposable
+    public interface RasterizerState : IDisposable
     {
         FaceCullingMode CullMode { get; }
         TriangleFillMode FillMode { get; }

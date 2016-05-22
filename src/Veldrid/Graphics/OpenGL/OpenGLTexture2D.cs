@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLTexture2D :  OpenGLTexture, DeviceTexture2D, IDisposable, PixelDataProvider
+    public class OpenGLTexture2D : OpenGLTexture, DeviceTexture2D, IDisposable, PixelDataProvider
     {
         private readonly OpenTK.Graphics.OpenGL.PixelFormat _pixelFormat;
         private readonly PixelType _pixelType;
@@ -40,8 +40,6 @@ namespace Veldrid.Graphics.OpenGL
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-            //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Clamp);
-            //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Clamp);
 
             // Set size, load empty data into texture
             GL.TexImage2D(

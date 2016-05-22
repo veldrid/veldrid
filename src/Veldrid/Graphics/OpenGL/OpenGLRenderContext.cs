@@ -151,6 +151,41 @@ namespace Veldrid.Graphics.OpenGL
             GL.Disable(EnableCap.ScissorTest);
         }
 
+        protected override void PlatformSetVertexBuffer(VertexBuffer vb)
+        {
+            ((OpenGLVertexBuffer)vb).Apply();
+        }
+
+        protected override void PlatformSetIndexBuffer(IndexBuffer ib)
+        {
+            ((OpenGLIndexBuffer)ib).Apply();
+        }
+
+        protected override void PlatformSetMaterial(Material material)
+        {
+            ((OpenGLMaterial)material).Apply();
+        }
+
+        protected override void PlatformSetFramebuffer(Framebuffer framebuffer)
+        {
+            ((OpenGLFramebufferBase)framebuffer).Apply();
+        }
+
+        protected override void PlatformSetBlendstate(BlendState blendState)
+        {
+            ((OpenGLBlendState)blendState).Apply();
+        }
+
+        protected override void PlatformSetDepthStencilState(DepthStencilState depthStencilState)
+        {
+            ((OpenGLDepthStencilState)depthStencilState).Apply();
+        }
+
+        protected override void PlatformSetRasterizerState(RasterizerState rasterizerState)
+        {
+            ((OpenGLRasterizerState)rasterizerState).Apply();
+        }
+
         protected override void PlatformClearMaterialResourceBindings()
         {
         }

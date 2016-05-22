@@ -8,8 +8,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
 {
     public class ShadowMapStage : PipelineStage
     {
-        //TODO REMOVE
-        public bool TakeScreenshot = false;
+        private bool _takeScreenshot = false;
 
         private string _contextBindingName = "ShadowMap";
 
@@ -62,12 +61,14 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 item.Render(RenderContext, "ShadowMap");
             }
 
-            if (TakeScreenshot)
+            if (_takeScreenshot)
             {
-                TakeScreenshot = false;
+                _takeScreenshot = false;
                 SaveDepthTextureToFile();
             }
         }
+
+        public void SaveNextFrame() => _takeScreenshot = true;
 
         private void SaveDepthTextureToFile()
         {

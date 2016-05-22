@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLFramebuffer : Framebuffer, IDisposable
+    public class OpenGLFramebuffer : OpenGLFramebufferBase, Framebuffer, IDisposable
     {
         private readonly int _framebufferID;
 
@@ -116,7 +116,7 @@ namespace Veldrid.Graphics.OpenGL
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
 
-        public void Apply()
+        internal override void Apply()
         {
             Bind();
             FramebufferErrorCode errorCode = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);

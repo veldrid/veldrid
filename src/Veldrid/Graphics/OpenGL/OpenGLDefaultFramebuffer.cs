@@ -4,7 +4,7 @@ using Veldrid.Platform;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLDefaultFramebuffer : Framebuffer, IDisposable
+    public class OpenGLDefaultFramebuffer : OpenGLFramebufferBase, Framebuffer, IDisposable
     {
         private readonly Window _window;
 
@@ -43,7 +43,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public int Height => _window.Height;
 
-        public void Apply()
+        internal override void Apply()
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }

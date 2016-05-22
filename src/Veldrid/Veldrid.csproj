@@ -44,6 +44,7 @@
     <Compile Include="Graphics\OpenGL\OpenGLDepthStencilState.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFormats.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFramebuffer.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLFramebufferInternal.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLRasterizerState.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLTextureBinding.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLUniformStorageAdapter.cs" />
@@ -90,7 +91,6 @@
     <Compile Include="Platform\DedicatedThreadWindow.cs" />
     <Compile Include="Graphics\VertexDescriptor.cs" />
     <Compile Include="Graphics\RenderContext.cs" />
-    <Compile Include="Graphics\RenderStateModifier.cs" />
     <Compile Include="Graphics\ResourceFactory.cs" />
     <Compile Include="Graphics\VertexBuffer.cs" />
     <Compile Include="Graphics\VertexFormatHelpers.cs" />

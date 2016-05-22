@@ -2,7 +2,7 @@
 
 namespace Veldrid.Graphics
 {
-    public interface Framebuffer : RenderStateModifier, IDisposable
+    public interface Framebuffer : IDisposable
     {
         DeviceTexture2D ColorTexture { get; set; }
         DeviceTexture2D DepthTexture { get; set; }

@@ -6,13 +6,18 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public abstract class D3DTexture : DeviceTexture
+    public abstract class D3DTexture : DeviceTexture, IDisposable
     {
         public abstract Texture2D DeviceTexture { get; }
         public abstract int Width { get; }
         public abstract int Height { get; }
 
         public abstract ShaderResourceViewDescription GetShaderResourceViewDescription();
+
+        public void Dispose()
+        {
+            DeviceTexture.Dispose();
+        }
     }
 
     public class D3DTexture2D : D3DTexture, DeviceTexture2D, IDisposable, PixelDataProvider
@@ -86,11 +91,6 @@ namespace Veldrid.Graphics.Direct3D
         public void CopyTo(TextureData textureData)
         {
             textureData.AcceptPixelData(this);
-        }
-
-        public void Dispose()
-        {
-            DeviceTexture.Dispose();
         }
 
         public unsafe void SetPixelData<T>(T[] destination, int width, int height, int pixelSizeInBytes) where T : struct

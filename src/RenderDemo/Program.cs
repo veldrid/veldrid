@@ -315,7 +315,7 @@ namespace Veldrid.RenderDemo
                 plane.Position = new Vector3(0, -2.5f, 0);
                 plane.Scale = new Vector3(20f);
                 _shadowsScene.AddRenderItem(plane);
-                
+
                 var skybox = new Skybox(_rc, _ad);
                 _shadowsScene.AddRenderItem(skybox);
 
@@ -368,7 +368,7 @@ namespace Veldrid.RenderDemo
             }
             if (InputTracker.GetKeyDown(OpenTK.Input.Key.PrintScreen))
             {
-                ((ShadowMapStage)_renderer.Stages[0]).TakeScreenshot = true;
+                ((ShadowMapStage)_renderer.Stages[0]).SaveNextFrame();
             }
             if (InputTracker.GetKeyDown(OpenTK.Input.Key.F11))
             {

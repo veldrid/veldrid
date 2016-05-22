@@ -2,7 +2,7 @@
 
 namespace Veldrid.Graphics
 {
-    public interface BlendState : RenderStateModifier, IDisposable
+    public interface BlendState : IDisposable
     {
         bool IsBlendEnabled { get; }
 

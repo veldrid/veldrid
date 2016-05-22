@@ -66,17 +66,18 @@ namespace Veldrid.Graphics
         {
             if (vb != _vertexBuffer)
             {
-                vb.Apply();
+                PlatformSetVertexBuffer(vb);
                 _vertexBuffer = vb;
             }
         }
+
 
         public IndexBuffer IndexBuffer => _indexBuffer;
         public void SetIndexBuffer(IndexBuffer ib)
         {
             if (ib != _indexBuffer)
             {
-                ib.Apply();
+                PlatformSetIndexBuffer(ib);
                 _indexBuffer = ib;
             }
         }
@@ -85,7 +86,7 @@ namespace Veldrid.Graphics
         {
             if (material != _material)
             {
-                material.Apply();
+                PlatformSetMaterial(material);
                 _material = material;
             }
         }
@@ -119,7 +120,7 @@ namespace Veldrid.Graphics
                 _material = null;
                 PlatformClearMaterialResourceBindings();
                 CurrentFramebuffer = framebuffer;
-                framebuffer.Apply();
+                PlatformSetFramebuffer(framebuffer);
             }
         }
 
@@ -173,7 +174,7 @@ namespace Veldrid.Graphics
             if (_blendState != blendState)
             {
                 _blendState = blendState;
-                _blendState.Apply();
+                PlatformSetBlendstate(blendState);
             }
         }
 
@@ -187,7 +188,7 @@ namespace Veldrid.Graphics
             if (_depthStencilState != depthStencilState)
             {
                 _depthStencilState = depthStencilState;
-                _depthStencilState.Apply();
+                PlatformSetDepthStencilState(depthStencilState);
             }
         }
 
@@ -201,7 +202,7 @@ namespace Veldrid.Graphics
             if (_rasterizerState != rasterizerState)
             {
                 _rasterizerState = rasterizerState;
-                _rasterizerState.Apply();
+                PlatformSetRasterizerState(rasterizerState);
             }
         }
 
@@ -257,6 +258,20 @@ namespace Veldrid.Graphics
         protected abstract void PlatformSwapBuffers();
 
         protected abstract void PlatformResize();
+
+        protected abstract void PlatformSetVertexBuffer(VertexBuffer vb);
+
+        protected abstract void PlatformSetIndexBuffer(IndexBuffer ib);
+
+        protected abstract void PlatformSetMaterial(Material material);
+
+        protected abstract void PlatformSetFramebuffer(Framebuffer framebuffer);
+
+        protected abstract void PlatformSetBlendstate(BlendState blendState);
+
+        protected abstract void PlatformSetDepthStencilState(DepthStencilState depthStencilState);
+
+        protected abstract void PlatformSetRasterizerState(RasterizerState rasterizerState);
 
         protected abstract void PlatformSetViewport(int x, int y, int width, int height);
 

@@ -12,7 +12,9 @@
   <ItemGroup>
     <Compile Include="ArrayEx.cs" />
     <Compile Include="Graphics\BlendState.cs" />
+    <Compile Include="Graphics\ConstantDataProvider.cs" />
     <Compile Include="Graphics\CubemapTextureInputElement.cs" />
+    <Compile Include="Graphics\DependantDataProvider.cs" />
     <Compile Include="Graphics\DepthComparison.cs" />
     <Compile Include="Graphics\DepthStencilState.cs" />
     <Compile Include="Graphics\CubemapTexture.cs" />
@@ -33,6 +35,7 @@
     <Compile Include="Graphics\Direct3D\D3DTexture2D.cs" />
     <Compile Include="Graphics\Direct3D\D3DTextureBinding.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
+    <Compile Include="Graphics\DynamicDataProvider.cs" />
     <Compile Include="Graphics\FaceCullingMode.cs" />
     <Compile Include="Graphics\FlatListVisibilityManager.cs" />
     <Compile Include="Graphics\Framebuffer.cs" />

@@ -15,6 +15,7 @@ using Veldrid.Graphics.Pipeline;
 using Veldrid.Platform;
 using Veldrid.RenderDemo.ForwardRendering;
 using Veldrid.RenderDemo.Models;
+using System.Collections.Generic;
 
 namespace Veldrid.RenderDemo
 {
@@ -36,6 +37,7 @@ namespace Veldrid.RenderDemo
         private static FlatListVisibilityManager _boxSceneVM;
         private static FlatListVisibilityManager _teapotVM;
         private static FlatListVisibilityManager _shadowsScene;
+        private static FlatListVisibilityManager _roomScene;
         private static double _circleWidth = 12.0;
         private static bool _wireframe;
 
@@ -330,6 +332,65 @@ namespace Veldrid.RenderDemo
             return _shadowsScene;
         }
 
+        private static FlatListVisibilityManager RoomScene()
+        {
+            if (_roomScene == null)
+            {
+                _roomScene = new FlatListVisibilityManager();
+                var sphereMeshInfo = _ad.LoadAsset<ObjMeshInfo>(new AssetID("Models/Sphere.obj"));
+
+                var stoneMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Stone.json"));
+                var woodMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Wood.json"));
+
+                var cube1 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
+                _roomScene.AddRenderItem(cube1);
+
+                var cube2 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
+                cube2.Position = new Vector3(3f, 5f, 0f);
+                cube2.Scale = new Vector3(3f);
+                _roomScene.AddRenderItem(cube2);
+
+                var teapotMeshInfo = _ad.LoadAsset<ObjMeshInfo>("Models/Teapot.obj");
+                var teapot = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
+                teapot.Position = new Vector3(-4f, 0f, 6f);
+                teapot.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
+                _roomScene.AddRenderItem(teapot);
+
+                var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
+                plane.Position = new Vector3(0, -10f, 0);
+                plane.Scale = new Vector3(20f);
+                _roomScene.AddRenderItem(plane);
+
+                plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
+                plane.Position = new Vector3(-10f, 0, 0);
+                plane.Scale = new Vector3(20f);
+                plane.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)Math.PI / -2f);
+                _roomScene.AddRenderItem(plane);
+
+                plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
+                plane.Position = new Vector3(10f, 0, 0);
+                plane.Scale = new Vector3(20f);
+                plane.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)Math.PI / 2f);
+                _roomScene.AddRenderItem(plane);
+
+                plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
+                plane.Position = new Vector3(0, 0, -10f);
+                plane.Scale = new Vector3(20f);
+                plane.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)Math.PI / 2f);
+                _roomScene.AddRenderItem(plane);
+
+                plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
+                plane.Position = new Vector3(0, 0, 10f);
+                plane.Scale = new Vector3(20f);
+                plane.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)Math.PI / -2f);
+                _roomScene.AddRenderItem(plane);
+
+                _roomScene.AddRenderItem(_imguiRenderer);
+            }
+
+            return _roomScene;
+        }
+
         private static void Update(double deltaMilliseconds, InputSnapshot snapshot)
         {
             float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
@@ -502,6 +563,17 @@ namespace Veldrid.RenderDemo
                         _visiblityManager = SceneWithShadows();
                     }
                     if (shadowsScene)
+                        ImGui.PopStyleColor();
+
+                    bool roomScene = _visiblityManager == _roomScene;
+                    if (roomScene)
+                        ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
+                    if (ImGui.MenuItem("Room", null))
+                    {
+                        _circleWidth = 8.0;
+                        _visiblityManager = RoomScene();
+                    }
+                    if (roomScene)
                         ImGui.PopStyleColor();
 
                     ImGui.EndMenu();

@@ -28,10 +28,7 @@
     <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Veldrid\Veldrid.csproj">
-      <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>
-      <Name>Veldrid</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <Reference Include="$(DepsDir)\SharpYaml\SharpYaml.dll">
       <Name>SharpYaml</Name>
     </Reference>

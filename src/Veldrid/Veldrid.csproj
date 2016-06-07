@@ -4,7 +4,7 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <ProjectGuid>{AE9BC745-284F-42F3-8236-C43FF9731DF2}</ProjectGuid>
+    <ProjectGuid>{2AD01FB3-8EEC-4481-84F9-F9797882A3A9}</ProjectGuid>
     <AssemblyName>Veldrid</AssemblyName>
     <RootNamespace>Veldrid</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

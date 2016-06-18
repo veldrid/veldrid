@@ -44,16 +44,14 @@ namespace Veldrid.Graphics
                 (RenderItemIndex first, RenderItemIndex second)
                     => keyComparer.Compare(first.Key, second.Key));
         }
-
-        public IEnumerator<RenderItem> GetEnumerator()
+        
+        public Enumerator GetEnumerator()
         {
             return new Enumerator(_indices, _renderItems);
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return new Enumerator(_indices, _renderItems);
-        }
+        IEnumerator<RenderItem> IEnumerable<RenderItem>.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public struct Enumerator : IEnumerator<RenderItem>
         {

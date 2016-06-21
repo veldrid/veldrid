@@ -156,8 +156,14 @@ namespace Veldrid.Platform
         public InputSnapshot GetInputSnapshot()
         {
             SimpleInputSnapshot snapshot = GetAvailableSnapshot();
-            var mouseState = Mouse.GetState();
-            snapshot.MousePosition = new System.Numerics.Vector2(mouseState.X, mouseState.Y);
+            if (NativeWindow.Exists)
+            {
+                MouseState cursorState = Mouse.GetCursorState();
+                Point windowPoint = NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
+                snapshot.MousePosition = new System.Numerics.Vector2(
+                    windowPoint.X / ScaleFactor.X,
+                    windowPoint.Y / ScaleFactor.Y);
+            }
             return snapshot;
         }
 

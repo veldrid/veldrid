@@ -1,10 +1,9 @@
 ﻿{
   "dependencies": {
-    "NETStandard.Library": "1.5.0-rc3-24019-00",
     "Microsoft.NETCore.ConsoleHost": "1.0.0-rc3-24019-00",
     "Microsoft.NETCore.Runtime": "1.0.2-rc3-24019-00",
-    "System.Reflection.TypeExtensions": "4.1.0-rc3-24019-00",
-    "System.IO.FileSystem.Watcher": "4.0.0-rc3-24019-00",
+    "System.AppContext": "4.1.0",
+    "System.Net.Primitives": "4.0.11",
     "Veldrid": { "target": "project" },
     "Veldrid.Assets": { "target": "project" }
   },

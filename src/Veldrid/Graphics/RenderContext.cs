@@ -56,6 +56,12 @@ namespace Veldrid.Graphics
             set { SetRasterizerState(value); }
         }
 
+        public BlendState BlendState
+        {
+            get { return _blendState; }
+            set { SetBlendState(value); }
+        }
+
         public virtual RgbaFloat ClearColor { get; set; } = RgbaFloat.CornflowerBlue;
 
         public abstract ResourceFactory ResourceFactory { get; }

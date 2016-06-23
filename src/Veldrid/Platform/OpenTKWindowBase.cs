@@ -161,8 +161,8 @@ namespace Veldrid.Platform
                 MouseState cursorState = Mouse.GetCursorState();
                 Point windowPoint = NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
                 snapshot.MousePosition = new System.Numerics.Vector2(
-                    windowPoint.X / ScaleFactor.X,
-                    windowPoint.Y / ScaleFactor.Y);
+                    windowPoint.X,
+                    windowPoint.Y);
             }
             return snapshot;
         }

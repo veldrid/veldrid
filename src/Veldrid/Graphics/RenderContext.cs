@@ -243,6 +243,7 @@ namespace Veldrid.Graphics
             SetBlendState(AlphaBlend);
             SetDepthStencilState(DefaultDepthStencilState);
             SetRasterizerState(DefaultRasterizerState);
+            ClearScissorRectangle();
         }
 
         protected abstract Vector2 GetTopLeftUvCoordinate();

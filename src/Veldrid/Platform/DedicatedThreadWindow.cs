@@ -5,12 +5,19 @@ using System.Threading.Tasks;
 
 namespace Veldrid.Platform
 {
+    /// <summmary>A window which performs message processing on a dedicated thread.
+    /// This is desirable on Windows to allow the window to be moved and resized without
+    /// interrupting message processing.</summmary>
     public class DedicatedThreadWindow : OpenTKWindowBase, Window
     {
         private SimpleInputSnapshot _snapshotBackBuffer = new SimpleInputSnapshot();
         private bool _shouldClose;
 
+        /// <summary>Gets or sets the polling interval, in milliseconds, at which to poll and process window events.
+        /// This property only has effect when LimitPollRate is set to True.</summary>
         public double PollIntervalInMs { get; set; } = 1000.0 / 120.0;
+
+        /// <summary>Gets or sets whether to limit message polling and processing.</summary>
         public bool LimitPollRate { get; set; }
 
         protected override void ConstructDefaultWindow()

@@ -2,27 +2,42 @@
 
 namespace Veldrid.Graphics
 {
+    /// <summary>Describes the vertex input of a material.</summary>
     public class MaterialVertexInput
     {
+        /// <summary>The total size of an individual vertex, in bytes.</summary>
         public int VertexSizeInBytes { get; set; }
+
+        /// <summary>The collection of individual vertex elements comprising a single vertex.</summary>
         public MaterialVertexInputElement[] Elements { get; set; }
 
+        /// <summary>Constructs a new MaterialVertexInput.</summary>
         public MaterialVertexInput(int vertexSizeInBytes, params MaterialVertexInputElement[] elements)
         {
             VertexSizeInBytes = vertexSizeInBytes;
             Elements = elements;
         }
 
+        /// <summary>Constructs a new MaterialVertexInput.</summary>
         public MaterialVertexInput() : this(0, Array.Empty<MaterialVertexInputElement>()) { }
     }
 
+    /// <summary>Describes an individual component of a vertex.</summary>
     public struct MaterialVertexInputElement
     {
+        /// <summary>The name of the element.</summary>
         public string Name { get; set; }
+
+        /// <summary>The type of the element.</summary>
         public VertexSemanticType SemanticType { get; set; }
+
+        /// <summary>The format of the element.</summary>
         public VertexElementFormat ElementFormat { get; set; }
+
+        /// <summary>The size of the element, in bytes.</summary>
         public byte SizeInBytes { get; set; }
 
+        /// <summary>Constructs a new MaterialVertexInputElement</summary>
         public MaterialVertexInputElement(string name, VertexSemanticType semanticType, VertexElementFormat format)
         {
             Name = name;
@@ -53,6 +68,7 @@ namespace Veldrid.Graphics
         }
     }
 
+    /// <summary>The structural format of a vertex element.</summary>
     public enum VertexElementFormat : byte
     {
         Float1,

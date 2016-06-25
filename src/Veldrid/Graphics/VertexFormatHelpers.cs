@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Veldrid.Graphics
+﻿namespace Veldrid.Graphics
 {
     public static class VertexFormatHelpers
     {

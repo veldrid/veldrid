@@ -7,25 +7,30 @@ using Veldrid.Platform;
 
 namespace Veldrid.Graphics
 {
+    /// <summary>Represents a graphics device. Provides functionality for creating and managing
+    /// device resources, querying and controlling device state, and low-level drawing operations.
     public abstract class RenderContext : IDisposable
     {
         private readonly Vector2 _topLeftUvCoordinate;
         private readonly Vector2 _bottomRightUvCoordinate;
 
+        private int _needsResizing;
+
+        // Device State
+        private Framebuffer _framebuffer;
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private Material _material;
-
-        private int _needsResizing;
-
-        private RenderQueue _renderQueue = new RenderQueue();
         private Rectangle _scissorRectangle;
         private Viewport _viewport;
         private BlendState _blendState;
         private DepthStencilState _depthStencilState;
         private RasterizerState _rasterizerState;
 
+        /// <summary>Storage for shader variable data providers.</summary>
         public Dictionary<string, ConstantBufferDataProvider> DataProviders { get; } = new Dictionary<string, ConstantBufferDataProvider>();
+
+        /// <summary>Storage for shader texture input providers.</summary>
         public Dictionary<string, ContextDeviceBinding<DeviceTexture>> TextureProviders { get; } = new Dictionary<string, ContextDeviceBinding<DeviceTexture>>();
 
         public RenderContext(Window window)
@@ -37,37 +42,27 @@ namespace Veldrid.Graphics
             _bottomRightUvCoordinate = GetBottomRightUvCoordinate();
         }
 
+        /// <summary>The window to which this RenderContext renders.</summary>
         public Window Window { get; }
 
-        public Framebuffer CurrentFramebuffer { get; private set; }
-
-        public Viewport Viewport
-        {
-            get { return _viewport; }
-            set
-            {
-                SetViewport(value.X, value.Y, value.Width, value.Height);
-            }
-        }
-
-        public RasterizerState RasterizerState
-        {
-            get { return _rasterizerState; }
-            set { SetRasterizerState(value); }
-        }
-
-        public BlendState BlendState
-        {
-            get { return _blendState; }
-            set { SetBlendState(value); }
-        }
-
+        /// <summary>Gets or sets the color which is used when clearing the Framebuffer when ClearBuffer() is called.</summary>
         public virtual RgbaFloat ClearColor { get; set; } = RgbaFloat.CornflowerBlue;
 
+        /// <summary>The ResourceFactory associated with this RenderContext.</summary>
         public abstract ResourceFactory ResourceFactory { get; }
 
+        /// <summary>An event which fires when the window is resized.
+        /// When a resize is detected, the next call to ClearBuffer will trigger this event.</summary>
         public event Action WindowResized;
 
+        /// <summary>Gets or sets the active VertexBuffer.</summary>
+        public VertexBuffer VertexBuffer
+        {
+            get { return _vertexBuffer; }
+            set { SetVertexBuffer(value); }
+        }
+
+        /// <summary>Changes the active VertexBuffer.</summary>
         public void SetVertexBuffer(VertexBuffer vb)
         {
             if (vb != _vertexBuffer)
@@ -77,8 +72,14 @@ namespace Veldrid.Graphics
             }
         }
 
+        /// <summary>Gets or sets the active IndexBuffer.</summary>
+        public IndexBuffer IndexBuffer
+        {
+            get { return _indexBuffer; }
+            set { SetIndexBuffer(value); }
+        }
 
-        public IndexBuffer IndexBuffer => _indexBuffer;
+        /// <summary>Changes the active IndexBuffer.</summary>
         public void SetIndexBuffer(IndexBuffer ib)
         {
             if (ib != _indexBuffer)
@@ -88,6 +89,14 @@ namespace Veldrid.Graphics
             }
         }
 
+        /// <summary>Gets or sets the active Material.</summary>
+        public Material Material
+        {
+            get { return _material; }
+            set { SetMaterial(value); }
+        }
+
+        /// <summary>Changes the active Material.</summary>
         public void SetMaterial(Material material)
         {
             if (material != _material)
@@ -97,9 +106,14 @@ namespace Veldrid.Graphics
             }
         }
 
+        /// <summary>Draws indexed primitives, starting from the given index.</summary>
         public abstract void DrawIndexedPrimitives(int count, int startingIndex);
+
+        /// <summary>Draws indexed primitives, starting from the given index and vertex.</summary>
         public abstract void DrawIndexedPrimitives(int count, int startingIndex, int startingVertex);
 
+        /// <summary>Clears the current Framebuffer's color and depth buffers.
+        /// The color is cleared to the value stored in ClearColor. </summary>
         public void ClearBuffer()
         {
             if (Interlocked.CompareExchange(ref _needsResizing, 0, 1) == 1)
@@ -111,6 +125,8 @@ namespace Veldrid.Graphics
             NullInputs();
         }
 
+        /// <summary>Clears the current Framebuffer's color and depth buffers.
+        /// The color is cleared to the given RgbaFloat value.</summary>
         public void ClearBuffer(RgbaFloat color)
         {
             RgbaFloat previousColor = ClearColor;
@@ -119,19 +135,32 @@ namespace Veldrid.Graphics
             ClearColor = previousColor;
         }
 
+        /// <summary>Gets or sets the current active Framebuffer.</summary>
+        public Framebuffer CurrentFramebuffer
+        {
+            get { return _framebuffer; }
+            set { SetFramebuffer(value); }
+        }
+
+        /// <summary>Changes the current Framebuffer.</summary>
         public void SetFramebuffer(Framebuffer framebuffer)
         {
-            if (CurrentFramebuffer != framebuffer)
+            if (_framebuffer != framebuffer)
             {
                 _material = null;
                 PlatformClearMaterialResourceBindings();
-                CurrentFramebuffer = framebuffer;
+                _framebuffer = framebuffer;
                 PlatformSetFramebuffer(framebuffer);
             }
         }
 
+        /// <summary>Changes the current scissor rectangle.
+        /// This will only have an effect if a RasterizerState is active with IsScissorTestEnabled set to True.</summary>
         public void SetScissorRectangle(int left, int top, int right, int bottom)
             => SetScissorRectangle(new Rectangle(left, top, right, bottom));
+
+        /// <summary>Changes the current scissor rectangle.
+        /// This will only have an effect if a RasterizerState is active with IsScissorTestEnabled set to True.</summary>
         public void SetScissorRectangle(Rectangle r)
         {
             if (_scissorRectangle != r)
@@ -141,40 +170,47 @@ namespace Veldrid.Graphics
             }
         }
 
+        /// <summary>Sets the scissor rectangle area to (0, 0, int.MaxValue, int.MaxValue).
         public virtual void ClearScissorRectangle()
         {
             SetScissorRectangle(0, 0, int.MaxValue, int.MaxValue);
         }
 
+        /// <summary>Makes the window's default Framebuffer active.</summary>
         public void SetDefaultFramebuffer()
         {
             PlatformSetDefaultFramebuffer();
         }
 
-        private void NullInputs()
-        {
-            _vertexBuffer = null;
-            _indexBuffer = null;
-            _material = null;
-        }
-
+        /// <summary>Swaps the graphics context's buffers and presents the new rendered image.</summary>
         public void SwapBuffers()
         {
             PlatformSwapBuffers();
         }
 
-        private BlendState _additiveBlend;
+        /// <summary>A BlendState providing basic override additive blending.<summary>
         public BlendState AdditiveBlend
             => _additiveBlend ?? (_additiveBlend = ResourceFactory.CreateCustomBlendState(true, Blend.SourceAlpha, Blend.One, BlendFunction.Add));
+        private BlendState _additiveBlend;
 
-        private BlendState _alphaBlend;
+        /// <summary>A BlendState providing SrcAlpha->InvSrcAlpha additive blending.<summary>
         public BlendState AlphaBlend
             => _alphaBlend ?? (_alphaBlend = ResourceFactory.CreateCustomBlendState(true, Blend.SourceAlpha, Blend.InverseSourceAlpha, BlendFunction.Add));
+        private BlendState _alphaBlend;
 
-        private BlendState _overrideBlend;
+        /// <summary>A BlendState providing full-override blending.<summary>
         public BlendState OverrideBlend
             => _overrideBlend ?? (_overrideBlend = ResourceFactory.CreateCustomBlendState(true, Blend.One, Blend.Zero, BlendFunction.Add));
+        private BlendState _overrideBlend;
 
+        /// <summary>Gets or sets the current active BlendState.</summary>
+        public BlendState BlendState
+        {
+            get { return _blendState; }
+            set { SetBlendState(value); }
+        }
+
+        /// <summary>Changes the active BlendState.</summary>
         public void SetBlendState(BlendState blendState)
         {
             if (_blendState != blendState)
@@ -184,11 +220,20 @@ namespace Veldrid.Graphics
             }
         }
 
-        private DepthStencilState _defaultDepthStencilState;
+        /// <summary>Gets the default DepthStencilState.</summary>
         public DepthStencilState DefaultDepthStencilState
             => _defaultDepthStencilState ?? (_defaultDepthStencilState
                 = ResourceFactory.CreateDepthStencilState(true, DepthComparison.LessEqual));
+        private DepthStencilState _defaultDepthStencilState;
 
+        /// <summary>Gets or sets the active DepthStencilState.</summary>
+        public DepthStencilState DepthStencilState
+        {
+            get { return _depthStencilState; }
+            set { SetDepthStencilState(value); }
+        }
+
+        /// <summary>Changes the active DepthStencilState.</summary>
         public void SetDepthStencilState(DepthStencilState depthStencilState)
         {
             if (_depthStencilState != depthStencilState)
@@ -198,11 +243,20 @@ namespace Veldrid.Graphics
             }
         }
 
-        private RasterizerState _defaultRasterizerState;
+        /// <summary>Gets the default RasterizerState.</summary>
         public RasterizerState DefaultRasterizerState
             => _defaultRasterizerState ?? (_defaultRasterizerState
                 = ResourceFactory.CreateRasterizerState(FaceCullingMode.Back, TriangleFillMode.Solid, true, true));
+        private RasterizerState _defaultRasterizerState;
 
+        /// <summary>Gets or sets the current active RasterizerState.</summary>
+        public RasterizerState RasterizerState
+        {
+            get { return _rasterizerState; }
+            set { SetRasterizerState(value); }
+        }
+
+        /// <summary>Changes the active RasterizerState.</summary>
         public void SetRasterizerState(RasterizerState rasterizerState)
         {
             if (_rasterizerState != rasterizerState)
@@ -212,8 +266,17 @@ namespace Veldrid.Graphics
             }
         }
 
+        /// <summary>Gets or sets the current viewport.</summary>
+        public Viewport Viewport
+        {
+            get { return _viewport; }
+            set { SetViewport(value.X, value.Y, value.Width, value.Height); }
+        }
+
+        /// <summary>Changes the active viewport.</summary>
         public void SetViewport(Viewport viewport) => SetViewport(viewport.X, viewport.Y, viewport.Width, viewport.Height);
 
+        /// <summary>Changes the active viewport.</summary>
         public void SetViewport(int x, int y, int width, int height)
         {
             if (_viewport.X != x || _viewport.Y != y || _viewport.Width != width || _viewport.Height != height)
@@ -223,9 +286,13 @@ namespace Veldrid.Graphics
             }
         }
 
+        /// <summary>Gets the top left UV coordinate of a standard plane.</summary>
         public Vector2 TopLeftUv => _topLeftUvCoordinate;
+
+        /// <summary>Gets the bottom right UV coordinate of a standard plane.</summary>
         public Vector2 BottomRightUv => _bottomRightUvCoordinate;
 
+        /// <summary>Gets a DeviceTexture binding by name.</summary>
         public ContextDeviceBinding<DeviceTexture> GetTextureContextBinding(string name)
         {
             ContextDeviceBinding<DeviceTexture> value;
@@ -246,7 +313,7 @@ namespace Veldrid.Graphics
 
         protected void PostContextCreated()
         {
-            SetBlendState(AlphaBlend);
+            SetBlendState(OverrideBlend);
             SetDepthStencilState(DefaultDepthStencilState);
             SetRasterizerState(DefaultRasterizerState);
             ClearScissorRectangle();
@@ -286,6 +353,7 @@ namespace Veldrid.Graphics
 
         protected abstract void PlatformDispose();
 
+        ///<summary>Disposes all resources owned by this RenderContext.</summary>
         public void Dispose()
         {
             _defaultDepthStencilState.Dispose();
@@ -294,6 +362,13 @@ namespace Veldrid.Graphics
             _overrideBlend?.Dispose();
             _alphaBlend?.Dispose();
             PlatformDispose();
+        }
+
+        private void NullInputs()
+        {
+            _vertexBuffer = null;
+            _indexBuffer = null;
+            _material = null;
         }
     }
 

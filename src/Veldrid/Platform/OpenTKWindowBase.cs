@@ -33,7 +33,7 @@ namespace Veldrid.Platform
                 desiredHeight,
                 "Veldrid Render Window",
                  GameWindowFlags.Default,
-                 GraphicsMode.Default,
+                 new GraphicsMode(32, 24, 0, 8),
                  DisplayDevice.Default);
             int actualWidth = _nativeWindow.Width;
             int actualHeight = _nativeWindow.Height;
@@ -69,36 +69,44 @@ namespace Veldrid.Platform
             _nativeWindow.Closed += OnWindowClosed;
         }
 
+        /// <summary>Gets the NativeWindow wrapped by this instance.</summary>
         public NativeWindow NativeWindow => _nativeWindow;
 
+        /// <summary>Gets whether the native window exists.</summary>
         public bool Exists => _nativeWindow.Exists;
 
+        /// <summary>Gets the native handle of the window.</summary>
         public IntPtr Handle => _nativeWindow.WindowInfo.Handle;
 
-        public int Height
-        {
-            get { return _nativeWindow.Height; }
-            set { _nativeWindow.Height = value; }
-        }
-
-        public string Title
-        {
-            get { return _nativeWindow.Title; }
-            set { _nativeWindow.Title = value; }
-        }
-
-        public bool Visible
-        {
-            get { return _nativeWindow.Visible; }
-            set { _nativeWindow.Visible = value; }
-        }
-
+        /// <summary>Gets or sets the width of the window.</summary>
         public int Width
         {
             get { return _nativeWindow.Width; }
             set { _nativeWindow.Width = value; }
         }
 
+        /// <summary>Gets or sets the height of the window.</summary>
+        public int Height
+        {
+            get { return _nativeWindow.Height; }
+            set { _nativeWindow.Height = value; }
+        }
+
+        /// <summary>Gets or sets the window title.</summary>
+        public string Title
+        {
+            get { return _nativeWindow.Title; }
+            set { _nativeWindow.Title = value; }
+        }
+
+        /// <summary>Gets or sets the visibility of the window.</summary>
+        public bool Visible
+        {
+            get { return _nativeWindow.Visible; }
+            set { _nativeWindow.Visible = value; }
+        }
+
+        /// <summary>Gets or sets the fullscreen state of the window.</summary>
         public WindowState WindowState
         {
             get
@@ -142,6 +150,7 @@ namespace Veldrid.Platform
 
         IWindowInfo OpenTKWindow.OpenTKWindowInfo => _nativeWindow.WindowInfo;
 
+        /// <summary>Gets the bounds of the window.</summary>
         public System.Drawing.Rectangle Bounds
         {
             get
@@ -151,8 +160,11 @@ namespace Veldrid.Platform
             }
         }
 
+        /// <summary>Closes the window.</summary>
         public abstract void Close();
 
+        /// <summary>Gets an InputSnapshot containing input information gatheres since the
+        /// last time GetInputSnapshot was called.</summary>
         public InputSnapshot GetInputSnapshot()
         {
             SimpleInputSnapshot snapshot = GetAvailableSnapshot();
@@ -228,6 +240,7 @@ namespace Veldrid.Platform
             Closed?.Invoke();
         }
 
+        /// <summary>Converts a screen-space point to a client-space point.</summary>
         public System.Drawing.Point ScreenToClient(System.Drawing.Point p)
         {
             var tkPoint = _nativeWindow.PointToClient(new OpenTK.Point(p.X, p.Y));

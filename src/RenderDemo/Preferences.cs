@@ -9,6 +9,8 @@ namespace Veldrid.RenderDemo
         public bool AllowOpenGLDebugContexts { get; set; } = false;
         public bool AllowDirect3DDebugDevice { get; set; } = false;
         public bool PreferOpenGL { get; set; } = false;
+        public string MenuFont { get; set; } = string.Empty;
+        public float FontSize { get; set; } = 15;
 
         private static Preferences _instance;
         public static Preferences Instance

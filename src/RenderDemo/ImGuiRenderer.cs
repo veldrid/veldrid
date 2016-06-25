@@ -3,7 +3,9 @@ using OpenTK;
 using OpenTK.Input;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid.Assets;
 using Veldrid.Graphics;
 using Veldrid.Platform;
@@ -158,8 +160,24 @@ namespace Veldrid.RenderDemo
 
         private unsafe void CreateFontsTexture(RenderContext rc)
         {
-            ImGui.LoadDefaultFont();
             IO io = ImGui.GetIO();
+
+            if (!string.IsNullOrEmpty(Preferences.Instance.MenuFont))
+            {
+                if (File.Exists(Preferences.Instance.MenuFont))
+                {
+                    float fontSize = Math.Max(4, Math.Min(48, Preferences.Instance.FontSize));
+                    var font = ImGuiNative.ImFontAtlas_AddFontFromFileTTF(io.GetNativePointer()->FontAtlas, Preferences.Instance.MenuFont, fontSize, IntPtr.Zero, null);
+                }
+                else
+                {
+                    Console.WriteLine("Font listed in preferences doesn't exist: " + Preferences.Instance.MenuFont);
+                }
+            }
+            else
+            {
+                ImGui.LoadDefaultFont();
+            }
 
             // Build
             _textureData = io.FontAtlas.GetTexDataAsRGBA32();

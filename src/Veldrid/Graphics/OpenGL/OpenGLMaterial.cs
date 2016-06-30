@@ -189,6 +189,15 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        public void SetVertexAttributes()
+        {
+            for (int slot = 0; slot < _inputs.Elements.Length; slot++)
+            {
+                var element = _inputs.Elements[slot];
+                GL.VertexAttribPointer(slot, element.ElementCount, element.Type, element.Normalized, _inputs.VertexSizeInBytes, element.Offset);
+            }
+        }
+
         private void BindTexture(int slot, OpenGLTexture texture)
         {
             GL.ActiveTexture(TextureUnit.Texture0 + slot);

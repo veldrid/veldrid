@@ -159,6 +159,9 @@ namespace Veldrid.Graphics.OpenGL
         protected override void PlatformSetIndexBuffer(IndexBuffer ib)
         {
             ((OpenGLIndexBuffer)ib).Apply();
+
+            // TODO: Figure out a better solution for this. Vertex attributes need to be re-bound with a new IndexBuffer.
+            ((OpenGLMaterial)Material)?.SetVertexAttributes();
         }
 
         protected override void PlatformSetMaterial(Material material)

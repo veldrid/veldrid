@@ -5,10 +5,13 @@
     <Configuration Condition="'$(Configuration)' == ''">Windows_Debug</Configuration>
     <ProjectGuid>{770FA151-76CA-43E3-A20B-096B5110D767}</ProjectGuid>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AssemblyName>RenderDemo</AssemblyName>
     <RootNamespace>Veldrid.RenderDemo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

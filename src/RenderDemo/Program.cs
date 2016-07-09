@@ -1,5 +1,4 @@
 using ImGuiNET;
-using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -16,6 +15,7 @@ using Veldrid.Platform;
 using Veldrid.RenderDemo.ForwardRendering;
 using Veldrid.RenderDemo.Models;
 using System.Collections.Generic;
+using SharpDX.DXGI;
 
 namespace Veldrid.RenderDemo
 {
@@ -25,7 +25,7 @@ namespace Veldrid.RenderDemo
         private static RenderContext _rc;
         private static FrameTimeAverager _fta;
         private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
-        private static OpenTKWindow _window;
+        private static Window _window;
         private static bool _limitFrameRate = true;
         private static FlatListVisibilityManager _visiblityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
@@ -72,23 +72,15 @@ namespace Veldrid.RenderDemo
         private static float _orthographicWidth = 20f;
         private static ShadowMapPreview _shadowMapPreview;
 
-        public static void Main()
+        public static void Main(Window window, SharpDX.Direct3D11.Device existingDevice, SwapChain swapChain)
         {
             try
             {
-                if (_onWindows)
-                {
-                    _window = new DedicatedThreadWindow();
-                }
-                else
-                {
-                    _window = new SameThreadWindow();
-                }
-
+                _window = window;
                 bool preferOpenGL = Preferences.Instance.PreferOpenGL;
                 if (!preferOpenGL && _onWindows)
                 {
-                    _rc = CreateDefaultD3dRenderContext();
+                    _rc = CreateDefaultD3dRenderContext(existingDevice, swapChain);
                 }
                 else
                 {
@@ -107,7 +99,7 @@ namespace Veldrid.RenderDemo
                 _ad = new LooseFileDatabase(Path.Combine(AppContext.BaseDirectory, "Assets"));
                 _editorWindow = new AssetEditorWindow(_ad);
 
-                _imguiRenderer = new ImGuiRenderer(_rc, _window.NativeWindow);
+                _imguiRenderer = new ImGuiRenderer(_rc);
 
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
                     new DirectionalLightBuffer(RgbaFloat.White, new Vector3(-.3f, -1f, -1f)));
@@ -177,7 +169,7 @@ namespace Veldrid.RenderDemo
                 Console.WriteLine("Error: " + e);
                 if (_rc is OpenGLRenderContext)
                 {
-                    Console.WriteLine("GL Error: " + GL.GetError());
+                    //Console.WriteLine("GL Error: " + GL.GetError());
                 }
             }
         }
@@ -188,10 +180,11 @@ namespace Veldrid.RenderDemo
 #if DEBUG
             debugContext = Preferences.Instance.AllowOpenGLDebugContexts;
 #endif
-            return new OpenGLRenderContext(_window, debugContext);
+            //return new OpenGLRenderContext(_window, debugContext);
+            throw new NotImplementedException();
         }
 
-        private static D3DRenderContext CreateDefaultD3dRenderContext()
+        private static D3DRenderContext CreateDefaultD3dRenderContext(SharpDX.Direct3D11.Device existingDevice, SwapChain swapChain)
         {
             SharpDX.Direct3D11.DeviceCreationFlags flags = SharpDX.Direct3D11.DeviceCreationFlags.None;
 #if DEBUG
@@ -200,7 +193,7 @@ namespace Veldrid.RenderDemo
                 flags |= SharpDX.Direct3D11.DeviceCreationFlags.Debug;
             }
 #endif
-            return new D3DRenderContext(_window, flags);
+            return new D3DRenderContext(_window, existingDevice, swapChain);
         }
 
         private static void SetCameraLookMatrix(Matrix4x4 mat)
@@ -426,15 +419,15 @@ namespace Veldrid.RenderDemo
             string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
             _rc.Window.Title = $"[{apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
 
-            if (InputTracker.GetKeyDown(OpenTK.Input.Key.F4) && (InputTracker.GetKey(OpenTK.Input.Key.AltLeft) || InputTracker.GetKey(OpenTK.Input.Key.AltRight)))
+            if (InputTracker.GetKeyDown(Key.F4) && (InputTracker.GetKey(Key.AltLeft) || InputTracker.GetKey(Key.AltRight)))
             {
                 _window.Close();
             }
-            if (InputTracker.GetKeyDown(OpenTK.Input.Key.PrintScreen))
+            if (InputTracker.GetKeyDown(Key.PrintScreen))
             {
                 ((ShadowMapStage)_renderer.Stages[0]).SaveNextFrame();
             }
-            if (InputTracker.GetKeyDown(OpenTK.Input.Key.F11))
+            if (InputTracker.GetKeyDown(Key.F11))
             {
                 ToggleFullScreenState();
             }
@@ -453,16 +446,16 @@ namespace Veldrid.RenderDemo
             bool cameraMoved = false;
 
             if (!ImGui.IsMouseHoveringAnyWindow() && !ImGui.IsAnyItemActive() && !_autoRotateCamera
-                && (InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Left) || InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Right)))
+                && (InputTracker.GetMouseButton(MouseButton.Left) || InputTracker.GetMouseButton(MouseButton.Right)))
             {
                 cameraMoved = true;
-                if (!InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Left) && !InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Right))
+                if (!InputTracker.GetMouseButtonDown(MouseButton.Left) && !InputTracker.GetMouseButtonDown(MouseButton.Right))
                 {
                     _cameraYaw += -deltaX * .01f;
                     _cameraPitch += -deltaY * .01f;
 
-                    float sprintFactor = InputTracker.GetKey(OpenTK.Input.Key.LShift) ? _cameraSprintFactor : 1.0f;
-                    if (InputTracker.GetKey(OpenTK.Input.Key.W))
+                    float sprintFactor = InputTracker.GetKey(Key.LShift) ? _cameraSprintFactor : 1.0f;
+                    if (InputTracker.GetKey(Key.W))
                     {
                         _cameraPosition += cameraForward * _cameraMoveSpeed * sprintFactor * deltaSec;
                         if (!_perspectiveProjection)
@@ -471,7 +464,7 @@ namespace Veldrid.RenderDemo
                             SetProjectionMatrix();
                         }
                     }
-                    if (InputTracker.GetKey(OpenTK.Input.Key.S))
+                    if (InputTracker.GetKey(Key.S))
                     {
                         _cameraPosition -= cameraForward * _cameraMoveSpeed * sprintFactor * deltaSec;
                         if (!_perspectiveProjection)
@@ -480,28 +473,28 @@ namespace Veldrid.RenderDemo
                             SetProjectionMatrix();
                         }
                     }
-                    if (InputTracker.GetKey(OpenTK.Input.Key.D))
+                    if (InputTracker.GetKey(Key.D))
                     {
                         _cameraPosition += cameraRight * _cameraMoveSpeed * sprintFactor * deltaSec;
                     }
-                    if (InputTracker.GetKey(OpenTK.Input.Key.A))
+                    if (InputTracker.GetKey(Key.A))
                     {
                         _cameraPosition -= cameraRight * _cameraMoveSpeed * sprintFactor * deltaSec;
                     }
-                    if (InputTracker.GetKey(OpenTK.Input.Key.E))
+                    if (InputTracker.GetKey(Key.E))
                     {
                         _cameraPosition += cameraUp * _cameraMoveSpeed * sprintFactor * deltaSec;
                     }
-                    if (InputTracker.GetKey(OpenTK.Input.Key.Q))
+                    if (InputTracker.GetKey(Key.Q))
                     {
                         _cameraPosition -= cameraUp * _cameraMoveSpeed * sprintFactor * deltaSec;
                     }
                 }
             }
 
-            if (InputTracker.GetMouseButton(OpenTK.Input.MouseButton.Middle) && !_autoRotateCamera)
+            if (InputTracker.GetMouseButton(MouseButton.Middle) && !_autoRotateCamera)
             {
-                if (!InputTracker.GetMouseButtonDown(OpenTK.Input.MouseButton.Middle))
+                if (!InputTracker.GetMouseButtonDown(MouseButton.Middle))
                 {
                     cameraMoved = true;
                     _cameraPosition += (deltaX * -cameraRight + deltaY * cameraUp) * .01f;
@@ -766,7 +759,7 @@ https://github.com/mellinoe/veldrid.");
             {
                 if (!(_rc is D3DRenderContext))
                 {
-                    newContext = CreateDefaultD3dRenderContext();
+                    //newContext = CreateDefaultD3dRenderContext();
                 }
             }
             else

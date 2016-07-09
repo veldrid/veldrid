@@ -1,5 +1,4 @@
-﻿using OpenTK.Input;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Numerics;
 using Veldrid.Platform;
 using System;
@@ -46,7 +45,7 @@ namespace Veldrid.RenderDemo
             {
                 if (ke.Down)
                 {
-                    KeyDown(ke.Key);
+                    KeyDown((Key)ke.Key);
                 }
                 else
                 {

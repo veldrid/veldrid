@@ -25,7 +25,8 @@ namespace Veldrid.RenderDemo
         {
             get
             {
-                return Path.Combine(AppDataFolder, "veldrid");
+                return Path.Combine(AppContext.BaseDirectory);
+                //return Path.Combine(AppDataFolder, "veldrid");
             }
         }
     }

@@ -1,0 +1,11 @@
+﻿{
+  "dependencies": {
+    "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.1",
+    "SharpDX.Direct3D11": "3.0.2",
+    "SharpDX.D3DCompiler": "3.0.2",
+    "System.Drawing.Primitives": "4.0.0"
+  },
+  "frameworks": {
+    "uap10.0": {}
+  }
+}

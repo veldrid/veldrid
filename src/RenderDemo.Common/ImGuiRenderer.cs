@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using Veldrid.Assets;
 using Veldrid.Graphics;
 using Veldrid.Platform;
+using System.Linq;
 
 namespace Veldrid.RenderDemo
 {
@@ -25,7 +26,6 @@ namespace Veldrid.RenderDemo
         private RasterizerState _rasterizerState;
         private ShaderTextureBinding _fontTextureBinding;
 
-        private float _wheelPosition;
         private int _fontAtlasID = 1;
 
         public ImGuiRenderer(RenderContext rc)
@@ -110,33 +110,11 @@ namespace Veldrid.RenderDemo
         public unsafe void UpdateImGuiInput(Window window, InputSnapshot snapshot)
         {
             IO io = ImGui.GetIO();
-            //MouseState cursorState = Mouse.GetCursorState();
-            //MouseState mouseState = Mouse.GetState();
 
-            //if (window.NativeWindow.Bounds.Contains(cursorState.X, cursorState.Y))
-            //{
-            //    // TODO: This does not take into account viewport coordinates.
-            //    if (window.Exists)
-            //    {
-            //        Point windowPoint = window.NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
-            //        io.MousePosition = new System.Numerics.Vector2(
-            //            windowPoint.X / window.ScaleFactor.X,
-            //            windowPoint.Y / window.ScaleFactor.Y);
-            //    }
-            //}
-            //else
-            {
-                io.MousePosition = new System.Numerics.Vector2(-1f, -1f);
-            }
-
-            //io.MouseDown[0] = mouseState.LeftButton == ButtonState.Pressed;
-            //io.MouseDown[1] = mouseState.RightButton == ButtonState.Pressed;
-            //io.MouseDown[2] = mouseState.MiddleButton == ButtonState.Pressed;
-
-            //float newWheelPos = mouseState.WheelPrecise;
-            //float delta = newWheelPos - _wheelPosition;
-            //_wheelPosition = newWheelPos;
-            //io.MouseWheel = delta;
+            io.MousePosition = snapshot.MousePosition;
+            io.MouseDown[0] = snapshot.MouseEvents.Any(me => me.MouseButton == MouseButton.Left && me.Down);
+            io.MouseDown[1] = snapshot.MouseEvents.Any(me => me.MouseButton == MouseButton.Right && me.Down);
+            io.MouseDown[2] = snapshot.MouseEvents.Any(me => me.MouseButton == MouseButton.Middle && me.Down);
 
             foreach (char c in snapshot.KeyCharPresses)
             {

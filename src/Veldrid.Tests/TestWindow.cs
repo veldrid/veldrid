@@ -163,22 +163,22 @@ namespace Veldrid.Platform
 
         private void OnMouseUp(object sender, MouseButtonEventArgs e)
         {
-            CurrentSnapshot.MouseEventsList.Add(new MouseEvent(e.Button, false));
+            CurrentSnapshot.MouseEventsList.Add(new MouseEvent((MouseButton)e.Button, false));
         }
 
         private void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            CurrentSnapshot.MouseEventsList.Add(new MouseEvent(e.Button, true));
+            CurrentSnapshot.MouseEventsList.Add(new MouseEvent((MouseButton)e.Button, true));
         }
 
         private void OnKeyUp(object sender, KeyboardKeyEventArgs e)
         {
-            CurrentSnapshot.KeyEventsList.Add(new KeyEvent(e.Key, false, ConvertModifiers(e.Modifiers)));
+            CurrentSnapshot.KeyEventsList.Add(new KeyEvent((Key)e.Key, false, ConvertModifiers(e.Modifiers)));
         }
 
         private void OnKeyDown(object sender, KeyboardKeyEventArgs e)
         {
-            CurrentSnapshot.KeyEventsList.Add(new KeyEvent(e.Key, true, ConvertModifiers(e.Modifiers)));
+            CurrentSnapshot.KeyEventsList.Add(new KeyEvent((Key)e.Key, true, ConvertModifiers(e.Modifiers)));
         }
 
         private ModifierKeys ConvertModifiers(KeyModifiers modifiers)

@@ -3,15 +3,13 @@
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == '' And '$(OS)' != 'Windows_NT'">Ubuntu_Debug</Configuration>
     <Configuration Condition="'$(Configuration)' == ''">Windows_Debug</Configuration>
-    <ProjectGuid>{770FA151-76CA-43E3-A20B-096B5110D767}</ProjectGuid>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
   </PropertyGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{770FA151-76CA-43E3-A20B-096B5110D767}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AssemblyName>RenderDemo</AssemblyName>
     <RootNamespace>Veldrid.RenderDemo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -19,201 +17,21 @@
     <BaseNuGetRuntimeIdentifier Condition="'$(OSTarget)' == 'Windows_NT'">win7</BaseNuGetRuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Drawers\AssetRefDrawer.cs" />
-    <Compile Include="ColoredCubeRenderer.cs" />
-    <Compile Include="DirectionalLightBuffer.cs" />
-    <Compile Include="Drawers\ModelDrawer.cs" />
-    <Compile Include="ForwardRendering\ShadowMapStage.cs" />
-    <Compile Include="ImGuiImageHelper.cs" />
-    <Compile Include="ImGuiRenderer.cs" />
-    <Compile Include="InputTracker.cs" />
-    <Compile Include="Assets\Models\CubeModel.cs" />
-    <Compile Include="Assets\Models\PlaneModel.cs" />
-    <Compile Include="AssetEditorWindow.cs" />
-    <Compile Include="PixelFormatConversion.cs" />
-    <Compile Include="Preferences.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Skybox.cs" />
-    <Compile Include="ForwardRendering\ShadowCaster.cs" />
-    <Compile Include="ForwardRendering\ShadowMapPreview.cs" />
-    <Compile Include="SpecialFolders.cs" />
-    <Compile Include="SwappableRenderItem.cs" />
-    <Compile Include="TeapotRenderer.cs" />
-    <Compile Include="TestItem.cs" />
-    <Compile Include="TextInputBuffer.cs" />
-    <Compile Include="TexturedMeshRenderer.cs" />
-    <Compile Include="Assets\Textures\Textures.cs" />
-    <Compile Include="Drawers\TextureDrawer.cs" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
-    <UseVSHostingProcess>true</UseVSHostingProcess>
-  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Release|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Release|x64' " />
   <ItemGroup>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_Stone.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_Crate.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_Wood.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_ShadowMap.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ModelPreview.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\Skybox.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="GLSL\shadow-frag.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="GLSL\shadow-vertex.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="GLSL\simple-2d-frag.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="GLSL\simple-2d-vertex.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="GLSL\skybox-vertex.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="GLSL\skybox-frag.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Content Include="HLSL\shadow-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\shadow-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\simple-2d-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\simple-2d-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\CubeTexture.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\Wood.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\crate0_diffuse.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_bk.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_ft.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_lf.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_rt.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_up.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_dn.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\envmap_stormydays\*.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Reference Include="$(DepsDir)\ImGui.NET\ImGui.NET.dll">
-      <Name>ImGui.NET</Name>
-    </Reference>
+    <ProjectReference Include="..\RenderDemo.Common\RenderDemo.Common.csproj">
+      <Name>RenderDemo.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj">
-      <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>
       <Name>Veldrid</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Veldrid.Assets\Veldrid.Assets.csproj">
-      <Name>Veldrid.Assets</Name>
-    </ProjectReference>
-    <Content Include="$(DepsDir)\ImGui.NET\win-x64\cimgui.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(DepsDir)\ImGui.NET\ubuntu-x64\cimgui.so" Condition="'$(OSTarget)' == 'Ubuntu'">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="GLSL\shadowmap-frag.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="GLSL\shadowmap-vertex.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="GLSL\imgui-frag.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="GLSL\imgui-vertex.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Content Include="HLSL\imgui-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\imgui-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\lit-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\simple-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\simple-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\textured-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\textured-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Models\Teapot.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="GLSL\textured-vertex.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="GLSL\lit-frag.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Content Include="GLSL\simple-frag.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="GLSL\simple-vertex.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="GLSL\textured-frag.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Models\Sphere.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\shadowmap-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\shadowmap-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\skybox-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\skybox-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="project.json" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />

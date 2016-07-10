@@ -3,7 +3,10 @@
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.1",
     "SharpDX.Direct3D11": "3.0.2",
     "SharpDX.D3DCompiler": "3.0.2",
-    "System.Drawing.Primitives": "4.0.0"
+    "System.Drawing.Primitives": "4.0.0",
+    "System.Console": "4.0.0",
+    "Newtonsoft.Json": "9.0.1",
+    "ImageProcessorCore": "1.0.0-alpha-888"
   },
   "frameworks": {
     "uap10.0": {}

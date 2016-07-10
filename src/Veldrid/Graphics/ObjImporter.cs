@@ -30,9 +30,11 @@ namespace Veldrid.Graphics
             int lastIndexUsed = -1;
             Dictionary<ObjVertex, int> objVertexIndices = new Dictionary<ObjVertex, int>();
 
-            while (!sr.EndOfStream)
+            string wholeFile = sr.ReadToEnd();
+            string[] lines = wholeFile.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var line in lines)
             {
-                string line = await sr.ReadLineAsync();
                 if (line.StartsWith("#"))
                 {
                     continue;

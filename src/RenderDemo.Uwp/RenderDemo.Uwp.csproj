@@ -88,38 +88,6 @@
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <ItemGroup>
-    <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <Content Include="..\..\deps\ImGui.NET\win-x64\cimgui.dll">
-      <Link>cimgui.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ModelPreview.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_Crate.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_ShadowMap.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_Stone.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_Wood.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\Skybox.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Models\Sphere.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Models\Teapot.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
@@ -130,7 +98,6 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UwpWindow.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -139,78 +106,6 @@
     <None Include="RenderDemo.Uwp_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_bk.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_dn.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_ft.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_lf.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_rt.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_up.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\crate0_diffuse.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\CubeTexture.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\Wood.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\imgui-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\imgui-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\lit-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\shadow-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\shadow-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\shadowmap-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\shadowmap-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\simple-2d-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\simple-2d-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\simple-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\simple-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\skybox-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\skybox-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\textured-frag.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="HLSL\textured-vertex.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -231,29 +126,39 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="ImageProcessorCore">
+      <HintPath>..\..\bin\Windows_NT.x64.Debug\RenderDemo\ImageProcessorCore.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK">
       <HintPath>..\..\bin\Windows_NT.x64.Debug\RenderDemo\OpenTK.dll</HintPath>
     </Reference>
-    <Reference Include="RenderDemo">
-      <HintPath>..\..\bin\Windows_NT.x64.Debug\RenderDemo\RenderDemo.dll</HintPath>
+    <Reference Include="RenderDemo.Common">
+      <HintPath>..\..\bin\AnyOS.AnyCPU.Debug\RenderDemo.Common\RenderDemo.Common.dll</HintPath>
     </Reference>
-    <Reference Include="Veldrid, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\bin\AnyOS.x64.Debug\Veldrid\Veldrid.dll</HintPath>
+    <Reference Include="Veldrid">
+      <HintPath>..\..\bin\AnyOS.AnyCPU.Debug\Veldrid\Veldrid.dll</HintPath>
     </Reference>
     <Reference Include="Veldrid.Assets">
-      <HintPath>..\..\bin\AnyOS.x64.Debug\Veldrid.Assets\Veldrid.Assets.dll</HintPath>
+      <HintPath>..\..\bin\AnyOS.AnyCPU.Debug\Veldrid.Assets\Veldrid.Assets.dll</HintPath>
     </Reference>
+    <Reference Include="Veldrid.Uwp">
+      <HintPath>..\..\bin\AnyOS.AnyCPU.Debug\Veldrid.Uwp\Veldrid.Uwp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Import Project="..\RenderDemo.Common\ContentIncludes.msbuild" />
+  <ItemGroup>
+    <Content Include="@(ContentItems)">
+      <Link>%(RelativePath)</Link>
+    </Content>
+    <None Include="@(NoneItems)">
+      <Link>%(RelativePath)</Link>
+    </None>
+    <Content Include="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

@@ -38,13 +38,13 @@ namespace Veldrid.Graphics.Direct3D
             PostContextCreated();
         }
 
-        public D3DRenderContext(Window window, SharpDX.Direct3D11.Device existingDevice, SwapChain swapChain)
+        public D3DRenderContext(Window window, SharpDX.Direct3D11.Device existingDevice, SwapChain existingSwapchain)
             : base(window)
         {
+            _swapChain = existingSwapchain;
             _device = existingDevice;
-            _deviceContext = existingDevice.ImmediateContext;
-            _swapChain = swapChain;
-            // TODO: This is messed up.
+            _deviceContext = _device.ImmediateContext;
+
             OnWindowResized();
             SetFramebuffer(_defaultFramebuffer);
             _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
@@ -79,7 +79,7 @@ namespace Veldrid.Graphics.Direct3D
 
         protected override void PlatformSwapBuffers()
         {
-            _swapChain.Present(0, PresentFlags.None);
+            _swapChain.Present(1, PresentFlags.None);
         }
 
         private void CreateAndInitializeDevice(DeviceCreationFlags creationFlags)
@@ -144,7 +144,7 @@ namespace Veldrid.Graphics.Direct3D
                 _defaultFramebuffer.Dispose();
             }
 
-            //_swapChain.ResizeBuffers(2, Window.Width, Window.Height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
+            _swapChain.ResizeBuffers(2, Window.Width, Window.Height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
 
             // Get the backbuffer from the swapchain
             using (var backBufferTexture = _swapChain.GetBackBuffer<Texture2D>(0))

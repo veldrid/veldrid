@@ -11,6 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ArrayEx.cs" />
+    <Compile Include="FrustumHelpers.cs" />
     <Compile Include="Graphics\BlendState.cs" />
     <Compile Include="Graphics\ConstantDataProvider.cs" />
     <Compile Include="Graphics\CubemapTextureInputElement.cs" />

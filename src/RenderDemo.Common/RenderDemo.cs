@@ -37,6 +37,7 @@ namespace Veldrid.RenderDemo
         private static FlatListVisibilityManager _teapotVM;
         private static FlatListVisibilityManager _shadowsScene;
         private static FlatListVisibilityManager _roomScene;
+        private static FlatListVisibilityManager _sponzaAtrium;
         private static double _circleWidth = 12.0;
         private static bool _wireframe;
 
@@ -45,6 +46,7 @@ namespace Veldrid.RenderDemo
 
         private static Framebuffer _screenshotFramebuffer;
         private static RasterizerState _wireframeRasterizerState;
+        private static MaterialAsset s_mtlMaterialAsset;
 
         private static Vector3 _cameraPosition;
         private static float _cameraYaw;
@@ -103,7 +105,7 @@ namespace Veldrid.RenderDemo
 
                 _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(lightPosition, Vector3.Zero, Vector3.UnitY);
 
-                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-18, 18, -18, 18, -10, 60f);
+                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-100, 100, -100, 100, -10, 160f);
 
                 _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
 
@@ -209,7 +211,7 @@ namespace Veldrid.RenderDemo
             if (_boxSceneVM == null)
             {
                 _boxSceneVM = new FlatListVisibilityManager();
-                var sphere = _ad.LoadAsset<ObjMeshInfo>(new AssetID("Models/Sphere.obj"));
+                var sphere = _ad.LoadAsset<ObjFile>(new AssetID("Models/Sphere.obj")).GetFirstMesh();
                 var tcr = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
                 tcr.Position = new Vector3(-5f, 0, -3);
                 _boxSceneVM.AddRenderItem(tcr);
@@ -259,7 +261,6 @@ namespace Veldrid.RenderDemo
             if (_shadowsScene == null)
             {
                 _shadowsScene = new FlatListVisibilityManager();
-                var sphereMeshInfo = _ad.LoadAsset<ObjMeshInfo>(new AssetID("Models/Sphere.obj"));
 
                 var stoneMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Stone.json"));
                 var woodMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Wood.json"));
@@ -273,7 +274,6 @@ namespace Veldrid.RenderDemo
                 cube2.Scale = new Vector3(3f);
                 _shadowsScene.AddRenderItem(cube2);
 
-                var teapotMeshInfo = _ad.LoadAsset<ObjMeshInfo>("Models/Teapot.obj");
                 var teapot = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
                 teapot.Position = new Vector3(-4f, 0f, 6f);
                 teapot.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
@@ -301,7 +301,6 @@ namespace Veldrid.RenderDemo
             if (_roomScene == null)
             {
                 _roomScene = new FlatListVisibilityManager();
-                var sphereMeshInfo = _ad.LoadAsset<ObjMeshInfo>(new AssetID("Models/Sphere.obj"));
 
                 var stoneMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Stone.json"));
                 var woodMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Wood.json"));
@@ -314,7 +313,6 @@ namespace Veldrid.RenderDemo
                 cube2.Scale = new Vector3(3f);
                 _roomScene.AddRenderItem(cube2);
 
-                var teapotMeshInfo = _ad.LoadAsset<ObjMeshInfo>("Models/Teapot.obj");
                 var teapot = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
                 teapot.Position = new Vector3(-4f, 0f, 6f);
                 teapot.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
@@ -353,6 +351,57 @@ namespace Veldrid.RenderDemo
             }
 
             return _roomScene;
+        }
+
+        private static FlatListVisibilityManager SponzaAtriumScene()
+        {
+            if (_sponzaAtrium == null)
+            {
+                _sponzaAtrium = new FlatListVisibilityManager();
+
+                ObjFile atriumFile = _ad.LoadAsset<ObjFile>("Models/SponzaAtrium/sponza.obj", cache: false);
+                MtlFile atriumMtls;
+                using (var mtlStream = _ad.OpenAssetStream("Models/SponzaAtrium/sponza.mtl"))
+                {
+                    atriumMtls = new MtlParser().Parse(mtlStream);
+                }
+
+                foreach (var group in atriumFile.MeshGroups)
+                {
+                    ConstructedMeshInfo mesh = atriumFile.GetMesh(group);
+                    MaterialDefinition materialDef = atriumMtls.Definitions[mesh.MaterialName];
+                    MaterialAsset matAsset = GetMtlMaterialAssetTemplate();
+                    TextureData overrideTextureData = null;
+                    if (materialDef.DiffuseTexture != null)
+                    {
+                        string texturePath = "Models/SponzaAtrium/" + materialDef.DiffuseTexture;
+                        overrideTextureData = _ad.LoadAsset<ImageProcessorTexture>(texturePath);
+                    }
+                    else
+                    {
+                        overrideTextureData = new RawTextureDataArray<RgbaFloat>(
+                          new RgbaFloat[] { RgbaFloat.Pink }, 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
+                    }
+
+                    ShadowCaster sc = new ShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, matAsset, overrideTextureData);
+                    sc.Scale = new Vector3(0.1f);
+                    _sponzaAtrium.AddRenderItem(sc);
+                }
+
+                _sponzaAtrium.AddRenderItem(_imguiRenderer);
+            }
+
+            return _sponzaAtrium;
+        }
+
+        private static MaterialAsset GetMtlMaterialAssetTemplate()
+        {
+            if (s_mtlMaterialAsset == null)
+            {
+                s_mtlMaterialAsset = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_MtlTemplate.json"));
+            }
+
+            return s_mtlMaterialAsset;
         }
 
         private static void Update(double deltaMilliseconds, InputSnapshot snapshot)
@@ -540,6 +589,17 @@ namespace Veldrid.RenderDemo
                     if (roomScene)
                         ImGui.PopStyleColor();
 
+                    bool sponzaAtriumScene = _visiblityManager == _sponzaAtrium;
+                    if (sponzaAtriumScene)
+                        ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
+                    if (ImGui.MenuItem("Sponza Atrium", null))
+                    {
+                        _circleWidth = 8.0;
+                        _visiblityManager = SponzaAtriumScene();
+                    }
+                    if (sponzaAtriumScene)
+                        ImGui.PopStyleColor();
+
                     ImGui.EndMenu();
                 }
                 if (ImGui.BeginMenu("View"))
@@ -723,6 +783,8 @@ https://github.com/mellinoe/veldrid.");
         {
             if (newContext != null)
             {
+                CreatedResourceCache.ClearCache();
+
                 foreach (var kvp in _rc.DataProviders)
                 {
                     newContext.DataProviders[kvp.Key] = kvp.Value;
@@ -751,6 +813,20 @@ https://github.com/mellinoe/veldrid.");
                 if (_shadowsScene != null)
                 {
                     foreach (var item in _shadowsScene.RenderItems)
+                    {
+                        ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
+                    }
+                }
+                if (_roomScene != null)
+                {
+                    foreach (var item in _roomScene.RenderItems)
+                    {
+                        ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
+                    }
+                }
+                if (_sponzaAtrium != null)
+                {
+                    foreach (var item in _sponzaAtrium.RenderItems)
                     {
                         ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
                     }

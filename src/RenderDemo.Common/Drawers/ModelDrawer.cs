@@ -13,12 +13,12 @@ using Veldrid.RenderDemo.Models;
 
 namespace Veldrid.RenderDemo.Drawers
 {
-    public class ModelDrawer : Drawer<ObjMeshInfo>
+    public class ModelDrawer : Drawer<ConstructedMeshInfo>
     {
-        private static ConditionalWeakTable<ObjMeshInfo, PreviewScene> _previewScenes = new ConditionalWeakTable<ObjMeshInfo, PreviewScene>();
+        private static ConditionalWeakTable<ConstructedMeshInfo, PreviewScene> _previewScenes = new ConditionalWeakTable<ConstructedMeshInfo, PreviewScene>();
         private static RenderContext s_validContext;
 
-        public override bool Draw(string label, ref ObjMeshInfo obj, RenderContext rc)
+        public override bool Draw(string label, ref ConstructedMeshInfo obj, RenderContext rc)
         {
             Vector2 region = ImGui.GetContentRegionAvailable();
             float minDimension = Math.Min(900, Math.Min(region.X, region.Y)) - 50;
@@ -34,12 +34,12 @@ namespace Veldrid.RenderDemo.Drawers
             return false;
         }
 
-        private static PreviewScene GetOrCreateScene(ObjMeshInfo obj, RenderContext rc)
+        private static PreviewScene GetOrCreateScene(ConstructedMeshInfo obj, RenderContext rc)
         {
             if (s_validContext != rc)
             {
                 s_validContext = rc;
-                _previewScenes = new ConditionalWeakTable<ObjMeshInfo, PreviewScene>();
+                _previewScenes = new ConditionalWeakTable<ConstructedMeshInfo, PreviewScene>();
             }
 
             PreviewScene scene;
@@ -86,7 +86,7 @@ namespace Veldrid.RenderDemo.Drawers
             private double _circleWidth = 10.0f;
             private readonly StandardPipelineStage _standardPipelineStage;
 
-            public PreviewScene(RenderContext rc, ObjMeshInfo previewItem)
+            public PreviewScene(RenderContext rc, ConstructedMeshInfo previewItem)
             {
                 _rc = rc;
                 ResourceFactory factory = rc.ResourceFactory;

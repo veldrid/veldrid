@@ -41,7 +41,9 @@
     <Compile Include="Graphics\Framebuffer.cs" />
     <Compile Include="Graphics\IndexFormat.cs" />
     <Compile Include="Graphics\ManualTextureInput.cs" />
+    <Compile Include="Graphics\MtlParser.cs" />
     <Compile Include="Graphics\ObjImporter.cs" />
+    <Compile Include="Graphics\ObjParser.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLBlendState.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLCubemapTexture.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLDefaultFramebuffer.cs" />

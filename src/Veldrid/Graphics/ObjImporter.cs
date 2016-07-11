@@ -13,11 +13,11 @@ namespace Veldrid.Graphics
         {
             using (var fs = File.OpenRead(path))
             {
-                return Import(fs).Result;
+                return Import(fs);
             }
         }
 
-        public static async Task<ObjMeshInfo> Import(Stream stream)
+        public static ObjMeshInfo Import(Stream stream)
         {
             StreamReader sr = new StreamReader(stream);
 

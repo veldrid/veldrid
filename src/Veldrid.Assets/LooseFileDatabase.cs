@@ -14,13 +14,13 @@ namespace Veldrid.Assets
         private Dictionary<Type, AssetLoader> _assetLoaders = new Dictionary<Type, AssetLoader>()
         {
             { typeof(ImageProcessorTexture), new PngLoader() },
-            { typeof(ObjMeshInfo), new ModelLoader() }
+            { typeof(ObjFile), new ModelLoader() }
         };
 
         private static readonly Dictionary<string, Type> s_extensionTypeMappings = new Dictionary<string, Type>()
         {
             { ".png", typeof(ImageProcessorTexture) },
-            { ".obj", typeof(ObjMeshInfo) }
+            { ".obj", typeof(ObjFile) }
         };
 
         private Dictionary<AssetID, object> _loadedAssets = new Dictionary<AssetID, object>();
@@ -56,16 +56,23 @@ namespace Veldrid.Assets
             return Path.Combine(_rootPath, assetID.Value);
         }
 
-        public T LoadAsset<T>(AssetRef<T> definition) => LoadAsset<T>(definition.ID);
-        public T LoadAsset<T>(AssetID assetID)
+        public T LoadAsset<T>(AssetRef<T> definition) => LoadAsset<T>(definition.ID, true);
+        public T LoadAsset<T>(AssetID assetID) => LoadAsset<T>(assetID, true);
+
+        public T LoadAsset<T>(AssetRef<T> definition, bool cache = true) => LoadAsset<T>(definition.ID, cache);
+        public T LoadAsset<T>(AssetID assetID, bool cache  = true)
         {
             object asset;
-            if (!_loadedAssets.TryGetValue(assetID, out asset))
+            if (!cache || !_loadedAssets.TryGetValue(assetID, out asset))
             {
                 AssetLoader<T> loader = GetLoader<T>();
                 using (var s = OpenAssetStream(assetID))
                 {
                     asset = loader.Load(s);
+                    if (cache)
+                    {
+                        _loadedAssets.Add(assetID, asset);
+                    }
                 }
             }
 

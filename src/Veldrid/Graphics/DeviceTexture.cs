@@ -1,9 +1,11 @@
-﻿namespace Veldrid.Graphics
+﻿using System;
+
+namespace Veldrid.Graphics
 {
     /// <summary>
     /// Represents a texture object owned by the graphics device.
     /// </summary>
-    public interface DeviceTexture
+    public interface DeviceTexture : IDisposable
     {
         /// <summary>
         /// The width of the texture. For cubemap textures, returns the width of each individual face.

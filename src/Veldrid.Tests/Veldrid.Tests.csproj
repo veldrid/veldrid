@@ -23,9 +23,20 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Release|x64' " />
   <ItemGroup>
     <None Include="project.json" />
+    <Content Include="sponza.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="sponza.mtl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Teapot.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Graphics\DeviceBufferImplTests.cs" />
+    <Compile Include="Graphics\MtlParserTests.cs" />
+    <Compile Include="Graphics\ObjParserTests.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLIndexBufferTests.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLVertexBufferTests.cs" />
     <Compile Include="Graphics\Direct3D\D3DIndexBufferTests.cs" />

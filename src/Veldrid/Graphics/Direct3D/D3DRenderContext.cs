@@ -114,12 +114,14 @@ namespace Veldrid.Graphics.Direct3D
         private void CreateAndSetSamplers()
         {
             SamplerStateDescription regularDesc = SamplerStateDescription.Default();
+            regularDesc.AddressU = TextureAddressMode.Wrap;
+            regularDesc.AddressV = TextureAddressMode.Wrap;
             _regularSamplerState = new SamplerState(_device, regularDesc);
             _deviceContext.PixelShader.SetSampler(0, _regularSamplerState);
 
             SamplerStateDescription shadowSamplerDesc = SamplerStateDescription.Default();
             shadowSamplerDesc.Filter = Filter.MinMagMipPoint;
-            shadowSamplerDesc.BorderColor = new RawColor4(0f, 0f, 0f, 0f);
+            shadowSamplerDesc.BorderColor = new RawColor4(1f, 1f, 1f, 1f);
             shadowSamplerDesc.AddressU = TextureAddressMode.Border;
             shadowSamplerDesc.AddressV = TextureAddressMode.Border;
             _shadowMapSampler = new SamplerState(_device, shadowSamplerDesc);

@@ -17,20 +17,20 @@ namespace Veldrid.RenderDemo
         private IndexBuffer _indexBuffer;
         private Material _material;
 
-        private static ObjMeshInfo _teapotMesh;
+        private static ConstructedMeshInfo _teapotMesh;
 
         public Vector3 Position { get; set; }
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
         public Vector3 Scale { get; set; } = Vector3.One;
 
-        private static ObjMeshInfo LoadTeapotMesh()
+        private static ConstructedMeshInfo LoadTeapotMesh()
         {
             if (_teapotMesh == null)
             {
                 string path = Path.Combine(AppContext.BaseDirectory, "Assets", "Models", "Teapot.obj");
                 using (var fs = File.OpenRead(path))
                 {
-                    _teapotMesh = ObjImporter.Import(fs).Result;
+                    _teapotMesh = new ObjParser().Parse(fs).GetFirstMesh();
                 }
             }
 

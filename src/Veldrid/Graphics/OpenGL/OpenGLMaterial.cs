@@ -223,7 +223,7 @@ namespace Veldrid.Graphics.OpenGL
 
             foreach (var textureBinding in _textureBindings)
             {
-                textureBinding.DeviceTexture.Dispose();
+                textureBinding.DeviceTexture?.Dispose();
             }
 
             foreach (var globalBinding in _globalUniformBindings)

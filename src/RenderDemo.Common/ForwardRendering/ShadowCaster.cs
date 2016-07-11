@@ -20,6 +20,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         private readonly MaterialAsset _shadowPassMaterialAsset;
         private readonly MaterialAsset _regularPassMaterialAsset;
+        private readonly TextureData _overrideTextureData;
 
         private readonly string[] _stages = new string[] { "ShadowMap", "Standard" };
 
@@ -27,6 +28,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private IndexBuffer _ib;
         private Material _shadowPassMaterial;
         private Material _regularPassMaterial;
+        private DeviceTexture2D _overrideTexture;
+        private ShaderTextureBinding _overrideTextureBinding;
 
         public Vector3 Position { get; set; }
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
@@ -37,13 +40,15 @@ namespace Veldrid.RenderDemo.ForwardRendering
             AssetDatabase ad,
             VertexPositionNormalTexture[] vertices,
             int[] indices,
-            MaterialAsset regularPassMaterial)
+            MaterialAsset regularPassMaterial,
+            TextureData overrideTexture = null)
         {
             _vertices = vertices;
             _indices = indices;
 
             _shadowPassMaterialAsset = ad.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_ShadowMap.json");
             _regularPassMaterialAsset = regularPassMaterial;
+            _overrideTextureData = overrideTexture;
 
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, Utilities.CalculateInverseTranspose);
@@ -74,6 +79,11 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
             _shadowPassMaterial = _shadowPassMaterialAsset.Create(ad, rc);
             _regularPassMaterial = _regularPassMaterialAsset.Create(ad, rc);
+            if (_overrideTextureData != null)
+            {
+                _overrideTexture = _overrideTextureData.CreateDeviceTexture(factory);
+                _overrideTextureBinding = factory.CreateShaderTextureBinding(_overrideTexture);
+            }
         }
 
         public RenderOrderKey GetRenderOrderKey()
@@ -98,6 +108,10 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 Debug.Assert(pipelineStage == "Standard");
                 rc.SetMaterial(_regularPassMaterial);
                 _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
+                if (_overrideTextureBinding != null)
+                {
+                    _regularPassMaterial.UseTexture(0, _overrideTextureBinding);
+                }
             }
 
             _worldProvider.Data =
@@ -129,6 +143,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
         {
             _regularPassMaterial.Dispose();
             _shadowPassMaterial.Dispose();
+            _overrideTexture?.Dispose();
+            _overrideTextureBinding?.Dispose();
             _vb.Dispose();
             _ib.Dispose();
         }

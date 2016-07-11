@@ -17,14 +17,22 @@ namespace Veldrid.Assets
 
         public Material Create(AssetDatabase ad, RenderContext rc, Dictionary<string, ConstantBufferDataProvider> providers = null)
         {
-            providers = providers ?? rc.DataProviders;
-            MaterialTextureInputElement[] texElements = TextureInputs.Select(ta => ta.Create(ad)).ToArray();
-            var allTextures = texElements.Concat(ContextTextures).ToArray();
-            var materialTextureInputs = new MaterialTextureInputs(allTextures);
-            MaterialInputs<MaterialGlobalInputElement> globalInputs =
-                new MaterialInputs<MaterialGlobalInputElement>(GlobalInputs.Select(mgid => mgid.Create(providers)).ToArray());
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(PerObjectInputs);
-            return rc.ResourceFactory.CreateMaterial(rc, VertexShader, FragmentShader, VertexInputs, globalInputs, perObjectInputs, materialTextureInputs);
+            Material ret;
+            if (!CreatedResourceCache.TryGetCachedItem(this, out ret))
+            {
+                providers = providers ?? rc.DataProviders;
+                MaterialTextureInputElement[] texElements = TextureInputs.Select(ta => ta.Create(ad)).ToArray();
+                var allTextures = texElements.Concat(ContextTextures).ToArray();
+                var materialTextureInputs = new MaterialTextureInputs(allTextures);
+                MaterialInputs<MaterialGlobalInputElement> globalInputs =
+                    new MaterialInputs<MaterialGlobalInputElement>(GlobalInputs.Select(mgid => mgid.Create(providers)).ToArray());
+                MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(PerObjectInputs);
+                ret = rc.ResourceFactory.CreateMaterial(rc, VertexShader, FragmentShader, VertexInputs, globalInputs, perObjectInputs, materialTextureInputs);
+
+                CreatedResourceCache.CacheItem(this, ret);
+            }
+
+            return ret;
         }
 
         public struct NamedAssetTexture

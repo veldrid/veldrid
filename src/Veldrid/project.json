@@ -17,6 +17,9 @@
     "SharpDX.Direct3D11": "3.0.1",
     "SharpDX.DXGI": "3.0.1"
   },
+  "buildOptions": {
+    "allowUnsafe": true
+  },
   "frameworks": {
     "netstandard1.5": {
       "imports": [ "dnxcore50", "portable-net45+netcore45" ]

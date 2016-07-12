@@ -51,6 +51,8 @@ namespace Veldrid.RenderDemo
         private static Vector3 _cameraPosition;
         private static float _cameraYaw;
         private static float _cameraPitch;
+        private static float _cameraNear = 1f;
+        private static float _cameraFar = 400f;
 
         private static Vector3 _lightDirection;
         private static float _fieldOfViewRadians = 1.05f;
@@ -101,13 +103,8 @@ namespace Veldrid.RenderDemo
 
                 // Shader buffers for shadow mapping
                 _lightDirection = Vector3.Normalize(new Vector3(1f, -1f, 0f));
-                Vector3 lightPosition = -_lightDirection * 20f;
-
-                _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(lightPosition, Vector3.Zero, Vector3.UnitY);
-
-                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-100, 100, -100, 100, -10, 160f);
-
                 _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
+
 
                 float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
                 _cameraPosition = new Vector3(
@@ -127,6 +124,7 @@ namespace Veldrid.RenderDemo
 
                 _rc.WindowResized += OnWindowResized;
                 SetProjectionMatrix();
+                UpdateLightMatrices();
 
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
@@ -185,8 +183,8 @@ namespace Veldrid.RenderDemo
                 _projectionMatrixProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
                     _fieldOfViewRadians,
                     _rc.Window.Width / (float)_rc.Window.Height,
-                    1f,
-                    1000f);
+                    _cameraNear,
+                    _cameraFar);
             }
             else
             {
@@ -388,6 +386,9 @@ namespace Veldrid.RenderDemo
                     _sponzaAtrium.AddRenderItem(sc);
                 }
 
+                var skybox = new Skybox(_rc, _ad);
+                _sponzaAtrium.AddRenderItem(skybox);
+
                 _sponzaAtrium.AddRenderItem(_imguiRenderer);
             }
 
@@ -424,9 +425,10 @@ namespace Veldrid.RenderDemo
                     6 + (float)Math.Sin(timeFactor) * 2,
                     -(float)(Math.Sin(timeFactor) * 5));
 
-                _lightViewMatrixProvider.Data = Matrix4x4.CreateLookAt(position, Vector3.Zero, Vector3.UnitY);
-                _lightInfoProvider.Data = new Vector4(-position, 1);
+                    _lightDirection = -position;
             }
+
+            UpdateLightMatrices();
 
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
             _imguiRenderer.UpdateImGuiInput(_rc.Window, snapshot);
@@ -529,6 +531,41 @@ namespace Veldrid.RenderDemo
             _editorWindow.Render(_rc);
 
             _imguiRenderer.UpdateFinished();
+        }
+
+        private static void UpdateLightMatrices()
+        {
+            Quaternion cameraRotation = Quaternion.CreateFromYawPitchRoll(_cameraYaw, _cameraPitch, 0f);
+            Vector3 cameraForward = Vector3.Transform(-Vector3.UnitZ, cameraRotation);
+            Vector3 unitY = Vector3.UnitY;
+
+            FrustumCorners corners;
+            FrustumHelpers.ComputePerspectiveFrustumCorners(
+                ref _cameraPosition,
+                ref cameraForward,
+                ref unitY,
+                _fieldOfViewRadians,
+                _cameraNear,
+                _cameraFar,
+                (float)_rc.Window.Width / (float)_rc.Window.Height,
+                out corners);
+
+                Matrix4x4 lightView;
+                OrthographicBounds bounds;
+                FrustumHelpers.ComputeOrthographicBoundsForPerpectiveFrustum(
+                    ref corners,
+                    ref _lightDirection,
+                    _cameraNear,
+                    out lightView,
+                    out bounds);
+
+                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(
+                    bounds.MinX - 30, bounds.MaxX + 30,
+                    bounds.MinY, bounds.MaxY,
+                    -bounds.MaxZ, -bounds.MinZ);
+
+                _lightViewMatrixProvider.Data = lightView;
+                _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
         }
 
         private static void ToggleFullScreenState()
@@ -670,6 +707,15 @@ namespace Veldrid.RenderDemo
                             {
                                 SetProjectionMatrix();
                             }
+                        }
+
+                        if (ImGui.DragFloat("Near Plane Distance", ref _cameraNear, 5f, 1000f, .1f))
+                        {
+                            SetProjectionMatrix();
+                        }
+                        if (ImGui.DragFloat("Far Plane Distance", ref _cameraFar, 5f, 1000f, .1f))
+                        {
+                            SetProjectionMatrix();
                         }
 
                         ImGui.EndMenu();

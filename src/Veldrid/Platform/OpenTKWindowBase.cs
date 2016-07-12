@@ -174,7 +174,7 @@ namespace Veldrid.Platform
                 Point windowPoint = NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
                 snapshot.MousePosition = new System.Numerics.Vector2(
                     windowPoint.X,
-                    windowPoint.Y);
+                    windowPoint.Y) / ScaleFactor;
             }
             return snapshot;
         }

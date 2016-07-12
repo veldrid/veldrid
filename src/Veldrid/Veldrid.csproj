@@ -11,6 +11,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ArrayEx.cs" />
+    <Compile Include="BoundingFrustum.cs" />
+    <Compile Include="BoundingSphere.cs" />
+    <Compile Include="ContainmentType.cs" />
     <Compile Include="FrustumHelpers.cs" />
     <Compile Include="Graphics\BlendState.cs" />
     <Compile Include="Graphics\ConstantDataProvider.cs" />

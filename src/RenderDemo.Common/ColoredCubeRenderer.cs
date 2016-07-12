@@ -122,6 +122,13 @@ namespace Veldrid.RenderDemo
             s_material.Dispose();
         }
 
+        public bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            float radius = 3f * (Scale.X * Scale.X) / 2f;
+            var boundingSphere = new BoundingSphere(Position, radius);
+            return visibleFrustum.Contains(boundingSphere) == ContainmentType.Disjoint;
+        }
+
         private static readonly VertexPositionColor[] s_cubeVertices = new VertexPositionColor[]
         {
             // Top

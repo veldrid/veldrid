@@ -14,6 +14,7 @@ namespace Veldrid.RenderDemo
         private readonly VertexPositionNormalTexture[] _vertices;
         private readonly int[] _indices;
         private readonly TextureData _texture;
+        private BoundingSphere _centeredBounds;
 
         private RenderContext _currentContext;
         private VertexBuffer s_vb;
@@ -31,6 +32,8 @@ namespace Veldrid.RenderDemo
             _vertices = vertices;
             _indices = indices;
             _texture = texture;
+
+            _centeredBounds = BoundingSphere.CreateFromPoints(vertices);
 
             if (context != _currentContext)
             {
@@ -143,6 +146,12 @@ namespace Veldrid.RenderDemo
             s_vb.Dispose();
             s_ib.Dispose();
             s_material.Dispose();
+        }
+
+        public bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            BoundingSphere sphere = new BoundingSphere(_centeredBounds.Center + Position, _centeredBounds.Radius * Scale.X);
+            return visibleFrustum.Contains(sphere) == ContainmentType.Disjoint;
         }
 
         private static readonly string VertexShaderSource = "textured-vertex";

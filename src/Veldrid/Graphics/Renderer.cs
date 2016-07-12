@@ -39,7 +39,7 @@ namespace Veldrid.Graphics
             {
                 if (stage.Enabled)
                 {
-                    stage.ExecuteStage(visibilityManager);
+                     stage.ExecuteStage(visibilityManager);
                 }
             }
 

@@ -13,6 +13,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
     {
         private readonly VertexPositionNormalTexture[] _vertices;
         private readonly int[] _indices;
+        private readonly BoundingSphere _centeredBounds;
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
@@ -53,6 +54,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, Utilities.CalculateInverseTranspose);
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
+
+            _centeredBounds = BoundingSphere.CreateFromPoints(vertices);
 
             InitializeContextObjects(ad, rc);
         }
@@ -147,6 +150,13 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _overrideTextureBinding?.Dispose();
             _vb.Dispose();
             _ib.Dispose();
+        }
+
+        public bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            var boundingSphere = new BoundingSphere(_centeredBounds.Center + Position, _centeredBounds.Radius * Scale.X);
+            var ret = visibleFrustum.Contains(boundingSphere) == ContainmentType.Disjoint;
+            return ret;
         }
     }
 }

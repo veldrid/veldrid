@@ -7,5 +7,6 @@ namespace Veldrid.Graphics
         IEnumerable<string> GetStagesParticipated();
         void Render(RenderContext rc, string pipelineStage);
         RenderOrderKey GetRenderOrderKey();
+        bool Cull(ref BoundingFrustum visibleFrustum);
     }
 }

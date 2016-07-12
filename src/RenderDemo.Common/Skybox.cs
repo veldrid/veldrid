@@ -110,6 +110,11 @@ namespace Veldrid.RenderDemo
             rc.SetRasterizerState(previousRasterState);
         }
 
+        public bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            return false;
+        }
+
         private static readonly VertexPosition[] s_vertices = new VertexPosition[]
         {
             // Top

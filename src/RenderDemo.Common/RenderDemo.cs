@@ -560,7 +560,7 @@ namespace Veldrid.RenderDemo
                     out bounds);
 
                 _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(
-                    bounds.MinX - 30, bounds.MaxX + 30,
+                    bounds.MinX, bounds.MaxX ,
                     bounds.MinY, bounds.MaxY,
                     -bounds.MaxZ, -bounds.MinZ);
 
@@ -898,6 +898,9 @@ https://github.com/mellinoe/veldrid.");
                 _rc.SetFramebuffer(_screenshotFramebuffer);
                 _rc.ClearBuffer();
             }
+
+            BoundingFrustum frustum = new BoundingFrustum(_viewMatrixProvider.Data * _projectionMatrixProvider.Data);
+            ((StandardPipelineStage)_renderer.Stages[1]).CameraFrustum = frustum;
 
             _renderer.RenderFrame(_visiblityManager);
             _imguiRenderer.NewFrame();

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace Veldrid.Graphics
@@ -34,9 +35,29 @@ namespace Veldrid.Graphics
             _distinctRenderItems.Remove(item);
         }
 
-        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage, Vector3 position, Vector3 direction)
+        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage)
         {
+            var stageList = GetStageList(pipelineStage);
             queue.AddRange(GetStageList(pipelineStage));
+        }
+
+        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage, ref BoundingFrustum visibleFrustum)
+        {
+            var stageList = new List<RenderItem>(GetStageList(pipelineStage));
+            Cull(stageList, ref visibleFrustum);
+            queue.AddRange(stageList);
+        }
+
+        private void Cull(List<RenderItem> renderItems, ref BoundingFrustum visibleFrustum)
+        {
+            for (int i = 0; i < renderItems.Count; i++)
+            {
+                var item = renderItems[i];
+                if (item.Cull(ref visibleFrustum))
+                {
+                    renderItems[i] = null;
+                }
+            }
         }
 
         private List<RenderItem> GetStageList(string stage)

@@ -302,5 +302,10 @@ namespace Veldrid.RenderDemo
         {
             ImGui.Render();
         }
+
+        public bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            return false;
+        }
     }
 }

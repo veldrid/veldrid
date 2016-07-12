@@ -21,7 +21,10 @@ namespace Veldrid.Graphics
         {
             foreach (RenderItem item in renderItems)
             {
-                Add(item);
+                if (item != null)
+                {
+                    Add(item);
+                }
             }
         }
 
@@ -44,7 +47,7 @@ namespace Veldrid.Graphics
                 (RenderItemIndex first, RenderItemIndex second)
                     => keyComparer.Compare(first.Key, second.Key));
         }
-        
+
         public Enumerator GetEnumerator()
         {
             return new Enumerator(_indices, _renderItems);

@@ -90,5 +90,10 @@ namespace Veldrid.RenderDemo.ForwardRendering
             rc.DrawIndexedPrimitives(6, 0);
             rc.SetDepthStencilState(rc.DefaultDepthStencilState);
         }
+
+        public bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            return false;
+        }
     }
 }

@@ -4,6 +4,7 @@ namespace Veldrid.Graphics
 {
     public interface VisibiltyManager
     {
-        void CollectVisibleObjects(RenderQueue queue, string pipelineStage, Vector3 position, Vector3 direction); // TODO: Implement visibility culling with real arguments.
+        void CollectVisibleObjects(RenderQueue queue, string pipelineStage);
+        void CollectVisibleObjects(RenderQueue queue, string pipelineStage, ref BoundingFrustum visibleFrustum);
     }
 }

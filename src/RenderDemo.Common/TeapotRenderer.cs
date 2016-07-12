@@ -12,6 +12,7 @@ namespace Veldrid.RenderDemo
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
+        private readonly BoundingSphere _centeredBounds;
 
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
@@ -42,6 +43,8 @@ namespace Veldrid.RenderDemo
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
+
+            _centeredBounds = BoundingSphere.CreateFromPoints(LoadTeapotMesh().Vertices);
 
             InitializeContextObjects(rc);
         }
@@ -138,6 +141,12 @@ namespace Veldrid.RenderDemo
             _material.ApplyPerObjectInputs(_perObjectProviders);
 
             context.DrawIndexedPrimitives(_teapotMesh.Indices.Length, 0);
+        }
+
+        public bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            BoundingSphere sphere = new BoundingSphere(_centeredBounds.Center + Position, _centeredBounds.Radius * Scale.X);
+            return visibleFrustum.Contains(sphere) == ContainmentType.Disjoint;
         }
 
         private static readonly ImageProcessorTexture s_cubeTexture = new ImageProcessorTexture(AppContext.BaseDirectory + "/Assets/Textures/CubeTexture.png");

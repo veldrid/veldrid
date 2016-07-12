@@ -258,6 +258,11 @@ namespace Veldrid.RenderDemo.Drawers
             {
                 return new RenderOrderKey();
             }
+
+            public bool Cull(ref BoundingFrustum visibleFrustum)
+            {
+                return false;
+            }
         }
     }
 }

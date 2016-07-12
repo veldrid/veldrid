@@ -54,7 +54,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             RenderContext.ClearBuffer();
             RenderContext.SetViewport(0, 0, DepthMapWidth, DepthMapHeight);
             _queue.Clear();
-            visibilityManager.CollectVisibleObjects(_queue, "ShadowMap", Vector3.Zero, Vector3.Zero);
+            visibilityManager.CollectVisibleObjects(_queue, "ShadowMap");
             _queue.Sort();
             foreach (RenderItem item in _queue)
             {

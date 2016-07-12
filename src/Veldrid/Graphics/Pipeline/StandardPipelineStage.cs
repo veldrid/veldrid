@@ -15,6 +15,14 @@ namespace Veldrid.Graphics.Pipeline
 
         public Framebuffer OverrideFramebuffer { get; set; }
 
+        public BoundingFrustum CameraFrustum
+        {
+            get { return _cameraFrustum; }
+            set { _cameraFrustum = value; }
+        }
+
+        private BoundingFrustum _cameraFrustum;
+
         public StandardPipelineStage(RenderContext rc, string name, Framebuffer framebuffer = null)
         {
             RenderContext = rc;
@@ -34,7 +42,7 @@ namespace Veldrid.Graphics.Pipeline
             }
             RenderContext.SetViewport(0, 0, RenderContext.CurrentFramebuffer.Width, RenderContext.CurrentFramebuffer.Height);
             _renderQueue.Clear();
-            visibilityManager.CollectVisibleObjects(_renderQueue, Name, Vector3.Zero, Vector3.Zero);
+            visibilityManager.CollectVisibleObjects(_renderQueue, Name, ref _cameraFrustum);
             _renderQueue.Sort();
 
             foreach (RenderItem item in _renderQueue)

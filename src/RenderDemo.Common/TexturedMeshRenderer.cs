@@ -21,8 +21,12 @@ namespace Veldrid.RenderDemo
         private IndexBuffer s_ib;
         private Material s_material;
 
+        private static RasterizerState s_wireframeRasterizerState;
+
         public Vector3 Position { get; internal set; }
         public Vector3 Scale { get; internal set; } = new Vector3(1f);
+
+        public bool Wireframe; // TODO: REMOVE
 
         public TexturedMeshRenderer(AssetDatabase ad, RenderContext context, VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
         {
@@ -107,6 +111,8 @@ namespace Veldrid.RenderDemo
                 globalInputs,
                 perObjectInputs,
                 textureInputs);
+
+            s_wireframeRasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
         }
 
         private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)
@@ -133,7 +139,11 @@ namespace Veldrid.RenderDemo
             context.SetMaterial(s_material);
             s_material.ApplyPerObjectInputs(_perObjectProviders);
 
+            var regular = context.RasterizerState;
+            if (Wireframe) context.RasterizerState = s_wireframeRasterizerState;
+
             context.DrawIndexedPrimitives(_indices.Length, 0);
+            context.RasterizerState = regular;
         }
 
         public RenderOrderKey GetRenderOrderKey()
@@ -146,10 +156,13 @@ namespace Veldrid.RenderDemo
             s_vb.Dispose();
             s_ib.Dispose();
             s_material.Dispose();
+            s_wireframeRasterizerState.Dispose();
         }
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
         {
+            if (Wireframe) return false;
+
             BoundingSphere sphere = new BoundingSphere(_centeredBounds.Center + Position, _centeredBounds.Radius * Scale.X);
             return visibleFrustum.Contains(sphere) == ContainmentType.Disjoint;
         }

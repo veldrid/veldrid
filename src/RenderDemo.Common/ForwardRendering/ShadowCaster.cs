@@ -13,7 +13,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
     {
         private readonly VertexPositionNormalTexture[] _vertices;
         private readonly int[] _indices;
-        private readonly BoundingSphere _centeredBounds;
+        public readonly BoundingSphere _centeredBounds; // TODO: PRIVATE
+
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
@@ -154,7 +155,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
         {
-            var boundingSphere = new BoundingSphere(_centeredBounds.Center + Position, _centeredBounds.Radius * Scale.X);
+            var boundingSphere = new BoundingSphere((_centeredBounds.Center * (Scale.X)) + Position, _centeredBounds.Radius * Scale.X);
             var ret = visibleFrustum.Contains(boundingSphere) == ContainmentType.Disjoint;
             return ret;
         }

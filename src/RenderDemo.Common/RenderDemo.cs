@@ -364,6 +364,9 @@ namespace Veldrid.RenderDemo
                     atriumMtls = new MtlParser().Parse(mtlStream);
                 }
 
+                var sphere = _ad.LoadAsset<ObjFile>(new AssetID("Models/Sphere.obj")).GetFirstMesh();
+                var pink = new RawTextureDataArray<RgbaFloat>(
+                    new RgbaFloat[] { RgbaFloat.Pink }, 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
                 foreach (var group in atriumFile.MeshGroups)
                 {
                     ConstructedMeshInfo mesh = atriumFile.GetMesh(group);
@@ -377,13 +380,20 @@ namespace Veldrid.RenderDemo
                     }
                     else
                     {
-                        overrideTextureData = new RawTextureDataArray<RgbaFloat>(
-                          new RgbaFloat[] { RgbaFloat.Pink }, 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
+                        overrideTextureData = pink;
                     }
 
                     ShadowCaster sc = new ShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, matAsset, overrideTextureData);
                     sc.Scale = new Vector3(0.1f);
+
+
+                    TexturedMeshRenderer boundingSphereRenderer = new TexturedMeshRenderer(
+                        _ad, _rc, sphere.Vertices , sphere.Indices, pink);
+                    boundingSphereRenderer.Wireframe = true;
+                    boundingSphereRenderer.Scale = new Vector3(sc._centeredBounds.Radius * sc.Scale.X);
+                    boundingSphereRenderer.Position = (sc._centeredBounds.Center * sc.Scale.X);
                     _sponzaAtrium.AddRenderItem(sc);
+                    _sponzaAtrium.AddRenderItem(boundingSphereRenderer);
                 }
 
                 var skybox = new Skybox(_rc, _ad);

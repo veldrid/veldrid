@@ -22,6 +22,7 @@ namespace Veldrid.RenderDemo
     {
         private static Renderer _renderer;
         private static RenderContext _rc;
+        private static ShadowMapStage _shadowMapStage;
         private static RendererOption[] _backendOptions;
         private static FrameTimeAverager _fta;
         private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
@@ -84,9 +85,10 @@ namespace Veldrid.RenderDemo
                 _backendOptions = backendOptions;
                 _selectedOption = backendOptions.FirstOrDefault();
 
+                _shadowMapStage = new ShadowMapStage(_rc);
                 _configurableStages = new PipelineStage[]
                 {
-                    new ShadowMapStage(_rc),
+                    _shadowMapStage,
                     new StandardPipelineStage(_rc, "Standard"),
                     new StandardPipelineStage(_rc, "Overlay"),
                 };
@@ -104,7 +106,6 @@ namespace Veldrid.RenderDemo
                 // Shader buffers for shadow mapping
                 _lightDirection = Vector3.Normalize(new Vector3(1f, -1f, 0f));
                 _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
-
 
                 float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
                 _cameraPosition = new Vector3(
@@ -435,7 +436,7 @@ namespace Veldrid.RenderDemo
                     6 + (float)Math.Sin(timeFactor) * 2,
                     -(float)(Math.Sin(timeFactor) * 5));
 
-                    _lightDirection = -position;
+                _lightDirection = Vector3.Normalize(-position);
             }
 
             UpdateLightMatrices();
@@ -486,6 +487,7 @@ namespace Veldrid.RenderDemo
                     _cameraPitch += -deltaY * .01f;
 
                     float sprintFactor = InputTracker.GetKey(Key.LShift) ? _cameraSprintFactor : 1.0f;
+                    sprintFactor = InputTracker.GetKey(Key.ControlLeft) ? (1f / _cameraSprintFactor) : sprintFactor;
                     if (InputTracker.GetKey(Key.W))
                     {
                         _cameraPosition += cameraForward * _cameraMoveSpeed * sprintFactor * deltaSec;
@@ -560,22 +562,51 @@ namespace Veldrid.RenderDemo
                 (float)_rc.Window.Width / (float)_rc.Window.Height,
                 out corners);
 
-                Matrix4x4 lightView;
-                OrthographicBounds bounds;
-                FrustumHelpers.ComputeOrthographicBoundsForPerpectiveFrustum(
-                    ref corners,
-                    ref _lightDirection,
-                    _cameraNear,
-                    out lightView,
-                    out bounds);
+            Matrix4x4 lightView;
+            OrthographicBounds bounds;
+            FrustumHelpers.ComputeOrthographicBoundsForPerpectiveFrustum(
+                ref corners,
+                ref _lightDirection,
+                _cameraNear,
+                out lightView,
+                out bounds);
 
-                _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(
-                    bounds.MinX, bounds.MaxX ,
-                    bounds.MinY, bounds.MaxY,
-                    -bounds.MaxZ, -bounds.MinZ);
+            Vector3 frustumCenter = Vector3.Zero;
+            frustumCenter += corners.NearTopLeft;
+            frustumCenter += corners.NearTopRight;
+            frustumCenter += corners.NearBottomLeft;
+            frustumCenter += corners.NearBottomRight;
+            frustumCenter += corners.FarTopLeft;
+            frustumCenter += corners.FarTopRight;
+            frustumCenter += corners.FarBottomLeft;
+            frustumCenter += corners.FarBottomRight;
+            frustumCenter /= 8f;
 
-                _lightViewMatrixProvider.Data = lightView;
-                _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
+            float radius = (corners.NearTopLeft - corners.FarBottomRight).Length() / 2.0f;
+            float texelsPerUnit = (float)_shadowMapStage.DepthMapWidth / (radius * 2.0f);
+
+            Matrix4x4 scalar = Matrix4x4.CreateScale(texelsPerUnit, texelsPerUnit, texelsPerUnit);
+
+            Vector3 baseLookAt = -_lightDirection;
+
+            Matrix4x4 lookat = Matrix4x4.CreateLookAt(Vector3.Zero, baseLookAt, Vector3.UnitY);
+            lookat = scalar * lookat;
+            Matrix4x4 lookatInv;
+            Matrix4x4.Invert(lookat, out lookatInv);
+
+            frustumCenter = Vector3.Transform(frustumCenter, lookat);
+            frustumCenter.X = (int)frustumCenter.X;
+            frustumCenter.Y = (int)frustumCenter.Y;
+            frustumCenter = Vector3.Transform(frustumCenter, lookatInv);
+
+            Vector3 eye = frustumCenter - (_lightDirection * radius * 2f);
+
+            lightView = Matrix4x4.CreateLookAt(eye, frustumCenter, Vector3.UnitY);
+
+            _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(
+                -radius, radius, -radius, radius, -radius * 4f, radius * 4f);
+            _lightViewMatrixProvider.Data = lightView;
+            _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
         }
 
         private static void ToggleFullScreenState()

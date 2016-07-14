@@ -9,13 +9,6 @@ namespace Veldrid
 
         private SixPlane _planes;
 
-        //private readonly Plane _nearPlane;
-        //private readonly Plane _farPlane;
-        //private readonly Plane _leftPlane;
-        //private readonly Plane _rightPlane;
-        //private readonly Plane _bottomPlane;
-        //private readonly Plane _topPlane;
-
         private struct SixPlane
         {
             public Plane Left;
@@ -103,7 +96,6 @@ namespace Veldrid
                 }
                 else if (distance < sphere.Radius)
                 {
-
                     result = ContainmentType.Intersects;
                 }
             }

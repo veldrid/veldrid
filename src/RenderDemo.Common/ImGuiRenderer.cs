@@ -112,9 +112,9 @@ namespace Veldrid.RenderDemo
             IO io = ImGui.GetIO();
 
             io.MousePosition = snapshot.MousePosition;
-            io.MouseDown[0] = snapshot.MouseEvents.Any(me => me.MouseButton == MouseButton.Left && me.Down);
-            io.MouseDown[1] = snapshot.MouseEvents.Any(me => me.MouseButton == MouseButton.Right && me.Down);
-            io.MouseDown[2] = snapshot.MouseEvents.Any(me => me.MouseButton == MouseButton.Middle && me.Down);
+            io.MouseDown[0] = snapshot.IsMouseDown(MouseButton.Left);
+            io.MouseDown[1] = snapshot.IsMouseDown(MouseButton.Right);
+            io.MouseDown[2] = snapshot.IsMouseDown(MouseButton.Middle);
 
             foreach (char c in snapshot.KeyCharPresses)
             {

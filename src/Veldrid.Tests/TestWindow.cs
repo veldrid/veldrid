@@ -240,6 +240,11 @@ namespace Veldrid.Platform
                 KeyEventsList.Clear();
                 MouseEventsList.Clear();
             }
+
+            public bool IsMouseDown(MouseButton button)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

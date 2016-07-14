@@ -19,6 +19,8 @@ namespace Veldrid.Platform
 
         protected SimpleInputSnapshot CurrentSnapshot = new SimpleInputSnapshot();
 
+        private bool[] _mouseDown = new bool[12];
+
         public OpenTKWindowBase()
         {
             ConstructDefaultWindow();
@@ -176,6 +178,7 @@ namespace Veldrid.Platform
                     windowPoint.X,
                     windowPoint.Y) / ScaleFactor;
             }
+            _mouseDown.CopyTo(snapshot.MouseDown, 0);
             return snapshot;
         }
 
@@ -183,11 +186,13 @@ namespace Veldrid.Platform
 
         private void OnMouseUp(object sender, MouseButtonEventArgs e)
         {
+            _mouseDown[(int)e.Button] = false;
             CurrentSnapshot.MouseEventsList.Add(new MouseEvent((MouseButton)e.Button, false));
         }
 
         private void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
+            _mouseDown[(int)e.Button] = true;
             CurrentSnapshot.MouseEventsList.Add(new MouseEvent((MouseButton)e.Button, true));
         }
 
@@ -260,6 +265,14 @@ namespace Veldrid.Platform
             public IReadOnlyCollection<char> KeyCharPresses => KeyCharPressesList;
 
             public System.Numerics.Vector2 MousePosition { get; set; }
+
+            private bool[] _mouseDown = new bool[12];
+            public bool[] MouseDown => _mouseDown;
+
+            public bool IsMouseDown(MouseButton button)
+            {
+                return _mouseDown[(int)button];
+            }
 
             internal void Clear()
             {

@@ -21,6 +21,11 @@ namespace Veldrid
             return string.Format("Center:{0}, Radius:{1}", Center, Radius);
         }
 
+        public bool Contains(Vector3 point)
+        {
+            return (Center - point).LengthSquared() <= Radius * Radius;
+        }
+
         public static BoundingSphere CreateFromPoints(IList<Vector3> points)
         {
             Vector3 center = Vector3.Zero;

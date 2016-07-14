@@ -8,6 +8,7 @@ namespace Veldrid.Platform
         IReadOnlyCollection<KeyEvent> KeyEvents { get; }
         IReadOnlyCollection<MouseEvent> MouseEvents { get; }
         IReadOnlyCollection<char> KeyCharPresses { get; }
+        bool IsMouseDown(MouseButton button);
         Vector2 MousePosition { get; }
     }
 }

@@ -387,14 +387,17 @@ namespace Veldrid.RenderDemo
                     ShadowCaster sc = new ShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, matAsset, overrideTextureData);
                     sc.Scale = new Vector3(0.1f);
 
+                    _sponzaAtrium.AddRenderItem(sc);
 
+                    /*
+                    // This renders the bounding spheres of the atrium meshes.
                     TexturedMeshRenderer boundingSphereRenderer = new TexturedMeshRenderer(
                         _ad, _rc, sphere.Vertices , sphere.Indices, pink);
                     boundingSphereRenderer.Wireframe = true;
                     boundingSphereRenderer.Scale = new Vector3(sc._centeredBounds.Radius * sc.Scale.X);
                     boundingSphereRenderer.Position = (sc._centeredBounds.Center * sc.Scale.X);
-                    _sponzaAtrium.AddRenderItem(sc);
                     _sponzaAtrium.AddRenderItem(boundingSphereRenderer);
+                    */
                 }
 
                 var skybox = new Skybox(_rc, _ad);
@@ -562,14 +565,7 @@ namespace Veldrid.RenderDemo
                 (float)_rc.Window.Width / (float)_rc.Window.Height,
                 out corners);
 
-            Matrix4x4 lightView;
-            OrthographicBounds bounds;
-            FrustumHelpers.ComputeOrthographicBoundsForPerpectiveFrustum(
-                ref corners,
-                ref _lightDirection,
-                _cameraNear,
-                out lightView,
-                out bounds);
+            // Approach used: http://alextardif.com/ShadowMapping.html
 
             Vector3 frustumCenter = Vector3.Zero;
             frustumCenter += corners.NearTopLeft;
@@ -601,7 +597,7 @@ namespace Veldrid.RenderDemo
 
             Vector3 eye = frustumCenter - (_lightDirection * radius * 2f);
 
-            lightView = Matrix4x4.CreateLookAt(eye, frustumCenter, Vector3.UnitY);
+            Matrix4x4 lightView = Matrix4x4.CreateLookAt(eye, frustumCenter, Vector3.UnitY);
 
             _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(
                 -radius, radius, -radius, radius, -radius * 4f, radius * 4f);

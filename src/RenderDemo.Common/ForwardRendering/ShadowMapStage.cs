@@ -12,8 +12,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         private string _contextBindingName = "ShadowMap";
 
-        private const int DepthMapWidth = 2048;
-        private const int DepthMapHeight = 2048;
+        public int DepthMapWidth { get; private set; } = 2048;
+        public int DepthMapHeight { get; private set; } = 2048;
 
         private readonly RenderQueue _queue = new RenderQueue();
 

@@ -20,8 +20,8 @@ namespace Veldrid
             float farHeight = 2 * (float)Math.Tan(fov / 2f) * farDistance;
             float farWidth = farHeight * aspectRatio;
 
-            Vector3 right = Vector3.Cross(viewDirection, globalUpDirection);
-            Vector3 up = Vector3.Cross(right, viewDirection);
+            Vector3 right = Vector3.Normalize(Vector3.Cross(viewDirection, globalUpDirection));
+            Vector3 up = Vector3.Normalize(Vector3.Cross(right, viewDirection));
 
             Vector3 nearCenter = viewPosition + viewDirection * nearDistance;
             Vector3 farCenter = viewPosition + viewDirection * farDistance;

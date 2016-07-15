@@ -27,7 +27,7 @@ namespace Veldrid.RenderDemo
         private static FrameTimeAverager _fta;
         private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
         private static bool _limitFrameRate = true;
-        private static FlatListVisibilityManager _visiblityManager;
+        private static VisibiltyManager _visibilityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
         private static DynamicDataProvider<Matrix4x4> _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Matrix4x4> _viewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
@@ -36,9 +36,9 @@ namespace Veldrid.RenderDemo
         private static DynamicDataProvider<Vector4> _lightInfoProvider = new DynamicDataProvider<Vector4>();
         private static FlatListVisibilityManager _boxSceneVM;
         private static FlatListVisibilityManager _teapotVM;
-        private static FlatListVisibilityManager _shadowsScene;
-        private static FlatListVisibilityManager _roomScene;
-        private static FlatListVisibilityManager _sponzaAtrium;
+        private static OctreeVisibilityManager _shadowsScene;
+        private static FlatListVisibilityManager _octreeScene;
+        private static OctreeVisibilityManager _sponzaAtrium;
         private static double _circleWidth = 12.0;
         private static bool _wireframe;
 
@@ -76,6 +76,11 @@ namespace Veldrid.RenderDemo
         private static float _orthographicWidth = 20f;
         private static ShadowMapPreview _shadowMapPreview;
         private static RendererOption _selectedOption;
+        private static OctreeNode<ShadowCaster> _octree;
+        private static List<RenderItem> _octreeCubes = new List<RenderItem>();
+        private static Vector3 _octreeBoxPosition;
+        private static MaterialAsset _stoneMaterial;
+        private static OctreeRenderer<ShadowCaster> _octreeRenderer;
 
         public static void RunDemo(RenderContext renderContext, params RendererOption[] backendOptions)
         {
@@ -130,7 +135,7 @@ namespace Veldrid.RenderDemo
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
 
-                _visiblityManager = SceneWithShadows();
+                _visibilityManager = SceneWithShadows();
 
                 _fta = new FrameTimeAverager(666);
 
@@ -255,33 +260,35 @@ namespace Veldrid.RenderDemo
             return _teapotVM;
         }
 
-        private static FlatListVisibilityManager SceneWithShadows()
+        private static OctreeVisibilityManager SceneWithShadows()
         {
             if (_shadowsScene == null)
             {
-                _shadowsScene = new FlatListVisibilityManager();
+                _shadowsScene = new OctreeVisibilityManager();
 
                 var stoneMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Stone.json"));
                 var woodMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Wood.json"));
                 var crateMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Crate.json"));
 
                 var cube1 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, crateMaterial);
-                _shadowsScene.AddRenderItem(cube1);
+                _shadowsScene.AddRenderItem(cube1.BoundingBox, cube1);
 
                 var cube2 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, crateMaterial);
                 cube2.Position = new Vector3(3f, 5f, 0f);
                 cube2.Scale = new Vector3(3f);
-                _shadowsScene.AddRenderItem(cube2);
+                _shadowsScene.AddRenderItem(cube2.BoundingBox, cube2);
 
                 var teapot = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
                 teapot.Position = new Vector3(-4f, 0f, 6f);
                 teapot.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
-                _shadowsScene.AddRenderItem(teapot);
+                _shadowsScene.AddRenderItem(teapot.BoundingBox, teapot);
 
                 var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
                 plane.Position = new Vector3(0, -2.5f, 0);
                 plane.Scale = new Vector3(20f);
-                _shadowsScene.AddRenderItem(plane);
+                _shadowsScene.AddRenderItem(plane.BoundingBox, plane);
+
+                _shadowsScene.AddRenderItem(new OctreeRenderer<RenderItem>(_shadowsScene.Octree, _ad, _rc));
 
                 var skybox = new Skybox(_rc, _ad);
                 _shadowsScene.AddRenderItem(skybox);
@@ -295,68 +302,61 @@ namespace Veldrid.RenderDemo
             return _shadowsScene;
         }
 
-        private static FlatListVisibilityManager RoomScene()
+        private static FlatListVisibilityManager OctreeScene()
         {
-            if (_roomScene == null)
+            if (_octreeScene == null)
             {
-                _roomScene = new FlatListVisibilityManager();
+                _octreeScene = new FlatListVisibilityManager();
+                _stoneMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Stone.json"));
 
-                var stoneMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Stone.json"));
-                var woodMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Wood.json"));
+                BoundingBox bounds = new BoundingBox(new Vector3(-25, -25, -25), new Vector3(25, 25, 25));
+                _octree = Octree.CreateNewTree<ShadowCaster>(ref bounds, 3);
+                _octreeRenderer = new OctreeRenderer<ShadowCaster>(_octree, _ad, _rc);
+                _octreeScene.AddRenderItem(_octreeRenderer);
 
-                var cube1 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
-                _roomScene.AddRenderItem(cube1);
+                AddRandomOctreeItems();
 
-                var cube2 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
-                cube2.Position = new Vector3(3f, 5f, 0f);
-                cube2.Scale = new Vector3(3f);
-                _roomScene.AddRenderItem(cube2);
-
-                var teapot = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
-                teapot.Position = new Vector3(-4f, 0f, 6f);
-                teapot.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
-                _roomScene.AddRenderItem(teapot);
-
-                var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
-                plane.Position = new Vector3(0, -10f, 0);
-                plane.Scale = new Vector3(20f);
-                _roomScene.AddRenderItem(plane);
-
-                plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
-                plane.Position = new Vector3(-10f, 0, 0);
-                plane.Scale = new Vector3(20f);
-                plane.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)Math.PI / -2f);
-                _roomScene.AddRenderItem(plane);
-
-                plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
-                plane.Position = new Vector3(10f, 0, 0);
-                plane.Scale = new Vector3(20f);
-                plane.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)Math.PI / 2f);
-                _roomScene.AddRenderItem(plane);
-
-                plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
-                plane.Position = new Vector3(0, 0, -10f);
-                plane.Scale = new Vector3(20f);
-                plane.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)Math.PI / 2f);
-                _roomScene.AddRenderItem(plane);
-
-                plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
-                plane.Position = new Vector3(0, 0, 10f);
-                plane.Scale = new Vector3(20f);
-                plane.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)Math.PI / -2f);
-                _roomScene.AddRenderItem(plane);
-
-                _roomScene.AddRenderItem(_imguiRenderer);
+                _octreeScene.AddRenderItem(_imguiRenderer);
             }
 
-            return _roomScene;
+            return _octreeScene;
         }
 
-        private static FlatListVisibilityManager SponzaAtriumScene()
+        private static void AddRandomOctreeItems()
+        {
+            Random r = new Random();
+            for (int i = 0; i < 50; i++)
+            {
+                Vector3 position = new Vector3((float)r.NextDouble() * 48f - 24f, (float)r.NextDouble() * 48f - 24f, (float)r.NextDouble() * 48f - 24f);
+                AddOctreeCube(position);
+            }
+        }
+
+        private static void ClearOctreeItems()
+        {
+            _octree.Clear();
+            foreach (var item in _octreeCubes)
+            {
+                _octreeScene.RemoveRenderItem(item);
+            }
+            _octreeCubes.Clear();
+        }
+
+        private static void AddOctreeCube(Vector3 position)
+        {
+            var cube = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, _stoneMaterial);
+            cube.Position = position;
+            _octreeScene.AddRenderItem(cube);
+            _octree = _octree.AddItem(cube.BoundingBox, cube);
+            _octreeRenderer.Octree = _octree;
+            _octreeCubes.Add(cube);
+        }
+
+        private static OctreeVisibilityManager SponzaAtriumScene()
         {
             if (_sponzaAtrium == null)
             {
-                _sponzaAtrium = new FlatListVisibilityManager();
+                _sponzaAtrium = new OctreeVisibilityManager();
 
                 ObjFile atriumFile = _ad.LoadAsset<ObjFile>("Models/SponzaAtrium/sponza.obj", cache: false);
                 MtlFile atriumMtls;
@@ -387,7 +387,7 @@ namespace Veldrid.RenderDemo
                     ShadowCaster sc = new ShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, matAsset, overrideTextureData);
                     sc.Scale = new Vector3(0.1f);
 
-                    _sponzaAtrium.AddRenderItem(sc);
+                    _sponzaAtrium.AddRenderItem(sc.BoundingBox, sc);
 
                     /*
                     // This renders the bounding spheres of the atrium meshes.
@@ -399,6 +399,8 @@ namespace Veldrid.RenderDemo
                     _sponzaAtrium.AddRenderItem(boundingSphereRenderer);
                     */
                 }
+
+                _sponzaAtrium.AddRenderItem(new OctreeRenderer<RenderItem>(_sponzaAtrium.Octree, _ad, _rc));
 
                 var skybox = new Skybox(_rc, _ad);
                 _sponzaAtrium.AddRenderItem(skybox);
@@ -465,6 +467,26 @@ namespace Veldrid.RenderDemo
             if (InputTracker.GetKeyDown(Key.F11))
             {
                 ToggleFullScreenState();
+            }
+            if (_visibilityManager == _octreeScene)
+            {
+                if (InputTracker.GetKeyDown(Key.F5))
+                {
+                    AddRandomOctreeItems();
+                }
+                if (InputTracker.GetKeyDown(Key.F6))
+                {
+                    ClearOctreeItems();
+                }
+                if (ImGui.BeginWindow("Octree Options"))
+                {
+                    ImGui.DragVector3("Box Position", ref _octreeBoxPosition, -24f, 24f, .3f);
+                    if (ImGui.Button("Place Box"))
+                    {
+                        AddOctreeCube(_octreeBoxPosition);
+                    }
+                }
+                ImGui.EndWindow();
             }
 
             float deltaX = InputTracker.MousePosition.X - _previousMouseX;
@@ -619,57 +641,57 @@ namespace Veldrid.RenderDemo
                 if (ImGui.BeginMenu("Scenes"))
                 {
 
-                    bool boxScene = _visiblityManager == _boxSceneVM;
+                    bool boxScene = _visibilityManager == _boxSceneVM;
                     if (boxScene)
                         ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
                     if (ImGui.MenuItem("Boxes", null))
                     {
                         _circleWidth = 12.0;
-                        _visiblityManager = SceneWithBoxes();
+                        _visibilityManager = SceneWithBoxes();
                     }
                     if (boxScene)
                         ImGui.PopStyleColor();
 
-                    bool teapotScene = _visiblityManager == _teapotVM;
+                    bool teapotScene = _visibilityManager == _teapotVM;
                     if (teapotScene)
                         ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
                     if (ImGui.MenuItem("Teapot", null))
                     {
                         _circleWidth = 5.0;
-                        _visiblityManager = SceneWithTeapot();
+                        _visibilityManager = SceneWithTeapot();
                     }
                     if (teapotScene)
                         ImGui.PopStyleColor();
 
-                    bool shadowsScene = _visiblityManager == _shadowsScene;
+                    bool shadowsScene = _visibilityManager == _shadowsScene;
                     if (shadowsScene)
                         ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
                     if (ImGui.MenuItem("Shadows", null))
                     {
                         _circleWidth = 15.0;
-                        _visiblityManager = SceneWithShadows();
+                        _visibilityManager = SceneWithShadows();
                     }
                     if (shadowsScene)
                         ImGui.PopStyleColor();
 
-                    bool roomScene = _visiblityManager == _roomScene;
+                    bool roomScene = _visibilityManager == _octreeScene;
                     if (roomScene)
                         ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
-                    if (ImGui.MenuItem("Room", null))
+                    if (ImGui.MenuItem("Octree", null))
                     {
                         _circleWidth = 8.0;
-                        _visiblityManager = RoomScene();
+                        _visibilityManager = OctreeScene();
                     }
                     if (roomScene)
                         ImGui.PopStyleColor();
 
-                    bool sponzaAtriumScene = _visiblityManager == _sponzaAtrium;
+                    bool sponzaAtriumScene = _visibilityManager == _sponzaAtrium;
                     if (sponzaAtriumScene)
                         ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
                     if (ImGui.MenuItem("Sponza Atrium", null))
                     {
                         _circleWidth = 8.0;
-                        _visiblityManager = SponzaAtriumScene();
+                        _visibilityManager = SponzaAtriumScene();
                     }
                     if (sponzaAtriumScene)
                         ImGui.PopStyleColor();
@@ -900,9 +922,9 @@ https://github.com/mellinoe/veldrid.");
                         ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
                     }
                 }
-                if (_roomScene != null)
+                if (_octreeScene != null)
                 {
-                    foreach (var item in _roomScene.RenderItems)
+                    foreach (var item in _octreeScene.RenderItems)
                     {
                         ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
                     }
@@ -939,7 +961,7 @@ https://github.com/mellinoe/veldrid.");
             BoundingFrustum frustum = new BoundingFrustum(_viewMatrixProvider.Data * _projectionMatrixProvider.Data);
             ((StandardPipelineStage)_renderer.Stages[1]).CameraFrustum = frustum;
 
-            _renderer.RenderFrame(_visiblityManager);
+            _renderer.RenderFrame(_visibilityManager);
             _imguiRenderer.NewFrame();
 
             if (_takeScreenshot)

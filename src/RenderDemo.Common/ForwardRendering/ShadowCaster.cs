@@ -159,5 +159,13 @@ namespace Veldrid.RenderDemo.ForwardRendering
             var ret = visibleFrustum.Contains(boundingSphere) == ContainmentType.Disjoint;
             return ret;
         }
+
+        public BoundingBox BoundingBox
+        {
+            get
+            {
+                return BoundingBox.CreateFromVertices(_vertices, Rotation, Position, Scale);
+            }
+        }
     }
 }

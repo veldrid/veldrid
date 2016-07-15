@@ -10,7 +10,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ProjectGuid>{64AEB337-027E-4553-9FD5-B91345F046D0}</ProjectGuid>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <Compile Include="BrowserUtil.cs" />
@@ -25,6 +27,7 @@
     <Compile Include="Assets\Models\CubeModel.cs" />
     <Compile Include="Assets\Models\PlaneModel.cs" />
     <Compile Include="AssetEditorWindow.cs" />
+    <Compile Include="OctreeRenderer.cs" />
     <Compile Include="PixelFormatConversion.cs" />
     <Compile Include="Preferences.cs" />
     <Compile Include="RenderDemo.cs" />

@@ -11,6 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ArrayEx.cs" />
+    <Compile Include="BoundingBox.cs" />
     <Compile Include="BoundingFrustum.cs" />
     <Compile Include="BoundingSphere.cs" />
     <Compile Include="ContainmentType.cs" />
@@ -48,6 +49,7 @@
     <Compile Include="Graphics\MtlParser.cs" />
     <Compile Include="Graphics\ObjImporter.cs" />
     <Compile Include="Graphics\ObjParser.cs" />
+    <Compile Include="Graphics\OctreeVisibilityManager.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLBlendState.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLCubemapTexture.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLDefaultFramebuffer.cs" />
@@ -72,6 +74,7 @@
     <Compile Include="Graphics\VertexPositionNormalColorTexture.cs" />
     <Compile Include="Graphics\Viewport.cs" />
     <Compile Include="Graphics\VisibiltyManager.cs" />
+    <Compile Include="Octree.cs" />
     <Compile Include="Platform\KeyEvent.cs" />
     <Compile Include="Platform\SameThreadWindow.cs" />
     <Compile Include="Graphics\MaterialTextureInputs.cs" />
@@ -116,7 +119,9 @@
     <Compile Include="IllegalValueException.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <Reference Include="$(DepsDir)\SharpYaml\SharpYaml.dll">

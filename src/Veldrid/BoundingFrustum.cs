@@ -152,5 +152,63 @@ namespace Veldrid
 
             return result;
         }
+
+        public unsafe ContainmentType Contains(ref BoundingFrustum other)
+        {
+            int pointsContained = 0;
+            FrustumCorners corners = other.GetCorners();
+            Vector3* cornersPtr = (Vector3*)&corners;
+            for (int i = 0; i < 8; i++)
+            {
+                if (Contains(cornersPtr[i]) != ContainmentType.Disjoint)
+                {
+                    pointsContained++;
+                }
+            }
+
+            if (pointsContained == 8)
+            {
+                return ContainmentType.Contains;
+            }
+            else if (pointsContained == 0)
+            {
+                return ContainmentType.Disjoint;
+            }
+            else
+            {
+                return ContainmentType.Intersects;
+            }
+        }
+
+        public FrustumCorners GetCorners()
+        {
+            FrustumCorners corners;
+            GetCorners(out corners);
+            return corners;
+        }
+
+        public void GetCorners(out FrustumCorners corners)
+        {
+            PlaneIntersection(ref _planes.Near, ref _planes.Top, ref _planes.Left, out corners.NearTopLeft);
+            PlaneIntersection(ref _planes.Near, ref _planes.Top, ref _planes.Right, out corners.NearTopRight);
+            PlaneIntersection(ref _planes.Near, ref _planes.Bottom, ref _planes.Left, out corners.NearBottomLeft);
+            PlaneIntersection(ref _planes.Near, ref _planes.Bottom, ref _planes.Right, out corners.NearBottomRight);
+            PlaneIntersection(ref _planes.Far, ref _planes.Top, ref _planes.Left, out corners.FarTopLeft);
+            PlaneIntersection(ref _planes.Far, ref _planes.Top, ref _planes.Right, out corners.FarTopRight);
+            PlaneIntersection(ref _planes.Far, ref _planes.Bottom, ref _planes.Left, out corners.FarBottomLeft);
+            PlaneIntersection(ref _planes.Far, ref _planes.Bottom, ref _planes.Right, out corners.FarBottomRight);
+        }
+
+        private static void PlaneIntersection(ref Plane p1, ref Plane p2, ref Plane p3, out Vector3 intersection)
+        {
+            // Formula: http://geomalgorithms.com/a05-_intersect-1.html
+            // The formula assumes that there is only a single intersection point.
+            // Because of the way the frustum planes are constructed, this should be guaranteed.
+            intersection =
+                (-(p1.D * Vector3.Cross(p2.Normal, p3.Normal))
+                - (p2.D * Vector3.Cross(p3.Normal, p1.Normal))
+                - (p3.D * Vector3.Cross(p1.Normal, p2.Normal)))
+                / Vector3.Dot(p1.Normal, Vector3.Cross(p2.Normal, p3.Normal));
+        }
     }
 }

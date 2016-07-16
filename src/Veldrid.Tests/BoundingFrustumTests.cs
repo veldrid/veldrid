@@ -49,5 +49,82 @@ namespace Veldrid
             yield return new object[] { bf, new BoundingSphere(new Vector3(6.46302489844f, 0, -10f), 1.1f), ContainmentType.Intersects };
             yield return new object[] { bf, new BoundingSphere(new Vector3(6.46302489844f, 6, -10f), 1.1f), ContainmentType.Intersects };
         }
+
+        [Theory]
+        [InlineData(0f, 0f, 0f, 0f, 0f, -1f)]
+        [InlineData(0f, 0f, 10f, 0f, 0f, -1f)]
+        [InlineData(0f, 10f, 10f, 0f, -.5f, -1f)]
+        [InlineData(5f, -10f, 0f, -.3f, .5f, 1f)]
+        [InlineData(-5f, -10f, -100000000f, -.3f, .5f, 1f)]
+        [InlineData(0f, 0f, 0f, 0f, -1f, 0f)]
+        public static void GetCorners(float eyeX, float eyeY, float eyeZ, float viewX, float viewY, float viewZ)
+        {
+            Vector3 viewOrigin = new Vector3(eyeX, eyeY, eyeZ);
+            Vector3 viewDir = Vector3.Normalize(new Vector3(viewX, viewY, viewZ));
+            Matrix4x4 view = Matrix4x4.CreateLookAt(viewOrigin, viewDir, Vector3.UnitY);
+            const float nearDist = 2f;
+            const float farDist = 10f;
+            const float fov = 1.0f;
+            const float ratio = 1.0f;
+            Matrix4x4 perspectiveProj = Matrix4x4.CreatePerspectiveFieldOfView(fov, ratio, nearDist, farDist);
+            BoundingFrustum frustum = new BoundingFrustum(view * perspectiveProj);
+
+            FrustumCorners corners = frustum.GetCorners();
+            Vector3 nearCenter = viewOrigin + viewDir * nearDist;
+            float nearHalfHeight = (float)Math.Tan(fov / 2f) * nearDist;
+            float nearHalfWidth = nearHalfHeight * ratio;
+            Vector3 up = Vector3.Transform(Vector3.UnitY, view);
+            Vector3 right = -Vector3.Cross(up, viewDir);
+
+            FuzzyComparer fuzzyComparer = new FuzzyComparer();
+            AssertEqual(nearCenter - nearHalfWidth * right + nearHalfHeight * up, corners.NearTopLeft, fuzzyComparer);
+            AssertEqual(nearCenter + nearHalfWidth * right + nearHalfHeight * up, corners.NearTopRight, fuzzyComparer);
+            AssertEqual(nearCenter - nearHalfWidth * right - nearHalfHeight * up, corners.NearBottomLeft, fuzzyComparer);
+            AssertEqual(nearCenter + nearHalfWidth * right - nearHalfHeight * up, corners.NearBottomRight, fuzzyComparer);
+
+            Vector3 farCenter = viewOrigin + viewDir * farDist;
+            float farHalfHeight = (float)Math.Tan(fov / 2f) * farDist;
+            float farHalfWidth = farHalfHeight * ratio;
+            AssertEqual(farCenter - farHalfWidth * right + farHalfHeight * up, corners.FarTopLeft, fuzzyComparer);
+            AssertEqual(farCenter + farHalfWidth * right + farHalfHeight * up, corners.FarTopRight, fuzzyComparer);
+            AssertEqual(farCenter - farHalfWidth * right - farHalfHeight * up, corners.FarBottomLeft, fuzzyComparer);
+            AssertEqual(farCenter + farHalfWidth * right - farHalfHeight * up, corners.FarBottomRight, fuzzyComparer);
+        }
+
+        private static void AssertEqual(Vector3 expected, Vector3 actual, IEqualityComparer<float> comparer)
+        {
+            Assert.Equal(expected.X, actual.X, comparer);
+            Assert.Equal(expected.Y, actual.Y, comparer);
+            Assert.Equal(expected.Z, actual.Z, comparer);
+        }
+    }
+
+    public class FuzzyComparer : IComparer<float>, IEqualityComparer<float>
+    {
+        public float AllowedDiff { get; } = .00001f;
+        public int Compare(float x, float y)
+        {
+            float diff = x - y;
+            if ((float)Math.Abs(diff) < AllowedDiff)
+            {
+                return 0;
+            }
+            else
+            {
+                return diff > 0 ? 1 : -1;
+            }
+        }
+
+        public bool Equals(float x, float y)
+        {
+            float diff = x - y;
+            return ((float)Math.Abs(diff) < AllowedDiff);
+            
+        }
+
+        public int GetHashCode(float obj)
+        {
+            return obj.GetHashCode();
+        }
     }
 }

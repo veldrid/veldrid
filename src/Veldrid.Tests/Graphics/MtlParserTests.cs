@@ -16,11 +16,11 @@ namespace Veldrid.Graphics
             MtlFile file = parser.Parse(lines);
 
             Assert.Equal(26, file.Definitions.Values.Count());
-            Assert.Equal("textures\\sponza_roof_diff.tga", file.Definitions["roof"].AmbientTexture);
-            Assert.Equal("textures\\sponza_roof_diff.tga", file.Definitions["roof"].DiffuseTexture);
+            Assert.Equal("textures\\sponza_roof_diff.png", file.Definitions["roof"].AmbientTexture);
+            Assert.Equal("textures\\sponza_roof_diff.png", file.Definitions["roof"].DiffuseTexture);
 
-            Assert.Equal("textures\\sponza_curtain_blue_diff.tga", file.Definitions["fabric_g"].AmbientTexture);
-            Assert.Equal("textures\\sponza_curtain_blue_diff.tga", file.Definitions["fabric_g"].DiffuseTexture);
+            Assert.Equal("textures\\sponza_curtain_blue_diff.png", file.Definitions["fabric_g"].AmbientTexture);
+            Assert.Equal("textures\\sponza_curtain_blue_diff.png", file.Definitions["fabric_g"].DiffuseTexture);
         }
     }
 }

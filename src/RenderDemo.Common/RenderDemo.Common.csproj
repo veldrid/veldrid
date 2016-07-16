@@ -27,7 +27,7 @@
     <Compile Include="Assets\Models\CubeModel.cs" />
     <Compile Include="Assets\Models\PlaneModel.cs" />
     <Compile Include="AssetEditorWindow.cs" />
-    <Compile Include="OctreeRenderer.cs" />
+    <Compile Include="WireframeShapeRenderer.cs" />
     <Compile Include="PixelFormatConversion.cs" />
     <Compile Include="Preferences.cs" />
     <Compile Include="RenderDemo.cs" />

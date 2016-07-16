@@ -55,6 +55,26 @@ namespace Veldrid
             return root;
         }
 
+        public void GetContainedObjects(BoundingFrustum frustum, List<T> results)
+        {
+            if (results == null)
+            {
+                throw new ArgumentNullException(nameof(results));
+            }
+
+            frustum = CoreGetContainedObjects(ref frustum, results, null);
+        }
+
+        public void GetContainedObjects(ref BoundingFrustum frustum, List<T> results)
+        {
+            if (results == null)
+            {
+                throw new ArgumentNullException(nameof(results));
+            }
+
+            frustum = CoreGetContainedObjects(ref frustum, results, null);
+        }
+
         public void GetContainedObjects(ref BoundingFrustum frustum, List<T> results, Func<T, bool> filter)
         {
             if (results == null)
@@ -132,7 +152,7 @@ namespace Veldrid
                     _nodeCache.AddNode(child);
                 }
 
-                _nodeCache.AddChildrenArray(Children);
+                _nodeCache.AddAndClearChildrenArray(Children);
                 Children = Array.Empty<OctreeNode<T>>();
             }
 
@@ -320,15 +340,9 @@ namespace Veldrid
 
             if (Children.Length != 0)
             {
-                for (int i = 0; i < Children.Length; i++)
-                {
-                    Children[i] = null;
-                }
-
-                _nodeCache.AddChildrenArray(Children);
+                _nodeCache.AddAndClearChildrenArray(Children);
+                Children = Array.Empty<OctreeNode<T>>();
             }
-
-            Children = Array.Empty<OctreeNode<T>>();
         }
 
         private string DebuggerDisplayString
@@ -370,8 +384,13 @@ namespace Veldrid
                 }
             }
 
-            public void AddChildrenArray(OctreeNode<T>[] children)
+            public void AddAndClearChildrenArray(OctreeNode<T>[] children)
             {
+                for (int i = 0; i < children.Length; i++)
+                {
+                    children[i] = null;
+                }
+                
                 _cachedChildren.Push(children);
             }
 
@@ -379,15 +398,15 @@ namespace Veldrid
             {
                 if (_cachedChildren.Count > 0)
                 {
-                    var node = _cachedChildren.Pop();
+                    var children = _cachedChildren.Pop();
 #if DEBUG
-                    for (int i = 0; i < node.Length; i++)
+                    for (int i = 0; i < children.Length; i++)
                     {
-                        Debug.Assert(node[i] == null);
+                        Debug.Assert(children[i] == null);
                     }
 #endif
 
-                    return node;
+                    return children;
                 }
                 else
                 {

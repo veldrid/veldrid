@@ -81,6 +81,12 @@ namespace Veldrid.RenderDemo
         private static Vector3 _octreeBoxPosition;
         private static MaterialAsset _stoneMaterial;
         private static OctreeRenderer<ShadowCaster> _octreeRenderer;
+        private static FrustumWireframeRenderer _octreeFrustumRenderer;
+        private static Vector3 _octreeFrustumViewOrigin;
+        private static Vector3 _octreeFrustumViewDirection = -Vector3.UnitZ;
+        private static float _octreeFrustumNearDistance = 3f;
+        private static float _octreeFrustumFarDistance = 18f;
+        private static List<ShadowCaster> _frustumQueryResult = new List<ShadowCaster>();
 
         public static void RunDemo(RenderContext renderContext, params RendererOption[] backendOptions)
         {
@@ -314,6 +320,10 @@ namespace Veldrid.RenderDemo
                 _octreeRenderer = new OctreeRenderer<ShadowCaster>(_octree, _ad, _rc);
                 _octreeScene.AddRenderItem(_octreeRenderer);
 
+                _octreeFrustumRenderer = new FrustumWireframeRenderer(default(BoundingFrustum), _ad, _rc);
+                RecreateOctreeFrustum();
+                _octreeScene.AddRenderItem(_octreeFrustumRenderer);
+
                 AddRandomOctreeItems();
 
                 _octreeScene.AddRenderItem(_imguiRenderer);
@@ -485,6 +495,21 @@ namespace Veldrid.RenderDemo
                     {
                         AddOctreeCube(_octreeBoxPosition);
                     }
+
+                    if (ImGui.DragVector3("Frustum View Origin", ref _octreeFrustumViewOrigin, -60f, 60f, .1f)
+                        | ImGui.DragVector3("Frustum View Direction", ref _octreeFrustumViewDirection, -60f, 60f, .1f)
+                        | ImGui.DragFloat("Frustum Near Plane", ref _octreeFrustumNearDistance, 0.1f, 100f, .1f)
+                        | ImGui.DragFloat("Frustum Far Plane", ref _octreeFrustumFarDistance, 0.1f, 100f, .1f)) 
+                    {
+                        RecreateOctreeFrustum();
+                    }
+
+                    _frustumQueryResult.Clear();
+                    _octree.GetContainedObjects(_octreeFrustumRenderer.Frustum, _frustumQueryResult);
+                    foreach (var item in _frustumQueryResult)
+                    {
+                        ImGui.Text(item.BoundingBox.ToString());
+                    }
                 }
                 ImGui.EndWindow();
             }
@@ -568,6 +593,16 @@ namespace Veldrid.RenderDemo
             _editorWindow.Render(_rc);
 
             _imguiRenderer.UpdateFinished();
+        }
+
+        private static void RecreateOctreeFrustum()
+        {
+            _octreeFrustumRenderer.Frustum = new BoundingFrustum(
+                Matrix4x4.CreateLookAt(
+                    _octreeFrustumViewOrigin, 
+                    _octreeFrustumViewOrigin + Vector3.Normalize(_octreeFrustumViewDirection), 
+                    Vector3.UnitY)
+                * Matrix4x4.CreatePerspectiveFieldOfView(1.0f, 1.0f, _octreeFrustumNearDistance, _octreeFrustumFarDistance));
         }
 
         private static void UpdateLightMatrices()

@@ -85,5 +85,10 @@ namespace Veldrid
         {
             return Min == other.Min && Max == other.Max;
         }
+
+        public override string ToString()
+        {
+            return string.Format("Min:{0}, Max:{1}", Min, Max);
+        }
     }
 }

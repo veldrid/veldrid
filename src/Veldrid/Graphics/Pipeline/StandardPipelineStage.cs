@@ -1,7 +1,4 @@
-﻿using System;
-using System.Numerics;
-
-namespace Veldrid.Graphics.Pipeline
+﻿namespace Veldrid.Graphics.Pipeline
 {
     public class StandardPipelineStage : PipelineStage
     {

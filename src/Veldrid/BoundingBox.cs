@@ -90,5 +90,18 @@ namespace Veldrid
         {
             return string.Format("Min:{0}, Max:{1}", Min, Max);
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is BoundingBox && ((BoundingBox)obj).Equals(this);
+        }
+
+        public override int GetHashCode()
+        {
+            int h1 = Min.GetHashCode();
+            int h2 = Max.GetHashCode();
+            uint shift5 = ((uint)h1 << 5) | ((uint)h1 >> 27);
+            return ((int)shift5 + h1) ^ h2;
+        }
     }
 }

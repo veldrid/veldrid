@@ -291,4 +291,83 @@ namespace Veldrid.RenderDemo
             _indices.Add(baseIndex + 2);
         }
     }
+
+    public class BoundingBoxWireframeRenderer : WireframeShapeRenderer
+    {
+        private BoundingBox _box;
+
+        public BoundingBoxWireframeRenderer(BoundingBox box, AssetDatabase ad, RenderContext rc)
+            : base(ad, rc, RgbaFloat.Cyan)
+        {
+            _box = box;
+        }
+
+        public BoundingBox Frustum
+        {
+            get { return _box; }
+            set { _box = value; }
+        }
+
+        public override bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            return visibleFrustum.Contains(_box) == ContainmentType.Disjoint;
+        }
+
+        protected override void AddVerticesAndIndices()
+        {
+            int baseIndex = _vertices.Count;
+
+            var min = _box.Min;
+            var max = _box.Max;
+
+            _vertices.Add(new VertexPositionNormalTexture(new Vector3(min.X, min.Y, min.Z), Vector3.Zero, Vector2.Zero));
+            _vertices.Add(new VertexPositionNormalTexture(new Vector3(min.X, max.Y, min.Z), Vector3.Zero, Vector2.Zero));
+            _vertices.Add(new VertexPositionNormalTexture(new Vector3(max.X, max.Y, min.Z), Vector3.Zero, Vector2.Zero));
+            _vertices.Add(new VertexPositionNormalTexture(new Vector3(max.X, min.Y, min.Z), Vector3.Zero, Vector2.Zero));
+            _vertices.Add(new VertexPositionNormalTexture(new Vector3(min.X, min.Y, max.Z), Vector3.Zero, Vector2.Zero));
+            _vertices.Add(new VertexPositionNormalTexture(new Vector3(min.X, max.Y, max.Z), Vector3.Zero, Vector2.Zero));
+            _vertices.Add(new VertexPositionNormalTexture(new Vector3(max.X, max.Y, max.Z), Vector3.Zero, Vector2.Zero));
+            _vertices.Add(new VertexPositionNormalTexture(new Vector3(max.X, min.Y, max.Z), Vector3.Zero, Vector2.Zero));
+
+            _indices.Add(baseIndex + 0);
+            _indices.Add(baseIndex + 1);
+            _indices.Add(baseIndex + 0);
+            _indices.Add(baseIndex + 1);
+            _indices.Add(baseIndex + 2);
+            _indices.Add(baseIndex + 1);
+            _indices.Add(baseIndex + 2);
+            _indices.Add(baseIndex + 3);
+            _indices.Add(baseIndex + 2);
+            _indices.Add(baseIndex + 3);
+            _indices.Add(baseIndex + 0);
+            _indices.Add(baseIndex + 3);
+
+            _indices.Add(baseIndex + 4);
+            _indices.Add(baseIndex + 5);
+            _indices.Add(baseIndex + 4);
+            _indices.Add(baseIndex + 5);
+            _indices.Add(baseIndex + 6);
+            _indices.Add(baseIndex + 5);
+            _indices.Add(baseIndex + 6);
+            _indices.Add(baseIndex + 7);
+            _indices.Add(baseIndex + 6);
+            _indices.Add(baseIndex + 7);
+            _indices.Add(baseIndex + 4);
+            _indices.Add(baseIndex + 7);
+
+            _indices.Add(baseIndex + 0);
+            _indices.Add(baseIndex + 4);
+            _indices.Add(baseIndex + 0);
+            _indices.Add(baseIndex + 1);
+            _indices.Add(baseIndex + 5);
+            _indices.Add(baseIndex + 1);
+
+            _indices.Add(baseIndex + 2);
+            _indices.Add(baseIndex + 6);
+            _indices.Add(baseIndex + 2);
+            _indices.Add(baseIndex + 3);
+            _indices.Add(baseIndex + 7);
+            _indices.Add(baseIndex + 3);
+        }
+    }
 }

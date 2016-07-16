@@ -11,6 +11,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
 {
     public class ShadowCaster : SwappableRenderItem, IDisposable
     {
+        public string Name = "No Name";
+
         private readonly VertexPositionNormalTexture[] _vertices;
         private readonly int[] _indices;
         public readonly BoundingSphere _centeredBounds; // TODO: PRIVATE
@@ -156,8 +158,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
         public bool Cull(ref BoundingFrustum visibleFrustum)
         {
             var boundingSphere = new BoundingSphere((_centeredBounds.Center * (Scale.X)) + Position, _centeredBounds.Radius * Scale.X);
-            var ret = visibleFrustum.Contains(boundingSphere) == ContainmentType.Disjoint;
-            return ret;
+            return visibleFrustum.Contains(boundingSphere) == ContainmentType.Disjoint;
         }
 
         public BoundingBox BoundingBox

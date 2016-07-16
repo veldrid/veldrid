@@ -396,21 +396,16 @@ namespace Veldrid.RenderDemo
 
                     ShadowCaster sc = new ShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, matAsset, overrideTextureData);
                     sc.Scale = new Vector3(0.1f);
+                    sc.Name = group.Name;
 
                     _sponzaAtrium.AddRenderItem(sc.BoundingBox, sc);
 
-                    /*
-                    // This renders the bounding spheres of the atrium meshes.
-                    TexturedMeshRenderer boundingSphereRenderer = new TexturedMeshRenderer(
-                        _ad, _rc, sphere.Vertices , sphere.Indices, pink);
-                    boundingSphereRenderer.Wireframe = true;
-                    boundingSphereRenderer.Scale = new Vector3(sc._centeredBounds.Radius * sc.Scale.X);
-                    boundingSphereRenderer.Position = (sc._centeredBounds.Center * sc.Scale.X);
-                    _sponzaAtrium.AddRenderItem(boundingSphereRenderer);
-                    */
+                    // This renders the bounding boxes of the atrium meshes.
+                    BoundingBoxWireframeRenderer boundsRenderer = new BoundingBoxWireframeRenderer(sc.BoundingBox, _ad, _rc);
+                    _sponzaAtrium.AddRenderItem(sc.BoundingBox, boundsRenderer);
                 }
 
-                _sponzaAtrium.AddRenderItem(new OctreeRenderer<RenderItem>(_sponzaAtrium.Octree, _ad, _rc));
+                //_sponzaAtrium.AddRenderItem(new OctreeRenderer<RenderItem>(_sponzaAtrium.Octree, _ad, _rc));
 
                 var skybox = new Skybox(_rc, _ad);
                 _sponzaAtrium.AddRenderItem(skybox);
@@ -499,7 +494,7 @@ namespace Veldrid.RenderDemo
                     if (ImGui.DragVector3("Frustum View Origin", ref _octreeFrustumViewOrigin, -60f, 60f, .1f)
                         | ImGui.DragVector3("Frustum View Direction", ref _octreeFrustumViewDirection, -60f, 60f, .1f)
                         | ImGui.DragFloat("Frustum Near Plane", ref _octreeFrustumNearDistance, 0.1f, 100f, .1f)
-                        | ImGui.DragFloat("Frustum Far Plane", ref _octreeFrustumFarDistance, 0.1f, 100f, .1f)) 
+                        | ImGui.DragFloat("Frustum Far Plane", ref _octreeFrustumFarDistance, 0.1f, 100f, .1f))
                     {
                         RecreateOctreeFrustum();
                     }
@@ -599,8 +594,8 @@ namespace Veldrid.RenderDemo
         {
             _octreeFrustumRenderer.Frustum = new BoundingFrustum(
                 Matrix4x4.CreateLookAt(
-                    _octreeFrustumViewOrigin, 
-                    _octreeFrustumViewOrigin + Vector3.Normalize(_octreeFrustumViewDirection), 
+                    _octreeFrustumViewOrigin,
+                    _octreeFrustumViewOrigin + Vector3.Normalize(_octreeFrustumViewDirection),
                     Vector3.UnitY)
                 * Matrix4x4.CreatePerspectiveFieldOfView(1.0f, 1.0f, _octreeFrustumNearDistance, _octreeFrustumFarDistance));
         }

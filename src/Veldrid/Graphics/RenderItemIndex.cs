@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Veldrid.Graphics
 {
@@ -21,6 +22,11 @@ namespace Veldrid.Graphics
         public int CompareTo(RenderItemIndex other)
         {
             return Key.CompareTo(other.Key);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("Index:{0}, Key:{1}", ItemIndex, Key);
         }
     }
 }

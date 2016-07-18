@@ -233,6 +233,10 @@ namespace Veldrid.Graphics.Direct3D
 
         protected override void PlatformClearMaterialResourceBindings()
         {
+            if (Material != null)
+            {
+                ((D3DMaterial)Material).ClearTextureBindings();
+            }
             _deviceContext.PixelShader.SetShaderResources(0, _emptySRVs.Length, _emptySRVs);
         }
 

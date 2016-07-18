@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Numerics;
 
 namespace Veldrid.Graphics
 {
@@ -6,7 +7,7 @@ namespace Veldrid.Graphics
     {
         IEnumerable<string> GetStagesParticipated();
         void Render(RenderContext rc, string pipelineStage);
-        RenderOrderKey GetRenderOrderKey();
+        RenderOrderKey GetRenderOrderKey(Vector3 viewPosition);
         bool Cull(ref BoundingFrustum visibleFrustum);
     }
 }

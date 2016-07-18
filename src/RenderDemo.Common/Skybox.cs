@@ -57,7 +57,7 @@ namespace Veldrid.RenderDemo
 
             _material = ad.LoadAsset<MaterialAsset>("MaterialAsset/Skybox.json").Create(ad, rc);
 
-            var viewProvider = (DynamicDataProvider<Matrix4x4>)rc.DataProviders["ViewMatrix"];
+            var viewProvider = (DynamicDataProvider<Matrix4x4>)rc.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider;
             _perObjectInput = new DependantDataProvider<Matrix4x4>(
                 viewProvider,
                 Utilities.ConvertToMatrix3x3);
@@ -86,10 +86,10 @@ namespace Veldrid.RenderDemo
             _rasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, false, false);
         }
 
-        public RenderOrderKey GetRenderOrderKey()
+        public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
         {
             // Render the skybox last.
-            return new RenderOrderKey(long.MaxValue);
+            return new RenderOrderKey(ulong.MaxValue);
         }
 
         public IEnumerable<string> GetStagesParticipated()

@@ -10,9 +10,9 @@ namespace Veldrid.Graphics
         private readonly List<RenderItem> _results = new List<RenderItem>();
         private readonly List<RenderItem> _freeRenderItems = new List<RenderItem>();
         private readonly Dictionary<string, Func<RenderItem, bool>> _filters = new Dictionary<string, Func<RenderItem, bool>>();
-        private OctreeNode<RenderItem> _octree = new OctreeNode<RenderItem>(new BoundingBox(Vector3.One * -50, Vector3.One * 50), 2);
+        private Octree<RenderItem> _octree = new Octree<RenderItem>(new BoundingBox(Vector3.One * -50, Vector3.One * 50), 2);
 
-        public OctreeNode<RenderItem> Octree => _octree;
+        public OctreeNode<RenderItem> OctreeRootNode => _octree.CurrentRoot;
 
         public IEnumerable<RenderItem> RenderItems
         {
@@ -32,32 +32,32 @@ namespace Veldrid.Graphics
             }
         }
 
-        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage)
+        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage, Vector3 viewPosition)
         {
             _results.Clear();
             Func<RenderItem, bool> filter = GetFilter(pipelineStage);
             _octree.GetAllContainedObjects(_results, filter);
-            queue.AddRange(_results);
+            queue.AddRange(_results, viewPosition);
             foreach (var item in _freeRenderItems)
             {
                 if (filter(item))
                 {
-                    queue.Add(item);
+                    queue.Add(item, viewPosition);
                 }
             }
         }
 
-        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage, ref BoundingFrustum visibleFrustum)
+        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage, ref BoundingFrustum visibleFrustum, Vector3 viewPosition)
         {
             _results.Clear();
             Func<RenderItem, bool> filter = GetFilter(pipelineStage);
-            _octree.GetContainedObjects(ref visibleFrustum, _results, filter);
-            queue.AddRange(_results);
+            _octree.GetContainedObjects(visibleFrustum, _results, filter);
+            queue.AddRange(_results, viewPosition);
             foreach (var item in _freeRenderItems)
             {
                 if (filter(item))
                 {
-                    queue.Add(item);
+                    queue.Add(item, viewPosition);
                 }
             }
         }
@@ -81,12 +81,12 @@ namespace Veldrid.Graphics
 
         public void AddRenderItem(BoundingBox bounds, RenderItem ri)
         {
-            _octree = _octree.AddItem(ref bounds, ri);
+            _octree.AddItem(bounds, ri);
         }
 
         public void AddRenderItem(ref BoundingBox bounds, RenderItem ri)
         {
-            _octree = _octree.AddItem(ref bounds, ri);
+            _octree.AddItem(bounds, ri);
         }
     }
 }

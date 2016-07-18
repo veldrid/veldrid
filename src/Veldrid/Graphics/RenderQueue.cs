@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 
 namespace Veldrid.Graphics
 {
@@ -17,21 +19,21 @@ namespace Veldrid.Graphics
             _renderItems.Clear();
         }
 
-        public void AddRange(IEnumerable<RenderItem> renderItems)
+        public void AddRange(IEnumerable<RenderItem> renderItems, Vector3 viewPosition)
         {
             foreach (RenderItem item in renderItems)
             {
                 if (item != null)
                 {
-                    Add(item);
+                    Add(item, viewPosition);
                 }
             }
         }
 
-        public void Add(RenderItem item)
+        public void Add(RenderItem item, Vector3 viewPosition)
         {
             int index = _renderItems.Count;
-            _indices.Add(new RenderItemIndex(item.GetRenderOrderKey(), index));
+            _indices.Add(new RenderItemIndex(item.GetRenderOrderKey(viewPosition), index));
             _renderItems.Add(item);
             Debug.Assert(_renderItems.IndexOf(item) == index);
         }

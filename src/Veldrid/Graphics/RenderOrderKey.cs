@@ -4,11 +4,28 @@ namespace Veldrid.Graphics
 {
     public struct RenderOrderKey : IComparable<RenderOrderKey>, IComparable
     {
-        private readonly long _rawKey;
+        private readonly ulong _rawKey;
 
-        public RenderOrderKey(long rawKey)
+        public RenderOrderKey(ulong rawKey)
         {
             _rawKey = rawKey;
+        }
+
+        public static RenderOrderKey Create(uint materialID) => Create(float.MaxValue, materialID);
+        public static RenderOrderKey Create(int materialID) => Create(float.MaxValue, (uint)materialID);
+        public static RenderOrderKey Create(float cameraDistance, int materialID) => Create(cameraDistance, (uint)materialID);
+        public static RenderOrderKey Create(float cameraDistance, uint materialID)
+        {
+            if (cameraDistance < 0)
+            {
+                throw new ArgumentException("Camera distance must not be negative.");
+            }
+
+            uint cameraDistanceInt = (uint)Math.Min(uint.MaxValue, (cameraDistance * 1000f));
+
+            return new RenderOrderKey(
+                ((ulong)materialID << 32) +
+                cameraDistanceInt);
         }
 
         public int CompareTo(object obj)
@@ -20,5 +37,7 @@ namespace Veldrid.Graphics
         {
             return _rawKey.CompareTo(other._rawKey);
         }
+
+        public override string ToString() => _rawKey.ToString();
     }
 }

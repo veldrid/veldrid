@@ -1,4 +1,6 @@
-﻿namespace Veldrid.Graphics
+﻿using System;
+
+namespace Veldrid.Graphics
 {
     /// <summary>
     /// Represents a type which provides data to a ConstantBuffer.
@@ -15,5 +17,7 @@
         /// </summary>
         /// <param name="buffer"></param>
         void SetData(ConstantBuffer buffer);
+
+        event Action DataChanged;
     }
 }

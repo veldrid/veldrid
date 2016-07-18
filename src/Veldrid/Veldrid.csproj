@@ -117,12 +117,16 @@
     <Compile Include="Platform\InputSnapshot.cs" />
     <Compile Include="Platform\WindowState.cs" />
     <Compile Include="IllegalValueException.cs" />
+    <Compile Include="Ray.cs" />
     <Compile Include="Utilities.cs" />
+    <Compile Include="VectorExtensions.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="$(DepsDir)\SharpYaml\SharpYaml.dll">
       <Name>SharpYaml</Name>

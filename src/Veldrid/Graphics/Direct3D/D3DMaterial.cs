@@ -2,6 +2,7 @@
 using SharpDX.Direct3D11;
 using SharpDX.D3DCompiler;
 using System.IO;
+using System.Diagnostics;
 
 namespace Veldrid.Graphics.Direct3D
 {
@@ -11,15 +12,16 @@ namespace Veldrid.Graphics.Direct3D
         private readonly VertexShader _vertexShader;
         private readonly PixelShader _pixelShader;
         private readonly InputLayout _inputLayout;
-        private readonly ConstantBufferBinding[] _constantBufferBindings;
-        private readonly ConstantBufferBinding[] _perObjectBufferBindings;
+        private readonly GlobalConstantBufferBinding[] _constantBufferBindings;
+        private readonly PerObjectConstantBufferBinding[] _perObjectBufferBindings;
         private readonly ResourceViewBinding?[] _resourceViewBindings;
+        private readonly ShaderTextureBinding[] _currentTextureBindings;
 
         private const ShaderFlags defaultShaderFlags
 #if DEBUG
             = ShaderFlags.Debug | ShaderFlags.SkipOptimization;
 #else
-            = ShaderFlags.None;
+            = ShaderFlags.OptimizationLevel3;
 #endif
 
         public D3DMaterial(
@@ -57,29 +59,44 @@ namespace Veldrid.Graphics.Direct3D
             int numGlobalElements = globalInputs.Elements.Length;
             _constantBufferBindings =
                 (numGlobalElements > 0)
-                ? new ConstantBufferBinding[numGlobalElements]
-                : Array.Empty<ConstantBufferBinding>();
+                ? new GlobalConstantBufferBinding[numGlobalElements]
+                : Array.Empty<GlobalConstantBufferBinding>();
             for (int i = 0; i < numGlobalElements; i++)
             {
                 var genericElement = globalInputs.Elements[i];
-                D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.DataProvider.DataSizeInBytes);
-                _constantBufferBindings[i] = new ConstantBufferBinding(i, constantBuffer, genericElement.DataProvider);
+                BufferProviderPair pair;
+                GlobalConstantBufferBinding cbb;
+                if (genericElement.UseGlobalNamedBuffer)
+                {
+                    pair = rc.GetNamedGlobalBufferProviderPair(genericElement.GlobalProviderName);
+                    cbb = new GlobalConstantBufferBinding(i, pair, false);
+                }
+                else
+                {
+                    D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.DataProvider.DataSizeInBytes);
+                    pair = new BufferProviderPair(constantBuffer, genericElement.DataProvider);
+                    cbb = new GlobalConstantBufferBinding(i, pair, true);
+                }
+
+                _constantBufferBindings[i] = cbb;
             }
 
             int numPerObjectInputs = perObjectInputs.Elements.Length;
             _perObjectBufferBindings =
                 (numPerObjectInputs > 0)
-                ? new ConstantBufferBinding[numPerObjectInputs]
-                : Array.Empty<ConstantBufferBinding>();
+                ? new PerObjectConstantBufferBinding[numPerObjectInputs]
+                : Array.Empty<PerObjectConstantBufferBinding>();
             for (int i = 0; i < numPerObjectInputs; i++)
             {
                 var genericElement = perObjectInputs.Elements[i];
                 D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.BufferSizeInBytes);
-                _perObjectBufferBindings[i] = new ConstantBufferBinding(i + numGlobalElements, constantBuffer, null); // TODO: Fix this, shouldn't pass null.
+                PerObjectConstantBufferBinding pocbb = new PerObjectConstantBufferBinding(i + numGlobalElements, constantBuffer);
+                _perObjectBufferBindings[i] = pocbb;
             }
 
             int numTextures = textureInputs.Elements.Length;
             _resourceViewBindings = new ResourceViewBinding?[numTextures];
+            _currentTextureBindings = new D3DTextureBinding[numTextures];
             for (int i = 0; i < numTextures; i++)
             {
                 var genericElement = textureInputs.Elements[i];
@@ -92,7 +109,12 @@ namespace Veldrid.Graphics.Direct3D
                     srvd.Texture2D.MipLevels = texture.DeviceTexture.Description.MipLevels;
                     srvd.Texture2D.MostDetailedMip = 0;
                     ShaderResourceView resourceView = new ShaderResourceView(device, texture.DeviceTexture, srvd);
-                    _resourceViewBindings[i] = new ResourceViewBinding(i, resourceView);
+                    D3DTextureBinding binding = new D3DTextureBinding(resourceView, texture);
+                    _resourceViewBindings[i] = new ResourceViewBinding(i, binding);
+                }
+                else
+                {
+                    _resourceViewBindings[i] = new ResourceViewBinding(i, null);
                 }
             }
         }
@@ -103,18 +125,34 @@ namespace Veldrid.Graphics.Direct3D
             _device.ImmediateContext.VertexShader.Set(_vertexShader);
             _device.ImmediateContext.PixelShader.Set(_pixelShader);
 
-            foreach (ConstantBufferBinding cbBinding in _constantBufferBindings)
+            foreach (GlobalConstantBufferBinding cbBinding in _constantBufferBindings)
             {
-                cbBinding.DataProvider.SetData(cbBinding.ConstantBuffer);
+                cbBinding.UpdateBuffer();
                 _device.ImmediateContext.VertexShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
                 _device.ImmediateContext.PixelShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
             }
 
+            for (int i = 0; i < _perObjectBufferBindings.Length; i++)
+            {
+                PerObjectConstantBufferBinding binding = _perObjectBufferBindings[i];
+                _device.ImmediateContext.VertexShader.SetConstantBuffer(binding.Slot, binding.ConstantBuffer.Buffer);
+                _device.ImmediateContext.PixelShader.SetConstantBuffer(binding.Slot, binding.ConstantBuffer.Buffer);
+            }
+
+            ApplyDefaultTextureBindings();
+        }
+
+        private void ApplyDefaultTextureBindings()
+        {
             foreach (ResourceViewBinding? rvBinding in _resourceViewBindings)
             {
-                if (rvBinding.HasValue)
+                if (rvBinding.Value.TextureBinding != null)
                 {
-                    _device.ImmediateContext.PixelShader.SetShaderResource(rvBinding.Value.Slot, rvBinding.Value.ResourceView);
+                    CoreUseTexture(rvBinding.Value.Slot, rvBinding.Value.TextureBinding, false);
+                }
+                else
+                {
+                    _currentTextureBindings[rvBinding.Value.Slot] = null;
                 }
             }
         }
@@ -184,10 +222,8 @@ namespace Veldrid.Graphics.Direct3D
                     "ApplyPerObjectInput can only be used when a material has exactly one per-object input.");
             }
 
-            ConstantBufferBinding cbBinding = _perObjectBufferBindings[0];
-            dataProvider.SetData(cbBinding.ConstantBuffer);
-            _device.ImmediateContext.VertexShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
-            _device.ImmediateContext.PixelShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
+            PerObjectConstantBufferBinding binding = _perObjectBufferBindings[0];
+            dataProvider.SetData(binding.ConstantBuffer);
         }
 
         public void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders)
@@ -200,13 +236,15 @@ namespace Veldrid.Graphics.Direct3D
 
             for (int i = 0; i < _perObjectBufferBindings.Length; i++)
             {
-                ConstantBufferBinding cbBinding = _perObjectBufferBindings[i];
+                PerObjectConstantBufferBinding binding = _perObjectBufferBindings[i];
                 ConstantBufferDataProvider provider = dataProviders[i];
-
-                provider.SetData(cbBinding.ConstantBuffer);
-                _device.ImmediateContext.VertexShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
-                _device.ImmediateContext.PixelShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
+                provider.SetData(binding.ConstantBuffer);
             }
+        }
+
+        public void UseDefaultTextures()
+        {
+            ApplyDefaultTextureBindings();
         }
 
         public void UseTexture(int slot, ShaderTextureBinding binding)
@@ -216,8 +254,26 @@ namespace Veldrid.Graphics.Direct3D
                 throw new InvalidOperationException("Illegal shader texture binding used.");
             }
 
-            var srv = ((D3DTextureBinding)binding).ResourceView;
-            _device.ImmediateContext.PixelShader.SetShaderResource(slot, srv);
+            CoreUseTexture(slot, binding, true);
+        }
+
+        private void CoreUseTexture(int slot, ShaderTextureBinding binding, bool useCache)
+        {
+            if (!useCache || _currentTextureBindings[slot] != binding)
+            {
+                var srv = ((D3DTextureBinding)binding).ResourceView;
+                _device.ImmediateContext.PixelShader.SetShaderResource(slot, srv);
+            }
+
+            _currentTextureBindings[slot] = binding;
+        }
+
+        internal void ClearTextureBindings()
+        {
+            for (int i = 0; i < _currentTextureBindings.Length; i++)
+            {
+                _currentTextureBindings[i] = null;
+            }
         }
 
         public void Dispose()
@@ -235,36 +291,56 @@ namespace Veldrid.Graphics.Direct3D
             }
             foreach (var binding in _resourceViewBindings)
             {
-                if (binding.HasValue)
+                binding.Value.TextureBinding?.Dispose();
+            }
+        }
+
+        private struct GlobalConstantBufferBinding
+        {
+            // Is this binding local to this Material, or shared in the RenderContext?
+            private readonly bool _isLocalBinding;
+
+            public int Slot { get; }
+            public BufferProviderPair Pair { get; }
+            public D3DConstantBuffer ConstantBuffer => (D3DConstantBuffer)Pair.ConstantBuffer;
+
+            public GlobalConstantBufferBinding(int slot, BufferProviderPair pair, bool isLocalBinding)
+            {
+                Slot = slot;
+                Pair = pair;
+                _isLocalBinding = isLocalBinding;
+            }
+
+            public void UpdateBuffer()
+            {
+                if (_isLocalBinding)
                 {
-                    binding.Value.ResourceView.Dispose();
+                    Pair.UpdateData();
                 }
             }
         }
 
-        private struct ConstantBufferBinding
+        private struct PerObjectConstantBufferBinding
         {
             public int Slot { get; }
             public D3DConstantBuffer ConstantBuffer { get; }
-            public ConstantBufferDataProvider DataProvider { get; }
 
-            public ConstantBufferBinding(int slot, D3DConstantBuffer buffer, ConstantBufferDataProvider dataProvider)
+            public PerObjectConstantBufferBinding(int slot, D3DConstantBuffer constantBuffer)
             {
                 Slot = slot;
-                ConstantBuffer = buffer;
-                DataProvider = dataProvider;
+                ConstantBuffer = constantBuffer;
             }
         }
 
         private struct ResourceViewBinding
         {
             public int Slot { get; }
-            public ShaderResourceView ResourceView { get; }
+            public D3DTextureBinding TextureBinding { get; }
 
-            public ResourceViewBinding(int slot, ShaderResourceView resourceView)
+            public ResourceViewBinding(int slot, D3DTextureBinding binding)
             {
                 Slot = slot;
-                ResourceView = resourceView;
+                TextureBinding = binding;
             }
         }
     }

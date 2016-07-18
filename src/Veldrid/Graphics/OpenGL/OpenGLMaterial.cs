@@ -55,6 +55,9 @@ namespace Veldrid.Graphics.OpenGL
             {
                 var element = globalInputs.Elements[i];
 
+                ConstantBufferDataProvider dataProvider = element.UseGlobalNamedBuffer
+                    ? rc.GetNamedGlobalBufferProviderPair(element.GlobalProviderName).DataProvider
+                    : element.DataProvider;
                 int blockIndex = GL.GetUniformBlockIndex(_programID, element.Name);
                 if (blockIndex != -1)
                 {
@@ -63,8 +66,9 @@ namespace Veldrid.Graphics.OpenGL
                             _programID,
                             blockIndex,
                             bindingIndex,
-                            new OpenGLConstantBuffer(element.DataProvider)),
-                        element.DataProvider);
+                            new OpenGLConstantBuffer(dataProvider),
+                            dataProvider.DataSizeInBytes),
+                        dataProvider);
                     bindingIndex += 1;
                 }
                 else
@@ -79,7 +83,7 @@ namespace Veldrid.Graphics.OpenGL
                         new UniformLocationBinding(
                             _programID,
                             uniformLocation),
-                        element.DataProvider);
+                        dataProvider);
                 }
             }
 
@@ -96,7 +100,8 @@ namespace Veldrid.Graphics.OpenGL
                             _programID,
                             blockIndex,
                             bindingIndex,
-                            new OpenGLConstantBuffer());
+                            new OpenGLConstantBuffer(),
+                            element.BufferSizeInBytes);
                     bindingIndex += 1;
                 }
                 else
@@ -150,7 +155,16 @@ namespace Veldrid.Graphics.OpenGL
             {
                 globalBinding.Bind();
             }
+            foreach (var perObjectBinding in _perObjectBindings)
+            {
+                perObjectBinding.Bind();
+            }
 
+            ApplyDefaultTextureBindings();
+        }
+
+        private void ApplyDefaultTextureBindings()
+        {
             for (int i = 0; i < _textureBindings.Length; i++)
             {
                 var binding = _textureBindings[i];
@@ -165,15 +179,20 @@ namespace Veldrid.Graphics.OpenGL
 
         public void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider)
         {
-            _perObjectBindings[0].Bind(dataProvider);
+            _perObjectBindings[0].SetData(dataProvider);
         }
 
         public void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders)
         {
             for (int i = 0; i < dataProviders.Length; i++)
             {
-                _perObjectBindings[i].Bind(dataProviders[i]);
+                _perObjectBindings[i].SetData(dataProviders[i]);
             }
+        }
+
+        public void UseDefaultTextures()
+        {
+            ApplyDefaultTextureBindings();
         }
 
         public void UseTexture(int slot, ShaderTextureBinding binding)
@@ -246,13 +265,16 @@ namespace Veldrid.Graphics.OpenGL
                 ProgramID = programID;
             }
 
-            public abstract void Bind(ConstantBufferDataProvider dataProvider);
+            public abstract void Bind();
+            public abstract void SetData(ConstantBufferDataProvider dataProvider);
             public abstract void Dispose();
         }
 
         [DebuggerDisplay("Prog:{ProgramID} BlockInd:{BlockIndex} BindingInd:{BindingIndex}")]
         private class UniformBlockBinding : UniformBinding
         {
+            private readonly int _dataSizeInBytes;
+
             public int BlockIndex { get; }
             public int BindingIndex { get; }
             public OpenGLConstantBuffer ConstantBuffer { get; }
@@ -261,18 +283,24 @@ namespace Veldrid.Graphics.OpenGL
                 int programID,
                 int blockIndex,
                 int bindingIndex,
-                OpenGLConstantBuffer constantBuffer)
+                OpenGLConstantBuffer constantBuffer,
+                int dataSizeInBytes)
                 : base(programID)
             {
+                _dataSizeInBytes = dataSizeInBytes;
                 BlockIndex = blockIndex;
                 BindingIndex = bindingIndex;
                 ConstantBuffer = constantBuffer;
             }
 
-            public override void Bind(ConstantBufferDataProvider dataProvider)
+            public override void Bind()
+            {
+                ConstantBuffer.BindToBlock(ProgramID, BlockIndex, _dataSizeInBytes, BindingIndex);
+            }
+
+            public override void SetData(ConstantBufferDataProvider dataProvider)
             {
                 dataProvider.SetData(ConstantBuffer);
-                ConstantBuffer.BindToBlock(ProgramID, BlockIndex, dataProvider.DataSizeInBytes, BindingIndex);
             }
 
             public override void Dispose()
@@ -292,7 +320,11 @@ namespace Veldrid.Graphics.OpenGL
                 StorageAdapter = new OpenGLUniformStorageAdapter(ProgramID, uniformLocation);
             }
 
-            public override void Bind(ConstantBufferDataProvider dataProvider)
+            public override void Bind()
+            {
+            }
+
+            public override void SetData(ConstantBufferDataProvider dataProvider)
             {
                 dataProvider.SetData(StorageAdapter);
             }
@@ -315,7 +347,8 @@ namespace Veldrid.Graphics.OpenGL
 
             public void Bind()
             {
-                Binding.Bind(DataProvider);
+                Binding.Bind();
+                Binding.SetData(DataProvider);
             }
         }
 

@@ -33,7 +33,8 @@ namespace Veldrid.RenderDemo
 
             _worldProvider = new DynamicDataProvider<Matrix4x4>(Matrix4x4.Identity);
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, Utilities.CalculateInverseTranspose);
-            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
+            var materialProvider = new DynamicDataProvider<ForwardRendering.MtlMaterialProperties>(new ForwardRendering.MtlMaterialProperties(new Vector3(4, 5, 6), 7));
+            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider, materialProvider };
 
             InitializeContextObjects(ad, rc);
         }
@@ -67,9 +68,9 @@ namespace Veldrid.RenderDemo
             _wireframeState?.Dispose();
         }
 
-        public RenderOrderKey GetRenderOrderKey()
+        public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
         {
-            return new RenderOrderKey();
+            return RenderOrderKey.Create(_material.GetHashCode());
         }
 
         public IEnumerable<string> GetStagesParticipated()

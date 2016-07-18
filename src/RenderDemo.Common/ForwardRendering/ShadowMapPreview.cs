@@ -58,7 +58,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
         }
 
-        public RenderOrderKey GetRenderOrderKey()
+        public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
         {
             return new RenderOrderKey();
         }

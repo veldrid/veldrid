@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics
 {
@@ -10,6 +11,10 @@ namespace Veldrid.Graphics
     {
         private T _data;
         private readonly int _dataSizeInBytes;
+
+#pragma warning disable 0067 // Never called; data is constant.
+        public event Action DataChanged;
+#pragma warning restore
 
         /// <summary>
         /// Returns the data provided by this ConstantDataProvider.

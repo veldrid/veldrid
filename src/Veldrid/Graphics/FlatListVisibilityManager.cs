@@ -35,17 +35,17 @@ namespace Veldrid.Graphics
             _distinctRenderItems.Remove(item);
         }
 
-        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage)
+        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage, Vector3 viewPosition)
         {
             var stageList = GetStageList(pipelineStage);
-            queue.AddRange(GetStageList(pipelineStage));
+            queue.AddRange(GetStageList(pipelineStage), viewPosition);
         }
 
-        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage, ref BoundingFrustum visibleFrustum)
+        public void CollectVisibleObjects(RenderQueue queue, string pipelineStage, ref BoundingFrustum visibleFrustum, Vector3 viewPosition)
         {
             var stageList = new List<RenderItem>(GetStageList(pipelineStage));
             Cull(stageList, ref visibleFrustum);
-            queue.AddRange(stageList);
+            queue.AddRange(stageList, viewPosition);
         }
 
         private void Cull(List<RenderItem> renderItems, ref BoundingFrustum visibleFrustum)

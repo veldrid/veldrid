@@ -15,6 +15,7 @@ using Veldrid.RenderDemo.ForwardRendering;
 using Veldrid.RenderDemo.Models;
 using System.Collections.Generic;
 using SharpDX.DXGI;
+using System.Threading.Tasks;
 
 namespace Veldrid.RenderDemo
 {
@@ -29,8 +30,6 @@ namespace Veldrid.RenderDemo
         private static bool _limitFrameRate = true;
         private static VisibiltyManager _visibilityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
-        private static DynamicDataProvider<Matrix4x4> _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
-        private static DynamicDataProvider<Matrix4x4> _viewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Matrix4x4> _lightViewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Matrix4x4> _lightProjMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Vector4> _lightInfoProvider = new DynamicDataProvider<Vector4>();
@@ -49,14 +48,11 @@ namespace Veldrid.RenderDemo
         private static RasterizerState _wireframeRasterizerState;
         private static MaterialAsset s_mtlMaterialAsset;
 
-        private static Vector3 _cameraPosition;
+        private static Camera _camera;
         private static float _cameraYaw;
         private static float _cameraPitch;
-        private static float _cameraNear = 1f;
-        private static float _cameraFar = 400f;
 
         private static Vector3 _lightDirection;
-        private static float _fieldOfViewRadians = 1.05f;
         private static bool _autoRotateCamera = true;
         private static bool _moveLight = false;
 
@@ -72,8 +68,6 @@ namespace Veldrid.RenderDemo
         private static LooseFileDatabase _ad;
         private static AssetEditorWindow _editorWindow;
 
-        private static bool _perspectiveProjection = true;
-        private static float _orthographicWidth = 20f;
         private static ShadowMapPreview _shadowMapPreview;
         private static RendererOption _selectedOption;
         private static OctreeNode<ShadowCaster> _octree;
@@ -86,7 +80,8 @@ namespace Veldrid.RenderDemo
         private static Vector3 _octreeFrustumViewDirection = -Vector3.UnitZ;
         private static float _octreeFrustumNearDistance = 3f;
         private static float _octreeFrustumFarDistance = 18f;
-        private static List<ShadowCaster> _frustumQueryResult = new List<ShadowCaster>();
+        private static List<ShadowCaster> _octreeQueryResult = new List<ShadowCaster>();
+        private static List<RenderItem> _sponzaQueryResult = new List<RenderItem>();
 
         public static void RunDemo(RenderContext renderContext, params RendererOption[] backendOptions)
         {
@@ -118,24 +113,23 @@ namespace Veldrid.RenderDemo
                 _lightDirection = Vector3.Normalize(new Vector3(1f, -1f, 0f));
                 _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
 
+                _camera = new Camera(_rc.Window);
                 float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
-                _cameraPosition = new Vector3(
+                _camera.Position = new Vector3(
                     (float)(Math.Cos(timeFactor) * _circleWidth),
                     3 + (float)Math.Sin(timeFactor) * 2,
                     (float)(Math.Sin(timeFactor) * _circleWidth));
-                var cameraRotation = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
-                SetCameraLookMatrix(cameraRotation);
+                _camera.LookDirection = -_camera.Position;
 
-                _rc.DataProviders.Add("LightBuffer", _lightBufferProvider);
-                _rc.DataProviders.Add("ProjectionMatrix", _projectionMatrixProvider);
-                _rc.DataProviders.Add("ViewMatrix", _viewMatrixProvider);
-                _rc.DataProviders.Add("LightViewMatrix", _lightViewMatrixProvider);
-                _rc.DataProviders.Add("LightProjMatrix", _lightProjMatrixProvider);
-                _rc.DataProviders.Add("LightInfo", _lightInfoProvider);
+                _rc.RegisterGlobalDataProvider("ProjectionMatrix", _camera.ProjectionProvider);
+                _rc.RegisterGlobalDataProvider("ViewMatrix", _camera.ViewProvider);
+                _rc.RegisterGlobalDataProvider("LightBuffer", _lightBufferProvider);
+                _rc.RegisterGlobalDataProvider("LightViewMatrix", _lightViewMatrixProvider);
+                _rc.RegisterGlobalDataProvider("LightProjMatrix", _lightProjMatrixProvider);
+                _rc.RegisterGlobalDataProvider("LightInfo", _lightInfoProvider);
+                _rc.RegisterGlobalDataProvider("CameraInfo", _camera.CameraInfoProvider);
                 _rc.ClearColor = RgbaFloat.CornflowerBlue;
 
-                _rc.WindowResized += OnWindowResized;
-                SetProjectionMatrix();
                 UpdateLightMatrices();
 
                 CreateScreenshotFramebuffer();
@@ -175,33 +169,6 @@ namespace Veldrid.RenderDemo
                 {
                     //Console.WriteLine("GL Error: " + GL.GetError());
                 }
-            }
-        }
-
-        private static void SetCameraLookMatrix(Matrix4x4 mat)
-        {
-            _viewMatrixProvider.Data = mat;
-        }
-
-        private static void OnWindowResized()
-        {
-            SetProjectionMatrix();
-        }
-
-        private static void SetProjectionMatrix()
-        {
-            if (_perspectiveProjection)
-            {
-                _projectionMatrixProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
-                    _fieldOfViewRadians,
-                    _rc.Window.Width / (float)_rc.Window.Height,
-                    _cameraNear,
-                    _cameraFar);
-            }
-            else
-            {
-                float orthographicHeight = _orthographicWidth * _rc.Window.Height / _rc.Window.Width;
-                _projectionMatrixProvider.Data = Matrix4x4.CreateOrthographic(_orthographicWidth, orthographicHeight, .1f, 100f);
             }
         }
 
@@ -294,7 +261,7 @@ namespace Veldrid.RenderDemo
                 plane.Scale = new Vector3(20f);
                 _shadowsScene.AddRenderItem(plane.BoundingBox, plane);
 
-                _shadowsScene.AddRenderItem(new OctreeRenderer<RenderItem>(_shadowsScene.Octree, _ad, _rc));
+                _shadowsScene.AddRenderItem(new OctreeRenderer<RenderItem>(_shadowsScene.OctreeRootNode, _ad, _rc));
 
                 var skybox = new Skybox(_rc, _ad);
                 _shadowsScene.AddRenderItem(skybox);
@@ -394,15 +361,26 @@ namespace Veldrid.RenderDemo
                         overrideTextureData = pink;
                     }
 
-                    ShadowCaster sc = new ShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, matAsset, overrideTextureData);
+                    MtlShadowCaster sc = new MtlShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, matAsset, overrideTextureData);
                     sc.Scale = new Vector3(0.1f);
-                    sc.Name = group.Name;
+                    sc.Name = group.Name + ":" + group.Material;
+                    Vector3 specularIntensity = Vector3.Zero;
+                    if (materialDef.Name.Contains("vase"))
+                    {
+                        specularIntensity = new Vector3(1.0f);
+                    }
+                    else
+                    {
+                        specularIntensity = new Vector3(0.2f);
+                    }
+
+                    sc.MaterialProperties = new MtlMaterialProperties(specularIntensity, materialDef.SpecularExponent);
 
                     _sponzaAtrium.AddRenderItem(sc.BoundingBox, sc);
 
                     // This renders the bounding boxes of the atrium meshes.
-                    BoundingBoxWireframeRenderer boundsRenderer = new BoundingBoxWireframeRenderer(sc.BoundingBox, _ad, _rc);
-                    _sponzaAtrium.AddRenderItem(sc.BoundingBox, boundsRenderer);
+                    //BoundingBoxWireframeRenderer boundsRenderer = new BoundingBoxWireframeRenderer(sc.BoundingBox, _ad, _rc);
+                    //_sponzaAtrium.AddRenderItem(sc.BoundingBox, boundsRenderer);
                 }
 
                 //_sponzaAtrium.AddRenderItem(new OctreeRenderer<RenderItem>(_sponzaAtrium.Octree, _ad, _rc));
@@ -431,12 +409,11 @@ namespace Veldrid.RenderDemo
             float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             if (_autoRotateCamera)
             {
-                _cameraPosition = new Vector3(
+                _camera.Position = new Vector3(
                     (float)(Math.Cos(timeFactor) * _circleWidth),
                     6 + (float)Math.Sin(timeFactor) * 2,
                     (float)(Math.Sin(timeFactor) * _circleWidth));
-                var cameraRotationMat = Matrix4x4.CreateLookAt(_cameraPosition, -_cameraPosition, Vector3.UnitY);
-                SetCameraLookMatrix(cameraRotationMat);
+                _camera.LookDirection = -_camera.Position;
             }
 
             if (_moveLight)
@@ -483,6 +460,19 @@ namespace Veldrid.RenderDemo
                 {
                     ClearOctreeItems();
                 }
+                if (InputTracker.GetMouseButtonDown(MouseButton.Left))
+                {
+                    var screenPos = InputTracker.MousePosition;
+                    Ray r = _camera.GetRayFromScreenPoint(screenPos.X, screenPos.Y);
+                    _octreeQueryResult.Clear();
+                    int numHits = _octree.RayCast(r, _octreeQueryResult);
+                    Console.WriteLine("Hit " + numHits + " objects.");
+
+                    foreach (var hit in _octreeQueryResult)
+                    {
+                        Console.WriteLine(hit.Name);
+                    }
+                }
                 if (ImGui.BeginWindow("Octree Options"))
                 {
                     ImGui.DragVector3("Box Position", ref _octreeBoxPosition, -24f, 24f, .3f);
@@ -499,14 +489,32 @@ namespace Veldrid.RenderDemo
                         RecreateOctreeFrustum();
                     }
 
-                    _frustumQueryResult.Clear();
-                    _octree.GetContainedObjects(_octreeFrustumRenderer.Frustum, _frustumQueryResult);
-                    foreach (var item in _frustumQueryResult)
+                    _octreeQueryResult.Clear();
+                    _octree.GetContainedObjects(_octreeFrustumRenderer.Frustum, _octreeQueryResult);
+                    foreach (var item in _octreeQueryResult)
                     {
                         ImGui.Text(item.BoundingBox.ToString());
                     }
                 }
                 ImGui.EndWindow();
+            }
+            if (_visibilityManager == _sponzaAtrium)
+            {
+                if (InputTracker.GetMouseButtonDown(MouseButton.Left))
+                {
+                    var screenPos = InputTracker.MousePosition;
+                    Ray r = _camera.GetRayFromScreenPoint(screenPos.X, screenPos.Y);
+                    _sponzaQueryResult.Clear();
+                    int numHits = _sponzaAtrium.OctreeRootNode.RayCast(r, _sponzaQueryResult);
+
+                    var hits = _sponzaQueryResult.Where(ri => ri is ShadowCaster).Cast<ShadowCaster>().OrderBy(sc => Vector3.DistanceSquared(sc.BoundingBox.GetCenter(), _camera.Position));
+                    Console.WriteLine("Hits: " + hits.Count());
+                    var first = hits.FirstOrDefault();
+                    if (first != null)
+                    {
+                        Console.WriteLine("First: " + first.Name);
+                    }
+                }
             }
 
             float deltaX = InputTracker.MousePosition.X - _previousMouseX;
@@ -514,18 +522,20 @@ namespace Veldrid.RenderDemo
             _previousMouseX = InputTracker.MousePosition.X;
             _previousMouseY = InputTracker.MousePosition.Y;
 
-            Quaternion cameraRotation = Quaternion.CreateFromYawPitchRoll(_cameraYaw, _cameraPitch, 0f);
-            Vector3 cameraForward = Vector3.Transform(-Vector3.UnitZ, cameraRotation);
-            Vector3 cameraRight = Vector3.Normalize(Vector3.Cross(cameraForward, Vector3.UnitY));
-            Vector3 cameraUp = Vector3.Normalize(Vector3.Cross(cameraRight, cameraForward));
+            if (!_autoRotateCamera)
+            {
+                Quaternion cameraRotation = Quaternion.CreateFromYawPitchRoll(_cameraYaw, _cameraPitch, 0f);
+                _camera.LookDirection = Vector3.Transform(-Vector3.UnitZ, cameraRotation);
+            }
+
+            Vector3 cameraRight = Vector3.Normalize(Vector3.Cross(_camera.LookDirection, Vector3.UnitY));
+            Vector3 cameraUp = Vector3.Normalize(Vector3.Cross(cameraRight, _camera.LookDirection));
 
             float deltaSec = (float)deltaMilliseconds / 1000f;
-            bool cameraMoved = false;
 
             if (!ImGui.IsMouseHoveringAnyWindow() && !ImGui.IsAnyItemActive() && !_autoRotateCamera
                 && (InputTracker.GetMouseButton(MouseButton.Left) || InputTracker.GetMouseButton(MouseButton.Right)))
             {
-                cameraMoved = true;
                 if (!InputTracker.GetMouseButtonDown(MouseButton.Left) && !InputTracker.GetMouseButtonDown(MouseButton.Right))
                 {
                     _cameraYaw += -deltaX * .01f;
@@ -535,37 +545,35 @@ namespace Veldrid.RenderDemo
                     sprintFactor = InputTracker.GetKey(Key.ControlLeft) ? (1f / _cameraSprintFactor) : sprintFactor;
                     if (InputTracker.GetKey(Key.W))
                     {
-                        _cameraPosition += cameraForward * _cameraMoveSpeed * sprintFactor * deltaSec;
-                        if (!_perspectiveProjection)
+                        _camera.Position += _camera.LookDirection * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        if (_camera.UseOrthographicProjection)
                         {
-                            _orthographicWidth -= 5f * deltaSec * sprintFactor;
-                            SetProjectionMatrix();
+                            _camera.OrthographicWidth -= 5f * deltaSec * sprintFactor;
                         }
                     }
                     if (InputTracker.GetKey(Key.S))
                     {
-                        _cameraPosition -= cameraForward * _cameraMoveSpeed * sprintFactor * deltaSec;
-                        if (!_perspectiveProjection)
+                        _camera.Position -= _camera.LookDirection * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        if (_camera.UseOrthographicProjection)
                         {
-                            _orthographicWidth += 5f * deltaSec * sprintFactor;
-                            SetProjectionMatrix();
+                            _camera.OrthographicWidth += 5f * deltaSec * sprintFactor;
                         }
                     }
                     if (InputTracker.GetKey(Key.D))
                     {
-                        _cameraPosition += cameraRight * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        _camera.Position += cameraRight * _cameraMoveSpeed * sprintFactor * deltaSec;
                     }
                     if (InputTracker.GetKey(Key.A))
                     {
-                        _cameraPosition -= cameraRight * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        _camera.Position -= cameraRight * _cameraMoveSpeed * sprintFactor * deltaSec;
                     }
                     if (InputTracker.GetKey(Key.E))
                     {
-                        _cameraPosition += cameraUp * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        _camera.Position += cameraUp * _cameraMoveSpeed * sprintFactor * deltaSec;
                     }
                     if (InputTracker.GetKey(Key.Q))
                     {
-                        _cameraPosition -= cameraUp * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        _camera.Position -= cameraUp * _cameraMoveSpeed * sprintFactor * deltaSec;
                     }
                 }
             }
@@ -574,15 +582,8 @@ namespace Veldrid.RenderDemo
             {
                 if (!InputTracker.GetMouseButtonDown(MouseButton.Middle))
                 {
-                    cameraMoved = true;
-                    _cameraPosition += (deltaX * -cameraRight + deltaY * cameraUp) * .01f;
+                    _camera.Position += (deltaX * -cameraRight + deltaY * cameraUp) * .01f;
                 }
-            }
-
-            if (cameraMoved)
-            {
-                Matrix4x4 cameraView = Matrix4x4.CreateLookAt(_cameraPosition, _cameraPosition + cameraForward, Vector3.UnitY);
-                SetCameraLookMatrix(cameraView);
             }
 
             _editorWindow.Render(_rc);
@@ -602,18 +603,17 @@ namespace Veldrid.RenderDemo
 
         private static void UpdateLightMatrices()
         {
-            Quaternion cameraRotation = Quaternion.CreateFromYawPitchRoll(_cameraYaw, _cameraPitch, 0f);
-            Vector3 cameraForward = Vector3.Transform(-Vector3.UnitZ, cameraRotation);
+            Vector3 cameraDir = _camera.LookDirection;
             Vector3 unitY = Vector3.UnitY;
-
+            Vector3 cameraPosition = _camera.Position;
             FrustumCorners corners;
             FrustumHelpers.ComputePerspectiveFrustumCorners(
-                ref _cameraPosition,
-                ref cameraForward,
+                ref cameraPosition,
+                ref cameraDir,
                 ref unitY,
-                _fieldOfViewRadians,
-                _cameraNear,
-                _cameraFar,
+                _camera.FieldOfViewRadians,
+                _camera.NearPlaneDistance,
+                _camera.FarPlaneDistance,
                 (float)_rc.Window.Width / (float)_rc.Window.Height,
                 out corners);
 
@@ -776,35 +776,39 @@ namespace Veldrid.RenderDemo
 
                     if (ImGui.BeginMenu("Camera Settings"))
                     {
-                        string buttonLabel = _perspectiveProjection ? "Perspective" : "Orthographic";
+                        bool perspectiveProjection = !_camera.UseOrthographicProjection;
+                        string buttonLabel = perspectiveProjection ? "Perspective" : "Orthographic";
                         if (ImGui.Button(buttonLabel))
                         {
-                            _perspectiveProjection = !_perspectiveProjection;
-                            SetProjectionMatrix();
+                            _camera.UseOrthographicProjection = !perspectiveProjection;
                         }
 
-                        if (_perspectiveProjection)
+                        if (perspectiveProjection)
                         {
-                            if (ImGui.SliderFloat("FOV", ref _fieldOfViewRadians, 0.05f, (float)Math.PI - .01f, _fieldOfViewRadians.ToString(), 1f))
+                            float fov = _camera.FieldOfViewRadians;
+                            if (ImGui.SliderFloat("FOV", ref fov, 0.05f, (float)Math.PI - .01f, fov.ToString(), 1f))
                             {
-                                SetProjectionMatrix();
+                                _camera.FieldOfViewRadians = fov;
                             }
                         }
                         else
                         {
-                            if (ImGui.DragFloat("Orthographic Width", ref _orthographicWidth, 1f, 100f, 1f))
+                            float orthographicWidth = _camera.OrthographicWidth;
+                            if (ImGui.DragFloat("Orthographic Width", ref orthographicWidth, 1f, 100f, 1f))
                             {
-                                SetProjectionMatrix();
+                                _camera.OrthographicWidth = orthographicWidth;
                             }
                         }
 
-                        if (ImGui.DragFloat("Near Plane Distance", ref _cameraNear, 5f, 1000f, .1f))
+                        float nearDistance = _camera.NearPlaneDistance;
+                        if (ImGui.DragFloat("Near Plane Distance", ref nearDistance, 5f, 1000f, .1f))
                         {
-                            SetProjectionMatrix();
+                            _camera.NearPlaneDistance = nearDistance;
                         }
-                        if (ImGui.DragFloat("Far Plane Distance", ref _cameraFar, 5f, 1000f, .1f))
+                        float farDistance = _camera.FarPlaneDistance;
+                        if (ImGui.DragFloat("Far Plane Distance", ref farDistance, 5f, 1000f, .1f))
                         {
-                            SetProjectionMatrix();
+                            _camera.FarPlaneDistance = farDistance;
                         }
 
                         ImGui.EndMenu();
@@ -920,9 +924,10 @@ https://github.com/mellinoe/veldrid.");
             {
                 CreatedResourceCache.ClearCache();
 
-                foreach (var kvp in _rc.DataProviders)
+                foreach (var kvp in _rc.GetAllGlobalBufferProviderPairs())
                 {
-                    newContext.DataProviders[kvp.Key] = kvp.Value;
+                    kvp.Value.Dispose();
+                    newContext.RegisterGlobalDataProvider(kvp.Key, kvp.Value.DataProvider);
                 }
                 foreach (var kvp in _rc.TextureProviders)
                 {
@@ -969,7 +974,6 @@ https://github.com/mellinoe/veldrid.");
 
                 _rc.Dispose();
                 _rc = newContext;
-                _rc.WindowResized += OnWindowResized;
 
                 CreateWireframeRasterizerState();
                 if (_wireframe)
@@ -988,10 +992,10 @@ https://github.com/mellinoe/veldrid.");
                 _rc.ClearBuffer();
             }
 
-            BoundingFrustum frustum = new BoundingFrustum(_viewMatrixProvider.Data * _projectionMatrixProvider.Data);
+            BoundingFrustum frustum = new BoundingFrustum(_camera.ViewProvider.Data * _camera.ProjectionProvider.Data);
             ((StandardPipelineStage)_renderer.Stages[1]).CameraFrustum = frustum;
 
-            _renderer.RenderFrame(_visibilityManager);
+            _renderer.RenderFrame(_visibilityManager, _camera.Position);
             _imguiRenderer.NewFrame();
 
             if (_takeScreenshot)

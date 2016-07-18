@@ -26,12 +26,21 @@
 
     public class MaterialGlobalInputElement : MaterialInputElement
     {
+        public string GlobalProviderName { get; private set; }
         public ConstantBufferDataProvider DataProvider { get; private set; }
+        public bool UseGlobalNamedBuffer { get; private set; } = true;
+
+        public MaterialGlobalInputElement(string name, MaterialInputType type, string providerName)
+            : base(name, type)
+        {
+            GlobalProviderName = providerName;
+        }
 
         public MaterialGlobalInputElement(string name, MaterialInputType type, ConstantBufferDataProvider dataProvider)
             : base(name, type)
         {
             DataProvider = dataProvider;
+            UseGlobalNamedBuffer = false;
         }
     }
 

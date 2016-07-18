@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Numerics;
 using Veldrid.Graphics.Pipeline;
 
 namespace Veldrid.Graphics
@@ -30,7 +31,7 @@ namespace Veldrid.Graphics
             SetRenderContext(rc);
         }
 
-        public void RenderFrame(VisibiltyManager visibilityManager)
+        public void RenderFrame(VisibiltyManager visibilityManager, Vector3 viewPosition)
         {
             _rc.SetDefaultFramebuffer();
             _rc.ClearBuffer();
@@ -39,7 +40,7 @@ namespace Veldrid.Graphics
             {
                 if (stage.Enabled)
                 {
-                     stage.ExecuteStage(visibilityManager);
+                     stage.ExecuteStage(visibilityManager, viewPosition);
                 }
             }
 

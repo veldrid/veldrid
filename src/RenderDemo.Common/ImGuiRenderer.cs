@@ -92,7 +92,7 @@ namespace Veldrid.RenderDemo
             RenderImDrawData(ImGui.GetDrawData(), rc);
         }
 
-        public RenderOrderKey GetRenderOrderKey()
+        public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
         {
             return new RenderOrderKey();
         }

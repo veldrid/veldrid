@@ -27,11 +27,10 @@ namespace Veldrid.Graphics
         private DepthStencilState _depthStencilState;
         private RasterizerState _rasterizerState;
 
-        /// <summary>Storage for shader variable data providers.</summary>
-        public Dictionary<string, ConstantBufferDataProvider> DataProviders { get; } = new Dictionary<string, ConstantBufferDataProvider>();
-
         /// <summary>Storage for shader texture input providers.</summary>
         public Dictionary<string, ContextDeviceBinding<DeviceTexture>> TextureProviders { get; } = new Dictionary<string, ContextDeviceBinding<DeviceTexture>>();
+
+        private readonly Dictionary<string, BufferProviderPair> _bufferProviderPairs = new Dictionary<string, BufferProviderPair>();
 
         public RenderContext(Window window)
         {
@@ -109,6 +108,12 @@ namespace Veldrid.Graphics
                 PlatformSetMaterial(material);
                 _material = material;
             }
+            else
+            {
+                // TODO: Fix this abstraction.
+                PlatformClearMaterialResourceBindings();
+                material.UseDefaultTextures();
+            }
         }
 
         /// <summary>Draws indexed primitives, starting from the given index.</summary>
@@ -128,6 +133,7 @@ namespace Veldrid.Graphics
 
             PlatformClearBuffer();
             NullInputs();
+            FlushConstantBufferData();
         }
 
         /// <summary>Clears the current Framebuffer's color and depth buffers.
@@ -310,6 +316,33 @@ namespace Veldrid.Graphics
             return value;
         }
 
+        public void RegisterGlobalDataProvider(string name, ConstantBufferDataProvider provider)
+        {
+            if (_bufferProviderPairs.ContainsKey(name))
+            {
+                throw new InvalidOperationException("A provider is already registered with name " + name);
+            }
+
+            var constantBuffer = ResourceFactory.CreateConstantBuffer(provider.DataSizeInBytes);
+            _bufferProviderPairs.Add(name, new BufferProviderPair(constantBuffer, provider));
+        }
+
+        public BufferProviderPair GetNamedGlobalBufferProviderPair(string name)
+        {
+            BufferProviderPair pair;
+            if (!_bufferProviderPairs.TryGetValue(name, out pair))
+            {
+                throw new InvalidOperationException("No provider registered with name " + name);
+            }
+
+            return pair;
+        }
+
+        public IEnumerable<KeyValuePair<string, BufferProviderPair>> GetAllGlobalBufferProviderPairs()
+        {
+            return _bufferProviderPairs;
+        }
+
         protected void OnWindowResized()
         {
             PlatformResize();
@@ -375,6 +408,14 @@ namespace Veldrid.Graphics
             _indexBuffer = null;
             _material = null;
         }
+
+        private void FlushConstantBufferData()
+        {
+            foreach (var kvp in _bufferProviderPairs)
+            {
+                kvp.Value.UpdateData();
+            }
+        }
     }
 
     public class ContextDeviceBinding<T>
@@ -408,6 +449,42 @@ namespace Veldrid.Graphics
 
         public ContextDeviceBinding()
         {
+        }
+    }
+
+    public class BufferProviderPair : IDisposable
+    {
+        public readonly ConstantBuffer ConstantBuffer;
+        public readonly ConstantBufferDataProvider DataProvider;
+
+        private bool _dirty;
+
+        public BufferProviderPair(ConstantBuffer buffer, ConstantBufferDataProvider provider)
+        {
+            ConstantBuffer = buffer;
+            DataProvider = provider;
+            provider.DataChanged += OnDataChanged;
+            _dirty = true;
+            UpdateData();
+        }
+
+        private void OnDataChanged()
+        {
+            _dirty = true;
+        }
+
+        public void UpdateData()
+        {
+            if (_dirty)
+            {
+                DataProvider.SetData(ConstantBuffer);
+                _dirty = false;
+            }
+        }
+
+        public void Dispose()
+        {
+            DataProvider.DataChanged -= OnDataChanged;
         }
     }
 }

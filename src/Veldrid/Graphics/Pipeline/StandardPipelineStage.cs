@@ -1,4 +1,6 @@
-﻿namespace Veldrid.Graphics.Pipeline
+﻿using System.Numerics;
+
+namespace Veldrid.Graphics.Pipeline
 {
     public class StandardPipelineStage : PipelineStage
     {
@@ -27,7 +29,7 @@
             OverrideFramebuffer = framebuffer;
         }
 
-        public void ExecuteStage(VisibiltyManager visibilityManager)
+        public void ExecuteStage(VisibiltyManager visibilityManager, Vector3 viewPosition)
         {
             if (OverrideFramebuffer == null)
             {
@@ -39,7 +41,7 @@
             }
             RenderContext.SetViewport(0, 0, RenderContext.CurrentFramebuffer.Width, RenderContext.CurrentFramebuffer.Height);
             _renderQueue.Clear();
-            visibilityManager.CollectVisibleObjects(_renderQueue, Name, ref _cameraFrustum);
+            visibilityManager.CollectVisibleObjects(_renderQueue, Name, ref _cameraFrustum, viewPosition);
             _renderQueue.Sort();
 
             foreach (RenderItem item in _renderQueue)

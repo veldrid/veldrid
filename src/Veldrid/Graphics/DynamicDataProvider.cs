@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics
 {
@@ -11,6 +12,8 @@ namespace Veldrid.Graphics
         private readonly int _dataSizeInBytes;
         private T _data;
 
+        public event Action DataChanged;
+
         public T Data
         {
             get
@@ -21,6 +24,7 @@ namespace Veldrid.Graphics
             set
             {
                 _data = value;
+                DataChanged?.Invoke();
             }
         }
 

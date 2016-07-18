@@ -160,7 +160,7 @@ namespace Veldrid.RenderDemo.Drawers
                 _rc.ClearBuffer(RgbaFloat.Clear);
                 foreach (var stage in _stages)
                 {
-                    stage.ExecuteStage(_visiblityManager);
+                    stage.ExecuteStage(_visiblityManager, _cameraPosition);
                 }
             }
 
@@ -254,7 +254,7 @@ namespace Veldrid.RenderDemo.Drawers
                 return s_stages;
             }
 
-            public RenderOrderKey GetRenderOrderKey()
+            public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
             {
                 return new RenderOrderKey();
             }

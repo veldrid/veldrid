@@ -47,14 +47,14 @@ namespace Veldrid.RenderDemo.ForwardRendering
             rc.GetTextureContextBinding(_contextBindingName).Value = _depthTexture;
         }
 
-        public void ExecuteStage(VisibiltyManager visibilityManager)
+        public void ExecuteStage(VisibiltyManager visibilityManager, Vector3 viewPosition)
         {
             RenderContext.ClearScissorRectangle();
             RenderContext.SetFramebuffer(_shadowMapFramebuffer);
             RenderContext.ClearBuffer();
             RenderContext.SetViewport(0, 0, DepthMapWidth, DepthMapHeight);
             _queue.Clear();
-            visibilityManager.CollectVisibleObjects(_queue, "ShadowMap");
+            visibilityManager.CollectVisibleObjects(_queue, "ShadowMap", Vector3.Zero); // TODO: Wrong view position.
             _queue.Sort();
             foreach (RenderItem item in _queue)
             {

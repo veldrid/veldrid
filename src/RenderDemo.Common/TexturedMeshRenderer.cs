@@ -85,9 +85,9 @@ namespace Veldrid.RenderDemo
             MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                 new MaterialGlobalInputElement[]
                 {
-                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ProjectionMatrix"]),
-                    new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ViewMatrix"]),
-                    new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, context.DataProviders["LightBuffer"]),
+                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
+                    new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, "ViewMatrix"),
+                    new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, "LightBuffer"),
                 });
 
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
@@ -146,7 +146,7 @@ namespace Veldrid.RenderDemo
             context.RasterizerState = regular;
         }
 
-        public RenderOrderKey GetRenderOrderKey()
+        public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
         {
             return new RenderOrderKey();
         }

@@ -66,7 +66,7 @@ namespace Veldrid.RenderDemo
             MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                 new MaterialGlobalInputElement[]
                 {
-                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ProjectionMatrix"])
+                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, "ProjectionMatrix")
                 });
 
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
@@ -100,7 +100,7 @@ namespace Veldrid.RenderDemo
                 * Matrix4x4.CreateRotationZ((rotationAmount * .33f) * Position.Z)
                 * Matrix4x4.CreateTranslation(Position)
                 * Matrix4x4.CreateTranslation((float)Math.Sin(rotationAmount) * Vector3.UnitY)
-                * ((DynamicDataProvider<Matrix4x4>)context.DataProviders["ViewMatrix"]).Data;
+                * ((DynamicDataProvider<Matrix4x4>)context.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).Data;
 
             context.SetVertexBuffer(s_vb);
             context.SetIndexBuffer(s_ib);
@@ -110,7 +110,7 @@ namespace Veldrid.RenderDemo
             context.DrawIndexedPrimitives(s_cubeIndices.Length, 0);
         }
 
-        public RenderOrderKey GetRenderOrderKey()
+        public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
         {
             return new RenderOrderKey();
         }

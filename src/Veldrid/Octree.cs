@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 
 namespace Veldrid
@@ -10,6 +11,56 @@ namespace Veldrid
         public static OctreeNode<T> CreateNewTree<T>(ref BoundingBox bounds, int maxChildren)
         {
             return OctreeNode<T>.CreateNewTree(ref bounds, maxChildren);
+        }
+    }
+
+    /// <summary>
+    /// Maintains a reference to the current root node of a dynamic octree.
+    /// The root node may change as items are added and removed from contained nodes.
+    /// </summary>
+    /// <typeparam name="T">The type stored in the octree.</typeparam>
+    public class Octree<T>
+    {
+        private OctreeNode<T> _currentRoot;
+
+        public Octree(BoundingBox boundingBox, int maxChildre)
+        {
+            _currentRoot = new OctreeNode<T>(boundingBox, maxChildre);
+        }
+
+        /// <summary>
+        /// The current root node of the octree. This may change when items are added and removed.
+        /// </summary>
+        public OctreeNode<T> CurrentRoot => _currentRoot;
+
+        public void AddItem(BoundingBox itemBounds, T item)
+        {
+            _currentRoot = _currentRoot.AddItem(ref itemBounds, item);
+        }
+
+        public void GetContainedObjects(BoundingFrustum frustum, List<T> results)
+        {
+            _currentRoot.GetContainedObjects(ref frustum, results);
+        }
+
+        public void GetContainedObjects(BoundingFrustum frustum, List<T> results, Func<T, bool> filter)
+        {
+            _currentRoot.GetContainedObjects(ref frustum, results, filter);
+        }
+
+        public int RayCast(Ray ray, List<T> hits)
+        {
+            return _currentRoot.RayCast(ray, hits);
+        }
+
+        public void GetAllContainedObjects(List<T> results)
+        {
+            _currentRoot.GetAllContainedObjects(results);
+        }
+
+        public void GetAllContainedObjects(List<T> results, Func<T, bool> filter)
+        {
+            _currentRoot.GetAllContainedObjects(results, filter);
         }
     }
 
@@ -85,6 +136,43 @@ namespace Veldrid
             frustum = CoreGetContainedObjects(ref frustum, results, filter);
         }
 
+        public void GetAllContainedObjects(List<T> results) => GetAllContainedObjects(results);
+        public void GetAllContainedObjects(List<T> results, Func<T, bool> filter)
+        {
+            if (results == null)
+            {
+                throw new ArgumentNullException(nameof(results));
+            }
+
+            CoreGetAllContainedObjects(results, filter);
+        }
+
+        public int RayCast(Ray ray, List<T> hits)
+        {
+            if (!ray.Intersects(Bounds))
+            {
+                return 0;
+            }
+            else
+            {
+                int numHits = 0;
+                foreach (OctreeItem item in _items)
+                {
+                    if (ray.Intersects(item.Bounds))
+                    {
+                        numHits++;
+                        hits.Add(item.Item);
+                    }
+                }
+                foreach (var child in Children)
+                {
+                    numHits += child.RayCast(ray, hits);
+                }
+
+                return numHits;
+            }
+        }
+
         private BoundingFrustum CoreGetContainedObjects(ref BoundingFrustum frustum, List<T> results, Func<T, bool> filter)
         {
             ContainmentType ct = frustum.Contains(Bounds);
@@ -113,22 +201,28 @@ namespace Veldrid
             return frustum;
         }
 
-        public void GetAllContainedObjects(List<T> results, Func<T, bool> filter)
+        private bool AnyChild(Func<OctreeItem, bool> filter)
         {
-            if (results == null)
+            if (_items.Any(filter))
             {
-                throw new ArgumentNullException(nameof(results));
+                return true;
             }
 
-            CoreGetAllContainedObjects(results, filter);
+            return Children.Any(node => node.AnyChild(filter));
         }
 
         private void CoreGetAllContainedObjects(List<T> results, Func<T, bool> filter)
         {
-            AddAllItems(results, filter);
+            foreach (var octreeItem in _items)
+            {
+                if (filter == null || filter(octreeItem.Item))
+                {
+                    results.Add(octreeItem.Item);
+                }
+            }
             foreach (var child in Children)
             {
-                child.AddAllItems(results, filter);
+                child.CoreGetAllContainedObjects(results, filter);
             }
         }
 
@@ -307,17 +401,6 @@ namespace Veldrid
             }
         }
 
-        private void AddAllItems(List<T> results, Func<T, bool> filter)
-        {
-            foreach (var octreeItem in _items)
-            {
-                if (filter == null || filter(octreeItem.Item))
-                {
-                    results.Add(octreeItem.Item);
-                }
-            }
-        }
-
         public OctreeNode(BoundingBox box, int maxChildren)
             : this(ref box, maxChildren, new OctreeNodeCache(maxChildren), null)
         {
@@ -390,7 +473,7 @@ namespace Veldrid
                 {
                     children[i] = null;
                 }
-                
+
                 _cachedChildren.Push(children);
             }
 
@@ -430,6 +513,11 @@ namespace Veldrid
             {
                 Bounds = bounds;
                 Item = item;
+            }
+
+            public override string ToString()
+            {
+                return string.Format("{0}, {1}", Bounds, Item);
             }
         }
     }

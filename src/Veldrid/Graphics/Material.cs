@@ -20,6 +20,7 @@ namespace Veldrid.Graphics
         /// <param name="dataProviders">The data providers to use. The number of elements in this
         /// array must match the number of per-object parameters accepted by the material.</param>
         void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders);
+        void UseDefaultTextures();
         /// <summary>
         /// Applies a texture override for the given texture slot.
         /// </summary>

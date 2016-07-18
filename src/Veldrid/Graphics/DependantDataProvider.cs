@@ -11,11 +11,19 @@ namespace Veldrid.Graphics
         private readonly DynamicDataProvider<T> _dataProvider;
         private readonly Func<T, T> _derivedFunc;
 
+        public event Action DataChanged;
+
         public DependantDataProvider(DynamicDataProvider<T> dataProvider, Func<T, T> derivedFunc)
         {
             _dataProvider = dataProvider;
             DataSizeInBytes = dataProvider.DataSizeInBytes;
             _derivedFunc = derivedFunc;
+            dataProvider.DataChanged += OnParentDataChanged;
+        }
+
+        private void OnParentDataChanged()
+        {
+            DataChanged?.Invoke();
         }
 
         public int DataSizeInBytes { get; }

@@ -20,12 +20,21 @@ namespace Veldrid.Assets
             Material ret;
             if (!CreatedResourceCache.TryGetCachedItem(this, out ret))
             {
-                providers = providers ?? rc.DataProviders;
                 MaterialTextureInputElement[] texElements = TextureInputs.Select(ta => ta.Create(ad)).ToArray();
                 var allTextures = texElements.Concat(ContextTextures).ToArray();
                 var materialTextureInputs = new MaterialTextureInputs(allTextures);
-                MaterialInputs<MaterialGlobalInputElement> globalInputs =
-                    new MaterialInputs<MaterialGlobalInputElement>(GlobalInputs.Select(mgid => mgid.Create(providers)).ToArray());
+                MaterialInputs<MaterialGlobalInputElement> globalInputs;
+                if (providers != null)
+                {
+                    globalInputs =
+                       new MaterialInputs<MaterialGlobalInputElement>(GlobalInputs.Select(mgid => mgid.Create(providers)).ToArray());
+                }
+                else
+                {
+                    globalInputs =
+                        new MaterialInputs<MaterialGlobalInputElement>(GlobalInputs.Select(mgid => mgid.Create()).ToArray());
+
+                }
                 MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(PerObjectInputs);
                 ret = rc.ResourceFactory.CreateMaterial(rc, VertexShader, FragmentShader, VertexInputs, globalInputs, perObjectInputs, materialTextureInputs);
 
@@ -57,6 +66,11 @@ namespace Veldrid.Assets
         public MaterialGlobalInputElement Create(Dictionary<string, ConstantBufferDataProvider> providers)
         {
             return new MaterialGlobalInputElement(Name, Type, providers[ProviderName]);
+        }
+
+        public MaterialGlobalInputElement Create()
+        {
+            return new MaterialGlobalInputElement(Name, Type, ProviderName);
         }
     }
 }

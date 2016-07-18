@@ -9,7 +9,7 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo.ForwardRendering
 {
-    public class ShadowCaster : SwappableRenderItem, IDisposable
+    public class MtlShadowCaster : SwappableRenderItem, IDisposable
     {
         public string Name { get; set; } = "No Name";
 
@@ -17,9 +17,9 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private readonly int[] _indices;
         public readonly BoundingSphere _centeredBounds; // TODO: PRIVATE
 
-
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
+        private readonly DynamicDataProvider<MtlMaterialProperties> _mtlPropertiesProvider = new DynamicDataProvider<MtlMaterialProperties>();
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
 
         private readonly MaterialAsset _shadowPassMaterialAsset;
@@ -39,7 +39,13 @@ namespace Veldrid.RenderDemo.ForwardRendering
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
         public Vector3 Scale { get; set; } = Vector3.One;
 
-        public ShadowCaster(
+        public MtlMaterialProperties MaterialProperties
+        {
+            get { return _mtlPropertiesProvider.Data; }
+            set { _mtlPropertiesProvider.Data = value; }
+        }
+
+        public MtlShadowCaster(
             RenderContext rc,
             AssetDatabase ad,
             VertexPositionNormalTexture[] vertices,
@@ -54,9 +60,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _regularPassMaterialAsset = regularPassMaterial;
             _overrideTextureData = overrideTexture;
 
-            _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, Utilities.CalculateInverseTranspose);
-            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
+            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider, _mtlPropertiesProvider };
 
             _centeredBounds = BoundingSphere.CreateFromPoints(vertices);
 
@@ -95,7 +100,9 @@ namespace Veldrid.RenderDemo.ForwardRendering
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
         {
             float distance = Vector3.Distance(Position, viewPosition);
-            return RenderOrderKey.Create(distance, _regularPassMaterial.GetHashCode());
+            uint materialHashCode = (uint)_regularPassMaterial.GetHashCode();
+            materialHashCode = (materialHashCode & 0xFFFF0000) | ((uint)_overrideTexture.GetHashCode() & 0x0000FFFF);
+            return RenderOrderKey.Create(distance, materialHashCode);
         }
 
         public IEnumerable<string> GetStagesParticipated() => _stages;
@@ -173,6 +180,18 @@ namespace Veldrid.RenderDemo.ForwardRendering
         public override string ToString()
         {
             return string.Format("{0}, {1}", Name, BoundingBox.GetCenter());
+        }
+    }
+
+    public struct MtlMaterialProperties
+    {
+        public Vector3 SpecularIntensity;
+        public float SpecularPower;
+
+        public MtlMaterialProperties(Vector3 specularIntensity, float specularPower)
+        {
+            SpecularIntensity = specularIntensity;
+            SpecularPower = specularPower;
         }
     }
 }

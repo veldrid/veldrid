@@ -19,6 +19,7 @@ namespace Veldrid.Graphics.Direct3D
         private D3DFramebuffer _defaultFramebuffer;
         private SamplerState _regularSamplerState;
         private SamplerState _shadowMapSampler;
+        private int _syncInterval;
 
         private const DeviceCreationFlags DefaultDeviceFlags
 #if DEBUG
@@ -44,6 +45,7 @@ namespace Veldrid.Graphics.Direct3D
             _swapChain = existingSwapchain;
             _device = existingDevice;
             _deviceContext = _device.ImmediateContext;
+            _syncInterval = 1;
 
             OnWindowResized();
             SetFramebuffer(_defaultFramebuffer);
@@ -79,7 +81,7 @@ namespace Veldrid.Graphics.Direct3D
 
         protected override void PlatformSwapBuffers()
         {
-            _swapChain.Present(1, PresentFlags.None);
+            _swapChain.Present(_syncInterval, PresentFlags.None);
         }
 
         private void CreateAndInitializeDevice(DeviceCreationFlags creationFlags)
@@ -109,6 +111,7 @@ namespace Veldrid.Graphics.Direct3D
             OnWindowResized();
             SetFramebuffer(_defaultFramebuffer);
             _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
+            _syncInterval = 0;
         }
 
         private void CreateAndSetSamplers()

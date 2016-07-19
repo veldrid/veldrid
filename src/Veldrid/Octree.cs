@@ -173,6 +173,11 @@ namespace Veldrid
             }
         }
 
+        public int GetItemCount()
+        {
+            return _items.Count + Children.Sum(on => on.GetItemCount());
+        }
+
         private BoundingFrustum CoreGetContainedObjects(ref BoundingFrustum frustum, List<T> results, Func<T, bool> filter)
         {
             ContainmentType ct = frustum.Contains(Bounds);
@@ -265,7 +270,8 @@ namespace Veldrid
                 OctreeNode<T> newNode = SplitChildren(ref item.Bounds, null);
                 if (newNode != null)
                 {
-                    Debug.Assert(newNode.AddItem(ref item), "Octree node returned from SplitChildren must fit the item given to it.");
+                    bool succeeded = newNode.AddItem(ref item);
+                    Debug.Assert(succeeded, "Octree node returned from SplitChildren must fit the item given to it.");
                     return true;
                 }
             }
@@ -392,7 +398,8 @@ namespace Veldrid
             OctreeNode<T> fittingNode = newRoot.SplitChildren(ref octreeItem.Bounds, oldRoot);
             if (fittingNode != null)
             {
-                Debug.Assert(fittingNode.AddItem(ref octreeItem), "Octree node returned from SplitChildren must fit the item given to it.");
+                bool succeeded = fittingNode.AddItem(ref octreeItem);
+                Debug.Assert(succeeded, "Octree node returned from SplitChildren must fit the item given to it.");
                 return newRoot;
             }
             else

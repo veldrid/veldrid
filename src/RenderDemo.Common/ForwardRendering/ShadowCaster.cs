@@ -15,8 +15,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         private readonly VertexPositionNormalTexture[] _vertices;
         private readonly int[] _indices;
-        public readonly BoundingSphere _centeredBounds; // TODO: PRIVATE
-
+        private readonly BoundingSphere _centeredBounds; // TODO: PRIVATE
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;

@@ -26,8 +26,6 @@ namespace Veldrid.RenderDemo
         public Vector3 Position { get; internal set; }
         public Vector3 Scale { get; internal set; } = new Vector3(1f);
 
-        public bool Wireframe; // TODO: REMOVE
-
         public TexturedMeshRenderer(AssetDatabase ad, RenderContext context, VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
         {
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
@@ -139,11 +137,7 @@ namespace Veldrid.RenderDemo
             context.SetMaterial(s_material);
             s_material.ApplyPerObjectInputs(_perObjectProviders);
 
-            var regular = context.RasterizerState;
-            if (Wireframe) context.RasterizerState = s_wireframeRasterizerState;
-
             context.DrawIndexedPrimitives(_indices.Length, 0);
-            context.RasterizerState = regular;
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
@@ -161,8 +155,6 @@ namespace Veldrid.RenderDemo
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
         {
-            if (Wireframe) return false;
-
             BoundingSphere sphere = new BoundingSphere(_centeredBounds.Center + Position, _centeredBounds.Radius * Scale.X);
             return visibleFrustum.Contains(sphere) == ContainmentType.Disjoint;
         }

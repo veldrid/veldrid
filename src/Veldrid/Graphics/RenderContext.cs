@@ -61,11 +61,6 @@ namespace Veldrid.Graphics
             set { SetVertexBuffer(value); }
         }
 
-        public void DrawIndexedPrimitives(object _indexCount)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>Changes the active VertexBuffer.</summary>
         public void SetVertexBuffer(VertexBuffer vb)
         {

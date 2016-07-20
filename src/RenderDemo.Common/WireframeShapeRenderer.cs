@@ -303,7 +303,7 @@ namespace Veldrid.RenderDemo
             _box = box;
         }
 
-        public BoundingBox Frustum
+        public BoundingBox Box
         {
             get { return _box; }
             set { _box = value; }

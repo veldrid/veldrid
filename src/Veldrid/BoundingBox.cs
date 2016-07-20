@@ -71,6 +71,35 @@ namespace Veldrid
             return new BoundingBox((min * scale) + offset, (max * scale) + offset);
         }
 
+        public static unsafe BoundingBox CreateFromVertices(Vector3* vertices, int numVertices, Quaternion rotation, Vector3 offset, Vector3 scale)
+        {
+            Vector3 min = Vector3.Transform(vertices[0], rotation);
+            Vector3 max = Vector3.Transform(vertices[0], rotation);
+
+            for (int i = 1; i < numVertices; i++)
+            {
+                Vector3 pos = Vector3.Transform(vertices[i], rotation);
+
+                if (min.X > pos.X) min.X = pos.X;
+                if (max.X < pos.X) max.X = pos.X;
+
+                if (min.Y > pos.Y) min.Y = pos.Y;
+                if (max.Y < pos.Y) max.Y = pos.Y;
+
+                if (min.Z > pos.Z) min.Z = pos.Z;
+                if (max.Z < pos.Z) max.Z = pos.Z;
+            }
+
+            return new BoundingBox((min * scale) + offset, (max * scale) + offset);
+        }
+
+        public static BoundingBox Combine(BoundingBox box1, BoundingBox box2)
+        {
+            return new BoundingBox(
+                Vector3.Min(box1.Min, box2.Min),
+                Vector3.Max(box1.Max, box2.Max));
+        }
+
         public static bool operator ==(BoundingBox first, BoundingBox second)
         {
             return first.Equals(second);
@@ -103,5 +132,34 @@ namespace Veldrid
             uint shift5 = ((uint)h1 << 5) | ((uint)h1 >> 27);
             return ((int)shift5 + h1) ^ h2;
         }
+
+        public AlignedBoxCorners GetCorners()
+        {
+            AlignedBoxCorners corners;
+            corners.NearBottomLeft = new Vector3(Min.X, Min.Y, Max.Z);
+            corners.NearBottomRight = new Vector3(Max.X, Min.Y, Max.Z);
+            corners.NearTopLeft = new Vector3(Min.X, Max.Y, Max.Z);
+            corners.NearTopRight = new Vector3(Max.X, Max.Y, Max.Z);
+
+            corners.FarBottomLeft = new Vector3(Min.X, Min.Y, Min.Z);
+            corners.FarBottomRight = new Vector3(Max.X, Min.Y, Min.Z);
+            corners.FarTopLeft = new Vector3(Min.X, Max.Y, Min.Z);
+            corners.FarTopRight = new Vector3(Max.X, Max.Y, Min.Z);
+
+            return corners;
+        }
+    }
+
+    public struct AlignedBoxCorners
+    {
+        public Vector3 NearTopLeft;
+        public Vector3 NearTopRight;
+        public Vector3 NearBottomLeft;
+        public Vector3 NearBottomRight;
+        public Vector3 FarTopLeft;
+        public Vector3 FarTopRight;
+        public Vector3 FarBottomLeft;
+        public Vector3 FarBottomRight;
+
     }
 }

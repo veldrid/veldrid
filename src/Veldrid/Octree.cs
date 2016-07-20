@@ -173,6 +173,29 @@ namespace Veldrid
             }
         }
 
+        public BoundingBox GetPreciseBounds()
+        {
+            Vector3 min = new Vector3(float.MaxValue);
+            Vector3 max = new Vector3(float.MinValue);
+            return CoreGetPreciseBounds(ref min, ref max);
+        }
+
+        private BoundingBox CoreGetPreciseBounds(ref Vector3 min, ref Vector3 max)
+        {
+            foreach (var item in _items)
+            {
+                min = Vector3.Min(min, item.Bounds.Min);
+                max = Vector3.Max(max, item.Bounds.Max);
+            }
+
+            foreach (var child in Children)
+            {
+                child.CoreGetPreciseBounds(ref min, ref max);
+            }
+
+            return new BoundingBox(min, max);
+        }
+
         public int GetItemCount()
         {
             return _items.Count + Children.Sum(on => on.GetItemCount());

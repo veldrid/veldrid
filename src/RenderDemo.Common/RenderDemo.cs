@@ -82,6 +82,7 @@ namespace Veldrid.RenderDemo
         private static float _octreeFrustumFarDistance = 18f;
         private static List<ShadowCaster> _octreeQueryResult = new List<ShadowCaster>();
         private static List<RenderItem> _sponzaQueryResult = new List<RenderItem>();
+        private static BoundingBoxWireframeRenderer _sceneBoundsRenderer;
 
         public static void RunDemo(RenderContext renderContext, params RendererOption[] backendOptions)
         {
@@ -135,7 +136,7 @@ namespace Veldrid.RenderDemo
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
 
-                _visibilityManager = SceneWithShadows();
+                ChangeScene(SceneWithShadows());
 
                 _fta = new FrameTimeAverager(666);
 
@@ -261,7 +262,8 @@ namespace Veldrid.RenderDemo
                 plane.Scale = new Vector3(20f);
                 _shadowsScene.AddRenderItem(plane.BoundingBox, plane);
 
-                _shadowsScene.AddRenderItem(new OctreeRenderer<RenderItem>(_shadowsScene.OctreeRootNode, _ad, _rc));
+                _sceneBoundsRenderer = new BoundingBoxWireframeRenderer(_shadowsScene.OctreeRootNode.GetPreciseBounds(), _ad, _rc);
+                _shadowsScene.AddRenderItem(_sceneBoundsRenderer);
 
                 var skybox = new Skybox(_rc, _ad);
                 _shadowsScene.AddRenderItem(skybox);
@@ -389,6 +391,9 @@ namespace Veldrid.RenderDemo
                 _sponzaAtrium.AddRenderItem(skybox);
 
                 _sponzaAtrium.AddRenderItem(_imguiRenderer);
+
+                _sceneBoundsRenderer = new BoundingBoxWireframeRenderer(_sponzaAtrium.OctreeRootNode.GetPreciseBounds(), _ad, _rc);
+                _sponzaAtrium.AddRenderItem(_sceneBoundsRenderer);
             }
 
             return _sponzaAtrium;
@@ -425,8 +430,6 @@ namespace Veldrid.RenderDemo
 
                 _lightDirection = Vector3.Normalize(-position);
             }
-
-            UpdateLightMatrices();
 
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
             _imguiRenderer.UpdateImGuiInput(_rc.Window, snapshot);
@@ -516,6 +519,12 @@ namespace Veldrid.RenderDemo
                     }
                 }
             }
+            if (_visibilityManager == _shadowsScene || _visibilityManager == _sponzaAtrium)
+            {
+                _sceneBoundsRenderer.Box = ((OctreeVisibilityManager)_visibilityManager).OctreeRootNode.GetPreciseBounds();
+            }
+
+            UpdateLightMatrices();
 
             float deltaX = InputTracker.MousePosition.X - _previousMouseX;
             float deltaY = InputTracker.MousePosition.Y - _previousMouseY;
@@ -542,7 +551,7 @@ namespace Veldrid.RenderDemo
                     _cameraPitch += -deltaY * .01f;
 
                     float sprintFactor = InputTracker.GetKey(Key.LShift) ? _cameraSprintFactor : 1.0f;
-                    sprintFactor = InputTracker.GetKey(Key.ControlLeft) ? (1f / _cameraSprintFactor) : sprintFactor;
+                    sprintFactor = InputTracker.GetKey(Key.ControlLeft) ? (1f / (3 * _cameraSprintFactor)) : sprintFactor;
                     if (InputTracker.GetKey(Key.W))
                     {
                         _camera.Position += _camera.LookDirection * _cameraMoveSpeed * sprintFactor * deltaSec;
@@ -677,7 +686,7 @@ namespace Veldrid.RenderDemo
                     if (ImGui.MenuItem("Boxes", null))
                     {
                         _circleWidth = 12.0;
-                        _visibilityManager = SceneWithBoxes();
+                        ChangeScene(SceneWithBoxes());
                     }
                     if (boxScene)
                         ImGui.PopStyleColor();
@@ -688,7 +697,7 @@ namespace Veldrid.RenderDemo
                     if (ImGui.MenuItem("Teapot", null))
                     {
                         _circleWidth = 5.0;
-                        _visibilityManager = SceneWithTeapot();
+                        ChangeScene(SceneWithTeapot());
                     }
                     if (teapotScene)
                         ImGui.PopStyleColor();
@@ -699,7 +708,7 @@ namespace Veldrid.RenderDemo
                     if (ImGui.MenuItem("Shadows", null))
                     {
                         _circleWidth = 15.0;
-                        _visibilityManager = SceneWithShadows();
+                        ChangeScene(SceneWithShadows());
                     }
                     if (shadowsScene)
                         ImGui.PopStyleColor();
@@ -710,7 +719,7 @@ namespace Veldrid.RenderDemo
                     if (ImGui.MenuItem("Octree", null))
                     {
                         _circleWidth = 8.0;
-                        _visibilityManager = OctreeScene();
+                        ChangeScene(OctreeScene());
                     }
                     if (roomScene)
                         ImGui.PopStyleColor();
@@ -721,7 +730,7 @@ namespace Veldrid.RenderDemo
                     if (ImGui.MenuItem("Sponza Atrium", null))
                     {
                         _circleWidth = 8.0;
-                        _visibilityManager = SponzaAtriumScene();
+                        ChangeScene(SponzaAtriumScene());
                     }
                     if (sponzaAtriumScene)
                         ImGui.PopStyleColor();
@@ -780,7 +789,7 @@ namespace Veldrid.RenderDemo
                         string buttonLabel = perspectiveProjection ? "Perspective" : "Orthographic";
                         if (ImGui.Button(buttonLabel))
                         {
-                            _camera.UseOrthographicProjection = !perspectiveProjection;
+                            _camera.UseOrthographicProjection = perspectiveProjection;
                         }
 
                         if (perspectiveProjection)
@@ -871,6 +880,10 @@ namespace Veldrid.RenderDemo
                     }
                     ImGui.EndMenu();
                 }
+                if (_rc.Window.WindowState == WindowState.FullScreen)
+                {
+                    ImGui.Text(string.Format("{0} FPS ({1} ms)", _fta.CurrentAverageFramesPerSecond.ToString("0.0"), _fta.CurrentAverageFrameTime.ToString("#00.00")));
+                }
 
                 ImGui.EndMainMenuBar();
             }
@@ -896,6 +909,11 @@ https://github.com/mellinoe/veldrid.");
             }
 
             DrawPreferencesEditor();
+        }
+
+        private static void ChangeScene(VisibiltyManager vm)
+        {
+            _visibilityManager = vm;
         }
 
         private static void DrawPreferencesEditor()

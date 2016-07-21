@@ -15,9 +15,9 @@ namespace Veldrid
             float aspectRatio,
             out FrustumCorners corners)
         {
-            float nearHeight = 2 * (float)Math.Tan(fov / 2f) * nearDistance;
+            float nearHeight = (float)(2 * Math.Tan(fov / 2.0) * nearDistance);
             float nearWidth = nearHeight * aspectRatio;
-            float farHeight = 2 * (float)Math.Tan(fov / 2f) * farDistance;
+            float farHeight = (float)(2 * Math.Tan(fov / 2.0) * farDistance);
             float farWidth = farHeight * aspectRatio;
 
             Vector3 right = Vector3.Normalize(Vector3.Cross(viewDirection, globalUpDirection));

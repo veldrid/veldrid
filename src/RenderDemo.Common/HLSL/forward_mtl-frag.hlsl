@@ -10,7 +10,24 @@ cbuffer CameraInfoBuffer : register(b5)
 	float __padding1;
 }
 
-cbuffer MaterialPropertiesBuffer : register(b8)
+#define MAX_POINT_LIGHTS 4
+
+struct PointLightInfo
+{
+	float3 position;
+	float range;
+	float3 color;
+	float __padding;
+};
+
+cbuffer PointLightsBuffer : register(b6)
+{
+	int numActiveLights;
+	float3 __padding2;
+	PointLightInfo pointLights[MAX_POINT_LIGHTS];
+}
+
+cbuffer MaterialPropertiesBuffer : register(b9)
 {
 	float3 specularIntensity;
 	float specularPower;
@@ -36,6 +53,37 @@ float4 PS(PixelInput input) : SV_Target
 	float4 surfaceColor = surfaceTexture.Sample(RegularSampler, input.texCoord);
 	float4 ambientLight = float4(.4, .4, .4, 1);
 
+	// Point Diffuse
+
+	float4 pointDiffuse = float4(0, 0, 0, 1);
+	float4 pointSpec = float4(0, 0, 0, 1);
+	for (int i = 0; i < numActiveLights; i++)
+	{
+		PointLightInfo pli = pointLights[i];
+		float3 lightDir = normalize(pli.position - input.position_worldSpace);
+		float intensity = saturate(dot(input.normal, lightDir));
+		float lightDistance = distance(pli.position, input.position_worldSpace);
+		intensity = saturate(intensity * (1 - (lightDistance / pli.range)));
+
+		pointDiffuse += intensity * float4(pli.color, 1) * surfaceColor;
+
+		// Specular
+		float3 vertexToEye = normalize(cameraPosition_worldSpace - input.position_worldSpace);
+		float3 lightReflect = normalize(reflect(lightDir, input.normal));
+
+		float specularFactor = dot(vertexToEye, lightReflect);
+		if (specularFactor > 0)
+		{
+			specularFactor = pow(abs(specularFactor), specularPower);
+			pointSpec += (1 - (lightDistance / pli.range)) * (float4(pli.color * specularIntensity * specularFactor, 1.0f));
+		}
+	}
+
+	pointDiffuse = saturate(pointDiffuse);
+	pointSpec = saturate(pointSpec);
+
+	// Directional light calculations
+
 	//re-homogenize position after interpolation
 	input.lightPosition.xyz /= input.lightPosition.w;
 
@@ -45,10 +93,10 @@ float4 PS(PixelInput input) : SV_Target
 		input.lightPosition.y < -1.0f || input.lightPosition.y > 1.0f ||
 		input.lightPosition.z < 0.0f || input.lightPosition.z > 1.0f)
 	{
-		return ambientLight * surfaceColor;
+		return (ambientLight * surfaceColor) + pointDiffuse + pointSpec;
 	}
 
-	//transform clip space coords to texture space coords (-1:1 to 0:1)
+	// transform clip space coords to texture space coords (-1:1 to 0:1)
 	input.lightPosition.x = input.lightPosition.x / 2 + 0.5;
 	input.lightPosition.y = input.lightPosition.y / -2 + 0.5;
 
@@ -67,7 +115,7 @@ float4 PS(PixelInput input) : SV_Target
 	//if clip space z value greater than shadow map value then pixel is in shadow
 	if (shadowMapDepth < input.lightPosition.z)
 	{
-		return ambientLight * surfaceColor;
+		return (ambientLight * surfaceColor) + pointDiffuse + pointSpec;
 	}
 
 	//otherwise calculate ilumination at fragment
@@ -86,5 +134,5 @@ float4 PS(PixelInput input) : SV_Target
 		specularColor = float4(lightColor * specularIntensity * specularFactor, 1.0f);
 	}
 
-	return specularColor + (ambientLight * surfaceColor) + (diffuseFactor * surfaceColor);
+	return specularColor + (ambientLight * surfaceColor) + (diffuseFactor * surfaceColor) + pointDiffuse + pointSpec;
 }

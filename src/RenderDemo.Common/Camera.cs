@@ -16,7 +16,7 @@ namespace Veldrid.RenderDemo
         private bool _ortho = false;
         private float _fov = 1.0f;
         private float _nearPlaneDistance = 1f;
-        private float _farPlaneDistance = 400f;
+        private float _farPlaneDistance = 250f;
         private float _orthographicWidth = 30f;
 
         public Vector3 Position { get { return _position; } set { _position = value; UpdateViewMatrix(); } }
@@ -35,7 +35,6 @@ namespace Veldrid.RenderDemo
             _window.Resized += () => UpdateProjectionMatrix();
             UpdateProjectionMatrix();
             UpdateViewMatrix();
-
         }
 
         private void UpdateViewMatrix()

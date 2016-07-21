@@ -33,6 +33,7 @@ namespace Veldrid.RenderDemo
         private static DynamicDataProvider<Matrix4x4> _lightViewMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Matrix4x4> _lightProjMatrixProvider = new DynamicDataProvider<Matrix4x4>();
         private static DynamicDataProvider<Vector4> _lightInfoProvider = new DynamicDataProvider<Vector4>();
+        private static DynamicDataProvider<PointLightsBuffer> _pointLightsProvider = new DynamicDataProvider<PointLightsBuffer>();
         private static FlatListVisibilityManager _boxSceneVM;
         private static FlatListVisibilityManager _teapotVM;
         private static OctreeVisibilityManager _shadowsScene;
@@ -53,7 +54,7 @@ namespace Veldrid.RenderDemo
         private static float _cameraPitch;
 
         private static Vector3 _lightDirection;
-        private static bool _autoRotateCamera = true;
+        private static bool _autoRotateCamera = false;
         private static bool _moveLight = false;
 
         private static float _previousMouseX;
@@ -111,7 +112,7 @@ namespace Veldrid.RenderDemo
                     new DirectionalLightBuffer(RgbaFloat.White, new Vector3(-.3f, -1f, -1f)));
 
                 // Shader buffers for shadow mapping
-                _lightDirection = Vector3.Normalize(new Vector3(1f, -1f, 0f));
+                _lightDirection = Vector3.Normalize(new Vector3(0f, -1f, -1f));
                 _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
 
                 _camera = new Camera(_rc.Window);
@@ -129,9 +130,11 @@ namespace Veldrid.RenderDemo
                 _rc.RegisterGlobalDataProvider("LightProjMatrix", _lightProjMatrixProvider);
                 _rc.RegisterGlobalDataProvider("LightInfo", _lightInfoProvider);
                 _rc.RegisterGlobalDataProvider("CameraInfo", _camera.CameraInfoProvider);
+                _rc.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);
                 _rc.ClearColor = RgbaFloat.CornflowerBlue;
 
                 UpdateLightMatrices();
+                UpdatePointLights();
 
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
@@ -171,6 +174,18 @@ namespace Veldrid.RenderDemo
                     //Console.WriteLine("GL Error: " + GL.GetError());
                 }
             }
+        }
+
+        private static void UpdatePointLights()
+        {
+            var buffer = _pointLightsProvider.Data;
+            buffer.LightInfo0 = new PointLightInfo(_camera.Position, new Vector3(1, 1, 1), 50f);
+            buffer.LightInfo1 = new PointLightInfo(new Vector3(55, 5, 6), new Vector3(1, 1, 1), 65);
+            buffer.LightInfo2 = new PointLightInfo(new Vector3(-100, 8, 9), new Vector3(1, 1, 1), 75);
+            buffer.LightInfo3 = new PointLightInfo(new Vector3(0, 10, 0), new Vector3(.89f, .35f, .13f), 45);
+            buffer.NumActivePointLights = 4;
+
+            _pointLightsProvider.Data = buffer;
         }
 
         private static void CreateWireframeRasterizerState()
@@ -252,14 +267,22 @@ namespace Veldrid.RenderDemo
                 cube2.Scale = new Vector3(3f);
                 _shadowsScene.AddRenderItem(cube2.BoundingBox, cube2);
 
-                var teapot = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
-                teapot.Position = new Vector3(-4f, 0f, 6f);
-                teapot.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
-                _shadowsScene.AddRenderItem(teapot.BoundingBox, teapot);
+                var cube3 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
+                cube3.Position = new Vector3(-4f, 0f, 6f);
+                cube3.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
+                _shadowsScene.AddRenderItem(cube3.BoundingBox, cube3);
+
+                var sphereModel = _ad.LoadAsset<ObjFile>(new AssetID("Models/Sphere.obj")).GetFirstMesh();
+                var sphere = new ShadowCaster(_rc, _ad, sphereModel.Vertices, sphereModel.Indices, stoneMaterial);
+                sphere.Position = new Vector3(18f, 3f, -18f);
+                sphere.Scale = new Vector3(4.0f);
+                sphere.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
+                _shadowsScene.AddRenderItem(sphere.BoundingBox, sphere);
+
 
                 var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
                 plane.Position = new Vector3(0, -2.5f, 0);
-                plane.Scale = new Vector3(20f);
+                plane.Scale = new Vector3(50f);
                 _shadowsScene.AddRenderItem(plane.BoundingBox, plane);
 
                 _sceneBoundsRenderer = new BoundingBoxWireframeRenderer(_shadowsScene.OctreeRootNode.GetPreciseBounds(), _ad, _rc);
@@ -525,6 +548,7 @@ namespace Veldrid.RenderDemo
             }
 
             UpdateLightMatrices();
+            UpdatePointLights();
 
             float deltaX = InputTracker.MousePosition.X - _previousMouseX;
             float deltaY = InputTracker.MousePosition.Y - _previousMouseY;

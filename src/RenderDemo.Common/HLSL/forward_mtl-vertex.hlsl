@@ -31,19 +31,36 @@ cbuffer CameraInfoBuffer : register(b5)
 	float __padding1;
 }
 
+struct PointLightInfo
+{
+	float3 position;
+	float range;
+	float3 color;
+	float __padding;
+};
+
+#define MAX_POINT_LIGHTS 4
+
+cbuffer PointLightsBuffer : register(b6)
+{
+	int numActiveLights;
+	float3 __padding2;
+	PointLightInfo pointLights[MAX_POINT_LIGHTS];
+}
+
 // Per-Object
 
-cbuffer WorldMatrixBuffer : register(b6)
+cbuffer WorldMatrixBuffer : register(b7)
 {
     float4x4 world;
 }
 
-cbuffer InverseTransposeWorldMatrixBuffer : register(b7)
+cbuffer InverseTransposeWorldMatrixBuffer : register(b8)
 {
     float4x4 inverseTransposeWorld;
 }
 
-cbuffer MaterialPropertiesBuffer : register(b8)
+cbuffer MaterialPropertiesBuffer : register(b9)
 {
 	float3 specularIntensity;
 	float specularPower;

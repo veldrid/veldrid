@@ -12,6 +12,22 @@ uniform CameraInfoBuffer
     float _padding1;
 };
 
+#define MAX_POINT_LIGHTS 4
+
+struct PointLightInfo
+{
+	vec3 position;
+	float range;
+	vec3 color;
+	float _padding;
+};
+
+uniform PointLightsBuffer
+{
+	int numActiveLights;
+	PointLightInfo pointLights[MAX_POINT_LIGHTS];
+};
+
 uniform MaterialPropertiesBuffer
 {
     vec3 specularIntensity;
@@ -33,6 +49,37 @@ void main()
     vec4 surfaceColor = texture(SurfaceTexture, out_texCoord);
     vec4 ambientLight = vec4(.4, .4, .4, 1);
 
+    // Point Diffuse
+
+	vec4 pointDiffuse = vec4(0, 0, 0, 1);
+	vec4 pointSpec = vec4(0, 0, 0, 1);
+	for (int i = 0; i < numActiveLights; i++)
+	{
+		PointLightInfo pli = pointLights[i];
+		vec3 lightDir = normalize(pli.position - out_position_worldSpace);
+		float intensity = clamp(dot(out_normal, lightDir), 0, 1);
+		float lightDistance = distance(pli.position, out_position_worldSpace);
+		intensity = clamp(intensity * (1 - (lightDistance / pli.range)), 0, 1);
+
+		pointDiffuse += intensity * vec4(pli.color, 1) * surfaceColor;
+
+		// Specular
+		vec3 vertexToEye = normalize(cameraPosition_worldSpace - out_position_worldSpace);
+		vec3 lightReflect = normalize(reflect(lightDir, out_normal));
+
+		float specularFactor = dot(vertexToEye, lightReflect);
+		if (specularFactor > 0)
+		{
+			specularFactor = pow(abs(specularFactor), specularPower);
+			pointSpec += (1 - (lightDistance / pli.range)) * (vec4(pli.color * specularIntensity * specularFactor, 1.0f));
+		}
+	}
+
+	pointDiffuse = clamp(pointDiffuse, 0, 1);
+	pointSpec = clamp(pointSpec, 0, 1);
+
+	// Directional light calculations
+
     // perform perspective divide
     vec3 projCoords = out_lightPosition.xyz / out_lightPosition.w;
 
@@ -42,7 +89,7 @@ void main()
         projCoords.y < -1.0f || projCoords.y > 1.0f ||
         projCoords.z < 0.0f || projCoords.z > 1.0f)
     {
-        outputColor = ambientLight * surfaceColor;
+        outputColor = ambientLight * surfaceColor + pointDiffuse + pointSpec;
         return;
     }
 
@@ -64,7 +111,7 @@ void main()
     //if clip space z value greater than shadow map value then pixel is in shadow
     if (shadowMapDepth < projCoords.z)
     {
-        outputColor = ambientLight * surfaceColor;
+        outputColor = ambientLight * surfaceColor + pointDiffuse + pointSpec;
         return;
     }
 
@@ -84,5 +131,5 @@ void main()
 		specularColor = vec4(lightColor * specularIntensity * specularFactor, 1.0f);
 	}
 
-	outputColor = specularColor + (ambientLight * surfaceColor) + (diffuseFactor * surfaceColor);
+	outputColor = specularColor + (ambientLight * surfaceColor) + (diffuseFactor * surfaceColor) + pointDiffuse + pointSpec;
 }

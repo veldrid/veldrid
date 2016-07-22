@@ -61,6 +61,7 @@ namespace Veldrid.Graphics.OpenGL
                 int blockIndex = GL.GetUniformBlockIndex(_programID, element.Name);
                 if (blockIndex != -1)
                 {
+                    ValidateBlockSize(_programID, blockIndex, dataProvider.DataSizeInBytes);
                     _globalUniformBindings[i] = new GlobalBindingPair(
                         new UniformBlockBinding(
                             _programID,
@@ -97,11 +98,11 @@ namespace Veldrid.Graphics.OpenGL
                 if (blockIndex != -1)
                 {
                     _perObjectBindings[i] = new UniformBlockBinding(
-                            _programID,
-                            blockIndex,
-                            bindingIndex,
-                            new OpenGLConstantBuffer(),
-                            element.BufferSizeInBytes);
+                        _programID,
+                        blockIndex,
+                        bindingIndex,
+                        new OpenGLConstantBuffer(),
+                        element.BufferSizeInBytes);
                     bindingIndex += 1;
                 }
                 else
@@ -129,6 +130,19 @@ namespace Veldrid.Graphics.OpenGL
                 }
                 OpenGLTexture2D deviceTexture = (OpenGLTexture2D)element.GetDeviceTexture(rc);
                 _textureBindings[i] = new OpenGLProgramTextureBinding(location, deviceTexture);
+            }
+        }
+
+        [Conditional("DEBUG")]
+        private void ValidateBlockSize(int programID, int blockIndex, int providerSize)
+        {
+            int blockSize;
+            GL.GetActiveUniformBlock(programID, blockIndex, ActiveUniformBlockParameter.UniformBlockDataSize, out blockSize);
+
+            if (blockSize != providerSize)
+            {
+                throw new InvalidOperationException(
+                    $"Declared shader uniform block size does not match provider's data size. The provider has size {providerSize}, but the buffer has size {blockSize}.");
             }
         }
 

@@ -1,6 +1,6 @@
 ﻿#version 140
 
-uniform ProjectionMatrixUniform
+uniform ProjectionMatrixBuffer
 {
     mat4 projection_matrix;
 };

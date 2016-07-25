@@ -1,11 +1,11 @@
 ﻿#version 140
 
-uniform projectionMatrixUniform
+uniform ProjectionMatrixBuffer
 {
     mat4 projection_matrix;
 };
 
-uniform viewMatrixUniform
+uniform ViewMatrixBuffer
 {
     mat4 view_matrix;
 };
@@ -15,7 +15,7 @@ uniform WorldMatrix
     mat4 world_matrix;
 };
 
-uniform inverseTransposeWorldMatrixUniform
+uniform InverseTransposeWorldMatrixBuffer
 {
     mat4 inverseTransposeWorldMatrix;
 };

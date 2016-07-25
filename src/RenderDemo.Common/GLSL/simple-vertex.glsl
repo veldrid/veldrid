@@ -1,11 +1,11 @@
 ﻿#version 140
 
-uniform projectionMatrixUniform
+uniform ProjectionMatrixBuffer
 {
     mat4 projection_matrix;
 };
 
-uniform modelviewMatrixUniform
+uniform ModelViewMatrixBuffer
 {
     mat4 modelview_matrix;
 };

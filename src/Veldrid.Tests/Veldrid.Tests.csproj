@@ -16,7 +16,7 @@
     <NuGetTargetMoniker>.NETCoreApp,Version=v1.0</NuGetTargetMoniker>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
-    <UseVSHostingProcess>true</UseVSHostingProcess>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' ">
     <UseVSHostingProcess>true</UseVSHostingProcess>

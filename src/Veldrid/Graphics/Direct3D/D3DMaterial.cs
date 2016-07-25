@@ -54,6 +54,9 @@ namespace Veldrid.Graphics.Direct3D
             _vertexShader = new VertexShader(device, vsCompilation.Bytecode.Data);
             _pixelShader = new PixelShader(device, psCompilation.Bytecode.Data);
 
+            ShaderReflection vsReflection = new ShaderReflection(vsCompilation.Bytecode.Data);
+            ShaderReflection psReflection = new ShaderReflection(psCompilation.Bytecode.Data);
+
             _inputLayout = CreateLayout(device, vsCompilation.Bytecode.Data, vertexInputs);
 
             int numGlobalElements = globalInputs.Elements.Length;
@@ -66,16 +69,19 @@ namespace Veldrid.Graphics.Direct3D
                 var genericElement = globalInputs.Elements[i];
                 BufferProviderPair pair;
                 GlobalConstantBufferBinding cbb;
+                bool vsBuffer = DoesConstantBufferExist(vsReflection, i, genericElement.Name);
+                bool psBuffer = DoesConstantBufferExist(psReflection, i, genericElement.Name);
+
                 if (genericElement.UseGlobalNamedBuffer)
                 {
                     pair = rc.GetNamedGlobalBufferProviderPair(genericElement.GlobalProviderName);
-                    cbb = new GlobalConstantBufferBinding(i, pair, false);
+                    cbb = new GlobalConstantBufferBinding(i, pair, false, vsBuffer, psBuffer);
                 }
                 else
                 {
                     D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.DataProvider.DataSizeInBytes);
                     pair = new BufferProviderPair(constantBuffer, genericElement.DataProvider);
-                    cbb = new GlobalConstantBufferBinding(i, pair, true);
+                    cbb = new GlobalConstantBufferBinding(i, pair, true, vsBuffer, psBuffer);
                 }
 
                 _constantBufferBindings[i] = cbb;
@@ -89,8 +95,12 @@ namespace Veldrid.Graphics.Direct3D
             for (int i = 0; i < numPerObjectInputs; i++)
             {
                 var genericElement = perObjectInputs.Elements[i];
+                int bufferSlot = i + numGlobalElements;
+                bool vsBuffer = DoesConstantBufferExist(vsReflection, bufferSlot, genericElement.Name);
+                bool psBuffer = DoesConstantBufferExist(psReflection, bufferSlot, genericElement.Name);
                 D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.BufferSizeInBytes);
-                PerObjectConstantBufferBinding pocbb = new PerObjectConstantBufferBinding(i + numGlobalElements, constantBuffer);
+
+                PerObjectConstantBufferBinding pocbb = new PerObjectConstantBufferBinding(bufferSlot, constantBuffer, vsBuffer, psBuffer);
                 _perObjectBufferBindings[i] = pocbb;
             }
 
@@ -119,6 +129,51 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
+        private static bool DoesConstantBufferExist(ShaderReflection reflection, int slot, string name)
+        {
+            InputBindingDescription bindingDesc;
+            try
+            {
+                bindingDesc = reflection.GetResourceBindingDescription(name);
+
+                if (bindingDesc.BindPoint != slot)
+                {
+                    throw new InvalidOperationException(string.Format("Mismatched binding slot. Expected: {0}, Actual: {1}", slot, bindingDesc.BindPoint));
+                }
+
+                return true;
+            }
+            catch (SharpDX.SharpDXException)
+            {
+                for (int i = 0; i < reflection.Description.BoundResources; i++)
+                {
+                    var desc = reflection.GetResourceBindingDescription(i);
+                    if (desc.Type == ShaderInputType.ConstantBuffer && desc.BindPoint == slot)
+                    {
+                        Console.WriteLine("Buffer in slot " + slot + " has wrong name. Expected: " + name + ", Actual: " + desc.Name);
+                        bindingDesc = desc;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsValid(SharpDX.D3DCompiler.ConstantBuffer buffer)
+        {
+            try
+            {
+                var desc = buffer.Description;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+
+        }
+
         public void Apply()
         {
             _device.ImmediateContext.InputAssembler.InputLayout = _inputLayout;
@@ -128,15 +183,13 @@ namespace Veldrid.Graphics.Direct3D
             foreach (GlobalConstantBufferBinding cbBinding in _constantBufferBindings)
             {
                 cbBinding.UpdateBuffer();
-                _device.ImmediateContext.VertexShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
-                _device.ImmediateContext.PixelShader.SetConstantBuffer(cbBinding.Slot, cbBinding.ConstantBuffer.Buffer);
+                cbBinding.BindToShaderSlots(_device.ImmediateContext);
             }
 
             for (int i = 0; i < _perObjectBufferBindings.Length; i++)
             {
                 PerObjectConstantBufferBinding binding = _perObjectBufferBindings[i];
-                _device.ImmediateContext.VertexShader.SetConstantBuffer(binding.Slot, binding.ConstantBuffer.Buffer);
-                _device.ImmediateContext.PixelShader.SetConstantBuffer(binding.Slot, binding.ConstantBuffer.Buffer);
+                binding.BindToShaderSlots(_device.ImmediateContext);
             }
 
             ApplyDefaultTextureBindings();
@@ -299,16 +352,20 @@ namespace Veldrid.Graphics.Direct3D
         {
             // Is this binding local to this Material, or shared in the RenderContext?
             private readonly bool _isLocalBinding;
+            private readonly bool _isVertexShaderBuffer;
+            private readonly bool _isPixelShaderBuffer;
 
             public int Slot { get; }
             public BufferProviderPair Pair { get; }
             public D3DConstantBuffer ConstantBuffer => (D3DConstantBuffer)Pair.ConstantBuffer;
 
-            public GlobalConstantBufferBinding(int slot, BufferProviderPair pair, bool isLocalBinding)
+            public GlobalConstantBufferBinding(int slot, BufferProviderPair pair, bool isLocalBinding, bool isVertexBuffer, bool isPixelShader)
             {
                 Slot = slot;
                 Pair = pair;
                 _isLocalBinding = isLocalBinding;
+                _isVertexShaderBuffer = isVertexBuffer;
+                _isPixelShaderBuffer = isPixelShader;
             }
 
             public void UpdateBuffer()
@@ -318,17 +375,46 @@ namespace Veldrid.Graphics.Direct3D
                     Pair.UpdateData();
                 }
             }
+
+            public void BindToShaderSlots(DeviceContext dc)
+            {
+                if (_isVertexShaderBuffer)
+                {
+                    dc.VertexShader.SetConstantBuffer(Slot, ConstantBuffer.Buffer);
+                }
+                if (_isPixelShaderBuffer)
+                {
+                    dc.PixelShader.SetConstantBuffer(Slot, ConstantBuffer.Buffer);
+                }
+            }
         }
 
         private struct PerObjectConstantBufferBinding
         {
+            private readonly bool _isVertexShaderBuffer;
+            private readonly bool _isPixelShaderBuffer;
+
             public int Slot { get; }
             public D3DConstantBuffer ConstantBuffer { get; }
 
-            public PerObjectConstantBufferBinding(int slot, D3DConstantBuffer constantBuffer)
+            public PerObjectConstantBufferBinding(int slot, D3DConstantBuffer constantBuffer, bool isVertexBuffer, bool isPixelShader)
             {
                 Slot = slot;
                 ConstantBuffer = constantBuffer;
+                _isVertexShaderBuffer = isVertexBuffer;
+                _isPixelShaderBuffer = isPixelShader;
+            }
+
+            public void BindToShaderSlots(DeviceContext dc)
+            {
+                if (_isVertexShaderBuffer)
+                {
+                    dc.VertexShader.SetConstantBuffer(Slot, ConstantBuffer.Buffer);
+                }
+                if (_isPixelShaderBuffer)
+                {
+                    dc.PixelShader.SetConstantBuffer(Slot, ConstantBuffer.Buffer);
+                }
             }
         }
 

@@ -38,13 +38,13 @@
         "$values": [
             {
                 "$type": "Veldrid.Assets.MaterialGlobalInputDescription, Veldrid.Assets",
-                "Name": "ProjectionMatrix",
+                "Name": "ProjectionMatrixBuffer",
                 "Type": 9,
                 "ProviderName": "LightProjMatrix"
             },
             {
                 "$type": "Veldrid.Assets.MaterialGlobalInputDescription, Veldrid.Assets",
-                "Name": "ViewMatrix",
+                "Name": "ViewMatrixBuffer",
                 "Type": 9,
                 "ProviderName": "LightViewMatrix"
             }
@@ -56,7 +56,7 @@
             {
                 "$type": "Veldrid.Graphics.MaterialPerObjectInputElement, Veldrid",
                 "BufferSizeInBytes": 16,
-                "Name": "WorldMatrix",
+                "Name": "WorldMatrixBuffer",
                 "Type": 9
             }
         ]

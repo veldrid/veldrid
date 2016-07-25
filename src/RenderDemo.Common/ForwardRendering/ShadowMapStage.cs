@@ -26,6 +26,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         public RenderContext RenderContext { get; private set; }
 
+        public Vector3 DirectionalLightPosition { get; set; }
+
         public ShadowMapStage(RenderContext rc, string contextBindingName = "ShadowMap")
         {
             RenderContext = rc;
@@ -54,7 +56,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             RenderContext.ClearBuffer();
             RenderContext.SetViewport(0, 0, DepthMapWidth, DepthMapHeight);
             _queue.Clear();
-            visibilityManager.CollectVisibleObjects(_queue, "ShadowMap", Vector3.Zero); // TODO: Wrong view position.
+            visibilityManager.CollectVisibleObjects(_queue, "ShadowMap", DirectionalLightPosition);
             _queue.Sort();
             foreach (RenderItem item in _queue)
             {

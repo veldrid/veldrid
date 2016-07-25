@@ -680,14 +680,15 @@ namespace Veldrid.RenderDemo
             frustumCenter.Y = (int)frustumCenter.Y;
             frustumCenter = Vector3.Transform(frustumCenter, lookatInv);
 
-            Vector3 eye = frustumCenter - (_lightDirection * radius * 2f);
+            Vector3 lightPos = frustumCenter - (_lightDirection * radius * 2f);
 
-            Matrix4x4 lightView = Matrix4x4.CreateLookAt(eye, frustumCenter, Vector3.UnitY);
+            Matrix4x4 lightView = Matrix4x4.CreateLookAt(lightPos, frustumCenter, Vector3.UnitY);
 
             _lightProjMatrixProvider.Data = Matrix4x4.CreateOrthographicOffCenter(
                 -radius, radius, -radius, radius, -radius * 4f, radius * 4f);
             _lightViewMatrixProvider.Data = lightView;
             _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
+            _shadowMapStage.DirectionalLightPosition = lightPos;
         }
 
         private static void ToggleFullScreenState()
@@ -965,6 +966,7 @@ https://github.com/mellinoe/veldrid.");
             if (newContext != null)
             {
                 CreatedResourceCache.ClearCache();
+                ImGuiImageHelper.InvalidateCache();
 
                 foreach (var kvp in _rc.GetAllGlobalBufferProviderPairs())
                 {

@@ -343,7 +343,7 @@ namespace Veldrid.RenderDemo
             var allItems = node.GetAllOctreeItems().ToArray();
             foreach (var octreeItem in allItems)
             {
-                Vector3 offset = new Vector3((float)(r.NextDouble()) * 5.0f, (float)(r.NextDouble() - 0.5f) * 5.0f, (float)(r.NextDouble() - 0.5f) * 5.0f);
+                Vector3 offset = new Vector3((float)(r.NextDouble()) * 15.0f, (float)(r.NextDouble() - 0.5f) * 5.0f, (float)(r.NextDouble() - 0.5f) * 5.0f);
                 _octree.MoveItem(octreeItem, new BoundingBox(octreeItem.Bounds.Min + offset, octreeItem.Bounds.Max + offset));
                 octreeItem.Item.Position += offset;
                 removed++;

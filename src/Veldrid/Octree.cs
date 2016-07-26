@@ -67,6 +67,7 @@ namespace Veldrid
             else
             {
                 octreeItem.Container.RemoveItem(octreeItem);
+                _currentRoot = _currentRoot.TryTrimChildren();
                 return true;
             }
         }
@@ -91,6 +92,8 @@ namespace Veldrid
             {
                 _currentRoot = newRoot;
             }
+
+            _currentRoot = _currentRoot.TryTrimChildren();
         }
 
         public void Clear() => _currentRoot.Clear();
@@ -172,6 +175,16 @@ namespace Veldrid
             {
                 // Item did not leave the node.
                 newRoot = null;
+
+                // It may have moved into the bounds of a child.
+                foreach (var child in Children)
+                {
+                    if (child.CoreAddItem(item))
+                    {
+                        _items.Remove(item);
+                        break;
+                    }
+                }
             }
             else
             {
@@ -428,10 +441,15 @@ namespace Veldrid
             RecycleNode();
         }
 
-        private void RecycleNode()
+        private void RecycleNode(bool recycleChildren = true)
         {
-            RecycleChildren();
+            if (recycleChildren)
+            {
+                RecycleChildren();
+            }
+
             _items.Clear();
+            _nodeCache.AddNode(this);
         }
 
         private void RecycleChildren()
@@ -441,7 +459,6 @@ namespace Veldrid
                 foreach (var child in Children)
                 {
                     child.RecycleNode();
-                    _nodeCache.AddNode(child);
                 }
 
                 _nodeCache.AddAndClearChildrenArray(Children);
@@ -480,7 +497,16 @@ namespace Veldrid
             // Couldn't fit in any children.
             _items.Add(item);
             item.Container = this;
-            Console.WriteLine("Added to node. New count is " + _items.Count);
+#if DEBUG
+            foreach (var i in _items)
+            {
+                foreach (var child in Children)
+                {
+                    Debug.Assert(child.Bounds.Contains(ref i.Bounds) != ContainmentType.Contains);
+                }
+            }
+#endif
+
             return true;
         }
 
@@ -520,6 +546,7 @@ namespace Veldrid
 
                         if (childBounds.Contains(ref itemBounds) == ContainmentType.Contains)
                         {
+                            Debug.Assert(childBigEnough == null);
                             childBigEnough = newChild;
                         }
 
@@ -545,7 +572,7 @@ namespace Veldrid
                     {
                         _items.Remove(item);
                         i--;
-                        continue;
+                        break;
                     }
                 }
             }
@@ -657,6 +684,52 @@ namespace Veldrid
             return false;
         }
 
+        /// <summary>
+        /// Determines if there is only one child node in use. If so, recycles all other nodes and returns that one.
+        /// If this is not true, the node is returned unchanged.
+        /// </summary>
+        internal OctreeNode<T> TryTrimChildren()
+        {
+            if (_items.Count == 0)
+            {
+                OctreeNode<T> loneChild = null;
+                foreach (var child in Children)
+                {
+                    if (child.GetItemCount() != 0)
+                    {
+                        if (loneChild != null)
+                        {
+                            return this;
+                        }
+                        else
+                        {
+                            loneChild = child;
+                        }
+                    }
+                }
+
+                if (loneChild != null)
+                {
+                    // Recycle excess
+                    foreach (var child in Children)
+                    {
+                        if (child != loneChild)
+                        {
+                            child.RecycleNode();
+                        }
+                    }
+
+                    RecycleNode(recycleChildren: false);
+
+                    // Return lone child in use
+                    loneChild.Parent = null;
+                    return loneChild;
+                }
+            }
+
+            return this;
+        }
+
         private string DebuggerDisplayString
         {
             get
@@ -669,7 +742,7 @@ namespace Veldrid
         {
             private readonly Stack<OctreeNode<T>> _nodes = new Stack<OctreeNode<T>>();
             private readonly Stack<OctreeNode<T>[]> _cachedChildren = new Stack<OctreeNode<T>[]>();
-            private readonly Stack<OctreeItem<T>> _cachedItems= new Stack<OctreeItem<T>>();
+            private readonly Stack<OctreeItem<T>> _cachedItems = new Stack<OctreeItem<T>>();
 
             public int MaxChildren { get; private set; }
 
@@ -680,6 +753,7 @@ namespace Veldrid
 
             public void AddNode(OctreeNode<T> child)
             {
+                Debug.Assert(!_nodes.Contains(child));
                 _nodes.Push(child);
             }
 
@@ -718,6 +792,7 @@ namespace Veldrid
                 {
                     var children = _cachedChildren.Pop();
 #if DEBUG
+                    Debug.Assert(children.Length == 8);
                     for (int i = 0; i < children.Length; i++)
                     {
                         Debug.Assert(children[i] == null);

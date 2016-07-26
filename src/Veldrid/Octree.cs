@@ -6,14 +6,6 @@ using System.Numerics;
 
 namespace Veldrid
 {
-    public static class Octree
-    {
-        public static OctreeNode<T> CreateNewTree<T>(ref BoundingBox bounds, int maxChildren)
-        {
-            return OctreeNode<T>.CreateNewTree(ref bounds, maxChildren);
-        }
-    }
-
     /// <summary>
     /// Maintains a reference to the current root node of a dynamic octree.
     /// The root node may change as items are added and removed from contained nodes.
@@ -33,9 +25,11 @@ namespace Veldrid
         /// </summary>
         public OctreeNode<T> CurrentRoot => _currentRoot;
 
-        public void AddItem(BoundingBox itemBounds, T item)
+        public OctreeItem<T> AddItem(BoundingBox itemBounds, T item)
         {
-            _currentRoot = _currentRoot.AddItem(ref itemBounds, item);
+            OctreeItem<T> ret;
+            _currentRoot = _currentRoot.AddItem(ref itemBounds, item, out ret);
+            return ret;
         }
 
         public void GetContainedObjects(BoundingFrustum frustum, List<T> results)
@@ -62,12 +56,50 @@ namespace Veldrid
         {
             _currentRoot.GetAllContainedObjects(results, filter);
         }
+
+        public bool RemoveItem(T item)
+        {
+            OctreeItem<T> octreeItem;
+            if (!_currentRoot.TryGetContainedOctreeItem(item, out octreeItem))
+            {
+                return false;
+            }
+            else
+            {
+                octreeItem.Container.RemoveItem(octreeItem);
+                return true;
+            }
+        }
+
+        public void MoveItem(T item, BoundingBox newBounds)
+        {
+            OctreeItem<T> octreeItem;
+            if (!_currentRoot.TryGetContainedOctreeItem(item, out octreeItem))
+            {
+                throw new InvalidOperationException(item + " is not contained in the octree. It cannot be moved.");
+            }
+            else
+            {
+                MoveItem(octreeItem, newBounds);
+            }
+        }
+
+        public void MoveItem(OctreeItem<T> octreeItem, BoundingBox newBounds)
+        {
+            var newRoot = octreeItem.Container.ItemMoved(octreeItem, newBounds);
+            if (newRoot != null)
+            {
+                _currentRoot = newRoot;
+            }
+        }
+
+        public void Clear() => _currentRoot.Clear();
     }
 
     [DebuggerDisplay("{DebuggerDisplayString,nq}")]
     public class OctreeNode<T>
     {
-        private readonly List<OctreeItem> _items = new List<OctreeItem>();
+        private readonly List<OctreeItem<T>> _items = new List<OctreeItem<T>>();
         private readonly OctreeNodeCache _nodeCache;
 
         public BoundingBox Bounds { get; private set; }
@@ -75,7 +107,7 @@ namespace Veldrid
         public OctreeNode<T>[] Children { get; private set; } = Array.Empty<OctreeNode<T>>();
         public OctreeNode<T> Parent { get; private set; }
 
-        private const int ChildCount = 8;
+        private const int NumChildNodes = 8;
 
         public static OctreeNode<T> CreateNewTree(ref BoundingBox bounds, int maxChildren)
         {
@@ -84,26 +116,142 @@ namespace Veldrid
 
         public OctreeNode<T> AddItem(BoundingBox itemBounds, T item)
         {
-            return AddItem(ref itemBounds, item);
+            OctreeItem<T> ignored;
+            return AddItem(itemBounds, item, out ignored);
         }
 
         public OctreeNode<T> AddItem(ref BoundingBox itemBounds, T item)
+        {
+            OctreeItem<T> ignored;
+            return AddItem(ref itemBounds, item, out ignored);
+        }
+
+        public OctreeNode<T> AddItem(BoundingBox itemBounds, T item, out OctreeItem<T> itemContainer)
+        {
+            return AddItem(ref itemBounds, item, out itemContainer);
+        }
+
+        public OctreeNode<T> AddItem(ref BoundingBox itemBounds, T item, out OctreeItem<T> octreeItem)
         {
             if (Parent != null)
             {
                 throw new InvalidOperationException("Can only add items to the root Octree node.");
             }
 
-            OctreeNode<T> root = this;
+            octreeItem = _nodeCache.GetOctreeItem(ref itemBounds, item);
+            return CoreAddRootItem(octreeItem);
+        }
 
-            OctreeItem octreeItem = new OctreeItem(ref itemBounds, item);
-            bool result = AddItem(ref octreeItem);
+        private OctreeNode<T> CoreAddRootItem(OctreeItem<T> octreeItem)
+        {
+            OctreeNode<T> root = this;
+            bool result = CoreAddItem(octreeItem);
             if (!result)
             {
-                root = ResizeAndAdd(ref octreeItem);
+                root = ResizeAndAdd(octreeItem);
             }
 
             return root;
+        }
+
+        /// <summary>
+        /// Move a contained OctreeItem. If the root OctreeNode needs to be resized, the new root node is returned.
+        /// </summary>
+        public OctreeNode<T> ItemMoved(OctreeItem<T> item, BoundingBox newBounds)
+        {
+            OctreeNode<T> newRoot = null;
+
+            var container = item.Container;
+            if (!container._items.Contains(item))
+            {
+                throw new InvalidOperationException("Can't move item " + item + ", its container does not contain it.");
+            }
+
+            item.Bounds = newBounds;
+            if (container.Bounds.Contains(ref item.Bounds) == ContainmentType.Contains)
+            {
+                // Item did not leave the node.
+                newRoot = null;
+            }
+            else
+            {
+                container._items.Remove(item);
+                item.Container = null;
+
+                var node = container;
+                while (node.Parent != null && !node.CoreAddItem(item))
+                {
+                    node = node.Parent;
+                }
+
+                if (item.Container == null)
+                {
+                    // This should only occur if the item has moved beyond the root node's bounds.
+                    // We need to resize the root tree.
+                    Debug.Assert(node == GetRootNode());
+                    newRoot = node.CoreAddRootItem(item);
+                }
+
+                container.Parent.ConsiderConsolidation();
+            }
+
+            return newRoot;
+        }
+
+        private OctreeNode<T> GetRootNode()
+        {
+            if (Parent == null)
+            {
+                return this;
+            }
+
+            OctreeNode<T> root = Parent;
+            while (root.Parent != null)
+            {
+                root = root.Parent;
+            }
+
+            return root;
+        }
+
+        public void RemoveItem(OctreeItem<T> octreeItem)
+        {
+            var container = octreeItem.Container;
+            if (!container._items.Remove(octreeItem))
+            {
+                throw new InvalidOperationException("Item isn't contained in its container.");
+            }
+
+            if (container.Parent != null)
+            {
+                container.Parent.ConsiderConsolidation();
+            }
+
+            _nodeCache.AddOctreeItem(octreeItem);
+        }
+
+        private void ConsiderConsolidation()
+        {
+            if (Children.Length > 0 && GetItemCount() < MaxChildren)
+            {
+                ConsolidateChildren();
+            }
+        }
+
+        private void ConsolidateChildren()
+        {
+            foreach (var child in Children)
+            {
+                child.ConsolidateChildren();
+
+                foreach (var childItem in child._items)
+                {
+                    _items.Add(childItem);
+                    childItem.Container = this;
+                }
+            }
+
+            RecycleChildren();
         }
 
         public void GetContainedObjects(BoundingFrustum frustum, List<T> results)
@@ -156,7 +304,7 @@ namespace Veldrid
             else
             {
                 int numHits = 0;
-                foreach (OctreeItem item in _items)
+                foreach (OctreeItem<T> item in _items)
                 {
                     if (ray.Intersects(item.Bounds))
                     {
@@ -229,7 +377,7 @@ namespace Veldrid
             return frustum;
         }
 
-        private bool AnyChild(Func<OctreeItem, bool> filter)
+        private bool AnyChild(Func<OctreeItem<T>, bool> filter)
         {
             if (_items.Any(filter))
             {
@@ -237,6 +385,22 @@ namespace Veldrid
             }
 
             return Children.Any(node => node.AnyChild(filter));
+        }
+
+        // TODO: REMOVE
+        public IEnumerable<OctreeItem<T>> GetAllOctreeItems()
+        {
+            foreach (var item in _items)
+            {
+                yield return item;
+            }
+            foreach (var child in Children)
+            {
+                foreach (var childItem in child.GetAllOctreeItems())
+                {
+                    yield return childItem;
+                }
+            }
         }
 
         private void CoreGetAllContainedObjects(List<T> results, Func<T, bool> filter)
@@ -261,27 +425,31 @@ namespace Veldrid
                 throw new InvalidOperationException("Can only clear the root OctreeNode.");
             }
 
-            RecycleTree();
+            RecycleNode();
         }
 
-        private void RecycleTree()
+        private void RecycleNode()
+        {
+            RecycleChildren();
+            _items.Clear();
+        }
+
+        private void RecycleChildren()
         {
             if (Children.Length != 0)
             {
                 foreach (var child in Children)
                 {
-                    child.RecycleTree();
+                    child.RecycleNode();
                     _nodeCache.AddNode(child);
                 }
 
                 _nodeCache.AddAndClearChildrenArray(Children);
                 Children = Array.Empty<OctreeNode<T>>();
             }
-
-            _items.Clear();
         }
 
-        private bool AddItem(ref OctreeItem item)
+        private bool CoreAddItem(OctreeItem<T> item)
         {
             if (Bounds.Contains(ref item.Bounds) != ContainmentType.Contains)
             {
@@ -293,7 +461,7 @@ namespace Veldrid
                 OctreeNode<T> newNode = SplitChildren(ref item.Bounds, null);
                 if (newNode != null)
                 {
-                    bool succeeded = newNode.AddItem(ref item);
+                    bool succeeded = newNode.CoreAddItem(item);
                     Debug.Assert(succeeded, "Octree node returned from SplitChildren must fit the item given to it.");
                     return true;
                 }
@@ -302,7 +470,7 @@ namespace Veldrid
             {
                 foreach (var child in Children)
                 {
-                    if (child.AddItem(ref item))
+                    if (child.CoreAddItem(item))
                     {
                         return true;
                     }
@@ -311,6 +479,8 @@ namespace Veldrid
 
             // Couldn't fit in any children.
             _items.Add(item);
+            item.Container = this;
+            Console.WriteLine("Added to node. New count is " + _items.Count);
             return true;
         }
 
@@ -371,7 +541,7 @@ namespace Veldrid
                 var item = _items[i];
                 foreach (var child in Children)
                 {
-                    if (child.AddItem(ref item))
+                    if (child.CoreAddItem(item))
                     {
                         _items.Remove(item);
                         i--;
@@ -381,7 +551,7 @@ namespace Veldrid
             }
         }
 
-        private OctreeNode<T> ResizeAndAdd(ref OctreeItem octreeItem)
+        private OctreeNode<T> ResizeAndAdd(OctreeItem<T> octreeItem)
         {
             OctreeNode<T> oldRoot = this;
             Vector3 oldRootCenter = Bounds.GetCenter();
@@ -421,13 +591,13 @@ namespace Veldrid
             OctreeNode<T> fittingNode = newRoot.SplitChildren(ref octreeItem.Bounds, oldRoot);
             if (fittingNode != null)
             {
-                bool succeeded = fittingNode.AddItem(ref octreeItem);
+                bool succeeded = fittingNode.CoreAddItem(octreeItem);
                 Debug.Assert(succeeded, "Octree node returned from SplitChildren must fit the item given to it.");
                 return newRoot;
             }
             else
             {
-                return newRoot.AddItem(ref octreeItem.Bounds, octreeItem.Item);
+                return newRoot.CoreAddRootItem(octreeItem);
             }
         }
 
@@ -458,6 +628,35 @@ namespace Veldrid
             }
         }
 
+        /// <summary>
+        /// Attempts to find an OctreeNode for the given item, in this OctreeNode and its children.
+        /// </summary>
+        /// <param name="item">The item to find.</param>
+        /// <param name="octreeItem">The contained OctreeItem.</param>
+        /// <returns>true if the item was contained in the Octree; false otherwise.</returns>
+        internal bool TryGetContainedOctreeItem(T item, out OctreeItem<T> octreeItem)
+        {
+            foreach (var containedItem in _items)
+            {
+                if (containedItem.Item.Equals(item))
+                {
+                    octreeItem = containedItem;
+                    return true;
+                }
+            }
+
+            foreach (var child in Children)
+            {
+                if (child.TryGetContainedOctreeItem(item, out octreeItem))
+                {
+                    return true;
+                }
+            }
+
+            octreeItem = null;
+            return false;
+        }
+
         private string DebuggerDisplayString
         {
             get
@@ -470,6 +669,7 @@ namespace Veldrid
         {
             private readonly Stack<OctreeNode<T>> _nodes = new Stack<OctreeNode<T>>();
             private readonly Stack<OctreeNode<T>[]> _cachedChildren = new Stack<OctreeNode<T>[]>();
+            private readonly Stack<OctreeItem<T>> _cachedItems= new Stack<OctreeItem<T>>();
 
             public int MaxChildren { get; private set; }
 
@@ -481,6 +681,11 @@ namespace Veldrid
             public void AddNode(OctreeNode<T> child)
             {
                 _nodes.Push(child);
+            }
+
+            public void AddOctreeItem(OctreeItem<T> octreeItem)
+            {
+                _cachedItems.Push(octreeItem);
             }
 
             public OctreeNode<T> GetNode(ref BoundingBox bounds)
@@ -523,9 +728,29 @@ namespace Veldrid
                 }
                 else
                 {
-                    return new OctreeNode<T>[ChildCount];
+                    return new OctreeNode<T>[NumChildNodes];
                 }
             }
+
+            public OctreeItem<T> GetOctreeItem(ref BoundingBox bounds, T item)
+            {
+                OctreeItem<T> octreeItem;
+                if (_cachedItems.Count > 0)
+                {
+                    octreeItem = _cachedItems.Pop();
+                    octreeItem.Bounds = bounds;
+                    octreeItem.Item = item;
+                    octreeItem.Container = null;
+                }
+                else
+                {
+                    octreeItem = CreateNewItem(ref bounds, item);
+                }
+
+                return octreeItem;
+            }
+
+            private OctreeItem<T> CreateNewItem(ref BoundingBox bounds, T item) => new OctreeItem<T>(ref bounds, item);
 
             private OctreeNode<T> CreateNewNode(ref BoundingBox bounds)
             {
@@ -533,22 +758,24 @@ namespace Veldrid
                 return node;
             }
         }
+    }
 
-        private struct OctreeItem
+    public class OctreeItem<T>
+    {
+        /// <summary>The node this item directly resides in. /// </summary>
+        public OctreeNode<T> Container;
+        public BoundingBox Bounds;
+        public T Item;
+
+        public OctreeItem(ref BoundingBox bounds, T item)
         {
-            public BoundingBox Bounds;
-            public T Item;
+            Bounds = bounds;
+            Item = item;
+        }
 
-            public OctreeItem(ref BoundingBox bounds, T item)
-            {
-                Bounds = bounds;
-                Item = item;
-            }
-
-            public override string ToString()
-            {
-                return string.Format("{0}, {1}", Bounds, Item);
-            }
+        public override string ToString()
+        {
+            return string.Format("{0}, {1}", Bounds, Item);
         }
     }
 }

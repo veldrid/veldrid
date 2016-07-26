@@ -71,7 +71,7 @@ namespace Veldrid.RenderDemo
 
         private static ShadowMapPreview _shadowMapPreview;
         private static RendererOption _selectedOption;
-        private static OctreeNode<ShadowCaster> _octree;
+        private static Octree<ShadowCaster> _octree;
         private static List<RenderItem> _octreeCubes = new List<RenderItem>();
         private static Vector3 _octreeBoxPosition;
         private static MaterialAsset _stoneMaterial;
@@ -308,8 +308,8 @@ namespace Veldrid.RenderDemo
                 _stoneMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Stone.json"));
 
                 BoundingBox bounds = new BoundingBox(new Vector3(-25, -25, -25), new Vector3(25, 25, 25));
-                _octree = Octree.CreateNewTree<ShadowCaster>(ref bounds, 3);
-                _octreeRenderer = new OctreeRenderer<ShadowCaster>(_octree, _ad, _rc);
+                _octree = new Octree<ShadowCaster>(bounds, 3);
+                _octreeRenderer = new OctreeRenderer<ShadowCaster>(_octree.CurrentRoot, _ad, _rc);
                 _octreeScene.AddRenderItem(_octreeRenderer);
 
                 _octreeFrustumRenderer = new FrustumWireframeRenderer(default(BoundingFrustum), _ad, _rc);
@@ -336,12 +336,25 @@ namespace Veldrid.RenderDemo
 
         private static void ClearOctreeItems()
         {
-            _octree.Clear();
-            foreach (var item in _octreeCubes)
+            var node = _octree.CurrentRoot;
+            int removed = 0;
+
+            Random r = new Random();
+            var allItems = node.GetAllOctreeItems().ToArray();
+            foreach (var octreeItem in allItems)
             {
-                _octreeScene.RemoveRenderItem(item);
+                Vector3 offset = new Vector3((float)(r.NextDouble()) * 5.0f, (float)(r.NextDouble() - 0.5f) * 5.0f, (float)(r.NextDouble() - 0.5f) * 5.0f);
+                _octree.MoveItem(octreeItem, new BoundingBox(octreeItem.Bounds.Min + offset, octreeItem.Bounds.Max + offset));
+                octreeItem.Item.Position += offset;
+                removed++;
+                if (removed == 4)
+                {
+                    //break;
+                }
             }
-            _octreeCubes.Clear();
+
+            // Root node may have changed.
+            _octreeRenderer.Octree = _octree.CurrentRoot;
         }
 
         private static void AddOctreeCube(Vector3 position)
@@ -349,8 +362,8 @@ namespace Veldrid.RenderDemo
             var cube = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, _stoneMaterial);
             cube.Position = position;
             _octreeScene.AddRenderItem(cube);
-            _octree = _octree.AddItem(cube.BoundingBox, cube);
-            _octreeRenderer.Octree = _octree;
+            _octree.AddItem(cube.BoundingBox, cube);
+            _octreeRenderer.Octree = _octree.CurrentRoot;
             _octreeCubes.Add(cube);
         }
 

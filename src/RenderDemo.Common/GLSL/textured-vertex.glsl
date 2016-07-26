@@ -10,7 +10,7 @@ uniform ViewMatrixBuffer
     mat4 view_matrix;
 };
 
-uniform WorldMatrix
+uniform WorldMatrixBuffer
 {
     mat4 world_matrix;
 };

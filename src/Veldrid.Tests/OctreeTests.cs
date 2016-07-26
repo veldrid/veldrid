@@ -10,7 +10,7 @@ namespace Veldrid
         public static void Basic()
         {
             BoundingBox octreeBounds = new BoundingBox(Vector3.Zero, new Vector3(100, 100, 100));
-            OctreeNode<string> octree = Octree.CreateNewTree<string>(ref octreeBounds, 3);
+            OctreeNode<string> octree = new OctreeNode<string>(octreeBounds, 3);
 
             Vector3[] mins = new Vector3[]
             {

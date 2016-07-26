@@ -12,6 +12,8 @@ namespace Veldrid.Graphics
         private readonly Dictionary<string, Func<RenderItem, bool>> _filters = new Dictionary<string, Func<RenderItem, bool>>();
         private Octree<RenderItem> _octree = new Octree<RenderItem>(new BoundingBox(Vector3.One * -50, Vector3.One * 50), 2);
 
+        public Octree<RenderItem> Octree => _octree;
+
         public OctreeNode<RenderItem> OctreeRootNode => _octree.CurrentRoot;
 
         public IEnumerable<RenderItem> RenderItems
@@ -79,14 +81,25 @@ namespace Veldrid.Graphics
             _freeRenderItems.Add(ri);
         }
 
-        public void AddRenderItem(BoundingBox bounds, RenderItem ri)
+        public OctreeItem<RenderItem> AddRenderItem(BoundingBox bounds, RenderItem ri)
         {
-            _octree.AddItem(bounds, ri);
+            return _octree.AddItem(bounds, ri);
         }
 
-        public void AddRenderItem(ref BoundingBox bounds, RenderItem ri)
+        public OctreeItem<RenderItem> AddRenderItem(ref BoundingBox bounds, RenderItem ri)
         {
-            _octree.AddItem(bounds, ri);
+            return _octree.AddItem(bounds, ri);
+        }
+
+        public void RemoveRenderItem(RenderItem ri)
+        {
+            if (!_octree.RemoveItem(ri))
+            {
+                if (!_freeRenderItems.Remove(ri))
+                {
+                    throw new InvalidOperationException("Couldn't remove RenderItem " + ri + ". It wasn't contained in the scene.");
+                }
+            }
         }
     }
 }

@@ -15,6 +15,8 @@ namespace Veldrid
     {
         private OctreeNode<T> _currentRoot;
 
+        private List<OctreeItem<T>> _pendingMoveStage = new List<OctreeItem<T>>();
+
         public Octree(BoundingBox boundingBox, int maxChildre)
         {
             _currentRoot = new OctreeNode<T>(boundingBox, maxChildre);
@@ -66,10 +68,15 @@ namespace Veldrid
             }
             else
             {
-                octreeItem.Container.RemoveItem(octreeItem);
-                _currentRoot = _currentRoot.TryTrimChildren();
+                RemoveItem(octreeItem);
                 return true;
             }
+        }
+
+        public void RemoveItem(OctreeItem<T> octreeItem)
+        {
+            octreeItem.Container.RemoveItem(octreeItem);
+            _currentRoot = _currentRoot.TryTrimChildren();
         }
 
         public void MoveItem(T item, BoundingBox newBounds)
@@ -87,7 +94,7 @@ namespace Veldrid
 
         public void MoveItem(OctreeItem<T> octreeItem, BoundingBox newBounds)
         {
-            var newRoot = octreeItem.Container.ItemMoved(octreeItem, newBounds);
+            var newRoot = octreeItem.Container.MoveContainedItem(octreeItem, newBounds);
             if (newRoot != null)
             {
                 _currentRoot = newRoot;
@@ -97,6 +104,20 @@ namespace Veldrid
         }
 
         public void Clear() => _currentRoot.Clear();
+
+        /// <summary>
+        /// Apply pending moves. This may change the current root node.
+        /// </summary>
+        public void ApplyPendingMoves()
+        {
+            _pendingMoveStage.Clear();
+            _currentRoot.CollectPendingMoves(_pendingMoveStage);
+            foreach (var item in _pendingMoveStage)
+            {
+                MoveItem(item, item.Bounds);
+                item.HasPendingMove = false;
+            }
+        }
     }
 
     [DebuggerDisplay("{DebuggerDisplayString,nq}")]
@@ -160,7 +181,7 @@ namespace Veldrid
         /// <summary>
         /// Move a contained OctreeItem. If the root OctreeNode needs to be resized, the new root node is returned.
         /// </summary>
-        public OctreeNode<T> ItemMoved(OctreeItem<T> item, BoundingBox newBounds)
+        public OctreeNode<T> MoveContainedItem(OctreeItem<T> item, BoundingBox newBounds)
         {
             OctreeNode<T> newRoot = null;
 
@@ -176,7 +197,7 @@ namespace Veldrid
                 // Item did not leave the node.
                 newRoot = null;
 
-                // It may have moved into the bounds of a child.
+                // It may have moved into the bounds of a child node.
                 foreach (var child in Children)
                 {
                     if (child.CoreAddItem(item))
@@ -209,6 +230,20 @@ namespace Veldrid
             }
 
             return newRoot;
+        }
+
+        /// <summary>
+        /// Mark an item as having moved, but do not alter the octree structure. Call <see cref="ApplyPendingMoves" to update the octree structure. />
+        /// </summary>
+        public void MarkItemAsMoved(OctreeItem<T> octreeItem, BoundingBox newBounds)
+        {
+            if (!_items.Contains(octreeItem))
+            {
+                throw new InvalidOperationException("Cannot mark item as moved which doesn't belong to this OctreeNode.");
+            }
+
+            octreeItem.HasPendingMove = true;
+            octreeItem.Bounds = newBounds;
         }
 
         private OctreeNode<T> GetRootNode()
@@ -248,6 +283,7 @@ namespace Veldrid
             if (Children.Length > 0 && GetItemCount() < MaxChildren)
             {
                 ConsolidateChildren();
+                Parent.ConsiderConsolidation();
             }
         }
 
@@ -400,7 +436,6 @@ namespace Veldrid
             return Children.Any(node => node.AnyChild(filter));
         }
 
-        // TODO: REMOVE
         public IEnumerable<OctreeItem<T>> GetAllOctreeItems()
         {
             foreach (var item in _items)
@@ -495,17 +530,15 @@ namespace Veldrid
             }
 
             // Couldn't fit in any children.
-            _items.Add(item);
-            item.Container = this;
 #if DEBUG
-            foreach (var i in _items)
+            foreach (var child in Children)
             {
-                foreach (var child in Children)
-                {
-                    Debug.Assert(child.Bounds.Contains(ref i.Bounds) != ContainmentType.Contains);
-                }
+                Debug.Assert(child.Bounds.Contains(ref item.Bounds) != ContainmentType.Contains);
             }
 #endif
+
+            _items.Add(item);
+            item.Container = this;
 
             return true;
         }
@@ -558,6 +591,12 @@ namespace Veldrid
             }
 
             PushItemsToChildren();
+#if DEBUG
+            for (int g = 0; g < Children.Length; g++)
+            {
+                Debug.Assert(Children[g] != null);
+            }
+#endif
             return childBigEnough;
         }
 
@@ -576,6 +615,16 @@ namespace Veldrid
                     }
                 }
             }
+
+#if DEBUG
+            foreach (var i in _items)
+            {
+                foreach (var child in Children)
+                {
+                    Debug.Assert(child.Bounds.Contains(ref i.Bounds) != ContainmentType.Contains);
+                }
+            }
+#endif
         }
 
         private OctreeNode<T> ResizeAndAdd(OctreeItem<T> octreeItem)
@@ -674,6 +723,7 @@ namespace Veldrid
 
             foreach (var child in Children)
             {
+                Debug.Assert(child != null, "node child cannot be null.");
                 if (child.TryGetContainedOctreeItem(item, out octreeItem))
                 {
                     return true;
@@ -728,6 +778,22 @@ namespace Veldrid
             }
 
             return this;
+        }
+
+        internal void CollectPendingMoves(List<OctreeItem<T>> pendingMoves)
+        {
+            foreach (var child in Children)
+            {
+                child.CollectPendingMoves(pendingMoves);
+            }
+
+            foreach (var item in _items)
+            {
+                if (item.HasPendingMove)
+                {
+                    pendingMoves.Add(item);
+                }
+            }
         }
 
         private string DebuggerDisplayString
@@ -841,6 +907,8 @@ namespace Veldrid
         public OctreeNode<T> Container;
         public BoundingBox Bounds;
         public T Item;
+
+        public bool HasPendingMove { get; set; }
 
         public OctreeItem(ref BoundingBox bounds, T item)
         {

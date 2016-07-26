@@ -336,7 +336,10 @@ namespace Veldrid.Graphics.Direct3D
             _inputLayout.Dispose();
             foreach (var binding in _constantBufferBindings)
             {
-                binding.ConstantBuffer.Dispose();
+                if (binding.IsLocalBinding) // Do not dispose shared bindings.
+                {
+                    binding.ConstantBuffer.Dispose();
+                }
             }
             foreach (var binding in _perObjectBufferBindings)
             {
@@ -351,7 +354,7 @@ namespace Veldrid.Graphics.Direct3D
         private struct GlobalConstantBufferBinding
         {
             // Is this binding local to this Material, or shared in the RenderContext?
-            private readonly bool _isLocalBinding;
+            public readonly bool IsLocalBinding;
             private readonly bool _isVertexShaderBuffer;
             private readonly bool _isPixelShaderBuffer;
 
@@ -363,14 +366,14 @@ namespace Veldrid.Graphics.Direct3D
             {
                 Slot = slot;
                 Pair = pair;
-                _isLocalBinding = isLocalBinding;
+                IsLocalBinding = isLocalBinding;
                 _isVertexShaderBuffer = isVertexBuffer;
                 _isPixelShaderBuffer = isPixelShader;
             }
 
             public void UpdateBuffer()
             {
-                if (_isLocalBinding)
+                if (IsLocalBinding)
                 {
                     Pair.UpdateData();
                 }

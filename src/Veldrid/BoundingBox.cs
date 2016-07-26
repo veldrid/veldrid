@@ -71,6 +71,23 @@ namespace Veldrid
             return new BoundingBox((min * scale) + offset, (max * scale) + offset);
         }
 
+        public static unsafe BoundingBox Transform(BoundingBox box, Matrix4x4 mat)
+        {
+            AlignedBoxCorners corners = box.GetCorners();
+            Vector3* cornersPtr = (Vector3*)&corners;
+
+            Vector3 min = Vector3.Transform(cornersPtr[0], mat);
+            Vector3 max = Vector3.Transform(cornersPtr[0], mat);
+
+            for (int i = 1; i < 8; i++)
+            {
+                min = Vector3.Min(min, Vector3.Transform(cornersPtr[i], mat));
+                max = Vector3.Max(max, Vector3.Transform(cornersPtr[i], mat));
+            }
+
+            return new BoundingBox(min, max);
+        }
+
         public static unsafe BoundingBox CreateFromVertices(Vector3* vertices, int numVertices, Quaternion rotation, Vector3 offset, Vector3 scale)
         {
             Vector3 min = Vector3.Transform(vertices[0], rotation);

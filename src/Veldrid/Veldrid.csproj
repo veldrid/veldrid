@@ -124,9 +124,6 @@
     <Compile Include="VectorExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="$(DepsDir)\SharpYaml\SharpYaml.dll">
-      <Name>SharpYaml</Name>
-    </Reference>
     <None Include="project.json" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />

@@ -69,6 +69,12 @@ namespace Veldrid.Platform
             _nativeWindow.MouseUp += OnMouseUp;
             _nativeWindow.Closing += OnWindowClosing;
             _nativeWindow.Closed += OnWindowClosed;
+            _nativeWindow.MouseWheel += OnMouseWheel;
+        }
+
+        private void OnMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            CurrentSnapshot.WheelDelta += e.DeltaPrecise;
         }
 
         /// <summary>Gets the NativeWindow wrapped by this instance.</summary>
@@ -268,6 +274,7 @@ namespace Veldrid.Platform
 
             private bool[] _mouseDown = new bool[12];
             public bool[] MouseDown => _mouseDown;
+            public float WheelDelta { get; set; }
 
             public bool IsMouseDown(MouseButton button)
             {
@@ -279,6 +286,7 @@ namespace Veldrid.Platform
                 KeyEventsList.Clear();
                 MouseEventsList.Clear();
                 KeyCharPressesList.Clear();
+                WheelDelta = 0f;
             }
         }
     }

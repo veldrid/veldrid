@@ -10,5 +10,6 @@ namespace Veldrid.Platform
         IReadOnlyCollection<char> KeyCharPresses { get; }
         bool IsMouseDown(MouseButton button);
         Vector2 MousePosition { get; }
+        float WheelDelta { get; }
     }
 }

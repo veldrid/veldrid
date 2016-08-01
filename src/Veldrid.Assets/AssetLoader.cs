@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace Veldrid.Assets
 {
@@ -8,11 +9,16 @@ namespace Veldrid.Assets
         object Load(Stream s);
     }
 
-    public abstract class AssetLoader<TAsset> : AssetLoader
+    public interface AssetLoader<out TAsset> : AssetLoader
+    {
+        new TAsset Load(Stream s);
+    }
+
+    public abstract class ConcreteLoader<T> : AssetLoader<T>
     {
         public abstract string FileExtension { get; }
 
-        public abstract TAsset Load(Stream s);
+        public abstract T Load(Stream s);
 
         object AssetLoader.Load(Stream s) => Load(s);
     }

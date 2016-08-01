@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using Veldrid.Graphics;
 using System.Diagnostics;
+using Veldrid.Assets.Converters;
 
 namespace Veldrid.Assets
 {
@@ -14,9 +15,12 @@ namespace Veldrid.Assets
         private Dictionary<Type, AssetLoader> _assetLoaders = new Dictionary<Type, AssetLoader>()
         {
             { typeof(ImageProcessorTexture), new PngLoader() },
-            { typeof(ObjFile), new ModelLoader() }
+            { typeof(TextureData), new PngLoader() },
+            { typeof(ObjFile), new ObjFileLoader() }
         };
 
+        // Used for untyped loads on an asset
+        // i.e.: object LoadAsset(AssetID);
         private static readonly Dictionary<string, Type> s_extensionTypeMappings = new Dictionary<string, Type>()
         {
             { ".png", typeof(ImageProcessorTexture) },
@@ -27,6 +31,8 @@ namespace Veldrid.Assets
 
         private static readonly JsonSerializer _serializer = CreateDefaultSerializer();
 
+        public JsonSerializer DefaultSerializer => _serializer;
+
         public LooseFileDatabase(string rootPath)
         {
             _rootPath = rootPath;
@@ -34,10 +40,16 @@ namespace Veldrid.Assets
 
         private static JsonSerializer CreateDefaultSerializer()
         {
-            return new JsonSerializer()
+            JsonConverter[] converters = new JsonConverter[]
             {
-                TypeNameHandling = TypeNameHandling.All
+                new VertexPositionNormalTextureConverter()
             };
+
+            return JsonSerializer.Create(new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.All,
+                Converters = converters
+            });
         }
 
         public void SaveDefinition<T>(T obj, string name)
@@ -142,7 +154,7 @@ namespace Veldrid.Assets
             }
             else
             {
-                return new TextAssetLoader<T>();
+                return new TextAssetLoader<T>(_serializer);
             }
         }
 

@@ -5,7 +5,7 @@ using System;
 
 namespace Veldrid.Assets
 {
-    public class PngLoader : AssetLoader<ImageProcessorTexture>
+    public class PngLoader : ConcreteLoader<ImageProcessorTexture>
     {
         public override string FileExtension => "png";
 

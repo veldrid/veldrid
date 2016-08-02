@@ -313,13 +313,17 @@ namespace Veldrid.Graphics
 
         public void RegisterGlobalDataProvider(string name, ConstantBufferDataProvider provider)
         {
-            if (_bufferProviderPairs.ContainsKey(name))
+            BufferProviderPair pair;
+            if (_bufferProviderPairs.TryGetValue(name, out pair))
             {
-                throw new InvalidOperationException("A provider is already registered with name " + name);
+                ChangeableProvider changeable = (ChangeableProvider)pair.DataProvider;
+                changeable.DataProvider = provider;
             }
-
-            var constantBuffer = ResourceFactory.CreateConstantBuffer(provider.DataSizeInBytes);
-            _bufferProviderPairs.Add(name, new BufferProviderPair(constantBuffer, provider));
+            else
+            {
+                var constantBuffer = ResourceFactory.CreateConstantBuffer(provider.DataSizeInBytes);
+                _bufferProviderPairs.Add(name, new BufferProviderPair(constantBuffer, new ChangeableProvider(provider)));
+            }
         }
 
         public BufferProviderPair GetNamedGlobalBufferProviderPair(string name)
@@ -444,6 +448,44 @@ namespace Veldrid.Graphics
 
         public ContextDeviceBinding()
         {
+        }
+    }
+
+    public class ChangeableProvider : ConstantBufferDataProvider
+    {
+        private ConstantBufferDataProvider _dataProvider;
+
+        public ConstantBufferDataProvider DataProvider
+        {
+            get { return _dataProvider; }
+            set
+            {
+                _dataProvider.DataChanged -= OnParentDataChanged;
+                _dataProvider = value;
+                _dataProvider.DataChanged += OnParentDataChanged;
+                OnParentDataChanged();
+            }
+        }
+
+        public event Action DataChanged;
+
+        public ChangeableProvider(ConstantBufferDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+            DataSizeInBytes = dataProvider.DataSizeInBytes;
+            dataProvider.DataChanged += OnParentDataChanged;
+        }
+
+        private void OnParentDataChanged()
+        {
+            DataChanged?.Invoke();
+        }
+
+        public int DataSizeInBytes { get; }
+
+        public void SetData(ConstantBuffer buffer)
+        {
+            _dataProvider.SetData(buffer);
         }
     }
 

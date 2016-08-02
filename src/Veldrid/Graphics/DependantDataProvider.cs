@@ -6,7 +6,7 @@ namespace Veldrid.Graphics
     /// A type providing data which is calculated from another DynamicDataProvider.
     /// </summary>
     /// <typeparam name="T">The type of data to provide.</typeparam>
-    public class DependantDataProvider<T> : ConstantBufferDataProvider where T : struct
+    public class DependantDataProvider<T> : ConstantBufferDataProvider where T : struct, IEquatable<T>
     {
         private readonly DynamicDataProvider<T> _dataProvider;
         private readonly Func<T, T> _derivedFunc;

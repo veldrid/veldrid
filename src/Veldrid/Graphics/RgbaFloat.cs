@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics
 {
-    public struct RgbaFloat
+    public struct RgbaFloat : IEquatable<RgbaFloat>
     {
         private readonly Vector4 _channels;
 
@@ -40,6 +40,11 @@ namespace Veldrid.Graphics
         public Vector4 ToVector4()
         {
             return _channels;
+        }
+
+        public bool Equals(RgbaFloat other)
+        {
+            return _channels.Equals(other._channels);
         }
     }
 }

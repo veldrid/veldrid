@@ -4,6 +4,8 @@ namespace Veldrid.Graphics
 {
     public abstract class ResourceFactory : DeviceTextureCreator
     {
+        public string ShaderAssetRootPath { get; set; } = AppContext.BaseDirectory;
+
         public abstract VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic);
 
         public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic);

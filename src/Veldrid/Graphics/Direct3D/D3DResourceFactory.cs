@@ -192,7 +192,7 @@ namespace Veldrid.Graphics.Direct3D
 
         private string GetShaderPathFromName(string shaderName)
         {
-            return Path.Combine(AppContext.BaseDirectory, s_shaderDirectory, shaderName + "." + s_shaderFileExtension);
+            return Path.Combine(ShaderAssetRootPath, s_shaderDirectory, shaderName + "." + s_shaderFileExtension);
         }
 
         public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison)

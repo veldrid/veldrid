@@ -6,12 +6,13 @@ using System.Collections.Generic;
 using Veldrid.Graphics;
 using System.Diagnostics;
 using Veldrid.Assets.Converters;
+using System.Reflection;
 
 namespace Veldrid.Assets
 {
     public class LooseFileDatabase : AssetDatabase
     {
-        private readonly string _rootPath;
+        private string _rootPath;
         private Dictionary<Type, AssetLoader> _assetLoaders = new Dictionary<Type, AssetLoader>()
         {
             { typeof(ImageProcessorTexture), new PngLoader() },
@@ -32,6 +33,8 @@ namespace Veldrid.Assets
         private static readonly JsonSerializer _serializer = CreateDefaultSerializer();
 
         public JsonSerializer DefaultSerializer => _serializer;
+
+        public string RootPath { get { return _rootPath; } set { _rootPath = value; } }
 
         public LooseFileDatabase(string rootPath)
         {
@@ -131,7 +134,6 @@ namespace Veldrid.Assets
         {
             string path = GetAssetPath(assetID);
             return File.OpenRead(path);
-
         }
 
         public DirectoryNode GetRootDirectoryGraph() => GetDirectoryGraph(_rootPath);
@@ -143,6 +145,48 @@ namespace Veldrid.Assets
             var children = rootDirectory.EnumerateDirectories().Select(di => GetDirectoryGraph(di.FullName)).ToArray();
 
             return new DirectoryNode(path, assetInfos.ToArray(), children);
+        }
+
+        public AssetID[] GetAssetsOfType(Type t)
+        {
+            List<AssetID> discovered = new List<AssetID>();
+            HashSet<string> extensions = new HashSet<string>();
+            foreach (var kvp in s_extensionTypeMappings)
+            {
+                if (t.GetTypeInfo().IsAssignableFrom(kvp.Value))
+                {
+                    extensions.Add(kvp.Key);
+                }
+            }
+
+            var node = GetRootDirectoryGraph();
+            DiscoverAssets(node, extensions, discovered);
+
+            return discovered.ToArray();
+        }
+
+        private void DiscoverAssets(DirectoryNode node, HashSet<string> extensions, List<AssetID> discovered)
+        {
+            foreach (var asset in node.AssetInfos)
+            {
+                if (extensions.Contains(Path.GetExtension(asset.Path)))
+                {
+                    string fullPath = asset.Path;
+                    AssetID id = GetIdFromFullPath(fullPath);
+                    discovered.Add(id);
+                }
+            }
+
+            foreach (var child in node.Children)
+            {
+                DiscoverAssets(child, extensions, discovered);
+            }
+        }
+
+        private AssetID GetIdFromFullPath(string fullPath)
+        {
+            Debug.Assert(fullPath.StartsWith(_rootPath));
+            return fullPath.Substring(_rootPath.Length + 1, fullPath.Length - _rootPath.Length - 1);
         }
 
         private AssetLoader<T> GetLoader<T>()

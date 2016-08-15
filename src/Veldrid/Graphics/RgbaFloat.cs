@@ -26,6 +26,7 @@ namespace Veldrid.Graphics
         public static readonly RgbaFloat Blue = new RgbaFloat(0, 0, 1, 1);
         public static readonly RgbaFloat Yellow = new RgbaFloat(1, 1, 0, 1);
         public static readonly RgbaFloat Grey = new RgbaFloat(.25f, .25f, .25f, 1);
+        public static readonly RgbaFloat LightGrey = new RgbaFloat(.65f, .65f, .65f, 1);
         public static readonly RgbaFloat Cyan = new RgbaFloat(0, 1, 1, 1);
         public static readonly RgbaFloat White = new RgbaFloat(1, 1, 1, 1);
         public static readonly RgbaFloat CornflowerBlue = new RgbaFloat(0.3921f, 0.5843f, 0.9294f, 1);

@@ -233,7 +233,7 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Mark an item as having moved, but do not alter the octree structure. Call <see cref="ApplyPendingMoves" to update the octree structure. />
+        /// Mark an item as having moved, but do not alter the octree structure. Call <see cref="ApplyPendingMoves" /> to update the octree structure.
         /// </summary>
         public void MarkItemAsMoved(OctreeItem<T> octreeItem, BoundingBox newBounds)
         {
@@ -283,7 +283,7 @@ namespace Veldrid
             if (Children.Length > 0 && GetItemCount() < MaxChildren)
             {
                 ConsolidateChildren();
-                Parent.ConsiderConsolidation();
+                Parent?.ConsiderConsolidation();
             }
         }
 

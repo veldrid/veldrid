@@ -19,17 +19,18 @@ namespace Veldrid.Platform
 
         protected SimpleInputSnapshot CurrentSnapshot = new SimpleInputSnapshot();
 
-        private bool[] _mouseDown = new bool[12];
+        private bool[] _mouseDown = new bool[13];
 
         public OpenTKWindowBase()
+            : this(960, 540, WindowState.Normal) { }
+
+        public OpenTKWindowBase(int width, int height, WindowState initialState)
         {
-            ConstructDefaultWindow();
+            ConstructDefaultWindow(width, height, initialState);
         }
 
-        protected virtual void ConstructDefaultWindow()
+        protected virtual void ConstructDefaultWindow(int desiredWidth, int desiredHeight, WindowState windowState)
         {
-            int desiredWidth = 960;
-            int desiredHeight = 540;
             _nativeWindow = new NativeWindow(
                 desiredWidth,
                 desiredHeight,
@@ -57,9 +58,10 @@ namespace Veldrid.Platform
                 ScaleFactor = new System.Numerics.Vector2(2.0f, 2.0f);
             }
 
-            _nativeWindow.Visible = true;
             _nativeWindow.X = 100;
             _nativeWindow.Y = 100;
+            _nativeWindow.WindowState = VeldridToOpenTKState(windowState);
+            _nativeWindow.Visible = true;
 
             _nativeWindow.Resize += OnWindowResized;
             _nativeWindow.KeyDown += OnKeyDown;
@@ -119,19 +121,7 @@ namespace Veldrid.Platform
         {
             get
             {
-                switch (_nativeWindow.WindowState)
-                {
-                    case OpenTK.WindowState.Normal:
-                        return WindowState.Normal;
-                    case OpenTK.WindowState.Minimized:
-                        return WindowState.Minimized;
-                    case OpenTK.WindowState.Maximized:
-                        return WindowState.Maximized;
-                    case OpenTK.WindowState.Fullscreen:
-                        return WindowState.FullScreen;
-                    default:
-                        throw Illegal.Value<WindowState>();
-                }
+                return OpenTKToVeldridState(_nativeWindow.WindowState);
             }
 
             set
@@ -153,6 +143,40 @@ namespace Veldrid.Platform
                     default:
                         throw Illegal.Value<WindowState>();
                 }
+            }
+        }
+
+        private static WindowState OpenTKToVeldridState(OpenTK.WindowState openTKState)
+        {
+            switch (openTKState)
+            {
+                case OpenTK.WindowState.Normal:
+                    return WindowState.Normal;
+                case OpenTK.WindowState.Minimized:
+                    return WindowState.Minimized;
+                case OpenTK.WindowState.Maximized:
+                    return WindowState.Maximized;
+                case OpenTK.WindowState.Fullscreen:
+                    return WindowState.FullScreen;
+                default:
+                    throw Illegal.Value<WindowState>();
+            }
+        }
+
+        private static OpenTK.WindowState VeldridToOpenTKState(WindowState state)
+        {
+            switch (state)
+            {
+                case WindowState.Normal:
+                    return OpenTK.WindowState.Normal;
+                case WindowState.FullScreen:
+                    return OpenTK.WindowState.Fullscreen;
+                case WindowState.Maximized:
+                    return OpenTK.WindowState.Maximized;
+                case WindowState.Minimized:
+                    return OpenTK.WindowState.Minimized;
+                default:
+                    throw Illegal.Value<WindowState>();
             }
         }
 
@@ -272,7 +296,7 @@ namespace Veldrid.Platform
 
             public System.Numerics.Vector2 MousePosition { get; set; }
 
-            private bool[] _mouseDown = new bool[12];
+            private bool[] _mouseDown = new bool[13];
             public bool[] MouseDown => _mouseDown;
             public float WheelDelta { get; set; }
 

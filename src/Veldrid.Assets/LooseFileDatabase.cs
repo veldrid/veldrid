@@ -97,6 +97,11 @@ namespace Veldrid.Assets
         public object LoadAsset(AssetID id)
         {
             Type t = GetAssetType(id);
+            return LoadAsset(t, id);
+        }
+
+        public object LoadAsset(Type t, AssetID id)
+        {
             AssetLoader loader = GetLoader(t);
             using (var stream = OpenAssetStream(id))
             {
@@ -110,7 +115,9 @@ namespace Veldrid.Assets
             Type type;
             if (!s_extensionTypeMappings.TryGetValue(extension, out type))
             {
-                type = typeof(object);
+                var asset = LoadAsset(typeof(object), id);
+                type = asset.GetType();
+                s_extensionTypeMappings.Add(extension, type);
             }
 
             return type;
@@ -207,9 +214,8 @@ namespace Veldrid.Assets
             AssetLoader loader;
             if (!_assetLoaders.TryGetValue(t, out loader))
             {
-                Debug.Assert(t == typeof(object));
-                loader = new ObjectTextAssetLoader();
-                _assetLoaders.Add(typeof(object), loader);
+                loader = new TextAssetLoader<object>(_serializer);
+                _assetLoaders.Add(t, loader);
             }
 
             return loader;

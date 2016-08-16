@@ -20,11 +20,24 @@ namespace Veldrid.Platform
         /// <summary>Gets or sets whether to limit message polling and processing.</summary>
         public bool LimitPollRate { get; set; }
 
-        protected override void ConstructDefaultWindow()
+        public DedicatedThreadWindow() { }
+
+        public DedicatedThreadWindow(int width, int height, WindowState initialState)
+            : base(width, height, initialState) { }
+
+        protected override void ConstructDefaultWindow(int width, int height, WindowState state)
         {
             using (ManualResetEvent mre = new ManualResetEvent(false))
             {
-                Task.Factory.StartNew(WindowOwnerRoutine, mre, TaskCreationOptions.LongRunning);
+                WindowParams wp = new WindowParams()
+                {
+                    Width = width,
+                    Height = height,
+                    WindowState = state,
+                    ResetEvent = mre
+                };
+
+                Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
                 mre.WaitOne();
             }
         }
@@ -44,9 +57,9 @@ namespace Veldrid.Platform
 
         private void WindowOwnerRoutine(object state)
         {
-            ManualResetEvent mre = (ManualResetEvent)state;
-            base.ConstructDefaultWindow();
-            mre.Set();
+            WindowParams wp = (WindowParams)state;
+            base.ConstructDefaultWindow(wp.Width, wp.Height, wp.WindowState);
+            wp.ResetEvent.Set();
 
             double previousPollTimeMs = 0;
             Stopwatch sw = new Stopwatch();
@@ -71,6 +84,14 @@ namespace Veldrid.Platform
                     NativeWindow.ProcessEvents();
                 }
             }
+        }
+
+        private class WindowParams
+        {
+            public int Width { get; set; }
+            public int Height { get; set; }
+            public WindowState WindowState { get; set; }
+            public ManualResetEvent ResetEvent { get; set; }
         }
     }
 }

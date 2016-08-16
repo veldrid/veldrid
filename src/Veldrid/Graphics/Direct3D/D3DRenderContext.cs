@@ -19,6 +19,7 @@ namespace Veldrid.Graphics.Direct3D
         private D3DFramebuffer _defaultFramebuffer;
         private SamplerState _regularSamplerState;
         private SamplerState _shadowMapSampler;
+        private PrimitiveTopology _primitiveTopology;
         private int _syncInterval;
 
         private const DeviceCreationFlags DefaultDeviceFlags
@@ -135,6 +136,16 @@ namespace Veldrid.Graphics.Direct3D
         protected override void PlatformSetViewport(int left, int top, int width, int height)
         {
             _deviceContext.Rasterizer.SetViewport(left, top, width, height);
+        }
+
+        protected override void PlatformSetPrimitiveTopology(PrimitiveTopology primitiveTopology)
+        {
+            if (_primitiveTopology != primitiveTopology)
+            {
+                _primitiveTopology = primitiveTopology;
+                var d3dTopology = D3DFormats.ConvertPrimitiveTopology(primitiveTopology);
+                _deviceContext.InputAssembler.PrimitiveTopology = d3dTopology;
+            }
         }
 
         protected override void PlatformResize()

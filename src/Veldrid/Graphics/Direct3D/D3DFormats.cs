@@ -150,5 +150,24 @@ namespace Veldrid.Graphics.Direct3D
                     return format;
             }
         }
+
+        public static SharpDX.Direct3D.PrimitiveTopology ConvertPrimitiveTopology(PrimitiveTopology primitiveTopology)
+        {
+            switch (primitiveTopology)
+            {
+                case PrimitiveTopology.TriangleList:
+                    return SharpDX.Direct3D.PrimitiveTopology.TriangleList;
+                case PrimitiveTopology.TriangleStrip:
+                    return SharpDX.Direct3D.PrimitiveTopology.TriangleStrip;
+                case PrimitiveTopology.LineList:
+                    return SharpDX.Direct3D.PrimitiveTopology.LineList;
+                case PrimitiveTopology.LineStrip:
+                    return SharpDX.Direct3D.PrimitiveTopology.LineStrip;
+                case PrimitiveTopology.PointList:
+                    return SharpDX.Direct3D.PrimitiveTopology.PointList;
+                default:
+                    throw Illegal.Value<PrimitiveTopology>();
+            }
+        }
     }
 }

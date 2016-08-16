@@ -136,6 +136,25 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        internal static PrimitiveType ConvertPrimitiveTopology(PrimitiveTopology primitiveTopology)
+        {
+            switch (primitiveTopology)
+            {
+                case PrimitiveTopology.TriangleList:
+                    return PrimitiveType.Triangles;
+                case PrimitiveTopology.TriangleStrip:
+                    return PrimitiveType.TriangleStrip;
+                case PrimitiveTopology.LineList:
+                    return PrimitiveType.Lines;
+                case PrimitiveTopology.LineStrip:
+                    return PrimitiveType.LineStrip;
+                case PrimitiveTopology.PointList:
+                    return PrimitiveType.Points;
+                default:
+                    throw Illegal.Value<PrimitiveTopology>();
+            }
+        }
+
         internal static BlendingFactorDest ConvertBlendDest(Blend blend) => (BlendingFactorDest)ConvertBlendSrc(blend);
 
         public static BlendEquationMode ConvertBlendEquation(BlendFunction function)

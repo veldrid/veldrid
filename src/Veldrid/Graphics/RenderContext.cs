@@ -117,6 +117,13 @@ namespace Veldrid.Graphics
         /// <summary>Draws indexed primitives, starting from the given index and vertex.</summary>
         public abstract void DrawIndexedPrimitives(int count, int startingIndex, int startingVertex);
 
+        public void DrawIndexedPrimitives(int count, int startingIndex, PrimitiveTopology primitiveTopology)
+        {
+            PlatformSetPrimitiveTopology(primitiveTopology);
+            DrawIndexedPrimitives(count, startingIndex);
+            PlatformSetPrimitiveTopology(PrimitiveTopology.TriangleList);
+        }
+
         /// <summary>Clears the current Framebuffer's color and depth buffers.
         /// The color is cleared to the value stored in ClearColor. </summary>
         public void ClearBuffer()
@@ -385,6 +392,8 @@ namespace Veldrid.Graphics
         protected abstract void PlatformSetRasterizerState(RasterizerState rasterizerState);
 
         protected abstract void PlatformSetViewport(int x, int y, int width, int height);
+
+        protected abstract void PlatformSetPrimitiveTopology(PrimitiveTopology primitiveTopology);
 
         protected abstract void PlatformClearMaterialResourceBindings();
 

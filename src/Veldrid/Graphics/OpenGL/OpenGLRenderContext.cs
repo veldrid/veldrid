@@ -13,6 +13,7 @@ namespace Veldrid.Graphics.OpenGL
         private readonly GraphicsContext _openGLGraphicsContext;
         private readonly OpenGLDefaultFramebuffer _defaultFramebuffer;
         private readonly int _vertexArrayID;
+        private PrimitiveType _primitiveType = PrimitiveType.Triangles;
 
         public DebugSeverity MinimumLogSeverity { get; set; } = DebugSeverity.DebugSeverityLow;
 
@@ -99,14 +100,14 @@ namespace Veldrid.Graphics.OpenGL
             var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
             int indexSize = OpenGLFormats.GetIndexFormatSize(elementsType);
 
-            GL.DrawElements(PrimitiveType.Triangles, count, elementsType, new IntPtr(startingIndex * indexSize));
+            GL.DrawElements(_primitiveType, count, elementsType, new IntPtr(startingIndex * indexSize));
         }
 
         public override void DrawIndexedPrimitives(int count, int startingIndex, int startingVertex)
         {
             var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
             int indexSize = OpenGLFormats.GetIndexFormatSize(elementsType);
-            GL.DrawElementsBaseVertex(PrimitiveType.Triangles, count, elementsType, new IntPtr(startingIndex * indexSize), startingVertex);
+            GL.DrawElementsBaseVertex(_primitiveType, count, elementsType, new IntPtr(startingIndex * indexSize), startingVertex);
         }
 
         private void SetInitialStates()
@@ -129,6 +130,11 @@ namespace Veldrid.Graphics.OpenGL
         protected override void PlatformSetViewport(int x, int y, int width, int height)
         {
             GL.Viewport(x, y, width, height);
+        }
+
+        protected override void PlatformSetPrimitiveTopology(PrimitiveTopology primitiveTopology)
+        {
+            _primitiveType = OpenGLFormats.ConvertPrimitiveTopology(primitiveTopology);
         }
 
         protected override void PlatformSetDefaultFramebuffer()

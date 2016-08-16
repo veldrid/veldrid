@@ -64,6 +64,7 @@
     <Compile Include="Graphics\OpenGL\OpenGLUniformStorageAdapter.cs" />
     <Compile Include="Graphics\Pipeline\PipelineStage.cs" />
     <Compile Include="Graphics\Pipeline\StandardPipelineStage.cs" />
+    <Compile Include="Graphics\PrimitiveTopology.cs" />
     <Compile Include="Graphics\RasterizerState.cs" />
     <Compile Include="Graphics\Renderer.cs" />
     <Compile Include="Graphics\RenderItem.cs" />

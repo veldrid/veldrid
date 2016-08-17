@@ -49,6 +49,11 @@ namespace Veldrid
             return _currentRoot.RayCast(ray, hits);
         }
 
+        public int RayCast(Ray ray, List<T> hits, Func<Ray, T, bool> filter)
+        {
+            return _currentRoot.RayCast(ray, hits, filter);
+        }
+
         public void GetAllContainedObjects(List<T> results)
         {
             _currentRoot.GetAllContainedObjects(results);
@@ -344,7 +349,7 @@ namespace Veldrid
             CoreGetAllContainedObjects(results, filter);
         }
 
-        public int RayCast(Ray ray, List<T> hits)
+        public int RayCast(Ray ray, List<T> hits, Func<Ray, T, bool> filter = null)
         {
             if (!ray.Intersects(Bounds))
             {
@@ -355,7 +360,7 @@ namespace Veldrid
                 int numHits = 0;
                 foreach (OctreeItem<T> item in _items)
                 {
-                    if (ray.Intersects(item.Bounds))
+                    if (ray.Intersects(item.Bounds) && (filter == null || filter(ray, item.Item)))
                     {
                         numHits++;
                         hits.Add(item.Item);

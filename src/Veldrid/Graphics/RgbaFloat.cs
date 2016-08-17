@@ -33,6 +33,7 @@ namespace Veldrid.Graphics
         public static readonly RgbaFloat Clear = new RgbaFloat(0, 0, 0, 0);
         public static readonly RgbaFloat Black = new RgbaFloat(0, 0, 0, 1);
         public static readonly RgbaFloat Pink = new RgbaFloat(1f, 0.45f, 0.75f, 1);
+        public static readonly RgbaFloat Orange = new RgbaFloat(1f, 0.36f, 0f, 1);
 
         internal static unsafe Color4 ToOpenTKColor(RgbaFloat clearColor)
         {

@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using System;
 
 namespace Veldrid.Assets
 {
@@ -6,8 +6,17 @@ namespace Veldrid.Assets
     {
         T LoadAsset<T>(AssetID assetID);
         T LoadAsset<T>(AssetRef<T> assetRef);
-        Stream OpenAssetStream(AssetID assetID);
+        object LoadAsset(AssetID assetID);
+        bool TryLoadAsset<T>(AssetID assetID, out T asset);
+        AssetID[] GetAssetsOfType(Type t);
+    }
 
-        void SaveDefinition<T>(T obj, string name);
+    public interface EditableAssetDatabase : AssetDatabase
+    {
+        string GetAssetPath(AssetID assetID);
+        DirectoryNode GetRootDirectoryGraph();
+        Type GetAssetType(AssetID assetID);
+        void CloneAsset(string path);
+        void DeleteAsset(string path);
     }
 }

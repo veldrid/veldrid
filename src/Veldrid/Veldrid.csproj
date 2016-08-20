@@ -48,6 +48,7 @@
     <Compile Include="Graphics\Framebuffer.cs" />
     <Compile Include="Graphics\IndexFormat.cs" />
     <Compile Include="Graphics\ManualTextureInput.cs" />
+    <Compile Include="Graphics\MeshData.cs" />
     <Compile Include="Graphics\MtlParser.cs" />
     <Compile Include="Graphics\ObjImporter.cs" />
     <Compile Include="Graphics\ObjParser.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="Graphics\RenderOrderKey.cs" />
     <Compile Include="Graphics\RenderQueue.cs" />
     <Compile Include="Graphics\ShaderTextureBinding.cs" />
+    <Compile Include="Graphics\SimpleMeshDataProvider.cs" />
     <Compile Include="Graphics\TextureData.cs" />
     <Compile Include="Graphics\TriangleFillMode.cs" />
     <Compile Include="Graphics\VertexPositionNormalColorTexture.cs" />

@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace Veldrid.Assets
 {
-    public class LooseFileDatabase : AssetDatabase
+    public class LooseFileDatabase : EditableAssetDatabase
     {
         private string _rootPath;
         private Dictionary<Type, AssetLoader> _assetLoaders = new Dictionary<Type, AssetLoader>()
@@ -219,6 +219,20 @@ namespace Veldrid.Assets
             }
 
             return loader;
+        }
+
+        public bool TryLoadAsset<T>(AssetID id, out T asset)
+        {
+            if (File.Exists(GetAssetPath(id)))
+            {
+                asset = LoadAsset<T>(id);
+                return true;
+            }
+            else
+            {
+                asset = default(T);
+                return false;
+            }
         }
     }
 

@@ -49,6 +49,11 @@ namespace Veldrid
             return Max - Min;
         }
 
+        public static BoundingBox CreateFromVertices(VertexPositionNormalTexture[] vertices)
+        {
+            return CreateFromVertices(vertices, Quaternion.Identity, Vector3.Zero, Vector3.One);
+        }
+
         public static BoundingBox CreateFromVertices(VertexPositionNormalTexture[] vertices, Quaternion rotation, Vector3 offset, Vector3 scale)
         {
             Vector3 min = Vector3.Transform(vertices[0].Position, rotation);
@@ -177,6 +182,5 @@ namespace Veldrid
         public Vector3 FarTopRight;
         public Vector3 FarBottomLeft;
         public Vector3 FarBottomRight;
-
     }
 }

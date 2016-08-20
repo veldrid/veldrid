@@ -15,6 +15,7 @@
     <Compile Include="AssetDefinition.cs" />
     <Compile Include="AssetID.cs" />
     <Compile Include="AssetLoader.cs" />
+    <Compile Include="Converters\RgbaFloatConverter.cs" />
     <Compile Include="Converters\VertexConverters.cs" />
     <Compile Include="CreatedResourceCache.cs" />
     <Compile Include="LooseFileDatabase.cs" />

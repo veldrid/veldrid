@@ -45,7 +45,8 @@ namespace Veldrid.Assets
         {
             JsonConverter[] converters = new JsonConverter[]
             {
-                new VertexPositionNormalTextureConverter()
+                new VertexPositionNormalTextureConverter(),
+                new RgbaFloatConverter()
             };
 
             return JsonSerializer.Create(new JsonSerializerSettings()

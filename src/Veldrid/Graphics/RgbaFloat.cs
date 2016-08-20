@@ -22,6 +22,7 @@ namespace Veldrid.Graphics
         public static readonly int SizeInBytes = 16;
 
         public static readonly RgbaFloat Red = new RgbaFloat(1, 0, 0, 1);
+        public static readonly RgbaFloat DarkRed = new RgbaFloat(0.6f, 0, 0, 1);
         public static readonly RgbaFloat Green = new RgbaFloat(0, 1, 0, 1);
         public static readonly RgbaFloat Blue = new RgbaFloat(0, 0, 1, 1);
         public static readonly RgbaFloat Yellow = new RgbaFloat(1, 1, 0, 1);

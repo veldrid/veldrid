@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Veldrid.Graphics
 {
@@ -16,10 +17,26 @@ namespace Veldrid.Graphics
         {
             VertexSizeInBytes = vertexSizeInBytes;
             Elements = elements;
+            DebugValidateVertexSize(elements, VertexSizeInBytes);
         }
 
         /// <summary>Constructs a new MaterialVertexInput.</summary>
         public MaterialVertexInput() : this(0, Array.Empty<MaterialVertexInputElement>()) { }
+
+
+        [Conditional("DEBUG")]
+        private void DebugValidateVertexSize(MaterialVertexInputElement[] elements, int vertexSizeInBytes)
+        {
+            int computedSize = 0;
+            foreach (MaterialVertexInputElement element in elements)
+            {
+                computedSize += element.SizeInBytes;
+            }
+            if (computedSize != vertexSizeInBytes)
+            {
+                throw new InvalidOperationException($"Provided VertexSizeInBytes ({vertexSizeInBytes}) does not match sum of component sizes ({computedSize}).");
+            }
+        }
     }
 
     /// <summary>Describes an individual component of a vertex.</summary>

@@ -43,8 +43,10 @@
     <Compile Include="Graphics\Direct3D\D3DTextureBinding.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
     <Compile Include="Graphics\DynamicDataProvider.cs" />
+    <Compile Include="Graphics\EmbeddedResourceShaderLoader.cs" />
     <Compile Include="Graphics\FaceCullingMode.cs" />
     <Compile Include="Graphics\FlatListVisibilityManager.cs" />
+    <Compile Include="Graphics\FolderShaderLoader.cs" />
     <Compile Include="Graphics\Framebuffer.cs" />
     <Compile Include="Graphics\IndexFormat.cs" />
     <Compile Include="Graphics\ManualTextureInput.cs" />
@@ -72,6 +74,7 @@
     <Compile Include="Graphics\RenderItemIndex.cs" />
     <Compile Include="Graphics\RenderOrderKey.cs" />
     <Compile Include="Graphics\RenderQueue.cs" />
+    <Compile Include="Graphics\ShaderLoader.cs" />
     <Compile Include="Graphics\ShaderTextureBinding.cs" />
     <Compile Include="Graphics\SimpleMeshDataProvider.cs" />
     <Compile Include="Graphics\TextureData.cs" />

@@ -60,5 +60,7 @@ namespace Veldrid.Graphics
             TriangleFillMode fillMode,
             bool isDepthClipEnabled,
             bool isScissorTestEnabled);
+
+        public abstract void AddShaderLoader(ShaderLoader loader);
     }
 }

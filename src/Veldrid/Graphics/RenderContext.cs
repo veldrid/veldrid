@@ -329,7 +329,8 @@ namespace Veldrid.Graphics
             else
             {
                 var constantBuffer = ResourceFactory.CreateConstantBuffer(provider.DataSizeInBytes);
-                _bufferProviderPairs.Add(name, new BufferProviderPair(constantBuffer, new ChangeableProvider(provider)));
+                var newProvider = provider is ChangeableProvider ? provider : new ChangeableProvider(provider);
+                _bufferProviderPairs.Add(name, new BufferProviderPair(constantBuffer, newProvider));
             }
         }
 

@@ -27,8 +27,10 @@ namespace Veldrid.Graphics.Direct3D
         public D3DMaterial(
             Device device,
             D3DRenderContext rc,
-            string vertexShaderPath,
-            string pixelShaderPath,
+            Stream vertexShaderStream,
+            string vertexShaderName,
+            Stream pixelShaderStream,
+            string pixelShaderName,
             MaterialVertexInput vertexInputs,
             MaterialInputs<MaterialGlobalInputElement> globalInputs,
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
@@ -36,11 +38,18 @@ namespace Veldrid.Graphics.Direct3D
         {
             _device = device;
 
-            string vsSource = File.ReadAllText(vertexShaderPath);
-            string psSource = (vertexShaderPath == pixelShaderPath) ? vsSource : File.ReadAllText(pixelShaderPath);
+            string vsSource, psSource;
+            using (var vsSr = new StreamReader(vertexShaderStream))
+            {
+                vsSource = vsSr.ReadToEnd();
+            }
+            using (var psSr = new StreamReader(pixelShaderStream))
+            {
+                psSource  = psSr.ReadToEnd();
+            }
 
-            CompilationResult vsCompilation = ShaderBytecode.Compile(vsSource, "VS", "vs_5_0", defaultShaderFlags, sourceFileName: vertexShaderPath);
-            CompilationResult psCompilation = ShaderBytecode.Compile(psSource, "PS", "ps_5_0", defaultShaderFlags, sourceFileName: pixelShaderPath);
+            CompilationResult vsCompilation = ShaderBytecode.Compile(vsSource, "VS", "vs_5_0", defaultShaderFlags, sourceFileName: vertexShaderName);
+            CompilationResult psCompilation = ShaderBytecode.Compile(psSource, "PS", "ps_5_0", defaultShaderFlags, sourceFileName: pixelShaderName);
 
             if (vsCompilation.HasErrors || vsCompilation.Message != null)
             {

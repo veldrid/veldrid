@@ -2,19 +2,21 @@
 using SharpDX.Direct3D11;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 namespace Veldrid.Graphics.Direct3D
 {
     public class D3DResourceFactory : ResourceFactory
     {
-        private static readonly string s_shaderDirectory = "HLSL";
         private static readonly string s_shaderFileExtension = "hlsl";
 
         private readonly Device _device;
+        private List<ShaderLoader> _shaderLoaders = new List<ShaderLoader>();
 
         public D3DResourceFactory(Device device)
         {
             _device = device;
+            AddShaderLoader(new FolderShaderLoader(Path.Combine(AppContext.BaseDirectory, "HLSL")));
         }
 
         public override ConstantBuffer CreateConstantBuffer(int sizeInBytes)
@@ -81,14 +83,16 @@ namespace Veldrid.Graphics.Direct3D
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
             MaterialTextureInputs textureInputs)
         {
-            string vertexShaderPath = GetShaderPathFromName(vertexShaderName);
-            string pixelShaderPath = GetShaderPathFromName(pixelShaderName);
+            Stream vsStream = GetShaderStream(vertexShaderName);
+            Stream psStream = GetShaderStream(pixelShaderName);
 
             return new D3DMaterial(
                 _device,
                 (D3DRenderContext)rc,
-                vertexShaderPath,
-                pixelShaderPath,
+                vsStream,
+                vertexShaderName,
+                psStream,
+                pixelShaderName,
                 vertexInputs,
                 globalInputs,
                 perObjectInputs,
@@ -190,11 +194,6 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DBlendState(_device, isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc);
         }
 
-        private string GetShaderPathFromName(string shaderName)
-        {
-            return Path.Combine(ShaderAssetRootPath, s_shaderDirectory, shaderName + "." + s_shaderFileExtension);
-        }
-
         public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison)
         {
             return new D3DDepthStencilState(_device, isDepthEnabled, comparison);
@@ -207,6 +206,25 @@ namespace Veldrid.Graphics.Direct3D
             bool isScissorTestEnabled)
         {
             return new D3DRasterizerState(_device, cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
+        }
+
+        public override void AddShaderLoader(ShaderLoader loader)
+        {
+            _shaderLoaders.Add(loader);
+        }
+
+        private Stream GetShaderStream(string name)
+        {
+            foreach (var loader in _shaderLoaders)
+            {
+                Stream s;
+                if (loader.TryOpenShader(name, s_shaderFileExtension, out s))
+                {
+                    return s;
+                }
+            }
+
+            throw new InvalidOperationException("No registered loader was able to find shader: " + name);
         }
     }
 }

@@ -1,13 +1,20 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLResourceFactory : ResourceFactory
     {
-        private static readonly string s_shaderDirectory = "GLSL";
         private static readonly string s_shaderFileExtension = "glsl";
+
+        private List<ShaderLoader> _shaderLoaders = new List<ShaderLoader>();
+
+        public OpenGLResourceFactory()
+        {
+            AddShaderLoader(new FolderShaderLoader(Path.Combine(AppContext.BaseDirectory, "GLSL")));
+        }
 
         public override ConstantBuffer CreateConstantBuffer(int sizeInBytes)
         {
@@ -54,23 +61,11 @@ namespace Veldrid.Graphics.OpenGL
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
             MaterialTextureInputs textureInputs)
         {
-            string vertexShaderPath = GetShaderPathFromName(vertexShaderName);
-            string pixelShaderPath = GetShaderPathFromName(pixelShaderName);
+            Stream vsStream = GetShaderStream(vertexShaderName);
+            Stream psStream = GetShaderStream(pixelShaderName);
 
-            if (!File.Exists(vertexShaderPath))
-            {
-                throw new FileNotFoundException($"The shader file '{vertexShaderName}' was not found at {vertexShaderPath}.");
-            }
-            string vsSource = File.ReadAllText(vertexShaderPath);
-
-            if (!File.Exists(pixelShaderPath))
-            {
-                throw new FileNotFoundException($"The shader file '{pixelShaderPath}' was not found at {pixelShaderPath}.");
-            }
-            string psSource = File.ReadAllText(pixelShaderPath);
-
-            OpenGLShader vertexShader = new OpenGLShader(vsSource, ShaderType.VertexShader);
-            OpenGLShader fragmentShader = new OpenGLShader(psSource, ShaderType.FragmentShader);
+            OpenGLShader vertexShader = new OpenGLShader(vsStream, ShaderType.VertexShader);
+            OpenGLShader fragmentShader = new OpenGLShader(psStream, ShaderType.FragmentShader);
 
             return new OpenGLMaterial((OpenGLRenderContext)rc, vertexShader, fragmentShader, inputs, globalInputs, perObjectInputs, textureInputs);
         }
@@ -151,11 +146,6 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLBlendState(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc);
         }
 
-        private string GetShaderPathFromName(string shaderName)
-        {
-            return Path.Combine(ShaderAssetRootPath, s_shaderDirectory, shaderName + "." + s_shaderFileExtension);
-        }
-
         public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison)
         {
             return new OpenGLDepthStencilState(isDepthEnabled, comparison);
@@ -168,6 +158,25 @@ namespace Veldrid.Graphics.OpenGL
             bool isScissorTestEnabled)
         {
             return new OpenGLRasterizerState(cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
+        }
+
+        public override void AddShaderLoader(ShaderLoader loader)
+        {
+            _shaderLoaders.Add(loader);
+        }
+
+        private Stream GetShaderStream(string name)
+        {
+            foreach (var loader in _shaderLoaders)
+            {
+                Stream s;
+                if (loader.TryOpenShader(name, s_shaderFileExtension, out s))
+                {
+                    return s;
+                }
+            }
+
+            throw new InvalidOperationException("No registered loader was able to find shader: " + name);
         }
     }
 }

@@ -183,7 +183,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
         }
     }
 
-    public struct MtlMaterialProperties
+    public struct MtlMaterialProperties : IEquatable<MtlMaterialProperties>
     {
         public Vector3 SpecularIntensity;
         public float SpecularPower;
@@ -192,6 +192,11 @@ namespace Veldrid.RenderDemo.ForwardRendering
         {
             SpecularIntensity = specularIntensity;
             SpecularPower = specularPower;
+        }
+
+        public bool Equals(MtlMaterialProperties other)
+        {
+            return SpecularIntensity.Equals(other.SpecularIntensity) && SpecularPower.Equals(other.SpecularPower);
         }
     }
 }

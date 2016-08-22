@@ -235,6 +235,8 @@ namespace Veldrid.Platform
 
             public System.Numerics.Vector2 MousePosition { get; set; }
 
+            public float WheelDelta { get { throw new NotImplementedException(); } }
+
             internal void Clear()
             {
                 KeyEventsList.Clear();

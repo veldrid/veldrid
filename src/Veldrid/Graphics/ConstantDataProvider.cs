@@ -7,7 +7,7 @@ namespace Veldrid.Graphics
     /// A type which only provides a pre-set data value.
     /// </summary>
     /// <typeparam name="T">The type of data to provide.</typeparam>
-    public class ConstantDataProvider<T> : ConstantBufferDataProvider where T : struct
+    public class ConstantDataProvider<T> : ConstantBufferDataProvider<T> where T : struct
     {
         private T _data;
         private readonly int _dataSizeInBytes;

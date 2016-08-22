@@ -7,7 +7,7 @@ namespace Veldrid.Graphics
     /// A data provider with dynamically and manually controllable data.
     /// </summary>
     /// <typeparam name="T">The type of data to provide.</typeparam>
-    public class DynamicDataProvider<T> : ConstantBufferDataProvider where T : struct, IEquatable<T>
+    public class DynamicDataProvider<T> : ConstantBufferDataProvider<T> where T : struct, IEquatable<T>
     {
         private readonly int _dataSizeInBytes;
         private T _data;

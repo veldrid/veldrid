@@ -6,14 +6,14 @@ namespace Veldrid.Graphics
     /// A type providing data which is calculated from another DynamicDataProvider.
     /// </summary>
     /// <typeparam name="T">The type of data to provide.</typeparam>
-    public class DependantDataProvider<T> : ConstantBufferDataProvider where T : struct, IEquatable<T>
+    public class DependantDataProvider<T> : ConstantBufferDataProvider<T> where T : struct, IEquatable<T>
     {
-        private readonly DynamicDataProvider<T> _dataProvider;
+        private readonly ConstantBufferDataProvider<T> _dataProvider;
         private readonly Func<T, T> _derivedFunc;
 
         public event Action DataChanged;
 
-        public DependantDataProvider(DynamicDataProvider<T> dataProvider, Func<T, T> derivedFunc)
+        public DependantDataProvider(ConstantBufferDataProvider<T> dataProvider, Func<T, T> derivedFunc)
         {
             _dataProvider = dataProvider;
             DataSizeInBytes = dataProvider.DataSizeInBytes;
@@ -25,6 +25,8 @@ namespace Veldrid.Graphics
         {
             DataChanged?.Invoke();
         }
+
+        public T Data { get { return _derivedFunc(_dataProvider.Data); } }
 
         public int DataSizeInBytes { get; }
 

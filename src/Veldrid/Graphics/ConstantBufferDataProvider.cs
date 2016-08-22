@@ -20,4 +20,10 @@ namespace Veldrid.Graphics
 
         event Action DataChanged;
     }
+
+    public interface ConstantBufferDataProvider<T> : ConstantBufferDataProvider
+    {
+        T Data { get; }
+    }
+
 }

@@ -57,7 +57,7 @@ namespace Veldrid.RenderDemo
 
             _material = ad.LoadAsset<MaterialAsset>("MaterialAsset/Skybox.json").Create(ad, rc);
 
-            var viewProvider = (DynamicDataProvider<Matrix4x4>)rc.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider;
+            var viewProvider = (ConstantBufferDataProvider<Matrix4x4>)((ChangeableProvider)rc.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).DataProvider;
             _perObjectInput = new DependantDataProvider<Matrix4x4>(
                 viewProvider,
                 Utilities.ConvertToMatrix3x3);

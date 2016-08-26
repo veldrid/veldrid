@@ -7,6 +7,8 @@ namespace Veldrid.Assets
         private string _value;
         public string Value { get { return _value; } set { _value = value; } }
 
+        public bool IsEmpty => string.IsNullOrEmpty(_value);
+
         public AssetID(string value)
         {
             _value = value;

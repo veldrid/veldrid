@@ -368,7 +368,7 @@ namespace Veldrid
                 }
                 foreach (var child in Children)
                 {
-                    numHits += child.RayCast(ray, hits);
+                    numHits += child.RayCast(ray, hits, filter);
                 }
 
                 return numHits;

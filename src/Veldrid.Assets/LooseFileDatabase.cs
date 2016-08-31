@@ -17,7 +17,9 @@ namespace Veldrid.Assets
         {
             { typeof(ImageProcessorTexture), new PngLoader() },
             { typeof(TextureData), new PngLoader() },
-            { typeof(ObjFile), new ObjFileLoader() }
+            { typeof(ObjFile), new ObjFileLoader() },
+            { typeof(ConstructedMeshInfo), new FirstMeshObjLoader() },
+            { typeof(MeshData), new FirstMeshObjLoader() }
         };
 
         // Used for untyped loads on an asset
@@ -25,7 +27,8 @@ namespace Veldrid.Assets
         private static readonly Dictionary<string, Type> s_extensionTypeMappings = new Dictionary<string, Type>()
         {
             { ".png", typeof(ImageProcessorTexture) },
-            { ".obj", typeof(ObjFile) }
+            { ".jpg", typeof(ImageProcessorTexture) },
+            { ".obj", typeof(ConstructedMeshInfo) }
         };
 
         private Dictionary<AssetID, object> _loadedAssets = new Dictionary<AssetID, object>();

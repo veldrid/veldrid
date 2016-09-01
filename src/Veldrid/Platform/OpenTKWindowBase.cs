@@ -192,6 +192,20 @@ namespace Veldrid.Platform
             }
         }
 
+        public bool CursorVisible
+        {
+            get
+            {
+                return _nativeWindow.CursorVisible;
+            }
+            set
+            {
+                _nativeWindow.CursorVisible = value;
+            }
+        }
+
+        public bool Focused => _nativeWindow.Focused;
+
         /// <summary>Closes the window.</summary>
         public abstract void Close();
 

@@ -17,6 +17,8 @@ namespace Veldrid.Platform
         bool Visible { get; set; }
         Vector2 ScaleFactor { get; }
         Rectangle Bounds { get; }
+        bool CursorVisible { get; set; }
+        bool Focused { get; }
 
         event Action Resized;
         event Action Closing;

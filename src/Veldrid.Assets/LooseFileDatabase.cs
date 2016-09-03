@@ -75,21 +75,18 @@ namespace Veldrid.Assets
             _loadedAssets[new AssetID(name)] = obj;
         }
 
-        public string GetAssetPath(AssetID assetID)
+        public override string GetAssetPath(AssetID assetID)
         {
             return Path.Combine(_rootPath, assetID.Value);
         }
 
-        public T LoadAsset<T>(AssetRef<T> definition) => LoadAsset<T>(definition.ID, true);
-        public T LoadAsset<T>(AssetID assetID) => LoadAsset<T>(assetID, true);
-
-        public T LoadAsset<T>(AssetRef<T> definition, bool cache = true) => LoadAsset<T>(definition.ID, cache);
-        public T LoadAsset<T>(AssetID assetID, bool cache  = true)
+        public override T LoadAsset<T>(AssetRef<T> definition, bool cache) => LoadAsset<T>(definition.ID, cache);
+        public override T LoadAsset<T>(AssetID assetID, bool cache)
         {
             object asset;
             if (!cache || !_loadedAssets.TryGetValue(assetID, out asset))
             {
-                AssetLoader<T> loader = GetLoader<T>();
+                AssetLoader loader = GetLoader<T>();
                 using (var s = OpenAssetStream(assetID))
                 {
                     asset = loader.Load(s);
@@ -103,14 +100,15 @@ namespace Veldrid.Assets
             return (T)asset;
         }
 
-        public object LoadAsset(AssetID id)
+        public override object LoadAsset(AssetID id, bool cache)
         {
             Type t = GetAssetType(id);
-            return LoadAsset(t, id);
+            return LoadAsset(t, id, cache);
         }
 
-        public object LoadAsset(Type t, AssetID id)
+        private object LoadAsset(Type t, AssetID id, bool cache)
         {
+            // TODO: Cache stuff here.
             AssetLoader loader = GetLoader(t);
             using (var stream = OpenAssetStream(id))
             {
@@ -118,13 +116,13 @@ namespace Veldrid.Assets
             }
         }
 
-        public Type GetAssetType(AssetID id)
+        public override Type GetAssetType(AssetID id)
         {
             string extension = Path.GetExtension(id.Value);
             Type type;
             if (!s_extensionTypeMappings.TryGetValue(extension, out type))
             {
-                var asset = LoadAsset(typeof(object), id);
+                var asset = LoadAsset(typeof(object), id, true);
                 type = asset.GetType();
                 s_extensionTypeMappings.Add(extension, type);
             }
@@ -132,7 +130,7 @@ namespace Veldrid.Assets
             return type;
         }
 
-        public void CloneAsset(string path)
+        public override void CloneAsset(string path)
         {
             string folder = new FileInfo(path).Directory.FullName;
             string fileName = Path.GetFileNameWithoutExtension(path);
@@ -141,7 +139,7 @@ namespace Veldrid.Assets
             File.Copy(path, destination);
         }
 
-        public void DeleteAsset(string path)
+        public override void DeleteAsset(string path)
         {
             File.Delete(path);
         }
@@ -152,7 +150,7 @@ namespace Veldrid.Assets
             return File.OpenRead(path);
         }
 
-        public DirectoryNode GetRootDirectoryGraph() => GetDirectoryGraph(_rootPath);
+        public override DirectoryNode GetRootDirectoryGraph() => GetDirectoryGraph(_rootPath);
         private static DirectoryNode GetDirectoryGraph(string path)
         {
             DirectoryInfo rootDirectory = new DirectoryInfo(path);
@@ -163,7 +161,7 @@ namespace Veldrid.Assets
             return new DirectoryNode(path, assetInfos.ToArray(), children);
         }
 
-        public AssetID[] GetAssetsOfType(Type t)
+        public override AssetID[] GetAssetsOfType(Type t)
         {
             List<AssetID> discovered = new List<AssetID>();
             HashSet<string> extensions = new HashSet<string>();
@@ -205,17 +203,9 @@ namespace Veldrid.Assets
             return fullPath.Substring(_rootPath.Length + 1, fullPath.Length - _rootPath.Length - 1);
         }
 
-        private AssetLoader<T> GetLoader<T>()
+        private AssetLoader GetLoader<T>()
         {
-            AssetLoader ret;
-            if (_assetLoaders.TryGetValue(typeof(T), out ret))
-            {
-                return (AssetLoader<T>)ret;
-            }
-            else
-            {
-                return new TextAssetLoader<T>(_serializer);
-            }
+            return GetLoader(typeof(T));
         }
 
         private AssetLoader GetLoader(Type t)
@@ -230,11 +220,11 @@ namespace Veldrid.Assets
             return loader;
         }
 
-        public bool TryLoadAsset<T>(AssetID id, out T asset)
+        public override bool TryLoadAsset<T>(AssetID id, bool cache, out T asset)
         {
             if (File.Exists(GetAssetPath(id)))
             {
-                asset = LoadAsset<T>(id);
+                asset = LoadAsset<T>(id, cache);
                 return true;
             }
             else

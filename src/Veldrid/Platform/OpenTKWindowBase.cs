@@ -200,8 +200,13 @@ namespace Veldrid.Platform
             }
             set
             {
-                _nativeWindow.CursorVisible = value;
+                SetCursorVisible(value);
             }
+        }
+
+        protected virtual void SetCursorVisible(bool value)
+        {
+            _nativeWindow.CursorVisible = value;
         }
 
         public bool Focused => _nativeWindow.Focused;

@@ -12,6 +12,7 @@ namespace Veldrid.Platform
     {
         private SimpleInputSnapshot _snapshotBackBuffer = new SimpleInputSnapshot();
         private bool _shouldClose;
+        private bool _isCursorVisible = true;
 
         /// <summary>Gets or sets the polling interval, in milliseconds, at which to poll and process window events.
         /// This property only has effect when LimitPollRate is set to True.</summary>
@@ -55,6 +56,11 @@ namespace Veldrid.Platform
             return snapshot;
         }
 
+        protected override void SetCursorVisible(bool value)
+        {
+            _isCursorVisible = value;
+        }
+
         private void WindowOwnerRoutine(object state)
         {
             WindowParams wp = (WindowParams)state;
@@ -81,6 +87,7 @@ namespace Veldrid.Platform
                 else
                 {
                     previousPollTimeMs = currentTimeMs;
+                    NativeWindow.CursorVisible = _isCursorVisible;
                     NativeWindow.ProcessEvents();
                 }
             }

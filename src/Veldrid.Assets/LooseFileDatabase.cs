@@ -49,6 +49,11 @@ namespace Veldrid.Assets
             s_extensionTypeMappings.Add(extension, type);
         }
 
+        public void RegisterTypeLoader(Type t, AssetLoader loader)
+        {
+            _assetLoaders.Add(t, loader);
+        }
+
         private static JsonSerializer CreateDefaultSerializer()
         {
             JsonConverter[] converters = new JsonConverter[]

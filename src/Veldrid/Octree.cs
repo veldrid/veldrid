@@ -835,7 +835,7 @@ namespace Veldrid
                         item.Container = null;
                     }
                     child.Parent = null;
-                    child.Children = null;
+                    child.Children = Array.Empty<OctreeNode<T>>();
 
                     _cachedNodes.Push(child);
                 }

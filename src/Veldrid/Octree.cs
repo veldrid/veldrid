@@ -811,11 +811,13 @@ namespace Veldrid
 
         private class OctreeNodeCache
         {
-            private readonly Stack<OctreeNode<T>> _nodes = new Stack<OctreeNode<T>>();
+            private readonly Stack<OctreeNode<T>> _cachedNodes = new Stack<OctreeNode<T>>();
             private readonly Stack<OctreeNode<T>[]> _cachedChildren = new Stack<OctreeNode<T>[]>();
             private readonly Stack<OctreeItem<T>> _cachedItems = new Stack<OctreeItem<T>>();
 
             public int MaxChildren { get; private set; }
+
+            public int MaxCachedItemCount { get; set; } = 100;
 
             public OctreeNodeCache(int maxChildren)
             {
@@ -824,20 +826,36 @@ namespace Veldrid
 
             public void AddNode(OctreeNode<T> child)
             {
-                Debug.Assert(!_nodes.Contains(child));
-                _nodes.Push(child);
+                Debug.Assert(!_cachedNodes.Contains(child));
+                if (_cachedNodes.Count < MaxCachedItemCount)
+                {
+                    foreach (var item in child._items)
+                    {
+                        item.Item = default(T);
+                        item.Container = null;
+                    }
+                    child.Parent = null;
+                    child.Children = null;
+
+                    _cachedNodes.Push(child);
+                }
             }
 
             public void AddOctreeItem(OctreeItem<T> octreeItem)
             {
-                _cachedItems.Push(octreeItem);
+                if (_cachedItems.Count < MaxCachedItemCount)
+                {
+                    octreeItem.Item = default(T);
+                    octreeItem.Container = null;
+                    _cachedItems.Push(octreeItem);
+                }
             }
 
             public OctreeNode<T> GetNode(ref BoundingBox bounds)
             {
-                if (_nodes.Count > 0)
+                if (_cachedNodes.Count > 0)
                 {
-                    var node = _nodes.Pop();
+                    var node = _cachedNodes.Pop();
                     node.Reset(ref bounds);
                     return node;
                 }
@@ -849,12 +867,15 @@ namespace Veldrid
 
             public void AddAndClearChildrenArray(OctreeNode<T>[] children)
             {
-                for (int i = 0; i < children.Length; i++)
+                if (_cachedChildren.Count < MaxCachedItemCount)
                 {
-                    children[i] = null;
-                }
+                    for (int i = 0; i < children.Length; i++)
+                    {
+                        children[i] = null;
+                    }
 
-                _cachedChildren.Push(children);
+                    _cachedChildren.Push(children);
+                }
             }
 
             public OctreeNode<T>[] GetChildrenArray()

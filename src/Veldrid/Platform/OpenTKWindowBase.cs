@@ -301,6 +301,11 @@ namespace Veldrid.Platform
             return new System.Drawing.Point(tkPoint.X, tkPoint.Y);
         }
 
+        public System.Drawing.Point ClientToScreen(System.Drawing.Point p)
+        {
+            return new System.Drawing.Point(_nativeWindow.X + p.X, _nativeWindow.Y + p.Y);
+        }
+
         protected class SimpleInputSnapshot : InputSnapshot
         {
             public List<KeyEvent> KeyEventsList { get; private set; } = new List<KeyEvent>();

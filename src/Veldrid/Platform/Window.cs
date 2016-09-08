@@ -26,6 +26,7 @@ namespace Veldrid.Platform
 
         InputSnapshot GetInputSnapshot();
         Point ScreenToClient(Point p);
+        Point ClientToScreen(Point p);
         void Close();
     }
 }

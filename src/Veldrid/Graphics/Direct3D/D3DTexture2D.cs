@@ -56,11 +56,14 @@ namespace Veldrid.Graphics.Direct3D
             _device = device;
 
             Texture2DDescription desc = CreateDescription(width, height, bindFlags, usage, cpuAccessFlags, format);
-
-            unsafe
+            if (pixelPtr != IntPtr.Zero)
             {
                 DataRectangle dataRectangle = new DataRectangle(pixelPtr, stride);
                 DeviceTexture = new Texture2D(device, desc, dataRectangle);
+            }
+            else
+            {
+                DeviceTexture = new Texture2D(device, desc);
             }
         }
 

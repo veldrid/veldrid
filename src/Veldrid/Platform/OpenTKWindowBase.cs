@@ -20,6 +20,8 @@ namespace Veldrid.Platform
         protected SimpleInputSnapshot CurrentSnapshot = new SimpleInputSnapshot();
 
         private bool[] _mouseDown = new bool[13];
+        private Size _previousSize;
+        private Point _previousPosition;
 
         public OpenTKWindowBase()
             : this(960, 540, WindowState.Normal) { }
@@ -121,7 +123,7 @@ namespace Veldrid.Platform
         {
             get
             {
-                return OpenTKToVeldridState(_nativeWindow.WindowState);
+                return OpenTKToVeldridState(_nativeWindow.WindowState, _nativeWindow.WindowBorder);
             }
 
             set
@@ -129,16 +131,40 @@ namespace Veldrid.Platform
                 switch (value)
                 {
                     case WindowState.Normal:
+                        _nativeWindow.WindowBorder = WindowBorder.Resizable;
                         _nativeWindow.WindowState = OpenTK.WindowState.Normal;
+                        if (_previousSize != default(Size))
+                        {
+                            _nativeWindow.ClientSize = _previousSize;
+                        }
+                        if (_previousPosition != default(Point))
+                        {
+                            _nativeWindow.X = _previousPosition.X;
+                            _nativeWindow.Y = _previousPosition.Y;
+                        }
                         break;
                     case WindowState.Minimized:
+                        _nativeWindow.WindowBorder = WindowBorder.Resizable;
                         _nativeWindow.WindowState = OpenTK.WindowState.Minimized;
                         break;
                     case WindowState.Maximized:
+                        _nativeWindow.WindowBorder = WindowBorder.Resizable;
                         _nativeWindow.WindowState = OpenTK.WindowState.Maximized;
                         break;
                     case WindowState.FullScreen:
                         _nativeWindow.WindowState = OpenTK.WindowState.Fullscreen;
+                        break;
+                    case WindowState.BorderlessFullScreen:
+                        _nativeWindow.WindowBorder = WindowBorder.Hidden;
+                        _nativeWindow.WindowState = OpenTK.WindowState.Normal;
+
+                        DisplayDevice defaultDD = DisplayDevice.Default;
+                        Size size = new Size(defaultDD.Width, defaultDD.Height);
+                        _previousSize = _nativeWindow.Size;
+                        _nativeWindow.Size = size;
+
+                        _previousPosition = new Point(_nativeWindow.X, _nativeWindow.Y);
+                        SetCenteredFullScreenWindow(_previousPosition);
                         break;
                     default:
                         throw Illegal.Value<WindowState>();
@@ -146,12 +172,33 @@ namespace Veldrid.Platform
             }
         }
 
-        private static WindowState OpenTKToVeldridState(OpenTK.WindowState openTKState)
+        private void SetCenteredFullScreenWindow(Point position)
+        {
+            int x = position.X;
+            int actualX = 0;
+            DisplayIndex index = DisplayIndex.Default;
+            while (x > 0)
+            {
+                var display = DisplayDevice.GetDisplay(index);
+                x -= display.Width;
+                if (x > 0)
+                {
+                    actualX += display.Width;
+                }
+
+                index += 1;
+            }
+
+            _nativeWindow.X = actualX;
+            _nativeWindow.Y = 0;
+        }
+
+        private static WindowState OpenTKToVeldridState(OpenTK.WindowState openTKState, WindowBorder border)
         {
             switch (openTKState)
             {
                 case OpenTK.WindowState.Normal:
-                    return WindowState.Normal;
+                    return border == WindowBorder.Hidden ? WindowState.BorderlessFullScreen : WindowState.Normal;
                 case OpenTK.WindowState.Minimized:
                     return WindowState.Minimized;
                 case OpenTK.WindowState.Maximized:

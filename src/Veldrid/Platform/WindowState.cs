@@ -6,5 +6,6 @@
         FullScreen,
         Maximized,
         Minimized,
+        BorderlessFullScreen
     }
 }

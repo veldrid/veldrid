@@ -157,22 +157,22 @@ namespace Veldrid.Graphics.OpenGL
             GL.Disable(EnableCap.ScissorTest);
         }
 
-        protected override void PlatformSetVertexBuffer(VertexBuffer vb)
+        protected override void PlatformSetVertexBuffer(int slot, VertexBuffer vb)
         {
-            ((OpenGLVertexBuffer)vb).Apply();
+            // TODO: This is going to cause vertex attributes to be set at least twice,
+            // because they are also set when the Material is initially applied.
+            ((OpenGLMaterial)Material)?.SetVertexAttributes(slot, (OpenGLVertexBuffer)vb);
         }
 
         protected override void PlatformSetIndexBuffer(IndexBuffer ib)
         {
             ((OpenGLIndexBuffer)ib).Apply();
-
-            // TODO: Figure out a better solution for this. Vertex attributes need to be re-bound with a new IndexBuffer.
-            ((OpenGLMaterial)Material)?.SetVertexAttributes();
+            //((OpenGLMaterial)Material)?.SetVertexAttributes();
         }
 
         protected override void PlatformSetMaterial(Material material)
         {
-            ((OpenGLMaterial)material).Apply();
+            ((OpenGLMaterial)material).Apply(VertexBuffers);
         }
 
         protected override void PlatformSetFramebuffer(Framebuffer framebuffer)

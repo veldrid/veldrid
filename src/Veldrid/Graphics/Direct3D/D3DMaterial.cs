@@ -3,6 +3,7 @@ using SharpDX.Direct3D11;
 using SharpDX.D3DCompiler;
 using System.IO;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Veldrid.Graphics.Direct3D
 {
@@ -31,7 +32,7 @@ namespace Veldrid.Graphics.Direct3D
             string vertexShaderName,
             Stream pixelShaderStream,
             string pixelShaderName,
-            MaterialVertexInput vertexInputs,
+            MaterialVertexInput[] vertexInputs,
             MaterialInputs<MaterialGlobalInputElement> globalInputs,
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
             MaterialTextureInputs textureInputs)
@@ -45,7 +46,7 @@ namespace Veldrid.Graphics.Direct3D
             }
             using (var psSr = new StreamReader(pixelShaderStream))
             {
-                psSource  = psSr.ReadToEnd();
+                psSource = psSr.ReadToEnd();
             }
 
             CompilationResult vsCompilation = ShaderBytecode.Compile(vsSource, "VS", "vs_5_0", defaultShaderFlags, sourceFileName: vertexShaderName);
@@ -219,20 +220,28 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        private static InputLayout CreateLayout(Device device, byte[] shaderBytecode, MaterialVertexInput vertexInputs)
+        private static InputLayout CreateLayout(Device device, byte[] shaderBytecode, MaterialVertexInput[] vertexInputs)
         {
-            int numElements = vertexInputs.Elements.Length;
-            InputElement[] elements = new InputElement[numElements];
-            int currentOffset = 0;
-            for (int i = 0; i < numElements; i++)
+            int count = vertexInputs.Sum(mvi => mvi.Elements.Length);
+            int element = 0;
+            InputElement[] elements = new InputElement[count];
+            for (int slot = 0; slot < vertexInputs.Length; slot++)
             {
-                var genericElement = vertexInputs.Elements[i];
-                elements[i] = new InputElement(
-                    GetSemanticName(genericElement.SemanticType),
-                    0,
-                    ConvertGenericFormat(genericElement.ElementFormat),
-                    currentOffset, 0);
-                currentOffset += genericElement.SizeInBytes;
+                MaterialVertexInput slotInput = vertexInputs[slot];
+                int numElements = slotInput.Elements.Length;
+                int currentOffset = 0;
+                for (int i = 0; i < numElements; i++)
+                {
+                    var genericElement = slotInput.Elements[i];
+                    elements[element] = new InputElement(
+                        GetSemanticName(genericElement.SemanticType),
+                        0,
+                        ConvertGenericFormat(genericElement.ElementFormat),
+                        currentOffset,
+                        slot);
+                    currentOffset += genericElement.SizeInBytes;
+                    element += 1;
+                }
             }
 
             return new InputLayout(device, shaderBytecode, elements);

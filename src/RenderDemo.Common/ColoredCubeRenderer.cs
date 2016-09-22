@@ -100,7 +100,7 @@ namespace Veldrid.RenderDemo
                 * Matrix4x4.CreateRotationZ((rotationAmount * .33f) * Position.Z)
                 * Matrix4x4.CreateTranslation(Position)
                 * Matrix4x4.CreateTranslation((float)Math.Sin(rotationAmount) * Vector3.UnitY)
-                * ((DynamicDataProvider<Matrix4x4>)context.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).Data;
+                * ((ConstantBufferDataProvider<Matrix4x4>)((ChangeableProvider)context.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).DataProvider).Data;
 
             context.SetVertexBuffer(s_vb);
             context.SetIndexBuffer(s_ib);

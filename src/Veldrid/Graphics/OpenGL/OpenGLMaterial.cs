@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -9,7 +10,7 @@ namespace Veldrid.Graphics.OpenGL
         private readonly OpenGLShader _vertexShader;
         private readonly OpenGLShader _fragmentShader;
         private readonly int _programID;
-        private readonly OpenGLMaterialVertexInput _inputs;
+        private readonly OpenGLMaterialVertexInput[] _inputsBySlot;
         private readonly GlobalBindingPair[] _globalUniformBindings;
         private readonly UniformBinding[] _perObjectBindings;
         private readonly OpenGLProgramTextureBinding[] _textureBindings;
@@ -20,22 +21,25 @@ namespace Veldrid.Graphics.OpenGL
             OpenGLRenderContext rc,
             OpenGLShader vertexShader,
             OpenGLShader fragmentShader,
-            MaterialVertexInput vertexInputs,
+            MaterialVertexInput[] vertexInputs,
             MaterialInputs<MaterialGlobalInputElement> globalInputs,
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
             MaterialTextureInputs textureInputs)
         {
             _vertexShader = vertexShader;
             _fragmentShader = fragmentShader;
-            _inputs = new OpenGLMaterialVertexInput(vertexInputs);
+            _inputsBySlot = GetInputsBySlot(vertexInputs);
 
             _programID = GL.CreateProgram();
             GL.AttachShader(_programID, _vertexShader.ShaderID);
             GL.AttachShader(_programID, _fragmentShader.ShaderID);
 
-            for (int slot = 0; slot < vertexInputs.Elements.Length; slot++)
+            foreach (var input in vertexInputs)
             {
-                GL.BindAttribLocation(_programID, slot, vertexInputs.Elements[slot].Name);
+                for (int slot = 0; slot < input.Elements.Length; slot++)
+                {
+                    GL.BindAttribLocation(_programID, slot, input.Elements[slot].Name);
+                }
             }
 
             GL.LinkProgram(_programID);
@@ -133,6 +137,11 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        private OpenGLMaterialVertexInput[] GetInputsBySlot(MaterialVertexInput[] vertexInputs)
+        {
+            return vertexInputs.Select(mvi => new OpenGLMaterialVertexInput(mvi)).ToArray();
+        }
+
         [Conditional("DEBUG")]
         private void ValidateBlockSize(int programID, int blockIndex, int providerSize)
         {
@@ -146,22 +155,36 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-        public void Apply()
+        public void Apply(VertexBuffer[] vertexBuffers)
         {
-            for (int slot = 0; slot < _inputs.Elements.Length; slot++)
+            if (vertexBuffers.Length < _inputsBySlot.Length)
             {
-                var element = _inputs.Elements[slot];
-
-                GL.EnableVertexAttribArray(slot);
-                GL.VertexAttribPointer(slot, element.ElementCount, element.Type, element.Normalized, _inputs.VertexSizeInBytes, element.Offset);
+                throw new InvalidOperationException(
+                    $"The number of vertex buffers was not expected. Expected: {_inputsBySlot.Length}, Received: {vertexBuffers.Length}");
             }
 
-            for (int extraSlot = _inputs.Elements.Length; extraSlot < s_vertexAttribSlotsBound; extraSlot++)
+            int totalSlotsBound = 0;
+            for (int i = 0; i < _inputsBySlot.Length; i++)
+            {
+                OpenGLMaterialVertexInput input = _inputsBySlot[i];
+                ((OpenGLVertexBuffer)vertexBuffers[i]).Apply();
+                for (int slot = 0; slot < input.Elements.Length; slot++)
+                {
+                    OpenGLMaterialVertexInputElement element = input.Elements[slot];
+                    int actualSlot = totalSlotsBound + slot;
+                    GL.EnableVertexAttribArray(actualSlot);
+                    GL.VertexAttribPointer(actualSlot, element.ElementCount, element.Type, element.Normalized, input.VertexSizeInBytes, element.Offset);
+                }
+
+                totalSlotsBound += input.Elements.Length;
+            }
+
+            for (int extraSlot = totalSlotsBound; extraSlot < s_vertexAttribSlotsBound; extraSlot++)
             {
                 GL.DisableVertexAttribArray(extraSlot);
             }
 
-            s_vertexAttribSlotsBound = _inputs.Elements.Length;
+            s_vertexAttribSlotsBound = totalSlotsBound;
 
             GL.UseProgram(_programID);
 
@@ -222,13 +245,29 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-        public void SetVertexAttributes()
+        public void SetVertexAttributes(int vertexBufferSlot, OpenGLVertexBuffer vb)
         {
-            for (int slot = 0; slot < _inputs.Elements.Length; slot++)
+            int baseSlot = GetSlotBaseIndex(vertexBufferSlot);
+            OpenGLMaterialVertexInput input = _inputsBySlot[vertexBufferSlot];
+            vb.Apply();
+            for (int i = 0; i < input.Elements.Length; i++)
             {
-                var element = _inputs.Elements[slot];
-                GL.VertexAttribPointer(slot, element.ElementCount, element.Type, element.Normalized, _inputs.VertexSizeInBytes, element.Offset);
+                OpenGLMaterialVertexInputElement element = input.Elements[i];
+                int slot = baseSlot + i;
+                GL.EnableVertexAttribArray(slot);
+                GL.VertexAttribPointer(slot, element.ElementCount, element.Type, element.Normalized, input.VertexSizeInBytes, element.Offset);
             }
+        }
+
+        private int GetSlotBaseIndex(int vertexBufferSlot)
+        {
+            int index = 0;
+            for (int i = 0; i < vertexBufferSlot; i++)
+            {
+                index += _inputsBySlot[i].Elements.Length;
+            }
+
+            return index;
         }
 
         private void BindTexture(int slot, OpenGLTexture texture)

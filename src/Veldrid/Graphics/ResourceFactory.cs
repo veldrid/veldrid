@@ -20,6 +20,25 @@ namespace Veldrid.Graphics
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
             MaterialTextureInputs textureInputs);
 
+        public abstract Material CreateMaterial(
+            RenderContext rc,
+            string vertexShaderName,
+            string pixelShaderName,
+            MaterialVertexInput vertexInputs0,
+            MaterialVertexInput vertexInputs1,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
+            MaterialTextureInputs textureInputs);
+
+        public abstract Material CreateMaterial(
+            RenderContext rc,
+            string vertexShaderName,
+            string pixelShaderName,
+            MaterialVertexInput[] vertexInputs,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
+            MaterialTextureInputs textureInputs);
+
         public abstract ConstantBuffer CreateConstantBuffer(int sizeInBytes);
 
         public abstract Framebuffer CreateFramebuffer();

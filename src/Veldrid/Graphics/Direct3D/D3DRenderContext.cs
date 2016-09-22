@@ -203,9 +203,9 @@ namespace Veldrid.Graphics.Direct3D
             _deviceContext.Rasterizer.SetScissorRectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
         }
 
-        protected override void PlatformSetVertexBuffer(VertexBuffer vb)
+        protected override void PlatformSetVertexBuffer(int slot, VertexBuffer vb)
         {
-            ((D3DVertexBuffer)vb).Apply();
+            ((D3DVertexBuffer)vb).Apply(slot);
         }
 
         protected override void PlatformSetIndexBuffer(IndexBuffer ib)

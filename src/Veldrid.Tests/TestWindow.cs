@@ -152,6 +152,10 @@ namespace Veldrid.Platform
             }
         }
 
+        public bool CursorVisible { get; set; }
+
+        public bool Focused { get; } = true;
+
         public void Close() { throw new NotImplementedException(); }
 
         public InputSnapshot GetInputSnapshot() { throw new NotImplementedException(); }
@@ -219,6 +223,11 @@ namespace Veldrid.Platform
         {
             var tkPoint = _nativeWindow.PointToClient(new OpenTK.Point(p.X, p.Y));
             return new System.Drawing.Point(tkPoint.X, tkPoint.Y);
+        }
+
+        public System.Drawing.Point ClientToScreen(System.Drawing.Point p)
+        {
+            return new System.Drawing.Point(p.X + _nativeWindow.X, p.Y + _nativeWindow.Y);
         }
 
         protected class SimpleInputSnapshot : InputSnapshot

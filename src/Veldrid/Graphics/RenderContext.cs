@@ -11,6 +11,8 @@ namespace Veldrid.Graphics
     /// device resources, querying and controlling device state, and low-level drawing operations.
     public abstract class RenderContext : IDisposable
     {
+        public const int MaxVertexBuffers = 16;
+
         private readonly Vector2 _topLeftUvCoordinate;
         private readonly Vector2 _bottomRightUvCoordinate;
 
@@ -18,7 +20,7 @@ namespace Veldrid.Graphics
 
         // Device State
         private Framebuffer _framebuffer;
-        private VertexBuffer _vertexBuffer;
+        private VertexBuffer[] _vertexBuffers = new VertexBuffer[MaxVertexBuffers];
         private IndexBuffer _indexBuffer;
         private Material _material;
         private Rectangle _scissorRectangle;
@@ -54,20 +56,35 @@ namespace Veldrid.Graphics
         /// When a resize is detected, the next call to ClearBuffer will trigger this event.</summary>
         public event Action WindowResized;
 
-        /// <summary>Gets or sets the active VertexBuffer.</summary>
+        /// <summary>Gets or sets the VertexBuffer in slot 0.</summary>
         public VertexBuffer VertexBuffer
         {
-            get { return _vertexBuffer; }
-            set { SetVertexBuffer(value); }
+            get { return _vertexBuffers[0]; }
+            set { SetVertexBufferCore(0, value); }
+        }
+
+        public void SetVertexBuffer(VertexBuffer vb)
+        {
+            SetVertexBufferCore(0, vb);
         }
 
         /// <summary>Changes the active VertexBuffer.</summary>
-        public void SetVertexBuffer(VertexBuffer vb)
+        public void SetVertexBuffer(int slot, VertexBuffer vb)
         {
-            if (vb != _vertexBuffer)
+            if (slot < 0 || slot >= MaxVertexBuffers)
             {
-                PlatformSetVertexBuffer(vb);
-                _vertexBuffer = vb;
+                throw new ArgumentOutOfRangeException("Slot must be between 0 and " + MaxVertexBuffers);
+            }
+
+            SetVertexBufferCore(slot, vb);
+        }
+
+        private void SetVertexBufferCore(int slot, VertexBuffer vb)
+        {
+            if (vb != _vertexBuffers[slot])
+            {
+                PlatformSetVertexBuffer(slot, vb);
+                _vertexBuffers[slot] = vb;
             }
         }
 
@@ -364,6 +381,8 @@ namespace Veldrid.Graphics
             ClearScissorRectangle();
         }
 
+        protected VertexBuffer[] VertexBuffers => _vertexBuffers;
+
         protected abstract Vector2 GetTopLeftUvCoordinate();
 
         protected abstract Vector2 GetBottomRightUvCoordinate();
@@ -378,7 +397,7 @@ namespace Veldrid.Graphics
 
         protected abstract void PlatformResize();
 
-        protected abstract void PlatformSetVertexBuffer(VertexBuffer vb);
+        protected abstract void PlatformSetVertexBuffer(int slot, VertexBuffer vb);
 
         protected abstract void PlatformSetIndexBuffer(IndexBuffer ib);
 
@@ -413,7 +432,11 @@ namespace Veldrid.Graphics
 
         private void NullInputs()
         {
-            _vertexBuffer = null;
+            for (int i = 0; i < MaxVertexBuffers; i++)
+            {
+                _vertexBuffers[i] = null;
+            }
+
             _indexBuffer = null;
             _material = null;
         }

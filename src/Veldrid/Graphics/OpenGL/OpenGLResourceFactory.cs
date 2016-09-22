@@ -67,7 +67,58 @@ namespace Veldrid.Graphics.OpenGL
             OpenGLShader vertexShader = new OpenGLShader(vsStream, ShaderType.VertexShader);
             OpenGLShader fragmentShader = new OpenGLShader(psStream, ShaderType.FragmentShader);
 
-            return new OpenGLMaterial((OpenGLRenderContext)rc, vertexShader, fragmentShader, inputs, globalInputs, perObjectInputs, textureInputs);
+            return new OpenGLMaterial((OpenGLRenderContext)rc, vertexShader, fragmentShader, new[] { inputs }, globalInputs, perObjectInputs, textureInputs);
+        }
+
+        public override Material CreateMaterial(
+            RenderContext rc,
+            string vertexShaderName,
+            string pixelShaderName,
+            MaterialVertexInput vertexInputs0,
+            MaterialVertexInput vertexInputs1,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
+            MaterialTextureInputs textureInputs)
+        {
+            Stream vsStream = GetShaderStream(vertexShaderName);
+            Stream psStream = GetShaderStream(pixelShaderName);
+
+            OpenGLShader vertexShader = new OpenGLShader(vsStream, ShaderType.VertexShader);
+            OpenGLShader fragmentShader = new OpenGLShader(psStream, ShaderType.FragmentShader);
+
+            return new OpenGLMaterial(
+                (OpenGLRenderContext)rc, 
+                vertexShader, 
+                fragmentShader, 
+                new[] { vertexInputs0, vertexInputs1 }, 
+                globalInputs, 
+                perObjectInputs, 
+                textureInputs);
+        }
+
+        public override Material CreateMaterial(
+            RenderContext rc,
+            string vertexShaderName,
+            string pixelShaderName,
+            MaterialVertexInput[] vertexInputs,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
+            MaterialTextureInputs textureInputs)
+        {
+            Stream vsStream = GetShaderStream(vertexShaderName);
+            Stream psStream = GetShaderStream(pixelShaderName);
+
+            OpenGLShader vertexShader = new OpenGLShader(vsStream, ShaderType.VertexShader);
+            OpenGLShader fragmentShader = new OpenGLShader(psStream, ShaderType.FragmentShader);
+
+            return new OpenGLMaterial(
+                (OpenGLRenderContext)rc,
+                vertexShader,
+                fragmentShader,
+                vertexInputs,
+                globalInputs,
+                perObjectInputs,
+                textureInputs);
         }
 
         public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)

@@ -15,9 +15,9 @@ namespace Veldrid.Graphics.Direct3D
                   isDynamic ? CpuAccessFlags.Write : CpuAccessFlags.None)
         { }
 
-        public void Apply()
+        public void Apply(int slot)
         {
-            Device.ImmediateContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(Buffer, _stride, 0));
+            Device.ImmediateContext.InputAssembler.SetVertexBuffers(slot, new VertexBufferBinding(Buffer, _stride, 0));
         }
 
         public void SetVertexData<T>(T[] vertexData, VertexDescriptor descriptor) where T : struct => SetVertexData(vertexData, descriptor, 0);

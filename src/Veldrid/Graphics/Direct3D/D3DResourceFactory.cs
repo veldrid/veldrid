@@ -93,6 +93,57 @@ namespace Veldrid.Graphics.Direct3D
                 vertexShaderName,
                 psStream,
                 pixelShaderName,
+                new[] { vertexInputs },
+                globalInputs,
+                perObjectInputs,
+                textureInputs);
+        }
+
+        public override Material CreateMaterial(
+            RenderContext rc,
+            string vertexShaderName,
+            string pixelShaderName,
+            MaterialVertexInput vertexInputs0,
+            MaterialVertexInput vertexInputs1,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
+            MaterialTextureInputs textureInputs)
+        {
+            Stream vsStream = GetShaderStream(vertexShaderName);
+            Stream psStream = GetShaderStream(pixelShaderName);
+
+            return new D3DMaterial(
+                _device,
+                (D3DRenderContext)rc,
+                vsStream,
+                vertexShaderName,
+                psStream,
+                pixelShaderName,
+                new[] { vertexInputs0, vertexInputs1 },
+                globalInputs,
+                perObjectInputs,
+                textureInputs);
+        }
+
+        public override Material CreateMaterial(
+            RenderContext rc,
+            string vertexShaderName,
+            string pixelShaderName,
+            MaterialVertexInput[] vertexInputs,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
+            MaterialTextureInputs textureInputs)
+        {
+            Stream vsStream = GetShaderStream(vertexShaderName);
+            Stream psStream = GetShaderStream(pixelShaderName);
+
+            return new D3DMaterial(
+                _device,
+                (D3DRenderContext)rc,
+                vsStream,
+                vertexShaderName,
+                psStream,
+                pixelShaderName,
                 vertexInputs,
                 globalInputs,
                 perObjectInputs,

@@ -34,11 +34,13 @@ namespace Veldrid.Graphics.OpenGL
             GL.AttachShader(_programID, _vertexShader.ShaderID);
             GL.AttachShader(_programID, _fragmentShader.ShaderID);
 
+            int slot = 0;
             foreach (var input in vertexInputs)
             {
-                for (int slot = 0; slot < input.Elements.Length; slot++)
+                for (int i = 0; i < input.Elements.Length; i++)
                 {
-                    GL.BindAttribLocation(_programID, slot, input.Elements[slot].Name);
+                    GL.BindAttribLocation(_programID, slot, input.Elements[i].Name);
+                    slot += 1;
                 }
             }
 
@@ -157,12 +159,6 @@ namespace Veldrid.Graphics.OpenGL
 
         public void Apply(VertexBuffer[] vertexBuffers)
         {
-            if (vertexBuffers.Length < _inputsBySlot.Length)
-            {
-                throw new InvalidOperationException(
-                    $"The number of vertex buffers was not expected. Expected: {_inputsBySlot.Length}, Received: {vertexBuffers.Length}");
-            }
-
             int totalSlotsBound = 0;
             for (int i = 0; i < _inputsBySlot.Length; i++)
             {
@@ -174,6 +170,7 @@ namespace Veldrid.Graphics.OpenGL
                     int actualSlot = totalSlotsBound + slot;
                     GL.EnableVertexAttribArray(actualSlot);
                     GL.VertexAttribPointer(actualSlot, element.ElementCount, element.Type, element.Normalized, input.VertexSizeInBytes, element.Offset);
+                    GL.VertexAttribDivisor(actualSlot, element.InstanceStepRate);
                 }
 
                 totalSlotsBound += input.Elements.Length;
@@ -247,6 +244,13 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetVertexAttributes(int vertexBufferSlot, OpenGLVertexBuffer vb)
         {
+            // TODO: Related to OpenGLRenderContext.PlatformSetVertexBuffer()
+            // These attributes should be lazily set on a draw call or something.
+            if (vertexBufferSlot <= _inputsBySlot.Length)
+            {
+                return;
+            }
+
             int baseSlot = GetSlotBaseIndex(vertexBufferSlot);
             OpenGLMaterialVertexInput input = _inputsBySlot[vertexBufferSlot];
             vb.Apply();
@@ -437,6 +441,7 @@ namespace Veldrid.Graphics.OpenGL
             public VertexAttribPointerType Type { get; }
             public int Offset { get; }
             public bool Normalized { get; }
+            public int InstanceStepRate { get; set; }
 
             public OpenGLMaterialVertexInputElement(byte sizeInBytes, byte elementCount, VertexAttribPointerType type, int offset, bool normalized)
             {
@@ -445,6 +450,23 @@ namespace Veldrid.Graphics.OpenGL
                 Type = type;
                 Offset = offset;
                 Normalized = normalized;
+                InstanceStepRate = 0;
+            }
+
+            public OpenGLMaterialVertexInputElement(
+                byte sizeInBytes, 
+                byte elementCount, 
+                VertexAttribPointerType type, 
+                int offset, 
+                bool normalized,
+                int instanceStepRate)
+            {
+                SizeInBytes = sizeInBytes;
+                ElementCount = elementCount;
+                Type = type;
+                Offset = offset;
+                Normalized = normalized;
+                InstanceStepRate = instanceStepRate;
             }
 
             public OpenGLMaterialVertexInputElement(MaterialVertexInputElement genericElement, int offset)
@@ -454,6 +476,7 @@ namespace Veldrid.Graphics.OpenGL
                 Type = GetGenericFormatType(genericElement.ElementFormat);
                 Offset = offset;
                 Normalized = genericElement.SemanticType == VertexSemanticType.Color && genericElement.ElementFormat == VertexElementFormat.Byte4;
+                InstanceStepRate = genericElement.InstanceStepRate;
             }
 
             private static VertexAttribPointerType GetGenericFormatType(VertexElementFormat format)

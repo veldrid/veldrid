@@ -80,6 +80,17 @@ namespace Veldrid.Graphics.Direct3D
             _deviceContext.DrawIndexed(count, startingIndex, startingVertex);
         }
 
+
+        public override void DrawInstancedPrimitives(int indexCount, int instanceCount, int startingIndex)
+        {
+            DrawInstancedPrimitives(indexCount, instanceCount, startingIndex, 0);
+        }
+
+        public override void DrawInstancedPrimitives(int indexCount, int instanceCount, int startingIndex, int startingVertex)
+        {
+            _deviceContext.DrawIndexedInstanced(indexCount, instanceCount, startingIndex, startingVertex, 0);
+        }
+
         protected override void PlatformSwapBuffers()
         {
             _swapChain.Present(_syncInterval, PresentFlags.None);

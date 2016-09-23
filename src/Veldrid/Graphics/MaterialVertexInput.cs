@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Veldrid.Graphics
 {
-    /// <summary>Describes the vertex input of a material.</summary>
+    /// <summary>Describes the vertex input of a <see cref="Material"/> contained in a single <see cref="VertexBuffer"/>.</summary>
     public class MaterialVertexInput
     {
         /// <summary>The total size of an individual vertex, in bytes.</summary>
@@ -54,6 +54,12 @@ namespace Veldrid.Graphics
         /// <summary>The size of the element, in bytes.</summary>
         public byte SizeInBytes { get; set; }
 
+        public VertexElementInputClass StorageClassifier { get; set; }
+
+        /// <summary> The number of instances to use a vertex
+        /// Only valid for PerInstance vertex inputs.
+        public int InstanceStepRate { get; set; }
+
         /// <summary>Constructs a new MaterialVertexInputElement</summary>
         public MaterialVertexInputElement(string name, VertexSemanticType semanticType, VertexElementFormat format)
         {
@@ -61,6 +67,24 @@ namespace Veldrid.Graphics
             SemanticType = semanticType;
             ElementFormat = format;
             SizeInBytes = GetSizeInBytes(format);
+            StorageClassifier = VertexElementInputClass.PerVertex;
+            InstanceStepRate = 0;
+        }
+
+        /// <summary>Constructs a new MaterialVertexInputElement</summary>
+        public MaterialVertexInputElement(
+            string name, 
+            VertexSemanticType semanticType, 
+            VertexElementFormat format,
+            VertexElementInputClass inputClass,
+            int stepRate)
+        {
+            Name = name;
+            SemanticType = semanticType;
+            ElementFormat = format;
+            SizeInBytes = GetSizeInBytes(format);
+            StorageClassifier = inputClass;
+            InstanceStepRate = stepRate;
         }
 
         private static byte GetSizeInBytes(VertexElementFormat format)
@@ -94,5 +118,15 @@ namespace Veldrid.Graphics
         Float4,
         Byte1,
         Byte4
+    }
+
+    /// <summary>The storage type of a vertex element.</summary>
+    public enum VertexElementInputClass : byte
+    {
+        /// <summary>Describes input which differs per-vertex.</summary>
+        PerVertex,
+        /// <summary>Describes input which differs per-instance.
+        /// The instance step rate can be changed with <see cref="MaterialVertexInputElement.InstanceStepRate"/></summary>
+        PerInstance
     }
 }

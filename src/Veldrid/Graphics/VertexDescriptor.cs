@@ -9,6 +9,9 @@ namespace Veldrid.Graphics
         public readonly byte Stride;
         public readonly IntPtr Offset;
 
+        public VertexDescriptor(byte vertexSizeInBytes, byte elementCount)
+            : this(vertexSizeInBytes, elementCount, 0, IntPtr.Zero) { }
+
         public VertexDescriptor(byte vertexSizeInBytes, byte elementCount, byte stride, IntPtr offset)
         {
             VertexSizeInBytes = vertexSizeInBytes;

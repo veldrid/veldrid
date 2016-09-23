@@ -110,6 +110,26 @@ namespace Veldrid.Graphics.OpenGL
             GL.DrawElementsBaseVertex(_primitiveType, count, elementsType, new IntPtr(startingIndex * indexSize), startingVertex);
         }
 
+        public override void DrawInstancedPrimitives(int indexCount, int instanceCount, int startingIndex)
+        {
+            var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
+            int indexSize = OpenGLFormats.GetIndexFormatSize(elementsType);
+            GL.DrawElementsInstanced(_primitiveType, indexCount, elementsType, new IntPtr(startingIndex * indexSize), instanceCount);
+        }
+
+        public override void DrawInstancedPrimitives(int indexCount, int instanceCount, int startingIndex, int startingVertex)
+        {
+            var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
+            int indexSize = OpenGLFormats.GetIndexFormatSize(elementsType);
+            GL.DrawElementsInstancedBaseVertex(
+                _primitiveType,
+                indexCount,
+                elementsType,
+                new IntPtr(startingIndex * indexSize),
+                instanceCount,
+                startingVertex);
+        }
+
         private void SetInitialStates()
         {
             GL.ClearColor(ClearColor.R, ClearColor.G, ClearColor.B, ClearColor.A);

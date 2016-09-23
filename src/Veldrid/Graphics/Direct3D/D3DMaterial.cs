@@ -225,20 +225,23 @@ namespace Veldrid.Graphics.Direct3D
             int count = vertexInputs.Sum(mvi => mvi.Elements.Length);
             int element = 0;
             InputElement[] elements = new InputElement[count];
-            for (int slot = 0; slot < vertexInputs.Length; slot++)
+            SemanticIndices indicesTracker = new SemanticIndices();
+            for (int vbSlot = 0; vbSlot < vertexInputs.Length; vbSlot++)
             {
-                MaterialVertexInput slotInput = vertexInputs[slot];
-                int numElements = slotInput.Elements.Length;
+                MaterialVertexInput bufferInput = vertexInputs[vbSlot];
+                int numElements = bufferInput.Elements.Length;
                 int currentOffset = 0;
                 for (int i = 0; i < numElements; i++)
                 {
-                    var genericElement = slotInput.Elements[i];
+                    var genericElement = bufferInput.Elements[i];
                     elements[element] = new InputElement(
                         GetSemanticName(genericElement.SemanticType),
-                        0,
+                        indicesTracker.GetAndIncrement(genericElement.SemanticType),
                         ConvertGenericFormat(genericElement.ElementFormat),
                         currentOffset,
-                        slot);
+                        vbSlot,
+                        D3DFormats.ConvertInputClass(genericElement.StorageClassifier),
+                        genericElement.InstanceStepRate);
                     currentOffset += genericElement.SizeInBytes;
                     element += 1;
                 }
@@ -448,6 +451,31 @@ namespace Veldrid.Graphics.Direct3D
             {
                 Slot = slot;
                 TextureBinding = binding;
+            }
+        }
+
+        private class SemanticIndices
+        {
+            private int _position;
+            private int _texCoord;
+            private int _normal;
+            private int _color;
+
+            public int GetAndIncrement(VertexSemanticType type)
+            {
+                switch (type)
+                {
+                    case VertexSemanticType.Position:
+                        return _position++;
+                    case VertexSemanticType.TextureCoordinate:
+                        return _texCoord++;
+                    case VertexSemanticType.Normal:
+                        return _normal++;
+                    case VertexSemanticType.Color:
+                        return _color++;
+                    default:
+                        throw Illegal.Value<VertexSemanticType>();
+                }
             }
         }
     }

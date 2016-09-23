@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Veldrid.Assets;
 using Veldrid.Graphics;
@@ -10,7 +11,8 @@ namespace Veldrid.RenderDemo
     {
         private readonly DynamicDataProvider<Matrix4x4> _modelViewProvider = new DynamicDataProvider<Matrix4x4>();
 
-        private static VertexBuffer s_vb;
+        private static VertexBuffer s_vb0;
+        private static VertexBuffer s_vb1;
         private static IndexBuffer s_ib;
         private static Material s_material;
 
@@ -48,18 +50,28 @@ namespace Veldrid.RenderDemo
             s_currentContext = context;
             ResourceFactory factory = context.ResourceFactory;
 
-            s_vb = factory.CreateVertexBuffer(VertexPositionColor.SizeInBytes * s_cubeVertices.Length, false);
-            VertexDescriptor desc = new VertexDescriptor(VertexPositionColor.SizeInBytes, VertexPositionColor.ElementCount, 0, IntPtr.Zero);
-            s_vb.SetVertexData(s_cubeVertices, desc);
+            s_vb0 = factory.CreateVertexBuffer(12 * s_cubeVertices.Length, false);
+            VertexDescriptor desc = new VertexDescriptor(12, 1, 0, IntPtr.Zero);
+            s_vb0.SetVertexData(s_cubeVertices.Select(vpc => vpc.Position).ToArray(), desc);
+
+            s_vb1 = factory.CreateVertexBuffer(16 * s_cubeVertices.Length, false);
+            VertexDescriptor desc2 = new VertexDescriptor(16, 1, 0, IntPtr.Zero);
+            s_vb1.SetVertexData(s_cubeVertices.Select(vpc => vpc.Color).ToArray(), desc2);
 
             s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length, false);
             s_ib.SetIndices(s_cubeIndices);
 
-            MaterialVertexInput materialInputs = new MaterialVertexInput(
-                VertexPositionColor.SizeInBytes,
+            MaterialVertexInput materialInputs0 = new MaterialVertexInput(
+                12,
                 new MaterialVertexInputElement[]
                 {
                     new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                });
+
+            MaterialVertexInput materialInputs1 = new MaterialVertexInput(
+                16,
+                new MaterialVertexInputElement[]
+                {
                     new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4)
                 });
 
@@ -79,7 +91,8 @@ namespace Veldrid.RenderDemo
                 context,
                 VertexShaderSource,
                 FragmentShaderSource,
-                materialInputs,
+                materialInputs0,
+                materialInputs1,
                 globalInputs,
                 perObjectInputs,
                 MaterialTextureInputs.Empty);
@@ -102,7 +115,8 @@ namespace Veldrid.RenderDemo
                 * Matrix4x4.CreateTranslation((float)Math.Sin(rotationAmount) * Vector3.UnitY)
                 * ((ConstantBufferDataProvider<Matrix4x4>)((ChangeableProvider)context.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).DataProvider).Data;
 
-            context.SetVertexBuffer(s_vb);
+            context.SetVertexBuffer(0, s_vb0);
+            context.SetVertexBuffer(1, s_vb1);
             context.SetIndexBuffer(s_ib);
             context.SetMaterial(s_material);
             s_material.ApplyPerObjectInput(_modelViewProvider);
@@ -117,7 +131,8 @@ namespace Veldrid.RenderDemo
 
         public void Dispose()
         {
-            s_vb.Dispose();
+            s_vb0.Dispose();
+            s_vb1.Dispose();
             s_ib.Dispose();
             s_material.Dispose();
         }

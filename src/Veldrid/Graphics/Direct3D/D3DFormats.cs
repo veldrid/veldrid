@@ -169,5 +169,19 @@ namespace Veldrid.Graphics.Direct3D
                     throw Illegal.Value<PrimitiveTopology>();
             }
         }
+
+        public static InputClassification ConvertInputClass(VertexElementInputClass inputClass)
+        {
+            switch (inputClass)
+            {
+                case VertexElementInputClass.PerVertex:
+                    return InputClassification.PerVertexData;
+                case VertexElementInputClass.PerInstance:
+                    return InputClassification.PerInstanceData;
+                default:
+                    throw Illegal.Value<VertexElementInputClass>();
+            }
+
+        }
     }
 }

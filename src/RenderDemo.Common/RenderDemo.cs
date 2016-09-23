@@ -39,6 +39,7 @@ namespace Veldrid.RenderDemo
         private static OctreeVisibilityManager _shadowsScene;
         private static FlatListVisibilityManager _octreeScene;
         private static OctreeVisibilityManager _sponzaAtrium;
+        private static FlatListVisibilityManager _instancingScene;
         private static double _circleWidth = 12.0;
         private static bool _wireframe;
 
@@ -139,7 +140,7 @@ namespace Veldrid.RenderDemo
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
 
-                ChangeScene(SceneWithShadows());
+                ChangeScene(SceneWithInstancing());
 
                 _fta = new FrameTimeAverager(666);
 
@@ -247,6 +248,25 @@ namespace Veldrid.RenderDemo
             }
 
             return _teapotVM;
+        }
+
+        private static FlatListVisibilityManager SceneWithInstancing()
+        {
+            if (_instancingScene == null)
+            {
+                _instancingScene = new FlatListVisibilityManager();
+                InstancedSphereRenderer isr = new InstancedSphereRenderer(_ad, _rc);
+                _instancingScene.AddRenderItem(isr);
+
+                var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
+                plane.Position = new Vector3(0, -2, 0);
+                plane.Scale = new Vector3(20, 1, 20);
+                _instancingScene.AddRenderItem(plane);
+
+                _instancingScene.AddRenderItem(_imguiRenderer);
+            }
+
+            return _instancingScene;
         }
 
         private static OctreeVisibilityManager SceneWithShadows()
@@ -740,6 +760,17 @@ namespace Veldrid.RenderDemo
                     if (teapotScene)
                         ImGui.PopStyleColor();
 
+                    bool instancingScene = _visibilityManager == _instancingScene;
+                    if (instancingScene)
+                        ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
+                    if (ImGui.MenuItem("Instancing", null))
+                    {
+                        _circleWidth = 15.0;
+                        ChangeScene(SceneWithInstancing());
+                    }
+                    if (instancingScene)
+                        ImGui.PopStyleColor();
+
                     bool shadowsScene = _visibilityManager == _shadowsScene;
                     if (shadowsScene)
                         ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
@@ -1024,6 +1055,13 @@ https://github.com/mellinoe/veldrid.");
                 if (_sponzaAtrium != null)
                 {
                     foreach (var item in _sponzaAtrium.RenderItems)
+                    {
+                        ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
+                    }
+                }
+                if (_instancingScene != null)
+                {
+                    foreach (var item in _instancingScene.RenderItems)
                     {
                         ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
                     }

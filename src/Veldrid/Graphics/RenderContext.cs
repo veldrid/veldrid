@@ -128,11 +128,47 @@ namespace Veldrid.Graphics
             }
         }
 
-        /// <summary>Draws indexed primitives, starting from the given index.</summary>
+        /// <summary>
+        /// Draws indexed primitives, starting from the given index.
+        /// </summary>
+        /// <param name="count">The number of indices to draw.</param>
+        /// <param name="startingIndex">The index to start with.</param>
         public abstract void DrawIndexedPrimitives(int count, int startingIndex);
 
-        /// <summary>Draws indexed primitives, starting from the given index and vertex.</summary>
+        /// <summary>
+        /// Draws indexed primitives, starting from the given index and vertex.
+        /// </summary>
+        /// <param name="count">The number of indices to draw.</param>
+        /// <param name="startingIndex">The index to start with.</param>
+        /// <param name="startingVertex">A base vertex value added to each index.</param>
         public abstract void DrawIndexedPrimitives(int count, int startingIndex, int startingVertex);
+
+        /// <summary>
+        /// Draws instanced primitives.
+        /// </summary>
+        /// <param name="indexCount">The number of indices to draw, per-instance.</param>
+        /// <param name="instanceCount">The number of instances to draw.</param>
+        public void DrawInstancedPrimitives(int indexCount, int instanceCount)
+        {
+            DrawInstancedPrimitives(indexCount, instanceCount, 0);
+        }
+
+        /// <summary>
+        /// Draws instanced primitives, starting from the given index.
+        /// </summary>
+        /// <param name="indexCount">The number of indices to draw, per-instance.</param>
+        /// <param name="instanceCount">The number of instances to draw.</param>
+        /// <param name="startingIndex">The index number to start with.</param>
+        public abstract void DrawInstancedPrimitives(int indexCount, int instanceCount, int startingIndex);
+
+        /// <summary>
+        /// Draws instanced primitives, starting from the given index and vertex.
+        /// </summary>
+        /// <param name="indexCount">The number of indices to draw, per-instance.</param>
+        /// <param name="instanceCount">The number of instances to draw.</param>
+        /// <param name="startingIndex">The index number to start with.</param>
+        /// <param name="startingVertex">A base vertex value added to each index.</param>
+        public abstract void DrawInstancedPrimitives(int indexCount, int instanceCount, int startingIndex, int startingVertex);
 
         public void DrawIndexedPrimitives(int count, int startingIndex, PrimitiveTopology primitiveTopology)
         {

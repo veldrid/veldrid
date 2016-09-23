@@ -14,7 +14,7 @@ namespace Veldrid.Graphics
             ObjFile file = new ObjParser().Parse(lines);
 
             Assert.Equal("sponza.mtl", file.MaterialLibName);
-            Assert.Equal(381, file.MeshGroups.Length);
+            Assert.Equal(393, file.MeshGroups.Length);
         }
 
         [Fact]

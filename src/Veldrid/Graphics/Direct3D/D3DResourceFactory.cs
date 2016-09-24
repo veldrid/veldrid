@@ -165,6 +165,11 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
+        public override VertexInputLayout CreateInputLayout(MaterialVertexInput[] vertexInputs)
+        {
+            throw new NotImplementedException();
+        }
+
         public override VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic)
         {
             return new D3DVertexBuffer(_device, sizeInBytes, isDynamic);

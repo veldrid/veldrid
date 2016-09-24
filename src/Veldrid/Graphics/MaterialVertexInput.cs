@@ -57,7 +57,7 @@ namespace Veldrid.Graphics
         public VertexElementInputClass StorageClassifier { get; set; }
 
         /// <summary> The number of instances to use a vertex
-        /// Only valid for PerInstance vertex inputs.
+        /// Only valid for PerInstance vertex inputs.</summary>
         public int InstanceStepRate { get; set; }
 
         /// <summary>Constructs a new MaterialVertexInputElement</summary>

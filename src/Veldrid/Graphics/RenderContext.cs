@@ -8,7 +8,7 @@ using Veldrid.Platform;
 namespace Veldrid.Graphics
 {
     /// <summary>Represents a graphics device. Provides functionality for creating and managing
-    /// device resources, querying and controlling device state, and low-level drawing operations.
+    /// device resources, querying and controlling device state, and low-level drawing operations.</summary>
     public abstract class RenderContext : IDisposable
     {
         public const int MaxVertexBuffers = 16;
@@ -236,7 +236,7 @@ namespace Veldrid.Graphics
             }
         }
 
-        /// <summary>Sets the scissor rectangle area to (0, 0, int.MaxValue, int.MaxValue).
+        /// <summary>Sets the scissor rectangle area to (0, 0, int.MaxValue, int.MaxValue).</summary>
         public virtual void ClearScissorRectangle()
         {
             SetScissorRectangle(0, 0, int.MaxValue, int.MaxValue);
@@ -254,17 +254,17 @@ namespace Veldrid.Graphics
             PlatformSwapBuffers();
         }
 
-        /// <summary>A BlendState providing basic override additive blending.<summary>
+        /// <summary>A BlendState providing basic override additive blending.</summary>
         public BlendState AdditiveBlend
             => _additiveBlend ?? (_additiveBlend = ResourceFactory.CreateCustomBlendState(true, Blend.SourceAlpha, Blend.One, BlendFunction.Add));
         private BlendState _additiveBlend;
 
-        /// <summary>A BlendState providing SrcAlpha->InvSrcAlpha additive blending.<summary>
+        /// <summary>A BlendState providing SrcAlpha->InvSrcAlpha additive blending.</summary>
         public BlendState AlphaBlend
             => _alphaBlend ?? (_alphaBlend = ResourceFactory.CreateCustomBlendState(true, Blend.SourceAlpha, Blend.InverseSourceAlpha, BlendFunction.Add));
         private BlendState _alphaBlend;
 
-        /// <summary>A BlendState providing full-override blending.<summary>
+        /// <summary>A BlendState providing full-override blending.</summary>
         public BlendState OverrideBlend
             => _overrideBlend ?? (_overrideBlend = ResourceFactory.CreateCustomBlendState(true, Blend.One, Blend.Zero, BlendFunction.Add));
         private BlendState _overrideBlend;

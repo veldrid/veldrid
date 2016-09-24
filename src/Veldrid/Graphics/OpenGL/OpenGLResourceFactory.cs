@@ -126,6 +126,11 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLShader(shaderCode, OpenGLFormats.VeldridToGLShaderType(type));
         }
 
+        public override VertexInputLayout CreateInputLayout(MaterialVertexInput[] vertexInputs)
+        {
+            return new OpenGLVertexInputLayout(vertexInputs);
+        }
+
         public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             return new OpenGLTexture2D(width, height, format, pixelData);

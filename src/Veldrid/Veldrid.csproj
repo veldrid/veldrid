@@ -43,6 +43,7 @@
     <Compile Include="Graphics\Direct3D\D3DTexture2D.cs" />
     <Compile Include="Graphics\Direct3D\D3DTextureBinding.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
+    <Compile Include="Graphics\Direct3D\D3DVertexInputLayout.cs" />
     <Compile Include="Graphics\DynamicDataProvider.cs" />
     <Compile Include="Graphics\EmbeddedResourceShaderLoader.cs" />
     <Compile Include="Graphics\FaceCullingMode.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="Graphics\OpenGL\OpenGLRasterizerState.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLTextureBinding.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLUniformStorageAdapter.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLVertexInputLayout.cs" />
     <Compile Include="Graphics\Pipeline\PipelineStage.cs" />
     <Compile Include="Graphics\Pipeline\StandardPipelineStage.cs" />
     <Compile Include="Graphics\PrimitiveTopology.cs" />
@@ -133,8 +135,6 @@
     <Compile Include="Ray.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="VectorExtensions.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="project.json" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />

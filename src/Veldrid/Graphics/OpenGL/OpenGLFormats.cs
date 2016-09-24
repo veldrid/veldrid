@@ -20,6 +20,40 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        public static OpenTK.Graphics.OpenGL.ShaderType VeldridToGLShaderType(ShaderType type)
+        {
+            switch (type)
+            {
+                case ShaderType.Vertex:
+                    return OpenTK.Graphics.OpenGL.ShaderType.VertexShader;
+                case ShaderType.Geometry:
+                    return OpenTK.Graphics.OpenGL.ShaderType.GeometryShader;
+                case ShaderType.Fragment:
+                    return OpenTK.Graphics.OpenGL.ShaderType.FragmentShader;
+                default:
+                    throw Illegal.Value<ShaderType>();
+            }
+        }
+
+        public static ShaderType GLToVeldridShaderType(OpenTK.Graphics.OpenGL.ShaderType type)
+        {
+            switch (type)
+            {
+                case OpenTK.Graphics.OpenGL.ShaderType.FragmentShader:
+                    return ShaderType.Fragment;
+                case OpenTK.Graphics.OpenGL.ShaderType.VertexShader:
+                    return ShaderType.Vertex;
+                case OpenTK.Graphics.OpenGL.ShaderType.GeometryShader:
+                    return ShaderType.Geometry;
+                case OpenTK.Graphics.OpenGL.ShaderType.TessEvaluationShader:
+                case OpenTK.Graphics.OpenGL.ShaderType.TessControlShader:
+                case OpenTK.Graphics.OpenGL.ShaderType.ComputeShader:
+                    throw new NotSupportedException($"The shader type {type} is not supported.");
+                default:
+                    throw Illegal.Value<OpenTK.Graphics.OpenGL.ShaderType>();
+            }
+        }
+
         internal static DepthFunction ConvertDepthComparison(DepthComparison depthComparison)
         {
             switch (depthComparison)

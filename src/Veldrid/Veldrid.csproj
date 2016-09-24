@@ -39,6 +39,7 @@
     <Compile Include="Graphics\Direct3D\D3DRasterizerState.cs" />
     <Compile Include="Graphics\Direct3D\D3DRenderContext.cs" />
     <Compile Include="Graphics\Direct3D\D3DResourceFactory.cs" />
+    <Compile Include="Graphics\Direct3D\D3DShader.cs" />
     <Compile Include="Graphics\Direct3D\D3DTexture2D.cs" />
     <Compile Include="Graphics\Direct3D\D3DTextureBinding.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
@@ -74,11 +75,15 @@
     <Compile Include="Graphics\RenderItemIndex.cs" />
     <Compile Include="Graphics\RenderOrderKey.cs" />
     <Compile Include="Graphics\RenderQueue.cs" />
+    <Compile Include="Graphics\Shader.cs" />
     <Compile Include="Graphics\ShaderLoader.cs" />
+    <Compile Include="Graphics\ShaderSet.cs" />
     <Compile Include="Graphics\ShaderTextureBinding.cs" />
+    <Compile Include="Graphics\ShaderType.cs" />
     <Compile Include="Graphics\SimpleMeshDataProvider.cs" />
     <Compile Include="Graphics\TextureData.cs" />
     <Compile Include="Graphics\TriangleFillMode.cs" />
+    <Compile Include="Graphics\VertexInputLayout.cs" />
     <Compile Include="Graphics\VertexPositionNormalColorTexture.cs" />
     <Compile Include="Graphics\Viewport.cs" />
     <Compile Include="Graphics\VisibiltyManager.cs" />

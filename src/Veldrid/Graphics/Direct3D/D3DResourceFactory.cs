@@ -150,6 +150,21 @@ namespace Veldrid.Graphics.Direct3D
                 textureInputs);
         }
 
+        public override Shader CreateShader(ShaderType type, string shaderCode, string name)
+        {
+            switch (type)
+            {
+                case ShaderType.Vertex:
+                    return new D3DVertexShader(_device, shaderCode, name);
+                case ShaderType.Geometry:
+                    return new D3DGeometryShader(_device, shaderCode, name);
+                case ShaderType.Fragment:
+                    return new D3DFragmentShader(_device, shaderCode, name);
+                default:
+                    throw Illegal.Value<ShaderType>();
+            }
+        }
+
         public override VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic)
         {
             return new D3DVertexBuffer(_device, sizeInBytes, isDynamic);

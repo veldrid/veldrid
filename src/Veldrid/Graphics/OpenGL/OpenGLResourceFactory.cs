@@ -64,8 +64,8 @@ namespace Veldrid.Graphics.OpenGL
             Stream vsStream = GetShaderStream(vertexShaderName);
             Stream psStream = GetShaderStream(pixelShaderName);
 
-            OpenGLShader vertexShader = new OpenGLShader(vsStream, ShaderType.VertexShader);
-            OpenGLShader fragmentShader = new OpenGLShader(psStream, ShaderType.FragmentShader);
+            OpenGLShader vertexShader = new OpenGLShader(vsStream, OpenTK.Graphics.OpenGL.ShaderType.VertexShader);
+            OpenGLShader fragmentShader = new OpenGLShader(psStream, OpenTK.Graphics.OpenGL.ShaderType.FragmentShader);
 
             return new OpenGLMaterial((OpenGLRenderContext)rc, vertexShader, fragmentShader, new[] { inputs }, globalInputs, perObjectInputs, textureInputs);
         }
@@ -83,8 +83,8 @@ namespace Veldrid.Graphics.OpenGL
             Stream vsStream = GetShaderStream(vertexShaderName);
             Stream psStream = GetShaderStream(pixelShaderName);
 
-            OpenGLShader vertexShader = new OpenGLShader(vsStream, ShaderType.VertexShader);
-            OpenGLShader fragmentShader = new OpenGLShader(psStream, ShaderType.FragmentShader);
+            OpenGLShader vertexShader = new OpenGLShader(vsStream, OpenTK.Graphics.OpenGL.ShaderType.VertexShader);
+            OpenGLShader fragmentShader = new OpenGLShader(psStream, OpenTK.Graphics.OpenGL.ShaderType.FragmentShader);
 
             return new OpenGLMaterial(
                 (OpenGLRenderContext)rc, 
@@ -108,8 +108,8 @@ namespace Veldrid.Graphics.OpenGL
             Stream vsStream = GetShaderStream(vertexShaderName);
             Stream psStream = GetShaderStream(pixelShaderName);
 
-            OpenGLShader vertexShader = new OpenGLShader(vsStream, ShaderType.VertexShader);
-            OpenGLShader fragmentShader = new OpenGLShader(psStream, ShaderType.FragmentShader);
+            OpenGLShader vertexShader = new OpenGLShader(vsStream, OpenTK.Graphics.OpenGL.ShaderType.VertexShader);
+            OpenGLShader fragmentShader = new OpenGLShader(psStream, OpenTK.Graphics.OpenGL.ShaderType.FragmentShader);
 
             return new OpenGLMaterial(
                 (OpenGLRenderContext)rc,
@@ -119,6 +119,11 @@ namespace Veldrid.Graphics.OpenGL
                 globalInputs,
                 perObjectInputs,
                 textureInputs);
+        }
+
+        public override Shader CreateShader(ShaderType type, string shaderCode, string name)
+        {
+            return new OpenGLShader(shaderCode, OpenGLFormats.VeldridToGLShaderType(type));
         }
 
         public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)

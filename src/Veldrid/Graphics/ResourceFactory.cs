@@ -39,6 +39,8 @@ namespace Veldrid.Graphics
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
             MaterialTextureInputs textureInputs);
 
+        public abstract Shader CreateShader(ShaderType type, string shaderCode, string name);
+
         public abstract ConstantBuffer CreateConstantBuffer(int sizeInBytes);
 
         public abstract Framebuffer CreateFramebuffer();

@@ -74,7 +74,7 @@ namespace Veldrid.Graphics
         /// Constructs a DeviceTexture from this texture.
         /// </summary>
         /// <param name="producer"></param>
-        /// <returns></returns>
+        /// <returns>A new <see cref="DeviceTexture2D"/> containing this image's pixel data.</returns>
         public DeviceTexture2D CreateDeviceTexture(DeviceTextureCreator producer)
         {
             return producer.CreateTexture(Pixels, Width, Height, PixelSizeInBytes, Format);

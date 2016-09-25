@@ -18,12 +18,17 @@ namespace Veldrid.Graphics
         /// <param name="buffer"></param>
         void SetData(ConstantBuffer buffer);
 
+        /// <summary>
+        /// Provides a notification when this provider's data changes.
+        /// </summary>
         event Action DataChanged;
     }
 
     public interface ConstantBufferDataProvider<T> : ConstantBufferDataProvider
     {
+        /// <summary>
+        /// Gets the data provided by this <see cref="ConstantBufferDataProvider{T}"/> directly.
+        /// </summary>
         T Data { get; }
     }
-
 }

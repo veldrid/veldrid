@@ -8,6 +8,7 @@
     <AssemblyName>Veldrid</AssemblyName>
     <RootNamespace>Veldrid</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile Condition="'$(ProduceXmlDocs)' == 'true'">$(OutDir)$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />

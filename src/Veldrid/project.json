@@ -1,6 +1,6 @@
 ﻿{
   "dependencies": {
-    "ImageProcessorCore": "1.0.0-alpha-934",
+    "ImageProcessorCore": "1.0.0-alpha-995",
     "Newtonsoft.Json": "9.0.1",
     "OpenTK.NETCore": "1.1.2364.6424",
     "System.AppContext": "4.1.0",

@@ -391,6 +391,7 @@ namespace Veldrid.RenderDemo
         {
             if (_sponzaAtrium == null)
             {
+                Stopwatch sw = Stopwatch.StartNew();
                 _sponzaAtrium = new OctreeVisibilityManager();
 
                 ObjFile atriumFile = _ad.LoadAsset<ObjFile>("Models/SponzaAtrium/sponza.obj", cache: false);
@@ -450,6 +451,9 @@ namespace Veldrid.RenderDemo
 
                 _sceneBoundsRenderer = new BoundingBoxWireframeRenderer(_sponzaAtrium.OctreeRootNode.GetPreciseBounds(), _ad, _rc);
                 _sponzaAtrium.AddRenderItem(_sceneBoundsRenderer);
+
+                sw.Stop();
+                Console.WriteLine("Total elapsed loading time: " + sw.Elapsed);
             }
 
             return _sponzaAtrium;

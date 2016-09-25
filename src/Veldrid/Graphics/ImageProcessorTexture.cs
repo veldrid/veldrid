@@ -16,7 +16,7 @@ namespace Veldrid.Graphics
         /// <summary>
         /// The raw pixel data, stored in RGBA format, where each element is a 32-bit float (128-bits-per-pixel).
         /// </summary>
-        public float[] Pixels => Image.Pixels;
+        public Color[] Pixels => Image.Pixels;
 
         /// <summary>
         /// The width of the texture.
@@ -30,12 +30,12 @@ namespace Veldrid.Graphics
         /// <summary>
         /// ImageProcessorTexture images are stored in R32_G32_B32_A32_Float format.
         /// </summary>
-        public PixelFormat Format => PixelFormat.R32_G32_B32_A32_Float;
+        public PixelFormat Format => PixelFormat.R8_G8_B8_A8;
 
         /// <summary>
         /// The size of each pixel; 16 bytes.
         /// </summary>
-        public int PixelSizeInBytes => sizeof(float) * 4;
+        public int PixelSizeInBytes => sizeof(byte) * 4;
 
         /// <summary>
         /// Loads and constructs a new ImageProcessorTexture from the file at the given path.

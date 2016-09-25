@@ -78,8 +78,8 @@ namespace Veldrid.RenderDemo
                     bottomPin.Ptr,
                     _front.Width,
                     _front.Height,
-                    RgbaFloat.SizeInBytes,
-                    PixelFormat.R32_G32_B32_A32_Float);
+                    _front.PixelSizeInBytes,
+                    _front.Format);
                 _cubemapBinding = factory.CreateShaderTextureBinding(cubemapTexture);
             }
 

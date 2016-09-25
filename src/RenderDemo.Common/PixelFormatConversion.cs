@@ -1,20 +1,17 @@
-﻿using Veldrid.Graphics;
+﻿using ImageProcessorCore;
 
 namespace Veldrid.RenderDemo
 {
     public static class PixelFormatConversion
     {
-        public static unsafe void ConvertPixelsUInt16DepthToRgbaFloat(int numPixels, ushort[] depthPixels, float[] colorPixels)
+        public static unsafe void ConvertPixelsUInt16DepthToRgbaFloat(int numPixels, ushort[] depthPixels, Color[] colorPixels)
         {
             for (int i = 0; i < numPixels; i++)
             {
                 ushort pixel = depthPixels[i];
-                float normalizedVal = ((float)pixel / ushort.MaxValue);
-                int colorIndex = i * 4;
-                colorPixels[colorIndex] = normalizedVal;
-                colorPixels[colorIndex + 1] = normalizedVal;
-                colorPixels[colorIndex + 2] = normalizedVal;
-                colorPixels[colorIndex + 3] = 1;
+                byte normalizedVal = (byte)(((double)pixel / ushort.MaxValue) * byte.MaxValue);
+                int colorIndex = i;
+                colorPixels[colorIndex] = new Color(normalizedVal, normalizedVal, normalizedVal, normalizedVal);
             }
         }
     }

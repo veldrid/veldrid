@@ -15,17 +15,19 @@ namespace Veldrid.Graphics.Direct3D
 
         public ShaderType Type { get; }
 
+        public ShaderBytecode Bytecode { get; }
         public TShader DeviceShader { get; }
 
         public D3DShader(Device device, ShaderType type, string shaderCode, string name)
         {
             Type = type;
-            CompilationResult compilation = ShaderBytecode.Compile(shaderCode, GetProfile(type), DefaultShaderFlags, sourceFileName: name);
+            CompilationResult compilation = ShaderBytecode.Compile(shaderCode, GetEntryPoint(type), GetProfile(type), DefaultShaderFlags, sourceFileName: name);
             if (compilation.HasErrors || compilation.Message != null)
             {
                 throw new InvalidOperationException("Error compiling shader: " + compilation.Message);
             }
 
+            Bytecode = compilation.Bytecode;
             DeviceShader = CreateDeviceShader(device, compilation.Bytecode);
         }
 

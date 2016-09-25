@@ -133,12 +133,22 @@ namespace Veldrid.Graphics
         /// <returns>A new Shader object.</returns>
         public abstract Shader CreateShader(ShaderType type, string shaderCode, string name);
 
+        public abstract ShaderSet CreateShaderSet(VertexInputLayout inputLayout, Shader vertexShader, Shader fragmentShader);
+
+        public abstract ShaderSet CreateShaderSet(VertexInputLayout inputLayout, Shader vertexShader, Shader geometryShader, Shader fragmentShader);
+
+        public abstract ShaderConstantBindings CreateShaderConstantBindings(
+            RenderContext rc,
+            ShaderSet shaderSet,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs);
+
         /// <summary>
         /// Creates a device-specific <see cref="VertexInputLayout"/> from a generic description.
         /// </summary>
         /// <param name="vertexInputs">An array of vertex input descriptions, one for each <see cref="VertexBuffer"/> input.</param>
         /// <returns>A new <see cref="VertexInputLayout"/>.</returns>
-        public abstract VertexInputLayout CreateInputLayout(MaterialVertexInput[] vertexInputs);
+        public abstract VertexInputLayout CreateInputLayout(Shader shader, MaterialVertexInput[] vertexInputs);
 
         /// <summary>
         /// Creates a new <see cref="ConstantBuffer"/>, used for storing global <see cref="Shader"/> parameters.

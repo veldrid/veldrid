@@ -1,25 +1,12 @@
-﻿namespace Veldrid.Graphics
-{
-    public class ShaderSet
-    {
-        public VertexInputLayout InputLayout { get; }
-        public Shader VertexShader { get; }
-        public Shader TesselationShader { get; }
-        public Shader GeometryShader { get; }
-        public Shader FragmentShader { get; }
+﻿using System;
 
-        public ShaderSet(
-            VertexInputLayout inputLayout,
-            Shader vertexShader,
-            Shader tesselationShader,
-            Shader geometryShader,
-            Shader fragmentShader)
-        {
-            InputLayout = inputLayout;
-            VertexShader = vertexShader;
-            TesselationShader = tesselationShader;
-            GeometryShader = geometryShader;
-            FragmentShader = fragmentShader;
-        }
+namespace Veldrid.Graphics
+{
+    public interface ShaderSet : IDisposable
+    {
+        VertexInputLayout InputLayout { get; }
+        Shader VertexShader { get; }
+        Shader GeometryShader { get; }
+        Shader FragmentShader { get; }
     }
 }

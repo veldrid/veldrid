@@ -1,6 +1,8 @@
-﻿namespace Veldrid.Graphics
+﻿using System;
+
+namespace Veldrid.Graphics
 {
-    public interface VertexInputLayout
+    public interface VertexInputLayout : IDisposable
     {
         MaterialVertexInput[] InputDescription { get; }
     }

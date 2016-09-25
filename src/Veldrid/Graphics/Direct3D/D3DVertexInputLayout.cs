@@ -5,12 +5,15 @@ namespace Veldrid.Graphics.Direct3D
 {
     public class D3DVertexInputLayout : VertexInputLayout
     {
+        private readonly Device _device;
+
         public MaterialVertexInput[] InputDescription { get; }
 
         public InputLayout DeviceLayout { get; }
 
-        public D3DVertexInputLayout(Device device, MaterialVertexInput[] inputs)
+        public D3DVertexInputLayout(Device device, byte[] shaderBytecode, MaterialVertexInput[] inputs)
         {
+            _device = device;
             InputDescription = inputs;
 
             int count = inputs.Sum(mvi => mvi.Elements.Length);
@@ -38,7 +41,7 @@ namespace Veldrid.Graphics.Direct3D
                 }
             }
 
-            DeviceLayout = new InputLayout(device, null, elements);
+            DeviceLayout = new InputLayout(device, shaderBytecode, elements);
         }
 
         private static string GetSemanticName(VertexSemanticType semanticType)
@@ -77,6 +80,11 @@ namespace Veldrid.Graphics.Direct3D
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }
+        }
+
+        public void Dispose()
+        {
+            DeviceLayout.Dispose();
         }
 
         private class SemanticIndices

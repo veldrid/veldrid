@@ -10,109 +10,25 @@ namespace Veldrid.Graphics.Direct3D
     internal class D3DMaterial : Material, IDisposable
     {
         private readonly Device _device;
-        private readonly VertexShader _vertexShader;
-        private readonly PixelShader _pixelShader;
-        private readonly InputLayout _inputLayout;
-        private readonly GlobalConstantBufferBinding[] _constantBufferBindings;
-        private readonly PerObjectConstantBufferBinding[] _perObjectBufferBindings;
+        private readonly ShaderSet _shaderSet;
+        private readonly VertexInputLayout _inputLayout;
+        private readonly ShaderConstantBindings _constantBindings;
+
         private readonly ResourceViewBinding?[] _resourceViewBindings;
         private readonly ShaderTextureBinding[] _currentTextureBindings;
-
-        private const ShaderFlags defaultShaderFlags
-#if DEBUG
-            = ShaderFlags.Debug | ShaderFlags.SkipOptimization;
-#else
-            = ShaderFlags.OptimizationLevel3;
-#endif
 
         public D3DMaterial(
             Device device,
             D3DRenderContext rc,
-            Stream vertexShaderStream,
-            string vertexShaderName,
-            Stream pixelShaderStream,
-            string pixelShaderName,
-            MaterialVertexInput[] vertexInputs,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
+            VertexInputLayout inputLayout,
+            ShaderSet shaderSet,
+            ShaderConstantBindings constantBindings,
             MaterialTextureInputs textureInputs)
         {
             _device = device;
-
-            string vsSource, psSource;
-            using (var vsSr = new StreamReader(vertexShaderStream))
-            {
-                vsSource = vsSr.ReadToEnd();
-            }
-            using (var psSr = new StreamReader(pixelShaderStream))
-            {
-                psSource = psSr.ReadToEnd();
-            }
-
-            CompilationResult vsCompilation = ShaderBytecode.Compile(vsSource, "VS", "vs_5_0", defaultShaderFlags, sourceFileName: vertexShaderName);
-            CompilationResult psCompilation = ShaderBytecode.Compile(psSource, "PS", "ps_5_0", defaultShaderFlags, sourceFileName: pixelShaderName);
-
-            if (vsCompilation.HasErrors || vsCompilation.Message != null)
-            {
-                throw new InvalidOperationException("Error compiling shader: " + vsCompilation.Message);
-            }
-            if (psCompilation.HasErrors || psCompilation.Message != null)
-            {
-                throw new InvalidOperationException("Error compiling shader: " + psCompilation.Message);
-            }
-
-            _vertexShader = new VertexShader(device, vsCompilation.Bytecode.Data);
-            _pixelShader = new PixelShader(device, psCompilation.Bytecode.Data);
-
-            ShaderReflection vsReflection = new ShaderReflection(vsCompilation.Bytecode.Data);
-            ShaderReflection psReflection = new ShaderReflection(psCompilation.Bytecode.Data);
-
-            _inputLayout = CreateLayout(device, vsCompilation.Bytecode.Data, vertexInputs);
-
-            int numGlobalElements = globalInputs.Elements.Length;
-            _constantBufferBindings =
-                (numGlobalElements > 0)
-                ? new GlobalConstantBufferBinding[numGlobalElements]
-                : Array.Empty<GlobalConstantBufferBinding>();
-            for (int i = 0; i < numGlobalElements; i++)
-            {
-                var genericElement = globalInputs.Elements[i];
-                BufferProviderPair pair;
-                GlobalConstantBufferBinding cbb;
-                bool vsBuffer = DoesConstantBufferExist(vsReflection, i, genericElement.Name);
-                bool psBuffer = DoesConstantBufferExist(psReflection, i, genericElement.Name);
-
-                if (genericElement.UseGlobalNamedBuffer)
-                {
-                    pair = rc.GetNamedGlobalBufferProviderPair(genericElement.GlobalProviderName);
-                    cbb = new GlobalConstantBufferBinding(i, pair, false, vsBuffer, psBuffer);
-                }
-                else
-                {
-                    D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.DataProvider.DataSizeInBytes);
-                    pair = new BufferProviderPair(constantBuffer, genericElement.DataProvider);
-                    cbb = new GlobalConstantBufferBinding(i, pair, true, vsBuffer, psBuffer);
-                }
-
-                _constantBufferBindings[i] = cbb;
-            }
-
-            int numPerObjectInputs = perObjectInputs.Elements.Length;
-            _perObjectBufferBindings =
-                (numPerObjectInputs > 0)
-                ? new PerObjectConstantBufferBinding[numPerObjectInputs]
-                : Array.Empty<PerObjectConstantBufferBinding>();
-            for (int i = 0; i < numPerObjectInputs; i++)
-            {
-                var genericElement = perObjectInputs.Elements[i];
-                int bufferSlot = i + numGlobalElements;
-                bool vsBuffer = DoesConstantBufferExist(vsReflection, bufferSlot, genericElement.Name);
-                bool psBuffer = DoesConstantBufferExist(psReflection, bufferSlot, genericElement.Name);
-                D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.BufferSizeInBytes);
-
-                PerObjectConstantBufferBinding pocbb = new PerObjectConstantBufferBinding(bufferSlot, constantBuffer, vsBuffer, psBuffer);
-                _perObjectBufferBindings[i] = pocbb;
-            }
+            _inputLayout = inputLayout;
+            _shaderSet = shaderSet;
+            _constantBindings = constantBindings;
 
             int numTextures = textureInputs.Elements.Length;
             _resourceViewBindings = new ResourceViewBinding?[numTextures];
@@ -181,27 +97,14 @@ namespace Veldrid.Graphics.Direct3D
             {
                 return false;
             }
-
         }
 
         public void Apply()
         {
-            _device.ImmediateContext.InputAssembler.InputLayout = _inputLayout;
-            _device.ImmediateContext.VertexShader.Set(_vertexShader);
-            _device.ImmediateContext.PixelShader.Set(_pixelShader);
-
-            foreach (GlobalConstantBufferBinding cbBinding in _constantBufferBindings)
-            {
-                cbBinding.UpdateBuffer();
-                cbBinding.BindToShaderSlots(_device.ImmediateContext);
-            }
-
-            for (int i = 0; i < _perObjectBufferBindings.Length; i++)
-            {
-                PerObjectConstantBufferBinding binding = _perObjectBufferBindings[i];
-                binding.BindToShaderSlots(_device.ImmediateContext);
-            }
-
+            _device.ImmediateContext.InputAssembler.InputLayout = ((D3DVertexInputLayout)_inputLayout).DeviceLayout;
+            _device.ImmediateContext.VertexShader.Set(((D3DVertexShader)_shaderSet.VertexShader).DeviceShader);
+            _device.ImmediateContext.PixelShader.Set(((D3DFragmentShader)_shaderSet.FragmentShader).DeviceShader);
+            _constantBindings.Apply();
             ApplyDefaultTextureBindings();
         }
 
@@ -290,30 +193,12 @@ namespace Veldrid.Graphics.Direct3D
 
         public void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider)
         {
-            if (_perObjectBufferBindings.Length != 1)
-            {
-                throw new InvalidOperationException(
-                    "ApplyPerObjectInput can only be used when a material has exactly one per-object input.");
-            }
-
-            PerObjectConstantBufferBinding binding = _perObjectBufferBindings[0];
-            dataProvider.SetData(binding.ConstantBuffer);
+            ((D3DShaderConstantBindings)_constantBindings).ApplyPerObjectInput(dataProvider);
         }
 
         public void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders)
         {
-            if (_perObjectBufferBindings.Length != dataProviders.Length)
-            {
-                throw new InvalidOperationException(
-                    "dataProviders must contain the exact number of per-object buffer bindings used in the material.");
-            }
-
-            for (int i = 0; i < _perObjectBufferBindings.Length; i++)
-            {
-                PerObjectConstantBufferBinding binding = _perObjectBufferBindings[i];
-                ConstantBufferDataProvider provider = dataProviders[i];
-                provider.SetData(binding.ConstantBuffer);
-            }
+            ((D3DShaderConstantBindings)_constantBindings).ApplyPerObjectInputs(dataProviders);
         }
 
         public void UseDefaultTextures()
@@ -352,20 +237,9 @@ namespace Veldrid.Graphics.Direct3D
 
         public void Dispose()
         {
-            _vertexShader.Dispose();
-            _pixelShader.Dispose();
+            _shaderSet.Dispose();
             _inputLayout.Dispose();
-            foreach (var binding in _constantBufferBindings)
-            {
-                if (binding.IsLocalBinding) // Do not dispose shared bindings.
-                {
-                    binding.ConstantBuffer.Dispose();
-                }
-            }
-            foreach (var binding in _perObjectBufferBindings)
-            {
-                binding.ConstantBuffer.Dispose();
-            }
+            _constantBindings.Dispose();
             foreach (var binding in _resourceViewBindings)
             {
                 binding.Value.TextureBinding?.Dispose();

@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System.Linq;
+using System;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -12,6 +13,10 @@ namespace Veldrid.Graphics.OpenGL
         {
             InputDescription = vertexInputs;
             VBLayoutsBySlot = vertexInputs.Select(mvi => new OpenGLMaterialVertexInput(mvi)).ToArray();
+        }
+
+        public void Dispose()
+        {
         }
     }
 

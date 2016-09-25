@@ -40,6 +40,8 @@
     <Compile Include="Graphics\Direct3D\D3DRenderContext.cs" />
     <Compile Include="Graphics\Direct3D\D3DResourceFactory.cs" />
     <Compile Include="Graphics\Direct3D\D3DShader.cs" />
+    <Compile Include="Graphics\Direct3D\D3DShaderConstantBindings.cs" />
+    <Compile Include="Graphics\Direct3D\D3DShaderSet.cs" />
     <Compile Include="Graphics\Direct3D\D3DTexture2D.cs" />
     <Compile Include="Graphics\Direct3D\D3DTextureBinding.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
@@ -65,6 +67,8 @@
     <Compile Include="Graphics\OpenGL\OpenGLFramebuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLFramebufferInternal.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLRasterizerState.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLShaderConstantBindings.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLShaderSet.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLTextureBinding.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLUniformStorageAdapter.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLVertexInputLayout.cs" />
@@ -78,6 +82,7 @@
     <Compile Include="Graphics\RenderOrderKey.cs" />
     <Compile Include="Graphics\RenderQueue.cs" />
     <Compile Include="Graphics\Shader.cs" />
+    <Compile Include="Graphics\ShaderConstantBindings.cs" />
     <Compile Include="Graphics\ShaderLoader.cs" />
     <Compile Include="Graphics\ShaderSet.cs" />
     <Compile Include="Graphics\ShaderTextureBinding.cs" />

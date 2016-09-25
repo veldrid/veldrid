@@ -1,7 +1,7 @@
 ﻿namespace Veldrid.Graphics
 {
     /// <summary>
-    /// An input element describing a cubemap texture.
+    /// A <see cref="MaterialTextureInputElement"/> describing a <see cref="CubemapTexture"/>.
     /// </summary>
     public class CubemapTextureInputElement : MaterialTextureInputElement
     {
@@ -12,6 +12,16 @@
         private readonly ImageProcessorTexture _top;
         private readonly ImageProcessorTexture _bottom;
 
+        /// <summary>
+        /// Constructs a <see cref="CubemapTextureInputElement"/> from six face textures.
+        /// </summary>
+        /// <param name="name">The name of the cubemap texture.</param>
+        /// <param name="front">The front texture.</param>
+        /// <param name="back">The back texture.</param>
+        /// <param name="left">The left texture.</param>
+        /// <param name="right">The right texture.</param>
+        /// <param name="top">The top texture.</param>
+        /// <param name="bottom">The bottom texture.</param>
         public CubemapTextureInputElement(
             string name,
             ImageProcessorTexture front,

@@ -2,10 +2,17 @@
 
 namespace Veldrid.Graphics
 {
+    /// <summary>
+    /// A simple <see cref="ShaderLoader"/> which loads from a single folder.
+    /// </summary>
     public class FolderShaderLoader : ShaderLoader
     {
         private readonly string _basePath;
 
+        /// <summary>
+        /// Constructs a new <see cref="FolderShaderLoader"/> which loads from the given path.
+        /// </summary>
+        /// <param name="basePath"></param>
         public FolderShaderLoader(string basePath)
         {
             _basePath = basePath;

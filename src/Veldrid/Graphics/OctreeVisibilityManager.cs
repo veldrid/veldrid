@@ -5,6 +5,9 @@ using System.Numerics;
 
 namespace Veldrid.Graphics
 {
+    /// <summary>
+    /// A <see cref="VisibiltyManager"/> which manages spatial queries using a hierarchical, dynamic <see cref="Octree{RenderItem}"/>.
+    /// </summary>
     public class OctreeVisibilityManager : VisibiltyManager
     {
         private readonly List<RenderItem> _results = new List<RenderItem>();

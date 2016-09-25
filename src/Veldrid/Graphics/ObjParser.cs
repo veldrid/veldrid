@@ -6,6 +6,9 @@ using System.Numerics;
 
 namespace Veldrid.Graphics
 {
+    /// <summary>
+    /// A parser for Wavefront OBJ files.
+    /// </summary>
     public class ObjParser
     {
         private static readonly string[] s_newline = new string[] { Environment.NewLine };
@@ -14,6 +17,11 @@ namespace Veldrid.Graphics
 
         private readonly ParseContext _pc = new ParseContext();
 
+        /// <summary>
+        /// Parses an <see cref="ObjFile"/> from the given raw text lines.
+        /// </summary>
+        /// <param name="lines">The text lines of the OBJ file.</param>
+        /// <returns>A new <see cref="ObjFile"/>.</returns>
         public ObjFile Parse(string[] lines)
         {
             foreach (string line in lines)
@@ -25,6 +33,11 @@ namespace Veldrid.Graphics
             return _pc.FinalizeFile();
         }
 
+        /// <summary>
+        /// Parses an <see cref="ObjFile"/> from the given text stream.
+        /// </summary>
+        /// <param name="s">The <see cref="Stream"/> to read from.</param>
+        /// <returns>A new <see cref="ObjFile"/>.</returns>
         public ObjFile Parse(Stream s)
         {
             using (var sr = new StreamReader(s))
@@ -310,6 +323,9 @@ namespace Veldrid.Graphics
         }
     }
 
+    /// <summary>
+    /// An parsing error for Wavefront OBJ files.
+    /// </summary>
     public class ObjParseException : Exception
     {
         public ObjParseException(string message) : base(message)
@@ -321,6 +337,9 @@ namespace Veldrid.Graphics
         }
     }
 
+    /// <summary>
+    /// Represents a parset Wavefront OBJ file.
+    /// </summary>
     public class ObjFile
     {
         public Vector3[] Positions { get; }
@@ -338,6 +357,11 @@ namespace Veldrid.Graphics
             MaterialLibName = materialLibName;
         }
 
+        /// <summary>
+        /// Gets a <see cref="ConstructedMeshInfo"/> for the given OBJ <see cref="MeshGroup"/>.
+        /// </summary>
+        /// <param name="group">The OBJ <see cref="MeshGroup"/> to construct.</param>
+        /// <returns>A new <see cref="ConstructedMeshInfo"/>.</returns>
         public ConstructedMeshInfo GetMesh(MeshGroup group)
         {
             Dictionary<FaceVertex, int> vertexMap = new Dictionary<FaceVertex, int>();
@@ -360,6 +384,10 @@ namespace Veldrid.Graphics
             return new ConstructedMeshInfo(vertices.ToArray(), indices, group.Material);
         }
 
+        /// <summary>
+        /// Constructs the first <see cref="MeshGroup"/> in this file.
+        /// </summary>
+        /// <returns>A new <see cref="ConstructedMeshInfo"/>.</returns>
         public ConstructedMeshInfo GetFirstMesh()
         {
             return GetMesh(MeshGroups[0]);
@@ -412,12 +440,32 @@ namespace Veldrid.Graphics
             return Vector3.Normalize(Vector3.Cross(pos1 - pos2, pos1 - pos3));
         }
 
+        /// <summary>
+        /// An OBJ file construct describing an individual mesh group.
+        /// </summary>
         public struct MeshGroup
         {
+            /// <summary>
+            /// The name.
+            /// </summary>
             public readonly string Name;
+
+            /// <summary>
+            /// The name of the associated <see cref="MaterialDefinition"/>.
+            /// </summary>
             public readonly string Material;
+
+            /// <summary>
+            /// The set of <see cref="Face"/>s comprising this mesh group.
+            /// </summary>
             public readonly Face[] Faces;
 
+            /// <summary>
+            /// Constructs a new <see cref="MeshGroup"/>.
+            /// </summary>
+            /// <param name="name">The name.</param>
+            /// <param name="material">The name of the associated <see cref="MaterialDefinition"/>.</param>
+            /// <param name="faces">The faces.</param>
             public MeshGroup(string name, string material, Face[] faces)
             {
                 Name = name;
@@ -426,10 +474,24 @@ namespace Veldrid.Graphics
             }
         }
 
+        /// <summary>
+        /// An OBJ file construct describing the indices of vertex components.
+        /// </summary>
         public struct FaceVertex
         {
+            /// <summary>
+            /// The index of the position component.
+            /// </summary>
             public int PositionIndex;
+
+            /// <summary>
+            /// The index of the normal component.
+            /// </summary>
             public int NormalIndex;
+
+            /// <summary>
+            /// The index of the texture coordinate component.
+            /// </summary>
             public int TexCoordIndex;
 
             public override string ToString()
@@ -438,11 +500,29 @@ namespace Veldrid.Graphics
             }
         }
 
+        /// <summary>
+        /// An OBJ file construct describing an individual mesh face.
+        /// </summary>
         public struct Face
         {
+            /// <summary>
+            /// The first vertex.
+            /// </summary>
             public readonly FaceVertex Vertex0;
+
+            /// <summary>
+            /// The second vertex.
+            /// </summary>
             public readonly FaceVertex Vertex1;
+
+            /// <summary>
+            /// The third vertex.
+            /// </summary>
             public readonly FaceVertex Vertex2;
+
+            /// <summary>
+            /// The smoothing group. Describes which kind of vertex smoothing should be applied.
+            /// </summary>
             public readonly int SmoothingGroup;
 
             public Face(FaceVertex v0, FaceVertex v1, FaceVertex v2, int smoothingGroup = -1)
@@ -456,12 +536,32 @@ namespace Veldrid.Graphics
         }
     }
 
+    /// <summary>
+    /// A standalone <see cref="MeshData"/> created from information from an <see cref="ObjFile"/>.
+    /// </summary>
     public class ConstructedMeshInfo : MeshData
     {
+        /// <summary>
+        /// The vertices of the mesh.
+        /// </summary>
         public VertexPositionNormalTexture[] Vertices { get; }
+
+        /// <summary>
+        /// The indices of the mesh.
+        /// </summary>
         public int[] Indices { get; }
+
+        /// <summary>
+        /// The name of the <see cref="MaterialDefinition"/> associated with this mesh.
+        /// </summary>
         public string MaterialName { get; }
 
+        /// <summary>
+        /// Constructs a new <see cref="ConstructedMeshInfo"/>.
+        /// </summary>
+        /// <param name="vertices">The vertices.</param>
+        /// <param name="indices">The indices.</param>
+        /// <param name="materialName">The name of the associated MTL <see cref="MaterialDefinition"/>.</param>
         public ConstructedMeshInfo(VertexPositionNormalTexture[] vertices, int[] indices, string materialName)
         {
             Vertices = vertices;

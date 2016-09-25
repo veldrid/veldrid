@@ -22,6 +22,11 @@
 
     public static class PixelFormatEx
     {
+        /// <summary>
+        /// Gets the size of an individual pixel data point for the given <see cref="PixelFormat"/>.
+        /// </summary>
+        /// <param name="format">The format of pixel data.</param>
+        /// <returns>The size of an individual pixel in bytes.</returns>
         public static int GetSizeInBytes(this PixelFormat format)
         {
             switch (format)

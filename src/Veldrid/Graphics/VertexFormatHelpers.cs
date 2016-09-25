@@ -2,6 +2,11 @@
 {
     public static class VertexFormatHelpers
     {
+        /// <summary>
+        /// Gets the number of individual vertex components from a given format.
+        /// </summary>
+        /// <param name="format">The vertex format.</param>
+        /// <returns>The number of vertex components.</returns>
         public static byte GetElementCount(VertexElementFormat format)
         {
             switch (format)

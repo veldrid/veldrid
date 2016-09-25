@@ -57,7 +57,6 @@
     <Compile Include="Graphics\ManualTextureInput.cs" />
     <Compile Include="Graphics\MeshData.cs" />
     <Compile Include="Graphics\MtlParser.cs" />
-    <Compile Include="Graphics\ObjImporter.cs" />
     <Compile Include="Graphics\ObjParser.cs" />
     <Compile Include="Graphics\OctreeVisibilityManager.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLBlendState.cs" />

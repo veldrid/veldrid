@@ -6,12 +6,20 @@ using System.Numerics;
 
 namespace Veldrid.Graphics
 {
+    /// <summary>
+    /// A parser for Wavefront MTL files.
+    /// </summary>
     public class MtlParser
     {
         private static readonly string[] s_newline = new string[] { Environment.NewLine };
 
         private readonly ParseContext _pc = new ParseContext();
 
+        /// <summary>
+        /// Parses a <see cref="MtlFile"/> from the given array of text lines.
+        /// </summary>
+        /// <param name="lines">The raw text lines of the MTL file.</param>
+        /// <returns>A new <see cref="MtlFile"/>.</returns>
         public MtlFile Parse(string[] lines)
         {
             foreach (string line in lines)
@@ -23,6 +31,11 @@ namespace Veldrid.Graphics
             return _pc.FinalizeFile();
         }
 
+        /// <summary>
+        /// Parses a <see cref="MtlFile"/> from the given stream
+        /// </summary>
+        /// <param name="s">The stream to parse from.</param>
+        /// <returns>A new <see cref="MtlFile"/>.</returns>
         public MtlFile Parse(Stream s)
         {
             using (var sr = new StreamReader(s))
@@ -259,19 +272,32 @@ namespace Veldrid.Graphics
         }
     }
 
+    /// <summary>
+    /// Represents a parsed MTL definition file.
+    /// </summary>
     public class MtlFile
     {
+        /// <summary>
+        /// Gets a mapping of all <see cref="MaterialDefinition"/>s contained in this <see cref="MtlFile"/>.
+        /// </summary>
         public IReadOnlyDictionary<string, MaterialDefinition> Definitions { get; }
 
+        /// <summary>
+        /// Constructs a new <see cref="MtlFile"/> from pre-parsed material definitions.
+        /// </summary>
+        /// <param name="definitions">A collection of material definitions.</param>
         public MtlFile(IEnumerable<MaterialDefinition> definitions)
         {
             Definitions = definitions.ToDictionary(def => def.Name);
         }
     }
 
+    /// <summary>
+    /// An individual material definition from a Wavefront MTL file.
+    /// </summary>
     public class MaterialDefinition
     {
-        public MaterialDefinition(string name)
+        internal MaterialDefinition(string name)
         {
             Name = name;
         }

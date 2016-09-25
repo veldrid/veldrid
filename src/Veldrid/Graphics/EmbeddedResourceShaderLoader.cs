@@ -1,16 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 
 namespace Veldrid.Graphics
 {
+    /// <summary>
+    /// A <see cref="ShaderLoader"/> which can load <see cref="Shader"/> objects from files embedded in <see cref="Assembly"/> resources.
+    /// </summary>
     public class EmbeddedResourceShaderLoader : ShaderLoader
     {
         private readonly Assembly _assembly;
         private readonly Dictionary<string, string> _shaderToManifestNames = new Dictionary<string, string>();
 
+        /// <summary>
+        /// Constructs a new <see cref="EmbeddedResourceShaderLoader"/> which loads <see cref="Shader"/> objects from the given <see cref="Assembly"/>
+        /// </summary>
+        /// <param name="assembly">The <see cref="Assembly"/> to load resources from.</param>
         public EmbeddedResourceShaderLoader(Assembly assembly)
         {
             _assembly = assembly;

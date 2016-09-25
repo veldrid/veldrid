@@ -13,17 +13,17 @@ namespace Veldrid.Graphics
 
         public event Action DataChanged;
 
+        /// <summary>
+        /// Constructs a <see cref="DependantDataProvider{T}"/> which provides data derived from the given provider.
+        /// </summary>
+        /// <param name="dataProvider">The parent provider to base data on.</param>
+        /// <param name="derivedFunc">The function used to derive data from the parent.</param>
         public DependantDataProvider(ConstantBufferDataProvider<T> dataProvider, Func<T, T> derivedFunc)
         {
             _dataProvider = dataProvider;
             DataSizeInBytes = dataProvider.DataSizeInBytes;
             _derivedFunc = derivedFunc;
             dataProvider.DataChanged += OnParentDataChanged;
-        }
-
-        private void OnParentDataChanged()
-        {
-            DataChanged?.Invoke();
         }
 
         public T Data { get { return _derivedFunc(_dataProvider.Data); } }
@@ -34,6 +34,11 @@ namespace Veldrid.Graphics
         {
             T value = _derivedFunc(_dataProvider.Data);
             buffer.SetData(ref value, DataSizeInBytes);
+        }
+
+        private void OnParentDataChanged()
+        {
+            DataChanged?.Invoke();
         }
     }
 }

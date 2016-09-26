@@ -52,80 +52,13 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLIndexBuffer(isDynamic, OpenGLFormats.MapIndexFormat(format));
         }
 
-        public override Material CreateMaterial(
-            RenderContext rc,
-            string vertexShaderName,
-            string pixelShaderName,
-            MaterialVertexInput vertexInputs,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs)
+        public override Shader CreateShader(ShaderType type, string name)
         {
-            OpenGLShader vertexShader, fragmentShader;
-            using (Stream vsStream = GetShaderStream(vertexShaderName))
+            using (Stream stream = GetShaderStream(name))
+            using (StreamReader reader = new StreamReader(stream))
             {
-                vertexShader = new OpenGLShader(vsStream, OpenTK.Graphics.OpenGL.ShaderType.VertexShader);
+                return CreateShader(type, reader.ReadToEnd(), name);
             }
-            using (Stream psStream = GetShaderStream(pixelShaderName))
-            {
-                fragmentShader = new OpenGLShader(psStream, OpenTK.Graphics.OpenGL.ShaderType.FragmentShader);
-            }
-
-            VertexInputLayout inputLayout = CreateInputLayout(vertexShader, new[] { vertexInputs });
-            ShaderSet shaderSet = CreateShaderSet(inputLayout, vertexShader, fragmentShader);
-            ShaderConstantBindings constantBindings = CreateShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
-            return new OpenGLMaterial((OpenGLRenderContext)rc, shaderSet, inputLayout, constantBindings, textureInputs);
-        }
-
-        public override Material CreateMaterial(
-            RenderContext rc,
-            string vertexShaderName,
-            string pixelShaderName,
-            MaterialVertexInput vertexInputs0,
-            MaterialVertexInput vertexInputs1,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs)
-        {
-            OpenGLShader vertexShader, fragmentShader;
-            using (Stream vsStream = GetShaderStream(vertexShaderName))
-            {
-                vertexShader = new OpenGLShader(vsStream, OpenTK.Graphics.OpenGL.ShaderType.VertexShader);
-            }
-            using (Stream psStream = GetShaderStream(pixelShaderName))
-            {
-                fragmentShader = new OpenGLShader(psStream, OpenTK.Graphics.OpenGL.ShaderType.FragmentShader);
-            }
-
-            VertexInputLayout inputLayout = CreateInputLayout(vertexShader, new[] { vertexInputs0, vertexInputs1 });
-            ShaderSet shaderSet = CreateShaderSet(inputLayout, vertexShader, fragmentShader);
-            ShaderConstantBindings constantBindings = CreateShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
-            return new OpenGLMaterial((OpenGLRenderContext)rc, shaderSet, inputLayout, constantBindings, textureInputs);
-        }
-
-        public override Material CreateMaterial(
-            RenderContext rc,
-            string vertexShaderName,
-            string pixelShaderName,
-            MaterialVertexInput[] vertexInputs,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs)
-        {
-            OpenGLShader vertexShader, fragmentShader;
-            using (Stream vsStream = GetShaderStream(vertexShaderName))
-            {
-                vertexShader = new OpenGLShader(vsStream, OpenTK.Graphics.OpenGL.ShaderType.VertexShader);
-            }
-            using (Stream psStream = GetShaderStream(pixelShaderName))
-            {
-                fragmentShader = new OpenGLShader(psStream, OpenTK.Graphics.OpenGL.ShaderType.FragmentShader);
-            }
-
-            VertexInputLayout inputLayout = CreateInputLayout(vertexShader, vertexInputs);
-            ShaderSet shaderSet = CreateShaderSet(inputLayout, vertexShader, fragmentShader);
-            ShaderConstantBindings constantBindings = CreateShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
-            return new OpenGLMaterial((OpenGLRenderContext)rc, shaderSet, inputLayout, constantBindings, textureInputs);
         }
 
         public override Shader CreateShader(ShaderType type, string shaderCode, string name)
@@ -157,6 +90,23 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLVertexInputLayout(vertexInputs);
         }
 
+        public override ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, MaterialTextureInputs textureInputs)
+        {
+            return new OpenGLTextureBindingSlots(shaderSet, textureInputs);
+        }
+
+        public override ShaderTextureBinding CreateShaderTextureBinding(DeviceTexture texture)
+        {
+            if (texture is OpenGLTexture2D)
+            {
+                return new OpenGLTextureBinding((OpenGLTexture2D)texture);
+            }
+            else
+            {
+                return new OpenGLTextureBinding((OpenGLCubemapTexture)texture);
+            }
+        }
+
         public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             return new OpenGLTexture2D(width, height, format, pixelData);
@@ -180,18 +130,6 @@ namespace Veldrid.Graphics.OpenGL
                 PixelInternalFormat.DepthComponent16,
                 OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent,
                 PixelType.UnsignedShort);
-        }
-
-        public override ShaderTextureBinding CreateShaderTextureBinding(DeviceTexture texture)
-        {
-            if (texture is OpenGLTexture2D)
-            {
-                return new OpenGLTextureBinding((OpenGLTexture2D)texture);
-            }
-            else
-            {
-                return new OpenGLTextureBinding((OpenGLCubemapTexture)texture);
-            }
         }
 
         public override CubemapTexture CreateCubemapTexture(

@@ -5,7 +5,7 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLShaderSet : ShaderSet
     {
-        public VertexInputLayout InputLayout { get; }
+        public OpenGLVertexInputLayout InputLayout { get; }
 
         public Shader VertexShader { get; }
 
@@ -50,6 +50,8 @@ namespace Veldrid.Graphics.OpenGL
                 throw new InvalidOperationException($"Error linking GL program: {log}");
             }
         }
+
+        VertexInputLayout ShaderSet.InputLayout => InputLayout;
 
         public void Dispose()
         {

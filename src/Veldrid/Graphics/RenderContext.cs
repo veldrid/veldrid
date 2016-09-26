@@ -12,6 +12,7 @@ namespace Veldrid.Graphics
     public abstract class RenderContext : IDisposable
     {
         public const int MaxVertexBuffers = 16;
+        public const int MaxTextures = 10;
 
         private readonly Vector2 _topLeftUvCoordinate;
         private readonly Vector2 _bottomRightUvCoordinate;
@@ -28,6 +29,9 @@ namespace Veldrid.Graphics
         private BlendState _blendState;
         private DepthStencilState _depthStencilState;
         private RasterizerState _rasterizerState;
+        private ShaderSet _shaderSet;
+        private ShaderConstantBindings _constantBindings;
+        private ShaderTextureBindingSlots _textureBindingSlots;
 
         /// <summary>Storage for shader texture input providers.</summary>
         public Dictionary<string, ContextDeviceBinding<DeviceTexture>> TextureProviders { get; } = new Dictionary<string, ContextDeviceBinding<DeviceTexture>>();
@@ -115,17 +119,75 @@ namespace Veldrid.Graphics
         /// <summary>Changes the active Material.</summary>
         public void SetMaterial(Material material)
         {
-            if (material != _material)
+            _material = material;
+            SetShaderSet(material.ShaderSet);
+            SetShaderConstantBindings(material.ConstantBindings);
+            SetTextureBindingSlots(material.TextureBindingSlots);
+            material.UseDefaultTextures();
+        }
+
+        public ShaderSet ShaderSet
+        {
+            get { return _shaderSet; }
+            set { SetShaderSet(value); }
+        }
+
+        public void SetShaderSet(ShaderSet shaderSet)
+        {
+            if (_shaderSet != shaderSet)
             {
-                PlatformSetMaterial(material);
-                _material = material;
+                PlatformSetShaderSet(shaderSet);
+                _shaderSet = shaderSet;
             }
-            else
+        }
+
+        public ShaderConstantBindings ShaderConstantBindings
+        {
+            get { return _constantBindings; }
+            set { SetShaderConstantBindings(value); }
+        }
+
+        public void SetShaderConstantBindings(ShaderConstantBindings shaderConstantBindings)
+        {
+            if (_constantBindings != shaderConstantBindings)
             {
-                // TODO: Fix this abstraction.
-                PlatformClearMaterialResourceBindings();
-                material.UseDefaultTextures();
+                PlatformSetShaderConstantBindings(shaderConstantBindings);
+                _constantBindings = shaderConstantBindings;
             }
+        }
+
+        public ShaderTextureBindingSlots ShaderTextureBindingSlots
+        {
+            get { return _textureBindingSlots; }
+            set { SetTextureBindingSlots(value); }
+        }
+
+        public void SetTextureBindingSlots(ShaderTextureBindingSlots bindingSlots)
+        {
+            if (_textureBindingSlots != bindingSlots)
+            {
+                PlatformSetShaderTextureBindingSlots(bindingSlots);
+                _textureBindingSlots = bindingSlots;
+            }
+        }
+
+        public void SetTexture(int slot, ShaderTextureBinding textureBinding)
+        {
+            if (_textureBindingSlots == null)
+            {
+                throw new InvalidOperationException("Cannot call SetTexture when TextureBindingSlots has not been set.");
+            }
+
+            PlatformSetTexture(slot, textureBinding);
+        }
+
+        /// <summary>
+        /// Draws indexed primitives.
+        /// </summary>
+        /// <param name="count">The number of indices to draw.</param>
+        public void DrawIndexedPrimitives(int count)
+        {
+            DrawIndexedPrimitives(count, 0);
         }
 
         /// <summary>
@@ -437,8 +499,6 @@ namespace Veldrid.Graphics
 
         protected abstract void PlatformSetIndexBuffer(IndexBuffer ib);
 
-        protected abstract void PlatformSetMaterial(Material material);
-
         protected abstract void PlatformSetFramebuffer(Framebuffer framebuffer);
 
         protected abstract void PlatformSetBlendstate(BlendState blendState);
@@ -450,6 +510,14 @@ namespace Veldrid.Graphics
         protected abstract void PlatformSetViewport(int x, int y, int width, int height);
 
         protected abstract void PlatformSetPrimitiveTopology(PrimitiveTopology primitiveTopology);
+
+        protected abstract void PlatformSetShaderSet(ShaderSet shaderSet);
+
+        protected abstract void PlatformSetShaderConstantBindings(ShaderConstantBindings shaderConstantBindings);
+
+        protected abstract void PlatformSetShaderTextureBindingSlots(ShaderTextureBindingSlots bindingSlots);
+
+        protected abstract void PlatformSetTexture(int slot, ShaderTextureBinding textureBinding);
 
         protected abstract void PlatformClearMaterialResourceBindings();
 

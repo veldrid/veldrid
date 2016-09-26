@@ -40,6 +40,7 @@ namespace Veldrid.RenderDemo
         private static FlatListVisibilityManager _octreeScene;
         private static OctreeVisibilityManager _sponzaAtrium;
         private static FlatListVisibilityManager _instancingScene;
+        private static FlatListVisibilityManager _geometryShaderScene;
         private static double _circleWidth = 12.0;
         private static bool _wireframe;
 
@@ -261,12 +262,26 @@ namespace Veldrid.RenderDemo
                 var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
                 plane.Position = new Vector3(0, -2, 0);
                 plane.Scale = new Vector3(20, 1, 20);
-                _instancingScene.AddRenderItem(plane);
+                //_instancingScene.AddRenderItem(plane);
 
                 _instancingScene.AddRenderItem(_imguiRenderer);
             }
 
             return _instancingScene;
+        }
+
+        private static FlatListVisibilityManager GeometryShaderScene()
+        {
+            if (_geometryShaderScene == null)
+            {
+                _geometryShaderScene = new FlatListVisibilityManager();
+                _geometryShaderScene.AddRenderItem(_imguiRenderer);
+
+                GeometryShaderBox gsb = new GeometryShaderBox(_ad, _rc);
+                _geometryShaderScene.AddRenderItem(gsb);
+            }
+
+            return _geometryShaderScene;
         }
 
         private static OctreeVisibilityManager SceneWithShadows()

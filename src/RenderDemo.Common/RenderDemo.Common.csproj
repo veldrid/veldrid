@@ -22,6 +22,7 @@
     <Compile Include="ForwardRendering\PointLightInfo.cs" />
     <Compile Include="ForwardRendering\ShadowCaster_Mtl.cs" />
     <Compile Include="ForwardRendering\ShadowMapStage.cs" />
+    <Compile Include="GeometryShaderBox.cs" />
     <Compile Include="ImGuiImageHelper.cs" />
     <Compile Include="ImGuiRenderer.cs" />
     <Compile Include="InputTracker.cs" />

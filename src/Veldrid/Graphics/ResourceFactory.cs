@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Veldrid.Graphics
 {
@@ -62,67 +64,58 @@ namespace Veldrid.Graphics
             return ib;
         }
 
-        /// <summary>
-        /// Creates a new Material, with vertex inputs contained in a single <see cref="VertexBuffer"/>
-        /// </summary>
-        /// <param name="rc">The <see cref="RenderContext"/>.</param>
-        /// <param name="vertexShaderName">The name of the vertex <see cref="Shader"/>.</param>
-        /// <param name="pixelShaderName">The name of the fragment <see cref="Shader"/>.</param>
-        /// <param name="vertexInputs">A description of the vertex shader's inputs.</param>
-        /// <param name="globalInputs">A description of the global shader inputs.</param>
-        /// <param name="perObjectInputs">A description of the per-object shader inputs.</param>
-        /// <param name="textureInputs">A description of the shader texture inputs.</param>
-        /// <returns>A new Material.</returns>
-        public abstract Material CreateMaterial(
+        public Material CreateMaterial(
             RenderContext rc,
             string vertexShaderName,
-            string pixelShaderName,
+            string fragmentShaderName,
             MaterialVertexInput vertexInputs,
             MaterialInputs<MaterialGlobalInputElement> globalInputs,
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs);
+            MaterialTextureInputs textureInputs)
+        {
+            return CreateMaterial(rc, vertexShaderName, fragmentShaderName, new[] { vertexInputs }, globalInputs, perObjectInputs, textureInputs);
+        }
 
-        /// <summary>
-        /// Creates a new Material, with vertex inputs contained in two separati <see cref="VertexBuffer"/> objects.
-        /// </summary>
-        /// <param name="rc">The <see cref="RenderContext"/>.</param>
-        /// <param name="vertexShaderName">The name of the vertex <see cref="Shader"/>.</param>
-        /// <param name="pixelShaderName">The name of the fragment <see cref="Shader"/>.</param>
-        /// <param name="vertexInputs0">A description of the vertex shader's inputs, stored in the first <see cref="VertexBuffer"/>.</param>
-        /// <param name="vertexInputs1">A description of the vertex shader's inputs, stored in the second <see cref="VertexBuffer"/>.</param>
-        /// <param name="globalInputs">A description of the global shader inputs.</param>
-        /// <param name="perObjectInputs">A description of the per-object shader inputs.</param>
-        /// <param name="textureInputs">A description of the shader texture inputs.</param>
-        /// <returns>A new Material.</returns>
-        public abstract Material CreateMaterial(
+        public Material CreateMaterial(
             RenderContext rc,
             string vertexShaderName,
-            string pixelShaderName,
+            string fragmentShaderName,
             MaterialVertexInput vertexInputs0,
             MaterialVertexInput vertexInputs1,
             MaterialInputs<MaterialGlobalInputElement> globalInputs,
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs);
+            MaterialTextureInputs textureInputs)
+        {
+            return CreateMaterial(rc, vertexShaderName, fragmentShaderName, new[] { vertexInputs0, vertexInputs1 }, globalInputs, perObjectInputs, textureInputs);
+        }
 
-        /// <summary>
-        /// Creates a new Material, with vertex inputs contained in two separati <see cref="VertexBuffer"/> objects.
-        /// </summary>
-        /// <param name="rc">The <see cref="RenderContext"/>.</param>
-        /// <param name="vertexShaderName">The name of the vertex <see cref="Shader"/>.</param>
-        /// <param name="pixelShaderName">The name of the fragment <see cref="Shader"/>.</param>
-        /// <param name="vertexInputs">An array of descriptions describing each of the <see cref="VertexBuffer"/> objects providing vertex information.</param>
-        /// <param name="globalInputs">A description of the global shader inputs.</param>
-        /// <param name="perObjectInputs">A description of the per-object shader inputs.</param>
-        /// <param name="textureInputs">A description of the shader texture inputs.</param>
-        /// <returns>A new Material.</returns>
-        public abstract Material CreateMaterial(
+        public Material CreateMaterial(
             RenderContext rc,
             string vertexShaderName,
-            string pixelShaderName,
+            string fragmentShaderName,
             MaterialVertexInput[] vertexInputs,
             MaterialInputs<MaterialGlobalInputElement> globalInputs,
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs);
+            MaterialTextureInputs textureInputs)
+        {
+            Shader vs = CreateShader(ShaderType.Vertex, vertexShaderName);
+            Shader fs = CreateShader(ShaderType.Fragment, fragmentShaderName);
+            VertexInputLayout inputLayout = CreateInputLayout(vs, vertexInputs);
+            ShaderSet shaderSet = CreateShaderSet(inputLayout, vs, fs);
+            ShaderConstantBindings constantBindings = CreateShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
+            ShaderTextureBindingSlots textureSlots = CreateShaderTextureBindingSlots(shaderSet, textureInputs);
+            DefaultTextureBindingInfo[] defaultTextureInfos = CreateDefaultTextureBindingInfos(rc, textureInputs);
+
+            return new Material(rc, shaderSet, constantBindings, textureSlots, defaultTextureInfos);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Shader"/> with the given name.
+        /// </summary>
+        /// <param name="type">The type of <see cref="Shader"/>.</param>
+        /// <param name="name">The name of the shader. Must be discoverable by a registered <see cref="ShaderLoader"/>.</param>
+        /// <returns>A new <see cref="Shader"/>.</returns>
+        public abstract Shader CreateShader(ShaderType type, string name);
 
         /// <summary>
         /// Creates a new <see cref="Shader"/> from shader source code.
@@ -144,11 +137,20 @@ namespace Veldrid.Graphics
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs);
 
         /// <summary>
+        /// Creates a new <see cref="ShaderTextureBindingSlots"/> for the given shader set and a device-agnostic description.
+        /// </summary>
+        /// <param name="shaderSet">The <see cref="ShaderSet"/> which the slots will be valid for.</param>
+        /// <param name="textureInputs">The texture slot descriptions.</param>
+        /// <returns>A new <see cref="ShaderTextureBindingSlots"/>.</returns>
+        public abstract ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, MaterialTextureInputs textureInputs);
+
+        /// <summary>
         /// Creates a device-specific <see cref="VertexInputLayout"/> from a generic description.
         /// </summary>
+        /// <param name="vertexShader">The vertex <see cref="Shader"/>.</param>
         /// <param name="vertexInputs">An array of vertex input descriptions, one for each <see cref="VertexBuffer"/> input.</param>
         /// <returns>A new <see cref="VertexInputLayout"/>.</returns>
-        public abstract VertexInputLayout CreateInputLayout(Shader shader, MaterialVertexInput[] vertexInputs);
+        public abstract VertexInputLayout CreateInputLayout(Shader vertexShader, params MaterialVertexInput[] vertexInputs);
 
         /// <summary>
         /// Creates a new <see cref="ConstantBuffer"/>, used for storing global <see cref="Shader"/> parameters.
@@ -293,5 +295,21 @@ namespace Veldrid.Graphics
         /// </summary>
         /// <param name="loader">The <see cref="ShaderLoader"/> to add.</param>
         public abstract void AddShaderLoader(ShaderLoader loader);
+
+        private DefaultTextureBindingInfo[] CreateDefaultTextureBindingInfos(RenderContext rc, MaterialTextureInputs textureInputs)
+        {
+            List<DefaultTextureBindingInfo> textures = new List<DefaultTextureBindingInfo>();
+            for (int i = 0; i < textureInputs.Elements.Length; i++)
+            {
+                var element = textureInputs.Elements[i];
+                var texture = element.GetDeviceTexture(rc);
+                if (texture != null)
+                {
+                    textures.Add(new DefaultTextureBindingInfo(i, CreateShaderTextureBinding(texture)));
+                }
+            }
+
+            return textures.ToArray();
+        }
     }
 }

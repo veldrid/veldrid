@@ -69,91 +69,19 @@ namespace Veldrid.Graphics.Direct3D
         {
             return new D3DIndexBuffer(_device, sizeInBytes, isDynamic);
         }
+
         public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format)
         {
             return new D3DIndexBuffer(_device, sizeInBytes, isDynamic, D3DFormats.ConvertIndexFormat(format));
         }
 
-        public override Material CreateMaterial(
-            RenderContext rc,
-            string vertexShaderName,
-            string fragmentShaderName,
-            MaterialVertexInput vertexInputs,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs)
+        public override Shader CreateShader(ShaderType type, string name)
         {
-            Shader vs, fs;
-            using (Stream vsStream = GetShaderStream(vertexShaderName))
-            using (StreamReader vsSR = new StreamReader(vsStream))
+            using (Stream stream = GetShaderStream(name))
+            using (StreamReader reader = new StreamReader(stream))
             {
-                vs = CreateShader(ShaderType.Vertex, vsSR.ReadToEnd(), vertexShaderName);
+                return CreateShader(type, reader.ReadToEnd(), name);
             }
-            using (Stream fsStream = GetShaderStream(fragmentShaderName))
-            using (StreamReader fsSR = new StreamReader(fsStream))
-            {
-                fs = CreateShader(ShaderType.Fragment, fsSR.ReadToEnd(), fragmentShaderName);
-            }
-            VertexInputLayout inputLayout = CreateInputLayout(vs, new[] { vertexInputs });
-            ShaderSet shaderSet = CreateShaderSet(inputLayout, vs, fs);
-            ShaderConstantBindings constantBindings = CreateShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
-
-            return new D3DMaterial(_device, (D3DRenderContext)rc, inputLayout, shaderSet, constantBindings, textureInputs);
-        }
-
-        public override Material CreateMaterial(
-            RenderContext rc,
-            string vertexShaderName,
-            string fragmentShaderName,
-            MaterialVertexInput vertexInputs0,
-            MaterialVertexInput vertexInputs1,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs)
-        {
-            Shader vs, fs;
-            using (Stream vsStream = GetShaderStream(vertexShaderName))
-            using (StreamReader vsSR = new StreamReader(vsStream))
-            {
-                vs = CreateShader(ShaderType.Vertex, vsSR.ReadToEnd(), vertexShaderName);
-            }
-            using (Stream fsStream = GetShaderStream(fragmentShaderName))
-            using (StreamReader fsSR = new StreamReader(fsStream))
-            {
-                fs = CreateShader(ShaderType.Fragment, fsSR.ReadToEnd(), fragmentShaderName);
-            }
-            VertexInputLayout inputLayout = CreateInputLayout(vs, new[] { vertexInputs0, vertexInputs1 });
-            ShaderSet shaderSet = CreateShaderSet(inputLayout, vs, fs);
-            ShaderConstantBindings constantBindings = CreateShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
-
-            return new D3DMaterial(_device, (D3DRenderContext)rc, inputLayout, shaderSet, constantBindings, textureInputs);
-        }
-
-        public override Material CreateMaterial(
-            RenderContext rc,
-            string vertexShaderName,
-            string fragmentShaderName,
-            MaterialVertexInput[] vertexInputs,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs)
-        {
-            Shader vs, fs;
-            using (Stream vsStream = GetShaderStream(vertexShaderName))
-            using (StreamReader vsSR = new StreamReader(vsStream))
-            {
-                vs = CreateShader(ShaderType.Vertex, vsSR.ReadToEnd(), vertexShaderName);
-            }
-            using (Stream fsStream = GetShaderStream(fragmentShaderName))
-            using (StreamReader fsSR = new StreamReader(fsStream))
-            {
-                fs = CreateShader(ShaderType.Fragment, fsSR.ReadToEnd(), fragmentShaderName);
-            }
-            VertexInputLayout inputLayout = CreateInputLayout(vs, vertexInputs);
-            ShaderSet shaderSet = CreateShaderSet(inputLayout, vs, fs);
-            ShaderConstantBindings constantBindings = CreateShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
-
-            return new D3DMaterial(_device, (D3DRenderContext)rc, inputLayout, shaderSet, constantBindings, textureInputs);
         }
 
         public override Shader CreateShader(ShaderType type, string shaderCode, string name)
@@ -169,6 +97,16 @@ namespace Veldrid.Graphics.Direct3D
                 default:
                     throw Illegal.Value<ShaderType>();
             }
+        }
+
+        public override VertexInputLayout CreateInputLayout(Shader vertexShader, MaterialVertexInput[] vertexInputs)
+        {
+            if (!(vertexShader is D3DVertexShader))
+            {
+                throw new InvalidOperationException($"CreateInputShader must be called with a VertexShader. A Shader of type {vertexShader.Type} was given.");
+            }
+
+            return new D3DVertexInputLayout(_device, ((D3DVertexShader)vertexShader).Bytecode.Data, vertexInputs);
         }
 
         public override ShaderSet CreateShaderSet(VertexInputLayout inputLayout, Shader vertexShader, Shader fragmentShader)
@@ -190,14 +128,9 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DShaderConstantBindings(rc, _device, shaderSet, globalInputs, perObjectInputs);
         }
 
-        public override VertexInputLayout CreateInputLayout(Shader shader, MaterialVertexInput[] vertexInputs)
+        public override ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, MaterialTextureInputs textureInputs)
         {
-            if (!(shader is D3DVertexShader))
-            {
-                throw new InvalidOperationException($"CreateInputShader must be called with a VertexShader. A Shader of type {shader.Type} was given.");
-            }
-
-            return new D3DVertexInputLayout(_device, ((D3DVertexShader)shader).Bytecode.Data, vertexInputs);
+            return new D3DShaderTextureBindingSlots((D3DShaderSet)shaderSet, textureInputs);
         }
 
         public override VertexBuffer CreateVertexBuffer(int sizeInBytes, bool isDynamic)

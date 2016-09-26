@@ -36,13 +36,13 @@
     <Compile Include="Graphics\Direct3D\D3DFormats.cs" />
     <Compile Include="Graphics\Direct3D\D3DFramebuffer.cs" />
     <Compile Include="Graphics\Direct3D\D3DIndexBuffer.cs" />
-    <Compile Include="Graphics\Direct3D\D3DMaterial.cs" />
     <Compile Include="Graphics\Direct3D\D3DRasterizerState.cs" />
     <Compile Include="Graphics\Direct3D\D3DRenderContext.cs" />
     <Compile Include="Graphics\Direct3D\D3DResourceFactory.cs" />
     <Compile Include="Graphics\Direct3D\D3DShader.cs" />
     <Compile Include="Graphics\Direct3D\D3DShaderConstantBindings.cs" />
     <Compile Include="Graphics\Direct3D\D3DShaderSet.cs" />
+    <Compile Include="Graphics\Direct3D\D3DShaderTextureBindingSlots.cs" />
     <Compile Include="Graphics\Direct3D\D3DTexture2D.cs" />
     <Compile Include="Graphics\Direct3D\D3DTextureBinding.cs" />
     <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
@@ -55,6 +55,9 @@
     <Compile Include="Graphics\Framebuffer.cs" />
     <Compile Include="Graphics\IndexFormat.cs" />
     <Compile Include="Graphics\ManualTextureInput.cs" />
+    <Compile Include="Graphics\Material.cs" />
+    <Compile Include="Graphics\OpenGL\OpenGLTextureBindingSlots.cs" />
+    <Compile Include="Graphics\ShaderTextureBindingSlots.cs" />
     <Compile Include="Graphics\MeshData.cs" />
     <Compile Include="Graphics\MtlParser.cs" />
     <Compile Include="Graphics\ObjParser.cs" />
@@ -104,7 +107,6 @@
     <Compile Include="Graphics\ConstantBufferDataProvider.cs" />
     <Compile Include="Graphics\ImageProcessorTexture.cs" />
     <Compile Include="Graphics\IndexBuffer.cs" />
-    <Compile Include="Graphics\Material.cs" />
     <Compile Include="Graphics\MaterialGlobalInputs.cs" />
     <Compile Include="Graphics\MaterialGlobalInputType.cs" />
     <Compile Include="Graphics\MaterialVertexInput.cs" />

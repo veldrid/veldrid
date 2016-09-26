@@ -14,6 +14,8 @@ namespace Veldrid.Graphics.OpenGL
         private readonly OpenGLDefaultFramebuffer _defaultFramebuffer;
         private readonly int _vertexArrayID;
         private PrimitiveType _primitiveType = PrimitiveType.Triangles;
+        private int _vertexAttributesBound;
+        private bool _vertexLayoutChanged;
 
         public DebugSeverity MinimumLogSeverity { get; set; } = DebugSeverity.DebugSeverityLow;
 
@@ -97,6 +99,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public override void DrawIndexedPrimitives(int count, int startingIndex)
         {
+            PreDrawCommand();
             var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
             int indexSize = OpenGLFormats.GetIndexFormatSize(elementsType);
 
@@ -105,6 +108,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public override void DrawIndexedPrimitives(int count, int startingIndex, int startingVertex)
         {
+            PreDrawCommand();
             var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
             int indexSize = OpenGLFormats.GetIndexFormatSize(elementsType);
             GL.DrawElementsBaseVertex(_primitiveType, count, elementsType, new IntPtr(startingIndex * indexSize), startingVertex);
@@ -112,6 +116,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public override void DrawInstancedPrimitives(int indexCount, int instanceCount, int startingIndex)
         {
+            PreDrawCommand();
             var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
             int indexSize = OpenGLFormats.GetIndexFormatSize(elementsType);
             GL.DrawElementsInstanced(_primitiveType, indexCount, elementsType, new IntPtr(startingIndex * indexSize), instanceCount);
@@ -119,6 +124,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public override void DrawInstancedPrimitives(int indexCount, int instanceCount, int startingIndex, int startingVertex)
         {
+            PreDrawCommand();
             var elementsType = ((OpenGLIndexBuffer)IndexBuffer).ElementsType;
             int indexSize = OpenGLFormats.GetIndexFormatSize(elementsType);
             GL.DrawElementsInstancedBaseVertex(
@@ -179,20 +185,37 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSetVertexBuffer(int slot, VertexBuffer vb)
         {
-            // TODO: This is going to cause vertex attributes to be set at least twice,
-            // because they are also set when the Material is initially applied.
-            ((OpenGLMaterial)Material)?.SetVertexAttributes(slot, (OpenGLVertexBuffer)vb);
+            _vertexLayoutChanged = true;
         }
 
         protected override void PlatformSetIndexBuffer(IndexBuffer ib)
         {
             ((OpenGLIndexBuffer)ib).Apply();
-            //((OpenGLMaterial)Material)?.SetVertexAttributes();
+            _vertexLayoutChanged = true;
         }
 
-        protected override void PlatformSetMaterial(Material material)
+        protected override void PlatformSetShaderSet(ShaderSet shaderSet)
         {
-            ((OpenGLMaterial)material).Apply(VertexBuffers);
+            OpenGLShaderSet glShaderSet = (OpenGLShaderSet)shaderSet;
+            GL.UseProgram(glShaderSet.ProgramID);
+            _vertexLayoutChanged = true;
+        }
+
+        protected override void PlatformSetShaderConstantBindings(ShaderConstantBindings shaderConstantBindings)
+        {
+            shaderConstantBindings.Apply();
+        }
+
+        protected override void PlatformSetShaderTextureBindingSlots(ShaderTextureBindingSlots bindingSlots)
+        {
+        }
+
+        protected override void PlatformSetTexture(int slot, ShaderTextureBinding textureBinding)
+        {
+            GL.ActiveTexture(TextureUnit.Texture0 + slot);
+            ((OpenGLTexture)textureBinding.BoundTexture).Bind();
+            int uniformLocation = ShaderTextureBindingSlots.GetUniformLocation(slot);
+            GL.Uniform1(uniformLocation, slot);
         }
 
         protected override void PlatformSetFramebuffer(Framebuffer framebuffer)
@@ -233,5 +256,16 @@ namespace Veldrid.Graphics.OpenGL
         {
             return new System.Numerics.Vector2(1, 0);
         }
+
+        private void PreDrawCommand()
+        {
+            if (_vertexLayoutChanged)
+            {
+                _vertexAttributesBound = ((OpenGLVertexInputLayout)ShaderSet.InputLayout).SetVertexAttributes(VertexBuffers, _vertexAttributesBound);
+                _vertexLayoutChanged = false;
+            }
+        }
+
+        private new OpenGLTextureBindingSlots ShaderTextureBindingSlots => (OpenGLTextureBindingSlots)base.ShaderTextureBindingSlots;
     }
 }

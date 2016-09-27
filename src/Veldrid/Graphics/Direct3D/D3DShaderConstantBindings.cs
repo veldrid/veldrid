@@ -65,6 +65,11 @@ namespace Veldrid.Graphics.Direct3D
 
             ShaderReflection vsReflection = new ShaderReflection(((D3DVertexShader)shaderSet.VertexShader).Bytecode.Data);
             ShaderReflection psReflection = new ShaderReflection(((D3DFragmentShader)shaderSet.FragmentShader).Bytecode.Data);
+            ShaderReflection gsReflection = null;
+            if (shaderSet.GeometryShader != null)
+            {
+                gsReflection = new ShaderReflection(((D3DGeometryShader)shaderSet.GeometryShader).Bytecode.Data);
+            }
 
             int numGlobalElements = globalInputs.Elements.Length;
             _constantBufferBindings =
@@ -76,19 +81,24 @@ namespace Veldrid.Graphics.Direct3D
                 var genericElement = globalInputs.Elements[i];
                 BufferProviderPair pair;
                 GlobalConstantBufferBinding cbb;
-                bool vsBuffer = DoesConstantBufferExist(vsReflection, i, genericElement.Name);
-                bool psBuffer = DoesConstantBufferExist(psReflection, i, genericElement.Name);
+                bool isVsBuffer = DoesConstantBufferExist(vsReflection, i, genericElement.Name);
+                bool isPsBuffer = DoesConstantBufferExist(psReflection, i, genericElement.Name);
+                bool isGsBuffer = false;
+                if (gsReflection != null)
+                {
+                    isGsBuffer = DoesConstantBufferExist(gsReflection, i, genericElement.Name);
+                }
 
                 if (genericElement.UseGlobalNamedBuffer)
                 {
                     pair = rc.GetNamedGlobalBufferProviderPair(genericElement.GlobalProviderName);
-                    cbb = new GlobalConstantBufferBinding(i, pair, false, vsBuffer, psBuffer);
+                    cbb = new GlobalConstantBufferBinding(i, pair, false, isVsBuffer, isGsBuffer, isPsBuffer);
                 }
                 else
                 {
                     D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.DataProvider.DataSizeInBytes);
                     pair = new BufferProviderPair(constantBuffer, genericElement.DataProvider);
-                    cbb = new GlobalConstantBufferBinding(i, pair, true, vsBuffer, psBuffer);
+                    cbb = new GlobalConstantBufferBinding(i, pair, true, isVsBuffer, isGsBuffer, isPsBuffer);
                 }
 
                 _constantBufferBindings[i] = cbb;
@@ -103,11 +113,15 @@ namespace Veldrid.Graphics.Direct3D
             {
                 var genericElement = perObjectInputs.Elements[i];
                 int bufferSlot = i + numGlobalElements;
-                bool vsBuffer = DoesConstantBufferExist(vsReflection, bufferSlot, genericElement.Name);
-                bool psBuffer = DoesConstantBufferExist(psReflection, bufferSlot, genericElement.Name);
+                bool isVsBuffer = DoesConstantBufferExist(vsReflection, bufferSlot, genericElement.Name);
+                bool isPsBuffer = DoesConstantBufferExist(psReflection, bufferSlot, genericElement.Name);
+                bool isGsBuffer = false;
+                if (gsReflection != null)
+                {
+                    isGsBuffer = DoesConstantBufferExist(gsReflection, bufferSlot, genericElement.Name);
+                }
                 D3DConstantBuffer constantBuffer = new D3DConstantBuffer(device, genericElement.BufferSizeInBytes);
-
-                PerObjectConstantBufferBinding pocbb = new PerObjectConstantBufferBinding(bufferSlot, constantBuffer, vsBuffer, psBuffer);
+                PerObjectConstantBufferBinding pocbb = new PerObjectConstantBufferBinding(bufferSlot, constantBuffer, isVsBuffer, isGsBuffer, isPsBuffer);
                 _perObjectBufferBindings[i] = pocbb;
             }
         }
@@ -121,7 +135,7 @@ namespace Veldrid.Graphics.Direct3D
 
                 if (bindingDesc.BindPoint != slot)
                 {
-                    throw new InvalidOperationException(string.Format("Mismatched binding slot. Expected: {0}, Actual: {1}", slot, bindingDesc.BindPoint));
+                    throw new InvalidOperationException($"Mismatched binding slot for {name}. Expected: {slot}, Actual: {bindingDesc.BindPoint}");
                 }
 
                 return true;
@@ -162,20 +176,32 @@ namespace Veldrid.Graphics.Direct3D
         {
             // Is this binding local to this Material, or shared in the RenderContext?
             public readonly bool IsLocalBinding;
-            private readonly bool _isVertexShaderBuffer;
-            private readonly bool _isPixelShaderBuffer;
+            private readonly ShaderStageApplicabilityFlags _applicability;
 
             public int Slot { get; }
             public BufferProviderPair Pair { get; }
             public D3DConstantBuffer ConstantBuffer => (D3DConstantBuffer)Pair.ConstantBuffer;
 
-            public GlobalConstantBufferBinding(int slot, BufferProviderPair pair, bool isLocalBinding, bool isVertexBuffer, bool isPixelShader)
+            public GlobalConstantBufferBinding(int slot, BufferProviderPair pair, bool isLocalBinding, bool isVertexBuffer, bool isGeometryShader, bool isPixelShader)
             {
                 Slot = slot;
                 Pair = pair;
                 IsLocalBinding = isLocalBinding;
-                _isVertexShaderBuffer = isVertexBuffer;
-                _isPixelShaderBuffer = isPixelShader;
+                ShaderStageApplicabilityFlags applicability = 0;
+                if (isVertexBuffer)
+                {
+                    applicability |= ShaderStageApplicabilityFlags.Vertex;
+                }
+                if (isGeometryShader)
+                {
+                    applicability |= ShaderStageApplicabilityFlags.Geometry;
+                }
+                if (isPixelShader)
+                {
+                    applicability |= ShaderStageApplicabilityFlags.Fragment;
+                }
+
+                _applicability = applicability;
             }
 
             public void UpdateBuffer()
@@ -188,11 +214,15 @@ namespace Veldrid.Graphics.Direct3D
 
             public void BindToShaderSlots(DeviceContext dc)
             {
-                if (_isVertexShaderBuffer)
+                if ((_applicability & ShaderStageApplicabilityFlags.Vertex) == ShaderStageApplicabilityFlags.Vertex)
                 {
                     dc.VertexShader.SetConstantBuffer(Slot, ConstantBuffer.Buffer);
                 }
-                if (_isPixelShaderBuffer)
+                if ((_applicability & ShaderStageApplicabilityFlags.Geometry) == ShaderStageApplicabilityFlags.Geometry)
+                {
+                    dc.GeometryShader.SetConstantBuffer(Slot, ConstantBuffer.Buffer);
+                }
+                if ((_applicability & ShaderStageApplicabilityFlags.Fragment) == ShaderStageApplicabilityFlags.Fragment)
                 {
                     dc.PixelShader.SetConstantBuffer(Slot, ConstantBuffer.Buffer);
                 }
@@ -201,27 +231,43 @@ namespace Veldrid.Graphics.Direct3D
 
         private struct PerObjectConstantBufferBinding
         {
-            private readonly bool _isVertexShaderBuffer;
-            private readonly bool _isPixelShaderBuffer;
+            private readonly ShaderStageApplicabilityFlags _applicability;
 
             public int Slot { get; }
             public D3DConstantBuffer ConstantBuffer { get; }
 
-            public PerObjectConstantBufferBinding(int slot, D3DConstantBuffer constantBuffer, bool isVertexBuffer, bool isPixelShader)
+            public PerObjectConstantBufferBinding(int slot, D3DConstantBuffer constantBuffer, bool isVertexBuffer, bool isGeometryShader, bool isPixelShader)
             {
                 Slot = slot;
                 ConstantBuffer = constantBuffer;
-                _isVertexShaderBuffer = isVertexBuffer;
-                _isPixelShaderBuffer = isPixelShader;
+                ShaderStageApplicabilityFlags applicability = 0;
+                if (isVertexBuffer)
+                {
+                    applicability |= ShaderStageApplicabilityFlags.Vertex;
+                }
+                if (isGeometryShader)
+                {
+                    applicability |= ShaderStageApplicabilityFlags.Geometry;
+                }
+                if (isPixelShader)
+                {
+                    applicability |= ShaderStageApplicabilityFlags.Fragment;
+                }
+
+                _applicability = applicability;
             }
 
             public void BindToShaderSlots(DeviceContext dc)
             {
-                if (_isVertexShaderBuffer)
+                if ((_applicability & ShaderStageApplicabilityFlags.Vertex) == ShaderStageApplicabilityFlags.Vertex)
                 {
                     dc.VertexShader.SetConstantBuffer(Slot, ConstantBuffer.Buffer);
                 }
-                if (_isPixelShaderBuffer)
+                if ((_applicability & ShaderStageApplicabilityFlags.Geometry) == ShaderStageApplicabilityFlags.Geometry)
+                {
+                    dc.GeometryShader.SetConstantBuffer(Slot, ConstantBuffer.Buffer);
+                }
+                if ((_applicability & ShaderStageApplicabilityFlags.Fragment) == ShaderStageApplicabilityFlags.Fragment)
                 {
                     dc.PixelShader.SetConstantBuffer(Slot, ConstantBuffer.Buffer);
                 }

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Veldrid.Graphics;
 using Veldrid.Platform;
 
@@ -8,7 +9,7 @@ namespace Veldrid.RenderDemo
     {
         public DynamicDataProvider<Matrix4x4> ViewProvider { get; } = new DynamicDataProvider<Matrix4x4>();
         public DynamicDataProvider<Matrix4x4> ProjectionProvider { get; } = new DynamicDataProvider<Matrix4x4>();
-        public DynamicDataProvider<Vector4> CameraInfoProvider { get; } = new DynamicDataProvider<Vector4>();
+        public DynamicDataProvider<Info> CameraInfoProvider { get; } = new DynamicDataProvider<Info>();
         private readonly Window _window;
 
         private Vector3 _position = Vector3.Zero;
@@ -40,7 +41,7 @@ namespace Veldrid.RenderDemo
         private void UpdateViewMatrix()
         {
             ViewProvider.Data = Matrix4x4.CreateLookAt(_position, _position + _lookDirection, Vector3.UnitY);
-            CameraInfoProvider.Data = new Vector4(_position, 1f);
+            CameraInfoProvider.Data = new Info(_position, _lookDirection);
         }
 
         private void UpdateProjectionMatrix()
@@ -74,6 +75,27 @@ namespace Veldrid.RenderDemo
             worldCoords = Vector3.Normalize(worldCoords);
 
             return new Ray(_position, worldCoords);
+        }
+
+        public struct Info : IEquatable<Info>
+        {
+            public readonly Vector3 WorldPosition;
+            private readonly float __buffer0;
+            public readonly Vector3 LookDirection;
+            private readonly float __buffer1;
+
+            public Info(Vector3 pos, Vector3 lookDir)
+            {
+                WorldPosition = pos;
+                LookDirection = lookDir;
+                __buffer0 = 0;
+                __buffer1 = 0;
+            }
+
+            public bool Equals(Info other)
+            {
+                return WorldPosition.Equals(other.WorldPosition) && LookDirection.Equals(other.LookDirection);
+            }
         }
     }
 }

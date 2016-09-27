@@ -141,7 +141,7 @@ namespace Veldrid.RenderDemo
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
 
-                ChangeScene(SceneWithInstancing());
+                ChangeScene(GeometryShaderScene());
 
                 _fta = new FrameTimeAverager(666);
 
@@ -262,7 +262,7 @@ namespace Veldrid.RenderDemo
                 var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
                 plane.Position = new Vector3(0, -2, 0);
                 plane.Scale = new Vector3(20, 1, 20);
-                //_instancingScene.AddRenderItem(plane);
+                _instancingScene.AddRenderItem(plane);
 
                 _instancingScene.AddRenderItem(_imguiRenderer);
             }
@@ -277,8 +277,26 @@ namespace Veldrid.RenderDemo
                 _geometryShaderScene = new FlatListVisibilityManager();
                 _geometryShaderScene.AddRenderItem(_imguiRenderer);
 
-                GeometryShaderBox gsb = new GeometryShaderBox(_ad, _rc);
+                GeometryShaderBox gsb = new GeometryShaderBox(_ad, _rc, _camera);
                 _geometryShaderScene.AddRenderItem(gsb);
+
+                GeometryShaderBox gsb2 = new GeometryShaderBox(_ad, _rc, _camera, "billboard-geometry");
+                _geometryShaderScene.AddRenderItem(gsb2);
+                gsb2.Position = new Vector3(7.5f, -2.5f, 7.5f);
+
+                var sphere = _ad.LoadAsset<ObjFile>(new AssetID("Models/Sphere.obj")).GetFirstMesh();
+                var tcr = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
+                tcr.Position = new Vector3(-5f, 0, 0);
+                _geometryShaderScene.AddRenderItem(tcr);
+
+                var tcr2 = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
+                tcr2.Position = new Vector3(5f, 0, 0);
+                _geometryShaderScene.AddRenderItem(tcr2);
+
+                var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
+                plane.Position = new Vector3(0, -5, 0);
+                plane.Scale = new Vector3(20, 1, 20);
+                _geometryShaderScene.AddRenderItem(plane);
             }
 
             return _geometryShaderScene;
@@ -790,6 +808,18 @@ namespace Veldrid.RenderDemo
                     if (instancingScene)
                         ImGui.PopStyleColor();
 
+                    bool geometryScene = _visibilityManager == _geometryShaderScene;
+                    if (geometryScene)
+                        ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
+                    if (ImGui.MenuItem("Geometry Shader", null))
+                    {
+                        _circleWidth = 15.0;
+                        ChangeScene(GeometryShaderScene());
+                    }
+                    if (geometryScene)
+                        ImGui.PopStyleColor();
+
+
                     bool shadowsScene = _visibilityManager == _shadowsScene;
                     if (shadowsScene)
                         ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
@@ -1081,6 +1111,13 @@ https://github.com/mellinoe/veldrid.");
                 if (_instancingScene != null)
                 {
                     foreach (var item in _instancingScene.RenderItems)
+                    {
+                        ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
+                    }
+                }
+                if (_geometryShaderScene != null)
+                {
+                    foreach (var item in _geometryShaderScene.RenderItems)
                     {
                         ((SwappableRenderItem)item).ChangeRenderContext(_ad, newContext);
                     }

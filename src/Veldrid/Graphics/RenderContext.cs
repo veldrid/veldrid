@@ -13,6 +13,7 @@ namespace Veldrid.Graphics
     {
         public const int MaxVertexBuffers = 16;
         public const int MaxTextures = 10;
+        public const int MaxRenderTargets = 8;
 
         private readonly Vector2 _topLeftUvCoordinate;
         private readonly Vector2 _bottomRightUvCoordinate;

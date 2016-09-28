@@ -70,9 +70,9 @@ namespace Veldrid.Graphics.Direct3D
         protected unsafe override void PlatformClearBuffer()
         {
             RgbaFloat clearColor = ClearColor;
-            if (CurrentFramebuffer.RenderTargetView != null)
+            foreach (var rtv in CurrentFramebuffer.RenderTargetViews)
             {
-                _deviceContext.ClearRenderTargetView(CurrentFramebuffer.RenderTargetView, *(RawColor4*)&clearColor);
+                _deviceContext.ClearRenderTargetView(rtv, *(RawColor4*)&clearColor);
             }
             if (CurrentFramebuffer.DepthStencilView != null)
             {

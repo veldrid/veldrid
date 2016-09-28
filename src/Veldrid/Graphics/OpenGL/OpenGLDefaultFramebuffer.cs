@@ -39,6 +39,16 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        public DeviceTexture2D GetColorTexture(int index)
+        {
+            throw new NotSupportedException("Cannot get color textures from OpenGLDefaultFramebuffer.");
+        }
+
+        public void AttachColorTexture(int index, DeviceTexture2D texture)
+        {
+            throw new NotSupportedException("Cannot set color textures on OpenGLDefaultFramebuffer.");
+        }
+
         public int Width => _window.Width;
 
         public int Height => _window.Height;

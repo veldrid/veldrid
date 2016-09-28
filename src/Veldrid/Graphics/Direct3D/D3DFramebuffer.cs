@@ -1,6 +1,7 @@
 ﻿using System;
 using SharpDX.Direct3D11;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace Veldrid.Graphics.Direct3D
 {
@@ -9,28 +10,16 @@ namespace Veldrid.Graphics.Direct3D
         private readonly Device _device;
         private int _width;
         private int _height;
+        private RenderTargetView[] _renderTargetViews = new RenderTargetView[RenderContext.MaxRenderTargets];
+        private D3DTexture2D[] _colorTextures = new D3DTexture2D[RenderContext.MaxRenderTargets];
 
         public DepthStencilView DepthStencilView { get; private set; }
-        public RenderTargetView RenderTargetView { get; private set; }
-        public D3DTexture2D RenderTargetTexture { get; private set; }
         public D3DTexture2D DepthTexture { get; private set; }
+        public IReadOnlyList<RenderTargetView> RenderTargetViews => _renderTargetViews;
 
-        DeviceTexture2D Framebuffer.ColorTexture
-        {
-            get
-            {
-                return RenderTargetTexture;
-            }
+        public int Width => _width;
 
-            set
-            {
-                Debug.Assert(value is D3DTexture2D);
-                RenderTargetTexture = (D3DTexture2D)value;
-                RenderTargetView = new RenderTargetView(_device, RenderTargetTexture.DeviceTexture);
-                _width = value.Width;
-                _height = value.Height;
-            }
-        }
+        public int Height => _height;
 
         DeviceTexture2D Framebuffer.DepthTexture
         {
@@ -38,7 +27,6 @@ namespace Veldrid.Graphics.Direct3D
             {
                 return DepthTexture;
             }
-
             set
             {
                 Debug.Assert(value is D3DTexture2D);
@@ -52,9 +40,33 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        public int Width => _width;
+        DeviceTexture2D Framebuffer.ColorTexture
+        {
+            get
+            {
+                return GetColorTexture(0);
+            }
+            set
+            {
+                AttachColorTexture(0, value);
+            }
+        }
 
-        public int Height => _height;
+        public DeviceTexture2D GetColorTexture(int index)
+        {
+            return _colorTextures[0];
+        }
+
+        public void AttachColorTexture(int index, DeviceTexture2D texture)
+        {
+            _colorTextures[index] = (D3DTexture2D)texture;
+            _renderTargetViews[index] = new RenderTargetView(_device, _colorTextures[index].DeviceTexture);
+            if (index == 0)
+            {
+                _width = texture.Width;
+                _height = texture.Height;
+            }
+        }
 
         public D3DFramebuffer(Device device)
         {
@@ -69,9 +81,9 @@ namespace Veldrid.Graphics.Direct3D
         public D3DFramebuffer(Device device, D3DTexture2D colorTexture, D3DTexture2D depthTexture, int width, int height)
         {
             _device = device;
-            RenderTargetView = new RenderTargetView(device, colorTexture.DeviceTexture);
+            _colorTextures[0] = colorTexture;
+            _renderTargetViews[0] = new RenderTargetView(device, colorTexture.DeviceTexture);
             DepthStencilView = new DepthStencilView(device, depthTexture.DeviceTexture);
-            RenderTargetTexture = colorTexture;
             DepthTexture = depthTexture;
             _width = width;
             _height = height;
@@ -79,12 +91,16 @@ namespace Veldrid.Graphics.Direct3D
 
         public void Apply()
         {
-            _device.ImmediateContext.OutputMerger.SetTargets(DepthStencilView, RenderTargetView);
+            _device.ImmediateContext.OutputMerger.SetTargets(DepthStencilView, _renderTargetViews);
         }
 
         public void Dispose()
         {
-            RenderTargetView?.Dispose();
+            foreach (var rtv in _renderTargetViews)
+            {
+                rtv?.Dispose();
+            }
+
             DepthStencilView?.Dispose();
         }
     }

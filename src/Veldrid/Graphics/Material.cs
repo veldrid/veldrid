@@ -7,6 +7,11 @@ namespace Veldrid.Graphics
         private readonly RenderContext _rc; // TODO: Temporary, remove when Material.UseTexture is obsolete.
         private readonly DefaultTextureBindingInfo[] _defaultTextureBindings;
 
+        public Material(RenderContext rc, ShaderSet shaderSet, ShaderConstantBindings constantBindings, ShaderTextureBindingSlots textureBindingSlots)
+            : this(rc, shaderSet, constantBindings, textureBindingSlots, Array.Empty<DefaultTextureBindingInfo>())
+        {
+        }
+
         public Material(
             RenderContext rc,
             ShaderSet shaderSet,

@@ -217,6 +217,19 @@ namespace Veldrid.Graphics
         }
 
         /// <summary>
+        /// Draws instanced primitives.
+        /// </summary>
+        /// <param name="indexCount">The number of indices to draw, per-instance.</param>
+        /// <param name="instanceCount">The number of instances to draw.</param>
+        /// <param name="primitiveTopology">The <see cref="PrimitiveTopology"/> to render with.</param>
+        public void DrawInstancedPrimitives(int indexCount, int instanceCount, PrimitiveTopology primitiveTopology)
+        {
+            PlatformSetPrimitiveTopology(primitiveTopology);
+            DrawInstancedPrimitives(indexCount, instanceCount);
+            PlatformSetPrimitiveTopology(PrimitiveTopology.TriangleList);
+        }
+
+        /// <summary>
         /// Draws instanced primitives, starting from the given index.
         /// </summary>
         /// <param name="indexCount">The number of indices to draw, per-instance.</param>
@@ -325,7 +338,7 @@ namespace Veldrid.Graphics
             => _alphaBlend ?? (_alphaBlend = ResourceFactory.CreateCustomBlendState(true, Blend.SourceAlpha, Blend.InverseSourceAlpha, BlendFunction.Add));
         private BlendState _alphaBlend;
 
-        /// <summary>A BlendState providing full-override blending.</summary>
+        /// <summary>A BlendState providing full-override blending. This is the default <see cref="Veldrid.Graphics.BlendState"/>.</summary>
         public BlendState OverrideBlend
             => _overrideBlend ?? (_overrideBlend = ResourceFactory.CreateCustomBlendState(true, Blend.One, Blend.Zero, BlendFunction.Add));
         private BlendState _overrideBlend;

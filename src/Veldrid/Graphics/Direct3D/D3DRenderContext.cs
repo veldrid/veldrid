@@ -28,6 +28,10 @@ namespace Veldrid.Graphics.Direct3D
         private ShaderTextureBinding[] _geometryShaderTextureBindings = new ShaderTextureBinding[MaxShaderResourceViewBindings];
         private ShaderTextureBinding[] _pixelShaderTextureBindings = new ShaderTextureBinding[MaxShaderResourceViewBindings];
 
+        private D3DVertexShader _vertexShader;
+        private D3DGeometryShader _geometryShader;
+        private D3DFragmentShader _fragmentShader;
+
         private const DeviceCreationFlags DefaultDeviceFlags
 #if DEBUG
             = DeviceCreationFlags.Debug;
@@ -239,9 +243,36 @@ namespace Veldrid.Graphics.Direct3D
 
             // TODO: Cache these values and do not always set.
             _deviceContext.InputAssembler.InputLayout = d3dShaders.InputLayout.DeviceLayout;
-            _deviceContext.VertexShader.Set(d3dShaders.VertexShader.DeviceShader);
-            _deviceContext.GeometryShader.Set(d3dShaders.GeometryShader?.DeviceShader);
-            _deviceContext.PixelShader.Set(d3dShaders.FragmentShader.DeviceShader);
+            SetVertexShader(d3dShaders.VertexShader);
+            SetGeometryShader(d3dShaders.GeometryShader);
+            SetPixelShader(d3dShaders.FragmentShader);
+        }
+
+        private void SetVertexShader(D3DVertexShader vertexShader)
+        {
+            if (_vertexShader != vertexShader)
+            {
+                _vertexShader = vertexShader;
+                _deviceContext.VertexShader.Set(vertexShader?.DeviceShader);
+            }
+        }
+
+        private void SetGeometryShader(D3DGeometryShader geometryShader)
+        {
+            if (_geometryShader != geometryShader)
+            {
+                _geometryShader = geometryShader;
+                _deviceContext.GeometryShader.Set(geometryShader?.DeviceShader);
+            }
+        }
+
+        private void SetPixelShader(D3DFragmentShader fragmentShader)
+        {
+            if (_fragmentShader != fragmentShader)
+            {
+                _fragmentShader = fragmentShader;
+                _deviceContext.PixelShader.Set(fragmentShader?.DeviceShader);
+            }
         }
 
         protected override void PlatformSetShaderConstantBindings(ShaderConstantBindings shaderConstantBindings)

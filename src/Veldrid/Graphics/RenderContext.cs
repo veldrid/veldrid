@@ -276,8 +276,6 @@ namespace Veldrid.Graphics
         {
             if (_framebuffer != framebuffer)
             {
-                _material = null;
-                PlatformClearMaterialResourceBindings();
                 _framebuffer = framebuffer;
                 PlatformSetFramebuffer(framebuffer);
             }

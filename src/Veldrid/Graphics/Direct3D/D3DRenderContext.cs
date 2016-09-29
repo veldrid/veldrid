@@ -272,7 +272,37 @@ namespace Veldrid.Graphics.Direct3D
 
         protected override void PlatformSetFramebuffer(Framebuffer framebuffer)
         {
-            ((D3DFramebuffer)framebuffer).Apply();
+            D3DFramebuffer d3dFramebuffer = (D3DFramebuffer)framebuffer;
+            D3DTexture2D depthTexture = d3dFramebuffer.DepthTexture;
+            UnbindIfBound(ShaderType.Vertex, depthTexture);
+            UnbindIfBound(ShaderType.Geometry, depthTexture);
+            UnbindIfBound(ShaderType.Fragment, depthTexture);
+
+            for (int i = 0; i < MaxRenderTargets; i++)
+            {
+                DeviceTexture2D colorTexture = framebuffer.GetColorTexture(i);
+                if (colorTexture != null)
+                {
+                    UnbindIfBound(ShaderType.Vertex, colorTexture);
+                    UnbindIfBound(ShaderType.Geometry, colorTexture);
+                    UnbindIfBound(ShaderType.Fragment, colorTexture);
+                }
+            }
+            d3dFramebuffer.Apply();
+        }
+
+        private void UnbindIfBound(ShaderType type, DeviceTexture texture)
+        {
+            ShaderTextureBinding[] bindingsArray = GetTextureBindingsArray(type);
+            for (int i = 0; i < bindingsArray.Length; i++)
+            {
+                if (bindingsArray[i] != null && bindingsArray[i].BoundTexture == texture)
+                {
+                    bindingsArray[i] = null;
+                    CommonShaderStage stage = GetShaderStage(type);
+                    stage.SetShaderResource(i, null);
+                }
+            }
         }
 
         protected override void PlatformSetBlendstate(BlendState blendState)
@@ -343,18 +373,6 @@ namespace Veldrid.Graphics.Direct3D
 
         protected override void PlatformClearMaterialResourceBindings()
         {
-            for (int i = 0; i < _vertexTextureBindings.Length; i++)
-            {
-                _vertexTextureBindings[i] = null;
-            }
-            for (int i = 0; i < _geometryShaderTextureBindings.Length; i++)
-            {
-                _geometryShaderTextureBindings[i] = null;
-            }
-            for (int i = 0; i < _pixelShaderTextureBindings.Length; i++)
-            {
-                _pixelShaderTextureBindings[i] = null;
-            }
         }
 
         protected override Vector2 GetTopLeftUvCoordinate()

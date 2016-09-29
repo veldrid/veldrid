@@ -72,7 +72,10 @@ namespace Veldrid.Graphics.Direct3D
             RgbaFloat clearColor = ClearColor;
             foreach (var rtv in CurrentFramebuffer.RenderTargetViews)
             {
-                _deviceContext.ClearRenderTargetView(rtv, *(RawColor4*)&clearColor);
+                if (rtv != null)
+                {
+                    _deviceContext.ClearRenderTargetView(rtv, *(RawColor4*)&clearColor);
+                }
             }
             if (CurrentFramebuffer.DepthStencilView != null)
             {
@@ -340,11 +343,18 @@ namespace Veldrid.Graphics.Direct3D
 
         protected override void PlatformClearMaterialResourceBindings()
         {
-            if (Material != null)
+            for (int i = 0; i < _vertexTextureBindings.Length; i++)
             {
-                //((D3DMaterial)Material).ClearTextureBindings();
+                _vertexTextureBindings[i] = null;
             }
-            //_deviceContext.PixelShader.SetShaderResources(0, _emptySRVs.Length, _emptySRVs);
+            for (int i = 0; i < _geometryShaderTextureBindings.Length; i++)
+            {
+                _geometryShaderTextureBindings[i] = null;
+            }
+            for (int i = 0; i < _pixelShaderTextureBindings.Length; i++)
+            {
+                _pixelShaderTextureBindings[i] = null;
+            }
         }
 
         protected override Vector2 GetTopLeftUvCoordinate()

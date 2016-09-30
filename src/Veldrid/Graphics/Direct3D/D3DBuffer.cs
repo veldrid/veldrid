@@ -6,7 +6,7 @@ using System;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public abstract class D3DBuffer : DeviceBuffer, System.IDisposable
+    public abstract class D3DBuffer : DeviceBuffer, IDisposable
     {
         private readonly BindFlags _bindFlags;
         private readonly ResourceUsage _resourceUsage;
@@ -43,6 +43,16 @@ namespace Veldrid.Graphics.Direct3D
         public unsafe void SetData<T>(T[] data, int dataSizeInBytes) where T : struct => SetData(data, dataSizeInBytes, 0);
         public unsafe void SetData<T>(T[] data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
         {
+            SetArrayDataCore(data, 0, dataSizeInBytes, destinationOffsetInBytes);
+        }
+
+        public void SetData<T>(ArraySegment<T> data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
+        {
+            SetArrayDataCore(data.Array, data.Offset, dataSizeInBytes, destinationOffsetInBytes);
+        }
+
+        private unsafe void SetArrayDataCore<T>(T[] data, int startIndex, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
+        {
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
 
             if (_resourceUsage == ResourceUsage.Dynamic)
@@ -52,7 +62,7 @@ namespace Veldrid.Graphics.Direct3D
                 {
                     SharpDX.Utilities.CopyMemory(
                         new IntPtr((byte*)db.DataPointer.ToPointer() + destinationOffsetInBytes),
-                        pin.Ptr,
+                        new IntPtr(((byte*)pin.Ptr.ToPointer()) + (startIndex * Unsafe.SizeOf<T>())),
                         dataSizeInBytes);
                 }
                 Device.ImmediateContext.UnmapSubresource(Buffer, 0);

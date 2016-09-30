@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGL
@@ -76,8 +77,19 @@ namespace Veldrid.Graphics.OpenGL
             => SetData(data, dataSizeInBytes, 0);
         public void SetData<T>(T[] data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
         {
+            SetArrayDataCore(data, 0, dataSizeInBytes, destinationOffsetInBytes);
+        }
+
+        public void SetData<T>(ArraySegment<T> data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
+        {
+            SetArrayDataCore(data.Array, data.Offset, dataSizeInBytes, destinationOffsetInBytes);
+        }
+
+        private unsafe void SetArrayDataCore<T>(T[] data, int startIndex, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
+        {
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            SetData(handle.AddrOfPinnedObject(), dataSizeInBytes, destinationOffsetInBytes);
+            IntPtr sourceAddress = new IntPtr((byte*)handle.AddrOfPinnedObject().ToPointer() + (startIndex * Unsafe.SizeOf<T>()));
+            SetData(sourceAddress, dataSizeInBytes, destinationOffsetInBytes);
             handle.Free();
         }
 

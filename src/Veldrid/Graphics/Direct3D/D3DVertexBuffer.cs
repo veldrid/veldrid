@@ -27,6 +27,12 @@ namespace Veldrid.Graphics.Direct3D
             SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Length, destinationOffsetInVertices * descriptor.VertexSizeInBytes);
         }
 
+        public void SetVertexData<T>(ArraySegment<T> vertexData, VertexDescriptor descriptor, int destinationOffsetInVertices) where T : struct
+        {
+            _stride = descriptor.VertexSizeInBytes;
+            SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Count, destinationOffsetInVertices * descriptor.VertexSizeInBytes);
+        }
+
         public void SetVertexData(IntPtr vertexData, VertexDescriptor descriptor, int numVertices) => SetVertexData(vertexData, descriptor, numVertices, 0);
         public void SetVertexData(IntPtr vertexData, VertexDescriptor descriptor, int numVertices, int destinationOffsetInVertices)
         {

@@ -28,6 +28,15 @@ namespace Veldrid.Graphics
         /// Transfers the given data into the <see cref="DeviceBuffer"/>.
         /// </summary>
         /// <typeparam name="T">The type of data; must be a value type.</typeparam>
+        /// <param name="data">An <see cref="ArraySegment{T}"/> containing the data to transfer.</param>
+        /// <param name="dataSizeInBytes">The total size of the data to transfer, in bytes.</param>
+        /// <param name="destinationOffsetInBytes">An offset into the <see cref="DeviceBuffer"/> at which data is stored.</param>
+        void SetData<T>(ArraySegment<T> data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct;
+
+        /// <summary>
+        /// Transfers the given data into the <see cref="DeviceBuffer"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of data; must be a value type.</typeparam>
         /// <param name="data">A reference to the first element of the starting location of the data to transfer.</param>
         /// <param name="dataSizeInBytes">The total size in bytes to transfer.</param>
         void SetData<T>(ref T data, int dataSizeInBytes) where T : struct;

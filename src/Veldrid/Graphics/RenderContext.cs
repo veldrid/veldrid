@@ -363,7 +363,7 @@ namespace Veldrid.Graphics
         /// <summary>Gets the default DepthStencilState.</summary>
         public DepthStencilState DefaultDepthStencilState
             => _defaultDepthStencilState ?? (_defaultDepthStencilState
-                = ResourceFactory.CreateDepthStencilState(true, DepthComparison.LessEqual));
+                = ResourceFactory.CreateDepthStencilState(true, DepthComparison.LessEqual, true));
         private DepthStencilState _defaultDepthStencilState;
 
         /// <summary>Gets or sets the active DepthStencilState.</summary>

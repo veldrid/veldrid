@@ -171,9 +171,9 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLBlendState(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc);
         }
 
-        public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison)
+        public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
         {
-            return new OpenGLDepthStencilState(isDepthEnabled, comparison);
+            return new OpenGLDepthStencilState(isDepthEnabled, comparison, isDepthWriteEnabled);
         }
 
         public override RasterizerState CreateRasterizerState(

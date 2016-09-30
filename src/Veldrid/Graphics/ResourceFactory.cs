@@ -274,7 +274,19 @@ namespace Veldrid.Graphics
         /// <param name="isDepthEnabled">A value indicating whether depth testing is enabled in the new state.</param>
         /// <param name="comparison">The kind of <see cref="DepthComparison"/> to use in the new state.</param>
         /// <returns>A new <see cref="DepthStencilState"/>.</returns>
-        public abstract DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison);
+        public DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison)
+        {
+            return CreateDepthStencilState(isDepthEnabled, comparison, true);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DepthStencilState"/>, used to control depth and stencil comparisons in the device's output merger.
+        /// </summary>
+        /// <param name="isDepthEnabled">A value indicating whether depth testing is enabled in the new state.</param>
+        /// <param name="comparison">The kind of <see cref="DepthComparison"/> to use in the new state.</param>
+        /// <param name="isDepthWriteEnabled">A value indicating whether the depth buffer is written to when drawing.</param>
+        /// <returns>A new <see cref="DepthStencilState"/>.</returns>
+        public abstract DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled);
 
         /// <summary>
         /// Creates a new <see cref="RasterizerState"/>, used to control various behaviors of the device's rasterizer.

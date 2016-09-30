@@ -5,15 +5,18 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLDepthStencilState : DepthStencilState, IDisposable
     {
-        public OpenGLDepthStencilState(bool isDepthEnabled, DepthComparison comparison)
+        public OpenGLDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
         {
             IsDepthEnabled = isDepthEnabled;
             DepthComparison = comparison;
+            IsDepthWriteEnabled = isDepthWriteEnabled;
         }
 
         public DepthComparison DepthComparison { get; }
 
         public bool IsDepthEnabled { get; }
+
+        public bool IsDepthWriteEnabled { get; }
 
         public void Apply()
         {
@@ -21,6 +24,7 @@ namespace Veldrid.Graphics.OpenGL
             {
                 GL.Enable(EnableCap.DepthTest);
                 GL.DepthFunc(OpenGLFormats.ConvertDepthComparison(DepthComparison));
+                GL.DepthMask(true);
             }
             else
             {

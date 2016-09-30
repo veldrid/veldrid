@@ -8,7 +8,7 @@ namespace Veldrid.Graphics.Direct3D
         private readonly Device _device;
         private readonly SharpDX.Direct3D11.DepthStencilState _deviceState;
 
-        public D3DDepthStencilState(Device device, bool isDepthEnabled, DepthComparison comparison)
+        public D3DDepthStencilState(Device device, bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
         {
             _device = device;
             IsDepthEnabled = IsDepthEnabled;
@@ -17,6 +17,7 @@ namespace Veldrid.Graphics.Direct3D
             DepthStencilStateDescription desc = DepthStencilStateDescription.Default();
             desc.DepthComparison = D3DFormats.ConvertDepthComparison(comparison);
             desc.IsDepthEnabled = isDepthEnabled;
+            desc.DepthWriteMask = isDepthWriteEnabled ? DepthWriteMask.All : DepthWriteMask.Zero;
 
             _deviceState = new SharpDX.Direct3D11.DepthStencilState(device, desc);
         }

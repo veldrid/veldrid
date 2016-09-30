@@ -83,7 +83,10 @@ namespace Veldrid.Graphics.Direct3D
             _device = device;
             _colorTextures[0] = colorTexture;
             _renderTargetViews[0] = new RenderTargetView(device, colorTexture.DeviceTexture);
-            DepthStencilView = new DepthStencilView(device, depthTexture.DeviceTexture);
+            DepthStencilViewDescription dsvd = new DepthStencilViewDescription();
+            dsvd.Format = SharpDX.DXGI.Format.D16_UNorm;
+            dsvd.Dimension = DepthStencilViewDimension.Texture2D;
+            DepthStencilView = new DepthStencilView(device, depthTexture.DeviceTexture, dsvd);
             DepthTexture = depthTexture;
             _width = width;
             _height = height;

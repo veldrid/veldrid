@@ -50,14 +50,14 @@ namespace Veldrid.Graphics.Direct3D
 
             D3DTexture2D depthTexture = new D3DTexture2D(_device, new Texture2DDescription()
             {
-                Format = SharpDX.DXGI.Format.D16_UNorm,
+                Format = SharpDX.DXGI.Format.R16_Typeless,
                 ArraySize = 1,
                 MipLevels = 1,
                 Width = width,
                 Height = height,
                 SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.DepthStencil,
+                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
                 CpuAccessFlags = CpuAccessFlags.None,
                 OptionFlags = ResourceOptionFlags.None
             });
@@ -228,9 +228,9 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DBlendState(_device, isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc);
         }
 
-        public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison)
+        public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
         {
-            return new D3DDepthStencilState(_device, isDepthEnabled, comparison);
+            return new D3DDepthStencilState(_device, isDepthEnabled, comparison, isDepthWriteEnabled);
         }
 
         public override RasterizerState CreateRasterizerState(

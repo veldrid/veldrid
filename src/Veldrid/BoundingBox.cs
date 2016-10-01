@@ -115,6 +115,33 @@ namespace Veldrid
             return new BoundingBox((min * scale) + offset, (max * scale) + offset);
         }
 
+        public static unsafe BoundingBox CreateFromVertices(Vector3[] vertices)
+        {
+            return CreateFromVertices(vertices, Quaternion.Identity, Vector3.Zero, Vector3.One);
+        }
+
+        public static unsafe BoundingBox CreateFromVertices(Vector3[] vertices, Quaternion rotation, Vector3 offset, Vector3 scale)
+        {
+            Vector3 min = Vector3.Transform(vertices[0], rotation);
+            Vector3 max = Vector3.Transform(vertices[0], rotation);
+
+            for (int i = 1; i < vertices.Length; i++)
+            {
+                Vector3 pos = Vector3.Transform(vertices[i], rotation);
+
+                if (min.X > pos.X) min.X = pos.X;
+                if (max.X < pos.X) max.X = pos.X;
+
+                if (min.Y > pos.Y) min.Y = pos.Y;
+                if (max.Y < pos.Y) max.Y = pos.Y;
+
+                if (min.Z > pos.Z) min.Z = pos.Z;
+                if (max.Z < pos.Z) max.Z = pos.Z;
+            }
+
+            return new BoundingBox((min * scale) + offset, (max * scale) + offset);
+        }
+
         public static BoundingBox Combine(BoundingBox box1, BoundingBox box2)
         {
             return new BoundingBox(

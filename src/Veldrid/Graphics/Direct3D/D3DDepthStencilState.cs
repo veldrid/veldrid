@@ -12,6 +12,7 @@ namespace Veldrid.Graphics.Direct3D
         {
             _device = device;
             IsDepthEnabled = IsDepthEnabled;
+            IsDepthWriteEnabled = isDepthWriteEnabled;
             DepthComparison = comparison;
 
             DepthStencilStateDescription desc = DepthStencilStateDescription.Default();
@@ -23,6 +24,8 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         public bool IsDepthEnabled { get; }
+
+        public bool IsDepthWriteEnabled { get; }
 
         public DepthComparison DepthComparison { get; }
 

@@ -11,6 +11,8 @@ namespace Veldrid.Graphics
         /// Returns whether or not depth testing is enabled.
         /// </summary>
         bool IsDepthEnabled { get; }
+
+        bool IsDepthWriteEnabled { get; }
         
         /// <summary>
         /// Returns what kind of comparison function is used to determine if a pixel

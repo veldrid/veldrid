@@ -156,12 +156,12 @@ namespace Veldrid.Platform
                         break;
                     case WindowState.BorderlessFullScreen:
                         _nativeWindow.WindowBorder = WindowBorder.Hidden;
-                        _nativeWindow.WindowState = OpenTK.WindowState.Normal;
+                        if (_nativeWindow.WindowState != OpenTK.WindowState.Normal)
+                        {
+                            _nativeWindow.WindowState = OpenTK.WindowState.Normal;
+                        }
 
-                        DisplayDevice defaultDD = DisplayDevice.Default;
-                        Size size = new Size(defaultDD.Width, defaultDD.Height);
                         _previousSize = _nativeWindow.Size;
-                        _nativeWindow.Size = size;
 
                         _previousPosition = new Point(_nativeWindow.X, _nativeWindow.Y);
                         SetCenteredFullScreenWindow(_previousPosition);
@@ -176,6 +176,7 @@ namespace Veldrid.Platform
         {
             int x = position.X;
             int actualX = 0;
+            Size size = default(Size);
             DisplayIndex index = DisplayIndex.Default;
             while (x > 0)
             {
@@ -185,12 +186,25 @@ namespace Veldrid.Platform
                 {
                     actualX += display.Width;
                 }
+                else
+                {
+                    size = new Size(display.Width, display.Height);
+                }
 
                 index += 1;
             }
 
-            _nativeWindow.X = actualX;
-            _nativeWindow.Y = 0;
+            if (size == default(Size))
+            {
+                throw new InvalidOperationException("SetCenteredFullScreen failed. Couldn't determine size.");
+            }
+
+            var bounds = _nativeWindow.Bounds;
+            bounds.X = actualX;
+            bounds.Y = 0;
+            bounds.Width = size.Width;
+            bounds.Height = size.Width;
+            _nativeWindow.Bounds = bounds;
         }
 
         private static WindowState OpenTKToVeldridState(OpenTK.WindowState openTKState, WindowBorder border)

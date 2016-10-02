@@ -220,7 +220,23 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSetFramebuffer(Framebuffer framebuffer)
         {
-            ((OpenGLFramebufferBase)framebuffer).Apply();
+            OpenGLFramebufferBase baseFramebuffer = (OpenGLFramebufferBase)framebuffer;
+            if (baseFramebuffer is OpenGLFramebuffer)
+            {
+                OpenGLFramebuffer glFramebuffer = (OpenGLFramebuffer)baseFramebuffer;
+                if (!glFramebuffer.HasDepthAttachment || !DepthStencilState.IsDepthEnabled)
+                {
+                    GL.Disable(EnableCap.DepthTest);
+                    GL.DepthMask(false);
+                }
+                else
+                {
+                    GL.Enable(EnableCap.DepthTest);
+                    GL.DepthMask(DepthStencilState.IsDepthWriteEnabled);
+                }
+            }
+
+            baseFramebuffer.Apply();
         }
 
         protected override void PlatformSetBlendstate(BlendState blendState)

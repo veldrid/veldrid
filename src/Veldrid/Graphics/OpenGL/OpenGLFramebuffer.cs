@@ -29,16 +29,21 @@ namespace Veldrid.Graphics.OpenGL
             }
             set
             {
-                if (value == null)
+                if (value != null)
                 {
-                    throw new InvalidOperationException("Can't set the depth texture to null.");
+                    Debug.Assert(value is OpenGLTexture2D);
+                    _depthTexture = (OpenGLTexture2D)value;
+                }
+                else
+                {
+                    _depthTexture = null;
                 }
 
-                Debug.Assert(value is OpenGLTexture2D);
-                _depthTexture = (OpenGLTexture2D)value;
                 AttachDepthTexture();
             }
         }
+
+        public bool HasDepthAttachment => _depthTexture != null;
 
         public OpenGLFramebuffer()
         {
@@ -63,6 +68,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public void AttachColorTexture(int index, DeviceTexture2D texture)
         {
+            Bind();
             Debug.Assert(texture is OpenGLTexture2D);
             OpenGLTexture2D glTex = (OpenGLTexture2D)texture;
             _colorTextures[index] = glTex;
@@ -76,17 +82,27 @@ namespace Veldrid.Graphics.OpenGL
                 0);
             GL.BindTexture(TextureTarget.Texture2D, 0);
             GL.DrawBuffer(DrawBufferMode.ColorAttachment0 + index);
+            Unbind();
         }
 
         private void AttachDepthTexture()
         {
             Bind();
-            _depthTexture.Bind();
+            int depthTextureID;
+            if (_depthTexture != null)
+            {
+                _depthTexture.Bind();
+                depthTextureID = _depthTexture.ID;
+            }
+            else
+            {
+                depthTextureID = 0;
+            }
             GL.FramebufferTexture2D(
                 FramebufferTarget.Framebuffer,
                 FramebufferAttachment.DepthAttachment,
                 TextureTarget.Texture2D,
-                _depthTexture.ID,
+                depthTextureID,
                 0);
             Unbind();
         }

@@ -29,7 +29,7 @@ namespace Veldrid.Graphics.OpenGL
                 int blockIndex = GL.GetUniformBlockIndex(programID, element.Name);
                 if (blockIndex != -1)
                 {
-                    ValidateBlockSize(programID, blockIndex, dataProvider.DataSizeInBytes);
+                    ValidateBlockSize(programID, blockIndex, dataProvider.DataSizeInBytes, element.Name);
                     _globalUniformBindings[i] = new GlobalBindingPair(
                         new UniformBlockBinding(
                             programID,
@@ -127,15 +127,28 @@ namespace Veldrid.Graphics.OpenGL
         }
 
         [Conditional("DEBUG")]
-        private void ValidateBlockSize(int programID, int blockIndex, int providerSize)
+        private void ValidateBlockSize(int programID, int blockIndex, int providerSize, string elementName)
         {
             int blockSize;
             GL.GetActiveUniformBlock(programID, blockIndex, ActiveUniformBlockParameter.UniformBlockDataSize, out blockSize);
 
-            if (blockSize != providerSize)
+            bool sizeMismatched = (blockSize != providerSize);
+
+            if (sizeMismatched)
             {
-                throw new InvalidOperationException(
-                    $"Declared shader uniform block size does not match provider's data size. The provider has size {providerSize}, but the buffer has size {blockSize}.");
+                string nameInProgram = GL.GetActiveUniformName(programID, blockIndex);
+                bool nameMismatched = nameInProgram != elementName;
+                string errorMessage = $"Uniform block validation failed for Program {programID}.";
+                if (nameMismatched)
+                {
+                    errorMessage += Environment.NewLine + $"Expected name: {elementName}, Actual name: {nameInProgram}.";
+                }
+                if (sizeMismatched)
+                {
+                    errorMessage += Environment.NewLine + $"Provider size in bytes: {providerSize}, Actual buffer size in bytes: {blockSize}.";
+                }
+
+                throw new InvalidOperationException(errorMessage);
             }
         }
 

@@ -203,7 +203,7 @@ namespace Veldrid.Platform
             bounds.X = actualX;
             bounds.Y = 0;
             bounds.Width = size.Width;
-            bounds.Height = size.Width;
+            bounds.Height = size.Height;
             _nativeWindow.Bounds = bounds;
         }
 

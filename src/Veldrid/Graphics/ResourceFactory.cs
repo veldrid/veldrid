@@ -64,6 +64,20 @@ namespace Veldrid.Graphics
             return ib;
         }
 
+        /// <summary>
+        /// Creates an <see cref="IndexBuffer"/> containing the given <see cref="System.Int32"/> index data.
+        /// </summary>
+        /// <param name="indices">The index data.</param>
+        /// <param name="format">The format of the index data.</param>
+        /// <param name="isDynamic">A value indicating whether or not the buffer should be optimized for dynamic access.</param>
+        /// <returns>A new <see cref="IndexBuffer"/></returns>
+        public IndexBuffer CreateIndexBuffer<T>(T[] indices, IndexFormat format, bool isDynamic) where T : struct
+        {
+            IndexBuffer ib = CreateIndexBuffer(sizeof(int) * indices.Length, isDynamic);
+            ib.SetIndices(indices, format);
+            return ib;
+        }
+
         public Material CreateMaterial(
             RenderContext rc,
             string vertexShaderName,

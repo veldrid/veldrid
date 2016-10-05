@@ -18,6 +18,18 @@ namespace Veldrid.Graphics.OpenGL
             Bind();
         }
 
+        public void SetIndices<T>(T[] indices, IndexFormat format) where T : struct
+        {
+            SetIndices(indices, format, 0, 0);
+        }
+
+        public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
+        {
+            int elementSizeInBytes = FormatHelpers.GetIndexFormatElementByteSize(format);
+            SetData(indices, elementSizeInBytes * indices.Length, elementOffset * elementSizeInBytes);
+            ElementsType = OpenGLFormats.MapIndexFormat(format);
+        }
+
         public void SetIndices(int[] indices) => SetIndices(indices, 0, 0);
         public void SetIndices(int[] indices, int stride, int elementOffset)
         {

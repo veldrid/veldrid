@@ -14,7 +14,7 @@ namespace Veldrid.Graphics
         public Image Image { get; }
 
         /// <summary>
-        /// The raw pixel data, stored in RGBA format, where each element is a 32-bit float (128-bits-per-pixel).
+        /// The raw pixel data, stored in RGBA format, where each element is a byte (32 bits per pixel).
         /// </summary>
         public Color[] Pixels => Image.Pixels;
 
@@ -28,12 +28,12 @@ namespace Veldrid.Graphics
         public int Height => Image.Height;
 
         /// <summary>
-        /// ImageProcessorTexture images are stored in R32_G32_B32_A32_Float format.
+        /// The <see cref="PixelFormat"/> of the data.
         /// </summary>
         public PixelFormat Format => PixelFormat.R8_G8_B8_A8;
 
         /// <summary>
-        /// The size of each pixel; 16 bytes.
+        /// The size of each pixel, in bytes.
         /// </summary>
         public int PixelSizeInBytes => sizeof(byte) * 4;
 

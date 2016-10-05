@@ -52,6 +52,7 @@
     <Compile Include="Graphics\FaceCullingMode.cs" />
     <Compile Include="Graphics\FlatListVisibilityManager.cs" />
     <Compile Include="Graphics\FolderShaderLoader.cs" />
+    <Compile Include="Graphics\FormatHelpers.cs" />
     <Compile Include="Graphics\Framebuffer.cs" />
     <Compile Include="Graphics\IndexFormat.cs" />
     <Compile Include="Graphics\ManualTextureInput.cs" />

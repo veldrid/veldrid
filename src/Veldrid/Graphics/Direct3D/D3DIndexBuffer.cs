@@ -29,6 +29,18 @@ namespace Veldrid.Graphics.Direct3D
             _device.ImmediateContext.InputAssembler.SetIndexBuffer(Buffer, _format, _offset);
         }
 
+        public void SetIndices<T>(T[] indices, IndexFormat format) where T : struct
+        {
+            SetIndices(indices, format, 0, 0);
+        }
+
+        public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
+        {
+            _format = D3DFormats.ConvertIndexFormat(format);
+            int elementSizeInBytes = FormatHelpers.GetIndexFormatElementByteSize(format);
+            SetData(indices, elementSizeInBytes * indices.Length, elementOffset * elementSizeInBytes);
+        }
+
         public void SetIndices(int[] indices) => SetIndices(indices, 0, 0);
         public void SetIndices(int[] indices, int stride, int elementOffset)
         {

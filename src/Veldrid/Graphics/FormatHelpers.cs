@@ -31,6 +31,8 @@ namespace Veldrid.Graphics
                     return 4;
                 case PixelFormat.Alpha_UInt16:
                     return 2;
+                case PixelFormat.R8_UInt:
+                    return 1;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }

@@ -12,6 +12,8 @@ namespace Veldrid.Graphics.Direct3D
             {
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return Format.R32G32B32A32_Float;
+                case PixelFormat.R8_UInt:
+                    return Format.R8_UInt;
                 case PixelFormat.Alpha_UInt8:
                     return Format.A8_UNorm;
                 case PixelFormat.R8_G8_B8_A8:

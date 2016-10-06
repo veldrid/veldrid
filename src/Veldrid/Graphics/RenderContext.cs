@@ -555,6 +555,7 @@ namespace Veldrid.Graphics
 
             _indexBuffer = null;
             _material = null;
+            _constantBindings = null;
         }
 
         private void FlushConstantBufferData()

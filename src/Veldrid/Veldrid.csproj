@@ -114,7 +114,6 @@
     <Compile Include="Graphics\OpenGL\OpenGLBuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLConstantBuffer.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLIndexBuffer.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLMaterial.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLRenderContext.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLResourceFactory.cs" />
     <Compile Include="Graphics\OpenGL\OpenGLShader.cs" />

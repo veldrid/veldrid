@@ -25,5 +25,16 @@ namespace Veldrid.Graphics
         /// </summary>
         /// <param name="textureData">The TextureData to copy the pixel data into.</param>
         void CopyTo(TextureData textureData);
+
+        /// <summary>
+        /// Copies texture data into the device's texture storage.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="data"></param>
+        /// <param name="dataSizeInBytes"></param>
+        void SetTextureData(int x, int y, int width, int height, IntPtr data, int dataSizeInBytes);
     }
 }

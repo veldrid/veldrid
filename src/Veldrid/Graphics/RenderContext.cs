@@ -124,7 +124,10 @@ namespace Veldrid.Graphics
             SetShaderSet(material.ShaderSet);
             SetShaderConstantBindings(material.ConstantBindings);
             SetTextureBindingSlots(material.TextureBindingSlots);
-            material.UseDefaultTextures();
+            foreach (var defaultBinding in material.DefaultTextureBindings)
+            {
+                SetTexture(defaultBinding.Slot, defaultBinding.TextureBinding);
+            }
         }
 
         public ShaderSet ShaderSet

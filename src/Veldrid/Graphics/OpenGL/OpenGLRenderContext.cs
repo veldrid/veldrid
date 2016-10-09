@@ -139,7 +139,6 @@ namespace Veldrid.Graphics.OpenGL
         private void SetInitialStates()
         {
             GL.ClearColor(ClearColor.R, ClearColor.G, ClearColor.B, ClearColor.A);
-            GL.Enable(EnableCap.PolygonSmooth);
             GL.Enable(EnableCap.CullFace);
             GL.FrontFace(FrontFaceDirection.Cw);
         }

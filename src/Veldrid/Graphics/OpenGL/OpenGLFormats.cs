@@ -11,6 +11,8 @@ namespace Veldrid.Graphics.OpenGL
             {
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return OpenTK.Graphics.OpenGL.PixelFormat.Rgba;
+                case PixelFormat.R8_UInt:
+                    return OpenTK.Graphics.OpenGL.PixelFormat.RedInteger;
                 case PixelFormat.Alpha_UInt8:
                     return OpenTK.Graphics.OpenGL.PixelFormat.Alpha;
                 case PixelFormat.R8_G8_B8_A8:
@@ -115,6 +117,8 @@ namespace Veldrid.Graphics.OpenGL
             {
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return PixelType.Float;
+                case PixelFormat.R8_UInt:
+                    return PixelType.UnsignedByte;
                 case PixelFormat.Alpha_UInt8:
                     return PixelType.UnsignedByte;
                 case PixelFormat.R8_G8_B8_A8:
@@ -132,6 +136,8 @@ namespace Veldrid.Graphics.OpenGL
             {
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return PixelInternalFormat.Rgba32f;
+                case PixelFormat.R8_UInt:
+                    return PixelInternalFormat.R8ui;
                 case PixelFormat.Alpha_UInt8:
                     return PixelInternalFormat.Alpha;
                 case PixelFormat.R8_G8_B8_A8:

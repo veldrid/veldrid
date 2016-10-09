@@ -91,6 +91,19 @@ namespace Veldrid.Graphics.Direct3D
             return desc;
         }
 
+        public void SetTextureData(int x, int y, int width, int height, IntPtr data, int dataSizeInBytes)
+        {
+            ResourceRegion resourceRegion = new ResourceRegion(
+                left: x,
+                top: y,
+                front: 0,
+                right: x + width,
+                bottom: y + height,
+                back: 1);
+            int srcRowPitch = GetRowPitch(width);
+            _device.ImmediateContext.UpdateSubresource(DeviceTexture, 0, resourceRegion, data, srcRowPitch, 0);
+        }
+
         public void CopyTo(TextureData textureData)
         {
             textureData.AcceptPixelData(this);
@@ -170,6 +183,12 @@ namespace Veldrid.Graphics.Direct3D
             srvd.Texture2D.MostDetailedMip = 0;
 
             return srvd;
+        }
+
+        private int GetRowPitch(int width)
+        {
+            var pixelSize = D3DFormats.GetPixelSize(DeviceTexture.Description.Format);
+            return pixelSize * width;
         }
     }
 }

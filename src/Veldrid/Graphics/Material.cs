@@ -5,7 +5,6 @@ namespace Veldrid.Graphics
     public class Material : IDisposable
     {
         private readonly RenderContext _rc; // TODO: Temporary, remove when Material.UseTexture is obsolete.
-        private readonly DefaultTextureBindingInfo[] _defaultTextureBindings;
 
         public Material(RenderContext rc, ShaderSet shaderSet, ShaderConstantBindings constantBindings, ShaderTextureBindingSlots textureBindingSlots)
             : this(rc, shaderSet, constantBindings, textureBindingSlots, Array.Empty<DefaultTextureBindingInfo>())
@@ -23,12 +22,13 @@ namespace Veldrid.Graphics
             ShaderSet = shaderSet;
             ConstantBindings = constantBindings;
             TextureBindingSlots = textureBindingSlots;
-            _defaultTextureBindings = defaultTextureBindings;
+            DefaultTextureBindings = defaultTextureBindings;
         }
 
         public ShaderSet ShaderSet { get; }
         public ShaderConstantBindings ConstantBindings { get; }
         public ShaderTextureBindingSlots TextureBindingSlots { get; }
+        public DefaultTextureBindingInfo[] DefaultTextureBindings { get; }
 
         public void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider)
         {
@@ -42,7 +42,7 @@ namespace Veldrid.Graphics
 
         public void UseDefaultTextures()
         {
-            foreach (var defaultBinding in _defaultTextureBindings)
+            foreach (var defaultBinding in DefaultTextureBindings)
             {
                 _rc.SetTexture(defaultBinding.Slot, defaultBinding.TextureBinding);
             }
@@ -58,7 +58,7 @@ namespace Veldrid.Graphics
         {
             ShaderSet.Dispose();
             ConstantBindings.Dispose();
-            foreach (var binding in _defaultTextureBindings)
+            foreach (var binding in DefaultTextureBindings)
             {
                 binding.TextureBinding.Dispose();
             }

@@ -7,6 +7,10 @@
         /// </summary>
         R32_G32_B32_A32_Float,
         /// <summary>
+        /// A format with a single color channel represented by an 8-bit unsigned integer.
+        /// </summary>
+        R8_UInt,
+        /// <summary>
         /// A format where each pixel is represented by a single byte (0-255) greyscale value.
         /// </summary>
         Alpha_UInt8,

@@ -26,7 +26,7 @@ namespace Veldrid.Assets
 
         public override int GetHashCode()
         {
-            return _value.GetHashCode();
+            return _value != null ? _value.GetHashCode() : 0;
         }
 
         public override string ToString()

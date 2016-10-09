@@ -7,32 +7,38 @@ namespace Veldrid.Graphics.OpenGL
     public class OpenGLTexture2D : OpenGLTexture, DeviceTexture2D, IDisposable, PixelDataProvider
     {
         private readonly OpenTK.Graphics.OpenGL.PixelFormat _pixelFormat;
+        private readonly PixelInternalFormat _internalFormat;
         private readonly PixelType _pixelType;
+        private readonly Graphics.PixelFormat _veldridFormat;
 
         public OpenGLTexture2D(
             int width,
             int height,
+            PixelFormat veldridFormat,
             PixelInternalFormat internalFormat,
             OpenTK.Graphics.OpenGL.PixelFormat pixelFormat,
             PixelType pixelType)
-            : this(width, height, internalFormat, pixelFormat, pixelType, IntPtr.Zero)
+            : this(width, height, veldridFormat, internalFormat, pixelFormat, pixelType, IntPtr.Zero)
         {
         }
 
         public OpenGLTexture2D(int width, int height, PixelFormat format, IntPtr pixelData)
-        : this(width, height, OpenGLFormats.MapPixelInternalFormat(format), OpenGLFormats.MapPixelFormat(format), OpenGLFormats.MapPixelType(format), pixelData)
+        : this(width, height, format, OpenGLFormats.MapPixelInternalFormat(format), OpenGLFormats.MapPixelFormat(format), OpenGLFormats.MapPixelType(format), pixelData)
         {
         }
 
         public OpenGLTexture2D(
             int width,
             int height,
+            PixelFormat veldridFormat,
             PixelInternalFormat internalFormat,
             OpenTK.Graphics.OpenGL.PixelFormat pixelFormat,
             PixelType pixelType,
             IntPtr pixelData)
             : base(TextureTarget.Texture2D, width, height)
         {
+            _veldridFormat = veldridFormat;
+            _internalFormat = internalFormat;
             _pixelFormat = pixelFormat;
             _pixelType = pixelType;
 
@@ -62,6 +68,7 @@ namespace Veldrid.Graphics.OpenGL
             OpenGLTexture2D texture = new OpenGLTexture2D(
                 width,
                 height,
+                format,
                 internalFormat,
                 pixelFormat,
                 pixelType);
@@ -71,6 +78,13 @@ namespace Veldrid.Graphics.OpenGL
             GL.BindTexture(TextureTarget.Texture2D, 0);
 
             return texture;
+        }
+
+        public void SetTextureData(int x, int y, int width, int height, IntPtr data, int dataSizeInBytes)
+        {
+            Bind();
+            GL.PixelStore(PixelStoreParameter.UnpackAlignment, FormatHelpers.GetPixelSize(_veldridFormat));
+            GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, width, height, _pixelFormat, _pixelType, data);
         }
 
         public void CopyTo(TextureData textureData)

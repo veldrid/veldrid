@@ -10,9 +10,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile Condition="'$(ProduceXmlDocs)' == 'true'">$(OutDir)$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <UseVSHostingProcess>true</UseVSHostingProcess>
-  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <Compile Include="ArrayEx.cs" />
@@ -143,6 +141,7 @@
     <Compile Include="IllegalValueException.cs" />
     <Compile Include="Ray.cs" />
     <Compile Include="Graphics\RgbaByte.cs" />
+    <Compile Include="RayCastHit.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="VectorExtensions.cs" />
     <None Include="project.json" />

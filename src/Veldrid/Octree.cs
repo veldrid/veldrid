@@ -6,6 +6,8 @@ using System.Numerics;
 
 namespace Veldrid
 {
+    public delegate bool RayCastFilter<T>(Ray ray, T item, out RayCastHit<T> hit);
+
     /// <summary>
     /// Maintains a reference to the current root node of a dynamic octree.
     /// The root node may change as items are added and removed from contained nodes.
@@ -44,12 +46,7 @@ namespace Veldrid
             _currentRoot.GetContainedObjects(ref frustum, results, filter);
         }
 
-        public int RayCast(Ray ray, List<T> hits)
-        {
-            return _currentRoot.RayCast(ray, hits);
-        }
-
-        public int RayCast(Ray ray, List<T> hits, Func<Ray, T, bool> filter)
+        public int RayCast(Ray ray, List<RayCastHit<T>> hits, RayCastFilter<T> filter)
         {
             return _currentRoot.RayCast(ray, hits, filter);
         }
@@ -349,7 +346,7 @@ namespace Veldrid
             CoreGetAllContainedObjects(results, filter);
         }
 
-        public int RayCast(Ray ray, List<T> hits, Func<Ray, T, bool> filter = null)
+        public int RayCast(Ray ray, List<RayCastHit<T>> hits, RayCastFilter<T> filter)
         {
             if (!ray.Intersects(Bounds))
             {
@@ -360,10 +357,14 @@ namespace Veldrid
                 int numHits = 0;
                 foreach (OctreeItem<T> item in _items)
                 {
-                    if (ray.Intersects(item.Bounds) && (filter == null || filter(ray, item.Item)))
+                    if (ray.Intersects(item.Bounds))
                     {
-                        numHits++;
-                        hits.Add(item.Item);
+                        RayCastHit<T> hit;
+                        if (filter(ray, item.Item, out hit))
+                        {
+                            numHits++;
+                            hits.Add(hit);
+                        }
                     }
                 }
                 foreach (var child in Children)

@@ -300,7 +300,7 @@ namespace Veldrid.Graphics
         /// <summary>Changes the current scissor rectangle.
         /// This will only have an effect if a RasterizerState is active with IsScissorTestEnabled set to True.</summary>
         public void SetScissorRectangle(int left, int top, int right, int bottom)
-            => SetScissorRectangle(new Rectangle(left, top, right, bottom));
+            => SetScissorRectangle(new Rectangle(left, top, right - left, bottom - top));
 
         /// <summary>Changes the current scissor rectangle.
         /// This will only have an effect if a RasterizerState is active with IsScissorTestEnabled set to True.</summary>

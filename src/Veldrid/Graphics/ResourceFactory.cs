@@ -322,7 +322,7 @@ namespace Veldrid.Graphics
         /// <param name="loader">The <see cref="ShaderLoader"/> to add.</param>
         public abstract void AddShaderLoader(ShaderLoader loader);
 
-        private DefaultTextureBindingInfo[] CreateDefaultTextureBindingInfos(RenderContext rc, MaterialTextureInputs textureInputs)
+        public DefaultTextureBindingInfo[] CreateDefaultTextureBindingInfos(RenderContext rc, MaterialTextureInputs textureInputs)
         {
             List<DefaultTextureBindingInfo> textures = new List<DefaultTextureBindingInfo>();
             for (int i = 0; i < textureInputs.Elements.Length; i++)

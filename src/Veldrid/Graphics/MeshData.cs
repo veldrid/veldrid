@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
+using System.Numerics;
 
 namespace Veldrid.Graphics
 {
@@ -42,6 +43,14 @@ namespace Veldrid.Graphics
         /// from the <see cref="Ray"/> origin that the hit occurred.</param>
         /// <returns>True if the <see cref="Ray"/> intersects the mesh; false otherwise</returns>
         bool RayCast(Ray ray, out float distance);
+
+        /// <summary>
+        /// Performs a RayCast against the vertices of this mesh.
+        /// </summary>
+        /// <param name="ray">The ray to use. This ray should be in object-local space.</param>
+        /// <param name="distancse">All of the distances at which the ray passes through the mesh.</param>
+        /// <returns>The number of intersections.</returns>
+        int RayCast(Ray ray, List<float> distances);
 
         /// <summary>
         /// Gets an array containing the raw vertex positions of the mesh.

@@ -6,7 +6,7 @@ using System.Numerics;
 
 namespace Veldrid
 {
-    public delegate bool RayCastFilter<T>(Ray ray, T item, out RayCastHit<T> hit);
+    public delegate int RayCastFilter<T>(Ray ray, T item, List<RayCastHit<T>> hits);
 
     /// <summary>
     /// Maintains a reference to the current root node of a dynamic octree.
@@ -359,12 +359,7 @@ namespace Veldrid
                 {
                     if (ray.Intersects(item.Bounds))
                     {
-                        RayCastHit<T> hit;
-                        if (filter(ray, item.Item, out hit))
-                        {
-                            numHits++;
-                            hits.Add(hit);
-                        }
+                        numHits += filter(ray, item.Item, hits);
                     }
                 }
                 foreach (var child in Children)

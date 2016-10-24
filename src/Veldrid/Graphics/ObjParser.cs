@@ -619,6 +619,26 @@ namespace Veldrid.Graphics
             return result;
         }
 
+        public int RayCast(Ray ray, List<float> distances)
+        {
+            int hits = 0;
+            for (int i = 0; i < Indices.Length - 2; i += 3)
+            {
+                Vector3 v0 = Vertices[Indices[i + 0]].Position;
+                Vector3 v1 = Vertices[Indices[i + 1]].Position;
+                Vector3 v2 = Vertices[Indices[i + 2]].Position;
+
+                float newDistance;
+                if (ray.Intersects(ref v0, ref v1, ref v2, out newDistance))
+                {
+                    hits++;
+                    distances.Add(newDistance);
+                }
+            }
+
+            return hits;
+        }
+
         public Vector3[] GetVertexPositions()
         {
             return Vertices.Select(vpnt => vpnt.Position).ToArray();

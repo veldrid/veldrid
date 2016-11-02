@@ -7,6 +7,7 @@ using Veldrid.Graphics;
 using System.Diagnostics;
 using Veldrid.Assets.Converters;
 using System.Reflection;
+using System.Collections.Concurrent;
 
 namespace Veldrid.Assets
 {
@@ -31,7 +32,7 @@ namespace Veldrid.Assets
             { ".obj", typeof(ConstructedMeshInfo) }
         };
 
-        private Dictionary<AssetID, object> _loadedAssets = new Dictionary<AssetID, object>();
+        private ConcurrentDictionary<AssetID, object> _loadedAssets = new ConcurrentDictionary<AssetID, object>();
 
         private static readonly JsonSerializer _serializer = CreateDefaultSerializer();
 
@@ -99,7 +100,7 @@ namespace Veldrid.Assets
                     asset = loader.Load(s);
                     if (cache)
                     {
-                        _loadedAssets.Add(assetID, asset);
+                        _loadedAssets.TryAdd(assetID, asset);
                     }
                 }
             }

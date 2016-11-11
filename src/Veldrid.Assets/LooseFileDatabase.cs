@@ -70,7 +70,7 @@ namespace Veldrid.Assets
             });
         }
 
-        public AssetID SaveDefinition<T>(T obj, string name)
+        public string SaveDefinition<T>(T obj, string name)
         {
             string path = GetAssetPath(name);
             using (var fs = File.CreateText(path))
@@ -80,7 +80,7 @@ namespace Veldrid.Assets
 
             AssetID id = new AssetID(name);
             _loadedAssets[id] = obj;
-            return id;
+            return path;
         }
 
         public override string GetAssetPath(AssetID assetID)

@@ -152,7 +152,20 @@ namespace Veldrid.Assets
             File.Delete(path);
         }
 
-        public Stream OpenAssetStream(AssetID assetID)
+        public override bool TryOpenAssetStream(AssetID assetID, out Stream stream)
+        {
+            string path = GetAssetPath(assetID);
+            if (File.Exists(path))
+            {
+                stream = File.OpenRead(path);
+                return true;
+            }
+
+            stream = null;
+            return false;
+        }
+
+        public override Stream OpenAssetStream(AssetID assetID)
         {
             string path = GetAssetPath(assetID);
             return File.OpenRead(path);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Veldrid.Assets
 {
@@ -15,6 +16,10 @@ namespace Veldrid.Assets
 
         public bool TryLoadAsset<T>(AssetID assetID, out T asset) => TryLoadAsset(assetID, true, out asset);
         public abstract bool TryLoadAsset<T>(AssetID assetID, bool cache, out T asset);
+
+        public abstract Stream OpenAssetStream(AssetID assetID);
+
+        public abstract bool TryOpenAssetStream(AssetID assetID, out Stream stream);
 
         public abstract AssetID[] GetAssetsOfType(Type t);
     }

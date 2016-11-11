@@ -96,6 +96,10 @@ namespace Veldrid
 
         public void MoveItem(OctreeItem<T> octreeItem, BoundingBox newBounds)
         {
+            if (ContainsNaN(newBounds))
+            {
+                throw new InvalidOperationException("Invalid bounds: " + newBounds);
+            }
             var newRoot = octreeItem.Container.MoveContainedItem(octreeItem, newBounds);
             if (newRoot != null)
             {
@@ -103,6 +107,12 @@ namespace Veldrid
             }
 
             _currentRoot = _currentRoot.TryTrimChildren();
+        }
+
+        private bool ContainsNaN(BoundingBox newBounds)
+        {
+            return float.IsNaN(newBounds.Min.X) || float.IsNaN(newBounds.Min.Y) || float.IsNaN(newBounds.Min.Z)
+                || float.IsNaN(newBounds.Max.X) || float.IsNaN(newBounds.Max.Y) || float.IsNaN(newBounds.Max.Z);
         }
 
         public void Clear() => _currentRoot.Clear();

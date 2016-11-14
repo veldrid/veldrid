@@ -197,6 +197,13 @@ namespace Veldrid
 
             return corners;
         }
+
+        public bool ContainsNaN()
+        {
+            return float.IsNaN(Min.X) || float.IsNaN(Min.Y) || float.IsNaN(Min.Z)
+                || float.IsNaN(Max.X) || float.IsNaN(Max.Y) || float.IsNaN(Max.Z);
+        }
+
     }
 
     public struct AlignedBoxCorners

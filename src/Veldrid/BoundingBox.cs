@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Veldrid.Graphics;
 
@@ -49,17 +50,17 @@ namespace Veldrid
             return Max - Min;
         }
 
-        public static BoundingBox CreateFromVertices(VertexPositionNormalTexture[] vertices)
+        public static BoundingBox CreateFromVertices(IList<VertexPositionNormalTexture> vertices)
         {
             return CreateFromVertices(vertices, Quaternion.Identity, Vector3.Zero, Vector3.One);
         }
 
-        public static BoundingBox CreateFromVertices(VertexPositionNormalTexture[] vertices, Quaternion rotation, Vector3 offset, Vector3 scale)
+        public static BoundingBox CreateFromVertices(IList<VertexPositionNormalTexture> vertices, Quaternion rotation, Vector3 offset, Vector3 scale)
         {
             Vector3 min = Vector3.Transform(vertices[0].Position, rotation);
             Vector3 max = Vector3.Transform(vertices[0].Position, rotation);
 
-            for (int i = 1; i < vertices.Length; i++)
+            for (int i = 1; i < vertices.Count; i++)
             {
                 Vector3 pos = Vector3.Transform(vertices[i].Position, rotation);
 

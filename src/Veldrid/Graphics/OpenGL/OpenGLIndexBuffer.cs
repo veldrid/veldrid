@@ -1,5 +1,6 @@
 ﻿using System;
 using OpenTK.Graphics.OpenGL;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -25,7 +26,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
         {
-            int elementSizeInBytes = FormatHelpers.GetIndexFormatElementByteSize(format);
+            int elementSizeInBytes = Unsafe.SizeOf<T>();
             SetData(indices, elementSizeInBytes * indices.Length, elementOffset * elementSizeInBytes);
             ElementsType = OpenGLFormats.MapIndexFormat(format);
         }

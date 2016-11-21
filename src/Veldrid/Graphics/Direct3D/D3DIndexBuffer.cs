@@ -1,5 +1,6 @@
 ﻿using System;
 using SharpDX.Direct3D11;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.Graphics.Direct3D
 {
@@ -37,7 +38,7 @@ namespace Veldrid.Graphics.Direct3D
         public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
         {
             _format = D3DFormats.ConvertIndexFormat(format);
-            int elementSizeInBytes = FormatHelpers.GetIndexFormatElementByteSize(format);
+            int elementSizeInBytes = Unsafe.SizeOf<T>();
             SetData(indices, elementSizeInBytes * indices.Length, elementOffset * elementSizeInBytes);
         }
 

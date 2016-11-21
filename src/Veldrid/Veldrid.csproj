@@ -22,6 +22,7 @@
     <Compile Include="Graphics\BlendState.cs" />
     <Compile Include="Graphics\ConstantDataProvider.cs" />
     <Compile Include="Graphics\CubemapTextureInputElement.cs" />
+    <Compile Include="Graphics\DefaultRenderItemComparer.cs" />
     <Compile Include="Graphics\DependantDataProvider.cs" />
     <Compile Include="Graphics\DepthComparison.cs" />
     <Compile Include="Graphics\DepthStencilState.cs" />

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
+using System.Numerics;
 
 namespace Veldrid.Graphics.Pipeline
 {
@@ -19,6 +20,8 @@ namespace Veldrid.Graphics.Pipeline
             get { return _cameraFrustum; }
             set { _cameraFrustum = value; }
         }
+
+        public Comparer<RenderItemIndex> Comparer { get; set; }
 
         private BoundingFrustum _cameraFrustum;
 
@@ -42,7 +45,14 @@ namespace Veldrid.Graphics.Pipeline
             RenderContext.SetViewport(0, 0, RenderContext.CurrentFramebuffer.Width, RenderContext.CurrentFramebuffer.Height);
             _renderQueue.Clear();
             visibilityManager.CollectVisibleObjects(_renderQueue, Name, ref _cameraFrustum, viewPosition);
-            _renderQueue.Sort();
+            if (Comparer != null)
+            {
+                _renderQueue.Sort(Comparer);
+            }
+            else
+            {
+                _renderQueue.Sort();
+            }
 
             foreach (RenderItem item in _renderQueue)
             {

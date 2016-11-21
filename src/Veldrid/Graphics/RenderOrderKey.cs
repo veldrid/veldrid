@@ -28,6 +28,11 @@ namespace Veldrid.Graphics
                 cameraDistanceInt);
         }
 
+        public float GetDistance()
+        {
+            return (_rawKey & 0x00000000FFFFFFFF) / 1000f;
+        }
+
         public int CompareTo(object obj)
         {
             return ((IComparable)_rawKey).CompareTo(obj);

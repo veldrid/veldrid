@@ -50,6 +50,11 @@ namespace Veldrid.Graphics
                     => keyComparer.Compare(first.Key, second.Key));
         }
 
+        public void Sort(Comparer<RenderItemIndex> comparer)
+        {
+            _indices.Sort(comparer);
+        }
+
         public Enumerator GetEnumerator()
         {
             return new Enumerator(_indices, _renderItems);

@@ -448,7 +448,7 @@ namespace Veldrid.RenderDemo
                     if (materialDef.DiffuseTexture != null)
                     {
                         string texturePath = "Models/SponzaAtrium/" + materialDef.DiffuseTexture;
-                        overrideTextureData = _ad.LoadAsset<ImageProcessorTexture>(texturePath);
+                        overrideTextureData = _ad.LoadAsset<ImageSharpTexture>(texturePath);
                     }
                     else
                     {
@@ -1158,9 +1158,9 @@ https://github.com/mellinoe/veldrid.");
                 var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), Graphics.PixelFormat.Alpha_UInt16);
                 _screenshotFramebuffer.DepthTexture.CopyTo(cpuDepthTexture);
 
-                ImageProcessorCore.Image image = new ImageProcessorCore.Image(width, height);
+                ImageSharp.Image image = new ImageSharp.Image(width, height);
                 PixelFormatConversion.ConvertPixelsUInt16DepthToRgbaFloat(width * height, cpuDepthTexture.PixelData, image.Pixels);
-                ImageProcessorTexture rgbaDepthTexture = new ImageProcessorTexture(image);
+                ImageSharpTexture rgbaDepthTexture = new ImageSharpTexture(image);
                 Console.WriteLine($"Saving file: {width} x {height}, ratio:{(double)width / height}");
                 rgbaDepthTexture.SaveToFile(Environment.TickCount + ".png");
             }
@@ -1168,7 +1168,7 @@ https://github.com/mellinoe/veldrid.");
 
         private static TextureData LoadStoneTextureData()
         {
-            return new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures/CubeTexture.png"));
+            return new ImageSharpTexture(Path.Combine(AppContext.BaseDirectory, "Textures/CubeTexture.png"));
         }
 
         private class FrameTimeAverager

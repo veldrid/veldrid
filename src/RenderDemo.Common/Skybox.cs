@@ -8,12 +8,12 @@ namespace Veldrid.RenderDemo
 {
     public class Skybox : SwappableRenderItem
     {
-        private readonly ImageProcessorTexture _front;
-        private readonly ImageProcessorTexture _back;
-        private readonly ImageProcessorTexture _left;
-        private readonly ImageProcessorTexture _right;
-        private readonly ImageProcessorTexture _top;
-        private readonly ImageProcessorTexture _bottom;
+        private readonly ImageSharpTexture _front;
+        private readonly ImageSharpTexture _back;
+        private readonly ImageSharpTexture _left;
+        private readonly ImageSharpTexture _right;
+        private readonly ImageSharpTexture _top;
+        private readonly ImageSharpTexture _bottom;
 
         // Context objects
         private VertexBuffer _vb;
@@ -24,17 +24,17 @@ namespace Veldrid.RenderDemo
         private ConstantBufferDataProvider _perObjectInput;
 
         public Skybox(RenderContext rc, AssetDatabase ad) : this(rc, ad,
-            ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_ft.png"),
-            ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_bk.png"),
-            ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_lf.png"),
-            ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_rt.png"),
-            ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_up.png"),
-            ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_dn.png"))
+            ad.LoadAsset<ImageSharpTexture>("Textures/cloudtop/cloudtop_ft.png"),
+            ad.LoadAsset<ImageSharpTexture>("Textures/cloudtop/cloudtop_bk.png"),
+            ad.LoadAsset<ImageSharpTexture>("Textures/cloudtop/cloudtop_lf.png"),
+            ad.LoadAsset<ImageSharpTexture>("Textures/cloudtop/cloudtop_rt.png"),
+            ad.LoadAsset<ImageSharpTexture>("Textures/cloudtop/cloudtop_up.png"),
+            ad.LoadAsset<ImageSharpTexture>("Textures/cloudtop/cloudtop_dn.png"))
         { }
 
         public Skybox(RenderContext rc, AssetDatabase ad,
-            ImageProcessorTexture front, ImageProcessorTexture back, ImageProcessorTexture left,
-            ImageProcessorTexture right, ImageProcessorTexture top, ImageProcessorTexture bottom)
+            ImageSharpTexture front, ImageSharpTexture back, ImageSharpTexture left,
+            ImageSharpTexture right, ImageSharpTexture top, ImageSharpTexture bottom)
         {
             _front = front;
             _back = back;

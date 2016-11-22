@@ -79,9 +79,9 @@ namespace Veldrid.RenderDemo.ForwardRendering
             var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), PixelFormat.Alpha_UInt16);
             _depthTexture.CopyTo(cpuDepthTexture);
 
-            ImageProcessorCore.Image image = new ImageProcessorCore.Image(width, height);
+            ImageSharp.Image image = new ImageSharp.Image(width, height);
             PixelFormatConversion.ConvertPixelsUInt16DepthToRgbaFloat(width * height, cpuDepthTexture.PixelData, image.Pixels);
-            ImageProcessorTexture rgbaDepthTexture = new ImageProcessorTexture(image);
+            ImageSharpTexture rgbaDepthTexture = new ImageSharpTexture(image);
             Console.WriteLine($"Saving file: {width} x {height}, ratio:{(double)width / height}");
             rgbaDepthTexture.SaveToFile(Environment.TickCount + ".png");
         }

@@ -149,6 +149,6 @@ namespace Veldrid.RenderDemo
             return visibleFrustum.Contains(sphere) == ContainmentType.Disjoint;
         }
 
-        private static readonly ImageProcessorTexture s_cubeTexture = new ImageProcessorTexture(AppContext.BaseDirectory + "/Assets/Textures/CubeTexture.png");
+        private static readonly ImageSharpTexture s_cubeTexture = new ImageSharpTexture(AppContext.BaseDirectory + "/Assets/Textures/CubeTexture.png");
     }
 }

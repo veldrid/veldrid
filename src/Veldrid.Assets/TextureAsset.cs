@@ -10,23 +10,23 @@ namespace Veldrid.Assets
 
     public class Texture2DAsset : TextureAsset
     {
-        public AssetRef<ImageProcessorTexture> ImageSource { get; set; }
+        public AssetRef<ImageSharpTexture> ImageSource { get; set; }
 
         public override MaterialTextureInputElement Create(AssetDatabase ad)
         {
-            ImageProcessorTexture texture = ad.LoadAsset(ImageSource);
+            ImageSharpTexture texture = ad.LoadAsset(ImageSource);
             return new TextureDataInputElement(Name, texture);
         }
     }
 
     public class CubeMapTextureAsset : TextureAsset
     {
-        public AssetRef<ImageProcessorTexture> Front { get; private set; }
-        public AssetRef<ImageProcessorTexture> Back { get; private set; }
-        public AssetRef<ImageProcessorTexture> Left { get; private set; }
-        public AssetRef<ImageProcessorTexture> Right { get; private set; }
-        public AssetRef<ImageProcessorTexture> Top { get; private set; }
-        public AssetRef<ImageProcessorTexture> Bottom { get; private set; }
+        public AssetRef<ImageSharpTexture> Front { get; private set; }
+        public AssetRef<ImageSharpTexture> Back { get; private set; }
+        public AssetRef<ImageSharpTexture> Left { get; private set; }
+        public AssetRef<ImageSharpTexture> Right { get; private set; }
+        public AssetRef<ImageSharpTexture> Top { get; private set; }
+        public AssetRef<ImageSharpTexture> Bottom { get; private set; }
 
         public override MaterialTextureInputElement Create(AssetDatabase ad)
         {

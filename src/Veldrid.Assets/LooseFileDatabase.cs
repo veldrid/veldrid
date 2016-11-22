@@ -16,7 +16,7 @@ namespace Veldrid.Assets
         private string _rootPath;
         private Dictionary<Type, AssetLoader> _assetLoaders = new Dictionary<Type, AssetLoader>()
         {
-            { typeof(ImageProcessorTexture), new PngLoader() },
+            { typeof(ImageSharpTexture), new PngLoader() },
             { typeof(TextureData), new PngLoader() },
             { typeof(ObjFile), new ObjFileLoader() },
             { typeof(ConstructedMeshInfo), new FirstMeshObjLoader() },
@@ -27,8 +27,8 @@ namespace Veldrid.Assets
         // i.e.: object LoadAsset(AssetID);
         private static readonly Dictionary<string, Type> s_extensionTypeMappings = new Dictionary<string, Type>()
         {
-            { ".png", typeof(ImageProcessorTexture) },
-            { ".jpg", typeof(ImageProcessorTexture) },
+            { ".png", typeof(ImageSharpTexture) },
+            { ".jpg", typeof(ImageSharpTexture) },
             { ".obj", typeof(ConstructedMeshInfo) }
         };
 

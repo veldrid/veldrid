@@ -1,15 +1,15 @@
-﻿using ImageProcessorCore;
+﻿using ImageSharp;
 using System.IO;
 
 namespace Veldrid.Graphics
 {
     /// <summary>
-    /// A texture loaded by ImageProcessorCore.
+    /// A texture loaded by ImageSharp.
     /// </summary>
-    public class ImageProcessorTexture : TextureData
+    public class ImageSharpTexture : TextureData
     {
         /// <summary>
-        /// The ImageProcessor image.
+        /// The ImageSharp image.
         /// </summary>
         public Image Image { get; }
 
@@ -41,7 +41,7 @@ namespace Veldrid.Graphics
         /// Loads and constructs a new ImageProcessorTexture from the file at the given path.
         /// </summary>
         /// <param name="filePath">The path to the file on disk.</param>
-        public ImageProcessorTexture(string filePath)
+        public ImageSharpTexture(string filePath)
         {
             using (FileStream fs = File.OpenRead(filePath))
             {
@@ -53,7 +53,7 @@ namespace Veldrid.Graphics
         /// Constructs an ImageProcessorTexture from the existing ImageProcessor image.
         /// </summary>
         /// <param name="image">The existing image.</param>
-        public ImageProcessorTexture(Image image)
+        public ImageSharpTexture(Image image)
         {
             Image = image;
         }

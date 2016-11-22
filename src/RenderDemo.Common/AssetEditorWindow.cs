@@ -195,7 +195,7 @@ namespace Veldrid.RenderDemo
             { typeof(byte), new FuncDrawer<byte>(GenericDrawFuncs.DrawByte) },
             { typeof(string), new FuncDrawer<string>(GenericDrawFuncs.DrawString, GenericDrawFuncs.NewString) },
             { typeof(bool), new FuncDrawer<bool>(GenericDrawFuncs.DrawBool) },
-            { typeof(ImageProcessorTexture), new TextureDrawer() },
+            { typeof(ImageSharpTexture), new TextureDrawer() },
             { typeof(ConstructedMeshInfo), new ModelDrawer() }
         };
 

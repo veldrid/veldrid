@@ -5,12 +5,12 @@
     /// </summary>
     public class CubemapTextureInputElement : MaterialTextureInputElement
     {
-        private readonly ImageProcessorTexture _front;
-        private readonly ImageProcessorTexture _back;
-        private readonly ImageProcessorTexture _left;
-        private readonly ImageProcessorTexture _right;
-        private readonly ImageProcessorTexture _top;
-        private readonly ImageProcessorTexture _bottom;
+        private readonly ImageSharpTexture _front;
+        private readonly ImageSharpTexture _back;
+        private readonly ImageSharpTexture _left;
+        private readonly ImageSharpTexture _right;
+        private readonly ImageSharpTexture _top;
+        private readonly ImageSharpTexture _bottom;
 
         /// <summary>
         /// Constructs a <see cref="CubemapTextureInputElement"/> from six face textures.
@@ -24,12 +24,12 @@
         /// <param name="bottom">The bottom texture.</param>
         public CubemapTextureInputElement(
             string name,
-            ImageProcessorTexture front,
-            ImageProcessorTexture back,
-            ImageProcessorTexture left,
-            ImageProcessorTexture right,
-            ImageProcessorTexture top,
-            ImageProcessorTexture bottom)
+            ImageSharpTexture front,
+            ImageSharpTexture back,
+            ImageSharpTexture left,
+            ImageSharpTexture right,
+            ImageSharpTexture top,
+            ImageSharpTexture bottom)
             : base(name)
         {
             _front = front;

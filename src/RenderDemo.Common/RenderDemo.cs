@@ -84,6 +84,8 @@ namespace Veldrid.RenderDemo
         private static float _octreeFrustumNearDistance = 3f;
         private static float _octreeFrustumFarDistance = 18f;
         private static List<ShadowCaster> _octreeQueryResult = new List<ShadowCaster>();
+        private static List<RayCastHit<ShadowCaster>> _octreeRayCastResult = new List<RayCastHit<ShadowCaster>>();
+        private static List<float> _rayCastDistances = new List<float>();
         private static List<RenderItem> _sponzaQueryResult = new List<RenderItem>();
         private static BoundingBoxWireframeRenderer _sceneBoundsRenderer;
 
@@ -561,7 +563,7 @@ namespace Veldrid.RenderDemo
                     var screenPos = InputTracker.MousePosition;
                     Ray r = _camera.GetRayFromScreenPoint(screenPos.X, screenPos.Y);
                     _octreeQueryResult.Clear();
-                    int numHits = _octree.RayCast(r, _octreeQueryResult);
+                    int numHits = _octree.RayCast(r, _octreeRayCastResult, OctreeFilter);
                     Console.WriteLine("Hit " + numHits + " objects.");
 
                     foreach (var hit in _octreeQueryResult)
@@ -596,21 +598,7 @@ namespace Veldrid.RenderDemo
             }
             if (_visibilityManager == _sponzaAtrium)
             {
-                if (InputTracker.GetMouseButtonDown(MouseButton.Left))
-                {
-                    var screenPos = InputTracker.MousePosition;
-                    Ray r = _camera.GetRayFromScreenPoint(screenPos.X, screenPos.Y);
-                    _sponzaQueryResult.Clear();
-                    int numHits = _sponzaAtrium.OctreeRootNode.RayCast(r, _sponzaQueryResult);
 
-                    var hits = _sponzaQueryResult.Where(ri => ri is ShadowCaster).Cast<ShadowCaster>().OrderBy(sc => Vector3.DistanceSquared(sc.BoundingBox.GetCenter(), _camera.Position));
-                    Console.WriteLine("Hits: " + hits.Count());
-                    var first = hits.FirstOrDefault();
-                    if (first != null)
-                    {
-                        Console.WriteLine("First: " + first.Name);
-                    }
-                }
             }
             if (_visibilityManager == _shadowsScene || _visibilityManager == _sponzaAtrium)
             {
@@ -692,6 +680,18 @@ namespace Veldrid.RenderDemo
             _editorWindow.Render(_rc);
 
             _imguiRenderer.UpdateFinished();
+        }
+
+        private static int OctreeFilter(Ray ray, ShadowCaster item, List<RayCastHit<ShadowCaster>> hits)
+        {
+            int result = item.RayCast(ray, _rayCastDistances);
+            for (int i = 0; i < result; i++)
+            {
+                float distance = _rayCastDistances[_rayCastDistances.Count - i - 1];
+                hits.Add(new RayCastHit<ShadowCaster>(item, ray.Origin + ray.Direction * distance, distance));
+            }
+
+            return result;
         }
 
         private static void RecreateOctreeFrustum()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid.Graphics;
 using Veldrid.Platform;
 
@@ -77,6 +78,7 @@ namespace Veldrid.RenderDemo
             return new Ray(_position, worldCoords);
         }
 
+        [StructLayout(LayoutKind.Sequential)]
         public struct Info : IEquatable<Info>
         {
             public readonly Vector3 WorldPosition;

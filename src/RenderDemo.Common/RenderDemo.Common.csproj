@@ -20,6 +20,7 @@
     <Compile Include="DirectionalLightBuffer.cs" />
     <Compile Include="Drawers\ModelDrawer.cs" />
     <Compile Include="ForwardRendering\PointLightInfo.cs" />
+    <Compile Include="ForwardRendering\RayCastable.cs" />
     <Compile Include="ForwardRendering\ShadowCaster_Mtl.cs" />
     <Compile Include="ForwardRendering\ShadowMapStage.cs" />
     <Compile Include="GeometryShaderBox.cs" />

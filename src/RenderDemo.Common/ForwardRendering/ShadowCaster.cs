@@ -9,12 +9,10 @@ using Veldrid.Graphics;
 
 namespace Veldrid.RenderDemo.ForwardRendering
 {
-    public class ShadowCaster : SwappableRenderItem, IDisposable
+    public class ShadowCaster : SwappableRenderItem, IDisposable, RayCastable
     {
         public string Name { get; set; } = "No Name";
 
-        private readonly VertexPositionNormalTexture[] _vertices;
-        private readonly int[] _indices;
         private readonly BoundingSphere _centeredBounds;
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
@@ -33,6 +31,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private Material _regularPassMaterial;
         private DeviceTexture2D _overrideTexture;
         private ShaderTextureBinding _overrideTextureBinding;
+        private readonly SimpleMeshDataProvider _meshData;
 
         public Vector3 Position { get; set; }
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
@@ -46,8 +45,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             MaterialAsset regularPassMaterial,
             TextureData overrideTexture = null)
         {
-            _vertices = vertices;
-            _indices = indices;
+            _meshData = new SimpleMeshDataProvider(vertices, indices);
 
             _shadowPassMaterialAsset = ad.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_ShadowMap.json");
             _regularPassMaterialAsset = regularPassMaterial;
@@ -71,16 +69,16 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private void InitializeContextObjects(AssetDatabase ad, RenderContext rc)
         {
             ResourceFactory factory = rc.ResourceFactory;
-            _vb = factory.CreateVertexBuffer(_vertices.Length * VertexPositionNormalTexture.SizeInBytes, false);
+            _vb = factory.CreateVertexBuffer(_meshData.Vertices.Length * VertexPositionNormalTexture.SizeInBytes, false);
             _vb.SetVertexData(
-                _vertices,
+                _meshData.Vertices,
                 new VertexDescriptor(
                     VertexPositionNormalTexture.SizeInBytes,
                     VertexPositionNormalTexture.ElementCount,
                     0,
                     IntPtr.Zero));
-            _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Length, false);
-            _ib.SetIndices(_indices);
+            _ib = factory.CreateIndexBuffer(sizeof(int) * _meshData.Indices.Length, false);
+            _ib.SetIndices(_meshData.Indices);
 
             _shadowPassMaterial = _shadowPassMaterialAsset.Create(ad, rc);
             _regularPassMaterial = _regularPassMaterialAsset.Create(ad, rc);
@@ -125,7 +123,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 * Matrix4x4.CreateFromQuaternion(Rotation)
                 * Matrix4x4.CreateTranslation(Position);
 
-            rc.DrawIndexedPrimitives(_indices.Length, 0);
+            rc.DrawIndexedPrimitives(_meshData.Indices.Length, 0);
         }
 
         private void Serialize<T>(ref T value)
@@ -165,13 +163,18 @@ namespace Veldrid.RenderDemo.ForwardRendering
         {
             get
             {
-                return BoundingBox.CreateFromVertices(_vertices, Rotation, Position, Scale);
+                return BoundingBox.CreateFromVertices(_meshData.Vertices, Rotation, Position, Scale);
             }
         }
 
         public override string ToString()
         {
             return string.Format("{0}, {1}", Name, BoundingBox.GetCenter());
+        }
+
+        public int RayCast(Ray ray, List<float> distances)
+        {
+            return _meshData.RayCast(ray, distances);
         }
     }
 }

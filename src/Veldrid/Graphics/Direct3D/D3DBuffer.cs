@@ -53,11 +53,16 @@ namespace Veldrid.Graphics.Direct3D
 
         private unsafe void SetArrayDataCore<T>(T[] data, int startIndex, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
         {
+            if (dataSizeInBytes == 0)
+            {
+                return;
+            }
+
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
 
             if (_resourceUsage == ResourceUsage.Dynamic)
             {
-                DataBox db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteNoOverwrite, MapFlags.None);
+                DataBox db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteDiscard, MapFlags.None);
                 using (var pin = data.Pin())
                 {
                     SharpDX.Utilities.CopyMemory(

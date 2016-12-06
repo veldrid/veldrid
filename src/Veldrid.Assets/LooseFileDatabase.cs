@@ -8,6 +8,7 @@ using System.Diagnostics;
 using Veldrid.Assets.Converters;
 using System.Reflection;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Veldrid.Assets
 {
@@ -92,16 +93,24 @@ namespace Veldrid.Assets
         public override T LoadAsset<T>(AssetID assetID, bool cache)
         {
             object asset;
-            if (!cache || !_loadedAssets.TryGetValue(assetID, out asset))
+            if (cache)
+            {
+                asset = _loadedAssets.GetOrAdd(assetID, id =>
+                {
+                    Console.WriteLine("Actually loading " + assetID);
+                    AssetLoader loader = GetLoader<T>();
+                    using (var s = OpenAssetStream(assetID))
+                    {
+                        return loader.Load(s);
+                    }
+                });
+            }
+            else
             {
                 AssetLoader loader = GetLoader<T>();
                 using (var s = OpenAssetStream(assetID))
                 {
                     asset = loader.Load(s);
-                    if (cache)
-                    {
-                        _loadedAssets.TryAdd(assetID, asset);
-                    }
                 }
             }
 
@@ -175,11 +184,14 @@ namespace Veldrid.Assets
         private static DirectoryNode GetDirectoryGraph(string path)
         {
             DirectoryInfo rootDirectory = new DirectoryInfo(path);
+            if (rootDirectory.Exists)
+            {
+                var assetInfos = rootDirectory.EnumerateFiles().Select(fi => new AssetInfo(fi.Name, fi.FullName)).ToArray();
+                var children = rootDirectory.EnumerateDirectories().Select(di => GetDirectoryGraph(di.FullName)).ToArray();
 
-            var assetInfos = rootDirectory.EnumerateFiles().Select(fi => new AssetInfo(fi.Name, fi.FullName)).ToArray();
-            var children = rootDirectory.EnumerateDirectories().Select(di => GetDirectoryGraph(di.FullName)).ToArray();
-
-            return new DirectoryNode(path, assetInfos.ToArray(), children);
+                return new DirectoryNode(path, assetInfos.ToArray(), children);
+            }
+            return new DirectoryNode(path, Array.Empty<AssetInfo>(), Array.Empty<DirectoryNode>());
         }
 
         public override AssetID[] GetAssetsOfType(Type t)

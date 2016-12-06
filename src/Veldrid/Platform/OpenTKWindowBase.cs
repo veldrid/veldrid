@@ -62,7 +62,7 @@ namespace Veldrid.Platform
 
             _nativeWindow.X = 100;
             _nativeWindow.Y = 100;
-            _nativeWindow.WindowState = VeldridToOpenTKState(windowState);
+            WindowState = windowState;
             _nativeWindow.Visible = true;
 
             _nativeWindow.Resize += OnWindowResized;
@@ -373,11 +373,11 @@ namespace Veldrid.Platform
             public List<MouseEvent> MouseEventsList { get; private set; } = new List<MouseEvent>();
             public List<char> KeyCharPressesList { get; private set; } = new List<char>();
 
-            public IReadOnlyCollection<KeyEvent> KeyEvents => KeyEventsList;
+            public IReadOnlyList<KeyEvent> KeyEvents => KeyEventsList;
 
-            public IReadOnlyCollection<MouseEvent> MouseEvents => MouseEventsList;
+            public IReadOnlyList<MouseEvent> MouseEvents => MouseEventsList;
 
-            public IReadOnlyCollection<char> KeyCharPresses => KeyCharPressesList;
+            public IReadOnlyList<char> KeyCharPresses => KeyCharPressesList;
 
             public System.Numerics.Vector2 MousePosition { get; set; }
 

@@ -404,7 +404,13 @@ namespace Veldrid
 
         public int GetItemCount()
         {
-            return _items.Count + Children.Sum(on => on.GetItemCount());
+            int count = _items.Count;
+            for (int i = 0; i < Children.Length; i++)
+            {
+                count += Children[i].GetItemCount();
+            }
+
+            return count;
         }
 
         private BoundingFrustum CoreGetContainedObjects(ref BoundingFrustum frustum, List<T> results, Func<T, bool> filter)

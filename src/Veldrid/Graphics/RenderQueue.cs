@@ -19,6 +19,17 @@ namespace Veldrid.Graphics
             _renderItems.Clear();
         }
 
+        public void AddRange(List<RenderItem> renderItems, Vector3 viewPosition)
+        {
+            foreach (RenderItem item in renderItems)
+            {
+                if (item != null)
+                {
+                    Add(item, viewPosition);
+                }
+            }
+        }
+
         public void AddRange(IEnumerable<RenderItem> renderItems, Vector3 viewPosition)
         {
             foreach (RenderItem item in renderItems)

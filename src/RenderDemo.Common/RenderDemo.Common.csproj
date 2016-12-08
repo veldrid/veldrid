@@ -15,6 +15,7 @@
   <ItemGroup>
     <Compile Include="BrowserUtil.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="CommonStages.cs" />
     <Compile Include="Drawers\AssetRefDrawer.cs" />
     <Compile Include="ColoredCubeRenderer.cs" />
     <Compile Include="DirectionalLightBuffer.cs" />

@@ -72,10 +72,16 @@ namespace Veldrid.Graphics
             Func<RenderItem, bool> filter;
             if (!_filters.TryGetValue(pipelineStage, out filter))
             {
-                filter = (ri) => ri.GetStagesParticipated().Contains(pipelineStage);
-                _filters.Add(pipelineStage, filter);
+                filter = CreateAndCacheFilter(pipelineStage);
             }
 
+            return filter;
+        }
+
+        private Func<RenderItem, bool> CreateAndCacheFilter(string pipelineStage)
+        {
+            Func<RenderItem, bool> filter = (ri) => ri.GetStagesParticipated().Contains(pipelineStage);
+            _filters.Add(pipelineStage, filter);
             return filter;
         }
 

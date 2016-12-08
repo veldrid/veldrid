@@ -80,9 +80,9 @@ namespace Veldrid.RenderDemo
             InitializeContextObjects(rc);
         }
 
-        public IEnumerable<string> GetStagesParticipated()
+        public IList<string> GetStagesParticipated()
         {
-            yield return "ImGui";
+            return CommonStages.ImGui;
         }
 
         public void NewFrame() => ImGui.NewFrame();

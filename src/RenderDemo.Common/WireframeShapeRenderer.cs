@@ -73,7 +73,7 @@ namespace Veldrid.RenderDemo
             return RenderOrderKey.Create(_material.GetHashCode());
         }
 
-        public IEnumerable<string> GetStagesParticipated()
+        public IList<string> GetStagesParticipated()
         {
             return s_stages;
         }

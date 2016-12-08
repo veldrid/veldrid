@@ -249,7 +249,7 @@ namespace Veldrid.RenderDemo.Drawers
                 rc.DrawIndexedPrimitives(_elementCount, 0);
             }
 
-            public IEnumerable<string> GetStagesParticipated()
+            public IList<string> GetStagesParticipated()
             {
                 return s_stages;
             }

@@ -122,10 +122,7 @@ namespace Veldrid.RenderDemo
             return new RenderOrderKey();
         }
 
-        public IEnumerable<string> GetStagesParticipated()
-        {
-            yield return "Standard";
-        }
+        public IList<string> GetStagesParticipated() => CommonStages.Standard;
 
         public unsafe void Render(RenderContext context, string pipelineStage)
         {

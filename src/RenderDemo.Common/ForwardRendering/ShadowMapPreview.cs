@@ -63,10 +63,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             return new RenderOrderKey();
         }
 
-        public IEnumerable<string> GetStagesParticipated()
-        {
-            yield return "Overlay";
-        }
+        public IList<string> GetStagesParticipated() => CommonStages.Overlay;
 
         public void Render(RenderContext rc, string pipelineStage)
         {

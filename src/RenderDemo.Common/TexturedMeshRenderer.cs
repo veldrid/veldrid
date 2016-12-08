@@ -120,10 +120,7 @@ namespace Veldrid.RenderDemo
             return Matrix4x4.Transpose(inverted);
         }
 
-        public IEnumerable<string> GetStagesParticipated()
-        {
-            yield return "Standard";
-        }
+        public IList<string> GetStagesParticipated() => CommonStages.Standard;
 
         public void Render(RenderContext context, string pipelineStage)
         {

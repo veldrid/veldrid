@@ -92,10 +92,7 @@ namespace Veldrid.RenderDemo
             return new RenderOrderKey(ulong.MaxValue);
         }
 
-        public IEnumerable<string> GetStagesParticipated()
-        {
-            yield return "Standard";
-        }
+        public IList<string> GetStagesParticipated() => CommonStages.Standard;
 
         public void Render(RenderContext rc, string pipelineStage)
         {

@@ -101,7 +101,7 @@
             {
                 "$type": "Veldrid.Assets.Texture2DAsset, Veldrid.Assets",
                 "ImageSource": {
-                    "$type": "Veldrid.Assets.AssetRef`1[[Veldrid.Graphics.ImageProcessorTexture, Veldrid]], Veldrid.Assets",
+                    "$type": "Veldrid.Assets.AssetRef`1[[Veldrid.Graphics.ImageSharpTexture, Veldrid]], Veldrid.Assets",
                     "ID": {
                         "$type": "Veldrid.Assets.AssetID, Veldrid.Assets",
                         "Value": "Textures/CubeTexture.png"

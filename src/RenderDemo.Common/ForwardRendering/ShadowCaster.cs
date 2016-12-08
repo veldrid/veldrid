@@ -95,7 +95,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             return RenderOrderKey.Create(distance, _regularPassMaterial.GetHashCode());
         }
 
-        public IEnumerable<string> GetStagesParticipated() => _stages;
+        public IList<string> GetStagesParticipated() => _stages;
 
         public void Render(RenderContext rc, string pipelineStage)
         {

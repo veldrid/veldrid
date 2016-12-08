@@ -98,10 +98,7 @@ namespace Veldrid.RenderDemo
                 MaterialTextureInputs.Empty);
         }
 
-        public IEnumerable<string> GetStagesParticipated()
-        {
-            yield return "Standard";
-        }
+        public IList<string> GetStagesParticipated() => CommonStages.Standard;
 
         public void Render(RenderContext context, string pipelineStage)
         {

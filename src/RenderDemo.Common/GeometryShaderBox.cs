@@ -10,7 +10,6 @@ namespace Veldrid.RenderDemo
     public class GeometryShaderBox : SwappableRenderItem
     {
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
-        private readonly string[] s_stages = { "Standard" };
         private readonly int _indexCount = 1;
         private readonly Camera _camera;
 
@@ -45,10 +44,7 @@ namespace Veldrid.RenderDemo
             return RenderOrderKey.Create(Vector3.Distance(Position, viewPosition), 0);
         }
 
-        public IEnumerable<string> GetStagesParticipated()
-        {
-            return s_stages;
-        }
+        public IList<string> GetStagesParticipated() => CommonStages.Standard;
 
         public void Render(RenderContext rc, string pipelineStage)
         {

@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -11,6 +12,7 @@ namespace Veldrid.Graphics.OpenGL
         private readonly int _programID;
         private readonly int _uniformLocation;
         private readonly UniformSetter _setterFunction;
+        private readonly ActiveUniformType _uniformType;
 
         public OpenGLUniformStorageAdapter(int programID, int uniformLocation)
         {
@@ -19,8 +21,8 @@ namespace Veldrid.Graphics.OpenGL
 
             int typeVal;
             GL.GetActiveUniforms(_programID, 1, ref uniformLocation, ActiveUniformParameter.UniformType, out typeVal);
-            ActiveUniformType uniformType = (ActiveUniformType)typeVal;
-            _setterFunction = GetSetterFunction(uniformType);
+            _uniformType = (ActiveUniformType)typeVal;
+            _setterFunction = GetSetterFunction(_uniformType);
         }
 
         public unsafe void GetData(IntPtr storageLocation, int storageSizeInBytes)
@@ -66,11 +68,10 @@ namespace Veldrid.Graphics.OpenGL
 
         public void SetData<T>(ref T data, int dataSizeInBytes) where T : struct
             => SetData(ref data, dataSizeInBytes, 0);
-        public void SetData<T>(ref T data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
+        public unsafe void SetData<T>(ref T data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
         {
-            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            SetData(handle.AddrOfPinnedObject(), dataSizeInBytes, destinationOffsetInBytes);
-            handle.Free();
+            IntPtr dataPtr = new IntPtr(Unsafe.AsPointer(ref data));
+            SetData(dataPtr, dataSizeInBytes, destinationOffsetInBytes);
         }
 
         public void SetData<T>(T[] data, int dataSizeInBytes) where T : struct

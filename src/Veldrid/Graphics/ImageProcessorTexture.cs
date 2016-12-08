@@ -38,7 +38,7 @@ namespace Veldrid.Graphics
         public int PixelSizeInBytes => sizeof(byte) * 4;
 
         /// <summary>
-        /// Loads and constructs a new ImageProcessorTexture from the file at the given path.
+        /// Loads and constructs a new ImageSharpTexture from the file at the given path.
         /// </summary>
         /// <param name="filePath">The path to the file on disk.</param>
         public ImageSharpTexture(string filePath)
@@ -50,7 +50,7 @@ namespace Veldrid.Graphics
         }
 
         /// <summary>
-        /// Constructs an ImageProcessorTexture from the existing ImageProcessor image.
+        /// Constructs an ImageSharpTexture from the existing ImageProcessor image.
         /// </summary>
         /// <param name="image">The existing image.</param>
         public ImageSharpTexture(Image image)

@@ -14,6 +14,8 @@ namespace Veldrid.Platform
         public event Action Resized;
         public event Action Closing;
         public event Action Closed;
+        public event Action FocusGained;
+        public event Action FocusLost;
 
         public System.Numerics.Vector2 ScaleFactor { get; private set; }
 
@@ -74,6 +76,20 @@ namespace Veldrid.Platform
             _nativeWindow.Closing += OnWindowClosing;
             _nativeWindow.Closed += OnWindowClosed;
             _nativeWindow.MouseWheel += OnMouseWheel;
+
+            _nativeWindow.FocusedChanged += OnWindowFocusChanged;
+        }
+
+        private void OnWindowFocusChanged(object sender, EventArgs e)
+        {
+            if (NativeWindow.Focused)
+            {
+                FocusGained?.Invoke();
+            }
+            else
+            {
+                FocusLost?.Invoke();
+            }
         }
 
         private void OnMouseWheel(object sender, MouseWheelEventArgs e)
@@ -178,7 +194,7 @@ namespace Veldrid.Platform
             int actualX = 0;
             Size size = default(Size);
             DisplayIndex index = DisplayIndex.Default;
-            while (x > 0)
+            while (x >= 0)
             {
                 var display = DisplayDevice.GetDisplay(index);
                 x -= display.Width;

@@ -23,6 +23,8 @@ namespace Veldrid.Platform
         event Action Resized;
         event Action Closing;
         event Action Closed;
+        event Action FocusLost;
+        event Action FocusGained;
 
         InputSnapshot GetInputSnapshot();
         Point ScreenToClient(Point p);

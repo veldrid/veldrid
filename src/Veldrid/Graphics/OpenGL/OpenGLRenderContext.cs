@@ -35,7 +35,7 @@ namespace Veldrid.Graphics.OpenGL
             }
             else
             {
-                _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo);
+                _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo, 3, 3, GraphicsContextFlags.ForwardCompatible);
             }
             _openGLGraphicsContext.MakeCurrent(window.OpenTKWindowInfo);
 

@@ -11,7 +11,7 @@ namespace Veldrid.Assets
 
         public AssetID(string value)
         {
-            _value = value;
+            _value = value.Replace("\\", "/");
         }
 
         public bool Equals(AssetID other)

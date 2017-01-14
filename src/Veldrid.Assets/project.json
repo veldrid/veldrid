@@ -1,7 +1,7 @@
 ﻿{
   "dependencies": {
     "Newtonsoft.Json": "9.0.1",
-    "OpenTK.NETCore": "1.1.2364.6424",
+    "OpenTK.NETCore": "1.1.2570.6429",
     "System.Drawing.Primitives": "4.0.0",
     "System.Runtime.CompilerServices.Unsafe": "4.0.0",
     "System.Runtime.Serialization.Primitives": "4.1.1",

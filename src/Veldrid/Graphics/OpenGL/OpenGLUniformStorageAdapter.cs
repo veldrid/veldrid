@@ -137,7 +137,14 @@ namespace Veldrid.Graphics.OpenGL
                         GL.UniformMatrix4(location, numFloat4s, false, dataPtr);
                     };
                 default:
-                    throw new NotImplementedException($"Uniforms of type {uniformType} are not implemented.");
+                    return (int location, IntPtr data, int dataSizeInBytes, int offsetInBytes) =>
+                    {
+                        float* dataPtr = (float*)data.ToPointer();
+                        int numMatrices = dataSizeInBytes / sizeof(Matrix4x4);
+                        int offsetElements = offsetInBytes / sizeof(float);
+                        dataPtr += offsetElements;
+                        GL.UniformMatrix4(location, numMatrices, false, dataPtr);
+                    };
             }
         }
 

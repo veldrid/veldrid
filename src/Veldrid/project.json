@@ -2,7 +2,7 @@
   "dependencies": {
     "ImageSharp": "1.0.0-alpha-000079",
     "Newtonsoft.Json": "9.0.1",
-    "OpenTK.NETCore": "1.1.2570.6430",
+    "OpenTK.NETCore": "1.1.2571.6431",
     "System.AppContext": "4.1.0",
     "System.Console": "4.0.0",
     "System.Diagnostics.Process": "4.1.0",

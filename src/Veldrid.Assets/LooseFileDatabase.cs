@@ -97,7 +97,6 @@ namespace Veldrid.Assets
             {
                 asset = _loadedAssets.GetOrAdd(assetID, id =>
                 {
-                    Console.WriteLine("Actually loading " + assetID);
                     AssetLoader loader = GetLoader<T>();
                     using (var s = OpenAssetStream(assetID))
                     {

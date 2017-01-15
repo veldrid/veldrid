@@ -4,6 +4,7 @@ using OpenTK.Input;
 using OpenTK.Platform;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Platform
 {
@@ -299,10 +300,19 @@ namespace Veldrid.Platform
             if (NativeWindow.Exists)
             {
                 MouseState cursorState = Mouse.GetCursorState();
-                Point windowPoint = NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
-                snapshot.MousePosition = new System.Numerics.Vector2(
-                    windowPoint.X,
-                    windowPoint.Y) / ScaleFactor;
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Point windowPoint = NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
+                    snapshot.MousePosition = new System.Numerics.Vector2(
+                        windowPoint.X,
+                        windowPoint.Y) / ScaleFactor;
+                }
+                else
+                {
+                    snapshot.MousePosition = new System.Numerics.Vector2(
+                        cursorState.X,
+                        cursorState.Y) / ScaleFactor;
+                }
             }
             _mouseDown.CopyTo(snapshot.MouseDown, 0);
             return snapshot;

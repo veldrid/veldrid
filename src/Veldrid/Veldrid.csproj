@@ -1,151 +1,21 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <ProjectGuid>{AE9BC745-284F-42F3-8236-C43FF9731DF2}</ProjectGuid>
-    <AssemblyName>Veldrid</AssemblyName>
-    <RootNamespace>Veldrid</RootNamespace>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile Condition="'$(ProduceXmlDocs)' == 'true'">$(OutDir)$(AssemblyName).xml</DocumentationFile>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
-    <Compile Include="ArrayEx.cs" />
-    <Compile Include="BoundingBox.cs" />
-    <Compile Include="BoundingFrustum.cs" />
-    <Compile Include="BoundingSphere.cs" />
-    <Compile Include="ContainmentType.cs" />
-    <Compile Include="FrustumHelpers.cs" />
-    <Compile Include="Graphics\BlendState.cs" />
-    <Compile Include="Graphics\ConstantDataProvider.cs" />
-    <Compile Include="Graphics\CubemapTextureInputElement.cs" />
-    <Compile Include="Graphics\DefaultRenderItemComparer.cs" />
-    <Compile Include="Graphics\DependantDataProvider.cs" />
-    <Compile Include="Graphics\DepthComparison.cs" />
-    <Compile Include="Graphics\DepthStencilState.cs" />
-    <Compile Include="Graphics\CubemapTexture.cs" />
-    <Compile Include="Graphics\DeviceBuffer.cs" />
-    <Compile Include="Graphics\DeviceTexture.cs" />
-    <Compile Include="Graphics\Direct3D\D3DBlendState.cs" />
-    <Compile Include="Graphics\Direct3D\D3DBuffer.cs" />
-    <Compile Include="Graphics\Direct3D\D3DConstantBuffer.cs" />
-    <Compile Include="Graphics\Direct3D\D3DCubemapTexture.cs" />
-    <Compile Include="Graphics\Direct3D\D3DDepthStencilState.cs" />
-    <Compile Include="Graphics\Direct3D\D3DFormats.cs" />
-    <Compile Include="Graphics\Direct3D\D3DFramebuffer.cs" />
-    <Compile Include="Graphics\Direct3D\D3DIndexBuffer.cs" />
-    <Compile Include="Graphics\Direct3D\D3DRasterizerState.cs" />
-    <Compile Include="Graphics\Direct3D\D3DRenderContext.cs" />
-    <Compile Include="Graphics\Direct3D\D3DResourceFactory.cs" />
-    <Compile Include="Graphics\Direct3D\D3DShader.cs" />
-    <Compile Include="Graphics\Direct3D\D3DShaderConstantBindings.cs" />
-    <Compile Include="Graphics\Direct3D\D3DShaderSet.cs" />
-    <Compile Include="Graphics\Direct3D\D3DShaderTextureBindingSlots.cs" />
-    <Compile Include="Graphics\Direct3D\D3DTexture2D.cs" />
-    <Compile Include="Graphics\Direct3D\D3DTextureBinding.cs" />
-    <Compile Include="Graphics\Direct3D\D3DVertexBuffer.cs" />
-    <Compile Include="Graphics\Direct3D\D3DVertexInputLayout.cs" />
-    <Compile Include="Graphics\DynamicDataProvider.cs" />
-    <Compile Include="Graphics\EmbeddedResourceShaderLoader.cs" />
-    <Compile Include="Graphics\FaceCullingMode.cs" />
-    <Compile Include="Graphics\FlatListVisibilityManager.cs" />
-    <Compile Include="Graphics\FolderShaderLoader.cs" />
-    <Compile Include="Graphics\FormatHelpers.cs" />
-    <Compile Include="Graphics\Framebuffer.cs" />
-    <Compile Include="Graphics\IndexFormat.cs" />
-    <Compile Include="Graphics\ManualTextureInput.cs" />
-    <Compile Include="Graphics\Material.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLTextureBindingSlots.cs" />
-    <Compile Include="Graphics\ShaderTextureBindingSlots.cs" />
-    <Compile Include="Graphics\MeshData.cs" />
-    <Compile Include="Graphics\MtlParser.cs" />
-    <Compile Include="Graphics\ObjParser.cs" />
-    <Compile Include="Graphics\OctreeVisibilityManager.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLBlendState.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLCubemapTexture.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLDefaultFramebuffer.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLDepthStencilState.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLFormats.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLFramebuffer.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLFramebufferInternal.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLRasterizerState.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLShaderConstantBindings.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLShaderSet.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLTextureBinding.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLUniformStorageAdapter.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLVertexInputLayout.cs" />
-    <Compile Include="Graphics\Pipeline\PipelineStage.cs" />
-    <Compile Include="Graphics\Pipeline\StandardPipelineStage.cs" />
-    <Compile Include="Graphics\PrimitiveTopology.cs" />
-    <Compile Include="Graphics\RasterizerState.cs" />
-    <Compile Include="Graphics\Renderer.cs" />
-    <Compile Include="Graphics\RenderItem.cs" />
-    <Compile Include="Graphics\RenderItemIndex.cs" />
-    <Compile Include="Graphics\RenderOrderKey.cs" />
-    <Compile Include="Graphics\RenderQueue.cs" />
-    <Compile Include="Graphics\Shader.cs" />
-    <Compile Include="Graphics\ShaderConstantBindings.cs" />
-    <Compile Include="Graphics\ShaderLoader.cs" />
-    <Compile Include="Graphics\ShaderSet.cs" />
-    <Compile Include="Graphics\ShaderTextureBinding.cs" />
-    <Compile Include="Graphics\ShaderType.cs" />
-    <Compile Include="Graphics\SimpleMeshDataProvider.cs" />
-    <Compile Include="Graphics\TextureData.cs" />
-    <Compile Include="Graphics\TriangleFillMode.cs" />
-    <Compile Include="Graphics\VertexInputLayout.cs" />
-    <Compile Include="Graphics\VertexPositionNormalColorTexture.cs" />
-    <Compile Include="Graphics\Viewport.cs" />
-    <Compile Include="Graphics\VisibiltyManager.cs" />
-    <Compile Include="Octree.cs" />
-    <Compile Include="Platform\KeyEvent.cs" />
-    <Compile Include="Platform\SameThreadWindow.cs" />
-    <Compile Include="Graphics\MaterialTextureInputs.cs" />
-    <Compile Include="Platform\ModifierKeys.cs" />
-    <Compile Include="Platform\MouseEvent.cs" />
-    <Compile Include="Graphics\ConstantBuffer.cs" />
-    <Compile Include="Graphics\ConstantBufferDataProvider.cs" />
-    <Compile Include="Graphics\ImageProcessorTexture.cs" />
-    <Compile Include="Graphics\IndexBuffer.cs" />
-    <Compile Include="Graphics\MaterialGlobalInputs.cs" />
-    <Compile Include="Graphics\MaterialGlobalInputType.cs" />
-    <Compile Include="Graphics\MaterialVertexInput.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLBuffer.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLConstantBuffer.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLIndexBuffer.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLRenderContext.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLResourceFactory.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLShader.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLTexture.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLTexture2D.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLVertexBuffer.cs" />
-    <Compile Include="Graphics\PixelFormat.cs" />
-    <Compile Include="Platform\OpenTKWindow.cs" />
-    <Compile Include="Graphics\RgbaFloat.cs" />
-    <Compile Include="Platform\DedicatedThreadWindow.cs" />
-    <Compile Include="Graphics\VertexDescriptor.cs" />
-    <Compile Include="Graphics\RenderContext.cs" />
-    <Compile Include="Graphics\ResourceFactory.cs" />
-    <Compile Include="Graphics\VertexBuffer.cs" />
-    <Compile Include="Graphics\VertexFormatHelpers.cs" />
-    <Compile Include="Graphics\VertexPosition.cs" />
-    <Compile Include="Graphics\VertexPositionColor.cs" />
-    <Compile Include="Graphics\VertexPositionNormalTexture.cs" />
-    <Compile Include="Graphics\VertexPositionTexture.cs" />
-    <Compile Include="Graphics\VertexSemanticType.cs" />
-    <Compile Include="Platform\OpenTKWindowBase.cs" />
-    <Compile Include="Platform\Window.cs" />
-    <Compile Include="Platform\InputSnapshot.cs" />
-    <Compile Include="Platform\WindowState.cs" />
-    <Compile Include="IllegalValueException.cs" />
-    <Compile Include="Ray.cs" />
-    <Compile Include="Graphics\RgbaByte.cs" />
-    <Compile Include="RayCastHit.cs" />
-    <Compile Include="Utilities.cs" />
-    <Compile Include="VectorExtensions.cs" />
-    <None Include="project.json" />
+    <PackageReference Include="ImageSharp" Version="1.0.0-alpha-000079" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="OpenTK.NETCore" Version="1.1.2571.6431" />
+    <PackageReference Include="SharpDX" Version="3.1.1" />
+    <PackageReference Include="SharpDX.D3DCompiler" Version="3.1.1" />
+    <PackageReference Include="SharpDX.Direct3D11" Version="3.1.1" />
+    <PackageReference Include="SharpDX.DXGI" Version="3.1.1" />
+    <PackageReference Include="System.AppContext" Version="4.3.0" />
+    <PackageReference Include="System.Collections" Version="4.3.0" />
+    <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
   </ItemGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>

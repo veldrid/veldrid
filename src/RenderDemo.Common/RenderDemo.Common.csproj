@@ -1,54 +1,52 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
-  <Import Project="ContentIncludes.msbuild" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <OutputType>Library</OutputType>
-    <AssemblyName>RenderDemo.Common</AssemblyName>
-    <RootNamespace>Veldrid.RenderDemo</RootNamespace>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <ProjectGuid>{64AEB337-027E-4553-9FD5-B91345F046D0}</ProjectGuid>
+    <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
-    <Compile Include="BrowserUtil.cs" />
-    <Compile Include="Camera.cs" />
-    <Compile Include="CommonStages.cs" />
-    <Compile Include="Drawers\AssetRefDrawer.cs" />
-    <Compile Include="ColoredCubeRenderer.cs" />
-    <Compile Include="DirectionalLightBuffer.cs" />
-    <Compile Include="Drawers\ModelDrawer.cs" />
-    <Compile Include="ForwardRendering\PointLightInfo.cs" />
-    <Compile Include="ForwardRendering\RayCastable.cs" />
-    <Compile Include="ForwardRendering\ShadowCaster_Mtl.cs" />
-    <Compile Include="ForwardRendering\ShadowMapStage.cs" />
-    <Compile Include="GeometryShaderBox.cs" />
-    <Compile Include="ImGuiImageHelper.cs" />
-    <Compile Include="ImGuiRenderer.cs" />
-    <Compile Include="InputTracker.cs" />
-    <Compile Include="Assets\Models\CubeModel.cs" />
-    <Compile Include="Assets\Models\PlaneModel.cs" />
-    <Compile Include="AssetEditorWindow.cs" />
-    <Compile Include="InstancedSphereRenderer.cs" />
-    <Compile Include="WireframeShapeRenderer.cs" />
-    <Compile Include="PixelFormatConversion.cs" />
-    <Compile Include="Preferences.cs" />
-    <Compile Include="RenderDemo.cs" />
-    <Compile Include="Skybox.cs" />
-    <Compile Include="ForwardRendering\ShadowCaster.cs" />
-    <Compile Include="ForwardRendering\ShadowMapPreview.cs" />
-    <Compile Include="SpecialFolders.cs" />
-    <Compile Include="SwappableRenderItem.cs" />
-    <Compile Include="TeapotRenderer.cs" />
-    <Compile Include="TestItem.cs" />
-    <Compile Include="TextInputBuffer.cs" />
-    <Compile Include="TexturedMeshRenderer.cs" />
-    <Compile Include="Assets\Textures\Textures.cs" />
-    <Compile Include="Drawers\TextureDrawer.cs" />
+    <None Remove="Assets\MaterialAsset\ModelPreview.json" />
+    <None Remove="Assets\MaterialAsset\ShadowCaster_Crate.json" />
+    <None Remove="Assets\MaterialAsset\ShadowCaster_ShadowMap.json" />
+    <None Remove="Assets\MaterialAsset\ShadowCaster_Stone.json" />
+    <None Remove="Assets\MaterialAsset\ShadowCaster_Wood.json" />
+    <None Remove="Assets\MaterialAsset\Skybox.json" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="ImageSharp" Version="1.0.0-alpha-000079" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="OpenTK.NETCore" Version="1.1.2571.6431" />
+    <PackageReference Include="SharpDX" Version="3.1.1" />
+    <PackageReference Include="SharpDX.D3DCompiler" Version="3.1.1" />
+    <PackageReference Include="SharpDX.Direct3D11" Version="3.1.1" />
+    <PackageReference Include="SharpDX.DXGI" Version="3.1.1" />
+    <PackageReference Include="System.AppContext" Version="4.3.0" />
+    <PackageReference Include="System.Collections" Version="4.3.0" />
+    <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\MaterialAsset\ModelPreview.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\MaterialAsset\ShadowCaster_Crate.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\MaterialAsset\ShadowCaster_ShadowMap.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\MaterialAsset\ShadowCaster_Stone.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\MaterialAsset\ShadowCaster_Wood.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\MaterialAsset\Skybox.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Models\Sphere.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\Models\SponzaAtrium\textures\background.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -208,6 +206,36 @@
     <Content Include="Assets\Models\SponzaAtrium\textures\vase_round_spec.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\Models\Teapot.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\cloudtop\cloudtop_bk.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\cloudtop\cloudtop_dn.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\cloudtop\cloudtop_ft.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\cloudtop\cloudtop_lf.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\cloudtop\cloudtop_rt.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\cloudtop\cloudtop_up.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\crate0_diffuse.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\CubeTexture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\Wood.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="GLSL\forward_mtl-frag.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -232,16 +260,57 @@
     <Content Include="HLSL\forward_mtl-vertex.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Reference Include="$(DepsDir)\ImGui.NET\ImGui.NET.dll">
+    <Content Include="HLSL\imgui-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\imgui-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\lit-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\shadow-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\shadow-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\shadowmap-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\shadowmap-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\simple-2d-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\simple-2d-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\simple-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\simple-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\skybox-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\skybox-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\textured-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\textured-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Reference Include="..\..\deps\ImGui.NET\ImGui.NET.dll">
       <Name>ImGui.NET</Name>
+      <Private>true</Private>
     </Reference>
-    <ProjectReference Include="..\Veldrid\Veldrid.csproj">
-      <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>
-      <Name>Veldrid</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Veldrid.Assets\Veldrid.Assets.csproj">
-      <Name>Veldrid.Assets</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="..\Veldrid.Assets\Veldrid.Assets.csproj" />
     <Content Include="Assets\MaterialAsset\ShadowCaster_MtlTemplate.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -269,19 +338,11 @@
     <Content Include="GLSL\billboard-geometry.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="GLSL\instanced-simple-vertex.glsl">
+    <Content Include="GLSL\instanced-simple-vertex.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="GLSL\instanced-simple-frag.glsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="project.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="@(ContentItems)">
     </Content>
-    <None Include="@(NoneItems)">
-    </None>
+    <Content Include="GLSL\instanced-simple-frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>

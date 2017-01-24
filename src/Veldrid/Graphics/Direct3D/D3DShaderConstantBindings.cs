@@ -147,7 +147,7 @@ namespace Veldrid.Graphics.Direct3D
                     var desc = reflection.GetResourceBindingDescription(i);
                     if (desc.Type == ShaderInputType.ConstantBuffer && desc.BindPoint == slot)
                     {
-                        Console.WriteLine("Buffer in slot " + slot + " has wrong name. Expected: " + name + ", Actual: " + desc.Name);
+                        System.Diagnostics.Debug.WriteLine("Buffer in slot " + slot + " has wrong name. Expected: " + name + ", Actual: " + desc.Name);
                         bindingDesc = desc;
                         return true;
                     }

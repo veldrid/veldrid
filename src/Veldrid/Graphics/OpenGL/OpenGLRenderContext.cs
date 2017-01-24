@@ -64,7 +64,7 @@ namespace Veldrid.Graphics.OpenGL
             if (severity >= MinimumLogSeverity)
             {
                 string messageString = Marshal.PtrToStringAnsi(message, length);
-                Console.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
+                System.Diagnostics.Debug.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
             }
         }
 

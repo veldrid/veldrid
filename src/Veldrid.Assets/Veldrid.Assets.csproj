@@ -1,35 +1,24 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <AssemblyName>Veldrid.Assets</AssemblyName>
-    <RootNamespace>Veldrid.Assets</RootNamespace>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <ProjectGuid>{881C55C7-0D91-4A87-B47A-46042C6F4CA0}</ProjectGuid>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
-    <Compile Include="AssetRef.cs" />
-    <Compile Include="AssetDatabase.cs" />
-    <Compile Include="AssetDefinition.cs" />
-    <Compile Include="AssetID.cs" />
-    <Compile Include="AssetLoader.cs" />
-    <Compile Include="Converters\RgbaFloatConverter.cs" />
-    <Compile Include="Converters\VertexConverters.cs" />
-    <Compile Include="CreatedResourceCache.cs" />
-    <Compile Include="LooseFileDatabase.cs" />
-    <Compile Include="MaterialAsset.cs" />
-    <Compile Include="ModelLoader.cs" />
-    <Compile Include="PngLoader.cs" />
-    <Compile Include="TextAssetLoader.cs" />
-    <Compile Include="TextureAsset.cs" />
+    <PackageReference Include="ImageSharp" Version="1.0.0-alpha-000079" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="OpenTK.NETCore" Version="1.1.2571.6431" />
+    <PackageReference Include="SharpDX" Version="3.1.1" />
+    <PackageReference Include="SharpDX.D3DCompiler" Version="3.1.1" />
+    <PackageReference Include="SharpDX.Direct3D11" Version="3.1.1" />
+    <PackageReference Include="SharpDX.DXGI" Version="3.1.1" />
+    <PackageReference Include="System.AppContext" Version="4.3.0" />
+    <PackageReference Include="System.Collections" Version="4.3.0" />
+    <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
-    <None Include="project.json" />
   </ItemGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>

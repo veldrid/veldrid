@@ -1,6 +1,10 @@
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildThisFileDirectory)\build\corebuild.props" />
   <PropertyGroup>
     <DepsDir>$(MSBuildThisFileDirectory)\deps</DepsDir>
+    <ProjectDir>$(MSBuildThisFileDirectory)</ProjectDir>
+    <BinDir>$(ProjectDir)\bin</BinDir>
+    <ObjDir>$(BinDir)\obj</ObjDir>
+    <OutputPath>$(BinDir)\$(Configuration)\$(MSBuildProjectName)</OutputPath>
+    <BaseIntermediateOutputPath>$(ObjDir)\$(Configuration)\$(MSBuildProjectName)</BaseIntermediateOutputPath>
   </PropertyGroup>
 </Project>

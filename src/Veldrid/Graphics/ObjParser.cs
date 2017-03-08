@@ -364,16 +364,16 @@ namespace Veldrid.Graphics
         /// <returns>A new <see cref="ConstructedMeshInfo"/>.</returns>
         public ConstructedMeshInfo GetMesh(MeshGroup group)
         {
-            Dictionary<FaceVertex, int> vertexMap = new Dictionary<FaceVertex, int>();
-            int[] indices = new int[group.Faces.Length * 3];
+            Dictionary<FaceVertex, ushort> vertexMap = new Dictionary<FaceVertex, ushort>();
+            ushort[] indices = new ushort[group.Faces.Length * 3];
             List<VertexPositionNormalTexture> vertices = new List<VertexPositionNormalTexture>();
 
             for (int i = 0; i < group.Faces.Length; i++)
             {
                 Face face = group.Faces[i];
-                int index0 = GetOrCreate(vertexMap, vertices, face.Vertex0, face.Vertex1, face.Vertex2);
-                int index1 = GetOrCreate(vertexMap, vertices, face.Vertex1, face.Vertex2, face.Vertex0);
-                int index2 = GetOrCreate(vertexMap, vertices, face.Vertex2, face.Vertex0, face.Vertex1);
+                ushort index0 = GetOrCreate(vertexMap, vertices, face.Vertex0, face.Vertex1, face.Vertex2);
+                ushort index1 = GetOrCreate(vertexMap, vertices, face.Vertex1, face.Vertex2, face.Vertex0);
+                ushort index2 = GetOrCreate(vertexMap, vertices, face.Vertex2, face.Vertex0, face.Vertex1);
 
                 // Reverse winding order here.
                 indices[(i * 3)] = index0;
@@ -393,19 +393,19 @@ namespace Veldrid.Graphics
             return GetMesh(MeshGroups[0]);
         }
 
-        private int GetOrCreate(
-            Dictionary<FaceVertex, int> vertexMap,
+        private ushort GetOrCreate(
+            Dictionary<FaceVertex, ushort> vertexMap,
             List<VertexPositionNormalTexture> vertices,
             FaceVertex key,
             FaceVertex adjacent1,
             FaceVertex adjacent2)
         {
-            int index;
+            ushort index;
             if (!vertexMap.TryGetValue(key, out index))
             {
                 VertexPositionNormalTexture vertex = ConstructVertex(key, adjacent1, adjacent2);
                 vertices.Add(vertex);
-                index = vertices.Count - 1;
+                index = checked((ushort)(vertices.Count - 1));
                 vertexMap.Add(key, index);
             }
 
@@ -549,7 +549,7 @@ namespace Veldrid.Graphics
         /// <summary>
         /// The indices of the mesh.
         /// </summary>
-        public int[] Indices { get; }
+        public ushort[] Indices { get; }
 
         /// <summary>
         /// The name of the <see cref="MaterialDefinition"/> associated with this mesh.
@@ -562,7 +562,7 @@ namespace Veldrid.Graphics
         /// <param name="vertices">The vertices.</param>
         /// <param name="indices">The indices.</param>
         /// <param name="materialName">The name of the associated MTL <see cref="MaterialDefinition"/>.</param>
-        public ConstructedMeshInfo(VertexPositionNormalTexture[] vertices, int[] indices, string materialName)
+        public ConstructedMeshInfo(VertexPositionNormalTexture[] vertices, ushort[] indices, string materialName)
         {
             Vertices = vertices;
             Indices = indices;
@@ -579,7 +579,7 @@ namespace Veldrid.Graphics
         public IndexBuffer CreateIndexBuffer(ResourceFactory factory, out int indexCount)
         {
             IndexBuffer ib = factory.CreateIndexBuffer(Indices.Length * sizeof(int), false);
-            ib.SetIndices(Indices);
+            ib.SetIndices(Indices, IndexFormat.UInt16);
             indexCount = Indices.Length;
             return ib;
         }
@@ -644,7 +644,7 @@ namespace Veldrid.Graphics
             return Vertices.Select(vpnt => vpnt.Position).ToArray();
         }
 
-        public int[] GetIndices()
+        public ushort[] GetIndices()
         {
             return Indices;
         }

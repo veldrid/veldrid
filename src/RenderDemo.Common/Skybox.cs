@@ -53,7 +53,7 @@ namespace Veldrid.RenderDemo
             _vb.SetVertexData(s_vertices, new VertexDescriptor(VertexPosition.SizeInBytes, 1, 0, IntPtr.Zero));
 
             _ib = factory.CreateIndexBuffer(s_indices.Length * sizeof(int), false);
-            _ib.SetIndices(s_indices);
+            _ib.SetIndices(s_indices, IndexFormat.UInt16);
 
             _material = ad.LoadAsset<MaterialAsset>("MaterialAsset/Skybox.json").Create(ad, rc);
 
@@ -146,7 +146,7 @@ namespace Veldrid.RenderDemo
             new VertexPosition(new Vector3(-20.0f,-20.0f,20.0f)),
         };
 
-        private static readonly int[] s_indices = new int[]
+        private static readonly ushort[] s_indices = new ushort[]
         {
             0,1,2, 0,2,3,
             4,5,6, 4,6,7,

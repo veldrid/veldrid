@@ -62,6 +62,6 @@ namespace Veldrid.Graphics
         /// Gets an array containing the raw indices of the mesh.
         /// </summary>
         /// <returns>An array of indices.</returns>
-        int[] GetIndices();
+        ushort[] GetIndices();
     }
 }

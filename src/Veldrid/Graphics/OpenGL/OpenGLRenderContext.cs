@@ -28,6 +28,7 @@ namespace Veldrid.Graphics.OpenGL
             : base(window)
         {
             _resourceFactory = new OpenGLResourceFactory();
+            RenderCapabilities = new RenderCapabilities(true, true);
 
             if (debugContext)
             {
@@ -256,6 +257,8 @@ namespace Veldrid.Graphics.OpenGL
         protected override void PlatformClearMaterialResourceBindings()
         {
         }
+
+        public override RenderCapabilities RenderCapabilities { get; }
 
         protected override void PlatformDispose()
         {

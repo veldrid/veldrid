@@ -47,6 +47,7 @@ namespace Veldrid.Graphics.Direct3D
             CreateAndInitializeDevice(flags);
             CreateAndSetSamplers();
             ResourceFactory = new D3DResourceFactory(_device);
+            RenderCapabilities = new RenderCapabilities(false, false);
             PostContextCreated();
         }
 
@@ -406,6 +407,8 @@ namespace Veldrid.Graphics.Direct3D
         protected override void PlatformClearMaterialResourceBindings()
         {
         }
+
+        public override RenderCapabilities RenderCapabilities { get; }
 
         protected override Vector2 GetTopLeftUvCoordinate()
         {

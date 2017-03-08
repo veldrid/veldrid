@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Veldrid.Assets;
 using Veldrid.Graphics;
@@ -12,7 +13,7 @@ namespace Veldrid.RenderDemo
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
         private readonly VertexPositionNormalTexture[] _vertices;
-        private readonly int[] _indices;
+        private readonly ushort[] _indices;
         private readonly TextureData _texture;
         private BoundingSphere _centeredBounds;
 
@@ -26,7 +27,7 @@ namespace Veldrid.RenderDemo
         public Vector3 Position { get; internal set; }
         public Vector3 Scale { get; internal set; } = new Vector3(1f);
 
-        public TexturedMeshRenderer(AssetDatabase ad, RenderContext context, VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
+        public TexturedMeshRenderer(AssetDatabase ad, RenderContext context, VertexPositionNormalTexture[] vertices, ushort[] indices, TextureData texture)
         {
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
@@ -68,8 +69,8 @@ namespace Veldrid.RenderDemo
             VertexDescriptor desc = new VertexDescriptor(VertexPositionNormalTexture.SizeInBytes, VertexPositionNormalTexture.ElementCount, 0, IntPtr.Zero);
             s_vb.SetVertexData(_vertices, desc);
 
-            s_ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Length, false);
-            s_ib.SetIndices(_indices);
+            s_ib = factory.CreateIndexBuffer(sizeof(ushort) * _indices.Length, false);
+            s_ib.SetIndices(_indices, IndexFormat.UInt16);
 
             MaterialVertexInput materialInputs = new MaterialVertexInput(
                 VertexPositionNormalTexture.SizeInBytes,

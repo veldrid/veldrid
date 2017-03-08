@@ -41,7 +41,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             RenderContext rc,
             AssetDatabase ad,
             VertexPositionNormalTexture[] vertices,
-            int[] indices,
+            ushort[] indices,
             MaterialAsset regularPassMaterial,
             TextureData overrideTexture = null)
         {
@@ -78,7 +78,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                     0,
                     IntPtr.Zero));
             _ib = factory.CreateIndexBuffer(sizeof(int) * _meshData.Indices.Length, false);
-            _ib.SetIndices(_meshData.Indices);
+            _ib.SetIndices(_meshData.Indices, IndexFormat.UInt16);
 
             _shadowPassMaterial = _shadowPassMaterialAsset.Create(ad, rc);
             _regularPassMaterial = _regularPassMaterialAsset.Create(ad, rc);

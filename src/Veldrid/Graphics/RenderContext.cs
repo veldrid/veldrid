@@ -429,6 +429,8 @@ namespace Veldrid.Graphics
             }
         }
 
+        public abstract RenderCapabilities RenderCapabilities { get; }
+
         /// <summary>Gets the top left UV coordinate of a standard plane.</summary>
         public Vector2 TopLeftUv => _topLeftUvCoordinate;
 

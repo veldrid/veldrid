@@ -11,6 +11,7 @@ namespace Veldrid.Platform
     public abstract class OpenTKWindowBase : Window, OpenTKWindow
     {
         private NativeWindow _nativeWindow;
+        private bool _isSDL2Window;
 
         public event Action Resized;
         public event Action Closing;
@@ -45,6 +46,7 @@ namespace Veldrid.Platform
                  DisplayDevice.Default);
             int actualWidth = _nativeWindow.Width;
             int actualHeight = _nativeWindow.Height;
+            _isSDL2Window = NativeWindow.WindowInfo.GetType().Name.Contains("Sdl2WindowInfo");
 
             ScaleFactor = new System.Numerics.Vector2((float)actualWidth / desiredWidth, (float)actualHeight / desiredHeight);
 
@@ -289,6 +291,7 @@ namespace Veldrid.Platform
 
         public bool Focused => _nativeWindow.Focused;
 
+
         /// <summary>Closes the window.</summary>
         public abstract void Close();
 
@@ -300,7 +303,7 @@ namespace Veldrid.Platform
             if (NativeWindow.Exists)
             {
                 MouseState cursorState = Mouse.GetCursorState();
-                if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                if (!_isSDL2Window)
                 {
                     Point windowPoint = NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
                     snapshot.MousePosition = new System.Numerics.Vector2(

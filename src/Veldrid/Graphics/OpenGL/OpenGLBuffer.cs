@@ -141,7 +141,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public void UnmapBuffer()
         {
-            if (GL.UnmapBuffer(_target))
+            if (!GL.UnmapBuffer(_target))
             {
                 throw new InvalidOperationException("GL.UnmapBuffer failed.");
             }

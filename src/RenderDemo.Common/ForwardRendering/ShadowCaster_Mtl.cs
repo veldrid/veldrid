@@ -14,7 +14,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
         public string Name { get; set; } = "No Name";
 
         private readonly VertexPositionNormalTexture[] _vertices;
-        private readonly int[] _indices;
+        private readonly ushort[] _indices;
         private readonly BoundingSphere _centeredBounds;
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
@@ -49,7 +49,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             RenderContext rc,
             AssetDatabase ad,
             VertexPositionNormalTexture[] vertices,
-            int[] indices,
+            ushort[] indices,
             MaterialAsset regularPassMaterial,
             TextureData overrideTexture = null)
         {
@@ -86,7 +86,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                     0,
                     IntPtr.Zero));
             _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Length, false);
-            _ib.SetIndices(_indices);
+            _ib.SetIndices(_indices, IndexFormat.UInt16);
 
             _shadowPassMaterial = _shadowPassMaterialAsset.Create(ad, rc);
             _regularPassMaterial = _regularPassMaterialAsset.Create(ad, rc);

@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
+using Veldrid.Graphics.OpenGLES;
 using Veldrid.Platform;
 
 namespace Veldrid.RenderDemo
@@ -12,29 +15,33 @@ namespace Veldrid.RenderDemo
         public static void Main()
         {
             bool onWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            OpenTKWindow window;
+            OpenTKWindow window = new SameThreadWindow();
             RenderContext rc;
-            if (onWindows)
-            {
-                window = new DedicatedThreadWindow();
-            }
-            else
-            {
-                window = new SameThreadWindow();
-            }
-
-            bool preferOpenGL = Preferences.Instance.PreferOpenGL;
-            if (!preferOpenGL && onWindows)
+            bool sdl2OnWindows = false;
+#if SDL2_ON_WINDOWS
+            sdl2OnWindows = true;
+#endif
+            bool preferOpenGL = Preferences.Instance.PreferOpenGL || sdl2OnWindows;
+            if (!sdl2OnWindows && !preferOpenGL && onWindows)
             {
                 rc = CreateDefaultD3dRenderContext(window);
             }
             else
             {
-                rc = CreateDefaultOpenGLRenderContext(window);
+                bool useGLES = sdl2OnWindows;
+                if (useGLES)
+                {
+                    rc = CreateDefaultOpenGLESRenderContext(window);
+                }
+                else
+                {
+                    rc = CreateDefaultOpenGLRenderContext(window);
+                }
             }
 
             var options = new List<RenderDemo.RendererOption>();
             var openGLOption = new RenderDemo.RendererOption("OpenGL", () => CreateDefaultOpenGLRenderContext(window));
+            var openGLESOption = new RenderDemo.RendererOption("OpenGL ES", () => CreateDefaultOpenGLESRenderContext(window));
             var d3dOption = new RenderDemo.RendererOption("Direct3D", () => CreateDefaultD3dRenderContext(window));
 
             if (onWindows)
@@ -42,10 +49,24 @@ namespace Veldrid.RenderDemo
                 if (rc is OpenGLRenderContext)
                 {
                     options.Add(openGLOption);
-                    options.Add(d3dOption);
+                    if (!sdl2OnWindows)
+                    {
+                        options.Add(d3dOption);
+                    }
+                    options.Add(openGLESOption);
+                }
+                else if (rc is OpenGLESRenderContext)
+                {
+                    options.Add(openGLESOption);
+                    options.Add(openGLOption);
+                    if (!sdl2OnWindows)
+                    {
+                        options.Add(d3dOption);
+                    }
                 }
                 else
                 {
+                    Debug.Assert(rc is D3DRenderContext);
                     options.Add(d3dOption);
                     options.Add(openGLOption);
                 }
@@ -53,9 +74,15 @@ namespace Veldrid.RenderDemo
             else
             {
                 options.Add(openGLOption);
+                options.Add(openGLESOption);
             }
 
             RenderDemo.RunDemo(rc, options.ToArray());
+        }
+
+        private static OpenGLESRenderContext CreateDefaultOpenGLESRenderContext(OpenTKWindow window)
+        {
+            return new OpenGLESRenderContext(window);
         }
 
         private static OpenGLRenderContext CreateDefaultOpenGLRenderContext(OpenTKWindow window)

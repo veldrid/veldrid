@@ -38,8 +38,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
             }, new VertexDescriptor(VertexPositionTexture.SizeInBytes, VertexPositionTexture.ElementCount, 0, IntPtr.Zero),
             0);
 
-            _indexBuffer = factory.CreateIndexBuffer(sizeof(int) * 6, false);
-            _indexBuffer.SetIndices(new int[] { 0, 1, 2, 0, 2, 3 });
+            _indexBuffer = factory.CreateIndexBuffer(sizeof(byte) * 6, false);
+            _indexBuffer.SetIndices(new byte[] { 0, 1, 2, 0, 2, 3 }, IndexFormat.UInt8);
 
             _material = factory.CreateMaterial(
                 rc,

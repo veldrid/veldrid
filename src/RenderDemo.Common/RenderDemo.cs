@@ -16,6 +16,7 @@ using Veldrid.RenderDemo.Models;
 using System.Collections.Generic;
 using SharpDX.DXGI;
 using System.Threading.Tasks;
+using Veldrid.Graphics.OpenGLES;
 
 namespace Veldrid.RenderDemo
 {
@@ -143,7 +144,7 @@ namespace Veldrid.RenderDemo
                 CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
 
-                ChangeScene(GeometryShaderScene());
+                ChangeScene(SceneWithBoxes());
 
                 _fta = new FrameTimeAverager(666);
 
@@ -170,12 +171,11 @@ namespace Veldrid.RenderDemo
                 }
 
             }
-            catch (Exception e) when (!Debugger.IsAttached)
+            catch when (!Debugger.IsAttached)
             {
-                Console.WriteLine("Error: " + e);
                 if (_rc is OpenGLRenderContext)
                 {
-                    //Console.WriteLine("GL Error: " + GL.GetError());
+                    // Console.WriteLine("GL Error: " + GL.GetError());
                 }
             }
         }
@@ -528,14 +528,11 @@ namespace Veldrid.RenderDemo
 
             _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
             _imguiRenderer.UpdateImGuiInput(_rc.Window, snapshot);
-
             DrawMainMenu();
 
             _fta.AddTime(deltaMilliseconds);
-
-            string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
+            string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : (_rc is OpenGLESRenderContext) ? "OpenGL ES" : "Direct3D";
             _rc.Window.Title = $"[{apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
-
             if (InputTracker.GetKeyDown(Key.F4) && (InputTracker.GetKey(Key.AltLeft) || InputTracker.GetKey(Key.AltRight)))
             {
                 _rc.Window.Close();
@@ -564,7 +561,6 @@ namespace Veldrid.RenderDemo
                     Ray r = _camera.GetRayFromScreenPoint(screenPos.X, screenPos.Y);
                     _octreeQueryResult.Clear();
                     int numHits = _octree.RayCast(r, _octreeRayCastResult, OctreeFilter);
-                    Console.WriteLine("Hit " + numHits + " objects.");
 
                     foreach (var hit in _octreeQueryResult)
                     {
@@ -604,7 +600,6 @@ namespace Veldrid.RenderDemo
             {
                 _sceneBoundsRenderer.Box = ((OctreeVisibilityManager)_visibilityManager).OctreeRootNode.GetPreciseBounds();
             }
-
             UpdateLightMatrices();
             UpdatePointLights();
 
@@ -883,7 +878,7 @@ namespace Veldrid.RenderDemo
 
                     ImGui.Checkbox("Auto-Rotate Light", ref _moveLight);
 
-                    string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : "Direct3D";
+                    string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : (_rc is OpenGLESRenderContext) ? "OpenGL ES" : "Direct3D";
                     if (ImGui.BeginMenu($"Renderer: {apiName}"))
                     {
                         foreach (var option in _backendOptions)

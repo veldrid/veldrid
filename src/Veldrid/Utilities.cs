@@ -1,4 +1,6 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Diagnostics;
+using System.Numerics;
 
 namespace Veldrid
 {
@@ -18,6 +20,16 @@ namespace Veldrid
                 m.M21, m.M22, m.M23, 0,
                 m.M31, m.M32, m.M33, 0,
                 0, 0, 0, 1);
+        }
+
+        [Conditional("DEBUG")]
+        public static void CheckLastGLES3Error()
+        {
+            var ec = OpenTK.Graphics.ES30.GL.GetError();
+            if (ec != OpenTK.Graphics.ES30.ErrorCode.NoError)
+            {
+                throw new InvalidOperationException("OpenGL Error: " + ec);
+            }
         }
     }
 }

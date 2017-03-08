@@ -126,7 +126,7 @@ namespace Veldrid.RenderDemo.Drawers
 
             public DeviceTexture RenderedScene => _fb.ColorTexture;
 
-            private PreviewModel CreatePreviewModel(VertexPositionNormalTexture[] vertices, int[] indices, ShaderTextureBinding textureBinding = null)
+            private PreviewModel CreatePreviewModel(VertexPositionNormalTexture[] vertices, ushort[] indices, ShaderTextureBinding textureBinding = null)
             {
                 AssetDatabase lfd = new LooseFileDatabase(Path.Combine(AppContext.BaseDirectory, "Assets"));
                 VertexBuffer vb = _rc.ResourceFactory.CreateVertexBuffer(vertices.Length * VertexPositionNormalTexture.SizeInBytes, false);
@@ -134,8 +134,8 @@ namespace Veldrid.RenderDemo.Drawers
                     vertices,
                     new VertexDescriptor(VertexPositionNormalTexture.SizeInBytes, VertexPositionNormalTexture.ElementCount, 0, IntPtr.Zero));
 
-                IndexBuffer ib = _rc.ResourceFactory.CreateIndexBuffer(indices.Length * sizeof(int), false);
-                ib.SetIndices(indices, sizeof(int), 0);
+                IndexBuffer ib = _rc.ResourceFactory.CreateIndexBuffer(indices.Length * sizeof(ushort), false);
+                ib.SetIndices(indices, IndexFormat.UInt16);
 
                 MaterialAsset shadowmapAsset = lfd.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_ShadowMap.json");
                 MaterialAsset surfaceMaterial = lfd.LoadAsset<MaterialAsset>("MaterialAsset/ModelPreview.json");

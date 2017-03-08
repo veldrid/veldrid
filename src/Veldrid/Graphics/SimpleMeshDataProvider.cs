@@ -8,10 +8,10 @@ namespace Veldrid.Graphics
     public class SimpleMeshDataProvider : MeshData
     {
         public VertexPositionNormalTexture[] Vertices { get; }
-        public int[] Indices { get; }
+        public ushort[] Indices { get; }
         public string MaterialName { get; }
 
-        public SimpleMeshDataProvider(VertexPositionNormalTexture[] vertices, int[] indices)
+        public SimpleMeshDataProvider(VertexPositionNormalTexture[] vertices, ushort[] indices)
         {
             Vertices = vertices;
             Indices = indices;
@@ -26,8 +26,8 @@ namespace Veldrid.Graphics
 
         public IndexBuffer CreateIndexBuffer(ResourceFactory factory, out int indexCount)
         {
-            IndexBuffer ib = factory.CreateIndexBuffer(Indices.Length * sizeof(int), false);
-            ib.SetIndices(Indices);
+            IndexBuffer ib = factory.CreateIndexBuffer(Indices.Length * sizeof(ushort), false);
+            ib.SetIndices(Indices, IndexFormat.UInt16);
             indexCount = Indices.Length;
             return ib;
         }
@@ -92,7 +92,7 @@ namespace Veldrid.Graphics
             return Vertices.Select(vpnt => vpnt.Position).ToArray();
         }
 
-        public int[] GetIndices()
+        public ushort[] GetIndices()
         {
             return Indices;
         }

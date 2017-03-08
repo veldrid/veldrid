@@ -39,7 +39,7 @@ namespace Veldrid.RenderDemo.Models
             new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,.5f),     new Vector3(0,0,1),     new Vector2(0, 1)),
         };
 
-        public static readonly int[] Indices = new int[]
+        public static readonly ushort[] Indices = new ushort[]
         {
             0,1,2, 0,2,3,
             4,5,6, 4,6,7,

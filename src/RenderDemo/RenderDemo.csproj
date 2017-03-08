@@ -10,6 +10,8 @@
     <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
     <OutputType>exe</OutputType>
     <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;ubuntu.16.04-x64;osx.10.10-x64</RuntimeIdentifiers>
+    <SDL2OnWindows Condition="'$(SDL2OnWindows)' == ''">true</SDL2OnWindows>
+    <DefineConstants Condition="'$(SDL2OnWindows)' == 'true'">$(DefineConstants);SDL2_ON_WINDOWS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ImageSharp" Version="1.0.0-alpha-000079" />
@@ -21,6 +23,9 @@
     <PackageReference Include="SharpDX.Direct3D11" Version="3.1.1" />
     <PackageReference Include="SharpDX.DXGI" Version="3.1.1" />
     <None Include="..\..\deps\ImGui.NET\ImGui.NET.dll" />
+    <Content Include="..\..\deps\SDL2\win7-x64\SDL2.dll" Condition="'$(SDL2OnWindows)' == 'true'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RenderDemo.Common\RenderDemo.Common.csproj" />

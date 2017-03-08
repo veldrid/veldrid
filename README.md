@@ -1,6 +1,6 @@
 ##Veldrid
 
-An experimental renderer with OpenGL and Direct3D backends.
+An abstract 3D rendering library for .NET, with backends for Direct3D 11, OpenGL 3+, and OpenGL ES 3.
 
 ![Sponza](http://i.imgur.com/4TlmVuh.png)
 
@@ -8,17 +8,8 @@ An experimental renderer with OpenGL and Direct3D backends.
 
 *(Severely compressed gif preview)*
 
-## Build instructions (Windows)
+## Build instructions
 
-* Have Visual Studio 2015 Update 3 installed
-* Have latest NuGet extension installed (Tools -> Extensions and Updates -> Updates)
-* Uncheck these options under Tools ->NuGet Package Manager -> Package Manager Settings:
-![image](https://cloud.githubusercontent.com/assets/8918977/20651200/7cba5744-b495-11e6-812c-d9cb4d51b0af.png)
-* Have .NET Core SDK installed: https://go.microsoft.com/fwlink/?LinkID=835014
-* After cloning the repository, run `dotnet restore <cloned-path>`.
+Veldrid now uses the standard .NET Core tooling. [Install the tools](https://www.microsoft.com/net/download/core) and build normally (`dotnet restore && dotnet msbuild`).
 
-# Visual Studio
-Change the configuration to Windows_Debug, x64. Build everything and set "RenderDemo" as the startup project
-
-# Command line
-Open a Visual Studio developer command prompt. Run `msbuild` on RenderDemo.csproj. Open RenderDemo.exe.
+Run RenderDemo(.exe) to see a quick demonstration of the rendering capabilities of the library.

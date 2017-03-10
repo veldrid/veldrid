@@ -13,3 +13,9 @@ An abstract 3D rendering library for .NET, with backends for Direct3D 11, OpenGL
 Veldrid now uses the standard .NET Core tooling. [Install the tools](https://www.microsoft.com/net/download/core) and build normally (`dotnet restore && dotnet msbuild`).
 
 Run RenderDemo(.exe) to see a quick demonstration of the rendering capabilities of the library.
+
+#Using the library
+
+The recommended way to reference Veldrid is via source. Veldrid includes some debug-only validation code which is disabled in release builds.
+
+A NuGet package is also available: https://www.nuget.org/packages/Veldrid

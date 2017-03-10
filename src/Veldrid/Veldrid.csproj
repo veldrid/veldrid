@@ -1,13 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netstandard1.3</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
+    <DocumentationFile Condition="'$(ProduceDocumentation)' == 'true'">$(BinDir)\Veldrid.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ImageSharp" Version="1.0.0-alpha-000079" />
+    <PackageReference Include="ImageSharp" Version="1.0.0-alpha2-00139" />
+    <PackageReference Include="ImageSharp.Formats.Png" Version="1.0.0-alpha2-00135" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="OpenTK.NETCore" Version="1.1.2571.6431" />
     <PackageReference Include="SharpDX" Version="3.1.1" />
@@ -19,4 +21,5 @@
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
   </ItemGroup>
+  <Import Project="Veldrid.PackageInfo.props" />
 </Project>

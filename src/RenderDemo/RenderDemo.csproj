@@ -14,7 +14,6 @@
     <DefineConstants Condition="'$(SDL2OnWindows)' == 'true'">$(DefineConstants);SDL2_ON_WINDOWS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ImageSharp" Version="1.0.0-alpha-000079" />
     <PackageReference Include="ImGui.NET" Version="0.1.5" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="OpenTK.NETCore" Version="1.1.2571.6431" />

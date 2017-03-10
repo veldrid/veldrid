@@ -6,7 +6,6 @@
     <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ImageSharp" Version="1.0.0-alpha-000079" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="OpenTK.NETCore" Version="1.1.2571.6431" />
     <PackageReference Include="SharpDX" Version="3.1.1" />

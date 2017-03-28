@@ -1,4 +1,4 @@
-##Veldrid
+## Veldrid
 
 An abstract 3D rendering library for .NET, with backends for Direct3D 11, OpenGL 3+, and OpenGL ES 3.
 
@@ -14,7 +14,7 @@ Veldrid now uses the standard .NET Core tooling. [Install the tools](https://www
 
 Run RenderDemo(.exe) to see a quick demonstration of the rendering capabilities of the library.
 
-#Using the library
+# Using the library
 
 The recommended way to reference Veldrid is via source. Veldrid includes some debug-only validation code which is disabled in release builds.
 

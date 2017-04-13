@@ -1,9 +1,8 @@
 ﻿using SharpDX.Direct3D11;
-using System;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public class D3DDepthStencilState : DepthStencilState, IDisposable
+    public class D3DDepthStencilState : DepthStencilState
     {
         private readonly Device _device;
         private readonly SharpDX.Direct3D11.DepthStencilState _deviceState;
@@ -11,7 +10,7 @@ namespace Veldrid.Graphics.Direct3D
         public D3DDepthStencilState(Device device, bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
         {
             _device = device;
-            IsDepthEnabled = IsDepthEnabled;
+            IsDepthEnabled = isDepthEnabled;
             IsDepthWriteEnabled = isDepthWriteEnabled;
             DepthComparison = comparison;
 

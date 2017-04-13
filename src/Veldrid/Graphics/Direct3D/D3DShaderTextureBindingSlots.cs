@@ -1,4 +1,6 @@
-﻿namespace Veldrid.Graphics.Direct3D
+﻿using System;
+
+namespace Veldrid.Graphics.Direct3D
 {
     public class D3DShaderTextureBindingSlots : ShaderTextureBindingSlots
     {
@@ -6,6 +8,7 @@
 
         public D3DShaderTextureBindingSlots(D3DShaderSet shaderSet, MaterialTextureInputs textureInputs)
         {
+            //TODO: arg 'shaderSet' is unused.
             TextureInputs = textureInputs;
         }
 
@@ -17,6 +20,7 @@
         }
     }
 
+    [Flags]
     public enum ShaderStageApplicabilityFlags : byte
     {
         Vertex = 1 << 0,

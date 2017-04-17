@@ -48,7 +48,7 @@ namespace Veldrid.Graphics
         /// Performs a RayCast against the vertices of this mesh.
         /// </summary>
         /// <param name="ray">The ray to use. This ray should be in object-local space.</param>
-        /// <param name="distancse">All of the distances at which the ray passes through the mesh.</param>
+        /// <param name="distances">All of the distances at which the ray passes through the mesh.</param>
         /// <returns>The number of intersections.</returns>
         int RayCast(Ray ray, List<float> distances);
 

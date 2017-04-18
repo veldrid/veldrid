@@ -343,7 +343,7 @@ namespace Veldrid
             frustum = CoreGetContainedObjects(ref frustum, results, filter);
         }
 
-        public void GetAllContainedObjects(List<T> results) => GetAllContainedObjects(results);
+        public void GetAllContainedObjects(List<T> results) => GetAllContainedObjects(results, null);
         public void GetAllContainedObjects(List<T> results, Func<T, bool> filter)
         {
             if (results == null)

@@ -84,7 +84,6 @@ namespace Veldrid.Graphics
         /// <summary>
         /// Retrieves data from the <see cref="DeviceBuffer"/> into a CPU-side array.
         /// </summary>
-        /// <typeparam name="T">The type of data; must be a value type.</typeparam>
         /// <param name="storageLocation">A pointer to the beginning of the CPU-side storage location.</param>
         /// <param name="storageSizeInBytes">The total size of thef CPU storage array, in bytes.</param>
         void GetData(IntPtr storageLocation, int storageSizeInBytes);

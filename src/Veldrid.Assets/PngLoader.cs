@@ -11,7 +11,7 @@ namespace Veldrid.Assets
 
         public override ImageSharpTexture Load(Stream s)
         {
-            return new ImageSharpTexture(new Image(s));
+            return new ImageSharpTexture(Image.Load(s));
         }
     }
 }

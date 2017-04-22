@@ -1,4 +1,5 @@
 ﻿using ImageSharp;
+using ImageSharp.PixelFormats;
 using System.IO;
 
 namespace Veldrid.Graphics
@@ -16,7 +17,7 @@ namespace Veldrid.Graphics
         /// <summary>
         /// The raw pixel data, stored in RGBA format, where each element is a byte (32 bits per pixel).
         /// </summary>
-        public Color[] Pixels => Image.Pixels;
+        public Rgba32[] Pixels => Image.Pixels;
 
         /// <summary>
         /// The width of the texture.
@@ -45,7 +46,7 @@ namespace Veldrid.Graphics
         {
             using (FileStream fs = File.OpenRead(filePath))
             {
-                Image = new Image(fs);
+                Image = Image.Load(fs);
             }
         }
 

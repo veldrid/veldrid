@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -172,9 +173,9 @@ namespace Veldrid.Graphics
             {
                 try
                 {
-                    float x = float.Parse(xStr);
-                    float y = float.Parse(yStr);
-                    float z = float.Parse(zStr);
+                    float x = float.Parse(xStr, CultureInfo.InvariantCulture);
+                    float y = float.Parse(yStr, CultureInfo.InvariantCulture);
+                    float z = float.Parse(zStr, CultureInfo.InvariantCulture);
 
                     return new Vector3(x, y, z);
                 }
@@ -188,8 +189,8 @@ namespace Veldrid.Graphics
             {
                 try
                 {
-                    float x = float.Parse(xStr);
-                    float y = float.Parse(yStr);
+                    float x = float.Parse(xStr, CultureInfo.InvariantCulture);
+                    float y = float.Parse(yStr, CultureInfo.InvariantCulture);
 
                     return new Vector2(x, y);
                 }
@@ -203,7 +204,7 @@ namespace Veldrid.Graphics
             {
                 try
                 {
-                    int i = int.Parse(intStr);
+                    int i = int.Parse(intStr, CultureInfo.InvariantCulture);
                     return i;
                 }
                 catch (FormatException fe)
@@ -216,7 +217,7 @@ namespace Veldrid.Graphics
             {
                 try
                 {
-                    float f = float.Parse(intStr);
+                    float f = float.Parse(intStr, CultureInfo.InvariantCulture);
                     return f;
                 }
                 catch (FormatException fe)

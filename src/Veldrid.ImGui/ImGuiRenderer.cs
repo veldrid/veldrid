@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 
 using Key = Veldrid.Platform.Key;
 
-namespace SynthApp
+namespace Veldrid
 {
     /// <summary>
     /// A Veldrid RenderItem which can draw draw lists produced by ImGui.

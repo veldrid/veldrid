@@ -2,7 +2,7 @@
 using Veldrid.Graphics;
 using System;
 
-namespace SynthApp
+namespace Veldrid
 {
     /// <summary>
     /// Helper class for registering textures to be drawn with ImGui.Image() or ImageButton().

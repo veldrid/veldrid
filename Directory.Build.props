@@ -10,7 +10,6 @@
 
   <PropertyGroup>
     <!-- NuGet Package common properties. -->
-    <PackageVersion>1.0.1</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Copyright>Copyright 2017 (c) Eric Mellino. All rights reserved.</Copyright>
     <Authors>Eric Mellino</Authors>

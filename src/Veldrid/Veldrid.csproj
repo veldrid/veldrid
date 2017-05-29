@@ -19,5 +19,5 @@
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
   </ItemGroup>
-  <Import Project="Veldrid.PackageInfo.props" />
+  <Import Project="$(MSBuildThisFileDirectory)Veldrid.PackageInfo.props" />
 </Project>

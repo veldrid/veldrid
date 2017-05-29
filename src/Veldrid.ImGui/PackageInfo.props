@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <PackageId>Veldrid.ImGui</PackageId>
+    <Authors>Eric Mellino</Authors>
+    <Description>ImGui.NET integration for Veldrid. Contains helper classes for managing ImGui state and rendering it with a Veldrid RenderContext.</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <Copyright>Copyright 2017 (c) Eric Mellino. All rights reserved.</Copyright>
+    <PackageTags>3D Graphics Render OpenGL DirectX Core Standard Game GUI ImGui</PackageTags>
+    <ProjectUrl>https://github.com/mellinoe/veldrid</ProjectUrl>
+    <RepositoryUrl>https://github.com/mellinoe/veldrid</RepositoryUrl>
+  </PropertyGroup>
+</Project>

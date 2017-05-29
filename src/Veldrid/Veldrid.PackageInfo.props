@@ -1,13 +1,7 @@
 <Project>
   <PropertyGroup>
     <PackageId>Veldrid</PackageId>
-    <PackageVersion>1.0.0</PackageVersion>
-    <Authors>Eric Mellino</Authors>
     <Description>A GPU-accelerated 3D rendering library for .NET, with backends for Direct3D 11, OpenGL 3+, and OpenGL ES 3.</Description>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Copyright>Copyright 2017 (c) Eric Mellino. All rights reserved.</Copyright>
     <PackageTags>3D Graphics Render OpenGL DirectX Core Standard Game</PackageTags>
-    <ProjectUrl>https://github.com/mellinoe/veldrid</ProjectUrl>
-    <RepositoryUrl>https://github.com/mellinoe/veldrid</RepositoryUrl>
   </PropertyGroup>
 </Project>

@@ -263,12 +263,12 @@ namespace Veldrid.Platform
         IWindowInfo OpenTKWindow.OpenTKWindowInfo => _nativeWindow.WindowInfo;
 
         /// <summary>Gets the bounds of the window.</summary>
-        public System.Drawing.Rectangle Bounds
+        public Rectangle Bounds
         {
             get
             {
                 var nativeBounds = _nativeWindow.Bounds;
-                return new System.Drawing.Rectangle(nativeBounds.X, nativeBounds.Y, nativeBounds.Width, nativeBounds.Height);
+                return new Rectangle(nativeBounds.X, nativeBounds.Y, nativeBounds.Width, nativeBounds.Height);
             }
         }
 
@@ -305,7 +305,7 @@ namespace Veldrid.Platform
                 MouseState cursorState = Mouse.GetCursorState();
                 if (!_isSDL2Window)
                 {
-                    Point windowPoint = NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
+                    OpenTK.Point windowPoint = NativeWindow.PointToClient(new OpenTK.Point(cursorState.X, cursorState.Y));
                     snapshot.MousePosition = new System.Numerics.Vector2(
                         windowPoint.X,
                         windowPoint.Y) / ScaleFactor;
@@ -385,15 +385,15 @@ namespace Veldrid.Platform
         }
 
         /// <summary>Converts a screen-space point to a client-space point.</summary>
-        public System.Drawing.Point ScreenToClient(System.Drawing.Point p)
+        public Point ScreenToClient(Point p)
         {
             var tkPoint = _nativeWindow.PointToClient(new OpenTK.Point(p.X, p.Y));
-            return new System.Drawing.Point(tkPoint.X, tkPoint.Y);
+            return new Point(tkPoint.X, tkPoint.Y);
         }
 
-        public System.Drawing.Point ClientToScreen(System.Drawing.Point p)
+        public Point ClientToScreen(Point p)
         {
-            return new System.Drawing.Point(_nativeWindow.X + p.X, _nativeWindow.Y + p.Y);
+            return new Point(_nativeWindow.X + p.X, _nativeWindow.Y + p.Y);
         }
 
         protected class SimpleInputSnapshot : InputSnapshot

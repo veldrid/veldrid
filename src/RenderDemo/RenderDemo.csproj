@@ -6,21 +6,13 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
     <OutputType>exe</OutputType>
     <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;ubuntu.16.04-x64;osx.10.10-x64</RuntimeIdentifiers>
     <SDL2OnWindows Condition="'$(SDL2OnWindows)' == ''">false</SDL2OnWindows>
     <DefineConstants Condition="'$(SDL2OnWindows)' == 'true'">$(DefineConstants);SDL2_ON_WINDOWS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="0.1.5" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="OpenTK.NETCore" Version="1.1.2571.6431" />
-    <PackageReference Include="SharpDX" Version="3.1.1" />
-    <PackageReference Include="SharpDX.D3DCompiler" Version="3.1.1" />
-    <PackageReference Include="SharpDX.Direct3D11" Version="3.1.1" />
-    <PackageReference Include="SharpDX.DXGI" Version="3.1.1" />
-    <None Include="..\..\deps\ImGui.NET\ImGui.NET.dll" />
+    <PackageReference Include="ImGui.NET" Version="0.2.1" />
     <Content Include="..\..\deps\SDL2\win7-x64\SDL2.dll" Condition="'$(SDL2OnWindows)' == 'true'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

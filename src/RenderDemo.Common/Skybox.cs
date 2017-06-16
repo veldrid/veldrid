@@ -1,3 +1,4 @@
+using ImageSharp;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -45,7 +46,7 @@ namespace Veldrid.RenderDemo
             ChangeRenderContext(ad, rc);
         }
 
-        public void ChangeRenderContext(AssetDatabase ad, RenderContext rc)
+        public unsafe void ChangeRenderContext(AssetDatabase ad, RenderContext rc)
         {
             var factory = rc.ResourceFactory;
 
@@ -62,20 +63,20 @@ namespace Veldrid.RenderDemo
                 viewProvider,
                 Utilities.ConvertToMatrix3x3);
 
-            using (var frontPin = _front.Pixels.Pin())
-            using (var backPin = _back.Pixels.Pin())
-            using (var leftPin = _left.Pixels.Pin())
-            using (var rightPin = _right.Pixels.Pin())
-            using (var topPin = _top.Pixels.Pin())
-            using (var bottomPin = _bottom.Pixels.Pin())
+            fixed (Rgba32* frontPin = &_front.Pixels.DangerousGetPinnableReference())
+            fixed (Rgba32* backPin = &_back.Pixels.DangerousGetPinnableReference())
+            fixed (Rgba32* leftPin = &_left.Pixels.DangerousGetPinnableReference())
+            fixed (Rgba32* rightPin = &_right.Pixels.DangerousGetPinnableReference())
+            fixed (Rgba32* topPin = &_top.Pixels.DangerousGetPinnableReference())
+            fixed (Rgba32* bottomPin = &_bottom.Pixels.DangerousGetPinnableReference())
             {
                 var cubemapTexture = factory.CreateCubemapTexture(
-                    frontPin.Ptr,
-                    backPin.Ptr,
-                    leftPin.Ptr,
-                    rightPin.Ptr,
-                    topPin.Ptr,
-                    bottomPin.Ptr,
+                    (IntPtr)frontPin,
+                    (IntPtr)backPin,
+                    (IntPtr)leftPin,
+                    (IntPtr)rightPin,
+                    (IntPtr)topPin,
+                    (IntPtr)bottomPin,
                     _front.Width,
                     _front.Height,
                     _front.PixelSizeInBytes,

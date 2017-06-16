@@ -113,14 +113,16 @@ namespace Veldrid
             io.FontAtlas.ClearTexData();
         }
 
-        private string[] s_stages = { "Standard" };
+        private string[] _stages = { "Standard" };
+
+        public void SetRenderStages(string[] stages) { _stages = stages; }
 
         /// <summary>
         /// Gets a list of stages participated by this RenderItem.
         /// </summary>
         public IList<string> GetStagesParticipated()
         {
-            return s_stages;
+            return _stages;
         }
 
         /// <summary>
@@ -152,14 +154,14 @@ namespace Veldrid
         /// Sets per-frame data based on the RenderContext and window.
         /// This is called by Update(float).
         /// </summary>
-        public unsafe void SetPerFrameImGuiData(RenderContext rc, float deltaSeconds)
+        private unsafe void SetPerFrameImGuiData(RenderContext rc, float deltaSeconds)
         {
             IO io = ImGui.GetIO();
             io.DisplaySize = new System.Numerics.Vector2(
                 rc.Window.Width / rc.Window.ScaleFactor.X,
                 rc.Window.Height / rc.Window.ScaleFactor.Y);
             io.DisplayFramebufferScale = rc.Window.ScaleFactor;
-            io.DeltaTime = deltaSeconds / 1000; // DeltaTime is in seconds.
+            io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
         }
 
         /// <summary>
@@ -183,7 +185,7 @@ namespace Veldrid
                 // TODO: This does not take into account viewport coordinates.
                 if (window.Exists)
                 {
-                    Point windowPoint = window.NativeWindow.PointToClient(new Point(cursorState.X, cursorState.Y));
+                    Point windowPoint = window.ScreenToClient(new Point(cursorState.X, cursorState.Y));
                     io.MousePosition = new System.Numerics.Vector2(
                         windowPoint.X / window.ScaleFactor.X,
                         windowPoint.Y / window.ScaleFactor.Y);

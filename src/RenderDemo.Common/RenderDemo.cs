@@ -27,7 +27,7 @@ namespace Veldrid.RenderDemo
         private static ShadowMapStage _shadowMapStage;
         private static RendererOption[] _backendOptions;
         private static FrameTimeAverager _fta;
-        private static double _desiredFrameLengthMilliseconds = 1000.0 / 60.0;
+        private static double _desiredFrameLengthSeconds = 1.0 / 60.0;
         private static bool _limitFrameRate = true;
         private static VisibiltyManager _visibilityManager;
         private static ConstantDataProvider<DirectionalLightBuffer> _lightBufferProvider;
@@ -90,7 +90,7 @@ namespace Veldrid.RenderDemo
         private static List<RenderItem> _sponzaQueryResult = new List<RenderItem>();
         private static BoundingBoxWireframeRenderer _sceneBoundsRenderer;
 
-        public static void RunDemo(RenderContext renderContext, params RendererOption[] backendOptions)
+        public static void RunDemo(RenderContext renderContext, OpenTKWindow openTKWindow, params RendererOption[] backendOptions)
         {
             try
             {
@@ -111,7 +111,8 @@ namespace Veldrid.RenderDemo
                 _ad = new LooseFileDatabase(Path.Combine(AppContext.BaseDirectory, "Assets"));
                 _editorWindow = new AssetEditorWindow(_ad);
 
-                _imguiRenderer = new ImGuiRenderer(_rc);
+                _imguiRenderer = new ImGuiRenderer(_rc, ((OpenTKWindow)_rc.Window).NativeWindow);
+                _imguiRenderer.SetRenderStages(CommonStages.ImGui);
 
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
                     new DirectionalLightBuffer(RgbaFloat.White, new Vector3(-.3f, -1f, -1f)));
@@ -146,7 +147,7 @@ namespace Veldrid.RenderDemo
 
                 ChangeScene(SceneWithBoxes());
 
-                _fta = new FrameTimeAverager(666);
+                _fta = new FrameTimeAverager(0.666);
 
                 long previousFrameTicks = 0;
                 Stopwatch sw = new Stopwatch();
@@ -154,19 +155,19 @@ namespace Veldrid.RenderDemo
                 while (_rc.Window.Exists)
                 {
                     long currentFrameTicks = sw.ElapsedTicks;
-                    double deltaMilliseconds = (currentFrameTicks - previousFrameTicks) * (1000.0 / Stopwatch.Frequency);
+                    double deltaSeconds = (currentFrameTicks - previousFrameTicks) / Stopwatch.Frequency;
 
-                    while (_limitFrameRate && deltaMilliseconds < _desiredFrameLengthMilliseconds)
+                    while (_limitFrameRate && deltaSeconds < _desiredFrameLengthSeconds)
                     {
                         currentFrameTicks = sw.ElapsedTicks;
-                        deltaMilliseconds = (currentFrameTicks - previousFrameTicks) * (1000.0 / Stopwatch.Frequency);
+                        deltaSeconds = (currentFrameTicks - previousFrameTicks) / (double)Stopwatch.Frequency;
                     }
 
                     previousFrameTicks = currentFrameTicks;
 
                     var snapshot = _rc.Window.GetInputSnapshot();
                     InputTracker.UpdateFrameInput(snapshot);
-                    Update(deltaMilliseconds, snapshot);
+                    Update(deltaSeconds, snapshot);
                     Draw();
                 }
 
@@ -504,7 +505,7 @@ namespace Veldrid.RenderDemo
             return s_mtlMaterialAsset;
         }
 
-        private static void Update(double deltaMilliseconds, InputSnapshot snapshot)
+        private static void Update(double deltaSeconds, InputSnapshot snapshot)
         {
             float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             if (_autoRotateCamera)
@@ -526,13 +527,13 @@ namespace Veldrid.RenderDemo
                 _lightDirection = Vector3.Normalize(-position);
             }
 
-            _imguiRenderer.SetPerFrameImGuiData(_rc, (float)deltaMilliseconds);
-            _imguiRenderer.UpdateImGuiInput(_rc.Window, snapshot);
+            _imguiRenderer.Update((float)deltaSeconds);
+            _imguiRenderer.OnInputUpdated(snapshot);
             DrawMainMenu();
 
-            _fta.AddTime(deltaMilliseconds);
+            _fta.AddTime(deltaSeconds);
             string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : (_rc is OpenGLESRenderContext) ? "OpenGL ES" : "Direct3D";
-            _rc.Window.Title = $"[{apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
+            _rc.Window.Title = $"[{apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTimeMilliseconds.ToString("#00.00 ms");
             if (InputTracker.GetKeyDown(Key.F4) && (InputTracker.GetKey(Key.AltLeft) || InputTracker.GetKey(Key.AltRight)))
             {
                 _rc.Window.Close();
@@ -617,7 +618,7 @@ namespace Veldrid.RenderDemo
             Vector3 cameraRight = Vector3.Normalize(Vector3.Cross(_camera.LookDirection, Vector3.UnitY));
             Vector3 cameraUp = Vector3.Normalize(Vector3.Cross(cameraRight, _camera.LookDirection));
 
-            float deltaSec = (float)deltaMilliseconds / 1000f;
+            float deltaSecondsFloat = (float)deltaSeconds;
 
             if (!ImGui.IsMouseHoveringAnyWindow() && !ImGui.IsAnyItemActive() && !_autoRotateCamera
                 && (InputTracker.GetMouseButton(MouseButton.Left) || InputTracker.GetMouseButton(MouseButton.Right)))
@@ -631,35 +632,35 @@ namespace Veldrid.RenderDemo
                     sprintFactor = InputTracker.GetKey(Key.ControlLeft) ? (1f / (3 * _cameraSprintFactor)) : sprintFactor;
                     if (InputTracker.GetKey(Key.W))
                     {
-                        _camera.Position += _camera.LookDirection * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        _camera.Position += _camera.LookDirection * _cameraMoveSpeed * sprintFactor * deltaSecondsFloat;
                         if (_camera.UseOrthographicProjection)
                         {
-                            _camera.OrthographicWidth -= 5f * deltaSec * sprintFactor;
+                            _camera.OrthographicWidth -= 5f * deltaSecondsFloat * sprintFactor;
                         }
                     }
                     if (InputTracker.GetKey(Key.S))
                     {
-                        _camera.Position -= _camera.LookDirection * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        _camera.Position -= _camera.LookDirection * _cameraMoveSpeed * sprintFactor * deltaSecondsFloat;
                         if (_camera.UseOrthographicProjection)
                         {
-                            _camera.OrthographicWidth += 5f * deltaSec * sprintFactor;
+                            _camera.OrthographicWidth += 5f * deltaSecondsFloat * sprintFactor;
                         }
                     }
                     if (InputTracker.GetKey(Key.D))
                     {
-                        _camera.Position += cameraRight * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        _camera.Position += cameraRight * _cameraMoveSpeed * sprintFactor * deltaSecondsFloat;
                     }
                     if (InputTracker.GetKey(Key.A))
                     {
-                        _camera.Position -= cameraRight * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        _camera.Position -= cameraRight * _cameraMoveSpeed * sprintFactor * deltaSecondsFloat;
                     }
                     if (InputTracker.GetKey(Key.E))
                     {
-                        _camera.Position += cameraUp * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        _camera.Position += cameraUp * _cameraMoveSpeed * sprintFactor * deltaSecondsFloat;
                     }
                     if (InputTracker.GetKey(Key.Q))
                     {
-                        _camera.Position -= cameraUp * _cameraMoveSpeed * sprintFactor * deltaSec;
+                        _camera.Position -= cameraUp * _cameraMoveSpeed * sprintFactor * deltaSecondsFloat;
                     }
                 }
             }
@@ -673,8 +674,6 @@ namespace Veldrid.RenderDemo
             }
 
             _editorWindow.Render(_rc);
-
-            _imguiRenderer.UpdateFinished();
         }
 
         private static int OctreeFilter(Ray ray, ShadowCaster item, List<RayCastHit<ShadowCaster>> hits)
@@ -995,7 +994,7 @@ namespace Veldrid.RenderDemo
                 }
                 if (_rc.Window.WindowState == WindowState.FullScreen)
                 {
-                    ImGui.Text(string.Format("{0} FPS ({1} ms)", _fta.CurrentAverageFramesPerSecond.ToString("0.0"), _fta.CurrentAverageFrameTime.ToString("#00.00")));
+                    ImGui.Text(string.Format("{0} FPS ({1} ms)", _fta.CurrentAverageFramesPerSecond.ToString("0.0"), _fta.CurrentAverageFrameTimeSeconds.ToString("#00.00")));
                 }
 
                 ImGui.EndMainMenuBar();
@@ -1038,7 +1037,7 @@ https://github.com/mellinoe/veldrid.");
                 {
                     object prefs = Preferences.Instance;
                     Drawer d = new ComplexItemDrawer(typeof(Preferences), false);
-                    ImGui.SetNextTreeNodeOpened(true, SetCondition.FirstUseEver);
+                    ImGui.SetNextTreeNodeOpen(true, SetCondition.FirstUseEver);
                     d.Draw("Preferences", ref prefs, _rc);
                     if (ImGui.Button("Save"))
                     {
@@ -1142,7 +1141,6 @@ https://github.com/mellinoe/veldrid.");
             ((StandardPipelineStage)_renderer.Stages[1]).CameraFrustum = frustum;
 
             _renderer.RenderFrame(_visibilityManager, _camera.Position);
-            _imguiRenderer.NewFrame();
 
             if (_takeScreenshot)
             {
@@ -1153,8 +1151,14 @@ https://github.com/mellinoe/veldrid.");
                 var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), Graphics.PixelFormat.Alpha_UInt16);
                 _screenshotFramebuffer.DepthTexture.CopyTo(cpuDepthTexture);
 
-                ImageSharp.Image image = new ImageSharp.Image(width, height);
-                PixelFormatConversion.ConvertPixelsUInt16DepthToRgbaFloat(width * height, cpuDepthTexture.PixelData, image.Pixels);
+                ImageSharp.Image<ImageSharp.Rgba32>  image = new ImageSharp.Image<ImageSharp.Rgba32>(width, height);
+                unsafe
+                {
+                    fixed (ImageSharp.Rgba32* pixelsPtr = &image.Pixels.DangerousGetPinnableReference())
+                    {
+                        PixelFormatConversion.ConvertPixelsUInt16DepthToRgbaFloat(width * height, cpuDepthTexture.PixelData, pixelsPtr);
+                    }
+                }
                 ImageSharpTexture rgbaDepthTexture = new ImageSharpTexture(image);
                 Console.WriteLine($"Saving file: {width} x {height}, ratio:{(double)width / height}");
                 rgbaDepthTexture.SaveToFile(Environment.TickCount + ".png");
@@ -1174,12 +1178,13 @@ https://github.com/mellinoe/veldrid.");
             private int _frameCount = 0;
             private readonly double _decayRate = .3;
 
-            public double CurrentAverageFrameTime { get; private set; }
-            public double CurrentAverageFramesPerSecond { get { return 1000 / CurrentAverageFrameTime; } }
+            public double CurrentAverageFrameTimeSeconds { get; private set; }
+            public double CurrentAverageFrameTimeMilliseconds => CurrentAverageFrameTimeSeconds * 1000.0;
+            public double CurrentAverageFramesPerSecond => 1 / CurrentAverageFrameTimeSeconds;
 
-            public FrameTimeAverager(double maxTimeMilliseconds)
+            public FrameTimeAverager(double maxTimeSeconds)
             {
-                _timeLimit = maxTimeMilliseconds;
+                _timeLimit = maxTimeSeconds;
             }
 
             public void Reset()
@@ -1188,9 +1193,9 @@ https://github.com/mellinoe/veldrid.");
                 _frameCount = 0;
             }
 
-            public void AddTime(double frameTime)
+            public void AddTime(double seconds)
             {
-                _accumulatedTime += frameTime;
+                _accumulatedTime += seconds;
                 _frameCount++;
                 if (_accumulatedTime >= _timeLimit)
                 {
@@ -1201,8 +1206,8 @@ https://github.com/mellinoe/veldrid.");
             private void Average()
             {
                 double total = _accumulatedTime;
-                CurrentAverageFrameTime =
-                    (CurrentAverageFrameTime * _decayRate)
+                CurrentAverageFrameTimeSeconds =
+                    (CurrentAverageFrameTimeSeconds * _decayRate)
                     + ((total / _frameCount) * (1 - _decayRate));
 
                 _accumulatedTime = 0;

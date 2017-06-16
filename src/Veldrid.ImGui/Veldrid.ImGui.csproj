@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageVersion>1.0.3</PackageVersion>
-    <AssemblyVersion>$(PackageVersion)</AssemblyVersion>
+    <AssemblyVersion>1.0.3</AssemblyVersion>
+    <PackageVersion>$(AssemblyVersion)</PackageVersion>
     <TargetFramework>netstandard1.3</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-    <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
-    <DocumentationFile Condition="'$(ProduceDocumentation)' == 'true'">$(BinDir)/$(AssemblyName).xml</DocumentationFile>
+    <DocumentationFile Condition="'$(Configuration)' == 'Release'">$(BinDir)/$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets/GLSL/*" />
@@ -14,7 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Veldrid/Veldrid.csproj" />
-    <PackageReference Include="ImGui.NET" Version="0.1.9" />
+    <PackageReference Include="ImGui.NET" Version="0.2.1" />
   </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)PackageInfo.props" />
 </Project>

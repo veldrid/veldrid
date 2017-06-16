@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Numerics;
 using System.Threading;
 using Veldrid.Platform;
@@ -59,7 +58,7 @@ namespace Veldrid.Graphics
 
         /// <summary>An event which fires when the window is resized.
         /// When a resize is detected, the next call to ClearBuffer will trigger this event.</summary>
-        public event Action WindowResized;
+        public event Action<int, int> WindowResized;
 
         /// <summary>Gets or sets the VertexBuffer in slot 0.</summary>
         public VertexBuffer VertexBuffer
@@ -262,7 +261,7 @@ namespace Veldrid.Graphics
         {
             if (Interlocked.CompareExchange(ref _needsResizing, 0, 1) == 1)
             {
-                OnWindowResized();
+                OnWindowResized(Window.Width, Window.Height);
             }
 
             PlatformClearBuffer();
@@ -482,10 +481,10 @@ namespace Veldrid.Graphics
             return _bufferProviderPairs;
         }
 
-        protected void OnWindowResized()
+        protected void OnWindowResized(int width, int height)
         {
-            PlatformResize();
-            WindowResized?.Invoke();
+            PlatformResize(width, height);
+            WindowResized?.Invoke(width, height);
         }
 
         protected void PostContextCreated()
@@ -510,7 +509,7 @@ namespace Veldrid.Graphics
 
         protected abstract void PlatformSwapBuffers();
 
-        protected abstract void PlatformResize();
+        protected abstract void PlatformResize(int width, int height);
 
         protected abstract void PlatformSetVertexBuffer(int slot, VertexBuffer vb);
 

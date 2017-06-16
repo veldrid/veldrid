@@ -3,7 +3,6 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using Veldrid.Platform;
-using System.Drawing;
 using System.Numerics;
 using System.Diagnostics;
 
@@ -44,7 +43,7 @@ namespace Veldrid.Graphics.Direct3D
         public D3DRenderContext(Window window, DeviceCreationFlags flags)
             : base(window)
         {
-            CreateAndInitializeDevice(flags);
+            CreateAndInitializeDevice(window, flags);
             CreateAndSetSamplers();
             ResourceFactory = new D3DResourceFactory(_device);
             RenderCapabilities = new RenderCapabilities(false, false);
@@ -59,7 +58,7 @@ namespace Veldrid.Graphics.Direct3D
             _deviceContext = _device.ImmediateContext;
             _syncInterval = 1;
 
-            OnWindowResized();
+            OnWindowResized(window.Width, window.Height);
             SetFramebuffer(_defaultFramebuffer);
             _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
 
@@ -111,14 +110,14 @@ namespace Veldrid.Graphics.Direct3D
             _swapChain.Present(_syncInterval, PresentFlags.None);
         }
 
-        private void CreateAndInitializeDevice(DeviceCreationFlags creationFlags)
+        private void CreateAndInitializeDevice(Window window, DeviceCreationFlags creationFlags)
         {
             var swapChainDescription = new SwapChainDescription()
             {
                 BufferCount = 1,
                 IsWindowed = true,
-                ModeDescription = new ModeDescription(Window.Width, Window.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
-                OutputHandle = Window.Handle,
+                ModeDescription = new ModeDescription(window.Width, window.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
+                OutputHandle = window.Handle,
                 SampleDescription = new SampleDescription(1, 0),
                 SwapEffect = SwapEffect.Discard,
                 Usage = Usage.RenderTargetOutput
@@ -133,9 +132,9 @@ namespace Veldrid.Graphics.Direct3D
 
             _deviceContext = _device.ImmediateContext;
             var factory = _swapChain.GetParent<Factory>();
-            factory.MakeWindowAssociation(Window.Handle, WindowAssociationFlags.IgnoreAll);
+            factory.MakeWindowAssociation(window.Handle, WindowAssociationFlags.IgnoreAll);
 
-            OnWindowResized();
+            OnWindowResized(window.Width, window.Height);
             SetFramebuffer(_defaultFramebuffer);
             _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
             _syncInterval = 0;
@@ -174,19 +173,19 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        protected override void PlatformResize()
+        protected override void PlatformResize(int width, int height)
         {
-            RecreateDefaultFramebuffer();
+            RecreateDefaultFramebuffer(width, height);
         }
 
-        private void RecreateDefaultFramebuffer()
+        private void RecreateDefaultFramebuffer(int width, int height)
         {
             if (_defaultFramebuffer != null)
             {
                 _defaultFramebuffer.Dispose();
             }
 
-            _swapChain.ResizeBuffers(2, Window.Width, Window.Height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
+            _swapChain.ResizeBuffers(2, width, height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
 
             // Get the backbuffer from the swapchain
             using (var backBufferTexture = _swapChain.GetBackBuffer<Texture2D>(0))

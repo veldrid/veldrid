@@ -1,7 +1,6 @@
 ﻿using ImGuiNET;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -26,7 +25,7 @@ namespace Veldrid.RenderDemo.Drawers
 
             PreviewScene scene;
             scene = GetOrCreateScene(obj, rc);
-            scene.Size = new Size((int)imageDimensions.X, (int)imageDimensions.Y);
+            scene.Size = new Point((int)imageDimensions.X, (int)imageDimensions.Y);
             scene.RenderFrame();
             IntPtr id = ImGuiImageHelper.GetOrCreateImGuiBinding(rc, scene.RenderedScene);
             ImGui.Image(id, new Vector2(scene.Width, scene.Height), rc.TopLeftUv, rc.BottomRightUv, Vector4.One, Vector4.One);
@@ -54,11 +53,11 @@ namespace Veldrid.RenderDemo.Drawers
 
         private class PreviewScene
         {
-            private Size _size = new Size(500, 360);
-            public Size Size { get { return _size; } set { if (_size != value) { _size = value; OnSizeChanged(); } } }
+            private Point _size = new Point(500, 360);
+            public Point Size { get { return _size; } set { if (_size != value) { _size = value; OnSizeChanged(); } } }
 
-            public int Width => _size.Width;
-            public int Height => _size.Height;
+            public int Width => _size.X;
+            public int Height => _size.Y;
 
             public float Fov { get; set; } = 1.05f;
 

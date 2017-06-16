@@ -28,7 +28,7 @@ namespace Veldrid.Graphics.OpenGLES
             _defaultFramebuffer = new OpenGLESDefaultFramebuffer(Window);
 
             SetInitialStates();
-            OnWindowResized();
+            OnWindowResized(Window.Width, Window.Height);
 
             PostContextCreated();
         }
@@ -127,7 +127,7 @@ namespace Veldrid.Graphics.OpenGLES
             Utilities.CheckLastGLES3Error();
         }
 
-        protected override void PlatformResize()
+        protected override void PlatformResize(int width, int height)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -152,7 +152,7 @@ namespace Veldrid.Graphics.OpenGLES
             SetFramebuffer(_defaultFramebuffer);
         }
 
-        protected override void PlatformSetScissorRectangle(System.Drawing.Rectangle rectangle)
+        protected override void PlatformSetScissorRectangle(Rectangle rectangle)
         {
             GL.Enable(EnableCap.ScissorTest);
             Utilities.CheckLastGLES3Error();

@@ -1,5 +1,6 @@
 ﻿using ImageSharp;
 using ImageSharp.PixelFormats;
+using System;
 using System.IO;
 
 namespace Veldrid.Graphics
@@ -12,21 +13,21 @@ namespace Veldrid.Graphics
         /// <summary>
         /// The ImageSharp image.
         /// </summary>
-        public Image Image { get; }
+        public Image<Rgba32> ISImage { get; }
 
         /// <summary>
         /// The raw pixel data, stored in RGBA format, where each element is a byte (32 bits per pixel).
         /// </summary>
-        public Rgba32[] Pixels => Image.Pixels;
+        public Span<Rgba32> Pixels => ISImage.Pixels;
 
         /// <summary>
         /// The width of the texture.
         /// </summary>
-        public int Width => Image.Width;
+        public int Width => ISImage.Width;
         /// <summary>
         /// The height of the iamge.
         /// </summary>
-        public int Height => Image.Height;
+        public int Height => ISImage.Height;
 
         /// <summary>
         /// The <see cref="PixelFormat"/> of the data.
@@ -46,7 +47,7 @@ namespace Veldrid.Graphics
         {
             using (FileStream fs = File.OpenRead(filePath))
             {
-                Image = Image.Load(fs);
+                ISImage = Image.Load(fs);
             }
         }
 
@@ -54,9 +55,9 @@ namespace Veldrid.Graphics
         /// Constructs an ImageSharpTexture from the existing ImageProcessor image.
         /// </summary>
         /// <param name="image">The existing image.</param>
-        public ImageSharpTexture(Image image)
+        public ImageSharpTexture(Image<Rgba32> image)
         {
-            Image = image;
+            ISImage = image;
         }
         
         /// <summary>
@@ -67,7 +68,7 @@ namespace Veldrid.Graphics
         {
             using (FileStream fs = File.OpenWrite(path))
             {
-                Image.Save(fs);
+                ISImage.Save(fs);
             }
         }
 
@@ -76,18 +77,24 @@ namespace Veldrid.Graphics
         /// </summary>
         /// <param name="producer"></param>
         /// <returns>A new <see cref="DeviceTexture2D"/> containing this image's pixel data.</returns>
-        public DeviceTexture2D CreateDeviceTexture(DeviceTextureCreator producer)
+        public unsafe DeviceTexture2D CreateDeviceTexture(DeviceTextureCreator producer)
         {
-            return producer.CreateTexture(Pixels, Width, Height, PixelSizeInBytes, Format);
+            fixed (Rgba32* pixelPtr = &Pixels.DangerousGetPinnableReference())
+            {
+                return producer.CreateTexture(new IntPtr(pixelPtr), Width, Height, PixelSizeInBytes, Format);
+            }
         }
 
         /// <summary>
         /// Accepts pixel data from the given provider. This will overrite the pixel data in this texture.
         /// </summary>
         /// <param name="pixelDataProvider">The data provider to accept pixel information from.</param>
-        public void AcceptPixelData(PixelDataProvider pixelDataProvider)
+        public unsafe void AcceptPixelData(PixelDataProvider pixelDataProvider)
         {
-            pixelDataProvider.SetPixelData(Pixels, Width, Height, PixelSizeInBytes);
+            fixed (Rgba32* pixelPtr = &Pixels.DangerousGetPinnableReference())
+            {
+                pixelDataProvider.SetPixelData(new IntPtr(pixelPtr), Width, Height, PixelSizeInBytes);
+            }
         }
     }
 }

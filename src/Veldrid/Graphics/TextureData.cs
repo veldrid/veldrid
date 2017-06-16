@@ -102,7 +102,6 @@ namespace Veldrid.Graphics
             : this(new T[width * height], width, height, pixelSizeInBytes, format)
         { }
 
-        [Newtonsoft.Json.JsonConstructor]
         public RawTextureDataArray(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
             : base(width, height, pixelSizeInBytes, format)
         {

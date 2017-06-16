@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Drawing;
 using System.Numerics;
-using Veldrid.Graphics;
-using Veldrid.Platform;
 
 namespace Veldrid.Platform
 {

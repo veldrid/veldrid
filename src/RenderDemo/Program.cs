@@ -77,7 +77,7 @@ namespace Veldrid.RenderDemo
                 options.Add(openGLESOption);
             }
 
-            RenderDemo.RunDemo(rc, options.ToArray());
+            RenderDemo.RunDemo(rc, window, options.ToArray());
         }
 
         private static OpenGLESRenderContext CreateDefaultOpenGLESRenderContext(OpenTKWindow window)

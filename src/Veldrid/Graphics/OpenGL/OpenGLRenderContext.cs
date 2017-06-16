@@ -49,7 +49,7 @@ namespace Veldrid.Graphics.OpenGL
             _defaultFramebuffer = new OpenGLDefaultFramebuffer(Window);
 
             SetInitialStates();
-            OnWindowResized();
+            OnWindowResized(Window.Width, Window.Height);
 
             PostContextCreated();
 
@@ -144,7 +144,7 @@ namespace Veldrid.Graphics.OpenGL
             GL.FrontFace(FrontFaceDirection.Cw);
         }
 
-        protected override void PlatformResize()
+        protected override void PlatformResize(int width, int height)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -168,7 +168,7 @@ namespace Veldrid.Graphics.OpenGL
             SetFramebuffer(_defaultFramebuffer);
         }
 
-        protected override void PlatformSetScissorRectangle(System.Drawing.Rectangle rectangle)
+        protected override void PlatformSetScissorRectangle(Rectangle rectangle)
         {
             GL.Enable(EnableCap.ScissorTest);
             GL.Scissor(

@@ -2,20 +2,9 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-    <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="OpenTK.NETCore" Version="1.1.2571.6431" />
-    <PackageReference Include="SharpDX" Version="3.1.1" />
-    <PackageReference Include="SharpDX.D3DCompiler" Version="3.1.1" />
-    <PackageReference Include="SharpDX.Direct3D11" Version="3.1.1" />
-    <PackageReference Include="SharpDX.DXGI" Version="3.1.1" />
-    <PackageReference Include="System.AppContext" Version="4.3.0" />
-    <PackageReference Include="System.Collections" Version="4.3.0" />
-    <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />

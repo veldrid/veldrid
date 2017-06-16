@@ -45,7 +45,7 @@ namespace Veldrid.RenderDemo
             {
                 if (ke.Down)
                 {
-                    KeyDown((Key)ke.Key);
+                    KeyDown(ke.Key);
                 }
                 else
                 {

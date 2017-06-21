@@ -80,9 +80,9 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _worldMatrixProvider.Data = Matrix4x4.CreateScale(width)
                 * Matrix4x4.CreateTranslation(rc.Viewport.Width - width - 20, 20, 0);
 
-            rc.SetVertexBuffer(_vertexBuffer);
-            rc.SetIndexBuffer(_indexBuffer);
-            rc.SetMaterial(_material);
+            rc.VertexBuffer=_vertexBuffer;
+            rc.IndexBuffer =_indexBuffer;
+            rc.Material = _material;
             rc.SetDepthStencilState(_depthDisabledState);
             rc.DrawIndexedPrimitives(6, 0);
             rc.SetDepthStencilState(rc.DefaultDepthStencilState);

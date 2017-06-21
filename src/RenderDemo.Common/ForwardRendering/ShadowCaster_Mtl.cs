@@ -109,18 +109,18 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         public void Render(RenderContext rc, string pipelineStage)
         {
-            rc.SetVertexBuffer(_vb);
-            rc.SetIndexBuffer(_ib);
+            rc.VertexBuffer =_vb;
+            rc.IndexBuffer= _ib;
 
             if (pipelineStage == "ShadowMap")
             {
-                rc.SetMaterial(_shadowPassMaterial);
+                rc.Material = _shadowPassMaterial;
                 _shadowPassMaterial.ApplyPerObjectInput(_worldProvider);
             }
             else
             {
                 Debug.Assert(pipelineStage == "Standard");
-                rc.SetMaterial(_regularPassMaterial);
+                rc.Material =_regularPassMaterial;
                 _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
                 if (_overrideTextureBinding != null)
                 {

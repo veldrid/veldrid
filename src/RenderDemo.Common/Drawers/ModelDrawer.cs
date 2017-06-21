@@ -228,16 +228,16 @@ namespace Veldrid.RenderDemo.Drawers
 
             public void Render(RenderContext rc, string stage)
             {
-                rc.SetVertexBuffer(_vb);
-                rc.SetIndexBuffer(_ib);
+                rc.VertexBuffer = _vb;
+                rc.IndexBuffer =_ib;
                 if (stage == "ShadowMap")
                 {
-                    rc.SetMaterial(_shadowmapMaterial);
+                    rc.Material = _shadowmapMaterial;
                     _shadowmapMaterial.ApplyPerObjectInput(_perObjectInputs[0]);
                 }
                 else
                 {
-                    rc.SetMaterial(_regularMaterial);
+                    rc.Material = _regularMaterial;
                     _regularMaterial.ApplyPerObjectInputs(_perObjectInputs);
                     if (_textureBinding != null)
                     {

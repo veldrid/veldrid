@@ -90,6 +90,7 @@ namespace Veldrid.RenderDemo
         private static List<float> _rayCastDistances = new List<float>();
         private static List<RenderItem> _sponzaQueryResult = new List<RenderItem>();
         private static BoundingBoxWireframeRenderer _sceneBoundsRenderer;
+        private static bool s_needsResizing;
 
         public static void RunDemo(RenderContext renderContext, Window window, params RendererOption[] backendOptions)
         {
@@ -99,6 +100,8 @@ namespace Veldrid.RenderDemo
                 _window = window;
                 _backendOptions = backendOptions;
                 _selectedOption = backendOptions.FirstOrDefault();
+
+                _window.Resized += OnWindowResized;
 
                 _shadowMapStage = new ShadowMapStage(_rc);
                 _configurableStages = new PipelineStage[]
@@ -113,7 +116,7 @@ namespace Veldrid.RenderDemo
                 _ad = new LooseFileDatabase(Path.Combine(AppContext.BaseDirectory, "Assets"));
                 _editorWindow = new AssetEditorWindow(_ad);
 
-                _imguiRenderer = new ImGuiRenderer(_rc, window);
+                _imguiRenderer = new SwappableImGuiRenderer(_rc, window);
                 _imguiRenderer.SetRenderStages(CommonStages.ImGui);
 
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
@@ -157,7 +160,7 @@ namespace Veldrid.RenderDemo
                 while (window.Exists)
                 {
                     long currentFrameTicks = sw.ElapsedTicks;
-                    double deltaSeconds = (currentFrameTicks - previousFrameTicks) / Stopwatch.Frequency;
+                    double deltaSeconds = (currentFrameTicks - previousFrameTicks) / (double)Stopwatch.Frequency;
 
                     while (_limitFrameRate && deltaSeconds < _desiredFrameLengthSeconds)
                     {
@@ -181,6 +184,11 @@ namespace Veldrid.RenderDemo
                     // Console.WriteLine("GL Error: " + GL.GetError());
                 }
             }
+        }
+
+        private static void OnWindowResized()
+        {
+            s_needsResizing = true;
         }
 
         private static void UpdatePointLights()
@@ -759,7 +767,7 @@ namespace Veldrid.RenderDemo
 
         private static void ToggleFullScreenState()
         {
-            _window.WindowState = _window.WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState.FullScreen;
+            _window.WindowState = _window.WindowState == WindowState.BorderlessFullScreen ? WindowState.Normal : WindowState.BorderlessFullScreen;
         }
 
         private static void DrawMainMenu()
@@ -853,7 +861,7 @@ namespace Veldrid.RenderDemo
                 }
                 if (ImGui.BeginMenu("View"))
                 {
-                    if (ImGui.MenuItem("Full Screen", "F11", _window.WindowState == WindowState.FullScreen, true))
+                    if (ImGui.MenuItem("Full Screen", "F11", _window.WindowState == WindowState.BorderlessFullScreen, true))
                     {
                         ToggleFullScreenState();
                     }
@@ -994,7 +1002,7 @@ namespace Veldrid.RenderDemo
                     }
                     ImGui.EndMenu();
                 }
-                if (_window.WindowState == WindowState.FullScreen)
+                if (_window.WindowState == WindowState.BorderlessFullScreen)
                 {
                     ImGui.Text(string.Format("{0} FPS ({1} ms)", _fta.CurrentAverageFramesPerSecond.ToString("0.0"), _fta.CurrentAverageFrameTimeSeconds.ToString("#00.00")));
                 }
@@ -1142,6 +1150,11 @@ https://github.com/mellinoe/veldrid.");
             BoundingFrustum frustum = new BoundingFrustum(_camera.ViewProvider.Data * _camera.ProjectionProvider.Data);
             ((StandardPipelineStage)_renderer.Stages[1]).CameraFrustum = frustum;
 
+            if (s_needsResizing)
+            {
+                s_needsResizing = false;
+                _rc.NotifyWindowResized(_window.Width, _window.Height);
+            }
             _renderer.RenderFrame(_visibilityManager, _camera.Position);
 
             if (_takeScreenshot)

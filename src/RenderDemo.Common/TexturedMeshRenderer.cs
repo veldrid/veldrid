@@ -123,19 +123,19 @@ namespace Veldrid.RenderDemo
 
         public IList<string> GetStagesParticipated() => CommonStages.Standard;
 
-        public void Render(RenderContext context, string pipelineStage)
+        public void Render(RenderContext rc, string pipelineStage)
         {
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             _worldProvider.Data =
                 Matrix4x4.CreateScale(Scale)
                 * Matrix4x4.CreateTranslation(Position);
 
-            context.SetVertexBuffer(s_vb);
-            context.SetIndexBuffer(s_ib);
-            context.SetMaterial(s_material);
+            rc.VertexBuffer = s_vb;
+            rc.IndexBuffer = s_ib;
+            rc.Material = s_material;
             s_material.ApplyPerObjectInputs(_perObjectProviders);
 
-            context.DrawIndexedPrimitives(_indices.Length, 0);
+            rc.DrawIndexedPrimitives(_indices.Length, 0);
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)

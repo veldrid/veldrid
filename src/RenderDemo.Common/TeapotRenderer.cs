@@ -132,9 +132,9 @@ namespace Veldrid.RenderDemo
                 * Matrix4x4.CreateFromQuaternion(Rotation)
                 * Matrix4x4.CreateTranslation(Position);
 
-            context.SetVertexBuffer(_vertexBuffer);
-            context.SetIndexBuffer(_indexBuffer);
-            context.SetMaterial(_material);
+            context.VertexBuffer = _vertexBuffer;
+            context.IndexBuffer = _indexBuffer;
+            context.Material = _material;
             _material.ApplyPerObjectInputs(_perObjectProviders);
 
             context.DrawIndexedPrimitives(_teapotMesh.Indices.Length, 0);

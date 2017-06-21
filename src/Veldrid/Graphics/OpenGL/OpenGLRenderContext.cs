@@ -16,24 +16,26 @@ namespace Veldrid.Graphics.OpenGL
         private PrimitiveType _primitiveType = PrimitiveType.Triangles;
         private int _vertexAttributesBound;
         private bool _vertexLayoutChanged;
+        private Action _swapBufferFunc;
 
         public DebugSeverity MinimumLogSeverity { get; set; } = DebugSeverity.DebugSeverityLow;
 
-        public OpenGLRenderContext(IntPtr contextHandle, Func<string, IntPtr> getProcAddress, Func<IntPtr> getCurrentContext)
+        public OpenGLRenderContext(IntPtr contextHandle, Func<string, IntPtr> getProcAddress, Func<IntPtr> getCurrentContext, Action swapBufferFunc)
         {
             _resourceFactory = new OpenGLResourceFactory();
             RenderCapabilities = new RenderCapabilities(true, true);
+            _swapBufferFunc = swapBufferFunc;
             GraphicsContext.GetAddressDelegate getAddressFunc = s => getProcAddress(s);
             GraphicsContext.GetCurrentContextDelegate getCurrentContextFunc = () => new ContextHandle(getCurrentContext());
             _openGLGraphicsContext = new GraphicsContext(new ContextHandle(contextHandle), getAddressFunc, getCurrentContextFunc);
 
             _openGLGraphicsContext.LoadAll();
 
-            // NOTE: I am binding a single VAO globally. This may or may not be a good idea.
+            // NOTE: I am binding a single VAO globally.
             _vertexArrayID = GL.GenVertexArray();
             GL.BindVertexArray(_vertexArrayID);
 
-            _defaultFramebuffer = new OpenGLDefaultFramebuffer(1, 1);
+            _defaultFramebuffer = new OpenGLDefaultFramebuffer(960, 540);
 
             SetInitialStates();
 
@@ -72,7 +74,14 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSwapBuffers()
         {
-            _openGLGraphicsContext.SwapBuffers();
+            if (_swapBufferFunc != null)
+            {
+                _swapBufferFunc();
+            }
+            else
+            {
+                _openGLGraphicsContext.SwapBuffers();
+            }
         }
 
         public override void DrawIndexedPrimitives(int count, int startingIndex)
@@ -123,11 +132,8 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformResize(int width, int height)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                // Documentation indicates that this needs to be called on OSX for proper behavior.
-                // _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
-            }
+            _defaultFramebuffer.Width = width;
+            _defaultFramebuffer.Height = height;
         }
 
         protected override void PlatformSetViewport(int x, int y, int width, int height)

@@ -59,11 +59,6 @@ namespace Veldrid.Graphics
             set { SetVertexBufferCore(0, value); }
         }
 
-        public void SetVertexBuffer(VertexBuffer vb)
-        {
-            SetVertexBufferCore(0, vb);
-        }
-
         /// <summary>Changes the active VertexBuffer.</summary>
         public void SetVertexBuffer(int slot, VertexBuffer vb)
         {
@@ -88,16 +83,13 @@ namespace Veldrid.Graphics
         public IndexBuffer IndexBuffer
         {
             get { return _indexBuffer; }
-            set { SetIndexBuffer(value); }
-        }
-
-        /// <summary>Changes the active IndexBuffer.</summary>
-        public void SetIndexBuffer(IndexBuffer ib)
-        {
-            if (ib != _indexBuffer)
+            set
             {
-                PlatformSetIndexBuffer(ib);
-                _indexBuffer = ib;
+                if (value != _indexBuffer)
+                {
+                    PlatformSetIndexBuffer(value);
+                    _indexBuffer = value;
+                }
             }
         }
 
@@ -105,64 +97,55 @@ namespace Veldrid.Graphics
         public Material Material
         {
             get { return _material; }
-            set { SetMaterial(value); }
-        }
-
-        /// <summary>Changes the active Material.</summary>
-        public void SetMaterial(Material material)
-        {
-            _material = material;
-            SetShaderSet(material.ShaderSet);
-            SetShaderConstantBindings(material.ConstantBindings);
-            SetTextureBindingSlots(material.TextureBindingSlots);
-            foreach (var defaultBinding in material.DefaultTextureBindings)
+            set
             {
-                SetTexture(defaultBinding.Slot, defaultBinding.TextureBinding);
+                _material = value;
+                ShaderSet = value.ShaderSet;
+                ShaderConstantBindings = value.ConstantBindings;
+                ShaderTextureBindingSlots = value.TextureBindingSlots;
+                foreach (var defaultBinding in value.DefaultTextureBindings)
+                {
+                    SetTexture(defaultBinding.Slot, defaultBinding.TextureBinding);
+                }
             }
         }
 
         public ShaderSet ShaderSet
         {
             get { return _shaderSet; }
-            set { SetShaderSet(value); }
-        }
-
-        public void SetShaderSet(ShaderSet shaderSet)
-        {
-            if (_shaderSet != shaderSet)
+            set
             {
-                PlatformSetShaderSet(shaderSet);
-                _shaderSet = shaderSet;
+                if (_shaderSet != value)
+                {
+                    PlatformSetShaderSet(value);
+                    _shaderSet = value;
+                }
             }
         }
 
         public ShaderConstantBindings ShaderConstantBindings
         {
             get { return _constantBindings; }
-            set { SetShaderConstantBindings(value); }
-        }
-
-        public void SetShaderConstantBindings(ShaderConstantBindings shaderConstantBindings)
-        {
-            if (_constantBindings != shaderConstantBindings)
+            set
             {
-                PlatformSetShaderConstantBindings(shaderConstantBindings);
-                _constantBindings = shaderConstantBindings;
+                if (_constantBindings != value)
+                {
+                    PlatformSetShaderConstantBindings(value);
+                    _constantBindings = value;
+                }
             }
         }
 
         public ShaderTextureBindingSlots ShaderTextureBindingSlots
         {
             get { return _textureBindingSlots; }
-            set { SetTextureBindingSlots(value); }
-        }
-
-        public void SetTextureBindingSlots(ShaderTextureBindingSlots bindingSlots)
-        {
-            if (_textureBindingSlots != bindingSlots)
+            set
             {
-                PlatformSetShaderTextureBindingSlots(bindingSlots);
-                _textureBindingSlots = bindingSlots;
+                if (_textureBindingSlots != value)
+                {
+                    PlatformSetShaderTextureBindingSlots(value);
+                    _textureBindingSlots = value;
+                }
             }
         }
 
@@ -466,6 +449,12 @@ namespace Veldrid.Graphics
         public IEnumerable<KeyValuePair<string, BufferProviderPair>> GetAllGlobalBufferProviderPairs()
         {
             return _bufferProviderPairs;
+        }
+
+        // TODO: REMOVE THIS.
+        public void NotifyWindowResized(int width, int height)
+        {
+            OnWindowResized(width, height);
         }
 
         protected void OnWindowResized(int width, int height)

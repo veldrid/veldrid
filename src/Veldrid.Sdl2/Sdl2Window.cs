@@ -76,7 +76,8 @@ namespace Veldrid.Sdl2
             get
             {
                 SDL_WindowFlags flags = SDL_GetWindowFlags(_window);
-                if ((flags & (SDL_WindowFlags.Borderless | SDL_WindowFlags.Fullscreen)) == (SDL_WindowFlags.Borderless | SDL_WindowFlags.Fullscreen))
+                if (((flags & SDL_WindowFlags.FullScreenDesktop) == SDL_WindowFlags.FullScreenDesktop)
+                    || ((flags & (SDL_WindowFlags.Borderless | SDL_WindowFlags.Fullscreen)) == (SDL_WindowFlags.Borderless | SDL_WindowFlags.Fullscreen)))
                 {
                     return WindowState.BorderlessFullScreen;
                 }
@@ -728,6 +729,7 @@ namespace Veldrid.Sdl2
                     Close();
                     break;
                 default:
+                    Debug.WriteLine("Unhandled SDL WindowEvent: " + windowEvent.@event);
                     break;
             }
         }

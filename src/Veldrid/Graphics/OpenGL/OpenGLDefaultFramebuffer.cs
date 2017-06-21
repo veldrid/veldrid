@@ -6,13 +6,10 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLDefaultFramebuffer : OpenGLFramebufferBase, Framebuffer, IDisposable
     {
-        private readonly int _width;
-        private readonly int _height;
-
         public OpenGLDefaultFramebuffer(int width, int height)
         {
-            _width = width;
-            _height = height;
+            Width = width;
+            Height = height;
         }
 
         public DeviceTexture2D ColorTexture
@@ -51,9 +48,9 @@ namespace Veldrid.Graphics.OpenGL
             throw new NotSupportedException("Cannot set color textures on OpenGLDefaultFramebuffer.");
         }
 
-        public int Width => _width;
+        public int Width { get; internal set; }
 
-        public int Height => _height;
+        public int Height { get; internal set; }
 
         internal override void Apply()
         {

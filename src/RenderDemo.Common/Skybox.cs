@@ -97,9 +97,9 @@ namespace Veldrid.RenderDemo
 
         public void Render(RenderContext rc, string pipelineStage)
         {
-            rc.SetVertexBuffer(_vb);
-            rc.SetIndexBuffer(_ib);
-            rc.SetMaterial(_material);
+            rc.VertexBuffer = _vb;
+            rc.IndexBuffer = _ib;
+            rc.Material = _material;
             RasterizerState previousRasterState = rc.RasterizerState;
             rc.SetRasterizerState(_rasterizerState);
             _material.UseTexture(0, _cubemapBinding);

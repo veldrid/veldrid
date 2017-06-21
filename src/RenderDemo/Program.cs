@@ -25,7 +25,7 @@ namespace Veldrid.RenderDemo
             }
             else
             {
-                bool useGLES = true;
+                bool useGLES = false;
                 if (useGLES)
                 {
                     rc = CreateDefaultOpenGLESRenderContext(window);
@@ -89,7 +89,17 @@ namespace Veldrid.RenderDemo
             {
                 Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)SDL_GLContextFlag.Debug);
             }
+
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 4);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 0);
+
             IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
+            unsafe
+            {
+                int major, minor;
+                Sdl2Native.SDL_GL_GetAttribute(SDL_GLAttribute.ContextMajorVersion, &major);
+                Sdl2Native.SDL_GL_GetAttribute(SDL_GLAttribute.ContextMinorVersion, &minor);
+            }
             if (contextHandle == IntPtr.Zero)
             {
                 unsafe
@@ -99,8 +109,10 @@ namespace Veldrid.RenderDemo
                     throw new InvalidOperationException("Unable to create GL Context: " + errorString);
                 }
             }
+
             Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, contextHandle);
-            return new OpenGLRenderContext(contextHandle, Sdl2Native.SDL_GL_GetProcAddress, Sdl2Native.SDL_GL_GetCurrentContext);
+            var rc = new OpenGLRenderContext(contextHandle, Sdl2Native.SDL_GL_GetProcAddress, Sdl2Native.SDL_GL_GetCurrentContext, () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
+            return rc;
         }
 
         private static D3DRenderContext CreateDefaultD3dRenderContext(Window window)

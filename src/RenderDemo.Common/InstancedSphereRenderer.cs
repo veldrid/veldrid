@@ -71,7 +71,7 @@ namespace Veldrid.RenderDemo
                 Shader vs = factory.CreateShader(ShaderType.Vertex, "instanced-simple-vertex");
                 Shader fs = factory.CreateShader(ShaderType.Fragment, "instanced-simple-frag");
                 VertexInputLayout inputLayout = factory.CreateInputLayout(
-                    vs, 
+                    vs,
                     new MaterialVertexInput(VertexPosition.SizeInBytes, new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3)),
                     new MaterialVertexInput(
                         InstanceData.SizeInBytes,
@@ -150,8 +150,8 @@ namespace Veldrid.RenderDemo
         {
             rc.SetVertexBuffer(0, _sphereGeometryVB);
             rc.SetVertexBuffer(1, _instanceVB);
-            rc.SetIndexBuffer(_ib);
-            rc.SetMaterial(_material);
+            rc.IndexBuffer = _ib;
+            rc.Material = _material;
             _material.ApplyPerObjectInput(_worldProvider);
             rc.DrawInstancedPrimitives(_indexCount, InstanceCount, 0);
         }

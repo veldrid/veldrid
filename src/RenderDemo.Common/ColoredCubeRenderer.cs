@@ -114,8 +114,8 @@ namespace Veldrid.RenderDemo
 
             context.SetVertexBuffer(0, s_vb0);
             context.SetVertexBuffer(1, s_vb1);
-            context.SetIndexBuffer(s_ib);
-            context.SetMaterial(s_material);
+            context.IndexBuffer = s_ib;
+            context.Material = s_material;
             s_material.ApplyPerObjectInput(_modelViewProvider);
 
             context.DrawIndexedPrimitives(s_cubeIndices.Length, 0);

@@ -1,6 +1,4 @@
 ﻿using ImGuiNET;
-using OpenTK;
-using OpenTK.Input;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -53,6 +51,13 @@ namespace Veldrid
             SetPerFrameImGuiData(window, 1f / 60f);
 
             ImGui.NewFrame();
+        }
+
+        public void SetRenderContext(RenderContext rc)
+        {
+            Dispose();
+            _rc = rc;
+            InitializeContextObjects(rc);
         }
 
         private void InitializeContextObjects(RenderContext rc)
@@ -177,34 +182,13 @@ namespace Veldrid
         private unsafe void UpdateImGuiInput(Window window, InputSnapshot snapshot)
         {
             IO io = ImGui.GetIO();
-            MouseState cursorState = Mouse.GetCursorState();
-            MouseState mouseState = Mouse.GetState();
 
-            if (window.Bounds.Contains(cursorState.X, cursorState.Y) && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                // TODO: This does not take into account viewport coordinates.
-                if (window.Exists)
-                {
-                    Point windowPoint = window.ScreenToClient(new Point(cursorState.X, cursorState.Y));
-                    io.MousePosition = new System.Numerics.Vector2(
-                        windowPoint.X / window.ScaleFactor.X,
-                        windowPoint.Y / window.ScaleFactor.Y);
-                }
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                io.MousePosition = new System.Numerics.Vector2(
-                        cursorState.X,
-                        cursorState.Y);
-            }
-            else
-            {
-                io.MousePosition = new System.Numerics.Vector2(-1f, -1f);
-            }
+            Vector2 mousePosition = snapshot.MousePosition;
 
-            io.MouseDown[0] = mouseState.LeftButton == ButtonState.Pressed;
-            io.MouseDown[1] = mouseState.RightButton == ButtonState.Pressed;
-            io.MouseDown[2] = mouseState.MiddleButton == ButtonState.Pressed;
+            io.MousePosition = mousePosition;
+            io.MouseDown[0] = snapshot.IsMouseDown(MouseButton.Left);
+            io.MouseDown[1] = snapshot.IsMouseDown(MouseButton.Right);
+            io.MouseDown[2] = snapshot.IsMouseDown(MouseButton.Middle);
 
             float delta = snapshot.WheelDelta;
             io.MouseWheel = delta;
@@ -309,9 +293,9 @@ namespace Veldrid
             rc.SetDepthStencilState(_depthDisabledState);
             RasterizerState previousRasterizerState = rc.RasterizerState;
             rc.SetRasterizerState(_rasterizerState);
-            rc.SetVertexBuffer(_vertexBuffer);
-            rc.SetIndexBuffer(_indexBuffer);
-            rc.SetMaterial(_material);
+            rc.VertexBuffer = _vertexBuffer;
+            rc.IndexBuffer =_indexBuffer;
+            rc.Material = _material;
 
             ImGui.ScaleClipRects(draw_data, ImGui.GetIO().DisplayFramebufferScale);
 

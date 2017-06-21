@@ -17,8 +17,6 @@ namespace Veldrid.Graphics
         private readonly Vector2 _topLeftUvCoordinate;
         private readonly Vector2 _bottomRightUvCoordinate;
 
-        private int _needsResizing;
-
         // Device State
         private Framebuffer _framebuffer;
         private VertexBuffer[] _vertexBuffers = new VertexBuffer[MaxVertexBuffers];
@@ -38,17 +36,11 @@ namespace Veldrid.Graphics
 
         private readonly Dictionary<string, BufferProviderPair> _bufferProviderPairs = new Dictionary<string, BufferProviderPair>();
 
-        public RenderContext(Window window)
+        public RenderContext()
         {
-            Window = window;
-            window.Resized += () => _needsResizing = 1;
-
             _topLeftUvCoordinate = GetTopLeftUvCoordinate();
             _bottomRightUvCoordinate = GetBottomRightUvCoordinate();
         }
-
-        /// <summary>The window to which this RenderContext renders.</summary>
-        public Window Window { get; }
 
         /// <summary>Gets or sets the color which is used when clearing the Framebuffer when ClearBuffer() is called.</summary>
         public virtual RgbaFloat ClearColor { get; set; } = RgbaFloat.CornflowerBlue;
@@ -259,11 +251,6 @@ namespace Veldrid.Graphics
         /// The color is cleared to the value stored in ClearColor. </summary>
         public void ClearBuffer()
         {
-            if (Interlocked.CompareExchange(ref _needsResizing, 0, 1) == 1)
-            {
-                OnWindowResized(Window.Width, Window.Height);
-            }
-
             PlatformClearBuffer();
             NullInputs();
             FlushConstantBufferData();

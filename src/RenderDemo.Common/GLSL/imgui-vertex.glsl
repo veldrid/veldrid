@@ -1,7 +1,4 @@
 ﻿#version 330 core
-#ifdef GL_ES
-#extension GL_ARB_gpu_shader5 : enable
-#endif
 
 uniform ProjectionMatrixBuffer
 {

@@ -20,6 +20,14 @@ namespace Veldrid
             Height = height;
         }
 
+        public Rectangle(Point topLeft, Point size)
+        {
+            X = topLeft.X;
+            Y = topLeft.Y;
+            Width = size.X;
+            Height = size.Y;
+        }
+
         public int Left => X;
         public int Right => X + Width;
         public int Top => Y;

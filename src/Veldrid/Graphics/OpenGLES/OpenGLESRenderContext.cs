@@ -17,18 +17,18 @@ namespace Veldrid.Graphics.OpenGLES
 
         public DebugSeverity MinimumLogSeverity { get; set; } = DebugSeverity.DebugSeverityLow;
 
-        public OpenGLESRenderContext(OpenTKWindow window) : base(window)
+        public OpenGLESRenderContext(Window window, OpenTK.Platform.IWindowInfo windowInfo)
         {
             ResourceFactory = new OpenGLESResourceFactory();
             RenderCapabilities = new RenderCapabilities(false, false);
-            _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo, 2, 0, GraphicsContextFlags.Embedded);
-            _openGLGraphicsContext.MakeCurrent(window.OpenTKWindowInfo);
+            _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, windowInfo, 2, 0, GraphicsContextFlags.Embedded);
+            _openGLGraphicsContext.MakeCurrent(windowInfo);
             _openGLGraphicsContext.LoadAll();
 
-            _defaultFramebuffer = new OpenGLESDefaultFramebuffer(Window);
+            _defaultFramebuffer = new OpenGLESDefaultFramebuffer(window);
 
             SetInitialStates();
-            OnWindowResized(Window.Width, Window.Height);
+            OnWindowResized(window.Width, window.Height);
 
             PostContextCreated();
         }
@@ -44,7 +44,7 @@ namespace Veldrid.Graphics.OpenGLES
             set
             {
                 base.ClearColor = value;
-                Color4 openTKColor = RgbaFloat.ToOpenTKColor(value);
+                Color4 openTKColor = new Color4(value.R, value.G, value.B, value.A);
                 GL.ClearColor(openTKColor);
                 Utilities.CheckLastGLES3Error();
             }
@@ -58,10 +58,7 @@ namespace Veldrid.Graphics.OpenGLES
 
         protected override void PlatformSwapBuffers()
         {
-            if (Window.Exists)
-            {
-                _openGLGraphicsContext.SwapBuffers();
-            }
+            _openGLGraphicsContext.SwapBuffers();
         }
 
         public override void DrawIndexedPrimitives(int count, int startingIndex)
@@ -132,7 +129,7 @@ namespace Veldrid.Graphics.OpenGLES
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // Documentation indicates that this needs to be called on OSX for proper behavior.
-                _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
+                // _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
             }
         }
 
@@ -158,7 +155,7 @@ namespace Veldrid.Graphics.OpenGLES
             Utilities.CheckLastGLES3Error();
             GL.Scissor(
                 rectangle.Left,
-                Window.Height - rectangle.Bottom,
+                Viewport.Height - rectangle.Bottom, // TODO: Is this line right?
                 rectangle.Width,
                 rectangle.Height);
         }

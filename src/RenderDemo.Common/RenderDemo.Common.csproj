@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Veldrid.ImGui/Veldrid.ImGui.csproj" />
+    <ProjectReference Include="../Veldrid.Sdl2/Veldrid.Sdl2.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\MaterialAsset\ModelPreview.json">

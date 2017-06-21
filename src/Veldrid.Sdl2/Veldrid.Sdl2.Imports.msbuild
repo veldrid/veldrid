@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build;Test" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Import this file to get a ProjectReference to Veldrid.Sdl2 and an import of the native DLL as well. -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)Veldrid.Sdl2.csproj" />
+  </ItemGroup>
+</Project>

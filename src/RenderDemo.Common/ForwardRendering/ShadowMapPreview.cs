@@ -69,16 +69,16 @@ namespace Veldrid.RenderDemo.ForwardRendering
         {
             Matrix4x4 orthoProjection = Matrix4x4.CreateOrthographicOffCenter(
                 0f,
-                rc.Window.Width,
-                rc.Window.Height,
+                rc.Viewport.Width,
+                rc.Viewport.Height,
                 0f,
                 -1.0f,
                 1.0f);
             _projectionMatrixProvider.Data = orthoProjection;
 
-            float width = _imageWidth * rc.Window.ScaleFactor.X;
+            float width = _imageWidth;
             _worldMatrixProvider.Data = Matrix4x4.CreateScale(width)
-                * Matrix4x4.CreateTranslation(rc.Window.Width - width - 20, 20 * rc.Window.ScaleFactor.Y, 0);
+                * Matrix4x4.CreateTranslation(rc.Viewport.Width - width - 20, 20, 0);
 
             rc.SetVertexBuffer(_vertexBuffer);
             rc.SetIndexBuffer(_indexBuffer);

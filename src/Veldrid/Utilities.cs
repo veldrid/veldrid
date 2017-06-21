@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Numerics;
+using System.Text;
 
 namespace Veldrid
 {
@@ -30,6 +31,17 @@ namespace Veldrid
             {
                 throw new InvalidOperationException("OpenGL Error: " + ec);
             }
+        }
+
+        public static unsafe string GetString(byte* stringStart)
+        {
+            int characters = 0;
+            while (stringStart[characters] != 0)
+            {
+                characters++;
+            }
+
+            return Encoding.UTF8.GetString(stringStart, characters);
         }
     }
 }

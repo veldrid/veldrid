@@ -7,6 +7,7 @@ using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
 using Veldrid.Graphics.OpenGLES;
 using Veldrid.Platform;
+using Veldrid.Sdl2;
 
 namespace Veldrid.RenderDemo
 {
@@ -15,20 +16,16 @@ namespace Veldrid.RenderDemo
         public static void Main()
         {
             bool onWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            OpenTKWindow window = new SameThreadWindow();
+            var window = new Sdl2Window("Veldrid Render Demo", 100, 100, 960, 540, SDL_WindowFlags.Resizable | SDL_WindowFlags.OpenGL, RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             RenderContext rc;
-            bool sdl2OnWindows = false;
-#if SDL2_ON_WINDOWS
-            sdl2OnWindows = true;
-#endif
-            bool preferOpenGL = Preferences.Instance.PreferOpenGL || sdl2OnWindows;
-            if (!sdl2OnWindows && !preferOpenGL && onWindows)
+            bool preferOpenGL = Preferences.Instance.PreferOpenGL;
+            if (!preferOpenGL && onWindows)
             {
                 rc = CreateDefaultD3dRenderContext(window);
             }
             else
             {
-                bool useGLES = sdl2OnWindows;
+                bool useGLES = true;
                 if (useGLES)
                 {
                     rc = CreateDefaultOpenGLESRenderContext(window);
@@ -49,20 +46,14 @@ namespace Veldrid.RenderDemo
                 if (rc is OpenGLRenderContext)
                 {
                     options.Add(openGLOption);
-                    if (!sdl2OnWindows)
-                    {
-                        options.Add(d3dOption);
-                    }
+                    options.Add(d3dOption);
                     options.Add(openGLESOption);
                 }
                 else if (rc is OpenGLESRenderContext)
                 {
                     options.Add(openGLESOption);
                     options.Add(openGLOption);
-                    if (!sdl2OnWindows)
-                    {
-                        options.Add(d3dOption);
-                    }
+                    options.Add(d3dOption);
                 }
                 else
                 {
@@ -80,18 +71,36 @@ namespace Veldrid.RenderDemo
             RenderDemo.RunDemo(rc, window, options.ToArray());
         }
 
-        private static OpenGLESRenderContext CreateDefaultOpenGLESRenderContext(OpenTKWindow window)
+        private static OpenGLESRenderContext CreateDefaultOpenGLESRenderContext(Sdl2Window window)
         {
-            return new OpenGLESRenderContext(window);
+            var windowInfo = OpenTK.Platform.Utilities.CreateSdl2WindowInfo(window.SdlWindowHandle);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.ES);
+            return new OpenGLESRenderContext(window, windowInfo);
         }
 
-        private static OpenGLRenderContext CreateDefaultOpenGLRenderContext(OpenTKWindow window)
+        private static OpenGLRenderContext CreateDefaultOpenGLRenderContext(Sdl2Window window)
         {
             bool debugContext = false;
 #if DEBUG
             debugContext = Preferences.Instance.AllowOpenGLDebugContexts;
 #endif
-            return new OpenGLRenderContext(window, debugContext);
+            IntPtr sdlHandle = window.SdlWindowHandle;
+            if (debugContext)
+            {
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)SDL_GLContextFlag.Debug);
+            }
+            IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
+            if (contextHandle == IntPtr.Zero)
+            {
+                unsafe
+                {
+                    byte* error = Sdl2Native.SDL_GetError();
+                    string errorString = Utilities.GetString(error);
+                    throw new InvalidOperationException("Unable to create GL Context: " + errorString);
+                }
+            }
+            Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, contextHandle);
+            return new OpenGLRenderContext(contextHandle, Sdl2Native.SDL_GL_GetProcAddress, Sdl2Native.SDL_GL_GetCurrentContext);
         }
 
         private static D3DRenderContext CreateDefaultD3dRenderContext(Window window)

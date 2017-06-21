@@ -41,7 +41,7 @@ namespace Veldrid
         /// <summary>
         /// Constructs a new ImGuiRenderer.
         /// </summary>
-        public ImGuiRenderer(RenderContext rc, NativeWindow window)
+        public ImGuiRenderer(RenderContext rc, Window window)
         {
             _rc = rc;
             ImGui.GetIO().FontAtlas.AddDefaultFont();
@@ -50,7 +50,7 @@ namespace Veldrid
             InitializeContextObjects(rc);
             SetOpenTKKeyMappings();
 
-            SetPerFrameImGuiData(rc, 1f / 60f);
+            SetPerFrameImGuiData(window, 1f / 60f);
 
             ImGui.NewFrame();
         }
@@ -145,22 +145,22 @@ namespace Veldrid
         /// <summary>
         /// Updates ImGui input and IO configuration state.
         /// </summary>
-        public void Update(float deltaSeconds)
+        public void Update(Window window, float deltaSeconds)
         {
-            SetPerFrameImGuiData(_rc, deltaSeconds);
+            SetPerFrameImGuiData(window, deltaSeconds);
         }
 
         /// <summary>
         /// Sets per-frame data based on the RenderContext and window.
         /// This is called by Update(float).
         /// </summary>
-        private unsafe void SetPerFrameImGuiData(RenderContext rc, float deltaSeconds)
+        private unsafe void SetPerFrameImGuiData(Window window, float deltaSeconds)
         {
             IO io = ImGui.GetIO();
             io.DisplaySize = new System.Numerics.Vector2(
-                rc.Window.Width / rc.Window.ScaleFactor.X,
-                rc.Window.Height / rc.Window.ScaleFactor.Y);
-            io.DisplayFramebufferScale = rc.Window.ScaleFactor;
+                window.Width / window.ScaleFactor.X,
+                window.Height / window.ScaleFactor.Y);
+            io.DisplayFramebufferScale = window.ScaleFactor;
             io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
         }
 
@@ -168,19 +168,19 @@ namespace Veldrid
         /// Updates the current input state tracked by ImGui.
         /// This calls ImGui.NewFrame().
         /// </summary>
-        public void OnInputUpdated(InputSnapshot snapshot)
+        public void OnInputUpdated(Window window, InputSnapshot snapshot)
         {
-            UpdateImGuiInput((OpenTKWindow)_rc.Window, snapshot);
+            UpdateImGuiInput(window, snapshot);
             ImGui.NewFrame();
         }
 
-        private unsafe void UpdateImGuiInput(OpenTKWindow window, InputSnapshot snapshot)
+        private unsafe void UpdateImGuiInput(Window window, InputSnapshot snapshot)
         {
             IO io = ImGui.GetIO();
             MouseState cursorState = Mouse.GetCursorState();
             MouseState mouseState = Mouse.GetState();
 
-            if (window.NativeWindow.Bounds.Contains(cursorState.X, cursorState.Y) && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (window.Bounds.Contains(cursorState.X, cursorState.Y) && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // TODO: This does not take into account viewport coordinates.
                 if (window.Exists)

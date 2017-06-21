@@ -41,7 +41,6 @@ namespace Veldrid.Graphics.Direct3D
         public D3DRenderContext(Window window) : this(window, DefaultDeviceFlags) { }
 
         public D3DRenderContext(Window window, DeviceCreationFlags flags)
-            : base(window)
         {
             CreateAndInitializeDevice(window, flags);
             CreateAndSetSamplers();
@@ -51,7 +50,6 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         public D3DRenderContext(Window window, SharpDX.Direct3D11.Device existingDevice, SwapChain existingSwapchain)
-            : base(window)
         {
             _swapChain = existingSwapchain;
             _device = existingDevice;

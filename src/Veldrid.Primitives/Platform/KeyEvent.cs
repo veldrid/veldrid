@@ -1,6 +1,4 @@
-﻿using OpenTK.Input;
-
-namespace Veldrid.Platform
+﻿namespace Veldrid.Platform
 {
     public struct KeyEvent
     {

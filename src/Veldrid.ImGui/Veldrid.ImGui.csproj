@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyVersion>1.0.3</AssemblyVersion>
     <PackageVersion>$(AssemblyVersion)</PackageVersion>
-    <TargetFramework>netstandard1.3</TargetFramework>
+    <TargetFramework>netstandard1.6</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <DocumentationFile Condition="'$(Configuration)' == 'Release'">$(BinDir)/$(AssemblyName).xml</DocumentationFile>

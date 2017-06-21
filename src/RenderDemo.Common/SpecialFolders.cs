@@ -28,7 +28,7 @@ namespace Veldrid.RenderDemo
                     appDatafolder = AppContext.BaseDirectory;
                 }
 
-                return appDatafolder;
+                return Path.Combine(appDatafolder, "veldrid");
             }
         }
     }

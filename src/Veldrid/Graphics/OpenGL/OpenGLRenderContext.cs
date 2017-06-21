@@ -19,26 +19,13 @@ namespace Veldrid.Graphics.OpenGL
 
         public DebugSeverity MinimumLogSeverity { get; set; } = DebugSeverity.DebugSeverityLow;
 
-        public OpenGLRenderContext(OpenTKWindow window,
-#if DEBUG
-        bool debugContext = true)
-#else
-        bool debugContext = false)
-#endif
-            : base(window)
+        public OpenGLRenderContext(IntPtr contextHandle, Func<string, IntPtr> getProcAddress, Func<IntPtr> getCurrentContext)
         {
             _resourceFactory = new OpenGLResourceFactory();
             RenderCapabilities = new RenderCapabilities(true, true);
-
-            if (debugContext)
-            {
-                _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo, 4, 3, GraphicsContextFlags.Debug);
-            }
-            else
-            {
-                _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, window.OpenTKWindowInfo, 3, 3, GraphicsContextFlags.ForwardCompatible);
-            }
-            _openGLGraphicsContext.MakeCurrent(window.OpenTKWindowInfo);
+            GraphicsContext.GetAddressDelegate getAddressFunc = s => getProcAddress(s);
+            GraphicsContext.GetCurrentContextDelegate getCurrentContextFunc = () => new ContextHandle(getCurrentContext());
+            _openGLGraphicsContext = new GraphicsContext(new ContextHandle(contextHandle), getAddressFunc, getCurrentContextFunc);
 
             _openGLGraphicsContext.LoadAll();
 
@@ -46,18 +33,11 @@ namespace Veldrid.Graphics.OpenGL
             _vertexArrayID = GL.GenVertexArray();
             GL.BindVertexArray(_vertexArrayID);
 
-            _defaultFramebuffer = new OpenGLDefaultFramebuffer(Window);
+            _defaultFramebuffer = new OpenGLDefaultFramebuffer(1, 1);
 
             SetInitialStates();
-            OnWindowResized(Window.Width, Window.Height);
 
             PostContextCreated();
-
-            if (debugContext)
-            {
-                GL.Enable(EnableCap.DebugOutput);
-                GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
-            }
         }
 
         private void DebugCallback(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam)
@@ -80,7 +60,7 @@ namespace Veldrid.Graphics.OpenGL
             set
             {
                 base.ClearColor = value;
-                Color4 openTKColor = RgbaFloat.ToOpenTKColor(value);
+                Color4 openTKColor = new Color4(value.R, value.G, value.B, value.A);
                 GL.ClearColor(openTKColor);
             }
         }
@@ -92,10 +72,7 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSwapBuffers()
         {
-            if (Window.Exists)
-            {
-                _openGLGraphicsContext.SwapBuffers();
-            }
+            _openGLGraphicsContext.SwapBuffers();
         }
 
         public override void DrawIndexedPrimitives(int count, int startingIndex)
@@ -149,7 +126,7 @@ namespace Veldrid.Graphics.OpenGL
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // Documentation indicates that this needs to be called on OSX for proper behavior.
-                _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
+                // _openGLGraphicsContext.Update(((OpenTKWindow)Window).OpenTKWindowInfo);
             }
         }
 
@@ -173,7 +150,7 @@ namespace Veldrid.Graphics.OpenGL
             GL.Enable(EnableCap.ScissorTest);
             GL.Scissor(
                 rectangle.Left,
-                Window.Height - rectangle.Bottom,
+                Viewport.Height - rectangle.Bottom, // TODO: Is this right?
                 rectangle.Width,
                 rectangle.Height);
         }

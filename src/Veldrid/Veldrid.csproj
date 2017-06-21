@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyVersion>2.0.0</AssemblyVersion>
     <PackageVersion>$(AssemblyVersion)</PackageVersion>
-    <TargetFramework>netstandard1.3</TargetFramework>
+    <TargetFramework>netstandard1.6</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile Condition="'$(Configuration)' == 'Release'">$(BinDir)\Veldrid.xml</DocumentationFile>
   </PropertyGroup>
@@ -13,6 +13,9 @@
     <PackageReference Include="SharpDX.D3DCompiler" Version="4.0.1" />
     <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" />
     <PackageReference Include="SharpDX.DXGI" Version="4.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Veldrid.Primitives\Veldrid.Primitives.csproj" />
   </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)Veldrid.PackageInfo.props" />
 </Project>

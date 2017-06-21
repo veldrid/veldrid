@@ -24,6 +24,7 @@ namespace Veldrid.RenderDemo
     {
         private static Renderer _renderer;
         private static RenderContext _rc;
+        private static Window _window;
         private static ShadowMapStage _shadowMapStage;
         private static RendererOption[] _backendOptions;
         private static FrameTimeAverager _fta;
@@ -90,11 +91,12 @@ namespace Veldrid.RenderDemo
         private static List<RenderItem> _sponzaQueryResult = new List<RenderItem>();
         private static BoundingBoxWireframeRenderer _sceneBoundsRenderer;
 
-        public static void RunDemo(RenderContext renderContext, OpenTKWindow openTKWindow, params RendererOption[] backendOptions)
+        public static void RunDemo(RenderContext renderContext, Window window, params RendererOption[] backendOptions)
         {
             try
             {
                 _rc = renderContext;
+                _window = window;
                 _backendOptions = backendOptions;
                 _selectedOption = backendOptions.FirstOrDefault();
 
@@ -111,7 +113,7 @@ namespace Veldrid.RenderDemo
                 _ad = new LooseFileDatabase(Path.Combine(AppContext.BaseDirectory, "Assets"));
                 _editorWindow = new AssetEditorWindow(_ad);
 
-                _imguiRenderer = new ImGuiRenderer(_rc, ((OpenTKWindow)_rc.Window).NativeWindow);
+                _imguiRenderer = new ImGuiRenderer(_rc, window);
                 _imguiRenderer.SetRenderStages(CommonStages.ImGui);
 
                 _lightBufferProvider = new ConstantDataProvider<DirectionalLightBuffer>(
@@ -121,7 +123,7 @@ namespace Veldrid.RenderDemo
                 _lightDirection = Vector3.Normalize(new Vector3(0f, -1f, -1f));
                 _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
 
-                _camera = new Camera(_rc.Window);
+                _camera = new Camera(window);
                 float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
                 _camera.Position = new Vector3(
                     (float)(Math.Cos(timeFactor) * _circleWidth),
@@ -152,7 +154,7 @@ namespace Veldrid.RenderDemo
                 long previousFrameTicks = 0;
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
-                while (_rc.Window.Exists)
+                while (window.Exists)
                 {
                     long currentFrameTicks = sw.ElapsedTicks;
                     double deltaSeconds = (currentFrameTicks - previousFrameTicks) / Stopwatch.Frequency;
@@ -165,7 +167,7 @@ namespace Veldrid.RenderDemo
 
                     previousFrameTicks = currentFrameTicks;
 
-                    var snapshot = _rc.Window.GetInputSnapshot();
+                    var snapshot = window.GetInputSnapshot();
                     InputTracker.UpdateFrameInput(snapshot);
                     Update(deltaSeconds, snapshot);
                     Draw();
@@ -201,7 +203,7 @@ namespace Veldrid.RenderDemo
 
         private static void CreateScreenshotFramebuffer()
         {
-            _screenshotFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_rc.Window.Width, _rc.Window.Height);
+            _screenshotFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
         }
 
         private static FlatListVisibilityManager SceneWithBoxes()
@@ -527,16 +529,16 @@ namespace Veldrid.RenderDemo
                 _lightDirection = Vector3.Normalize(-position);
             }
 
-            _imguiRenderer.Update((float)deltaSeconds);
-            _imguiRenderer.OnInputUpdated(snapshot);
+            _imguiRenderer.Update(_window, (float)deltaSeconds);
+            _imguiRenderer.OnInputUpdated(_window, snapshot);
             DrawMainMenu();
 
             _fta.AddTime(deltaSeconds);
             string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : (_rc is OpenGLESRenderContext) ? "OpenGL ES" : "Direct3D";
-            _rc.Window.Title = $"[{apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTimeMilliseconds.ToString("#00.00 ms");
+            _window.Title = $"[{apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTimeMilliseconds.ToString("#00.00 ms");
             if (InputTracker.GetKeyDown(Key.F4) && (InputTracker.GetKey(Key.AltLeft) || InputTracker.GetKey(Key.AltRight)))
             {
-                _rc.Window.Close();
+                _window.Close();
             }
             if (InputTracker.GetKeyDown(Key.PrintScreen))
             {
@@ -711,7 +713,7 @@ namespace Veldrid.RenderDemo
                 _camera.FieldOfViewRadians,
                 _camera.NearPlaneDistance,
                 _camera.FarPlaneDistance,
-                (float)_rc.Window.Width / (float)_rc.Window.Height,
+                (float)_window.Width / (float)_window.Height,
                 out corners);
 
             // Approach used: http://alextardif.com/ShadowMapping.html
@@ -757,7 +759,7 @@ namespace Veldrid.RenderDemo
 
         private static void ToggleFullScreenState()
         {
-            _rc.Window.WindowState = _rc.Window.WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState.FullScreen;
+            _window.WindowState = _window.WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState.FullScreen;
         }
 
         private static void DrawMainMenu()
@@ -851,7 +853,7 @@ namespace Veldrid.RenderDemo
                 }
                 if (ImGui.BeginMenu("View"))
                 {
-                    if (ImGui.MenuItem("Full Screen", "F11", _rc.Window.WindowState == WindowState.FullScreen, true))
+                    if (ImGui.MenuItem("Full Screen", "F11", _window.WindowState == WindowState.FullScreen, true))
                     {
                         ToggleFullScreenState();
                     }
@@ -868,7 +870,7 @@ namespace Veldrid.RenderDemo
                     }
                     if (ImGui.Checkbox("Limit Framerate", ref _limitFrameRate))
                     {
-                        var threadedWindow = _rc.Window as DedicatedThreadWindow;
+                        var threadedWindow = _window as Sdl2.Sdl2Window;
                         if (threadedWindow != null)
                         {
                             threadedWindow.LimitPollRate = _limitFrameRate;
@@ -992,7 +994,7 @@ namespace Veldrid.RenderDemo
                     }
                     ImGui.EndMenu();
                 }
-                if (_rc.Window.WindowState == WindowState.FullScreen)
+                if (_window.WindowState == WindowState.FullScreen)
                 {
                     ImGui.Text(string.Format("{0} FPS ({1} ms)", _fta.CurrentAverageFramesPerSecond.ToString("0.0"), _fta.CurrentAverageFrameTimeSeconds.ToString("#00.00")));
                 }
@@ -1146,8 +1148,8 @@ https://github.com/mellinoe/veldrid.");
             {
                 _takeScreenshot = false;
                 _rc.SetDefaultFramebuffer();
-                int width = _rc.Window.Width;
-                int height = _rc.Window.Height;
+                int width = _window.Width;
+                int height = _window.Height;
                 var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), Graphics.PixelFormat.Alpha_UInt16);
                 _screenshotFramebuffer.DepthTexture.CopyTo(cpuDepthTexture);
 

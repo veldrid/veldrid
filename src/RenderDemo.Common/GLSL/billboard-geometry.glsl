@@ -48,6 +48,8 @@ void main()
     for (int i = 0; i < 4; i++)
     {
         gl_Position = projection * view * vec4(worldPositions[i], 1);
+        // Normalize depth range
+        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;
         out_color = vec4(1, 0, 0, 1);
         EmitVertex();
     }

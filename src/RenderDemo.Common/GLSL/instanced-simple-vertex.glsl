@@ -25,10 +25,12 @@ out vec4 out_color;
 
 void main()
 {
-	vec4 worldPos = world * vec4(in_position + in_offset, 1);
-	vec4 viewPos = view * worldPos;
-	vec4 projPos = projection * viewPos;
-	gl_Position = projPos;
+    vec4 worldPos = world * vec4(in_position + in_offset, 1);
+    vec4 viewPos = view * worldPos;
+    vec4 projPos = projection * viewPos;
+    gl_Position = projPos;
+    // Normalize depth range
+    gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;
 
     out_color = in_color;
 }

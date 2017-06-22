@@ -47,6 +47,8 @@ void main()
     vec4 worldPosition = world * vec4(in_position, 1);
     vec4 viewPosition = view * worldPosition;
     gl_Position = projection * viewPosition;
+    // Normalize depth range
+    gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;
 
     out_position_worldSpace = worldPosition.xyz;
 
@@ -60,4 +62,6 @@ void main()
     out_lightPosition = world * vec4(in_position, 1);
     out_lightPosition = lightView * out_lightPosition;
     out_lightPosition = lightProjection * out_lightPosition;
+    // Normalize depth range
+    out_lightPosition.z = out_lightPosition.z * 2.0 - out_lightPosition.w;
 }

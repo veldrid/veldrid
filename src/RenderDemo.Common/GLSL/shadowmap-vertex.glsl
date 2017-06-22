@@ -14,4 +14,6 @@ void main()
     vec4 viewPos = ViewMatrixBuffer * worldPos;
     vec4 screenPos = ProjectionMatrixBuffer * viewPos;
     gl_Position = screenPos;
+    // Normalize depth range
+    gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;
 }

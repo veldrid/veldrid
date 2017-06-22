@@ -60,18 +60,26 @@ void main()
     for (int i = 0; i < 24; i += 4)
     {
         gl_Position = projection * view * world * (center + cubePositions[cubeIndices[i]]);
+        // Normalize depth range
+        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;
         out_color = vec4(1, g, 1, 1);
         EmitVertex();
         g += step;
         gl_Position = projection * view * world * (center + cubePositions[cubeIndices[i + 1]]);
+        // Normalize depth range
+        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;
         out_color = vec4(1, g, 1, 1);
         EmitVertex();
         g += step;
         gl_Position = projection * view * world * (center + cubePositions[cubeIndices[i + 2]]);
+        // Normalize depth range
+        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;
         out_color = vec4(1, g, 1, 1);
         EmitVertex();
         g += step;
         gl_Position = projection * view * world * (center + cubePositions[cubeIndices[i + 3]]);
+        // Normalize depth range
+        gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;
         out_color = vec4(1, g, 1, 1);
         EmitVertex();
         g += step;

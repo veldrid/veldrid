@@ -23,6 +23,68 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
+        internal static SamplerAddressMode D3DToVeldridSamplerAddressMode(TextureAddressMode address)
+        {
+            switch (address)
+            {
+                case TextureAddressMode.Wrap:
+                    return SamplerAddressMode.Wrap;
+                case TextureAddressMode.Mirror:
+                    return SamplerAddressMode.Mirror;
+                case TextureAddressMode.Clamp:
+                    return SamplerAddressMode.Clamp;
+                case TextureAddressMode.Border:
+                    return SamplerAddressMode.Border;
+                default:
+                    throw Illegal.Value<TextureAddressMode>();
+            }
+        }
+
+        internal static SamplerFilter D3DToVeldridSamplerFilter(Filter filter)
+        {
+            switch (filter)
+            {
+                case Filter.MinMagMipPoint:
+                    return SamplerFilter.MinMagMipPoint;
+                case Filter.MinMagPointMipLinear:
+                    return SamplerFilter.MinMagPointMipLinear;
+                case Filter.MinPointMagLinearMipPoint:
+                    return SamplerFilter.MinPointMagLinearMipPoint;
+                case Filter.MinPointMagMipLinear:
+                    return SamplerFilter.MinPointMagMipLinear;
+                case Filter.MinLinearMagMipPoint:
+                    return SamplerFilter.MinLinearMagMipPoint;
+                case Filter.MinLinearMagPointMipLinear:
+                    return SamplerFilter.MinLinearMagPointMipLinear;
+                case Filter.MinMagLinearMipPoint:
+                    return SamplerFilter.MinMagLinearMipPoint;
+                case Filter.MinMagMipLinear:
+                    return SamplerFilter.MinMagMipLinear;
+                case Filter.Anisotropic:
+                    return SamplerFilter.Anisotropic;
+                case Filter.ComparisonMinMagMipPoint:
+                    return SamplerFilter.ComparisonMinMagMipPoint;
+                case Filter.ComparisonMinMagPointMipLinear:
+                    return SamplerFilter.ComparisonMinMagPointMipLinear;
+                case Filter.ComparisonMinPointMagLinearMipPoint:
+                    return SamplerFilter.ComparisonMinPointMagLinearMipPoint;
+                case Filter.ComparisonMinPointMagMipLinear:
+                    return SamplerFilter.ComparisonMinPointMagMipLinear;
+                case Filter.ComparisonMinLinearMagMipPoint:
+                    return SamplerFilter.ComparisonMinLinearMagMipPoint;
+                case Filter.ComparisonMinLinearMagPointMipLinear:
+                    return SamplerFilter.ComparisonMinLinearMagPointMipLinear;
+                case Filter.ComparisonMinMagLinearMipPoint:
+                    return SamplerFilter.ComparisonMinMagLinearMipPoint;
+                case Filter.ComparisonMinMagMipLinear:
+                    return SamplerFilter.ComparisonMinMagMipLinear;
+                case Filter.ComparisonAnisotropic:
+                    return SamplerFilter.ComparisonAnisotropic;
+                default:
+                    throw Illegal.Value<Filter>();
+            }
+        }
+
         internal static Format ConvertIndexFormat(IndexFormat format)
         {
             switch (format)
@@ -139,6 +201,31 @@ namespace Veldrid.Graphics.Direct3D
                     return Comparison.Always;
                 default:
                     throw Illegal.Value<DepthComparison>();
+            }
+        }
+
+        internal static DepthComparison D3DToVeldridDepthComparison(Comparison comparisonFunction)
+        {
+            switch (comparisonFunction)
+            {
+                case Comparison.Never:
+                    return DepthComparison.Never;
+                case Comparison.Less:
+                    return DepthComparison.Less;
+                case Comparison.Equal:
+                    return DepthComparison.Equal;
+                case Comparison.LessEqual:
+                    return DepthComparison.LessEqual;
+                case Comparison.Greater:
+                    return DepthComparison.Greater;
+                case Comparison.NotEqual:
+                    return DepthComparison.NotEqual;
+                case Comparison.GreaterEqual:
+                    return DepthComparison.GreaterEqual;
+                case Comparison.Always:
+                    return DepthComparison.Always;
+                default:
+                    throw Illegal.Value<Comparison>();
             }
         }
 

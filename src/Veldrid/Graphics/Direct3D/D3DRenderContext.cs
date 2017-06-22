@@ -17,8 +17,8 @@ namespace Veldrid.Graphics.Direct3D
         private SwapChain _swapChain;
         private DeviceContext _deviceContext;
         private D3DFramebuffer _defaultFramebuffer;
-        private SamplerState _regularSamplerState;
-        private SamplerState _shadowMapSampler;
+        private SharpDX.Direct3D11.SamplerState _regularSamplerState;
+        private SharpDX.Direct3D11.SamplerState _shadowMapSampler;
         private PrimitiveTopology _primitiveTopology;
         private int _syncInterval;
 
@@ -143,7 +143,7 @@ namespace Veldrid.Graphics.Direct3D
             SamplerStateDescription regularDesc = SamplerStateDescription.Default();
             regularDesc.AddressU = TextureAddressMode.Wrap;
             regularDesc.AddressV = TextureAddressMode.Wrap;
-            _regularSamplerState = new SamplerState(_device, regularDesc);
+            _regularSamplerState = new SharpDX.Direct3D11.SamplerState(_device, regularDesc);
             _deviceContext.PixelShader.SetSampler(0, _regularSamplerState);
 
             SamplerStateDescription shadowSamplerDesc = SamplerStateDescription.Default();
@@ -151,7 +151,7 @@ namespace Veldrid.Graphics.Direct3D
             shadowSamplerDesc.BorderColor = new RawColor4(1f, 1f, 1f, 1f);
             shadowSamplerDesc.AddressU = TextureAddressMode.Border;
             shadowSamplerDesc.AddressV = TextureAddressMode.Border;
-            _shadowMapSampler = new SamplerState(_device, shadowSamplerDesc);
+            _shadowMapSampler = new SharpDX.Direct3D11.SamplerState(_device, shadowSamplerDesc);
             _deviceContext.PixelShader.SetSampler(1, _shadowMapSampler);
         }
 

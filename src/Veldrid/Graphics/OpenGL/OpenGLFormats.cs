@@ -39,6 +39,66 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
+        internal static TextureWrapMode VeldridToGLTextureWrapMode(SamplerAddressMode mode)
+        {
+            switch (mode)
+            {
+                case SamplerAddressMode.Wrap:
+                    return TextureWrapMode.Repeat;
+                case SamplerAddressMode.Mirror:
+                    return TextureWrapMode.MirroredRepeat;
+                case SamplerAddressMode.Clamp:
+                    return TextureWrapMode.Clamp;
+                case SamplerAddressMode.Border:
+                    return TextureWrapMode.ClampToBorder;
+                default:
+                    throw Illegal.Value<SamplerAddressMode>();
+            }
+        }
+
+        internal static void VeldridToGLTextureMinMagFilter(SamplerFilter filter, out TextureMinFilter min, out TextureMagFilter mag)
+        {
+            switch (filter)
+            {
+                case SamplerFilter.MinMagMipPoint:
+                case SamplerFilter.MinMagPointMipLinear:
+                case SamplerFilter.ComparisonMinMagMipPoint:
+                case SamplerFilter.ComparisonMinMagPointMipLinear:
+                    min = TextureMinFilter.Nearest;
+                    mag = TextureMagFilter.Nearest;
+                    break;
+                case SamplerFilter.MinPointMagLinearMipPoint:
+                case SamplerFilter.MinPointMagMipLinear:
+                case SamplerFilter.ComparisonMinPointMagLinearMipPoint:
+                case SamplerFilter.ComparisonMinPointMagMipLinear:
+                    min = TextureMinFilter.Nearest;
+                    mag = TextureMagFilter.Linear;
+                    break;
+                case SamplerFilter.MinLinearMagMipPoint:
+                case SamplerFilter.MinLinearMagPointMipLinear:
+                case SamplerFilter.ComparisonMinLinearMagMipPoint:
+                case SamplerFilter.ComparisonMinLinearMagPointMipLinear:
+                    min = TextureMinFilter.Linear;
+                    mag = TextureMagFilter.Nearest;
+                    break;
+                case SamplerFilter.MinMagLinearMipPoint:
+                case SamplerFilter.MinMagMipLinear:
+                case SamplerFilter.ComparisonMinMagLinearMipPoint:
+                case SamplerFilter.ComparisonMinMagMipLinear:
+                    min = TextureMinFilter.Linear;
+                    mag = TextureMagFilter.Linear;
+                    break;
+                case SamplerFilter.Anisotropic:
+                case SamplerFilter.ComparisonAnisotropic:
+                    // TODO: This doesn't map to a min/mag filtering mode.
+                    min = TextureMinFilter.Nearest;
+                    mag = TextureMagFilter.Nearest;
+                    break;
+                default:
+                    throw Illegal.Value<SamplerFilter>();
+            }
+        }
+
         public static ShaderType GLToVeldridShaderType(OpenTK.Graphics.OpenGL.ShaderType type)
         {
             switch (type)

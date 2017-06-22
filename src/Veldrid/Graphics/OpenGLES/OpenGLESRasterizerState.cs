@@ -52,16 +52,7 @@ namespace Veldrid.Graphics.OpenGLES
                 Utilities.CheckLastGLES3Error();
             }
 
-            if (IsDepthClipEnabled)
-            {
-                // GL.Enable(EnableCap.DepthClamp);
-                Utilities.CheckLastGLES3Error();
-            }
-            else
-            {
-                // GL.Disable(EnableCap.DepthClamp);
-                Utilities.CheckLastGLES3Error();
-            }
+            // IsDepthClipEnabled is not really supported on OpenGL ES.
         }
 
         public void Dispose()

@@ -61,6 +61,7 @@ namespace Veldrid.Sdl2
         RetainedBacking,
         ContextMajorVersion,
         ContextMinorVersion,
+        ContextEgl,
         ContextFlags,
         ContextProfileMask,
         ShareWithCurrentContext,

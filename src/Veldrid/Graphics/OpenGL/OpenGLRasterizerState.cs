@@ -1,5 +1,4 @@
 ﻿using OpenTK.Graphics.OpenGL;
-using System;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -46,11 +45,11 @@ namespace Veldrid.Graphics.OpenGL
 
             if (IsDepthClipEnabled)
             {
-                GL.Enable(EnableCap.DepthClamp);
+                GL.Disable(EnableCap.DepthClamp);
             }
             else
             {
-                GL.Disable(EnableCap.DepthClamp);
+                GL.Enable(EnableCap.DepthClamp);
             }
         }
 

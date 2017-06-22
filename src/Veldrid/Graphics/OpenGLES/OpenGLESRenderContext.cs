@@ -3,6 +3,7 @@ using OpenTK.Graphics;
 using Veldrid.Platform;
 using OpenTK.Graphics.ES30;
 using System.Runtime.InteropServices;
+using OpenTK;
 
 namespace Veldrid.Graphics.OpenGLES
 {
@@ -14,23 +15,50 @@ namespace Veldrid.Graphics.OpenGLES
         private int _vertexAttributesBound;
         private bool _vertexLayoutChanged;
         private int _baseVertexOffset = 0;
+        private Action _swapBufferFunc;
+        private DebugProc _debugMessageCallback;
 
         public DebugSeverity MinimumLogSeverity { get; set; } = DebugSeverity.DebugSeverityLow;
 
-        public OpenGLESRenderContext(Window window, OpenTK.Platform.IWindowInfo windowInfo)
+        public OpenGLESRenderContext(Window window, OpenGLPlatformContextInfo platformContext)
         {
             ResourceFactory = new OpenGLESResourceFactory();
             RenderCapabilities = new RenderCapabilities(false, false);
-            _openGLGraphicsContext = new GraphicsContext(GraphicsMode.Default, windowInfo, 2, 0, GraphicsContextFlags.Embedded);
-            _openGLGraphicsContext.MakeCurrent(windowInfo);
+            _swapBufferFunc = platformContext.SwapBuffer;
+            GraphicsContext.GetAddressDelegate getAddressFunc = s => platformContext.GetProcAddress(s);
+            GraphicsContext.GetCurrentContextDelegate getCurrentContextFunc = () => new ContextHandle(platformContext.GetCurrentContext());
+            _openGLGraphicsContext = new GraphicsContext(new ContextHandle(platformContext.ContextHandle), getAddressFunc, getCurrentContextFunc);
+
             _openGLGraphicsContext.LoadAll();
 
-            _defaultFramebuffer = new OpenGLESDefaultFramebuffer(window);
-
-            SetInitialStates();
+            _defaultFramebuffer = new OpenGLESDefaultFramebuffer(window.Width, window.Height);
             OnWindowResized(window.Width, window.Height);
 
+            SetInitialStates();
+
             PostContextCreated();
+        }
+
+        public void EnableDebugCallback() => EnableDebugCallback(DebugSeverity.DebugSeverityNotification);
+        public void EnableDebugCallback(DebugSeverity minimumSeverity) => EnableDebugCallback(DefaultDebugCallback(minimumSeverity));
+        public void EnableDebugCallback(DebugProc callback)
+        {
+            // The debug callback delegate must be persisted, otherwise errors will occur
+            // when the OpenGL drivers attempt to call it after it has been collected.
+            _debugMessageCallback = callback;
+            GL.DebugMessageCallback(_debugMessageCallback, IntPtr.Zero);
+        }
+
+        private DebugProc DefaultDebugCallback(DebugSeverity minimumSeverity)
+        {
+            return (DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam) =>
+            {
+                if (severity >= minimumSeverity)
+                {
+                    string messageString = Marshal.PtrToStringAnsi(message, length);
+                    System.Diagnostics.Debug.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
+                }
+            };
         }
 
         public override ResourceFactory ResourceFactory { get; }
@@ -58,7 +86,14 @@ namespace Veldrid.Graphics.OpenGLES
 
         protected override void PlatformSwapBuffers()
         {
-            _openGLGraphicsContext.SwapBuffers();
+            if (_swapBufferFunc != null)
+            {
+                _swapBufferFunc();
+            }
+            else
+            {
+                _openGLGraphicsContext.SwapBuffers();
+            }
         }
 
         public override void DrawIndexedPrimitives(int count, int startingIndex)

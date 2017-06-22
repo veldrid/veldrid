@@ -73,9 +73,44 @@ namespace Veldrid.RenderDemo
 
         private static OpenGLESRenderContext CreateDefaultOpenGLESRenderContext(Sdl2Window window)
         {
-            var windowInfo = OpenTK.Platform.Utilities.CreateSdl2WindowInfo(window.SdlWindowHandle);
+            bool debugContext = false;
+#if DEBUG
+            debugContext = Preferences.Instance.AllowOpenGLDebugContexts;
+#endif
+            if (debugContext)
+            {
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)SDL_GLContextFlag.Debug);
+            }
+
+            IntPtr sdlHandle = window.SdlWindowHandle;
             Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.ES);
-            return new OpenGLESRenderContext(window, windowInfo);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 3);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 0);
+            IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
+            Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, contextHandle);
+
+            if (contextHandle == IntPtr.Zero)
+            {
+                unsafe
+                {
+                    byte* error = Sdl2Native.SDL_GetError();
+                    string errorString = Utilities.GetString(error);
+                    throw new InvalidOperationException("Unable to create GL Context: " + errorString);
+                }
+            }
+
+            Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, contextHandle);
+            OpenGLPlatformContextInfo ci = new OpenGLPlatformContextInfo(
+                contextHandle,
+                Sdl2Native.SDL_GL_GetProcAddress,
+                Sdl2Native.SDL_GL_GetCurrentContext,
+                () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
+            var rc = new OpenGLESRenderContext(window, ci);
+            if (debugContext)
+            {
+                rc.EnableDebugCallback(OpenTK.Graphics.ES30.DebugSeverity.DebugSeverityNotification);
+            }
+            return rc;
         }
 
         private static OpenGLRenderContext CreateDefaultOpenGLRenderContext(Sdl2Window window)
@@ -106,7 +141,12 @@ namespace Veldrid.RenderDemo
             }
 
             Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, contextHandle);
-            var rc = new OpenGLRenderContext(contextHandle, Sdl2Native.SDL_GL_GetProcAddress, Sdl2Native.SDL_GL_GetCurrentContext, () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
+            OpenGLPlatformContextInfo ci = new OpenGLPlatformContextInfo(
+                contextHandle,
+                Sdl2Native.SDL_GL_GetProcAddress,
+                Sdl2Native.SDL_GL_GetCurrentContext,
+                () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
+            var rc = new OpenGLRenderContext(window, ci);
             if (debugContext)
             {
                 rc.EnableDebugCallback(OpenTK.Graphics.OpenGL.DebugSeverity.DebugSeverityNotification);

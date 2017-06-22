@@ -1,17 +1,16 @@
 ﻿using OpenTK.Graphics.ES30;
 using System;
-using Veldrid.Platform;
 
 namespace Veldrid.Graphics.OpenGLES
 {
     public class OpenGLESDefaultFramebuffer : OpenGLESFramebufferBase, Framebuffer, IDisposable
     {
-        private readonly Window _window;
-
-        public OpenGLESDefaultFramebuffer(Window window)
+        public OpenGLESDefaultFramebuffer(int width, int height)
         {
-            _window = window;
+            Width = width;
+            Height = height;
         }
+
 
         public DeviceTexture2D ColorTexture
         {
@@ -48,10 +47,9 @@ namespace Veldrid.Graphics.OpenGLES
         {
             throw new NotSupportedException("Cannot set color textures on OpenGLDefaultFramebuffer.");
         }
+        public int Width { get; internal set; }
 
-        public int Width => _window.Width;
-
-        public int Height => _window.Height;
+        public int Height { get; internal set; }
 
         internal override void Apply()
         {

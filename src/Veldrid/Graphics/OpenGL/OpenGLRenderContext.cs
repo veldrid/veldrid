@@ -3,6 +3,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
 using System.Runtime.InteropServices;
 using OpenTK;
+using Veldrid.Platform;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -18,14 +19,14 @@ namespace Veldrid.Graphics.OpenGL
         private Action _swapBufferFunc;
         private DebugProc _debugMessageCallback;
 
-        public OpenGLRenderContext(IntPtr contextHandle, Func<string, IntPtr> getProcAddress, Func<IntPtr> getCurrentContext, Action swapBufferFunc)
+        public OpenGLRenderContext(Window window, OpenGLPlatformContextInfo platformContext)
         {
             _resourceFactory = new OpenGLResourceFactory();
             RenderCapabilities = new RenderCapabilities(true, true);
-            _swapBufferFunc = swapBufferFunc;
-            GraphicsContext.GetAddressDelegate getAddressFunc = s => getProcAddress(s);
-            GraphicsContext.GetCurrentContextDelegate getCurrentContextFunc = () => new ContextHandle(getCurrentContext());
-            _openGLGraphicsContext = new GraphicsContext(new ContextHandle(contextHandle), getAddressFunc, getCurrentContextFunc);
+            _swapBufferFunc = platformContext.SwapBuffer;
+            GraphicsContext.GetAddressDelegate getAddressFunc = s => platformContext.GetProcAddress(s);
+            GraphicsContext.GetCurrentContextDelegate getCurrentContextFunc = () => new ContextHandle(platformContext.GetCurrentContext());
+            _openGLGraphicsContext = new GraphicsContext(new ContextHandle(platformContext.ContextHandle), getAddressFunc, getCurrentContextFunc);
 
             _openGLGraphicsContext.LoadAll();
 
@@ -33,7 +34,8 @@ namespace Veldrid.Graphics.OpenGL
             _vertexArrayID = GL.GenVertexArray();
             GL.BindVertexArray(_vertexArrayID);
 
-            _defaultFramebuffer = new OpenGLDefaultFramebuffer(960, 540);
+            _defaultFramebuffer = new OpenGLDefaultFramebuffer(window.Width, window.Height);
+            OnWindowResized(window.Width, window.Height);
 
             SetInitialStates();
 

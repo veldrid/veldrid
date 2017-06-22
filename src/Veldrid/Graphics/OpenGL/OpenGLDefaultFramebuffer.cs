@@ -1,6 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
-using Veldrid.Platform;
 
 namespace Veldrid.Graphics.OpenGL
 {

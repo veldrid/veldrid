@@ -1,7 +1,6 @@
 ﻿using System;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
-using Veldrid.Platform;
 using System.Runtime.InteropServices;
 using OpenTK;
 
@@ -17,8 +16,7 @@ namespace Veldrid.Graphics.OpenGL
         private int _vertexAttributesBound;
         private bool _vertexLayoutChanged;
         private Action _swapBufferFunc;
-
-        public DebugSeverity MinimumLogSeverity { get; set; } = DebugSeverity.DebugSeverityLow;
+        private DebugProc _debugMessageCallback;
 
         public OpenGLRenderContext(IntPtr contextHandle, Func<string, IntPtr> getProcAddress, Func<IntPtr> getCurrentContext, Action swapBufferFunc)
         {
@@ -42,13 +40,27 @@ namespace Veldrid.Graphics.OpenGL
             PostContextCreated();
         }
 
-        private void DebugCallback(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam)
+        public void EnableDebugCallback() => EnableDebugCallback(DebugSeverity.DebugSeverityNotification);
+        public void EnableDebugCallback(DebugSeverity minimumSeverity) => EnableDebugCallback(DefaultDebugCallback(minimumSeverity));
+        public void EnableDebugCallback(DebugProc callback)
         {
-            if (severity >= MinimumLogSeverity)
+            GL.Enable(EnableCap.DebugOutput);
+            // The debug callback delegate must be persisted, otherwise errors will occur
+            // when the OpenGL drivers attempt to call it after it has been collected.
+            _debugMessageCallback = callback;
+            GL.DebugMessageCallback(_debugMessageCallback, IntPtr.Zero);
+        }
+
+        private DebugProc DefaultDebugCallback(DebugSeverity minimumSeverity)
+        {
+            return (DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam) =>
             {
-                string messageString = Marshal.PtrToStringAnsi(message, length);
-                System.Diagnostics.Debug.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
-            }
+                if (severity >= minimumSeverity)
+                {
+                    string messageString = Marshal.PtrToStringAnsi(message, length);
+                    System.Diagnostics.Debug.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
+                }
+            };
         }
 
         public override ResourceFactory ResourceFactory => _resourceFactory;

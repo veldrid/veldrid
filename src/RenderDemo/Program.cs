@@ -90,16 +90,11 @@ namespace Veldrid.RenderDemo
                 Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)SDL_GLContextFlag.Debug);
             }
 
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.Core);
             Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 4);
             Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 0);
 
             IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
-            unsafe
-            {
-                int major, minor;
-                Sdl2Native.SDL_GL_GetAttribute(SDL_GLAttribute.ContextMajorVersion, &major);
-                Sdl2Native.SDL_GL_GetAttribute(SDL_GLAttribute.ContextMinorVersion, &minor);
-            }
             if (contextHandle == IntPtr.Zero)
             {
                 unsafe
@@ -112,6 +107,10 @@ namespace Veldrid.RenderDemo
 
             Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, contextHandle);
             var rc = new OpenGLRenderContext(contextHandle, Sdl2Native.SDL_GL_GetProcAddress, Sdl2Native.SDL_GL_GetCurrentContext, () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
+            if (debugContext)
+            {
+                rc.EnableDebugCallback(OpenTK.Graphics.OpenGL.DebugSeverity.DebugSeverityNotification);
+            }
             return rc;
         }
 

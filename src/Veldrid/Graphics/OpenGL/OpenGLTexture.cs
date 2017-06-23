@@ -9,6 +9,7 @@ namespace Veldrid.Graphics.OpenGL
         public TextureTarget Target { get; }
         public int Width { get; protected set; }
         public int Height { get; protected set; }
+        public int MipLevels { get; protected set; } = 1;
 
         public OpenGLTexture(TextureTarget target, int width, int height)
         {

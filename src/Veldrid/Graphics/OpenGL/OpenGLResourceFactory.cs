@@ -33,14 +33,16 @@ namespace Veldrid.Graphics.OpenGL
                 PixelFormat.R32_G32_B32_A32_Float,
                 PixelInternalFormat.Rgba32f,
                 OpenTK.Graphics.OpenGL.PixelFormat.Rgba,
-                PixelType.Float);
+                PixelType.Float,
+                generateMipmaps: false);
             OpenGLTexture2D depthTexture = new OpenGLTexture2D(
                 width,
                 height,
                 PixelFormat.Alpha_UInt16,
                 PixelInternalFormat.DepthComponent16,
                 OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent,
-                PixelType.UnsignedShort);
+                PixelType.UnsignedShort,
+                generateMipmaps: false);
 
             return new OpenGLFramebuffer(colorTexture, depthTexture);
         }
@@ -111,12 +113,27 @@ namespace Veldrid.Graphics.OpenGL
 
         public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            return new OpenGLTexture2D(width, height, format, pixelData);
+            return new OpenGLTexture2D(width, height, format, pixelData, generateMipmaps: true);
         }
 
         public override DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            return OpenGLTexture2D.Create(pixelData, width, height, pixelSizeInBytes, format);
+            return OpenGLTexture2D.Create(pixelData, width, height, pixelSizeInBytes, format, generateMipmaps: true);
+        }
+
+        public override SamplerState CreateSamplerState(
+            SamplerAddressMode addressU,
+            SamplerAddressMode addressV,
+            SamplerAddressMode addressW,
+            SamplerFilter filter,
+            int maxAnisotropy,
+            RgbaFloat borderColor,
+            DepthComparison comparison,
+            int minimumLod,
+            int maximumLod,
+            int lodBias)
+        {
+            return new OpenGLSamplerState(addressU, addressV, addressW, filter, maxAnisotropy, borderColor, comparison, minimumLod, maximumLod, lodBias);
         }
 
         public override DeviceTexture2D CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)

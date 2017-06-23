@@ -38,7 +38,7 @@ namespace Veldrid.Graphics.Direct3D
                         ConvertGenericFormat(genericElement.ElementFormat),
                         currentOffset,
                         vbSlot,
-                        D3DFormats.ConvertInputClass(genericElement.StorageClassifier),
+                        D3DFormats.VeldridToD3DVertexElementInputClass(genericElement.StorageClassifier),
                         genericElement.InstanceStepRate);
                     currentOffset += genericElement.SizeInBytes;
                     element += 1;

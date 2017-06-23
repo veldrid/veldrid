@@ -210,6 +210,18 @@ namespace Veldrid.Graphics
         /// <returns>A new <see cref="DeviceTexture2D"/> containing the given pixel data.</returns>
         public abstract DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format);
 
+        public abstract SamplerState CreateSamplerState(
+            SamplerAddressMode addressU,
+            SamplerAddressMode addressV,
+            SamplerAddressMode addressW,
+            SamplerFilter filter,
+            int maxAnisotropy,
+            RgbaFloat borderColor,
+            DepthComparison comparison,
+            int minimumLod,
+            int maximumLod,
+            int lodBias);
+
         /// <summary>
         /// Creates a new <see cref="ShaderTextureBinding"/> for the given <see cref="DeviceTexture"/>.
         /// </summary>

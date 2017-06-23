@@ -7,7 +7,7 @@ namespace Veldrid.Graphics
         private readonly RenderContext _rc; // TODO: Temporary, remove when Material.UseTexture is obsolete.
 
         public Material(RenderContext rc, ShaderSet shaderSet, ShaderConstantBindings constantBindings, ShaderTextureBindingSlots textureBindingSlots)
-            : this(rc, shaderSet, constantBindings, textureBindingSlots, Array.Empty<DefaultTextureBindingInfo>())
+            : this(rc, shaderSet, constantBindings, textureBindingSlots, Array.Empty<DefaultTextureBindingInfo>(), Array.Empty<DefaultSamplerBindingInfo>())
         {
         }
 
@@ -17,18 +17,31 @@ namespace Veldrid.Graphics
             ShaderConstantBindings constantBindings,
             ShaderTextureBindingSlots textureBindingSlots,
             DefaultTextureBindingInfo[] defaultTextureBindings)
+            : this(rc, shaderSet, constantBindings, textureBindingSlots, defaultTextureBindings, Array.Empty<DefaultSamplerBindingInfo>())
+        {
+        }
+
+        public Material(
+            RenderContext rc,
+            ShaderSet shaderSet,
+            ShaderConstantBindings constantBindings,
+            ShaderTextureBindingSlots textureBindingSlots,
+            DefaultTextureBindingInfo[] defaultTextureBindings,
+            DefaultSamplerBindingInfo[] defaultSamplerBindings)
         {
             _rc = rc;
             ShaderSet = shaderSet;
             ConstantBindings = constantBindings;
             TextureBindingSlots = textureBindingSlots;
             DefaultTextureBindings = defaultTextureBindings;
+            DefaultSamplerBindings = defaultSamplerBindings;
         }
 
         public ShaderSet ShaderSet { get; }
         public ShaderConstantBindings ConstantBindings { get; }
         public ShaderTextureBindingSlots TextureBindingSlots { get; }
         public DefaultTextureBindingInfo[] DefaultTextureBindings { get; }
+        public DefaultSamplerBindingInfo[] DefaultSamplerBindings { get; }
 
         public void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider)
         {
@@ -45,6 +58,10 @@ namespace Veldrid.Graphics
             foreach (var defaultBinding in DefaultTextureBindings)
             {
                 _rc.SetTexture(defaultBinding.Slot, defaultBinding.TextureBinding);
+            }
+            foreach (var samplerBinding in DefaultSamplerBindings)
+            {
+                _rc.SetSamplerState(samplerBinding.Slot, samplerBinding.SamplerState);
             }
         }
 
@@ -73,6 +90,17 @@ namespace Veldrid.Graphics
         {
             Slot = slot;
             TextureBinding = binding;
+        }
+    }
+
+    public struct DefaultSamplerBindingInfo
+    {
+        public readonly int Slot;
+        public readonly SamplerState SamplerState;
+        public DefaultSamplerBindingInfo(int slot, SamplerState samplerState)
+        {
+            Slot = slot;
+            SamplerState = samplerState;
         }
     }
 }

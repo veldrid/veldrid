@@ -6,7 +6,7 @@ namespace Veldrid.Graphics.Direct3D
 {
     internal class D3DFormats
     {
-        internal static Format ConvertPixelFormat(PixelFormat format)
+        internal static Format VeldridToD3DPixelFormat(PixelFormat format)
         {
             switch (format)
             {
@@ -23,9 +23,9 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        internal static SamplerAddressMode D3DToVeldridSamplerAddressMode(TextureAddressMode address)
+        internal static SamplerAddressMode D3DToVeldridSamplerAddressMode(TextureAddressMode mode)
         {
-            switch (address)
+            switch (mode)
             {
                 case TextureAddressMode.Wrap:
                     return SamplerAddressMode.Wrap;
@@ -37,6 +37,23 @@ namespace Veldrid.Graphics.Direct3D
                     return SamplerAddressMode.Border;
                 default:
                     throw Illegal.Value<TextureAddressMode>();
+            }
+        }
+
+        internal static TextureAddressMode VeldridToD3DSamplerAddressMode(SamplerAddressMode mode)
+        {
+            switch (mode)
+            {
+                case SamplerAddressMode.Wrap:
+                    return TextureAddressMode.Wrap;
+                case SamplerAddressMode.Mirror:
+                    return TextureAddressMode.Mirror;
+                case SamplerAddressMode.Clamp:
+                    return TextureAddressMode.Clamp;
+                case SamplerAddressMode.Border:
+                    return TextureAddressMode.Border;
+                default:
+                    throw Illegal.Value<SamplerAddressMode>();
             }
         }
 
@@ -85,7 +102,53 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        internal static Format ConvertIndexFormat(IndexFormat format)
+        internal static Filter VeldridToD3DSamplerFilter(SamplerFilter filter)
+        {
+            switch (filter)
+            {
+                case SamplerFilter.MinMagMipPoint:
+                    return Filter.MinMagMipPoint;
+                case SamplerFilter.MinMagPointMipLinear:
+                    return Filter.MinMagPointMipLinear;
+                case SamplerFilter.MinPointMagLinearMipPoint:
+                    return Filter.MinPointMagLinearMipPoint;
+                case SamplerFilter.MinPointMagMipLinear:
+                    return Filter.MinPointMagMipLinear;
+                case SamplerFilter.MinLinearMagMipPoint:
+                    return Filter.MinLinearMagMipPoint;
+                case SamplerFilter.MinLinearMagPointMipLinear:
+                    return Filter.MinLinearMagPointMipLinear;
+                case SamplerFilter.MinMagLinearMipPoint:
+                    return Filter.MinMagLinearMipPoint;
+                case SamplerFilter.MinMagMipLinear:
+                    return Filter.MinMagMipLinear;
+                case SamplerFilter.Anisotropic:
+                    return Filter.Anisotropic;
+                case SamplerFilter.ComparisonMinMagMipPoint:
+                    return Filter.ComparisonMinMagMipPoint;
+                case SamplerFilter.ComparisonMinMagPointMipLinear:
+                    return Filter.ComparisonMinMagPointMipLinear;
+                case SamplerFilter.ComparisonMinPointMagLinearMipPoint:
+                    return Filter.ComparisonMinPointMagLinearMipPoint;
+                case SamplerFilter.ComparisonMinPointMagMipLinear:
+                    return Filter.ComparisonMinPointMagMipLinear;
+                case SamplerFilter.ComparisonMinLinearMagMipPoint:
+                    return Filter.ComparisonMinLinearMagMipPoint;
+                case SamplerFilter.ComparisonMinLinearMagPointMipLinear:
+                    return Filter.ComparisonMinLinearMagPointMipLinear;
+                case SamplerFilter.ComparisonMinMagLinearMipPoint:
+                    return Filter.ComparisonMinMagLinearMipPoint;
+                case SamplerFilter.ComparisonMinMagMipLinear:
+                    return Filter.ComparisonMinMagMipLinear;
+                case SamplerFilter.ComparisonAnisotropic:
+                    return Filter.ComparisonAnisotropic;
+                default:
+                    throw Illegal.Value<SamplerFilter>();
+            }
+        }
+
+
+        internal static Format VeldridToD3DIndexFormat(IndexFormat format)
         {
             switch (format)
             {
@@ -100,7 +163,7 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        internal static FillMode ConvertFillMode(TriangleFillMode fillMode)
+        internal static FillMode VeldridToD3DTriangleFillMode(TriangleFillMode fillMode)
         {
             switch (fillMode)
             {
@@ -113,7 +176,7 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        internal static CullMode ConvertCullMode(FaceCullingMode cullMode)
+        internal static CullMode VeldridToD3DFaceCullingMode(FaceCullingMode cullMode)
         {
             switch (cullMode)
             {
@@ -128,7 +191,7 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        public static BlendOption ConvertBlend(Blend blendFactor)
+        public static BlendOption VeldridToD3DBlend(Blend blendFactor)
         {
             switch (blendFactor)
             {
@@ -161,7 +224,7 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        public static BlendOperation ConvertBlendFunction(BlendFunction function)
+        public static BlendOperation VeldridToD3DBlendFunction(BlendFunction function)
         {
             switch (function)
             {
@@ -179,7 +242,7 @@ namespace Veldrid.Graphics.Direct3D
                     throw Illegal.Value<BlendFunction>();
             }
         }
-        public static Comparison ConvertDepthComparison(DepthComparison dc)
+        public static Comparison VeldridToD3DDepthComparison(DepthComparison dc)
         {
             switch (dc)
             {
@@ -240,7 +303,7 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        public static SharpDX.Direct3D.PrimitiveTopology ConvertPrimitiveTopology(PrimitiveTopology primitiveTopology)
+        public static SharpDX.Direct3D.PrimitiveTopology VeldridToD3DPrimitiveTopology(PrimitiveTopology primitiveTopology)
         {
             switch (primitiveTopology)
             {
@@ -259,7 +322,7 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        public static InputClassification ConvertInputClass(VertexElementInputClass inputClass)
+        public static InputClassification VeldridToD3DVertexElementInputClass(VertexElementInputClass inputClass)
         {
             switch (inputClass)
             {

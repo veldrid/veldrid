@@ -56,36 +56,68 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-        internal static void VeldridToGLTextureMinMagFilter(SamplerFilter filter, out TextureMinFilter min, out TextureMagFilter mag)
+        internal static SizedInternalFormat GetSizedInternalFormat(PixelFormat pixelFormat)
+        {
+            switch (pixelFormat)
+            {
+                case PixelFormat.R32_G32_B32_A32_Float:
+                    return SizedInternalFormat.Rgba32f;
+                case PixelFormat.R8_UInt:
+                    return SizedInternalFormat.R8ui;
+                case PixelFormat.Alpha_UInt8:
+                    return SizedInternalFormat.R8ui;
+                case PixelFormat.R8_G8_B8_A8:
+                    return SizedInternalFormat.Rgba8ui;
+                case PixelFormat.Alpha_UInt16:
+                    return SizedInternalFormat.R16ui;
+                default:
+                    throw Illegal.Value<PixelFormat>();
+            }
+        }
+
+
+        internal static void VeldridToGLTextureMinMagFilter(SamplerFilter filter, bool mip, out TextureMinFilter min, out TextureMagFilter mag)
         {
             switch (filter)
             {
                 case SamplerFilter.MinMagMipPoint:
-                case SamplerFilter.MinMagPointMipLinear:
                 case SamplerFilter.ComparisonMinMagMipPoint:
+                    min = mip ? TextureMinFilter.NearestMipmapNearest : TextureMinFilter.Nearest;
+                    mag = TextureMagFilter.Nearest;
+                    break;
+                case SamplerFilter.MinMagPointMipLinear:
                 case SamplerFilter.ComparisonMinMagPointMipLinear:
-                    min = TextureMinFilter.Nearest;
+                    min = mip ? TextureMinFilter.NearestMipmapLinear : TextureMinFilter.Nearest;
                     mag = TextureMagFilter.Nearest;
                     break;
                 case SamplerFilter.MinPointMagLinearMipPoint:
-                case SamplerFilter.MinPointMagMipLinear:
                 case SamplerFilter.ComparisonMinPointMagLinearMipPoint:
+                    min = mip ? TextureMinFilter.NearestMipmapNearest : TextureMinFilter.Nearest;
+                    mag = TextureMagFilter.Linear;
+                    break;
+                case SamplerFilter.MinPointMagMipLinear:
                 case SamplerFilter.ComparisonMinPointMagMipLinear:
-                    min = TextureMinFilter.Nearest;
+                    min = mip ? TextureMinFilter.NearestMipmapLinear : TextureMinFilter.Nearest;
                     mag = TextureMagFilter.Linear;
                     break;
                 case SamplerFilter.MinLinearMagMipPoint:
-                case SamplerFilter.MinLinearMagPointMipLinear:
                 case SamplerFilter.ComparisonMinLinearMagMipPoint:
+                    min = mip ? TextureMinFilter.LinearMipmapNearest : TextureMinFilter.Linear;
+                    mag = TextureMagFilter.Nearest;
+                    break;
+                case SamplerFilter.MinLinearMagPointMipLinear:
                 case SamplerFilter.ComparisonMinLinearMagPointMipLinear:
-                    min = TextureMinFilter.Linear;
+                    min = mip ? TextureMinFilter.LinearMipmapLinear : TextureMinFilter.Linear;
                     mag = TextureMagFilter.Nearest;
                     break;
                 case SamplerFilter.MinMagLinearMipPoint:
-                case SamplerFilter.MinMagMipLinear:
                 case SamplerFilter.ComparisonMinMagLinearMipPoint:
+                    min = mip ? TextureMinFilter.LinearMipmapNearest : TextureMinFilter.Linear;
+                    mag = TextureMagFilter.Linear;
+                    break;
+                case SamplerFilter.MinMagMipLinear:
                 case SamplerFilter.ComparisonMinMagMipLinear:
-                    min = TextureMinFilter.Linear;
+                    min = mip ? TextureMinFilter.LinearMipmapLinear : TextureMinFilter.Linear;
                     mag = TextureMagFilter.Linear;
                     break;
                 case SamplerFilter.Anisotropic:

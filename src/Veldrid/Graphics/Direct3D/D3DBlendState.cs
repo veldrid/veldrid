@@ -24,12 +24,12 @@ namespace Veldrid.Graphics.Direct3D
             ColorBlendFunction = colorBlendFunc;
 
             var desc = new BlendStateDescription();
-            desc.RenderTarget[0].SourceAlphaBlend = D3DFormats.ConvertBlend(SourceAlphaBlend);
-            desc.RenderTarget[0].DestinationAlphaBlend = D3DFormats.ConvertBlend(DestinationAlphaBlend);
-            desc.RenderTarget[0].AlphaBlendOperation = D3DFormats.ConvertBlendFunction(AlphaBlendFunction);
-            desc.RenderTarget[0].SourceBlend = D3DFormats.ConvertBlend(SourceColorBlend);
-            desc.RenderTarget[0].DestinationBlend = D3DFormats.ConvertBlend(DestinationColorBlend);
-            desc.RenderTarget[0].BlendOperation = D3DFormats.ConvertBlendFunction(ColorBlendFunction);
+            desc.RenderTarget[0].SourceAlphaBlend = D3DFormats.VeldridToD3DBlend(SourceAlphaBlend);
+            desc.RenderTarget[0].DestinationAlphaBlend = D3DFormats.VeldridToD3DBlend(DestinationAlphaBlend);
+            desc.RenderTarget[0].AlphaBlendOperation = D3DFormats.VeldridToD3DBlendFunction(AlphaBlendFunction);
+            desc.RenderTarget[0].SourceBlend = D3DFormats.VeldridToD3DBlend(SourceColorBlend);
+            desc.RenderTarget[0].DestinationBlend = D3DFormats.VeldridToD3DBlend(DestinationColorBlend);
+            desc.RenderTarget[0].BlendOperation = D3DFormats.VeldridToD3DBlendFunction(ColorBlendFunction);
             desc.RenderTarget[0].IsBlendEnabled = isBlendEnabled;
             desc.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using OpenTK.Graphics.ES30;
+using System.Diagnostics;
 
 namespace Veldrid.Graphics.OpenGLES
 {
@@ -55,6 +56,79 @@ namespace Veldrid.Graphics.OpenGLES
                     throw new NotSupportedException($"Shaders of type {type} are not supported in OpenGL ES.");
                 default:
                     throw Illegal.Value<ShaderType>();
+            }
+        }
+
+        internal static TextureWrapMode VeldridToGLTextureWrapMode(SamplerAddressMode mode)
+        {
+            switch (mode)
+            {
+                case SamplerAddressMode.Wrap:
+                    return TextureWrapMode.Repeat;
+                case SamplerAddressMode.Mirror:
+                    Debug.WriteLine("SamplerAddressMode.Mirror is not supported on OpenGL ES.");
+                    return TextureWrapMode.Clamp;
+                case SamplerAddressMode.Clamp:
+                    return TextureWrapMode.Clamp;
+                case SamplerAddressMode.Border:
+                    return TextureWrapMode.ClampToBorder;
+                default:
+                    throw Illegal.Value<SamplerAddressMode>();
+            }
+        }
+
+        internal static void VeldridToGLTextureMinMagFilter(SamplerFilter filter, out TextureMinFilter min, out TextureMagFilter mag)
+        {
+            switch (filter)
+            {
+                case SamplerFilter.MinMagMipPoint:
+                case SamplerFilter.ComparisonMinMagMipPoint:
+                    min = TextureMinFilter.NearestMipmapNearest;
+                    mag = TextureMagFilter.Nearest;
+                    break;
+                case SamplerFilter.MinMagPointMipLinear:
+                case SamplerFilter.ComparisonMinMagPointMipLinear:
+                    min = TextureMinFilter.NearestMipmapLinear;
+                    mag = TextureMagFilter.Nearest;
+                    break;
+                case SamplerFilter.MinPointMagLinearMipPoint:
+                case SamplerFilter.ComparisonMinPointMagLinearMipPoint:
+                    min = TextureMinFilter.NearestMipmapNearest;
+                    mag = TextureMagFilter.Linear;
+                    break;
+                case SamplerFilter.MinPointMagMipLinear:
+                case SamplerFilter.ComparisonMinPointMagMipLinear:
+                    min = TextureMinFilter.NearestMipmapLinear;
+                    mag = TextureMagFilter.Linear;
+                    break;
+                case SamplerFilter.MinLinearMagMipPoint:
+                case SamplerFilter.ComparisonMinLinearMagMipPoint:
+                    min = TextureMinFilter.LinearMipmapNearest;
+                    mag = TextureMagFilter.Nearest;
+                    break;
+                case SamplerFilter.MinLinearMagPointMipLinear:
+                case SamplerFilter.ComparisonMinLinearMagPointMipLinear:
+                    min = TextureMinFilter.LinearMipmapLinear;
+                    mag = TextureMagFilter.Nearest;
+                    break;
+                case SamplerFilter.MinMagLinearMipPoint:
+                case SamplerFilter.ComparisonMinMagLinearMipPoint:
+                    min = TextureMinFilter.LinearMipmapNearest;
+                    mag = TextureMagFilter.Linear;
+                    break;
+                case SamplerFilter.MinMagMipLinear:
+                case SamplerFilter.ComparisonMinMagMipLinear:
+                    min = TextureMinFilter.LinearMipmapLinear;
+                    mag = TextureMagFilter.Linear;
+                    break;
+                case SamplerFilter.Anisotropic:
+                case SamplerFilter.ComparisonAnisotropic:
+                    // TODO: This doesn't map to a min/mag filtering mode.
+                    min = TextureMinFilter.Nearest;
+                    mag = TextureMagFilter.Nearest;
+                    break;
+                default:
+                    throw Illegal.Value<SamplerFilter>();
             }
         }
 

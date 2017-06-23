@@ -18,9 +18,10 @@ namespace Veldrid.RenderDemo
         private BoundingSphere _centeredBounds;
 
         private RenderContext _currentContext;
-        private VertexBuffer s_vb;
-        private IndexBuffer s_ib;
-        private Material s_material;
+        private VertexBuffer _vb;
+        private IndexBuffer _ib;
+        private Material _material;
+        private SamplerState _samplerState;
 
         private static RasterizerState s_wireframeRasterizerState;
 
@@ -65,12 +66,12 @@ namespace Veldrid.RenderDemo
             _currentContext = context;
             ResourceFactory factory = context.ResourceFactory;
 
-            s_vb = factory.CreateVertexBuffer(VertexPositionNormalTexture.SizeInBytes * _vertices.Length, false);
+            _vb = factory.CreateVertexBuffer(VertexPositionNormalTexture.SizeInBytes * _vertices.Length, false);
             VertexDescriptor desc = new VertexDescriptor(VertexPositionNormalTexture.SizeInBytes, VertexPositionNormalTexture.ElementCount, 0, IntPtr.Zero);
-            s_vb.SetVertexData(_vertices, desc);
+            _vb.SetVertexData(_vertices, desc);
 
-            s_ib = factory.CreateIndexBuffer(sizeof(ushort) * _indices.Length, false);
-            s_ib.SetIndices(_indices, IndexFormat.UInt16);
+            _ib = factory.CreateIndexBuffer(sizeof(ushort) * _indices.Length, false);
+            _ib.SetIndices(_indices, IndexFormat.UInt16);
 
             MaterialVertexInput materialInputs = new MaterialVertexInput(
                 VertexPositionNormalTexture.SizeInBytes,
@@ -102,7 +103,7 @@ namespace Veldrid.RenderDemo
                     new TextureDataInputElement("surfaceTexture", _texture)
                 });
 
-            s_material = factory.CreateMaterial(
+            _material = factory.CreateMaterial(
                 context,
                 VertexShaderSource,
                 FragmentShaderSource,
@@ -110,6 +111,16 @@ namespace Veldrid.RenderDemo
                 globalInputs,
                 perObjectInputs,
                 textureInputs);
+
+            _samplerState = factory.CreateSamplerState(
+                SamplerAddressMode.Wrap, SamplerAddressMode.Wrap, SamplerAddressMode.Wrap,
+                SamplerFilter.MinMagMipPoint,
+                1,
+                RgbaFloat.Pink,
+                DepthComparison.Always,
+                0,
+                int.MaxValue,
+                0);
 
             s_wireframeRasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
         }
@@ -130,10 +141,11 @@ namespace Veldrid.RenderDemo
                 Matrix4x4.CreateScale(Scale)
                 * Matrix4x4.CreateTranslation(Position);
 
-            rc.VertexBuffer = s_vb;
-            rc.IndexBuffer = s_ib;
-            rc.Material = s_material;
-            s_material.ApplyPerObjectInputs(_perObjectProviders);
+            rc.VertexBuffer = _vb;
+            rc.IndexBuffer = _ib;
+            rc.Material = _material;
+            _material.ApplyPerObjectInputs(_perObjectProviders);
+            rc.SetSamplerState(0, _samplerState);
 
             rc.DrawIndexedPrimitives(_indices.Length, 0);
         }
@@ -145,9 +157,10 @@ namespace Veldrid.RenderDemo
 
         public void Dispose()
         {
-            s_vb.Dispose();
-            s_ib.Dispose();
-            s_material.Dispose();
+            _vb.Dispose();
+            _ib.Dispose();
+            _material.Dispose();
+            _samplerState.Dispose();
             s_wireframeRasterizerState.Dispose();
         }
 

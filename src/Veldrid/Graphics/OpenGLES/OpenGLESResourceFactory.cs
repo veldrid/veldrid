@@ -117,6 +117,21 @@ namespace Veldrid.Graphics.OpenGLES
             return OpenGLESTexture2D.Create(pixelData, width, height, pixelSizeInBytes, format);
         }
 
+        public override SamplerState CreateSamplerState(
+            SamplerAddressMode addressU,
+            SamplerAddressMode addressV,
+            SamplerAddressMode addressW,
+            SamplerFilter filter,
+            int maxAnisotropy,
+            RgbaFloat borderColor,
+            DepthComparison comparison,
+            int minimumLod,
+            int maximumLod,
+            int lodBias)
+        {
+            return new OpenGLESSamplerState(addressU, addressV, addressW, filter, maxAnisotropy, borderColor, comparison, minimumLod, maximumLod, lodBias);
+        }
+
         public override DeviceTexture2D CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             if (format != PixelFormat.Alpha_UInt16)

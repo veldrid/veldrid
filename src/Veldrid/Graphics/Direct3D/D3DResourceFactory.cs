@@ -72,7 +72,7 @@ namespace Veldrid.Graphics.Direct3D
 
         public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format)
         {
-            return new D3DIndexBuffer(_device, sizeInBytes, isDynamic, D3DFormats.ConvertIndexFormat(format));
+            return new D3DIndexBuffer(_device, sizeInBytes, isDynamic, D3DFormats.VeldridToD3DIndexFormat(format));
         }
 
         public override Shader CreateShader(ShaderType type, string name)
@@ -146,7 +146,7 @@ namespace Veldrid.Graphics.Direct3D
                 BindFlags.ShaderResource,
                 ResourceUsage.Default,
                 CpuAccessFlags.None,
-                D3DFormats.ConvertPixelFormat(format),
+                D3DFormats.VeldridToD3DPixelFormat(format),
                 handle.AddrOfPinnedObject(),
                 width,
                 height,
@@ -162,12 +162,27 @@ namespace Veldrid.Graphics.Direct3D
                 BindFlags.ShaderResource,
                 ResourceUsage.Default,
                 CpuAccessFlags.None,
-                D3DFormats.ConvertPixelFormat(format),
+                D3DFormats.VeldridToD3DPixelFormat(format),
                 pixelData,
                 width,
                 height,
                 width * pixelSizeInBytes);
             return texture;
+        }
+
+        public override SamplerState CreateSamplerState(
+            SamplerAddressMode addressU, 
+            SamplerAddressMode addressV, 
+            SamplerAddressMode addressW, 
+            SamplerFilter filter, 
+            int maxAnisotropy, 
+            RgbaFloat borderColor, 
+            DepthComparison comparison, 
+            int minimumLod, 
+            int maximumLod, 
+            int lodBias)
+        {
+            return new D3DSamplerState(_device, addressU, addressV, addressW, filter, maxAnisotropy, borderColor, comparison, minimumLod, maximumLod, lodBias);
         }
 
         public override DeviceTexture2D CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)

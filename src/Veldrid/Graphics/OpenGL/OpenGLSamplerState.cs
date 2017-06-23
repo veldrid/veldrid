@@ -1,12 +1,13 @@
-﻿using System;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using System.Collections.Generic;
+using System;
 
 namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLSamplerState : SamplerState
     {
-        private readonly int _samplerID;
+        private InternalSamplerState _mipmapState;
+        private InternalSamplerState _noMipmapState;
 
         public SamplerAddressMode AddressU { get; }
         public SamplerAddressMode AddressV { get; }
@@ -24,6 +25,7 @@ namespace Veldrid.Graphics.OpenGL
             SamplerAddressMode addressV,
             SamplerAddressMode addressW,
             SamplerFilter filter,
+            int maxAnisotropy,
             RgbaFloat borderColor,
             DepthComparison comparison,
             int minLod,
@@ -34,63 +36,130 @@ namespace Veldrid.Graphics.OpenGL
             AddressV = addressV;
             AddressW = addressW;
             Filter = filter;
+            MaximumAnisotropy = maxAnisotropy;
             BorderColor = borderColor;
             Comparison = comparison;
             MinimumLod = minLod;
             MaximumLod = maxLod;
             LodBias = lodBias;
+        }
 
-            _samplerID = GL.GenSampler();
-#pragma warning disable CS0618 // GL.SamplerParameter isn't actually obsolete.
-            GL.SamplerParameter(_samplerID, SamplerParameter.TextureBorderColor, (float*)&borderColor);
-            GL.SamplerParameter(_samplerID, SamplerParameter.TextureWrapR, (int)OpenGLFormats.VeldridToGLTextureWrapMode(addressU));
-            GL.SamplerParameter(_samplerID, SamplerParameter.TextureWrapS, (int)OpenGLFormats.VeldridToGLTextureWrapMode(addressV));
-            GL.SamplerParameter(_samplerID, SamplerParameter.TextureWrapT, (int)OpenGLFormats.VeldridToGLTextureWrapMode(addressW));
-
-            GL.SamplerParameter(_samplerID, SamplerParameter.TextureMinLod, MinimumLod);
-            GL.SamplerParameter(_samplerID, SamplerParameter.TextureMaxLod, MaximumLod);
-            GL.SamplerParameter(_samplerID, SamplerParameter.TextureLodBias, LodBias);
-
-            if (filter == SamplerFilter.Anisotropic || filter == SamplerFilter.ComparisonAnisotropic)
+        private InternalSamplerState GetInternalState(bool mipmap)
+        {
+            if (mipmap)
             {
-                GL.SamplerParameter(_samplerID, SamplerParameter.TextureMaxAnisotropyExt, (float)MaximumAnisotropy);
+                return _mipmapState ?? (_mipmapState = CreateInternalState(mipmap));
             }
             else
             {
-                OpenGLFormats.VeldridToGLTextureMinMagFilter(filter, out TextureMinFilter min, out TextureMagFilter mag);
-                GL.SamplerParameter(_samplerID, SamplerParameter.TextureMinFilter, (int)min);
-                GL.SamplerParameter(_samplerID, SamplerParameter.TextureMagFilter, (int)mag);
+                return _noMipmapState ?? (_noMipmapState = CreateInternalState(mipmap));
             }
-
-            if (s_comparisonFilters.Contains(filter))
-            {
-                GL.SamplerParameter(_samplerID, SamplerParameter.TextureCompareMode, (int)TextureCompareMode.CompareRefToTexture);
-                GL.SamplerParameter(_samplerID, SamplerParameter.TextureCompareFunc, (int)OpenGLFormats.ConvertDepthComparison(Comparison));
-            }
-#pragma warning restore CS0618
         }
 
-        public void Apply(int textureUnit)
+        private InternalSamplerState CreateInternalState(bool mipmap)
         {
-            GL.BindSampler(textureUnit, _samplerID);
+            return new InternalSamplerState(
+                AddressU, AddressV, AddressW, Filter, MaximumAnisotropy, BorderColor, Comparison, MinimumLod, MaximumLod, LodBias, mipmap);
+        }
+
+        public void Apply(int textureUnit, bool mipmap)
+        {
+            InternalSamplerState internalState = GetInternalState(mipmap);
+            internalState.Bind(textureUnit);
         }
 
         public void Dispose()
         {
-            GL.DeleteSampler(_samplerID);
+            _mipmapState?.Dispose();
+            _noMipmapState?.Dispose();
         }
 
-        private static readonly HashSet<SamplerFilter> s_comparisonFilters = new HashSet<SamplerFilter>
+        private class InternalSamplerState : IDisposable
         {
-            SamplerFilter.ComparisonMinMagMipPoint,
-            SamplerFilter.ComparisonMinMagPointMipLinear,
-            SamplerFilter.ComparisonMinPointMagLinearMipPoint,
-            SamplerFilter.ComparisonMinPointMagMipLinear,
-            SamplerFilter.ComparisonMinLinearMagMipPoint,
-            SamplerFilter.ComparisonMinLinearMagPointMipLinear,
-            SamplerFilter.ComparisonMinMagLinearMipPoint,
-            SamplerFilter.ComparisonMinMagMipLinear,
-            SamplerFilter.ComparisonAnisotropic,
-        };
+            private readonly int _samplerID;
+
+            public unsafe InternalSamplerState(
+                SamplerAddressMode addressU,
+                SamplerAddressMode addressV,
+                SamplerAddressMode addressW,
+                SamplerFilter filter,
+                int maxAnisotropy,
+                RgbaFloat borderColor,
+                DepthComparison comparison,
+                int minLod,
+                int maxLod,
+                int lodBias,
+                bool mip)
+            {
+                _samplerID = GL.GenSampler();
+
+                GL.SamplerParameter(_samplerID, SamplerParameterName.TextureWrapR, (int)OpenGLFormats.VeldridToGLTextureWrapMode(addressU));
+                Utilities.CheckLastGLError();
+                GL.SamplerParameter(_samplerID, SamplerParameterName.TextureWrapS, (int)OpenGLFormats.VeldridToGLTextureWrapMode(addressV));
+                Utilities.CheckLastGLError();
+                GL.SamplerParameter(_samplerID, SamplerParameterName.TextureWrapT, (int)OpenGLFormats.VeldridToGLTextureWrapMode(addressW));
+                Utilities.CheckLastGLError();
+
+                if (addressU == SamplerAddressMode.Border || addressV == SamplerAddressMode.Border || addressW == SamplerAddressMode.Border)
+                {
+                    GL.SamplerParameter(_samplerID, SamplerParameterName.TextureBorderColor, (float*)&borderColor);
+                    Utilities.CheckLastGLError();
+                }
+
+                GL.SamplerParameter(_samplerID, SamplerParameterName.TextureMinLod, (float)minLod);
+                Utilities.CheckLastGLError();
+                GL.SamplerParameter(_samplerID, SamplerParameterName.TextureMaxLod, (float)maxLod);
+                Utilities.CheckLastGLError();
+                GL.SamplerParameter(_samplerID, SamplerParameterName.TextureLodBias, (float)lodBias);
+                Utilities.CheckLastGLError();
+
+                if (filter == SamplerFilter.Anisotropic || filter == SamplerFilter.ComparisonAnisotropic)
+                {
+                    GL.SamplerParameter(_samplerID, SamplerParameterName.TextureMaxAnisotropyExt, (float)maxAnisotropy);
+                    GL.SamplerParameter(_samplerID, SamplerParameterName.TextureMinFilter, mip ? (int)TextureMinFilter.LinearMipmapLinear : (int)TextureMinFilter.Linear);
+                    GL.SamplerParameter(_samplerID, SamplerParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+                    Utilities.CheckLastGLError();
+                }
+                else
+                {
+                    OpenGLFormats.VeldridToGLTextureMinMagFilter(filter, mip, out TextureMinFilter min, out TextureMagFilter mag);
+                    GL.SamplerParameter(_samplerID, SamplerParameterName.TextureMinFilter, (int)min);
+                    Utilities.CheckLastGLError();
+                    GL.SamplerParameter(_samplerID, SamplerParameterName.TextureMagFilter, (int)mag);
+                    Utilities.CheckLastGLError();
+                }
+
+                if (s_comparisonFilters.Contains(filter))
+                {
+                    GL.SamplerParameter(_samplerID, SamplerParameterName.TextureCompareMode, (int)TextureCompareMode.CompareRefToTexture);
+                    Utilities.CheckLastGLError();
+                    GL.SamplerParameter(_samplerID, SamplerParameterName.TextureCompareFunc, (int)OpenGLFormats.ConvertDepthComparison(comparison));
+                    Utilities.CheckLastGLError();
+                }
+            }
+
+            public void Bind(int textureUnit)
+            {
+                GL.BindSampler(textureUnit, _samplerID);
+            }
+
+            public void Dispose()
+            {
+                GL.DeleteSampler(_samplerID);
+            }
+
+            private static readonly HashSet<SamplerFilter> s_comparisonFilters = new HashSet<SamplerFilter>
+            {
+                SamplerFilter.ComparisonMinMagMipPoint,
+                SamplerFilter.ComparisonMinMagPointMipLinear,
+                SamplerFilter.ComparisonMinPointMagLinearMipPoint,
+                SamplerFilter.ComparisonMinPointMagMipLinear,
+                SamplerFilter.ComparisonMinLinearMagMipPoint,
+                SamplerFilter.ComparisonMinLinearMagPointMipLinear,
+                SamplerFilter.ComparisonMinMagLinearMipPoint,
+                SamplerFilter.ComparisonMinMagMipLinear,
+                SamplerFilter.ComparisonAnisotropic,
+            };
+        }
     }
 }

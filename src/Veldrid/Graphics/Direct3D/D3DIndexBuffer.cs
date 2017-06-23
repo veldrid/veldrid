@@ -37,7 +37,7 @@ namespace Veldrid.Graphics.Direct3D
 
         public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
         {
-            _format = D3DFormats.ConvertIndexFormat(format);
+            _format = D3DFormats.VeldridToD3DIndexFormat(format);
             int elementSizeInBytes = Unsafe.SizeOf<T>();
             SetData(indices, elementSizeInBytes * indices.Length, elementOffset * elementSizeInBytes);
         }
@@ -54,7 +54,7 @@ namespace Veldrid.Graphics.Direct3D
         public void SetIndices(IntPtr indices, IndexFormat format, int elementSizeInBytes, int count, int elementOffset)
         {
             SetData(indices, elementSizeInBytes * count, elementSizeInBytes * elementOffset);
-            _format = D3DFormats.ConvertIndexFormat(format);
+            _format = D3DFormats.VeldridToD3DIndexFormat(format);
         }
     }
 }

@@ -91,6 +91,7 @@ namespace Veldrid.RenderDemo
             _material.ApplyPerObjectInputs(_perObjectProviders);
             _material.UseTexture(0, _textureBinding);
             rc.RasterizerState = _wireframeState;
+            rc.SetSamplerState(0, rc.PointSampler);
             rc.DrawIndexedPrimitives(_indices.Count, 0, PrimitiveTopology.LineList);
             rc.RasterizerState = rasterState;
         }

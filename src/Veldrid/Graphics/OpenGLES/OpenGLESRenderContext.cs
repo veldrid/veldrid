@@ -239,6 +239,11 @@ namespace Veldrid.Graphics.OpenGLES
             Utilities.CheckLastGLES3Error();
         }
 
+        protected override void PlatformSetSamplerState(int slot, SamplerState samplerState)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void PlatformSetFramebuffer(Framebuffer framebuffer)
         {
             OpenGLESFramebufferBase baseFramebuffer = (OpenGLESFramebufferBase)framebuffer;

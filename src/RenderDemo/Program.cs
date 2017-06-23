@@ -60,6 +60,7 @@ namespace Veldrid.RenderDemo
                     Debug.Assert(rc is D3DRenderContext);
                     options.Add(d3dOption);
                     options.Add(openGLOption);
+                    options.Add(openGLESOption);
                 }
             }
             else

@@ -17,13 +17,14 @@ namespace Veldrid.Graphics.OpenGL
             PixelFormat veldridFormat,
             PixelInternalFormat internalFormat,
             OpenTK.Graphics.OpenGL.PixelFormat pixelFormat,
-            PixelType pixelType)
-            : this(width, height, veldridFormat, internalFormat, pixelFormat, pixelType, IntPtr.Zero)
+            PixelType pixelType,
+            bool generateMipmaps = false)
+            : this(width, height, veldridFormat, internalFormat, pixelFormat, pixelType, IntPtr.Zero, generateMipmaps)
         {
         }
 
-        public OpenGLTexture2D(int width, int height, PixelFormat format, IntPtr pixelData)
-        : this(width, height, format, OpenGLFormats.MapPixelInternalFormat(format), OpenGLFormats.MapPixelFormat(format), OpenGLFormats.MapPixelType(format), pixelData)
+        public OpenGLTexture2D(int width, int height, PixelFormat format, IntPtr pixelData, bool generateMipmaps = false)
+        : this(width, height, format, OpenGLFormats.MapPixelInternalFormat(format), OpenGLFormats.MapPixelFormat(format), OpenGLFormats.MapPixelType(format), pixelData, generateMipmaps)
         {
         }
 
@@ -34,7 +35,8 @@ namespace Veldrid.Graphics.OpenGL
             PixelInternalFormat internalFormat,
             OpenTK.Graphics.OpenGL.PixelFormat pixelFormat,
             PixelType pixelType,
-            IntPtr pixelData)
+            IntPtr pixelData,
+            bool generateMipmaps = false)
             : base(TextureTarget.Texture2D, width, height)
         {
             _veldridFormat = veldridFormat;
@@ -44,8 +46,8 @@ namespace Veldrid.Graphics.OpenGL
 
             Bind();
 
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
 
             // Set size, load empty data into texture
             GL.TexImage2D(
@@ -57,9 +59,15 @@ namespace Veldrid.Graphics.OpenGL
                 _pixelFormat,
                 _pixelType,
                 pixelData);
+
+            if (generateMipmaps)
+            {
+                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+                MipLevels = ComputeMipLevels(width, height);
+            }
         }
 
-        public static OpenGLTexture2D Create<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct
+        public static OpenGLTexture2D Create<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format, bool generateMipmaps = false) where T : struct
         {
             var internalFormat = OpenGLFormats.MapPixelInternalFormat(format);
             var pixelFormat = OpenGLFormats.MapPixelFormat(format);
@@ -75,9 +83,19 @@ namespace Veldrid.Graphics.OpenGL
 
             texture.Bind();
             GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, pixelFormat, pixelType, pixelData);
-            GL.BindTexture(TextureTarget.Texture2D, 0);
+
+            if (generateMipmaps)
+            {
+                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+                texture.MipLevels = ComputeMipLevels(width, height);
+            }
 
             return texture;
+        }
+
+        private static int ComputeMipLevels(int width, int height)
+        {
+            return 1 + (int)Math.Floor(Math.Log(Math.Max(width, height), 2));
         }
 
         public void SetTextureData(int x, int y, int width, int height, IntPtr data, int dataSizeInBytes)

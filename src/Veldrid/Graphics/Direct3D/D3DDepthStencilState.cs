@@ -15,7 +15,7 @@ namespace Veldrid.Graphics.Direct3D
             DepthComparison = comparison;
 
             DepthStencilStateDescription desc = DepthStencilStateDescription.Default();
-            desc.DepthComparison = D3DFormats.ConvertDepthComparison(comparison);
+            desc.DepthComparison = D3DFormats.VeldridToD3DDepthComparison(comparison);
             desc.IsDepthEnabled = isDepthEnabled;
             desc.DepthWriteMask = isDepthWriteEnabled ? DepthWriteMask.All : DepthWriteMask.Zero;
 

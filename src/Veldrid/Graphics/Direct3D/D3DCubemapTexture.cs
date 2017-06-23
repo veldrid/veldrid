@@ -41,7 +41,7 @@ namespace Veldrid.Graphics.Direct3D
                 device,
                 new Texture2DDescription()
                 {
-                    Format = D3DFormats.ConvertPixelFormat(format),
+                    Format = D3DFormats.VeldridToD3DPixelFormat(format),
                     ArraySize = 6,
                     MipLevels = 1,
                     SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),

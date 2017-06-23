@@ -17,8 +17,6 @@ namespace Veldrid.Graphics.Direct3D
         private SwapChain _swapChain;
         private DeviceContext _deviceContext;
         private D3DFramebuffer _defaultFramebuffer;
-        private SharpDX.Direct3D11.SamplerState _regularSamplerState;
-        private SharpDX.Direct3D11.SamplerState _shadowMapSampler;
         private PrimitiveTopology _primitiveTopology;
         private int _syncInterval;
 
@@ -43,7 +41,6 @@ namespace Veldrid.Graphics.Direct3D
         public D3DRenderContext(Window window, DeviceCreationFlags flags)
         {
             CreateAndInitializeDevice(window, flags);
-            CreateAndSetSamplers();
             ResourceFactory = new D3DResourceFactory(_device);
             RenderCapabilities = new RenderCapabilities(false, false);
             PostContextCreated();
@@ -60,7 +57,6 @@ namespace Veldrid.Graphics.Direct3D
             SetFramebuffer(_defaultFramebuffer);
             _deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
 
-            CreateAndSetSamplers();
             ResourceFactory = new D3DResourceFactory(_device);
             PostContextCreated();
         }
@@ -138,24 +134,6 @@ namespace Veldrid.Graphics.Direct3D
             _syncInterval = 0;
         }
 
-        private void CreateAndSetSamplers()
-        {
-            SamplerStateDescription regularDesc = SamplerStateDescription.Default();
-            regularDesc.AddressU = TextureAddressMode.Wrap;
-            regularDesc.AddressV = TextureAddressMode.Wrap;
-            _regularSamplerState = new SharpDX.Direct3D11.SamplerState(_device, regularDesc);
-            _deviceContext.PixelShader.SetSampler(0, _regularSamplerState);
-
-            SamplerStateDescription shadowSamplerDesc = SamplerStateDescription.Default();
-            shadowSamplerDesc.Filter = Filter.MinMagMipPoint;
-            shadowSamplerDesc.BorderColor = new RawColor4(1f, 1f, 1f, 1f);
-            shadowSamplerDesc.AddressU = TextureAddressMode.Border;
-            shadowSamplerDesc.AddressV = TextureAddressMode.Border;
-            _shadowMapSampler = new SharpDX.Direct3D11.SamplerState(_device, shadowSamplerDesc);
-            _deviceContext.PixelShader.SetSampler(1, _shadowMapSampler);
-        }
-
-
         protected override void PlatformSetViewport(int left, int top, int width, int height)
         {
             _deviceContext.Rasterizer.SetViewport(left, top, width, height);
@@ -166,7 +144,7 @@ namespace Veldrid.Graphics.Direct3D
             if (_primitiveTopology != primitiveTopology)
             {
                 _primitiveTopology = primitiveTopology;
-                var d3dTopology = D3DFormats.ConvertPrimitiveTopology(primitiveTopology);
+                var d3dTopology = D3DFormats.VeldridToD3DPrimitiveTopology(primitiveTopology);
                 _deviceContext.InputAssembler.PrimitiveTopology = d3dTopology;
             }
         }
@@ -298,6 +276,16 @@ namespace Veldrid.Graphics.Direct3D
             {
                 SetTextureBinding(ShaderType.Fragment, slot, binding);
             }
+        }
+
+        protected override void PlatformSetSamplerState(int slot, SamplerState samplerState)
+        {
+            D3DSamplerState d3dSamplerState = (D3DSamplerState)samplerState;
+
+            // TODO: This should respect applicability flags like textures do.
+            _deviceContext.VertexShader.SetSampler(slot, d3dSamplerState.SamplerState);
+            _deviceContext.GeometryShader.SetSampler(slot, d3dSamplerState.SamplerState);
+            _deviceContext.PixelShader.SetSampler(slot, d3dSamplerState.SamplerState);
         }
 
         protected override void PlatformSetFramebuffer(Framebuffer framebuffer)

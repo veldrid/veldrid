@@ -34,6 +34,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private Material _regularPassMaterial;
         private DeviceTexture2D _overrideTexture;
         private ShaderTextureBinding _overrideTextureBinding;
+        private SamplerState _shadowMapSampler;
 
         public Vector3 Position { get; set; }
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
@@ -95,6 +96,18 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 _overrideTexture = _overrideTextureData.CreateDeviceTexture(factory);
                 _overrideTextureBinding = factory.CreateShaderTextureBinding(_overrideTexture);
             }
+
+            _shadowMapSampler = rc.ResourceFactory.CreateSamplerState(
+                SamplerAddressMode.Border,
+                SamplerAddressMode.Border,
+                SamplerAddressMode.Border,
+                SamplerFilter.MinMagMipPoint,
+                1,
+                RgbaFloat.White,
+                DepthComparison.Always,
+                0,
+                int.MaxValue,
+                0);
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
@@ -126,6 +139,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 {
                     _regularPassMaterial.UseTexture(0, _overrideTextureBinding);
                 }
+                rc.SetSamplerState(1, _shadowMapSampler);
             }
 
             _worldProvider.Data =

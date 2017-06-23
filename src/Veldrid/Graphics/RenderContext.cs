@@ -59,6 +59,23 @@ namespace Veldrid.Graphics
             set { SetVertexBufferCore(0, value); }
         }
 
+        public void SetSamplerState(int slot, SamplerState samplerState)
+        {
+            PlatformSetSamplerState(slot, samplerState);
+        }
+
+        public SamplerState PointSampler
+            => _pointSampler ?? (_pointSampler = ResourceFactory.CreateSamplerState(
+                SamplerAddressMode.Clamp, SamplerAddressMode.Clamp, SamplerAddressMode.Clamp,
+                SamplerFilter.MinMagMipPoint, 1, RgbaFloat.Black, DepthComparison.Always, 0, int.MaxValue, 0));
+        private SamplerState _pointSampler;
+
+        public SamplerState Anisox4Sampler
+            => _anisox4Sampler ?? (_anisox4Sampler = ResourceFactory.CreateSamplerState(
+                SamplerAddressMode.Clamp, SamplerAddressMode.Clamp, SamplerAddressMode.Clamp,
+                SamplerFilter.Anisotropic, 4, RgbaFloat.Black, DepthComparison.Always, 0, int.MaxValue, 0));
+        private SamplerState _anisox4Sampler;
+
         /// <summary>Changes the active VertexBuffer.</summary>
         public void SetVertexBuffer(int slot, VertexBuffer vb)
         {
@@ -510,6 +527,8 @@ namespace Veldrid.Graphics
         protected abstract void PlatformSetShaderTextureBindingSlots(ShaderTextureBindingSlots bindingSlots);
 
         protected abstract void PlatformSetTexture(int slot, ShaderTextureBinding textureBinding);
+
+        protected abstract void PlatformSetSamplerState(int slot, SamplerState samplerState);
 
         protected abstract void PlatformClearMaterialResourceBindings();
 

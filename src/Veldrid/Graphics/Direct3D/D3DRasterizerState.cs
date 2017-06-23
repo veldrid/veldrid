@@ -30,8 +30,8 @@ namespace Veldrid.Graphics.Direct3D
             {
                 IsDepthClipEnabled = IsDepthClipEnabled,
                 IsScissorEnabled = IsScissorTestEnabled,
-                CullMode = D3DFormats.ConvertCullMode(cullMode),
-                FillMode = D3DFormats.ConvertFillMode(fillMode)
+                CullMode = D3DFormats.VeldridToD3DFaceCullingMode(cullMode),
+                FillMode = D3DFormats.VeldridToD3DTriangleFillMode(fillMode)
             };
 
             _deviceState = new SharpDX.Direct3D11.RasterizerState(device, desc);

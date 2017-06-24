@@ -30,13 +30,13 @@ namespace Veldrid.Graphics.OpenGLES
         {
             OpenGLESTexture2D colorTexture = new OpenGLESTexture2D(
                 width, height,
-                PixelFormat.R8_G8_B8_A8,
+                PixelFormat.R8_G8_B8_A8_UInt,
                 OpenTK.Graphics.ES30.PixelFormat.Rgba,
                 PixelType.UnsignedByte);
             OpenGLESTexture2D depthTexture = new OpenGLESTexture2D(
                 width,
                 height,
-                PixelFormat.Alpha_UInt16,
+                PixelFormat.R16_UInt,
                 OpenTK.Graphics.ES30.PixelFormat.DepthComponent,
                 PixelType.UnsignedShort);
 
@@ -117,7 +117,7 @@ namespace Veldrid.Graphics.OpenGLES
             return OpenGLESTexture2D.Create(pixelData, width, height, pixelSizeInBytes, format);
         }
 
-        public override SamplerState CreateSamplerState(
+        public override SamplerState CreateSamplerStateCore(
             SamplerAddressMode addressU,
             SamplerAddressMode addressV,
             SamplerAddressMode addressW,
@@ -134,15 +134,15 @@ namespace Veldrid.Graphics.OpenGLES
 
         public override DeviceTexture2D CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            if (format != PixelFormat.Alpha_UInt16)
+            if (format != PixelFormat.R16_UInt)
             {
-                throw new NotImplementedException("Alpha_UInt16 is the only supported depth texture format.");
+                throw new NotImplementedException("R16_UInt is the only supported depth texture format.");
             }
 
             return new OpenGLESTexture2D(
                 width,
                 height,
-                PixelFormat.Alpha_UInt16,
+                PixelFormat.R16_UInt,
                 OpenTK.Graphics.ES30.PixelFormat.DepthComponent,
                 PixelType.UnsignedShort);
         }
@@ -176,14 +176,17 @@ namespace Veldrid.Graphics.OpenGLES
             return new OpenGLESVertexBuffer(isDynamic);
         }
 
-        public override BlendState CreateCustomBlendState(bool isBlendEnabled, Blend srcBlend, Blend destBlend, BlendFunction blendFunc)
+        public override BlendState CreateCustomBlendStateCore(
+            bool isBlendEnabled,
+            Blend srcAlpha,
+            Blend destAlpha,
+            BlendFunction alphaBlendFunc,
+            Blend srcColor,
+            Blend destColor,
+            BlendFunction colorBlendFunc,
+            RgbaFloat blendFactor)
         {
-            return new OpenGLESBlendState(isBlendEnabled, srcBlend, destBlend, blendFunc, srcBlend, destBlend, blendFunc);
-        }
-
-        public override BlendState CreateCustomBlendState(bool isBlendEnabled, Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc, Blend srcColor, Blend destColor, BlendFunction colorBlendFunc)
-        {
-            return new OpenGLESBlendState(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc);
+            return new OpenGLESBlendState(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc, blendFactor);
         }
 
         public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)

@@ -42,32 +42,74 @@ namespace Veldrid.Sdl2
 
     public enum SDL_WindowEventID : byte
     {
-        None,           /**< Never used */
-        Shown,          /**< Window has been shown */
-        Hidden,         /**< Window has been hidden */
-        Exposed,        /**< Window has been exposed and should be
-                                             redrawn */
-        Moved,          /**< Window has been moved to data1, data2
-                                         */
-        Resized,        /**< Window has been resized to data1xdata2 */
-        SizeChanged,   /**< The window size has changed, either as
-                                             a result of an API call or through the
-                                             system or user changing the window size. */
-        Minimized,      /**< Window has been minimized */
-        Maximized,      /**< Window has been maximized */
-        Restored,       /**< Window has been restored to normal size
-                                             and position */
-        Enter,          /**< Window has gained mouse focus */
-        Leave,          /**< Window has lost mouse focus */
-        FocusGained,   /**< Window has gained keyboard focus */
-        FocusLost,     /**< Window has lost keyboard focus */
-
+        /// <summary>
+        /// Never used.
+        /// </summary>
+        None,
+        /// <summary>
+        /// Window has been shown.
+        /// </summary>
+        Shown,
+        /// <summary>
+        /// Window has been hidden.
+        /// </summary>
+        Hidden,
+        /// <summary>
+        /// Window has been exposed and should be redrawn.
+        /// </summary>
+        Exposed,
+        /// <summary>
+        /// Window has been moved to data1, data2.
+        /// </summary>
+        Moved,
+        /// <summary>
+        /// Window has been resized to data1xdata2.
+        /// </summary>
+        Resized,
+        /// <summary>
+        /// The window size has changed, either as a result of an API call or through the system or user changing the window size.
+        /// </summary>
+        SizeChanged,
+        /// <summary>
+        /// Window has been minimized.
+        /// </summary>
+        Minimized,
+        /// <summary>
+        /// Window has been maximized.
+        /// </summary>
+        Maximized,
+        /// <summary>
+        /// Window has been restored to normal size and position.
+        /// </summary>
+        Restored,
+        /// <summary>
+        /// Window has gained mouse focus.
+        /// </summary>
+        Enter,
+        /// <summary>
+        /// Window has lost mouse focus.
+        /// </summary>
+        Leave,
+        /// <summary>
+        /// Window has gained keyboard focus.
+        /// </summary>
+        FocusGained,
+        /// <summary>
+        /// Window has lost keyboard focus
+        /// </summary>
+        FocusLost,
         /// <summary>
         /// The window manager requests that the window be closed.
         /// </summary>
         Close,
-        TakeFocus,     /**< Window is being offered a focus (should SetWindowInputFocus() on itself or a subwindow, or ignore) */
-        HitTest        /**< Window had a hit test that wasn't SDL_HITTEST_NORMAL. */
+        /// <summary>
+        /// Window is being offered a focus (should SetWindowInputFocus() on itself or a subwindow, or ignore).
+        /// </summary>
+        TakeFocus,
+        /// <summary>
+        /// Window had a hit test that wasn't SDL_HITTEST_NORMAL.
+        /// </summary>
+        HitTest
     }
 
     /// <summary>

@@ -74,6 +74,10 @@ namespace Veldrid.Graphics.OpenGL
             _noMipmapState?.Dispose();
         }
 
+        /// <summary>
+        /// Encapsulates a single sampler state. Each OpenGLSamplerState uses two InternalSamplerState objects to represent
+        /// a mipmapped and non-mipmapped sampler, and binds one depending on whether the current texture has mipmaps.
+        /// </summary>
         private class InternalSamplerState : IDisposable
         {
             private readonly int _samplerID;

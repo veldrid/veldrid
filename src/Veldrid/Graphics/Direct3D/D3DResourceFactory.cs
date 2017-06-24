@@ -170,7 +170,7 @@ namespace Veldrid.Graphics.Direct3D
             return texture;
         }
 
-        public override SamplerState CreateSamplerState(
+        public override SamplerState CreateSamplerStateCore(
             SamplerAddressMode addressU, 
             SamplerAddressMode addressV, 
             SamplerAddressMode addressW, 
@@ -187,9 +187,9 @@ namespace Veldrid.Graphics.Direct3D
 
         public override DeviceTexture2D CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            if (format != PixelFormat.Alpha_UInt16)
+            if (format != PixelFormat.R16_UInt)
             {
-                throw new NotImplementedException("Alpha_UInt16 is the only supported depth texture format.");
+                throw new NotImplementedException("R16_UInt is the only supported depth texture format.");
             }
 
             return new D3DTexture2D(_device, new Texture2DDescription()
@@ -230,17 +230,13 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DTextureBinding(srv, d3dTexture);
         }
 
-        public override BlendState CreateCustomBlendState(bool isBlendEnabled, Blend srcBlend, Blend destBlend, BlendFunction blendFunc)
-        {
-            return new D3DBlendState(_device, isBlendEnabled, srcBlend, destBlend, blendFunc, srcBlend, destBlend, blendFunc);
-        }
-
-        public override BlendState CreateCustomBlendState(
+        public override BlendState CreateCustomBlendStateCore(
             bool isBlendEnabled,
             Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
-            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc)
+            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
+            RgbaFloat blendFactor)
         {
-            return new D3DBlendState(_device, isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc);
+            return new D3DBlendState(_device, isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc, blendFactor);
         }
 
         public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)

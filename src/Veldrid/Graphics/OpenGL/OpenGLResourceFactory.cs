@@ -38,7 +38,7 @@ namespace Veldrid.Graphics.OpenGL
             OpenGLTexture2D depthTexture = new OpenGLTexture2D(
                 width,
                 height,
-                PixelFormat.Alpha_UInt16,
+                PixelFormat.R16_UInt,
                 PixelInternalFormat.DepthComponent16,
                 OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent,
                 PixelType.UnsignedShort,
@@ -121,7 +121,7 @@ namespace Veldrid.Graphics.OpenGL
             return OpenGLTexture2D.Create(pixelData, width, height, pixelSizeInBytes, format, generateMipmaps: true);
         }
 
-        public override SamplerState CreateSamplerState(
+        public override SamplerState CreateSamplerStateCore(
             SamplerAddressMode addressU,
             SamplerAddressMode addressV,
             SamplerAddressMode addressW,
@@ -138,15 +138,15 @@ namespace Veldrid.Graphics.OpenGL
 
         public override DeviceTexture2D CreateDepthTexture(int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            if (format != PixelFormat.Alpha_UInt16)
+            if (format != PixelFormat.R16_UInt)
             {
-                throw new NotImplementedException("Alpha_UInt16 is the only supported depth texture format.");
+                throw new NotImplementedException("R16_UInt is the only supported depth texture format.");
             }
 
             return new OpenGLTexture2D(
                 width,
                 height,
-                PixelFormat.Alpha_UInt16,
+                PixelFormat.R16_UInt,
                 PixelInternalFormat.DepthComponent16,
                 OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent,
                 PixelType.UnsignedShort);
@@ -181,14 +181,13 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLVertexBuffer(isDynamic);
         }
 
-        public override BlendState CreateCustomBlendState(bool isBlendEnabled, Blend srcBlend, Blend destBlend, BlendFunction blendFunc)
+        public override BlendState CreateCustomBlendStateCore(
+            bool isBlendEnabled, 
+            Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc, 
+            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
+            RgbaFloat blendFactor)
         {
-            return new OpenGLBlendState(isBlendEnabled, srcBlend, destBlend, blendFunc, srcBlend, destBlend, blendFunc);
-        }
-
-        public override BlendState CreateCustomBlendState(bool isBlendEnabled, Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc, Blend srcColor, Blend destColor, BlendFunction colorBlendFunc)
-        {
-            return new OpenGLBlendState(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc);
+            return new OpenGLBlendState(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc, blendFactor);
         }
 
         public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)

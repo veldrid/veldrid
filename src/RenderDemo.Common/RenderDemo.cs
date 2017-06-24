@@ -47,7 +47,7 @@ namespace Veldrid.RenderDemo
         private static bool _wireframe;
 
         private static bool _takeScreenshot;
-        private static ImGuiRenderer _imguiRenderer;
+        private static SwappableImGuiRenderer _imguiRenderer;
 
         private static Framebuffer _screenshotFramebuffer;
         private static RasterizerState _wireframeRasterizerState;
@@ -1163,7 +1163,7 @@ https://github.com/mellinoe/veldrid.");
                 _rc.SetDefaultFramebuffer();
                 int width = _window.Width;
                 int height = _window.Height;
-                var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), Graphics.PixelFormat.Alpha_UInt16);
+                var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), Graphics.PixelFormat.R16_UInt);
                 _screenshotFramebuffer.DepthTexture.CopyTo(cpuDepthTexture);
 
                 ImageSharp.Image<ImageSharp.Rgba32>  image = new ImageSharp.Image<ImageSharp.Rgba32>(width, height);

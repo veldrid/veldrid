@@ -41,7 +41,7 @@ namespace Veldrid.Graphics
         /// <summary>
         /// The blend factor used with parameterized blend states.
         /// </summary>
-        RgbaFloat BlendFactor { get; set; }
+        RgbaFloat BlendFactor { get; }
     }
 
     /// <summary>

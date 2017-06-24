@@ -25,12 +25,10 @@ namespace Veldrid.Graphics
             {
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return 16;
-                case PixelFormat.Alpha_UInt8:
-                    return 1;
-                case PixelFormat.R8_G8_B8_A8:
-                    return 4;
-                case PixelFormat.Alpha_UInt16:
+                case PixelFormat.R16_UInt:
                     return 2;
+                case PixelFormat.R8_G8_B8_A8_UInt:
+                    return 4;
                 case PixelFormat.R8_UInt:
                     return 1;
                 default:

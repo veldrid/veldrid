@@ -43,7 +43,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         private void InitializeContextObjects(RenderContext rc)
         {
-            _depthTexture = rc.ResourceFactory.CreateDepthTexture(DepthMapWidth, DepthMapHeight, sizeof(ushort), PixelFormat.Alpha_UInt16);
+            _depthTexture = rc.ResourceFactory.CreateDepthTexture(DepthMapWidth, DepthMapHeight, sizeof(ushort), PixelFormat.R16_UInt);
             _shadowMapFramebuffer = rc.ResourceFactory.CreateFramebuffer();
             _shadowMapFramebuffer.DepthTexture = _depthTexture;
             rc.GetTextureContextBinding(_contextBindingName).Value = _depthTexture;
@@ -76,7 +76,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
         {
             int width = DepthMapWidth;
             int height = DepthMapHeight;
-            var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), PixelFormat.Alpha_UInt16);
+            var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), PixelFormat.R16_UInt);
             _depthTexture.CopyTo(cpuDepthTexture);
 
             ImageSharp.Image<ImageSharp.Rgba32> image = new ImageSharp.Image<ImageSharp.Rgba32>(width, height);

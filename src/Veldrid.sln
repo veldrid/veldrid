@@ -16,6 +16,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.Primitives", "Veldr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.Sdl2", "Veldrid.Sdl2\Veldrid.Sdl2.csproj", "{DFF40910-3081-4CC7-B72D-B0B809752F20}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.SystemAbstractions", "Veldrid.SystemAbstractions\Veldrid.SystemAbstractions.csproj", "{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -110,6 +112,18 @@ Global
 		{DFF40910-3081-4CC7-B72D-B0B809752F20}.Release|x64.Build.0 = Release|Any CPU
 		{DFF40910-3081-4CC7-B72D-B0B809752F20}.Release|x86.ActiveCfg = Release|Any CPU
 		{DFF40910-3081-4CC7-B72D-B0B809752F20}.Release|x86.Build.0 = Release|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Debug|x64.Build.0 = Debug|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Debug|x86.Build.0 = Debug|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Release|x64.ActiveCfg = Release|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Release|x64.Build.0 = Release|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Release|x86.ActiveCfg = Release|Any CPU
+		{54CE2E7B-C80A-4832-8B50-D348F6D19DFD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

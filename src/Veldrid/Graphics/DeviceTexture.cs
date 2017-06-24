@@ -16,6 +16,8 @@ namespace Veldrid.Graphics
         /// The height of the texture. For cubemap textures, returns the height of each individual face.
         /// </summary>
         int Height { get; }
+
+        int MipLevels { get; }
     }
 
     public interface DeviceTexture2D : DeviceTexture

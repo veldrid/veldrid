@@ -31,6 +31,9 @@ namespace Veldrid.Graphics
         private ShaderConstantBindings _constantBindings;
         private ShaderTextureBindingSlots _textureBindingSlots;
 
+        protected readonly Dictionary<int, DeviceTexture> _boundTexturesBySlot = new Dictionary<int, DeviceTexture>();
+        protected readonly Dictionary<int, BoundSamplerStateInfo> _boundSamplersBySlot = new Dictionary<int, BoundSamplerStateInfo>();
+
         /// <summary>Storage for shader texture input providers.</summary>
         public Dictionary<string, ContextDeviceBinding<DeviceTexture>> TextureProviders { get; } = new Dictionary<string, ContextDeviceBinding<DeviceTexture>>();
 
@@ -61,18 +64,25 @@ namespace Veldrid.Graphics
 
         public void SetSamplerState(int slot, SamplerState samplerState)
         {
-            PlatformSetSamplerState(slot, samplerState);
+            bool mipmap = false;
+            if (_boundTexturesBySlot.TryGetValue(slot, out DeviceTexture boundTex) && boundTex != null)
+            {
+                mipmap = boundTex.MipLevels != 1;
+            }
+
+            PlatformSetSamplerState(slot, samplerState, mipmap);
+            _boundSamplersBySlot[slot] = new BoundSamplerStateInfo(samplerState, mipmap);
         }
 
         public SamplerState PointSampler
             => _pointSampler ?? (_pointSampler = ResourceFactory.CreateSamplerState(
-                SamplerAddressMode.Clamp, SamplerAddressMode.Clamp, SamplerAddressMode.Clamp,
+                SamplerAddressMode.Wrap, SamplerAddressMode.Wrap, SamplerAddressMode.Wrap,
                 SamplerFilter.MinMagMipPoint, 1, RgbaFloat.Black, DepthComparison.Always, 0, int.MaxValue, 0));
         private SamplerState _pointSampler;
 
         public SamplerState Anisox4Sampler
             => _anisox4Sampler ?? (_anisox4Sampler = ResourceFactory.CreateSamplerState(
-                SamplerAddressMode.Clamp, SamplerAddressMode.Clamp, SamplerAddressMode.Clamp,
+                SamplerAddressMode.Wrap, SamplerAddressMode.Wrap, SamplerAddressMode.Wrap,
                 SamplerFilter.Anisotropic, 4, RgbaFloat.Black, DepthComparison.Always, 0, int.MaxValue, 0));
         private SamplerState _anisox4Sampler;
 
@@ -528,7 +538,7 @@ namespace Veldrid.Graphics
 
         protected abstract void PlatformSetTexture(int slot, ShaderTextureBinding textureBinding);
 
-        protected abstract void PlatformSetSamplerState(int slot, SamplerState samplerState);
+        protected abstract void PlatformSetSamplerState(int slot, SamplerState samplerState, bool mipmapped);
 
         protected abstract void PlatformClearMaterialResourceBindings();
 

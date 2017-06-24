@@ -14,33 +14,42 @@ namespace Veldrid.Graphics.OpenGLES
                     return OpenTK.Graphics.ES30.PixelFormat.Rgba;
                 case PixelFormat.R8_UInt:
                     return OpenTK.Graphics.ES30.PixelFormat.RedInteger;
-                case PixelFormat.Alpha_UInt8:
-                    return OpenTK.Graphics.ES30.PixelFormat.Alpha;
-                case PixelFormat.R8_G8_B8_A8:
+                case PixelFormat.R16_UInt:
+                    return OpenTK.Graphics.ES30.PixelFormat.RedInteger;
+                case PixelFormat.R8_G8_B8_A8_UInt:
                     return OpenTK.Graphics.ES30.PixelFormat.Rgba;
-                case PixelFormat.Alpha_UInt16:
-                    return OpenTK.Graphics.ES30.PixelFormat.Alpha;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
         }
 
-        public static TextureComponentCount MapTextureComponentCount(PixelFormat format)
+        public static TextureComponentCount MapTextureComponentCount(PixelFormat veldridFormat, bool isDepthFormat)
         {
-            switch (format)
+            if (isDepthFormat)
             {
-                case PixelFormat.R32_G32_B32_A32_Float:
-                    return TextureComponentCount.Rgba;
-                case PixelFormat.R8_UInt:
-                    return TextureComponentCount.R8ui;
-                case PixelFormat.Alpha_UInt8:
-                    return TextureComponentCount.R8ui;
-                case PixelFormat.R8_G8_B8_A8:
-                    return TextureComponentCount.Rgba8;
-                case PixelFormat.Alpha_UInt16:
-                    return TextureComponentCount.DepthComponent16; // HACK
-                default:
-                    throw Illegal.Value<PixelFormat>();
+                switch (veldridFormat)
+                {
+                    case PixelFormat.R16_UInt:
+                        return TextureComponentCount.DepthComponent16;
+                    default:
+                        throw new InvalidOperationException("Invalid PixelFormat for a depth texture: " + veldridFormat);
+                }
+            }
+            else
+            {
+                switch (veldridFormat)
+                {
+                    case PixelFormat.R32_G32_B32_A32_Float:
+                        return TextureComponentCount.Rgba;
+                    case PixelFormat.R8_UInt:
+                        return TextureComponentCount.R8ui;
+                    case PixelFormat.R16_UInt:
+                        return TextureComponentCount.R16ui;
+                    case PixelFormat.R8_G8_B8_A8_UInt:
+                        return TextureComponentCount.Rgba8;
+                    default:
+                        throw Illegal.Value<PixelFormat>();
+                }
             }
         }
 
@@ -77,48 +86,48 @@ namespace Veldrid.Graphics.OpenGLES
             }
         }
 
-        internal static void VeldridToGLTextureMinMagFilter(SamplerFilter filter, out TextureMinFilter min, out TextureMagFilter mag)
+        internal static void VeldridToGLTextureMinMagFilter(SamplerFilter filter, bool mip, out TextureMinFilter min, out TextureMagFilter mag)
         {
             switch (filter)
             {
                 case SamplerFilter.MinMagMipPoint:
                 case SamplerFilter.ComparisonMinMagMipPoint:
-                    min = TextureMinFilter.NearestMipmapNearest;
+                    min = mip ? TextureMinFilter.NearestMipmapNearest : TextureMinFilter.Nearest;
                     mag = TextureMagFilter.Nearest;
                     break;
                 case SamplerFilter.MinMagPointMipLinear:
                 case SamplerFilter.ComparisonMinMagPointMipLinear:
-                    min = TextureMinFilter.NearestMipmapLinear;
+                    min = mip ? TextureMinFilter.NearestMipmapLinear : TextureMinFilter.Nearest;
                     mag = TextureMagFilter.Nearest;
                     break;
                 case SamplerFilter.MinPointMagLinearMipPoint:
                 case SamplerFilter.ComparisonMinPointMagLinearMipPoint:
-                    min = TextureMinFilter.NearestMipmapNearest;
+                    min = mip ? TextureMinFilter.NearestMipmapNearest : TextureMinFilter.Nearest;
                     mag = TextureMagFilter.Linear;
                     break;
                 case SamplerFilter.MinPointMagMipLinear:
                 case SamplerFilter.ComparisonMinPointMagMipLinear:
-                    min = TextureMinFilter.NearestMipmapLinear;
+                    min = mip ? TextureMinFilter.NearestMipmapLinear : TextureMinFilter.Nearest;
                     mag = TextureMagFilter.Linear;
                     break;
                 case SamplerFilter.MinLinearMagMipPoint:
                 case SamplerFilter.ComparisonMinLinearMagMipPoint:
-                    min = TextureMinFilter.LinearMipmapNearest;
+                    min = mip ? TextureMinFilter.LinearMipmapNearest : TextureMinFilter.Linear;
                     mag = TextureMagFilter.Nearest;
                     break;
                 case SamplerFilter.MinLinearMagPointMipLinear:
                 case SamplerFilter.ComparisonMinLinearMagPointMipLinear:
-                    min = TextureMinFilter.LinearMipmapLinear;
+                    min = mip ? TextureMinFilter.LinearMipmapLinear : TextureMinFilter.Linear;
                     mag = TextureMagFilter.Nearest;
                     break;
                 case SamplerFilter.MinMagLinearMipPoint:
                 case SamplerFilter.ComparisonMinMagLinearMipPoint:
-                    min = TextureMinFilter.LinearMipmapNearest;
+                    min = mip ? TextureMinFilter.LinearMipmapNearest : TextureMinFilter.Linear;
                     mag = TextureMagFilter.Linear;
                     break;
                 case SamplerFilter.MinMagMipLinear:
                 case SamplerFilter.ComparisonMinMagMipLinear:
-                    min = TextureMinFilter.LinearMipmapLinear;
+                    min = mip ? TextureMinFilter.LinearMipmapLinear : TextureMinFilter.Linear;
                     mag = TextureMagFilter.Linear;
                     break;
                 case SamplerFilter.Anisotropic:
@@ -131,6 +140,7 @@ namespace Veldrid.Graphics.OpenGLES
                     throw Illegal.Value<SamplerFilter>();
             }
         }
+
 
         public static ShaderType GLToVeldridShaderType(OpenTK.Graphics.ES30.ShaderType type)
         {
@@ -207,12 +217,10 @@ namespace Veldrid.Graphics.OpenGLES
                     return PixelType.Float;
                 case PixelFormat.R8_UInt:
                     return PixelType.UnsignedByte;
-                case PixelFormat.Alpha_UInt8:
-                    return PixelType.UnsignedByte;
-                case PixelFormat.R8_G8_B8_A8:
-                    return PixelType.UnsignedByte;
-                case PixelFormat.Alpha_UInt16:
+                case PixelFormat.R16_UInt:
                     return PixelType.UnsignedShort;
+                case PixelFormat.R8_G8_B8_A8_UInt:
+                    return PixelType.UnsignedByte;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -226,12 +234,10 @@ namespace Veldrid.Graphics.OpenGLES
                     return PixelInternalFormat.Rgba;
                 case PixelFormat.R8_UInt:
                     return PixelInternalFormat.Alpha;
-                case PixelFormat.Alpha_UInt8:
+                case PixelFormat.R16_UInt:
                     return PixelInternalFormat.Alpha;
-                case PixelFormat.R8_G8_B8_A8:
+                case PixelFormat.R8_G8_B8_A8_UInt:
                     return PixelInternalFormat.Rgba;
-                case PixelFormat.Alpha_UInt16:
-                    return PixelInternalFormat.Alpha;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }

@@ -356,6 +356,7 @@
     <Content Include="HLSL\instanced-simple-frag.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <ProjectReference Include="..\Veldrid.SystemAbstractions\Veldrid.SystemAbstractions.csproj" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.Assets\Veldrid.Assets.csproj" />
     <Content Include="Assets\MaterialAsset\ShadowCaster_MtlTemplate.json">

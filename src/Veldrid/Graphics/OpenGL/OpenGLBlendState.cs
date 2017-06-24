@@ -8,7 +8,8 @@ namespace Veldrid.Graphics.OpenGL
         public OpenGLBlendState(
             bool isBlendEnabled,
             Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
-            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc)
+            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
+            RgbaFloat blendFactor)
         {
             IsBlendEnabled = isBlendEnabled;
             SourceAlphaBlend = srcAlpha;
@@ -17,11 +18,12 @@ namespace Veldrid.Graphics.OpenGL
             SourceColorBlend = srcColor;
             DestinationColorBlend = destColor;
             ColorBlendFunction = colorBlendFunc;
+            BlendFactor = blendFactor;
         }
 
         public bool IsBlendEnabled { get; }
 
-        public RgbaFloat BlendFactor { get; set; }
+        public RgbaFloat BlendFactor { get; }
 
         public Blend SourceAlphaBlend { get; }
         public Blend DestinationAlphaBlend { get; }
@@ -46,6 +48,7 @@ namespace Veldrid.Graphics.OpenGL
                 GL.BlendEquationSeparate(
                     OpenGLFormats.ConvertBlendEquation(ColorBlendFunction),
                     OpenGLFormats.ConvertBlendEquation(AlphaBlendFunction));
+                GL.BlendColor(BlendFactor.R, BlendFactor.G, BlendFactor.B, BlendFactor.A);
             }
         }
 

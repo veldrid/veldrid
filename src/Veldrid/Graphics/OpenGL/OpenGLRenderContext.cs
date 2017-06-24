@@ -19,8 +19,6 @@ namespace Veldrid.Graphics.OpenGL
         private bool _vertexLayoutChanged;
         private Action _swapBufferFunc;
         private DebugProc _debugMessageCallback;
-        private Dictionary<int, OpenGLTexture> _boundTexturesBySlot = new Dictionary<int, OpenGLTexture>();
-        private Dictionary<int, OpenGLBoundSamplerStateInfo> _boundSamplersBySlot = new Dictionary<int, OpenGLBoundSamplerStateInfo>();
 
         public OpenGLRenderContext(Window window, OpenGLPlatformContextInfo platformContext)
         {
@@ -223,27 +221,20 @@ namespace Veldrid.Graphics.OpenGL
             EnsureSamplerMipmapState(slot, boundTexture.MipLevels != 1);
         }
 
-        protected override void PlatformSetSamplerState(int slot, SamplerState samplerState)
+        protected override void PlatformSetSamplerState(int slot, SamplerState samplerState, bool mipmapped)
         {
             OpenGLSamplerState glSamplerState = (OpenGLSamplerState)samplerState;
-            bool mipmap = false;
-            if (_boundTexturesBySlot.TryGetValue(slot, out OpenGLTexture boundTex) && boundTex != null)
-            {
-                mipmap = boundTex.MipLevels != 1;
-            }
-
-            glSamplerState.Apply(slot, mipmap);
-            _boundSamplersBySlot[slot] = new OpenGLBoundSamplerStateInfo(glSamplerState, mipmap);
+            glSamplerState.Apply(slot, mipmapped);
         }
 
         private void EnsureSamplerMipmapState(int slot, bool mipmap)
         {
-            if (_boundSamplersBySlot.TryGetValue(slot, out OpenGLBoundSamplerStateInfo info))
+            if (_boundSamplersBySlot.TryGetValue(slot, out BoundSamplerStateInfo info))
             {
                 if (info.SamplerState != null && info.Mipmapped != mipmap)
                 {
-                    info.SamplerState.Apply(slot, mipmap);
-                    _boundSamplersBySlot[slot] = new OpenGLBoundSamplerStateInfo(info.SamplerState, mipmap);
+                    ((OpenGLSamplerState)info.SamplerState).Apply(slot, mipmap);
+                    _boundSamplersBySlot[slot] = new BoundSamplerStateInfo(info.SamplerState, mipmap);
                 }
             }
         }

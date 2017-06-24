@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <PackageId>Veldrid.SystemAbstractions</PackageId>
+    <Description>High-level abstractions for building rendering systems.</Description>
+    <PackageTags>3D Graphics Render OpenGL DirectX Core Standard Game</PackageTags>
+  </PropertyGroup>
+</Project>

@@ -21,7 +21,7 @@ namespace Veldrid.Graphics.OpenGLES
             PixelFormat format)
             : base(TextureTarget.TextureCubeMap, width, height)
         {
-            _texComponentCount = OpenGLESFormats.MapTextureComponentCount(format);
+            _texComponentCount = OpenGLESFormats.MapTextureComponentCount(format, false);
             _format = OpenGLESFormats.MapPixelFormat(format);
             _type = OpenGLESFormats.MapPixelType(format);
 

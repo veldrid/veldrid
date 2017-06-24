@@ -1,4 +1,5 @@
-﻿using Veldrid.Assets;
+﻿using System.Numerics;
+using Veldrid.Assets;
 using Veldrid.Graphics;
 using Veldrid.Platform;
 
@@ -8,6 +9,11 @@ namespace Veldrid.RenderDemo
     {
         public SwappableImGuiRenderer(RenderContext rc, Window window) : base(rc, window)
         {
+        }
+
+        public RenderOrderKey GetRenderOrderKey(Vector3 pos)
+        {
+            return RenderOrderKey.Create(Material.GetHashCode());
         }
 
         public void ChangeRenderContext(AssetDatabase ad, RenderContext rc)

@@ -8,7 +8,8 @@ namespace Veldrid.Graphics.OpenGLES
         public OpenGLESBlendState(
             bool isBlendEnabled,
             Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
-            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc)
+            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
+            RgbaFloat blendFactor)
         {
             IsBlendEnabled = isBlendEnabled;
             SourceAlphaBlend = srcAlpha;
@@ -17,6 +18,7 @@ namespace Veldrid.Graphics.OpenGLES
             SourceColorBlend = srcColor;
             DestinationColorBlend = destColor;
             ColorBlendFunction = colorBlendFunc;
+            BlendFactor = blendFactor;
         }
 
         public bool IsBlendEnabled { get; }
@@ -48,6 +50,7 @@ namespace Veldrid.Graphics.OpenGLES
                 GL.BlendEquationSeparate(
                     OpenGLESFormats.ConvertBlendEquation(ColorBlendFunction),
                     OpenGLESFormats.ConvertBlendEquation(AlphaBlendFunction));
+                GL.BlendColor(BlendFactor.R, BlendFactor.G, BlendFactor.B, BlendFactor.A);
             }
         }
 

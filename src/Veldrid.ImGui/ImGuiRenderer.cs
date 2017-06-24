@@ -15,7 +15,7 @@ namespace Veldrid
     /// A Veldrid RenderItem which can draw draw lists produced by ImGui.
     /// Also provides functions for updating ImGui input.
     /// </summary>
-    public class ImGuiRenderer : RenderItem, IDisposable
+    public class ImGuiRenderer : IDisposable
     {
         private readonly DynamicDataProvider<Matrix4x4> _projectionMatrixProvider;
         private RawTextureDataArray<int> _fontTexture;
@@ -68,7 +68,8 @@ namespace Veldrid
             _blendState = factory.CreateCustomBlendState(
                 true,
                 Blend.InverseSourceAlpha, Blend.Zero, BlendFunction.Add,
-                Blend.SourceAlpha, Blend.InverseSourceAlpha, BlendFunction.Add);
+                Blend.SourceAlpha, Blend.InverseSourceAlpha, BlendFunction.Add,
+                RgbaFloat.Black);
             _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
             _rasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true);
             RecreateFontDeviceTexture(rc);
@@ -107,12 +108,12 @@ namespace Veldrid
                 pixels[i] = ((int*)_textureData.Pixels)[i];
             }
 
-            _fontTexture = new RawTextureDataArray<int>(pixels, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8);
+            _fontTexture = new RawTextureDataArray<int>(pixels, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8_UInt);
 
             // Store our identifier
             io.FontAtlas.SetTexID(_fontAtlasID);
 
-            var deviceTexture = rc.ResourceFactory.CreateTexture(_fontTexture.PixelData, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8);
+            var deviceTexture = rc.ResourceFactory.CreateTexture(_fontTexture.PixelData, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8_UInt);
             _fontTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(deviceTexture);
 
             io.FontAtlas.ClearTexData();
@@ -137,14 +138,6 @@ namespace Veldrid
         {
             ImGui.Render();
             RenderImDrawData(ImGui.GetDrawData(), rc);
-        }
-
-        /// <summary>
-        /// Gets the RenderOrderKey for this RenderItem.
-        /// </summary>
-        public RenderOrderKey GetRenderOrderKey(System.Numerics.Vector3 position)
-        {
-            return new RenderOrderKey();
         }
 
         /// <summary>
@@ -368,5 +361,7 @@ namespace Veldrid
         {
             return false;
         }
+
+        protected Material Material => _material;
     }
 }

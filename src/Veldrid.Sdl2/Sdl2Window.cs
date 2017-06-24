@@ -154,6 +154,12 @@ namespace Veldrid.Sdl2
         public event Action Closed;
         public event Action FocusLost;
         public event Action FocusGained;
+        public event Action Shown;
+        public event Action Hidden;
+        public event Action MouseEntered;
+        public event Action MouseLeft;
+        public event Action Exposed;
+        public event Action<Point> Moved;
         public event Action<MouseWheelEventArgs> MouseWheel;
         public event Action<MouseMoveEventArgs> MouseMove;
         public event Action<MouseEvent> MouseDown;
@@ -727,6 +733,24 @@ namespace Veldrid.Sdl2
                     break;
                 case SDL_WindowEventID.Close:
                     Close();
+                    break;
+                case SDL_WindowEventID.Shown:
+                    Shown?.Invoke();
+                    break;
+                case SDL_WindowEventID.Hidden:
+                    Hidden?.Invoke();
+                    break;
+                case SDL_WindowEventID.Enter:
+                    MouseEntered?.Invoke();
+                    break;
+                case SDL_WindowEventID.Leave:
+                    MouseLeft?.Invoke();
+                    break;
+                case SDL_WindowEventID.Exposed:
+                    Exposed?.Invoke();
+                    break;
+                case SDL_WindowEventID.Moved:
+                    Moved?.Invoke(new Point(windowEvent.data1, windowEvent.data2));
                     break;
                 default:
                     Debug.WriteLine("Unhandled SDL WindowEvent: " + windowEvent.@event);

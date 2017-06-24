@@ -32,7 +32,7 @@ namespace Veldrid.Graphics
         /// <summary>
         /// The <see cref="PixelFormat"/> of the data.
         /// </summary>
-        public PixelFormat Format => PixelFormat.R8_G8_B8_A8;
+        public PixelFormat Format => PixelFormat.R8_G8_B8_A8_UInt;
 
         /// <summary>
         /// The size of each pixel, in bytes.
@@ -75,13 +75,13 @@ namespace Veldrid.Graphics
         /// <summary>
         /// Constructs a DeviceTexture from this texture.
         /// </summary>
-        /// <param name="producer"></param>
+        /// <param name="factory">The resource factory responsible for constructing the DeviceTexture.</param>
         /// <returns>A new <see cref="DeviceTexture2D"/> containing this image's pixel data.</returns>
-        public unsafe DeviceTexture2D CreateDeviceTexture(DeviceTextureCreator producer)
+        public unsafe DeviceTexture2D CreateDeviceTexture(ResourceFactory factory)
         {
             fixed (Rgba32* pixelPtr = &Pixels.DangerousGetPinnableReference())
             {
-                return producer.CreateTexture(new IntPtr(pixelPtr), Width, Height, PixelSizeInBytes, Format);
+                return factory.CreateTexture(new IntPtr(pixelPtr), Width, Height, PixelSizeInBytes, Format);
             }
         }
 
@@ -93,6 +93,8 @@ namespace Veldrid.Graphics
         {
             fixed (Rgba32* pixelPtr = &Pixels.DangerousGetPinnableReference())
             {
+                // TODO: This is very unsafe,and will very likely overflow if the PixelDataProvider
+                // has more data than this can hold.
                 pixelDataProvider.SetPixelData(new IntPtr(pixelPtr), Width, Height, PixelSizeInBytes);
             }
         }

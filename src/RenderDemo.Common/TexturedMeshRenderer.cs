@@ -21,7 +21,6 @@ namespace Veldrid.RenderDemo
         private VertexBuffer _vb;
         private IndexBuffer _ib;
         private Material _material;
-        private SamplerState _samplerState;
 
         private static RasterizerState s_wireframeRasterizerState;
 
@@ -112,16 +111,6 @@ namespace Veldrid.RenderDemo
                 perObjectInputs,
                 textureInputs);
 
-            _samplerState = factory.CreateSamplerState(
-                SamplerAddressMode.Wrap, SamplerAddressMode.Wrap, SamplerAddressMode.Wrap,
-                SamplerFilter.MinMagMipPoint,
-                1,
-                RgbaFloat.Pink,
-                DepthComparison.Always,
-                0,
-                int.MaxValue,
-                0);
-
             s_wireframeRasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
         }
 
@@ -145,7 +134,7 @@ namespace Veldrid.RenderDemo
             rc.IndexBuffer = _ib;
             rc.Material = _material;
             _material.ApplyPerObjectInputs(_perObjectProviders);
-            rc.SetSamplerState(0, _samplerState);
+            rc.SetSamplerState(0, rc.PointSampler);
 
             rc.DrawIndexedPrimitives(_indices.Length, 0);
         }
@@ -160,7 +149,6 @@ namespace Veldrid.RenderDemo
             _vb.Dispose();
             _ib.Dispose();
             _material.Dispose();
-            _samplerState.Dispose();
             s_wireframeRasterizerState.Dispose();
         }
 

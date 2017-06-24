@@ -38,14 +38,9 @@ namespace Veldrid.Graphics.OpenGLES
             _veldridFormat = veldridFormat;
             _pixelFormat = pixelFormat;
             _pixelType = pixelType;
-            _texComponentCount = OpenGLESFormats.MapTextureComponentCount(veldridFormat);
+            _texComponentCount = OpenGLESFormats.MapTextureComponentCount(veldridFormat, pixelFormat == OpenTK.Graphics.ES30.PixelFormat.DepthComponent);
 
             Bind();
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            Utilities.CheckLastGLES3Error();
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-            Utilities.CheckLastGLES3Error();
 
             // Set size, load empty data into texture
             GL.TexImage2D(
@@ -57,7 +52,7 @@ namespace Veldrid.Graphics.OpenGLES
                 _pixelFormat,
                 _pixelType,
                 pixelData);
-            Utilities.CheckLastGLES3Error(); ;
+            Utilities.CheckLastGLES3Error();
         }
 
         public static OpenGLESTexture2D Create<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct

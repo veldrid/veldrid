@@ -12,7 +12,8 @@ namespace Veldrid.Graphics.Direct3D
         public D3DBlendState(
             Device device, bool isBlendEnabled,
             Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
-            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc)
+            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
+            RgbaFloat blendFactor)
         {
             _device = device;
             IsBlendEnabled = isBlendEnabled;
@@ -22,6 +23,7 @@ namespace Veldrid.Graphics.Direct3D
             SourceColorBlend = srcColor;
             DestinationColorBlend = destColor;
             ColorBlendFunction = colorBlendFunc;
+            BlendFactor = blendFactor;
 
             var desc = new BlendStateDescription();
             desc.RenderTarget[0].SourceAlphaBlend = D3DFormats.VeldridToD3DBlend(SourceAlphaBlend);
@@ -38,7 +40,7 @@ namespace Veldrid.Graphics.Direct3D
 
         public bool IsBlendEnabled { get; }
 
-        public RgbaFloat BlendFactor { get; set; }
+        public RgbaFloat BlendFactor { get; }
 
         public Blend SourceAlphaBlend { get; }
         public Blend DestinationAlphaBlend { get; }

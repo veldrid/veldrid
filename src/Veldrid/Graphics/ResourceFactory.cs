@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Veldrid.Graphics
 {
@@ -8,9 +7,12 @@ namespace Veldrid.Graphics
     /// Contains functionality for creating GPU device resources,
     /// including buffers, textures, and other pipeline state objects.
     /// </summary>
-    public abstract class ResourceFactory : DeviceTextureCreator
+    public abstract class ResourceFactory
     {
         public string ShaderAssetRootPath { get; set; } = AppContext.BaseDirectory;
+
+        private readonly Dictionary<SamplerStateCacheKey, SamplerState> _cachedSamplers = new Dictionary<SamplerStateCacheKey, SamplerState>();
+        private readonly Dictionary<BlendStateCacheKey, BlendState> _cachedBlendStates = new Dictionary<BlendStateCacheKey, BlendState>();
 
         /// <summary>
         /// Creates a <see cref="VertexBuffer"/> with the given storage size.
@@ -210,7 +212,51 @@ namespace Veldrid.Graphics
         /// <returns>A new <see cref="DeviceTexture2D"/> containing the given pixel data.</returns>
         public abstract DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format);
 
-        public abstract SamplerState CreateSamplerState(
+        public SamplerState CreateSamplerState(
+            SamplerAddressMode addressU,
+            SamplerAddressMode addressV,
+            SamplerAddressMode addressW,
+            SamplerFilter filter,
+            int maxAnisotropy,
+            RgbaFloat borderColor,
+            DepthComparison comparison,
+            int minimumLod,
+            int maximumLod,
+            int lodBias)
+        {
+            SamplerStateCacheKey key = new SamplerStateCacheKey(
+                addressU,
+                addressV,
+                addressW,
+                filter,
+                maxAnisotropy,
+                borderColor,
+                comparison,
+                minimumLod,
+                maximumLod,
+                lodBias);
+
+            if (!_cachedSamplers.TryGetValue(key, out SamplerState state))
+            {
+                Console.WriteLine("Failed to retrieve sampler from cache. Creating new.");
+                state = CreateSamplerStateCore(
+                    addressU,
+                    addressV,
+                    addressW,
+                    filter,
+                    maxAnisotropy,
+                    borderColor,
+                    comparison,
+                    minimumLod,
+                    maximumLod,
+                    lodBias);
+                _cachedSamplers.Add(key, state);
+            }
+
+            return state;
+        }
+
+        public abstract SamplerState CreateSamplerStateCore(
             SamplerAddressMode addressU,
             SamplerAddressMode addressV,
             SamplerAddressMode addressW,
@@ -273,9 +319,12 @@ namespace Veldrid.Graphics
         /// <param name="destBlend">The destination blend factor.</param>
         /// <param name="blendFunc">The blend function.</param>
         /// <returns>A new <see cref="BlendState"/>.</returns>
-        public abstract BlendState CreateCustomBlendState(
+        public BlendState CreateCustomBlendState(
             bool isBlendEnabled,
-            Blend srcBlend, Blend destBlend, BlendFunction blendFunc);
+            Blend srcBlend, Blend destBlend, BlendFunction blendFunc)
+        {
+            return CreateCustomBlendState(isBlendEnabled, srcBlend, destBlend, blendFunc, srcBlend, destBlend, blendFunc, RgbaFloat.Black);
+        }
 
         /// <summary>
         /// Creates a new <see cref="BlendState"/>, used to control blending behavior in the device's output merger.
@@ -288,11 +337,50 @@ namespace Veldrid.Graphics
         /// <param name="srcColor">The source color blend factor.</param>
         /// <param name="destColor">The destenation color blend factor.</param>
         /// <param name="colorBlendFunc">The color blend function.</param>
+        /// <param name="blendFactor">The blend factor to use for parameterized blend states.</param>
         /// <returns>A new <see cref="BlendState"/>.</returns>
-        public abstract BlendState CreateCustomBlendState(
+        public BlendState CreateCustomBlendState(
             bool isBlendEnabled,
             Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
-            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc);
+            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
+            RgbaFloat blendFactor)
+        {
+            BlendStateCacheKey key = new BlendStateCacheKey(
+                isBlendEnabled,
+                srcAlpha,
+                destAlpha,
+                alphaBlendFunc,
+                srcColor,
+                destColor,
+                colorBlendFunc,
+                blendFactor);
+            if (!_cachedBlendStates.TryGetValue(key, out BlendState state))
+            {
+                state = CreateCustomBlendStateCore(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc, blendFactor);
+                _cachedBlendStates.Add(key, state);
+            }
+
+            return state;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="BlendState"/>, used to control blending behavior in the device's output merger.
+        /// with separate factors for alpha and color blending.
+        /// </summary>
+        /// <param name="isBlendEnabled">A value indicating whether blending is enabled in the <see cref="BlendState"/>.</param>
+        /// <param name="srcAlpha">The source alpha blend factor.</param>
+        /// <param name="destAlpha">The destination alpha blend factor.</param>
+        /// <param name="alphaBlendFunc">The alpha blend function.</param>
+        /// <param name="srcColor">The source color blend factor.</param>
+        /// <param name="destColor">The destenation color blend factor.</param>
+        /// <param name="colorBlendFunc">The color blend function.</param>
+        /// <param name="blendFactor">The blend factor to use for parameterized blend states.</param>
+        /// <returns>A new <see cref="BlendState"/>.</returns>
+        public abstract BlendState CreateCustomBlendStateCore(
+            bool isBlendEnabled,
+            Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
+            Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
+            RgbaFloat blendFactor);
 
         /// <summary>
         /// Creates a new <see cref="DepthStencilState"/>, used to control depth and stencil comparisons in the device's output merger.

@@ -139,6 +139,9 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 * Matrix4x4.CreateTranslation(Position);
 
             rc.DrawIndexedPrimitives(_meshData.Indices.Length, 0);
+
+            rc.SetSamplerState(0, rc.PointSampler);
+            rc.SetSamplerState(1, rc.PointSampler);
         }
 
         private void Serialize<T>(ref T value)

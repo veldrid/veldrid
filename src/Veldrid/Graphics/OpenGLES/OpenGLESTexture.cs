@@ -9,6 +9,7 @@ namespace Veldrid.Graphics.OpenGLES
         public TextureTarget Target { get; }
         public int Width { get; protected set; }
         public int Height { get; protected set; }
+        public int MipLevels { get; protected set; } = 1;
 
         public OpenGLESTexture(TextureTarget target, int width, int height)
         {

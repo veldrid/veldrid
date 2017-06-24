@@ -11,6 +11,7 @@ namespace Veldrid.Graphics.Direct3D
         public abstract Texture2D DeviceTexture { get; }
         public abstract int Width { get; }
         public abstract int Height { get; }
+        public int MipLevels { get; protected set; } = 1;
 
         public abstract ShaderResourceViewDescription GetShaderResourceViewDescription();
 

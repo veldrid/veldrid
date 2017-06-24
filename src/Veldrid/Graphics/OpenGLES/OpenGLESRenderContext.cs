@@ -239,9 +239,10 @@ namespace Veldrid.Graphics.OpenGLES
             Utilities.CheckLastGLES3Error();
         }
 
-        protected override void PlatformSetSamplerState(int slot, SamplerState samplerState)
+        protected override void PlatformSetSamplerState(int slot, SamplerState samplerState, bool mipmapped)
         {
-            throw new NotImplementedException();
+            OpenGLESSamplerState glSamplerState = (OpenGLESSamplerState)samplerState;
+            glSamplerState.Apply(slot, mipmapped);
         }
 
         protected override void PlatformSetFramebuffer(Framebuffer framebuffer)

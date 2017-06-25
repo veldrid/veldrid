@@ -116,19 +116,15 @@ namespace Veldrid.Graphics.OpenGLES
                 Utilities.CheckLastGLError();
                 GL.SamplerParameter(_samplerID, SamplerParameterName.TextureMaxLod, (float)maxLod);
                 Utilities.CheckLastGLError();
-#pragma warning disable CS0618 // LodBias is not exposed on SamplerParameterName
-                GL.SamplerParameter(_samplerID, All.TextureLodBiasRSgix, (float)lodBias);
-                GL.SamplerParameter(_samplerID, All.TextureLodBiasTSgix, (float)lodBias);
-                GL.SamplerParameter(_samplerID, All.TextureLodBiasTSgix, (float)lodBias);
-#pragma warning restore CS0618
-                Utilities.CheckLastGLError();
 
                 if (filter == SamplerFilter.Anisotropic || filter == SamplerFilter.ComparisonAnisotropic)
                 {
 #pragma warning disable CS0618 // TextureMaxAnisotropyExt is not exposed on SamplerParameterName
                     GL.SamplerParameter(_samplerID, All.TextureMaxAnisotropyExt, (float)maxAnisotropy);
 #pragma warning restore CS0618 // Type or member is obsolete
+                    Utilities.CheckLastGLError();
                     GL.SamplerParameter(_samplerID, SamplerParameterName.TextureMinFilter, mip ? (int)TextureMinFilter.LinearMipmapLinear : (int)TextureMinFilter.Linear);
+                    Utilities.CheckLastGLError();
                     GL.SamplerParameter(_samplerID, SamplerParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
                     Utilities.CheckLastGLError();
                 }

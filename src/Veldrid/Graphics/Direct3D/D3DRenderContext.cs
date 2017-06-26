@@ -25,6 +25,7 @@ namespace Veldrid.Graphics.Direct3D
         private ShaderTextureBinding[] _geometryShaderTextureBindings = new ShaderTextureBinding[MaxShaderResourceViewBindings];
         private ShaderTextureBinding[] _pixelShaderTextureBindings = new ShaderTextureBinding[MaxShaderResourceViewBindings];
 
+        private D3DVertexInputLayout _inputLayout;
         private D3DVertexShader _vertexShader;
         private D3DGeometryShader _geometryShader;
         private D3DFragmentShader _fragmentShader;
@@ -218,11 +219,19 @@ namespace Veldrid.Graphics.Direct3D
         {
             D3DShaderSet d3dShaders = ((D3DShaderSet)shaderSet);
 
-            // TODO: Cache these values and do not always set.
-            _deviceContext.InputAssembler.InputLayout = d3dShaders.InputLayout.DeviceLayout;
+            SetInputLayout(d3dShaders.InputLayout);
             SetVertexShader(d3dShaders.VertexShader);
             SetGeometryShader(d3dShaders.GeometryShader);
             SetPixelShader(d3dShaders.FragmentShader);
+        }
+
+        private void SetInputLayout(D3DVertexInputLayout inputLayout)
+        {
+            if (_inputLayout != inputLayout)
+            {
+                _inputLayout = inputLayout;
+                _deviceContext.InputAssembler.InputLayout = inputLayout.DeviceLayout;
+            }
         }
 
         private void SetVertexShader(D3DVertexShader vertexShader)

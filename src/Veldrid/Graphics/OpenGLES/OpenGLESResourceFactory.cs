@@ -29,11 +29,13 @@ namespace Veldrid.Graphics.OpenGLES
         public override Framebuffer CreateFramebuffer(int width, int height)
         {
             OpenGLESTexture2D colorTexture = new OpenGLESTexture2D(
+                1,
                 width, height,
                 PixelFormat.R8_G8_B8_A8_UInt,
                 OpenTK.Graphics.ES30.PixelFormat.Rgba,
                 PixelType.UnsignedByte);
             OpenGLESTexture2D depthTexture = new OpenGLESTexture2D(
+                1,
                 width,
                 height,
                 PixelFormat.R16_UInt,
@@ -109,7 +111,7 @@ namespace Veldrid.Graphics.OpenGLES
 
         public override DeviceTexture2D CreateTexture(int mipLevels, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            throw new NotImplementedException();
+            return new OpenGLESTexture2D(mipLevels, width, height, format, OpenGLESFormats.MapPixelFormat(format), OpenGLESFormats.MapPixelType(format));
         }
 
         public override SamplerState CreateSamplerStateCore(
@@ -135,6 +137,7 @@ namespace Veldrid.Graphics.OpenGLES
             }
 
             return new OpenGLESTexture2D(
+                1,
                 width,
                 height,
                 PixelFormat.R16_UInt,

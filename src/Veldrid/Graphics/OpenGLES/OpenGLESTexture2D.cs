@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.ES30;
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGLES
@@ -11,30 +12,23 @@ namespace Veldrid.Graphics.OpenGLES
         private readonly Graphics.PixelFormat _veldridFormat;
         private TextureComponentCount _texComponentCount;
 
+
+        public OpenGLESTexture2D(int width, int height, PixelFormat format, IntPtr pixelData)
+            : this(1, width, height, format, OpenGLESFormats.MapPixelFormat(format), OpenGLESFormats.MapPixelType(format))
+        {
+            SetTextureData(1, 0, 0, width, height, pixelData, FormatHelpers.GetPixelSize(format) * width * height);
+        }
+
         public OpenGLESTexture2D(
+            int mipLevels,
             int width,
             int height,
             PixelFormat veldridFormat,
             OpenTK.Graphics.ES30.PixelFormat pixelFormat,
             PixelType pixelType)
-            : this(width, height, veldridFormat, pixelFormat, pixelType, IntPtr.Zero)
-        {
-        }
-
-        public OpenGLESTexture2D(int width, int height, PixelFormat format, IntPtr pixelData)
-        : this(width, height, format, OpenGLESFormats.MapPixelFormat(format), OpenGLESFormats.MapPixelType(format), pixelData)
-        {
-        }
-
-        public OpenGLESTexture2D(
-            int width,
-            int height,
-            PixelFormat veldridFormat,
-            OpenTK.Graphics.ES30.PixelFormat pixelFormat,
-            PixelType pixelType,
-            IntPtr pixelData)
             : base(TextureTarget.Texture2D, width, height)
         {
+            MipLevels = mipLevels;
             _veldridFormat = veldridFormat;
             _pixelFormat = pixelFormat;
             _pixelType = pixelType;
@@ -42,47 +36,40 @@ namespace Veldrid.Graphics.OpenGLES
 
             Bind();
 
-            // Set size, load empty data into texture
-            GL.TexImage2D(
-                TextureTarget2d.Texture2D,
-                0, // level
-                _texComponentCount,
-                width, height,
-                0, // border
-                _pixelFormat,
-                _pixelType,
-                pixelData);
-            Utilities.CheckLastGLES3Error();
-        }
-
-        public static OpenGLESTexture2D Create<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct
-        {
-            var pixelFormat = OpenGLESFormats.MapPixelFormat(format);
-            var pixelType = OpenGLESFormats.MapPixelType(format);
-
-            OpenGLESTexture2D texture = new OpenGLESTexture2D(
-                width,
-                height,
-                format,
-                pixelFormat,
-                pixelType);
-
-            texture.Bind();
-            GL.TexImage2D(TextureTarget2d.Texture2D, 0, texture._texComponentCount, width, height, 0, pixelFormat, pixelType, pixelData);
-            Utilities.CheckLastGLES3Error();
-            GL.BindTexture(TextureTarget.Texture2D, 0);
-            Utilities.CheckLastGLES3Error();
-
-            return texture;
+            for (int currentLevel = 0; currentLevel < mipLevels; currentLevel++)
+            {
+                // Set size, load empty data into texture
+                GL.TexImage2D(
+                    TextureTarget2d.Texture2D,
+                    currentLevel,
+                    _texComponentCount,
+                    width, height,
+                    0, // border
+                    _pixelFormat,
+                    _pixelType,
+                    IntPtr.Zero);
+                Utilities.CheckLastGLES3Error();
+                width = Math.Max(1, width / 2);
+                height = Math.Max(1, height / 2);
+            }
         }
 
         public void SetTextureData(int mipLevel, int x, int y, int width, int height, IntPtr data, int dataSizeInBytes)
         {
             Bind();
-            GL.PixelStore(PixelStoreParameter.UnpackAlignment, (int)FormatHelpers.GetPixelSize(_veldridFormat));
-            Utilities.CheckLastGLES3Error();
+            int pixelSize = FormatHelpers.GetPixelSize(_veldridFormat);
+            if (pixelSize < 4)
+            {
+                GL.PixelStore(PixelStoreParameter.UnpackAlignment, pixelSize);
+                Utilities.CheckLastGLES3Error();
+            }
             GL.TexSubImage2D(TextureTarget2d.Texture2D, mipLevel, x, y, width, height, _pixelFormat, _pixelType, data);
             Utilities.CheckLastGLES3Error();
+            if (pixelSize < 4)
+            {
+                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
+                Utilities.CheckLastGLES3Error();
+            }
         }
 
         public void CopyTo(TextureData textureData)

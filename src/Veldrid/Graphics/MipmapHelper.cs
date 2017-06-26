@@ -1,5 +1,6 @@
 ﻿using ImageSharp;
 using ImageSharp.PixelFormats;
+using ImageSharp.Processing;
 using System;
 using System.Diagnostics;
 
@@ -7,6 +8,8 @@ namespace Veldrid.Graphics
 {
     public static class MipmapHelper
     {
+        private static readonly IResampler s_resampler = new Lanczos3Resampler();
+
         public static Image<T>[] GenerateMipmaps<T>(Image<T> baseImage) where T : struct, IPixel<T>
         {
             int mipLevelCount = ComputeMipLevels(baseImage.Width, baseImage.Height);
@@ -17,7 +20,7 @@ namespace Veldrid.Graphics
             {
                 int newWidth = Math.Max(1, baseImage.Width / 2);
                 int newHeight = Math.Max(1, baseImage.Height / 2);
-                Image<T> newImage = new Image<T>(baseImage).Resize(newWidth, newHeight);
+                Image<T> newImage = new Image<T>(baseImage).Resize(newWidth, newHeight, s_resampler);
                 Debug.Assert(i < mipLevelCount);
                 mipLevels[i] = newImage;
 

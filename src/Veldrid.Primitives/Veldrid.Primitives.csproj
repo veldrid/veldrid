@@ -11,8 +11,5 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.3.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Graphics\OpenGL\" />
-  </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)PackageInfo.props" />
 </Project>

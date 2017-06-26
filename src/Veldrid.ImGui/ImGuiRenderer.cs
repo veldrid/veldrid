@@ -18,8 +18,6 @@ namespace Veldrid
     public class ImGuiRenderer : IDisposable
     {
         private readonly DynamicDataProvider<Matrix4x4> _projectionMatrixProvider;
-        private RawTextureDataArray<int> _fontTexture;
-        private FontTextureData _textureData;
 
         // Context objects
         private Material _material;
@@ -89,7 +87,7 @@ namespace Veldrid
                 MaterialInputs<MaterialPerObjectInputElement>.Empty,
                 new MaterialTextureInputs(new MaterialTextureInputElement[]
                 {
-                    new TextureDataInputElement("surfaceTexture", _fontTexture)
+                    new ManualTextureInput("surfaceTexture")
                 }));
 
         }
@@ -101,19 +99,19 @@ namespace Veldrid
         {
             var io = ImGui.GetIO();
             // Build
-            _textureData = io.FontAtlas.GetTexDataAsRGBA32();
-            int[] pixels = new int[_textureData.Width * _textureData.Height];
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                pixels[i] = ((int*)_textureData.Pixels)[i];
-            }
-
-            _fontTexture = new RawTextureDataArray<int>(pixels, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8_UInt);
+            var textureData = io.FontAtlas.GetTexDataAsRGBA32();
 
             // Store our identifier
             io.FontAtlas.SetTexID(_fontAtlasID);
 
-            var deviceTexture = rc.ResourceFactory.CreateTexture(_fontTexture.PixelData, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8_UInt);
+            var deviceTexture = rc.ResourceFactory.CreateTexture(1, textureData.Width, textureData.Height, textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8_UInt);
+            deviceTexture.SetTextureData(
+                0, 
+                0, 0, 
+                textureData.Width, 
+                textureData.Height, 
+                (IntPtr)textureData.Pixels, 
+                textureData.BytesPerPixel * textureData.Width * textureData.Height);
             _fontTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(deviceTexture);
 
             io.FontAtlas.ClearTexData();
@@ -287,7 +285,7 @@ namespace Veldrid
             RasterizerState previousRasterizerState = rc.RasterizerState;
             rc.SetRasterizerState(_rasterizerState);
             rc.VertexBuffer = _vertexBuffer;
-            rc.IndexBuffer =_indexBuffer;
+            rc.IndexBuffer = _indexBuffer;
             rc.Material = _material;
 
             ImGui.ScaleClipRects(draw_data, ImGui.GetIO().DisplayFramebufferScale);

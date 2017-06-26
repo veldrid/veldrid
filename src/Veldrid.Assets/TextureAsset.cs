@@ -10,11 +10,11 @@ namespace Veldrid.Assets
 
     public class Texture2DAsset : TextureAsset
     {
-        public AssetRef<ImageSharpTexture> ImageSource { get; set; }
+        public AssetRef<ImageSharpMipmapChain> ImageSource { get; set; }
 
         public override MaterialTextureInputElement Create(AssetDatabase ad)
         {
-            ImageSharpTexture texture = ad.LoadAsset(ImageSource);
+            ImageSharpMipmapChain texture = ad.LoadAsset(ImageSource);
             return new TextureDataInputElement(Name, texture);
         }
     }

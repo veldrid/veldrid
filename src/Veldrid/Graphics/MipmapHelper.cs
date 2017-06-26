@@ -7,21 +7,22 @@ namespace Veldrid.Graphics
 {
     public static class MipmapHelper
     {
-        public static Image<T>[] GenerateMipmaps<T>(Image<T> image) where T : struct, IPixel<T>
+        public static Image<T>[] GenerateMipmaps<T>(Image<T> baseImage) where T : struct, IPixel<T>
         {
-            int mipLevelCount = ComputeMipLevels(image.Width, image.Height);
+            int mipLevelCount = ComputeMipLevels(baseImage.Width, baseImage.Height);
             Image<T>[] mipLevels = new Image<T>[mipLevelCount];
-            int i = 0;
-            while (image.Width != 1 && image.Height != 1)
+            mipLevels[0] = baseImage;
+            int i = 1;
+            while (baseImage.Width != 1 || baseImage.Height != 1)
             {
-                int newWidth = Math.Max(1, image.Width / 2);
-                int newHeight = Math.Max(1, image.Height / 2);
-                Image<T> newImage = image.Resize(newWidth, newHeight);
+                int newWidth = Math.Max(1, baseImage.Width / 2);
+                int newHeight = Math.Max(1, baseImage.Height / 2);
+                Image<T> newImage = new Image<T>(baseImage).Resize(newWidth, newHeight);
                 Debug.Assert(i < mipLevelCount);
                 mipLevels[i] = newImage;
 
                 i++;
-                image = newImage;
+                baseImage = newImage;
             }
 
             Debug.Assert(i == mipLevelCount);

@@ -29,20 +29,20 @@ namespace Veldrid.Graphics.OpenGL
         public override Framebuffer CreateFramebuffer(int width, int height)
         {
             OpenGLTexture2D colorTexture = new OpenGLTexture2D(
+                1,
                 width, height,
                 PixelFormat.R32_G32_B32_A32_Float,
                 PixelInternalFormat.Rgba32f,
                 OpenTK.Graphics.OpenGL.PixelFormat.Rgba,
-                PixelType.Float,
-                generateMipmaps: false);
+                PixelType.Float);
             OpenGLTexture2D depthTexture = new OpenGLTexture2D(
+                1,
                 width,
                 height,
                 PixelFormat.R16_UInt,
                 PixelInternalFormat.DepthComponent16,
                 OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent,
-                PixelType.UnsignedShort,
-                generateMipmaps: false);
+                PixelType.UnsignedShort);
 
             return new OpenGLFramebuffer(colorTexture, depthTexture);
         }
@@ -111,14 +111,16 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-        public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        public override DeviceTexture2D CreateTexture(int mipLevels, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            return new OpenGLTexture2D(width, height, format, pixelData, generateMipmaps: true);
-        }
-
-        public override DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
-        {
-            return OpenGLTexture2D.Create(pixelData, width, height, pixelSizeInBytes, format, generateMipmaps: true);
+            return new OpenGLTexture2D(
+                mipLevels,
+                width,
+                height,
+                format,
+                OpenGLFormats.MapPixelInternalFormat(format),
+                OpenGLFormats.MapPixelFormat(format),
+                OpenGLFormats.MapPixelType(format));
         }
 
         public override SamplerState CreateSamplerStateCore(
@@ -144,6 +146,7 @@ namespace Veldrid.Graphics.OpenGL
             }
 
             return new OpenGLTexture2D(
+                1,
                 width,
                 height,
                 PixelFormat.R16_UInt,
@@ -182,8 +185,8 @@ namespace Veldrid.Graphics.OpenGL
         }
 
         public override BlendState CreateCustomBlendStateCore(
-            bool isBlendEnabled, 
-            Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc, 
+            bool isBlendEnabled,
+            Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
             Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
             RgbaFloat blendFactor)
         {

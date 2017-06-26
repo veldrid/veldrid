@@ -39,6 +39,8 @@ namespace Veldrid.Graphics
         /// </summary>
         public int PixelSizeInBytes => sizeof(byte) * 4;
 
+        public int MipLevels => 1;
+
         /// <summary>
         /// Loads and constructs a new ImageSharpTexture from the file at the given path.
         /// </summary>

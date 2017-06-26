@@ -138,24 +138,7 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DVertexBuffer(_device, sizeInBytes, isDynamic);
         }
 
-        public override DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
-        {
-            GCHandle handle = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
-            D3DTexture2D texture = new D3DTexture2D(
-                _device,
-                BindFlags.ShaderResource,
-                ResourceUsage.Default,
-                CpuAccessFlags.None,
-                D3DFormats.VeldridToD3DPixelFormat(format),
-                handle.AddrOfPinnedObject(),
-                width,
-                height,
-                width * pixelSizeInBytes);
-            handle.Free();
-            return texture;
-        }
-
-        public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        public override DeviceTexture2D CreateTexture(int mipLevels, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             D3DTexture2D texture = new D3DTexture2D(
                 _device,
@@ -163,7 +146,7 @@ namespace Veldrid.Graphics.Direct3D
                 ResourceUsage.Default,
                 CpuAccessFlags.None,
                 D3DFormats.VeldridToD3DPixelFormat(format),
-                pixelData,
+                mipLevels,
                 width,
                 height,
                 width * pixelSizeInBytes);

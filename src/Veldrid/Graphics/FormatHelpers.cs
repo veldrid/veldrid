@@ -19,7 +19,7 @@ namespace Veldrid.Graphics
             }
         }
 
-        public static float GetPixelSize(PixelFormat veldridFormat)
+        public static int GetPixelSize(PixelFormat veldridFormat)
         {
             switch (veldridFormat)
             {

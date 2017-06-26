@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGL
@@ -11,34 +12,23 @@ namespace Veldrid.Graphics.OpenGL
         private readonly PixelType _pixelType;
         private readonly Graphics.PixelFormat _veldridFormat;
 
+        public OpenGLTexture2D(int width, int height, PixelFormat format, IntPtr pixelData)
+            : this(1, width, height, format, OpenGLFormats.MapPixelInternalFormat(format), OpenGLFormats.MapPixelFormat(format), OpenGLFormats.MapPixelType(format))
+        {
+            SetTextureData(1, 0, 0, width, height, pixelData, FormatHelpers.GetPixelSize(format) * width * height);
+        }
+
         public OpenGLTexture2D(
+            int mipLevels,
             int width,
             int height,
             PixelFormat veldridFormat,
             PixelInternalFormat internalFormat,
             OpenTK.Graphics.OpenGL.PixelFormat pixelFormat,
-            PixelType pixelType,
-            bool generateMipmaps = false)
-            : this(width, height, veldridFormat, internalFormat, pixelFormat, pixelType, IntPtr.Zero, generateMipmaps)
-        {
-        }
-
-        public OpenGLTexture2D(int width, int height, PixelFormat format, IntPtr pixelData, bool generateMipmaps = false)
-        : this(width, height, format, OpenGLFormats.MapPixelInternalFormat(format), OpenGLFormats.MapPixelFormat(format), OpenGLFormats.MapPixelType(format), pixelData, generateMipmaps)
-        {
-        }
-
-        public OpenGLTexture2D(
-            int width,
-            int height,
-            PixelFormat veldridFormat,
-            PixelInternalFormat internalFormat,
-            OpenTK.Graphics.OpenGL.PixelFormat pixelFormat,
-            PixelType pixelType,
-            IntPtr pixelData,
-            bool generateMipmaps = false)
+            PixelType pixelType)
             : base(TextureTarget.Texture2D, width, height)
         {
+            MipLevels = mipLevels;
             _veldridFormat = veldridFormat;
             _internalFormat = internalFormat;
             _pixelFormat = pixelFormat;
@@ -49,60 +39,41 @@ namespace Veldrid.Graphics.OpenGL
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
 
-            // Set size, load empty data into texture
-            GL.TexImage2D(
-                TextureTarget.Texture2D,
-                0, // level
-                internalFormat,
-                width, height,
-                0, // border
-                _pixelFormat,
-                _pixelType,
-                pixelData);
 
-            if (generateMipmaps)
+            for (int currentLevel = 0; currentLevel < mipLevels; currentLevel++)
             {
-                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-                MipLevels = ComputeMipLevels(width, height);
+                // Set size, load empty data into texture
+                GL.TexImage2D(
+                    TextureTarget.Texture2D,
+                    currentLevel,
+                    internalFormat,
+                    width, height,
+                    0, // border
+                    _pixelFormat,
+                    _pixelType,
+                    IntPtr.Zero);
+                Utilities.CheckLastGLError();
+                width = Math.Max(1, width / 2);
+                height = Math.Max(1, height / 2);
             }
         }
 
-        public static OpenGLTexture2D Create<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format, bool generateMipmaps = false) where T : struct
-        {
-            var internalFormat = OpenGLFormats.MapPixelInternalFormat(format);
-            var pixelFormat = OpenGLFormats.MapPixelFormat(format);
-            var pixelType = OpenGLFormats.MapPixelType(format);
-
-            OpenGLTexture2D texture = new OpenGLTexture2D(
-                width,
-                height,
-                format,
-                internalFormat,
-                pixelFormat,
-                pixelType);
-
-            texture.Bind();
-            GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, pixelFormat, pixelType, pixelData);
-
-            if (generateMipmaps)
-            {
-                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-                texture.MipLevels = ComputeMipLevels(width, height);
-            }
-
-            return texture;
-        }
-
-        private static int ComputeMipLevels(int width, int height)
-        {
-            return 1 + (int)Math.Floor(Math.Log(Math.Max(width, height), 2));
-        }
-
-        public void SetTextureData(int x, int y, int width, int height, IntPtr data, int dataSizeInBytes)
+        public void SetTextureData(int mipLevel, int x, int y, int width, int height, IntPtr data, int dataSizeInBytes)
         {
             Bind();
-            GL.PixelStore(PixelStoreParameter.UnpackAlignment, FormatHelpers.GetPixelSize(_veldridFormat));
-            GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, width, height, _pixelFormat, _pixelType, data);
+            int pixelSize = FormatHelpers.GetPixelSize(_veldridFormat);
+            if (pixelSize < 4)
+            {
+                GL.PixelStore(PixelStoreParameter.UnpackAlignment, pixelSize);
+                Utilities.CheckLastGLError();
+            }
+            GL.TexSubImage2D(TextureTarget.Texture2D, mipLevel, x, y, width, height, _pixelFormat, _pixelType, data);
+            Utilities.CheckLastGLError();
+            if (pixelSize < 4)
+            {
+                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
+                Utilities.CheckLastGLError();
+            }
         }
 
         public void CopyTo(TextureData textureData)

@@ -37,6 +37,6 @@ namespace Veldrid.Graphics
         /// <param name="height"></param>
         /// <param name="data"></param>
         /// <param name="dataSizeInBytes"></param>
-        void SetTextureData(int x, int y, int width, int height, IntPtr data, int dataSizeInBytes);
+        void SetTextureData(int mipLevel, int x, int y, int width, int height, IntPtr data, int dataSizeInBytes);
     }
 }

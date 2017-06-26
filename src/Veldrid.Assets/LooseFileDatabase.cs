@@ -17,7 +17,8 @@ namespace Veldrid.Assets
         private string _rootPath;
         private Dictionary<Type, AssetLoader> _assetLoaders = new Dictionary<Type, AssetLoader>()
         {
-            { typeof(ImageSharpTexture), new PngLoader() },
+            { typeof(ImageSharpMipmapChain), new PngLoader() },
+            { typeof(ImageSharpTexture), new ImageSharpTextureLoader() },
             { typeof(TextureData), new PngLoader() },
             { typeof(ObjFile), new ObjFileLoader() },
             { typeof(ConstructedMeshInfo), new FirstMeshObjLoader() },

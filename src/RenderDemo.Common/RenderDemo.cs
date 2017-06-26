@@ -459,7 +459,7 @@ namespace Veldrid.RenderDemo
                     if (materialDef.DiffuseTexture != null)
                     {
                         string texturePath = "Models/SponzaAtrium/" + materialDef.DiffuseTexture;
-                        overrideTextureData = _ad.LoadAsset<ImageSharpTexture>(texturePath);
+                        overrideTextureData = _ad.LoadAsset<ImageSharpMipmapChain>(texturePath);
                     }
                     else
                     {

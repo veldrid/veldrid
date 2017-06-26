@@ -49,26 +49,18 @@ namespace Veldrid.Graphics.Direct3D
             ResourceUsage usage,
             CpuAccessFlags cpuAccessFlags,
             SharpDX.DXGI.Format format,
-            IntPtr pixelPtr,
+            int mipLevels,
             int width,
             int height,
             int stride)
         {
             _device = device;
-
-            Texture2DDescription desc = CreateDescription(width, height, bindFlags, usage, cpuAccessFlags, format);
-            if (pixelPtr != IntPtr.Zero)
-            {
-                DataRectangle dataRectangle = new DataRectangle(pixelPtr, stride);
-                DeviceTexture = new Texture2D(device, desc, dataRectangle);
-            }
-            else
-            {
-                DeviceTexture = new Texture2D(device, desc);
-            }
+            Texture2DDescription desc = CreateDescription(mipLevels, width, height, bindFlags, usage, cpuAccessFlags, format);
+            DeviceTexture = new Texture2D(device, desc);
         }
 
         private Texture2DDescription CreateDescription(
+            int mipLevels,
             int width,
             int height,
             BindFlags bindFlags,
@@ -84,7 +76,7 @@ namespace Veldrid.Graphics.Direct3D
             desc.Usage = usage;
             desc.CpuAccessFlags = cpuAccessFlags;
             desc.Format = format;
-            desc.MipLevels = 1;
+            desc.MipLevels = mipLevels;
             desc.OptionFlags = ResourceOptionFlags.None;
             desc.SampleDescription.Count = 1;
             desc.SampleDescription.Quality = 0;
@@ -92,7 +84,7 @@ namespace Veldrid.Graphics.Direct3D
             return desc;
         }
 
-        public void SetTextureData(int x, int y, int width, int height, IntPtr data, int dataSizeInBytes)
+        public void SetTextureData(int mipLevel, int x, int y, int width, int height, IntPtr data, int dataSizeInBytes)
         {
             ResourceRegion resourceRegion = new ResourceRegion(
                 left: x,
@@ -102,7 +94,7 @@ namespace Veldrid.Graphics.Direct3D
                 bottom: y + height,
                 back: 1);
             int srcRowPitch = GetRowPitch(width);
-            _device.ImmediateContext.UpdateSubresource(DeviceTexture, 0, resourceRegion, data, srcRowPitch, 0);
+            _device.ImmediateContext.UpdateSubresource(DeviceTexture, mipLevel, resourceRegion, data, srcRowPitch, 0);
         }
 
         public void CopyTo(TextureData textureData)

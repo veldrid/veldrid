@@ -28,6 +28,11 @@ namespace Veldrid.Graphics
         int PixelSizeInBytes { get; }
 
         /// <summary>
+        /// The number of levels in the texture's mipmap chain.
+        /// </summary>
+        int MipLevels { get; }
+
+        /// <summary>
         /// Constructs a GPU-side <see cref="DeviceTexture2D"/> from this <see cref="TextureData"/>.
         /// </summary>
         /// <param name="producer">The device texture producer.</param>
@@ -56,6 +61,8 @@ namespace Veldrid.Graphics
         public PixelFormat Format { get; }
 
         public int PixelSizeInBytes { get; }
+
+        public int MipLevels => 1;
 
         public abstract DeviceTexture2D CreateDeviceTexture(ResourceFactory factory);
 

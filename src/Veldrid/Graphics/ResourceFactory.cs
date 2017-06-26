@@ -199,7 +199,15 @@ namespace Veldrid.Graphics
         /// <param name="pixelSizeInBytes">The total size in bytes of the pixel data.</param>
         /// <param name="format">The format of pixel information.</param>
         /// <returns>A new <see cref="DeviceTexture2D"/> containing the given pixel data.</returns>
-        public abstract DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct;
+        public DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct
+        {
+            DeviceTexture2D tex = CreateTexture(1, width, height, pixelSizeInBytes, format);
+            using (var pinnedPixels = pixelData.Pin())
+            {
+                tex.SetTextureData(0, 0, 0, width, height, pinnedPixels.Ptr, pixelSizeInBytes * width * height);
+            }
+            return tex;
+        }
 
         /// <summary>
         /// Creates a new <see cref="DeviceTexture2D"/>.
@@ -210,7 +218,14 @@ namespace Veldrid.Graphics
         /// <param name="pixelSizeInBytes">The total size in bytes of the pixel data.</param>
         /// <param name="format">The format of pixel information.</param>
         /// <returns>A new <see cref="DeviceTexture2D"/> containing the given pixel data.</returns>
-        public abstract DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format);
+        public DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        {
+            DeviceTexture2D tex = CreateTexture(1, width, height, pixelSizeInBytes, format);
+            tex.SetTextureData(0, 0, 0, width, height, pixelData, pixelSizeInBytes * width * height);
+            return tex;
+        }
+
+        public abstract DeviceTexture2D CreateTexture(int mipLevels, int width, int height, int pixelSizeInBytes, PixelFormat format);
 
         public SamplerState CreateSamplerState(
             SamplerAddressMode addressU,

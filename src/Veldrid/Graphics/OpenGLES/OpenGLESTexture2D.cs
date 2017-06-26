@@ -76,12 +76,12 @@ namespace Veldrid.Graphics.OpenGLES
             return texture;
         }
 
-        public void SetTextureData(int x, int y, int width, int height, IntPtr data, int dataSizeInBytes)
+        public void SetTextureData(int mipLevel, int x, int y, int width, int height, IntPtr data, int dataSizeInBytes)
         {
             Bind();
             GL.PixelStore(PixelStoreParameter.UnpackAlignment, (int)FormatHelpers.GetPixelSize(_veldridFormat));
             Utilities.CheckLastGLES3Error();
-            GL.TexSubImage2D(TextureTarget2d.Texture2D, 0, x, y, width, height, _pixelFormat, _pixelType, data);
+            GL.TexSubImage2D(TextureTarget2d.Texture2D, mipLevel, x, y, width, height, _pixelFormat, _pixelType, data);
             Utilities.CheckLastGLES3Error();
         }
 

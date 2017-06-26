@@ -107,14 +107,9 @@ namespace Veldrid.Graphics.OpenGLES
             }
         }
 
-        public override DeviceTexture2D CreateTexture(IntPtr pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
+        public override DeviceTexture2D CreateTexture(int mipLevels, int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
-            return new OpenGLESTexture2D(width, height, format, pixelData);
-        }
-
-        public override DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format)
-        {
-            return OpenGLESTexture2D.Create(pixelData, width, height, pixelSizeInBytes, format);
+            throw new NotImplementedException();
         }
 
         public override SamplerState CreateSamplerStateCore(

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Threading;
-using Veldrid.Platform;
 
 namespace Veldrid.Graphics
 {
@@ -574,113 +572,17 @@ namespace Veldrid.Graphics
                 kvp.Value.UpdateData();
             }
         }
-    }
 
-    public class ContextDeviceBinding<T>
-    {
-        private T _value;
-        private bool _valid;
-
-        public T Value
+        protected struct BoundSamplerStateInfo
         {
-            get
+            public SamplerState SamplerState { get; }
+            public bool Mipmapped { get; }
+
+            public BoundSamplerStateInfo(SamplerState samplerState, bool mipmapped)
             {
-                if (!_valid)
-                {
-                    throw new InvalidOperationException($"No value has been bound to context binding of type {typeof(T).FullName}");
-                }
-
-                return _value;
+                SamplerState = samplerState;
+                Mipmapped = mipmapped;
             }
-            set
-            {
-                _value = value;
-                _valid = true;
-            }
-        }
-
-        public ContextDeviceBinding(T value)
-        {
-            _value = value;
-            _valid = true;
-        }
-
-        public ContextDeviceBinding()
-        {
-        }
-    }
-
-    public class ChangeableProvider : ConstantBufferDataProvider
-    {
-        private ConstantBufferDataProvider _dataProvider;
-
-        public ConstantBufferDataProvider DataProvider
-        {
-            get { return _dataProvider; }
-            set
-            {
-                _dataProvider.DataChanged -= OnParentDataChanged;
-                _dataProvider = value;
-                _dataProvider.DataChanged += OnParentDataChanged;
-                OnParentDataChanged();
-            }
-        }
-
-        public event Action DataChanged;
-
-        public ChangeableProvider(ConstantBufferDataProvider dataProvider)
-        {
-            _dataProvider = dataProvider;
-            DataSizeInBytes = dataProvider.DataSizeInBytes;
-            dataProvider.DataChanged += OnParentDataChanged;
-        }
-
-        private void OnParentDataChanged()
-        {
-            DataChanged?.Invoke();
-        }
-
-        public int DataSizeInBytes { get; }
-
-        public void SetData(ConstantBuffer buffer)
-        {
-            _dataProvider.SetData(buffer);
-        }
-    }
-
-    public class BufferProviderPair : IDisposable
-    {
-        public readonly ConstantBuffer ConstantBuffer;
-        public readonly ConstantBufferDataProvider DataProvider;
-
-        private bool _dirty;
-
-        public BufferProviderPair(ConstantBuffer buffer, ConstantBufferDataProvider provider)
-        {
-            ConstantBuffer = buffer;
-            DataProvider = provider;
-            provider.DataChanged += OnDataChanged;
-            _dirty = true;
-            UpdateData();
-        }
-
-        private void OnDataChanged()
-        {
-            _dirty = true;
-        }
-
-        public void UpdateData()
-        {
-            if (_dirty)
-            {
-                DataProvider.SetData(ConstantBuffer);
-                _dirty = false;
-            }
-        }
-
-        public void Dispose()
-        {
-            DataProvider.DataChanged -= OnDataChanged;
         }
     }
 }

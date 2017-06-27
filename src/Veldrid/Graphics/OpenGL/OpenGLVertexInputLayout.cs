@@ -148,7 +148,7 @@ namespace Veldrid.Graphics.OpenGL
         public OpenGLMaterialVertexInputElement(MaterialVertexInputElement genericElement, int offset)
         {
             SizeInBytes = genericElement.SizeInBytes;
-            ElementCount = VertexFormatHelpers.GetElementCount(genericElement.ElementFormat);
+            ElementCount = FormatHelpers.GetElementCount(genericElement.ElementFormat);
             Type = GetGenericFormatType(genericElement.ElementFormat);
             Offset = offset;
             Normalized = genericElement.SemanticType == VertexSemanticType.Color && genericElement.ElementFormat == VertexElementFormat.Byte4;

@@ -46,5 +46,12 @@ namespace Veldrid.Graphics
                 && Comparison == other.Comparison && MinimumLod.Equals(other.MinimumLod) && MaximumLod.Equals(other.MaximumLod)
                 && LodBias.Equals(other.LodBias);
         }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(AddressU.GetHashCode(), AddressV.GetHashCode(), AddressW.GetHashCode(),
+                HashHelper.Combine(Filter.GetHashCode(), MaximumAnisotropy.GetHashCode(), BorderColor.GetHashCode(),
+                    HashHelper.Combine(Comparison.GetHashCode(), MinimumLod.GetHashCode(), MaximumLod.GetHashCode(), LodBias.GetHashCode())));
+        }
     }
 }

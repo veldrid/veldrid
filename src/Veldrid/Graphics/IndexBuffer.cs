@@ -3,9 +3,9 @@
 namespace Veldrid.Graphics
 {
     /// <summary>
-    /// A DeviceBuffer storing index information.
+    /// A <see cref="DeviceBuffer"/> storing index information.
     /// </summary>
-    public interface IndexBuffer: IDisposable
+    public interface IndexBuffer: DeviceBuffer, IDisposable
     {
         /// <summary>
         /// Stores the given index data into the device-side buffer.

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace Veldrid.Graphics
 {
     /// <summary>
-    /// Contains functionality for creating GPU device resources,
-    /// including buffers, textures, and other pipeline state objects.
+    /// Contains functionality for creating GPU device resources, including buffers, textures, and other pipeline
+    /// state objects.
     /// </summary>
     public abstract class ResourceFactory
     {

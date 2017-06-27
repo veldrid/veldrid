@@ -12,8 +12,8 @@ namespace Veldrid.Assets
         {
             using (var sr = new StreamReader(s))
             {
-                string[] lines = sr.ReadToEnd().Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-                var objFile = new ObjParser().Parse(lines);
+                string text = sr.ReadToEnd();
+                var objFile = new ObjParser().Parse(text);
                 return objFile;
             }
         }
@@ -27,8 +27,8 @@ namespace Veldrid.Assets
         {
             using (var sr = new StreamReader(s))
             {
-                string[] lines = sr.ReadToEnd().Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-                var objFile = new ObjParser().Parse(lines);
+                string text = sr.ReadToEnd();
+                var objFile = new ObjParser().Parse(text);
                 return objFile.GetFirstMesh();
             }
         }

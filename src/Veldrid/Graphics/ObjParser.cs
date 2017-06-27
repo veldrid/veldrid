@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Text;
+
+using static Veldrid.SpanHelpers;
 
 namespace Veldrid.Graphics
 {
@@ -23,12 +27,35 @@ namespace Veldrid.Graphics
         /// </summary>
         /// <param name="lines">The text lines of the OBJ file.</param>
         /// <returns>A new <see cref="ObjFile"/>.</returns>
-        public ObjFile Parse(string[] lines)
+        public ObjFile Parse(string text)
         {
-            foreach (string line in lines)
+            return Parse(text.AsSpan());
+        }
+
+        /// <summary>
+        /// Parses an <see cref="ObjFile"/> from the given raw text lines.
+        /// </summary>
+        /// <param name="lines">The text lines of the OBJ file.</param>
+        /// <returns>A new <see cref="ObjFile"/>.</returns>
+        public ObjFile Parse(ReadOnlySpan<char> text)
+        {
+            ReadOnlySpan<char> currentChunk = text;
+            int lineEnd = -1;
+            while ((lineEnd = currentChunk.IndexOf('\n')) != -1)
             {
-                _pc.Process(line);
+                ReadOnlySpan<char> lineChunk;
+                if (currentChunk[lineEnd - 1] == '\r')
+                {
+                    lineChunk = currentChunk.Slice(0, lineEnd - 1);
+                }
+                else
+                {
+                    lineChunk = currentChunk.Slice(0, lineEnd);
+                }
+                _pc.Process(lineChunk);
+                currentChunk = currentChunk.Slice(lineEnd + 1);
             }
+
             _pc.EndOfFileReached();
 
             return _pc.FinalizeFile();
@@ -44,147 +71,213 @@ namespace Veldrid.Graphics
             using (var sr = new StreamReader(s))
             {
                 string allText = sr.ReadToEnd();
-                string[] lines = allText.Split(s_newline, StringSplitOptions.None);
-                return Parse(lines);
+                return Parse(allText.AsSpan());
             }
         }
 
         private class ParseContext
         {
+            private readonly ReadOnlySpan<char>[] _pieces = new ReadOnlySpan<char>[10];
+            private readonly ReadOnlySpan<char>[] _slashSplit = new ReadOnlySpan<char>[10];
+
             private List<Vector3> _positions = new List<Vector3>();
             private List<Vector3> _normals = new List<Vector3>();
             private List<Vector2> _texCoords = new List<Vector2>();
 
             private List<ObjFile.MeshGroup> _groups = new List<ObjFile.MeshGroup>();
 
-            private string _currentGroupName;
-            private string _currentMaterial;
+            private ReadOnlySpan<char> _currentGroupName;
+            private ReadOnlySpan<char> _currentMaterial;
             private int _currentSmoothingGroup;
             private List<ObjFile.Face> _currentGroupFaces = new List<ObjFile.Face>();
 
             private int _currentLine;
-            private string _currentLineText;
+            private ReadOnlySpan<char> _currentLineText;
 
             private string _materialLibName;
 
-            public void Process(string line)
+            private readonly ReadOnlySpan<char> _globalFileGroup = new ReadOnlySpan<char>("GlobalFileGroup".ToCharArray());
+            private readonly ReadOnlySpan<char> _span_off = new ReadOnlySpan<char>("off".ToCharArray());
+            private readonly ReadOnlySpan<char> _span_v = new ReadOnlySpan<char>(new char[] { 'v' });
+            private readonly ReadOnlySpan<char> _span_vn = new ReadOnlySpan<char>(new char[] { 'v', 'n' });
+            private readonly ReadOnlySpan<char> _span_vt = new ReadOnlySpan<char>(new char[] { 'v', 't' });
+            private readonly ReadOnlySpan<char> _span_g = new ReadOnlySpan<char>(new char[] { 'g' });
+            private readonly ReadOnlySpan<char> _span_usemtl = new ReadOnlySpan<char>(new char[] { 'u', 's', 'e', 'm', 't', 'l' });
+            private readonly ReadOnlySpan<char> _span_s = new ReadOnlySpan<char>(new char[] { 's' });
+            private readonly ReadOnlySpan<char> _span_f = new ReadOnlySpan<char>(new char[] { 'f' });
+            private readonly ReadOnlySpan<char> _span_mtllib = new ReadOnlySpan<char>(new char[] { 'm', 't', 'l', 'l', 'i', 'b' });
+
+            public void Process(ReadOnlySpan<char> line)
             {
                 _currentLine++;
                 _currentLineText = line;
 
-                string[] pieces = line.Split(s_whitespaceChars, StringSplitOptions.RemoveEmptyEntries);
-                if (pieces.Length == 0 || pieces[0].StartsWith("#"))
+                SplitBy(_pieces, line, ' ', out int numItemsSplit);
+
+                if (numItemsSplit == 0 || _pieces[0].IsEmpty || _pieces[0][0] == '#')
                 {
                     return;
                 }
-                switch (pieces[0])
-                {
-                    case "v":
-                        ExpectExactly(pieces, 3, "v");
-                        DiscoverPosition(ParseVector3(pieces[1], pieces[2], pieces[3], "position data"));
-                        break;
-                    case "vn":
-                        ExpectExactly(pieces, 3, "vn");
-                        DiscoverNormal(ParseVector3(pieces[1], pieces[2], pieces[3], "normal data"));
-                        break;
-                    case "vt":
-                        ExpectAtLeast(pieces, 1, "vt");
-                        Vector2 texCoord = ParseVector2(pieces[1], pieces[2], "texture coordinate data");
-                        // Flip v coordinate
-                        texCoord.Y = 1f - texCoord.Y;
-                        DiscoverTexCoord(texCoord);
-                        break;
-                    case "g":
-                        ExpectAtLeast(pieces, 1, "g");
-                        FinalizeGroup();
-                        _currentGroupName = line.Substring(1, line.Length - 1).Trim();
-                        break;
-                    case "usemtl":
-                        ExpectExactly(pieces, 1, "usematl");
-                        if (_currentMaterial != null)
-                        {
-                            string nextGroupName = _currentGroupName + "_Next";
-                            FinalizeGroup();
-                            _currentGroupName = nextGroupName;
-                        }
 
-                        _currentMaterial = pieces[1];
-                        break;
-                    case "s":
-                        ExpectExactly(pieces, 1, "s");
-                        if (pieces[1] == "off")
-                        {
-                            _currentSmoothingGroup = 0;
-                        }
-                        else
-                        {
-                            _currentSmoothingGroup = ParseInt(pieces[1], "smoothing group");
-                        }
-                        break;
-                    case "f":
-                        ExpectAtLeast(pieces, 3, "f");
-                        ProcessFaceLine(pieces);
-                        break;
-                    case "mtllib":
-                        ExpectExactly(pieces, 1, "mtllib");
-                        DiscoverMaterialLib(pieces[1]);
-                        break;
-                    default:
-                        throw new ObjParseException(
-                            string.Format("An unsupported line-type specifier, '{0}', was used on line {1}, \"{2}\"",
-                            pieces[0],
-                            _currentLine,
-                            _currentLineText));
+                if (_pieces[0].SequenceEqual(_span_v))
+                {
+                    ExpectExactly(numItemsSplit, 3, "v");
+                    DiscoverPosition(ParseVector3(_pieces[1], _pieces[2], _pieces[3], "position data"));
+                }
+                else if (_pieces[0].SequenceEqual(_span_vn))
+                {
+                    ExpectExactly(numItemsSplit, 3, "vn");
+                    DiscoverNormal(ParseVector3(_pieces[1], _pieces[2], _pieces[3], "normal data"));
+                }
+                else if (_pieces[0].SequenceEqual(_span_vt))
+                {
+                    ExpectAtLeast(numItemsSplit, 1, "vt");
+                    Vector2 texCoord = ParseVector2(_pieces[1], _pieces[2], "texture coordinate data");
+                    // Flip v coordinate
+                    texCoord.Y = 1f - texCoord.Y;
+                    DiscoverTexCoord(texCoord);
+                }
+                else if (_pieces[0].SequenceEqual(_span_g))
+                {
+                    ExpectAtLeast(numItemsSplit, 1, "g");
+                    FinalizeGroup();
+                    _currentGroupName = line.Slice(1, line.Length - 1);
+                }
+                else if (_pieces[0].SequenceEqual(_span_usemtl))
+                {
+                    ExpectExactly(numItemsSplit, 1, "usematl");
+                    if (!_currentMaterial.IsEmpty)
+                    {
+                        string nextGroupName = _currentGroupName + "_Next";
+                        FinalizeGroup();
+                        _currentGroupName = nextGroupName.AsSpan();
+                    }
+                    _currentMaterial = _pieces[1];
+                }
+                else if (_pieces[0].SequenceEqual(_span_s))
+                {
+                    ExpectExactly(numItemsSplit, 1, "s");
+                    if (_pieces[1].SequenceEqual(_span_off))
+                    {
+                        _currentSmoothingGroup = 0;
+                    }
+                    else
+                    {
+                        _currentSmoothingGroup = ParseInt(_pieces[1], "smoothing group");
+                    }
+                }
+                else if (_pieces[0].SequenceEqual(_span_f))
+                {
+                    ExpectAtLeast(numItemsSplit, 3, "f");
+                    ProcessFaceLine(_pieces, numItemsSplit);
+                }
+                else if (_pieces[0].SequenceEqual(_span_mtllib))
+                {
+                    ExpectExactly(numItemsSplit, 1, "mtllib");
+                    DiscoverMaterialLib(_pieces[1]);
+                }
+                else
+                {
+                    throw new ObjParseException(
+                        string.Format("An unsupported line-type specifier, '{0}', was used on line {1}, \"{2}\"",
+                        GetString(_pieces[0]),
+                        _currentLine,
+                        GetString(_currentLineText)));
                 }
             }
 
-            private void DiscoverMaterialLib(string libName)
+            private void SplitBy(ReadOnlySpan<char>[] destination, ReadOnlySpan<char> span, char value, out int numItemsSplit)
+            {
+                Array.Clear(destination, 0, destination.Length);
+                numItemsSplit = 0;
+                int destIndex = 0;
+                int currentChunkEnd = -1;
+                int nextChunkStart = int.MaxValue;
+                bool endReached = false;
+                while ((currentChunkEnd = span.IndexOf(value)) != -1 && !endReached)
+                {
+                    nextChunkStart = currentChunkEnd;
+                    endReached = (nextChunkStart + 1 == span.Length);
+                    // Keep seeking forward until a different char is ecountered.
+                    while (nextChunkStart + 1 < span.Length)
+                    {
+                        if (span[nextChunkStart + 1] == value)
+                        {
+                            nextChunkStart += 1;
+                            if (nextChunkStart == span.Length)
+                            {
+                                endReached = true;
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    numItemsSplit += 1;
+                    Debug.Assert(destIndex < destination.Length);
+                    destination[destIndex] = span.Slice(0, currentChunkEnd);
+                    destIndex += 1;
+                    span = span.Slice(nextChunkStart + 1);
+                }
+
+                if (!endReached)
+                {
+                    // End of file -- no separator encountered since last chunk.
+                    numItemsSplit += 1;
+                    destination[destIndex] = span;
+                }
+            }
+
+            private void DiscoverMaterialLib(ReadOnlySpan<char> libName)
             {
                 if (_materialLibName != null)
                 {
                     throw new ObjParseException(
-                        string.Format("mtllib appeared again in the file. It should only appear once. Line {0}, \"{1}\"", _currentLine, _currentLineText));
+                        string.Format("mtllib appeared again in the file. It should only appear once. Line {0}, \"{1}\"", _currentLine, GetString(_currentLineText)));
                 }
 
-                _materialLibName = libName;
+                _materialLibName = GetString(libName);
             }
 
-            private void ProcessFaceLine(string[] pieces)
+            private void ProcessFaceLine(ReadOnlySpan<char>[] pieces, int count)
             {
-                string first = pieces[1];
+                ReadOnlySpan<char> first = pieces[1];
                 ObjFile.FaceVertex faceVertex0 = ParseFaceVertex(first);
 
-                for (int i = 0; i < pieces.Length - 3; i++)
+                for (int i = 0; i < count - 3; i++)
                 {
-                    string second = pieces[i + 2];
+                    ReadOnlySpan<char> second = pieces[i + 2];
                     ObjFile.FaceVertex faceVertex1 = ParseFaceVertex(second);
-                    string third = pieces[i + 3];
+                    ReadOnlySpan<char> third = pieces[i + 3];
                     ObjFile.FaceVertex faceVertex2 = ParseFaceVertex(third);
 
                     DiscoverFace(new ObjFile.Face(faceVertex0, faceVertex1, faceVertex2, _currentSmoothingGroup));
                 }
             }
 
-            private ObjFile.FaceVertex ParseFaceVertex(string faceComponents)
+            private ObjFile.FaceVertex ParseFaceVertex(ReadOnlySpan<char> faceComponents)
             {
-                string[] slashSplit = faceComponents.Split(s_slashChar, StringSplitOptions.None);
-                if (slashSplit.Length != 1 && slashSplit.Length != 2 && slashSplit.Length != 3)
+                SplitBy(_slashSplit, faceComponents, '/', out int numItems);
+
+                if (numItems != 1 && numItems != 2 && numItems != 3)
                 {
-                    throw CreateExceptionForWrongFaceCount(slashSplit.Length);
+                    throw CreateExceptionForWrongFaceCount(numItems);
                 }
 
-                int pos = ParseInt(slashSplit[0], "the first face position index");
+                int pos = ParseInt(_slashSplit[0], "the first face position index");
 
                 int texCoord = -1;
-                if (slashSplit.Length >= 2 && !string.IsNullOrEmpty(slashSplit[1]))
+                if (numItems >= 2 && !_slashSplit[1].IsEmpty)
                 {
-                    texCoord = ParseInt(slashSplit[1], "the first face texture coordinate index");
+                    texCoord = ParseInt(_slashSplit[1], "the first face texture coordinate index");
                 }
 
                 int normal = -1;
-                if (slashSplit.Length == 3)
+                if (_slashSplit.Length == 3)
                 {
-                    normal = ParseInt(slashSplit[2], "the first face normal index");
+                    normal = ParseInt(_slashSplit[2], "the first face normal index");
                 }
 
                 return new ObjFile.FaceVertex() { PositionIndex = pos, NormalIndex = normal, TexCoordIndex = texCoord };
@@ -196,7 +289,7 @@ namespace Veldrid.Graphics
                     string.Format("Expected 1, 2, or 3 face components, but got {0}, on line {1}, \"{2}\"",
                     count,
                     _currentLine,
-                    _currentLineText));
+                    GetString(_currentLineText)));
             }
 
             public void DiscoverPosition(Vector3 position)
@@ -221,13 +314,13 @@ namespace Veldrid.Graphics
 
             public void FinalizeGroup()
             {
-                if (_currentGroupName != null)
+                if (!_currentGroupName.IsEmpty)
                 {
                     ObjFile.Face[] faces = _currentGroupFaces.ToArray();
-                    _groups.Add(new ObjFile.MeshGroup(_currentGroupName, _currentMaterial, faces));
+                    _groups.Add(new ObjFile.MeshGroup(GetString(_currentGroupName), GetString(_currentMaterial), faces));
 
-                    _currentGroupName = null;
-                    _currentMaterial = null;
+                    _currentGroupName = ReadOnlySpan<char>.Empty;
+                    _currentMaterial = ReadOnlySpan<char>.Empty;
                     _currentSmoothingGroup = -1;
                     _currentGroupFaces.Clear();
                 }
@@ -235,8 +328,8 @@ namespace Veldrid.Graphics
 
             public void EndOfFileReached()
             {
-                _currentGroupName = _currentGroupName ?? "GlobalFileGroup";
-                _groups.Add(new ObjFile.MeshGroup(_currentGroupName, _currentMaterial, _currentGroupFaces.ToArray()));
+                _currentGroupName = !_currentGroupName.IsEmpty ? _currentGroupName : _globalFileGroup;
+                _groups.Add(new ObjFile.MeshGroup(GetString(_currentGroupName), GetString(_currentMaterial), _currentGroupFaces.ToArray()));
             }
 
             public ObjFile FinalizeFile()
@@ -244,28 +337,28 @@ namespace Veldrid.Graphics
                 return new ObjFile(_positions.ToArray(), _normals.ToArray(), _texCoords.ToArray(), _groups.ToArray(), _materialLibName);
             }
 
-            private Vector3 ParseVector3(string xStr, string yStr, string zStr, string location)
+            private Vector3 ParseVector3(ReadOnlySpan<char> xStr, ReadOnlySpan<char> yStr, ReadOnlySpan<char> zStr, string location)
             {
                 try
                 {
-                    float x = float.Parse(xStr, CultureInfo.InvariantCulture);
-                    float y = float.Parse(yStr, CultureInfo.InvariantCulture);
-                    float z = float.Parse(zStr, CultureInfo.InvariantCulture);
+                    float x = ParseFloat(xStr);
+                    float y = ParseFloat(yStr);
+                    float z = ParseFloat(zStr);
 
                     return new Vector3(x, y, z);
                 }
-                catch (FormatException fe)
+                catch (FormatException fe) when (!Debugger.IsAttached)
                 {
                     throw CreateParseException(location, fe);
                 }
             }
 
-            private Vector2 ParseVector2(string xStr, string yStr, string location)
+            private Vector2 ParseVector2(ReadOnlySpan<char> xStr, ReadOnlySpan<char> yStr, string location)
             {
                 try
                 {
-                    float x = float.Parse(xStr, CultureInfo.InvariantCulture);
-                    float y = float.Parse(yStr, CultureInfo.InvariantCulture);
+                    float x = ParseFloat(xStr);
+                    float y = ParseFloat(yStr);
 
                     return new Vector2(x, y);
                 }
@@ -275,50 +368,63 @@ namespace Veldrid.Graphics
                 }
             }
 
-            private int ParseInt(string intStr, string location)
+            private int ParseInt(ReadOnlySpan<char> intStr, string location)
             {
-                try
+                if (!PrimitiveParser.InvariantUtf16.TryParseInt32(intStr, out int value))
                 {
-                    int i = int.Parse(intStr, CultureInfo.InvariantCulture);
-                    return i;
+                    throw new ObjParseException($"Encountered an invalid int at {location}.");
                 }
-                catch (FormatException fe)
-                {
-                    throw CreateParseException(location, fe);
-                }
+
+                return value;
             }
 
-            private void ExpectExactly(string[] pieces, int count, string name)
+            // TODO: Remove this when System.Text.Primitives supports this.
+            private float ParseFloat(ReadOnlySpan<char> text)
             {
-                if (pieces.Length != count + 1)
+                return float.Parse(GetString(text));
+            }
+
+            private uint ParseUInt32(ReadOnlySpan<char> text)
+            {
+                if (!PrimitiveParser.InvariantUtf16.TryParseUInt32(text, out uint value, out int _))
+                {
+                    throw new ObjParseException($"Invalid float value on line {_currentLine}, text: {_currentLineText}");
+                }
+
+                return value;
+            }
+
+            private void ExpectExactly(int pieces, int expectedCount, string name)
+            {
+                if (pieces != expectedCount + 1)
                 {
                     string message = string.Format(
                         "Expected exactly {0} components to a line starting with {1}, on line {2}, \"{3}\".",
-                        count,
+                        expectedCount,
                         name,
                         _currentLine,
-                        _currentLineText);
+                        GetString(_currentLineText));
                     throw new ObjParseException(message);
                 }
             }
 
-            private void ExpectAtLeast(string[] pieces, int count, string name)
+            private void ExpectAtLeast(int pieces, int expectedCount, string name)
             {
-                if (pieces.Length < count + 1)
+                if (pieces < expectedCount + 1)
                 {
                     string message = string.Format(
                         "Expected at least {0} components to a line starting with {1}, on line {2}, \"{3}\".",
-                        count,
+                        expectedCount,
                         name,
                         _currentLine,
-                        _currentLineText);
+                        GetString(_currentLineText));
                     throw new ObjParseException(message);
                 }
             }
 
             private ObjParseException CreateParseException(string location, FormatException fe)
             {
-                string message = string.Format("An error ocurred while parsing {0} on line {1}, \"{2}\"", location, _currentLine, _currentLineText);
+                string message = string.Format("An error ocurred while parsing {0} on line {1}, \"{2}\"", location, _currentLine, GetString(_currentLineText));
                 return new ObjParseException(message, fe);
             }
         }

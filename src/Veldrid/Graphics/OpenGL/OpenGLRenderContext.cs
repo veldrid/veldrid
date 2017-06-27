@@ -172,7 +172,7 @@ namespace Veldrid.Graphics.OpenGL
             GL.Enable(EnableCap.ScissorTest);
             GL.Scissor(
                 rectangle.Left,
-                Viewport.Height - rectangle.Bottom, // TODO: Is this right?
+                Viewport.Height - rectangle.Bottom,
                 rectangle.Width,
                 rectangle.Height);
         }

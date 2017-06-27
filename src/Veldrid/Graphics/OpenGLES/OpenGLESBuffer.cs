@@ -86,11 +86,10 @@ namespace Veldrid.Graphics.OpenGLES
 
         public unsafe void GetData<T>(ref T storageLocation, int storageSizeInBytes) where T : struct
         {
-            // TODO: Determine if this is safe ("Unsafe.AsPointer")
-            int bytesToCopy = Math.Min(_bufferSize, storageSizeInBytes);
+            uint bytesToCopy = (uint)Math.Min(_bufferSize, storageSizeInBytes);
             Bind();
             IntPtr mappedPtr = GL.MapBufferRange(_target, IntPtr.Zero, (IntPtr)bytesToCopy, BufferAccessMask.MapReadBit);
-            SharpDX.Utilities.CopyMemory(new IntPtr(Unsafe.AsPointer(ref storageLocation)), mappedPtr, bytesToCopy);
+            Unsafe.CopyBlock(Unsafe.AsPointer(ref storageLocation), mappedPtr.ToPointer(), bytesToCopy);
             if (!GL.UnmapBuffer(_target))
             {
                 throw new InvalidOperationException("UnmapBuffer failed.");

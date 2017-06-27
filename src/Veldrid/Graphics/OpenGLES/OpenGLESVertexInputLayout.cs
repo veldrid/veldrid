@@ -14,36 +14,6 @@ namespace Veldrid.Graphics.OpenGLES
             VBLayoutsBySlot = vertexInputs.Select(mvi => new OpenGLESMaterialVertexInput(mvi)).ToArray();
         }
 
-        public int SetVertexAttributes(int vertexBufferSlot, OpenGLESVertexBuffer vb, int previousAttributesBound)
-        {
-            // TODO: Related to OpenGLESRenderContext.PlatformSetVertexBuffer()
-            // These attributes should be lazily set on a draw call or something.
-            if (vertexBufferSlot <= VBLayoutsBySlot.Length)
-            {
-                return previousAttributesBound;
-            }
-
-            int baseSlot = GetSlotBaseIndex(vertexBufferSlot);
-            OpenGLESMaterialVertexInput input = VBLayoutsBySlot[vertexBufferSlot];
-            vb.Apply();
-            for (int i = 0; i < input.Elements.Length; i++)
-            {
-                OpenGLESMaterialVertexInputElement element = input.Elements[i];
-                int slot = baseSlot + i;
-                GL.EnableVertexAttribArray(slot);
-                Utilities.CheckLastGLES3Error();
-                GL.VertexAttribPointer(slot, element.ElementCount, element.Type, element.Normalized, input.VertexSizeInBytes, element.Offset);
-                Utilities.CheckLastGLES3Error();
-            }
-            for (int extraSlot = input.Elements.Length; extraSlot < previousAttributesBound; extraSlot++)
-            {
-                GL.DisableVertexAttribArray(extraSlot);
-                Utilities.CheckLastGLES3Error();
-            }
-
-            return input.Elements.Length;
-        }
-
         public int SetVertexAttributes(VertexBuffer[] vertexBuffers, int previousAttributesBound, int baseVertexOffset)
         {
             int totalSlotsBound = 0;

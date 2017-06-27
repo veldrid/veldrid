@@ -190,7 +190,7 @@ namespace Veldrid.Graphics.OpenGLES
             Utilities.CheckLastGLES3Error();
             GL.Scissor(
                 rectangle.Left,
-                Viewport.Height - rectangle.Bottom, // TODO: Is this line right?
+                Viewport.Height - rectangle.Bottom,
                 rectangle.Width,
                 rectangle.Height);
         }

@@ -15,33 +15,6 @@ namespace Veldrid.Graphics.OpenGL
             VBLayoutsBySlot = vertexInputs.Select(mvi => new OpenGLMaterialVertexInput(mvi)).ToArray();
         }
 
-        public int SetVertexAttributes(int vertexBufferSlot, OpenGLVertexBuffer vb, int previousAttributesBound)
-        {
-            // TODO: Related to OpenGLRenderContext.PlatformSetVertexBuffer()
-            // These attributes should be lazily set on a draw call or something.
-            if (vertexBufferSlot <= VBLayoutsBySlot.Length)
-            {
-                return previousAttributesBound;
-            }
-
-            int baseSlot = GetSlotBaseIndex(vertexBufferSlot);
-            OpenGLMaterialVertexInput input = VBLayoutsBySlot[vertexBufferSlot];
-            vb.Apply();
-            for (int i = 0; i < input.Elements.Length; i++)
-            {
-                OpenGLMaterialVertexInputElement element = input.Elements[i];
-                int slot = baseSlot + i;
-                GL.EnableVertexAttribArray(slot);
-                GL.VertexAttribPointer(slot, element.ElementCount, element.Type, element.Normalized, input.VertexSizeInBytes, element.Offset);
-            }
-            for (int extraSlot = input.Elements.Length; extraSlot < previousAttributesBound; extraSlot++)
-            {
-                GL.DisableVertexAttribArray(extraSlot);
-            }
-
-            return input.Elements.Length;
-        }
-
         public int SetVertexAttributes(VertexBuffer[] vertexBuffers, int previousAttributesBound)
         {
             int totalSlotsBound = 0;

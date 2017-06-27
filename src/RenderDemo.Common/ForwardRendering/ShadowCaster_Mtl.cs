@@ -25,16 +25,22 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private readonly MaterialAsset _shadowPassMaterialAsset;
         private readonly MaterialAsset _regularPassMaterialAsset;
         private readonly TextureData _overrideTextureData;
+        private TextureData _alphaMapTextureData = RawTextureDataArray<RgbaByte>.FromSingleColor(RgbaByte.White);
 
-        private readonly string[] _stages = new string[] { "ShadowMap", "Standard" };
+        private readonly string[] _standardStages = new string[] { "ShadowMap", "Standard" };
+        private readonly string[] _alphaMapStages = new string[] { "ShadowMap", "AlphaBlend" };
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
         private Material _shadowPassMaterial;
         private Material _regularPassMaterial;
         private DeviceTexture2D _overrideTexture;
+        private DeviceTexture2D _alphaMapTexture;
         private ShaderTextureBinding _overrideTextureBinding;
+        private ShaderTextureBinding _alphaMapTextureBinding;
         private SamplerState _shadowMapSampler;
+        private bool _alphaMapNeedsRecreation = true;
+        private bool _hasAlphaMap = false;
 
         public Vector3 Position { get; set; }
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
@@ -44,6 +50,17 @@ namespace Veldrid.RenderDemo.ForwardRendering
         {
             get { return _mtlPropertiesProvider.Data; }
             set { _mtlPropertiesProvider.Data = value; }
+        }
+
+        public TextureData AlphaMap
+        {
+            get { return _alphaMapTextureData; }
+            set
+            {
+                _alphaMapTextureData = value;
+                _hasAlphaMap = true;
+                _alphaMapNeedsRecreation = true;
+            }
         }
 
         public MtlShadowCaster(
@@ -108,6 +125,21 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 0,
                 int.MaxValue,
                 0);
+
+            if (_alphaMapNeedsRecreation)
+            {
+                _alphaMapNeedsRecreation = false;
+                RecreateAlphaMapTextureResources(rc);
+            }
+        }
+
+        private void RecreateAlphaMapTextureResources(RenderContext rc)
+        {
+            _alphaMapTexture?.Dispose();
+            _alphaMapTextureBinding?.Dispose();
+
+            _alphaMapTexture = _alphaMapTextureData.CreateDeviceTexture(rc.ResourceFactory);
+            _alphaMapTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(_alphaMapTexture);
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
@@ -118,12 +150,18 @@ namespace Veldrid.RenderDemo.ForwardRendering
             return RenderOrderKey.Create(distance, materialHashCode);
         }
 
-        public IList<string> GetStagesParticipated() => _stages;
+        public IList<string> GetStagesParticipated() => _hasAlphaMap ? _alphaMapStages : _standardStages;
 
         public void Render(RenderContext rc, string pipelineStage)
         {
-            rc.VertexBuffer =_vb;
-            rc.IndexBuffer= _ib;
+            if (_alphaMapNeedsRecreation)
+            {
+                _alphaMapNeedsRecreation = false;
+                RecreateAlphaMapTextureResources(rc);
+            }
+
+            rc.VertexBuffer = _vb;
+            rc.IndexBuffer = _ib;
 
             if (pipelineStage == "ShadowMap")
             {
@@ -132,15 +170,22 @@ namespace Veldrid.RenderDemo.ForwardRendering
             }
             else
             {
-                Debug.Assert(pipelineStage == "Standard");
-                rc.Material =_regularPassMaterial;
+                Debug.Assert(pipelineStage == (!_hasAlphaMap ? "Standard" : "AlphaBlend"));
+                rc.Material = _regularPassMaterial;
                 _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
                 if (_overrideTextureBinding != null)
                 {
                     rc.SetTexture(0, _overrideTextureBinding);
                 }
-                rc.SetSamplerState(0, rc.Anisox4Sampler);
-                rc.SetSamplerState(1, _shadowMapSampler);
+                rc.SetTexture(1, _alphaMapTextureBinding);
+                rc.SetSamplerState(0, rc.Anisox4Sampler); // Surface texture
+                rc.SetSamplerState(1, rc.PointSampler); // Alpha map
+                rc.SetSamplerState(2, _shadowMapSampler); // Shadow map
+
+                if (_hasAlphaMap)
+                {
+                    rc.SetBlendState(rc.AlphaBlend);
+                }
             }
 
             _worldProvider.Data =
@@ -151,7 +196,12 @@ namespace Veldrid.RenderDemo.ForwardRendering
             rc.DrawIndexedPrimitives(_indices.Length, 0);
 
             rc.SetSamplerState(0, rc.PointSampler);
-            rc.SetSamplerState(1, rc.PointSampler);
+            rc.SetSamplerState(2, rc.PointSampler);
+
+            if (_hasAlphaMap)
+            {
+                rc.SetBlendState(rc.OverrideBlend);
+            }
         }
 
         private void Serialize<T>(ref T value)

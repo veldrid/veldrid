@@ -24,9 +24,9 @@
             PixelData = pixelData;
         }
 
-        public static RawTextureDataArray<RgbaFloat> FromSingleColor(RgbaFloat color)
+        public static RawTextureDataArray<T> FromSingleColor(T color)
         {
-            return new RawTextureDataArray<RgbaFloat>(new[] { color }, 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
+            return new RawTextureDataArray<T>(new[] { color }, 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
         }
     }
 }

@@ -104,10 +104,13 @@ namespace Veldrid.RenderDemo
                 _window.Resized += OnWindowResized;
 
                 _shadowMapStage = new ShadowMapStage(_rc);
+                StandardPipelineStage alphaBlendStage = new StandardPipelineStage(_rc, "AlphaBlend");
+                alphaBlendStage.Comparer = new FarToNearIndexComparer();
                 _configurableStages = new PipelineStage[]
                 {
                     _shadowMapStage,
                     new StandardPipelineStage(_rc, "Standard"),
+                    alphaBlendStage,
                     new StandardPipelineStage(_rc, "Overlay"),
                 };
 
@@ -469,6 +472,12 @@ namespace Veldrid.RenderDemo
                     MtlShadowCaster sc = new MtlShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, matAsset, overrideTextureData);
                     sc.Scale = new Vector3(0.1f);
                     sc.Name = group.Name + ":" + group.Material;
+                    if (materialDef.AlphaMap != null)
+                    {
+                        string texturePath = "Models/SponzaAtrium/" + materialDef.AlphaMap;
+                        sc.AlphaMap = _ad.LoadAsset<ImageSharpMipmapChain>(texturePath);
+                    }
+
                     Vector3 specularIntensity = Vector3.Zero;
                     if (materialDef.Name.Contains("vase"))
                     {

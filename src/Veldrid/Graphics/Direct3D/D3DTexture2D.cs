@@ -55,6 +55,7 @@ namespace Veldrid.Graphics.Direct3D
             int stride)
         {
             _device = device;
+            MipLevels = mipLevels;
             Texture2DDescription desc = CreateDescription(mipLevels, width, height, bindFlags, usage, cpuAccessFlags, format);
             DeviceTexture = new Texture2D(device, desc);
         }

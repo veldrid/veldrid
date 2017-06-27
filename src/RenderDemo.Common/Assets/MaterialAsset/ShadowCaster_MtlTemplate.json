@@ -119,6 +119,10 @@
       {
         "$type": "Veldrid.Assets.PlaceholderTexture, Veldrid.Assets",
         "Name": "SurfaceTexture"
+      },
+      {
+        "$type": "Veldrid.Assets.PlaceholderTexture, Veldrid.Assets",
+        "Name": "AlphaMap"
       }
     ]
   }

@@ -153,7 +153,7 @@ namespace Veldrid.Graphics.Direct3D
             return texture;
         }
 
-        public override SamplerState CreateSamplerStateCore(
+        protected override SamplerState CreateSamplerStateCore(
             SamplerAddressMode addressU, 
             SamplerAddressMode addressV, 
             SamplerAddressMode addressW, 
@@ -213,7 +213,7 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DTextureBinding(srv, d3dTexture);
         }
 
-        public override BlendState CreateCustomBlendStateCore(
+        protected override BlendState CreateCustomBlendStateCore(
             bool isBlendEnabled,
             Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
             Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
@@ -222,12 +222,12 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DBlendState(_device, isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc, blendFactor);
         }
 
-        public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
+        protected override DepthStencilState CreateDepthStencilStateCore(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
         {
             return new D3DDepthStencilState(_device, isDepthEnabled, comparison, isDepthWriteEnabled);
         }
 
-        public override RasterizerState CreateRasterizerState(
+        protected override RasterizerState CreateRasterizerStateCore(
             FaceCullingMode cullMode,
             TriangleFillMode fillMode,
             bool isDepthClipEnabled,

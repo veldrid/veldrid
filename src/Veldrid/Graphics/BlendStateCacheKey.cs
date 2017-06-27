@@ -2,7 +2,7 @@
 
 namespace Veldrid.Graphics
 {
-    public struct BlendStateCacheKey : IEquatable<BlendStateCacheKey>
+    internal struct BlendStateCacheKey : IEquatable<BlendStateCacheKey>
     {
         bool IsBlendEnabled { get; }
 

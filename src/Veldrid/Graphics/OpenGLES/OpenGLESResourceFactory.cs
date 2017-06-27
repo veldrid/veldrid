@@ -114,7 +114,7 @@ namespace Veldrid.Graphics.OpenGLES
             return new OpenGLESTexture2D(mipLevels, width, height, format, OpenGLESFormats.MapPixelFormat(format), OpenGLESFormats.MapPixelType(format));
         }
 
-        public override SamplerState CreateSamplerStateCore(
+        protected override SamplerState CreateSamplerStateCore(
             SamplerAddressMode addressU,
             SamplerAddressMode addressV,
             SamplerAddressMode addressW,
@@ -174,7 +174,7 @@ namespace Veldrid.Graphics.OpenGLES
             return new OpenGLESVertexBuffer(isDynamic);
         }
 
-        public override BlendState CreateCustomBlendStateCore(
+        protected override BlendState CreateCustomBlendStateCore(
             bool isBlendEnabled,
             Blend srcAlpha,
             Blend destAlpha,
@@ -187,12 +187,12 @@ namespace Veldrid.Graphics.OpenGLES
             return new OpenGLESBlendState(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc, blendFactor);
         }
 
-        public override DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
+        protected override DepthStencilState CreateDepthStencilStateCore(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
         {
             return new OpenGLESDepthStencilState(isDepthEnabled, comparison, isDepthWriteEnabled);
         }
 
-        public override RasterizerState CreateRasterizerState(
+        protected override RasterizerState CreateRasterizerStateCore(
             FaceCullingMode cullMode,
             TriangleFillMode fillMode,
             bool isDepthClipEnabled,

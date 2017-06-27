@@ -11,8 +11,14 @@ namespace Veldrid.Graphics
     {
         public string ShaderAssetRootPath { get; set; } = AppContext.BaseDirectory;
 
-        private readonly Dictionary<SamplerStateCacheKey, SamplerState> _cachedSamplers = new Dictionary<SamplerStateCacheKey, SamplerState>();
-        private readonly Dictionary<BlendStateCacheKey, BlendState> _cachedBlendStates = new Dictionary<BlendStateCacheKey, BlendState>();
+        private readonly Dictionary<SamplerStateCacheKey, SamplerState> _cachedSamplers
+            = new Dictionary<SamplerStateCacheKey, SamplerState>();
+        private readonly Dictionary<BlendStateCacheKey, BlendState> _cachedBlendStates
+            = new Dictionary<BlendStateCacheKey, BlendState>();
+        private readonly Dictionary<DepthStencilStateCacheKey, DepthStencilState> _cachedDepthStencilStates
+            = new Dictionary<DepthStencilStateCacheKey, DepthStencilState>();
+        private readonly Dictionary<RasterizerStateCacheKey, RasterizerState> _cachedRasterizerStates
+            = new Dictionary<RasterizerStateCacheKey, RasterizerState>();
 
         /// <summary>
         /// Creates a <see cref="VertexBuffer"/> with the given storage size.
@@ -253,7 +259,6 @@ namespace Veldrid.Graphics
 
             if (!_cachedSamplers.TryGetValue(key, out SamplerState state))
             {
-                Console.WriteLine("Failed to retrieve sampler from cache. Creating new.");
                 state = CreateSamplerStateCore(
                     addressU,
                     addressV,
@@ -271,7 +276,7 @@ namespace Veldrid.Graphics
             return state;
         }
 
-        public abstract SamplerState CreateSamplerStateCore(
+        protected abstract SamplerState CreateSamplerStateCore(
             SamplerAddressMode addressU,
             SamplerAddressMode addressV,
             SamplerAddressMode addressW,
@@ -391,7 +396,7 @@ namespace Veldrid.Graphics
         /// <param name="colorBlendFunc">The color blend function.</param>
         /// <param name="blendFactor">The blend factor to use for parameterized blend states.</param>
         /// <returns>A new <see cref="BlendState"/>.</returns>
-        public abstract BlendState CreateCustomBlendStateCore(
+        protected abstract BlendState CreateCustomBlendStateCore(
             bool isBlendEnabled,
             Blend srcAlpha, Blend destAlpha, BlendFunction alphaBlendFunc,
             Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
@@ -415,7 +420,26 @@ namespace Veldrid.Graphics
         /// <param name="comparison">The kind of <see cref="DepthComparison"/> to use in the new state.</param>
         /// <param name="isDepthWriteEnabled">A value indicating whether the depth buffer is written to when drawing.</param>
         /// <returns>A new <see cref="DepthStencilState"/>.</returns>
-        public abstract DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled);
+        public DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
+        {
+            DepthStencilStateCacheKey key = new DepthStencilStateCacheKey(isDepthEnabled, isDepthWriteEnabled, comparison);
+            if (!_cachedDepthStencilStates.TryGetValue(key, out DepthStencilState state))
+            {
+                state = CreateDepthStencilStateCore(isDepthWriteEnabled, comparison, isDepthWriteEnabled);
+                _cachedDepthStencilStates.Add(key, state);
+            }
+
+            return state;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DepthStencilState"/>, used to control depth and stencil comparisons in the device's output merger.
+        /// </summary>
+        /// <param name="isDepthEnabled">A value indicating whether depth testing is enabled in the new state.</param>
+        /// <param name="comparison">The kind of <see cref="DepthComparison"/> to use in the new state.</param>
+        /// <param name="isDepthWriteEnabled">A value indicating whether the depth buffer is written to when drawing.</param>
+        /// <returns>A new <see cref="DepthStencilState"/>.</returns>
+        protected abstract DepthStencilState CreateDepthStencilStateCore(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled);
 
         /// <summary>
         /// Creates a new <see cref="RasterizerState"/>, used to control various behaviors of the device's rasterizer.
@@ -425,7 +449,31 @@ namespace Veldrid.Graphics
         /// <param name="isDepthClipEnabled">Whether or not primitives are clipped by depth.</param>
         /// <param name="isScissorTestEnabled">Whether or not primitives are clipped by the scissor test.</param>
         /// <returns>A new <see cref="RasterizerState"/>.</returns>
-        public abstract RasterizerState CreateRasterizerState(
+        public RasterizerState CreateRasterizerState(
+            FaceCullingMode cullMode,
+            TriangleFillMode fillMode,
+            bool isDepthClipEnabled,
+            bool isScissorTestEnabled)
+        {
+            RasterizerStateCacheKey key = new RasterizerStateCacheKey(cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
+            if (!_cachedRasterizerStates.TryGetValue(key, out RasterizerState state))
+            {
+                state = CreateRasterizerStateCore(cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
+                _cachedRasterizerStates.Add(key, state);
+            }
+
+            return state;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="RasterizerState"/>, used to control various behaviors of the device's rasterizer.
+        /// </summary>
+        /// <param name="cullMode">Controls which primitive faces are culled.</param>
+        /// <param name="fillMode">The kind of triangle filling to use.</param>
+        /// <param name="isDepthClipEnabled">Whether or not primitives are clipped by depth.</param>
+        /// <param name="isScissorTestEnabled">Whether or not primitives are clipped by the scissor test.</param>
+        /// <returns>A new <see cref="RasterizerState"/>.</returns>
+        protected abstract RasterizerState CreateRasterizerStateCore(
             FaceCullingMode cullMode,
             TriangleFillMode fillMode,
             bool isDepthClipEnabled,

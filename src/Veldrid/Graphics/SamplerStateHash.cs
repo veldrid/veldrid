@@ -2,7 +2,7 @@
 
 namespace Veldrid.Graphics
 {
-    public struct SamplerStateCacheKey : IEquatable<SamplerStateCacheKey>
+    internal struct SamplerStateCacheKey : IEquatable<SamplerStateCacheKey>
     {
         public SamplerAddressMode AddressU { get; }
         public SamplerAddressMode AddressV { get; }

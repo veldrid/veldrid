@@ -127,7 +127,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
                 if (_overrideTextureBinding != null)
                 {
-                    _regularPassMaterial.UseTexture(0, _overrideTextureBinding);
+                    rc.SetTexture(0, _overrideTextureBinding);
                 }
                 rc.SetSamplerState(0, rc.Anisox4Sampler);
                 rc.SetSamplerState(1, _shadowMapSampler);

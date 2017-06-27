@@ -89,7 +89,7 @@ namespace Veldrid.RenderDemo
             rc.IndexBuffer = _ib;
             rc.Material = _material;
             _material.ApplyPerObjectInputs(_perObjectProviders);
-            _material.UseTexture(0, _textureBinding);
+            rc.SetTexture(0, _textureBinding);
             rc.RasterizerState = _wireframeState;
             rc.SetSamplerState(0, rc.PointSampler);
             rc.DrawIndexedPrimitives(_indices.Count, 0, PrimitiveTopology.LineList);

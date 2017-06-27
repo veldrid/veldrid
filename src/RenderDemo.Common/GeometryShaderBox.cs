@@ -76,7 +76,7 @@ namespace Veldrid.RenderDemo
                 new MaterialInputs<MaterialPerObjectInputElement>(
                     new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes)));
             ShaderTextureBindingSlots slots = factory.CreateShaderTextureBindingSlots(shaderSet, MaterialTextureInputs.Empty);
-            _material = new Material(rc, shaderSet, constantBindings, slots, Array.Empty<DefaultTextureBindingInfo>());
+            _material = new Material(shaderSet, constantBindings, slots, Array.Empty<DefaultTextureBindingInfo>());
         }
 
         private void ClearDeviceResources()

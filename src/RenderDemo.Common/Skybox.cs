@@ -102,7 +102,7 @@ namespace Veldrid.RenderDemo
             rc.Material = _material;
             RasterizerState previousRasterState = rc.RasterizerState;
             rc.SetRasterizerState(_rasterizerState);
-            _material.UseTexture(0, _cubemapBinding);
+            rc.SetTexture(0, _cubemapBinding);
             _material.ApplyPerObjectInput(_perObjectInput);
             rc.DrawIndexedPrimitives(s_indices.Length, 0);
             rc.SetRasterizerState(previousRasterState);

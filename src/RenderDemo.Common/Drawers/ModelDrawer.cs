@@ -241,7 +241,7 @@ namespace Veldrid.RenderDemo.Drawers
                     _regularMaterial.ApplyPerObjectInputs(_perObjectInputs);
                     if (_textureBinding != null)
                     {
-                        _regularMaterial.UseTexture(1, _textureBinding);
+                        rc.SetTexture(1, _textureBinding);
                     }
                 }
 

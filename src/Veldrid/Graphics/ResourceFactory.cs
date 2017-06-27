@@ -128,7 +128,7 @@ namespace Veldrid.Graphics
             ShaderTextureBindingSlots textureSlots = CreateShaderTextureBindingSlots(shaderSet, textureInputs);
             DefaultTextureBindingInfo[] defaultTextureInfos = CreateDefaultTextureBindingInfos(rc, textureInputs);
 
-            return new Material(rc, shaderSet, constantBindings, textureSlots, defaultTextureInfos);
+            return new Material(shaderSet, constantBindings, textureSlots, defaultTextureInfos);
         }
 
         /// <summary>

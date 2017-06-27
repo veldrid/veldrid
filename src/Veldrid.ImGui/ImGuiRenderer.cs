@@ -309,12 +309,12 @@ namespace Veldrid
                         {
                             if (pcmd->TextureId == new IntPtr(_fontAtlasID))
                             {
-                                _material.UseTexture(0, _fontTextureBinding);
+                                _rc.SetTexture(0, _fontTextureBinding);
                             }
                             else
                             {
                                 ShaderTextureBinding binding = ImGuiImageHelper.GetShaderTextureBinding(pcmd->TextureId);
-                                _material.UseTexture(0, binding);
+                                _rc.SetTexture(0, binding);
                             }
                         }
 

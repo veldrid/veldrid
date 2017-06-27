@@ -4,9 +4,9 @@ namespace Veldrid
 {
     internal static class SpanHelpers
     {
-        public static string GetString(ReadOnlySpan<char> libName)
+        public static string GetString(ReadOnlySpan<char> span)
         {
-            return new string(libName.ToArray());
+            return new string(span.ToArray());
         }
     }
 }

@@ -318,15 +318,21 @@ namespace Veldrid.Graphics.Direct3D
             d3dFramebuffer.Apply();
         }
 
-        private void UnbindIfBound(ShaderType type, DeviceTexture texture)
+        /// <summary>
+        /// Unbinds a texture if it is bound to any slots for the given shader type.
+        /// Used to avoid binding a texture to a framebuffer while it is in use elsewhere, which is not valid.
+        /// </summary>
+        /// <param name="shaderType">The type of shader to unbind the texture from.</param>
+        /// <param name="texture">The texture resource to unbind.</param>
+        private void UnbindIfBound(ShaderType shaderType, DeviceTexture texture)
         {
-            ShaderTextureBinding[] bindingsArray = GetTextureBindingsArray(type);
+            ShaderTextureBinding[] bindingsArray = GetTextureBindingsArray(shaderType);
             for (int i = 0; i < bindingsArray.Length; i++)
             {
                 if (bindingsArray[i] != null && bindingsArray[i].BoundTexture == texture)
                 {
                     bindingsArray[i] = null;
-                    CommonShaderStage stage = GetShaderStage(type);
+                    CommonShaderStage stage = GetShaderStage(shaderType);
                     stage.SetShaderResource(i, null);
                 }
             }

@@ -63,12 +63,14 @@ namespace Veldrid.Graphics.Direct3D
         {
             _device = device;
 
-            ShaderReflection vsReflection = new ShaderReflection(((D3DVertexShader)shaderSet.VertexShader).Bytecode.Data);
-            ShaderReflection psReflection = new ShaderReflection(((D3DFragmentShader)shaderSet.FragmentShader).Bytecode.Data);
+            D3DShaderSet d3dShaderSet = (D3DShaderSet)shaderSet;
+
+            ShaderReflection vsReflection = d3dShaderSet.VertexShader.Reflection;
+            ShaderReflection psReflection = d3dShaderSet.FragmentShader.Reflection;
             ShaderReflection gsReflection = null;
             if (shaderSet.GeometryShader != null)
             {
-                gsReflection = new ShaderReflection(((D3DGeometryShader)shaderSet.GeometryShader).Bytecode.Data);
+                gsReflection = d3dShaderSet.GeometryShader.Reflection;
             }
 
             int numGlobalElements = globalInputs.Elements.Length;

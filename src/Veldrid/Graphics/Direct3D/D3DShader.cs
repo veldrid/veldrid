@@ -13,10 +13,12 @@ namespace Veldrid.Graphics.Direct3D
             = ShaderFlags.OptimizationLevel3;
 #endif
 
-        public ShaderType Type { get; }
+        private ShaderReflection _reflection;
 
+        public ShaderType Type { get; }
         public ShaderBytecode Bytecode { get; }
         public TShader DeviceShader { get; }
+        public ShaderReflection Reflection => _reflection ?? (_reflection = new ShaderReflection(Bytecode.Data));
 
         public D3DShader(Device device, ShaderType type, string shaderCode, string name)
         {

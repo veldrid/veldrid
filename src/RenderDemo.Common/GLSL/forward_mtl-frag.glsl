@@ -42,12 +42,24 @@ in vec3 out_normal;
 in vec2 out_texCoord;
 
 uniform sampler2D SurfaceTexture;
+uniform sampler2D AlphaMap;
 uniform sampler2D ShadowMap;
 
 out vec4 outputColor;
 
+vec4 WithAlpha(vec4 baseColor, float alpha)
+{
+    return vec4(baseColor.rgb, alpha);
+}
+
 void main()
 {
+    float alphaMapSample = texture(AlphaMap, out_texCoord).r;
+    if (alphaMapSample == 0)
+    {
+        discard;
+    }
+
     vec4 surfaceColor = texture(SurfaceTexture, out_texCoord);
     vec4 ambientLight = vec4(.4, .4, .4, 1);
 
@@ -92,6 +104,7 @@ void main()
         projCoords.z < 0.0f || projCoords.z > 1.0f)
     {
         outputColor = ambientLight * surfaceColor + pointDiffuse + pointSpec;
+        outputColor = WithAlpha(outputColor, surfaceColor.a);
         return;
     }
 
@@ -114,6 +127,7 @@ void main()
     if (shadowMapDepth < projCoords.z)
     {
         outputColor = ambientLight * surfaceColor + pointDiffuse + pointSpec;
+        outputColor = WithAlpha(outputColor, surfaceColor.a);
         return;
     }
 
@@ -134,4 +148,5 @@ void main()
 	}
 
 	outputColor = specularColor + (ambientLight * surfaceColor) + (diffuseFactor * surfaceColor) + pointDiffuse + pointSpec;
+    outputColor = WithAlpha(outputColor, surfaceColor.a);
 }

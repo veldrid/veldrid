@@ -19,7 +19,6 @@ namespace Veldrid.Graphics
         private Framebuffer _framebuffer;
         private VertexBuffer[] _vertexBuffers = new VertexBuffer[MaxVertexBuffers];
         private IndexBuffer _indexBuffer;
-        private Material _material;
         private Rectangle _scissorRectangle;
         private Viewport _viewport;
         private BlendState _blendState;
@@ -114,23 +113,6 @@ namespace Veldrid.Graphics
                 {
                     PlatformSetIndexBuffer(value);
                     _indexBuffer = value;
-                }
-            }
-        }
-
-        /// <summary>Gets or sets the active Material.</summary>
-        public Material Material
-        {
-            get { return _material; }
-            set
-            {
-                _material = value;
-                ShaderSet = value.ShaderSet;
-                ShaderConstantBindings = value.ConstantBindings;
-                ShaderTextureBindingSlots = value.TextureBindingSlots;
-                foreach (var defaultBinding in value.DefaultTextureBindings)
-                {
-                    SetTexture(defaultBinding.Slot, defaultBinding.TextureBinding);
                 }
             }
         }
@@ -561,7 +543,6 @@ namespace Veldrid.Graphics
             }
 
             _indexBuffer = null;
-            _material = null;
             _constantBindings = null;
         }
 

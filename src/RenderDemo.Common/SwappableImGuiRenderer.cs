@@ -13,7 +13,7 @@ namespace Veldrid.RenderDemo
 
         public RenderOrderKey GetRenderOrderKey(Vector3 pos)
         {
-            return RenderOrderKey.Create(Material.GetHashCode());
+            return new RenderOrderKey();
         }
 
         public void ChangeRenderContext(AssetDatabase ad, RenderContext rc)

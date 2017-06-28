@@ -233,16 +233,32 @@ namespace Veldrid.Graphics.OpenGLES
         {
             GL.ActiveTexture(TextureUnit.Texture0 + slot);
             Utilities.CheckLastGLES3Error();
-            ((OpenGLESTexture)textureBinding.BoundTexture).Bind();
+            OpenGLESTexture boundTexture = ((OpenGLESTexture)textureBinding.BoundTexture);
+            boundTexture.Bind();
             int uniformLocation = ShaderTextureBindingSlots.GetUniformLocation(slot);
             GL.Uniform1(uniformLocation, slot);
             Utilities.CheckLastGLES3Error();
+
+            _boundTexturesBySlot[slot] = boundTexture;
+            EnsureSamplerMipmapState(slot, boundTexture.MipLevels != 1);
         }
 
         protected override void PlatformSetSamplerState(int slot, SamplerState samplerState, bool mipmapped)
         {
             OpenGLESSamplerState glSamplerState = (OpenGLESSamplerState)samplerState;
             glSamplerState.Apply(slot, mipmapped);
+        }
+
+        private void EnsureSamplerMipmapState(int slot, bool mipmap)
+        {
+            if (_boundSamplersBySlot.TryGetValue(slot, out BoundSamplerStateInfo info))
+            {
+                if (info.SamplerState != null && info.Mipmapped != mipmap)
+                {
+                    ((OpenGLESSamplerState)info.SamplerState).Apply(slot, mipmap);
+                    _boundSamplersBySlot[slot] = new BoundSamplerStateInfo(info.SamplerState, mipmap);
+                }
+            }
         }
 
         protected override void PlatformSetFramebuffer(Framebuffer framebuffer)

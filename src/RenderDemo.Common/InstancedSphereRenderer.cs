@@ -67,26 +67,23 @@ namespace Veldrid.RenderDemo
             _instanceVB = factory.CreateVertexBuffer(instanceData.Length * InstanceData.SizeInBytes, false);
             _instanceVB.SetVertexData(instanceData, new VertexDescriptor(InstanceData.SizeInBytes, 2, 0, IntPtr.Zero));
 
-            {
-                Shader vs = factory.CreateShader(ShaderType.Vertex, "instanced-simple-vertex");
-                Shader fs = factory.CreateShader(ShaderType.Fragment, "instanced-simple-frag");
-                VertexInputLayout inputLayout = factory.CreateInputLayout(
-                    vs,
-                    new MaterialVertexInput(VertexPosition.SizeInBytes, new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3)),
-                    new MaterialVertexInput(
-                        InstanceData.SizeInBytes,
-                        new MaterialVertexInputElement("in_offset", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float3, VertexElementInputClass.PerInstance, 1),
-                        new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4, VertexElementInputClass.PerInstance, 1)));
-                ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, fs);
-                ShaderConstantBindings constantBindings = factory.CreateShaderConstantBindings(rc, shaderSet,
-                    new MaterialInputs<MaterialGlobalInputElement>(
-                        new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
-                        new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix")),
-                    new MaterialInputs<MaterialPerObjectInputElement>(
-                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, 16)));
-                ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(shaderSet, MaterialTextureInputs.Empty);
-                _material = new Material(shaderSet, constantBindings, textureSlots, Array.Empty<DefaultTextureBindingInfo>());
-            }
+            Shader vs = factory.CreateShader(ShaderType.Vertex, "instanced-simple-vertex");
+            Shader fs = factory.CreateShader(ShaderType.Fragment, "instanced-simple-frag");
+            VertexInputLayout inputLayout = factory.CreateInputLayout(
+                new MaterialVertexInput(VertexPosition.SizeInBytes, new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3)),
+                new MaterialVertexInput(
+                    InstanceData.SizeInBytes,
+                    new MaterialVertexInputElement("in_offset", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float3, VertexElementInputClass.PerInstance, 1),
+                    new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4, VertexElementInputClass.PerInstance, 1)));
+            ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, fs);
+            ShaderConstantBindings constantBindings = factory.CreateShaderConstantBindings(rc, shaderSet,
+                new MaterialInputs<MaterialGlobalInputElement>(
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
+                    new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix")),
+                new MaterialInputs<MaterialPerObjectInputElement>(
+                new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, 16)));
+            ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(shaderSet, Array.Empty<ShaderTextureInput>());
+            _material = new Material(shaderSet, constantBindings, textureSlots);
         }
 
         private struct InstanceData
@@ -117,7 +114,7 @@ namespace Veldrid.RenderDemo
             rc.SetVertexBuffer(0, _sphereGeometryVB);
             rc.SetVertexBuffer(1, _instanceVB);
             rc.IndexBuffer = _ib;
-            rc.Material = _material;
+            _material.Apply(rc);
             _material.ApplyPerObjectInput(_worldProvider);
             rc.DrawInstancedPrimitives(_indexCount, InstanceCount, 0);
         }

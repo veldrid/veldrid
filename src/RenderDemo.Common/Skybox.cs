@@ -56,7 +56,7 @@ namespace Veldrid.RenderDemo
             _ib = factory.CreateIndexBuffer(s_indices.Length * sizeof(int), false);
             _ib.SetIndices(s_indices, IndexFormat.UInt16);
 
-            _material = ad.LoadAsset<MaterialAsset>("MaterialAsset/Skybox.json").Create(ad, rc);
+            _material = null; // TODO
 
             var viewProvider = (ConstantBufferDataProvider<Matrix4x4>)((ChangeableProvider)rc.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).DataProvider;
             _perObjectInput = new DependantDataProvider<Matrix4x4>(
@@ -99,7 +99,7 @@ namespace Veldrid.RenderDemo
         {
             rc.VertexBuffer = _vb;
             rc.IndexBuffer = _ib;
-            rc.Material = _material;
+            _material.Apply(rc);
             RasterizerState previousRasterState = rc.RasterizerState;
             rc.SetRasterizerState(_rasterizerState);
             rc.SetTexture(0, _cubemapBinding);

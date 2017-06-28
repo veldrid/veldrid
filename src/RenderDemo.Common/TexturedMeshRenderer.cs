@@ -21,6 +21,7 @@ namespace Veldrid.RenderDemo
         private VertexBuffer _vb;
         private IndexBuffer _ib;
         private Material _material;
+        private ShaderTextureBinding _textureBinding;
 
         private static RasterizerState s_wireframeRasterizerState;
 
@@ -96,11 +97,7 @@ namespace Veldrid.RenderDemo
                     new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
                 });
 
-            MaterialTextureInputs textureInputs = new MaterialTextureInputs(
-                new MaterialTextureInputElement[]
-                {
-                    new TextureDataInputElement("surfaceTexture", _texture)
-                });
+            ShaderTextureInput[] textureInputs = new[] { new ShaderTextureInput(0, "surfaceTexture") };
 
             _material = factory.CreateMaterial(
                 context,
@@ -110,6 +107,9 @@ namespace Veldrid.RenderDemo
                 globalInputs,
                 perObjectInputs,
                 textureInputs);
+
+            var texture = _texture.CreateDeviceTexture(factory);
+            _textureBinding = factory.CreateShaderTextureBinding(texture);
 
             s_wireframeRasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
         }
@@ -132,8 +132,10 @@ namespace Veldrid.RenderDemo
 
             rc.VertexBuffer = _vb;
             rc.IndexBuffer = _ib;
-            rc.Material = _material;
+
+            _material.Apply(rc);
             _material.ApplyPerObjectInputs(_perObjectProviders);
+            rc.SetTexture(0, _textureBinding);
             rc.SetSamplerState(0, rc.PointSampler);
 
             rc.DrawIndexedPrimitives(_indices.Length, 0);

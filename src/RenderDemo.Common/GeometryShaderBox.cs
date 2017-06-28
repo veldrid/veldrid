@@ -50,7 +50,7 @@ namespace Veldrid.RenderDemo
         {
             rc.VertexBuffer = _vb;
             rc.IndexBuffer = _ib;
-            rc.Material = _material;
+            _material.Apply(rc);
             _worldProvider.Data = Matrix4x4.CreateTranslation(Position);
             _material.ApplyPerObjectInput(_worldProvider);
             rc.DrawIndexedPrimitives(_indexCount, 0, PrimitiveTopology.PointList);
@@ -65,7 +65,7 @@ namespace Veldrid.RenderDemo
             Shader geometryShader = factory.CreateShader(ShaderType.Geometry, _geometryShaderName);
             Shader fragmentShader = factory.CreateShader(ShaderType.Fragment, "geometry-frag");
             VertexInputLayout inputLayout = factory.CreateInputLayout(
-                vertexShader, new MaterialVertexInput(12, new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3)));
+                new MaterialVertexInput(12, new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3)));
             ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vertexShader, geometryShader, fragmentShader);
             ShaderConstantBindings constantBindings = factory.CreateShaderConstantBindings(rc, shaderSet,
                 new MaterialInputs<MaterialGlobalInputElement>(
@@ -75,8 +75,8 @@ namespace Veldrid.RenderDemo
                     ),
                 new MaterialInputs<MaterialPerObjectInputElement>(
                     new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes)));
-            ShaderTextureBindingSlots slots = factory.CreateShaderTextureBindingSlots(shaderSet, MaterialTextureInputs.Empty);
-            _material = new Material(shaderSet, constantBindings, slots, Array.Empty<DefaultTextureBindingInfo>());
+            ShaderTextureBindingSlots slots = factory.CreateShaderTextureBindingSlots(shaderSet, Array.Empty<ShaderTextureInput>());
+            _material = new Material(shaderSet, constantBindings, slots);
         }
 
         private void ClearDeviceResources()

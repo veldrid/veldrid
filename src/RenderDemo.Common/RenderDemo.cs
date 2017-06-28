@@ -51,7 +51,6 @@ namespace Veldrid.RenderDemo
 
         private static Framebuffer _screenshotFramebuffer;
         private static RasterizerState _wireframeRasterizerState;
-        private static MaterialAsset s_mtlMaterialAsset;
 
         private static Camera _camera;
         private static float _cameraYaw;
@@ -78,7 +77,6 @@ namespace Veldrid.RenderDemo
         private static Octree<ShadowCaster> _octree;
         private static List<RenderItem> _octreeCubes = new List<RenderItem>();
         private static Vector3 _octreeBoxPosition;
-        private static MaterialAsset _stoneMaterial;
         private static OctreeRenderer<ShadowCaster> _octreeRenderer;
         private static FrustumWireframeRenderer _octreeFrustumRenderer;
         private static Vector3 _octreeFrustumViewOrigin;
@@ -91,6 +89,7 @@ namespace Veldrid.RenderDemo
         private static List<RenderItem> _sponzaQueryResult = new List<RenderItem>();
         private static BoundingBoxWireframeRenderer _sceneBoundsRenderer;
         private static bool s_needsResizing;
+        private static Material _stoneMaterial;
 
         public static void RunDemo(RenderContext renderContext, Window window, params RendererOption[] backendOptions)
         {
@@ -324,9 +323,9 @@ namespace Veldrid.RenderDemo
             {
                 _shadowsScene = new OctreeVisibilityManager();
 
-                var stoneMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Stone.json"));
-                var woodMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Wood.json"));
-                var crateMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Crate.json"));
+                Material stoneMaterial = null; // TODO
+                Material woodMaterial = null; // TODO
+                Material crateMaterial = null; // TODO
 
                 var cube1 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, crateMaterial);
                 _shadowsScene.AddRenderItem(cube1.BoundingBox, cube1);
@@ -374,7 +373,7 @@ namespace Veldrid.RenderDemo
             if (_octreeScene == null)
             {
                 _octreeScene = new FlatListVisibilityManager();
-                _stoneMaterial = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_Stone.json"));
+                _stoneMaterial = null; // TODO
 
                 BoundingBox bounds = new BoundingBox(new Vector3(-25, -25, -25), new Vector3(25, 25, 25));
                 _octree = new Octree<ShadowCaster>(bounds, 3);
@@ -457,7 +456,6 @@ namespace Veldrid.RenderDemo
                 {
                     ConstructedMeshInfo mesh = atriumFile.GetMesh(group);
                     MaterialDefinition materialDef = atriumMtls.Definitions[mesh.MaterialName];
-                    MaterialAsset matAsset = GetMtlMaterialAssetTemplate();
                     TextureData overrideTextureData = null;
                     if (materialDef.DiffuseTexture != null)
                     {
@@ -469,7 +467,7 @@ namespace Veldrid.RenderDemo
                         overrideTextureData = pink;
                     }
 
-                    MtlShadowCaster sc = new MtlShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, matAsset, overrideTextureData);
+                    MtlShadowCaster sc = new MtlShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, overrideTextureData);
                     sc.Scale = new Vector3(0.1f);
                     sc.Name = group.Name + ":" + group.Material;
                     if (materialDef.AlphaMap != null)
@@ -512,16 +510,6 @@ namespace Veldrid.RenderDemo
             }
 
             return _sponzaAtrium;
-        }
-
-        private static MaterialAsset GetMtlMaterialAssetTemplate()
-        {
-            if (s_mtlMaterialAsset == null)
-            {
-                s_mtlMaterialAsset = _ad.LoadAsset<MaterialAsset>(new AssetID("MaterialAsset/ShadowCaster_MtlTemplate.json"));
-            }
-
-            return s_mtlMaterialAsset;
         }
 
         private static void Update(double deltaSeconds, InputSnapshot snapshot)

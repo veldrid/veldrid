@@ -22,8 +22,6 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private readonly DynamicDataProvider<MtlMaterialProperties> _mtlPropertiesProvider = new DynamicDataProvider<MtlMaterialProperties>();
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
 
-        private readonly MaterialAsset _shadowPassMaterialAsset;
-        private readonly MaterialAsset _regularPassMaterialAsset;
         private readonly TextureData _overrideTextureData;
         private TextureData _alphaMapTextureData = RawTextureDataArray<RgbaByte>.FromSingleColor(RgbaByte.White);
 
@@ -68,14 +66,11 @@ namespace Veldrid.RenderDemo.ForwardRendering
             AssetDatabase ad,
             VertexPositionNormalTexture[] vertices,
             ushort[] indices,
-            MaterialAsset regularPassMaterial,
             TextureData overrideTexture = null)
         {
             _vertices = vertices;
             _indices = indices;
 
-            _shadowPassMaterialAsset = ad.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_ShadowMap.json");
-            _regularPassMaterialAsset = regularPassMaterial;
             _overrideTextureData = overrideTexture;
 
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, Utilities.CalculateInverseTranspose);
@@ -106,8 +101,9 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Length, false);
             _ib.SetIndices(_indices, IndexFormat.UInt16);
 
-            _shadowPassMaterial = _shadowPassMaterialAsset.Create(ad, rc);
-            _regularPassMaterial = _regularPassMaterialAsset.Create(ad, rc);
+            _shadowPassMaterial = null; // TODO
+            _regularPassMaterial = null; // TODO
+
             if (_overrideTextureData != null)
             {
                 _overrideTexture = _overrideTextureData.CreateDeviceTexture(factory);
@@ -165,13 +161,13 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
             if (pipelineStage == "ShadowMap")
             {
-                rc.Material = _shadowPassMaterial;
+                _shadowPassMaterial.Apply(rc);
                 _shadowPassMaterial.ApplyPerObjectInput(_worldProvider);
             }
             else
             {
                 Debug.Assert(pipelineStage == (!_hasAlphaMap ? "Standard" : "AlphaBlend"));
-                rc.Material = _regularPassMaterial;
+                _regularPassMaterial.Apply(rc);
                 _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
                 if (_overrideTextureBinding != null)
                 {

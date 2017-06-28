@@ -87,12 +87,12 @@ namespace Veldrid.Graphics.OpenGLES
             return new OpenGLESShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
         }
 
-        public override VertexInputLayout CreateInputLayout(Shader shader, MaterialVertexInput[] vertexInputs)
+        public override VertexInputLayout CreateInputLayout(MaterialVertexInput[] vertexInputs)
         {
             return new OpenGLESVertexInputLayout(vertexInputs);
         }
 
-        public override ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, MaterialTextureInputs textureInputs)
+        public override ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, ShaderTextureInput[] textureInputs)
         {
             return new OpenGLESTextureBindingSlots(shaderSet, textureInputs);
         }

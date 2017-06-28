@@ -99,14 +99,9 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        public override VertexInputLayout CreateInputLayout(Shader vertexShader, MaterialVertexInput[] vertexInputs)
+        public override VertexInputLayout CreateInputLayout(MaterialVertexInput[] vertexInputs)
         {
-            if (!(vertexShader is D3DVertexShader))
-            {
-                throw new InvalidOperationException($"CreateInputShader must be called with a VertexShader. A Shader of type {vertexShader.Type} was given.");
-            }
-
-            return new D3DVertexInputLayout(_device, ((D3DVertexShader)vertexShader).Bytecode.Data, vertexInputs);
+            return new D3DVertexInputLayout(_device, vertexInputs);
         }
 
         public override ShaderSet CreateShaderSet(VertexInputLayout inputLayout, Shader vertexShader, Shader fragmentShader)
@@ -128,7 +123,7 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DShaderConstantBindings(rc, _device, shaderSet, globalInputs, perObjectInputs);
         }
 
-        public override ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, MaterialTextureInputs textureInputs)
+        public override ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, ShaderTextureInput[] textureInputs)
         {
             return new D3DShaderTextureBindingSlots((D3DShaderSet)shaderSet, textureInputs);
         }

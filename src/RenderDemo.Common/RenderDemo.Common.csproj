@@ -2,30 +2,13 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Veldrid.RenderDemo</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Veldrid.ImGui/Veldrid.ImGui.csproj" />
     <ProjectReference Include="../Veldrid.Sdl2/Veldrid.Sdl2.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\MaterialAsset\ModelPreview.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_Crate.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_ShadowMap.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_Stone.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\ShadowCaster_Wood.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\MaterialAsset\Skybox.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Assets\Models\Sphere.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -359,9 +342,6 @@
     <ProjectReference Include="..\Veldrid.SystemAbstractions\Veldrid.SystemAbstractions.csproj" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.Assets\Veldrid.Assets.csproj" />
-    <Content Include="Assets\MaterialAsset\ShadowCaster_MtlTemplate.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Assets\Models\SponzaAtrium\sponza.mtl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

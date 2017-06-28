@@ -86,51 +86,6 @@ namespace Veldrid.Graphics
             return ib;
         }
 
-        public Material CreateMaterial(
-            RenderContext rc,
-            string vertexShaderName,
-            string fragmentShaderName,
-            MaterialVertexInput vertexInputs,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs)
-        {
-            return CreateMaterial(rc, vertexShaderName, fragmentShaderName, new[] { vertexInputs }, globalInputs, perObjectInputs, textureInputs);
-        }
-
-        public Material CreateMaterial(
-            RenderContext rc,
-            string vertexShaderName,
-            string fragmentShaderName,
-            MaterialVertexInput vertexInputs0,
-            MaterialVertexInput vertexInputs1,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs)
-        {
-            return CreateMaterial(rc, vertexShaderName, fragmentShaderName, new[] { vertexInputs0, vertexInputs1 }, globalInputs, perObjectInputs, textureInputs);
-        }
-
-        public Material CreateMaterial(
-            RenderContext rc,
-            string vertexShaderName,
-            string fragmentShaderName,
-            MaterialVertexInput[] vertexInputs,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
-            MaterialTextureInputs textureInputs)
-        {
-            Shader vs = CreateShader(ShaderType.Vertex, vertexShaderName);
-            Shader fs = CreateShader(ShaderType.Fragment, fragmentShaderName);
-            VertexInputLayout inputLayout = CreateInputLayout(vs, vertexInputs);
-            ShaderSet shaderSet = CreateShaderSet(inputLayout, vs, fs);
-            ShaderConstantBindings constantBindings = CreateShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
-            ShaderTextureBindingSlots textureSlots = CreateShaderTextureBindingSlots(shaderSet, textureInputs);
-            DefaultTextureBindingInfo[] defaultTextureInfos = CreateDefaultTextureBindingInfos(rc, textureInputs);
-
-            return new Material(shaderSet, constantBindings, textureSlots, defaultTextureInfos);
-        }
-
         /// <summary>
         /// Creates a new <see cref="Shader"/> with the given name.
         /// </summary>
@@ -164,7 +119,7 @@ namespace Veldrid.Graphics
         /// <param name="shaderSet">The <see cref="ShaderSet"/> which the slots will be valid for.</param>
         /// <param name="textureInputs">The texture slot descriptions.</param>
         /// <returns>A new <see cref="ShaderTextureBindingSlots"/>.</returns>
-        public abstract ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, MaterialTextureInputs textureInputs);
+        public abstract ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, ShaderTextureInput[] textureInputs);
 
         /// <summary>
         /// Creates a device-specific <see cref="VertexInputLayout"/> from a generic description.
@@ -172,7 +127,7 @@ namespace Veldrid.Graphics
         /// <param name="vertexShader">The vertex <see cref="Shader"/>.</param>
         /// <param name="vertexInputs">An array of vertex input descriptions, one for each <see cref="VertexBuffer"/> input.</param>
         /// <returns>A new <see cref="VertexInputLayout"/>.</returns>
-        public abstract VertexInputLayout CreateInputLayout(Shader vertexShader, params MaterialVertexInput[] vertexInputs);
+        public abstract VertexInputLayout CreateInputLayout(params MaterialVertexInput[] vertexInputs); // TODO: Provide a non-params-array version.
 
         /// <summary>
         /// Creates a new <see cref="ConstantBuffer"/>, used for storing global <see cref="Shader"/> parameters.
@@ -484,21 +439,5 @@ namespace Veldrid.Graphics
         /// </summary>
         /// <param name="loader">The <see cref="ShaderLoader"/> to add.</param>
         public abstract void AddShaderLoader(ShaderLoader loader);
-
-        public DefaultTextureBindingInfo[] CreateDefaultTextureBindingInfos(RenderContext rc, MaterialTextureInputs textureInputs)
-        {
-            List<DefaultTextureBindingInfo> textures = new List<DefaultTextureBindingInfo>();
-            for (int i = 0; i < textureInputs.Elements.Length; i++)
-            {
-                var element = textureInputs.Elements[i];
-                var texture = element.GetDeviceTexture(rc);
-                if (texture != null)
-                {
-                    textures.Add(new DefaultTextureBindingInfo(i, CreateShaderTextureBinding(texture)));
-                }
-            }
-
-            return textures.ToArray();
-        }
     }
 }

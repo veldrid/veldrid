@@ -53,7 +53,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                     new MaterialGlobalInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldMatrixProvider),
                     new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, _projectionMatrixProvider)),
                 MaterialInputs<MaterialPerObjectInputElement>.Empty,
-                new MaterialTextureInputs(new ContextTextureInputElement("SurfaceTexture", "ShadowMap")));
+                new[] { new ShaderTextureInput(0, "SurfaceTexture") });
 
             _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
         }
@@ -82,7 +82,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
             rc.VertexBuffer=_vertexBuffer;
             rc.IndexBuffer =_indexBuffer;
-            rc.Material = _material;
+            _material.Apply(rc);
             rc.SetDepthStencilState(_depthDisabledState);
             rc.DrawIndexedPrimitives(6, 0);
             rc.SetDepthStencilState(rc.DefaultDepthStencilState);

@@ -95,12 +95,12 @@ namespace Veldrid.RenderDemo
                 materialInputs1,
                 globalInputs,
                 perObjectInputs,
-                MaterialTextureInputs.Empty);
+                Array.Empty<ShaderTextureInput>());
         }
 
         public IList<string> GetStagesParticipated() => CommonStages.Standard;
 
-        public void Render(RenderContext context, string pipelineStage)
+        public void Render(RenderContext rc, string pipelineStage)
         {
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             _modelViewProvider.Data =
@@ -110,15 +110,15 @@ namespace Veldrid.RenderDemo
                 * Matrix4x4.CreateRotationZ((rotationAmount * .33f) * Position.Z)
                 * Matrix4x4.CreateTranslation(Position)
                 * Matrix4x4.CreateTranslation((float)Math.Sin(rotationAmount) * Vector3.UnitY)
-                * ((ConstantBufferDataProvider<Matrix4x4>)((ChangeableProvider)context.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).DataProvider).Data;
+                * ((ConstantBufferDataProvider<Matrix4x4>)((ChangeableProvider)rc.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).DataProvider).Data;
 
-            context.SetVertexBuffer(0, s_vb0);
-            context.SetVertexBuffer(1, s_vb1);
-            context.IndexBuffer = s_ib;
-            context.Material = s_material;
+            rc.SetVertexBuffer(0, s_vb0);
+            rc.SetVertexBuffer(1, s_vb1);
+            rc.IndexBuffer = s_ib;
+            s_material.Apply(rc);
             s_material.ApplyPerObjectInput(_modelViewProvider);
 
-            context.DrawIndexedPrimitives(s_cubeIndices.Length, 0);
+            rc.DrawIndexedPrimitives(s_cubeIndices.Length, 0);
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)

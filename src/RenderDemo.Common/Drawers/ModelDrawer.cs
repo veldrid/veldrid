@@ -136,10 +136,8 @@ namespace Veldrid.RenderDemo.Drawers
                 IndexBuffer ib = _rc.ResourceFactory.CreateIndexBuffer(indices.Length * sizeof(ushort), false);
                 ib.SetIndices(indices, IndexFormat.UInt16);
 
-                MaterialAsset shadowmapAsset = lfd.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_ShadowMap.json");
-                MaterialAsset surfaceMaterial = lfd.LoadAsset<MaterialAsset>("MaterialAsset/ModelPreview.json");
-                Material shadowmapMaterial = shadowmapAsset.Create(lfd, _rc, _sceneProviders);
-                Material regularMaterial = surfaceMaterial.Create(lfd, _rc, _sceneProviders);
+                Material shadowmapMaterial = null; // TODO
+                Material regularMaterial = null; // TODO
 
                 return new PreviewModel(
                     vb,
@@ -232,12 +230,12 @@ namespace Veldrid.RenderDemo.Drawers
                 rc.IndexBuffer =_ib;
                 if (stage == "ShadowMap")
                 {
-                    rc.Material = _shadowmapMaterial;
+                    _shadowmapMaterial.Apply(rc);
                     _shadowmapMaterial.ApplyPerObjectInput(_perObjectInputs[0]);
                 }
                 else
                 {
-                    rc.Material = _regularMaterial;
+                    _regularMaterial.Apply(rc);
                     _regularMaterial.ApplyPerObjectInputs(_perObjectInputs);
                     if (_textureBinding != null)
                     {

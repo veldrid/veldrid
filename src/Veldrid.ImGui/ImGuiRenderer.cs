@@ -20,13 +20,17 @@ namespace Veldrid
         private readonly DynamicDataProvider<Matrix4x4> _projectionMatrixProvider;
 
         // Context objects
-        private Material _material;
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private BlendState _blendState;
         private DepthStencilState _depthDisabledState;
         private RasterizerState _rasterizerState;
         private ShaderTextureBinding _fontTextureBinding;
+
+        // Material replacements
+        private ShaderSet _shaderSet;
+        private ShaderConstantBindings _constantBindings;
+        private ShaderTextureBindingSlots _textureSlots;
 
         private int _fontAtlasID = 1;
         private RenderContext _rc;
@@ -71,25 +75,29 @@ namespace Veldrid
             _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
             _rasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true);
             RecreateFontDeviceTexture(rc);
-            _material = factory.CreateMaterial(
-                rc,
-                "imgui-vertex", "imgui-frag",
+
+            Shader vertexShader = factory.CreateShader(ShaderType.Vertex, "imgui-vertex");
+            Shader fragmentShader = factory.CreateShader(ShaderType.Fragment, "imgui-frag");
+            VertexInputLayout inputLayout = factory.CreateInputLayout(
                 new MaterialVertexInput(20, new MaterialVertexInputElement[]
                 {
                     new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float2),
                     new MaterialVertexInputElement("in_texcoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2),
                     new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Byte4)
-                }),
+                }));
+
+            _shaderSet = factory.CreateShaderSet(inputLayout, vertexShader, fragmentShader);
+
+            _constantBindings = factory.CreateShaderConstantBindings(
+                rc,
+                _shaderSet,
                 new MaterialInputs<MaterialGlobalInputElement>(new MaterialGlobalInputElement[]
                 {
                     new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, _projectionMatrixProvider)
                 }),
-                MaterialInputs<MaterialPerObjectInputElement>.Empty,
-                new MaterialTextureInputs(new MaterialTextureInputElement[]
-                {
-                    new ManualTextureInput("surfaceTexture")
-                }));
+                MaterialInputs<MaterialPerObjectInputElement>.Empty);
 
+            _textureSlots = factory.CreateShaderTextureBindingSlots(_shaderSet, new[] { new ShaderTextureInput(0, "surfaceTexture") });
         }
 
         /// <summary>
@@ -106,11 +114,11 @@ namespace Veldrid
 
             var deviceTexture = rc.ResourceFactory.CreateTexture(1, textureData.Width, textureData.Height, textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8_UInt);
             deviceTexture.SetTextureData(
-                0, 
-                0, 0, 
-                textureData.Width, 
-                textureData.Height, 
-                (IntPtr)textureData.Pixels, 
+                0,
+                0, 0,
+                textureData.Width,
+                textureData.Height,
+                (IntPtr)textureData.Pixels,
                 textureData.BytesPerPixel * textureData.Width * textureData.Height);
             _fontTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(deviceTexture);
 
@@ -286,7 +294,10 @@ namespace Veldrid
             rc.SetRasterizerState(_rasterizerState);
             rc.VertexBuffer = _vertexBuffer;
             rc.IndexBuffer = _indexBuffer;
-            rc.Material = _material;
+
+            rc.ShaderSet = _shaderSet;
+            rc.ShaderConstantBindings = _constantBindings;
+            rc.ShaderTextureBindingSlots = _textureSlots;
 
             ImGui.ScaleClipRects(draw_data, ImGui.GetIO().DisplayFramebufferScale);
 
@@ -346,10 +357,12 @@ namespace Veldrid
         {
             _vertexBuffer.Dispose();
             _indexBuffer.Dispose();
-            _material.Dispose();
             _depthDisabledState.Dispose();
             _blendState.Dispose();
             _fontTextureBinding.Dispose();
+
+            _shaderSet.Dispose();
+            _constantBindings.Dispose();
         }
 
         /// <summary>
@@ -359,7 +372,5 @@ namespace Veldrid
         {
             return false;
         }
-
-        protected Material Material => _material;
     }
 }

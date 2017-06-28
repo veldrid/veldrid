@@ -10,7 +10,6 @@ namespace Veldrid.RenderDemo
     public abstract class WireframeShapeRenderer : SwappableRenderItem, IDisposable
     {
         private readonly RawTextureDataArray<RgbaFloat> _textureData;
-        private readonly MaterialAsset _materialAsset;
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
@@ -30,7 +29,6 @@ namespace Veldrid.RenderDemo
 
         public WireframeShapeRenderer(AssetDatabase ad, RenderContext rc, RgbaFloat color)
         {
-            _materialAsset = ad.LoadAsset<MaterialAsset>("MaterialAsset/ShadowCaster_MtlTemplate.json");
             _textureData = new RawTextureDataArray<RgbaFloat>(new RgbaFloat[] { color }, 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
 
             _worldProvider = new DynamicDataProvider<Matrix4x4>(Matrix4x4.Identity);
@@ -52,7 +50,7 @@ namespace Veldrid.RenderDemo
             ResourceFactory factory = rc.ResourceFactory;
             _vb = factory.CreateVertexBuffer(1024, true);
             _ib = factory.CreateIndexBuffer(1024, true);
-            _material = _materialAsset.Create(ad, rc);
+            _material = null; // TODO
             _texture = _textureData.CreateDeviceTexture(factory);
             _textureBinding = factory.CreateShaderTextureBinding(_texture);
             _wireframeState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true);
@@ -87,7 +85,7 @@ namespace Veldrid.RenderDemo
             var rasterState = rc.RasterizerState;
             rc.VertexBuffer = _vb;
             rc.IndexBuffer = _ib;
-            rc.Material = _material;
+            _material.Apply(rc);
             _material.ApplyPerObjectInputs(_perObjectProviders);
             rc.SetTexture(0, _textureBinding);
             rc.RasterizerState = _wireframeState;

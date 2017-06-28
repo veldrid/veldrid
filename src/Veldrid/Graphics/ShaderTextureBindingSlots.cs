@@ -8,6 +8,6 @@
         /// <summary>
         /// A device-agnostic description of the texture binding slots.
         /// </summary>
-        MaterialTextureInputs TextureInputs { get; }
+        ShaderTextureInput[] TextureInputs { get; }
     }
 }

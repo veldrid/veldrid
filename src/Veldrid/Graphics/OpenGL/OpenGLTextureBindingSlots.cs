@@ -5,18 +5,18 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLTextureBindingSlots : ShaderTextureBindingSlots
     {
-        public MaterialTextureInputs TextureInputs { get; }
+        public ShaderTextureInput[] TextureInputs { get; }
 
         private readonly OpenGLProgramTextureBinding[] _textureBindings;
 
-        public OpenGLTextureBindingSlots(ShaderSet shaderSet, MaterialTextureInputs textureInputs)
+        public OpenGLTextureBindingSlots(ShaderSet shaderSet, ShaderTextureInput[] textureInputs)
         {
             TextureInputs = textureInputs;
 
-            _textureBindings = new OpenGLProgramTextureBinding[textureInputs.Elements.Length];
-            for (int i = 0; i < textureInputs.Elements.Length; i++)
+            _textureBindings = new OpenGLProgramTextureBinding[textureInputs.Length];
+            for (int i = 0; i < textureInputs.Length; i++)
             {
-                MaterialTextureInputElement element = textureInputs.Elements[i];
+                ShaderTextureInput element = textureInputs[i];
                 int location = GL.GetUniformLocation(((OpenGLShaderSet)shaderSet).ProgramID, element.Name);
                 if (location == -1)
                 {

@@ -5,6 +5,7 @@ using SharpDX.Mathematics.Interop;
 using Veldrid.Platform;
 using System.Numerics;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace Veldrid.Graphics.Direct3D
 {
@@ -19,6 +20,9 @@ namespace Veldrid.Graphics.Direct3D
         private D3DFramebuffer _defaultFramebuffer;
         private PrimitiveTopology _primitiveTopology;
         private int _syncInterval;
+
+        private readonly Dictionary<D3DVertexInputLayout, InputLayout> _inputLayoutCache = new Dictionary<D3DVertexInputLayout, InputLayout>();
+        private bool _vertexLayoutChanged;
 
         // Texture binding arrays
         private ShaderTextureBinding[] _vertexTextureBindings = new ShaderTextureBinding[MaxShaderResourceViewBindings];
@@ -86,18 +90,42 @@ namespace Veldrid.Graphics.Direct3D
         public override void DrawIndexedPrimitives(int count, int startingIndex) => DrawIndexedPrimitives(count, startingIndex, 0);
         public override void DrawIndexedPrimitives(int count, int startingIndex, int startingVertex)
         {
+            PreDrawCommand();
             _deviceContext.DrawIndexed(count, startingIndex, startingVertex);
         }
 
 
         public override void DrawInstancedPrimitives(int indexCount, int instanceCount, int startingIndex)
         {
+            PreDrawCommand();
             DrawInstancedPrimitives(indexCount, instanceCount, startingIndex, 0);
         }
 
         public override void DrawInstancedPrimitives(int indexCount, int instanceCount, int startingIndex, int startingVertex)
         {
+            PreDrawCommand();
             _deviceContext.DrawIndexedInstanced(indexCount, instanceCount, startingIndex, startingVertex, 0);
+        }
+
+        private void PreDrawCommand()
+        {
+            if (_vertexLayoutChanged)
+            {
+                _vertexLayoutChanged = false;
+                InputLayout inputLayout = GetInputLayout(_vertexShader, _inputLayout);
+                _deviceContext.InputAssembler.InputLayout = inputLayout;
+            }
+        }
+
+        private InputLayout GetInputLayout(D3DVertexShader vertexShader, D3DVertexInputLayout d3dInputLayout)
+        {
+            if (!_inputLayoutCache.TryGetValue(d3dInputLayout, out InputLayout inputLayout))
+            {
+                inputLayout = D3DVertexInputLayout.CreateLayout(_device, d3dInputLayout.InputDescription, vertexShader.Bytecode);
+                _inputLayoutCache.Add(d3dInputLayout, inputLayout);
+            }
+
+            return inputLayout;
         }
 
         protected override void PlatformSwapBuffers()
@@ -230,7 +258,7 @@ namespace Veldrid.Graphics.Direct3D
             if (_inputLayout != inputLayout)
             {
                 _inputLayout = inputLayout;
-                _deviceContext.InputAssembler.InputLayout = inputLayout.DeviceLayout;
+                _vertexLayoutChanged = true;
             }
         }
 

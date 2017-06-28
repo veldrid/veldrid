@@ -17,6 +17,7 @@ namespace Veldrid.RenderDemo
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private Material _material;
+        private ShaderTextureBinding _textureBinding;
 
         private static ConstructedMeshInfo _teapotMesh;
 
@@ -84,8 +85,7 @@ namespace Veldrid.RenderDemo
                     new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
                 });
 
-            MaterialTextureInputs textureInputs = new MaterialTextureInputs(
-                new TextureDataInputElement("surfaceTexture", s_cubeTexture));
+            ShaderTextureInput[] textureInputs = new[] { new ShaderTextureInput(0, "surfaceTexture") };
 
             _material = factory.CreateMaterial(
                 rc,
@@ -95,6 +95,9 @@ namespace Veldrid.RenderDemo
                 globalInputs,
                 perObjectInputs,
                 textureInputs);
+
+            DeviceTexture2D deviceTex = s_cubeTexture.CreateDeviceTexture(factory);
+            _textureBinding = factory.CreateShaderTextureBinding(deviceTex);
         }
 
         public void ChangeRenderContext(AssetDatabase ad, RenderContext rc)
@@ -105,9 +108,9 @@ namespace Veldrid.RenderDemo
 
         public void Dispose()
         {
-            ((IDisposable)_vertexBuffer).Dispose();
-            ((IDisposable)_indexBuffer).Dispose();
-            ((IDisposable)_material).Dispose();
+            _vertexBuffer.Dispose();
+            _indexBuffer.Dispose();
+            _material.Dispose();
         }
 
         private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)
@@ -124,7 +127,7 @@ namespace Veldrid.RenderDemo
 
         public IList<string> GetStagesParticipated() => CommonStages.Standard;
 
-        public unsafe void Render(RenderContext context, string pipelineStage)
+        public void Render(RenderContext rc, string pipelineStage)
         {
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
             _worldProvider.Data =
@@ -132,12 +135,13 @@ namespace Veldrid.RenderDemo
                 * Matrix4x4.CreateFromQuaternion(Rotation)
                 * Matrix4x4.CreateTranslation(Position);
 
-            context.VertexBuffer = _vertexBuffer;
-            context.IndexBuffer = _indexBuffer;
-            context.Material = _material;
+            rc.VertexBuffer = _vertexBuffer;
+            rc.IndexBuffer = _indexBuffer;
+            _material.Apply(rc);
             _material.ApplyPerObjectInputs(_perObjectProviders);
+            rc.SetTexture(0, _textureBinding);
 
-            context.DrawIndexedPrimitives(_teapotMesh.Indices.Length, 0);
+            rc.DrawIndexedPrimitives(_teapotMesh.Indices.Length, 0);
         }
 
         public bool Cull(ref BoundingFrustum visibleFrustum)

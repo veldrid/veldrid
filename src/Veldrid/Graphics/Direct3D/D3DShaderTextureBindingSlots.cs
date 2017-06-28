@@ -8,9 +8,9 @@ namespace Veldrid.Graphics.Direct3D
     {
         private readonly ShaderStageApplicabilityFlags[] _applicabilities;
 
-        public MaterialTextureInputs TextureInputs { get; }
+        public ShaderTextureInput[] TextureInputs { get; }
 
-        public D3DShaderTextureBindingSlots(D3DShaderSet shaderSet, MaterialTextureInputs textureInputs)
+        public D3DShaderTextureBindingSlots(D3DShaderSet shaderSet, ShaderTextureInput[] textureInputs)
         {
             TextureInputs = textureInputs;
             _applicabilities = ComputeStageApplicabilities(shaderSet, textureInputs);
@@ -21,12 +21,12 @@ namespace Veldrid.Graphics.Direct3D
             return _applicabilities[slot];
         }
 
-        private ShaderStageApplicabilityFlags[] ComputeStageApplicabilities(D3DShaderSet shaderSet, MaterialTextureInputs textureInputs)
+        private ShaderStageApplicabilityFlags[] ComputeStageApplicabilities(D3DShaderSet shaderSet, ShaderTextureInput[] textureInputs)
         {
-            ShaderStageApplicabilityFlags[] stageFlagsBySlot = new ShaderStageApplicabilityFlags[textureInputs.Elements.Length];
+            ShaderStageApplicabilityFlags[] stageFlagsBySlot = new ShaderStageApplicabilityFlags[textureInputs.Length];
             for (int i = 0; i < stageFlagsBySlot.Length; i++)
             {
-                MaterialTextureInputElement element = textureInputs.Elements[i];
+                ShaderTextureInput element = textureInputs[i];
                 ShaderStageApplicabilityFlags flags = ShaderStageApplicabilityFlags.None;
 
                 if (IsTextureSlotUsedInShader(shaderSet.VertexShader, i

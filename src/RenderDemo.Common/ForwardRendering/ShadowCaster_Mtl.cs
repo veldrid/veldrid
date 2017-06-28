@@ -227,6 +227,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _shadowPassMaterial.Dispose();
             _overrideTexture?.Dispose();
             _overrideTextureBinding?.Dispose();
+            _alphaMapTexture?.Dispose();
+            _alphaMapTextureBinding?.Dispose();
             _vb.Dispose();
             _ib.Dispose();
         }

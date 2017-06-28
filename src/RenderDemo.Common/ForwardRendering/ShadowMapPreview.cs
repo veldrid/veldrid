@@ -50,8 +50,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
                     new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
                     new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)),
                 new MaterialInputs<MaterialGlobalInputElement>(
-                    new MaterialGlobalInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldMatrixProvider),
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, _projectionMatrixProvider)),
+                    new MaterialGlobalInputElement("WorldMatrixBuffer", ShaderConstantType.Matrix4x4, _worldMatrixProvider),
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4, _projectionMatrixProvider)),
                 MaterialInputs<MaterialPerObjectInputElement>.Empty,
                 new[] { new ShaderTextureInput(0, "SurfaceTexture") });
 

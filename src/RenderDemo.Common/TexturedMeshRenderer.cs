@@ -85,16 +85,16 @@ namespace Veldrid.RenderDemo
             MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                 new MaterialGlobalInputElement[]
                 {
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
-                    new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix"),
-                    new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, "LightBuffer"),
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4, "ProjectionMatrix"),
+                    new MaterialGlobalInputElement("ViewMatrixBuffer", ShaderConstantType.Matrix4x4, "ViewMatrix"),
+                    new MaterialGlobalInputElement("LightBuffer", ShaderConstantType.Custom, "LightBuffer"),
                 });
 
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
                 new MaterialPerObjectInputElement[]
                 {
-                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
-                    new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("WorldMatrixBuffer", ShaderConstantType.Matrix4x4, _worldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", ShaderConstantType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
                 });
 
             ShaderTextureInput[] textureInputs = new[] { new ShaderTextureInput(0, "surfaceTexture") };

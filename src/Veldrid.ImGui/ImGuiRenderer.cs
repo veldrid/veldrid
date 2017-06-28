@@ -29,7 +29,7 @@ namespace Veldrid
 
         // Material replacements
         private ShaderSet _shaderSet;
-        private ShaderConstantBindings _constantBindings;
+        private ShaderConstantBindingSlots _constantBindings;
         private ShaderTextureBindingSlots _textureSlots;
 
         private int _fontAtlasID = 1;
@@ -93,7 +93,7 @@ namespace Veldrid
                 _shaderSet,
                 new MaterialInputs<MaterialGlobalInputElement>(new MaterialGlobalInputElement[]
                 {
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, _projectionMatrixProvider)
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4, _projectionMatrixProvider)
                 }),
                 MaterialInputs<MaterialPerObjectInputElement>.Empty);
 

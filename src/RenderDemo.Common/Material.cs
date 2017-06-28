@@ -7,7 +7,7 @@ namespace Veldrid.Graphics
     {
         public Material(
             ShaderSet shaderSet,
-            ShaderConstantBindings constantBindings,
+            ShaderConstantBindingSlots constantBindings,
             ShaderTextureBindingSlots textureBindingSlots)
         {
             ShaderSet = shaderSet;
@@ -16,7 +16,7 @@ namespace Veldrid.Graphics
         }
 
         public ShaderSet ShaderSet { get; }
-        public ShaderConstantBindings ConstantBindings { get; }
+        public ShaderConstantBindingSlots ConstantBindings { get; }
         public ShaderTextureBindingSlots TextureBindingSlots { get; }
 
         public void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider)

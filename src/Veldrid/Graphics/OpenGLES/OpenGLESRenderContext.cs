@@ -220,7 +220,7 @@ namespace Veldrid.Graphics.OpenGLES
             _vertexLayoutChanged = true;
         }
 
-        protected override void PlatformSetShaderConstantBindings(ShaderConstantBindings shaderConstantBindings)
+        protected override void PlatformSetShaderConstantBindings(ShaderConstantBindingSlots shaderConstantBindings)
         {
             shaderConstantBindings.Apply();
         }

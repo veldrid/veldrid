@@ -289,7 +289,7 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        protected override void PlatformSetShaderConstantBindings(ShaderConstantBindings shaderConstantBindings)
+        protected override void PlatformSetShaderConstantBindings(ShaderConstantBindingSlots shaderConstantBindings)
         {
             shaderConstantBindings.Apply();
         }

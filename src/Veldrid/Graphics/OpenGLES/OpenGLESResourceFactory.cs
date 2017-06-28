@@ -78,13 +78,13 @@ namespace Veldrid.Graphics.OpenGLES
             throw new NotSupportedException();
         }
 
-        public override ShaderConstantBindings CreateShaderConstantBindings(
+        public override ShaderConstantBindingSlots CreateShaderConstantBindingSlots(
             RenderContext rc,
             ShaderSet shaderSet,
             MaterialInputs<MaterialGlobalInputElement> globalInputs,
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs)
         {
-            return new OpenGLESShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
+            return new OpenGLESShaderConstantBindingSlots(rc, shaderSet, globalInputs, perObjectInputs);
         }
 
         public override VertexInputLayout CreateInputLayout(MaterialVertexInput[] vertexInputs)

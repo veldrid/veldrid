@@ -107,11 +107,10 @@ namespace Veldrid.Graphics
 
         public abstract ShaderSet CreateShaderSet(VertexInputLayout inputLayout, Shader vertexShader, Shader geometryShader, Shader fragmentShader);
 
-        public abstract ShaderConstantBindings CreateShaderConstantBindings(
+        public abstract ShaderConstantBindingSlots CreateShaderConstantBindingSlots(
             RenderContext rc,
             ShaderSet shaderSet,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs);
+            ShaderConstantDescription[] constants);
 
         /// <summary>
         /// Creates a new <see cref="ShaderTextureBindingSlots"/> for the given shader set and a device-agnostic description.

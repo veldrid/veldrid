@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.Graphics
 {
-    public enum MaterialInputType
+    public enum ShaderConstantType
     {
         Boolean,
         Int1,
@@ -12,7 +12,6 @@
         Float3,
         Float4,
         Matrix4x4,
-        Texture2D,
         Custom
     }
 }

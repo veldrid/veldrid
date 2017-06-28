@@ -76,12 +76,12 @@ namespace Veldrid.RenderDemo
                     new MaterialVertexInputElement("in_offset", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float3, VertexElementInputClass.PerInstance, 1),
                     new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4, VertexElementInputClass.PerInstance, 1)));
             ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, fs);
-            ShaderConstantBindings constantBindings = factory.CreateShaderConstantBindings(rc, shaderSet,
+            ShaderConstantBindingSlots constantBindings = factory.CreateShaderConstantBindings(rc, shaderSet,
                 new MaterialInputs<MaterialGlobalInputElement>(
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
-                    new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix")),
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4, "ProjectionMatrix"),
+                    new MaterialGlobalInputElement("ViewMatrixBuffer", ShaderConstantType.Matrix4x4, "ViewMatrix")),
                 new MaterialInputs<MaterialPerObjectInputElement>(
-                new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, 16)));
+                new MaterialPerObjectInputElement("WorldMatrixBuffer", ShaderConstantType.Matrix4x4, 16)));
             ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(shaderSet, Array.Empty<ShaderTextureInput>());
             _material = new Material(shaderSet, constantBindings, textureSlots);
         }

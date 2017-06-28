@@ -25,7 +25,7 @@ namespace Veldrid.Graphics
         private DepthStencilState _depthStencilState;
         private RasterizerState _rasterizerState;
         private ShaderSet _shaderSet;
-        private ShaderConstantBindings _constantBindings;
+        private ShaderConstantBindingSlots _constantBindings;
         private ShaderTextureBindingSlots _textureBindingSlots;
 
         protected readonly Dictionary<int, DeviceTexture> _boundTexturesBySlot = new Dictionary<int, DeviceTexture>();
@@ -130,7 +130,7 @@ namespace Veldrid.Graphics
             }
         }
 
-        public ShaderConstantBindings ShaderConstantBindings
+        public ShaderConstantBindingSlots ShaderConstantBindings
         {
             get { return _constantBindings; }
             set
@@ -512,7 +512,7 @@ namespace Veldrid.Graphics
 
         protected abstract void PlatformSetShaderSet(ShaderSet shaderSet);
 
-        protected abstract void PlatformSetShaderConstantBindings(ShaderConstantBindings shaderConstantBindings);
+        protected abstract void PlatformSetShaderConstantBindings(ShaderConstantBindingSlots shaderConstantBindings);
 
         protected abstract void PlatformSetShaderTextureBindingSlots(ShaderTextureBindingSlots bindingSlots);
 

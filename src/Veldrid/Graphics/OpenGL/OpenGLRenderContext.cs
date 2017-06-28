@@ -200,7 +200,7 @@ namespace Veldrid.Graphics.OpenGL
             _vertexLayoutChanged = true;
         }
 
-        protected override void PlatformSetShaderConstantBindings(ShaderConstantBindings shaderConstantBindings)
+        protected override void PlatformSetShaderConstantBindings(ShaderConstantBindingSlots shaderConstantBindings)
         {
             shaderConstantBindings.Apply();
         }

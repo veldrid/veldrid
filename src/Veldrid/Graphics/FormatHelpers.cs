@@ -36,6 +36,47 @@ namespace Veldrid.Graphics
             }
         }
 
+        public static bool GetShaderConstantTypeByteSize(ShaderConstantType type, out int bytes)
+        {
+            switch (type)
+            {
+                case ShaderConstantType.Boolean:
+                    bytes = 1;
+                    return true;
+                case ShaderConstantType.Int1:
+                    bytes = 4;
+                    return true;
+                case ShaderConstantType.Int2:
+                    bytes = 8;
+                    return true;
+                case ShaderConstantType.Int3:
+                    bytes = 12;
+                    return true;
+                case ShaderConstantType.Int4:
+                    bytes = 16;
+                    return true;
+                case ShaderConstantType.Float1:
+                    bytes = 4;
+                    return true;
+                case ShaderConstantType.Float2:
+                    bytes = 8;
+                    return true;
+                case ShaderConstantType.Float3:
+                    bytes = 12;
+                    return true;
+                case ShaderConstantType.Float4:
+                    bytes = 16;
+                    return true;
+                case ShaderConstantType.Matrix4x4:
+                    bytes = 64;
+                    return true;
+                case ShaderConstantType.Custom:
+                default:
+                    bytes = -1;
+                    return false;
+            }
+        }
+
         /// <summary>
         /// Gets the number of individual vertex components from a given format.
         /// </summary>

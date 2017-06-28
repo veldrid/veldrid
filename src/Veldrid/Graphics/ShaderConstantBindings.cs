@@ -1,11 +1,7 @@
-﻿using System;
-
-namespace Veldrid.Graphics
+﻿namespace Veldrid.Graphics
 {
-    public interface ShaderConstantBindings : IDisposable
+    public interface ShaderConstantBindingSlots
     {
-        void Apply();
-        void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider);
-        void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders);
+        ShaderConstantDescription[] Constants { get; }
     }
 }

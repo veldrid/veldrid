@@ -45,7 +45,7 @@ namespace Veldrid.RenderDemo
             Shader fs = factory.CreateShader(ShaderType.Fragment, fragmentShaderName);
             VertexInputLayout inputLayout = factory.CreateInputLayout(vertexInputs);
             ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, fs);
-            ShaderConstantBindings constantBindings = factory.CreateShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
+            ShaderConstantBindingSlots constantBindings = factory.CreateShaderConstantBindings(rc, shaderSet, globalInputs, perObjectInputs);
             ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(shaderSet, textureInputs);
 
             return new Material(shaderSet, constantBindings, textureSlots);

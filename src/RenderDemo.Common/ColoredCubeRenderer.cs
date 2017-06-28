@@ -78,13 +78,13 @@ namespace Veldrid.RenderDemo
             MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                 new MaterialGlobalInputElement[]
                 {
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix")
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4, "ProjectionMatrix")
                 });
 
             MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
                 new MaterialPerObjectInputElement[]
                 {
-                    new MaterialPerObjectInputElement("ModelViewMatrixBuffer", MaterialInputType.Matrix4x4, _modelViewProvider.DataSizeInBytes)
+                    new MaterialPerObjectInputElement("ModelViewMatrixBuffer", ShaderConstantType.Matrix4x4, _modelViewProvider.DataSizeInBytes)
                 });
 
             s_material = factory.CreateMaterial(

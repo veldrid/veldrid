@@ -23,10 +23,7 @@ namespace Veldrid.Graphics.Direct3D
 
         DeviceTexture2D Framebuffer.DepthTexture
         {
-            get
-            {
-                return DepthTexture;
-            }
+            get => DepthTexture;
             set
             {
                 Debug.Assert(value is D3DTexture2D);
@@ -42,20 +39,11 @@ namespace Veldrid.Graphics.Direct3D
 
         DeviceTexture2D Framebuffer.ColorTexture
         {
-            get
-            {
-                return GetColorTexture(0);
-            }
-            set
-            {
-                AttachColorTexture(0, value);
-            }
+            get => GetColorTexture(0);
+            set => AttachColorTexture(0, value);
         }
 
-        public DeviceTexture2D GetColorTexture(int index)
-        {
-            return _colorTextures[0];
-        }
+        public DeviceTexture2D GetColorTexture(int index) => _colorTextures[index];
 
         public void AttachColorTexture(int index, DeviceTexture2D texture)
         {

@@ -23,7 +23,12 @@ namespace Veldrid.Graphics.Direct3D
         public D3DShader(Device device, ShaderType type, string shaderCode, string name)
         {
             Type = type;
-            CompilationResult compilation = ShaderBytecode.Compile(shaderCode, GetEntryPoint(type), GetProfile(type), DefaultShaderFlags, sourceFileName: name);
+            CompilationResult compilation = ShaderBytecode.Compile(
+                shaderCode,
+                GetEntryPoint(type),
+                GetProfile(type),
+                DefaultShaderFlags,
+                sourceFileName: name);
             if (compilation.HasErrors || compilation.Message != null)
             {
                 throw new InvalidOperationException("Error compiling shader: " + compilation.Message);
@@ -33,7 +38,7 @@ namespace Veldrid.Graphics.Direct3D
             DeviceShader = CreateDeviceShader(device, compilation.Bytecode);
         }
 
-        private string GetEntryPoint(ShaderType type)
+        private static string GetEntryPoint(ShaderType type)
         {
             switch (type)
             {
@@ -48,7 +53,7 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        private string GetProfile(ShaderType type)
+        private static string GetProfile(ShaderType type)
         {
             switch (type)
             {

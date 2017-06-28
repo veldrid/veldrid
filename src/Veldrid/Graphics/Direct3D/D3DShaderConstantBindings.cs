@@ -37,7 +37,6 @@ namespace Veldrid.Graphics.Direct3D
             dataProvider.SetData(binding.ConstantBuffer);
         }
 
-
         public void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders)
         {
             if (_perObjectBufferBindings.Length != dataProviders.Length)

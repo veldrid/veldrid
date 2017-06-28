@@ -11,11 +11,12 @@ namespace Veldrid.Graphics.Direct3D
         private int _offset = 0;
 
         public D3DIndexBuffer(Device device, int sizeInBytes, bool isDynamic, SharpDX.DXGI.Format format = SharpDX.DXGI.Format.Unknown)
-            : base(device,
-                  sizeInBytes,
-                  BindFlags.IndexBuffer,
-                  isDynamic ? ResourceUsage.Dynamic : ResourceUsage.Default,
-                  isDynamic ? CpuAccessFlags.Write : CpuAccessFlags.None)
+            : base(
+                device,
+                sizeInBytes,
+                BindFlags.IndexBuffer,
+                isDynamic ? ResourceUsage.Dynamic : ResourceUsage.Default,
+                isDynamic ? CpuAccessFlags.Write : CpuAccessFlags.None)
         {
             _device = device;
             _format = format;
@@ -27,13 +28,12 @@ namespace Veldrid.Graphics.Direct3D
             {
                 throw new InvalidOperationException("IndexBuffer format is Unknown.");
             }
+
             _device.ImmediateContext.InputAssembler.SetIndexBuffer(Buffer, _format, _offset);
         }
 
         public void SetIndices<T>(T[] indices, IndexFormat format) where T : struct
-        {
-            SetIndices(indices, format, 0, 0);
-        }
+            => SetIndices(indices, format, 0, 0);
 
         public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
         {

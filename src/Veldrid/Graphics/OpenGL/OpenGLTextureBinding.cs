@@ -2,12 +2,12 @@
 {
     public class OpenGLTextureBinding : ShaderTextureBinding
     {
-        private readonly OpenGLTexture _texture;
-        public DeviceTexture BoundTexture => _texture;
+        public OpenGLTexture BoundTexture { get; }
+        DeviceTexture ShaderTextureBinding.BoundTexture => BoundTexture;
 
         public OpenGLTextureBinding(OpenGLTexture texture)
         {
-            _texture = texture;
+            BoundTexture = texture;
         }
 
         public void Dispose()

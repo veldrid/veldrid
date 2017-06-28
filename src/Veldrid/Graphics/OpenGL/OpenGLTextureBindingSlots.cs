@@ -16,7 +16,7 @@ namespace Veldrid.Graphics.OpenGL
             _textureBindings = new OpenGLProgramTextureBinding[textureInputs.Elements.Length];
             for (int i = 0; i < textureInputs.Elements.Length; i++)
             {
-                var element = textureInputs.Elements[i];
+                MaterialTextureInputElement element = textureInputs.Elements[i];
                 int location = GL.GetUniformLocation(((OpenGLShaderSet)shaderSet).ProgramID, element.Name);
                 if (location == -1)
                 {

@@ -4,16 +4,16 @@ using System.Diagnostics;
 namespace Veldrid.Graphics
 {
     /// <summary>Describes the vertex input of a <see cref="Material"/> contained in a single <see cref="VertexBuffer"/>.</summary>
-    public class MaterialVertexInput
+    public class VertexInputDescription
     {
         /// <summary>The total size of an individual vertex, in bytes.</summary>
         public int VertexSizeInBytes { get; set; }
 
         /// <summary>The collection of individual vertex elements comprising a single vertex.</summary>
-        public MaterialVertexInputElement[] Elements { get; set; }
+        public VertexInputElement[] Elements { get; set; }
 
         /// <summary>Constructs a new MaterialVertexInput.</summary>
-        public MaterialVertexInput(int vertexSizeInBytes, params MaterialVertexInputElement[] elements)
+        public VertexInputDescription(int vertexSizeInBytes, params VertexInputElement[] elements)
         {
             VertexSizeInBytes = vertexSizeInBytes;
             Elements = elements;
@@ -21,14 +21,14 @@ namespace Veldrid.Graphics
         }
 
         /// <summary>Constructs a new MaterialVertexInput.</summary>
-        public MaterialVertexInput() : this(0, Array.Empty<MaterialVertexInputElement>()) { }
+        public VertexInputDescription() : this(0, Array.Empty<VertexInputElement>()) { }
 
 
         [Conditional("DEBUG")]
-        private void DebugValidateVertexSize(MaterialVertexInputElement[] elements, int vertexSizeInBytes)
+        private void DebugValidateVertexSize(VertexInputElement[] elements, int vertexSizeInBytes)
         {
             int computedSize = 0;
-            foreach (MaterialVertexInputElement element in elements)
+            foreach (VertexInputElement element in elements)
             {
                 computedSize += element.SizeInBytes;
             }
@@ -40,7 +40,7 @@ namespace Veldrid.Graphics
     }
 
     /// <summary>Describes an individual component of a vertex.</summary>
-    public struct MaterialVertexInputElement
+    public struct VertexInputElement
     {
         /// <summary>The name of the element.</summary>
         public string Name { get; set; }
@@ -61,7 +61,7 @@ namespace Veldrid.Graphics
         public int InstanceStepRate { get; set; }
 
         /// <summary>Constructs a new MaterialVertexInputElement</summary>
-        public MaterialVertexInputElement(string name, VertexSemanticType semanticType, VertexElementFormat format)
+        public VertexInputElement(string name, VertexSemanticType semanticType, VertexElementFormat format)
         {
             Name = name;
             SemanticType = semanticType;
@@ -72,7 +72,7 @@ namespace Veldrid.Graphics
         }
 
         /// <summary>Constructs a new MaterialVertexInputElement</summary>
-        public MaterialVertexInputElement(
+        public VertexInputElement(
             string name, 
             VertexSemanticType semanticType, 
             VertexElementFormat format,
@@ -126,7 +126,7 @@ namespace Veldrid.Graphics
         /// <summary>Describes input which differs per-vertex.</summary>
         PerVertex,
         /// <summary>Describes input which differs per-instance.
-        /// The instance step rate can be changed with <see cref="MaterialVertexInputElement.InstanceStepRate"/></summary>
+        /// The instance step rate can be changed with <see cref="VertexInputElement.InstanceStepRate"/></summary>
         PerInstance
     }
 }

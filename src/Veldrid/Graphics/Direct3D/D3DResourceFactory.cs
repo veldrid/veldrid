@@ -99,7 +99,7 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
-        public override VertexInputLayout CreateInputLayout(MaterialVertexInput[] vertexInputs)
+        public override VertexInputLayout CreateInputLayout(VertexInputDescription[] vertexInputs)
         {
             return new D3DVertexInputLayout(_device, vertexInputs);
         }
@@ -115,12 +115,10 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         public override ShaderConstantBindingSlots CreateShaderConstantBindingSlots(
-            RenderContext rc,
             ShaderSet shaderSet,
-            MaterialInputs<MaterialGlobalInputElement> globalInputs,
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs)
+            ShaderConstantDescription[] constants)
         {
-            return new D3DShaderConstantBindingSlots(rc, _device, shaderSet, globalInputs, perObjectInputs);
+            return new D3DShaderConstantBindingSlots(_device, shaderSet, constants);
         }
 
         public override ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, ShaderTextureInput[] textureInputs)

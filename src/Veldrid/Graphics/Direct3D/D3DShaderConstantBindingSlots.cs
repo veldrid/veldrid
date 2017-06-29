@@ -12,7 +12,6 @@ namespace Veldrid.Graphics.Direct3D
         public ShaderConstantDescription[] Constants { get; }
 
         public D3DShaderConstantBindingSlots(
-            RenderContext rc,
             Device device,
             ShaderSet shaderSet,
             ShaderConstantDescription[] constants)
@@ -59,6 +58,16 @@ namespace Veldrid.Graphics.Direct3D
 
                 _applicabilityFlagsBySlot[i] = applicabilityFlags;
             }
+        }
+
+        public ShaderStageApplicabilityFlags GetApplicability(int slot)
+        {
+            if (slot >= _applicabilityFlagsBySlot.Length)
+            {
+                throw new ArgumentOutOfRangeException($"Invalid slot. There are {_applicabilityFlagsBySlot.Length} slots bound.");
+            }
+
+            return _applicabilityFlagsBySlot[slot];
         }
 
         private static bool DoesConstantBufferExist(ShaderReflection reflection, int slot, string name)

@@ -157,5 +157,7 @@ namespace Veldrid.Graphics.OpenGL
         {
             throw new NotSupportedException();
         }
+
+        public void Dispose() { }
     }
 }

@@ -7,15 +7,15 @@ namespace Veldrid.Graphics.Direct3D
     {
         private readonly Device _device;
 
-        public MaterialVertexInput[] InputDescription { get; }
+        public VertexInputDescription[] InputDescriptions { get; }
 
-        public D3DVertexInputLayout(Device device, MaterialVertexInput[] vertexInputs)
+        public D3DVertexInputLayout(Device device, VertexInputDescription[] vertexInputs)
         {
             _device = device;
-            InputDescription = vertexInputs;
+            InputDescriptions = vertexInputs;
         }
 
-        public static InputLayout CreateLayout(Device device, MaterialVertexInput[] vertexInputs, byte[] shaderBytecode)
+        public static InputLayout CreateLayout(Device device, VertexInputDescription[] vertexInputs, byte[] shaderBytecode)
         {
             int count = vertexInputs.Sum(mvi => mvi.Elements.Length);
             int element = 0;
@@ -23,7 +23,7 @@ namespace Veldrid.Graphics.Direct3D
             SemanticIndices indicesTracker = new SemanticIndices();
             for (int vbSlot = 0; vbSlot < vertexInputs.Length; vbSlot++)
             {
-                MaterialVertexInput bufferInput = vertexInputs[vbSlot];
+                VertexInputDescription bufferInput = vertexInputs[vbSlot];
                 int numElements = bufferInput.Elements.Length;
                 int currentOffset = 0;
                 for (int i = 0; i < numElements; i++)

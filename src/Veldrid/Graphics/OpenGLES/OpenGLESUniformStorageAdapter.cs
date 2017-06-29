@@ -163,5 +163,7 @@ namespace Veldrid.Graphics.OpenGLES
         {
             throw new NotSupportedException();
         }
+
+        public void Dispose() { }
     }
 }

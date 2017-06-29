@@ -231,12 +231,10 @@ namespace Veldrid.RenderDemo.Drawers
                 if (stage == "ShadowMap")
                 {
                     _shadowmapMaterial.Apply(rc);
-                    _shadowmapMaterial.ApplyPerObjectInput(_perObjectInputs[0]);
                 }
                 else
                 {
                     _regularMaterial.Apply(rc);
-                    _regularMaterial.ApplyPerObjectInputs(_perObjectInputs);
                     if (_textureBinding != null)
                     {
                         rc.SetTexture(1, _textureBinding);

@@ -6,12 +6,12 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLVertexInputLayout : VertexInputLayout
     {
-        public MaterialVertexInput[] InputDescription { get; }
+        public VertexInputDescription[] InputDescriptions { get; }
         public OpenGLMaterialVertexInput[] VBLayoutsBySlot { get; }
 
-        public OpenGLVertexInputLayout(MaterialVertexInput[] vertexInputs)
+        public OpenGLVertexInputLayout(VertexInputDescription[] vertexInputs)
         {
-            InputDescription = vertexInputs;
+            InputDescriptions = vertexInputs;
             VBLayoutsBySlot = vertexInputs.Select(mvi => new OpenGLMaterialVertexInput(mvi)).ToArray();
         }
 
@@ -69,7 +69,7 @@ namespace Veldrid.Graphics.OpenGL
             Elements = elements;
         }
 
-        public OpenGLMaterialVertexInput(MaterialVertexInput genericInput)
+        public OpenGLMaterialVertexInput(VertexInputDescription genericInput)
         {
             VertexSizeInBytes = genericInput.VertexSizeInBytes;
             Elements = new OpenGLMaterialVertexInputElement[genericInput.Elements.Length];
@@ -118,7 +118,7 @@ namespace Veldrid.Graphics.OpenGL
             InstanceStepRate = instanceStepRate;
         }
 
-        public OpenGLMaterialVertexInputElement(MaterialVertexInputElement genericElement, int offset)
+        public OpenGLMaterialVertexInputElement(VertexInputElement genericElement, int offset)
         {
             SizeInBytes = genericElement.SizeInBytes;
             ElementCount = FormatHelpers.GetElementCount(genericElement.ElementFormat);

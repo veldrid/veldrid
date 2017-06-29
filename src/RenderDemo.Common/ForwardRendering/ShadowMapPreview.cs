@@ -45,14 +45,15 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 rc,
                 "simple-2d-vertex",
                 "simple-2d-frag",
-                new MaterialVertexInput(
+                new VertexInputDescription(
                     VertexPositionTexture.SizeInBytes,
-                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
-                    new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)),
-                new MaterialInputs<MaterialGlobalInputElement>(
-                    new MaterialGlobalInputElement("WorldMatrixBuffer", ShaderConstantType.Matrix4x4, _worldMatrixProvider),
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4, _projectionMatrixProvider)),
-                MaterialInputs<MaterialPerObjectInputElement>.Empty,
+                    new VertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                    new VertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)),
+                new[]
+                {
+                    new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4),
+                    new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4),
+                },
                 new[] { new ShaderTextureInput(0, "SurfaceTexture") });
 
             _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
@@ -80,8 +81,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _worldMatrixProvider.Data = Matrix4x4.CreateScale(width)
                 * Matrix4x4.CreateTranslation(rc.Viewport.Width - width - 20, 20, 0);
 
-            rc.VertexBuffer=_vertexBuffer;
-            rc.IndexBuffer =_indexBuffer;
+            rc.VertexBuffer = _vertexBuffer;
+            rc.IndexBuffer = _indexBuffer;
             _material.Apply(rc);
             rc.SetDepthStencilState(_depthDisabledState);
             rc.DrawIndexedPrimitives(6, 0);

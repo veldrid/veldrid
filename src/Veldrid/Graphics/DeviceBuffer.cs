@@ -5,7 +5,7 @@ namespace Veldrid.Graphics
     /// <summary>
     /// A generic <see cref="DeviceBuffer"/>, which is used to store generic data on the graphics device.
     /// </summary>
-    public interface DeviceBuffer
+    public interface DeviceBuffer : IDisposable
     {
         /// <summary>
         /// Transfers the given data into the <see cref="DeviceBuffer"/>.

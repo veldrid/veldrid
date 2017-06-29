@@ -222,7 +222,12 @@ namespace Veldrid.Graphics.OpenGLES
 
         protected override void PlatformSetShaderConstantBindings(ShaderConstantBindingSlots shaderConstantBindings)
         {
-            shaderConstantBindings.Apply();
+        }
+
+        protected override void PlatformSetConstantBuffer(int slot, ConstantBuffer cb)
+        {
+            var binding = ShaderConstantBindingSlots.GetBindingForSlot(slot);
+            binding.Bind((OpenGLESConstantBuffer)cb);
         }
 
         protected override void PlatformSetShaderTextureBindingSlots(ShaderTextureBindingSlots bindingSlots)
@@ -332,5 +337,7 @@ namespace Veldrid.Graphics.OpenGLES
         }
 
         private new OpenGLESTextureBindingSlots ShaderTextureBindingSlots => (OpenGLESTextureBindingSlots)base.ShaderTextureBindingSlots;
+
+        private new OpenGLESShaderConstantBindingSlots ShaderConstantBindingSlots => (OpenGLESShaderConstantBindingSlots)base.ShaderConstantBindingSlots;
     }
 }

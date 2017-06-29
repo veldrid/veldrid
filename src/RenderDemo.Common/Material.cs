@@ -19,26 +19,15 @@ namespace Veldrid.Graphics
         public ShaderConstantBindingSlots ConstantBindings { get; }
         public ShaderTextureBindingSlots TextureBindingSlots { get; }
 
-        public void ApplyPerObjectInput(ConstantBufferDataProvider dataProvider)
-        {
-            ConstantBindings.ApplyPerObjectInput(dataProvider);
-        }
-
-        public void ApplyPerObjectInputs(ConstantBufferDataProvider[] dataProviders)
-        {
-            ConstantBindings.ApplyPerObjectInputs(dataProviders);
-        }
-
         public void Dispose()
         {
             ShaderSet.Dispose();
-            ConstantBindings.Dispose();
         }
 
         internal void Apply(RenderContext rc)
         {
             rc.ShaderSet = ShaderSet;
-            rc.ShaderConstantBindings = ConstantBindings;
+            rc.ShaderConstantBindingSlots = ConstantBindings;
             rc.ShaderTextureBindingSlots = TextureBindingSlots;
         }
     }

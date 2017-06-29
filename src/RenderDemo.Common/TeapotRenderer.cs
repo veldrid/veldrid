@@ -61,29 +61,23 @@ namespace Veldrid.RenderDemo
             _indexBuffer = factory.CreateIndexBuffer(mesh.Indices.Length * sizeof(int), false);
             _indexBuffer.SetIndices(mesh.Indices, IndexFormat.UInt16);
 
-            MaterialVertexInput materialInputs = new MaterialVertexInput(
+            VertexInputDescription materialInputs = new VertexInputDescription(
                 VertexPositionNormalTexture.SizeInBytes,
-                new MaterialVertexInputElement[]
+                new VertexInputElement[]
                 {
-                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
-                    new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
-                    new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
+                    new VertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                    new VertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
+                    new VertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
                 });
 
-            MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
-                new MaterialGlobalInputElement[]
-                {
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4, "ProjectionMatrix"),
-                    new MaterialGlobalInputElement("ViewMatrixBuffer", ShaderConstantType.Matrix4x4, "ViewMatrix"),
-                    new MaterialGlobalInputElement("LightBuffer", ShaderConstantType.Custom, "LightBuffer"),
-                });
-
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
-                new MaterialPerObjectInputElement[]
-                {
-                    new MaterialPerObjectInputElement("WorldMatrixBuffer", ShaderConstantType.Matrix4x4, _worldProvider.DataSizeInBytes),
-                    new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", ShaderConstantType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
-                });
+            ShaderConstantDescription[] constants = new[]
+            {
+                new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("ViewMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("LightBuffer", ShaderConstantType.Custom),
+                new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("InverseTransposeWorldMatrixBuffer", ShaderConstantType.Matrix4x4),
+            };
 
             ShaderTextureInput[] textureInputs = new[] { new ShaderTextureInput(0, "surfaceTexture") };
 
@@ -92,8 +86,7 @@ namespace Veldrid.RenderDemo
                 "textured-vertex",
                 "lit-frag",
                 materialInputs,
-                globalInputs,
-                perObjectInputs,
+                constants,
                 textureInputs);
 
             DeviceTexture2D deviceTex = s_cubeTexture.CreateDeviceTexture(factory);
@@ -138,7 +131,9 @@ namespace Veldrid.RenderDemo
             rc.VertexBuffer = _vertexBuffer;
             rc.IndexBuffer = _indexBuffer;
             _material.Apply(rc);
-            _material.ApplyPerObjectInputs(_perObjectProviders);
+            rc.SetConstantBuffer(0, SharedDataProviders.ProjectionMatrixBuffer);
+            rc.SetConstantBuffer(1, SharedDataProviders.ViewMatrixBuffer);
+            rc.SetConstantBuffer(2, SharedDataProviders.LightBuffer);
             rc.SetTexture(0, _textureBinding);
 
             rc.DrawIndexedPrimitives(_teapotMesh.Indices.Length, 0);

@@ -108,9 +108,8 @@ namespace Veldrid.Graphics
         public abstract ShaderSet CreateShaderSet(VertexInputLayout inputLayout, Shader vertexShader, Shader geometryShader, Shader fragmentShader);
 
         public abstract ShaderConstantBindingSlots CreateShaderConstantBindingSlots(
-            RenderContext rc,
             ShaderSet shaderSet,
-            ShaderConstantDescription[] constants);
+            params ShaderConstantDescription[] constants);
 
         /// <summary>
         /// Creates a new <see cref="ShaderTextureBindingSlots"/> for the given shader set and a device-agnostic description.
@@ -126,7 +125,18 @@ namespace Veldrid.Graphics
         /// <param name="vertexShader">The vertex <see cref="Shader"/>.</param>
         /// <param name="vertexInputs">An array of vertex input descriptions, one for each <see cref="VertexBuffer"/> input.</param>
         /// <returns>A new <see cref="VertexInputLayout"/>.</returns>
-        public abstract VertexInputLayout CreateInputLayout(params MaterialVertexInput[] vertexInputs); // TODO: Provide a non-params-array version.
+        public abstract VertexInputLayout CreateInputLayout(params VertexInputDescription[] vertexInputs); // TODO: Provide a non-params-array version.
+
+        public ConstantBuffer CreateConstantBuffer(ShaderConstantType type)
+        {
+            if (!FormatHelpers.GetShaderConstantTypeByteSize(type, out int sizeInBytes))
+            {
+                throw new InvalidOperationException(
+                    $"ShaderConstantType passed to CreateConstantBuffer must have a defined size. {type} does not.");
+            }
+
+            return CreateConstantBuffer(sizeInBytes);
+        }
 
         /// <summary>
         /// Creates a new <see cref="ConstantBuffer"/>, used for storing global <see cref="Shader"/> parameters.

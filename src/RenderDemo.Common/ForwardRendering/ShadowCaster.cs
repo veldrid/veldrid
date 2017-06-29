@@ -114,13 +114,11 @@ namespace Veldrid.RenderDemo.ForwardRendering
             if (pipelineStage == "ShadowMap")
             {
                 _shadowPassMaterial.Apply(rc);
-                _shadowPassMaterial.ApplyPerObjectInput(_worldProvider);
             }
             else
             {
                 Debug.Assert(pipelineStage == "Standard");
                 _regularPassMaterial.Apply(rc);
-                _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
                 if (_overrideTextureBinding != null)
                 {
                     rc.SetTexture(0, _overrideTextureBinding);

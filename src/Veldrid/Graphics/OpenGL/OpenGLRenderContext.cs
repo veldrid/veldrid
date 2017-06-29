@@ -202,7 +202,12 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSetShaderConstantBindings(ShaderConstantBindingSlots shaderConstantBindings)
         {
-            shaderConstantBindings.Apply();
+        }
+
+        protected override void PlatformSetConstantBuffer(int slot, ConstantBuffer cb)
+        {
+            OpenGLShaderConstantBindingSlots.UniformBinding binding = ShaderConstantBindingSlots.GetUniformBindingForSlot(slot);
+            binding.Bind((OpenGLConstantBuffer)cb);
         }
 
         protected override void PlatformSetShaderTextureBindingSlots(ShaderTextureBindingSlots bindingSlots)
@@ -306,5 +311,7 @@ namespace Veldrid.Graphics.OpenGL
         }
 
         private new OpenGLTextureBindingSlots ShaderTextureBindingSlots => (OpenGLTextureBindingSlots)base.ShaderTextureBindingSlots;
+
+        private new OpenGLShaderConstantBindingSlots ShaderConstantBindingSlots => (OpenGLShaderConstantBindingSlots)base.ShaderConstantBindingSlots;
     }
 }

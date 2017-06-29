@@ -10,6 +10,6 @@ namespace Veldrid.Graphics
         /// <summary>
         /// A device-agnostic description of the vertex layout.
         /// </summary>
-        MaterialVertexInput[] InputDescription { get; }
+        VertexInputDescription[] InputDescriptions { get; }
     }
 }

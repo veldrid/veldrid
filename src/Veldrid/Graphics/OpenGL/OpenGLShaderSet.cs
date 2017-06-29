@@ -31,7 +31,7 @@ namespace Veldrid.Graphics.OpenGL
             GL.AttachShader(ProgramID, fragmentShader.ShaderID);
 
             int slot = 0;
-            foreach (var input in inputLayout.InputDescription)
+            foreach (var input in inputLayout.InputDescriptions)
             {
                 for (int i = 0; i < input.Elements.Length; i++)
                 {

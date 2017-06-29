@@ -58,10 +58,10 @@ namespace Veldrid.RenderDemo
 
             _material = null; // TODO
 
-            var viewProvider = (ConstantBufferDataProvider<Matrix4x4>)((ChangeableProvider)rc.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).DataProvider;
-            _perObjectInput = new DependantDataProvider<Matrix4x4>(
-                viewProvider,
-                Utilities.ConvertToMatrix3x3);
+            // var viewProvider = (ConstantBufferDataProvider<Matrix4x4>)((ChangeableProvider)rc.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).DataProvider;
+            //_perObjectInput = new DependantDataProvider<Matrix4x4>(
+            //    viewProvider,
+            //    Utilities.ConvertToMatrix3x3);
 
             fixed (Rgba32* frontPin = &_front.Pixels.DangerousGetPinnableReference())
             fixed (Rgba32* backPin = &_back.Pixels.DangerousGetPinnableReference())
@@ -103,7 +103,6 @@ namespace Veldrid.RenderDemo
             RasterizerState previousRasterState = rc.RasterizerState;
             rc.SetRasterizerState(_rasterizerState);
             rc.SetTexture(0, _cubemapBinding);
-            _material.ApplyPerObjectInput(_perObjectInput);
             rc.DrawIndexedPrimitives(s_indices.Length, 0);
             rc.SetRasterizerState(previousRasterState);
         }

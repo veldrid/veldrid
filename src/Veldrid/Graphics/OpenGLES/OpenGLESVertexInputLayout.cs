@@ -5,12 +5,12 @@ namespace Veldrid.Graphics.OpenGLES
 {
     public class OpenGLESVertexInputLayout : VertexInputLayout
     {
-        public MaterialVertexInput[] InputDescription { get; }
+        public VertexInputDescription[] InputDescriptions { get; }
         public OpenGLESMaterialVertexInput[] VBLayoutsBySlot { get; }
 
-        public OpenGLESVertexInputLayout(MaterialVertexInput[] vertexInputs)
+        public OpenGLESVertexInputLayout(VertexInputDescription[] vertexInputs)
         {
-            InputDescription = vertexInputs;
+            InputDescriptions = vertexInputs;
             VBLayoutsBySlot = vertexInputs.Select(mvi => new OpenGLESMaterialVertexInput(mvi)).ToArray();
         }
 
@@ -73,7 +73,7 @@ namespace Veldrid.Graphics.OpenGLES
             Elements = elements;
         }
 
-        public OpenGLESMaterialVertexInput(MaterialVertexInput genericInput)
+        public OpenGLESMaterialVertexInput(VertexInputDescription genericInput)
         {
             VertexSizeInBytes = genericInput.VertexSizeInBytes;
             Elements = new OpenGLESMaterialVertexInputElement[genericInput.Elements.Length];
@@ -122,7 +122,7 @@ namespace Veldrid.Graphics.OpenGLES
             InstanceStepRate = instanceStepRate;
         }
 
-        public OpenGLESMaterialVertexInputElement(MaterialVertexInputElement genericElement, int offset)
+        public OpenGLESMaterialVertexInputElement(VertexInputElement genericElement, int offset)
         {
             SizeInBytes = genericElement.SizeInBytes;
             ElementCount = FormatHelpers.GetElementCount(genericElement.ElementFormat);

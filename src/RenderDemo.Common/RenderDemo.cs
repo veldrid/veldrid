@@ -136,14 +136,15 @@ namespace Veldrid.RenderDemo
                     (float)(Math.Sin(timeFactor) * _circleWidth));
                 _camera.LookDirection = -_camera.Position;
 
-                _rc.RegisterGlobalDataProvider("ProjectionMatrix", _camera.ProjectionProvider);
-                _rc.RegisterGlobalDataProvider("ViewMatrix", _camera.ViewProvider);
-                _rc.RegisterGlobalDataProvider("LightBuffer", _lightBufferProvider);
-                _rc.RegisterGlobalDataProvider("LightViewMatrix", _lightViewMatrixProvider);
-                _rc.RegisterGlobalDataProvider("LightProjMatrix", _lightProjMatrixProvider);
-                _rc.RegisterGlobalDataProvider("LightInfo", _lightInfoProvider);
-                _rc.RegisterGlobalDataProvider("CameraInfo", _camera.CameraInfoProvider);
-                _rc.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);
+                SharedDataProviders.ChangeRenderContext(_rc);
+                SharedDataProviders.RegisterGlobalDataProvider("ProjectionMatrix", _camera.ProjectionProvider);
+                SharedDataProviders.RegisterGlobalDataProvider("ViewMatrix", _camera.ViewProvider);
+                SharedDataProviders.RegisterGlobalDataProvider("LightBuffer", _lightBufferProvider);
+                SharedDataProviders.RegisterGlobalDataProvider("LightViewMatrix", _lightViewMatrixProvider);
+                SharedDataProviders.RegisterGlobalDataProvider("LightProjMatrix", _lightProjMatrixProvider);
+                SharedDataProviders.RegisterGlobalDataProvider("LightInfo", _lightInfoProvider);
+                SharedDataProviders.RegisterGlobalDataProvider("CameraInfo", _camera.CameraInfoProvider);
+                SharedDataProviders.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);
                 _rc.ClearColor = RgbaFloat.CornflowerBlue;
 
                 UpdateLightMatrices();
@@ -1061,12 +1062,7 @@ https://github.com/mellinoe/veldrid.");
             {
                 CreatedResourceCache.ClearCache();
                 ImGuiImageHelper.InvalidateCache();
-
-                foreach (var kvp in _rc.GetAllGlobalBufferProviderPairs())
-                {
-                    kvp.Value.Dispose();
-                    newContext.RegisterGlobalDataProvider(kvp.Key, kvp.Value.DataProvider);
-                }
+                SharedDataProviders.ChangeRenderContext(newContext);
                 foreach (var kvp in _rc.TextureProviders)
                 {
                     newContext.TextureProviders[kvp.Key] = kvp.Value;

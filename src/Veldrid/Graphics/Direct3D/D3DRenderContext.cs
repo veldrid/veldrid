@@ -24,6 +24,11 @@ namespace Veldrid.Graphics.Direct3D
         private readonly Dictionary<D3DVertexInputLayout, InputLayout> _inputLayoutCache = new Dictionary<D3DVertexInputLayout, InputLayout>();
         private bool _vertexLayoutChanged;
 
+        // Shader constant bindings
+        private D3DConstantBuffer[] _vertexConstantBindings = new D3DConstantBuffer[15];
+        private D3DConstantBuffer[] _geometryConstantBindings = new D3DConstantBuffer[15];
+        private D3DConstantBuffer[] _fragmentConstantBindings = new D3DConstantBuffer[15];
+
         // Texture binding arrays
         private ShaderTextureBinding[] _vertexTextureBindings = new ShaderTextureBinding[MaxShaderResourceViewBindings];
         private ShaderTextureBinding[] _geometryShaderTextureBindings = new ShaderTextureBinding[MaxShaderResourceViewBindings];
@@ -121,7 +126,7 @@ namespace Veldrid.Graphics.Direct3D
         {
             if (!_inputLayoutCache.TryGetValue(d3dInputLayout, out InputLayout inputLayout))
             {
-                inputLayout = D3DVertexInputLayout.CreateLayout(_device, d3dInputLayout.InputDescription, vertexShader.Bytecode);
+                inputLayout = D3DVertexInputLayout.CreateLayout(_device, d3dInputLayout.InputDescriptions, vertexShader.Bytecode);
                 _inputLayoutCache.Add(d3dInputLayout, inputLayout);
             }
 
@@ -291,7 +296,29 @@ namespace Veldrid.Graphics.Direct3D
 
         protected override void PlatformSetShaderConstantBindings(ShaderConstantBindingSlots shaderConstantBindings)
         {
-            shaderConstantBindings.Apply();
+        }
+
+        protected override void PlatformSetConstantBuffer(int slot, ConstantBuffer cb)
+        {
+            ShaderStageApplicabilityFlags applicability = ShaderConstantBindingSlots.GetApplicability(slot);
+
+            if ((applicability & ShaderStageApplicabilityFlags.Vertex) == ShaderStageApplicabilityFlags.Vertex
+                && _vertexConstantBindings[slot] != cb)
+            {
+                _deviceContext.VertexShader.SetConstantBuffer(slot, ((D3DConstantBuffer)cb).Buffer);
+            }
+
+            if ((applicability & ShaderStageApplicabilityFlags.Geometry) == ShaderStageApplicabilityFlags.Geometry
+                && _geometryConstantBindings[slot] != cb)
+            {
+                _deviceContext.GeometryShader.SetConstantBuffer(slot, ((D3DConstantBuffer)cb).Buffer);
+            }
+
+            if ((applicability & ShaderStageApplicabilityFlags.Fragment) == ShaderStageApplicabilityFlags.Fragment
+                && _fragmentConstantBindings[slot] != cb)
+            {
+                _deviceContext.PixelShader.SetConstantBuffer(slot, ((D3DConstantBuffer)cb).Buffer);
+            }
         }
 
         protected override void PlatformSetShaderTextureBindingSlots(ShaderTextureBindingSlots bindingSlots)
@@ -451,5 +478,7 @@ namespace Veldrid.Graphics.Direct3D
         private new D3DFramebuffer CurrentFramebuffer => (D3DFramebuffer)base.CurrentFramebuffer;
 
         private new D3DShaderTextureBindingSlots ShaderTextureBindingSlots => (D3DShaderTextureBindingSlots)base.ShaderTextureBindingSlots;
+
+        private new D3DShaderConstantBindingSlots ShaderConstantBindingSlots => (D3DShaderConstantBindingSlots)base.ShaderConstantBindingSlots;
     }
 }

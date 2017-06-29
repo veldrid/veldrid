@@ -11,7 +11,6 @@ namespace Veldrid.Graphics.OpenGLES
         public ShaderConstantDescription[] Constants { get; }
 
         public OpenGLESShaderConstantBindingSlots(
-            RenderContext rc,
             ShaderSet shaderSet,
             ShaderConstantDescription[] constants)
         {
@@ -48,6 +47,11 @@ namespace Veldrid.Graphics.OpenGLES
                         uniformLocation);
                 }
             }
+        }
+
+        public UniformBinding GetBindingForSlot(int slot)
+        {
+            return _bindings[slot];
         }
 
         [Conditional("DEBUG")]

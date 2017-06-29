@@ -86,7 +86,6 @@ namespace Veldrid.RenderDemo
             rc.VertexBuffer = _vb;
             rc.IndexBuffer = _ib;
             _material.Apply(rc);
-            _material.ApplyPerObjectInputs(_perObjectProviders);
             rc.SetTexture(0, _textureBinding);
             rc.RasterizerState = _wireframeState;
             rc.SetSamplerState(0, rc.PointSampler);

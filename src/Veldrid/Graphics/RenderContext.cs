@@ -130,7 +130,7 @@ namespace Veldrid.Graphics
             }
         }
 
-        public ShaderConstantBindingSlots ShaderConstantBindings
+        public ShaderConstantBindingSlots ShaderConstantBindingSlots
         {
             get { return _constantBindings; }
             set
@@ -141,6 +141,17 @@ namespace Veldrid.Graphics
                     _constantBindings = value;
                 }
             }
+        }
+
+        public void SetConstantBuffer(int slot, ConstantBuffer cb)
+        {
+            if (_constantBindings == null)
+            {
+                throw new InvalidOperationException(
+                    "Cannot call SetConstantBuffer when ShaderConstantBindingSlots has not been set.");
+            }
+
+            PlatformSetConstantBuffer(slot, cb);
         }
 
         public ShaderTextureBindingSlots ShaderTextureBindingSlots
@@ -426,38 +437,6 @@ namespace Veldrid.Graphics
             return value;
         }
 
-        public void RegisterGlobalDataProvider(string name, ConstantBufferDataProvider provider)
-        {
-            BufferProviderPair pair;
-            if (_bufferProviderPairs.TryGetValue(name, out pair))
-            {
-                ChangeableProvider changeable = (ChangeableProvider)pair.DataProvider;
-                changeable.DataProvider = provider;
-            }
-            else
-            {
-                var constantBuffer = ResourceFactory.CreateConstantBuffer(provider.DataSizeInBytes);
-                var newProvider = provider is ChangeableProvider ? provider : new ChangeableProvider(provider);
-                _bufferProviderPairs.Add(name, new BufferProviderPair(constantBuffer, newProvider));
-            }
-        }
-
-        public BufferProviderPair GetNamedGlobalBufferProviderPair(string name)
-        {
-            BufferProviderPair pair;
-            if (!_bufferProviderPairs.TryGetValue(name, out pair))
-            {
-                throw new InvalidOperationException("No provider registered with name " + name);
-            }
-
-            return pair;
-        }
-
-        public IEnumerable<KeyValuePair<string, BufferProviderPair>> GetAllGlobalBufferProviderPairs()
-        {
-            return _bufferProviderPairs;
-        }
-
         // TODO: REMOVE THIS.
         public void NotifyWindowResized(int width, int height)
         {
@@ -513,6 +492,8 @@ namespace Veldrid.Graphics
         protected abstract void PlatformSetShaderSet(ShaderSet shaderSet);
 
         protected abstract void PlatformSetShaderConstantBindings(ShaderConstantBindingSlots shaderConstantBindings);
+
+        protected abstract void PlatformSetConstantBuffer(int slot, ConstantBuffer cb);
 
         protected abstract void PlatformSetShaderTextureBindingSlots(ShaderTextureBindingSlots bindingSlots);
 

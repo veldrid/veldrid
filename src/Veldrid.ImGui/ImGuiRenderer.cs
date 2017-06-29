@@ -17,8 +17,6 @@ namespace Veldrid
     /// </summary>
     public class ImGuiRenderer : IDisposable
     {
-        private readonly DynamicDataProvider<Matrix4x4> _projectionMatrixProvider;
-
         // Context objects
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
@@ -30,6 +28,7 @@ namespace Veldrid
         // Material replacements
         private ShaderSet _shaderSet;
         private ShaderConstantBindingSlots _constantBindings;
+        private ConstantBuffer _projMatrixBuffer;
         private ShaderTextureBindingSlots _textureSlots;
 
         private int _fontAtlasID = 1;
@@ -45,7 +44,6 @@ namespace Veldrid
         {
             _rc = rc;
             ImGui.GetIO().FontAtlas.AddDefaultFont();
-            _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
 
             InitializeContextObjects(rc);
             SetOpenTKKeyMappings();
@@ -79,23 +77,19 @@ namespace Veldrid
             Shader vertexShader = factory.CreateShader(ShaderType.Vertex, "imgui-vertex");
             Shader fragmentShader = factory.CreateShader(ShaderType.Fragment, "imgui-frag");
             VertexInputLayout inputLayout = factory.CreateInputLayout(
-                new MaterialVertexInput(20, new MaterialVertexInputElement[]
+                new VertexInputDescription(20, new VertexInputElement[]
                 {
-                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float2),
-                    new MaterialVertexInputElement("in_texcoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2),
-                    new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Byte4)
+                    new VertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float2),
+                    new VertexInputElement("in_texcoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2),
+                    new VertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Byte4)
                 }));
 
             _shaderSet = factory.CreateShaderSet(inputLayout, vertexShader, fragmentShader);
 
-            _constantBindings = factory.CreateShaderConstantBindings(
-                rc,
+            _constantBindings = factory.CreateShaderConstantBindingSlots(
                 _shaderSet,
-                new MaterialInputs<MaterialGlobalInputElement>(new MaterialGlobalInputElement[]
-                {
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4, _projectionMatrixProvider)
-                }),
-                MaterialInputs<MaterialPerObjectInputElement>.Empty);
+                new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4));
+            _projMatrixBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
 
             _textureSlots = factory.CreateShaderTextureBindingSlots(_shaderSet, new[] { new ShaderTextureInput(0, "surfaceTexture") });
         }
@@ -284,7 +278,7 @@ namespace Veldrid
                     -1.0f,
                     1.0f);
 
-                _projectionMatrixProvider.Data = mvp;
+                _projMatrixBuffer.SetData(ref mvp, sizeof(Matrix4x4));
             }
 
             BlendState previousBlendState = rc.BlendState;
@@ -296,7 +290,8 @@ namespace Veldrid
             rc.IndexBuffer = _indexBuffer;
 
             rc.ShaderSet = _shaderSet;
-            rc.ShaderConstantBindings = _constantBindings;
+            rc.ShaderConstantBindingSlots = _constantBindings;
+            rc.SetConstantBuffer(0, _projMatrixBuffer);
             rc.ShaderTextureBindingSlots = _textureSlots;
 
             ImGui.ScaleClipRects(draw_data, ImGui.GetIO().DisplayFramebufferScale);
@@ -362,7 +357,6 @@ namespace Veldrid
             _fontTextureBinding.Dispose();
 
             _shaderSet.Dispose();
-            _constantBindings.Dispose();
         }
 
         /// <summary>

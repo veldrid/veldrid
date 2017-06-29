@@ -10,7 +10,7 @@ namespace Veldrid.Graphics
 
         public ShaderConstantDescription(string name, ShaderConstantType type)
         {
-            if (FormatHelpers.GetShaderConstantTypeByteSize(type, out int dataSizeInBytes))
+            if (!FormatHelpers.GetShaderConstantTypeByteSize(type, out int dataSizeInBytes))
             {
                 throw new ArgumentException($"When using ShaderConstantType.{type}, the data size must be given explicitly.");
             }

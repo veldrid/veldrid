@@ -68,8 +68,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _ib = factory.CreateIndexBuffer(sizeof(int) * _meshData.Indices.Length, false);
             _ib.SetIndices(_meshData.Indices, IndexFormat.UInt16);
 
-            _shadowPassMaterial = CreateShadowPassMaterial(rc.ResourceFactory); // TODO
-            _regularPassMaterial = CreateRegularPassMaterial(rc.ResourceFactory); // TODO
+            _shadowPassMaterial = CreateShadowPassMaterial(rc.ResourceFactory);
+            _regularPassMaterial = CreateRegularPassMaterial(rc.ResourceFactory);
 
             _worldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
             _inverseTransposeWorldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);

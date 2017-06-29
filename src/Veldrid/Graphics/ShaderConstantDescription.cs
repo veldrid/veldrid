@@ -20,10 +20,10 @@ namespace Veldrid.Graphics
             DataSizeInBytes = dataSizeInBytes;
         }
 
-        public ShaderConstantDescription(string name, ShaderConstantType type, int dataSizeInBytes)
+        public ShaderConstantDescription(string name, int dataSizeInBytes)
         {
             Name = name;
-            Type = type;
+            Type =  ShaderConstantType.Custom;
             DataSizeInBytes = dataSizeInBytes;
         }
     }

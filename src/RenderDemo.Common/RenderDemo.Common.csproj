@@ -5,6 +5,9 @@
     <RootNamespace>Veldrid.RenderDemo</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="HLSL\wireframe-vertex.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../Veldrid.ImGui/Veldrid.ImGui.csproj" />
     <ProjectReference Include="../Veldrid.Sdl2/Veldrid.Sdl2.csproj" />
   </ItemGroup>
@@ -270,6 +273,12 @@
     <Content Include="GLSL\instanced-simple-frag.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="GLSL\wireframe-frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GLSL\wireframe-vertex.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="HLSL\billboard-geometry.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -337,6 +346,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="HLSL\instanced-simple-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\wireframe-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\wireframe-vertex.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <ProjectReference Include="..\Veldrid.SystemAbstractions\Veldrid.SystemAbstractions.csproj" />

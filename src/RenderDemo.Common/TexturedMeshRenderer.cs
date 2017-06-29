@@ -80,12 +80,12 @@ namespace Veldrid.RenderDemo
 
             ShaderConstantDescription[] constants = new[]
             {
-                    new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4),
-                    new ShaderConstantDescription("ViewMatrixBuffer", ShaderConstantType.Matrix4x4),
-                    new ShaderConstantDescription("LightBuffer", ShaderConstantType.Custom, Unsafe.SizeOf<DirectionalLightBuffer>()),
-                    new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4),
-                    new ShaderConstantDescription("InverseTransposeWorldMatrixBuffer", ShaderConstantType.Matrix4x4),
-                };
+                new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("ViewMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("LightBuffer", Unsafe.SizeOf<DirectionalLightBuffer>()),
+                new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("InverseTransposeWorldMatrixBuffer", ShaderConstantType.Matrix4x4),
+            };
 
             ShaderTextureInput[] textureInputs = new[] { new ShaderTextureInput(0, "surfaceTexture") };
 

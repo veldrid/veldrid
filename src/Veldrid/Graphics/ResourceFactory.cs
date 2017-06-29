@@ -122,6 +122,17 @@ namespace Veldrid.Graphics
         /// <returns>A new <see cref="ShaderTextureBindingSlots"/>.</returns>
         public abstract ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, params ShaderTextureInput[] textureInputs);
 
+        public VertexInputLayout CreateInputLayout(params VertexInputElement[] inputElements)
+        {
+            int totalSize = 0;
+            for (int i = 0; i < inputElements.Length; i++)
+            {
+                totalSize += inputElements[i].SizeInBytes;
+            }
+
+            return CreateInputLayout(new VertexInputDescription(totalSize, inputElements));
+        }
+
         /// <summary>
         /// Creates a device-specific <see cref="VertexInputLayout"/> from a generic description.
         /// </summary>

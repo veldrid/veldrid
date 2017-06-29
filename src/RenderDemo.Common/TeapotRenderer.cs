@@ -70,7 +70,7 @@ namespace Veldrid.RenderDemo
             {
                 new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4),
                 new ShaderConstantDescription("ViewMatrixBuffer", ShaderConstantType.Matrix4x4),
-                new ShaderConstantDescription("LightBuffer", ShaderConstantType.Custom, Unsafe.SizeOf<DirectionalLightBuffer>()),
+                new ShaderConstantDescription("LightBuffer", Unsafe.SizeOf<DirectionalLightBuffer>()),
                 new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4),
                 new ShaderConstantDescription("InverseTransposeWorldMatrixBuffer", ShaderConstantType.Matrix4x4),
             };

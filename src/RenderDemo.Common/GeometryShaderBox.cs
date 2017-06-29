@@ -77,7 +77,7 @@ namespace Veldrid.RenderDemo
                 shaderSet,
                     new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4), // Global
                     new ShaderConstantDescription("ViewMatrixBuffer", ShaderConstantType.Matrix4x4), // Global
-                    new ShaderConstantDescription("CameraInfoBuffer", ShaderConstantType.Custom, Unsafe.SizeOf<Camera.Info>()), // Global
+                    new ShaderConstantDescription("CameraInfoBuffer", Unsafe.SizeOf<Camera.Info>()), // Global
                     new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4)); // Local
             ShaderTextureBindingSlots slots = factory.CreateShaderTextureBindingSlots(shaderSet, Array.Empty<ShaderTextureInput>());
             _material = new Material(shaderSet, constantBindings, slots);

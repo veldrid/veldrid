@@ -6,11 +6,8 @@ namespace Veldrid.RenderDemo
 {
     public static class SharedDataProviders
     {
-        private static readonly Dictionary<string, ConstantBufferDataProvider> s_providers
-            = new Dictionary<string, ConstantBufferDataProvider>();
-
-        private static Dictionary<string, (int Size, ConstantBuffer Buffer)> s_buffers
-            = new Dictionary<string, (int, ConstantBuffer)>();
+        private static readonly Dictionary<string, Entry> s_entries
+            = new Dictionary<string, Entry>();
 
         private static RenderContext _rc;
 
@@ -21,19 +18,21 @@ namespace Veldrid.RenderDemo
                 throw new InvalidOperationException("No RenderContext set on SharedDataProviders.");
             }
 
-            s_providers.Add(name, provider);
-            int dataSize = provider.DataSizeInBytes;
-            s_buffers.Add(name, (dataSize, _rc.ResourceFactory.CreateConstantBuffer(dataSize)));
+            Entry entry = new Entry();
+            entry.Provider = provider;
+            entry.Buffer = _rc.ResourceFactory.CreateConstantBuffer(provider.DataSizeInBytes);
+
+            s_entries.Add(name, entry);
         }
 
         public static ConstantBufferDataProvider GetProvider(string name)
         {
-            if (!s_providers.TryGetValue(name, out ConstantBufferDataProvider provider))
+            if (!s_entries.TryGetValue(name, out Entry entry))
             {
                 throw new InvalidOperationException("No registered provider with the name " + name);
             }
 
-            return provider;
+            return entry.Provider;
         }
 
         public static ConstantBufferDataProvider<T> GetProvider<T>(string name)
@@ -50,24 +49,40 @@ namespace Veldrid.RenderDemo
 
         public static ConstantBuffer GetBuffer(string name)
         {
-            return s_buffers[name].Buffer;
+            return s_entries[name].Buffer;
+        }
+
+        public static void UpdateBuffers()
+        {
+            foreach (var kvp in s_entries)
+            {
+                kvp.Value.Provider.SetData(kvp.Value.Buffer);
+            }
         }
 
         public static ConstantBuffer ProjectionMatrixBuffer => GetBuffer("ProjectionMatrix");
         public static ConstantBuffer ViewMatrixBuffer => GetBuffer("ViewMatrix");
-        public static ConstantBuffer LightBuffer => GetBuffer("LightInfo");
+        public static ConstantBuffer DirectionalLightBuffer => GetBuffer("LightBuffer");
+        public static ConstantBuffer LightInfoBuffer => GetBuffer("LightInfo");
+        public static ConstantBuffer CameraInfoBuffer => GetBuffer("CameraInfo");
+        public static ConstantBuffer LightViewMatrixBuffer => GetBuffer("LightViewMatrix");
+        public static ConstantBuffer LightProjMatrixBuffer => GetBuffer("LightProjMatrix");
+        public static ConstantBuffer PointLightsBuffer => GetBuffer("PointLights");
 
         public static void ChangeRenderContext(RenderContext rc)
         {
             _rc = rc;
-            var newDictionary = new Dictionary<string, (int, ConstantBuffer)>(s_buffers.Count);
-            foreach (KeyValuePair<string, (int Size, ConstantBuffer Buffer)> kvp in s_buffers)
+            foreach (var kvp in s_entries)
             {
                 kvp.Value.Buffer.Dispose();
-                newDictionary.Add(kvp.Key, (kvp.Value.Size, rc.ResourceFactory.CreateConstantBuffer(kvp.Value.Size)));
+                kvp.Value.Buffer = rc.ResourceFactory.CreateConstantBuffer(kvp.Value.Provider.DataSizeInBytes);
             }
+        }
 
-            s_buffers = newDictionary;
+        private class Entry
+        {
+            public ConstantBufferDataProvider Provider { get; set; }
+            public ConstantBuffer Buffer { get; set; }
         }
     }
 }

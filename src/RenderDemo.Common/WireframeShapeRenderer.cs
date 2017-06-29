@@ -70,6 +70,7 @@ namespace Veldrid.RenderDemo
 
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
         {
+            return new RenderOrderKey(); // TODO
             return RenderOrderKey.Create(_material.GetHashCode());
         }
 
@@ -80,6 +81,7 @@ namespace Veldrid.RenderDemo
 
         public void Render(RenderContext rc, string pipelineStage)
         {
+            return;//TODO
             UpdateBuffers(rc);
 
             var rasterState = rc.RasterizerState;

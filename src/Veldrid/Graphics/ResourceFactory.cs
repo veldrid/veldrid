@@ -11,6 +11,8 @@ namespace Veldrid.Graphics
     {
         public string ShaderAssetRootPath { get; set; } = AppContext.BaseDirectory;
 
+        // TODO: These are problematic because of ownership confusion.
+        /*
         private readonly Dictionary<SamplerStateCacheKey, SamplerState> _cachedSamplers
             = new Dictionary<SamplerStateCacheKey, SamplerState>();
         private readonly Dictionary<BlendStateCacheKey, BlendState> _cachedBlendStates
@@ -19,6 +21,7 @@ namespace Veldrid.Graphics
             = new Dictionary<DepthStencilStateCacheKey, DepthStencilState>();
         private readonly Dictionary<RasterizerStateCacheKey, RasterizerState> _cachedRasterizerStates
             = new Dictionary<RasterizerStateCacheKey, RasterizerState>();
+        */
 
         /// <summary>
         /// Creates a <see cref="VertexBuffer"/> with the given storage size.
@@ -117,7 +120,7 @@ namespace Veldrid.Graphics
         /// <param name="shaderSet">The <see cref="ShaderSet"/> which the slots will be valid for.</param>
         /// <param name="textureInputs">The texture slot descriptions.</param>
         /// <returns>A new <see cref="ShaderTextureBindingSlots"/>.</returns>
-        public abstract ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, ShaderTextureInput[] textureInputs);
+        public abstract ShaderTextureBindingSlots CreateShaderTextureBindingSlots(ShaderSet shaderSet, params ShaderTextureInput[] textureInputs);
 
         /// <summary>
         /// Creates a device-specific <see cref="VertexInputLayout"/> from a generic description.
@@ -209,7 +212,7 @@ namespace Veldrid.Graphics
             int maximumLod,
             int lodBias)
         {
-            SamplerStateCacheKey key = new SamplerStateCacheKey(
+            return CreateSamplerStateCore(
                 addressU,
                 addressV,
                 addressW,
@@ -220,24 +223,6 @@ namespace Veldrid.Graphics
                 minimumLod,
                 maximumLod,
                 lodBias);
-
-            if (!_cachedSamplers.TryGetValue(key, out SamplerState state))
-            {
-                state = CreateSamplerStateCore(
-                    addressU,
-                    addressV,
-                    addressW,
-                    filter,
-                    maxAnisotropy,
-                    borderColor,
-                    comparison,
-                    minimumLod,
-                    maximumLod,
-                    lodBias);
-                _cachedSamplers.Add(key, state);
-            }
-
-            return state;
         }
 
         protected abstract SamplerState CreateSamplerStateCore(
@@ -329,22 +314,7 @@ namespace Veldrid.Graphics
             Blend srcColor, Blend destColor, BlendFunction colorBlendFunc,
             RgbaFloat blendFactor)
         {
-            BlendStateCacheKey key = new BlendStateCacheKey(
-                isBlendEnabled,
-                srcAlpha,
-                destAlpha,
-                alphaBlendFunc,
-                srcColor,
-                destColor,
-                colorBlendFunc,
-                blendFactor);
-            if (!_cachedBlendStates.TryGetValue(key, out BlendState state))
-            {
-                state = CreateCustomBlendStateCore(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc, blendFactor);
-                _cachedBlendStates.Add(key, state);
-            }
-
-            return state;
+            return CreateCustomBlendStateCore(isBlendEnabled, srcAlpha, destAlpha, alphaBlendFunc, srcColor, destColor, colorBlendFunc, blendFactor);
         }
 
         /// <summary>
@@ -386,14 +356,7 @@ namespace Veldrid.Graphics
         /// <returns>A new <see cref="DepthStencilState"/>.</returns>
         public DepthStencilState CreateDepthStencilState(bool isDepthEnabled, DepthComparison comparison, bool isDepthWriteEnabled)
         {
-            DepthStencilStateCacheKey key = new DepthStencilStateCacheKey(isDepthEnabled, isDepthWriteEnabled, comparison);
-            if (!_cachedDepthStencilStates.TryGetValue(key, out DepthStencilState state))
-            {
-                state = CreateDepthStencilStateCore(isDepthWriteEnabled, comparison, isDepthWriteEnabled);
-                _cachedDepthStencilStates.Add(key, state);
-            }
-
-            return state;
+            return CreateDepthStencilStateCore(isDepthWriteEnabled, comparison, isDepthWriteEnabled);
         }
 
         /// <summary>
@@ -419,14 +382,7 @@ namespace Veldrid.Graphics
             bool isDepthClipEnabled,
             bool isScissorTestEnabled)
         {
-            RasterizerStateCacheKey key = new RasterizerStateCacheKey(cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
-            if (!_cachedRasterizerStates.TryGetValue(key, out RasterizerState state))
-            {
-                state = CreateRasterizerStateCore(cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
-                _cachedRasterizerStates.Add(key, state);
-            }
-
-            return state;
+            return CreateRasterizerStateCore(cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
         }
 
         /// <summary>

@@ -84,6 +84,8 @@ namespace Veldrid.RenderDemo
             ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(shaderSet, Array.Empty<ShaderTextureInput>());
             _material = new Material(shaderSet, constantBindings, textureSlots);
             _worldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
+            Matrix4x4 identity = Matrix4x4.Identity;
+            _worldBuffer.SetData(ref identity, 64);
         }
 
         private struct InstanceData

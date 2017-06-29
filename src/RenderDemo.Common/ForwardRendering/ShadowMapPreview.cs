@@ -8,12 +8,11 @@ namespace Veldrid.RenderDemo.ForwardRendering
 {
     public class ShadowMapPreview : SwappableRenderItem
     {
-        private readonly DynamicDataProvider<Matrix4x4> _worldMatrixProvider = new DynamicDataProvider<Matrix4x4>();
-        private readonly DynamicDataProvider<Matrix4x4> _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
-
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private Material _material;
+        private ConstantBuffer _worldMatrixBuffer;
+        private ConstantBuffer _projectionMatrixBuffer;
         private float _imageWidth = 200f;
         private DepthStencilState _depthDisabledState;
 
@@ -56,6 +55,9 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 },
                 new[] { new ShaderTextureInput(0, "SurfaceTexture") });
 
+            _worldMatrixBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
+            _projectionMatrixBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
+
             _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
         }
 
@@ -75,15 +77,20 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 0f,
                 -1.0f,
                 1.0f);
-            _projectionMatrixProvider.Data = orthoProjection;
+            Matrix4x4 proj = orthoProjection;
+            _projectionMatrixBuffer.SetData(ref proj, 64);
 
             float width = _imageWidth;
-            _worldMatrixProvider.Data = Matrix4x4.CreateScale(width)
+            Matrix4x4 world = Matrix4x4.CreateScale(width)
                 * Matrix4x4.CreateTranslation(rc.Viewport.Width - width - 20, 20, 0);
+            _worldMatrixBuffer.SetData(ref world, 64);
 
             rc.VertexBuffer = _vertexBuffer;
             rc.IndexBuffer = _indexBuffer;
             _material.Apply(rc);
+            rc.SetConstantBuffer(0, _worldMatrixBuffer);
+            rc.SetConstantBuffer(1, _projectionMatrixBuffer);
+            rc.SetTexture(0, SharedTextures.GetTextureBinding("ShadowMap"));
             rc.SetDepthStencilState(_depthDisabledState);
             rc.DrawIndexedPrimitives(6, 0);
             rc.SetDepthStencilState(rc.DefaultDepthStencilState);

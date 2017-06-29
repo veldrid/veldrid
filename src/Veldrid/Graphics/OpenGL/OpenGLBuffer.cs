@@ -12,14 +12,20 @@ namespace Veldrid.Graphics.OpenGL
         private int _bufferID;
         private int _bufferSize;
 
-        public OpenGLBuffer(BufferTarget target) : this(target, BufferUsageHint.DynamicDraw) { }
-        public OpenGLBuffer(BufferTarget target, BufferUsageHint bufferUsage)
+        public OpenGLBuffer(BufferTarget target) : this(target, 0, BufferUsageHint.DynamicDraw) { }
+        public OpenGLBuffer(BufferTarget target, int sizeInBytes) : this(target, sizeInBytes, BufferUsageHint.DynamicDraw) { }
+        public OpenGLBuffer(BufferTarget target, int sizeInBytes, BufferUsageHint bufferUsage)
         {
             _bufferID = GL.GenBuffer();
             _bufferUsage = bufferUsage;
             _target = target;
-            _bufferSize = 0;
+            // TODO: Try to use named buffer stuff here.
+            Bind();
+            EnsureBufferSize(sizeInBytes);
+            Unbind();
         }
+
+        public int BufferSize => _bufferSize;
 
         protected int BufferID => _bufferID;
 
@@ -87,12 +93,12 @@ namespace Veldrid.Graphics.OpenGL
             Unbind();
         }
 
-        public void GetData(IntPtr storageLocation, int storageSizeInBytes)
+        public unsafe void GetData(IntPtr storageLocation, int storageSizeInBytes)
         {
             int bytesToCopy = Math.Min(_bufferSize, storageSizeInBytes);
             Bind();
             IntPtr mappedPtr = GL.MapBuffer(_target, BufferAccess.ReadOnly);
-            SharpDX.Utilities.CopyMemory(storageLocation, mappedPtr, bytesToCopy);
+            Unsafe.CopyBlock(storageLocation.ToPointer(), mappedPtr.ToPointer(), (uint)bytesToCopy);
             if (!GL.UnmapBuffer(_target))
             {
                 throw new InvalidOperationException("UnmapBuffer failed.");

@@ -9,6 +9,7 @@ namespace Veldrid.RenderDemo
 {
     public class Skybox : SwappableRenderItem
     {
+        private DependantDataProvider<Matrix4x4> _viewProvider;
         private readonly ImageSharpTexture _front;
         private readonly ImageSharpTexture _back;
         private readonly ImageSharpTexture _left;
@@ -20,9 +21,9 @@ namespace Veldrid.RenderDemo
         private VertexBuffer _vb;
         private IndexBuffer _ib;
         private Material _material;
+        private ConstantBuffer _viewMatrixBuffer;
         private ShaderTextureBinding _cubemapBinding;
         private RasterizerState _rasterizerState;
-        private ConstantBufferDataProvider _perObjectInput;
 
         public Skybox(RenderContext rc, AssetDatabase ad) : this(rc, ad,
             ad.LoadAsset<ImageSharpTexture>("Textures/cloudtop/cloudtop_ft.png"),
@@ -56,12 +57,24 @@ namespace Veldrid.RenderDemo
             _ib = factory.CreateIndexBuffer(s_indices.Length * sizeof(int), false);
             _ib.SetIndices(s_indices, IndexFormat.UInt16);
 
-            _material = null; // TODO
+            Shader vs = factory.CreateShader(ShaderType.Vertex, "skybox-vertex");
+            Shader fs = factory.CreateShader(ShaderType.Fragment, "skybox-frag");
+            VertexInputLayout inputLayout = factory.CreateInputLayout(
+                new VertexInputDescription(
+                    12,
+                    new VertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3)));
+            ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, fs);
+            ShaderConstantBindingSlots constantSlots = factory.CreateShaderConstantBindingSlots(
+                shaderSet,
+                new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("ViewMatrixBuffer", ShaderConstantType.Matrix4x4));
 
-            // var viewProvider = (ConstantBufferDataProvider<Matrix4x4>)((ChangeableProvider)rc.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider).DataProvider;
-            //_perObjectInput = new DependantDataProvider<Matrix4x4>(
-            //    viewProvider,
-            //    Utilities.ConvertToMatrix3x3);
+            ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(
+                shaderSet,
+                new ShaderTextureInput(0, "Skybox"));
+
+            _material = new Material(shaderSet, constantSlots, textureSlots);
+            _viewMatrixBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
 
             fixed (Rgba32* frontPin = &_front.Pixels.DangerousGetPinnableReference())
             fixed (Rgba32* backPin = &_back.Pixels.DangerousGetPinnableReference())
@@ -85,6 +98,8 @@ namespace Veldrid.RenderDemo
             }
 
             _rasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, false, false);
+
+            _viewProvider = new DependantDataProvider<Matrix4x4>(SharedDataProviders.GetProvider<Matrix4x4>("ViewMatrix"), Utilities.ConvertToMatrix3x3);
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
@@ -100,6 +115,9 @@ namespace Veldrid.RenderDemo
             rc.VertexBuffer = _vb;
             rc.IndexBuffer = _ib;
             _material.Apply(rc);
+            rc.SetConstantBuffer(0, SharedDataProviders.ProjectionMatrixBuffer);
+            _viewProvider.SetData(_viewMatrixBuffer);
+            rc.SetConstantBuffer(1, _viewMatrixBuffer);
             RasterizerState previousRasterState = rc.RasterizerState;
             rc.SetRasterizerState(_rasterizerState);
             rc.SetTexture(0, _cubemapBinding);

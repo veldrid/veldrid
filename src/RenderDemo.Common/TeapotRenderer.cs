@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Veldrid.Assets;
 using Veldrid.Graphics;
 
@@ -9,14 +10,13 @@ namespace Veldrid.RenderDemo
 {
     public class TeapotRenderer : SwappableRenderItem, IDisposable
     {
-        private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
-        private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
-        private readonly ConstantBufferDataProvider[] _perObjectProviders;
         private readonly BoundingSphere _centeredBounds;
 
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private Material _material;
+        private ConstantBuffer _worldBuffer;
+        private ConstantBuffer _inverseTransposeWorldBuffer;
         private ShaderTextureBinding _textureBinding;
 
         private static ConstructedMeshInfo _teapotMesh;
@@ -41,10 +41,6 @@ namespace Veldrid.RenderDemo
 
         public TeapotRenderer(RenderContext rc)
         {
-            _worldProvider = new DynamicDataProvider<Matrix4x4>();
-            _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
-            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
-
             _centeredBounds = BoundingSphere.CreateFromPoints(LoadTeapotMesh().Vertices);
 
             InitializeContextObjects(rc);
@@ -74,7 +70,7 @@ namespace Veldrid.RenderDemo
             {
                 new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4),
                 new ShaderConstantDescription("ViewMatrixBuffer", ShaderConstantType.Matrix4x4),
-                new ShaderConstantDescription("LightBuffer", ShaderConstantType.Custom),
+                new ShaderConstantDescription("LightBuffer", ShaderConstantType.Custom, Unsafe.SizeOf<DirectionalLightBuffer>()),
                 new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4),
                 new ShaderConstantDescription("InverseTransposeWorldMatrixBuffer", ShaderConstantType.Matrix4x4),
             };
@@ -88,6 +84,9 @@ namespace Veldrid.RenderDemo
                 materialInputs,
                 constants,
                 textureInputs);
+
+            _worldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
+            _inverseTransposeWorldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
 
             DeviceTexture2D deviceTex = s_cubeTexture.CreateDeviceTexture(factory);
             _textureBinding = factory.CreateShaderTextureBinding(deviceTex);
@@ -104,6 +103,8 @@ namespace Veldrid.RenderDemo
             _vertexBuffer.Dispose();
             _indexBuffer.Dispose();
             _material.Dispose();
+            _worldBuffer.Dispose();
+            _inverseTransposeWorldBuffer.Dispose();
         }
 
         private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)
@@ -123,17 +124,23 @@ namespace Veldrid.RenderDemo
         public void Render(RenderContext rc, string pipelineStage)
         {
             float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
-            _worldProvider.Data =
+            Matrix4x4 worldData =
                 Matrix4x4.CreateScale(Scale)
                 * Matrix4x4.CreateFromQuaternion(Rotation)
                 * Matrix4x4.CreateTranslation(Position);
+            _worldBuffer.SetData(ref worldData, 64);
+
+            var inverseTransposeData = Utilities.CalculateInverseTranspose(worldData);
+            _inverseTransposeWorldBuffer.SetData(ref inverseTransposeData, 64);
 
             rc.VertexBuffer = _vertexBuffer;
             rc.IndexBuffer = _indexBuffer;
             _material.Apply(rc);
             rc.SetConstantBuffer(0, SharedDataProviders.ProjectionMatrixBuffer);
             rc.SetConstantBuffer(1, SharedDataProviders.ViewMatrixBuffer);
-            rc.SetConstantBuffer(2, SharedDataProviders.LightBuffer);
+            rc.SetConstantBuffer(2, SharedDataProviders.DirectionalLightBuffer);
+            rc.SetConstantBuffer(3, _worldBuffer);
+            rc.SetConstantBuffer(4, _inverseTransposeWorldBuffer);
             rc.SetTexture(0, _textureBinding);
 
             rc.DrawIndexedPrimitives(_teapotMesh.Indices.Length, 0);

@@ -4,6 +4,10 @@ using System.Diagnostics;
 
 namespace Veldrid.Graphics.OpenGL
 {
+    // TODO: There is a major issue with OpenGL constant bindings.
+    // If the value is stored in a uniform location, rather than a uniform block,
+    // then data needs to be loaded into the buffer at the time it is bound 
+    // (RenderContext.SetConstantBuffer), rather than the time it is used.
     public class OpenGLShaderConstantBindingSlots : ShaderConstantBindingSlots
     {
         private readonly UniformBinding[] _bindings;
@@ -120,6 +124,8 @@ namespace Veldrid.Graphics.OpenGL
 
         private class UniformLocationBinding : UniformBinding
         {
+            private readonly OpenGLUniformStorageAdapter _adapter;
+
             public int UniformLocation { get; }
 
             public UniformLocationBinding(
@@ -127,12 +133,16 @@ namespace Veldrid.Graphics.OpenGL
                 int uniformLocation) : base(programID)
             {
                 UniformLocation = uniformLocation;
+                _adapter = new OpenGLUniformStorageAdapter(programID, uniformLocation);
             }
 
 
-            public override void Bind(OpenGLConstantBuffer cb)
+            public unsafe override void Bind(OpenGLConstantBuffer cb)
             {
-                throw new NotImplementedException();
+                byte* data = stackalloc byte[cb.BufferSize];
+
+                cb.GetData((IntPtr)data, cb.BufferSize);
+                _adapter.SetData((IntPtr)data, cb.BufferSize);
             }
         }
     }

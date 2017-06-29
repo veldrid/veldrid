@@ -89,7 +89,6 @@ namespace Veldrid.RenderDemo
         private static List<RenderItem> _sponzaQueryResult = new List<RenderItem>();
         private static BoundingBoxWireframeRenderer _sceneBoundsRenderer;
         private static bool s_needsResizing;
-        private static Material _stoneMaterial;
 
         public static void RunDemo(RenderContext renderContext, Window window, params RendererOption[] backendOptions)
         {
@@ -223,7 +222,7 @@ namespace Veldrid.RenderDemo
             {
                 _boxSceneVM = new FlatListVisibilityManager();
                 var sphere = _ad.LoadAsset<ObjFile>(new AssetID("Models/Sphere.obj")).GetFirstMesh();
-                var tcr = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
+                var tcr = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.Stone);
                 tcr.Position = new Vector3(-5f, 0, -3);
                 _boxSceneVM.AddRenderItem(tcr);
 
@@ -255,7 +254,7 @@ namespace Veldrid.RenderDemo
                 teapot.Position = new Vector3(0, -1, 0);
                 teapot.Scale = new Vector3(1f);
 
-                var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
+                var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.Wood);
                 plane.Position = new Vector3(0, -2, 0);
                 plane.Scale = new Vector3(20, 1, 20);
 
@@ -275,7 +274,7 @@ namespace Veldrid.RenderDemo
                 InstancedSphereRenderer isr = new InstancedSphereRenderer(_ad, _rc);
                 _instancingScene.AddRenderItem(isr);
 
-                var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
+                var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.Wood);
                 plane.Position = new Vector3(0, -2, 0);
                 plane.Scale = new Vector3(20, 1, 20);
                 _instancingScene.AddRenderItem(plane);
@@ -301,15 +300,15 @@ namespace Veldrid.RenderDemo
                 gsb2.Position = new Vector3(7.5f, -2.5f, 7.5f);
 
                 var sphere = _ad.LoadAsset<ObjFile>(new AssetID("Models/Sphere.obj")).GetFirstMesh();
-                var tcr = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
+                var tcr = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.Stone);
                 tcr.Position = new Vector3(-5f, 0, 0);
                 _geometryShaderScene.AddRenderItem(tcr);
 
-                var tcr2 = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.CubeTexture);
+                var tcr2 = new TexturedMeshRenderer(_ad, _rc, sphere.Vertices, sphere.Indices, Textures.Stone);
                 tcr2.Position = new Vector3(5f, 0, 0);
                 _geometryShaderScene.AddRenderItem(tcr2);
 
-                var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.WoodTexture);
+                var plane = new TexturedMeshRenderer(_ad, _rc, PlaneModel.Vertices, PlaneModel.Indices, Textures.Wood);
                 plane.Position = new Vector3(0, -5, 0);
                 plane.Scale = new Vector3(20, 1, 20);
                 _geometryShaderScene.AddRenderItem(plane);
@@ -324,32 +323,28 @@ namespace Veldrid.RenderDemo
             {
                 _shadowsScene = new OctreeVisibilityManager();
 
-                Material stoneMaterial = null; // TODO
-                Material woodMaterial = null; // TODO
-                Material crateMaterial = null; // TODO
-
-                var cube1 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, crateMaterial);
+                var cube1 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, Textures.Crate);
                 _shadowsScene.AddRenderItem(cube1.BoundingBox, cube1);
 
-                var cube2 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, crateMaterial);
+                var cube2 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, Textures.Crate);
                 cube2.Position = new Vector3(3f, 5f, 0f);
                 cube2.Scale = new Vector3(3f);
                 _shadowsScene.AddRenderItem(cube2.BoundingBox, cube2);
 
-                var cube3 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, stoneMaterial);
+                var cube3 = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, Textures.Stone);
                 cube3.Position = new Vector3(-4f, 0f, 6f);
                 cube3.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
                 _shadowsScene.AddRenderItem(cube3.BoundingBox, cube3);
 
                 var sphereModel = _ad.LoadAsset<ObjFile>(new AssetID("Models/Sphere.obj")).GetFirstMesh();
-                var sphere = new ShadowCaster(_rc, _ad, sphereModel.Vertices, sphereModel.Indices, stoneMaterial);
+                var sphere = new ShadowCaster(_rc, _ad, sphereModel.Vertices, sphereModel.Indices, Textures.Stone);
                 sphere.Position = new Vector3(18f, 3f, -18f);
                 sphere.Scale = new Vector3(4.0f);
                 sphere.Rotation = Quaternion.CreateFromRotationMatrix(Matrix4x4.CreateRotationY(1));
                 _shadowsScene.AddRenderItem(sphere.BoundingBox, sphere);
 
 
-                var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, woodMaterial);
+                var plane = new ShadowCaster(_rc, _ad, PlaneModel.Vertices, PlaneModel.Indices, Textures.Wood);
                 plane.Position = new Vector3(0, -2.5f, 0);
                 plane.Scale = new Vector3(50f);
                 _shadowsScene.AddRenderItem(plane.BoundingBox, plane);
@@ -374,7 +369,6 @@ namespace Veldrid.RenderDemo
             if (_octreeScene == null)
             {
                 _octreeScene = new FlatListVisibilityManager();
-                _stoneMaterial = null; // TODO
 
                 BoundingBox bounds = new BoundingBox(new Vector3(-25, -25, -25), new Vector3(25, 25, 25));
                 _octree = new Octree<ShadowCaster>(bounds, 3);
@@ -428,7 +422,7 @@ namespace Veldrid.RenderDemo
 
         private static void AddOctreeCube(Vector3 position)
         {
-            var cube = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, _stoneMaterial);
+            var cube = new ShadowCaster(_rc, _ad, CubeModel.Vertices, CubeModel.Indices, Textures.Stone);
             cube.Position = position;
             _octreeScene.AddRenderItem(cube);
             _octree.AddItem(cube.BoundingBox, cube);
@@ -1148,6 +1142,8 @@ https://github.com/mellinoe/veldrid.");
                 s_needsResizing = false;
                 _rc.NotifyWindowResized(_window.Width, _window.Height);
             }
+
+            SharedDataProviders.UpdateBuffers();
             _renderer.RenderFrame(_visibilityManager, _camera.Position);
 
             if (_takeScreenshot)

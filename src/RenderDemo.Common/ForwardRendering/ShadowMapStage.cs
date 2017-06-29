@@ -19,6 +19,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         private Framebuffer _shadowMapFramebuffer;
         private DeviceTexture2D _depthTexture;
+        private ShaderTextureBinding _depthTextureBinding;
 
         public bool Enabled { get; set; } = true;
 
@@ -44,9 +45,10 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private void InitializeContextObjects(RenderContext rc)
         {
             _depthTexture = rc.ResourceFactory.CreateDepthTexture(DepthMapWidth, DepthMapHeight, sizeof(ushort), PixelFormat.R16_UInt);
+            _depthTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(_depthTexture);
             _shadowMapFramebuffer = rc.ResourceFactory.CreateFramebuffer();
             _shadowMapFramebuffer.DepthTexture = _depthTexture;
-            rc.GetTextureContextBinding(_contextBindingName).Value = _depthTexture;
+            SharedTextures.SetTextureBinding(_contextBindingName, _depthTextureBinding);
         }
 
         public void ExecuteStage(VisibiltyManager visibilityManager, Vector3 viewPosition)

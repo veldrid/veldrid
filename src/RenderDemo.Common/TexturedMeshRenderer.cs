@@ -131,7 +131,7 @@ namespace Veldrid.RenderDemo
             _material.Apply(rc);
             rc.SetConstantBuffer(0, SharedDataProviders.ProjectionMatrixBuffer);
             rc.SetConstantBuffer(1, SharedDataProviders.ViewMatrixBuffer);
-            rc.SetConstantBuffer(2, SharedDataProviders.LightBuffer);
+            rc.SetConstantBuffer(2, SharedDataProviders.DirectionalLightBuffer);
             rc.SetConstantBuffer(3, _worldBuffer);
             rc.SetConstantBuffer(4, _inverseTransposeWorldBuffer);
             rc.SetTexture(0, _textureBinding);

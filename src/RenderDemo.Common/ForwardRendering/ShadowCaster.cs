@@ -15,11 +15,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         private readonly BoundingSphere _centeredBounds;
 
-        private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
-        private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
-        private readonly ConstantBufferDataProvider[] _perObjectProviders;
-
-        private readonly TextureData _overrideTextureData;
+        private readonly TextureData _textureData;
 
         private readonly string[] _stages = new string[] { "ShadowMap", "Standard" };
 
@@ -27,8 +23,10 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private IndexBuffer _ib;
         private Material _shadowPassMaterial;
         private Material _regularPassMaterial;
-        private DeviceTexture2D _overrideTexture;
-        private ShaderTextureBinding _overrideTextureBinding;
+        private ConstantBuffer _worldBuffer;
+        private ConstantBuffer _inverseTransposeWorldBuffer;
+        private DeviceTexture2D _surfaceTexture;
+        private ShaderTextureBinding _surfaceTextureBinding;
         private readonly SimpleMeshDataProvider _meshData;
         private SamplerState _shadowMapSampler;
 
@@ -41,17 +39,10 @@ namespace Veldrid.RenderDemo.ForwardRendering
             AssetDatabase ad,
             VertexPositionNormalTexture[] vertices,
             ushort[] indices,
-            Material regularPassMaterial,
-            TextureData overrideTexture = null)
+            TextureData texture)
         {
             _meshData = new SimpleMeshDataProvider(vertices, indices);
-
-            _overrideTextureData = overrideTexture;
-
-            _worldProvider = new DynamicDataProvider<Matrix4x4>();
-            _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, Utilities.CalculateInverseTranspose);
-            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
-
+            _textureData = texture;
             _centeredBounds = BoundingSphere.CreateFromPoints(vertices);
 
             InitializeContextObjects(ad, rc);
@@ -77,13 +68,14 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _ib = factory.CreateIndexBuffer(sizeof(int) * _meshData.Indices.Length, false);
             _ib.SetIndices(_meshData.Indices, IndexFormat.UInt16);
 
-            _shadowPassMaterial = null; // TODO
-            _regularPassMaterial = null; // TODO
-            if (_overrideTextureData != null)
-            {
-                _overrideTexture = _overrideTextureData.CreateDeviceTexture(factory);
-                _overrideTextureBinding = factory.CreateShaderTextureBinding(_overrideTexture);
-            }
+            _shadowPassMaterial = CreateShadowPassMaterial(rc.ResourceFactory); // TODO
+            _regularPassMaterial = CreateRegularPassMaterial(rc.ResourceFactory); // TODO
+
+            _worldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
+            _inverseTransposeWorldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
+
+            _surfaceTexture = _textureData.CreateDeviceTexture(factory);
+            _surfaceTextureBinding = factory.CreateShaderTextureBinding(_surfaceTexture);
 
             _shadowMapSampler = rc.ResourceFactory.CreateSamplerState(
                 SamplerAddressMode.Border,
@@ -108,29 +100,44 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         public void Render(RenderContext rc, string pipelineStage)
         {
-            rc.VertexBuffer =_vb;
-            rc.IndexBuffer =_ib;
+            rc.VertexBuffer = _vb;
+            rc.IndexBuffer = _ib;
+
+            Matrix4x4 worldData =
+                Matrix4x4.CreateScale(Scale)
+                * Matrix4x4.CreateFromQuaternion(Rotation)
+                * Matrix4x4.CreateTranslation(Position);
+            _worldBuffer.SetData(ref worldData, 64);
+
+            Matrix4x4 inverseTransposeData = Utilities.CalculateInverseTranspose(worldData);
+            _inverseTransposeWorldBuffer.SetData(ref inverseTransposeData, 64);
+
 
             if (pipelineStage == "ShadowMap")
             {
                 _shadowPassMaterial.Apply(rc);
+                rc.SetConstantBuffer(0, SharedDataProviders.LightProjMatrixBuffer);
+                rc.SetConstantBuffer(1, SharedDataProviders.LightViewMatrixBuffer);
+                rc.SetConstantBuffer(2, _worldBuffer);
             }
             else
             {
                 Debug.Assert(pipelineStage == "Standard");
+
                 _regularPassMaterial.Apply(rc);
-                if (_overrideTextureBinding != null)
-                {
-                    rc.SetTexture(0, _overrideTextureBinding);
-                }
+                rc.SetConstantBuffer(0, SharedDataProviders.ProjectionMatrixBuffer);
+                rc.SetConstantBuffer(1, SharedDataProviders.ViewMatrixBuffer);
+                rc.SetConstantBuffer(2, SharedDataProviders.LightProjMatrixBuffer);
+                rc.SetConstantBuffer(3, SharedDataProviders.LightViewMatrixBuffer);
+                rc.SetConstantBuffer(4, SharedDataProviders.LightInfoBuffer);
+                rc.SetConstantBuffer(5, _worldBuffer);
+                rc.SetConstantBuffer(6, _inverseTransposeWorldBuffer);
+
+                rc.SetTexture(0, _surfaceTextureBinding);
+                rc.SetTexture(1, SharedTextures.GetTextureBinding("ShadowMap"));
                 rc.SetSamplerState(0, rc.Anisox4Sampler);
                 rc.SetSamplerState(1, _shadowMapSampler);
             }
-
-            _worldProvider.Data =
-                Matrix4x4.CreateScale(Scale)
-                * Matrix4x4.CreateFromQuaternion(Rotation)
-                * Matrix4x4.CreateTranslation(Position);
 
             rc.DrawIndexedPrimitives(_meshData.Indices.Length, 0);
 
@@ -138,29 +145,65 @@ namespace Veldrid.RenderDemo.ForwardRendering
             rc.SetSamplerState(1, rc.PointSampler);
         }
 
-        private void Serialize<T>(ref T value)
+        private static Material CreateShadowPassMaterial(ResourceFactory factory)
         {
-            JsonSerializer js = new JsonSerializer();
-            js.TypeNameHandling = TypeNameHandling.All;
-            var fileName = typeof(T).Name + ".json";
+            Shader vs = factory.CreateShader(ShaderType.Vertex, "shadowmap-vertex");
+            Shader fs = factory.CreateShader(ShaderType.Fragment, "shadowmap-frag");
+            VertexInputLayout inputLayout = factory.CreateInputLayout(
+                new VertexInputDescription(
+                    32,
+                    new VertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                    new VertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
+                    new VertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)));
+            ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, fs);
+            ShaderConstantBindingSlots constantSlots = factory.CreateShaderConstantBindingSlots(
+                shaderSet,
+                new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4), // Light Projection
+                new ShaderConstantDescription("ViewMatrixBuffer", ShaderConstantType.Matrix4x4), // Light View
+                new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4));
 
-            using (var fs = File.CreateText(fileName))
-            {
-                js.Serialize(fs, value);
-            }
+            ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(
+                shaderSet,
+                Array.Empty<ShaderTextureInput>());
 
-            using (var fs = File.OpenText(fileName))
-            {
-                value = js.Deserialize<T>(new JsonTextReader(fs));
-            }
+            return new Material(shaderSet, constantSlots, textureSlots);
+        }
+
+        private static Material CreateRegularPassMaterial(ResourceFactory factory)
+        {
+            Shader vs = factory.CreateShader(ShaderType.Vertex, "shadow-vertex");
+            Shader fs = factory.CreateShader(ShaderType.Fragment, "shadow-frag");
+            VertexInputLayout inputLayout = factory.CreateInputLayout(
+                new VertexInputDescription(
+                    32,
+                    new VertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                    new VertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
+                    new VertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)));
+            ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, fs);
+            ShaderConstantBindingSlots constantSlots = factory.CreateShaderConstantBindingSlots(
+                shaderSet,
+                new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("ViewMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("LightProjectionMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("LightViewMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("LightInfoBuffer", ShaderConstantType.Float4),
+                new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4),
+                new ShaderConstantDescription("InverseTransposeWorldMatrixBuffer", ShaderConstantType.Matrix4x4));
+
+            ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(
+                shaderSet,
+                new ShaderTextureInput(0, "SurfaceTexture"),
+                new ShaderTextureInput(1, "ShadowMap"));
+
+            return new Material(shaderSet, constantSlots, textureSlots);
         }
 
         public void Dispose()
         {
             _regularPassMaterial.Dispose();
             _shadowPassMaterial.Dispose();
-            _overrideTexture?.Dispose();
-            _overrideTextureBinding?.Dispose();
+            _surfaceTexture?.Dispose();
+            _surfaceTextureBinding?.Dispose();
             _vb.Dispose();
             _ib.Dispose();
         }

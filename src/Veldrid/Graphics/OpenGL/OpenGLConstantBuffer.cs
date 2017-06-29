@@ -5,7 +5,7 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLConstantBuffer : OpenGLBuffer, ConstantBuffer
     {
-        public OpenGLConstantBuffer() : base(BufferTarget.UniformBuffer) { }
+        public OpenGLConstantBuffer(int sizeInBytes) : base(BufferTarget.UniformBuffer, sizeInBytes) { }
 
         public OpenGLConstantBuffer(ConstantBufferDataProvider dataProvider) : base(BufferTarget.UniformBuffer)
         {

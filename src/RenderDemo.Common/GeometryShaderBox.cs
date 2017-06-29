@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Veldrid.Assets;
 using Veldrid.Graphics;
 
@@ -9,13 +10,13 @@ namespace Veldrid.RenderDemo
 {
     public class GeometryShaderBox : SwappableRenderItem
     {
-        private readonly ConstantBuffer _worldMatrixBuffer;
         private readonly int _indexCount = 1;
         private readonly Camera _camera;
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
         private Material _material;
+        private ConstantBuffer _worldMatrixBuffer;
         private readonly string _geometryShaderName;
 
         public Vector3 Position { get; set; }
@@ -54,9 +55,9 @@ namespace Veldrid.RenderDemo
             _material.Apply(rc);
             Matrix4x4 worldMatrix = Matrix4x4.CreateTranslation(Position);
             _worldMatrixBuffer.SetData(ref worldMatrix, 64);
-            rc.SetConstantBuffer(0, SharedDataProviders.GetBuffer("ProjectionMatrixBuffer"));
-            rc.SetConstantBuffer(1, SharedDataProviders.GetBuffer("ViewMatrixBuffer"));
-            rc.SetConstantBuffer(2, SharedDataProviders.GetBuffer("CameraInfoBuffer"));
+            rc.SetConstantBuffer(0, SharedDataProviders.ProjectionMatrixBuffer);
+            rc.SetConstantBuffer(1, SharedDataProviders.ViewMatrixBuffer);
+            rc.SetConstantBuffer(2, SharedDataProviders.CameraInfoBuffer);
             rc.SetConstantBuffer(3, _worldMatrixBuffer);
             rc.DrawIndexedPrimitives(_indexCount, 0, PrimitiveTopology.PointList);
         }
@@ -76,10 +77,11 @@ namespace Veldrid.RenderDemo
                 shaderSet,
                     new ShaderConstantDescription("ProjectionMatrixBuffer", ShaderConstantType.Matrix4x4), // Global
                     new ShaderConstantDescription("ViewMatrixBuffer", ShaderConstantType.Matrix4x4), // Global
-                    new ShaderConstantDescription("CameraInfoBuffer", ShaderConstantType.Custom), // Global
+                    new ShaderConstantDescription("CameraInfoBuffer", ShaderConstantType.Custom, Unsafe.SizeOf<Camera.Info>()), // Global
                     new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4)); // Local
             ShaderTextureBindingSlots slots = factory.CreateShaderTextureBindingSlots(shaderSet, Array.Empty<ShaderTextureInput>());
             _material = new Material(shaderSet, constantBindings, slots);
+            _worldMatrixBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
         }
 
         private void ClearDeviceResources()

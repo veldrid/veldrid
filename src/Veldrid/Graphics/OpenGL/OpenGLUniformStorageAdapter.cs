@@ -1,13 +1,12 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
-using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLUniformStorageAdapter : ConstantBuffer
+    public class OpenGLUniformStorageAdapter
     {
         private readonly int _programID;
         private readonly int _uniformLocation;
@@ -23,31 +22,6 @@ namespace Veldrid.Graphics.OpenGL
             GL.GetActiveUniforms(_programID, 1, ref uniformLocation, ActiveUniformParameter.UniformType, out typeVal);
             _uniformType = (ActiveUniformType)typeVal;
             _setterFunction = GetSetterFunction(_uniformType);
-        }
-
-        public unsafe void GetData(IntPtr storageLocation, int storageSizeInBytes)
-        {
-            if (storageSizeInBytes % sizeof(float) != 0)
-            {
-                throw new InvalidOperationException("Storage size must be a multiple of 4 bytes.");
-            }
-
-            float* floatPtr = (float*)storageLocation.ToPointer();
-            GL.GetUniform(_programID, _uniformLocation, floatPtr);
-        }
-
-        public void GetData<T>(ref T storageLocation, int storageSizeInBytes) where T : struct
-        {
-            GCHandle handle = GCHandle.Alloc(storageLocation, GCHandleType.Pinned);
-            GetData(handle.AddrOfPinnedObject(), storageSizeInBytes);
-            handle.Free();
-        }
-
-        public void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct
-        {
-            GCHandle handle = GCHandle.Alloc(storageLocation, GCHandleType.Pinned);
-            GetData(handle.AddrOfPinnedObject(), storageSizeInBytes);
-            handle.Free();
         }
 
         public void SetData(IntPtr data, int dataSizeInBytes)

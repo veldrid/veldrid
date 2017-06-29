@@ -18,7 +18,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public override ConstantBuffer CreateConstantBuffer(int sizeInBytes)
         {
-            return new OpenGLConstantBuffer();
+            return new OpenGLConstantBuffer(sizeInBytes);
         }
 
         public override Framebuffer CreateFramebuffer()

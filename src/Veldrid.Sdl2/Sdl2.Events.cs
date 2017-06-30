@@ -29,15 +29,30 @@ namespace Veldrid.Sdl2
     [StructLayout(LayoutKind.Sequential)]
     public struct SDL_WindowEvent
     {
-        public SDL_EventType type;        /**< ::SDL_WINDOWEVENT */
+        /// <summary>
+        /// SDL_WINDOWEVENT
+        /// </summary>
+        public SDL_EventType type;
         public uint timestamp;
-        public uint windowID;    /**< The associated window */
-        public SDL_WindowEventID @event;        /**< ::SDL_WindowEventID */
+        /// <summary>
+        /// The associated window
+        /// </summary>
+        public uint windowID;
+        /// <summary>
+        /// SDL_WindowEventID
+        /// </summary>
+        public SDL_WindowEventID @event;
         private byte padding1;
         private byte padding2;
         private byte padding3;
-        public int data1;       /**< event dependent data */
-        public int data2;       /**< event dependent data */
+        /// <summary>
+        /// event dependent data
+        /// </summary>
+        public int data1;
+        /// <summary>
+        /// event dependent data
+        /// </summary>
+        public int data2;
     }
 
     public enum SDL_WindowEventID : byte
@@ -117,7 +132,7 @@ namespace Veldrid.Sdl2
     /// </summary>
     public enum SDL_EventType
     {
-        FirstEvent = 0,     /**< Unused (do not remove) */
+        FirstEvent = 0,
 
         /* Application events */
 
@@ -140,58 +155,133 @@ namespace Veldrid.Sdl2
         /// </summary>
         LowMemory,
 
-        WillEnterBackground, /**< The application is about to enter the background
-                                          Called on iOS in applicationWillResignActive()
-                                          Called on Android in onPause()
-                                     */
-        DidEnterBackground, /**< The application did enter the background and may not get CPU for some time
-                                          Called on iOS in applicationDidEnterBackground()
-                                          Called on Android in onPause()
-                                     */
-        WillEnterForeground, /**< The application is about to enter the foreground
-                                          Called on iOS in applicationWillEnterForeground()
-                                          Called on Android in onResume()
-                                     */
-        DidEnterForeground, /**< The application is now interactive
-                                          Called on iOS in applicationDidBecomeActive()
-                                          Called on Android in onResume()
-                                     */
+        /// <summary>
+        /// The application is about to enter the background.
+        /// Called on iOS in applicationWillResignActive().
+        /// Called on Android in onPause()
+        /// </summary>
+        WillEnterBackground,
+        /// <summary>
+        /// The application did enter the background and may not get CPU for some time.
+        /// Called on iOS in applicationDidEnterBackground().
+        /// Called on Android in onPause()
+        /// </summary>
+        DidEnterBackground,
+        /// <summary>
+        /// The application is about to enter the foreground
+        /// Called on iOS in applicationWillEnterForeground()
+        /// Called on Android in onResume()
+        /// </summary>
+        WillEnterForeground,
+        /// <summary>
+        /// The application is now interactive
+        /// Called on iOS in applicationDidBecomeActive()
+        /// Called on Android in onResume()
+        /// </summary>
+        DidEnterForeground,
 
         /* Window events */
-        WindowEvent = 0x200, /**< Window state change */
-        SysWMEvent,             /**< System specific event */
+        /// <summary>
+        /// Window state change
+        /// </summary>
+        WindowEvent = 0x200,
+        /// <summary>
+        /// System specific event
+        /// </summary>
+        SysWMEvent,
 
         /* Keyboard events */
-        KeyDown = 0x300, /**< Key pressed */
-        KeyUp,                  /**< Key released */
-        TextEditing,            /**< Keyboard text editing (composition) */
-        TextInput,              /**< Keyboard text input */
-        KeyMapChanged,          /**< Keymap changed due to a system event such as an
-                                          input language or keyboard layout change.
-                                     */
+        /// <summary>
+        /// Key pressed
+        /// </summary>
+        KeyDown = 0x300,
+        /// <summary>
+        /// Key released
+        /// </summary>
+        KeyUp,
+        /// <summary>
+        /// Keyboard text editing (composition)
+        /// </summary>
+        TextEditing,
+        /// <summary>
+        /// Keyboard text input
+        /// </summary>
+        TextInput,
+        /// <summary>
+        /// Keymap changed due to a system event such as an input language or keyboard layout change.
+        /// </summary>
+        KeyMapChanged,
 
         /* Mouse events */
-        MouseMotion = 0x400, /**< Mouse moved */
-        MouseButtonDown,        /**< Mouse button pressed */
-        MouseButtonUp,          /**< Mouse button released */
-        MouseWheel,             /**< Mouse wheel motion */
+        /// <summary>
+        /// Mouse moved
+        /// </summary>
+        MouseMotion = 0x400,
+        MouseButtonDown,
+        /// <summary>
+        /// Mouse button released
+        /// </summary>
+        MouseButtonUp,
+        /// <summary>
+        /// Mouse wheel motion
+        /// </summary>
+        MouseWheel,
 
         /* Joystick events */
-        JoyAxisMotion = 0x600, /**< Joystick axis motion */
-        JoyBallMotion,          /**< Joystick trackball motion */
-        JoyHatMotion,           /**< Joystick hat position change */
-        JoyButtonDown,          /**< Joystick button pressed */
-        JoyButtonUp,            /**< Joystick button released */
-        JoyDeviceAdded,         /**< A new joystick has been inserted into the system */
-        JoyDeviceRemoved,       /**< An opened joystick has been removed */
+        /// <summary>
+        /// Joystick axis motion
+        /// </summary>
+        JoyAxisMotion = 0x600,
+        /// <summary>
+        /// Joystick trackball motion
+        /// </summary>
+        JoyBallMotion,
+        /// <summary>
+        /// Joystick hat position change
+        /// </summary>
+        JoyHatMotion,
+        /// <summary>
+        /// Joystick button pressed
+        /// </summary>
+        JoyButtonDown,
+        /// <summary>
+        /// Joystick button released
+        /// </summary>
+        JoyButtonUp,
+        /// <summary>
+        /// A new joystick has been inserted into the system
+        /// </summary>
+        JoyDeviceAdded,
+        /// <summary>
+        /// An opened joystick has been removed
+        /// </summary>
+        JoyDeviceRemoved,
 
         /* Game controller events */
-        ControllerAxisMotion = 0x650, /**< Game controller axis motion */
-        ControllerButtonDown,          /**< Game controller button pressed */
-        ControllerButtonUp,            /**< Game controller button released */
-        ControllerDeviceAdded,         /**< A new Game controller has been inserted into the system */
-        ControllerDeviceRemoved,       /**< An opened Game controller has been removed */
-        ControllerDeviceRemapped,      /**< The controller mapping was updated */
+        /// <summary>
+        /// Game controller axis motion
+        /// </summary>
+        ControllerAxisMotion = 0x650,
+        /// <summary>
+        /// Game controller button pressed
+        /// </summary>
+        ControllerButtonDown,
+        /// <summary>
+        /// Game controller button released
+        /// </summary>
+        ControllerButtonUp,
+        /// <summary>
+        /// A new Game controller has been inserted into the system
+        /// </summary>
+        ControllerDeviceAdded,
+        /// <summary>
+        /// An opened Game controller has been removed
+        /// </summary>
+        ControllerDeviceRemoved,
+        /// <summary>
+        /// The controller mapping was updated
+        /// </summary>
+        ControllerDeviceRemapped,
 
         /* Touch events */
         FingerDown = 0x700,
@@ -204,30 +294,55 @@ namespace Veldrid.Sdl2
         MultiGesture,
 
         /* Clipboard events */
-        ClipboardUpdate = 0x900, /**< The clipboard changed */
+        /// <summary>
+        /// The clipboard changed
+        /// </summary>
+        ClipboardUpdate = 0x900,
 
         /* Drag and drop events */
-        DropFile = 0x1000, /**< The system requests a file open */
-        DropTest,                 /**< text/plain drag-and-drop event */
-        DropBegin,                /**< A new set of drops is beginning (NULL filename) */
-        DropComplete,             /**< Current set of drops is now complete (NULL filename) */
+        /// <summary>
+        /// The system requests a file open
+        /// </summary>
+        DropFile = 0x1000,
+        /// <summary>
+        /// text/plain drag-and-drop event
+        /// </summary>
+        DropTest,
+        /// <summary>
+        /// A new set of drops is beginning (NULL filename) 
+        /// </summary>
+        DropBegin,
+        /// <summary>
+        /// Current set of drops is now complete (NULL filename)
+        /// </summary>
+        DropComplete,
 
         /* Audio hotplug events */
-        AudioDeviceAdded = 0x1100, /**< A new audio device is available */
-        AudioDeviceRemoved,        /**< An audio device has been removed. */
+        /// <summary>
+        /// A new audio device is available
+        /// </summary>
+        AudioDeviceAdded = 0x1100,
+        /// <summary>
+        /// An audio device has been removed.
+        /// </summary>
+        AudioDeviceRemoved,
 
         /* Render events */
-        RenderTargetsReset = 0x2000, /**< The render targets have been reset and their contents need to be updated */
-        RenderDeviceReset, /**< The device has been reset and all textures need to be recreated */
+        /// <summary>
+        /// The render targets have been reset and their contents need to be updated
+        /// </summary>
+        RenderTargetsReset = 0x2000,
+        /// <summary>
+        /// The device has been reset and all textures need to be recreated
+        /// </summary>
+        RenderDeviceReset,
 
-        /** Events ::SDL_USEREVENT through ::SDL_LASTEVENT are for your use,
-         *  and should be allocated with SDL_RegisterEvents()
-         */
+        /// <summary>
+        /// Events ::SDL_USEREVENT through ::SDL_LASTEVENT are for your use,
+        /// *  and should be allocated with SDL_RegisterEvents()
+        /// </summary>
         UserEvent = 0x8000,
 
-        /**
-         *  This last event is only for bounding internal arrays
-         */
         LastEvent = 0xFFFF
     }
 
@@ -357,17 +472,29 @@ namespace Veldrid.Sdl2
     /// </summary>
     public struct SDL_KeyboardEvent
     {
-        public SDL_EventType type;        /**< ::SDL_KEYDOWN or ::SDL_KEYUP */
+        /// <summary>
+        /// SDL_KEYDOWN or SDL_KEYUP
+        /// </summary>
+        public SDL_EventType type;
         public uint timestamp;
-        public uint windowID;    /**< The window with keyboard focus, if any */
+        /// <summary>
+        /// The window with keyboard focus, if any
+        /// </summary>
+        public uint windowID;
         /// <summary>
         /// Pressed (1) or Released (0).
         /// </summary>
         public byte state;
-        public byte repeat;       /**< Non-zero if this is a key repeat */
+        /// <summary>
+        /// Non-zero if this is a key repeat
+        /// </summary>
+        public byte repeat;
         public byte padding2;
         public byte padding3;
-        public SDL_Keysym keysym;  /**< The key that was pressed or released */
+        /// <summary>
+        /// The key that was pressed or released
+        /// </summary>
+        public SDL_Keysym keysym;
     }
 
     [StructLayout(LayoutKind.Sequential)]

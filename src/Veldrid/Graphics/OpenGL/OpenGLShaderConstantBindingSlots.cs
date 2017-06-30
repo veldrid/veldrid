@@ -20,7 +20,6 @@ namespace Veldrid.Graphics.OpenGL
         {
             Constants = constants;
             var programID = ((OpenGLShaderSet)shaderSet).ProgramID;
-            int bindingIndex = 0;
             int constantsCount = constants.Length;
             _bindings = new UniformBinding[constantsCount];
             for (int i = 0; i < constantsCount; i++)
@@ -31,12 +30,7 @@ namespace Veldrid.Graphics.OpenGL
                 if (blockIndex != -1)
                 {
                     ValidateBlockSize(programID, blockIndex, description.DataSizeInBytes, description.Name);
-                    _bindings[i] = new UniformBlockBinding(
-                        programID,
-                        blockIndex,
-                        bindingIndex,
-                        description.DataSizeInBytes);
-                    bindingIndex += 1;
+                    _bindings[i] = new UniformBinding(programID, blockIndex, description.DataSizeInBytes);
                 }
                 else
                 {
@@ -46,9 +40,8 @@ namespace Veldrid.Graphics.OpenGL
                         throw new InvalidOperationException($"No uniform or uniform block with name {description.Name} was found.");
                     }
 
-                    _bindings[i] = new UniformLocationBinding(
-                        programID,
-                        uniformLocation);
+                    OpenGLUniformStorageAdapter storageAdapter = new OpenGLUniformStorageAdapter(programID, uniformLocation);
+                    _bindings[i] = new UniformBinding(programID, storageAdapter);
                 }
             }
         }
@@ -84,65 +77,24 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-        public abstract class UniformBinding
+        public class UniformBinding
         {
             public int ProgramID { get; }
+            public int BlockLocation { get; } = -1;
+            public int DataSizeInBytes { get; } = -1;
+            public OpenGLUniformStorageAdapter StorageAdapter { get; }
 
-            public UniformBinding(int programID)
+            public UniformBinding(int programID, int blockLocation, int dataSizeInBytes)
             {
                 ProgramID = programID;
+                BlockLocation = blockLocation;
+                DataSizeInBytes = dataSizeInBytes;
             }
 
-            public abstract void Bind(OpenGLConstantBuffer cb);
-        }
-
-        [DebuggerDisplay("Prog:{ProgramID} BlockInd:{BlockIndex} BindingInd:{BindingIndex}")]
-        private class UniformBlockBinding : UniformBinding
-        {
-            private readonly int _dataSizeInBytes;
-
-            public int BlockIndex { get; }
-            public int BindingIndex { get; }
-
-            public UniformBlockBinding(
-                int programID,
-                int blockIndex,
-                int bindingIndex,
-                int dataSizeInBytes)
-                : base(programID)
+            public UniformBinding(int programID, OpenGLUniformStorageAdapter storageAdapter)
             {
-                _dataSizeInBytes = dataSizeInBytes;
-                BlockIndex = blockIndex;
-                BindingIndex = bindingIndex;
-            }
-
-            public override void Bind(OpenGLConstantBuffer cb)
-            {
-                cb.BindToBlock(ProgramID, BlockIndex, _dataSizeInBytes, BindingIndex);
-            }
-        }
-
-        private class UniformLocationBinding : UniformBinding
-        {
-            private readonly OpenGLUniformStorageAdapter _adapter;
-
-            public int UniformLocation { get; }
-
-            public UniformLocationBinding(
-                int programID,
-                int uniformLocation) : base(programID)
-            {
-                UniformLocation = uniformLocation;
-                _adapter = new OpenGLUniformStorageAdapter(programID, uniformLocation);
-            }
-
-
-            public unsafe override void Bind(OpenGLConstantBuffer cb)
-            {
-                byte* data = stackalloc byte[cb.BufferSize];
-
-                cb.GetData((IntPtr)data, cb.BufferSize);
-                _adapter.SetData((IntPtr)data, cb.BufferSize);
+                ProgramID = programID;
+                StorageAdapter = storageAdapter;
             }
         }
     }

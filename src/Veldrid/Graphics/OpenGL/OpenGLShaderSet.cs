@@ -1,10 +1,13 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
+using System.Collections.Generic;
 
 namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLShaderSet : ShaderSet
     {
+        private readonly Dictionary<int, OpenGLConstantBuffer> _boundConstantBuffers = new Dictionary<int, OpenGLConstantBuffer>();
+
         public OpenGLVertexInputLayout InputLayout { get; }
 
         public Shader VertexShader { get; }
@@ -49,6 +52,20 @@ namespace Veldrid.Graphics.OpenGL
                 string log = GL.GetProgramInfoLog(ProgramID);
                 throw new InvalidOperationException($"Error linking GL program: {log}");
             }
+        }
+
+        public bool BindConstantBuffer(int slot, int blockLocation, OpenGLConstantBuffer cb)
+        {
+            // NOTE: slot == uniformBlockIndex
+
+            if (_boundConstantBuffers.TryGetValue(slot, out OpenGLConstantBuffer boundCB) && boundCB == cb)
+            {
+                return false;
+            }
+
+            GL.UniformBlockBinding(ProgramID, blockLocation, slot);
+            _boundConstantBuffers[slot] = cb;
+            return true;
         }
 
         VertexInputLayout ShaderSet.InputLayout => InputLayout;

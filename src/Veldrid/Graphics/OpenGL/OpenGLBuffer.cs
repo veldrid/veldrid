@@ -27,7 +27,7 @@ namespace Veldrid.Graphics.OpenGL
 
         public int BufferSize => _bufferSize;
 
-        protected int BufferID => _bufferID;
+        public int BufferID => _bufferID;
 
         protected void Bind()
         {

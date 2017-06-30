@@ -4,15 +4,18 @@ using OpenTK.Graphics;
 using System.Runtime.InteropServices;
 using OpenTK;
 using Veldrid.Platform;
-using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLRenderContext : RenderContext, IDisposable
     {
+        private const int MaxConstantBufferSlots = 30; // Real limit?
+
         private readonly OpenGLResourceFactory _resourceFactory;
         private readonly GraphicsContext _openGLGraphicsContext;
         private readonly OpenGLDefaultFramebuffer _defaultFramebuffer;
+        private readonly OpenGLConstantBuffer[] _constantBuffersBySlot = new OpenGLConstantBuffer[MaxConstantBufferSlots];
         private readonly int _vertexArrayID;
         private PrimitiveType _primitiveType = PrimitiveType.Triangles;
         private int _vertexAttributesBound;
@@ -207,7 +210,42 @@ namespace Veldrid.Graphics.OpenGL
         protected override void PlatformSetConstantBuffer(int slot, ConstantBuffer cb)
         {
             OpenGLShaderConstantBindingSlots.UniformBinding binding = ShaderConstantBindingSlots.GetUniformBindingForSlot(slot);
-            binding.Bind((OpenGLConstantBuffer)cb);
+            if (binding.BlockLocation != -1)
+            { 
+                BindUniformBlock(ShaderSet, slot, binding.BlockLocation, (OpenGLConstantBuffer)cb);
+            }
+            else
+            {
+                Debug.Assert(binding.StorageAdapter != null);
+                SetUniformLocationDataSlow((OpenGLConstantBuffer)cb, binding.StorageAdapter);
+            }
+        }
+
+        private void BindUniformBlock(OpenGLShaderSet shaderSet, int slot, int blockLocation, OpenGLConstantBuffer cb)
+        {
+            if (slot > MaxConstantBufferSlots)
+            {
+                throw new InvalidOperationException($"Too many constant buffers used. Limit is {MaxConstantBufferSlots}.");
+            }
+
+            // Bind Constant Buffer to slot
+            if (_constantBuffersBySlot[slot] != cb)
+            {
+                GL.BindBufferRange(BufferRangeTarget.UniformBuffer, slot, cb.BufferID, IntPtr.Zero, cb.BufferSize);
+                _constantBuffersBySlot[slot] = cb;
+            }
+
+            // Bind slot to uniform block location.
+            shaderSet.BindConstantBuffer(slot, blockLocation, cb);
+        }
+
+        private unsafe void SetUniformLocationDataSlow(OpenGLConstantBuffer cb, OpenGLUniformStorageAdapter storageAdapter)
+        {
+            // NOTE: This is slow -- avoid using uniform locations in shader code. Prefer uniform blocks.
+            int dataSizeInBytes = cb.BufferSize;
+            byte* data = stackalloc byte[dataSizeInBytes];
+            cb.GetData((IntPtr)data, dataSizeInBytes);
+            storageAdapter.SetData((IntPtr)data, dataSizeInBytes);
         }
 
         protected override void PlatformSetShaderTextureBindingSlots(ShaderTextureBindingSlots bindingSlots)
@@ -313,5 +351,7 @@ namespace Veldrid.Graphics.OpenGL
         private new OpenGLTextureBindingSlots ShaderTextureBindingSlots => (OpenGLTextureBindingSlots)base.ShaderTextureBindingSlots;
 
         private new OpenGLShaderConstantBindingSlots ShaderConstantBindingSlots => (OpenGLShaderConstantBindingSlots)base.ShaderConstantBindingSlots;
+
+        private new OpenGLShaderSet ShaderSet => (OpenGLShaderSet)base.ShaderSet;
     }
 }

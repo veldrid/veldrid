@@ -150,7 +150,8 @@ namespace Veldrid.RenderDemo
             var rc = new OpenGLRenderContext(window, ci);
             if (debugContext)
             {
-                rc.EnableDebugCallback(OpenTK.Graphics.OpenGL.DebugSeverity.DebugSeverityNotification);
+                // Slows things down significantly -- Only use when debugging something specific.
+                // rc.EnableDebugCallback(OpenTK.Graphics.OpenGL.DebugSeverity.DebugSeverityNotification);
             }
             return rc;
         }

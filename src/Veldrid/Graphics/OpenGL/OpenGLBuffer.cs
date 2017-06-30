@@ -46,7 +46,6 @@ namespace Veldrid.Graphics.OpenGL
             Bind();
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
             GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, ref data);
-            Unbind();
         }
 
         public void SetData<T>(T[] data, int dataSizeInBytes) where T : struct
@@ -75,7 +74,6 @@ namespace Veldrid.Graphics.OpenGL
             Bind();
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
             GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, data);
-            Unbind();
         }
 
         public void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct
@@ -90,7 +88,6 @@ namespace Veldrid.Graphics.OpenGL
             int bytesToCopy = Math.Min(_bufferSize, storageSizeInBytes);
             Bind();
             GL.GetBufferSubData(_target, IntPtr.Zero, bytesToCopy, ref storageLocation);
-            Unbind();
         }
 
         public unsafe void GetData(IntPtr storageLocation, int storageSizeInBytes)
@@ -103,7 +100,6 @@ namespace Veldrid.Graphics.OpenGL
             {
                 throw new InvalidOperationException("UnmapBuffer failed.");
             }
-            Unbind();
         }
 
         private void EnsureBufferSize(int dataSizeInBytes)

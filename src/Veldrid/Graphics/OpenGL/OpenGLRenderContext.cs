@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using OpenTK;
 using Veldrid.Platform;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace Veldrid.Graphics.OpenGL
 {
@@ -14,6 +15,7 @@ namespace Veldrid.Graphics.OpenGL
 
         private readonly OpenGLResourceFactory _resourceFactory;
         private readonly GraphicsContext _openGLGraphicsContext;
+        private readonly HashSet<string> _extensions;
         private readonly OpenGLDefaultFramebuffer _defaultFramebuffer;
         private readonly OpenGLConstantBuffer[] _constantBuffersBySlot = new OpenGLConstantBuffer[MaxConstantBufferSlots];
         private readonly int _vertexArrayID;
@@ -44,6 +46,13 @@ namespace Veldrid.Graphics.OpenGL
             SetInitialStates();
 
             PostContextCreated();
+
+            int extensionCount = GL.GetInteger(GetPName.NumExtensions);
+            _extensions = new HashSet<string>();
+            for (int i = 0; i < extensionCount; i++)
+            {
+                _extensions.Add(GL.GetString(StringNameIndexed.Extensions, i));
+            }
         }
 
         public void EnableDebugCallback() => EnableDebugCallback(DebugSeverity.DebugSeverityNotification);
@@ -231,6 +240,7 @@ namespace Veldrid.Graphics.OpenGL
             // Bind Constant Buffer to slot
             if (_constantBuffersBySlot[slot] != cb)
             {
+                // TODO: Defer this work and use GL.BindBuffersRange
                 GL.BindBufferRange(BufferRangeTarget.UniformBuffer, slot, cb.BufferID, IntPtr.Zero, cb.BufferSize);
                 _constantBuffersBySlot[slot] = cb;
             }

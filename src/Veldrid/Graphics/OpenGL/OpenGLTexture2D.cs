@@ -39,7 +39,6 @@ namespace Veldrid.Graphics.OpenGL
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
 
-
             for (int currentLevel = 0; currentLevel < mipLevels; currentLevel++)
             {
                 // Set size, load empty data into texture

@@ -61,14 +61,17 @@ namespace Veldrid.Graphics
 
         public void SetSamplerState(int slot, SamplerState samplerState)
         {
-            bool mipmap = false;
-            if (_boundTexturesBySlot.TryGetValue(slot, out DeviceTexture boundTex) && boundTex != null)
+            if (!_boundSamplersBySlot.TryGetValue(slot, out BoundSamplerStateInfo bssi) || bssi.SamplerState != samplerState)
             {
-                mipmap = boundTex.MipLevels != 1;
-            }
+                bool mipmap = false;
+                if (_boundTexturesBySlot.TryGetValue(slot, out DeviceTexture boundTex) && boundTex != null)
+                {
+                    mipmap = boundTex.MipLevels != 1;
+                }
 
-            PlatformSetSamplerState(slot, samplerState, mipmap);
-            _boundSamplersBySlot[slot] = new BoundSamplerStateInfo(samplerState, mipmap);
+                PlatformSetSamplerState(slot, samplerState, mipmap);
+                _boundSamplersBySlot[slot] = new BoundSamplerStateInfo(samplerState, mipmap);
+            }
         }
 
         public SamplerState PointSampler

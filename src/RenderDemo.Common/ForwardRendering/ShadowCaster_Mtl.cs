@@ -18,9 +18,9 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private readonly ushort[] _indices;
         private readonly BoundingSphere _centeredBounds;
 
-        private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
+        private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
-        private readonly DynamicDataProvider<MtlMaterialProperties> _mtlPropertiesProvider = new DynamicDataProvider<MtlMaterialProperties>();
+        private readonly DynamicDataProvider<MtlMaterialProperties> _mtlPropertiesProvider;
 
         private readonly TextureData _overrideTextureData;
         private TextureData _alphaMapTextureData = RawTextureDataArray<RgbaByte>.FromSingleColor(RgbaByte.White);
@@ -30,22 +30,37 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
-        private Material _shadowPassMaterial;
-        private Material _regularPassMaterial;
         private ConstantBuffer _worldBuffer;
         private ConstantBuffer _inverseTransposeWorldBuffer;
         private ConstantBuffer _mtlPropertiesBuffer;
-        private DeviceTexture2D _overrideTexture;
+        private DeviceTexture2D _texture;
+        private ShaderTextureBinding _textureBinding;
         private DeviceTexture2D _alphaMapTexture;
-        private ShaderTextureBinding _overrideTextureBinding;
         private ShaderTextureBinding _alphaMapTextureBinding;
-        private SamplerState _shadowMapSampler;
         private bool _alphaMapNeedsRecreation = true;
         private bool _hasAlphaMap = false;
+        private Vector3 _scale = Vector3.One;
+
+        // Per-Render-Context resources. Shared between all objects.
+        private static ResourceFactory s_cachedResourceFactory;
+        private static Material s_shadowPassMaterial;
+        private static Material s_regularPassMaterial;
+        private static SamplerState s_shadowMapSampler;
 
         public Vector3 Position { get; set; }
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
-        public Vector3 Scale { get; set; } = Vector3.One;
+        public Vector3 Scale
+        {
+            get => _scale;
+            set { _scale = value; _worldProvider.Data = CreateWorldMatrix(); }
+        }
+
+        private Matrix4x4 CreateWorldMatrix()
+        {
+            return Matrix4x4.CreateScale(Scale)
+                * Matrix4x4.CreateFromQuaternion(Rotation)
+                * Matrix4x4.CreateTranslation(Position);
+        }
 
         public MtlMaterialProperties MaterialProperties
         {
@@ -66,32 +81,41 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         public MtlShadowCaster(
             RenderContext rc,
-            AssetDatabase ad,
             VertexPositionNormalTexture[] vertices,
             ushort[] indices,
             TextureData overrideTexture = null)
         {
             _vertices = vertices;
             _indices = indices;
+            _centeredBounds = BoundingSphere.CreateFromPoints(vertices);
 
             _overrideTextureData = overrideTexture;
 
+            InitializeContextObjects(rc);
+
+            _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, Utilities.CalculateInverseTranspose);
-
-            _centeredBounds = BoundingSphere.CreateFromPoints(vertices);
-
-            InitializeContextObjects(ad, rc);
+            _mtlPropertiesProvider = new DynamicDataProvider<MtlMaterialProperties>();
+            _worldProvider.DataChanged += () =>
+            {
+                _worldProvider.SetData(_worldBuffer); _inverseTransposeWorldProvider.SetData(_inverseTransposeWorldBuffer);
+            };
+            _worldProvider.Data = CreateWorldMatrix();
+            _mtlPropertiesProvider.DataChanged += () => _mtlPropertiesProvider.SetData(_mtlPropertiesBuffer);
         }
 
         public void ChangeRenderContext(AssetDatabase ad, RenderContext context)
         {
             Dispose();
-            InitializeContextObjects(ad, context);
+            InitializeContextObjects(context);
         }
 
-        private void InitializeContextObjects(AssetDatabase ad, RenderContext rc)
+        private void InitializeContextObjects(RenderContext rc)
         {
             ResourceFactory factory = rc.ResourceFactory;
+
+            CreateSharedResources(factory);
+
             _vb = factory.CreateVertexBuffer(_vertices.Length * VertexPositionNormalTexture.SizeInBytes, false);
             _vb.SetVertexData(
                 _vertices,
@@ -103,30 +127,12 @@ namespace Veldrid.RenderDemo.ForwardRendering
             _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Length, false);
             _ib.SetIndices(_indices, IndexFormat.UInt16);
 
-            _shadowPassMaterial = CreateShadowPassMaterial(rc.ResourceFactory);
-            _regularPassMaterial = CreateRegularPassMaterial(rc.ResourceFactory);
-
             _worldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
             _inverseTransposeWorldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
             _mtlPropertiesBuffer = factory.CreateConstantBuffer(ShaderConstantType.Float4);
 
-            if (_overrideTextureData != null)
-            {
-                _overrideTexture = _overrideTextureData.CreateDeviceTexture(factory);
-                _overrideTextureBinding = factory.CreateShaderTextureBinding(_overrideTexture);
-            }
-
-            _shadowMapSampler = rc.ResourceFactory.CreateSamplerState(
-                SamplerAddressMode.Border,
-                SamplerAddressMode.Border,
-                SamplerAddressMode.Border,
-                SamplerFilter.MinMagMipPoint,
-                1,
-                RgbaFloat.White,
-                DepthComparison.Always,
-                0,
-                int.MaxValue,
-                0);
+            _texture = _overrideTextureData.CreateDeviceTexture(factory);
+            _textureBinding = factory.CreateShaderTextureBinding(_texture);
 
             if (_alphaMapNeedsRecreation)
             {
@@ -135,19 +141,31 @@ namespace Veldrid.RenderDemo.ForwardRendering
             }
         }
 
-        private static Material CreateShadowPassMaterial(ResourceFactory factory)
+        private static void CreateSharedResources(ResourceFactory factory)
         {
             if (s_cachedResourceFactory != factory)
             {
-                s_cachedShadowPassMaterial = null;
-                s_cachedRegularPassMaterial = null;
                 s_cachedResourceFactory = factory;
-            }
-            else if (s_cachedShadowPassMaterial != null)
-            {
-                return s_cachedShadowPassMaterial;
-            }
+                CreateShadowPassMaterial(factory);
+                CreateRegularPassMaterial(factory);
 
+                s_shadowMapSampler = factory.CreateSamplerState(
+                    SamplerAddressMode.Border,
+                    SamplerAddressMode.Border,
+                    SamplerAddressMode.Border,
+                    SamplerFilter.MinMagMipPoint,
+                    1,
+                    RgbaFloat.White,
+                    DepthComparison.Always,
+                    0,
+                    int.MaxValue,
+                    0);
+
+            }
+        }
+
+        private static void CreateShadowPassMaterial(ResourceFactory factory)
+        {
             Shader vs = factory.CreateShader(ShaderType.Vertex, "shadowmap-vertex");
             Shader fs = factory.CreateShader(ShaderType.Fragment, "shadowmap-frag");
             VertexInputLayout inputLayout = factory.CreateInputLayout(
@@ -167,23 +185,11 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 shaderSet,
                 Array.Empty<ShaderTextureInput>());
 
-            s_cachedShadowPassMaterial = new Material(shaderSet, constantSlots, textureSlots);
-            return s_cachedShadowPassMaterial;
+            s_shadowPassMaterial = new Material(shaderSet, constantSlots, textureSlots);
         }
 
-        private static Material CreateRegularPassMaterial(ResourceFactory factory)
+        private static void CreateRegularPassMaterial(ResourceFactory factory)
         {
-            if (s_cachedResourceFactory != factory)
-            {
-                s_cachedShadowPassMaterial = null;
-                s_cachedRegularPassMaterial = null;
-                s_cachedResourceFactory = factory;
-            }
-            else if (s_cachedRegularPassMaterial != null)
-            {
-                return s_cachedRegularPassMaterial;
-            }
-
             Shader vs = factory.CreateShader(ShaderType.Vertex, "forward_mtl-vertex");
             Shader fs = factory.CreateShader(ShaderType.Fragment, "forward_mtl-frag");
             VertexInputLayout inputLayout = factory.CreateInputLayout(
@@ -201,7 +207,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 new ShaderConstantDescription("LightViewMatrixBuffer", ShaderConstantType.Matrix4x4),
                 new ShaderConstantDescription("LightInfoBuffer", ShaderConstantType.Float4),
                 new ShaderConstantDescription("CameraInfoBuffer", Unsafe.SizeOf<Camera.Info>()),
-                new ShaderConstantDescription("PointLightsBuffer",  Unsafe.SizeOf<PointLightsBuffer>()),
+                new ShaderConstantDescription("PointLightsBuffer", Unsafe.SizeOf<PointLightsBuffer>()),
                 new ShaderConstantDescription("WorldMatrixBuffer", ShaderConstantType.Matrix4x4),
                 new ShaderConstantDescription("InverseTransposeWorldMatrixBuffer", ShaderConstantType.Matrix4x4),
                 new ShaderConstantDescription("MaterialPropertiesBuffer", ShaderConstantType.Float4));
@@ -212,8 +218,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 new ShaderTextureInput(1, "AlphaMap"),
                 new ShaderTextureInput(2, "ShadowMap"));
 
-            s_cachedRegularPassMaterial = new Material(shaderSet, constantSlots, textureSlots);
-            return s_cachedRegularPassMaterial;
+            s_regularPassMaterial = new Material(shaderSet, constantSlots, textureSlots);
         }
 
         private void RecreateAlphaMapTextureResources(RenderContext rc)
@@ -228,8 +233,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
         {
             float distance = Vector3.Distance(Position, viewPosition);
-            uint materialHashCode = (uint)_regularPassMaterial.GetHashCode();
-            materialHashCode = (materialHashCode & 0xFFFF0000) | ((uint)_overrideTexture.GetHashCode() & 0x0000FFFF);
+            uint materialHashCode = (uint)s_regularPassMaterial.GetHashCode();
+            materialHashCode = (materialHashCode & 0xFFFF0000) | ((uint)_texture.GetHashCode() & 0x0000FFFF);
             return RenderOrderKey.Create(distance, materialHashCode);
         }
 
@@ -246,13 +251,9 @@ namespace Veldrid.RenderDemo.ForwardRendering
             rc.VertexBuffer = _vb;
             rc.IndexBuffer = _ib;
 
-            _worldProvider.SetData(_worldBuffer);
-            _inverseTransposeWorldProvider.SetData(_inverseTransposeWorldBuffer);
-            _mtlPropertiesProvider.SetData(_mtlPropertiesBuffer);
-
             if (pipelineStage == "ShadowMap")
             {
-                _shadowPassMaterial.Apply(rc);
+                s_shadowPassMaterial.Apply(rc);
                 rc.SetConstantBuffer(0, SharedDataProviders.LightProjMatrixBuffer);
                 rc.SetConstantBuffer(1, SharedDataProviders.LightViewMatrixBuffer);
                 rc.SetConstantBuffer(2, _worldBuffer);
@@ -260,7 +261,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             else
             {
                 Debug.Assert(pipelineStage == (!_hasAlphaMap ? "Standard" : "AlphaBlend"));
-                _regularPassMaterial.Apply(rc);
+                s_regularPassMaterial.Apply(rc);
                 rc.SetConstantBuffer(0, SharedDataProviders.ProjectionMatrixBuffer);
                 rc.SetConstantBuffer(1, SharedDataProviders.ViewMatrixBuffer);
                 rc.SetConstantBuffer(2, SharedDataProviders.LightProjMatrixBuffer);
@@ -272,12 +273,12 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 rc.SetConstantBuffer(8, _inverseTransposeWorldBuffer);
                 rc.SetConstantBuffer(9, _mtlPropertiesBuffer);
 
-                rc.SetTexture(0, _overrideTextureBinding);
+                rc.SetTexture(0, _textureBinding);
                 rc.SetTexture(1, _alphaMapTextureBinding);
                 rc.SetTexture(2, SharedTextures.GetTextureBinding("ShadowMap"));
                 rc.SetSamplerState(0, rc.Anisox4Sampler); // Surface texture
                 rc.SetSamplerState(1, rc.PointSampler); // Alpha map
-                rc.SetSamplerState(2, _shadowMapSampler); // Shadow map
+                rc.SetSamplerState(2, s_shadowMapSampler); // Shadow map
 
                 if (_hasAlphaMap)
                 {
@@ -285,15 +286,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                 }
             }
 
-            _worldProvider.Data =
-                Matrix4x4.CreateScale(Scale)
-                * Matrix4x4.CreateFromQuaternion(Rotation)
-                * Matrix4x4.CreateTranslation(Position);
-
             rc.DrawIndexedPrimitives(_indices.Length, 0);
-
-            rc.SetSamplerState(0, rc.PointSampler);
-            rc.SetSamplerState(2, rc.PointSampler);
 
             if (_hasAlphaMap)
             {
@@ -320,18 +313,13 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         public void Dispose()
         {
-            _regularPassMaterial.Dispose();
-            _shadowPassMaterial.Dispose();
-            _overrideTexture?.Dispose();
-            _overrideTextureBinding?.Dispose();
+            _texture?.Dispose();
+            _textureBinding?.Dispose();
             _alphaMapTexture?.Dispose();
             _alphaMapTextureBinding?.Dispose();
             _alphaMapNeedsRecreation = true;
             _vb.Dispose();
             _ib.Dispose();
-            _worldBuffer.Dispose();
-            _inverseTransposeWorldBuffer.Dispose();
-            _mtlPropertiesBuffer.Dispose();
         }
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
@@ -352,10 +340,6 @@ namespace Veldrid.RenderDemo.ForwardRendering
         {
             return string.Format("{0}, {1}", Name, BoundingBox.GetCenter());
         }
-
-        private static ResourceFactory s_cachedResourceFactory;
-        private static Material s_cachedShadowPassMaterial;
-        private static Material s_cachedRegularPassMaterial;
     }
 
     public struct MtlMaterialProperties : IEquatable<MtlMaterialProperties>

@@ -462,7 +462,7 @@ namespace Veldrid.RenderDemo
                         overrideTextureData = pink;
                     }
 
-                    MtlShadowCaster sc = new MtlShadowCaster(_rc, _ad, mesh.Vertices, mesh.Indices, overrideTextureData);
+                    MtlShadowCaster sc = new MtlShadowCaster(_rc, mesh.Vertices, mesh.Indices, overrideTextureData);
                     sc.Scale = new Vector3(0.1f);
                     sc.Name = group.Name + ":" + group.Material;
                     if (materialDef.AlphaMap != null)

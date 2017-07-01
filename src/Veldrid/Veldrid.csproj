@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ImageSharp" Version="1.0.0-alpha9-00140" />
-    <PackageReference Include="OpenTK.NETCore" Version="1.1.2571.6432" />
+    <PackageReference Include="OpenTK.NETCore" Version="1.1.2737.6432" />
     <PackageReference Include="SharpDX" Version="4.0.1" />
     <PackageReference Include="SharpDX.D3DCompiler" Version="4.0.1" />
     <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" />

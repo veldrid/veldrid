@@ -15,7 +15,7 @@ namespace Veldrid.Graphics.OpenGL
 
         private readonly OpenGLResourceFactory _resourceFactory;
         private readonly GraphicsContext _openGLGraphicsContext;
-        private readonly HashSet<string> _extensions;
+        private readonly OpenGLExtensions _extensions;
         private readonly OpenGLDefaultFramebuffer _defaultFramebuffer;
         private readonly OpenGLConstantBuffer[] _constantBuffersBySlot = new OpenGLConstantBuffer[MaxConstantBufferSlots];
         private readonly int _vertexArrayID;
@@ -48,11 +48,12 @@ namespace Veldrid.Graphics.OpenGL
             PostContextCreated();
 
             int extensionCount = GL.GetInteger(GetPName.NumExtensions);
-            _extensions = new HashSet<string>();
+            HashSet<string> extensions = new HashSet<string>();
             for (int i = 0; i < extensionCount; i++)
             {
-                _extensions.Add(GL.GetString(StringNameIndexed.Extensions, i));
+                extensions.Add(GL.GetString(StringNameIndexed.Extensions, i));
             }
+            _extensions = new OpenGLExtensions(extensions);
         }
 
         public void EnableDebugCallback() => EnableDebugCallback(DebugSeverity.DebugSeverityNotification);
@@ -77,6 +78,8 @@ namespace Veldrid.Graphics.OpenGL
                 }
             };
         }
+
+        public OpenGLExtensions Extensions => _extensions;
 
         public override ResourceFactory ResourceFactory => _resourceFactory;
 
@@ -264,9 +267,17 @@ namespace Veldrid.Graphics.OpenGL
 
         protected override void PlatformSetTexture(int slot, ShaderTextureBinding textureBinding)
         {
-            GL.ActiveTexture(TextureUnit.Texture0 + slot);
             OpenGLTexture boundTexture = (OpenGLTexture)textureBinding.BoundTexture;
-            boundTexture.Bind();
+            if (_extensions.ARB_DirectStateAccess)
+            {
+                GL.BindTextureUnit(slot, boundTexture.ID);
+            }
+            else
+            {
+                GL.ActiveTexture(TextureUnit.Texture0 + slot);
+                boundTexture.Bind();
+            }
+
             int uniformLocation = ShaderTextureBindingSlots.GetUniformLocation(slot);
             GL.Uniform1(uniformLocation, slot);
 
@@ -353,7 +364,7 @@ namespace Veldrid.Graphics.OpenGL
         {
             if (_vertexLayoutChanged)
             {
-                _vertexAttributesBound = ((OpenGLVertexInputLayout)ShaderSet.InputLayout).SetVertexAttributes(VertexBuffers, _vertexAttributesBound);
+                _vertexAttributesBound = ShaderSet.InputLayout.SetVertexAttributes(VertexBuffers, _vertexAttributesBound);
                 _vertexLayoutChanged = false;
             }
         }

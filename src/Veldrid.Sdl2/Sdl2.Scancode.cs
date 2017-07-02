@@ -68,21 +68,15 @@ namespace Veldrid.Sdl2
         SDL_SCANCODE_EQUALS = 46,
         SDL_SCANCODE_LEFTBRACKET = 47,
         SDL_SCANCODE_RIGHTBRACKET = 48,
-        SDL_SCANCODE_BACKSLASH = 49, /**< Located at the lower left of the return
-                                  *   key on ISO keyboards and at the right end
-                                  *   of the QWERTY row on ANSI keyboards.
-                                  *   Produces REVERSE SOLIDUS (backslash) and
-                                  *   VERTICAL LINE in a US layout, REVERSE
-                                  *   SOLIDUS and VERTICAL LINE in a UK Mac
-                                  *   layout, NUMBER SIGN and TILDE in a UK
-                                  *   Windows layout, DOLLAR SIGN and POUND SIGN
-                                  *   in a Swiss German layout, NUMBER SIGN and
-                                  *   APOSTROPHE in a German layout, GRAVE
-                                  *   ACCENT and POUND SIGN in a French Mac
-                                  *   layout, and ASTERISK and MICRO SIGN in a
-                                  *   French Windows layout.
-                                  */
-        SDL_SCANCODE_NONUSHASH = 50, /**< ISO USB keyboards actually use this code
+        /// <summary>
+        /// Located at the lower left of the return key on ISO keyboards and at the right end of the QWERTY row on
+        /// ANSI keyboards. Produces REVERSE SOLIDUS (backslash) and VERTICAL LINE in a US layout, REVERSE
+        /// SOLIDUS and VERTICAL LINE in a UK Mac layout, NUMBER SIGN and TILDE in a UK Windows layout, DOLLAR SIGN
+        /// and POUND SIGN in a Swiss German layout, NUMBER SIGN and APOSTROPHE in a German layout, GRAVE ACCENT and
+        /// POUND SIGN in a French Mac layout, and ASTERISK and MICRO SIGN in a French Windows layout.
+        /// </summary>
+        SDL_SCANCODE_BACKSLASH = 49, 
+        SDL_SCANCODE_NONUSHASH = 50, /* ISO USB keyboards actually use this code
                                   *   instead of 49 for the same key, but all
                                   *   OSes I've seen treat the two codes
                                   *   identically. So, as an implementor, unless
@@ -96,7 +90,7 @@ namespace Veldrid.Sdl2
                                   */
         SDL_SCANCODE_SEMICOLON = 51,
         SDL_SCANCODE_APOSTROPHE = 52,
-        SDL_SCANCODE_GRAVE = 53, /**< Located in the top left corner (on both ANSI
+        SDL_SCANCODE_GRAVE = 53, /* Located in the top left corner (on both ANSI
                               *   and ISO keyboards). Produces GRAVE ACCENT and
                               *   TILDE in a US Windows layout and in US and UK
                               *   Mac layouts on ANSI keyboards, GRAVE ACCENT
@@ -135,7 +129,7 @@ namespace Veldrid.Sdl2
         SDL_SCANCODE_PRINTSCREEN = 70,
         SDL_SCANCODE_SCROLLLOCK = 71,
         SDL_SCANCODE_PAUSE = 72,
-        SDL_SCANCODE_INSERT = 73, /**< insert on PC, help on some Mac keyboards (but
+        SDL_SCANCODE_INSERT = 73, /* insert on PC, help on some Mac keyboards (but
                                    does send code 73, not 117) */
         SDL_SCANCODE_HOME = 74,
         SDL_SCANCODE_PAGEUP = 75,
@@ -147,7 +141,7 @@ namespace Veldrid.Sdl2
         SDL_SCANCODE_DOWN = 81,
         SDL_SCANCODE_UP = 82,
 
-        SDL_SCANCODE_NUMLOCKCLEAR = 83, /**< num lock on PC, clear on Mac keyboards
+        SDL_SCANCODE_NUMLOCKCLEAR = 83, /* num lock on PC, clear on Mac keyboards
                                      */
         SDL_SCANCODE_KP_DIVIDE = 84,
         SDL_SCANCODE_KP_MULTIPLY = 85,
@@ -166,7 +160,7 @@ namespace Veldrid.Sdl2
         SDL_SCANCODE_KP_0 = 98,
         SDL_SCANCODE_KP_PERIOD = 99,
 
-        SDL_SCANCODE_NONUSBACKSLASH = 100, /**< This is the additional key that ISO
+        SDL_SCANCODE_NONUSBACKSLASH = 100, /* This is the additional key that ISO
                                         *   keyboards have over ANSI ones,
                                         *   located between left shift and Y.
                                         *   Produces GRAVE ACCENT and TILDE in a
@@ -176,8 +170,8 @@ namespace Veldrid.Sdl2
                                         *   LESS-THAN SIGN and GREATER-THAN SIGN
                                         *   in a Swiss German, German, or French
                                         *   layout. */
-        SDL_SCANCODE_APPLICATION = 101, /**< windows contextual menu, compose */
-        SDL_SCANCODE_POWER = 102, /**< The USB document says this is a status flag,
+        SDL_SCANCODE_APPLICATION = 101, /* windows contextual menu, compose */
+        SDL_SCANCODE_POWER = 102, /* The USB document says this is a status flag,
                                *   not a physical key - but some Mac keyboards
                                *   do have a power key. */
         SDL_SCANCODE_KP_EQUALS = 103,
@@ -198,7 +192,7 @@ namespace Veldrid.Sdl2
         SDL_SCANCODE_MENU = 118,
         SDL_SCANCODE_SELECT = 119,
         SDL_SCANCODE_STOP = 120,
-        SDL_SCANCODE_AGAIN = 121,   /**< redo */
+        SDL_SCANCODE_AGAIN = 121,   /* redo */
         SDL_SCANCODE_UNDO = 122,
         SDL_SCANCODE_CUT = 123,
         SDL_SCANCODE_COPY = 124,
@@ -214,27 +208,27 @@ namespace Veldrid.Sdl2
         SDL_SCANCODE_KP_COMMA = 133,
         SDL_SCANCODE_KP_EQUALSAS400 = 134,
 
-        SDL_SCANCODE_INTERNATIONAL1 = 135, /**< used on Asian keyboards, see
+        SDL_SCANCODE_INTERNATIONAL1 = 135, /* used on Asian keyboards, see
                                             footnotes in USB doc */
         SDL_SCANCODE_INTERNATIONAL2 = 136,
-        SDL_SCANCODE_INTERNATIONAL3 = 137, /**< Yen */
+        SDL_SCANCODE_INTERNATIONAL3 = 137, /* Yen */
         SDL_SCANCODE_INTERNATIONAL4 = 138,
         SDL_SCANCODE_INTERNATIONAL5 = 139,
         SDL_SCANCODE_INTERNATIONAL6 = 140,
         SDL_SCANCODE_INTERNATIONAL7 = 141,
         SDL_SCANCODE_INTERNATIONAL8 = 142,
         SDL_SCANCODE_INTERNATIONAL9 = 143,
-        SDL_SCANCODE_LANG1 = 144, /**< Hangul/English toggle */
-        SDL_SCANCODE_LANG2 = 145, /**< Hanja conversion */
-        SDL_SCANCODE_LANG3 = 146, /**< Katakana */
-        SDL_SCANCODE_LANG4 = 147, /**< Hiragana */
-        SDL_SCANCODE_LANG5 = 148, /**< Zenkaku/Hankaku */
-        SDL_SCANCODE_LANG6 = 149, /**< reserved */
-        SDL_SCANCODE_LANG7 = 150, /**< reserved */
-        SDL_SCANCODE_LANG8 = 151, /**< reserved */
-        SDL_SCANCODE_LANG9 = 152, /**< reserved */
+        SDL_SCANCODE_LANG1 = 144, /* Hangul/English toggle */
+        SDL_SCANCODE_LANG2 = 145, /* Hanja conversion */
+        SDL_SCANCODE_LANG3 = 146, /* Katakana */
+        SDL_SCANCODE_LANG4 = 147, /* Hiragana */
+        SDL_SCANCODE_LANG5 = 148, /* Zenkaku/Hankaku */
+        SDL_SCANCODE_LANG6 = 149, /* reserved */
+        SDL_SCANCODE_LANG7 = 150, /* reserved */
+        SDL_SCANCODE_LANG8 = 151, /* reserved */
+        SDL_SCANCODE_LANG9 = 152, /* reserved */
 
-        SDL_SCANCODE_ALTERASE = 153, /**< Erase-Eaze */
+        SDL_SCANCODE_ALTERASE = 153, /* Erase-Eaze */
         SDL_SCANCODE_SYSREQ = 154,
         SDL_SCANCODE_CANCEL = 155,
         SDL_SCANCODE_CLEAR = 156,
@@ -296,21 +290,21 @@ namespace Veldrid.Sdl2
 
         SDL_SCANCODE_LCTRL = 224,
         SDL_SCANCODE_LSHIFT = 225,
-        SDL_SCANCODE_LALT = 226, /**< alt, option */
-        SDL_SCANCODE_LGUI = 227, /**< windows, command (apple), meta */
+        SDL_SCANCODE_LALT = 226, /* alt, option */
+        SDL_SCANCODE_LGUI = 227, /* windows, command (apple), meta */
         SDL_SCANCODE_RCTRL = 228,
         SDL_SCANCODE_RSHIFT = 229,
-        SDL_SCANCODE_RALT = 230, /**< alt gr, option */
-        SDL_SCANCODE_RGUI = 231, /**< windows, command (apple), meta */
+        SDL_SCANCODE_RALT = 230, /* alt gr, option */
+        SDL_SCANCODE_RGUI = 231, /* windows, command (apple), meta */
 
-        SDL_SCANCODE_MODE = 257,    /**< I'm not sure if this is really not covered
+        SDL_SCANCODE_MODE = 257,    /* I'm not sure if this is really not covered
                                  *   by any of the above, but since there's a
                                  *   special KMOD_MODE for it I'm adding it here
                                  */
 
         /* @} *//* Usage page 0x07 */
 
-        /**
+        /*
          *  \name Usage page 0x0C
          *
          *  These values are mapped from usage page 0x0C (USB consumer page).
@@ -337,7 +331,7 @@ namespace Veldrid.Sdl2
 
         /* @} *//* Usage page 0x0C */
 
-        /**
+        /*
          *  \name Walther keys
          *
          *  These are values that Christian Walther added (for mac keyboard?).
@@ -346,7 +340,7 @@ namespace Veldrid.Sdl2
 
         SDL_SCANCODE_BRIGHTNESSDOWN = 275,
         SDL_SCANCODE_BRIGHTNESSUP = 276,
-        SDL_SCANCODE_DISPLAYSWITCH = 277, /**< display mirroring/dual display
+        SDL_SCANCODE_DISPLAYSWITCH = 277, /* display mirroring/dual display
                                            switch, video mode switch */
         SDL_SCANCODE_KBDILLUMTOGGLE = 278,
         SDL_SCANCODE_KBDILLUMDOWN = 279,
@@ -361,7 +355,7 @@ namespace Veldrid.Sdl2
 
         /* Add any other keys here. */
 
-        SDL_NUM_SCANCODES = 512 /**< not a key, just marks the number of scancodes
+        SDL_NUM_SCANCODES = 512 /* not a key, just marks the number of scancodes
                                  for array bounds */
     }
  }

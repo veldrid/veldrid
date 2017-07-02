@@ -306,18 +306,21 @@ namespace Veldrid.Graphics.Direct3D
                 && _vertexConstantBindings[slot] != cb)
             {
                 _deviceContext.VertexShader.SetConstantBuffer(slot, ((D3DConstantBuffer)cb).Buffer);
+                _vertexConstantBindings[slot] = (D3DConstantBuffer)cb;
             }
 
             if ((applicability & ShaderStageApplicabilityFlags.Geometry) == ShaderStageApplicabilityFlags.Geometry
                 && _geometryConstantBindings[slot] != cb)
             {
                 _deviceContext.GeometryShader.SetConstantBuffer(slot, ((D3DConstantBuffer)cb).Buffer);
+                _geometryConstantBindings[slot] = (D3DConstantBuffer)cb;
             }
 
             if ((applicability & ShaderStageApplicabilityFlags.Fragment) == ShaderStageApplicabilityFlags.Fragment
                 && _fragmentConstantBindings[slot] != cb)
             {
                 _deviceContext.PixelShader.SetConstantBuffer(slot, ((D3DConstantBuffer)cb).Buffer);
+                _fragmentConstantBindings[slot] = (D3DConstantBuffer)cb;
             }
         }
 

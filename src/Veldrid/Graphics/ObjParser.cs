@@ -95,16 +95,16 @@ namespace Veldrid.Graphics
 
             private string _materialLibName;
 
-            private readonly ReadOnlySpan<char> _globalFileGroup = new ReadOnlySpan<char>("GlobalFileGroup".ToCharArray());
-            private readonly ReadOnlySpan<char> _span_off = new ReadOnlySpan<char>("off".ToCharArray());
-            private readonly ReadOnlySpan<char> _span_v = new ReadOnlySpan<char>(new char[] { 'v' });
-            private readonly ReadOnlySpan<char> _span_vn = new ReadOnlySpan<char>(new char[] { 'v', 'n' });
-            private readonly ReadOnlySpan<char> _span_vt = new ReadOnlySpan<char>(new char[] { 'v', 't' });
-            private readonly ReadOnlySpan<char> _span_g = new ReadOnlySpan<char>(new char[] { 'g' });
-            private readonly ReadOnlySpan<char> _span_usemtl = new ReadOnlySpan<char>(new char[] { 'u', 's', 'e', 'm', 't', 'l' });
-            private readonly ReadOnlySpan<char> _span_s = new ReadOnlySpan<char>(new char[] { 's' });
-            private readonly ReadOnlySpan<char> _span_f = new ReadOnlySpan<char>(new char[] { 'f' });
-            private readonly ReadOnlySpan<char> _span_mtllib = new ReadOnlySpan<char>(new char[] { 'm', 't', 'l', 'l', 'i', 'b' });
+            private static readonly ReadOnlySpan<char> _span_globalFileGroup = new ReadOnlySpan<char>("GlobalFileGroup".ToCharArray());
+            private static readonly ReadOnlySpan<char> _span_off = new ReadOnlySpan<char>(new char[] { 'o', 'f', 'f' });
+            private static readonly ReadOnlySpan<char> _span_v = new ReadOnlySpan<char>(new char[] { 'v' });
+            private static readonly ReadOnlySpan<char> _span_vn = new ReadOnlySpan<char>(new char[] { 'v', 'n' });
+            private static readonly ReadOnlySpan<char> _span_vt = new ReadOnlySpan<char>(new char[] { 'v', 't' });
+            private static readonly ReadOnlySpan<char> _span_g = new ReadOnlySpan<char>(new char[] { 'g' });
+            private static readonly ReadOnlySpan<char> _span_usemtl = new ReadOnlySpan<char>(new char[] { 'u', 's', 'e', 'm', 't', 'l' });
+            private static readonly ReadOnlySpan<char> _span_s = new ReadOnlySpan<char>(new char[] { 's' });
+            private static readonly ReadOnlySpan<char> _span_f = new ReadOnlySpan<char>(new char[] { 'f' });
+            private static readonly ReadOnlySpan<char> _span_mtllib = new ReadOnlySpan<char>(new char[] { 'm', 't', 'l', 'l', 'i', 'b' });
 
             public void Process(ReadOnlySpan<char> line)
             {
@@ -327,7 +327,7 @@ namespace Veldrid.Graphics
 
             public void EndOfFileReached()
             {
-                _currentGroupName = !_currentGroupName.IsEmpty ? _currentGroupName : _globalFileGroup;
+                _currentGroupName = !_currentGroupName.IsEmpty ? _currentGroupName : _span_globalFileGroup;
                 _groups.Add(new ObjFile.MeshGroup(GetString(_currentGroupName), GetString(_currentMaterial), _currentGroupFaces.ToArray()));
             }
 

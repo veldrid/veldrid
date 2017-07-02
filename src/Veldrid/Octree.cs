@@ -131,10 +131,11 @@ namespace Veldrid
     {
         private readonly List<OctreeItem<T>> _items = new List<OctreeItem<T>>();
         private readonly OctreeNodeCache _nodeCache;
+        private OctreeNode<T>[] _children = Array.Empty<OctreeNode<T>>();
 
         public BoundingBox Bounds { get; private set; }
         public int MaxChildren { get; private set; }
-        public OctreeNode<T>[] Children { get; private set; } = Array.Empty<OctreeNode<T>>();
+        public OctreeNode<T>[] Children { get => _children; private set => _children = value; }
         public OctreeNode<T> Parent { get; private set; }
 
         private const int NumChildNodes = 8;
@@ -204,9 +205,9 @@ namespace Veldrid
                 newRoot = null;
 
                 // It may have moved into the bounds of a child node.
-                foreach (var child in Children)
+                for (int i = 0; i < _children.Length; i++)
                 {
-                    if (child.CoreAddItem(item))
+                    if (_children[i].CoreAddItem(item))
                     {
                         _items.Remove(item);
                         break;
@@ -290,7 +291,7 @@ namespace Veldrid
 
         private void ConsiderConsolidation()
         {
-            if (Children.Length > 0 && GetItemCount() < MaxChildren)
+            if (_children.Length > 0 && GetItemCount() < MaxChildren)
             {
                 ConsolidateChildren();
                 Parent?.ConsiderConsolidation();
@@ -299,8 +300,9 @@ namespace Veldrid
 
         private void ConsolidateChildren()
         {
-            foreach (var child in Children)
+            for (int i = 0; i < _children.Length; i++)
             {
+                OctreeNode<T> child = _children[i];
                 child.ConsolidateChildren();
 
                 foreach (var childItem in child._items)
@@ -370,9 +372,9 @@ namespace Veldrid
                         numHits += filter(ray, item.Item, hits);
                     }
                 }
-                foreach (var child in Children)
+                for (int i =0; i < _children.Length;i++)
                 {
-                    numHits += child.RayCast(ray, hits, filter);
+                    numHits += _children[i].RayCast(ray, hits, filter);
                 }
 
                 return numHits;
@@ -388,15 +390,16 @@ namespace Veldrid
 
         private BoundingBox CoreGetPreciseBounds(ref Vector3 min, ref Vector3 max)
         {
-            foreach (var item in _items)
+            for (int i = 0; i < _items.Count; i++)
             {
+                OctreeItem<T> item = _items[i];
                 min = Vector3.Min(min, item.Bounds.Min);
                 max = Vector3.Max(max, item.Bounds.Max);
             }
-
-            foreach (var child in Children)
+            
+            for (int i = 0; i < _children.Length; i++)
             {
-                child.CoreGetPreciseBounds(ref min, ref max);
+                _children[i].CoreGetPreciseBounds(ref min, ref max);
             }
 
             return new BoundingBox(min, max);
@@ -405,9 +408,9 @@ namespace Veldrid
         public int GetItemCount()
         {
             int count = _items.Count;
-            for (int i = 0; i < Children.Length; i++)
+            for (int i = 0; i < _children.Length; i++)
             {
-                count += Children[i].GetItemCount();
+                count += _children[i].GetItemCount();
             }
 
             return count;
@@ -422,8 +425,9 @@ namespace Veldrid
             }
             else if (ct == ContainmentType.Intersects)
             {
-                foreach (var octreeItem in _items)
+                for (int i = 0; i < _items.Count; i++)
                 {
+                    OctreeItem<T> octreeItem = _items[i];
                     if (frustum.Contains(octreeItem.Bounds) != ContainmentType.Disjoint)
                     {
                         if (filter == null || filter(octreeItem.Item))
@@ -432,23 +436,13 @@ namespace Veldrid
                         }
                     }
                 }
-                foreach (var child in Children)
+                for (int i = 0; i < _children.Length; i++)
                 {
-                    child.CoreGetContainedObjects(ref frustum, results, filter);
+                    _children[i].CoreGetContainedObjects(ref frustum, results, filter);
                 }
             }
 
             return frustum;
-        }
-
-        private bool AnyChild(Func<OctreeItem<T>, bool> filter)
-        {
-            if (_items.Any(filter))
-            {
-                return true;
-            }
-
-            return Children.Any(node => node.AnyChild(filter));
         }
 
         public IEnumerable<OctreeItem<T>> GetAllOctreeItems()
@@ -468,16 +462,17 @@ namespace Veldrid
 
         private void CoreGetAllContainedObjects(List<T> results, Func<T, bool> filter)
         {
-            foreach (var octreeItem in _items)
+            for (int i = 0; i < _items.Count; i++)
             {
+                OctreeItem<T> octreeItem = _items[i];
                 if (filter == null || filter(octreeItem.Item))
                 {
                     results.Add(octreeItem.Item);
                 }
             }
-            foreach (var child in Children)
+            for (int i = 0; i < _children.Length; i++)
             {
-                child.CoreGetAllContainedObjects(results, filter);
+                _children[i].CoreGetAllContainedObjects(results, filter);
             }
         }
 
@@ -504,15 +499,15 @@ namespace Veldrid
 
         private void RecycleChildren()
         {
-            if (Children.Length != 0)
+            if (_children.Length != 0)
             {
-                foreach (var child in Children)
+                for (int i = 0; i < _children.Length; i++)
                 {
-                    child.RecycleNode();
+                    _children[i].RecycleNode();
                 }
 
-                _nodeCache.AddAndClearChildrenArray(Children);
-                Children = Array.Empty<OctreeNode<T>>();
+                _nodeCache.AddAndClearChildrenArray(_children);
+                _children = Array.Empty<OctreeNode<T>>();
             }
         }
 
@@ -523,7 +518,7 @@ namespace Veldrid
                 return false;
             }
 
-            if (_items.Count >= MaxChildren && Children.Length == 0)
+            if (_items.Count >= MaxChildren && _children.Length == 0)
             {
                 OctreeNode<T> newNode = SplitChildren(ref item.Bounds, null);
                 if (newNode != null)
@@ -533,11 +528,11 @@ namespace Veldrid
                     return true;
                 }
             }
-            else if (Children.Length > 0)
+            else if (_children.Length > 0)
             {
-                foreach (var child in Children)
+                for (int i = 0; i < _children.Length; i++)
                 {
-                    if (child.CoreAddItem(item))
+                    if (_children[i].CoreAddItem(item))
                     {
                         return true;
                     }
@@ -546,7 +541,7 @@ namespace Veldrid
 
             // Couldn't fit in any children.
 #if DEBUG
-            foreach (var child in Children)
+            foreach (var child in _children)
             {
                 Debug.Assert(child.Bounds.Contains(ref item.Bounds) != ContainmentType.Contains);
             }
@@ -561,10 +556,10 @@ namespace Veldrid
         // Splits the node into 8 children
         private OctreeNode<T> SplitChildren(ref BoundingBox itemBounds, OctreeNode<T> existingChild)
         {
-            Debug.Assert(Children.Length == 0, "Children must be empty before SplitChildren is called.");
+            Debug.Assert(_children.Length == 0, "Children must be empty before SplitChildren is called.");
 
             OctreeNode<T> childBigEnough = null;
-            Children = _nodeCache.GetChildrenArray();
+            _children = _nodeCache.GetChildrenArray();
             Vector3 center = Bounds.GetCenter();
             Vector3 dimensions = Bounds.GetDimensions();
 
@@ -599,7 +594,7 @@ namespace Veldrid
                         }
 
                         newChild.Parent = this;
-                        Children[i] = newChild;
+                        _children[i] = newChild;
                         i++;
                     }
                 }
@@ -607,9 +602,9 @@ namespace Veldrid
 
             PushItemsToChildren();
 #if DEBUG
-            for (int g = 0; g < Children.Length; g++)
+            for (int g = 0; g < _children.Length; g++)
             {
-                Debug.Assert(Children[g] != null);
+                Debug.Assert(_children[g] != null);
             }
 #endif
             return childBigEnough;
@@ -619,10 +614,10 @@ namespace Veldrid
         {
             for (int i = 0; i < _items.Count; i++)
             {
-                var item = _items[i];
-                foreach (var child in Children)
+                OctreeItem<T> item = _items[i];
+                for (int c = 0; c < _children.Length; c++)
                 {
-                    if (child.CoreAddItem(item))
+                    if (_children[c].CoreAddItem(item))
                     {
                         _items.Remove(item);
                         i--;
@@ -632,11 +627,11 @@ namespace Veldrid
             }
 
 #if DEBUG
-            foreach (var i in _items)
+            for (int i = 0; i < _items.Count; i++)
             {
-                foreach (var child in Children)
+                for (int c = 0; c < _children.Length; c++)
                 {
-                    Debug.Assert(child.Bounds.Contains(ref i.Bounds) != ContainmentType.Contains);
+                    Debug.Assert(_children[c].Bounds.Contains(ref _items[i].Bounds) != ContainmentType.Contains);
                 }
             }
 #endif
@@ -712,10 +707,10 @@ namespace Veldrid
             _items.Clear();
             Parent = null;
 
-            if (Children.Length != 0)
+            if (_children.Length != 0)
             {
                 _nodeCache.AddAndClearChildrenArray(Children);
-                Children = Array.Empty<OctreeNode<T>>();
+                _children = Array.Empty<OctreeNode<T>>();
             }
         }
 
@@ -727,8 +722,9 @@ namespace Veldrid
         /// <returns>true if the item was contained in the Octree; false otherwise.</returns>
         internal bool TryGetContainedOctreeItem(T item, out OctreeItem<T> octreeItem)
         {
-            foreach (var containedItem in _items)
+            for (int i = 0; i < _items.Count; i++)
             {
+                OctreeItem<T> containedItem = _items[i];
                 if (containedItem.Item.Equals(item))
                 {
                     octreeItem = containedItem;
@@ -736,8 +732,9 @@ namespace Veldrid
                 }
             }
 
-            foreach (var child in Children)
+            for (int i = 0; i < _children.Length; i++)
             {
+                OctreeNode<T> child = _children[i];
                 Debug.Assert(child != null, "node child cannot be null.");
                 if (child.TryGetContainedOctreeItem(item, out octreeItem))
                 {
@@ -758,8 +755,9 @@ namespace Veldrid
             if (_items.Count == 0)
             {
                 OctreeNode<T> loneChild = null;
-                foreach (var child in Children)
+                for (int i = 0; i < _children.Length; i++)
                 {
+                    OctreeNode<T> child = _children[i];
                     if (child.GetItemCount() != 0)
                     {
                         if (loneChild != null)
@@ -776,8 +774,9 @@ namespace Veldrid
                 if (loneChild != null)
                 {
                     // Recycle excess
-                    foreach (var child in Children)
+                    for (int i = 0; i < _children.Length; i++)
                     {
+                        OctreeNode<T> child = _children[i];
                         if (child != loneChild)
                         {
                             child.RecycleNode();
@@ -797,13 +796,14 @@ namespace Veldrid
 
         internal void CollectPendingMoves(List<OctreeItem<T>> pendingMoves)
         {
-            foreach (var child in Children)
+            for (int i = 0; i < _children.Length; i++)
             {
-                child.CollectPendingMoves(pendingMoves);
+                _children[i].CollectPendingMoves(pendingMoves);
             }
 
-            foreach (var item in _items)
+            for (int i = 0; i < _items.Count; i++)
             {
+                OctreeItem<T> item = _items[i];
                 if (item.HasPendingMove)
                 {
                     pendingMoves.Add(item);
@@ -839,13 +839,14 @@ namespace Veldrid
                 Debug.Assert(!_cachedNodes.Contains(child));
                 if (_cachedNodes.Count < MaxCachedItemCount)
                 {
-                    foreach (var item in child._items)
+                    for (int i = 0; i < child._items.Count; i++)
                     {
+                        OctreeItem<T> item = child._items[i];
                         item.Item = default(T);
                         item.Container = null;
                     }
                     child.Parent = null;
-                    child.Children = Array.Empty<OctreeNode<T>>();
+                    child._children = Array.Empty<OctreeNode<T>>();
 
                     _cachedNodes.Push(child);
                 }
@@ -892,7 +893,7 @@ namespace Veldrid
             {
                 if (_cachedChildren.Count > 0)
                 {
-                    var children = _cachedChildren.Pop();
+                    OctreeNode<T>[] children = _cachedChildren.Pop();
 #if DEBUG
                     Debug.Assert(children.Length == 8);
                     for (int i = 0; i < children.Length; i++)

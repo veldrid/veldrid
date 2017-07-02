@@ -65,11 +65,6 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DFramebuffer(_device, colorTexture, depthTexture);
         }
 
-        public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic)
-        {
-            return new D3DIndexBuffer(_device, sizeInBytes, isDynamic);
-        }
-
         public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format)
         {
             return new D3DIndexBuffer(_device, sizeInBytes, isDynamic, D3DFormats.VeldridToD3DIndexFormat(format));

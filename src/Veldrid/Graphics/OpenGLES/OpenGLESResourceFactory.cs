@@ -45,10 +45,6 @@ namespace Veldrid.Graphics.OpenGLES
             return new OpenGLESFramebuffer(colorTexture, depthTexture);
         }
 
-        public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic)
-        {
-            return new OpenGLESIndexBuffer(isDynamic);
-        }
         public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format)
         {
             return new OpenGLESIndexBuffer(isDynamic, OpenGLESFormats.MapIndexFormat(format));

@@ -23,8 +23,11 @@ namespace Veldrid.Graphics
         {
             for (int i = 0; i < renderItems.Count; i++)
             {
-                Debug.Assert(renderItems[i] != null);
-                Add(renderItems[i], viewPosition);
+                RenderItem renderItem = renderItems[i];
+                if (renderItem != null)
+                {
+                    Add(renderItem, viewPosition);
+                }
             }
         }
 

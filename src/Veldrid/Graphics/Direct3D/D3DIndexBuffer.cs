@@ -18,11 +18,6 @@ namespace Veldrid.Graphics.Direct3D
                 isDynamic ? ResourceUsage.Dynamic : ResourceUsage.Default,
                 isDynamic ? CpuAccessFlags.Write : CpuAccessFlags.None)
         {
-            if (format == SharpDX.DXGI.Format.Unknown)
-            {
-                throw new InvalidOperationException("IndexBuffer format is Unknown.");
-            }
-
             _format = format;
             _device = device;
         }
@@ -38,11 +33,6 @@ namespace Veldrid.Graphics.Direct3D
         public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
         {
             SharpDX.DXGI.Format dxgiFormat = D3DFormats.VeldridToD3DIndexFormat(format);
-            if (dxgiFormat == SharpDX.DXGI.Format.Unknown)
-            {
-                throw new InvalidOperationException("IndexBuffer format is Unknown.");
-            }
-
             _format = dxgiFormat;
             int elementSizeInBytes = Unsafe.SizeOf<T>();
             SetData(indices, elementSizeInBytes * indices.Length, elementOffset * elementSizeInBytes);
@@ -61,11 +51,6 @@ namespace Veldrid.Graphics.Direct3D
         {
             SetData(indices, elementSizeInBytes * count, elementSizeInBytes * elementOffset);
             SharpDX.DXGI.Format dxgiFormat = D3DFormats.VeldridToD3DIndexFormat(format);
-            if (dxgiFormat == SharpDX.DXGI.Format.Unknown)
-            {
-                throw new InvalidOperationException("IndexBuffer format is Unknown.");
-            }
-
             _format = dxgiFormat;
         }
     }

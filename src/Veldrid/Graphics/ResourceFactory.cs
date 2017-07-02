@@ -52,7 +52,7 @@ namespace Veldrid.Graphics
         /// <param name="sizeInBytes">The total capacity in bytes of the buffer.</param>
         /// <param name="isDynamic">A value indicating whether or not the buffer should be optimized for dynamic access.</param>
         /// <returns>A new <see cref="IndexBuffer"/></returns>
-        public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic);
+        public IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic) => CreateIndexBuffer(sizeInBytes, isDynamic, IndexFormat.UInt16);
         /// <summary>
         /// Constructs a <see cref="IndexBuffer"/> with the given storage size.
         /// </summary>

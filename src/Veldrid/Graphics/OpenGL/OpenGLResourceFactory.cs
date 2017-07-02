@@ -47,10 +47,6 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLFramebuffer(colorTexture, depthTexture);
         }
 
-        public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic)
-        {
-            return new OpenGLIndexBuffer(isDynamic);
-        }
         public override IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format)
         {
             return new OpenGLIndexBuffer(isDynamic, OpenGLFormats.MapIndexFormat(format));

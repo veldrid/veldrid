@@ -21,12 +21,10 @@ namespace Veldrid.Graphics
 
         public void AddRange(List<RenderItem> renderItems, Vector3 viewPosition)
         {
-            foreach (RenderItem item in renderItems)
+            for (int i = 0; i < renderItems.Count; i++)
             {
-                if (item != null)
-                {
-                    Add(item, viewPosition);
-                }
+                Debug.Assert(renderItems[i] != null);
+                Add(renderItems[i], viewPosition);
             }
         }
 

@@ -18,17 +18,17 @@ namespace Veldrid.Graphics.Direct3D
                 isDynamic ? ResourceUsage.Dynamic : ResourceUsage.Default,
                 isDynamic ? CpuAccessFlags.Write : CpuAccessFlags.None)
         {
-            _device = device;
-            _format = format;
-        }
-
-        public void Apply()
-        {
-            if (_format == SharpDX.DXGI.Format.Unknown)
+            if (format == SharpDX.DXGI.Format.Unknown)
             {
                 throw new InvalidOperationException("IndexBuffer format is Unknown.");
             }
 
+            _format = format;
+            _device = device;
+        }
+
+        public void Apply()
+        {
             _device.ImmediateContext.InputAssembler.SetIndexBuffer(Buffer, _format, _offset);
         }
 
@@ -37,7 +37,13 @@ namespace Veldrid.Graphics.Direct3D
 
         public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
         {
-            _format = D3DFormats.VeldridToD3DIndexFormat(format);
+            SharpDX.DXGI.Format dxgiFormat = D3DFormats.VeldridToD3DIndexFormat(format);
+            if (dxgiFormat == SharpDX.DXGI.Format.Unknown)
+            {
+                throw new InvalidOperationException("IndexBuffer format is Unknown.");
+            }
+
+            _format = dxgiFormat;
             int elementSizeInBytes = Unsafe.SizeOf<T>();
             SetData(indices, elementSizeInBytes * indices.Length, elementOffset * elementSizeInBytes);
         }
@@ -54,7 +60,13 @@ namespace Veldrid.Graphics.Direct3D
         public void SetIndices(IntPtr indices, IndexFormat format, int elementSizeInBytes, int count, int elementOffset)
         {
             SetData(indices, elementSizeInBytes * count, elementSizeInBytes * elementOffset);
-            _format = D3DFormats.VeldridToD3DIndexFormat(format);
+            SharpDX.DXGI.Format dxgiFormat = D3DFormats.VeldridToD3DIndexFormat(format);
+            if (dxgiFormat == SharpDX.DXGI.Format.Unknown)
+            {
+                throw new InvalidOperationException("IndexBuffer format is Unknown.");
+            }
+
+            _format = dxgiFormat;
         }
     }
 }

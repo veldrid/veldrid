@@ -996,7 +996,8 @@ namespace Veldrid.RenderDemo
                 }
                 if (_window.WindowState == WindowState.BorderlessFullScreen)
                 {
-                    ImGui.Text(string.Format("{0} FPS ({1} ms)", _fta.CurrentAverageFramesPerSecond.ToString("0.0"), _fta.CurrentAverageFrameTimeSeconds.ToString("#00.00")));
+                    string apiName = (_rc is OpenGLRenderContext) ? "OpenGL" : (_rc is OpenGLESRenderContext) ? "OpenGL ES" : "Direct3D";
+                    ImGui.Text($"[{apiName}] " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTimeMilliseconds.ToString("#00.00 ms"));
                 }
 
                 ImGui.EndMainMenuBar();
@@ -1057,10 +1058,6 @@ https://github.com/mellinoe/veldrid.");
                 CreatedResourceCache.ClearCache();
                 ImGuiImageHelper.InvalidateCache();
                 SharedDataProviders.ChangeRenderContext(newContext);
-                foreach (var kvp in _rc.TextureProviders)
-                {
-                    newContext.TextureProviders[kvp.Key] = kvp.Value;
-                }
 
                 _renderer.SetRenderContext(newContext);
 

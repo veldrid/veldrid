@@ -3,7 +3,7 @@
     /// <summary>
     /// Describes which primitive faces to cull in the rasterizer.
     /// </summary>
-    public enum FaceCullingMode
+    public enum FaceCullingMode : byte
     {
         /// <summary>
         /// Cull the back faces of primitives.

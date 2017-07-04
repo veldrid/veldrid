@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.Graphics
 {
-    public enum ShaderConstantType
+    public enum ShaderConstantType : byte
     {
         Boolean,
         Int1,

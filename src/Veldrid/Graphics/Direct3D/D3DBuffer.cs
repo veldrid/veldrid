@@ -1,12 +1,10 @@
 ﻿using SharpDX.Direct3D11;
 using SharpDX;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
 using System;
 
 namespace Veldrid.Graphics.Direct3D
 {
-    public abstract class D3DBuffer : DeviceBuffer, IDisposable
+    public abstract class D3DBuffer : DeviceBufferBase
     {
         private readonly BindFlags _bindFlags;
         private readonly ResourceUsage _resourceUsage;
@@ -40,18 +38,7 @@ namespace Veldrid.Graphics.Direct3D
             _bufferSizeInBytes = bd.SizeInBytes;
         }
 
-        public unsafe void SetData<T>(T[] data, int dataSizeInBytes) where T : struct => SetData(data, dataSizeInBytes, 0);
-        public unsafe void SetData<T>(T[] data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
-        {
-            SetArrayDataCore(data, 0, dataSizeInBytes, destinationOffsetInBytes);
-        }
-
-        public void SetData<T>(ArraySegment<T> data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
-        {
-            SetArrayDataCore(data.Array, data.Offset, dataSizeInBytes, destinationOffsetInBytes);
-        }
-
-        private unsafe void SetArrayDataCore<T>(T[] data, int startIndex, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
+        public unsafe override void SetData(IntPtr data, int dataSizeInBytes, int destinationOffsetInBytes)
         {
             if (dataSizeInBytes == 0)
             {
@@ -63,131 +50,48 @@ namespace Veldrid.Graphics.Direct3D
             if (_resourceUsage == ResourceUsage.Dynamic)
             {
                 DataBox db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteDiscard, MapFlags.None);
-                using (var pin = data.Pin())
                 {
                     SharpDX.Utilities.CopyMemory(
                         new IntPtr((byte*)db.DataPointer.ToPointer() + destinationOffsetInBytes),
-                        new IntPtr(((byte*)pin.Ptr.ToPointer()) + (startIndex * Unsafe.SizeOf<T>())),
+                        new IntPtr((byte*)data),
                         dataSizeInBytes);
                 }
                 Device.ImmediateContext.UnmapSubresource(Buffer, 0);
             }
             else
             {
-                ResourceRegion subregion = new ResourceRegion()
+                ResourceRegion? subregion = null;
+                if ((_bindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
                 {
-                    Left = destinationOffsetInBytes,
-                    Right = dataSizeInBytes + destinationOffsetInBytes,
-                    Bottom = 1,
-                    Back = 1
-                };
+                    // For a shader-constant buffer; set pDstBox to null. It is not possible to use
+                    // this method to partially update a shader-constant buffer
 
-                Device.ImmediateContext.UpdateSubresource(data, Buffer, region: subregion);
+                    subregion = new ResourceRegion()
+                    {
+                        Left = destinationOffsetInBytes,
+                        Right = dataSizeInBytes + destinationOffsetInBytes,
+                        Bottom = 1,
+                        Back = 1
+                    };
+                }
+
+                Device.ImmediateContext.UpdateSubresource(Buffer, 0, subregion, data, 0, 0);
             }
         }
 
-        public void SetData<T>(ref T data, int dataSizeInBytes) where T : struct => SetData(ref data, dataSizeInBytes, 0);
-        public unsafe void SetData<T>(ref T data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
+        public override IntPtr MapBuffer(int numBytes)
         {
-            if (destinationOffsetInBytes != 0)
-            {
-                throw new NotImplementedException();
-            }
-
-            if (_resourceUsage == ResourceUsage.Dynamic)
-            {
-                DataBox db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteNoOverwrite, MapFlags.None);
-                Unsafe.CopyBlock(
-                        (byte*)db.DataPointer.ToPointer() + destinationOffsetInBytes,
-                        Unsafe.AsPointer(ref data),
-                        (uint)dataSizeInBytes);
-                Device.ImmediateContext.UnmapSubresource(Buffer, 0);
-            }
-            else
-            {
-                EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
-                Device.ImmediateContext.UpdateSubresource(ref data, Buffer);
-            }
+            EnsureBufferSize(numBytes);
+            var db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteDiscard, MapFlags.None);
+            return db.DataPointer;
         }
 
-        public void SetData(IntPtr data, int dataSizeInBytes) => SetData(data, dataSizeInBytes, 0);
-        public unsafe void SetData(IntPtr data, int dataSizeInBytes, int destinationOffsetInBytes)
+        public override void UnmapBuffer()
         {
-            EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
-
-            if (_resourceUsage == ResourceUsage.Dynamic)
-            {
-                DataBox db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteDiscard, MapFlags.None);
-                SharpDX.Utilities.CopyMemory(
-                    new IntPtr((byte*)db.DataPointer.ToPointer() + destinationOffsetInBytes),
-                    data,
-                    dataSizeInBytes);
-                Device.ImmediateContext.UnmapSubresource(Buffer, 0);
-            }
-            else
-            {
-                ResourceRegion subregion = new ResourceRegion()
-                {
-                    Left = destinationOffsetInBytes,
-                    Right = dataSizeInBytes + destinationOffsetInBytes,
-                    Bottom = 1,
-                    Back = 1
-                };
-
-                Device.ImmediateContext.UpdateSubresource(new DataBox(data), Buffer, 0, region: subregion);
-            }
+            Device.ImmediateContext.UnmapSubresource(Buffer, 0);
         }
 
-        private void EnsureBufferSize(int dataSizeInBytes)
-        {
-            if (_bufferSizeInBytes < dataSizeInBytes)
-            {
-                SharpDX.Direct3D11.Buffer oldBuffer = Buffer;
-                int previousWidth = _bufferSizeInBytes;
-                _bufferSizeInBytes = dataSizeInBytes;
-                InitializeDeviceBuffer();
-                ResourceRegion region = new ResourceRegion(0, 0, 0, previousWidth, 1, 1);
-                Device.ImmediateContext.CopySubresourceRegion(oldBuffer, 0, region, Buffer, 0);
-
-                oldBuffer.Dispose();
-            }
-        }
-
-        public unsafe void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct
-        {
-            SharpDX.Direct3D11.Buffer stagingBuffer = new SharpDX.Direct3D11.Buffer(Device, new BufferDescription()
-            {
-                BindFlags = BindFlags.None,
-                CpuAccessFlags = CpuAccessFlags.Read,
-                Usage = ResourceUsage.Staging,
-                SizeInBytes = _bufferSizeInBytes
-            });
-
-            Device.ImmediateContext.CopyResource(Buffer, stagingBuffer);
-
-            DataBox db = Device.ImmediateContext.MapSubresource(stagingBuffer, 0, MapMode.Read, MapFlags.None);
-            GCHandle storageHandle = GCHandle.Alloc(storageLocation, GCHandleType.Pinned);
-            System.Buffer.MemoryCopy(
-                db.DataPointer.ToPointer(),
-                storageHandle.AddrOfPinnedObject().ToPointer(),
-                storageSizeInBytes,
-                _bufferSizeInBytes);
-            storageHandle.Free();
-            Device.ImmediateContext.UnmapSubresource(stagingBuffer, 0);
-            stagingBuffer.Dispose();
-        }
-
-        public void GetData<T>(ref T storageLocation, int storageSizeInBytes) where T : struct
-        {
-            GCHandle storageHandle = GCHandle.Alloc(storageLocation, GCHandleType.Pinned);
-
-            IntPtr storagePtr = storageHandle.AddrOfPinnedObject();
-            GetData(storagePtr, storageSizeInBytes);
-
-            storageHandle.Free();
-        }
-
-        public unsafe void GetData(IntPtr storageLocation, int storageSizeInBytes)
+        public unsafe override void GetData(IntPtr storageLocation, int storageSizeInBytes)
         {
             SharpDX.Direct3D11.Buffer stagingBuffer = new SharpDX.Direct3D11.Buffer(Device, new BufferDescription()
             {
@@ -209,21 +113,26 @@ namespace Veldrid.Graphics.Direct3D
             stagingBuffer.Dispose();
         }
 
-        public IntPtr MapBuffer(int numBytes)
-        {
-            EnsureBufferSize(numBytes);
-            var db = Device.ImmediateContext.MapSubresource(Buffer, 0, MapMode.WriteDiscard, MapFlags.None);
-            return db.DataPointer;
-        }
-
-        public void UnmapBuffer()
-        {
-            Device.ImmediateContext.UnmapSubresource(Buffer, 0);
-        }
-
-        public void Dispose()
+        public override void Dispose()
         {
             Buffer.Dispose();
         }
+
+
+        private void EnsureBufferSize(int dataSizeInBytes)
+        {
+            if (_bufferSizeInBytes < dataSizeInBytes)
+            {
+                SharpDX.Direct3D11.Buffer oldBuffer = Buffer;
+                int previousWidth = _bufferSizeInBytes;
+                _bufferSizeInBytes = dataSizeInBytes;
+                InitializeDeviceBuffer();
+                ResourceRegion region = new ResourceRegion(0, 0, 0, previousWidth, 1, 1);
+                Device.ImmediateContext.CopySubresourceRegion(oldBuffer, 0, region, Buffer, 0);
+
+                oldBuffer.Dispose();
+            }
+        }
     }
+
 }

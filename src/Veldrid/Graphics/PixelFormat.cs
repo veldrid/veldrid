@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.Graphics
 {
-    public enum PixelFormat
+    public enum PixelFormat : byte
     {
         /// <summary>
         /// A format where each component (RGBA) is represented by a 32-bit floating point value.

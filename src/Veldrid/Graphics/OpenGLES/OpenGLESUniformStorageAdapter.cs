@@ -165,5 +165,20 @@ namespace Veldrid.Graphics.OpenGLES
         }
 
         public void Dispose() { }
+
+        public void SetData<T>(T[] data) where T : struct
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetData<T>(ArraySegment<T> data, int destinationOffsetInBytes) where T : struct
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetData<T>(T[] storageLocation) where T : struct
+        {
+            throw new NotImplementedException();
+        }
     }
 }

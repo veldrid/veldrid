@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.Graphics
 {
@@ -72,6 +73,13 @@ namespace Veldrid.Graphics
         {
             IndexBuffer ib = CreateIndexBuffer(sizeof(int) * indices.Length, isDynamic);
             ib.SetIndices(indices);
+            return ib;
+        }
+
+        public IndexBuffer CreateIndexBuffer<T>(T[] indices, bool isDynamic, IndexFormat format) where T : struct
+        {
+            IndexBuffer ib = CreateIndexBuffer(Unsafe.SizeOf<T>() * indices.Length, isDynamic);
+            ib.SetIndices(indices, format);
             return ib;
         }
 

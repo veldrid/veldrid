@@ -314,8 +314,6 @@ namespace Veldrid.Graphics.OpenGL
                     return DrawElementsType.UnsignedInt;
                 case IndexFormat.UInt16:
                     return DrawElementsType.UnsignedShort;
-                case IndexFormat.UInt8:
-                    return DrawElementsType.UnsignedByte;
                 default:
                     throw Illegal.Value<DrawElementsType>();
             }

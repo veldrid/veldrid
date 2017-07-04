@@ -156,8 +156,6 @@ namespace Veldrid.Graphics.Direct3D
                     return Format.R32_UInt;
                 case IndexFormat.UInt16:
                     return Format.R16_UInt;
-                case IndexFormat.UInt8:
-                    return Format.R8_UInt;
                 default:
                     throw Illegal.Value<IndexFormat>();
             }

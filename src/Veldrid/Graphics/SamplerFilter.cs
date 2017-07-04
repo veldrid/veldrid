@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.Graphics
 {
-    public enum SamplerFilter
+    public enum SamplerFilter : byte
     {
         MinMagMipPoint,
         MinMagPointMipLinear,

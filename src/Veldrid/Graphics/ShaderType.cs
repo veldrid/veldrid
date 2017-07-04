@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.Graphics
 {
-    public enum ShaderType
+    public enum ShaderType : byte
     {
         Vertex,
         Geometry,

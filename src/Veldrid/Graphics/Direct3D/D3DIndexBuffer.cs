@@ -35,14 +35,14 @@ namespace Veldrid.Graphics.Direct3D
             SharpDX.DXGI.Format dxgiFormat = D3DFormats.VeldridToD3DIndexFormat(format);
             _format = dxgiFormat;
             int elementSizeInBytes = Unsafe.SizeOf<T>();
-            SetData(indices, elementSizeInBytes * indices.Length, elementOffset * elementSizeInBytes);
+            SetData(indices, elementOffset * elementSizeInBytes);
         }
 
         public void SetIndices(int[] indices) => SetIndices(indices, 0, 0);
         public void SetIndices(int[] indices, int stride, int elementOffset)
         {
             _format = SharpDX.DXGI.Format.R32_UInt;
-            SetData(indices, indices.Length * sizeof(int), elementOffset * sizeof(int));
+            SetData(indices, elementOffset * sizeof(int));
         }
 
         public void SetIndices(IntPtr indices, IndexFormat format, int elementSizeInBytes, int count)

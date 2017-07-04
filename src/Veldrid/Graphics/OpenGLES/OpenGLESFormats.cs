@@ -324,8 +324,6 @@ namespace Veldrid.Graphics.OpenGLES
                     throw new PlatformNotSupportedException();
                 case IndexFormat.UInt16:
                     return DrawElementsType.UnsignedShort;
-                case IndexFormat.UInt8:
-                    return DrawElementsType.UnsignedByte;
                 default:
                     throw Illegal.Value<DrawElementsType>();
             }

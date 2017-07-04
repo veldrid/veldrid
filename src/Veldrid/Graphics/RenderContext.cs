@@ -31,11 +31,6 @@ namespace Veldrid.Graphics
         protected readonly Dictionary<int, DeviceTexture> _boundTexturesBySlot = new Dictionary<int, DeviceTexture>();
         protected readonly Dictionary<int, BoundSamplerStateInfo> _boundSamplersBySlot = new Dictionary<int, BoundSamplerStateInfo>();
 
-        /// <summary>Storage for shader texture input providers.</summary>
-        public Dictionary<string, ContextDeviceBinding<DeviceTexture>> TextureProviders { get; } = new Dictionary<string, ContextDeviceBinding<DeviceTexture>>();
-
-        private readonly Dictionary<string, BufferProviderPair> _bufferProviderPairs = new Dictionary<string, BufferProviderPair>();
-
         public RenderContext()
         {
             _topLeftUvCoordinate = GetTopLeftUvCoordinate();
@@ -257,7 +252,6 @@ namespace Veldrid.Graphics
         {
             PlatformClearBuffer();
             NullInputs();
-            FlushConstantBufferData();
         }
 
         /// <summary>Clears the current Framebuffer's color and depth buffers.
@@ -427,19 +421,6 @@ namespace Veldrid.Graphics
         /// <summary>Gets the bottom right UV coordinate of a standard plane.</summary>
         public Vector2 BottomRightUv => _bottomRightUvCoordinate;
 
-        /// <summary>Gets a DeviceTexture binding by name.</summary>
-        public ContextDeviceBinding<DeviceTexture> GetTextureContextBinding(string name)
-        {
-            ContextDeviceBinding<DeviceTexture> value;
-            if (!TextureProviders.TryGetValue(name, out value))
-            {
-                value = new ContextDeviceBinding<DeviceTexture>();
-                TextureProviders.Add(name, value);
-            }
-
-            return value;
-        }
-
         // TODO: REMOVE THIS.
         public void NotifyWindowResized(int width, int height)
         {
@@ -528,14 +509,6 @@ namespace Veldrid.Graphics
 
             _indexBuffer = null;
             _constantBindings = null;
-        }
-
-        private void FlushConstantBufferData()
-        {
-            foreach (var kvp in _bufferProviderPairs)
-            {
-                kvp.Value.UpdateData();
-            }
         }
 
         protected struct BoundSamplerStateInfo

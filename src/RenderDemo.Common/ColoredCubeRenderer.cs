@@ -56,8 +56,7 @@ namespace Veldrid.RenderDemo
             VertexDescriptor desc2 = new VertexDescriptor(16, 1, 0, IntPtr.Zero);
             s_vb1.SetVertexData(s_cubeVertices.Select(vpc => vpc.Color).ToArray(), desc2);
 
-            s_ib = factory.CreateIndexBuffer(sizeof(int) * s_cubeIndices.Length, false);
-            s_ib.SetIndices(s_cubeIndices, IndexFormat.UInt8);
+            s_ib = factory.CreateIndexBuffer(s_cubeIndices, false, IndexFormat.UInt16);
 
             VertexInputDescription materialInputs0 = new VertexInputDescription(
                 12,
@@ -168,7 +167,7 @@ namespace Veldrid.RenderDemo
             new VertexPositionColor(new Vector3(-.5f,-.5f,.5f),    RgbaFloat.Green)
         };
 
-        private static readonly byte[] s_cubeIndices = new byte[]
+        private static readonly ushort[] s_cubeIndices = new ushort[]
         {
             0,1,2, 0,2,3,
             4,5,6, 4,6,7,

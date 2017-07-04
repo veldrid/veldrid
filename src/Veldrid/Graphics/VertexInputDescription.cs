@@ -3,7 +3,12 @@ using System.Diagnostics;
 
 namespace Veldrid.Graphics
 {
-    /// <summary>Describes the vertex input of a <see cref="Material"/> contained in a single <see cref="VertexBuffer"/>.</summary>
+    /// <summary>
+    /// A generic description of vertex inputs to the device's input assembler stage.
+    /// This object describes the inputs from a single vertex buffer.
+    /// Shaders may use inputs from multiple vertex buffers, in which case multiple
+    /// <see cref="VertexInputDescription"/> objects must be used.
+    /// </summary>
     public class VertexInputDescription
     {
         /// <summary>The total size of an individual vertex, in bytes.</summary>

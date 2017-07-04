@@ -1,11 +1,10 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLBuffer : DeviceBuffer, IDisposable
+    public class OpenGLBuffer : DeviceBufferBase, IDisposable
     {
         private readonly BufferTarget _target;
         private readonly BufferUsageHint _bufferUsage;
@@ -39,58 +38,14 @@ namespace Veldrid.Graphics.OpenGL
             GL.BindBuffer(_target, 0);
         }
 
-        public void SetData<T>(ref T data, int dataSizeInBytes) where T : struct
-            => SetData(ref data, dataSizeInBytes, 0);
-        public void SetData<T>(ref T data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
-        {
-            Bind();
-            EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
-            GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, ref data);
-        }
-
-        public void SetData<T>(T[] data, int dataSizeInBytes) where T : struct
-            => SetData(data, dataSizeInBytes, 0);
-        public void SetData<T>(T[] data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
-        {
-            SetArrayDataCore(data, 0, dataSizeInBytes, destinationOffsetInBytes);
-        }
-
-        public void SetData<T>(ArraySegment<T> data, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
-        {
-            SetArrayDataCore(data.Array, data.Offset, dataSizeInBytes, destinationOffsetInBytes);
-        }
-
-        private unsafe void SetArrayDataCore<T>(T[] data, int startIndex, int dataSizeInBytes, int destinationOffsetInBytes) where T : struct
-        {
-            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            IntPtr sourceAddress = new IntPtr((byte*)handle.AddrOfPinnedObject().ToPointer() + (startIndex * Unsafe.SizeOf<T>()));
-            SetData(sourceAddress, dataSizeInBytes, destinationOffsetInBytes);
-            handle.Free();
-        }
-
-        public void SetData(IntPtr data, int dataSizeInBytes) => SetData(data, dataSizeInBytes, 0);
-        public unsafe void SetData(IntPtr data, int dataSizeInBytes, int destinationOffsetInBytes)
+        public unsafe override void SetData(IntPtr data, int dataSizeInBytes, int destinationOffsetInBytes)
         {
             Bind();
             EnsureBufferSize(dataSizeInBytes + destinationOffsetInBytes);
             GL.BufferSubData(_target, new IntPtr(destinationOffsetInBytes), dataSizeInBytes, data);
         }
 
-        public void GetData<T>(T[] storageLocation, int storageSizeInBytes) where T : struct
-        {
-            GCHandle handle = GCHandle.Alloc(storageLocation, GCHandleType.Pinned);
-            GetData(handle.AddrOfPinnedObject(), storageSizeInBytes);
-            handle.Free();
-        }
-
-        public void GetData<T>(ref T storageLocation, int storageSizeInBytes) where T : struct
-        {
-            int bytesToCopy = Math.Min(_bufferSize, storageSizeInBytes);
-            Bind();
-            GL.GetBufferSubData(_target, IntPtr.Zero, bytesToCopy, ref storageLocation);
-        }
-
-        public unsafe void GetData(IntPtr storageLocation, int storageSizeInBytes)
+        public unsafe override void GetData(IntPtr storageLocation, int storageSizeInBytes)
         {
             int bytesToCopy = Math.Min(_bufferSize, storageSizeInBytes);
             Bind();
@@ -135,13 +90,13 @@ namespace Veldrid.Graphics.OpenGL
 #endif
         }
 
-        public IntPtr MapBuffer(int numBytes)
+        public override IntPtr MapBuffer(int numBytes)
         {
             EnsureBufferSize(numBytes);
             return GL.MapBuffer(_target, BufferAccess.WriteOnly);
         }
 
-        public void UnmapBuffer()
+        public override void UnmapBuffer()
         {
             if (!GL.UnmapBuffer(_target))
             {
@@ -149,7 +104,7 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             GL.DeleteBuffer(_bufferID);
         }

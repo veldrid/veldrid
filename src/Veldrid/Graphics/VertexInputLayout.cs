@@ -9,6 +9,7 @@ namespace Veldrid.Graphics
     {
         /// <summary>
         /// A device-agnostic description of the vertex layout.
+        /// Each element in the array describes the contents of a single VertexBuffer.
         /// </summary>
         VertexInputDescription[] InputDescriptions { get; }
     }

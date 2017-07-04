@@ -27,14 +27,14 @@ namespace Veldrid.Graphics.OpenGL
         public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
         {
             int elementSizeInBytes = Unsafe.SizeOf<T>();
-            SetData(indices, elementSizeInBytes * indices.Length, elementOffset * elementSizeInBytes);
+            SetData(indices, elementOffset * elementSizeInBytes);
             ElementsType = OpenGLFormats.MapIndexFormat(format);
         }
 
         public void SetIndices(int[] indices) => SetIndices(indices, 0, 0);
         public void SetIndices(int[] indices, int stride, int elementOffset)
         {
-            SetData(indices, sizeof(int) * indices.Length, sizeof(int) * elementOffset);
+            SetData(indices, sizeof(int) * elementOffset);
             ElementsType = DrawElementsType.UnsignedInt;
         }
 

@@ -21,12 +21,12 @@ namespace Veldrid.Graphics.OpenGLES
 
         public void SetVertexData<T>(T[] vertexData, VertexDescriptor descriptor, int destinationOffsetInVertices) where T : struct
         {
-            SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Length, descriptor.VertexSizeInBytes * destinationOffsetInVertices);
+            SetData(vertexData, descriptor.VertexSizeInBytes * destinationOffsetInVertices);
         }
 
         public void SetVertexData<T>(ArraySegment<T> vertexData, VertexDescriptor descriptor, int destinationOffsetInVertices) where T : struct
         {
-            SetData(vertexData, descriptor.VertexSizeInBytes * vertexData.Count, descriptor.VertexSizeInBytes * destinationOffsetInVertices);
+            SetData(vertexData, descriptor.VertexSizeInBytes * destinationOffsetInVertices);
         }
 
         public void SetVertexData(IntPtr vertexData, VertexDescriptor descriptor, int numVertices)

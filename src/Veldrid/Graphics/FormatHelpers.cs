@@ -12,8 +12,6 @@ namespace Veldrid.Graphics
                     return 4;
                 case IndexFormat.UInt16:
                     return 2;
-                case IndexFormat.UInt8:
-                    return 1;
                 default:
                     throw Illegal.Value<IndexFormat>();
             }

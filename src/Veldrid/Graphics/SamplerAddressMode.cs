@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.Graphics
 {
-    public enum SamplerAddressMode
+    public enum SamplerAddressMode : byte
     {
         Wrap,
         Mirror,

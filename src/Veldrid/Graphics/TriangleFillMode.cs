@@ -1,7 +1,7 @@
 ﻿namespace Veldrid.Graphics
 {
     /// <summary>Describes how triangles are rasterized.</summary>
-    public enum TriangleFillMode
+    public enum TriangleFillMode : byte
     {
         /// <summary>Fill triangles fully.</summary>
         Solid,

@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.Graphics
 {
-    public enum VertexSemanticType
+    public enum VertexSemanticType : byte
     {
         Position,
         TextureCoordinate,

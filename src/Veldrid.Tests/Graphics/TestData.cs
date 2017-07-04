@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
 using Veldrid.Platform;
+using Veldrid.Sdl2;
 
 namespace Veldrid.Graphics
 {
@@ -16,23 +17,61 @@ namespace Veldrid.Graphics
             {
                 return new RenderContext[]
                 {
-                    new D3DRenderContext(new TestWindow()),
-                    GetDefaultOpenGLContext(new TestWindow())
+                    new D3DRenderContext(CreateTestWindow()),
+                    CreateDefaultOpenGLRenderContext(CreateTestWindow())
                 };
             }
             else
             {
                 return new RenderContext[]
                 {
-                    GetDefaultOpenGLContext(new TestWindow())
+                    CreateDefaultOpenGLRenderContext(CreateTestWindow())
                 };
             }
         }
-        
-        private static OpenGLRenderContext GetDefaultOpenGLContext(OpenTKWindow window)
+
+        public static Sdl2Window CreateTestWindow()
         {
-            bool debug = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            return new OpenGLRenderContext(window, debug);
+            return new Sdl2Window("Test_Window", 0, 0, 1, 1, SDL_WindowFlags.OpenGL, false);
+        }
+
+        public static OpenGLRenderContext CreateDefaultOpenGLRenderContext(Sdl2Window window)
+        {
+            bool debugContext = false;
+            IntPtr sdlHandle = window.SdlWindowHandle;
+            if (debugContext)
+            {
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)SDL_GLContextFlag.Debug);
+            }
+
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.Core);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 4);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 0);
+
+            IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
+            if (contextHandle == IntPtr.Zero)
+            {
+                unsafe
+                {
+                    byte* error = Sdl2Native.SDL_GetError();
+                    string errorString = Utilities.GetString(error);
+                    throw new InvalidOperationException("Unable to create GL Context: " + errorString);
+                }
+            }
+
+            Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, contextHandle);
+            OpenGLPlatformContextInfo ci = new OpenGLPlatformContextInfo(
+                contextHandle,
+                Sdl2Native.SDL_GL_GetProcAddress,
+                Sdl2Native.SDL_GL_GetCurrentContext,
+                () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
+            var rc = new OpenGLRenderContext(window, ci);
+            if (debugContext)
+            {
+                // Slows things down significantly -- Only use when debugging something specific.
+                rc.EnableDebugCallback(OpenTK.Graphics.OpenGL.DebugSeverity.DebugSeverityNotification);
+            }
+            return rc;
         }
 
         internal static IEnumerable<object> DataValueArrays()

@@ -12,12 +12,11 @@ namespace Veldrid.Graphics.Direct3D
 
         public D3DIndexBufferTests()
         {
-            _context = new D3DRenderContext(new TestWindow());
+            _context = new D3DRenderContext(TestData.CreateTestWindow());
             _factory = new D3DResourceFactory(_context.Device);
         }
 
         [Fact]
-        [PlatformSpecific(PlatformID.Windows)]
         public void SetAndGet_Array()
         {
             D3DIndexBuffer ib = (D3DIndexBuffer)_factory.CreateIndexBuffer(1, false);
@@ -26,12 +25,11 @@ namespace Veldrid.Graphics.Direct3D
             ib.SetIndices(indexData);
 
             int[] returned = new int[indexData.Length];
-            ib.GetData(returned, returned.Length * 4);
+            ib.GetData(returned);
             Assert.Equal(indexData, returned);
         }
 
         [Fact]
-        [PlatformSpecific(PlatformID.Windows)]
         public unsafe void SetAndGet_IntPtr_Offset()
         {
             D3DIndexBuffer ib = (D3DIndexBuffer)_factory.CreateIndexBuffer(1, false);
@@ -42,7 +40,7 @@ namespace Veldrid.Graphics.Direct3D
                 ib.SetIndices(new IntPtr(dataPtr), IndexFormat.UInt16, 2, 150, 250);
             }
             ushort[] returned = new ushort[indexData.Length + 250];
-            ib.GetData(returned, returned.Length * sizeof(ushort));
+            ib.GetData(returned);
 
             for (int i = 250; i < returned.Length; i++)
             {

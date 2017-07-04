@@ -12,8 +12,8 @@ namespace Veldrid.Graphics.OpenGL
 
         public OpenGLIndexBufferTests()
         {
-            _context = new OpenGLRenderContext(new TestWindow());
-            _factory = new OpenGLResourceFactory();
+            _context = TestData.CreateDefaultOpenGLRenderContext(TestData.CreateTestWindow());
+            _factory = (OpenGLResourceFactory)_context.ResourceFactory;
         }
 
         [Fact]
@@ -25,7 +25,7 @@ namespace Veldrid.Graphics.OpenGL
             ib.SetIndices(indexData);
 
             int[] returned = new int[indexData.Length];
-            ib.GetData(returned, returned.Length * 4);
+            ib.GetData(returned);
             Assert.Equal(indexData, returned);
         }
 
@@ -40,7 +40,7 @@ namespace Veldrid.Graphics.OpenGL
                 ib.SetIndices(new IntPtr(dataPtr), IndexFormat.UInt16, 2, 150, 250);
             }
             ushort[] returned = new ushort[indexData.Length + 250];
-            ib.GetData(returned, returned.Length * sizeof(ushort));
+            ib.GetData(returned);
 
             for (int i = 250; i < returned.Length; i++)
             {

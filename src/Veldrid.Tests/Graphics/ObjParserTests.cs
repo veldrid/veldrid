@@ -10,8 +10,8 @@ namespace Veldrid.Graphics
         public static void ParseSponzaAtriumFile()
         {
             string path = Path.Combine(AppContext.BaseDirectory, "sponza.obj");
-            string[] lines = File.ReadAllLines(path);
-            ObjFile file = new ObjParser().Parse(lines);
+            string text = File.ReadAllText(path);
+            ObjFile file = new ObjParser().Parse(text);
 
             Assert.Equal("sponza.mtl", file.MaterialLibName);
             Assert.Equal(393, file.MeshGroups.Length);
@@ -21,7 +21,7 @@ namespace Veldrid.Graphics
         public static void ParseTeapot()
         {
             string path = Path.Combine(AppContext.BaseDirectory, "Teapot.obj");
-            string[] lines = File.ReadAllLines(path);
+            string lines = File.ReadAllText(path);
             ObjFile file = new ObjParser().Parse(lines);
 
             Assert.Equal(null, file.MaterialLibName);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -27,20 +28,12 @@ namespace Veldrid.Graphics
 
         [Theory]
         [MemberData(nameof(SetAndGetData))]
-        public static void SetThenGetArray(DeviceBuffer db, object data, int offsetInElements)
-        {
-            MethodInfo mi = typeof(DeviceBufferImplTests).GetMethod(nameof(SetThenGetGeneric))
-                .MakeGenericMethod(data.GetType().GetElementType());
-            mi.Invoke(null, new[] { db, data, offsetInElements });
-        }
-
         public static void SetThenGetGeneric<T>(DeviceBuffer db, T[] data, int offsetInElements) where T : struct
         {
-            int sizeOfElement = Marshal.SizeOf<T>();
             int numElements = data.Length + offsetInElements;
-            db.SetData(data, data.Length * sizeOfElement, offsetInElements * sizeOfElement);
+            db.SetData(data, offsetInElements * Unsafe.SizeOf<T>());
             T[] ret = new T[numElements];
-            db.GetData(ret, numElements * sizeOfElement);
+            db.GetData(ret);
             for (int i = 0; i < data.Length; i++)
             {
                 Assert.Equal(data[i], ret[i + offsetInElements]);
@@ -49,12 +42,10 @@ namespace Veldrid.Graphics
 
         [Theory]
         [MemberData(nameof(SetAndGetData))]
-        public static void SetThenGetIntPtr(DeviceBuffer db, object data, int offsetInElements)
+        public static void SetThenGetIntPtr<T>(DeviceBuffer db, T[] data, int offsetInElements)
         {
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-#pragma warning disable 0618 // Too annoying to get this another way.
-            int sizeOfElement = Marshal.SizeOf(data.GetType().GetElementType());
-#pragma warning restore
+            int sizeOfElement = Unsafe.SizeOf<T>();
             int dataCount = ((Array)data).Length;
             SetThenGetIntPtrTest(db, handle.AddrOfPinnedObject(), dataCount, sizeOfElement, offsetInElements);
             handle.Free();

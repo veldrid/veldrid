@@ -1,55 +1,38 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build;Test" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition="'$(Configuration)' == '' And '$(OS)' != 'Windows_NT'">Ubuntu_Debug</Configuration>
-    <Configuration Condition="'$(Configuration)' == ''">Windows_Debug</Configuration>
-  </PropertyGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <AssemblyName>Veldrid.Tests</AssemblyName>
-    <RootNamespace>Veldrid</RootNamespace>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <CopyNuGetImplementations>true</CopyNuGetImplementations>
-    <ProjectGuid>{0B65FB57-E49C-45DC-8C09-FC758A24E401}</ProjectGuid>
-    <NuGetTargetMoniker>.NETCoreApp,Version=v1.0</NuGetTargetMoniker>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Debug|x64' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Release|x64' " />
+
   <ItemGroup>
-    <None Include="project.json" />
-    <Content Include="sponza.obj">
+    <None Remove="sponza.mtl" />
+    <None Remove="sponza.obj" />
+    <None Remove="Teapot.obj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="sponza.mtl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="sponza.mtl">
+    <Content Include="sponza.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Teapot.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="BoundingFrustumTests.cs" />
-    <Compile Include="Graphics\DeviceBufferImplTests.cs" />
-    <Compile Include="Graphics\MtlParserTests.cs" />
-    <Compile Include="Graphics\ObjParserTests.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLIndexBufferTests.cs" />
-    <Compile Include="Graphics\OpenGL\OpenGLVertexBufferTests.cs" />
-    <Compile Include="Graphics\Direct3D\D3DIndexBufferTests.cs" />
-    <Compile Include="Graphics\Direct3D\D3DVertexBufferTests.cs" />
-    <Compile Include="Graphics\TestData.cs" />
-    <Compile Include="Graphics\VertexPositionColorTests.cs" />
-    <Compile Include="OctreeTests.cs" />
-    <Compile Include="TestWindow.cs" />
+    <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="..\Veldrid.Sdl2\Veldrid.Sdl2.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
+    <PackageReference Include="xunit" Version="2.2.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\Veldrid\Veldrid.csproj">
-      <Project>{ae9bc745-284f-42f3-8236-c43ff9731df2}</Project>
-      <Name>Veldrid</Name>
-    </ProjectReference>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+
 </Project>

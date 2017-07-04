@@ -13,12 +13,11 @@ namespace Veldrid.Graphics.Direct3D
 
         public D3DVertexBufferTests()
         {
-            _context = new D3DRenderContext(new TestWindow());
+            _context = new D3DRenderContext(TestData.CreateTestWindow());
             _factory = new D3DResourceFactory(_context.Device);
         }
 
         [Fact]
-        [PlatformSpecific(PlatformID.Windows)]
         public void SetAndGet_Array()
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -31,12 +30,11 @@ namespace Veldrid.Graphics.Direct3D
             vb.SetVertexData(vertexData, new VertexDescriptor(sizeof(float), 1, 0, IntPtr.Zero));
 
             float[] returned = new float[vertexData.Length];
-            vb.GetData(returned, returned.Length * 4);
+            vb.GetData(returned);
             Assert.Equal(vertexData, returned);
         }
 
         [Fact]
-        [PlatformSpecific(PlatformID.Windows)]
         public void SetAndGet_Array_Offset()
         {
             D3DVertexBuffer vb = (D3DVertexBuffer)_factory.CreateVertexBuffer(1, false);
@@ -45,7 +43,7 @@ namespace Veldrid.Graphics.Direct3D
             vb.SetVertexData(vertexData, new VertexDescriptor(sizeof(float), 1, 0, IntPtr.Zero), 250);
 
             float[] returned = new float[vertexData.Length + 250];
-            vb.GetData(returned, returned.Length * 4);
+            vb.GetData(returned);
             for (int i = 0; i < 250; i++)
             {
                 Assert.Equal(0, returned[i]);
@@ -57,7 +55,6 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         [Fact]
-        [PlatformSpecific(PlatformID.Windows)]
         public unsafe void SetAndGet_IntPtr_Offset()
         {
             D3DVertexBuffer vb = (D3DVertexBuffer)_factory.CreateVertexBuffer(1, false);
@@ -68,7 +65,7 @@ namespace Veldrid.Graphics.Direct3D
                 vb.SetVertexData(new IntPtr(dataPtr), new VertexDescriptor(4, 1, 0, IntPtr.Zero), 150, 250);
             }
             float[] returned = new float[vertexData.Length + 250];
-            vb.GetData(returned, returned.Length * 4);
+            vb.GetData(returned);
 
             for (int i = 250; i < returned.Length; i++)
             {

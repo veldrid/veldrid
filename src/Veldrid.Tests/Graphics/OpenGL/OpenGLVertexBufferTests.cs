@@ -12,8 +12,8 @@ namespace Veldrid.Graphics.OpenGL
 
         public OpenGLVertexBufferTests()
         {
-            _context = new OpenGLRenderContext(new TestWindow());
-            _factory = new OpenGLResourceFactory();
+            _context = TestData.CreateDefaultOpenGLRenderContext(TestData.CreateTestWindow());
+            _factory = (OpenGLResourceFactory)_context.ResourceFactory;
         }
 
         [Fact]
@@ -25,7 +25,7 @@ namespace Veldrid.Graphics.OpenGL
             vb.SetVertexData(vertexData, new VertexDescriptor(4, 1, 0, IntPtr.Zero));
 
             float[] returned = new float[vertexData.Length];
-            vb.GetData(returned, returned.Length * 4);
+            vb.GetData(returned);
             Assert.Equal(vertexData, returned);
         }
 
@@ -38,7 +38,7 @@ namespace Veldrid.Graphics.OpenGL
             vb.SetVertexData(vertexData, new VertexDescriptor(sizeof(float), 1, 0, IntPtr.Zero), 250);
 
             float[] returned = new float[vertexData.Length + 250];
-            vb.GetData(returned, returned.Length * sizeof(float));
+            vb.GetData(returned);
             for (int i = 250; i < returned.Length; i++)
             {
                 Assert.Equal(vertexData[i - 250], returned[i]);
@@ -56,7 +56,7 @@ namespace Veldrid.Graphics.OpenGL
                 vb.SetVertexData(new IntPtr(dataPtr), new VertexDescriptor(sizeof(float), 1, 0, IntPtr.Zero), 150, 250);
             }
             float[] returned = new float[vertexData.Length + 250];
-            vb.GetData(returned, returned.Length * sizeof(float));
+            vb.GetData(returned);
 
             for (int i = 250; i < returned.Length; i++)
             {

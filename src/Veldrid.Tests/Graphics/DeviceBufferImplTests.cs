@@ -69,7 +69,7 @@ namespace Veldrid.Graphics
                 {
                     Matrix4x4.Identity,
                     Matrix4x4.CreatePerspective(1280, 720, 2, 500),
-                    Vector3.One,
+                    Vector4.One,
                     Quaternion.Identity,
                     new TestStruct
                     {
@@ -87,29 +87,38 @@ namespace Veldrid.Graphics
         }
 
         [Theory]
-        [MemberData(nameof(TestData) + "." + nameof(TestData.RenderContextsTestData))]
-        public static void ConstantBufferSet(RenderContext rc, object value)
+        [MemberData(nameof(ConstantBufferSetTestData))]
+        public static void ConstantBufferSetThenGet(RenderContext rc, object value)
         {
-            Assert.True(false);
             typeof(DeviceBufferImplTests).GetMethod("ConstantBufferSetGeneric", BindingFlags.NonPublic | BindingFlags.Static)
                 .MakeGenericMethod(value.GetType())
                  .Invoke(null, new[] { rc, value });
         }
 
-        private static void ConstantBufferSetGeneric<T>(RenderContext rc, T value) where T : struct
+        private static void ConstantBufferSetGeneric<T>(RenderContext rc, T value) where T : struct, IEquatable<T>
         {
-            ConstantBuffer cb = rc.ResourceFactory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
-            cb.SetData(ref value, Unsafe.SizeOf<T>());
+            int sizeOfT = Unsafe.SizeOf<T>();
+            ConstantBuffer cb = rc.ResourceFactory.CreateConstantBuffer(sizeOfT);
+            cb.SetData(ref value, sizeOfT);
+            T returnedValue = default(T);
+            cb.GetData(ref returnedValue, sizeOfT);
+
+            Assert.Equal(value, returnedValue);
         }
 
 
-        private struct TestStruct
+        private struct TestStruct : IEquatable<TestStruct>
         {
             public Vector3 A;
             public Vector4 B;
             public Vector3 C;
             public Vector2 D;
             public Vector4 E;
+
+            public bool Equals(TestStruct other)
+            {
+                return A.Equals(other.A) && B.Equals(other.B) && C.Equals(other.C) && D.Equals(other.D) && E.Equals(other.E);
+            }
         }
     }
 

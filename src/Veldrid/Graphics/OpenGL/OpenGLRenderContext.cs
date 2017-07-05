@@ -223,7 +223,7 @@ namespace Veldrid.Graphics.OpenGL
         {
             OpenGLShaderConstantBindingSlots.UniformBinding binding = ShaderConstantBindingSlots.GetUniformBindingForSlot(slot);
             if (binding.BlockLocation != -1)
-            { 
+            {
                 BindUniformBlock(ShaderSet, slot, binding.BlockLocation, (OpenGLConstantBuffer)cb);
             }
             else
@@ -268,20 +268,23 @@ namespace Veldrid.Graphics.OpenGL
         protected override void PlatformSetTexture(int slot, ShaderTextureBinding textureBinding)
         {
             OpenGLTexture boundTexture = (OpenGLTexture)textureBinding.BoundTexture;
-            if (_extensions.ARB_DirectStateAccess)
+            if (!_boundTexturesBySlot.TryGetValue(slot, out DeviceTexture oldBoundTexture) || oldBoundTexture != textureBinding.BoundTexture)
             {
-                GL.BindTextureUnit(slot, boundTexture.ID);
-            }
-            else
-            {
-                GL.ActiveTexture(TextureUnit.Texture0 + slot);
-                boundTexture.Bind();
+                if (_extensions.ARB_DirectStateAccess)
+                {
+                    GL.BindTextureUnit(slot, boundTexture.ID);
+                }
+                else
+                {
+                    GL.ActiveTexture(TextureUnit.Texture0 + slot);
+                    boundTexture.Bind();
+                }
+                _boundTexturesBySlot[slot] = boundTexture;
             }
 
             int uniformLocation = ShaderTextureBindingSlots.GetUniformLocation(slot);
-            GL.Uniform1(uniformLocation, slot);
+            ShaderSet.UpdateTextureUniform(uniformLocation, slot); // Performs internal caching.
 
-            _boundTexturesBySlot[slot] = boundTexture;
             EnsureSamplerMipmapState(slot, boundTexture.MipLevels != 1);
         }
 

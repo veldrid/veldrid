@@ -7,6 +7,7 @@ namespace Veldrid.Graphics.OpenGL
     public class OpenGLShaderSet : ShaderSet
     {
         private readonly Dictionary<int, OpenGLConstantBuffer> _boundConstantBuffers = new Dictionary<int, OpenGLConstantBuffer>();
+        private readonly Dictionary<int, int> _boundUniformLocationSlots = new Dictionary<int, int>();
 
         public OpenGLVertexInputLayout InputLayout { get; }
 
@@ -77,6 +78,15 @@ namespace Veldrid.Graphics.OpenGL
             GeometryShader?.Dispose();
             FragmentShader.Dispose();
             GL.DeleteProgram(ProgramID);
+        }
+
+        public void UpdateTextureUniform(int uniformLocation, int slot)
+        {
+            if (!_boundUniformLocationSlots.TryGetValue(uniformLocation, out int boundSlot) || boundSlot != slot)
+            {
+                GL.Uniform1(uniformLocation, slot);
+                _boundUniformLocationSlots[uniformLocation] = slot;
+            }
         }
     }
 }

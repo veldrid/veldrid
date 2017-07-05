@@ -23,7 +23,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private readonly DynamicDataProvider<MtlMaterialProperties> _mtlPropertiesProvider;
 
         private readonly TextureData _overrideTextureData;
-        private TextureData _alphaMapTextureData = RawTextureDataArray<RgbaByte>.FromSingleColor(RgbaByte.White);
+        private TextureData _alphaMapTextureData;
 
         private readonly string[] _standardStages = new string[] { "ShadowMap", "Standard" };
         private readonly string[] _alphaMapStages = new string[] { "ShadowMap", "AlphaBlend" };
@@ -46,6 +46,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
         private static Material s_shadowPassMaterial;
         private static Material s_regularPassMaterial;
         private static SamplerState s_shadowMapSampler;
+        private static DeviceTexture2D s_blankAlphaMapTexture;
+        private static ShaderTextureBinding s_blankAlphaMapTextureBinding;
 
         public Vector3 Position { get; set; }
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
@@ -161,6 +163,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
                     int.MaxValue,
                     0);
 
+                s_blankAlphaMapTexture = factory.CreateTexture(new RgbaByte[] { RgbaByte.White }, 1, 1, 4, PixelFormat.R8_G8_B8_A8_UInt);
+                s_blankAlphaMapTextureBinding = factory.CreateShaderTextureBinding(s_blankAlphaMapTexture);
             }
         }
 
@@ -223,11 +227,22 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         private void RecreateAlphaMapTextureResources(RenderContext rc)
         {
-            _alphaMapTexture?.Dispose();
-            _alphaMapTextureBinding?.Dispose();
+            if (_alphaMapTexture != s_blankAlphaMapTexture)
+            {
+                _alphaMapTexture?.Dispose();
+                _alphaMapTextureBinding?.Dispose();
+            }
 
-            _alphaMapTexture = _alphaMapTextureData.CreateDeviceTexture(rc.ResourceFactory);
-            _alphaMapTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(_alphaMapTexture);
+            if (_alphaMapTextureData != null)
+            {
+                _alphaMapTexture = _alphaMapTextureData.CreateDeviceTexture(rc.ResourceFactory);
+                _alphaMapTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(_alphaMapTexture);
+            }
+            else
+            {
+                _alphaMapTexture = s_blankAlphaMapTexture;
+                _alphaMapTextureBinding = s_blankAlphaMapTextureBinding;
+            }
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)

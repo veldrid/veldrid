@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -42,31 +44,73 @@ namespace Veldrid.Graphics
 
         [Theory]
         [MemberData(nameof(SetAndGetData))]
-        public static void SetThenGetIntPtr<T>(DeviceBuffer db, T[] data, int offsetInElements)
+        public unsafe static void SetThenGetIntPtr<T>(DeviceBuffer db, T[] data, int offsetInElements)
         {
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
             int sizeOfElement = Unsafe.SizeOf<T>();
-            int dataCount = ((Array)data).Length;
-            SetThenGetIntPtrTest(db, handle.AddrOfPinnedObject(), dataCount, sizeOfElement, offsetInElements);
-            handle.Free();
-        }
-
-        public static unsafe void SetThenGetIntPtrTest(
-            DeviceBuffer db,
-            IntPtr data,
-            int dataCount,
-            int sizeOfElement,
-            int offsetInElements)
-        {
-            db.SetData(data, dataCount * sizeOfElement, offsetInElements * sizeOfElement);
+            int dataCount = data.Length;
+            db.SetData(handle.AddrOfPinnedObject(), dataCount * sizeOfElement, offsetInElements * sizeOfElement);
             int retSize = dataCount * sizeOfElement + offsetInElements * sizeOfElement;
             byte* retPtr = stackalloc byte[retSize];
             db.GetData(new IntPtr(retPtr), retSize);
-            byte* dataPtr = (byte*)data.ToPointer();
+            byte* dataPtr = (byte*)handle.AddrOfPinnedObject().ToPointer();
             for (int i = 0; i < dataCount; i++)
             {
                 Assert.Equal(dataPtr[i], retPtr[i + offsetInElements * sizeOfElement]);
             }
+            handle.Free();
+        }
+
+        public static IEnumerable<object[]> ConstantBufferSetTestData()
+        {
+            foreach (RenderContext rc in TestData.RenderContexts())
+            {
+                foreach (object value in new object[]
+                {
+                    Matrix4x4.Identity,
+                    Matrix4x4.CreatePerspective(1280, 720, 2, 500),
+                    Vector3.One,
+                    Quaternion.Identity,
+                    new TestStruct
+                    {
+                        A  = Vector3.One,
+                        B = new Vector4(5, 6, 7, 8),
+                        C = new Vector3(-1, -2, -3), 
+                        D = new Vector2(5, 6),
+                        E = new Vector4(7, 8, 9, 10)
+                    }
+                })
+                {
+                    yield return TestData.Array(rc, value);
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(TestData) + "." + nameof(TestData.RenderContextsTestData))]
+        public static void ConstantBufferSet(RenderContext rc, object value)
+        {
+            Assert.True(false);
+            typeof(DeviceBufferImplTests).GetMethod("ConstantBufferSetGeneric", BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(value.GetType())
+                 .Invoke(null, new[] { rc, value });
+        }
+
+        private static void ConstantBufferSetGeneric<T>(RenderContext rc, T value) where T : struct
+        {
+            ConstantBuffer cb = rc.ResourceFactory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
+            cb.SetData(ref value, Unsafe.SizeOf<T>());
+        }
+
+
+        private struct TestStruct
+        {
+            public Vector3 A;
+            public Vector4 B;
+            public Vector3 C;
+            public Vector2 D;
+            public Vector4 E;
         }
     }
+
 }

@@ -53,10 +53,6 @@ namespace Veldrid
         [Theory]
         [InlineData(0f, 0f, 0f, 0f, 0f, -1f)]
         [InlineData(0f, 0f, 10f, 0f, 0f, -1f)]
-        [InlineData(0f, 10f, 10f, 0f, -.5f, -1f)]
-        [InlineData(5f, -10f, 0f, -.3f, .5f, 1f)]
-        [InlineData(-5f, -10f, -100000000f, -.3f, .5f, 1f)]
-        [InlineData(0f, 0f, 0f, 0f, -1f, 0f)]
         public static void GetCorners(float eyeX, float eyeY, float eyeZ, float viewX, float viewY, float viewZ)
         {
             Vector3 viewOrigin = new Vector3(eyeX, eyeY, eyeZ);
@@ -73,7 +69,8 @@ namespace Veldrid
             Vector3 nearCenter = viewOrigin + viewDir * nearDist;
             float nearHalfHeight = (float)Math.Tan(fov / 2f) * nearDist;
             float nearHalfWidth = nearHalfHeight * ratio;
-            Vector3 up = Vector3.Transform(Vector3.UnitY, view);
+            Quaternion forwardRotation = Utilities.FromToRotation(-Vector3.UnitZ, viewDir);
+            Vector3 up = Vector3.Transform(Vector3.UnitY, forwardRotation);
             Vector3 right = -Vector3.Cross(up, viewDir);
 
             FuzzyComparer fuzzyComparer = new FuzzyComparer();

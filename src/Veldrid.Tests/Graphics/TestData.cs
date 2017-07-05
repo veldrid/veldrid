@@ -15,24 +15,27 @@ namespace Veldrid.Graphics
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return new RenderContext[]
-                {
-                    new D3DRenderContext(CreateTestWindow()),
-                    CreateDefaultOpenGLRenderContext(CreateTestWindow())
-                };
+                yield return new D3DRenderContext(CreateTestWindow());
+                yield return CreateDefaultOpenGLRenderContext(CreateTestWindow());
             }
             else
             {
-                return new RenderContext[]
-                {
-                    CreateDefaultOpenGLRenderContext(CreateTestWindow())
-                };
+                yield return CreateDefaultOpenGLRenderContext(CreateTestWindow());
             }
         }
 
+        public static IEnumerable<object[]> RenderContextsTestData()
+        {
+            foreach (var item in RenderContexts())
+            {
+                yield return Array(item);
+            }
+        }
+
+
         public static Sdl2Window CreateTestWindow()
         {
-            return new Sdl2Window("Test_Window", 0, 0, 1, 1, SDL_WindowFlags.OpenGL, false);
+            return new Sdl2Window("Test_Window", 0, 0, 1, 1, SDL_WindowFlags.OpenGL | SDL_WindowFlags.Hidden, false);
         }
 
         public static OpenGLRenderContext CreateDefaultOpenGLRenderContext(Sdl2Window window)
@@ -102,6 +105,11 @@ namespace Veldrid.Graphics
         }
 
         public static object[] Array(params object[] items)
+        {
+            return items;
+        }
+
+        public static T[] Array<T>(params T[] items)
         {
             return items;
         }

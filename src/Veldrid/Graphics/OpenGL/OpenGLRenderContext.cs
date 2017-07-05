@@ -11,13 +11,14 @@ namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLRenderContext : RenderContext, IDisposable
     {
-        private const int MaxConstantBufferSlots = 30; // Real limit?
 
         private readonly OpenGLResourceFactory _resourceFactory;
         private readonly GraphicsContext _openGLGraphicsContext;
         private readonly OpenGLExtensions _extensions;
         private readonly OpenGLDefaultFramebuffer _defaultFramebuffer;
-        private readonly OpenGLConstantBuffer[] _constantBuffersBySlot = new OpenGLConstantBuffer[MaxConstantBufferSlots];
+        private readonly int _maxConstantBufferSlots;
+        private readonly OpenGLConstantBuffer[] _constantBuffersBySlot;
+        private readonly OpenGLConstantBuffer[] _newConstantBuffersBySlot; // CB's bound during draw call preparation
         private readonly int _vertexArrayID;
         private PrimitiveType _primitiveType = PrimitiveType.Triangles;
         private int _vertexAttributesBound;
@@ -54,6 +55,10 @@ namespace Veldrid.Graphics.OpenGL
                 extensions.Add(GL.GetString(StringNameIndexed.Extensions, i));
             }
             _extensions = new OpenGLExtensions(extensions);
+
+            _maxConstantBufferSlots = GL.GetInteger(GetPName.MaxUniformBufferBindings);
+            _constantBuffersBySlot = new OpenGLConstantBuffer[_maxConstantBufferSlots];
+            _newConstantBuffersBySlot = new OpenGLConstantBuffer[_maxConstantBufferSlots];
         }
 
         public void EnableDebugCallback() => EnableDebugCallback(DebugSeverity.DebugSeverityNotification);
@@ -235,21 +240,75 @@ namespace Veldrid.Graphics.OpenGL
 
         private void BindUniformBlock(OpenGLShaderSet shaderSet, int slot, int blockLocation, OpenGLConstantBuffer cb)
         {
-            if (slot > MaxConstantBufferSlots)
+            if (slot > _maxConstantBufferSlots)
             {
-                throw new InvalidOperationException($"Too many constant buffers used. Limit is {MaxConstantBufferSlots}.");
+                throw new InvalidOperationException($"Too many constant buffers used. Limit is {_maxConstantBufferSlots}.");
             }
 
             // Bind Constant Buffer to slot
-            if (_constantBuffersBySlot[slot] != cb)
+            if (_constantBuffersBySlot[slot] == cb)
             {
-                // TODO: Defer this work and use GL.BindBuffersRange
-                GL.BindBufferRange(BufferRangeTarget.UniformBuffer, slot, cb.BufferID, IntPtr.Zero, cb.BufferSize);
-                _constantBuffersBySlot[slot] = cb;
+                _newConstantBuffersBySlot[slot] = null;
+            }
+            else
+            {
+                _newConstantBuffersBySlot[slot] = cb;
             }
 
-            // Bind slot to uniform block location.
+            // Bind slot to uniform block location. Performs internal caching to avoid GL calls.
             shaderSet.BindConstantBuffer(slot, blockLocation, cb);
+        }
+
+        private unsafe void CommitNewConstantBufferBindings()
+        {
+            int* buffers = stackalloc int[_maxConstantBufferSlots];
+            IntPtr* sizes = stackalloc IntPtr[_maxConstantBufferSlots];
+            IntPtr* offsets = stackalloc IntPtr[_maxConstantBufferSlots];
+            int currentIndex = 0; // Index into stack allocated buffers.
+            int currentBaseSlot = -1;
+
+            void AddBinding(OpenGLConstantBuffer cb)
+            {
+                Console.WriteLine("Current index: " + currentIndex);
+                buffers[currentIndex] = cb.BufferID;
+                sizes[currentIndex] = new IntPtr(cb.BufferSize);
+
+                currentIndex += 1;
+            }
+
+            void EmitBindings()
+            {
+                GL.BindBuffersRange(BufferRangeTarget.UniformBuffer, currentBaseSlot, currentIndex, buffers, offsets, sizes);
+                Utilities.CheckLastGLError();
+                currentIndex = 0;
+                currentBaseSlot = -1;
+            }
+
+            // TODO: Don't check the entire array every time -- only check up to the number we know are newly-bound.
+            for (int slot = 0; slot < _maxConstantBufferSlots; slot++)
+            {
+                OpenGLConstantBuffer cb = _newConstantBuffersBySlot[slot];
+                if (cb != null)
+                {
+                    AddBinding(cb);
+                    if (currentBaseSlot == -1)
+                    {
+                        currentBaseSlot = slot;
+                    }
+                    _constantBuffersBySlot[slot] = cb;
+                }
+                else if (currentIndex != 0)
+                {
+                    EmitBindings();
+                }
+            }
+
+            if (currentIndex != 0)
+            {
+                EmitBindings();
+            }
+
+            Array.Clear(_newConstantBuffersBySlot, 0, _newConstantBuffersBySlot.Length);
         }
 
         private unsafe void SetUniformLocationDataSlow(OpenGLConstantBuffer cb, OpenGLUniformStorageAdapter storageAdapter)
@@ -370,6 +429,8 @@ namespace Veldrid.Graphics.OpenGL
                 _vertexAttributesBound = ShaderSet.InputLayout.SetVertexAttributes(VertexBuffers, _vertexAttributesBound);
                 _vertexLayoutChanged = false;
             }
+
+            CommitNewConstantBufferBindings();
         }
 
         private new OpenGLTextureBindingSlots ShaderTextureBindingSlots => (OpenGLTextureBindingSlots)base.ShaderTextureBindingSlots;

@@ -20,6 +20,8 @@ namespace Veldrid.Graphics.OpenGL
         private readonly OpenGLConstantBuffer[] _constantBuffersBySlot;
         private readonly OpenGLConstantBuffer[] _newConstantBuffersBySlot; // CB's bound during draw call preparation
         private readonly int _vertexArrayID;
+        private readonly int _maxVertexAttributeSlots;
+        private readonly int[] _vertexAttribDivisors;
         private PrimitiveType _primitiveType = PrimitiveType.Triangles;
         private int _vertexAttributesBound;
         private bool _vertexLayoutChanged;
@@ -59,6 +61,9 @@ namespace Veldrid.Graphics.OpenGL
             _maxConstantBufferSlots = GL.GetInteger(GetPName.MaxUniformBufferBindings);
             _constantBuffersBySlot = new OpenGLConstantBuffer[_maxConstantBufferSlots];
             _newConstantBuffersBySlot = new OpenGLConstantBuffer[_maxConstantBufferSlots];
+
+            _maxVertexAttributeSlots = GL.GetInteger(GetPName.MaxVertexAttribs);
+            _vertexAttribDivisors = new int[_maxVertexAttributeSlots];
         }
 
         public void EnableDebugCallback() => EnableDebugCallback(DebugSeverity.DebugSeverityNotification);
@@ -269,7 +274,6 @@ namespace Veldrid.Graphics.OpenGL
 
             void AddBinding(OpenGLConstantBuffer cb)
             {
-                Console.WriteLine("Current index: " + currentIndex);
                 buffers[currentIndex] = cb.BufferID;
                 sizes[currentIndex] = new IntPtr(cb.BufferSize);
 
@@ -426,11 +430,48 @@ namespace Veldrid.Graphics.OpenGL
         {
             if (_vertexLayoutChanged)
             {
-                _vertexAttributesBound = ShaderSet.InputLayout.SetVertexAttributes(VertexBuffers, _vertexAttributesBound);
+                SetVertexAttributes(ShaderSet.InputLayout, VertexBuffers);
                 _vertexLayoutChanged = false;
             }
 
             CommitNewConstantBufferBindings();
+        }
+
+        private void SetVertexAttributes(OpenGLVertexInputLayout inputlayout, VertexBuffer[] vertexBuffers)
+        {
+            int totalSlotsBound = 0;
+            for (int i = 0; i < inputlayout.VBLayoutsBySlot.Length; i++)
+            {
+                OpenGLVertexInput input = inputlayout.VBLayoutsBySlot[i];
+                ((OpenGLVertexBuffer)vertexBuffers[i]).Apply();
+                for (int slot = 0; slot < input.Elements.Length; slot++)
+                {
+                    ref OpenGLVertexInputElement element = ref input.Elements[slot]; // Large structure -- use by reference.
+                    int actualSlot = totalSlotsBound + slot;
+                    if (actualSlot >= _vertexAttributesBound)
+                    {
+                        GL.EnableVertexAttribArray(actualSlot);
+                    }
+
+                    GL.VertexAttribPointer(actualSlot, element.ElementCount, element.Type, element.Normalized, input.VertexSizeInBytes, element.Offset);
+
+                    int stepRate = element.InstanceStepRate;
+                    if (_vertexAttribDivisors[actualSlot] != stepRate)
+                    {
+                        GL.VertexAttribDivisor(actualSlot, stepRate);
+                        _vertexAttribDivisors[actualSlot] = stepRate;
+                    }
+                }
+
+                totalSlotsBound += input.Elements.Length;
+            }
+
+            for (int extraSlot = totalSlotsBound; extraSlot < _vertexAttributesBound; extraSlot++)
+            {
+                GL.DisableVertexAttribArray(extraSlot);
+            }
+
+            _vertexAttributesBound = totalSlotsBound;
         }
 
         private new OpenGLTextureBindingSlots ShaderTextureBindingSlots => (OpenGLTextureBindingSlots)base.ShaderTextureBindingSlots;

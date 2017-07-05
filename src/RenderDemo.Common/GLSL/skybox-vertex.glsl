@@ -3,11 +3,18 @@
 in vec3 position;
 out vec3 TexCoords;
 
-uniform mat4 ProjectionMatrixBuffer;
-uniform mat4 ViewMatrixBuffer;
+uniform ProjectionMatrixBuffer
+{
+    mat4 projection;
+};
+
+uniform ViewMatrixBuffer
+{
+    mat4 view;
+};
 
 void main()
 {
-    gl_Position = (ProjectionMatrixBuffer * ViewMatrixBuffer * vec4(position, 1.0)).xyww;  
+    gl_Position = (projection * view * vec4(position, 1.0)).xyww;  
     TexCoords = position;
 }  

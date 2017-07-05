@@ -1,18 +1,27 @@
 ﻿#version 330 core
 
-uniform mat4 ProjectionMatrixBuffer;
+uniform ProjectionMatrixBuffer
+{
+    mat4 projection;
+};
 
-uniform mat4 ViewMatrixBuffer;
+uniform ViewMatrixBuffer
+{
+    mat4 view;
+};
 
-uniform mat4 WorldMatrixBuffer;
+uniform WorldMatrixBuffer
+{
+    mat4 world;
+};
 
 in vec3 in_position;
 
 void main()
 {
-    vec4 worldPos = WorldMatrixBuffer * vec4(in_position, 1);
-    vec4 viewPos = ViewMatrixBuffer * worldPos;
-    vec4 screenPos = ProjectionMatrixBuffer * viewPos;
+    vec4 worldPos = world * vec4(in_position, 1);
+    vec4 viewPos = view * worldPos;
+    vec4 screenPos = projection * viewPos;
     gl_Position = screenPos;
     // Normalize depth range
     gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;

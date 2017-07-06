@@ -19,6 +19,7 @@ namespace Veldrid.Graphics.OpenGL
         private readonly int _maxConstantBufferSlots;
         private readonly OpenGLConstantBuffer[] _constantBuffersBySlot;
         private readonly OpenGLConstantBuffer[] _newConstantBuffersBySlot; // CB's bound during draw call preparation
+        private int _newConstantBuffersCount;
         private readonly int _vertexArrayID;
         private readonly int _maxVertexAttributeSlots;
         private readonly int[] _vertexAttribDivisors;
@@ -253,10 +254,19 @@ namespace Veldrid.Graphics.OpenGL
             // Bind Constant Buffer to slot
             if (_constantBuffersBySlot[slot] == cb)
             {
+                if (_newConstantBuffersBySlot[slot] != null)
+                {
+                    _newConstantBuffersCount -= 1;
+                }
                 _newConstantBuffersBySlot[slot] = null;
             }
             else
             {
+                if (_newConstantBuffersBySlot[slot] == null)
+                {
+                    _newConstantBuffersCount += 1;
+                }
+
                 _newConstantBuffersBySlot[slot] = cb;
             }
 
@@ -271,6 +281,7 @@ namespace Veldrid.Graphics.OpenGL
             IntPtr* offsets = stackalloc IntPtr[_maxConstantBufferSlots];
             int currentIndex = 0; // Index into stack allocated buffers.
             int currentBaseSlot = -1;
+            int remainingBuffers = _newConstantBuffersCount;
 
             void AddBinding(OpenGLConstantBuffer cb)
             {
@@ -282,13 +293,15 @@ namespace Veldrid.Graphics.OpenGL
 
             void EmitBindings()
             {
-                GL.BindBuffersRange(BufferRangeTarget.UniformBuffer, currentBaseSlot, currentIndex, buffers, offsets, sizes);
+                int count = currentIndex;
+                GL.BindBuffersRange(BufferRangeTarget.UniformBuffer, currentBaseSlot, count, buffers, offsets, sizes);
                 Utilities.CheckLastGLError();
                 currentIndex = 0;
                 currentBaseSlot = -1;
+                remainingBuffers -= count;
+                Debug.Assert(remainingBuffers >= 0);
             }
 
-            // TODO: Don't check the entire array every time -- only check up to the number we know are newly-bound.
             for (int slot = 0; slot < _maxConstantBufferSlots; slot++)
             {
                 OpenGLConstantBuffer cb = _newConstantBuffersBySlot[slot];
@@ -304,6 +317,10 @@ namespace Veldrid.Graphics.OpenGL
                 else if (currentIndex != 0)
                 {
                     EmitBindings();
+                    if (remainingBuffers == 0)
+                    {
+                        return;
+                    }
                 }
             }
 

@@ -8,12 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)..\..\deps\sdl2\win7-x64\SDL2.dll">
+    <Content Include="$(MSBuildThisFileDirectory)..\..\deps\SDL2\win7-x64\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackagePath>runtimes/win7-x64/native</PackagePath>
       <Pack>true</Pack>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)..\..\deps\sdl2\osx.10.10-x64\libsdl2.dylib">
+    <Content Include="$(MSBuildThisFileDirectory)..\..\deps\SDL2\osx.10.10-x64\libsdl2.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackagePath>runtimes/osx.10.10-x64/native</PackagePath>
       <Pack>true</Pack>

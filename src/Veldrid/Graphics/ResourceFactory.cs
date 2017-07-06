@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Veldrid.Graphics
@@ -11,8 +9,6 @@ namespace Veldrid.Graphics
     /// </summary>
     public abstract class ResourceFactory
     {
-        public string ShaderAssetRootPath { get; set; } = AppContext.BaseDirectory;
-
         // TODO: These are problematic because of ownership confusion.
         /*
         private readonly Dictionary<SamplerStateCacheKey, SamplerState> _cachedSamplers

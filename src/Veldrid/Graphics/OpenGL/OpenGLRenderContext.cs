@@ -274,8 +274,22 @@ namespace Veldrid.Graphics.OpenGL
             shaderSet.BindConstantBuffer(slot, blockLocation, cb);
         }
 
-        private unsafe void CommitNewConstantBufferBindings()
+        private void CommitNewConstantBufferBindings()
         {
+            if (_extensions.ARB_MultiBind)
+            {
+                CommitNewConstantBufferBindings_MultiBind();
+            }
+            else
+            {
+                CommitNewConstantBufferBindings_SingleBind();
+            }
+        }
+
+        private unsafe void CommitNewConstantBufferBindings_MultiBind()
+        {
+            Debug.Assert(_extensions.ARB_MultiBind);
+            // TODO: This requires GL 4.4 or ARB_multi_bind. Provide the old fallback path if that is not available.
             int* buffers = stackalloc int[_maxConstantBufferSlots];
             IntPtr* sizes = stackalloc IntPtr[_maxConstantBufferSlots];
             IntPtr* offsets = stackalloc IntPtr[_maxConstantBufferSlots];
@@ -330,6 +344,24 @@ namespace Veldrid.Graphics.OpenGL
             }
 
             Array.Clear(_newConstantBuffersBySlot, 0, _newConstantBuffersBySlot.Length);
+        }
+
+        private void CommitNewConstantBufferBindings_SingleBind()
+        {
+            int remainingBindings = _newConstantBuffersCount;
+            for (int slot = 0; slot < _maxConstantBufferSlots; slot++)
+            {
+                OpenGLConstantBuffer cb = _newConstantBuffersBySlot[slot];
+                if (cb != null)
+                {
+                    GL.BindBufferRange(BufferRangeTarget.UniformBuffer, slot, cb.BufferID, IntPtr.Zero, cb.BufferSize);
+                    remainingBindings -= 1;
+                    if (remainingBindings == 0)
+                    {
+                        return;
+                    }
+                }
+            }
         }
 
         private unsafe void SetUniformLocationDataSlow(OpenGLConstantBuffer cb, OpenGLUniformStorageAdapter storageAdapter)

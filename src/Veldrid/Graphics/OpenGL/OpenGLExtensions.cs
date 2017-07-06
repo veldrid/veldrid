@@ -11,9 +11,12 @@ namespace Veldrid.Graphics.OpenGL
             _extensions = extensions;
 
             ARB_DirectStateAccess = IsExtensionSupported("GL_ARB_direct_state_access");
+            ARB_MultiBind = IsExtensionSupported("GL_ARB_multi_bind");
+            ARB_MultiBind = false;
         }
 
         public readonly bool ARB_DirectStateAccess;
+        public readonly bool ARB_MultiBind;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.

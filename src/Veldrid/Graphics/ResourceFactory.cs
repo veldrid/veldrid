@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -147,7 +148,7 @@ namespace Veldrid.Graphics
         /// <param name="vertexShader">The vertex <see cref="Shader"/>.</param>
         /// <param name="vertexInputs">An array of vertex input descriptions, one for each <see cref="VertexBuffer"/> input.</param>
         /// <returns>A new <see cref="VertexInputLayout"/>.</returns>
-        public abstract VertexInputLayout CreateInputLayout(params VertexInputDescription[] vertexInputs); // TODO: Provide a non-params-array version.
+        public abstract VertexInputLayout CreateInputLayout(params VertexInputDescription[] vertexInputs);
 
         public ConstantBuffer CreateConstantBuffer(ShaderConstantType type)
         {

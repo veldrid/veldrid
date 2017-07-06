@@ -295,7 +295,6 @@ namespace Veldrid.Graphics.OpenGL
         private unsafe void CommitNewConstantBufferBindings_MultiBind()
         {
             Debug.Assert(_extensions.ARB_MultiBind);
-            // TODO: This requires GL 4.4 or ARB_multi_bind. Provide the old fallback path if that is not available.
             int* buffers = stackalloc int[_maxConstantBufferSlots];
             IntPtr* sizes = stackalloc IntPtr[_maxConstantBufferSlots];
             IntPtr* offsets = stackalloc IntPtr[_maxConstantBufferSlots];

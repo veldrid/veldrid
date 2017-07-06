@@ -11,13 +11,19 @@ namespace Veldrid.Graphics
     /// </summary>
     public class VertexInputDescription
     {
-        /// <summary>The total size of an individual vertex, in bytes.</summary>
+        /// <summary>
+        /// The total size of an individual vertex, in bytes.
+        /// </summary>
         public int VertexSizeInBytes { get; set; }
 
-        /// <summary>The collection of individual vertex elements comprising a single vertex.</summary>
+        /// <summary>
+        /// The collection of individual vertex elements comprising a single vertex.
+        /// </summary>
         public VertexInputElement[] Elements { get; set; }
 
-        /// <summary>Constructs a new MaterialVertexInput.</summary>
+        /// <summary>
+        /// Constructs a new MaterialVertexInput.
+        /// </summary>
         public VertexInputDescription(int vertexSizeInBytes, params VertexInputElement[] elements)
         {
             VertexSizeInBytes = vertexSizeInBytes;
@@ -25,7 +31,9 @@ namespace Veldrid.Graphics
             DebugValidateVertexSize(elements, VertexSizeInBytes);
         }
 
-        /// <summary>Constructs a new MaterialVertexInput.</summary>
+        /// <summary>
+        /// Constructs a new MaterialVertexInput.
+        /// </summary>
         public VertexInputDescription() : this(0, Array.Empty<VertexInputElement>()) { }
 
 
@@ -44,28 +52,41 @@ namespace Veldrid.Graphics
         }
     }
 
-    /// <summary>Describes an individual component of a vertex.</summary>
+    /// <summary>
+    /// Describes an individual component of a vertex.
+    /// </summary>
     public struct VertexInputElement
     {
-        /// <summary>The name of the element.</summary>
+        /// <summary>
+        /// The name of the element.
+        /// </summary>
         public string Name { get; set; }
 
-        /// <summary>The type of the element.</summary>
+        /// <summary>
+        /// The type of the element.
+        /// </summary>
         public VertexSemanticType SemanticType { get; set; }
 
-        /// <summary>The format of the element.</summary>
+        /// <summary>
+        /// The format of the element.
+        /// </summary>
         public VertexElementFormat ElementFormat { get; set; }
 
-        /// <summary>The size of the element, in bytes.</summary>
+        /// <summary>
+        /// The size of the element, in bytes.
+        /// </summary>
         public byte SizeInBytes { get; set; }
 
         public VertexElementInputClass StorageClassifier { get; set; }
 
-        /// <summary> The number of instances to use a vertex
-        /// Only valid for PerInstance vertex inputs.</summary>
+        /// <summary>
+        /// The number of instances to use a vertex. Only valid for PerInstance vertex inputs.
+        /// </summary>
         public int InstanceStepRate { get; set; }
 
-        /// <summary>Constructs a new MaterialVertexInputElement</summary>
+        /// <summary>
+        /// Constructs a new MaterialVertexInputElement.
+        /// </summary>
         public VertexInputElement(string name, VertexSemanticType semanticType, VertexElementFormat format)
         {
             Name = name;
@@ -76,10 +97,12 @@ namespace Veldrid.Graphics
             InstanceStepRate = 0;
         }
 
-        /// <summary>Constructs a new MaterialVertexInputElement</summary>
+        /// <summary>
+        /// Constructs a new MaterialVertexInputElement
+        /// </summary>
         public VertexInputElement(
-            string name, 
-            VertexSemanticType semanticType, 
+            string name,
+            VertexSemanticType semanticType,
             VertexElementFormat format,
             VertexElementInputClass inputClass,
             int stepRate)
@@ -114,7 +137,9 @@ namespace Veldrid.Graphics
         }
     }
 
-    /// <summary>The structural format of a vertex element.</summary>
+    /// <summary>
+    /// The structural format of a vertex element.
+    /// </summary>
     public enum VertexElementFormat : byte
     {
         Float1,
@@ -125,7 +150,9 @@ namespace Veldrid.Graphics
         Byte4
     }
 
-    /// <summary>The storage type of a vertex element.</summary>
+    /// <summary>
+    /// The storage type of a vertex element.
+    /// </summary>
     public enum VertexElementInputClass : byte
     {
         /// <summary>Describes input which differs per-vertex.</summary>

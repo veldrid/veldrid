@@ -276,13 +276,19 @@ namespace Veldrid.Graphics.OpenGL
 
         private void CommitNewConstantBufferBindings()
         {
-            if (_extensions.ARB_MultiBind)
+            if (_newConstantBuffersCount > 0)
             {
-                CommitNewConstantBufferBindings_MultiBind();
-            }
-            else
-            {
-                CommitNewConstantBufferBindings_SingleBind();
+                if (_extensions.ARB_MultiBind)
+                {
+                    CommitNewConstantBufferBindings_MultiBind();
+                }
+                else
+                {
+                    CommitNewConstantBufferBindings_SingleBind();
+                }
+
+                Array.Clear(_newConstantBuffersBySlot, 0, _newConstantBuffersBySlot.Length);
+                _newConstantBuffersCount = 0;
             }
         }
 
@@ -342,8 +348,6 @@ namespace Veldrid.Graphics.OpenGL
             {
                 EmitBindings();
             }
-
-            Array.Clear(_newConstantBuffersBySlot, 0, _newConstantBuffersBySlot.Length);
         }
 
         private void CommitNewConstantBufferBindings_SingleBind()
@@ -351,15 +355,16 @@ namespace Veldrid.Graphics.OpenGL
             int remainingBindings = _newConstantBuffersCount;
             for (int slot = 0; slot < _maxConstantBufferSlots; slot++)
             {
+                if (remainingBindings == 0)
+                {
+                    return;
+                }
+
                 OpenGLConstantBuffer cb = _newConstantBuffersBySlot[slot];
                 if (cb != null)
                 {
                     GL.BindBufferRange(BufferRangeTarget.UniformBuffer, slot, cb.BufferID, IntPtr.Zero, cb.BufferSize);
                     remainingBindings -= 1;
-                    if (remainingBindings == 0)
-                    {
-                        return;
-                    }
                 }
             }
         }

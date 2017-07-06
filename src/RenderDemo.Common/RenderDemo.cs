@@ -128,7 +128,7 @@ namespace Veldrid.RenderDemo
                 _lightInfoProvider.Data = new Vector4(_lightDirection, 1);
 
                 _camera = new Camera(window);
-                float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
+                float timeFactor = (float)DateTime.UtcNow.TimeOfDay.TotalMilliseconds / 1000;
                 _camera.Position = new Vector3(
                     (float)(Math.Cos(timeFactor) * _circleWidth),
                     3 + (float)Math.Sin(timeFactor) * 2,
@@ -509,7 +509,7 @@ namespace Veldrid.RenderDemo
 
         private static void Update(double deltaSeconds, InputSnapshot snapshot)
         {
-            float timeFactor = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
+            float timeFactor = (float)DateTime.UtcNow.TimeOfDay.TotalMilliseconds / 1000;
             if (_autoRotateCamera)
             {
                 _camera.Position = new Vector3(

@@ -43,7 +43,7 @@ namespace Veldrid.Graphics
             while ((lineEnd = currentChunk.IndexOf('\n')) != -1)
             {
                 ReadOnlySpan<char> lineChunk;
-                if (currentChunk[lineEnd - 1] == '\r')
+                if (lineEnd != 0 && currentChunk[lineEnd - 1] == '\r')
                 {
                     lineChunk = currentChunk.Slice(0, lineEnd - 1);
                 }

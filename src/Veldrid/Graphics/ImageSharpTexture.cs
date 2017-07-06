@@ -1,12 +1,12 @@
 ﻿using ImageSharp;
-using ImageSharp.PixelFormats;
 using System;
 using System.IO;
 
 namespace Veldrid.Graphics
 {
     /// <summary>
-    /// A texture loaded by ImageSharp.
+    /// A texture loaded by ImageSharp. This is a single, non-mipmapped image.
+    /// To create a mipmap chain, construct an ImageSharpMipmapChain.
     /// </summary>
     public class ImageSharpTexture : TextureData
     {

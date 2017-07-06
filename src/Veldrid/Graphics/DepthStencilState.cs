@@ -12,6 +12,9 @@ namespace Veldrid.Graphics
         /// </summary>
         bool IsDepthEnabled { get; }
 
+        /// <summary>
+        /// Returns whether depth writing is enabled.
+        /// </summary>
         bool IsDepthWriteEnabled { get; }
         
         /// <summary>

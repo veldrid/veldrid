@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 
 namespace Veldrid.Graphics
 {
@@ -46,19 +45,12 @@ namespace Veldrid.Graphics
 
         /// <summary>
         /// Constructs a <see cref="IndexBuffer"/> with the given storage size.
+        /// The IndexBuffer will be configured to store 16-bit unsigned index data.
         /// </summary>
         /// <param name="sizeInBytes">The total capacity in bytes of the buffer.</param>
         /// <param name="isDynamic">A value indicating whether or not the buffer should be optimized for dynamic access.</param>
         /// <returns>A new <see cref="IndexBuffer"/></returns>
         public IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic) => CreateIndexBuffer(sizeInBytes, isDynamic, IndexFormat.UInt16);
-        /// <summary>
-        /// Constructs a <see cref="IndexBuffer"/> with the given storage size.
-        /// </summary>
-        /// <param name="sizeInBytes">The total capacity in bytes of the buffer.</param>
-        /// <param name="isDynamic">A value indicating whether or not the buffer should be optimized for dynamic access.</param>
-        /// <param name="format">The format of index data that will be contained in the buffer.</param>
-        /// <returns>A new <see cref="IndexBuffer"/></returns>
-        public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format);
 
         /// <summary>
         /// Creates an <see cref="IndexBuffer"/> containing the given <see cref="System.Int32"/> index data.
@@ -68,15 +60,8 @@ namespace Veldrid.Graphics
         /// <returns>A new <see cref="IndexBuffer"/></returns>
         public IndexBuffer CreateIndexBuffer(int[] indices, bool isDynamic)
         {
-            IndexBuffer ib = CreateIndexBuffer(sizeof(int) * indices.Length, isDynamic);
+            IndexBuffer ib = CreateIndexBuffer(sizeof(int) * indices.Length, isDynamic, IndexFormat.UInt32);
             ib.SetIndices(indices);
-            return ib;
-        }
-
-        public IndexBuffer CreateIndexBuffer<T>(T[] indices, bool isDynamic, IndexFormat format) where T : struct
-        {
-            IndexBuffer ib = CreateIndexBuffer(Unsafe.SizeOf<T>() * indices.Length, isDynamic);
-            ib.SetIndices(indices, format);
             return ib;
         }
 
@@ -84,15 +69,23 @@ namespace Veldrid.Graphics
         /// Creates an <see cref="IndexBuffer"/> containing the given <see cref="System.Int32"/> index data.
         /// </summary>
         /// <param name="indices">The index data.</param>
-        /// <param name="format">The format of the index data.</param>
         /// <param name="isDynamic">A value indicating whether or not the buffer should be optimized for dynamic access.</param>
         /// <returns>A new <see cref="IndexBuffer"/></returns>
-        public IndexBuffer CreateIndexBuffer<T>(T[] indices, IndexFormat format, bool isDynamic) where T : struct
+        public IndexBuffer CreateIndexBuffer(ushort[] indices, bool isDynamic)
         {
-            IndexBuffer ib = CreateIndexBuffer(sizeof(int) * indices.Length, isDynamic);
-            ib.SetIndices(indices, format);
+            IndexBuffer ib = CreateIndexBuffer(sizeof(ushort) * indices.Length, isDynamic, IndexFormat.UInt16);
+            ib.SetIndices(indices);
             return ib;
         }
+
+        /// <summary>
+        /// Constructs a <see cref="IndexBuffer"/> with the given storage size.
+        /// </summary>
+        /// <param name="sizeInBytes">The total capacity in bytes of the buffer.</param>
+        /// <param name="isDynamic">A value indicating whether or not the buffer should be optimized for dynamic access.</param>
+        /// <param name="format">The format of index data that will be contained in the buffer.</param>
+        /// <returns>A new <see cref="IndexBuffer"/></returns>
+        public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format);
 
         /// <summary>
         /// Creates a new <see cref="Shader"/> with the given name.
@@ -111,10 +104,31 @@ namespace Veldrid.Graphics
         /// <returns>A new Shader object.</returns>
         public abstract Shader CreateShader(ShaderType type, string shaderCode, string name);
 
+        /// <summary>
+        /// Creates a <see cref="ShaderSet"/> from the given vertex inputs and shaders.
+        /// </summary>
+        /// <param name="inputLayout">The device-specific vertex input layout of the vertex shader.</param>
+        /// <param name="vertexShader">The vertex shader.</param>
+        /// <param name="fragmentShader">The fragment shader.</param>
+        /// <returns></returns>
         public abstract ShaderSet CreateShaderSet(VertexInputLayout inputLayout, Shader vertexShader, Shader fragmentShader);
 
+        /// <summary>
+        /// Creates a <see cref="ShaderSet"/> from the given vertex inputs and shaders.
+        /// </summary>
+        /// <param name="inputLayout">The device-specific vertex input layout of the vertex shader.</param>
+        /// <param name="vertexShader">The vertex shader.</param>
+        /// <param name="geometryShader">The geometry shader.</param>
+        /// <param name="fragmentShader">The fragment shader.</param>
+        /// <returns></returns>
         public abstract ShaderSet CreateShaderSet(VertexInputLayout inputLayout, Shader vertexShader, Shader geometryShader, Shader fragmentShader);
 
+        /// <summary>
+        /// Creates a device-specific representation of the constant buffer slots available to a set of shaders.
+        /// </summary>
+        /// <param name="shaderSet">The shader set for which the <see cref="ShaderConstantBindingSlots"/> will be applicable.</param>
+        /// <param name="constants">A description of the constant buffer inputs.</param>
+        /// <returns></returns>
         public abstract ShaderConstantBindingSlots CreateShaderConstantBindingSlots(
             ShaderSet shaderSet,
             params ShaderConstantDescription[] constants);
@@ -214,8 +228,32 @@ namespace Veldrid.Graphics
             return tex;
         }
 
+        /// <summary>
+        /// Creates a new 2D device texture with the given properties.
+        /// </summary>
+        /// <param name="mipLevels">The number of mipmap levels contained in the texture.</param>
+        /// <param name="width">The width of the largest mipmap level.</param>
+        /// <param name="height">The height of the largest mipmap level.</param>
+        /// <param name="pixelSizeInBytes">The size of individual pixels, in bytes.</param>
+        /// <param name="format">The pixel format of the texture.</param>
+        /// <returns></returns>
         public abstract DeviceTexture2D CreateTexture(int mipLevels, int width, int height, int pixelSizeInBytes, PixelFormat format);
 
+        /// <summary>
+        /// Creates a new <see cref="SamplerState"/> with the given properties.
+        /// </summary>
+        /// <param name="addressU">A value controlling U-coordinate (R-coordinate in OpenGL) sampling.</param>
+        /// <param name="addressV">A value controlling V-coordinate (S-coordinate in OpenGL) sampling.</param>
+        /// <param name="addressW">A value controlling W-coordinate (T-coordinate in OpenGL) sampling.</param>
+        /// <param name="filter">The filter kind to use.</param>
+        /// <param name="maxAnisotropy">If <paramref name="filter"/> is equal to Anisotropic, then this parameter
+        /// controls the level of anisotropic filtering used.</param>
+        /// <param name="borderColor">When a border-type filter is used, this controls the sampled border color.</param>
+        /// <param name="comparison">Controls the comparison used when a Comparison-type filter is used.</param>
+        /// <param name="minimumLod">The highest-quality LOD level (lowest level) the sampler will access.</param>
+        /// <param name="maximumLod">The lowerst-quality LOD level (lowest level) the sampler will access.</param>
+        /// <param name="lodBias">A bias to use when choosing which LOD level to sample from.</param>
+        /// <returns>A new <see cref="SamplerState"/> which supports the given properties.</returns>
         public SamplerState CreateSamplerState(
             SamplerAddressMode addressU,
             SamplerAddressMode addressV,

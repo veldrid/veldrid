@@ -41,8 +41,9 @@ namespace Veldrid.RenderDemo
             _newMouseButtonsThisFrame.Clear();
 
             MousePosition = snapshot.MousePosition;
-            foreach (var ke in snapshot.KeyEvents)
+            for (int i = 0; i < snapshot.KeyEvents.Count; i++)
             {
+                KeyEvent ke = snapshot.KeyEvents[i];
                 if (ke.Down)
                 {
                     KeyDown(ke.Key);
@@ -52,8 +53,9 @@ namespace Veldrid.RenderDemo
                     KeyUp(ke.Key);
                 }
             }
-            foreach (var me in snapshot.MouseEvents)
+            for (int i = 0; i < snapshot.MouseEvents.Count; i++)
             {
+                MouseEvent me = snapshot.MouseEvents[i];
                 if (me.Down)
                 {
                     MouseDown(me.MouseButton);

@@ -109,15 +109,21 @@ namespace Veldrid.RenderDemo
             _vb.Dispose();
             _ib.Dispose();
 
+            // TODO: The vertex buffer should not need to be recreated every frame.
             _vb = factory.CreateVertexBuffer(_vertices.Count * WireframeVertex.SizeInBytes, false);
             _vb.SetVertexData(
+                // TODO: This copying is very wasteful -- it happens every single frame.
+                // Use a RawList type or similar.
                 _vertices.ToArray(),
                 new VertexDescriptor(
                     WireframeVertex.SizeInBytes,
                     WireframeVertex.ElementCount,
                     0,
                     IntPtr.Zero));
+            // TODO: The index buffer should not need to be recreated every frame.
             _ib = factory.CreateIndexBuffer(sizeof(ushort) * _indices.Count, false);
+            // TODO: This copying is very wasteful -- it happens every single frame.
+            // Use a RawList type or similar.
             _ib.SetIndices(_indices.ToArray(), IndexFormat.UInt16);
         }
 

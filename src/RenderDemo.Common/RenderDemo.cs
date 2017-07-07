@@ -179,12 +179,19 @@ namespace Veldrid.RenderDemo
                 }
 
             }
-            catch when (!Debugger.IsAttached)
+            catch (Exception e) when (!Debugger.IsAttached)
             {
                 if (_rc is OpenGLRenderContext)
                 {
-                    // Console.WriteLine("GL Error: " + GL.GetError());
+                    OpenTK.Graphics.OpenGL.ErrorCode glError = OpenTK.Graphics.OpenGL.GL.GetError();
+                    if (glError != OpenTK.Graphics.OpenGL.ErrorCode.NoError)
+                    {
+                        Console.WriteLine("GL Error: " + glError);
+                    }
                 }
+
+                Console.WriteLine($"RenderDemo encountered an unhandled exception: {e.Message}");
+                Console.WriteLine(e.StackTrace);
             }
         }
 

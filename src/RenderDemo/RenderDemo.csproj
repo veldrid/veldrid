@@ -1,22 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Build;Publish">
-  <PropertyGroup>
-    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(OS)' == 'Windows_NT'">win7-x64</RuntimeIdentifier>
-    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(OS)' == 'Unix'">ubuntu.16.04-x64</RuntimeIdentifier>
-  </PropertyGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>exe</OutputType>
-    <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;ubuntu.16.04-x64;osx.10.10-x64</RuntimeIdentifiers>
-    <SDL2OnWindows Condition="'$(SDL2OnWindows)' == ''">false</SDL2OnWindows>
-    <DefineConstants Condition="'$(SDL2OnWindows)' == 'true'">$(DefineConstants);SDL2_ON_WINDOWS</DefineConstants>
     <PreprocessHlslShaders>true</PreprocessHlslShaders>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="0.2.1" />
-    <Content Include="..\..\deps\SDL2\win7-x64\SDL2.dll" Condition="'$(SDL2OnWindows)' == 'true'">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)..\RenderDemo.Common\ContentIncludes.msbuild" />
   <ItemGroup>

@@ -66,7 +66,7 @@ namespace Veldrid.RenderDemo
         {
             ResourceFactory factory = rc.ResourceFactory;
             _vb = factory.CreateVertexBuffer(new[] { new VertexPosition(Vector3.Zero) }, new VertexDescriptor(12, 1), false);
-            _ib = factory.CreateIndexBuffer(new[] { 0 }, false);
+            _ib = factory.CreateIndexBuffer(new ushort[] { 0 }, false);
             Shader vertexShader = factory.CreateShader(ShaderType.Vertex, "geometry-vertex");
             Shader geometryShader = factory.CreateShader(ShaderType.Geometry, _geometryShaderName);
             Shader fragmentShader = factory.CreateShader(ShaderType.Fragment, "geometry-frag");

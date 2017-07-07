@@ -55,7 +55,7 @@ namespace Veldrid.RenderDemo
             _vertexBuffer.SetVertexData(mesh.Vertices, new VertexDescriptor(VertexPositionNormalTexture.SizeInBytes, 3, 0, IntPtr.Zero));
 
             _indexBuffer = factory.CreateIndexBuffer(mesh.Indices.Length * sizeof(int), false);
-            _indexBuffer.SetIndices(mesh.Indices, IndexFormat.UInt16);
+            _indexBuffer.SetIndices(mesh.Indices);
 
             VertexInputDescription materialInputs = new VertexInputDescription(
                 VertexPositionNormalTexture.SizeInBytes,

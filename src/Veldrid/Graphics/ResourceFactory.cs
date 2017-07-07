@@ -58,9 +58,9 @@ namespace Veldrid.Graphics
         /// <param name="indices">The index data.</param>
         /// <param name="isDynamic">A value indicating whether or not the buffer should be optimized for dynamic access.</param>
         /// <returns>A new <see cref="IndexBuffer"/></returns>
-        public IndexBuffer CreateIndexBuffer(int[] indices, bool isDynamic)
+        public IndexBuffer CreateIndexBuffer(uint[] indices, bool isDynamic)
         {
-            IndexBuffer ib = CreateIndexBuffer(sizeof(int) * indices.Length, isDynamic, IndexFormat.UInt32);
+            IndexBuffer ib = CreateIndexBuffer(sizeof(uint) * indices.Length, isDynamic, IndexFormat.UInt32);
             ib.SetIndices(indices);
             return ib;
         }

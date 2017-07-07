@@ -260,7 +260,7 @@ namespace Veldrid
                 NativeDrawList* cmd_list = draw_data->CmdLists[i];
 
                 _vertexBuffer.SetVertexData(new IntPtr(cmd_list->VtxBuffer.Data), descriptor, cmd_list->VtxBuffer.Size, vertexOffsetInVertices);
-                _indexBuffer.SetIndices(new IntPtr(cmd_list->IdxBuffer.Data), IndexFormat.UInt16, sizeof(ushort), cmd_list->IdxBuffer.Size, indexOffsetInElements);
+                _indexBuffer.SetIndices(new IntPtr(cmd_list->IdxBuffer.Data), IndexFormat.UInt16, cmd_list->IdxBuffer.Size, indexOffsetInElements);
 
                 vertexOffsetInVertices += cmd_list->VtxBuffer.Size;
                 indexOffsetInElements += cmd_list->IdxBuffer.Size;

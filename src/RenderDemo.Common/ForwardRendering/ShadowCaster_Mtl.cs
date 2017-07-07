@@ -127,7 +127,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                     0,
                     IntPtr.Zero));
             _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Length, false);
-            _ib.SetIndices(_indices, IndexFormat.UInt16);
+            _ib.SetIndices(_indices);
 
             _worldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
             _inverseTransposeWorldBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);

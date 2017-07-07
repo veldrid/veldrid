@@ -134,7 +134,7 @@ namespace Veldrid.RenderDemo.Drawers
                     new VertexDescriptor(VertexPositionNormalTexture.SizeInBytes, VertexPositionNormalTexture.ElementCount, 0, IntPtr.Zero));
 
                 IndexBuffer ib = _rc.ResourceFactory.CreateIndexBuffer(indices.Length * sizeof(ushort), false);
-                ib.SetIndices(indices, IndexFormat.UInt16);
+                ib.SetIndices(indices);
 
                 Material shadowmapMaterial = null; // TODO
                 Material regularMaterial = null; // TODO

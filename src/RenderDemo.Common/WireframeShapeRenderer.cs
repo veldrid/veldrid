@@ -124,7 +124,7 @@ namespace Veldrid.RenderDemo
             _ib = factory.CreateIndexBuffer(sizeof(ushort) * _indices.Count, false);
             // TODO: This copying is very wasteful -- it happens every single frame.
             // Use a RawList type or similar.
-            _ib.SetIndices(_indices.ToArray(), IndexFormat.UInt16);
+            _ib.SetIndices(_indices.ToArray());
         }
 
         protected abstract void AddVerticesAndIndices();

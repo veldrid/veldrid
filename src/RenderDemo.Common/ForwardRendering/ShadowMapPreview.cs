@@ -38,7 +38,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             0);
 
             _indexBuffer = factory.CreateIndexBuffer(sizeof(byte) * 6, false);
-            _indexBuffer.SetIndices(new ushort[] { 0, 1, 2, 0, 2, 3 }, IndexFormat.UInt16);
+            _indexBuffer.SetIndices(new ushort[] { 0, 1, 2, 0, 2, 3 });
 
             _material = factory.CreateMaterial(
                 rc,

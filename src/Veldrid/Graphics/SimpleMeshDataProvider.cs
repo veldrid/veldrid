@@ -27,7 +27,7 @@ namespace Veldrid.Graphics
         public IndexBuffer CreateIndexBuffer(ResourceFactory factory, out int indexCount)
         {
             IndexBuffer ib = factory.CreateIndexBuffer(Indices.Length * sizeof(ushort), false);
-            ib.SetIndices(Indices, IndexFormat.UInt16);
+            ib.SetIndices(Indices);
             indexCount = Indices.Length;
             return ib;
         }

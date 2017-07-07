@@ -19,29 +19,25 @@ namespace Veldrid.Graphics.OpenGLES
             Bind();
         }
 
-        public void SetIndices<T>(T[] indices, IndexFormat format) where T : struct
+        public void SetIndices(ushort[] indices) => SetIndices(indices, 0, 0);
+        public void SetIndices(ushort[] indices, int stride, int elementOffset)
         {
-            SetIndices(indices, format, 0, 0);
+            SetData(indices, sizeof(ushort) * elementOffset);
+            ElementsType = DrawElementsType.UnsignedShort;
         }
 
-        public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
+        public void SetIndices(uint[] indices) => SetIndices(indices, 0, 0);
+        public void SetIndices(uint[] indices, int stride, int elementOffset)
         {
-            int elementSizeInBytes = Unsafe.SizeOf<T>();
-            SetData(indices, elementOffset * elementSizeInBytes);
-            ElementsType = OpenGLESFormats.MapIndexFormat(format);
-        }
-
-        public void SetIndices(int[] indices) => SetIndices(indices, 0, 0);
-        public void SetIndices(int[] indices, int stride, int elementOffset)
-        {
-            SetData(indices, sizeof(int) * elementOffset);
+            SetData(indices, sizeof(uint) * elementOffset);
             ElementsType = DrawElementsType.UnsignedInt;
         }
 
-        public void SetIndices(IntPtr indices, IndexFormat format, int elementSizeInBytes, int count)
-            => SetIndices(indices, format, elementSizeInBytes, count, 0);
-        public void SetIndices(IntPtr indices, IndexFormat format, int elementSizeInBytes, int count, int elementOffset)
+        public void SetIndices(IntPtr indices, IndexFormat format, int count)
+            => SetIndices(indices, format, count, 0);
+        public void SetIndices(IntPtr indices, IndexFormat format, int count, int elementOffset)
         {
+            int elementSizeInBytes = format == IndexFormat.UInt16 ? sizeof(ushort) : sizeof(uint);
             SetData(indices, count * elementSizeInBytes, elementOffset * elementSizeInBytes);
             ElementsType = OpenGLESFormats.MapIndexFormat(format);
         }

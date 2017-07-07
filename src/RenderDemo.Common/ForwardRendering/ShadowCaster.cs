@@ -66,7 +66,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
                     0,
                     IntPtr.Zero));
             _ib = factory.CreateIndexBuffer(sizeof(int) * _meshData.Indices.Length, false);
-            _ib.SetIndices(_meshData.Indices, IndexFormat.UInt16);
+            _ib.SetIndices(_meshData.Indices);
 
             _shadowPassMaterial = CreateShadowPassMaterial(rc.ResourceFactory);
             _regularPassMaterial = CreateRegularPassMaterial(rc.ResourceFactory);

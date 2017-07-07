@@ -27,28 +27,26 @@ namespace Veldrid.Graphics.Direct3D
             _device.ImmediateContext.InputAssembler.SetIndexBuffer(Buffer, _format, _offset);
         }
 
-        public void SetIndices<T>(T[] indices, IndexFormat format) where T : struct
-            => SetIndices(indices, format, 0, 0);
+        public void SetIndices(ushort[] indices) => SetIndices(indices, 0, 0);
 
-        public void SetIndices<T>(T[] indices, IndexFormat format, int stride, int elementOffset) where T : struct
+        public void SetIndices(ushort[] indices, int stride, int elementOffset)
         {
-            SharpDX.DXGI.Format dxgiFormat = D3DFormats.VeldridToD3DIndexFormat(format);
-            _format = dxgiFormat;
-            int elementSizeInBytes = Unsafe.SizeOf<T>();
-            SetData(indices, elementOffset * elementSizeInBytes);
+            _format = SharpDX.DXGI.Format.R16_UInt;
+            SetData(indices, elementOffset * sizeof(ushort));
         }
 
-        public void SetIndices(int[] indices) => SetIndices(indices, 0, 0);
-        public void SetIndices(int[] indices, int stride, int elementOffset)
+        public void SetIndices(uint[] indices) => SetIndices(indices, 0, 0);
+        public void SetIndices(uint[] indices, int stride, int elementOffset)
         {
             _format = SharpDX.DXGI.Format.R32_UInt;
-            SetData(indices, elementOffset * sizeof(int));
+            SetData(indices, elementOffset * sizeof(uint));
         }
 
-        public void SetIndices(IntPtr indices, IndexFormat format, int elementSizeInBytes, int count)
-            => SetIndices(indices, format, elementSizeInBytes, count, 0);
-        public void SetIndices(IntPtr indices, IndexFormat format, int elementSizeInBytes, int count, int elementOffset)
+        public void SetIndices(IntPtr indices, IndexFormat format, int count)
+            => SetIndices(indices, format, count, 0);
+        public void SetIndices(IntPtr indices, IndexFormat format, int count, int elementOffset)
         {
+            int elementSizeInBytes = format == IndexFormat.UInt16 ? sizeof(ushort) : sizeof(uint);
             SetData(indices, elementSizeInBytes * count, elementSizeInBytes * elementOffset);
             SharpDX.DXGI.Format dxgiFormat = D3DFormats.VeldridToD3DIndexFormat(format);
             _format = dxgiFormat;

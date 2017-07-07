@@ -56,7 +56,7 @@ namespace Veldrid.RenderDemo
             VertexDescriptor desc2 = new VertexDescriptor(16, 1, 0, IntPtr.Zero);
             s_vb1.SetVertexData(s_cubeVertices.Select(vpc => vpc.Color).ToArray(), desc2);
 
-            s_ib = factory.CreateIndexBuffer(s_cubeIndices, false, IndexFormat.UInt16);
+            s_ib = factory.CreateIndexBuffer(s_cubeIndices, false);
 
             VertexInputDescription materialInputs0 = new VertexInputDescription(
                 12,

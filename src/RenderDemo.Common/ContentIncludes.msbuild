@@ -214,5 +214,6 @@
       <Link>%(OriginalIdentity)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="@(HlslShader)" />
   </ItemGroup>
 </Project>

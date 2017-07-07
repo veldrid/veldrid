@@ -1,4 +1,4 @@
-﻿cbuffer WorldMatrixBuffer : register(b0)
+cbuffer WorldMatrixBuffer : register(b0)
 {
     float4x4 world;
 }

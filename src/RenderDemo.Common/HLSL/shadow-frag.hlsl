@@ -1,4 +1,4 @@
-﻿cbuffer LightInfoBuffer : register(b4)
+cbuffer LightInfoBuffer : register(b4)
 {
     float3 lightDir;
     float __padding;

@@ -8,6 +8,8 @@ using Veldrid.Platform;
 using System.Runtime.InteropServices;
 
 using Key = Veldrid.Platform.Key;
+using System.Reflection;
+using System.IO;
 
 namespace Veldrid
 {
@@ -17,6 +19,8 @@ namespace Veldrid
     /// </summary>
     public class ImGuiRenderer : IDisposable
     {
+        private readonly EmbeddedResourceShaderLoader _embeddedResourceShaderLoader;
+
         // Context objects
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
@@ -43,6 +47,8 @@ namespace Veldrid
         public ImGuiRenderer(RenderContext rc, Window window)
         {
             _rc = rc;
+            _embeddedResourceShaderLoader = new EmbeddedResourceShaderLoader(typeof(ImGuiRenderer).GetTypeInfo().Assembly);
+
             ImGui.GetIO().FontAtlas.AddDefaultFont();
 
             InitializeContextObjects(rc);
@@ -74,8 +80,11 @@ namespace Veldrid
             _rasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true);
             RecreateFontDeviceTexture(rc);
 
-            Shader vertexShader = factory.CreateShader(ShaderType.Vertex, "imgui-vertex");
-            Shader fragmentShader = factory.CreateShader(ShaderType.Fragment, "imgui-frag");
+            string vertexShaderCode = LoadEmbeddedShaderCode("imgui-vertex", rc.BackendType);
+            string fragmentShaderCode = LoadEmbeddedShaderCode("imgui-frag", rc.BackendType);
+            Shader vertexShader = factory.CreateShader(ShaderType.Vertex, vertexShaderCode);
+            Shader fragmentShader = factory.CreateShader(ShaderType.Fragment, fragmentShaderCode);
+
             VertexInputLayout inputLayout = factory.CreateInputLayout(
                 new VertexInputDescription(20, new VertexInputElement[]
                 {
@@ -92,6 +101,20 @@ namespace Veldrid
             _projMatrixBuffer = factory.CreateConstantBuffer(ShaderConstantType.Matrix4x4);
 
             _textureSlots = factory.CreateShaderTextureBindingSlots(_shaderSet, new[] { new ShaderTextureInput(0, "surfaceTexture") });
+        }
+
+        private string LoadEmbeddedShaderCode(string name, GraphicsBackend backend)
+        {
+            if (!_embeddedResourceShaderLoader.TryOpenShader(name, backend, out Stream stream))
+            {
+                throw new InvalidOperationException("Couldn't open imgui-vertex shader code stream.");
+            }
+
+            using (stream)
+            using (StreamReader sr = new StreamReader(stream))
+            {
+                return sr.ReadToEnd();
+            }
         }
 
         /// <summary>

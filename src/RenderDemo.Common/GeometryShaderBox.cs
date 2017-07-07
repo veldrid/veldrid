@@ -67,9 +67,9 @@ namespace Veldrid.RenderDemo
             ResourceFactory factory = rc.ResourceFactory;
             _vb = factory.CreateVertexBuffer(new[] { new VertexPosition(Vector3.Zero) }, new VertexDescriptor(12, 1), false);
             _ib = factory.CreateIndexBuffer(new ushort[] { 0 }, false);
-            Shader vertexShader = factory.CreateShader(ShaderType.Vertex, "geometry-vertex");
-            Shader geometryShader = factory.CreateShader(ShaderType.Geometry, _geometryShaderName);
-            Shader fragmentShader = factory.CreateShader(ShaderType.Fragment, "geometry-frag");
+            Shader vertexShader = factory.CreateShader(ShaderType.Vertex, ShaderHelper.LoadShaderCode("geometry-vertex", ShaderType.Vertex, rc.ResourceFactory));
+            Shader geometryShader = factory.CreateShader(ShaderType.Geometry, ShaderHelper.LoadShaderCode(_geometryShaderName, ShaderType.Geometry, rc.ResourceFactory));
+            Shader fragmentShader = factory.CreateShader(ShaderType.Fragment, ShaderHelper.LoadShaderCode("geometry-frag", ShaderType.Fragment, rc.ResourceFactory));
             VertexInputLayout inputLayout = factory.CreateInputLayout(
                 new VertexInputDescription(12, new VertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3)));
             ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vertexShader, geometryShader, fragmentShader);

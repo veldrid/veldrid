@@ -4,6 +4,6 @@ namespace Veldrid.Graphics
 {
     public interface ShaderLoader
     {
-        bool TryOpenShader(string name, string extension, out Stream dataStream);
+        bool TryOpenShader(string name, GraphicsBackend backend, out Stream dataStream);
     }
 }

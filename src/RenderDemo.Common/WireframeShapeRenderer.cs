@@ -40,8 +40,8 @@ namespace Veldrid.RenderDemo
             _vb = factory.CreateVertexBuffer(1024, true);
             _ib = factory.CreateIndexBuffer(1024, true);
 
-            Shader vs = factory.CreateShader(ShaderType.Vertex, "wireframe-vertex");
-            Shader fs = factory.CreateShader(ShaderType.Fragment, "wireframe-frag");
+            Shader vs = factory.CreateShader(ShaderType.Vertex, ShaderHelper.LoadShaderCode("wireframe-vertex", ShaderType.Vertex, rc.ResourceFactory));
+            Shader fs = factory.CreateShader(ShaderType.Fragment, ShaderHelper.LoadShaderCode("wireframe-frag", ShaderType.Fragment, rc.ResourceFactory));
             VertexInputLayout inputLayout = factory.CreateInputLayout(
                 new VertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
                 new VertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Byte4));

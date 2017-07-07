@@ -75,6 +75,8 @@ namespace Veldrid.Graphics.Direct3D
 
         public SharpDX.Direct3D11.Device Device => _device;
 
+        protected override GraphicsBackend PlatformGetGraphicsBackend() => GraphicsBackend.Direct3D11;
+
         protected unsafe override void PlatformClearBuffer()
         {
             RgbaFloat clearColor = ClearColor;

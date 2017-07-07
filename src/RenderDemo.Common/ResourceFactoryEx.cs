@@ -38,8 +38,8 @@ namespace Veldrid.RenderDemo
             ShaderConstantDescription[] constants,
             ShaderTextureInput[] textureInputs)
         {
-            Shader vs = factory.CreateShader(ShaderType.Vertex, vertexShaderName);
-            Shader fs = factory.CreateShader(ShaderType.Fragment, fragmentShaderName);
+            Shader vs = factory.CreateShader(ShaderType.Vertex, ShaderHelper.LoadShaderCode(vertexShaderName, ShaderType.Vertex, rc.ResourceFactory));
+            Shader fs = factory.CreateShader(ShaderType.Fragment, ShaderHelper.LoadShaderCode(fragmentShaderName, ShaderType.Fragment, rc.ResourceFactory));
             VertexInputLayout inputLayout = factory.CreateInputLayout(vertexInputs);
             ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, fs);
             ShaderConstantBindingSlots constantBindings = factory.CreateShaderConstantBindingSlots(shaderSet, constants);

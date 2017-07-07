@@ -7,7 +7,6 @@
     <DepsDir>$(MSBuildThisFileDirectory)\deps</DepsDir>
     <ProjectDir>$(MSBuildThisFileDirectory)</ProjectDir>
   </PropertyGroup>
-
   <PropertyGroup>
     <!-- NuGet Package common properties. -->
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>

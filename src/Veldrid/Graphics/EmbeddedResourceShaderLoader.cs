@@ -19,17 +19,17 @@ namespace Veldrid.Graphics
         public EmbeddedResourceShaderLoader(Assembly assembly)
         {
             _assembly = assembly;
-            foreach (var name in assembly.GetManifestResourceNames())
+            foreach (string name in assembly.GetManifestResourceNames())
             {
                 _shaderToManifestNames.Add(GetFinalPortion(name), name);
             }
         }
 
-        public bool TryOpenShader(string name, string extension, out Stream dataStream)
+        public bool TryOpenShader(string name, GraphicsBackend backend, out Stream dataStream)
         {
+            string extension = backend == GraphicsBackend.Direct3D11 ? "hlsl" : "glsl";
             string namePlusExtension = name + "." + extension;
-            string manifestName;
-            if (_shaderToManifestNames.TryGetValue(namePlusExtension, out manifestName))
+            if (_shaderToManifestNames.TryGetValue(namePlusExtension, out string manifestName))
             {
                 dataStream = _assembly.GetManifestResourceStream(manifestName);
                 return true;

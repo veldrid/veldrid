@@ -20,22 +20,11 @@ namespace Veldrid.Graphics.Direct3D
         public TShader DeviceShader { get; }
         public ShaderReflection Reflection => _reflection ?? (_reflection = new ShaderReflection(Bytecode.Data));
 
-        public D3DShader(Device device, ShaderType type, string shaderCode, string name)
+        public D3DShader(Device device, ShaderType type, ShaderBytecode bytecode)
         {
             Type = type;
-            CompilationResult compilation = ShaderBytecode.Compile(
-                shaderCode,
-                GetEntryPoint(type),
-                GetProfile(type),
-                DefaultShaderFlags,
-                sourceFileName: name);
-            if (compilation.HasErrors || compilation.Message != null)
-            {
-                throw new InvalidOperationException("Error compiling shader: " + compilation.Message);
-            }
-
-            Bytecode = compilation.Bytecode;
-            DeviceShader = CreateDeviceShader(device, compilation.Bytecode);
+            Bytecode = bytecode;
+            DeviceShader = CreateDeviceShader(device, Bytecode);
         }
 
         private static string GetEntryPoint(ShaderType type)
@@ -79,8 +68,8 @@ namespace Veldrid.Graphics.Direct3D
 
     public class D3DVertexShader : D3DShader<VertexShader>
     {
-        public D3DVertexShader(Device device, string shaderCode, string name)
-            : base(device, ShaderType.Vertex, shaderCode, name) { }
+        public D3DVertexShader(Device device, ShaderBytecode bytecode)
+            : base(device, ShaderType.Vertex, bytecode) { }
 
         protected override VertexShader CreateDeviceShader(Device device, ShaderBytecode bytecode)
         {
@@ -90,8 +79,8 @@ namespace Veldrid.Graphics.Direct3D
 
     public class D3DGeometryShader : D3DShader<GeometryShader>
     {
-        public D3DGeometryShader(Device device, string shaderCode, string name)
-            : base(device, ShaderType.Geometry, shaderCode, name) { }
+        public D3DGeometryShader(Device device, ShaderBytecode bytecode)
+            : base(device, ShaderType.Geometry, bytecode) { }
 
         protected override GeometryShader CreateDeviceShader(Device device, ShaderBytecode bytecode)
         {
@@ -101,8 +90,8 @@ namespace Veldrid.Graphics.Direct3D
 
     public class D3DFragmentShader : D3DShader<PixelShader>
     {
-        public D3DFragmentShader(Device device, string shaderCode, string name)
-            : base(device, ShaderType.Fragment, shaderCode, name) { }
+        public D3DFragmentShader(Device device, ShaderBytecode bytecode)
+            : base(device, ShaderType.Fragment, bytecode) { }
 
         protected override PixelShader CreateDeviceShader(Device device, ShaderBytecode bytecode)
         {

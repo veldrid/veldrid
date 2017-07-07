@@ -61,6 +61,8 @@ namespace Veldrid.Graphics.OpenGLES
             };
         }
 
+        protected override GraphicsBackend PlatformGetGraphicsBackend() => GraphicsBackend.OpenGL;
+
         public override ResourceFactory ResourceFactory { get; }
 
         public override RgbaFloat ClearColor

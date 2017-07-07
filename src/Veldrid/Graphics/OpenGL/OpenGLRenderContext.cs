@@ -90,6 +90,8 @@ namespace Veldrid.Graphics.OpenGL
             };
         }
 
+        protected override GraphicsBackend PlatformGetGraphicsBackend() => GraphicsBackend.OpenGL;
+
         public OpenGLExtensions Extensions => _extensions;
 
         public override ResourceFactory ResourceFactory => _resourceFactory;

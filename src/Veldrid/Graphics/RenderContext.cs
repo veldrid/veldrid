@@ -37,6 +37,8 @@ namespace Veldrid.Graphics
             _bottomRightUvCoordinate = GetBottomRightUvCoordinate();
         }
 
+        public GraphicsBackend BackendType => PlatformGetGraphicsBackend();
+
         /// <summary>Gets or sets the color which is used when clearing the Framebuffer when ClearBuffer() is called.</summary>
         public virtual RgbaFloat ClearColor { get; set; } = RgbaFloat.CornflowerBlue;
 
@@ -488,6 +490,8 @@ namespace Veldrid.Graphics
         protected abstract void PlatformClearMaterialResourceBindings();
 
         protected abstract void PlatformDispose();
+
+        protected abstract GraphicsBackend PlatformGetGraphicsBackend();
 
         ///<summary>Disposes all resources owned by this RenderContext.</summary>
         public void Dispose()

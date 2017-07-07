@@ -2,19 +2,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace Veldrid.Graphics.OpenGL
 {
     public class OpenGLResourceFactory : ResourceFactory
     {
-        private static readonly string s_shaderFileExtension = "glsl";
-
-        private List<ShaderLoader> _shaderLoaders = new List<ShaderLoader>();
+        protected override string GetShaderFileExtension() => "glsl";
 
         public OpenGLResourceFactory()
         {
-            AddShaderLoader(new FolderShaderLoader(Path.Combine(AppContext.BaseDirectory, "GLSL")));
         }
+
+        protected override GraphicsBackend PlatformGetGraphicsBackend() => GraphicsBackend.OpenGL;
 
         public override ConstantBuffer CreateConstantBuffer(int sizeInBytes)
         {
@@ -52,18 +52,37 @@ namespace Veldrid.Graphics.OpenGL
             return new OpenGLIndexBuffer(isDynamic, OpenGLFormats.MapIndexFormat(format));
         }
 
-        public override Shader CreateShader(ShaderType type, string name)
+        public override CompiledShaderCode ProcessShaderCode(ShaderType type, string shaderCode)
         {
-            using (Stream stream = GetShaderStream(name))
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                return CreateShader(type, reader.ReadToEnd(), name);
-            }
+            return new OpenGLCompiledShaderCode(shaderCode);
         }
 
-        public override Shader CreateShader(ShaderType type, string shaderCode, string name)
+        public override CompiledShaderCode LoadProcessedShader(byte[] bytes)
         {
-            return new OpenGLShader(shaderCode, OpenGLFormats.VeldridToGLShaderType(type));
+            string shaderCode;
+            try
+            {
+                shaderCode = Encoding.UTF8.GetString(bytes);
+            }
+            catch
+            {
+                try
+                {
+                    shaderCode = Encoding.ASCII.GetString(bytes);
+                }
+                catch
+                {
+                    throw new InvalidOperationException("Byte array provided to LoadProcessedShader was not a valid shader string.");
+                }
+            }
+
+            return new OpenGLCompiledShaderCode(shaderCode);
+        }
+
+        public override Shader CreateShader(ShaderType type, CompiledShaderCode compiledShaderCode)
+        {
+            OpenGLCompiledShaderCode glShaderSource = (OpenGLCompiledShaderCode)compiledShaderCode;
+            return new OpenGLShader(glShaderSource.ShaderCode, OpenGLFormats.VeldridToGLShaderType(type));
         }
 
         public override ShaderSet CreateShaderSet(VertexInputLayout inputLayout, Shader vertexShader, Shader fragmentShader)
@@ -199,25 +218,6 @@ namespace Veldrid.Graphics.OpenGL
             bool isScissorTestEnabled)
         {
             return new OpenGLRasterizerState(cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
-        }
-
-        public override void AddShaderLoader(ShaderLoader loader)
-        {
-            _shaderLoaders.Add(loader);
-        }
-
-        private Stream GetShaderStream(string name)
-        {
-            foreach (var loader in _shaderLoaders)
-            {
-                Stream s;
-                if (loader.TryOpenShader(name, s_shaderFileExtension, out s))
-                {
-                    return s;
-                }
-            }
-
-            throw new InvalidOperationException("No registered loader was able to find shader: " + name);
         }
     }
 }

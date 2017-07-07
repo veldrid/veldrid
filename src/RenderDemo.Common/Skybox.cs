@@ -57,8 +57,8 @@ namespace Veldrid.RenderDemo
             _ib = factory.CreateIndexBuffer(s_indices.Length * sizeof(int), false);
             _ib.SetIndices(s_indices);
 
-            Shader vs = factory.CreateShader(ShaderType.Vertex, "skybox-vertex");
-            Shader fs = factory.CreateShader(ShaderType.Fragment, "skybox-frag");
+            Shader vs = factory.CreateShader(ShaderType.Vertex, ShaderHelper.LoadShaderCode("skybox-vertex", ShaderType.Vertex, rc.ResourceFactory));
+            Shader fs = factory.CreateShader(ShaderType.Fragment, ShaderHelper.LoadShaderCode("skybox-frag", ShaderType.Fragment, rc.ResourceFactory));
             VertexInputLayout inputLayout = factory.CreateInputLayout(
                 new VertexInputDescription(
                     12,

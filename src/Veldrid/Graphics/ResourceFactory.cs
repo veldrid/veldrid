@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Veldrid.Graphics
 {
@@ -19,6 +21,8 @@ namespace Veldrid.Graphics
         private readonly Dictionary<RasterizerStateCacheKey, RasterizerState> _cachedRasterizerStates
             = new Dictionary<RasterizerStateCacheKey, RasterizerState>();
         */
+
+        public GraphicsBackend BackendType => PlatformGetGraphicsBackend();
 
         /// <summary>
         /// Creates a <see cref="VertexBuffer"/> with the given storage size.
@@ -87,13 +91,9 @@ namespace Veldrid.Graphics
         /// <returns>A new <see cref="IndexBuffer"/></returns>
         public abstract IndexBuffer CreateIndexBuffer(int sizeInBytes, bool isDynamic, IndexFormat format);
 
-        /// <summary>
-        /// Creates a new <see cref="Shader"/> with the given name.
-        /// </summary>
-        /// <param name="type">The type of <see cref="Shader"/>.</param>
-        /// <param name="name">The name of the shader. Must be discoverable by a registered <see cref="ShaderLoader"/>.</param>
-        /// <returns>A new <see cref="Shader"/>.</returns>
-        public abstract Shader CreateShader(ShaderType type, string name);
+        public abstract CompiledShaderCode ProcessShaderCode(ShaderType type, string shaderCode);
+
+        public abstract CompiledShaderCode LoadProcessedShader(byte[] data);
 
         /// <summary>
         /// Creates a new <see cref="Shader"/> from shader source code.
@@ -102,7 +102,12 @@ namespace Veldrid.Graphics
         /// <param name="shaderCode">The raw text source of the <see cref="Shader"/></param>
         /// <param name="name">The name of the <see cref="Shader"/>, generally used for debugging.</param>
         /// <returns>A new Shader object.</returns>
-        public abstract Shader CreateShader(ShaderType type, string shaderCode, string name);
+        public Shader CreateShader(ShaderType type, string shaderCode)
+        {
+            return CreateShader(type, ProcessShaderCode(type, shaderCode));
+        }
+
+        public abstract Shader CreateShader(ShaderType type, CompiledShaderCode compiledShaderCode);
 
         /// <summary>
         /// Creates a <see cref="ShaderSet"/> from the given vertex inputs and shaders.
@@ -453,10 +458,8 @@ namespace Veldrid.Graphics
             bool isDepthClipEnabled,
             bool isScissorTestEnabled);
 
-        /// <summary>
-        /// Adds an additional <see cref="ShaderLoader"/> which provides additional <see cref="Shader"/> loading locations.
-        /// </summary>
-        /// <param name="loader">The <see cref="ShaderLoader"/> to add.</param>
-        public abstract void AddShaderLoader(ShaderLoader loader);
+        protected abstract string GetShaderFileExtension();
+
+        protected abstract GraphicsBackend PlatformGetGraphicsBackend();
     }
 }

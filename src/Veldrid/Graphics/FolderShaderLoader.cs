@@ -18,8 +18,9 @@ namespace Veldrid.Graphics
             _basePath = basePath;
         }
 
-        public bool TryOpenShader(string name, string extension, out Stream dataStream)
+        public bool TryOpenShader(string name, GraphicsBackend backend, out Stream dataStream)
         {
+            string extension = backend == GraphicsBackend.Direct3D11 ? "hlsl" : "glsl";
             string path = GetFullPath(name, extension);
             if (File.Exists(path))
             {

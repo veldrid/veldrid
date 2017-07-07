@@ -170,8 +170,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         private static void CreateShadowPassMaterial(ResourceFactory factory)
         {
-            Shader vs = factory.CreateShader(ShaderType.Vertex, "shadowmap-vertex");
-            Shader fs = factory.CreateShader(ShaderType.Fragment, "shadowmap-frag");
+            Shader vs = factory.CreateShader(ShaderType.Vertex, ShaderHelper.LoadShaderCode("shadowmap-vertex", ShaderType.Vertex, factory));
+            Shader fs = factory.CreateShader(ShaderType.Fragment, ShaderHelper.LoadShaderCode("shadowmap-frag", ShaderType.Fragment, factory));
             VertexInputLayout inputLayout = factory.CreateInputLayout(
                 new VertexInputDescription(
                     32,
@@ -194,8 +194,8 @@ namespace Veldrid.RenderDemo.ForwardRendering
 
         private static void CreateRegularPassMaterial(ResourceFactory factory)
         {
-            Shader vs = factory.CreateShader(ShaderType.Vertex, "forward_mtl-vertex");
-            Shader fs = factory.CreateShader(ShaderType.Fragment, "forward_mtl-frag");
+            Shader vs = factory.CreateShader(ShaderType.Vertex, ShaderHelper.LoadShaderCode("forward_mtl-vertex", ShaderType.Vertex, factory));
+            Shader fs = factory.CreateShader(ShaderType.Fragment, ShaderHelper.LoadShaderCode("forward_mtl-frag", ShaderType.Fragment, factory));
             VertexInputLayout inputLayout = factory.CreateInputLayout(
                 new VertexInputDescription(
                     32,

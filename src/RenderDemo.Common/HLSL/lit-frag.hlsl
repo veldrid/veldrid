@@ -1,4 +1,4 @@
-﻿cbuffer LightBuffer : register(b2)
+cbuffer LightBuffer : register(b2)
 {
     float4 diffuseColor;
     float3 lightDirection;

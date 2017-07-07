@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="FindFxcExe">
+    <PropertyGroup>
+      <_Fxcx64DefaultLocation>C:\Program Files (x86)\Windows Kits\10\bin\x64\fxc.exe</_Fxcx64DefaultLocation>
+      <FxcExe Condition="Exists('$(_Fxcx64DefaultLocation)')">$(_Fxcx64DefaultLocation)</FxcExe>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="CompileHlslShaders" 
+          DependsOnTargets="FindFxcExe"
+          BeforeTargets="CoreCompile"
+          Condition="'$(PreprocessHlslShaders)' == 'true' And '@(HlslShader)' != ''">
+
+     <ItemGroup>
+      <_HlslShaderWithMetadata Include="@(HlslShader)"
+                               Condition="'%(HlslShader.Profile)' != '' And '%(HlslShader.EntryPoint)' != ''" />
+      <_HlslShaderWithoutMetadata Include="@(HlslShader)" Exclude="@(_HlslShaderWithMetadata)" />
+     </ItemGroup>
+
+    <Warning Condition="'@(_HlslShaderWithoutMetadata)' != ''"
+             Text="HlslShader item %(_HlslShaderWithoutMetadata.Identity) does not define both Profile and EntryPoint metadata. It will not be compiled." />
+
+    <MakeDir Directories="$(IntermediateOutputPath)%(_HlslShaderWithMetadata.OutputPath)" />
+
+    <Exec Condition="'@(_HlslShaderWithMetadata)' != ''"
+          Command=" &quot;$(FxcExe)&quot; /O3 /T %(Profile) /E %(EntryPoint) /Fo &quot;$(IntermediateOutputPath)%(OutputPath)\$([System.IO.Path]::GetFileName(%(Identity))).bytes&quot; &quot;%(_HlslShaderWithMetadata.Identity)&quot;"
+          StandardOutputImportance="high" />
+
+    <ItemGroup>
+      <Content Include="$(IntermediateOutputPath)%(OutputPath)\$([System.IO.Path]::GetFileName('%(_HlslShaderWithMetadata.Identity)')).bytes">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="%(_HlslShaderWithMetadata.Identity)">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+  </Target>
+</Project>

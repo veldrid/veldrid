@@ -1,206 +1,218 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!-- Assets -->
-  <ItemGroup>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\MaterialAsset\ShadowCaster_Stone.json">
-      <RelativePath>Assets\MaterialAsset\ShadowCaster_Stone.json</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+<ItemGroup>
+    <ContentItems Include="Assets\Models\SponzaAtrium\sponza.mtl"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\sponza.obj"/>
+    <ContentItems Include="Assets\Models\Sphere.obj"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\background.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\background_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\chain_texture.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\chain_texture_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\chain_texture_mask.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\lion.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\lion2_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\lion_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\spnza_bricks_a_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\spnza_bricks_a_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\spnza_bricks_a_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_arch_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_arch_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_arch_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_ceiling_a_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_ceiling_a_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_column_a_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_column_a_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_column_a_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_column_b_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_column_b_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_column_b_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_column_c_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_column_c_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_column_c_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_curtain_blue_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_curtain_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_curtain_green_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_details_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_details_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_fabric_blue_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_fabric_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_fabric_green_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_fabric_purple.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_fabric_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_flagpole_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_flagpole_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_floor_a_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_floor_a_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_roof_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_thorn_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_thorn_diff.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_thorn_mask.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\sponza_thorn_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\vase_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\vase_dif.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\vase_hanging.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\vase_plant.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\vase_plant_mask.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\vase_plant_spec.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\vase_round.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\vase_round_bump.png"/>
+    <ContentItems Include="Assets\Models\SponzaAtrium\textures\vase_round_spec.png"/>
+    <ContentItems Include="Assets\Models\Teapot.obj"/>
+    <ContentItems Include="Assets\Textures\cloudtop\cloudtop_bk.png"/>
+    <ContentItems Include="Assets\Textures\cloudtop\cloudtop_dn.png"/>
+    <ContentItems Include="Assets\Textures\cloudtop\cloudtop_ft.png"/>
+    <ContentItems Include="Assets\Textures\cloudtop\cloudtop_lf.png"/>
+    <ContentItems Include="Assets\Textures\cloudtop\cloudtop_rt.png"/>
+    <ContentItems Include="Assets\Textures\cloudtop\cloudtop_up.png"/>
+    <ContentItems Include="Assets\Textures\crate0_diffuse.png"/>
+    <ContentItems Include="Assets\Textures\CubeTexture.png"/>
+    <ContentItems Include="Assets\Textures\Wood.png"/>
+    <ContentItems Include="GLSL\billboard-geometry.glsl"/>
+    <ContentItems Include="GLSL\forward_mtl-frag.glsl"/>
+    <ContentItems Include="GLSL\forward_mtl-vertex.glsl"/>
+    <ContentItems Include="GLSL\lit-frag.glsl"/>
+    <ContentItems Include="GLSL\shadow-frag.glsl"/>
+    <ContentItems Include="GLSL\shadow-vertex.glsl"/>
+    <ContentItems Include="GLSL\shadowmap-frag.glsl"/>
+    <ContentItems Include="GLSL\shadowmap-vertex.glsl"/>
+    <ContentItems Include="GLSL\simple-2d-frag.glsl"/>
+    <ContentItems Include="GLSL\simple-2d-vertex.glsl"/>
+    <ContentItems Include="GLSL\simple-frag.glsl"/>
+    <ContentItems Include="GLSL\simple-vertex.glsl"/>
+    <ContentItems Include="GLSL\skybox-frag.glsl"/>
+    <ContentItems Include="GLSL\skybox-vertex.glsl"/>
+    <ContentItems Include="GLSL\textured-frag.glsl"/>
+    <ContentItems Include="GLSL\textured-vertex.glsl"/>
+    <ContentItems Include="GLSL\cube-geometry.glsl"/>
+    <ContentItems Include="GLSL\geometry-vertex.glsl"/>
+    <ContentItems Include="GLSL\geometry-frag.glsl"/>
+    <ContentItems Include="GLSL\instanced-simple-vertex.glsl"/>
+    <ContentItems Include="GLSL\instanced-simple-frag.glsl"/>
+    <ContentItems Include="GLSL\wireframe-frag.glsl"/>
+    <ContentItems Include="GLSL\wireframe-vertex.glsl"/>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\billboard-geometry.hlsl">
+      <Profile>gs_5_0</Profile>
+      <EntryPoint>GS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\forward_mtl-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\forward_mtl-vertex.hlsl">
+      <Profile>vs_5_0</Profile>
+      <EntryPoint>VS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\lit-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\shadow-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\shadow-vertex.hlsl">
+      <Profile>vs_5_0</Profile>
+      <EntryPoint>VS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\shadowmap-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\shadowmap-vertex.hlsl">
+      <Profile>vs_5_0</Profile>
+      <EntryPoint>VS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\simple-2d-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\simple-2d-vertex.hlsl">
+      <Profile>vs_5_0</Profile>
+      <EntryPoint>VS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\simple-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\simple-vertex.hlsl">
+      <Profile>vs_5_0</Profile>
+      <EntryPoint>VS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\skybox-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\skybox-vertex.hlsl">
+      <Profile>vs_5_0</Profile>
+      <EntryPoint>VS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\textured-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\textured-vertex.hlsl">
+      <Profile>vs_5_0</Profile>
+      <EntryPoint>VS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\cube-geometry.hlsl">
+      <Profile>gs_5_0</Profile>
+      <EntryPoint>GS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\geometry-vertex.hlsl">
+      <Profile>vs_5_0</Profile>
+      <EntryPoint>VS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\geometry-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\instanced-simple-vertex.hlsl">
+      <Profile>vs_5_0</Profile>
+      <EntryPoint>VS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\instanced-simple-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\wireframe-frag.hlsl">
+      <Profile>ps_5_0</Profile>
+      <EntryPoint>PS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+    <HlslShader Include="$(MSBuildThisFileDirectory)HLSL\wireframe-vertex.hlsl">
+      <Profile>vs_5_0</Profile>
+      <EntryPoint>VS</EntryPoint>
+      <OutputPath>HLSL</OutputPath>
+    </HlslShader>
+
+    <ContentItems Update="@(ContentItems)">
+      <OriginalIdentity>%(Identity)</OriginalIdentity>
     </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\MaterialAsset\ShadowCaster_Crate.json">
-      <RelativePath>Assets\MaterialAsset\ShadowCaster_Crate.json</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\MaterialAsset\ShadowCaster_Wood.json">
-      <RelativePath>Assets\MaterialAsset\ShadowCaster_Wood.json</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\MaterialAsset\ShadowCaster_ShadowMap.json">
-      <RelativePath>Assets\MaterialAsset\ShadowCaster_ShadowMap.json</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\MaterialAsset\ModelPreview.json">
-      <RelativePath>Assets\MaterialAsset\ModelPreview.json</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\MaterialAsset\Skybox.json">
-      <RelativePath>Assets\MaterialAsset\Skybox.json</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\shadow-frag.glsl">
-      <RelativePath>GLSL\shadow-frag.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\shadow-vertex.glsl">
-      <RelativePath>GLSL\shadow-vertex.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\simple-2d-frag.glsl">
-      <RelativePath>GLSL\simple-2d-frag.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\simple-2d-vertex.glsl">
-      <RelativePath>GLSL\simple-2d-vertex.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\skybox-vertex.glsl">
-      <RelativePath>GLSL\skybox-vertex.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\skybox-frag.glsl">
-      <RelativePath>GLSL\skybox-frag.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\shadow-frag.hlsl">
-      <RelativePath>HLSL\shadow-frag.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\shadow-vertex.hlsl">
-      <RelativePath>HLSL\shadow-vertex.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\simple-2d-frag.hlsl">
-      <RelativePath>HLSL\simple-2d-frag.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\simple-2d-vertex.hlsl">
-      <RelativePath>HLSL\simple-2d-vertex.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Textures\CubeTexture.png">
-      <RelativePath>Assets\Textures\CubeTexture.png</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Textures\Wood.png">
-      <RelativePath>Assets\Textures\Wood.png</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Textures\crate0_diffuse.png">
-      <RelativePath>Assets\Textures\crate0_diffuse.png</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Textures\cloudtop\cloudtop_bk.png">
-      <RelativePath>Assets\Textures\cloudtop\cloudtop_bk.png</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Textures\cloudtop\cloudtop_ft.png">
-      <RelativePath>Assets\Textures\cloudtop\cloudtop_ft.png</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Textures\cloudtop\cloudtop_lf.png">
-      <RelativePath>Assets\Textures\cloudtop\cloudtop_lf.png</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Textures\cloudtop\cloudtop_rt.png">
-      <RelativePath>Assets\Textures\cloudtop\cloudtop_rt.png</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Textures\cloudtop\cloudtop_up.png">
-      <RelativePath>Assets\Textures\cloudtop\cloudtop_up.png</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Textures\cloudtop\cloudtop_dn.png">
-      <RelativePath>Assets\Textures\cloudtop\cloudtop_dn.png</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Textures\envmap_stormydays\*.png">
-      <RelativePath>Assets\Textures\envmap_stormydays\*.png</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)..\..\deps\ImGui.NET\win-x64\cimgui.dll">
-      <RelativePath>cimgui.dll</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)..\..\deps\ImGui.NET\ubuntu-x64\cimgui.so" Condition="'$(OSTarget)' == 'Ubuntu'">
-      <RelativePath>cimgui.so</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\shadowmap-frag.glsl">
-      <RelativePath>GLSL\shadowmap-frag.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\shadowmap-vertex.glsl">
-      <RelativePath>GLSL\shadowmap-vertex.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\imgui-frag.glsl">
-      <RelativePath>GLSL\imgui-frag.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\imgui-vertex.glsl">
-      <RelativePath>GLSL\imgui-vertex.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\imgui-frag.hlsl">
-      <RelativePath>HLSL\imgui-frag.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\imgui-vertex.hlsl">
-      <RelativePath>HLSL\imgui-vertex.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\lit-frag.hlsl">
-      <RelativePath>HLSL\lit-frag.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\simple-frag.hlsl">
-      <RelativePath>HLSL\simple-frag.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\simple-vertex.hlsl">
-      <RelativePath>HLSL\simple-vertex.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\textured-frag.hlsl">
-      <RelativePath>HLSL\textured-frag.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\textured-vertex.hlsl">
-      <RelativePath>HLSL\textured-vertex.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Models\Teapot.obj">
-      <RelativePath>Assets\Models\Teapot.obj</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)GLSL\textured-vertex.glsl">
-      <RelativePath>GLSL\textured-vertex.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <NoneItems Include="$(MSBuildThisFileDirectory)GLSL\lit-frag.glsl">
-      <RelativePath>GLSL\lit-frag.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </NoneItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)GLSL\simple-frag.glsl">
-      <RelativePath>GLSL\simple-frag.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)GLSL\simple-vertex.glsl">
-      <RelativePath>GLSL\simple-vertex.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)GLSL\textured-frag.glsl">
-      <RelativePath>GLSL\textured-frag.glsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)Assets\Models\Sphere.obj">
-      <RelativePath>Assets\Models\Sphere.obj</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\shadowmap-frag.hlsl">
-      <RelativePath>HLSL\shadowmap-frag.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\shadowmap-vertex.hlsl">
-      <RelativePath>HLSL\shadowmap-vertex.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\skybox-frag.hlsl">
-      <RelativePath>HLSL\skybox-frag.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
-    <ContentItems Include="$(MSBuildThisFileDirectory)HLSL\skybox-vertex.hlsl">
-      <RelativePath>HLSL\skybox-vertex.hlsl</RelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ContentItems>
+
+    <Content Include="@(ContentItems -> '$(MSBuildThisFileDirectory)%(Identity)')">
+      <Link>%(OriginalIdentity)</Link>
+      <OutputPath>HLSL</OutputPath>
+    </Content>
   </ItemGroup>
 </Project>

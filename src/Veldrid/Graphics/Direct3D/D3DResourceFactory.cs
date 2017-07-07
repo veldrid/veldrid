@@ -3,20 +3,28 @@ using SharpDX.Direct3D11;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using SharpDX.D3DCompiler;
 
 namespace Veldrid.Graphics.Direct3D
 {
     public class D3DResourceFactory : ResourceFactory
     {
-        private static readonly string s_shaderFileExtension = "hlsl";
+        private const ShaderFlags DefaultShaderFlags
+#if DEBUG
+            = ShaderFlags.Debug | ShaderFlags.SkipOptimization;
+#else
+            = ShaderFlags.OptimizationLevel3;
+#endif
+
+        protected override string GetShaderFileExtension() => "hlsl";
+
+        protected override GraphicsBackend PlatformGetGraphicsBackend() => GraphicsBackend.Direct3D11;
 
         private readonly Device _device;
-        private List<ShaderLoader> _shaderLoaders = new List<ShaderLoader>();
 
         public D3DResourceFactory(Device device)
         {
             _device = device;
-            AddShaderLoader(new FolderShaderLoader(Path.Combine(AppContext.BaseDirectory, "HLSL")));
         }
 
         public override ConstantBuffer CreateConstantBuffer(int sizeInBytes)
@@ -70,27 +78,60 @@ namespace Veldrid.Graphics.Direct3D
             return new D3DIndexBuffer(_device, sizeInBytes, isDynamic, D3DFormats.VeldridToD3DIndexFormat(format));
         }
 
-        public override Shader CreateShader(ShaderType type, string name)
+        public override CompiledShaderCode ProcessShaderCode(ShaderType type, string shaderCode)
         {
-            using (Stream stream = GetShaderStream(name))
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                return CreateShader(type, reader.ReadToEnd(), name);
-            }
-        }
-
-        public override Shader CreateShader(ShaderType type, string shaderCode, string name)
-        {
+            string entryPoint;
             switch (type)
             {
                 case ShaderType.Vertex:
-                    return new D3DVertexShader(_device, shaderCode, name);
+                    entryPoint = "VS";
+                    break;
                 case ShaderType.Geometry:
-                    return new D3DGeometryShader(_device, shaderCode, name);
+                    entryPoint = "GS";
+                    break;
                 case ShaderType.Fragment:
-                    return new D3DFragmentShader(_device, shaderCode, name);
+                    entryPoint = "PS";
+                    break;
                 default:
                     throw Illegal.Value<ShaderType>();
+            }
+
+            string profile;
+            switch (type)
+            {
+                case ShaderType.Vertex:
+                    profile = "vs_5_0";
+                    break;
+                case ShaderType.Geometry:
+                    profile = "gs_5_0";
+                    break;
+                case ShaderType.Fragment:
+                    profile = "ps_5_0";
+                    break;
+                default: throw Illegal.Value<ShaderType>();
+            }
+
+            return new D3DShaderBytecode(shaderCode, entryPoint, profile, DefaultShaderFlags);
+        }
+
+        public override CompiledShaderCode LoadProcessedShader(byte[] data)
+        {
+            return new D3DShaderBytecode(data);
+        }
+
+        public override Shader CreateShader(ShaderType type, CompiledShaderCode compiledShaderCode)
+        {
+            D3DShaderBytecode d3dBytecode = (D3DShaderBytecode)compiledShaderCode;
+
+            switch (type)
+            {
+                case ShaderType.Vertex:
+                    return new D3DVertexShader(_device, d3dBytecode.Bytecode);
+                case ShaderType.Geometry:
+                    return new D3DGeometryShader(_device, d3dBytecode.Bytecode);
+                case ShaderType.Fragment:
+                    return new D3DFragmentShader(_device, d3dBytecode.Bytecode);
+                default: throw Illegal.Value<ShaderType>();
             }
         }
 
@@ -142,15 +183,15 @@ namespace Veldrid.Graphics.Direct3D
         }
 
         protected override SamplerState CreateSamplerStateCore(
-            SamplerAddressMode addressU, 
-            SamplerAddressMode addressV, 
-            SamplerAddressMode addressW, 
-            SamplerFilter filter, 
-            int maxAnisotropy, 
-            RgbaFloat borderColor, 
-            DepthComparison comparison, 
-            int minimumLod, 
-            int maximumLod, 
+            SamplerAddressMode addressU,
+            SamplerAddressMode addressV,
+            SamplerAddressMode addressW,
+            SamplerFilter filter,
+            int maxAnisotropy,
+            RgbaFloat borderColor,
+            DepthComparison comparison,
+            int minimumLod,
+            int maximumLod,
             int lodBias)
         {
             return new D3DSamplerState(_device, addressU, addressV, addressW, filter, maxAnisotropy, borderColor, comparison, minimumLod, maximumLod, lodBias);
@@ -222,25 +263,6 @@ namespace Veldrid.Graphics.Direct3D
             bool isScissorTestEnabled)
         {
             return new D3DRasterizerState(_device, cullMode, fillMode, isDepthClipEnabled, isScissorTestEnabled);
-        }
-
-        public override void AddShaderLoader(ShaderLoader loader)
-        {
-            _shaderLoaders.Add(loader);
-        }
-
-        private Stream GetShaderStream(string name)
-        {
-            foreach (var loader in _shaderLoaders)
-            {
-                Stream s;
-                if (loader.TryOpenShader(name, s_shaderFileExtension, out s))
-                {
-                    return s;
-                }
-            }
-
-            throw new InvalidOperationException("No registered loader was able to find shader: " + name);
         }
     }
 }

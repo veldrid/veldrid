@@ -15,20 +15,27 @@
           AfterTargets="AssignTargetPaths"
           Condition="'$(PreprocessHlslShaders)' == 'true' And '@(HlslShader)' != ''">
 
-     <ItemGroup>
+    <ItemGroup>
       <_HlslShaderWithMetadata Include="@(HlslShader)"
                                Condition="'%(HlslShader.Profile)' != '' And '%(HlslShader.EntryPoint)' != ''" />
       <_HlslShaderWithoutMetadata Include="@(HlslShader)" Exclude="@(_HlslShaderWithMetadata)" />
-     </ItemGroup>
+    </ItemGroup>
 
     <Warning Condition="'@(_HlslShaderWithoutMetadata)' != ''"
              Text="HlslShader item %(_HlslShaderWithoutMetadata.Identity) does not define both Profile and EntryPoint metadata. It will not be compiled." />
 
+    <PropertyGroup>
+      <FxcOptimizationLevel Condition="'$(FxcOptimizationLevel)' == '' And '$(Configuration)' == 'Debug'">/Od</FxcOptimizationLevel>
+      <FxcOptimizationLevel Condition="'$(FxcOptimizationLevel)' == ''">/O3</FxcOptimizationLevel>
+
+      <FxcDebugFlag Condition="'$(Configuration)' == 'Debug'">/Zi</FxcDebugFlag>
+    </PropertyGroup>
+
     <MakeDir Directories="$(IntermediateOutputPath)%(_HlslShaderWithMetadata.OutputPath)" />
 
     <Exec Condition="'@(_HlslShaderWithMetadata)' != '' And '$(FxcExe)' != ''"
-          Command=" &quot;$(FxcExe)&quot; /O3 /T %(Profile) /E %(EntryPoint) /Fo &quot;$(IntermediateOutputPath)%(OutputPath)\$([System.IO.Path]::GetFileName(%(Identity))).bytes&quot; &quot;%(_HlslShaderWithMetadata.Identity)&quot;"
-          StandardOutputImportance="high" />
+          Command=" &quot;$(FxcExe)&quot; $(FxcOptimizationLevel) $(FxcDebugFlag) /T %(Profile) /E %(EntryPoint) /Fo &quot;$(IntermediateOutputPath)%(OutputPath)\$([System.IO.Path]::GetFileName(%(Identity))).bytes&quot; &quot;%(_HlslShaderWithMetadata.Identity)&quot;"
+          StandardOutputImportance="low" />
 
     <ItemGroup>
       <ContentWithTargetPath Include="$(IntermediateOutputPath)%(_HlslShaderWithMetadata.OutputPath)\$([System.IO.Path]::GetFileName('%(_HlslShaderWithMetadata.Identity)')).bytes">
@@ -40,9 +47,6 @@
         <Link>%(_HlslShaderWithoutMetadata.OutputPath)\$([System.IO.Path]::GetFileName('%(_HlslShaderWithoutMetadata.Identity)'))</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </ContentWithTargetPath>
-
-      <!-- Copy original shader file as well. -->
-      
     </ItemGroup>
 
   </Target>

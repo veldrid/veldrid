@@ -79,7 +79,7 @@ namespace Veldrid.RenderDemo.ForwardRendering
             int width = DepthMapWidth;
             int height = DepthMapHeight;
             var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), PixelFormat.R16_UInt);
-            _depthTexture.CopyTo(cpuDepthTexture);
+            _depthTexture.GetTextureData(0, cpuDepthTexture.PixelData);
 
             ImageSharp.Image<ImageSharp.Rgba32> image = new ImageSharp.Image<ImageSharp.Rgba32>(width, height);
             unsafe

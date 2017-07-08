@@ -1,11 +1,12 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGL
 {
-    public class OpenGLTexture2D : OpenGLTexture, DeviceTexture2D, IDisposable, PixelDataProvider
+    public class OpenGLTexture2D : OpenGLTexture, DeviceTexture2D, IDisposable
     {
         private readonly OpenTK.Graphics.OpenGL.PixelFormat _pixelFormat;
         private readonly PixelInternalFormat _internalFormat;
@@ -75,36 +76,29 @@ namespace Veldrid.Graphics.OpenGL
             }
         }
 
-        public void CopyTo(TextureData textureData)
+        public void GetTextureData<T>(int mipLevel, T[] destination) where T : struct
         {
-            textureData.AcceptPixelData(this);
-        }
-
-        public void SetPixelData<T>(T[] pixelData, int width, int height, int pixelSizeInBytes) where T : struct
-        {
-            Width = width;
-            Height = height;
-
-            GCHandle handle = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
-            SetPixelData(handle.AddrOfPinnedObject(), width, height, pixelSizeInBytes);
+            GCHandle handle = GCHandle.Alloc(destination, GCHandleType.Pinned);
+            GetTextureData(mipLevel, handle.AddrOfPinnedObject(), Unsafe.SizeOf<T>() * destination.Length);
             handle.Free();
         }
 
-        public unsafe void SetPixelData(IntPtr pixelData, int width, int height, int pixelSizeInBytes)
+        public unsafe void GetTextureData(int mipLevel, IntPtr destination, int storageSizeInBytes)
         {
-            Width = width;
-            Height = height;
+            int width = MipmapHelper.GetDimension(Width, mipLevel);
+            int height = MipmapHelper.GetDimension(Height, mipLevel);
 
             Bind();
-            GL.GetTexImage(TextureTarget.Texture2D, 0, OpenTK.Graphics.OpenGL.PixelFormat.Alpha, _pixelType, pixelData);
+            GL.GetTexImage(TextureTarget.Texture2D, mipLevel, OpenTK.Graphics.OpenGL.PixelFormat.Alpha, _pixelType, destination);
             GL.BindTexture(TextureTarget.Texture2D, 0);
             GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
 
             // Need to reverse the rows vertically.
+            int pixelSizeInBytes = FormatHelpers.GetPixelSize(_veldridFormat);
             int rowBytes = width * pixelSizeInBytes;
             IntPtr stagingRow = Marshal.AllocHGlobal(rowBytes);
             byte* stagingPtr = (byte*)stagingRow.ToPointer();
-            byte* sourcePtr = (byte*)pixelData.ToPointer();
+            byte* sourcePtr = (byte*)destination.ToPointer();
             for (int y = height - 1, destY = 0; y > (height / 2); y--)
             {
                 Buffer.MemoryCopy(sourcePtr + (y * rowBytes), stagingPtr, rowBytes, rowBytes);

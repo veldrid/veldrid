@@ -86,19 +86,5 @@ namespace Veldrid.Graphics
                 return factory.CreateTexture(new IntPtr(pixelPtr), Width, Height, PixelSizeInBytes, Format);
             }
         }
-
-        /// <summary>
-        /// Accepts pixel data from the given provider. This will overrite the pixel data in this texture.
-        /// </summary>
-        /// <param name="pixelDataProvider">The data provider to accept pixel information from.</param>
-        public unsafe void AcceptPixelData(PixelDataProvider pixelDataProvider)
-        {
-            fixed (Rgba32* pixelPtr = &Pixels.DangerousGetPinnableReference())
-            {
-                // TODO: This is very unsafe,and will very likely overflow if the PixelDataProvider
-                // has more data than this can hold.
-                pixelDataProvider.SetPixelData(new IntPtr(pixelPtr), Width, Height, PixelSizeInBytes);
-            }
-        }
     }
 }

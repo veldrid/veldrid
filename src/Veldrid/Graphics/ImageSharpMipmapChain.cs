@@ -60,11 +60,6 @@ namespace Veldrid.Graphics
             Images = GenerateMipmaps(baseImage);
         }
 
-        public void AcceptPixelData(PixelDataProvider pixelDataProvider)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Constructs a mipmapped 2D device texture from this mipmap chain.
         /// </summary>

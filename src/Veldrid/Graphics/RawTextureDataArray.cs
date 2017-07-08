@@ -4,11 +4,6 @@
     {
         public T[] PixelData { get; }
 
-        public override void AcceptPixelData(PixelDataProvider pixelDataProvider)
-        {
-            pixelDataProvider.SetPixelData(PixelData, Width, Height, PixelSizeInBytes);
-        }
-
         public override DeviceTexture2D CreateDeviceTexture(ResourceFactory factory)
         {
             return factory.CreateTexture(PixelData, Width, Height, PixelSizeInBytes, Format);

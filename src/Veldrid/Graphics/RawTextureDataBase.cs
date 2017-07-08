@@ -14,8 +14,6 @@
 
         public abstract DeviceTexture2D CreateDeviceTexture(ResourceFactory factory);
 
-        public abstract void AcceptPixelData(PixelDataProvider pixelDataProvider);
-
         public RawTextureDataBase(int width, int height, int pixelSizeInBytes, PixelFormat format)
         {
             Width = width;

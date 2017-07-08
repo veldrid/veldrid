@@ -423,8 +423,7 @@ namespace Veldrid.Graphics
         /// <summary>Gets the bottom right UV coordinate of a standard plane.</summary>
         public Vector2 BottomRightUv => _bottomRightUvCoordinate;
 
-        // TODO: REMOVE THIS.
-        public void NotifyWindowResized(int width, int height)
+        public void ResizeMainWindow(int width, int height)
         {
             OnWindowResized(width, height);
         }

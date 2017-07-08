@@ -38,18 +38,5 @@ namespace Veldrid.Graphics
         /// <param name="producer">The device texture producer.</param>
         /// <returns>A new GPU <see cref="DeviceTexture2D"/>.</returns>
         DeviceTexture2D CreateDeviceTexture(ResourceFactory factory);
-
-        // TODO: This function does not understand mip levels.
-        /// <summary>
-        /// Accepts pixel data from a provider.
-        /// </summary>
-        /// <param name="pixelDataProvider">The provider whose data is transferred.</param>
-        void AcceptPixelData(PixelDataProvider pixelDataProvider);
-    }
-
-    public interface PixelDataProvider
-    {
-        void SetPixelData<T>(T[] pixelData, int width, int height, int pixelSizeInBytes) where T : struct;
-        void SetPixelData(IntPtr pixelData, int width, int height, int pixelSizeInBytes);
     }
 }

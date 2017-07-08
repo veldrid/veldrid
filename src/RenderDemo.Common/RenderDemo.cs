@@ -547,9 +547,9 @@ namespace Veldrid.RenderDemo
             {
                 _window.Close();
             }
-            if (InputTracker.GetKeyDown(Key.PrintScreen))
+            if (InputTracker.GetKeyDown(Key.F6))
             {
-                ((ShadowMapStage)_renderer.Stages[0]).SaveNextFrame();
+                _takeScreenshot = true;
             }
             if (InputTracker.GetKeyDown(Key.F11))
             {
@@ -1144,7 +1144,7 @@ https://github.com/mellinoe/veldrid.");
             if (s_needsResizing)
             {
                 s_needsResizing = false;
-                _rc.NotifyWindowResized(_window.Width, _window.Height);
+                _rc.ResizeMainWindow(_window.Width, _window.Height);
             }
 
             SharedDataProviders.UpdateBuffers();
@@ -1157,9 +1157,9 @@ https://github.com/mellinoe/veldrid.");
                 int width = _window.Width;
                 int height = _window.Height;
                 var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), Graphics.PixelFormat.R16_UInt);
-                _screenshotFramebuffer.DepthTexture.CopyTo(cpuDepthTexture);
+                _screenshotFramebuffer.ColorTexture.GetTextureData(0, cpuDepthTexture.PixelData);
 
-                ImageSharp.Image<ImageSharp.Rgba32>  image = new ImageSharp.Image<ImageSharp.Rgba32>(width, height);
+                ImageSharp.Image<ImageSharp.Rgba32> image = new ImageSharp.Image<ImageSharp.Rgba32>(width, height);
                 unsafe
                 {
                     fixed (ImageSharp.Rgba32* pixelsPtr = &image.Pixels.DangerousGetPinnableReference())

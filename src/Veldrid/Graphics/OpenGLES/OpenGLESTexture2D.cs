@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.OpenGLES
 {
-    public class OpenGLESTexture2D : OpenGLESTexture, DeviceTexture2D, IDisposable, PixelDataProvider
+    public class OpenGLESTexture2D : OpenGLESTexture, DeviceTexture2D, IDisposable
     {
         private readonly OpenTK.Graphics.ES30.PixelFormat _pixelFormat;
         private readonly PixelType _pixelType;
@@ -72,25 +72,14 @@ namespace Veldrid.Graphics.OpenGLES
             }
         }
 
-        public void CopyTo(TextureData textureData)
+        public void GetTextureData<T>(int mipLevel, T[] destination) where T : struct
         {
-            textureData.AcceptPixelData(this);
+            throw new NotSupportedException();
         }
 
-        public void SetPixelData<T>(T[] pixelData, int width, int height, int pixelSizeInBytes) where T : struct
+        public unsafe void GetTextureData(int mipLevel, IntPtr destination, int storageSizeInBytes)
         {
-            Width = width;
-            Height = height;
-
-            GCHandle handle = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
-            SetPixelData(handle.AddrOfPinnedObject(), width, height, pixelSizeInBytes);
-            handle.Free();
-        }
-
-        public unsafe void SetPixelData(IntPtr pixelData, int width, int height, int pixelSizeInBytes)
-        {
-            // TODO: GL.ReadPixels (?)
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

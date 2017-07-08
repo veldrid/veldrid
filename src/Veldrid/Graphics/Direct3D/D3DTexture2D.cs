@@ -2,6 +2,7 @@
 using SharpDX.Direct3D11;
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics.Direct3D
@@ -21,7 +22,7 @@ namespace Veldrid.Graphics.Direct3D
         }
     }
 
-    public class D3DTexture2D : D3DTexture, DeviceTexture2D, IDisposable, PixelDataProvider
+    public class D3DTexture2D : D3DTexture, DeviceTexture2D, IDisposable
     {
         private readonly Device _device;
 
@@ -96,11 +97,6 @@ namespace Veldrid.Graphics.Direct3D
                 back: 1);
             int srcRowPitch = GetRowPitch(width);
             _device.ImmediateContext.UpdateSubresource(DeviceTexture, mipLevel, resourceRegion, data, srcRowPitch, 0);
-        }
-
-        public void CopyTo(TextureData textureData)
-        {
-            textureData.AcceptPixelData(this);
         }
 
         public unsafe void SetPixelData<T>(T[] destination, int width, int height, int pixelSizeInBytes) where T : struct
@@ -183,6 +179,71 @@ namespace Veldrid.Graphics.Direct3D
         {
             var pixelSize = D3DFormats.GetPixelSize(DeviceTexture.Description.Format);
             return pixelSize * width;
+        }
+
+        public void GetTextureData<T>(int mipLevel, T[] destination) where T : struct
+        {
+            GCHandle handle = GCHandle.Alloc(destination, GCHandleType.Pinned);
+            GetTextureData(mipLevel, handle.AddrOfPinnedObject(), Unsafe.SizeOf<T>() * destination.Length);
+            handle.Free();
+        }
+
+        public void GetTextureData(int mipLevel, IntPtr destination, int storageSizeInBytes)
+        {
+            int width = MipmapHelper.GetDimension(Width, mipLevel);
+            int height = MipmapHelper.GetDimension(Height, mipLevel);
+
+            D3DTexture2D stagingTexture = new D3DTexture2D(_device, new Texture2DDescription()
+            {
+                Width = width,
+                Height = height,
+                Usage = ResourceUsage.Staging,
+                BindFlags = BindFlags.None,
+                CpuAccessFlags = CpuAccessFlags.Read,
+                OptionFlags = ResourceOptionFlags.None,
+                MipLevels = 1,
+                ArraySize = 1,
+                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                Format = DeviceTexture.Description.Format
+            });
+
+            // Copy the data from the GPU to the staging texture.
+            _device.ImmediateContext.CopySubresourceRegion(DeviceTexture, mipLevel, null, stagingTexture.DeviceTexture, 0);
+
+            int elementCount = width * height;
+            // Copy the data to the array.
+            DataBox db = _device.ImmediateContext.MapSubresource(
+                stagingTexture.DeviceTexture,
+                0,
+                MapMode.Read,
+                MapFlags.None,
+                out DataStream ds);
+
+            int pixelSizeInBytes = D3DFormats.GetPixelSize(DeviceTexture.Description.Format);
+            int rowSize = pixelSizeInBytes * width;
+            // If the pitch exactly matches the row size, we can simply copy all the data.
+            if (rowSize == db.RowPitch)
+            {
+                SharpDX.Utilities.CopyMemory(destination, db.DataPointer, elementCount * pixelSizeInBytes);
+            }
+            else
+            {
+                // The texture data may not have a pitch exactly equal to the row width.
+                // This means that the pixel data is not "tightly packed" into the buffer given
+                // to us, and has empty data at the end of each row.
+
+                for (int rowNumber = 0; rowNumber < height; rowNumber++)
+                {
+                    int rowStartOffsetInBytes = rowNumber * width * pixelSizeInBytes;
+                    ds.Read(destination, rowStartOffsetInBytes, width * pixelSizeInBytes);
+
+                    // At the end of the row, seek the stream to skip the extra filler data,
+                    // which is equal to (RowPitch - RowSize) bytes.
+                    ds.Seek(db.RowPitch - rowSize, SeekOrigin.Current);
+                }
+            }
+
+            stagingTexture.Dispose();
         }
     }
 }

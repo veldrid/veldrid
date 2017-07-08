@@ -23,12 +23,6 @@ namespace Veldrid.Graphics
     public interface DeviceTexture2D : DeviceTexture
     {
         /// <summary>
-        /// Copies the DeviceTexture's pixel data into a CPU-side Texture.
-        /// </summary>
-        /// <param name="textureData">The TextureData to copy the pixel data into.</param>
-        void CopyTo(TextureData textureData);
-
-        /// <summary>
         /// Copies texture data into the device's texture storage.
         /// </summary>
         /// <param name="x"></param>
@@ -38,5 +32,15 @@ namespace Veldrid.Graphics
         /// <param name="data"></param>
         /// <param name="dataSizeInBytes"></param>
         void SetTextureData(int mipLevel, int x, int y, int width, int height, IntPtr data, int dataSizeInBytes);
+
+        /// <summary>
+        /// Retrieves texture data from the DeviceTexture2D into a CPU-side buffer.
+        /// </summary>
+        void GetTextureData(int mipLevel, IntPtr destination, int storageSizeInBytes);
+
+        /// <summary>
+        /// Retrieves texture data from the DeviceTexture2D into a CPU-side buffer.
+        /// </summary>
+        void GetTextureData<T>(int mipLevel, T[] destination) where T : struct;
     }
 }

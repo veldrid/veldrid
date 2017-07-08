@@ -5,14 +5,15 @@ namespace Veldrid.Graphics.Direct3D
 {
     public class D3DVertexInputLayout : VertexInputLayout
     {
-        private readonly Device _device;
-
         public VertexInputDescription[] InputDescriptions { get; }
 
-        public D3DVertexInputLayout(Device device, VertexInputDescription[] vertexInputs)
+        public D3DVertexInputLayout(VertexInputDescription[] vertexInputs)
         {
-            _device = device;
             InputDescriptions = vertexInputs;
+        }
+
+        public void Dispose()
+        {
         }
 
         public static InputLayout CreateLayout(Device device, VertexInputDescription[] vertexInputs, byte[] shaderBytecode)
@@ -81,10 +82,6 @@ namespace Veldrid.Graphics.Direct3D
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }
-        }
-
-        public void Dispose()
-        {
         }
 
         private class SemanticIndices

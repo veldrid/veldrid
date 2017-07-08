@@ -137,7 +137,7 @@ namespace Veldrid.Graphics.Direct3D
 
         public override VertexInputLayout CreateInputLayout(VertexInputDescription[] vertexInputs)
         {
-            return new D3DVertexInputLayout(_device, vertexInputs);
+            return new D3DVertexInputLayout(vertexInputs);
         }
 
         public override ShaderSet CreateShaderSet(VertexInputLayout inputLayout, Shader vertexShader, Shader fragmentShader)

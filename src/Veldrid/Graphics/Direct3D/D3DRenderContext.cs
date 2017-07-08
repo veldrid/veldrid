@@ -124,6 +124,10 @@ namespace Veldrid.Graphics.Direct3D
             }
         }
 
+        // This method is necessary so we can avoid requiring a VertexShader to be passed to
+        // D3DResourceFactory.CreateInputLayout. Input layouts can be shared between different
+        // vertex shaders, although they do require vertex shader bytecode (from any shader with a
+        // compatible input layout) for their initial creation.
         private InputLayout GetInputLayout(D3DVertexShader vertexShader, D3DVertexInputLayout d3dInputLayout)
         {
             if (!_inputLayoutCache.TryGetValue(d3dInputLayout, out InputLayout inputLayout))

@@ -77,6 +77,12 @@ namespace Veldrid.Graphics
                 SamplerFilter.MinMagMipPoint, 1, RgbaFloat.Black, DepthComparison.Always, 0, int.MaxValue, 0));
         private SamplerState _pointSampler;
 
+        public SamplerState LinearSampler
+            => _linearSampler ?? (_linearSampler = ResourceFactory.CreateSamplerState(
+                SamplerAddressMode.Wrap, SamplerAddressMode.Wrap, SamplerAddressMode.Wrap,
+                SamplerFilter.MinMagMipLinear, 1, RgbaFloat.Black, DepthComparison.Always, 0, int.MaxValue, 0));
+        private SamplerState _linearSampler;
+
         public SamplerState Anisox4Sampler
             => _anisox4Sampler ?? (_anisox4Sampler = ResourceFactory.CreateSamplerState(
                 SamplerAddressMode.Wrap, SamplerAddressMode.Wrap, SamplerAddressMode.Wrap,

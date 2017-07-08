@@ -37,7 +37,7 @@ namespace Veldrid.Graphics.OpenGL
             if (compileStatus != 1)
             {
                 string shaderLog = GL.GetShaderInfoLog(ShaderID);
-                throw new InvalidOperationException($"Error compiling {type} shader. {shaderLog}");
+                throw new VeldridException($"Error compiling {type} shader. {shaderLog}");
             }
         }
 

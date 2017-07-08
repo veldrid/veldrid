@@ -21,7 +21,7 @@ namespace Veldrid.Graphics.OpenGLES
                 Utilities.CheckLastGLES3Error();
                 if (location == -1)
                 {
-                    throw new InvalidOperationException($"No sampler was found with the name {element.Name}");
+                    throw new VeldridException($"No sampler was found with the name {element.Name}");
                 }
 
                 _textureBindings[i] = new OpenGLESProgramTextureBinding(location);

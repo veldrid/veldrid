@@ -37,7 +37,7 @@ namespace Veldrid.Graphics.OpenGL
                     int uniformLocation = GL.GetUniformLocation(programID, description.Name);
                     if (uniformLocation == -1)
                     {
-                        throw new InvalidOperationException($"No uniform or uniform block with name {description.Name} was found.");
+                        throw new VeldridException($"No uniform or uniform block with name {description.Name} was found.");
                     }
 
                     OpenGLUniformStorageAdapter storageAdapter = new OpenGLUniformStorageAdapter(programID, uniformLocation);
@@ -73,7 +73,7 @@ namespace Veldrid.Graphics.OpenGL
                     errorMessage += Environment.NewLine + $"Provider size in bytes: {providerSize}, Actual buffer size in bytes: {blockSize}.";
                 }
 
-                throw new InvalidOperationException(errorMessage);
+                throw new VeldridException(errorMessage);
             }
         }
 

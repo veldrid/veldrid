@@ -54,7 +54,7 @@ namespace Veldrid.Graphics.OpenGLES
             SharpDX.Utilities.CopyMemory(storageLocation, mappedPtr, bytesToCopy);
             if (!GL.UnmapBuffer(_target))
             {
-                throw new InvalidOperationException("UnmapBuffer failed.");
+                throw new VeldridException("UnmapBuffer failed.");
             }
             Unbind();
         }
@@ -94,7 +94,7 @@ namespace Veldrid.Graphics.OpenGLES
             Utilities.CheckLastGLES3Error();
             if (expectedSizeInBytes != bufferSize)
             {
-                throw new InvalidOperationException($"{_target} {_bufferID} not uploaded correctly. Expected:{expectedSizeInBytes}, Actual:{bufferSize}");
+                throw new VeldridException($"{_target} {_bufferID} not uploaded correctly. Expected:{expectedSizeInBytes}, Actual:{bufferSize}");
             }
 #endif
         }
@@ -111,7 +111,7 @@ namespace Veldrid.Graphics.OpenGLES
         {
             if (!GL.UnmapBuffer(_target))
             {
-                throw new InvalidOperationException("GL.UnmapBuffer failed.");
+                throw new VeldridException("GL.UnmapBuffer failed.");
             }
         }
 

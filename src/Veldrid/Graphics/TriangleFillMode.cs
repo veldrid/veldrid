@@ -1,11 +1,17 @@
 ﻿namespace Veldrid.Graphics
 {
-    /// <summary>Describes how triangles are rasterized.</summary>
+    /// <summary>
+    /// Describes how triangles are rasterized.
+    /// </summary>
     public enum TriangleFillMode : byte
     {
-        /// <summary>Fill triangles fully.</summary>
+        /// <summary>
+        /// Fill triangles fully.
+        /// </summary>
         Solid,
-        /// <summary>Outline triangles "wireframe-style".</summary>
+        /// <summary>
+        /// Outline triangles "wireframe-style".
+        /// </summary>
         Wireframe
     }
 }

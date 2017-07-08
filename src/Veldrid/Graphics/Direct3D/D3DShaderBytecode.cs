@@ -12,7 +12,7 @@ namespace Veldrid.Graphics.Direct3D
             CompilationResult compilationResult = ShaderBytecode.Compile(shaderCode, entryPoint, profile, flags);
             if (compilationResult.HasErrors)
             {
-                throw new InvalidOperationException($"Error compiling shader code: {compilationResult.Message}");
+                throw new VeldridException($"Error compiling shader code: {compilationResult.Message}");
             }
 
             Bytecode = compilationResult.Bytecode;

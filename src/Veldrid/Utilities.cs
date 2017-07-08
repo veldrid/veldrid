@@ -29,7 +29,7 @@ namespace Veldrid
             var ec = OpenTK.Graphics.ES30.GL.GetError();
             if (ec != OpenTK.Graphics.ES30.ErrorCode.NoError)
             {
-                throw new InvalidOperationException("OpenGLES Error: " + ec);
+                throw new VeldridException("OpenGLES Error: " + ec);
             }
         }
 
@@ -39,7 +39,7 @@ namespace Veldrid
             var ec = OpenTK.Graphics.OpenGL.GL.GetError();
             if (ec != OpenTK.Graphics.OpenGL.ErrorCode.NoError)
             {
-                throw new InvalidOperationException("OpenGL Error: " + ec);
+                throw new VeldridException("OpenGL Error: " + ec);
             }
         }
 

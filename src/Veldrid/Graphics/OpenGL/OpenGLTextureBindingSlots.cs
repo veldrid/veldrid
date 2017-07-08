@@ -20,7 +20,7 @@ namespace Veldrid.Graphics.OpenGL
                 int location = GL.GetUniformLocation(((OpenGLShaderSet)shaderSet).ProgramID, element.Name);
                 if (location == -1)
                 {
-                    throw new InvalidOperationException($"No sampler was found with the name {element.Name}");
+                    throw new VeldridException($"No sampler was found with the name {element.Name}");
                 }
 
                 _textureBindings[i] = new OpenGLProgramTextureBinding(location);

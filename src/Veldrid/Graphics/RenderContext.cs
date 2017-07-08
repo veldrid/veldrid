@@ -147,7 +147,7 @@ namespace Veldrid.Graphics
         {
             if (_constantBindings == null)
             {
-                throw new InvalidOperationException(
+                throw new VeldridException(
                     "Cannot call SetConstantBuffer when ShaderConstantBindingSlots has not been set.");
             }
 
@@ -171,7 +171,7 @@ namespace Veldrid.Graphics
         {
             if (_textureBindingSlots == null)
             {
-                throw new InvalidOperationException("Cannot call SetTexture when TextureBindingSlots has not been set.");
+                throw new VeldridException("Cannot call SetTexture when TextureBindingSlots has not been set.");
             }
 
             PlatformSetTexture(slot, textureBinding);

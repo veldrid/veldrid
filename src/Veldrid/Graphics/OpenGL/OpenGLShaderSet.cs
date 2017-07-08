@@ -51,7 +51,7 @@ namespace Veldrid.Graphics.OpenGL
             if (linkStatus != 1)
             {
                 string log = GL.GetProgramInfoLog(ProgramID);
-                throw new InvalidOperationException($"Error linking GL program: {log}");
+                throw new VeldridException($"Error linking GL program: {log}");
             }
         }
 

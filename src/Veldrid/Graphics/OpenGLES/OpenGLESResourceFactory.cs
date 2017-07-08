@@ -70,7 +70,7 @@ namespace Veldrid.Graphics.OpenGLES
                 }
                 catch
                 {
-                    throw new InvalidOperationException("Byte array provided to LoadProcessedShader was not a valid shader string.");
+                    throw new VeldridException("Byte array provided to LoadProcessedShader was not a valid shader string.");
                 }
             }
 

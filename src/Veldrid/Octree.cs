@@ -86,7 +86,7 @@ namespace Veldrid
             OctreeItem<T> octreeItem;
             if (!_currentRoot.TryGetContainedOctreeItem(item, out octreeItem))
             {
-                throw new InvalidOperationException(item + " is not contained in the octree. It cannot be moved.");
+                throw new VeldridException(item + " is not contained in the octree. It cannot be moved.");
             }
             else
             {
@@ -98,7 +98,7 @@ namespace Veldrid
         {
             if (newBounds.ContainsNaN())
             {
-                throw new InvalidOperationException("Invalid bounds: " + newBounds);
+                throw new VeldridException("Invalid bounds: " + newBounds);
             }
             var newRoot = octreeItem.Container.MoveContainedItem(octreeItem, newBounds);
             if (newRoot != null)
@@ -166,7 +166,7 @@ namespace Veldrid
         {
             if (Parent != null)
             {
-                throw new InvalidOperationException("Can only add items to the root Octree node.");
+                throw new VeldridException("Can only add items to the root Octree node.");
             }
 
             octreeItem = _nodeCache.GetOctreeItem(ref itemBounds, item);
@@ -195,7 +195,7 @@ namespace Veldrid
             var container = item.Container;
             if (!container._items.Contains(item))
             {
-                throw new InvalidOperationException("Can't move item " + item + ", its container does not contain it.");
+                throw new VeldridException("Can't move item " + item + ", its container does not contain it.");
             }
 
             item.Bounds = newBounds;
@@ -246,11 +246,11 @@ namespace Veldrid
         {
             if (!_items.Contains(octreeItem))
             {
-                throw new InvalidOperationException("Cannot mark item as moved which doesn't belong to this OctreeNode.");
+                throw new VeldridException("Cannot mark item as moved which doesn't belong to this OctreeNode.");
             }
             if (newBounds.ContainsNaN())
             {
-                throw new InvalidOperationException("Invalid bounds: " + newBounds);
+                throw new VeldridException("Invalid bounds: " + newBounds);
             }
 
             octreeItem.HasPendingMove = true;
@@ -278,7 +278,7 @@ namespace Veldrid
             var container = octreeItem.Container;
             if (!container._items.Remove(octreeItem))
             {
-                throw new InvalidOperationException("Item isn't contained in its container.");
+                throw new VeldridException("Item isn't contained in its container.");
             }
 
             if (container.Parent != null)
@@ -480,7 +480,7 @@ namespace Veldrid
         {
             if (Parent != null)
             {
-                throw new InvalidOperationException("Can only clear the root OctreeNode.");
+                throw new VeldridException("Can only clear the root OctreeNode.");
             }
 
             RecycleNode();

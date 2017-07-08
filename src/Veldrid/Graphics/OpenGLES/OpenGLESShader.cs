@@ -41,7 +41,7 @@ namespace Veldrid.Graphics.OpenGLES
             {
                 string shaderLog = GL.GetShaderInfoLog(ShaderID);
                 Utilities.CheckLastGLES3Error();
-                throw new InvalidOperationException($"Error compiling {type} shader. {shaderLog}");
+                throw new VeldridException($"Error compiling {type} shader. {shaderLog}");
             }
         }
 

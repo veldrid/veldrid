@@ -123,7 +123,7 @@ namespace Veldrid.Graphics.OpenGL
             FramebufferErrorCode errorCode = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
             if (errorCode != FramebufferErrorCode.FramebufferComplete)
             {
-                throw new InvalidOperationException("Framebuffer was not complete: " + errorCode);
+                throw new VeldridException("Framebuffer was not complete: " + errorCode);
             }
         }
 

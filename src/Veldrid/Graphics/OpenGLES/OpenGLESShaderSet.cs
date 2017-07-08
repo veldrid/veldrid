@@ -49,7 +49,7 @@ namespace Veldrid.Graphics.OpenGLES
             {
                 string log = GL.GetProgramInfoLog(ProgramID);
                 Utilities.CheckLastGLES3Error();
-                throw new InvalidOperationException($"Error linking GL program: {log}");
+                throw new VeldridException($"Error linking GL program: {log}");
             }
         }
 

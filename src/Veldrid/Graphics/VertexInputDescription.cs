@@ -47,7 +47,7 @@ namespace Veldrid.Graphics
             }
             if (computedSize != vertexSizeInBytes)
             {
-                throw new InvalidOperationException($"Provided VertexSizeInBytes ({vertexSizeInBytes}) does not match sum of component sizes ({computedSize}).");
+                throw new VeldridException($"Provided VertexSizeInBytes ({vertexSizeInBytes}) does not match sum of component sizes ({computedSize}).");
             }
         }
     }

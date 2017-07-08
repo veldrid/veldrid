@@ -29,7 +29,7 @@ namespace Veldrid.Graphics.OpenGLES
         {
             if (storageSizeInBytes % sizeof(float) != 0)
             {
-                throw new InvalidOperationException("Storage size must be a multiple of 4 bytes.");
+                throw new VeldridException("Storage size must be a multiple of 4 bytes.");
             }
 
             float* floatPtr = (float*)storageLocation.ToPointer();
@@ -57,11 +57,11 @@ namespace Veldrid.Graphics.OpenGLES
         {
             if (dataSizeInBytes % sizeof(float) != 0)
             {
-                throw new InvalidOperationException($"{nameof(dataSizeInBytes)} must be a multiple of 4 bytes");
+                throw new VeldridException($"{nameof(dataSizeInBytes)} must be a multiple of 4 bytes");
             }
             if (destinationOffsetInBytes % sizeof(float) != 0)
             {
-                throw new InvalidOperationException($"{nameof(destinationOffsetInBytes)} must be a multiple of 4 bytes");
+                throw new VeldridException($"{nameof(destinationOffsetInBytes)} must be a multiple of 4 bytes");
             }
 
             _setterFunction(_uniformLocation, data, dataSizeInBytes, destinationOffsetInBytes);

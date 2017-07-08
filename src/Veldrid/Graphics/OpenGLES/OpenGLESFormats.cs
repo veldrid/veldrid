@@ -32,7 +32,7 @@ namespace Veldrid.Graphics.OpenGLES
                     case PixelFormat.R16_UInt:
                         return TextureComponentCount.DepthComponent16;
                     default:
-                        throw new InvalidOperationException("Invalid PixelFormat for a depth texture: " + veldridFormat);
+                        throw new VeldridException("Invalid PixelFormat for a depth texture: " + veldridFormat);
                 }
             }
             else

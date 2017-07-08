@@ -53,7 +53,7 @@ namespace Veldrid.Graphics.OpenGL
             Unsafe.CopyBlock(storageLocation.ToPointer(), mappedPtr.ToPointer(), (uint)bytesToCopy);
             if (!GL.UnmapBuffer(_target))
             {
-                throw new InvalidOperationException("UnmapBuffer failed.");
+                throw new VeldridException("UnmapBuffer failed.");
             }
         }
 
@@ -85,7 +85,7 @@ namespace Veldrid.Graphics.OpenGL
             GL.GetBufferParameter(_target, BufferParameterName.BufferSize, out bufferSize);
             if (expectedSizeInBytes != bufferSize)
             {
-                throw new InvalidOperationException($"{_target} {_bufferID} not uploaded correctly. Expected:{expectedSizeInBytes}, Actual:{bufferSize}");
+                throw new VeldridException($"{_target} {_bufferID} not uploaded correctly. Expected:{expectedSizeInBytes}, Actual:{bufferSize}");
             }
 #endif
         }
@@ -100,7 +100,7 @@ namespace Veldrid.Graphics.OpenGL
         {
             if (!GL.UnmapBuffer(_target))
             {
-                throw new InvalidOperationException("GL.UnmapBuffer failed.");
+                throw new VeldridException("GL.UnmapBuffer failed.");
             }
         }
 

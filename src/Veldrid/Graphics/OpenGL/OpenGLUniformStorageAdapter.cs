@@ -30,11 +30,11 @@ namespace Veldrid.Graphics.OpenGL
         {
             if (dataSizeInBytes % sizeof(float) != 0)
             {
-                throw new InvalidOperationException($"{nameof(dataSizeInBytes)} must be a multiple of 4 bytes");
+                throw new VeldridException($"{nameof(dataSizeInBytes)} must be a multiple of 4 bytes");
             }
             if (destinationOffsetInBytes % sizeof(float) != 0)
             {
-                throw new InvalidOperationException($"{nameof(destinationOffsetInBytes)} must be a multiple of 4 bytes");
+                throw new VeldridException($"{nameof(destinationOffsetInBytes)} must be a multiple of 4 bytes");
             }
 
             _setterFunction(_uniformLocation, data, dataSizeInBytes, destinationOffsetInBytes);

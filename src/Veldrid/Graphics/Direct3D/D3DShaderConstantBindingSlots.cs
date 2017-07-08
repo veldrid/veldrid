@@ -79,7 +79,7 @@ namespace Veldrid.Graphics.Direct3D
 
                 if (bindingDesc.BindPoint != slot)
                 {
-                    throw new InvalidOperationException($"Mismatched binding slot for {name}. Expected: {slot}, Actual: {bindingDesc.BindPoint}");
+                    throw new VeldridException($"Mismatched binding slot for {name}. Expected: {slot}, Actual: {bindingDesc.BindPoint}");
                 }
 
                 return true;

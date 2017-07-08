@@ -250,7 +250,7 @@ namespace Veldrid.Graphics.OpenGL
         {
             if (slot > _maxConstantBufferSlots)
             {
-                throw new InvalidOperationException($"Too many constant buffers used. Limit is {_maxConstantBufferSlots}.");
+                throw new VeldridException($"Too many constant buffers used. Limit is {_maxConstantBufferSlots}.");
             }
 
             // Bind Constant Buffer to slot

@@ -132,7 +132,7 @@ namespace Veldrid.Graphics.OpenGLES
             Utilities.CheckLastGLES3Error();
             if (errorCode != FramebufferErrorCode.FramebufferComplete)
             {
-                throw new InvalidOperationException("Framebuffer was not complete: " + errorCode);
+                throw new VeldridException("Framebuffer was not complete: " + errorCode);
             }
         }
 

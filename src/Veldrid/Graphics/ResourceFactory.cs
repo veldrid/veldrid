@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Graphics
 {
@@ -169,7 +170,7 @@ namespace Veldrid.Graphics
         {
             if (!FormatHelpers.GetShaderConstantTypeByteSize(type, out int sizeInBytes))
             {
-                throw new InvalidOperationException(
+                throw new VeldridException(
                     $"ShaderConstantType passed to CreateConstantBuffer must have a defined size. {type} does not.");
             }
 
@@ -210,10 +211,9 @@ namespace Veldrid.Graphics
         public DeviceTexture2D CreateTexture<T>(T[] pixelData, int width, int height, int pixelSizeInBytes, PixelFormat format) where T : struct
         {
             DeviceTexture2D tex = CreateTexture(1, width, height, pixelSizeInBytes, format);
-            using (var pinnedPixels = pixelData.Pin())
-            {
-                tex.SetTextureData(0, 0, 0, width, height, pinnedPixels.Ptr, pixelSizeInBytes * width * height);
-            }
+            GCHandle handle = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
+            tex.SetTextureData(0, 0, 0, width, height, handle.AddrOfPinnedObject(), pixelSizeInBytes * width * height);
+            handle.Free();
             return tex;
         }
 

@@ -44,7 +44,7 @@ namespace Veldrid.Graphics.Direct3D
 
             D3DTexture2D colorTexture = new D3DTexture2D(_device, new Texture2DDescription()
             {
-                Format = SharpDX.DXGI.Format.R32G32B32A32_Float,
+                Format = SharpDX.DXGI.Format.R8G8B8A8_UNorm,
                 ArraySize = 1,
                 MipLevels = 1,
                 Width = width,

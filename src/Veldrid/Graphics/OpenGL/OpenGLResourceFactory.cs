@@ -31,10 +31,10 @@ namespace Veldrid.Graphics.OpenGL
             OpenGLTexture2D colorTexture = new OpenGLTexture2D(
                 1,
                 width, height,
-                PixelFormat.R32_G32_B32_A32_Float,
-                PixelInternalFormat.Rgba32f,
+                PixelFormat.R8_G8_B8_A8_UInt,
+                PixelInternalFormat.Rgba,
                 OpenTK.Graphics.OpenGL.PixelFormat.Rgba,
-                PixelType.Float);
+                PixelType.UnsignedByte);
             OpenGLTexture2D depthTexture = new OpenGLTexture2D(
                 1,
                 width,

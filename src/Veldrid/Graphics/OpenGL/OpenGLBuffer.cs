@@ -18,7 +18,6 @@ namespace Veldrid.Graphics.OpenGL
             _bufferID = GL.GenBuffer();
             _bufferUsage = bufferUsage;
             _target = target;
-            // TODO: Try to use named buffer stuff here.
             Bind();
             EnsureBufferSize(sizeInBytes);
             Unbind();

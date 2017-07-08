@@ -44,13 +44,13 @@ struct PixelInput
 	float2 texCoord : TEXCOORD1;
 };
 
-Texture2D SurfaceTexture;
+Texture2D SurfaceTexture : register(t0);
 SamplerState RegularSampler : register(s0);
 
-Texture2D AlphaMap;
+Texture2D AlphaMap : register(t1);
 SamplerState AlphaMapSampler : register(s1);
 
-Texture2D ShadowMap;
+Texture2D ShadowMap : register(t2);
 SamplerState ShadowMapSampler : register(s2);
 
 float4 WithAlpha(float4 baseColor, float alpha)

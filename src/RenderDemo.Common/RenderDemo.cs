@@ -46,10 +46,8 @@ namespace Veldrid.RenderDemo
         private static double _circleWidth = 12.0;
         private static bool _wireframe;
 
-        private static bool _takeScreenshot;
         private static SwappableImGuiRenderer _imguiRenderer;
 
-        private static Framebuffer _screenshotFramebuffer;
         private static RasterizerState _wireframeRasterizerState;
 
         private static Camera _camera;
@@ -149,7 +147,6 @@ namespace Veldrid.RenderDemo
                 UpdateLightMatrices();
                 UpdatePointLights();
 
-                CreateScreenshotFramebuffer();
                 CreateWireframeRasterizerState();
 
                 ChangeScene(SceneWithBoxes());
@@ -216,11 +213,6 @@ namespace Veldrid.RenderDemo
         {
             _wireframeRasterizerState = _rc.ResourceFactory.CreateRasterizerState(
                 FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
-        }
-
-        private static void CreateScreenshotFramebuffer()
-        {
-            _screenshotFramebuffer = _rc.ResourceFactory.CreateFramebuffer(_window.Width, _window.Height);
         }
 
         private static FlatListVisibilityManager SceneWithBoxes()
@@ -546,10 +538,6 @@ namespace Veldrid.RenderDemo
             if (InputTracker.GetKeyDown(Key.F4) && (InputTracker.GetKey(Key.AltLeft) || InputTracker.GetKey(Key.AltRight)))
             {
                 _window.Close();
-            }
-            if (InputTracker.GetKeyDown(Key.F6))
-            {
-                _takeScreenshot = true;
             }
             if (InputTracker.GetKeyDown(Key.F11))
             {
@@ -1131,13 +1119,6 @@ https://github.com/mellinoe/veldrid.");
 
         private unsafe static void Draw()
         {
-            if (_takeScreenshot)
-            {
-                CreateScreenshotFramebuffer();
-                _rc.SetFramebuffer(_screenshotFramebuffer);
-                _rc.ClearBuffer();
-            }
-
             BoundingFrustum frustum = new BoundingFrustum(_camera.ViewProvider.Data * _camera.ProjectionProvider.Data);
             ((StandardPipelineStage)_renderer.Stages[1]).CameraFrustum = frustum;
 
@@ -1149,28 +1130,6 @@ https://github.com/mellinoe/veldrid.");
 
             SharedDataProviders.UpdateBuffers();
             _renderer.RenderFrame(_visibilityManager, _camera.Position);
-
-            if (_takeScreenshot)
-            {
-                _takeScreenshot = false;
-                _rc.SetDefaultFramebuffer();
-                int width = _window.Width;
-                int height = _window.Height;
-                var cpuDepthTexture = new RawTextureDataArray<ushort>(width, height, sizeof(ushort), Graphics.PixelFormat.R16_UInt);
-                _screenshotFramebuffer.ColorTexture.GetTextureData(0, cpuDepthTexture.PixelData);
-
-                ImageSharp.Image<ImageSharp.Rgba32> image = new ImageSharp.Image<ImageSharp.Rgba32>(width, height);
-                unsafe
-                {
-                    fixed (ImageSharp.Rgba32* pixelsPtr = &image.Pixels.DangerousGetPinnableReference())
-                    {
-                        PixelFormatConversion.ConvertPixelsUInt16DepthToRgbaFloat(width * height, cpuDepthTexture.PixelData, pixelsPtr);
-                    }
-                }
-                ImageSharpTexture rgbaDepthTexture = new ImageSharpTexture(image);
-                Console.WriteLine($"Saving file: {width} x {height}, ratio:{(double)width / height}");
-                rgbaDepthTexture.SaveToFile(Environment.TickCount + ".png");
-            }
         }
 
         private static TextureData LoadStoneTextureData()

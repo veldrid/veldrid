@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <PackageVersion>$(AssemblyVersion)</PackageVersion>
     <PackageId>Veldrid.ImGui</PackageId>
     <Authors>Eric Mellino</Authors>
     <Description>ImGui.NET integration for Veldrid. Contains helper classes for managing ImGui state and rendering it with a Veldrid RenderContext.</Description>

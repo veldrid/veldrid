@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <PackageId>Veldrid.Sdl2</PackageId>
-    <PackageVersion>1.0.0</PackageVersion>
+    <PackageVersion>$(AssemblyVersion)</PackageVersion>
     <Authors>Eric Mellino</Authors>
     <Description>Raw SDL2 bindings for .NET.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>

@@ -3,7 +3,7 @@
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>exe</OutputType>
-    <PreprocessHlslShaders>true</PreprocessHlslShaders>
+    <PreprocessHlslShaders>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))</PreprocessHlslShaders>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="0.2.1" />

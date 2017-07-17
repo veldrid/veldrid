@@ -15,13 +15,17 @@
           AfterTargets="AssignTargetPaths"
           Condition="'$(PreprocessHlslShaders)' == 'true' And '@(HlslShader)' != ''">
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(FxcExe)' != ''">
       <_HlslShaderWithMetadata Include="@(HlslShader)"
                                Condition="'%(HlslShader.Profile)' != '' And '%(HlslShader.EntryPoint)' != ''" />
       <_HlslShaderWithoutMetadata Include="@(HlslShader)" Exclude="@(_HlslShaderWithMetadata)" />
     </ItemGroup>
 
-    <Warning Condition="'@(_HlslShaderWithoutMetadata)' != ''"
+    <ItemGroup Condition="'$(FxcExe)' == ''">
+      <_HlslShaderWithoutMetadata Include="@(HlslShader)" />
+    </ItemGroup>
+
+    <Warning Condition="'$(FxcExe)' != '' And '@(_HlslShaderWithoutMetadata)' != ''"
              Text="HlslShader item %(_HlslShaderWithoutMetadata.Identity) does not define both Profile and EntryPoint metadata. It will not be compiled." />
 
     <PropertyGroup>
@@ -38,11 +42,15 @@
           StandardOutputImportance="low" />
 
     <ItemGroup>
-      <ContentWithTargetPath Include="$(IntermediateOutputPath)%(_HlslShaderWithMetadata.OutputPath)\$([System.IO.Path]::GetFileName('%(_HlslShaderWithMetadata.Identity)')).bytes">
+      <ContentWithTargetPath
+        Condition="'@(_HlslShaderWithMetadata)' != ''"
+        Include="$(IntermediateOutputPath)%(_HlslShaderWithMetadata.OutputPath)\$([System.IO.Path]::GetFileName('%(_HlslShaderWithMetadata.Identity)')).bytes">
         <TargetPath>%(_HlslShaderWithMetadata.OutputPath)\$([System.IO.Path]::GetFileName('%(_HlslShaderWithMetadata.Identity)')).bytes</TargetPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </ContentWithTargetPath>
-      <ContentWithTargetPath Include="@(_HlslShaderWithoutMetadata)">
+      <ContentWithTargetPath
+        Condition="'@(_HlslShaderWithoutMetadata)' != ''"
+        Include="@(_HlslShaderWithoutMetadata)">
         <TargetPath>%(_HlslShaderWithoutMetadata.OutputPath)\$([System.IO.Path]::GetFileName('%(_HlslShaderWithoutMetadata.Identity)'))</TargetPath>
         <Link>%(_HlslShaderWithoutMetadata.OutputPath)\$([System.IO.Path]::GetFileName('%(_HlslShaderWithoutMetadata.Identity)'))</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -3,7 +3,6 @@
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>Veldrid.RenderDemo</RootNamespace>
-    <PreprocessHlslShaders>true</PreprocessHlslShaders>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Veldrid.ImGui/Veldrid.ImGui.csproj" />
@@ -15,5 +14,4 @@
     <ProjectReference Include="..\Veldrid.Assets\Veldrid.Assets.csproj" />
     <PackageReference Include="System.ValueTuple" Version="4.3.1" />
   </ItemGroup>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\build\ShaderCompilation.targets" />
 </Project>

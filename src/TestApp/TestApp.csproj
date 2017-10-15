@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ShaderOutputPath>$(MSBuildThisFileDirectory)Shaders.Generated</ShaderOutputPath>
+    <ProcessedShaderSetDir>$(ShaderOutputPath)</ProcessedShaderSetDir>
+    <ListAllShaderPaths>true</ListAllShaderPaths>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenTK.NETCore" Version="1.1.2749.6433" />
+    <PackageReference Include="ShaderGen.Primitives" Version="1.0.7" />
+    <PackageReference Include="ShaderGen.Build" Version="1.0.20" PrivateAssets="All" />
+    <ProjectReference Include="..\vd2\Vd2.csproj" />
+  </ItemGroup>
+
+  <Target Name="IncludeGeneratedShaderContent" AfterTargets="AssignTargetPaths">
+    <Message Importance="high" Text="@(GeneratedShader)" />
+    <ItemGroup>
+      <ContentWithTargetPath Include="@(GeneratedShader)">
+        <TargetPath>Shaders\%(FileName)%(Extension)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </ContentWithTargetPath>
+    </ItemGroup>
+  </Target>
+
+</Project>

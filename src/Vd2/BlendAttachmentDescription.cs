@@ -10,13 +10,13 @@
         public BlendFactor DestinationAlphaFactor;
         public BlendFunction AlphaFunction;
 
-        public static readonly BlendAttachmentDescription AdditiveBlend = new BlendAttachmentDescription
+        public static readonly BlendAttachmentDescription OverrideBlend = new BlendAttachmentDescription
         {
-            SourceColorFactor = BlendFactor.SourceAlpha,
-            DestinationColorFactor = BlendFactor.One,
+            SourceColorFactor = BlendFactor.One,
+            DestinationColorFactor = BlendFactor.Zero,
             ColorFunction = BlendFunction.Add,
-            SourceAlphaFactor = BlendFactor.SourceAlpha,
-            DestinationAlphaFactor = BlendFactor.One,
+            SourceAlphaFactor = BlendFactor.One,
+            DestinationAlphaFactor = BlendFactor.Zero,
             AlphaFunction = BlendFunction.Add,
             BlendEnabled = true,
         };
@@ -32,5 +32,15 @@
             BlendEnabled = true,
         };
 
+        public static readonly BlendAttachmentDescription AdditiveBlend = new BlendAttachmentDescription
+        {
+            SourceColorFactor = BlendFactor.SourceAlpha,
+            DestinationColorFactor = BlendFactor.One,
+            ColorFunction = BlendFunction.Add,
+            SourceAlphaFactor = BlendFactor.SourceAlpha,
+            DestinationAlphaFactor = BlendFactor.One,
+            AlphaFunction = BlendFunction.Add,
+            BlendEnabled = true,
+        };
     }
 }

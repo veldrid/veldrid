@@ -34,6 +34,9 @@ namespace Vd2.D3D11
                 out _swapChain);
             _immediateContext = _device.ImmediateContext;
 
+            _device.CheckThreadingSupport(out bool concurrentResources, out bool commandLists);
+            Console.WriteLine($"Concurrent resources: {concurrentResources}, command lists: {commandLists}");
+
             Factory factory = _swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(hwnd, WindowAssociationFlags.IgnoreAll);
 
@@ -83,6 +86,16 @@ namespace Vd2.D3D11
         public override void SwapBuffers()
         {
             _swapChain.Present(0, PresentFlags.None);
+        }
+
+        public override void Dispose()
+        {
+            DeviceDebug deviceDebug = _device.QueryInterface<DeviceDebug>();
+            if (deviceDebug != null)
+            {
+                deviceDebug.ReportLiveDeviceObjects(ReportingLevel.Summary);
+                deviceDebug.ReportLiveDeviceObjects(ReportingLevel.Detail);
+            }
         }
     }
 }

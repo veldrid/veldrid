@@ -8,10 +8,9 @@ namespace TestApp.Shaders
 {
     public class Box
     {
-        //public Matrix4x4 World;
-        //public Matrix4x4 View;
-        //public Matrix4x4 Projection;
-        public Matrix4x4 WVP;
+        public Matrix4x4 World;
+        public Matrix4x4 View;
+        public Matrix4x4 Projection;
         public Texture2DResource SurfaceTexture;
         public SamplerResource Sampler;
 
@@ -19,7 +18,12 @@ namespace TestApp.Shaders
         public FragmentInput VS(VertexPositionNormalTexture input)
         {
             FragmentInput output;
-            output.Position = Mul(WVP, new Vector4(input.Position, 1));
+
+            Vector4 worldPosition = Mul(World, new Vector4(input.Position, 1));
+            Vector4 viewPosition = Mul(View, worldPosition);
+            Vector4 projPosition = Mul(Projection, viewPosition);
+            output.Position = projPosition;
+
             output.TextureCoordinates = input.TextureCoordinates;
             return output;
         }

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Vd2
 {
-    public abstract class CommandBuffer
+    public abstract class CommandBuffer : IDisposable
     {
         public CommandBuffer(ref CommandBufferDescription description)
         {
@@ -55,5 +55,7 @@ namespace Vd2
             IntPtr source,
             int sizeInBytes,
             int bufferOffsetInBytes);
+
+        public abstract void Dispose();
     }
 }

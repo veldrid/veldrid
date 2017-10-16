@@ -4,9 +4,9 @@
     {
         public BlendAttachmentDescription[] AttachmentStates;
 
-        public static readonly BlendStateDescription SingleAdditiveBlend = new BlendStateDescription
+        public static readonly BlendStateDescription SingleOverrideBlend = new BlendStateDescription
         {
-            AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.AdditiveBlend }
+            AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.OverrideBlend }
         };
     }
 }

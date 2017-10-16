@@ -6,6 +6,7 @@ namespace Vd2.D3D11
 {
     internal class D3D11CommandBuffer : CommandBuffer
     {
+        private readonly Device _device;
         private readonly DeviceContext _context;
 
         private RawViewportF[] _viewports = new RawViewportF[0];
@@ -15,6 +16,7 @@ namespace Vd2.D3D11
         public D3D11CommandBuffer(Device device, ref CommandBufferDescription description)
             : base(ref description)
         {
+            _device = device;
             _context = new DeviceContext(device);
         }
 
@@ -22,6 +24,9 @@ namespace Vd2.D3D11
 
         public override void Begin()
         {
+            CommandList?.Dispose();
+            CommandList = null;
+            _context.ClearState();
         }
 
         public override void BindIndexBuffer(IndexBuffer ib)
@@ -261,6 +266,12 @@ namespace Vd2.D3D11
                 back: 1);
             uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture2D.Format) * width;
             _context.UpdateSubresource(deviceTexture, (int)mipLevel, resourceRegion, source, (int)srcRowPitch, 0);
+        }
+
+        public override void Dispose()
+        {
+            CommandList?.Dispose();
+            _context.Dispose();
         }
     }
 }

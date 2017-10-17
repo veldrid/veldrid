@@ -33,7 +33,7 @@ namespace Vd2.NeoDemo
                 WindowWidth = 960,
                 WindowHeight = 540,
                 WindowInitialState = WindowState.Normal,
-                WindowTitle = "Veldrid NeoDemo"
+                WindowTitle = "Vd NeoDemo"
             };
             GraphicsDeviceCreateInfo gdCI = new GraphicsDeviceCreateInfo();
             gdCI.DebugDevice = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
@@ -150,19 +150,19 @@ namespace Vd2.NeoDemo
                     {
                         if (ImGui.MenuItem("Vulkan"))
                         {
-                            ChangeRenderContext(GraphicsBackend.Vulkan);
+                            ChangeBackend(GraphicsBackend.Vulkan);
                         }
                         if (ImGui.MenuItem("OpenGL"))
                         {
-                            ChangeRenderContext(GraphicsBackend.OpenGL);
+                            ChangeBackend(GraphicsBackend.OpenGL);
                         }
                         if (ImGui.MenuItem("OpenGL ES"))
                         {
-                            ChangeRenderContext(GraphicsBackend.OpenGLES);
+                            ChangeBackend(GraphicsBackend.OpenGLES);
                         }
                         if (ImGui.MenuItem("Direct3D 11"))
                         {
-                            ChangeRenderContext(GraphicsBackend.Direct3D11);
+                            ChangeBackend(GraphicsBackend.Direct3D11);
                         }
                         ImGui.EndMenu();
                     }
@@ -179,7 +179,7 @@ namespace Vd2.NeoDemo
                     if (ImGui.IsLastItemHovered())
                     {
                         ImGui.SetTooltip(
-                            "Causes a new OS Sdl2Window to be created whenever the RenderContext is switched. This is much safer, and is the default.");
+                            "Causes a new OS Sdl2Window to be created whenever the graphics backend is switched. This is much safer, and is the default.");
                     }
 
                     ImGui.EndMenu();
@@ -252,7 +252,7 @@ namespace Vd2.NeoDemo
             }
         }
 
-        private void ChangeRenderContext(GraphicsBackend backend)
+        private void ChangeBackend(GraphicsBackend backend)
         {
             _sc.DestroyDeviceObjects();
             _scene.DestroyAllDeviceObjects();
@@ -270,7 +270,7 @@ namespace Vd2.NeoDemo
                     WindowWidth = _window.Width,
                     WindowHeight = _window.Height,
                     WindowInitialState = _window.WindowState,
-                    WindowTitle = "Veldrid NeoDemo"
+                    WindowTitle = "Vd NeoDemo"
                 };
 
                 _window.Close();

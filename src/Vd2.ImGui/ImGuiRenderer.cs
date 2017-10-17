@@ -8,7 +8,7 @@ using System.IO;
 namespace Vd2
 {
     /// <summary>
-    /// A Veldrid RenderItem which can draw draw lists produced by ImGui.
+    /// Can render draw lists produced by ImGui.
     /// Also provides functions for updating ImGui input.
     /// </summary>
     public class ImGuiRenderer : IDisposable
@@ -221,7 +221,7 @@ namespace Vd2
         }
 
         /// <summary>
-        /// Sets per-frame data based on the RenderContext and window.
+        /// Sets per-frame data based on the associated window.
         /// This is called by Update(float).
         /// </summary>
         private unsafe void SetPerFrameImGuiData(float deltaSeconds)

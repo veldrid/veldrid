@@ -2,7 +2,13 @@
 {
     public struct ShaderDescription
     {
-        public byte[] ShaderBytes;
         public ShaderStages Stage;
+        public byte[] ShaderBytes;
+
+        public ShaderDescription(ShaderStages stage, byte[] shaderBytes)
+        {
+            Stage = stage;
+            ShaderBytes = shaderBytes;
+        }
     }
 }

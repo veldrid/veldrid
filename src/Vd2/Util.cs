@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Vd2
 {
@@ -22,6 +23,11 @@ namespace Vd2
             {
                 Array.Resize(ref array, (int)size);
             }
+        }
+
+        internal static uint USizeOf<T>() where T : struct
+        {
+            return (uint)Unsafe.SizeOf<T>();
         }
     }
 }

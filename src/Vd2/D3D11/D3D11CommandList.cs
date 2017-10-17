@@ -4,38 +4,36 @@ using SharpDX.Mathematics.Interop;
 
 namespace Vd2.D3D11
 {
-    internal class D3D11CommandBuffer : CommandBuffer
+    internal class D3D11CommandList : CommandList
     {
-        private readonly Device _device;
         private readonly DeviceContext _context;
 
         private RawViewportF[] _viewports = new RawViewportF[0];
         private RawRectangle[] _scissors = new RawRectangle[0];
         private D3D11Framebuffer _fb;
 
-        public D3D11CommandBuffer(Device device, ref CommandBufferDescription description)
+        public D3D11CommandList(Device device, ref CommandListDescription description)
             : base(ref description)
         {
-            _device = device;
             _context = new DeviceContext(device);
         }
 
-        public CommandList CommandList { get; private set; }
+        public SharpDX.Direct3D11.CommandList DeviceCommandList { get; private set; }
 
         public override void Begin()
         {
-            CommandList?.Dispose();
-            CommandList = null;
+            DeviceCommandList?.Dispose();
+            DeviceCommandList = null;
             _context.ClearState();
         }
 
-        public override void BindIndexBuffer(IndexBuffer ib)
+        public override void SetIndexBuffer(IndexBuffer ib)
         {
             D3D11IndexBuffer d3d11Buffer = Util.AssertSubtype<IndexBuffer, D3D11IndexBuffer>(ib);
             _context.InputAssembler.SetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(ib.Format), 0);
         }
 
-        public override void BindPipeline(Pipeline pipeline)
+        public override void SetPipeline(Pipeline pipeline)
         {
             D3D11Pipeline dp = Util.AssertSubtype<Pipeline, D3D11Pipeline>(pipeline);
             _context.OutputMerger.SetBlendState(dp.BlendState);
@@ -50,7 +48,7 @@ namespace Vd2.D3D11
             _context.PixelShader.Set(dp.PixelShader);
         }
 
-        public override void BindResourceSet(ResourceSet rs)
+        public override void SetResourceSet(ResourceSet rs)
         {
             D3D11ResourceSet d3d11RS = Util.AssertSubtype<ResourceSet, D3D11ResourceSet>(rs);
             D3D11ResourceLayout layout = d3d11RS.Layout;
@@ -74,7 +72,7 @@ namespace Vd2.D3D11
             }
         }
 
-        public override void BindVertexBuffer(uint index, VertexBuffer vb, uint vertexStrideInBytes)
+        public override void SetVertexBuffer(uint index, VertexBuffer vb, uint vertexStrideInBytes)
         {
             D3D11VertexBuffer d3d11Buffer = Util.AssertSubtype<VertexBuffer, D3D11VertexBuffer>(vb);
             VertexBufferBinding vbb = new VertexBufferBinding(d3d11Buffer.Buffer, (int)vertexStrideInBytes, 0);
@@ -101,7 +99,12 @@ namespace Vd2.D3D11
 
         public override void End()
         {
-            CommandList = _context.FinishCommandList(true);
+            if (DeviceCommandList != null)
+            {
+                throw new VdException("Invalid use of End().");
+            }
+
+            DeviceCommandList = _context.FinishCommandList(true);
         }
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
@@ -213,13 +216,7 @@ namespace Vd2.D3D11
             _context.ClearDepthStencilView(_fb.DepthStencilView, DepthStencilClearFlags.Depth, depth, 0);
         }
 
-        public override void ExecuteCommands(CommandBuffer cb)
-        {
-            D3D11CommandBuffer d3dCB = Util.AssertSubtype<CommandBuffer, D3D11CommandBuffer>(cb);
-            _context.ExecuteCommandList(d3dCB.CommandList, false);
-        }
-
-        public override void UpdateBuffer(Buffer buffer, IntPtr source, int sizeInBytes, int bufferOffsetInBytes)
+        public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             D3D11Buffer d3dBuffer = Util.AssertSubtype<Buffer, D3D11Buffer>(buffer);
             if (sizeInBytes == 0)
@@ -235,8 +232,8 @@ namespace Vd2.D3D11
 
                 subregion = new ResourceRegion()
                 {
-                    Left = bufferOffsetInBytes,
-                    Right = sizeInBytes + bufferOffsetInBytes,
+                    Left = (int)bufferOffsetInBytes,
+                    Right = (int)(sizeInBytes + bufferOffsetInBytes),
                     Bottom = 1,
                     Back = 1
                 };
@@ -268,9 +265,65 @@ namespace Vd2.D3D11
             _context.UpdateSubresource(deviceTexture, (int)mipLevel, resourceRegion, source, (int)srcRowPitch, 0);
         }
 
+        public override void UpdateTextureCube(
+            TextureCube textureCube,
+            IntPtr source,
+            uint sizeInBytes,
+            CubeFace face,
+            uint x,
+            uint y,
+            uint width,
+            uint height,
+            uint mipLevel,
+            uint arrayLayer)
+        {
+            SharpDX.Direct3D11.Texture2D deviceTexture = Util.AssertSubtype<TextureCube, D3D11TextureCube>(textureCube).DeviceTexture;
+
+            ResourceRegion resourceRegion = new ResourceRegion(
+                left: (int)x,
+                right: (int)x + (int)width,
+                top: (int)y,
+                bottom: (int)y + (int)height,
+                front: 0,
+                back: 1);
+            uint srcRowPitch = FormatHelpers.GetSizeInBytes(textureCube.Format) * width;
+            int subresource = GetSubresource(face, mipLevel, textureCube.MipLevels);
+            _context.UpdateSubresource(deviceTexture, subresource, resourceRegion, source, (int)srcRowPitch, 0);
+        }
+
+        private int GetSubresource(CubeFace face, uint level, uint totalLevels)
+        {
+            int faceOffset;
+            switch (face)
+            {
+                case CubeFace.NegativeX:
+                    faceOffset = 1;
+                    break;
+                case CubeFace.PositiveX:
+                    faceOffset = 0;
+                    break;
+                case CubeFace.NegativeY:
+                    faceOffset = 3;
+                    break;
+                case CubeFace.PositiveY:
+                    faceOffset = 2;
+                    break;
+                case CubeFace.NegativeZ:
+                    faceOffset = 4;
+                    break;
+                case CubeFace.PositiveZ:
+                    faceOffset = 5;
+                    break;
+                default:
+                    throw Illegal.Value<CubeFace>();
+            }
+
+            return faceOffset * (int)totalLevels + (int)level;
+        }
+
         public override void Dispose()
         {
-            CommandList?.Dispose();
+            DeviceCommandList?.Dispose();
             _context.Dispose();
         }
     }

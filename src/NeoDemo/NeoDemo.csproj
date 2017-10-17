@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RootNamespace>Veldrid.NeoDemo</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssetsDir>$(MSBuildThisFileDirectory)Assets</AssetsDir>
+    <ShaderOutputPath>$(AssetsDir)\Shaders.Generated</ShaderOutputPath>
+    <ProcessedShaderSetDir>$(ShaderOutputPath)</ProcessedShaderSetDir>
+    <ListAllShaderPaths>true</ListAllShaderPaths>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="$(AssetsDir)\Textures\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Assets\Textures\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\VdSdl2\native\win-x64\SDL2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)..\VdSdl2\native\osx-x64\libsdl2.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ShaderGen.Primitives" Version="1.0.7" />
+    <PackageReference Include="ShaderGen.Build" Version="1.0.20" PrivateAssets="All" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\vd2\Vd2.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\VdSdl2\VdSdl2.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2.StartupUtilities\Vd2.StartupUtilities.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2.ImageSharp\Vd2.ImageSharp.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2.Utilities\Vd2.Utilities.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2.ImGui\Vd2.ImGui.csproj" />
+  </ItemGroup>
+
+  <Target Name="IncludeGeneratedShaderContent" AfterTargets="AssignTargetPaths">
+    <Message Importance="high" Text="@(GeneratedShader)" />
+    <ItemGroup>
+      <ContentWithTargetPath Include="@(GeneratedShader)">
+        <TargetPath>Assets\Shaders.Generated\%(FileName)%(Extension)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </ContentWithTargetPath>
+    </ItemGroup>
+  </Target>
+
+</Project>

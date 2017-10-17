@@ -9,11 +9,13 @@ namespace Vd2.D3D11
 
         public D3D11TextureView(Device device, ref TextureViewDescription description)
         {
+            // TODO: This is stupid.
             if (description.Target is D3D11Texture2D d3dTex2d)
             {
+                SharpDX.DXGI.Format dxgiFormat = D3D11Formats.GetViewFormat(d3dTex2d.DeviceTexture.Description.Format);
                 ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
                 {
-                    Format = d3dTex2d.DeviceTexture.Description.Format,
+                    Format = dxgiFormat,
                     Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D,
                     Texture2D = new ShaderResourceViewDescription.Texture2DResource
                     {
@@ -24,10 +26,27 @@ namespace Vd2.D3D11
 
                 ShaderResourceView = new ShaderResourceView(device, d3dTex2d.DeviceTexture, srvDesc);
             }
-            else
+            else if (description.Target is D3D11TextureCube d3dTexCube)
             {
-                throw new NotImplementedException();
+                SharpDX.DXGI.Format dxgiFormat = D3D11Formats.GetViewFormat(d3dTexCube.DeviceTexture.Description.Format);
+                ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
+                {
+                    Format = dxgiFormat,
+                    Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.TextureCube,
+                    TextureCube = new ShaderResourceViewDescription.TextureCubeResource
+                    {
+                        MipLevels = (int)d3dTexCube.MipLevels,
+                        MostDetailedMip = 0
+                    }
+                };
+
+                ShaderResourceView = new ShaderResourceView(device, d3dTexCube.DeviceTexture, srvDesc);
             }
+        }
+
+        public override void Dispose()
+        {
+            ShaderResourceView.Dispose();
         }
     }
 }

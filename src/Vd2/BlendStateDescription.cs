@@ -8,5 +8,11 @@
         {
             AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.OverrideBlend }
         };
+
+        public static readonly BlendStateDescription SingleAlphaBlend = new BlendStateDescription
+        {
+            AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.AlphaBlend }
+        };
+
     }
 }

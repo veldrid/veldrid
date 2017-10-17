@@ -4,5 +4,11 @@
     {
         public ulong SizeInBytes;
         public IndexFormat Format;
+
+        public IndexBufferDescription(ulong sizeInBytes, IndexFormat format)
+        {
+            SizeInBytes = sizeInBytes;
+            Format = format;
+        }
     }
 }

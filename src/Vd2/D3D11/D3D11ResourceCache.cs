@@ -1,5 +1,4 @@
-﻿using System;
-using SharpDX.Direct3D11;
+﻿using SharpDX.Direct3D11;
 
 namespace Vd2.D3D11
 {

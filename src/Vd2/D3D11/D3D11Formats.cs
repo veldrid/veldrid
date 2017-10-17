@@ -7,7 +7,7 @@ namespace Vd2.D3D11
 {
     internal static class D3D11Formats
     {
-        internal static Format ToDxgiFormat(PixelFormat format)
+        internal static Format ToDxgiFormat(PixelFormat format, bool depthFormat)
         {
             switch (format)
             {
@@ -18,13 +18,24 @@ namespace Vd2.D3D11
                 case PixelFormat.R8_UNorm:
                     return Format.R8_UNorm;
                 case PixelFormat.R16_UNorm:
-                    return Format.R16_UNorm;
+                    return depthFormat ? Format.R16_Typeless : Format.R16_UNorm;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return Format.R32G32B32A32_Float;
                 case PixelFormat.R32_Float:
-                    return Format.R32_Float;
+                    return depthFormat ? Format.D32_Float : Format.R32_Float;
                 default:
                     throw Illegal.Value<PixelFormat>();
+            }
+        }
+
+        internal static Format GetViewFormat(Format format)
+        {
+            switch (format)
+            {
+                case Format.R16_Typeless:
+                    return Format.R16_UNorm;
+                default:
+                    return format;
             }
         }
 

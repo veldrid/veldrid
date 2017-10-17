@@ -46,6 +46,18 @@
             MaximumAnisotropy = 0,
         };
 
+        public static readonly SamplerDescription Linear = new SamplerDescription
+        {
+            AddressModeU = SamplerAddressMode.Wrap,
+            AddressModeV = SamplerAddressMode.Wrap,
+            AddressModeW = SamplerAddressMode.Wrap,
+            Filter = SamplerFilter.MinLinear_MagLinear_MipLinear,
+            LodBias = 0,
+            MinimumLod = 0,
+            MaximumLod = uint.MaxValue,
+            MaximumAnisotropy = 0,
+        };
+
         public static readonly SamplerDescription Aniso4x = new SamplerDescription
         {
             AddressModeU = SamplerAddressMode.Wrap,

@@ -8,15 +8,18 @@ namespace Vd2.D3D11
         private readonly Device _device;
         private readonly D3D11ResourceCache _cache;
 
+        public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
+
         public D3D11ResourceFactory(Device device)
         {
             _device = device;
             _cache = new D3D11ResourceCache(device);
         }
 
-        public override CommandBuffer CreateCommandBuffer(ref CommandBufferDescription description)
+
+        public override CommandList CreateCommandList(ref CommandListDescription description)
         {
-            return new D3D11CommandBuffer(_device, ref description);
+            return new D3D11CommandList(_device, ref description);
         }
 
         public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)

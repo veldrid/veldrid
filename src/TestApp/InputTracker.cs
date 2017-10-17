@@ -1,6 +1,7 @@
-﻿using OpenTK.Input;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Numerics;
+using Vd2;
+using VdSdl2;
 
 namespace TestApp
 {
@@ -14,13 +15,13 @@ namespace TestApp
 
         public static Vector2 MousePosition;
 
-        public static void Init(OpenTK.NativeWindow nw)
+        public static void Init(Sdl2Window nw)
         {
-            nw.KeyDown += (s, e) => KeyDown(e.Key);
-            nw.KeyUp += (s, e) => KeyUp(e.Key);
-            nw.MouseMove += (s, e) => MousePosition = new Vector2(e.X, e.Y);
-            nw.MouseDown += (s, e) => MouseDown(e.Button);
-            nw.MouseUp += (s, e) => MouseUp(e.Button);
+            nw.KeyDown += (e) => KeyDown(e.Key);
+            nw.KeyUp += (e) => KeyUp(e.Key);
+            nw.MouseMove += (e) => MousePosition = e.MousePosition;
+            nw.MouseDown += (e) => MouseDown(e.MouseButton);
+            nw.MouseUp += (e) => MouseUp(e.MouseButton);
         }
 
         public static bool GetKey(Key key)

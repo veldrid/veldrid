@@ -30,7 +30,7 @@ namespace Vd2.D3D11
                     D3D11Texture2D d3dColorTarget = Util.AssertSubtype<Texture2D, D3D11Texture2D>(description.ColorTargets[i]);
                     RenderTargetViewDescription rtvDesc = new RenderTargetViewDescription
                     {
-                        Format = D3D11Formats.ToDxgiFormat(d3dColorTarget.Format),
+                        Format = D3D11Formats.ToDxgiFormat(d3dColorTarget.Format, false),
                         Dimension = RenderTargetViewDimension.Texture2D,
                     };
                     RenderTargetViews[i] = new RenderTargetView(device, d3dColorTarget.DeviceTexture, rtvDesc);
@@ -39,6 +39,15 @@ namespace Vd2.D3D11
             else
             {
                 RenderTargetViews = Array.Empty<RenderTargetView>();
+            }
+        }
+
+        public override void Dispose()
+        {
+            DepthStencilView?.Dispose();
+            foreach (RenderTargetView rtv in RenderTargetViews)
+            {
+                rtv.Dispose();
             }
         }
     }

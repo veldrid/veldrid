@@ -10,10 +10,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTK.NETCore" Version="1.1.2749.6433" />
     <PackageReference Include="ShaderGen.Primitives" Version="1.0.7" />
     <PackageReference Include="ShaderGen.Build" Version="1.0.20" PrivateAssets="All" />
     <ProjectReference Include="..\vd2\Vd2.csproj" />
+    <ProjectReference Include="..\VdSdl2\VdSdl2.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\VdSdl2\native\win-x64\SDL2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)..\VdSdl2\native\osx-x64\libsdl2.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <Target Name="IncludeGeneratedShaderContent" AfterTargets="AssignTargetPaths">

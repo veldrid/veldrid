@@ -1,9 +1,12 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
+    [Flags]
     public enum TextureUsage : byte
     {
-        Sampled = 0,
-        RenderTarget = 1,
-        DepthStencil = 2,
+        Sampled = 1 << 0,
+        RenderTarget = 1 << 1,
+        DepthStencil = 1 << 2,
     }
 }

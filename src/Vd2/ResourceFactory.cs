@@ -2,6 +2,8 @@ namespace Vd2
 {
     public abstract class ResourceFactory
     {
+        public abstract GraphicsBackend BackendType { get; }
+
         public Pipeline CreatePipeline(PipelineDescription description) => CreatePipeline(ref description);
         public abstract Pipeline CreatePipeline(ref PipelineDescription description);
         public Framebuffer CreateFramebuffer(FramebufferDescription description) => CreateFramebuffer(ref description);
@@ -10,6 +12,7 @@ namespace Vd2
         public abstract Texture2D CreateTexture2D(ref TextureDescription description);
         public TextureCube CreateTextureCube(TextureDescription description) => CreateTextureCube(ref description);
         public abstract TextureCube CreateTextureCube(ref TextureDescription description);
+        public TextureView CreateTextureView(Texture target) => CreateTextureView(new TextureViewDescription(target));
         public TextureView CreateTextureView(TextureViewDescription description) => CreateTextureView(ref description);
         public abstract TextureView CreateTextureView(ref TextureViewDescription description);
         public VertexBuffer CreateVertexBuffer(BufferDescription description) => CreateVertexBuffer(ref description);
@@ -22,8 +25,9 @@ namespace Vd2
         public abstract Sampler CreateSampler(ref SamplerDescription description);
         public Shader CreateShader(ShaderDescription description) => CreateShader(ref description);
         public abstract Shader CreateShader(ref ShaderDescription description);
-        public CommandBuffer CreateCommandBuffer(CommandBufferDescription description) => CreateCommandBuffer(ref description);
-        public abstract CommandBuffer CreateCommandBuffer(ref CommandBufferDescription description);
+        public CommandList CreateCommandList() => CreateCommandList(new CommandListDescription());
+        public CommandList CreateCommandList(CommandListDescription description) => CreateCommandList(ref description);
+        public abstract CommandList CreateCommandList(ref CommandListDescription description);
         public ResourceLayout CreateResourceLayout(ResourceLayoutDescription description) => CreateResourceLayout(ref description);
         public abstract ResourceLayout CreateResourceLayout(ref ResourceLayoutDescription description);
         public ResourceSet CreateResourceSet(ResourceSetDescription description) => CreateResourceSet(ref description);

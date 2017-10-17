@@ -4,7 +4,7 @@
     {
         public ShaderStages Stage;
         public Shader Shader;
-        public string EntryPoint;
+        public string EntryPoint; // Vulkan requires entry point name when a Pipeline is created with bytecode.
 
         public ShaderStageDescription(ShaderStages stage, Shader shader, string entryPoint)
         {

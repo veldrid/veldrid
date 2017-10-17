@@ -12,5 +12,7 @@ namespace Vd2
             ColorTextures = colorTextures;
             DepthTexture = depthTexture;
         }
+
+        public abstract void Dispose();
     }
 }

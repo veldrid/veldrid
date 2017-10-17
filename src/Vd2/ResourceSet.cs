@@ -1,6 +1,9 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
-    public abstract class ResourceSet
+    public abstract class ResourceSet : IDisposable
     {
+        public abstract void Dispose();
     }
 }

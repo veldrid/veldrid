@@ -18,5 +18,9 @@
                 }
             }
         }
+
+        public override void Dispose()
+        {
+        }
     }
 }

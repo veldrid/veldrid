@@ -12,6 +12,8 @@ namespace Vd2.D3D11
         private readonly SwapChain _swapChain;
         private Framebuffer _swapChainFramebuffer;
 
+        public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
+
         public D3D11GraphicsDevice(IntPtr hwnd, int width, int height)
         {
             SwapChainDescription swapChainDescription = new SwapChainDescription()
@@ -42,10 +44,19 @@ namespace Vd2.D3D11
 
             ResourceFactory = new D3D11ResourceFactory(_device);
             RecreateSwapchainFramebuffer(width, height);
+
+            PostContextCreated();
+        }
+
+        public override void ResizeMainWindow(uint width, uint height)
+        {
+            RecreateSwapchainFramebuffer((int)width, (int)height);
         }
 
         private void RecreateSwapchainFramebuffer(int width, int height)
         {
+            _swapChainFramebuffer?.Dispose();
+
             _swapChain.ResizeBuffers(2, width, height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
 
             // Get the backbuffer from the swapchain
@@ -77,10 +88,10 @@ namespace Vd2.D3D11
 
         public override Framebuffer SwapchainFramebuffer => _swapChainFramebuffer;
 
-        public override void ExecuteCommands(CommandBuffer cb)
+        public override void ExecuteCommands(CommandList cb)
         {
-            D3D11CommandBuffer d3d11Cb = Util.AssertSubtype<CommandBuffer, D3D11CommandBuffer>(cb);
-            _immediateContext.ExecuteCommandList(d3d11Cb.CommandList, false);
+            D3D11CommandList d3d11Cb = Util.AssertSubtype<CommandList, D3D11CommandList>(cb);
+            _immediateContext.ExecuteCommandList(d3d11Cb.DeviceCommandList, false);
         }
 
         public override void SwapBuffers()

@@ -4,11 +4,24 @@ namespace Vd2
 {
     public abstract class GraphicsDevice : IDisposable
     {
+        public abstract GraphicsBackend BackendType { get; }
+
         public abstract ResourceFactory ResourceFactory { get; }
-        public abstract void ExecuteCommands(CommandBuffer cb);
+        public abstract void ExecuteCommands(CommandList cb);
         public abstract void SwapBuffers();
         public abstract Framebuffer SwapchainFramebuffer { get; }
-
+        public abstract void ResizeMainWindow(uint width, uint height);
         public abstract void Dispose();
+
+        protected void PostContextCreated()
+        {
+            PointSampler = ResourceFactory.CreateSampler(SamplerDescription.Point);
+            LinearSampler = ResourceFactory.CreateSampler(SamplerDescription.Linear);
+            Aniso4xSampler = ResourceFactory.CreateSampler(SamplerDescription.Aniso4x);
+        }
+
+        public Sampler PointSampler { get; private set; }
+        public Sampler LinearSampler { get; private set; }
+        public Sampler Aniso4xSampler { get; private set; }
     }
 }

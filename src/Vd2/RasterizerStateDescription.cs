@@ -7,6 +7,18 @@
         public bool DepthClipEnabled;
         public bool ScissorTestEnabled;
 
+        public RasterizerStateDescription(
+            FaceCullMode cullMode,
+            TriangleFillMode fillMode,
+            bool depthClipEnabled,
+            bool scissorTestEnabled)
+        {
+            CullMode = cullMode;
+            FillMode = fillMode;
+            DepthClipEnabled = depthClipEnabled;
+            ScissorTestEnabled = scissorTestEnabled;
+        }
+
         public static readonly RasterizerStateDescription Default = new RasterizerStateDescription
         {
             CullMode = FaceCullMode.Back,

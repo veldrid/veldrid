@@ -105,7 +105,7 @@ namespace Vd2
 
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("ProjectionMatrixBuffer", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("FontTexture", ResourceKind.Texture2D, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("FontTexture", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("FontSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(layout,

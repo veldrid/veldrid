@@ -65,7 +65,7 @@ namespace Vd2.NeoDemo.Objects
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("View", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("GridTexture", ResourceKind.Texture2D, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("GridTexture", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("GridSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(

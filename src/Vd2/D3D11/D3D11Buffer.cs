@@ -4,7 +4,6 @@ namespace Vd2.D3D11
 {
     internal class D3D11Buffer : Buffer
     {
-        private readonly Device _device;
         private readonly SharpDX.Direct3D11.Buffer _buffer;
 
         public ulong SizeInBytes { get; }
@@ -13,9 +12,8 @@ namespace Vd2.D3D11
 
         public D3D11Buffer(Device device, ulong sizeInBytes, BindFlags bindFlags)
         {
-            _device = device;
             SharpDX.Direct3D11.BufferDescription bd = new SharpDX.Direct3D11.BufferDescription((int)sizeInBytes, bindFlags, ResourceUsage.Default);
-            _buffer = new SharpDX.Direct3D11.Buffer(_device, bd);
+            _buffer = new SharpDX.Direct3D11.Buffer(device, bd);
         }
 
         public void Dispose()

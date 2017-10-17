@@ -56,18 +56,18 @@ namespace Vd2.D3D11
             for (int i = 0; i < resources.Length; i++)
             {
                 BindableResource resource = resources[i];
-                (int slot, ShaderStages stages) = layout.GetDeviceSlotIndex(i);
+                D3D11ResourceLayout.ResourceBindingInfo rbi = layout.GetDeviceSlotIndex(i);
                 if (resource is D3D11TextureView texView)
                 {
-                    BindTextureView(texView, slot, stages);
+                    BindTextureView(texView, rbi.Slot, rbi.Stages);
                 }
                 else if (resource is D3D11UniformBuffer ub)
                 {
-                    BindUniformBuffer(ub, slot, stages);
+                    BindUniformBuffer(ub, rbi.Slot, rbi.Stages);
                 }
                 else if (resource is D3D11Sampler sampler)
                 {
-                    BindSampler(sampler, slot, stages);
+                    BindSampler(sampler, rbi.Slot, rbi.Stages);
                 }
             }
         }

@@ -1,5 +1,4 @@
-﻿using System;
-using SharpDX.Direct3D11;
+﻿using SharpDX.Direct3D11;
 
 namespace Vd2.D3D11
 {
@@ -15,7 +14,6 @@ namespace Vd2.D3D11
             _device = device;
             _cache = new D3D11ResourceCache(device);
         }
-
 
         public override CommandList CreateCommandList(ref CommandListDescription description)
         {

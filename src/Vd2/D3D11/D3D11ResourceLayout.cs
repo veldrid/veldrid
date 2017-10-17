@@ -2,18 +2,18 @@
 {
     internal class D3D11ResourceLayout : ResourceLayout
     {
-        private readonly (int index, ShaderStages stages)[] _deviceIndexByVdResourceIndex;
+        private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
 
         public D3D11ResourceLayout(ref ResourceLayoutDescription description)
         {
             ResourceLayoutElementDescription[] elements = description.Elements;
-            _deviceIndexByVdResourceIndex = new(int, ShaderStages)[elements.Length];
+            _bindingInfosByVdIndex = new ResourceBindingInfo[elements.Length];
 
             int cbIndex = 0;
             int texIndex = 0;
             int samplerIndex = 0;
 
-            for (int i = 0; i < _deviceIndexByVdResourceIndex.Length; i++)
+            for (int i = 0; i < _bindingInfosByVdIndex.Length; i++)
             {
                 int slot;
                 switch (elements[i].Kind)
@@ -21,10 +21,7 @@
                     case ResourceKind.Uniform:
                         slot = cbIndex++;
                         break;
-                    case ResourceKind.Texture2D:
-                        slot = texIndex++;
-                        break;
-                    case ResourceKind.TextureCube:
+                    case ResourceKind.Texture:
                         slot = texIndex++;
                         break;
                     case ResourceKind.Sampler:
@@ -33,18 +30,30 @@
                     default: throw Illegal.Value<ResourceKind>();
                 }
 
-                _deviceIndexByVdResourceIndex[i] = (slot, elements[i].Stages);
+                _bindingInfosByVdIndex[i] = new ResourceBindingInfo(slot, elements[i].Stages);
             }
         }
 
-        public (int slot, ShaderStages stages) GetDeviceSlotIndex(int resourceLayoutIndex)
+        public ResourceBindingInfo GetDeviceSlotIndex(int resourceLayoutIndex)
         {
-            if (resourceLayoutIndex >= _deviceIndexByVdResourceIndex.Length)
+            if (resourceLayoutIndex >= _bindingInfosByVdIndex.Length)
             {
-                throw new VdException($"Invalid resource index: {resourceLayoutIndex}. Maximum is: {_deviceIndexByVdResourceIndex.Length - 1}.");
+                throw new VdException($"Invalid resource index: {resourceLayoutIndex}. Maximum is: {_bindingInfosByVdIndex.Length - 1}.");
             }
 
-            return _deviceIndexByVdResourceIndex[resourceLayoutIndex];
+            return _bindingInfosByVdIndex[resourceLayoutIndex];
+        }
+
+        public struct ResourceBindingInfo
+        {
+            public int Slot;
+            public ShaderStages Stages;
+
+            public ResourceBindingInfo(int slot, ShaderStages stages)
+            {
+                Slot = slot;
+                Stages = stages;
+            }
         }
     }
 }

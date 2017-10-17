@@ -62,7 +62,7 @@ namespace TestApp
                 new ResourceLayoutElementDescription("World", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("View", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.Texture2D, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("Sampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             UniformBuffer worldUB = rf.CreateUniformBuffer(new BufferDescription(64));

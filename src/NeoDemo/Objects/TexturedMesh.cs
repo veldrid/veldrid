@@ -135,13 +135,13 @@ namespace Vd2.NeoDemo.Objects
                 new ResourceLayoutElementDescription("CameraInfo", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("PointLights", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("MaterialProperties", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.Texture2D, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("RegularSampler", ResourceKind.Sampler, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("AlphaMap", ResourceKind.Texture2D, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("AlphaMap", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("AlphaMapSampler", ResourceKind.Sampler, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("ShadowMapNear", ResourceKind.Texture2D, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("ShadowMapMid", ResourceKind.Texture2D, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("ShadowMapFar", ResourceKind.Texture2D, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ShadowMapNear", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ShadowMapMid", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ShadowMapFar", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("ShadowMapSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(mainLayout,

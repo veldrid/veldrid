@@ -21,6 +21,7 @@ namespace Vd2.D3D11
             BlendState = cache.GetBlendState(ref description.BlendState);
             DepthStencilState = cache.GetDepthStencilState(ref description.DepthStencilStateDescription);
             RasterizerState = cache.GetRasterizerState(ref description.RasterizerState);
+            PrimitiveTopology = D3D11Formats.VdToD3D11PrimitiveTopology(description.PrimitiveTopology);
 
             byte[] vsBytecode = null;
             ShaderStageDescription[] stages = description.ShaderSet.ShaderStages;
@@ -52,9 +53,6 @@ namespace Vd2.D3D11
 
             Debug.Assert(vsBytecode != null);
             InputLayout = cache.GetInputLayout(description.ShaderSet.VertexLayouts, vsBytecode);
-
-            
-            PrimitiveTopology = D3D11Formats.VdToD3D11PrimitiveTopology(description.PrimitiveTopology);
         }
 
         public override void Dispose()

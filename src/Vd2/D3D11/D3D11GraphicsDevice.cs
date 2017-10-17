@@ -1,6 +1,5 @@
 ﻿using SharpDX.Direct3D11;
 using SharpDX.DXGI;
-using SharpDX.Mathematics.Interop;
 using System;
 
 namespace Vd2.D3D11
@@ -35,9 +34,6 @@ namespace Vd2.D3D11
                 out _device,
                 out _swapChain);
             _immediateContext = _device.ImmediateContext;
-
-            _device.CheckThreadingSupport(out bool concurrentResources, out bool commandLists);
-            Console.WriteLine($"Concurrent resources: {concurrentResources}, command lists: {commandLists}");
 
             Factory factory = _swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(hwnd, WindowAssociationFlags.IgnoreAll);

@@ -3,8 +3,7 @@
     public enum ResourceKind : byte
     {
         Uniform,
-        Texture2D,
-        TextureCube,
+        Texture,
         Sampler,
     }
 }

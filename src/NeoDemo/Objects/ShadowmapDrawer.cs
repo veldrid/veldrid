@@ -77,7 +77,7 @@ namespace Vd2.NeoDemo.Objects
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("SizePos", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("Tex", ResourceKind.Texture2D, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("Tex", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("TexSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             _sizeInfoBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<SizeInfo>()));

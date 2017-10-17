@@ -70,8 +70,8 @@ namespace Vd2
         {
             _gd = gd;
             ResourceFactory factory = gd.ResourceFactory;
-            _vertexBuffer = factory.CreateVertexBuffer(new BufferDescription(100000));
-            _indexBuffer = factory.CreateIndexBuffer(new IndexBufferDescription(50000, IndexFormat.UInt16));
+            _vertexBuffer = factory.CreateVertexBuffer(new BufferDescription(10000));
+            _indexBuffer = factory.CreateIndexBuffer(new IndexBufferDescription(2000, IndexFormat.UInt16));
             RecreateFontDeviceTexture(gd, cl);
 
             _projMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription(64));

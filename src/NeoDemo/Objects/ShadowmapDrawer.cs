@@ -8,6 +8,7 @@ namespace Vd2.NeoDemo.Objects
     public class ShadowmapDrawer : Renderable
     {
         private readonly Func<Sdl2Window> _windowGetter;
+        private readonly DisposeCollector _disposeCollector = new DisposeCollector();
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
@@ -15,7 +16,6 @@ namespace Vd2.NeoDemo.Objects
         private UniformBuffer _sizeInfoBuffer;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
-        private ResourceLayout _layout;
 
         private Vector2 _position;
         private Vector2 _size = new Vector2(100, 100);
@@ -60,13 +60,15 @@ namespace Vd2.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementFormat.Float2,  VertexElementSemantic.TextureCoordinate))
             };
 
+            Shader vs = ShaderHelper.LoadShader(factory, "ShadowmapPreviewShader", ShaderStages.Vertex);
+            Shader fs = ShaderHelper.LoadShader(factory, "ShadowmapPreviewShader", ShaderStages.Fragment);
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
-                new ShaderStageDescription(ShaderStages.Vertex, ShaderHelper.LoadShader(factory, "ShadowmapPreviewShader", ShaderStages.Vertex), "VS"),
-                new ShaderStageDescription(ShaderStages.Fragment, ShaderHelper.LoadShader(factory, "ShadowmapPreviewShader", ShaderStages.Fragment), "FS"),
+                new ShaderStageDescription(ShaderStages.Vertex, vs, "VS"),
+                new ShaderStageDescription(ShaderStages.Fragment, fs, "FS"),
             };
 
-            _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+            ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("SizePos", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("Tex", ResourceKind.Texture, ShaderStages.Fragment),
@@ -78,7 +80,7 @@ namespace Vd2.NeoDemo.Objects
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, shaderStages),
-                _layout,
+                layout,
                 gd.SwapchainFramebuffer.OutputDescription);
 
             _pipeline = factory.CreatePipeline(ref pd);
@@ -88,22 +90,20 @@ namespace Vd2.NeoDemo.Objects
             _orthographicBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<Matrix4x4>()));
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
-                _layout,
+                layout,
                 _orthographicBuffer,
                 _sizeInfoBuffer,
                 _bindingGetter(),
                 gd.PointSampler));
 
             OnWindowResized();
+
+            _disposeCollector.Add(_vb, _ib, layout, vs, fs, _pipeline, _sizeInfoBuffer, _orthographicBuffer, _resourceSet);
         }
 
         public override void DestroyDeviceObjects()
         {
-            _vb.Dispose();
-            _ib.Dispose();
-            _sizeInfoBuffer.Dispose();
-            _orthographicBuffer.Dispose();
-            _layout.Dispose();
+            _disposeCollector.DisposeAll();
         }
 
         public override RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)

@@ -220,6 +220,19 @@ namespace Vd2.NeoDemo
                     }
                     ImGui.EndMenu();
                 }
+                if (ImGui.BeginMenu("Debug"))
+                {
+                    if (ImGui.MenuItem("Refresh Device Objects"))
+                    {
+                        RefreshDeviceObjects(1);
+                    }
+                    if (ImGui.MenuItem("Refresh Device Objects (100 times)"))
+                    {
+                        RefreshDeviceObjects(100);
+                    }
+                    
+                    ImGui.EndMenu();
+                }
 
                 ImGui.Text(_fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTimeMilliseconds.ToString("#00.00 ms"));
 
@@ -232,6 +245,15 @@ namespace Vd2.NeoDemo
             }
 
             _window.Title = _gd.BackendType.ToString();
+        }
+
+        private void RefreshDeviceObjects(int numTimes)
+        {
+            for (int i = 0; i < numTimes; i++)
+            {
+                DestroyAllObjects();
+                CreateAllObjects();
+            }
         }
 
         private void DrawMaterialMenu(MaterialPropsAndBuffer brick)
@@ -283,9 +305,7 @@ namespace Vd2.NeoDemo
 
         private void ChangeBackend(GraphicsBackend backend)
         {
-            _sc.DestroyDeviceObjects();
-            _scene.DestroyAllDeviceObjects();
-            CommonMaterials.DestroyAllDeviceObjects();
+            DestroyAllObjects();
 
             _gd.Dispose();
 
@@ -318,6 +338,18 @@ namespace Vd2.NeoDemo
 
             _gd = Vd2Startup.CreateGraphicsDevice(ref rcCI, _window);
 
+            CreateAllObjects();
+        }
+
+        private void DestroyAllObjects()
+        {
+            _sc.DestroyDeviceObjects();
+            _scene.DestroyAllDeviceObjects();
+            CommonMaterials.DestroyAllDeviceObjects();
+        }
+
+        private void CreateAllObjects()
+        {
             CommandList initCL = _gd.ResourceFactory.CreateCommandList();
             initCL.Begin();
             _sc.CreateDeviceObjects(_gd, initCL, _sc);

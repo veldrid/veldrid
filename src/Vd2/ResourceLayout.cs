@@ -1,6 +1,8 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
-    public abstract class ResourceLayout
+    public abstract class ResourceLayout : IDisposable
     {
         public abstract void Dispose();
     }

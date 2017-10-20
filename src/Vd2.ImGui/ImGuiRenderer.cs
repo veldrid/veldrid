@@ -19,10 +19,12 @@ namespace Vd2
         // Context objects
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
-        private TextureView _fontTextureView;
-
-        // Material replacements
         private UniformBuffer _projMatrixBuffer;
+        private Texture2D _fontTexture;
+        private TextureView _fontTextureView;
+        private Shader _vertexShader;
+        private Shader _fragmentShader;
+        private ResourceLayout _layout;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
 
@@ -78,8 +80,8 @@ namespace Vd2
 
             byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex);
             byte[] fragmentShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-frag", ShaderStages.Fragment);
-            Shader vertexShader = factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vertexShaderBytes));
-            Shader fragmentShader = factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fragmentShaderBytes));
+            _vertexShader = factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vertexShaderBytes));
+            _fragmentShader = factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fragmentShaderBytes));
 
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
@@ -91,8 +93,8 @@ namespace Vd2
 
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
-                new ShaderStageDescription(ShaderStages.Vertex, vertexShader, "VS"),
-                new ShaderStageDescription(ShaderStages.Fragment, fragmentShader, "FS")
+                new ShaderStageDescription(ShaderStages.Vertex, _vertexShader, "VS"),
+                new ShaderStageDescription(ShaderStages.Fragment, _fragmentShader, "FS")
             };
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
@@ -172,7 +174,7 @@ namespace Vd2
             // Store our identifier
             io.FontAtlas.SetTexID(_fontAtlasID);
 
-            Texture2D deviceTexture = gd.ResourceFactory.CreateTexture2D(new TextureDescription(
+            _fontTexture = gd.ResourceFactory.CreateTexture2D(new TextureDescription(
                 (uint)textureData.Width,
                 (uint)textureData.Height,
                 1,
@@ -180,7 +182,7 @@ namespace Vd2
                 PixelFormat.R8_G8_B8_A8_UNorm,
                 TextureUsage.Sampled));
             cl.UpdateTexture2D(
-                deviceTexture,
+                _fontTexture,
                 (IntPtr)textureData.Pixels,
                 (uint)(textureData.BytesPerPixel * textureData.Width * textureData.Height),
                 0,
@@ -189,13 +191,12 @@ namespace Vd2
                 (uint)textureData.Height,
                 0,
                 0);
-            _fontTextureView = gd.ResourceFactory.CreateTextureView(deviceTexture);
+            _fontTextureView = gd.ResourceFactory.CreateTextureView(_fontTexture);
 
             io.FontAtlas.ClearTexData();
         }
 
         private string[] _stages = { "Standard" };
-        private ResourceLayout _layout;
 
         public void SetRenderStages(string[] stages) { _stages = stages; }
 
@@ -431,10 +432,14 @@ namespace Vd2
         {
             _vertexBuffer.Dispose();
             _indexBuffer.Dispose();
+            _projMatrixBuffer.Dispose();
+            _fontTexture.Dispose();
             _fontTextureView.Dispose();
+            _vertexShader.Dispose();
+            _fragmentShader.Dispose();
+            _layout.Dispose();
             _pipeline.Dispose();
             _resourceSet.Dispose();
-            _layout.Dispose();
         }
     }
 }

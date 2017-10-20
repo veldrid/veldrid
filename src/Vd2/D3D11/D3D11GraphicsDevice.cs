@@ -25,8 +25,11 @@ namespace Vd2.D3D11
                 SwapEffect = SwapEffect.Discard,
                 Usage = Usage.RenderTargetOutput
             };
-
+#if DEBUG
             DeviceCreationFlags creationFlags = DeviceCreationFlags.Debug;
+#else
+            DeviceCreationFlags creationFlags = DeviceCreationFlags.None;
+#endif 
             SharpDX.Direct3D11.Device.CreateWithSwapChain(
                 SharpDX.Direct3D.DriverType.Hardware,
                 creationFlags,

@@ -10,11 +10,10 @@ namespace Vd2.NeoDemo.Objects
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
-        private Texture2D _gridTexture;
-        private TextureView _textureView;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
-        private ResourceLayout _layout;
+
+        private readonly DisposeCollector _disposeCollector = new DisposeCollector();
 
         public unsafe override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
@@ -34,13 +33,13 @@ namespace Vd2.NeoDemo.Objects
             const int gridSize = 64;
             RgbaByte borderColor = new RgbaByte(255, 255, 255, 150);
             RgbaByte[] pixels = CreateGridTexturePixels(gridSize, 1, borderColor, new RgbaByte());
-            _gridTexture = factory.CreateTexture2D(new TextureDescription(gridSize, gridSize, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+            Texture2D gridTexture = factory.CreateTexture2D(new TextureDescription(gridSize, gridSize, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
             fixed (RgbaByte* pixelsPtr = pixels)
             {
-                cl.UpdateTexture2D(_gridTexture, (IntPtr)pixelsPtr, pixels.SizeInBytes(), 0, 0, gridSize, gridSize, 0, 0);
+                cl.UpdateTexture2D(gridTexture, (IntPtr)pixelsPtr, pixels.SizeInBytes(), 0, 0, gridSize, gridSize, 0, 0);
             }
 
-            _textureView = factory.CreateTextureView(new TextureViewDescription(_gridTexture));
+            TextureView textureView = factory.CreateTextureView(new TextureViewDescription(gridTexture));
 
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
@@ -48,13 +47,15 @@ namespace Vd2.NeoDemo.Objects
                     new VertexElementDescription("Position", VertexElementFormat.Float3, VertexElementSemantic.Position))
             };
 
+            Shader gridVS = ShaderHelper.LoadShader(factory, "Grid", ShaderStages.Vertex);
+            Shader gridFS = ShaderHelper.LoadShader(factory, "Grid", ShaderStages.Fragment);
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
-                new ShaderStageDescription(ShaderStages.Vertex, ShaderHelper.LoadShader(factory, "Grid", ShaderStages.Vertex), "VS"),
-                new ShaderStageDescription(ShaderStages.Fragment, ShaderHelper.LoadShader(factory, "Grid", ShaderStages.Fragment), "FS"),
+                new ShaderStageDescription(ShaderStages.Vertex, gridVS, "VS"),
+                new ShaderStageDescription(ShaderStages.Fragment, gridFS, "FS"),
             };
 
-            _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+            ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("View", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("GridTexture", ResourceKind.Texture, ShaderStages.Fragment),
@@ -66,27 +67,24 @@ namespace Vd2.NeoDemo.Objects
                 new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, FrontFace.Clockwise, true, true),
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, shaderStages),
-                _layout,
+                layout,
                 gd.SwapchainFramebuffer.OutputDescription);
 
             _pipeline = factory.CreatePipeline(ref pd);
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
-                _layout,
+                layout,
                 sc.ProjectionMatrixBuffer,
                 sc.ViewMatrixBuffer,
-                _textureView,
+                textureView,
                 gd.PointSampler));
+
+            _disposeCollector.Add(_vb, _ib, gridTexture, textureView, gridVS, gridFS, layout, _pipeline, _resourceSet);
         }
 
         public override void DestroyDeviceObjects()
         {
-            _pipeline.Dispose();
-            _vb.Dispose();
-            _ib.Dispose();
-            _gridTexture.Dispose();
-            _textureView.Dispose();
-            _layout.Dispose();
+            _disposeCollector.DisposeAll();
         }
 
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)

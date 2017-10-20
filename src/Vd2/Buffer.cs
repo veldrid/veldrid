@@ -2,9 +2,8 @@
 
 namespace Vd2
 {
-    public interface Buffer
+    public interface Buffer : IDisposable
     {
         ulong SizeInBytes { get; }
-        void Dispose();
     }
 }

@@ -25,5 +25,10 @@ namespace Vd2.Vk
                 CheckResult(result);
             }
         }
+
+        public override void Dispose()
+        {
+            vkDestroyShaderModule(_gd.Device, ShaderModule, null);
+        }
     }
 }

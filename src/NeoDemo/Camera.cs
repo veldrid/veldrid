@@ -17,7 +17,7 @@ namespace Vd2.NeoDemo
 
         private Vector3 _position = new Vector3(0, 3, 0);
         private Vector3 _lookDirection = new Vector3(0, -.3f, -1f);
-        private float _moveSpeed = 1.5f;
+        private float _moveSpeed = 10.0f;
 
         private float _yaw;
         private float _pitch;

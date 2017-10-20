@@ -33,5 +33,10 @@ namespace Vd2.D3D11
 
             Bytecode = description.ShaderBytes;
         }
+
+        public override void Dispose()
+        {
+            DeviceShader.Dispose();
+        }
     }
 }

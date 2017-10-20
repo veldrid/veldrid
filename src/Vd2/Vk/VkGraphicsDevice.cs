@@ -440,7 +440,8 @@ namespace Vd2.Vk
                 destroyDel.Invoke(_instance, _debugCallbackHandle, null);
             }
 
-            vkDeviceWaitIdle(_device);
+            VkResult result = vkDeviceWaitIdle(_device);
+            CheckResult(result);
             vkDestroyInstance(_instance, null);
         }
     }

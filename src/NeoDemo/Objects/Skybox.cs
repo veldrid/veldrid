@@ -20,10 +20,9 @@ namespace Vd2.NeoDemo.Objects
         private VertexBuffer _vb;
         private IndexBuffer _ib;
         private UniformBuffer _viewMatrixBuffer;
-        private TextureCube _cubemapTexture;
-        private TextureView _cubemapBinding;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
+        private readonly DisposeCollector _disposeCollector = new DisposeCollector();
 
         public Skybox(
             Image<Rgba32> front, Image<Rgba32> back, Image<Rgba32> left,
@@ -49,6 +48,8 @@ namespace Vd2.NeoDemo.Objects
 
             _viewMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription((ulong)Unsafe.SizeOf<Matrix4x4>()));
 
+            TextureCube textureCube;
+            TextureView textureView;
             fixed (Rgba32* frontPin = &_front.DangerousGetPinnableReferenceToPixelBuffer())
             fixed (Rgba32* backPin = &_back.DangerousGetPinnableReferenceToPixelBuffer())
             fixed (Rgba32* leftPin = &_left.DangerousGetPinnableReferenceToPixelBuffer())
@@ -58,7 +59,7 @@ namespace Vd2.NeoDemo.Objects
             {
                 uint width = (uint)_front.Width;
                 uint height = (uint)_front.Height;
-                _cubemapTexture = factory.CreateTextureCube(new TextureDescription(
+                textureCube = factory.CreateTextureCube(new TextureDescription(
                     width,
                     height,
                     1,
@@ -67,14 +68,14 @@ namespace Vd2.NeoDemo.Objects
                     TextureUsage.Sampled));
 
                 uint faceSize = (uint)(_front.Width * _front.Height * Unsafe.SizeOf<Rgba32>());
-                cl.UpdateTextureCube(_cubemapTexture, (IntPtr)leftPin, faceSize, CubeFace.NegativeX, 0, 0, width, height, 0, 0);
-                cl.UpdateTextureCube(_cubemapTexture, (IntPtr)rightPin, faceSize, CubeFace.PositiveX, 0, 0, width, height, 0, 0);
-                cl.UpdateTextureCube(_cubemapTexture, (IntPtr)bottomPin, faceSize, CubeFace.NegativeY, 0, 0, width, height, 0, 0);
-                cl.UpdateTextureCube(_cubemapTexture, (IntPtr)topPin, faceSize, CubeFace.PositiveY, 0, 0, width, height, 0, 0);
-                cl.UpdateTextureCube(_cubemapTexture, (IntPtr)backPin, faceSize, CubeFace.NegativeZ, 0, 0, width, height, 0, 0);
-                cl.UpdateTextureCube(_cubemapTexture, (IntPtr)frontPin, faceSize, CubeFace.PositiveZ, 0, 0, width, height, 0, 0);
+                cl.UpdateTextureCube(textureCube, (IntPtr)leftPin, faceSize, CubeFace.NegativeX, 0, 0, width, height, 0, 0);
+                cl.UpdateTextureCube(textureCube, (IntPtr)rightPin, faceSize, CubeFace.PositiveX, 0, 0, width, height, 0, 0);
+                cl.UpdateTextureCube(textureCube, (IntPtr)bottomPin, faceSize, CubeFace.NegativeY, 0, 0, width, height, 0, 0);
+                cl.UpdateTextureCube(textureCube, (IntPtr)topPin, faceSize, CubeFace.PositiveY, 0, 0, width, height, 0, 0);
+                cl.UpdateTextureCube(textureCube, (IntPtr)backPin, faceSize, CubeFace.NegativeZ, 0, 0, width, height, 0, 0);
+                cl.UpdateTextureCube(textureCube, (IntPtr)frontPin, faceSize, CubeFace.PositiveZ, 0, 0, width, height, 0, 0);
 
-                _cubemapBinding = factory.CreateTextureView(new TextureViewDescription(_cubemapTexture));
+                textureView = factory.CreateTextureView(new TextureViewDescription(textureCube));
             }
 
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
@@ -83,10 +84,12 @@ namespace Vd2.NeoDemo.Objects
                     new VertexElementDescription("Position", VertexElementFormat.Float3, VertexElementSemantic.Position))
             };
 
+            Shader vs = ShaderHelper.LoadShader(factory, "Skybox", ShaderStages.Vertex);
+            Shader fs = ShaderHelper.LoadShader(factory, "Skybox", ShaderStages.Fragment);
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
-                new ShaderStageDescription(ShaderStages.Vertex, ShaderHelper.LoadShader(factory, "Skybox", ShaderStages.Vertex), "VS"),
-                new ShaderStageDescription(ShaderStages.Fragment, ShaderHelper.LoadShader(factory, "Skybox", ShaderStages.Fragment), "VS"),
+                new ShaderStageDescription(ShaderStages.Vertex, vs, "VS"),
+                new ShaderStageDescription(ShaderStages.Fragment, fs, "VS"),
             };
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
@@ -110,8 +113,10 @@ namespace Vd2.NeoDemo.Objects
                 _layout,
                 sc.ProjectionMatrixBuffer,
                 _viewMatrixBuffer,
-                _cubemapBinding,
+                textureView,
                 gd.PointSampler));
+
+            _disposeCollector.Add(_vb, _ib, _viewMatrixBuffer, textureCube, textureView, _layout, _pipeline, _resourceSet, vs, fs);
         }
 
         public static Skybox LoadDefaultSkybox()
@@ -127,12 +132,7 @@ namespace Vd2.NeoDemo.Objects
 
         public override void DestroyDeviceObjects()
         {
-            _cubemapTexture.Dispose();
-            _cubemapBinding.Dispose();
-            _vb.Dispose();
-            _ib.Dispose();
-            _viewMatrixBuffer.Dispose();
-            _layout.Dispose();
+            _disposeCollector.DisposeAll();
         }
 
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)

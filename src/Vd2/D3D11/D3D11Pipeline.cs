@@ -15,11 +15,12 @@ namespace Vd2.D3D11
         public HullShader HullShader { get; } // May be null.
         public DomainShader DomainShader { get; } // May be null.
         public PixelShader PixelShader { get; }
+        public int[] VertexStrides { get; }
 
         public D3D11Pipeline(D3D11ResourceCache cache, ref PipelineDescription description)
         {
             BlendState = cache.GetBlendState(ref description.BlendState);
-            DepthStencilState = cache.GetDepthStencilState(ref description.DepthStencilStateDescription);
+            DepthStencilState = cache.GetDepthStencilState(ref description.DepthStencilState);
             RasterizerState = cache.GetRasterizerState(ref description.RasterizerState);
             PrimitiveTopology = D3D11Formats.VdToD3D11PrimitiveTopology(description.PrimitiveTopology);
 
@@ -37,11 +38,11 @@ namespace Vd2.D3D11
                 {
                     GeometryShader = (GeometryShader)((D3D11Shader)stages[i].Shader).DeviceShader;
                 }
-                if (stages[i].Stage == ShaderStages.TesselationControl)
+                if (stages[i].Stage == ShaderStages.TessellationControl)
                 {
                     HullShader = (HullShader)((D3D11Shader)stages[i].Shader).DeviceShader;
                 }
-                if (stages[i].Stage == ShaderStages.TesselationEvaluation)
+                if (stages[i].Stage == ShaderStages.TessellationEvaluation)
                 {
                     DomainShader = (DomainShader)((D3D11Shader)stages[i].Shader).DeviceShader;
                 }
@@ -53,6 +54,12 @@ namespace Vd2.D3D11
 
             Debug.Assert(vsBytecode != null);
             InputLayout = cache.GetInputLayout(description.ShaderSet.VertexLayouts, vsBytecode);
+            int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
+            VertexStrides = new int[numVertexBuffers];
+            for (int i = 0; i < numVertexBuffers; i++)
+            {
+                VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
+            }
         }
 
         public override void Dispose()

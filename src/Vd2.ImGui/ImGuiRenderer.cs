@@ -38,7 +38,7 @@ namespace Vd2
         /// <summary>
         /// Constructs a new ImGuiRenderer.
         /// </summary>
-        public ImGuiRenderer(GraphicsDevice gd, CommandList cl, int width, int height)
+        public ImGuiRenderer(GraphicsDevice gd, CommandList cl, OutputDescription outputDescription, int width, int height)
         {
             _gd = gd;
             _assembly = typeof(ImGuiRenderer).GetTypeInfo().Assembly;
@@ -47,7 +47,7 @@ namespace Vd2
 
             ImGui.GetIO().FontAtlas.AddDefaultFont();
 
-            CreateDeviceResources(gd, cl);
+            CreateDeviceResources(gd, cl, outputDescription);
             SetOpenTKKeyMappings();
 
             SetPerFrameImGuiData(1f / 60f);
@@ -66,7 +66,7 @@ namespace Vd2
             Dispose();
         }
 
-        public void CreateDeviceResources(GraphicsDevice gd, CommandList cl)
+        public void CreateDeviceResources(GraphicsDevice gd, CommandList cl, OutputDescription outputDescription)
         {
             _gd = gd;
             ResourceFactory factory = gd.ResourceFactory;
@@ -95,20 +95,23 @@ namespace Vd2
                 new ShaderStageDescription(ShaderStages.Fragment, fragmentShader, "FS")
             };
 
-            PipelineDescription pd = new PipelineDescription(
-                BlendStateDescription.SingleAlphaBlend,
-                new DepthStencilStateDescription(false, false, DepthComparisonKind.Always),
-                new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, false, true),
-                PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(vertexLayouts, shaderStages));
-            _pipeline = factory.CreatePipeline(ref pd);
-
-            ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+            _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("ProjectionMatrixBuffer", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("FontTexture", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("FontSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(layout,
+
+            PipelineDescription pd = new PipelineDescription(
+                BlendStateDescription.SingleAlphaBlend,
+                new DepthStencilStateDescription(false, false, DepthComparisonKind.Always),
+                new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, FrontFace.Clockwise, false, true),
+                PrimitiveTopology.TriangleList,
+                new ShaderSetDescription(vertexLayouts, shaderStages),
+                _layout,
+                outputDescription);
+            _pipeline = factory.CreatePipeline(ref pd);
+
+            _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,
                 _projMatrixBuffer,
                 _fontTextureView,
                 gd.PointSampler));
@@ -192,6 +195,7 @@ namespace Vd2
         }
 
         private string[] _stages = { "Standard" };
+        private ResourceLayout _layout;
 
         public void SetRenderStages(string[] stages) { _stages = stages; }
 
@@ -373,7 +377,7 @@ namespace Vd2
                 cl.UpdateBuffer(_projMatrixBuffer, 0, ref mvp);
             }
 
-            cl.SetVertexBuffer(0, _vertexBuffer, (uint)sizeof(DrawVert));
+            cl.SetVertexBuffer(0, _vertexBuffer);
             cl.SetIndexBuffer(_indexBuffer);
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(_resourceSet);
@@ -430,6 +434,7 @@ namespace Vd2
             _fontTextureView.Dispose();
             _pipeline.Dispose();
             _resourceSet.Dispose();
+            _layout.Dispose();
         }
     }
 }

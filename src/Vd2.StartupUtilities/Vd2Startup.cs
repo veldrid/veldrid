@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Vd2.Vk;
 using VdSdl2;
 
 namespace Vd2.StartupUtilities
@@ -67,12 +68,12 @@ namespace Vd2.StartupUtilities
             {
                 case GraphicsBackend.Direct3D11:
                     return CreateDefaultD3D11GraphicsDevice(ref graphicsDeviceCI, window);
+                case GraphicsBackend.Vulkan:
+                    return CreateVulkanGraphicsDevice(ref graphicsDeviceCI, window);
                 //case GraphicsBackend.OpenGL:
                 //    return CreateDefaultOpenGLRenderContext(ref contextCI, window);
                 //case GraphicsBackend.OpenGLES:
                 //    return CreateDefaultOpenGLESRenderContext(ref contextCI, window);
-                //case GraphicsBackend.Vulkan:
-                //    return CreateVulkanRenderContext(ref contextCI, window);
                 default:
                     throw new VdException("Invalid GraphicsBackend: " + graphicsDeviceCI.Backend);
             }
@@ -94,38 +95,34 @@ namespace Vd2.StartupUtilities
             }
         }
 
-        //public static unsafe GraphicsDevice CreateVulkanRenderContext(ref RenderContextCreateInfo contextCI, Sdl2Window window)
-        //{
-        //    IntPtr sdlHandle = window.SdlWindowHandle;
-        //    SDL_SysWMinfo sysWmInfo;
-        //    Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
-        //    Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
-        //    VkSurfaceSource surfaceSource = GetSurfaceSource(sysWmInfo);
-        //    VkRenderContext rc = new VkRenderContext(surfaceSource, window.Width, window.Height);
-        //    if (contextCI.DebugContext)
-        //    {
-        //        rc.EnableDebugCallback();
-        //    }
+        public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(ref GraphicsDeviceCreateInfo contextCI, Sdl2Window window)
+        {
+            IntPtr sdlHandle = window.SdlWindowHandle;
+            SDL_SysWMinfo sysWmInfo;
+            Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
+            Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
+            VkSurfaceSource surfaceSource = GetSurfaceSource(sysWmInfo);
+            GraphicsDevice gd = Hacks.CreateVulkan(surfaceSource, (uint)window.Width, (uint)window.Height, contextCI.DebugDevice);
 
-        //    return rc;
-        //}
+            return gd;
+        }
 
-        //private static unsafe VkSurfaceSource GetSurfaceSource(SDL_SysWMinfo sysWmInfo)
-        //{
-        //    switch (sysWmInfo.subsystem)
-        //    {
-        //        case SysWMType.Windows:
-        //            Win32WindowInfo w32Info = Unsafe.Read<Win32WindowInfo>(&sysWmInfo.info);
-        //            return VkSurfaceSource.CreateWin32(w32Info.hinstance, w32Info.window);
-        //        case SysWMType.X11:
-        //            X11WindowInfo x11Info = Unsafe.Read<X11WindowInfo>(&sysWmInfo.info);
-        //            return VkSurfaceSource.CreateXlib(
-        //                (Vulkan.Xlib.Display*)x11Info.display,
-        //                new Vulkan.Xlib.Window() { Value = x11Info.window });
-        //        default:
-        //            throw new PlatformNotSupportedException("Cannot create a Vulkan surface for " + sysWmInfo.subsystem + ".");
-        //    }
-        //}
+        private static unsafe VkSurfaceSource GetSurfaceSource(SDL_SysWMinfo sysWmInfo)
+        {
+            switch (sysWmInfo.subsystem)
+            {
+                case SysWMType.Windows:
+                    Win32WindowInfo w32Info = Unsafe.Read<Win32WindowInfo>(&sysWmInfo.info);
+                    return VkSurfaceSource.CreateWin32(w32Info.hinstance, w32Info.Sdl2Window);
+                case SysWMType.X11:
+                    X11WindowInfo x11Info = Unsafe.Read<X11WindowInfo>(&sysWmInfo.info);
+                    return VkSurfaceSource.CreateXlib(
+                        (Vulkan.Xlib.Display*)x11Info.display,
+                        new Vulkan.Xlib.Window() { Value = x11Info.Sdl2Window });
+                default:
+                    throw new PlatformNotSupportedException("Cannot create a Vulkan surface for " + sysWmInfo.subsystem + ".");
+            }
+        }
 
         //public static OpenGLESRenderContext CreateDefaultOpenGLESRenderContext(ref RenderContextCreateInfo contextCI, Sdl2Window window)
         //{

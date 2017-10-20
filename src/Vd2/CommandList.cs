@@ -14,7 +14,7 @@ namespace Vd2
         public abstract void End();
 
         public abstract void SetPipeline(Pipeline pipeline);
-        public abstract void SetVertexBuffer(uint index, VertexBuffer vb, uint vertexStrideInBytes);
+        public abstract void SetVertexBuffer(uint index, VertexBuffer vb);
         public abstract void SetIndexBuffer(IndexBuffer ib);
         public abstract void SetResourceSet(ResourceSet rs);
         public abstract void SetFramebuffer(Framebuffer fb);

@@ -12,6 +12,11 @@ namespace Vd2.D3D11
         private RawRectangle[] _scissors = new RawRectangle[0];
         private D3D11Framebuffer _fb;
 
+        private uint _numVertexBindings = 0;
+        private readonly SharpDX.Direct3D11.Buffer[] _vertexBindings = new SharpDX.Direct3D11.Buffer[10];
+        private int[] _vertexStrides;
+        private int[] _vertexOffsets = new int[10];
+
         public D3D11CommandList(Device device, ref CommandListDescription description)
             : base(ref description)
         {
@@ -24,6 +29,13 @@ namespace Vd2.D3D11
         {
             DeviceCommandList?.Dispose();
             DeviceCommandList = null;
+            ClearState();
+        }
+
+        private void ClearState()
+        {
+            _numVertexBindings = 0;
+            Array.Clear(_vertexBindings, 0, _vertexBindings.Length);
             _context.ClearState();
         }
 
@@ -46,6 +58,8 @@ namespace Vd2.D3D11
             _context.HullShader.Set(dp.HullShader);
             _context.DomainShader.Set(dp.DomainShader);
             _context.PixelShader.Set(dp.PixelShader);
+
+            _vertexStrides = dp.VertexStrides;
         }
 
         public override void SetResourceSet(ResourceSet rs)
@@ -72,20 +86,18 @@ namespace Vd2.D3D11
             }
         }
 
-        public override void SetVertexBuffer(uint index, VertexBuffer vb, uint vertexStrideInBytes)
+        public override void SetVertexBuffer(uint index, VertexBuffer vb)
         {
             D3D11VertexBuffer d3d11Buffer = Util.AssertSubtype<VertexBuffer, D3D11VertexBuffer>(vb);
-            VertexBufferBinding vbb = new VertexBufferBinding(d3d11Buffer.Buffer, (int)vertexStrideInBytes, 0);
-            _context.InputAssembler.SetVertexBuffers((int)index, vbb);
+            _vertexBindings[index] = d3d11Buffer.Buffer;
+            _numVertexBindings = Math.Max((index + 1), _numVertexBindings);
         }
 
         public override void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
-            _context.Rasterizer.SetViewports(_viewports, _viewports.Length);
-            if (_scissors.Length > 0)
-            {
-                _context.Rasterizer.SetScissorRectangles(_scissors);
-            }
+            FlushViewports();
+            FlushScissorRects();
+            FlushVertexBindings();
 
             if (instanceCount == 1)
             {
@@ -94,6 +106,33 @@ namespace Vd2.D3D11
             else
             {
                 _context.DrawIndexedInstanced((int)indexCount, (int)instanceCount, (int)indexStart, vertexOffset, (int)instanceStart);
+            }
+        }
+
+        private void FlushViewports()
+        {
+            _context.Rasterizer.SetViewports(_viewports, _viewports.Length);
+        }
+
+        private void FlushScissorRects()
+        {
+            if (_scissors.Length > 0)
+            {
+                _context.Rasterizer.SetScissorRectangles(_scissors);
+            }
+        }
+
+        private unsafe void FlushVertexBindings()
+        {
+            IntPtr* buffersPtr = stackalloc IntPtr[(int)_numVertexBindings];
+            for (int i = 0; i < _numVertexBindings; i++)
+            {
+                buffersPtr[i] = _vertexBindings[i].NativePointer;
+            }
+            fixed (int* stridesPtr = _vertexStrides)
+            fixed (int* offsetsPtr = _vertexOffsets)
+            {
+                _context.InputAssembler.SetVertexBuffers(0, (int)_numVertexBindings, (IntPtr)buffersPtr, (IntPtr)stridesPtr, (IntPtr)offsetsPtr);
             }
         }
 
@@ -137,11 +176,11 @@ namespace Vd2.D3D11
             {
                 _context.GeometryShader.SetShaderResource(slot, texView.ShaderResourceView);
             }
-            if ((stages & ShaderStages.TesselationControl) == ShaderStages.TesselationControl)
+            if ((stages & ShaderStages.TessellationControl) == ShaderStages.TessellationControl)
             {
                 _context.HullShader.SetShaderResource(slot, texView.ShaderResourceView);
             }
-            if ((stages & ShaderStages.TesselationEvaluation) == ShaderStages.TesselationEvaluation)
+            if ((stages & ShaderStages.TessellationEvaluation) == ShaderStages.TessellationEvaluation)
             {
                 _context.DomainShader.SetShaderResource(slot, texView.ShaderResourceView);
             }
@@ -161,11 +200,11 @@ namespace Vd2.D3D11
             {
                 _context.GeometryShader.SetConstantBuffer(slot, ub.Buffer);
             }
-            if ((stages & ShaderStages.TesselationControl) == ShaderStages.TesselationControl)
+            if ((stages & ShaderStages.TessellationControl) == ShaderStages.TessellationControl)
             {
                 _context.HullShader.SetConstantBuffer(slot, ub.Buffer);
             }
-            if ((stages & ShaderStages.TesselationEvaluation) == ShaderStages.TesselationEvaluation)
+            if ((stages & ShaderStages.TessellationEvaluation) == ShaderStages.TessellationEvaluation)
             {
                 _context.DomainShader.SetConstantBuffer(slot, ub.Buffer);
             }
@@ -185,11 +224,11 @@ namespace Vd2.D3D11
             {
                 _context.GeometryShader.SetSampler(slot, sampler.DeviceSampler);
             }
-            if ((stages & ShaderStages.TesselationControl) == ShaderStages.TesselationControl)
+            if ((stages & ShaderStages.TessellationControl) == ShaderStages.TessellationControl)
             {
                 _context.HullShader.SetSampler(slot, sampler.DeviceSampler);
             }
-            if ((stages & ShaderStages.TesselationEvaluation) == ShaderStages.TesselationEvaluation)
+            if ((stages & ShaderStages.TessellationEvaluation) == ShaderStages.TessellationEvaluation)
             {
                 _context.DomainShader.SetSampler(slot, sampler.DeviceSampler);
             }

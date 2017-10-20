@@ -11,6 +11,7 @@
         public uint MinimumLod;
         public uint MaximumLod;
         public int LodBias;
+        public SamplerBorderColor BorderColor;
 
         public SamplerDescription(
             SamplerAddressMode addressModeU,
@@ -21,7 +22,8 @@
             uint maximumAnisotropy,
             uint minimumLod,
             uint maximumLod,
-            int lodBias)
+            int lodBias,
+            SamplerBorderColor borderColor)
         {
             AddressModeU = addressModeU;
             AddressModeV = addressModeV;
@@ -32,6 +34,7 @@
             MinimumLod = minimumLod;
             MaximumLod = maximumLod;
             LodBias = lodBias;
+            BorderColor = borderColor;
         }
 
         public static readonly SamplerDescription Point = new SamplerDescription

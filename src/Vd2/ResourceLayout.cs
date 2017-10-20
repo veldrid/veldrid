@@ -2,5 +2,6 @@
 {
     public abstract class ResourceLayout
     {
+        public abstract void Dispose();
     }
 }

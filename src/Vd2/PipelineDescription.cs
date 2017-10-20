@@ -3,23 +3,29 @@
     public struct PipelineDescription
     {
         public BlendStateDescription BlendState;
-        public DepthStencilStateDescription DepthStencilStateDescription;
+        public DepthStencilStateDescription DepthStencilState;
         public RasterizerStateDescription RasterizerState;
         public PrimitiveTopology PrimitiveTopology;
         public ShaderSetDescription ShaderSet;
+        public ResourceLayout ResourceLayout;
+        public OutputDescription Outputs;
 
         public PipelineDescription(
             BlendStateDescription blendState,
             DepthStencilStateDescription depthStencilStateDescription,
             RasterizerStateDescription rasterizerState,
             PrimitiveTopology primitiveTopology,
-            ShaderSetDescription shaderSet)
+            ShaderSetDescription shaderSet,
+            ResourceLayout resourceLayout,
+            OutputDescription outputs)
         {
             BlendState = blendState;
-            DepthStencilStateDescription = depthStencilStateDescription;
+            DepthStencilState = depthStencilStateDescription;
             RasterizerState = rasterizerState;
             PrimitiveTopology = primitiveTopology;
             ShaderSet = shaderSet;
+            ResourceLayout = resourceLayout;
+            Outputs = outputs;
         }
     }
 }

@@ -89,23 +89,25 @@ namespace Vd2.NeoDemo.Objects
                 new ShaderStageDescription(ShaderStages.Fragment, ShaderHelper.LoadShader(factory, "Skybox", ShaderStages.Fragment), "VS"),
             };
 
-            PipelineDescription pd = new PipelineDescription(
-                BlendStateDescription.SingleAlphaBlend,
-                DepthStencilStateDescription.LessEqual,
-                new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, false, true),
-                PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(vertexLayouts, shaderStages));
-
-            _pipeline = factory.CreatePipeline(ref pd);
-
-            ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+            _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("View", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("CubeTexture", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("CubeSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
+            PipelineDescription pd = new PipelineDescription(
+                BlendStateDescription.SingleAlphaBlend,
+                DepthStencilStateDescription.LessEqual,
+                new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, FrontFace.Clockwise, false, true),
+                PrimitiveTopology.TriangleList,
+                new ShaderSetDescription(vertexLayouts, shaderStages),
+                _layout,
+                gd.SwapchainFramebuffer.OutputDescription);
+
+            _pipeline = factory.CreatePipeline(ref pd);
+
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
-                layout,
+                _layout,
                 sc.ProjectionMatrixBuffer,
                 _viewMatrixBuffer,
                 _cubemapBinding,
@@ -130,11 +132,12 @@ namespace Vd2.NeoDemo.Objects
             _vb.Dispose();
             _ib.Dispose();
             _viewMatrixBuffer.Dispose();
+            _layout.Dispose();
         }
 
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
-            cl.SetVertexBuffer(0, _vb, VertexPosition.SizeInBytes);
+            cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(_resourceSet);
@@ -200,5 +203,6 @@ namespace Vd2.NeoDemo.Objects
             16,17,18, 16,18,19,
             20,21,22, 20,22,23,
         };
+        private ResourceLayout _layout;
     }
 }

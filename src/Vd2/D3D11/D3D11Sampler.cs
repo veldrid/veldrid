@@ -1,4 +1,5 @@
 ﻿using SharpDX.Direct3D11;
+using SharpDX.Mathematics.Interop;
 
 namespace Vd2.D3D11
 {
@@ -19,10 +20,31 @@ namespace Vd2.D3D11
                 MaximumLod = description.MaximumLod,
                 MaximumAnisotropy = (int)description.MaximumAnisotropy,
                 ComparisonFunction = comparision,
-                MipLodBias = description.LodBias
+                MipLodBias = description.LodBias,
+                BorderColor = ToRawColor4(description.BorderColor)
             };
 
             DeviceSampler = new SamplerState(device, samplerStateDesc);
+        }
+
+        private static RawColor4 ToRawColor4(SamplerBorderColor borderColor)
+        {
+            switch (borderColor)
+            {
+                case SamplerBorderColor.TransparentBlack:
+                    return new RawColor4(0, 0, 0, 0);
+                case SamplerBorderColor.OpaqueBlack:
+                    return new RawColor4(0, 0, 0, 1);
+                case SamplerBorderColor.OpaqueWhite:
+                    return new RawColor4(1, 1, 1, 1);
+                default:
+                    throw Illegal.Value<SamplerBorderColor>();
+            }
+        }
+
+        public override void Dispose()
+        {
+            DeviceSampler.Dispose();
         }
     }
 }

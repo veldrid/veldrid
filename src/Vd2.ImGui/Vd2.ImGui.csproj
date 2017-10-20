@@ -31,7 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepositoryRootDirectory)\src\vd2\Vd2.csproj" />
-    <ProjectReference Include="$(RepositoryRootDirectory)\src\vdsdl2\VdSdl2.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\VdSdl2\VdSdl2.csproj" />
     <PackageReference Include="ImGui.NET" Version="0.2.1" />
   </ItemGroup>
 

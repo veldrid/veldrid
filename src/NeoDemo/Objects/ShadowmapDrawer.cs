@@ -7,17 +7,19 @@ namespace Vd2.NeoDemo.Objects
 {
     public class ShadowmapDrawer : Renderable
     {
+        private readonly Func<Sdl2Window> _windowGetter;
+
         private VertexBuffer _vb;
         private IndexBuffer _ib;
         private UniformBuffer _orthographicBuffer;
         private UniformBuffer _sizeInfoBuffer;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
+        private ResourceLayout _layout;
 
         private Vector2 _position;
         private Vector2 _size = new Vector2(100, 100);
 
-        private readonly Sdl2Window _window;
         private readonly Func<TextureView> _bindingGetter;
         private SizeInfo? _si;
         private Matrix4x4? _ortho;
@@ -31,17 +33,16 @@ namespace Vd2.NeoDemo.Objects
             _si = new SizeInfo { Size = _size, Position = _position };
         }
 
-        public ShadowmapDrawer(Sdl2Window window, Func<TextureView> bindingGetter)
+        public ShadowmapDrawer(Func<Sdl2Window> windowGetter, Func<TextureView> bindingGetter)
         {
-            _window = window;
-            window.Resized += OnWindowResized;
+            _windowGetter = windowGetter;
             OnWindowResized();
             _bindingGetter = bindingGetter;
         }
 
-        private void OnWindowResized()
+        public void OnWindowResized()
         {
-            _ortho = Matrix4x4.CreateOrthographicOffCenter(0, _window.Width, _window.Height, 0, -1, 1);
+            _ortho = Matrix4x4.CreateOrthographicOffCenter(0, _windowGetter().Width, _windowGetter().Height, 0, -1, 1);
         }
 
         public override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
@@ -65,27 +66,29 @@ namespace Vd2.NeoDemo.Objects
                 new ShaderStageDescription(ShaderStages.Fragment, ShaderHelper.LoadShader(factory, "ShadowmapPreviewShader", ShaderStages.Fragment), "FS"),
             };
 
+            _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("SizePos", ResourceKind.Uniform, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("Tex", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("TexSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
+
             PipelineDescription pd = new PipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
                 new DepthStencilStateDescription(false, true, DepthComparisonKind.Always),
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(vertexLayouts, shaderStages));
+                new ShaderSetDescription(vertexLayouts, shaderStages),
+                _layout,
+                gd.SwapchainFramebuffer.OutputDescription);
 
             _pipeline = factory.CreatePipeline(ref pd);
-
-            ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("SizePos", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("Tex", ResourceKind.Texture, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("TexSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             _sizeInfoBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<SizeInfo>()));
             UpdateSizeInfoBuffer();
             _orthographicBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<Matrix4x4>()));
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
-                layout,
+                _layout,
                 _orthographicBuffer,
                 _sizeInfoBuffer,
                 _bindingGetter(),
@@ -100,6 +103,7 @@ namespace Vd2.NeoDemo.Objects
             _ib.Dispose();
             _sizeInfoBuffer.Dispose();
             _orthographicBuffer.Dispose();
+            _layout.Dispose();
         }
 
         public override RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)
@@ -123,7 +127,7 @@ namespace Vd2.NeoDemo.Objects
                 _ortho = null;
             }
 
-            cl.SetVertexBuffer(0, _vb, 16);
+            cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(_resourceSet);

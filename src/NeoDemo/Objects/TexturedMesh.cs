@@ -23,6 +23,7 @@ namespace Vd2.NeoDemo.Objects
         private TextureView _alphaMapView;
 
         private Pipeline _pipeline;
+        private ResourceLayout _mainLayout;
         private ResourceSet _resourceSet;
 
         private Pipeline _shadowMapPipeline;
@@ -34,6 +35,7 @@ namespace Vd2.NeoDemo.Objects
         private readonly MaterialPropsAndBuffer _materialProps;
 
         private bool _materialPropsOwned = false;
+        private ResourceLayout _depthLayout;
 
         public MaterialProperties MaterialProperties { get => _materialProps.Properties; set { _materialProps.Properties = value; } }
 
@@ -90,12 +92,18 @@ namespace Vd2.NeoDemo.Objects
                 new ShaderStageDescription(ShaderStages.Fragment, ShaderHelper.LoadShader(factory, "ShadowDepth", ShaderStages.Fragment), "FS"),
             };
 
+            _depthLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+             new ResourceLayoutElementDescription("ViewProjection", ResourceKind.Uniform, ShaderStages.Vertex),
+             new ResourceLayoutElementDescription("World", ResourceKind.Uniform, ShaderStages.Vertex)));
+
             PipelineDescription depthPD = new PipelineDescription(
-                BlendStateDescription.SingleOverrideBlend,
+                BlendStateDescription.Empty,
                 DepthStencilStateDescription.LessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(shadowDepthVertexLayouts, shadowDepthShaderStages));
+                new ShaderSetDescription(shadowDepthVertexLayouts, shadowDepthShaderStages),
+                _depthLayout,
+                DemoOutputsDescriptions.ShadowMapPass);
             _shadowMapPipeline = factory.CreatePipeline(ref depthPD);
 
             _shadowMapResourceSets = CreateShadowMapResourceSets(factory, cl, sc);
@@ -114,15 +122,7 @@ namespace Vd2.NeoDemo.Objects
                 new ShaderStageDescription(ShaderStages.Fragment, ShaderHelper.LoadShader(factory, "ShadowMain", ShaderStages.Fragment), "FS"),
             };
 
-            PipelineDescription mainPD = new PipelineDescription(
-                BlendStateDescription.SingleOverrideBlend,
-                DepthStencilStateDescription.LessEqual,
-                RasterizerStateDescription.Default,
-                PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(mainVertexLayouts, mainShaderStages));
-            _pipeline = factory.CreatePipeline(ref mainPD);
-
-            ResourceLayout mainLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+            _mainLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("View", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("World", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
@@ -144,7 +144,17 @@ namespace Vd2.NeoDemo.Objects
                 new ResourceLayoutElementDescription("ShadowMapFar", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("ShadowMapSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(mainLayout,
+            PipelineDescription mainPD = new PipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.LessEqual,
+                RasterizerStateDescription.Default,
+                PrimitiveTopology.TriangleList,
+                new ShaderSetDescription(mainVertexLayouts, mainShaderStages),
+                _mainLayout,
+                gd.SwapchainFramebuffer.OutputDescription);
+            _pipeline = factory.CreatePipeline(ref mainPD);
+
+            _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(_mainLayout,
                 sc.ProjectionMatrixBuffer,
                 sc.ViewMatrixBuffer,
                 _worldBuffer,
@@ -169,16 +179,13 @@ namespace Vd2.NeoDemo.Objects
 
         private ResourceSet[] CreateShadowMapResourceSets(ResourceFactory factory, CommandList cl, SceneContext sc)
         {
-            ResourceLayout depthLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
-                 new ResourceLayoutElementDescription("ViewProjection", ResourceKind.Uniform, ShaderStages.Vertex),
-                 new ResourceLayoutElementDescription("World", ResourceKind.Uniform, ShaderStages.Vertex)));
             ResourceSet[] ret = new ResourceSet[3];
 
             for (int i = 0; i < ret.Length; i++)
             {
                 UniformBuffer viewProjBuffer = i == 0 ? sc.LightViewProjectionBuffer0 : i == 1 ? sc.LightViewProjectionBuffer1 : sc.LightViewProjectionBuffer2;
                 ret[i] = factory.CreateResourceSet(new ResourceSetDescription(
-                    depthLayout,
+                    _depthLayout,
                     viewProjBuffer,
                     _worldBuffer));
             }
@@ -204,6 +211,7 @@ namespace Vd2.NeoDemo.Objects
             _resourceSet.Dispose();
             _shadowMapPipeline.Dispose();
             foreach (ResourceSet set in _shadowMapResourceSets) { set.Dispose(); }
+            _depthLayout.Dispose();
         }
 
         public override RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)
@@ -236,7 +244,7 @@ namespace Vd2.NeoDemo.Objects
             cl.UpdateBuffer(_worldBuffer, 0, ref world);
             cl.UpdateBuffer(_inverseTransposeWorldBuffer, 0, VdUtilities.CalculateInverseTranspose(ref world));
 
-            cl.SetVertexBuffer(0, _vb, VertexPositionNormalTexture.SizeInBytes);
+            cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_shadowMapPipeline);
             cl.SetResourceSet(_shadowMapResourceSets[sc.CurrentLightViewProjectionBuffer]);
@@ -249,7 +257,7 @@ namespace Vd2.NeoDemo.Objects
             cl.UpdateBuffer(_worldBuffer, 0, ref world);
             cl.UpdateBuffer(_inverseTransposeWorldBuffer, 0, VdUtilities.CalculateInverseTranspose(ref world));
 
-            cl.SetVertexBuffer(0, _vb, VertexPositionNormalTexture.SizeInBytes);
+            cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(_resourceSet);

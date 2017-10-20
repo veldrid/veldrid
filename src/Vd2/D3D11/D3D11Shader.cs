@@ -18,10 +18,10 @@ namespace Vd2.D3D11
                 case ShaderStages.Geometry:
                     DeviceShader = new GeometryShader(device, description.ShaderBytes);
                     break;
-                case ShaderStages.TesselationControl:
+                case ShaderStages.TessellationControl:
                     DeviceShader = new HullShader(device, description.ShaderBytes);
                     break;
-                case ShaderStages.TesselationEvaluation:
+                case ShaderStages.TessellationEvaluation:
                     DeviceShader = new DomainShader(device, description.ShaderBytes);
                     break;
                 case ShaderStages.Fragment:

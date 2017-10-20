@@ -51,7 +51,8 @@ namespace Vd2.D3D11
                 CullMode = D3D11Formats.VdToD3D11CullMode(description.CullMode),
                 FillMode = D3D11Formats.VdToD3D11FillMode(description.FillMode),
                 IsDepthClipEnabled = description.DepthClipEnabled,
-                IsScissorEnabled = description.ScissorTestEnabled
+                IsScissorEnabled = description.ScissorTestEnabled,
+                IsFrontCounterClockwise = description.FrontFace == FrontFace.CounterClockwise
             };
 
             return new RasterizerState(_device, rssDesc);
@@ -84,7 +85,7 @@ namespace Vd2.D3D11
                         desc.InstanceStepRate == 0 ? InputClassification.PerVertexData : InputClassification.PerInstanceData,
                         (int)desc.InstanceStepRate);
 
-                    currentOffset += FormatHelpers.GetSizeInBytes(desc.Format);
+                    currentOffset += (int)FormatHelpers.GetSizeInBytes(desc.Format);
                     element += 1;
                 }
             }

@@ -8,8 +8,8 @@ namespace Vd2
         None = 0,
         Vertex = 1 << 0,
         Geometry = 1 << 1,
-        TesselationControl = 1 << 2,
-        TesselationEvaluation = 1 << 3,
+        TessellationControl = 1 << 2,
+        TessellationEvaluation = 1 << 3,
         Fragment = 1 << 4,
     }
 }

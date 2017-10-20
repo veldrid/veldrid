@@ -23,11 +23,11 @@ namespace Vd2.NeoDemo
         {
             if (_imguiRenderer == null)
             {
-                _imguiRenderer = new ImGuiRenderer(gd, cl, _width, _height);
+                _imguiRenderer = new ImGuiRenderer(gd, cl, gd.SwapchainFramebuffer.OutputDescription, _width, _height);
             }
             else
             {
-                _imguiRenderer.CreateDeviceResources(gd, cl);
+                _imguiRenderer.CreateDeviceResources(gd, cl, gd.SwapchainFramebuffer.OutputDescription);
             }
         }
 

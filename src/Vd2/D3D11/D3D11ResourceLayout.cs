@@ -44,6 +44,10 @@
             return _bindingInfosByVdIndex[resourceLayoutIndex];
         }
 
+        public override void Dispose()
+        {
+        }
+
         public struct ResourceBindingInfo
         {
             public int Slot;

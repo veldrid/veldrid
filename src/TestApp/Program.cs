@@ -82,7 +82,7 @@ namespace TestApp
             renderCB.SetViewport(0, new Viewport(0, 0, _window.Width, _window.Height, 0, 1));
             renderCB.SetScissorRect(0, 0, 0, (uint)_window.Width, (uint)_window.Height);
 
-            renderCB.SetVertexBuffer(0, vb, (uint)Unsafe.SizeOf<VertexPositionNormalTexture>());
+            renderCB.SetVertexBuffer(0, vb);
             renderCB.SetIndexBuffer(ib);
             renderCB.SetPipeline(p);
             renderCB.SetResourceSet(set);
@@ -117,7 +117,7 @@ namespace TestApp
                     mRender.SetFramebuffer(_gd.SwapchainFramebuffer);
                     mRender.SetViewport(0, new Viewport(0, 0, _window.Width, _window.Height, 0, 1));
                     mRender.SetScissorRect(0, 0, 0, (uint)_window.Width, (uint)_window.Height);
-                    mRender.SetVertexBuffer(0, vb, (uint)Unsafe.SizeOf<VertexPositionNormalTexture>());
+                    mRender.SetVertexBuffer(0, vb);
                     mRender.SetIndexBuffer(ib);
                     mRender.SetPipeline(p);
                     mRender.SetResourceSet(mSet);
@@ -209,7 +209,7 @@ namespace TestApp
         {
             PipelineDescription pd = new PipelineDescription();
             pd.BlendState = BlendStateDescription.SingleOverrideBlend;
-            pd.DepthStencilStateDescription = DepthStencilStateDescription.LessEqual;
+            pd.DepthStencilState = DepthStencilStateDescription.LessEqual;
             pd.PrimitiveTopology = PrimitiveTopology.TriangleList;
             pd.RasterizerState = RasterizerStateDescription.Default;
             pd.ShaderSet = new ShaderSetDescription(

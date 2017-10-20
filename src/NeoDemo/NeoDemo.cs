@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Vd2;
@@ -22,6 +23,10 @@ namespace Vd2.NeoDemo
         private RenderOrderKeyComparer _renderOrderKeyComparer = new RenderOrderKeyComparer();
         private bool _recreateWindow = true;
 
+        private static double _desiredFrameLengthSeconds = 1.0 / 60.0;
+        private static bool _limitFrameRate = false;
+        private static FrameTimeAverager _fta = new FrameTimeAverager(0.666);
+
         private event Action<int, int> _resizeHandled;
 
         public NeoDemo()
@@ -36,7 +41,10 @@ namespace Vd2.NeoDemo
                 WindowTitle = "Vd NeoDemo"
             };
             GraphicsDeviceCreateInfo gdCI = new GraphicsDeviceCreateInfo();
-            gdCI.DebugDevice = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            gdCI.Backend = GraphicsBackend.Vulkan;
+#if DEBUG
+            gdCI.DebugDevice = true;
+#endif
 
             Vd2Startup.CreateWindowAndGraphicsDevice(ref windowCI, ref gdCI, out _window, out _gd);
             _window.Resized += () => _windowResized = true;
@@ -97,20 +105,23 @@ namespace Vd2.NeoDemo
                 Quaternion.Identity,
                 Vector3.One);
 
-            ShadowmapDrawer texDrawer = new ShadowmapDrawer(_window, () => _sc.NearShadowMapView);
+            ShadowmapDrawer texDrawer = new ShadowmapDrawer(() => _window, () => _sc.NearShadowMapView);
+            _resizeHandled += (w, h) => texDrawer.OnWindowResized();
             texDrawer.CreateDeviceObjects(_gd, initCL, _sc);
             texDrawer.Position = new Vector2(10, 25);
             _scene.AddRenderable(texDrawer);
 
-            texDrawer = new ShadowmapDrawer(_window, () => _sc.MidShadowMapView);
-            texDrawer.CreateDeviceObjects(_gd, initCL, _sc);
-            texDrawer.Position = new Vector2(20 + texDrawer.Size.X, 25);
-            _scene.AddRenderable(texDrawer);
+            ShadowmapDrawer texDrawer2 = new ShadowmapDrawer(() => _window, () => _sc.MidShadowMapView);
+            _resizeHandled += (w, h) => texDrawer2.OnWindowResized();
+            texDrawer2.CreateDeviceObjects(_gd, initCL, _sc);
+            texDrawer2.Position = new Vector2(20 + texDrawer2.Size.X, 25);
+            _scene.AddRenderable(texDrawer2);
 
-            texDrawer = new ShadowmapDrawer(_window, () => _sc.FarShadowMapView);
-            texDrawer.CreateDeviceObjects(_gd, initCL, _sc);
-            texDrawer.Position = new Vector2(30 + (texDrawer.Size.X * 2), 25);
-            _scene.AddRenderable(texDrawer);
+            ShadowmapDrawer texDrawer3 = new ShadowmapDrawer(() => _window, () => _sc.FarShadowMapView);
+            _resizeHandled += (w, h) => texDrawer3.OnWindowResized();
+            texDrawer3.CreateDeviceObjects(_gd, initCL, _sc);
+            texDrawer3.Position = new Vector2(30 + (texDrawer3.Size.X * 2), 25);
+            _scene.AddRenderable(texDrawer3);
 
             initCL.End();
             _gd.ExecuteCommands(initCL);
@@ -130,16 +141,32 @@ namespace Vd2.NeoDemo
 
         public void Run()
         {
+            long previousFrameTicks = 0;
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             while (_window.Exists)
             {
-                InputTracker.UpdateFrameInput(_window.PumpEvents());
-                Update(1f / 60f);
+                long currentFrameTicks = sw.ElapsedTicks;
+                double deltaSeconds = (currentFrameTicks - previousFrameTicks) / (double)Stopwatch.Frequency;
+
+                while (_limitFrameRate && deltaSeconds < _desiredFrameLengthSeconds)
+                {
+                    currentFrameTicks = sw.ElapsedTicks;
+                    deltaSeconds = (currentFrameTicks - previousFrameTicks) / (double)Stopwatch.Frequency;
+                }
+
+                previousFrameTicks = currentFrameTicks;
+
+                InputSnapshot snapshot = _window.PumpEvents();
+                InputTracker.UpdateFrameInput(snapshot);
+                Update((float)deltaSeconds);
                 Draw();
             }
         }
 
         private void Update(float deltaSeconds)
         {
+            _fta.AddTime(deltaSeconds);
             _scene.Update(deltaSeconds);
 
             if (ImGui.BeginMainMenuBar())
@@ -194,6 +221,8 @@ namespace Vd2.NeoDemo
                     ImGui.EndMenu();
                 }
 
+                ImGui.Text(_fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTimeMilliseconds.ToString("#00.00 ms"));
+
                 ImGui.EndMainMenuBar();
             }
 
@@ -228,7 +257,7 @@ namespace Vd2.NeoDemo
             int width = _window.Width;
             int height = _window.Height;
 
-            if (_windowResized)
+            if (_windowResized && _window.Exists)
             {
                 _windowResized = false;
                 _gd.ResizeMainWindow((uint)width, (uint)height);
@@ -281,7 +310,10 @@ namespace Vd2.NeoDemo
 
             GraphicsDeviceCreateInfo rcCI = new GraphicsDeviceCreateInfo
             {
-                Backend = backend
+                Backend = backend,
+#if DEBUG
+                DebugDevice = true
+#endif
             };
 
             _gd = Vd2Startup.CreateGraphicsDevice(ref rcCI, _window);
@@ -289,8 +321,8 @@ namespace Vd2.NeoDemo
             CommandList initCL = _gd.ResourceFactory.CreateCommandList();
             initCL.Begin();
             _sc.CreateDeviceObjects(_gd, initCL, _sc);
-            _scene.CreateAllDeviceObjects(_gd, initCL, _sc);
             CommonMaterials.CreateAllDeviceObjects(_gd, initCL, _sc);
+            _scene.CreateAllDeviceObjects(_gd, initCL, _sc);
             initCL.End();
             _gd.ExecuteCommands(initCL);
             initCL.Dispose();

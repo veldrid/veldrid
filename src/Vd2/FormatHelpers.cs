@@ -22,7 +22,7 @@ namespace Vd2
             }
         }
 
-        internal static int GetSizeInBytes(VertexElementFormat format)
+        internal static uint GetSizeInBytes(VertexElementFormat format)
         {
             switch (format)
             {

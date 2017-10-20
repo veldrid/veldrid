@@ -14,6 +14,7 @@ namespace Vd2.NeoDemo.Objects
         private TextureView _textureView;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
+        private ResourceLayout _layout;
 
         public unsafe override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
@@ -53,23 +54,25 @@ namespace Vd2.NeoDemo.Objects
                 new ShaderStageDescription(ShaderStages.Fragment, ShaderHelper.LoadShader(factory, "Grid", ShaderStages.Fragment), "FS"),
             };
 
-            PipelineDescription pd = new PipelineDescription(
-                BlendStateDescription.SingleAlphaBlend,
-                DepthStencilStateDescription.LessEqual,
-                new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, true, true),
-                PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(vertexLayouts, shaderStages));
-
-            _pipeline = factory.CreatePipeline(ref pd);
-
-            ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+            _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("View", ResourceKind.Uniform, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("GridTexture", ResourceKind.Texture, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("GridSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
+            PipelineDescription pd = new PipelineDescription(
+                BlendStateDescription.SingleAlphaBlend,
+                DepthStencilStateDescription.LessEqual,
+                new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, FrontFace.Clockwise, true, true),
+                PrimitiveTopology.TriangleList,
+                new ShaderSetDescription(vertexLayouts, shaderStages),
+                _layout,
+                gd.SwapchainFramebuffer.OutputDescription);
+
+            _pipeline = factory.CreatePipeline(ref pd);
+
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
-                layout,
+                _layout,
                 sc.ProjectionMatrixBuffer,
                 sc.ViewMatrixBuffer,
                 _textureView,
@@ -83,13 +86,14 @@ namespace Vd2.NeoDemo.Objects
             _ib.Dispose();
             _gridTexture.Dispose();
             _textureView.Dispose();
+            _layout.Dispose();
         }
 
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(_resourceSet);
-            cl.SetVertexBuffer(0, _vb, VertexPosition.SizeInBytes);
+            cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.Draw(6, 1, 0, 0, 0);
         }

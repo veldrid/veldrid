@@ -100,7 +100,11 @@ namespace Vd2.Vk
 
             VertexLayoutDescription[] inputDescriptions = description.ShaderSet.VertexLayouts;
             uint bindingCount = (uint)inputDescriptions.Length;
-            uint attributeCount = (uint)inputDescriptions.Sum(desc => desc.Elements.Length); // TODO: Don't use LINQ
+            uint attributeCount = 0;
+            for (int i = 0; i < inputDescriptions.Length; i++)
+            {
+                attributeCount += (uint)inputDescriptions[i].Elements.Length;
+            }
             VkVertexInputBindingDescription* bindingDescs = stackalloc VkVertexInputBindingDescription[(int)bindingCount];
             VkVertexInputAttributeDescription* attributeDescs = stackalloc VkVertexInputAttributeDescription[(int)attributeCount];
 

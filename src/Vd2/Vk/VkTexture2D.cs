@@ -65,7 +65,7 @@ namespace Vd2.Vk
             imageCI.extent.width = Width;
             imageCI.extent.height = Height;
             imageCI.extent.depth = 1;
-            imageCI.initialLayout = VkImageLayout.Preinitialized; // TODO: Use proper VkImageLayout values and transitions.
+            imageCI.initialLayout = VkImageLayout.Preinitialized;
             imageCI.usage = VkImageUsageFlags.TransferDst | VkImageUsageFlags.Sampled;
             bool isDepthStencil = (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
             if ((description.Usage & TextureUsage.Sampled) == TextureUsage.Sampled)
@@ -93,7 +93,7 @@ namespace Vd2.Vk
 
             VkMemoryBlock memoryToken = gd.MemoryManager.Allocate(
                 FindMemoryType(
-                    gd.PhysicalDevice,
+                    gd.PhysicalDeviceMemProperties,
                     memoryRequirements.memoryTypeBits,
                     VkMemoryPropertyFlags.DeviceLocal),
                 memoryRequirements.size,

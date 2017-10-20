@@ -238,7 +238,7 @@ namespace Vd2.Vk
             // First, create a staging texture.
             CreateImage(
                 _gd.Device,
-                _gd.PhysicalDevice,
+                _gd.PhysicalDeviceMemProperties,
                 _gd.MemoryManager,
                 width,
                 height,
@@ -310,7 +310,7 @@ namespace Vd2.Vk
             // First, create a staging texture.
             CreateImage(
                 _gd.Device,
-                _gd.PhysicalDevice,
+                _gd.PhysicalDeviceMemProperties,
                 _gd.MemoryManager,
                 width,
                 height,

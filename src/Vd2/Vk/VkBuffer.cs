@@ -30,7 +30,7 @@ namespace Vd2.Vk
             vkGetBufferMemoryRequirements(gd.Device, _deviceBuffer, out VkMemoryRequirements bufferMemoryRequirements);
 
             VkMemoryPropertyFlags memoryProperties = VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent;
-            uint memoryType = FindMemoryType(gd.PhysicalDevice, bufferMemoryRequirements.memoryTypeBits, memoryProperties);
+            uint memoryType = FindMemoryType(gd.PhysicalDeviceMemProperties, bufferMemoryRequirements.memoryTypeBits, memoryProperties);
             VkMemoryBlock memoryToken = gd.MemoryManager.Allocate(
                 memoryType,
                 bufferMemoryRequirements.size,

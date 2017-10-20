@@ -27,8 +27,8 @@ namespace Vd2.Vk
             BindableResource[] boundResources = description.BoundResources;
             uint descriptorWriteCount = (uint)boundResources.Length;
             VkWriteDescriptorSet* descriptorWrites = stackalloc VkWriteDescriptorSet[(int)descriptorWriteCount];
-            VkDescriptorBufferInfo* bufferInfos = stackalloc VkDescriptorBufferInfo[(int)descriptorWriteCount]; // TODO: Fix this.
-            VkDescriptorImageInfo* imageInfos = stackalloc VkDescriptorImageInfo[(int)descriptorWriteCount]; // TODO: Fix this.
+            VkDescriptorBufferInfo* bufferInfos = stackalloc VkDescriptorBufferInfo[(int)descriptorWriteCount];
+            VkDescriptorImageInfo* imageInfos = stackalloc VkDescriptorImageInfo[(int)descriptorWriteCount];
 
             for (int i = 0; i < descriptorWriteCount; i++)
             {

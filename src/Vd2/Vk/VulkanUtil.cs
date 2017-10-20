@@ -16,9 +16,8 @@ namespace Vd2.Vk
             }
         }
 
-        public static uint FindMemoryType(VkPhysicalDevice physicalDevice, uint typeFilter, VkMemoryPropertyFlags properties)
+        public static uint FindMemoryType(VkPhysicalDeviceMemoryProperties memProperties, uint typeFilter, VkMemoryPropertyFlags properties)
         {
-            vkGetPhysicalDeviceMemoryProperties(physicalDevice, out VkPhysicalDeviceMemoryProperties memProperties);
             for (int i = 0; i < memProperties.memoryTypeCount; i++)
             {
                 if (((typeFilter & (1 << i)) != 0)
@@ -33,7 +32,7 @@ namespace Vd2.Vk
 
         public static void CreateImage(
             VkDevice device,
-            VkPhysicalDevice physicalDevice,
+            VkPhysicalDeviceMemoryProperties physicalDeviceMemProperties,
             VkDeviceMemoryManager memoryManager,
             uint width,
             uint height,
@@ -64,7 +63,7 @@ namespace Vd2.Vk
 
             vkGetImageMemoryRequirements(device, image, out VkMemoryRequirements memRequirements);
             VkMemoryBlock memoryToken = memoryManager.Allocate(
-                FindMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties),
+                FindMemoryType(physicalDeviceMemProperties, memRequirements.memoryTypeBits, properties),
                 memRequirements.size,
                 memRequirements.alignment);
             memory = memoryToken;
@@ -139,7 +138,6 @@ namespace Vd2.Vk
 
             return true;
         }
-
     }
 
     internal unsafe static class VkPhysicalDeviceMemoryPropertiesEx

@@ -18,6 +18,7 @@ namespace Vd2.Vk
         private VkSurfaceKHR _surface;
         private VkPhysicalDeviceProperties _physicalDeviceProperties;
         private VkPhysicalDeviceFeatures _physicalDeviceFeatures;
+        private VkPhysicalDeviceMemoryProperties _physicalDeviceMemProperties;
         private VkDevice _device;
         private readonly VkSwapchainFramebuffer _scFB;
         private uint _graphicsQueueIndex;
@@ -37,6 +38,7 @@ namespace Vd2.Vk
 
         public VkDevice Device => _device;
         public VkPhysicalDevice PhysicalDevice => _physicalDevice;
+        public VkPhysicalDeviceMemoryProperties PhysicalDeviceMemProperties => _physicalDeviceMemProperties;
         public VkQueue GraphicsQueue => _graphicsQueue;
         public uint GraphicsQueueIndex => _graphicsQueueIndex;
         public VkCommandPool GraphicsCommandPool => _graphicsCommandPool;
@@ -288,6 +290,8 @@ namespace Vd2.Vk
             }
 
             vkGetPhysicalDeviceFeatures(_physicalDevice, out _physicalDeviceFeatures);
+
+            vkGetPhysicalDeviceMemoryProperties(_physicalDevice, out _physicalDeviceMemProperties);
         }
 
         private void CreateLogicalDevice()

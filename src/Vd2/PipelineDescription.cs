@@ -7,7 +7,7 @@
         public RasterizerStateDescription RasterizerState;
         public PrimitiveTopology PrimitiveTopology;
         public ShaderSetDescription ShaderSet;
-        public ResourceLayout ResourceLayout;
+        public ResourceLayout ResourceLayout; // TODO: Allow multiple resource layouts
         public OutputDescription Outputs;
 
         public PipelineDescription(

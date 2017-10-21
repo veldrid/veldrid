@@ -21,6 +21,7 @@ namespace Vd2.Vk
 
         private bool _commandBufferBegun;
         private bool _commandBufferEnded;
+        private VkResourceSet _currentResourceSet;
 
         public VkCommandBuffer CommandBuffer => _cb;
 
@@ -97,6 +98,17 @@ namespace Vd2.Vk
 
         public override void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
+            VkDescriptorSet ds = _currentResourceSet.DescriptorSet;
+            vkCmdBindDescriptorSets(
+                _cb,
+                 VkPipelineBindPoint.Graphics,
+                 _currentPipeline.PipelineLayout,
+                 0,
+                 1,
+                 ref ds,
+                 0,
+                 null);
+
             vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
@@ -183,17 +195,8 @@ namespace Vd2.Vk
         public override void SetResourceSet(ResourceSet rs)
         {
             VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
-            VkDescriptorSet ds = vkRS.DescriptorSet;
 
-            vkCmdBindDescriptorSets(
-                _cb,
-                 VkPipelineBindPoint.Graphics,
-                 _currentPipeline.PipelineLayout,
-                 0,
-                 1,
-                 ref ds,
-                 0,
-                 null);
+            _currentResourceSet = vkRS;
         }
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)

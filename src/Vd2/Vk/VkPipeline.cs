@@ -171,7 +171,6 @@ namespace Vd2.Vk
             pipelineCI.pViewportState = &viewportStateCI;
 
             // Pipeline Layout
-            // TODO: This should probably be moved into VkResourceLayout.
             VkPipelineLayoutCreateInfo pipelineLayoutCI = VkPipelineLayoutCreateInfo.New();
             pipelineLayoutCI.setLayoutCount = 1;
             VkDescriptorSetLayout dsl = Util.AssertSubtype<ResourceLayout, VkResourceLayout>(description.ResourceLayout).DescriptorSetLayout;

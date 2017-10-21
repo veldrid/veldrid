@@ -1,6 +1,8 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
-    public struct RasterizerStateDescription
+    public struct RasterizerStateDescription : IEquatable<RasterizerStateDescription>
     {
         public FaceCullMode CullMode;
         public TriangleFillMode FillMode;
@@ -30,5 +32,24 @@
             DepthClipEnabled = true,
             ScissorTestEnabled = true,
         };
+
+        public bool Equals(RasterizerStateDescription other)
+        {
+            return CullMode == other.CullMode
+                && FillMode == other.FillMode
+                && FrontFace == other.FrontFace
+                && DepthClipEnabled.Equals(other.DepthClipEnabled)
+                && ScissorTestEnabled.Equals(other.ScissorTestEnabled);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(
+                CullMode.GetHashCode(),
+                FillMode.GetHashCode(),
+                FrontFace.GetHashCode(),
+                DepthClipEnabled.GetHashCode(),
+                ScissorTestEnabled.GetHashCode());
+        }
     }
 }

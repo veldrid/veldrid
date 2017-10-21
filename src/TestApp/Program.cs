@@ -216,9 +216,9 @@ namespace TestApp
                 new VertexLayoutDescription[]
                 {
                      new VertexLayoutDescription(
-                        new VertexElementDescription("in_position", VertexElementFormat.Float3, VertexElementSemantic.Position),
-                        new VertexElementDescription("in_normal", VertexElementFormat.Float3, VertexElementSemantic.Normal),
-                        new VertexElementDescription("in_texCoords", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate))
+                        new VertexElementDescription("in_position", VertexElementSemantic.Position, VertexElementFormat.Float3),
+                        new VertexElementDescription("in_normal", VertexElementSemantic.Normal, VertexElementFormat.Float3),
+                        new VertexElementDescription("in_texCoords", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
                 },
                 new ShaderStageDescription[]
                 {

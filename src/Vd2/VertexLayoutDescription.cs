@@ -1,7 +1,9 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
     // Inputs from a single VertexBuffer.
-    public struct VertexLayoutDescription
+    public struct VertexLayoutDescription : IEquatable<VertexLayoutDescription>
     {
         public uint Stride;
         public VertexElementDescription[] Elements;
@@ -22,6 +24,16 @@
             }
 
             Stride = computedStride;
+        }
+
+        public bool Equals(VertexLayoutDescription other)
+        {
+            return Stride.Equals(other.Stride) && Util.ArrayEqualsBlittable(Elements, other.Elements);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(Stride.GetHashCode(), HashHelper.Array(Elements));
         }
     }
 }

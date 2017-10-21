@@ -26,6 +26,7 @@ namespace Vd2.NeoDemo
         private static double _desiredFrameLengthSeconds = 1.0 / 60.0;
         private static bool _limitFrameRate = false;
         private static FrameTimeAverager _fta = new FrameTimeAverager(0.666);
+        private CommandList _frameCommands;
 
         private event Action<int, int> _resizeHandled;
 
@@ -52,25 +53,19 @@ namespace Vd2.NeoDemo
             CommandList initCL = _gd.ResourceFactory.CreateCommandList();
             initCL.Begin();
 
-            _sc.CreateDeviceObjects(_gd, initCL, _sc);
-            CommonMaterials.CreateAllDeviceObjects(_gd, initCL, _sc);
-
             _scene = new Scene(_window.Width, _window.Height);
 
             _sc.SetCurrentScene(_scene, initCL);
 
             _igRenderable = new ImGuiRenderable(_window.Width, _window.Height);
             _resizeHandled += (w, h) => _igRenderable.WindowResized(w, h);
-            _igRenderable.CreateDeviceObjects(_gd, initCL, _sc);
             _scene.AddRenderable(_igRenderable);
             _scene.AddUpdateable(_igRenderable);
 
             InfiniteGrid grid = new InfiniteGrid();
-            grid.CreateDeviceObjects(_gd, initCL, _sc);
             _scene.AddRenderable(grid);
 
             Skybox skybox = Skybox.LoadDefaultSkybox();
-            skybox.CreateDeviceObjects(_gd, initCL, _sc);
             _scene.AddRenderable(skybox);
 
             AddTexturedMesh(
@@ -107,25 +102,20 @@ namespace Vd2.NeoDemo
 
             ShadowmapDrawer texDrawer = new ShadowmapDrawer(() => _window, () => _sc.NearShadowMapView);
             _resizeHandled += (w, h) => texDrawer.OnWindowResized();
-            texDrawer.CreateDeviceObjects(_gd, initCL, _sc);
             texDrawer.Position = new Vector2(10, 25);
             _scene.AddRenderable(texDrawer);
 
             ShadowmapDrawer texDrawer2 = new ShadowmapDrawer(() => _window, () => _sc.MidShadowMapView);
             _resizeHandled += (w, h) => texDrawer2.OnWindowResized();
-            texDrawer2.CreateDeviceObjects(_gd, initCL, _sc);
             texDrawer2.Position = new Vector2(20 + texDrawer2.Size.X, 25);
             _scene.AddRenderable(texDrawer2);
 
             ShadowmapDrawer texDrawer3 = new ShadowmapDrawer(() => _window, () => _sc.FarShadowMapView);
             _resizeHandled += (w, h) => texDrawer3.OnWindowResized();
-            texDrawer3.CreateDeviceObjects(_gd, initCL, _sc);
             texDrawer3.Position = new Vector2(30 + (texDrawer3.Size.X * 2), 25);
             _scene.AddRenderable(texDrawer3);
 
-            initCL.End();
-            _gd.ExecuteCommands(initCL);
-            initCL.Dispose();
+            CreateAllObjects();
         }
 
         private void AddTexturedMesh(CommandList cl, string texPath, MeshData meshData, Vector3 position, Quaternion rotation, Vector3 scale)
@@ -135,7 +125,6 @@ namespace Vd2.NeoDemo
             mesh.Transform.Position = position;
             mesh.Transform.Rotation = rotation;
             mesh.Transform.Scale = scale;
-            mesh.CreateDeviceObjects(_gd, cl, _sc);
             _scene.AddRenderable(mesh);
         }
 
@@ -287,15 +276,13 @@ namespace Vd2.NeoDemo
                 _resizeHandled?.Invoke(width, height);
             }
 
-            CommandList cl = _gd.ResourceFactory.CreateCommandList();
-            cl.Begin();
-            CommonMaterials.FlushAll(cl);
-            _sc.UpdateCameraBuffers(cl); // Meh
+            _frameCommands.Begin();
+            CommonMaterials.FlushAll(_frameCommands);
+            _sc.UpdateCameraBuffers(_frameCommands); // Meh
 
-            _scene.RenderAllStages(_gd, cl, _sc);
-            cl.End();
-            _gd.ExecuteCommands(cl);
-            cl.Dispose();
+            _scene.RenderAllStages(_gd, _frameCommands, _sc);
+            _frameCommands.End();
+            _gd.ExecuteCommands(_frameCommands);
 
             if (_window.Exists)
             {
@@ -350,6 +337,7 @@ namespace Vd2.NeoDemo
 
         private void CreateAllObjects()
         {
+            _frameCommands = _gd.ResourceFactory.CreateCommandList();
             CommandList initCL = _gd.ResourceFactory.CreateCommandList();
             initCL.Begin();
             _sc.CreateDeviceObjects(_gd, initCL, _sc);

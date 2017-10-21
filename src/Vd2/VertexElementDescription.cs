@@ -1,13 +1,15 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
-    public struct VertexElementDescription
+    public struct VertexElementDescription : IEquatable<VertexElementDescription>
     {
         public string Name;
-        public VertexElementFormat Format;
         public VertexElementSemantic Semantic;
+        public VertexElementFormat Format;
         public uint InstanceStepRate; // 0 == per-vertex.
 
-        public VertexElementDescription(string name, VertexElementFormat format, VertexElementSemantic semantic)
+        public VertexElementDescription(string name, VertexElementSemantic semantic, VertexElementFormat format)
             : this(name, format, semantic, 0)
         {
         }
@@ -22,6 +24,23 @@
             Format = format;
             Semantic = semantic;
             InstanceStepRate = instanceStepRate;
+        }
+
+        public bool Equals(VertexElementDescription other)
+        {
+            return Name.Equals(other.Name)
+                && Format == other.Format
+                && Semantic == other.Semantic
+                && InstanceStepRate == other.InstanceStepRate;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(
+                Name.GetHashCode(),
+                Format.GetHashCode(),
+                Semantic.GetHashCode(),
+                InstanceStepRate.GetHashCode());
         }
     }
 }

@@ -64,15 +64,6 @@ namespace Vd2.D3D11
 
         public override void Dispose()
         {
-            BlendState.Dispose();
-            DepthStencilState.Dispose();
-            RasterizerState.Dispose();
-            InputLayout.Dispose();
-            VertexShader.Dispose();
-            GeometryShader?.Dispose();
-            HullShader?.Dispose();
-            DomainShader?.Dispose();
-            PixelShader.Dispose();
         }
     }
 }

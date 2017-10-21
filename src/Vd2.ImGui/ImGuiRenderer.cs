@@ -86,9 +86,9 @@ namespace Vd2
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
                 new VertexLayoutDescription(
-                    new VertexElementDescription("in_position", VertexElementFormat.Float2, VertexElementSemantic.Position),
-                    new VertexElementDescription("in_texCoord", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate),
-                    new VertexElementDescription("in_color", VertexElementFormat.Byte4, VertexElementSemantic.Color))
+                    new VertexElementDescription("in_position", VertexElementSemantic.Position, VertexElementFormat.Float2),
+                    new VertexElementDescription("in_texCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                    new VertexElementDescription("in_color", VertexElementSemantic.Color, VertexElementFormat.Byte4))
             };
 
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]

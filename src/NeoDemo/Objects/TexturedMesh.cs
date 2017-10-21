@@ -88,9 +88,9 @@ namespace Vd2.NeoDemo.Objects
             VertexLayoutDescription[] shadowDepthVertexLayouts = new VertexLayoutDescription[]
             {
                 new VertexLayoutDescription(
-                    new VertexElementDescription("Position", VertexElementFormat.Float3, VertexElementSemantic.Position),
-                    new VertexElementDescription("Normal", VertexElementFormat.Float3, VertexElementSemantic.Normal),
-                    new VertexElementDescription("TexCoord", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate))
+                    new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
+                    new VertexElementDescription("Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3),
+                    new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
             Shader depthVS = ShaderHelper.LoadShader(factory, "ShadowDepth", ShaderStages.Vertex);
@@ -125,9 +125,9 @@ namespace Vd2.NeoDemo.Objects
             VertexLayoutDescription[] mainVertexLayouts = new VertexLayoutDescription[]
             {
                 new VertexLayoutDescription(
-                    new VertexElementDescription("Position", VertexElementFormat.Float3, VertexElementSemantic.Position),
-                    new VertexElementDescription("Normal", VertexElementFormat.Float3, VertexElementSemantic.Normal),
-                    new VertexElementDescription("TexCoord", VertexElementFormat.Float2, VertexElementSemantic.TextureCoordinate))
+                    new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
+                    new VertexElementDescription("Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3),
+                    new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
             Shader mainVS = ShaderHelper.LoadShader(factory, "ShadowMain", ShaderStages.Vertex);

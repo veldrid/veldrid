@@ -31,6 +31,18 @@ namespace Vd2.NeoDemo
             }
         }
 
+        public void AddRange(IReadOnlyList<Renderable> Renderables, Vector3 viewPosition)
+        {
+            for (int i = 0; i < Renderables.Count; i++)
+            {
+                Renderable Renderable = Renderables[i];
+                if (Renderable != null)
+                {
+                    Add(Renderable, viewPosition);
+                }
+            }
+        }
+
         public void AddRange(IEnumerable<Renderable> Renderables, Vector3 viewPosition)
         {
             foreach (Renderable item in Renderables)

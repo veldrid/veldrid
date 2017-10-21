@@ -56,8 +56,8 @@ namespace Vd2.NeoDemo.Objects
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
                 new VertexLayoutDescription(
-                    new VertexElementDescription("Position", VertexElementFormat.Float2, VertexElementSemantic.Position),
-                    new VertexElementDescription("TexCoord", VertexElementFormat.Float2,  VertexElementSemantic.TextureCoordinate))
+                    new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
+                    new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate,  VertexElementFormat.Float2))
             };
 
             Shader vs = ShaderHelper.LoadShader(factory, "ShadowmapPreviewShader", ShaderStages.Vertex);

@@ -16,8 +16,11 @@ namespace Vd2.Vk
         private VkRenderPass _activeRenderPass;
         private VkPipeline _currentPipeline;
 
-        private readonly List<VkImage> _imagesToDestroy = new List<VkImage>();
-        private readonly List<VkMemoryBlock> _memoriesToFree = new List<VkMemoryBlock>();
+        private List<VkImage> _imagesToDestroy;
+        private List<VkMemoryBlock> _memoriesToFree;
+
+        private bool _commandBufferBegun;
+        private bool _commandBufferEnded;
 
         public VkCommandBuffer CommandBuffer => _cb;
 
@@ -35,8 +38,20 @@ namespace Vd2.Vk
 
         public override void Begin()
         {
+            if (_commandBufferBegun)
+            {
+                throw new VdException(
+                    "CommandList must be in it's initial state, or End() must have been called, for Begin() to be valid to call.");
+            }
+            if (_commandBufferEnded)
+            {
+                _commandBufferEnded = false;
+                vkResetCommandBuffer(_cb, VkCommandBufferResetFlags.None);
+            }
+
             VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
             vkBeginCommandBuffer(_cb, ref beginInfo);
+            _commandBufferBegun = true;
         }
 
         public override void ClearColorTarget(uint index, RgbaFloat clearColor)
@@ -87,6 +102,14 @@ namespace Vd2.Vk
 
         public override void End()
         {
+            if (!_commandBufferBegun)
+            {
+                throw new VdException("CommandBuffer must have been started before End() may be called.");
+            }
+
+            _commandBufferBegun = false;
+            _commandBufferEnded = true;
+
             if (_activeRenderPass != VkRenderPass.Null)
             {
                 EndCurrentRenderPass();
@@ -284,7 +307,16 @@ namespace Vd2.Vk
             TransitionImageLayout(vkTex2D.DeviceImage, mipLevel, 1, 0, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
             vkTex2D.ImageLayouts[mipLevel] = VkImageLayout.ShaderReadOnlyOptimal;
 
+            if (_imagesToDestroy == null)
+            {
+                _imagesToDestroy = new List<VkImage>();
+            }
             _imagesToDestroy.Add(stagingImage);
+
+            if (_memoriesToFree == null)
+            {
+                _memoriesToFree = new List<VkMemoryBlock>();
+            }
             _memoriesToFree.Add(stagingMemory);
         }
 
@@ -358,7 +390,16 @@ namespace Vd2.Vk
             TransitionImageLayout(vkTexCube.DeviceImage, 0, 1, 0, 6, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
             vkTexCube.ImageLayout = VkImageLayout.ShaderReadOnlyOptimal;
 
+            if (_imagesToDestroy == null)
+            {
+                _imagesToDestroy = new List<VkImage>();
+            }
             _imagesToDestroy.Add(stagingImage);
+
+            if (_memoriesToFree == null)
+            {
+                _memoriesToFree = new List<VkMemoryBlock>();
+            }
             _memoriesToFree.Add(stagingMemory);
         }
 
@@ -430,7 +471,6 @@ namespace Vd2.Vk
                 barrier.dstAccessMask = VkAccessFlags.ShaderRead;
             }
 
-            //VkCommandBuffer cbTemp = BeginOneTimeCommands();
             vkCmdPipelineBarrier(
                 //cbTemp,
                 _cb,
@@ -440,39 +480,7 @@ namespace Vd2.Vk
                 0, null,
                 0, null,
                 1, &barrier);
-            //EndOneTimeCommands(cbTemp);
         }
-
-        //private VkCommandBuffer BeginOneTimeCommands()
-        //{
-        //    VkCommandBufferAllocateInfo allocInfo = VkCommandBufferAllocateInfo.New();
-        //    allocInfo.commandBufferCount = 1;
-        //    allocInfo.commandPool = _gd.GraphicsCommandPool;
-        //    allocInfo.level = VkCommandBufferLevel.Primary;
-
-        //    vkAllocateCommandBuffers(_gd.Device, ref allocInfo, out VkCommandBuffer cb);
-
-        //    VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
-        //    beginInfo.flags = VkCommandBufferUsageFlags.OneTimeSubmit;
-
-        //    vkBeginCommandBuffer(cb, ref beginInfo);
-
-        //    return cb;
-        //}
-
-        //private void EndOneTimeCommands(VkCommandBuffer cb)
-        //{
-        //    vkEndCommandBuffer(cb);
-
-        //    VkSubmitInfo submitInfo = VkSubmitInfo.New();
-        //    submitInfo.commandBufferCount = 1;
-        //    submitInfo.pCommandBuffers = &cb;
-
-        //    vkQueueSubmit(_gd.GraphicsQueue, 1, ref submitInfo, VkFence.Null);
-        //    vkQueueWaitIdle(_gd.GraphicsQueue);
-
-        //    vkFreeCommandBuffers(_gd.Device, _gd.GraphicsCommandPool, 1, ref cb);
-        //}
 
         protected void CopyImage(
             VkImage srcImage,
@@ -502,7 +510,6 @@ namespace Vd2.Vk
             region.extent.height = height;
             region.extent.depth = 1;
 
-            //VkCommandBuffer tempCB = BeginOneTimeCommands();
             vkCmdCopyImage(
                 //tempCB,
                 _cb,
@@ -512,7 +519,6 @@ namespace Vd2.Vk
                 VkImageLayout.TransferDstOptimal,
                 1,
                 ref region);
-            //EndOneTimeCommands(tempCB);
         }
 
         public override void Dispose()

@@ -44,7 +44,7 @@ namespace Vd2.NeoDemo.Objects
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
                 new VertexLayoutDescription(
-                    new VertexElementDescription("Position", VertexElementFormat.Float3, VertexElementSemantic.Position))
+                    new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3))
             };
 
             Shader gridVS = ShaderHelper.LoadShader(factory, "Grid", ShaderStages.Vertex);

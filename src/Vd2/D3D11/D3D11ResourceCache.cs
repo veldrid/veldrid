@@ -1,4 +1,6 @@
 ﻿using SharpDX.Direct3D11;
+using System;
+using System.Collections.Generic;
 
 namespace Vd2.D3D11
 {
@@ -6,12 +8,37 @@ namespace Vd2.D3D11
     {
         private readonly Device _device;
 
+        private readonly Dictionary<BlendStateDescription, BlendState> _blendStates
+            = new Dictionary<BlendStateDescription, BlendState>();
+
+        private readonly Dictionary<DepthStencilStateDescription, DepthStencilState> _depthStencilStates
+            = new Dictionary<DepthStencilStateDescription, DepthStencilState>();
+
+        private readonly Dictionary<RasterizerStateDescription, RasterizerState> _rasterizerStates
+            = new Dictionary<RasterizerStateDescription, RasterizerState>();
+
+        private readonly Dictionary<InputLayoutCacheKey, InputLayout> _inputLayouts
+            = new Dictionary<InputLayoutCacheKey, InputLayout>();
+
         public D3D11ResourceCache(Device device)
         {
             _device = device;
         }
 
         internal BlendState GetBlendState(ref BlendStateDescription description)
+        {
+            if (!_blendStates.TryGetValue(description, out BlendState blendState))
+            {
+                blendState = CreateNewBlendState(ref description);
+                BlendStateDescription key = description;
+                key.AttachmentStates = (BlendAttachmentDescription[])key.AttachmentStates.Clone();
+                _blendStates.Add(key, blendState);
+            }
+
+            return blendState;
+        }
+
+        private BlendState CreateNewBlendState(ref BlendStateDescription description)
         {
             BlendAttachmentDescription[] attachmentStates = description.AttachmentStates;
             SharpDX.Direct3D11.BlendStateDescription d3dBlendStateDesc = new SharpDX.Direct3D11.BlendStateDescription();
@@ -26,13 +53,25 @@ namespace Vd2.D3D11
                 d3dBlendStateDesc.RenderTarget[i].BlendOperation = D3D11Formats.VdToD3D11BlendOperation(state.ColorFunction);
                 d3dBlendStateDesc.RenderTarget[i].SourceAlphaBlend = D3D11Formats.VdToD3D11BlendOption(state.SourceAlphaFactor);
                 d3dBlendStateDesc.RenderTarget[i].DestinationAlphaBlend = D3D11Formats.VdToD3D11BlendOption(state.DestinationAlphaFactor);
-                d3dBlendStateDesc.RenderTarget[i].AlphaBlendOperation= D3D11Formats.VdToD3D11BlendOperation(state.AlphaFunction);
+                d3dBlendStateDesc.RenderTarget[i].AlphaBlendOperation = D3D11Formats.VdToD3D11BlendOperation(state.AlphaFunction);
             }
 
             return new BlendState(_device, d3dBlendStateDesc);
         }
 
         internal DepthStencilState GetDepthStencilState(ref DepthStencilStateDescription description)
+        {
+            if (!_depthStencilStates.TryGetValue(description, out DepthStencilState dss))
+            {
+                dss = CreateNewDepthStencilState(ref description);
+                DepthStencilStateDescription key = description;
+                _depthStencilStates.Add(key, dss);
+            }
+
+            return dss;
+        }
+
+        private DepthStencilState CreateNewDepthStencilState(ref DepthStencilStateDescription description)
         {
             SharpDX.Direct3D11.DepthStencilStateDescription dssDesc = new SharpDX.Direct3D11.DepthStencilStateDescription
             {
@@ -45,6 +84,18 @@ namespace Vd2.D3D11
         }
 
         internal RasterizerState GetRasterizerState(ref RasterizerStateDescription description)
+        {
+            if (!_rasterizerStates.TryGetValue(description, out RasterizerState rasterizerState))
+            {
+                rasterizerState = CreateNewRasterizerState(ref description);
+                RasterizerStateDescription key = description;
+                _rasterizerStates.Add(key, rasterizerState);
+            }
+
+            return rasterizerState;
+        }
+
+        private RasterizerState CreateNewRasterizerState(ref RasterizerStateDescription description)
         {
             SharpDX.Direct3D11.RasterizerStateDescription rssDesc = new SharpDX.Direct3D11.RasterizerStateDescription
             {
@@ -59,6 +110,19 @@ namespace Vd2.D3D11
         }
 
         internal InputLayout GetInputLayout(VertexLayoutDescription[] vertexLayouts, byte[] vsBytecode)
+        {
+            InputLayoutCacheKey tempKey = InputLayoutCacheKey.CreateTempKey(vertexLayouts);
+            if (!_inputLayouts.TryGetValue(tempKey, out InputLayout inputLayout))
+            {
+                inputLayout = CreateNewInputLayout(vertexLayouts, vsBytecode);
+                InputLayoutCacheKey permanentKey = InputLayoutCacheKey.CreatePermanentKey(vertexLayouts);
+                _inputLayouts.Add(permanentKey, inputLayout);
+            }
+
+            return inputLayout;
+        }
+
+        private InputLayout CreateNewInputLayout(VertexLayoutDescription[] vertexLayouts, byte[] vsBytecode)
         {
             int totalCount = 0;
             for (int i = 0; i < vertexLayouts.Length; i++)
@@ -132,6 +196,36 @@ namespace Vd2.D3D11
                     default:
                         throw Illegal.Value<VertexElementSemantic>();
                 }
+            }
+        }
+
+        private struct InputLayoutCacheKey : IEquatable<InputLayoutCacheKey>
+        {
+            public VertexLayoutDescription[] VertexLayouts;
+
+            public static InputLayoutCacheKey CreateTempKey(VertexLayoutDescription[] original)
+                => new InputLayoutCacheKey { VertexLayouts = original };
+
+            public static InputLayoutCacheKey CreatePermanentKey(VertexLayoutDescription[] original)
+            {
+                VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[original.Length];
+                for (int i = 0; i < original.Length; i++)
+                {
+                    vertexLayouts[i].Stride = original[i].Stride;
+                    vertexLayouts[i].Elements = (VertexElementDescription[])original[i].Elements.Clone();
+                }
+
+                return new InputLayoutCacheKey { VertexLayouts = vertexLayouts };
+            }
+
+            public bool Equals(InputLayoutCacheKey other)
+            {
+                return Util.ArrayEqualsBlittable(VertexLayouts, other.VertexLayouts);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashHelper.Array(VertexLayouts);
             }
         }
     }

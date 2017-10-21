@@ -120,24 +120,6 @@ namespace Vd2.Vk
 
             return ret;
         }
-
-        public static bool ArrayEquals<T>(T[] left, T[] right)
-        {
-            if (left.Length != right.Length)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < left.Length; i++)
-            {
-                if (!ReferenceEquals(left[i], right[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
     }
 
     internal unsafe static class VkPhysicalDeviceMemoryPropertiesEx

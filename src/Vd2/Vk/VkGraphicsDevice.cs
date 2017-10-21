@@ -405,7 +405,7 @@ namespace Vd2.Vk
         private void CreateGraphicsCommandPool()
         {
             VkCommandPoolCreateInfo commandPoolCI = VkCommandPoolCreateInfo.New();
-            commandPoolCI.flags = VkCommandPoolCreateFlags.None;
+            commandPoolCI.flags = VkCommandPoolCreateFlags.ResetCommandBuffer;
             commandPoolCI.queueFamilyIndex = _graphicsQueueIndex;
             VkResult result = vkCreateCommandPool(_device, ref commandPoolCI, null, out _graphicsCommandPool);
             CheckResult(result);

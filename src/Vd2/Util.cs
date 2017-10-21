@@ -46,5 +46,41 @@ namespace Vd2
 
             return Encoding.UTF8.GetString(stringStart, characters);
         }
+
+        internal static bool ArrayEquals<T>(T[] left, T[] right) where T : class
+        {
+            if (left.Length != right.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < left.Length; i++)
+            {
+                if (!ReferenceEquals(left[i], right[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        internal static bool ArrayEqualsBlittable<T>(T[] left, T[] right) where T : struct, IEquatable<T>
+        {
+            if (left.Length != right.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < left.Length; i++)
+            {
+                if (!left[i].Equals(right[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using Vd2.Utilities;
 
@@ -16,7 +17,7 @@ namespace Vd2.NeoDemo
         private readonly List<IUpdateable> _updateables = new List<IUpdateable>();
 
         private readonly Dictionary<RenderPasses, Func<CullRenderable, bool>> _filters
-            = new Dictionary<RenderPasses, Func<CullRenderable, bool>>();
+            = new Dictionary<RenderPasses, Func<CullRenderable, bool>>(new RenderPassesComparer());
 
         private readonly Camera _camera;
 
@@ -266,15 +267,22 @@ namespace Vd2.NeoDemo
             }
         }
 
-        private Func<CullRenderable, bool> GetFilter(RenderPasses renderPass)
+        private Func<CullRenderable, bool> GetFilter(RenderPasses passes)
         {
-            if (!_filters.TryGetValue(renderPass, out Func<CullRenderable, bool> filter))
+            if (!_filters.TryGetValue(passes, out Func<CullRenderable, bool> filter))
             {
-                filter = cr => (cr.RenderPasses & renderPass) != 0;
-                _filters.Add(renderPass, filter);
+                filter = CreateFilter(passes);
+                _filters.Add(passes, filter);
             }
 
             return filter;
+        }
+
+        private static Func<CullRenderable, bool> CreateFilter(RenderPasses rp)
+        {
+            // This cannot be inlined into GetFilter -- a Roslyn bug causes copious allocations.
+            // https://github.com/dotnet/roslyn/issues/22589
+            return cr => (cr.RenderPasses & rp) == rp;
         }
 
         internal void DestroyAllDeviceObjects()
@@ -303,6 +311,12 @@ namespace Vd2.NeoDemo
             {
                 r.CreateDeviceObjects(gd, cl, sc);
             }
+        }
+
+        private class RenderPassesComparer : IEqualityComparer<RenderPasses>
+        {
+            public bool Equals(RenderPasses x, RenderPasses y) => x == y;
+            public int GetHashCode(RenderPasses obj) => ((byte)obj).GetHashCode();
         }
     }
 }

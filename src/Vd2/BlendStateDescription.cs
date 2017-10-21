@@ -2,7 +2,7 @@
 
 namespace Vd2
 {
-    public struct BlendStateDescription
+    public struct BlendStateDescription : IEquatable<BlendStateDescription>
     {
         public RgbaFloat BlendFactor;
         public BlendAttachmentDescription[] AttachmentStates;
@@ -21,5 +21,16 @@ namespace Vd2
         {
             AttachmentStates = Array.Empty<BlendAttachmentDescription>()
         };
+
+        public bool Equals(BlendStateDescription other)
+        {
+            return BlendFactor.Equals(other.BlendFactor)
+                && Util.ArrayEqualsBlittable(AttachmentStates, other.AttachmentStates); 
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(BlendFactor.GetHashCode(), HashHelper.Array(AttachmentStates));
+        }
     }
 }

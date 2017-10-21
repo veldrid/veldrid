@@ -252,8 +252,7 @@ namespace Vd2.NeoDemo
             RenderPasses renderPass,
             List<CullRenderable> renderables)
         {
-            _octree.GetAllContainedObjects(renderables, GetFilter(renderPass));
-            //_octree.GetContainedObjects(frustum, renderables, GetFilter(renderPass));
+            _octree.GetContainedObjects(frustum, renderables, GetFilter(renderPass));
         }
 
         private void CollectFreeObjects(RenderPasses renderPass, List<Renderable> renderables)

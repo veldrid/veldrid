@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Vulkan;
@@ -49,7 +50,7 @@ namespace Vd2.Vk
 
         public VkGraphicsDevice(VkSurfaceSource surfaceSource, uint width, uint height, bool debugDevice)
         {
-            CreateInstance();
+            CreateInstance(debugDevice);
             CreateSurface(surfaceSource);
             CreatePhysicalDevice();
             CreateLogicalDevice();
@@ -66,11 +67,6 @@ namespace Vd2.Vk
             vkResetFences(_device, 1, ref _imageAvailableFence);
 
             PostContextCreated();
-
-            if (debugDevice)
-            {
-                EnableDebugCallback();
-            }
         }
 
 
@@ -155,7 +151,7 @@ namespace Vd2.Vk
             vkFreeCommandBuffers(_device, GraphicsCommandPool, 1, ref cb);
         }
 
-        private void CreateInstance()
+        private void CreateInstance(bool debug)
         {
             HashSet<string> availableInstanceLayers = new HashSet<string>(EnumerateInstanceLayers());
             HashSet<string> availableInstanceExtensions = new HashSet<string>(EnumerateInstanceExtensions());
@@ -203,10 +199,6 @@ namespace Vd2.Vk
                 throw new NotSupportedException("This platform does not support Vulkan.");
             }
 
-            bool debug = false;
-#if DEBUG
-            debug = true;
-#endif
             bool debugReportExtensionAvailable = false;
             if (debug)
             {
@@ -232,21 +224,26 @@ namespace Vd2.Vk
 
             if (debug && debugReportExtensionAvailable)
             {
-                EnableDebugCallback(VkDebugReportFlagsEXT.WarningEXT | VkDebugReportFlagsEXT.ErrorEXT | VkDebugReportFlagsEXT.PerformanceWarningEXT);
+                EnableDebugCallback();
             }
         }
 
         public void EnableDebugCallback(VkDebugReportFlagsEXT flags = VkDebugReportFlagsEXT.WarningEXT | VkDebugReportFlagsEXT.ErrorEXT)
         {
+            Debug.WriteLine("Enabling Vulkan Debug callbacks.");
             _debugCallbackFunc = DebugCallback;
             IntPtr debugFunctionPtr = Marshal.GetFunctionPointerForDelegate(_debugCallbackFunc);
             VkDebugReportCallbackCreateInfoEXT debugCallbackCI = VkDebugReportCallbackCreateInfoEXT.New();
             debugCallbackCI.flags = flags;
             debugCallbackCI.pfnCallback = debugFunctionPtr;
-            FixedUtf8String debugExtFnName = "vkCreateDebugReportCallbackEXT";
-            IntPtr createFnPtr = vkGetInstanceProcAddr(_instance, debugExtFnName);
+            IntPtr createFnPtr;
+            using (FixedUtf8String debugExtFnName = "vkCreateDebugReportCallbackEXT")
+            {
+                createFnPtr = vkGetInstanceProcAddr(_instance, debugExtFnName);
+            }
             vkCreateDebugReportCallbackEXT_d createDelegate = Marshal.GetDelegateForFunctionPointer<vkCreateDebugReportCallbackEXT_d>(createFnPtr);
-            createDelegate(_instance, &debugCallbackCI, IntPtr.Zero, out _debugCallbackHandle);
+            VkResult result = createDelegate(_instance, &debugCallbackCI, IntPtr.Zero, out _debugCallbackHandle);
+            CheckResult(result);
         }
 
         private uint DebugCallback(
@@ -437,7 +434,8 @@ namespace Vd2.Vk
                 IntPtr destroyFuncPtr = vkGetInstanceProcAddr(_instance, debugExtFnName);
                 vkDestroyDebugReportCallbackEXT_d destroyDel
                     = Marshal.GetDelegateForFunctionPointer<vkDestroyDebugReportCallbackEXT_d>(destroyFuncPtr);
-                destroyDel.Invoke(_instance, _debugCallbackHandle, null);
+                VkResult debugDestroyResult = destroyDel(_instance, _debugCallbackHandle, null);
+                CheckResult(debugDestroyResult);
             }
 
             VkResult result = vkDeviceWaitIdle(_device);

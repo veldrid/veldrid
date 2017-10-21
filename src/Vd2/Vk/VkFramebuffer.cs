@@ -26,6 +26,7 @@ namespace Vd2.Vk
 
             if (ColorTextures.Count > 1)
             {
+                // TODO: Stop being lazy
                 throw new NotImplementedException("Laziness");
             }
 

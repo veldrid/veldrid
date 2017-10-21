@@ -1,7 +1,6 @@
 ﻿using Vulkan;
 using static Vulkan.VulkanNative;
 using static Vd2.Vk.VulkanUtil;
-using System.Linq;
 using System;
 
 namespace Vd2.Vk

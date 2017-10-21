@@ -69,7 +69,6 @@ namespace Vd2.Vk
             PostContextCreated();
         }
 
-
         public override ResourceFactory ResourceFactory { get; }
 
         public override Framebuffer SwapchainFramebuffer => _scFB;
@@ -83,9 +82,6 @@ namespace Vd2.Vk
             si.pCommandBuffers = &vkCB;
             VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             si.pWaitDstStageMask = &waitDstStageMask;
-            //si.waitSemaphoreCount = 1;
-            //VkSemaphore waitSemaphore = _imageAvailableSemaphore;
-            //si.pWaitSemaphores = &waitSemaphore;
 
             vkQueueSubmit(_graphicsQueue, 1, ref si, VkFence.Null);
             vkQueueWaitIdle(_graphicsQueue); // Yep

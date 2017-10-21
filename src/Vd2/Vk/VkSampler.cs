@@ -6,7 +6,7 @@ namespace Vd2.Vk
     internal unsafe class VkSampler : Sampler
     {
         private readonly VkDevice _device;
-        private readonly unsafe Vulkan.VkSampler _sampler;
+        private readonly Vulkan.VkSampler _sampler;
 
         public Vulkan.VkSampler DeviceSampler => _sampler;
 
@@ -41,7 +41,7 @@ namespace Vd2.Vk
 
         public override void Dispose()
         {
-            throw new System.NotImplementedException();
+            vkDestroySampler(_device, _sampler, null);
         }
     }
 }

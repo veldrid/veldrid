@@ -4,20 +4,22 @@ namespace Vd2.D3D11
 {
     internal class D3D11ResourceFactory : ResourceFactory
     {
+        private readonly D3D11GraphicsDevice _gd;
         private readonly Device _device;
         private readonly D3D11ResourceCache _cache;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
-        public D3D11ResourceFactory(Device device)
+        public D3D11ResourceFactory(D3D11GraphicsDevice gd)
         {
-            _device = device;
-            _cache = new D3D11ResourceCache(device);
+            _gd = gd;
+            _device = gd.Device;
+            _cache = new D3D11ResourceCache(_device);
         }
 
         public override CommandList CreateCommandList(ref CommandListDescription description)
         {
-            return new D3D11CommandList(_device, ref description);
+            return new D3D11CommandList(_gd, ref description);
         }
 
         public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)

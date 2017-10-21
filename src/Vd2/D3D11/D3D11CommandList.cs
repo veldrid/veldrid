@@ -6,6 +6,7 @@ namespace Vd2.D3D11
 {
     internal class D3D11CommandList : CommandList
     {
+        private readonly D3D11GraphicsDevice _gd;
         private readonly DeviceContext _context;
 
         private RawViewportF[] _viewports = new RawViewportF[0];
@@ -16,27 +17,71 @@ namespace Vd2.D3D11
         private readonly SharpDX.Direct3D11.Buffer[] _vertexBindings = new SharpDX.Direct3D11.Buffer[10];
         private int[] _vertexStrides;
         private int[] _vertexOffsets = new int[10];
+        private bool _begun;
 
-        public D3D11CommandList(Device device, ref CommandListDescription description)
+        public D3D11CommandList(D3D11GraphicsDevice gd, ref CommandListDescription description)
             : base(ref description)
         {
-            _context = new DeviceContext(device);
+            _gd = gd;
+            _context = new DeviceContext(gd.Device);
         }
 
-        public SharpDX.Direct3D11.CommandList DeviceCommandList { get; private set; }
+        public SharpDX.Direct3D11.CommandList DeviceCommandList { get; set; }
 
         public override void Begin()
         {
             DeviceCommandList?.Dispose();
             DeviceCommandList = null;
             ClearState();
+            _begun = true;
         }
 
         private void ClearState()
         {
+            _context.ClearState();
+            ResetManagedState();
+        }
+
+        private void ResetManagedState()
+        {
             _numVertexBindings = 0;
             Array.Clear(_vertexBindings, 0, _vertexBindings.Length);
-            _context.ClearState();
+            _vertexStrides = null;
+            Array.Clear(_vertexOffsets, 0, _vertexOffsets.Length);
+
+            _fb = null;
+
+            Array.Clear(_viewports, 0, _viewports.Length);
+            Array.Clear(_scissors, 0, _scissors.Length);
+        }
+
+        public override void End()
+        {
+            if (DeviceCommandList != null)
+            {
+                throw new VdException("Invalid use of End().");
+            }
+
+            DeviceCommandList = _context.FinishCommandList(false);
+            ResetManagedState();
+            _begun = false;
+        }
+
+        public void Reset()
+        {
+            if (DeviceCommandList != null)
+            {
+                DeviceCommandList.Dispose();
+                DeviceCommandList = null;
+            }
+            else if (_begun)
+            {
+                _context.ClearState();
+                SharpDX.Direct3D11.CommandList cl = _context.FinishCommandList(false);
+                cl.Dispose();
+            }
+
+            ResetManagedState();
         }
 
         public override void SetIndexBuffer(IndexBuffer ib)
@@ -136,16 +181,6 @@ namespace Vd2.D3D11
             }
         }
 
-        public override void End()
-        {
-            if (DeviceCommandList != null)
-            {
-                throw new VdException("Invalid use of End().");
-            }
-
-            DeviceCommandList = _context.FinishCommandList(true);
-        }
-
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
             Util.EnsureArraySize(ref _scissors, index + 1);
@@ -241,6 +276,11 @@ namespace Vd2.D3D11
         public override void SetFramebuffer(Framebuffer vfb)
         {
             D3D11Framebuffer fb = Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(vfb);
+            if (fb.IsSwapchainFramebuffer)
+            {
+                _gd.CommandListsReferencingSwapchain.Add(this);
+            }
+
             _fb = fb;
             _context.OutputMerger.SetRenderTargets(fb.DepthStencilView, fb.RenderTargetViews);
         }

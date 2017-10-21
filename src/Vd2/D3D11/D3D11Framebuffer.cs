@@ -8,6 +8,8 @@ namespace Vd2.D3D11
         public RenderTargetView[] RenderTargetViews { get; }
         public DepthStencilView DepthStencilView { get; }
 
+        internal bool IsSwapchainFramebuffer { get; set; }
+
         public D3D11Framebuffer(Device device, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)
         {

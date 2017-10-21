@@ -1,6 +1,8 @@
 ﻿using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Vd2.D3D11
 {
@@ -9,9 +11,17 @@ namespace Vd2.D3D11
         private readonly SharpDX.Direct3D11.Device _device;
         private readonly DeviceContext _immediateContext;
         private readonly SwapChain _swapChain;
-        private Framebuffer _swapChainFramebuffer;
+        private D3D11Framebuffer _swapChainFramebuffer;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
+
+        public override ResourceFactory ResourceFactory { get; }
+
+        public override Framebuffer SwapchainFramebuffer => _swapChainFramebuffer;
+
+        public SharpDX.Direct3D11.Device Device => _device;
+
+        public List<D3D11CommandList> CommandListsReferencingSwapchain { get; internal set; } = new List<D3D11CommandList>();
 
         public D3D11GraphicsDevice(IntPtr hwnd, int width, int height)
         {
@@ -41,7 +51,7 @@ namespace Vd2.D3D11
             Factory factory = _swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(hwnd, WindowAssociationFlags.IgnoreAll);
 
-            ResourceFactory = new D3D11ResourceFactory(_device);
+            ResourceFactory = new D3D11ResourceFactory(this);
             RecreateSwapchainFramebuffer(width, height);
 
             PostContextCreated();
@@ -54,6 +64,13 @@ namespace Vd2.D3D11
 
         private void RecreateSwapchainFramebuffer(int width, int height)
         {
+            // NOTE: Perhaps this should be deferred until all CommandLists naturally remove their references to the swapchain.
+            // The actual resize could be done in ExecuteCommands() when it is found that this list is empty.
+            foreach (D3D11CommandList d3dCL in CommandListsReferencingSwapchain)
+            {
+                d3dCL.Reset();
+            }
+
             _swapChainFramebuffer?.Dispose();
 
             _swapChain.ResizeBuffers(2, width, height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
@@ -80,17 +97,17 @@ namespace Vd2.D3D11
                 D3D11Texture2D depthVdTexture = new D3D11Texture2D(depthBufferTexture);
                 FramebufferDescription desc = new FramebufferDescription(depthVdTexture, backBufferVdTexture);
                 _swapChainFramebuffer = new D3D11Framebuffer(_device, ref desc);
+                _swapChainFramebuffer.IsSwapchainFramebuffer = true;
             }
         }
 
-        public override ResourceFactory ResourceFactory { get; }
-
-        public override Framebuffer SwapchainFramebuffer => _swapChainFramebuffer;
-
-        public override void ExecuteCommands(CommandList cb)
+        public override void ExecuteCommands(CommandList cl)
         {
-            D3D11CommandList d3d11Cb = Util.AssertSubtype<CommandList, D3D11CommandList>(cb);
-            _immediateContext.ExecuteCommandList(d3d11Cb.DeviceCommandList, false);
+            D3D11CommandList d3d11CL = Util.AssertSubtype<CommandList, D3D11CommandList>(cl);
+            _immediateContext.ExecuteCommandList(d3d11CL.DeviceCommandList, false);
+            d3d11CL.DeviceCommandList.Dispose();
+            d3d11CL.DeviceCommandList = null;
+            CommandListsReferencingSwapchain.Remove(d3d11CL);
         }
 
         public override void SwapBuffers()

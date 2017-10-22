@@ -34,6 +34,7 @@ namespace Vd2.Vk
         private VkQueue _presentQueue;
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private PFN_vkDebugReportCallbackEXT _debugCallbackFunc;
+        private readonly List<VkCommandList> _commandListsToDispose = new List<VkCommandList>();
 
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
@@ -84,7 +85,14 @@ namespace Vd2.Vk
             si.pWaitDstStageMask = &waitDstStageMask;
 
             vkQueueSubmit(_graphicsQueue, 1, ref si, VkFence.Null);
-            vkQueueWaitIdle(_graphicsQueue); // Yep
+        }
+
+        public void EnqueueDisposedCommandBuffer(VkCommandList vkCL)
+        {
+            lock (_commandListsToDispose)
+            {
+                _commandListsToDispose.Add(vkCL);
+            }
         }
 
         public override void ResizeMainWindow(uint width, uint height)
@@ -98,6 +106,7 @@ namespace Vd2.Vk
         public override void SwapBuffers()
         {
             vkQueueWaitIdle(_graphicsQueue); // Meh
+            FlushDestroyedCommandBuffers();
 
             // Then, present the swapchain.
             VkPresentInfoKHR presentInfo = VkPresentInfoKHR.New();
@@ -109,11 +118,23 @@ namespace Vd2.Vk
             presentInfo.pImageIndices = &imageIndex;
 
             vkQueuePresentKHR(_presentQueue, ref presentInfo);
-            vkQueueWaitIdle(_presentQueue);
 
             _scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence);
             vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
             vkResetFences(_device, 1, ref _imageAvailableFence);
+        }
+
+        private void FlushDestroyedCommandBuffers()
+        {
+            lock (_commandListsToDispose)
+            {
+                foreach (VkCommandList vkCB in _commandListsToDispose)
+                {
+                    vkCB.DestroyCommandPool();
+                }
+
+                _commandListsToDispose.Clear();
+            }
         }
 
         public VkCommandBuffer BeginOneTimeCommands()

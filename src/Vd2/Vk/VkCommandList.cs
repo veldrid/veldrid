@@ -24,6 +24,7 @@ namespace Vd2.Vk
         private bool _commandBufferEnded;
         private VkResourceSet _currentResourceSet;
 
+        public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
 
         public VkCommandList(VkGraphicsDevice gd, ref CommandListDescription description)
@@ -538,6 +539,12 @@ namespace Vd2.Vk
         }
 
         public override void Dispose()
+        {
+            _gd.EnqueueDisposedCommandBuffer(this);
+        }
+
+        // Must only be called once the command buffer has fully executed.
+        public void DestroyCommandPool()
         {
             vkDestroyCommandPool(_gd.Device, _pool, null);
         }

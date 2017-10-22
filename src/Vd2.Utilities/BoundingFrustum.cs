@@ -99,7 +99,8 @@ namespace Vd2.Utilities
             return result;
         }
 
-        public ContainmentType Contains(BoundingBox box)
+        public ContainmentType Contains(BoundingBox box) => Contains(ref box);
+        public ContainmentType Contains(ref BoundingBox box)
         {
             Plane* planes = (Plane*)Unsafe.AsPointer(ref _planes);
 

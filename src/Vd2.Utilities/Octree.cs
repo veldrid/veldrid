@@ -428,7 +428,7 @@ namespace Vd2.Utilities
                 for (int i = 0; i < _items.Count; i++)
                 {
                     OctreeItem<T> octreeItem = _items[i];
-                    if (frustum.Contains(octreeItem.Bounds) != ContainmentType.Disjoint)
+                    if (frustum.Contains(ref octreeItem.Bounds) != ContainmentType.Disjoint)
                     {
                         if (filter == null || filter(octreeItem.Item))
                         {

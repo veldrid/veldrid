@@ -63,7 +63,10 @@ namespace Vd2.Vk
 
             vkGetImageMemoryRequirements(device, image, out VkMemoryRequirements memRequirements);
             VkMemoryBlock memoryToken = memoryManager.Allocate(
-                FindMemoryType(physicalDeviceMemProperties, memRequirements.memoryTypeBits, properties),
+                physicalDeviceMemProperties,
+                memRequirements.memoryTypeBits,
+                properties,
+                false,
                 memRequirements.size,
                 memRequirements.alignment);
             memory = memoryToken;

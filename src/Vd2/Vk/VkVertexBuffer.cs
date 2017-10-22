@@ -3,7 +3,7 @@
     internal class VkVertexBuffer : VkBuffer, VertexBuffer
     {
         public VkVertexBuffer(VkGraphicsDevice gd, ref BufferDescription description)
-            : base(gd, description.SizeInBytes, Vulkan.VkBufferUsageFlags.VertexBuffer)
+            : base(gd, description.SizeInBytes, description.Dynamic, Vulkan.VkBufferUsageFlags.VertexBuffer)
         {
         }
     }

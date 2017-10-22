@@ -87,6 +87,10 @@ namespace Vd2.NeoDemo.Objects
             _disposeCollector.DisposeAll();
         }
 
+        public override void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc)
+        {
+        }
+
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
             cl.SetPipeline(_pipeline);

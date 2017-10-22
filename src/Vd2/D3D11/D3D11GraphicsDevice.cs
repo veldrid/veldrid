@@ -117,7 +117,7 @@ namespace Vd2.D3D11
 
         public override void Dispose()
         {
-            DeviceDebug deviceDebug = _device.QueryInterface<DeviceDebug>();
+            DeviceDebug deviceDebug = _device.QueryInterfaceOrNull<DeviceDebug>();
             if (deviceDebug != null)
             {
                 deviceDebug.ReportLiveDeviceObjects(ReportingLevel.Summary);

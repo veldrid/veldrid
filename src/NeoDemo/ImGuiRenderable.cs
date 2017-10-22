@@ -47,6 +47,10 @@ namespace Vd2.NeoDemo
             _imguiRenderer.Render(gd, cl);
         }
 
+        public override void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc)
+        {
+        }
+
         public override RenderPasses RenderPasses => RenderPasses.Overlay;
 
         public void Update(float deltaSeconds)

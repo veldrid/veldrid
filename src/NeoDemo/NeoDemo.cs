@@ -187,10 +187,14 @@ namespace Vd2.NeoDemo
                     {
                         ToggleFullscreenState();
                     }
-
                     if (ImGui.MenuItem("Always Recreate Sdl2Window", string.Empty, _recreateWindow, true))
                     {
                         _recreateWindow = !_recreateWindow;
+                    }
+                    bool threadedRendering = _scene.ThreadedRendering;
+                    if (ImGui.MenuItem("Render with multiple threads", string.Empty, threadedRendering, true))
+                    {
+                        _scene.ThreadedRendering = !_scene.ThreadedRendering;
                     }
                     if (ImGui.IsLastItemHovered())
                     {

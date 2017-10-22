@@ -72,8 +72,8 @@ namespace Vd2
         {
             _gd = gd;
             ResourceFactory factory = gd.ResourceFactory;
-            _vertexBuffer = factory.CreateVertexBuffer(new BufferDescription(10000));
-            _indexBuffer = factory.CreateIndexBuffer(new IndexBufferDescription(2000, IndexFormat.UInt16));
+            _vertexBuffer = factory.CreateVertexBuffer(new BufferDescription(10000, true));
+            _indexBuffer = factory.CreateIndexBuffer(new IndexBufferDescription(2000, IndexFormat.UInt16, true));
             RecreateFontDeviceTexture(gd, cl);
 
             _projMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription(64));
@@ -334,14 +334,14 @@ namespace Vd2
             if (totalVBSize > _vertexBuffer.SizeInBytes)
             {
                 _vertexBuffer.Dispose();
-                _vertexBuffer = gd.ResourceFactory.CreateVertexBuffer(new BufferDescription((ulong)(totalVBSize * 1.5f)));
+                _vertexBuffer = gd.ResourceFactory.CreateVertexBuffer(new BufferDescription((ulong)(totalVBSize * 1.5f), true));
             }
 
             uint totalIBSize = (uint)(draw_data->TotalIdxCount * sizeof(ushort));
             if (totalIBSize > _indexBuffer.SizeInBytes)
             {
                 _indexBuffer.Dispose();
-                _indexBuffer = gd.ResourceFactory.CreateIndexBuffer(new IndexBufferDescription((ulong)(totalIBSize * 1.5f), IndexFormat.UInt16));
+                _indexBuffer = gd.ResourceFactory.CreateIndexBuffer(new IndexBufferDescription((ulong)(totalIBSize * 1.5f), IndexFormat.UInt16, true));
             }
 
             for (int i = 0; i < draw_data->CmdListsCount; i++)

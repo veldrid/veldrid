@@ -1,9 +1,11 @@
 ﻿using ImGuiNET;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using Vd2.Utilities;
 
 namespace Vd2.NeoDemo
@@ -16,12 +18,14 @@ namespace Vd2.NeoDemo
         private readonly List<Renderable> _freeRenderables = new List<Renderable>();
         private readonly List<IUpdateable> _updateables = new List<IUpdateable>();
 
-        private readonly Dictionary<RenderPasses, Func<CullRenderable, bool>> _filters
-            = new Dictionary<RenderPasses, Func<CullRenderable, bool>>(new RenderPassesComparer());
+        private readonly ConcurrentDictionary<RenderPasses, Func<CullRenderable, bool>> _filters
+            = new ConcurrentDictionary<RenderPasses, Func<CullRenderable, bool>>(new RenderPassesComparer());
 
         private readonly Camera _camera;
 
         public Camera Camera => _camera;
+
+        public bool ThreadedRendering { get; set; }
 
         float _lScale = 1f;
         float _rScale = 1f;
@@ -67,7 +71,21 @@ namespace Vd2.NeoDemo
             }
         }
 
+        private readonly Task[] _tasks = new Task[4];
+
         public void RenderAllStages(GraphicsDevice gd, CommandList cl, SceneContext sc)
+        {
+            if (ThreadedRendering)
+            {
+                RenderAllMultiThreaded(gd, sc);
+            }
+            else
+            {
+                RenderAllSingleThread(gd, cl, sc);
+            }
+        }
+
+        private void RenderAllSingleThread(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             Matrix4x4 cameraProj = Camera.ProjectionMatrix;
             Vector4 nearLimitCS = Vector4.Transform(new Vector3(0, 0, -_nearCascadeLimit), cameraProj);
@@ -91,12 +109,11 @@ namespace Vd2.NeoDemo
                 sc.NearShadowMapTexture.Width,
                 out BoundingFrustum lightFrustum);
             cl.UpdateBuffer(sc.LightViewProjectionBuffer0, 0, ref viewProj0);
-            sc.CurrentLightViewProjectionBuffer = 0;
             cl.SetFramebuffer(sc.NearShadowMapFramebuffer);
             cl.SetViewport(0, new Viewport(0, 0, sc.NearShadowMapTexture.Width, sc.NearShadowMapTexture.Height, 0, 1));
             cl.SetScissorRect(0, 0, 0, sc.NearShadowMapTexture.Width, sc.NearShadowMapTexture.Height);
             cl.ClearDepthTarget(1f);
-            Render(gd, cl, sc, RenderPasses.ShadowMap, lightFrustum, null);
+            Render(gd, cl, sc, RenderPasses.ShadowMapNear, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             // Mid
             Matrix4x4 viewProj1 = UpdateDirectionalLightMatrices(
@@ -106,12 +123,11 @@ namespace Vd2.NeoDemo
                 sc.MidShadowMapTexture.Width,
                 out lightFrustum);
             cl.UpdateBuffer(sc.LightViewProjectionBuffer1, 0, ref viewProj1);
-            sc.CurrentLightViewProjectionBuffer = 1;
             cl.SetFramebuffer(sc.MidShadowMapFramebuffer);
             cl.SetViewport(0, new Viewport(0, 0, sc.MidShadowMapTexture.Width, sc.MidShadowMapTexture.Height, 0, 1));
             cl.SetScissorRect(0, 0, 0, sc.MidShadowMapTexture.Width, sc.MidShadowMapTexture.Height);
             cl.ClearDepthTarget(1f);
-            Render(gd, cl, sc, RenderPasses.ShadowMap, lightFrustum, null);
+            Render(gd, cl, sc, RenderPasses.ShadowMapMid, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             // Far
             Matrix4x4 viewProj2 = UpdateDirectionalLightMatrices(
@@ -121,15 +137,14 @@ namespace Vd2.NeoDemo
                 sc.FarShadowMapTexture.Width,
                 out lightFrustum);
             cl.UpdateBuffer(sc.LightViewProjectionBuffer2, 0, ref viewProj2);
-            sc.CurrentLightViewProjectionBuffer = 2;
             cl.SetFramebuffer(sc.FarShadowMapFramebuffer);
             cl.SetViewport(0, new Viewport(0, 0, sc.FarShadowMapTexture.Width, sc.FarShadowMapTexture.Height, 0, 1));
             cl.SetScissorRect(0, 0, 0, sc.FarShadowMapTexture.Width, sc.FarShadowMapTexture.Height);
             cl.ClearDepthTarget(1f);
-            Render(gd, cl, sc, RenderPasses.ShadowMap, lightFrustum, null);
+            Render(gd, cl, sc, RenderPasses.ShadowMapFar, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             cl.SetFramebuffer(gd.SwapchainFramebuffer);
-            Texture2D colorTex = (Texture2D)gd.SwapchainFramebuffer.ColorTextures[0];
+            Texture2D colorTex = gd.SwapchainFramebuffer.ColorTextures[0];
             float scWidth = colorTex.Width;
             float scHeight = colorTex.Height;
             cl.SetViewport(0, new Viewport(0, 0, scWidth, scHeight, 0, 1));
@@ -137,9 +152,120 @@ namespace Vd2.NeoDemo
             cl.ClearColorTarget(0, RgbaFloat.Black);
             cl.ClearDepthTarget(1f);
             BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
-            Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, null);
-            Render(gd, cl, sc, RenderPasses.AlphaBlend, cameraFrustum, null);
-            Render(gd, cl, sc, RenderPasses.Overlay, cameraFrustum, null);
+            Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            Render(gd, cl, sc, RenderPasses.AlphaBlend, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            Render(gd, cl, sc, RenderPasses.Overlay, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+
+            _resourceUpdateCL.Begin();
+            foreach (Renderable renderable in _allPerFrameRenderablesSet)
+            {
+                renderable.UpdatePerFrameResources(gd, _resourceUpdateCL, sc);
+            }
+            _resourceUpdateCL.End();
+            gd.ExecuteCommands(_resourceUpdateCL);
+        }
+
+        private void RenderAllMultiThreaded(GraphicsDevice gd, SceneContext sc)
+        {
+            Matrix4x4 cameraProj = Camera.ProjectionMatrix;
+            Vector4 nearLimitCS = Vector4.Transform(new Vector3(0, 0, -_nearCascadeLimit), cameraProj);
+            Vector4 midLimitCS = Vector4.Transform(new Vector3(0, 0, -_midCascadeLimit), cameraProj);
+            Vector4 farLimitCS = Vector4.Transform(new Vector3(0, 0, -_farCascadeLimit), cameraProj);
+
+            _resourceUpdateCL.Begin();
+            CommandList[] cls = new CommandList[5];
+            for (int i = 0; i < cls.Length; i++) { cls[i] = gd.ResourceFactory.CreateCommandList(); cls[i].Begin(); }
+
+            _resourceUpdateCL.UpdateBuffer(sc.DepthLimitsBuffer, 0, new DepthCascadeLimits
+            {
+                NearLimit = nearLimitCS.Z,
+                MidLimit = midLimitCS.Z,
+                FarLimit = farLimitCS.Z
+            });
+
+            _resourceUpdateCL.UpdateBuffer(sc.LightInfoBuffer, 0, sc.DirectionalLight.GetInfo());
+
+            _allPerFrameRenderablesConcurrentBag.Clear();
+            _tasks[0] = Task.Run(() =>
+            {
+                // Near
+                Matrix4x4 viewProj0 = UpdateDirectionalLightMatrices(
+                    sc,
+                    Camera.NearDistance,
+                    _nearCascadeLimit,
+                    sc.NearShadowMapTexture.Width,
+                    out BoundingFrustum lightFrustum0);
+                cls[1].UpdateBuffer(sc.LightViewProjectionBuffer0, 0, ref viewProj0);
+
+                cls[1].SetFramebuffer(sc.NearShadowMapFramebuffer);
+                cls[1].SetViewport(0, new Viewport(0, 0, sc.NearShadowMapTexture.Width, sc.NearShadowMapTexture.Height, 0, 1));
+                cls[1].SetScissorRect(0, 0, 0, sc.NearShadowMapTexture.Width, sc.NearShadowMapTexture.Height);
+                cls[1].ClearDepthTarget(1f);
+                Render(gd, cls[1], sc, RenderPasses.ShadowMapNear, lightFrustum0, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, true);
+            });
+
+            _tasks[1] = Task.Run(() =>
+            {
+                // Mid
+                Matrix4x4 viewProj1 = UpdateDirectionalLightMatrices(
+                    sc,
+                    _nearCascadeLimit,
+                    _midCascadeLimit,
+                    sc.MidShadowMapTexture.Width,
+                    out var lightFrustum1);
+                cls[2].UpdateBuffer(sc.LightViewProjectionBuffer1, 0, ref viewProj1);
+
+                cls[2].SetFramebuffer(sc.MidShadowMapFramebuffer);
+                cls[2].SetViewport(0, new Viewport(0, 0, sc.MidShadowMapTexture.Width, sc.MidShadowMapTexture.Height, 0, 1));
+                cls[2].SetScissorRect(0, 0, 0, sc.MidShadowMapTexture.Width, sc.MidShadowMapTexture.Height);
+                cls[2].ClearDepthTarget(1f);
+                Render(gd, cls[2], sc, RenderPasses.ShadowMapMid, lightFrustum1, _renderQueues[1], _cullableStage[1], _renderableStage[1], null, true);
+            });
+
+            _tasks[2] = Task.Run(() =>
+            {
+                // Far
+                Matrix4x4 viewProj2 = UpdateDirectionalLightMatrices(
+                    sc,
+                    _midCascadeLimit,
+                    _farCascadeLimit,
+                    sc.FarShadowMapTexture.Width,
+                    out var lightFrustum2);
+                cls[3].UpdateBuffer(sc.LightViewProjectionBuffer2, 0, ref viewProj2);
+
+                cls[3].SetFramebuffer(sc.FarShadowMapFramebuffer);
+                cls[3].SetViewport(0, new Viewport(0, 0, sc.FarShadowMapTexture.Width, sc.FarShadowMapTexture.Height, 0, 1));
+                cls[3].SetScissorRect(0, 0, 0, sc.FarShadowMapTexture.Width, sc.FarShadowMapTexture.Height);
+                cls[3].ClearDepthTarget(1f);
+                Render(gd, cls[3], sc, RenderPasses.ShadowMapFar, lightFrustum2, _renderQueues[2], _cullableStage[2], _renderableStage[2], null, true);
+            });
+
+            _tasks[3] = Task.Run(() =>
+            {
+                cls[4].SetFramebuffer(gd.SwapchainFramebuffer);
+                Texture2D colorTex = gd.SwapchainFramebuffer.ColorTextures[0];
+                float scWidth = colorTex.Width;
+                float scHeight = colorTex.Height;
+                cls[4].SetViewport(0, new Viewport(0, 0, scWidth, scHeight, 0, 1));
+                cls[4].SetScissorRect(0, 0, 0, (uint)scWidth, (uint)scHeight);
+                cls[4].ClearColorTarget(0, RgbaFloat.Black);
+                cls[4].ClearDepthTarget(1f);
+                BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
+                Render(gd, cls[4], sc, RenderPasses.Standard, cameraFrustum, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
+                Render(gd, cls[4], sc, RenderPasses.AlphaBlend, cameraFrustum, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
+                Render(gd, cls[4], sc, RenderPasses.Overlay, cameraFrustum, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
+            });
+
+            Task.WaitAll(_tasks);
+
+            foreach (Renderable renderable in _allPerFrameRenderablesConcurrentBag.ToHashSet())
+            {
+                renderable.UpdatePerFrameResources(gd, _resourceUpdateCL, sc);
+            }
+            _resourceUpdateCL.End();
+            gd.ExecuteCommands(_resourceUpdateCL);
+
+            for (int i = 0; i < cls.Length; i++) { cls[i].End(); gd.ExecuteCommands(cls[i]); cls[i].Dispose(); }
         }
 
         private Matrix4x4 UpdateDirectionalLightMatrices(
@@ -215,37 +341,53 @@ namespace Vd2.NeoDemo
             SceneContext sc,
             RenderPasses pass,
             BoundingFrustum frustum,
-            Comparer<RenderItemIndex> comparer = null)
+            RenderQueue renderQueue,
+            List<CullRenderable> cullRenderableList,
+            List<Renderable> renderableList,
+            Comparer<RenderItemIndex> comparer,
+            bool threaded)
         {
-            _renderQueue.Clear();
+            renderQueue.Clear();
 
-            _cullableStage.Clear();
-            CollectVisibleObjects(ref frustum, pass, _cullableStage);
-            _renderQueue.AddRange(_cullableStage, _camera.Position);
+            cullRenderableList.Clear();
+            CollectVisibleObjects(ref frustum, pass, cullRenderableList);
+            renderQueue.AddRange(cullRenderableList, _camera.Position);
 
-            _renderableStage.Clear();
-            CollectFreeObjects(pass, _renderableStage);
-            _renderQueue.AddRange(_renderableStage, _camera.Position);
+            renderableList.Clear();
+            CollectFreeObjects(pass, renderableList);
+            renderQueue.AddRange(renderableList, _camera.Position);
 
             if (comparer == null)
             {
-                _renderQueue.Sort();
+                renderQueue.Sort();
             }
             else
             {
-                _renderQueue.Sort(comparer);
+                renderQueue.Sort(comparer);
             }
 
-            foreach (Renderable renderable in _renderQueue)
+            foreach (Renderable renderable in renderQueue)
             {
                 renderable.Render(gd, rc, sc, pass);
             }
+
+            if (threaded)
+            {
+                foreach (CullRenderable thing in cullRenderableList) { _allPerFrameRenderablesConcurrentBag.Add(thing); }
+                foreach (Renderable thing in renderableList) { _allPerFrameRenderablesConcurrentBag.Add(thing); }
+            }
+            else
+            {
+                foreach (CullRenderable thing in cullRenderableList) { _allPerFrameRenderablesSet.Add(thing); }
+                foreach (Renderable thing in renderableList) { _allPerFrameRenderablesSet.Add(thing); }
+            }
         }
 
-        private readonly RenderQueue _renderQueue = new RenderQueue();
-        private readonly List<CullRenderable> _shadowmapStage = new List<CullRenderable>();
-        private readonly List<CullRenderable> _cullableStage = new List<CullRenderable>();
-        private readonly List<Renderable> _renderableStage = new List<Renderable>();
+        private readonly HashSet<Renderable> _allPerFrameRenderablesSet = new HashSet<Renderable>();
+        private readonly ConcurrentBag<Renderable> _allPerFrameRenderablesConcurrentBag = new ConcurrentBag<Renderable>();
+        private readonly RenderQueue[] _renderQueues = Enumerable.Range(0, 4).Select(i => new RenderQueue()).ToArray();
+        private readonly List<CullRenderable>[] _cullableStage = Enumerable.Range(0, 4).Select(i => new List<CullRenderable>()).ToArray();
+        private readonly List<Renderable>[] _renderableStage = Enumerable.Range(0, 4).Select(i => new List<Renderable>()).ToArray();
 
         private void CollectVisibleObjects(
             ref BoundingFrustum frustum,
@@ -266,15 +408,12 @@ namespace Vd2.NeoDemo
             }
         }
 
+        private static Func<RenderPasses, Func<CullRenderable, bool>> s_createFilterFunc = rp => CreateFilter(rp);
+        private CommandList _resourceUpdateCL;
+
         private Func<CullRenderable, bool> GetFilter(RenderPasses passes)
         {
-            if (!_filters.TryGetValue(passes, out Func<CullRenderable, bool> filter))
-            {
-                filter = CreateFilter(passes);
-                _filters.Add(passes, filter);
-            }
-
-            return filter;
+            return _filters.GetOrAdd(passes, s_createFilterFunc);
         }
 
         private static Func<CullRenderable, bool> CreateFilter(RenderPasses rp)
@@ -286,9 +425,9 @@ namespace Vd2.NeoDemo
 
         internal void DestroyAllDeviceObjects()
         {
-            _cullableStage.Clear();
-            _octree.GetAllContainedObjects(_cullableStage);
-            foreach (CullRenderable cr in _cullableStage)
+            _cullableStage[0].Clear();
+            _octree.GetAllContainedObjects(_cullableStage[0]);
+            foreach (CullRenderable cr in _cullableStage[0])
             {
                 cr.DestroyDeviceObjects();
             }
@@ -296,13 +435,15 @@ namespace Vd2.NeoDemo
             {
                 r.DestroyDeviceObjects();
             }
+
+            _resourceUpdateCL.Dispose();
         }
 
         internal void CreateAllDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
-            _cullableStage.Clear();
-            _octree.GetAllContainedObjects(_cullableStage);
-            foreach (CullRenderable cr in _cullableStage)
+            _cullableStage[0].Clear();
+            _octree.GetAllContainedObjects(_cullableStage[0]);
+            foreach (CullRenderable cr in _cullableStage[0])
             {
                 cr.CreateDeviceObjects(gd, cl, sc);
             }
@@ -310,6 +451,8 @@ namespace Vd2.NeoDemo
             {
                 r.CreateDeviceObjects(gd, cl, sc);
             }
+
+            _resourceUpdateCL = gd.ResourceFactory.CreateCommandList();
         }
 
         private class RenderPassesComparer : IEqualityComparer<RenderPasses>

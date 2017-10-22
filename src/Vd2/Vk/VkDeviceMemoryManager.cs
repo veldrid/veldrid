@@ -10,7 +10,9 @@ namespace Vd2.Vk
     {
         private readonly VkDevice _device;
         private readonly VkPhysicalDevice _physicalDevice;
+        private readonly object _lock = new object();
 
+        private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryTypeUnmapped = new Dictionary<uint, ChunkAllocatorSet>();
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryType = new Dictionary<uint, ChunkAllocatorSet>();
 
         public VkDeviceMemoryManager(VkDevice device, VkPhysicalDevice physicalDevice)
@@ -19,29 +21,54 @@ namespace Vd2.Vk
             _physicalDevice = physicalDevice;
         }
 
-        public VkMemoryBlock Allocate(uint memoryTypeIndex, ulong size, ulong alignment)
+        public VkMemoryBlock Allocate(
+            VkPhysicalDeviceMemoryProperties memProperties,
+            uint memoryTypeBits,
+            VkMemoryPropertyFlags flags,
+            bool persistentMapped,
+            ulong size,
+            ulong alignment)
         {
-            ChunkAllocatorSet allocator = GetAllocator(memoryTypeIndex);
-            bool result = allocator.Allocate(size, alignment, out VkMemoryBlock ret);
-            if (!result)
+            lock (_lock)
             {
-                throw new VdException("Unable to allocate memory.");
-            }
+                uint memoryTypeIndex = FindMemoryType(memProperties, memoryTypeBits, flags);
+                ChunkAllocatorSet allocator = GetAllocator(memoryTypeIndex, persistentMapped);
+                bool result = allocator.Allocate(size, alignment, out VkMemoryBlock ret);
+                if (!result)
+                {
+                    throw new VdException("Unable to allocate memory.");
+                }
 
-            return ret;
+                return ret;
+            }
         }
 
         public void Free(VkMemoryBlock block)
         {
-            GetAllocator(block.MemoryTypeIndex).Free(block);
+            lock (_lock)
+            {
+                GetAllocator(block.MemoryTypeIndex, block.IsPersistentMapped).Free(block);
+            }
         }
 
-        private ChunkAllocatorSet GetAllocator(uint memoryTypeIndex)
+        private ChunkAllocatorSet GetAllocator(uint memoryTypeIndex, bool persistentMapped)
         {
-            if (!_allocatorsByMemoryType.TryGetValue(memoryTypeIndex, out ChunkAllocatorSet ret))
+            ChunkAllocatorSet ret = null;
+            if (persistentMapped)
             {
-                ret = new ChunkAllocatorSet(_device, memoryTypeIndex);
-                _allocatorsByMemoryType.Add(memoryTypeIndex, ret);
+                if (!_allocatorsByMemoryType.TryGetValue(memoryTypeIndex, out ret))
+                {
+                    ret = new ChunkAllocatorSet(_device, memoryTypeIndex, true);
+                    _allocatorsByMemoryType.Add(memoryTypeIndex, ret);
+                }
+            }
+            else
+            {
+                if (!_allocatorsByMemoryTypeUnmapped.TryGetValue(memoryTypeIndex, out ret))
+                {
+                    ret = new ChunkAllocatorSet(_device, memoryTypeIndex, false);
+                    _allocatorsByMemoryTypeUnmapped.Add(memoryTypeIndex, ret);
+                }
             }
 
             return ret;
@@ -51,12 +78,14 @@ namespace Vd2.Vk
         {
             private readonly VkDevice _device;
             private readonly uint _memoryTypeIndex;
+            private readonly bool _persistentMapped;
             private readonly List<ChunkAllocator> _allocators = new List<ChunkAllocator>();
 
-            public ChunkAllocatorSet(VkDevice device, uint memoryTypeIndex)
+            public ChunkAllocatorSet(VkDevice device, uint memoryTypeIndex, bool persistentMapped)
             {
                 _device = device;
                 _memoryTypeIndex = memoryTypeIndex;
+                _persistentMapped = persistentMapped;
             }
 
             public bool Allocate(ulong size, ulong alignment, out VkMemoryBlock block)
@@ -69,7 +98,7 @@ namespace Vd2.Vk
                     }
                 }
 
-                ChunkAllocator newAllocator = new ChunkAllocator(_device, _memoryTypeIndex);
+                ChunkAllocator newAllocator = new ChunkAllocator(_device, _memoryTypeIndex, _persistentMapped);
                 _allocators.Add(newAllocator);
                 return newAllocator.Allocate(size, alignment, out block);
             }
@@ -88,20 +117,25 @@ namespace Vd2.Vk
 
         private class ChunkAllocator
         {
+            private const ulong PersistentMappedChunkSize = 1024 * 1024 * 64;
+            private const ulong UnmappedChunkSize = 1024 * 1024 * 256;
             private readonly VkDevice _device;
             private readonly uint _memoryTypeIndex;
+            private readonly bool _persistentMapped;
             private readonly List<VkMemoryBlock> _freeBlocks = new List<VkMemoryBlock>();
             private readonly VkDeviceMemory _memory;
 
-            private ulong _totalMemorySize = 1024 * 1024 * 256; // 256 MB
+            private ulong _totalMemorySize;
             private ulong _totalAllocatedBytes = 0;
 
             public VkDeviceMemory Memory => _memory;
 
-            public ChunkAllocator(VkDevice device, uint memoryTypeIndex)
+            public ChunkAllocator(VkDevice device, uint memoryTypeIndex, bool persistentMapped)
             {
                 _device = device;
                 _memoryTypeIndex = memoryTypeIndex;
+                _persistentMapped = persistentMapped;
+                _totalMemorySize = persistentMapped ? PersistentMappedChunkSize : UnmappedChunkSize;
 
                 VkMemoryAllocateInfo memoryAI = VkMemoryAllocateInfo.New();
                 memoryAI.allocationSize = _totalMemorySize;
@@ -109,7 +143,14 @@ namespace Vd2.Vk
                 VkResult result = vkAllocateMemory(_device, ref memoryAI, null, out _memory);
                 CheckResult(result);
 
-                VkMemoryBlock initialBlock = new VkMemoryBlock(_memory, 0, _totalMemorySize, _memoryTypeIndex);
+                void* mappedPtr = null;
+                if (persistentMapped)
+                {
+                    result = vkMapMemory(_device, _memory, 0, _totalMemorySize, 0, &mappedPtr);
+                    CheckResult(result);
+                }
+
+                VkMemoryBlock initialBlock = new VkMemoryBlock(_memory, 0, _totalMemorySize, _memoryTypeIndex, mappedPtr);
                 _freeBlocks.Add(initialBlock);
             }
 
@@ -149,7 +190,8 @@ namespace Vd2.Vk
                                     freeBlock.DeviceMemory,
                                     freeBlock.Offset + size,
                                     freeBlock.Size - size,
-                                    _memoryTypeIndex);
+                                    _memoryTypeIndex,
+                                    freeBlock.BaseMappedPointer);
                                 _freeBlocks.Add(splitBlock);
                                 block = freeBlock;
                                 block.Size = size;
@@ -211,20 +253,25 @@ namespace Vd2.Vk
     }
 
     [DebuggerDisplay("[Mem:{DeviceMemory.Handle}] Off:{Offset}, Size:{Size}")]
-    public class VkMemoryBlock
+    public unsafe class VkMemoryBlock
     {
         public readonly uint MemoryTypeIndex;
         public readonly VkDeviceMemory DeviceMemory;
+        public readonly void* BaseMappedPointer;
 
         public ulong Offset;
         public ulong Size;
 
-        public VkMemoryBlock(VkDeviceMemory memory, ulong offset, ulong size, uint memoryTypeIndex)
+        public void* BlockMappedPointer => ((byte*)BaseMappedPointer) + Offset;
+        public bool IsPersistentMapped => BaseMappedPointer != null;
+
+        public VkMemoryBlock(VkDeviceMemory memory, ulong offset, ulong size, uint memoryTypeIndex, void* mappedPtr)
         {
             DeviceMemory = memory;
             Offset = offset;
             Size = size;
             MemoryTypeIndex = memoryTypeIndex;
+            BaseMappedPointer = mappedPtr;
         }
     }
 }

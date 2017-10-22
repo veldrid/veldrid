@@ -79,9 +79,13 @@ namespace Vd2.Vk
             ImageLayout = VkImageLayout.Preinitialized;
 
             vkGetImageMemoryRequirements(_gd.Device, _deviceImage, out VkMemoryRequirements memReqs);
-            uint memoryType = FindMemoryType(_gd.PhysicalDeviceMemProperties, memReqs.memoryTypeBits, VkMemoryPropertyFlags.DeviceLocal);
-
-            _memory = _gd.MemoryManager.Allocate(memoryType, memReqs.size, memReqs.alignment);
+            _memory = _gd.MemoryManager.Allocate(
+                _gd.PhysicalDeviceMemProperties,
+                memReqs.memoryTypeBits,
+                VkMemoryPropertyFlags.DeviceLocal,
+                false,
+                memReqs.size,
+                memReqs.alignment);
             vkBindImageMemory(_gd.Device, _deviceImage, _memory.DeviceMemory, _memory.Offset);
         }
 

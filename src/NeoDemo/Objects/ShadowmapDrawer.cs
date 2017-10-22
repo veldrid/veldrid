@@ -113,7 +113,7 @@ namespace Vd2.NeoDemo.Objects
 
         public override RenderPasses RenderPasses => RenderPasses.Overlay;
 
-        public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
+        public override void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             if (_si.HasValue)
             {
@@ -126,7 +126,10 @@ namespace Vd2.NeoDemo.Objects
                 cl.UpdateBuffer(_orthographicBuffer, 0, _ortho.Value);
                 _ortho = null;
             }
+        }
 
+        public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
+        {
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_pipeline);

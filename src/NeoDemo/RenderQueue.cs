@@ -13,6 +13,8 @@ namespace Vd2.NeoDemo
         private readonly List<RenderItemIndex> _indices = new List<RenderItemIndex>(DefaultCapacity);
         private readonly List<Renderable> _renderables = new List<Renderable>(DefaultCapacity);
 
+        public int Count => _renderables.Count;
+
         public void Clear()
         {
             _indices.Clear();

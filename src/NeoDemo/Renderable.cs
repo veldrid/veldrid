@@ -6,7 +6,8 @@ namespace Vd2.NeoDemo
 {
     public abstract class Renderable : IDisposable
     {
-        public abstract void Render(GraphicsDevice gd, CommandList rc, SceneContext sc, RenderPasses renderPass);
+        public abstract void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc);
+        public abstract void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass);
         public abstract void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc);
         public abstract void DestroyDeviceObjects();
         public abstract RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition);

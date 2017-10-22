@@ -67,8 +67,8 @@ namespace Vd2.NeoDemo.Objects
             _vb = _meshData.CreateVertexBuffer(factory, cl);
             _ib = _meshData.CreateIndexBuffer(factory, cl, out _indexCount);
 
-            _worldBuffer = factory.CreateUniformBuffer(new BufferDescription(64));
-            _inverseTransposeWorldBuffer = factory.CreateUniformBuffer(new BufferDescription(64));
+            _worldBuffer = factory.CreateUniformBuffer(new BufferDescription(64, true));
+            _inverseTransposeWorldBuffer = factory.CreateUniformBuffer(new BufferDescription(64, true));
             if (_materialPropsOwned)
             {
                 _materialProps.CreateDeviceObjects(gd, cl, sc);
@@ -227,7 +227,7 @@ namespace Vd2.NeoDemo.Objects
             return RenderOrderKey.Create(_pipeline.GetHashCode(), Vector3.Distance(_transform.Position, cameraPosition));
         }
 
-        public override RenderPasses RenderPasses => RenderPasses.ShadowMap | RenderPasses.Standard;
+        public override RenderPasses RenderPasses => RenderPasses.AllShadowMap | RenderPasses.Standard;
 
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
@@ -236,9 +236,10 @@ namespace Vd2.NeoDemo.Objects
                 _materialProps.FlushChanges(cl);
             }
 
-            if (renderPass == RenderPasses.ShadowMap)
+            if ((renderPass & RenderPasses.AllShadowMap) != 0)
             {
-                RenderShadowMap(cl, sc);
+                int shadowMapIndex = renderPass == RenderPasses.ShadowMapNear ? 0 : renderPass == RenderPasses.ShadowMapMid ? 1 : 2;
+                RenderShadowMap(cl, sc, shadowMapIndex);
             }
             else if (renderPass == RenderPasses.Standard)
             {
@@ -246,25 +247,24 @@ namespace Vd2.NeoDemo.Objects
             }
         }
 
-        private void RenderShadowMap(CommandList cl, SceneContext sc)
+        public override void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             Matrix4x4 world = _transform.GetTransformMatrix();
             cl.UpdateBuffer(_worldBuffer, 0, ref world);
             cl.UpdateBuffer(_inverseTransposeWorldBuffer, 0, VdUtilities.CalculateInverseTranspose(ref world));
+        }
 
+        private void RenderShadowMap(CommandList cl, SceneContext sc, int shadowMapIndex)
+        {
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
-            cl.SetResourceSet(_shadowMapResourceSets[sc.CurrentLightViewProjectionBuffer]);
+            cl.SetResourceSet(_shadowMapResourceSets[shadowMapIndex]);
             cl.SetPipeline(_shadowMapPipeline);
             cl.Draw((uint)_indexCount, 1, 0, 0, 0);
         }
 
         private void RenderStandard(CommandList cl, SceneContext sc)
         {
-            Matrix4x4 world = _transform.GetTransformMatrix();
-            cl.UpdateBuffer(_worldBuffer, 0, ref world);
-            cl.UpdateBuffer(_inverseTransposeWorldBuffer, 0, VdUtilities.CalculateInverseTranspose(ref world));
-
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_pipeline);

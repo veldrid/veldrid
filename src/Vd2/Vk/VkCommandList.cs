@@ -11,6 +11,7 @@ namespace Vd2.Vk
     internal unsafe class VkCommandList : CommandList
     {
         private readonly VkGraphicsDevice _gd;
+        private VkCommandPool _pool;
         private VkCommandBuffer _cb;
         private VkFramebufferBase _currentFramebuffer;
         private VkRenderPass _activeRenderPass;
@@ -29,11 +30,16 @@ namespace Vd2.Vk
             : base(ref description)
         {
             _gd = gd;
+            VkCommandPoolCreateInfo poolCI = VkCommandPoolCreateInfo.New();
+            poolCI.queueFamilyIndex = gd.GraphicsQueueIndex;
+            VkResult result = vkCreateCommandPool(_gd.Device, ref poolCI, null, out _pool);
+            CheckResult(result);
+
             VkCommandBufferAllocateInfo cbAI = VkCommandBufferAllocateInfo.New();
-            cbAI.commandPool = gd.GraphicsCommandPool;
+            cbAI.commandPool = _pool;
             cbAI.commandBufferCount = 1;
             cbAI.level = VkCommandBufferLevel.Primary;
-            VkResult result = vkAllocateCommandBuffers(gd.Device, ref cbAI, out _cb);
+            result = vkAllocateCommandBuffers(gd.Device, ref cbAI, out _cb);
             CheckResult(result);
         }
 
@@ -47,7 +53,7 @@ namespace Vd2.Vk
             if (_commandBufferEnded)
             {
                 _commandBufferEnded = false;
-                vkResetCommandBuffer(_cb, VkCommandBufferResetFlags.None);
+                vkResetCommandPool(_gd.Device, _pool, VkCommandPoolResetFlags.None);
             }
 
             VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
@@ -231,17 +237,26 @@ namespace Vd2.Vk
 
         private IntPtr MapBuffer(VkBuffer buffer, uint numBytes)
         {
-            void* mappedPtr;
-            VkResult result = vkMapMemory(_gd.Device, buffer.Memory.DeviceMemory, buffer.Memory.Offset, numBytes, 0, &mappedPtr);
-            CheckResult(result);
-            return (IntPtr)mappedPtr;
+            if (buffer.Memory.IsPersistentMapped)
+            {
+                return (IntPtr)buffer.Memory.BlockMappedPointer;
+            }
+            else
+            {
+                void* mappedPtr;
+                VkResult result = vkMapMemory(_gd.Device, buffer.Memory.DeviceMemory, buffer.Memory.Offset, numBytes, 0, &mappedPtr);
+                CheckResult(result);
+                return (IntPtr)mappedPtr;
+            }
         }
 
         private void UnmapBuffer(VkBuffer buffer)
         {
-            vkUnmapMemory(_gd.Device, buffer.Memory.DeviceMemory);
+            if (!buffer.Memory.IsPersistentMapped)
+            {
+                vkUnmapMemory(_gd.Device, buffer.Memory.DeviceMemory);
+            }
         }
-
 
         public override void UpdateTexture2D(
             Texture2D texture2D,
@@ -475,7 +490,6 @@ namespace Vd2.Vk
             }
 
             vkCmdPipelineBarrier(
-                //cbTemp,
                 _cb,
                 VkPipelineStageFlags.TopOfPipe,
                 VkPipelineStageFlags.TopOfPipe,
@@ -514,7 +528,6 @@ namespace Vd2.Vk
             region.extent.depth = 1;
 
             vkCmdCopyImage(
-                //tempCB,
                 _cb,
                 srcImage,
                 VkImageLayout.TransferSrcOptimal,
@@ -526,7 +539,7 @@ namespace Vd2.Vk
 
         public override void Dispose()
         {
-            vkFreeCommandBuffers(_gd.Device, _gd.GraphicsCommandPool, 1, ref _cb);
+            vkDestroyCommandPool(_gd.Device, _pool, null);
         }
     }
 }

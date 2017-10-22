@@ -15,7 +15,7 @@ namespace Vd2.Vk
         public Vulkan.VkBuffer DeviceBuffer => _deviceBuffer;
         public VkMemoryBlock Memory => _memory;
 
-        public VkBuffer(VkGraphicsDevice gd, ulong sizeInBytes, VkBufferUsageFlags usage)
+        public VkBuffer(VkGraphicsDevice gd, ulong sizeInBytes, bool dynamic, VkBufferUsageFlags usage)
         {
             _gd = gd;
             SizeInBytes = sizeInBytes;
@@ -29,14 +29,16 @@ namespace Vd2.Vk
 
             vkGetBufferMemoryRequirements(gd.Device, _deviceBuffer, out VkMemoryRequirements bufferMemoryRequirements);
 
-            VkMemoryPropertyFlags memoryProperties = VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent;
-            uint memoryType = FindMemoryType(gd.PhysicalDeviceMemProperties, bufferMemoryRequirements.memoryTypeBits, memoryProperties);
             VkMemoryBlock memoryToken = gd.MemoryManager.Allocate(
-                memoryType,
+                gd.PhysicalDeviceMemProperties,
+                bufferMemoryRequirements.memoryTypeBits,
+                VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
+                dynamic,
                 bufferMemoryRequirements.size,
                 bufferMemoryRequirements.alignment);
             _memory = memoryToken;
-            vkBindBufferMemory(gd.Device, _deviceBuffer, _memory.DeviceMemory, _memory.Offset);
+            result = vkBindBufferMemory(gd.Device, _deviceBuffer, _memory.DeviceMemory, _memory.Offset);
+            CheckResult(result);
         }
 
         public void Dispose()

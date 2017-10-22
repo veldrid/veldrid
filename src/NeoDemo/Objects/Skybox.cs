@@ -135,14 +135,18 @@ namespace Vd2.NeoDemo.Objects
             _disposeCollector.DisposeAll();
         }
 
+        public override void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc)
+        {
+            Matrix4x4 viewMat = ConvertToMatrix3x3(sc.Camera.ViewMatrix);
+            cl.UpdateBuffer(_viewMatrixBuffer, 0, ref viewMat);
+        }
+
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(_resourceSet);
-            Matrix4x4 viewMat = ConvertToMatrix3x3(sc.Camera.ViewMatrix);
-            cl.UpdateBuffer(_viewMatrixBuffer, 0, ref viewMat);
             cl.Draw((uint)s_indices.Length, 1, 0, 0, 0);
         }
 

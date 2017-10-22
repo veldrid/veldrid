@@ -12,7 +12,6 @@ namespace Vd2.NeoDemo
         public UniformBuffer LightViewProjectionBuffer0 { get; internal set; }
         public UniformBuffer LightViewProjectionBuffer1 { get; internal set; }
         public UniformBuffer LightViewProjectionBuffer2 { get; internal set; }
-        public int CurrentLightViewProjectionBuffer { get; internal set; }
         public UniformBuffer DepthLimitsBuffer { get; internal set; }
         public UniformBuffer CameraInfoBuffer { get; private set; }
         public UniformBuffer PointLightsBuffer { get; private set; }
@@ -37,9 +36,9 @@ namespace Vd2.NeoDemo
             ResourceFactory factory = gd.ResourceFactory;
             ProjectionMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription(64));
             ViewMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription(64));
-            LightViewProjectionBuffer0 = factory.CreateUniformBuffer(new BufferDescription(64));
-            LightViewProjectionBuffer1 = factory.CreateUniformBuffer(new BufferDescription(64));
-            LightViewProjectionBuffer2 = factory.CreateUniformBuffer(new BufferDescription(64));
+            LightViewProjectionBuffer0 = factory.CreateUniformBuffer(new BufferDescription(64, true));
+            LightViewProjectionBuffer1 = factory.CreateUniformBuffer(new BufferDescription(64, true));
+            LightViewProjectionBuffer2 = factory.CreateUniformBuffer(new BufferDescription(64, true));
             DepthLimitsBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<DepthCascadeLimits>()));
             LightInfoBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<DirectionalLightInfo>()));
             CameraInfoBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>()));

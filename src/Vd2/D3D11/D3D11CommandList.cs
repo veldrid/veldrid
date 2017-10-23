@@ -19,6 +19,19 @@ namespace Vd2.D3D11
         private int[] _vertexOffsets = new int[10];
         private bool _begun;
 
+        // Cached State
+        private D3D11Pipeline _pipeline;
+        private BlendState _blendState;
+        private DepthStencilState _depthStencilState;
+        private RasterizerState _rasterizerState;
+        private SharpDX.Direct3D.PrimitiveTopology _primitiveTopology;
+        private InputLayout _inputLayout;
+        private VertexShader _vertexShader;
+        private GeometryShader _geometryShader;
+        private HullShader _hullShader;
+        private DomainShader _domainShader;
+        private PixelShader _pixelShader;
+
         public D3D11CommandList(D3D11GraphicsDevice gd, ref CommandListDescription description)
             : base(ref description)
         {
@@ -53,6 +66,18 @@ namespace Vd2.D3D11
 
             Array.Clear(_viewports, 0, _viewports.Length);
             Array.Clear(_scissors, 0, _scissors.Length);
+
+            _pipeline = null;
+            _blendState = null;
+            _depthStencilState = null;
+            _rasterizerState = null;
+            _primitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
+            _inputLayout = null;
+            _vertexShader = null;
+            _geometryShader = null;
+            _hullShader = null;
+            _domainShader = null;
+            _pixelShader = null;
         }
 
         public override void End()
@@ -92,19 +117,83 @@ namespace Vd2.D3D11
 
         public override void SetPipeline(Pipeline pipeline)
         {
-            D3D11Pipeline dp = Util.AssertSubtype<Pipeline, D3D11Pipeline>(pipeline);
-            _context.OutputMerger.SetBlendState(dp.BlendState);
-            _context.OutputMerger.SetDepthStencilState(dp.DepthStencilState);
-            _context.Rasterizer.State = dp.RasterizerState;
-            _context.InputAssembler.PrimitiveTopology = dp.PrimitiveTopology;
-            _context.InputAssembler.InputLayout = dp.InputLayout;
-            _context.VertexShader.Set(dp.VertexShader);
-            _context.GeometryShader.Set(dp.GeometryShader);
-            _context.HullShader.Set(dp.HullShader);
-            _context.DomainShader.Set(dp.DomainShader);
-            _context.PixelShader.Set(dp.PixelShader);
+            D3D11Pipeline d3dPipeline = Util.AssertSubtype<Pipeline, D3D11Pipeline>(pipeline);
+            if (_pipeline != d3dPipeline)
+            {
+                _pipeline = d3dPipeline;
 
-            _vertexStrides = dp.VertexStrides;
+                BlendState blendState = d3dPipeline.BlendState;
+                if (_blendState != blendState)
+                {
+                    _blendState = blendState;
+                    _context.OutputMerger.SetBlendState(blendState);
+                }
+
+                DepthStencilState depthStencilState = d3dPipeline.DepthStencilState;
+                if (_depthStencilState != depthStencilState)
+                {
+                    _depthStencilState = depthStencilState;
+                    _context.OutputMerger.SetDepthStencilState(depthStencilState);
+                }
+
+                RasterizerState rasterizerState = d3dPipeline.RasterizerState;
+                if (_rasterizerState != rasterizerState)
+                {
+                    _rasterizerState = rasterizerState;
+                    _context.Rasterizer.State = rasterizerState;
+                }
+
+                SharpDX.Direct3D.PrimitiveTopology primitiveTopology = d3dPipeline.PrimitiveTopology;
+                if (_primitiveTopology != primitiveTopology)
+                {
+                    _primitiveTopology = primitiveTopology;
+                    _context.InputAssembler.PrimitiveTopology = primitiveTopology;
+                }
+
+                InputLayout inputLayout = d3dPipeline.InputLayout;
+                if (_inputLayout != inputLayout)
+                {
+                    _inputLayout = inputLayout;
+                    _context.InputAssembler.InputLayout = inputLayout;
+                }
+
+                VertexShader vertexShader = d3dPipeline.VertexShader;
+                if (_vertexShader != vertexShader)
+                {
+                    _vertexShader = vertexShader;
+                    _context.VertexShader.Set(vertexShader);
+                }
+
+                GeometryShader geometryShader = d3dPipeline.GeometryShader;
+                if (_geometryShader != geometryShader)
+                {
+                    _geometryShader = geometryShader;
+                    _context.GeometryShader.Set(geometryShader);
+                }
+
+                HullShader hullShader = d3dPipeline.HullShader;
+                if (_hullShader != hullShader)
+                {
+                    _hullShader = hullShader;
+                    _context.HullShader.Set(hullShader);
+                }
+
+                DomainShader domainShader = d3dPipeline.DomainShader;
+                if (_domainShader != domainShader)
+                {
+                    _domainShader = domainShader;
+                    _context.DomainShader.Set(domainShader);
+                }
+
+                PixelShader pixelShader = d3dPipeline.PixelShader;
+                if (_pixelShader != pixelShader)
+                {
+                    _pixelShader = pixelShader;
+                    _context.PixelShader.Set(pixelShader);
+                }
+
+                _vertexStrides = d3dPipeline.VertexStrides;
+            }
         }
 
         public override void SetResourceSet(ResourceSet rs)
@@ -273,16 +362,19 @@ namespace Vd2.D3D11
             }
         }
 
-        public override void SetFramebuffer(Framebuffer vfb)
+        public override void SetFramebuffer(Framebuffer fb)
         {
-            D3D11Framebuffer fb = Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(vfb);
-            if (fb.IsSwapchainFramebuffer)
+            D3D11Framebuffer d3dFB = Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(fb);
+            if (d3dFB.IsSwapchainFramebuffer)
             {
                 _gd.CommandListsReferencingSwapchain.Add(this);
             }
 
-            _fb = fb;
-            _context.OutputMerger.SetRenderTargets(fb.DepthStencilView, fb.RenderTargetViews);
+            if (_fb != d3dFB)
+            {
+                _fb = d3dFB;
+                _context.OutputMerger.SetRenderTargets(d3dFB.DepthStencilView, d3dFB.RenderTargetViews);
+            }
         }
 
         public override void ClearColorTarget(uint index, RgbaFloat clearColor)

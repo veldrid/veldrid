@@ -30,12 +30,12 @@
   <ItemGroup>
     <PackageReference Include="ShaderGen.Primitives" Version="1.0.7" />
     <PackageReference Include="ShaderGen.Build" Version="1.0.20" PrivateAssets="All" />
-    <ProjectReference Include="$(RepositoryRootDirectory)\src\vd2\Vd2.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2\Vd2.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\VdSdl2\VdSdl2.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2.StartupUtilities\Vd2.StartupUtilities.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2.ImageSharp\Vd2.ImageSharp.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2.Utilities\Vd2.Utilities.csproj" />
-    <ProjectReference Include="$(RepositoryRootDirectory)\src\vd2.ImGui\Vd2.ImGui.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2.ImGui\Vd2.ImGui.csproj" />
   </ItemGroup>
 
   <Target Name="IncludeGeneratedShaderContent" AfterTargets="AssignTargetPaths">

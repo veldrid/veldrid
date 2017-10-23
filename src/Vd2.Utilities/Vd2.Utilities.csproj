@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepositoryRootDirectory)\src\vd2\Vd2.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2\Vd2.csproj" />
   </ItemGroup>
 
 </Project>

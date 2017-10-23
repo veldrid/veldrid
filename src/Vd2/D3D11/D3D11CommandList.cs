@@ -8,19 +8,22 @@ namespace Vd2.D3D11
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly DeviceContext _context;
+        private bool _begun;
 
         private RawViewportF[] _viewports = new RawViewportF[0];
         private RawRectangle[] _scissors = new RawRectangle[0];
-        private D3D11Framebuffer _fb;
+        private bool _viewportsChanged;
+        private bool _scissorRectsChanged;
 
         private uint _numVertexBindings = 0;
         private readonly SharpDX.Direct3D11.Buffer[] _vertexBindings = new SharpDX.Direct3D11.Buffer[10];
         private int[] _vertexStrides;
         private int[] _vertexOffsets = new int[10];
-        private bool _begun;
 
-        // Cached State
-        private D3D11Pipeline _pipeline;
+        // Cached pipeline State
+        private Pipeline _pipeline;
+        private IndexBuffer _ib;
+        private D3D11Framebuffer _fb;
         private BlendState _blendState;
         private DepthStencilState _depthStencilState;
         private RasterizerState _rasterizerState;
@@ -31,6 +34,18 @@ namespace Vd2.D3D11
         private HullShader _hullShader;
         private DomainShader _domainShader;
         private PixelShader _pixelShader;
+        private ResourceSet _resourceSet;
+
+        // Cached resources
+        private const int MaxCachedUniformBuffers = 15;
+        private readonly D3D11UniformBuffer[] _vertexBoundUniformBuffers = new D3D11UniformBuffer[MaxCachedUniformBuffers];
+        private readonly D3D11UniformBuffer[] _fragmentBoundUniformBuffers = new D3D11UniformBuffer[MaxCachedUniformBuffers];
+        private const int MaxCachedTextureViews = 16;
+        private readonly D3D11TextureView[] _vertexBoundTextureViews = new D3D11TextureView[MaxCachedTextureViews];
+        private readonly D3D11TextureView[] _fragmentBoundTextureViews = new D3D11TextureView[MaxCachedTextureViews];
+        private const int MaxCachedSamplers = 4;
+        private readonly D3D11Sampler[] _vertexBoundSamplers = new D3D11Sampler[MaxCachedSamplers];
+        private readonly D3D11Sampler[] _fragmentBoundSamplers = new D3D11Sampler[MaxCachedSamplers];
 
         public D3D11CommandList(D3D11GraphicsDevice gd, ref CommandListDescription description)
             : base(ref description)
@@ -58,26 +73,38 @@ namespace Vd2.D3D11
         private void ResetManagedState()
         {
             _numVertexBindings = 0;
-            Array.Clear(_vertexBindings, 0, _vertexBindings.Length);
+            Util.ClearArray(_vertexBindings);
             _vertexStrides = null;
-            Array.Clear(_vertexOffsets, 0, _vertexOffsets.Length);
+            Util.ClearArray(_vertexOffsets);
 
             _fb = null;
 
-            Array.Clear(_viewports, 0, _viewports.Length);
-            Array.Clear(_scissors, 0, _scissors.Length);
+            Util.ClearArray(_viewports);
+            Util.ClearArray(_scissors);
+            _viewportsChanged = false;
+            _scissorRectsChanged = false;
 
+            _ib = null;
             _pipeline = null;
             _blendState = null;
             _depthStencilState = null;
             _rasterizerState = null;
-            _primitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
+            _primitiveTopology = SharpDX.Direct3D.PrimitiveTopology.Undefined;
             _inputLayout = null;
             _vertexShader = null;
             _geometryShader = null;
             _hullShader = null;
             _domainShader = null;
             _pixelShader = null;
+            _resourceSet = null;
+
+            Util.ClearArray(_vertexBoundUniformBuffers);
+            Util.ClearArray(_vertexBoundTextureViews);
+            Util.ClearArray(_vertexBoundSamplers);
+
+            Util.ClearArray(_fragmentBoundUniformBuffers);
+            Util.ClearArray(_fragmentBoundTextureViews);
+            Util.ClearArray(_fragmentBoundSamplers);
         }
 
         public override void End()
@@ -111,16 +138,21 @@ namespace Vd2.D3D11
 
         public override void SetIndexBuffer(IndexBuffer ib)
         {
-            D3D11IndexBuffer d3d11Buffer = Util.AssertSubtype<IndexBuffer, D3D11IndexBuffer>(ib);
-            _context.InputAssembler.SetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(ib.Format), 0);
+            if (_ib != ib)
+            {
+                _ib = ib;
+                D3D11IndexBuffer d3d11Buffer = Util.AssertSubtype<IndexBuffer, D3D11IndexBuffer>(ib);
+                _context.InputAssembler.SetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(ib.Format), 0);
+            }
         }
 
         public override void SetPipeline(Pipeline pipeline)
         {
-            D3D11Pipeline d3dPipeline = Util.AssertSubtype<Pipeline, D3D11Pipeline>(pipeline);
-            if (_pipeline != d3dPipeline)
+            if (_pipeline != pipeline)
             {
-                _pipeline = d3dPipeline;
+                _pipeline = pipeline;
+
+                D3D11Pipeline d3dPipeline = Util.AssertSubtype<Pipeline, D3D11Pipeline>(pipeline);
 
                 BlendState blendState = d3dPipeline.BlendState;
                 if (_blendState != blendState)
@@ -198,24 +230,28 @@ namespace Vd2.D3D11
 
         public override void SetResourceSet(ResourceSet rs)
         {
-            D3D11ResourceSet d3d11RS = Util.AssertSubtype<ResourceSet, D3D11ResourceSet>(rs);
-            D3D11ResourceLayout layout = d3d11RS.Layout;
-            BindableResource[] resources = d3d11RS.Resources;
-            for (int i = 0; i < resources.Length; i++)
+            if (_resourceSet != rs)
             {
-                BindableResource resource = resources[i];
-                D3D11ResourceLayout.ResourceBindingInfo rbi = layout.GetDeviceSlotIndex(i);
-                if (resource is D3D11TextureView texView)
+                _resourceSet = rs;
+                D3D11ResourceSet d3d11RS = Util.AssertSubtype<ResourceSet, D3D11ResourceSet>(rs);
+                D3D11ResourceLayout layout = d3d11RS.Layout;
+                BindableResource[] resources = d3d11RS.Resources;
+                for (int i = 0; i < resources.Length; i++)
                 {
-                    BindTextureView(texView, rbi.Slot, rbi.Stages);
-                }
-                else if (resource is D3D11UniformBuffer ub)
-                {
-                    BindUniformBuffer(ub, rbi.Slot, rbi.Stages);
-                }
-                else if (resource is D3D11Sampler sampler)
-                {
-                    BindSampler(sampler, rbi.Slot, rbi.Stages);
+                    BindableResource resource = resources[i];
+                    D3D11ResourceLayout.ResourceBindingInfo rbi = layout.GetDeviceSlotIndex(i);
+                    if (resource is D3D11TextureView texView)
+                    {
+                        BindTextureView(texView, rbi.Slot, rbi.Stages);
+                    }
+                    else if (resource is D3D11UniformBuffer ub)
+                    {
+                        BindUniformBuffer(ub, rbi.Slot, rbi.Stages);
+                    }
+                    else if (resource is D3D11Sampler sampler)
+                    {
+                        BindSampler(sampler, rbi.Slot, rbi.Stages);
+                    }
                 }
             }
         }
@@ -245,14 +281,22 @@ namespace Vd2.D3D11
 
         private void FlushViewports()
         {
-            _context.Rasterizer.SetViewports(_viewports, _viewports.Length);
+            if (_viewportsChanged)
+            {
+                _viewportsChanged = false;
+                _context.Rasterizer.SetViewports(_viewports, _viewports.Length);
+            }
         }
 
         private void FlushScissorRects()
         {
-            if (_scissors.Length > 0)
+            if (_scissorRectsChanged)
             {
-                _context.Rasterizer.SetScissorRectangles(_scissors);
+                _scissorRectsChanged = false;
+                if (_scissors.Length > 0)
+                {
+                    _context.Rasterizer.SetScissorRectangles(_scissors);
+                }
             }
         }
 
@@ -272,12 +316,14 @@ namespace Vd2.D3D11
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
+            _scissorRectsChanged = true;
             Util.EnsureArraySize(ref _scissors, index + 1);
             _scissors[index] = new RawRectangle((int)x, (int)y, (int)(x + width), (int)(y + height));
         }
 
         public override void SetViewport(uint index, ref Viewport viewport)
         {
+            _viewportsChanged = true;
             Util.EnsureArraySize(ref _viewports, index + 1);
             _viewports[index] = new RawViewportF
             {
@@ -294,7 +340,23 @@ namespace Vd2.D3D11
         {
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
-                _context.VertexShader.SetShaderResource(slot, texView.ShaderResourceView);
+                bool bind = false;
+                if (slot < MaxCachedUniformBuffers)
+                {
+                    if (_vertexBoundTextureViews[slot] != texView)
+                    {
+                        _vertexBoundTextureViews[slot] = texView;
+                        bind = true;
+                    }
+                }
+                else
+                {
+                    bind = true;
+                }
+                if (bind)
+                {
+                    _context.VertexShader.SetShaderResource(slot, texView.ShaderResourceView);
+                }
             }
             if ((stages & ShaderStages.Geometry) == ShaderStages.Geometry)
             {
@@ -310,7 +372,23 @@ namespace Vd2.D3D11
             }
             if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
             {
-                _context.PixelShader.SetShaderResource(slot, texView.ShaderResourceView);
+                bool bind = false;
+                if (slot < MaxCachedUniformBuffers)
+                {
+                    if (_fragmentBoundTextureViews[slot] != texView)
+                    {
+                        _fragmentBoundTextureViews[slot] = texView;
+                        bind = true;
+                    }
+                }
+                else
+                {
+                    bind = true;
+                }
+                if (bind)
+                {
+                    _context.PixelShader.SetShaderResource(slot, texView.ShaderResourceView);
+                }
             }
         }
 
@@ -318,7 +396,23 @@ namespace Vd2.D3D11
         {
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
-                _context.VertexShader.SetConstantBuffer(slot, ub.Buffer);
+                bool bind = false;
+                if (slot < MaxCachedUniformBuffers)
+                {
+                    if (_vertexBoundUniformBuffers[slot] != ub)
+                    {
+                        _vertexBoundUniformBuffers[slot] = ub;
+                        bind = true;
+                    }
+                }
+                else
+                {
+                    bind = true;
+                }
+                if (bind)
+                {
+                    _context.VertexShader.SetConstantBuffer(slot, ub.Buffer);
+                }
             }
             if ((stages & ShaderStages.Geometry) == ShaderStages.Geometry)
             {
@@ -334,7 +428,23 @@ namespace Vd2.D3D11
             }
             if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
             {
-                _context.PixelShader.SetConstantBuffer(slot, ub.Buffer);
+                bool bind = false;
+                if (slot < MaxCachedUniformBuffers)
+                {
+                    if (_fragmentBoundUniformBuffers[slot] != ub)
+                    {
+                        _fragmentBoundUniformBuffers[slot] = ub;
+                        bind = true;
+                    }
+                }
+                else
+                {
+                    bind = true;
+                }
+                if (bind)
+                {
+                    _context.PixelShader.SetConstantBuffer(slot, ub.Buffer);
+                }
             }
         }
 
@@ -342,7 +452,23 @@ namespace Vd2.D3D11
         {
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
-                _context.VertexShader.SetSampler(slot, sampler.DeviceSampler);
+                bool bind = false;
+                if (slot < MaxCachedSamplers)
+                {
+                    if (_vertexBoundSamplers[slot] != sampler)
+                    {
+                        _vertexBoundSamplers[slot] = sampler;
+                        bind = true;
+                    }
+                }
+                else
+                {
+                    bind = true;
+                }
+                if (bind)
+                {
+                    _context.VertexShader.SetSampler(slot, sampler.DeviceSampler);
+                }
             }
             if ((stages & ShaderStages.Geometry) == ShaderStages.Geometry)
             {
@@ -358,20 +484,36 @@ namespace Vd2.D3D11
             }
             if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
             {
-                _context.PixelShader.SetSampler(slot, sampler.DeviceSampler);
+                bool bind = false;
+                if (slot < MaxCachedSamplers)
+                {
+                    if (_fragmentBoundSamplers[slot] != sampler)
+                    {
+                        _fragmentBoundSamplers[slot] = sampler;
+                        bind = true;
+                    }
+                }
+                else
+                {
+                    bind = true;
+                }
+                if (bind)
+                {
+                    _context.PixelShader.SetSampler(slot, sampler.DeviceSampler);
+                }
             }
         }
 
         public override void SetFramebuffer(Framebuffer fb)
         {
-            D3D11Framebuffer d3dFB = Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(fb);
-            if (d3dFB.IsSwapchainFramebuffer)
+            if (_fb != fb)
             {
-                _gd.CommandListsReferencingSwapchain.Add(this);
-            }
+                D3D11Framebuffer d3dFB = Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(fb);
+                if (d3dFB.IsSwapchainFramebuffer)
+                {
+                    _gd.CommandListsReferencingSwapchain.Add(this);
+                }
 
-            if (_fb != d3dFB)
-            {
                 _fb = d3dFB;
                 _context.OutputMerger.SetRenderTargets(d3dFB.DepthStencilView, d3dFB.RenderTargetViews);
             }

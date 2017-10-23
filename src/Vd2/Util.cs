@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Vd2.D3D11;
 
 namespace Vd2
 {
@@ -87,6 +88,11 @@ namespace Vd2
             }
 
             return true;
+        }
+
+        internal static void ClearArray<T>(T[] array)
+        {
+            Array.Clear(array, 0, array.Length);
         }
     }
 }

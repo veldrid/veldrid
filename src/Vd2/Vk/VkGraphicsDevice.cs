@@ -459,6 +459,11 @@ namespace Vd2.Vk
             CheckResult(result);
             vkDestroyInstance(_instance, null);
         }
+
+        public override void WaitForIdle()
+        {
+            vkQueueWaitIdle(_graphicsQueue);
+        }
     }
 
     internal unsafe delegate VkResult vkCreateDebugReportCallbackEXT_d(

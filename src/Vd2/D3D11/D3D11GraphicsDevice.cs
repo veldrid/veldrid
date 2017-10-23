@@ -124,5 +124,9 @@ namespace Vd2.D3D11
                 deviceDebug.ReportLiveDeviceObjects(ReportingLevel.Detail);
             }
         }
+
+        public override void WaitForIdle()
+        {
+        }
     }
 }

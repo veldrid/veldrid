@@ -11,6 +11,7 @@ namespace Vd2
         public abstract void SwapBuffers();
         public abstract Framebuffer SwapchainFramebuffer { get; }
         public abstract void ResizeMainWindow(uint width, uint height);
+        public abstract void WaitForIdle();
         public abstract void Dispose();
 
         protected void PostContextCreated()

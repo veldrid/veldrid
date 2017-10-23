@@ -8,8 +8,10 @@ namespace Vd2
     internal static class Util
     {
         [DebuggerNonUserCode]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static TDerived AssertSubtype<TBase, TDerived>(TBase value) where TDerived : class, TBase where TBase : class
         {
+#if DEBUG
             if (value == null)
             {
                 return null;
@@ -21,6 +23,10 @@ namespace Vd2
             }
 
             return derived;
+
+#else
+            return (TDerived)value;
+#endif
         }
 
         internal static void EnsureArraySize<T>(ref T[] array, uint size)

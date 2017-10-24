@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Vd2
 {
-    public abstract class Framebuffer
+    public abstract class Framebuffer : IDisposable
     {
         public virtual Texture2D DepthTexture { get; protected set; }
         public virtual IReadOnlyList<Texture2D> ColorTextures { get; protected set; }

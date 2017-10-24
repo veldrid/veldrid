@@ -12,6 +12,7 @@ namespace Vd2.Vk
         public VkImageView ImageView => _imageView;
 
         public VkTextureView(VkGraphicsDevice gd, ref TextureViewDescription description)
+            : base(description.Target)
         {
             _gd = gd;
             VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();

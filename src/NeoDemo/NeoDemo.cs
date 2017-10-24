@@ -42,7 +42,6 @@ namespace Vd2.NeoDemo
                 WindowTitle = "Vd NeoDemo"
             };
             GraphicsDeviceCreateInfo gdCI = new GraphicsDeviceCreateInfo();
-            gdCI.Backend = GraphicsBackend.Vulkan;
 #if DEBUG
             gdCI.DebugDevice = true;
 #endif

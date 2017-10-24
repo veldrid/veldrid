@@ -7,7 +7,7 @@ namespace Vd2
         public abstract GraphicsBackend BackendType { get; }
 
         public abstract ResourceFactory ResourceFactory { get; }
-        public abstract void ExecuteCommands(CommandList sl);
+        public abstract void ExecuteCommands(CommandList cl);
         public abstract void SwapBuffers();
         public abstract Framebuffer SwapchainFramebuffer { get; }
         public abstract void ResizeMainWindow(uint width, uint height);

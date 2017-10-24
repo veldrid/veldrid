@@ -8,6 +8,7 @@ namespace Vd2.D3D11
         public ShaderResourceView ShaderResourceView { get; }
 
         public D3D11TextureView(Device device, ref TextureViewDescription description)
+            : base(description.Target)
         {
             // TODO: This is stupid.
             if (description.Target is D3D11Texture2D d3dTex2d)

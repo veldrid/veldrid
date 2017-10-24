@@ -14,6 +14,7 @@
     <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" />
     <PackageReference Include="SharpDX.DXGI" Version="4.0.1" />
     <PackageReference Include="Vk" Version="1.0.5" />
+    <ProjectReference Include="..\Vd2.OpenGLBinding\Vd2.OpenGLBinding.csproj" />
   </ItemGroup>
 
 </Project>

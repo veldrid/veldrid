@@ -2,11 +2,11 @@
 {
     internal class SetPipelineEntry : OpenGLCommandEntry
     {
-        private Pipeline pipeline;
+        public readonly Pipeline Pipeline;
 
         public SetPipelineEntry(Pipeline pipeline)
         {
-            this.pipeline = pipeline;
+            Pipeline = pipeline;
         }
     }
 }

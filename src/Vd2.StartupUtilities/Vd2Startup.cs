@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using Vd2.Vk;
 using VdSdl2;
 
@@ -70,8 +71,8 @@ namespace Vd2.StartupUtilities
                     return CreateDefaultD3D11GraphicsDevice(ref graphicsDeviceCI, window);
                 case GraphicsBackend.Vulkan:
                     return CreateVulkanGraphicsDevice(ref graphicsDeviceCI, window);
-                //case GraphicsBackend.OpenGL:
-                //    return CreateDefaultOpenGLRenderContext(ref contextCI, window);
+                case GraphicsBackend.OpenGL:
+                    return CreateDefaultOpenGLRenderContext(ref graphicsDeviceCI, window);
                 //case GraphicsBackend.OpenGLES:
                 //    return CreateDefaultOpenGLESRenderContext(ref contextCI, window);
                 default:
@@ -161,43 +162,37 @@ namespace Vd2.StartupUtilities
         //    return rc;
         //}
 
-        //public static OpenGLRenderContext CreateDefaultOpenGLRenderContext(ref RenderContextCreateInfo contextCI, Sdl2Window window)
-        //{
-        //    IntPtr sdlHandle = window.SdlWindowHandle;
-        //    if (contextCI.DebugContext)
-        //    {
-        //        Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)SDL_GLContextFlag.Debug);
-        //    }
+        public static GraphicsDevice CreateDefaultOpenGLRenderContext(ref GraphicsDeviceCreateInfo gdCI, Sdl2Window window)
+        {
+            IntPtr sdlHandle = window.SdlWindowHandle;
+            if (gdCI.DebugDevice)
+            {
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)SDL_GLContextFlag.Debug);
+            }
 
-        //    Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.Core);
-        //    Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 4);
-        //    Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 0);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.Core);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 4);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 0);
 
-        //    IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
-        //    if (contextHandle == IntPtr.Zero)
-        //    {
-        //        unsafe
-        //        {
-        //            byte* error = Sdl2Native.SDL_GetError();
-        //            string errorString = Utilities.GetString(error);
-        //            throw new VdException("Unable to create GL Context: " + errorString);
-        //        }
-        //    }
+            IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
+            if (contextHandle == IntPtr.Zero)
+            {
+                unsafe
+                {
+                    byte* error = Sdl2Native.SDL_GetError();
+                    string errorString = GetString(error);
+                    throw new VdException("Unable to create GL Context: " + errorString);
+                }
+            }
 
-        //    Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, contextHandle);
-        //    OpenGLPlatformContextInfo ci = new OpenGLPlatformContextInfo(
-        //        contextHandle,
-        //        Sdl2Native.SDL_GL_GetProcAddress,
-        //        Sdl2Native.SDL_GL_GetCurrentContext,
-        //        () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
-        //    OpenGLRenderContext rc = new OpenGLRenderContext(window, ci);
-        //    if (contextCI.DebugContext)
-        //    {
-        //        // Slows things down significantly -- Only use when debugging something specific.
-        //        rc.EnableDebugCallback(OpenTK.Graphics.OpenGL.DebugSeverity.DebugSeverityNotification);
-        //    }
-        //    return rc;
-        //}
+            return Hacks.CreateOpenGL(
+                contextHandle,
+                Sdl2Native.SDL_GL_GetProcAddress,
+                () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle),
+                (uint)window.Width,
+                (uint)window.Handle,
+                gdCI.DebugDevice);
+        }
 
         public static GraphicsDevice CreateDefaultD3D11GraphicsDevice(ref GraphicsDeviceCreateInfo deviceCI, Sdl2Window window)
         {
@@ -209,5 +204,17 @@ namespace Vd2.StartupUtilities
 
             return Hacks.CreateD3D11(window.Handle, window.Width, window.Height);
         }
+
+        private static unsafe string GetString(byte* stringStart)
+        {
+            int characters = 0;
+            while (stringStart[characters] != 0)
+            {
+                characters++;
+            }
+
+            return Encoding.UTF8.GetString(stringStart, characters);
+        }
+
     }
 }

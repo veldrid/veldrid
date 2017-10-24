@@ -11,7 +11,6 @@
 
         public override void Dispose()
         {
-            throw new System.NotImplementedException();
         }
     }
 }

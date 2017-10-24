@@ -10,6 +10,7 @@ namespace Vd2.OpenGL
         private PrimitiveType _primitiveType;
         private DrawElementsType _drawElementsType;
         private OpenGLVertexBuffer[] _vertexBuffers = new OpenGLVertexBuffer[10];
+        private OpenGLPipeline _pipeline;
 
         public void Execute(OpenGLCommandEntryList list)
         {
@@ -144,11 +145,21 @@ namespace Vd2.OpenGL
         private void SetFramebuffer(SetFramebufferEntry sfbe)
         {
             Framebuffer fb = sfbe.Framebuffer;
-            OpenGLFramebuffer glFB = Util.AssertSubtype<Framebuffer, OpenGLFramebuffer>(fb);
-            glFB.EnsureResourcesCreated();
-
-            glBindFramebuffer(FramebufferTarget.Framebuffer, glFB.Framebuffer);
-            CheckLastError();
+            if (fb is OpenGLFramebuffer glFB)
+            {
+                glFB.EnsureResourcesCreated();
+                glBindFramebuffer(FramebufferTarget.Framebuffer, glFB.Framebuffer);
+                CheckLastError();
+            }
+            else if (fb is OpenGLSwapchainFramebuffer)
+            {
+                glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                CheckLastError();
+            }
+            else
+            {
+                throw new VdException("Invalid Framebuffer type: " + fb.GetType().Name);
+            }
         }
 
         private void SetIndexBuffer(SetIndexBufferEntry sibe)
@@ -162,7 +173,7 @@ namespace Vd2.OpenGL
 
         private void SetPipeline(SetPipelineEntry spe)
         {
-            throw new NotImplementedException();
+            _pipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(spe.Pipeline);
         }
 
         private void SetResourceSet(SetResourceSetEntry srse)

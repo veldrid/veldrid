@@ -27,8 +27,7 @@ namespace Vd2.NeoDemo
 
             string extension = GetSourceExtension(backend);
             string path = AssetHelper.GetPath(Path.Combine("Shaders.Generated", name + extension));
-            // return factory.ProcessShaderCode(stage, File.ReadAllText(path));
-            throw new NotImplementedException("Can't compile shader code at runtime yet.");
+            return File.ReadAllBytes(path);
         }
 
         private static string GetBytecodeExtension(GraphicsBackend backend)

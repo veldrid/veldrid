@@ -38,6 +38,8 @@ namespace Vd2.Vk
 
         public uint ImageIndex => _currentImageIndex;
 
+        public override OutputDescription OutputDescription { get; }
+
         public VkSwapchainFramebuffer(VkGraphicsDevice gd, VkSurfaceKHR surface, uint width, uint height)
             : base()
         {

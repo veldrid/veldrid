@@ -526,4 +526,307 @@ namespace Vd2.OpenGLBinding
         Gequal = 518,
         Always = 519
     }
+
+    public enum BlendingFactorSrc
+    {
+        Zero = 0,
+        One = 1,
+        SrcColor = 768,
+        OneMinusSrcColor = 769,
+        SrcAlpha = 770,
+        OneMinusSrcAlpha = 771,
+        DstAlpha = 772,
+        OneMinusDstAlpha = 773,
+        DstColor = 774,
+        OneMinusDstColor = 775,
+        SrcAlphaSaturate = 776,
+        ConstantColor = 32769,
+        ConstantColorExt = 32769,
+        OneMinusConstantColor = 32770,
+        OneMinusConstantColorExt = 32770,
+        ConstantAlpha = 32771,
+        ConstantAlphaExt = 32771,
+        OneMinusConstantAlpha = 32772,
+        OneMinusConstantAlphaExt = 32772,
+        Src1Alpha = 34185,
+        Src1Color = 35065,
+        OneMinusSrc1Color = 35066,
+        OneMinusSrc1Alpha = 35067
+    }
+
+    public enum BlendingFactorDest
+    {
+        Zero = 0,
+        One = 1,
+        SrcColor = 768,
+        OneMinusSrcColor = 769,
+        SrcAlpha = 770,
+        OneMinusSrcAlpha = 771,
+        DstAlpha = 772,
+        OneMinusDstAlpha = 773,
+        DstColor = 774,
+        OneMinusDstColor = 775,
+        SrcAlphaSaturate = 776,
+        ConstantColor = 32769,
+        ConstantColorExt = 32769,
+        OneMinusConstantColor = 32770,
+        OneMinusConstantColorExt = 32770,
+        ConstantAlpha = 32771,
+        ConstantAlphaExt = 32771,
+        OneMinusConstantAlpha = 32772,
+        OneMinusConstantAlphaExt = 32772,
+        Src1Alpha = 34185,
+        Src1Color = 35065,
+        OneMinusSrc1Color = 35066,
+        OneMinusSrc1Alpha = 35067
+    }
+
+    public enum EnableCap
+    {
+        PointSmooth = 2832,
+        LineSmooth = 2848,
+        LineStipple = 2852,
+        PolygonSmooth = 2881,
+        PolygonStipple = 2882,
+        CullFace = 2884,
+        Lighting = 2896,
+        ColorMaterial = 2903,
+        Fog = 2912,
+        DepthTest = 2929,
+        StencilTest = 2960,
+        Normalize = 2977,
+        AlphaTest = 3008,
+        Dither = 3024,
+        Blend = 3042,
+        IndexLogicOp = 3057,
+        ColorLogicOp = 3058,
+        ScissorTest = 3089,
+        TextureGenS = 3168,
+        TextureGenT = 3169,
+        TextureGenR = 3170,
+        TextureGenQ = 3171,
+        AutoNormal = 3456,
+        Map1Color4 = 3472,
+        Map1Index = 3473,
+        Map1Normal = 3474,
+        Map1TextureCoord1 = 3475,
+        Map1TextureCoord2 = 3476,
+        Map1TextureCoord3 = 3477,
+        Map1TextureCoord4 = 3478,
+        Map1Vertex3 = 3479,
+        Map1Vertex4 = 3480,
+        Map2Color4 = 3504,
+        Map2Index = 3505,
+        Map2Normal = 3506,
+        Map2TextureCoord1 = 3507,
+        Map2TextureCoord2 = 3508,
+        Map2TextureCoord3 = 3509,
+        Map2TextureCoord4 = 3510,
+        Map2Vertex3 = 3511,
+        Map2Vertex4 = 3512,
+        Texture1D = 3552,
+        Texture2D = 3553,
+        PolygonOffsetPoint = 10753,
+        PolygonOffsetLine = 10754,
+        ClipDistance0 = 12288,
+        ClipPlane0 = 12288,
+        ClipDistance1 = 12289,
+        ClipPlane1 = 12289,
+        ClipDistance2 = 12290,
+        ClipPlane2 = 12290,
+        ClipDistance3 = 12291,
+        ClipPlane3 = 12291,
+        ClipDistance4 = 12292,
+        ClipPlane4 = 12292,
+        ClipDistance5 = 12293,
+        ClipPlane5 = 12293,
+        ClipDistance6 = 12294,
+        ClipDistance7 = 12295,
+        Light0 = 16384,
+        Light1 = 16385,
+        Light2 = 16386,
+        Light3 = 16387,
+        Light4 = 16388,
+        Light5 = 16389,
+        Light6 = 16390,
+        Light7 = 16391,
+        Convolution1D = 32784,
+        Convolution1DExt = 32784,
+        Convolution2D = 32785,
+        Convolution2DExt = 32785,
+        Separable2D = 32786,
+        Separable2DExt = 32786,
+        Histogram = 32804,
+        HistogramExt = 32804,
+        MinmaxExt = 32814,
+        PolygonOffsetFill = 32823,
+        RescaleNormal = 32826,
+        RescaleNormalExt = 32826,
+        Texture3DExt = 32879,
+        VertexArray = 32884,
+        NormalArray = 32885,
+        ColorArray = 32886,
+        IndexArray = 32887,
+        TextureCoordArray = 32888,
+        EdgeFlagArray = 32889,
+        InterlaceSgix = 32916,
+        Multisample = 32925,
+        MultisampleSgis = 32925,
+        SampleAlphaToCoverage = 32926,
+        SampleAlphaToMaskSgis = 32926,
+        SampleAlphaToOne = 32927,
+        SampleAlphaToOneSgis = 32927,
+        SampleCoverage = 32928,
+        SampleMaskSgis = 32928,
+        TextureColorTableSgi = 32956,
+        ColorTable = 32976,
+        ColorTableSgi = 32976,
+        PostConvolutionColorTable = 32977,
+        PostConvolutionColorTableSgi = 32977,
+        PostColorMatrixColorTable = 32978,
+        PostColorMatrixColorTableSgi = 32978,
+        Texture4DSgis = 33076,
+        PixelTexGenSgix = 33081,
+        SpriteSgix = 33096,
+        ReferencePlaneSgix = 33149,
+        IrInstrument1Sgix = 33151,
+        CalligraphicFragmentSgix = 33155,
+        FramezoomSgix = 33163,
+        FogOffsetSgix = 33176,
+        SharedTexturePaletteExt = 33275,
+        DebugOutputSynchronous = 33346,
+        AsyncHistogramSgix = 33580,
+        PixelTextureSgis = 33619,
+        AsyncTexImageSgix = 33628,
+        AsyncDrawPixelsSgix = 33629,
+        AsyncReadPixelsSgix = 33630,
+        FragmentLightingSgix = 33792,
+        FragmentColorMaterialSgix = 33793,
+        FragmentLight0Sgix = 33804,
+        FragmentLight1Sgix = 33805,
+        FragmentLight2Sgix = 33806,
+        FragmentLight3Sgix = 33807,
+        FragmentLight4Sgix = 33808,
+        FragmentLight5Sgix = 33809,
+        FragmentLight6Sgix = 33810,
+        FragmentLight7Sgix = 33811,
+        FogCoordArray = 33879,
+        ColorSum = 33880,
+        SecondaryColorArray = 33886,
+        TextureRectangle = 34037,
+        TextureCubeMap = 34067,
+        ProgramPointSize = 34370,
+        VertexProgramPointSize = 34370,
+        VertexProgramTwoSide = 34371,
+        DepthClamp = 34383,
+        TextureCubeMapSeamless = 34895,
+        PointSprite = 34913,
+        SampleShading = 35894,
+        RasterizerDiscard = 35977,
+        PrimitiveRestartFixedIndex = 36201,
+        FramebufferSrgb = 36281,
+        SampleMask = 36433,
+        PrimitiveRestart = 36765,
+        DebugOutput = 37600
+    }
+
+    public enum BlendEquationMode
+    {
+        FuncAdd = 32774,
+        Min = 32775,
+        Max = 32776,
+        FuncSubtract = 32778,
+        FuncReverseSubtract = 32779
+    }
+
+    public enum CullFaceMode
+    {
+        Front = 1028,
+        Back = 1029,
+        FrontAndBack = 1032
+    }
+
+    public enum MaterialFace
+    {
+        Front = 1028,
+        Back = 1029,
+        FrontAndBack = 1032
+    }
+
+    public enum PolygonMode
+    {
+        Point = 6912,
+        Line = 6913,
+        Fill = 6914
+    }
+
+    public enum GetProgramParameterName
+    {
+        ProgramBinaryRetrievableHint = 33367,
+        ProgramSeparable = 33368,
+        GeometryShaderInvocations = 34943,
+        GeometryVerticesOut = 35094,
+        GeometryInputType = 35095,
+        GeometryOutputType = 35096,
+        ActiveUniformBlockMaxNameLength = 35381,
+        ActiveUniformBlocks = 35382,
+        DeleteStatus = 35712,
+        LinkStatus = 35714,
+        ValidateStatus = 35715,
+        InfoLogLength = 35716,
+        AttachedShaders = 35717,
+        ActiveUniforms = 35718,
+        ActiveUniformMaxLength = 35719,
+        ActiveAttributes = 35721,
+        ActiveAttributeMaxLength = 35722,
+        TransformFeedbackVaryingMaxLength = 35958,
+        TransformFeedbackBufferMode = 35967,
+        TransformFeedbackVaryings = 35971,
+        TessControlOutputVertices = 36469,
+        TessGenMode = 36470,
+        TessGenSpacing = 36471,
+        TessGenVertexOrder = 36472,
+        TessGenPointMode = 36473,
+        MaxComputeWorkGroupSize = 37311,
+        ActiveAtomicCounterBuffers = 37593
+    }
+
+    public enum BufferRangeTarget
+    {
+        UniformBuffer = 35345,
+        TransformFeedbackBuffer = 35982,
+        ShaderStorageBuffer = 37074,
+        AtomicCounterBuffer = 37568
+    }
+
+    public enum DebugSource
+    {
+        DebugSourceApi = 33350,
+        DebugSourceWindowSystem = 33351,
+        DebugSourceShaderCompiler = 33352,
+        DebugSourceThirdParty = 33353,
+        DebugSourceApplication = 33354,
+        DebugSourceOther = 33355
+    }
+
+    public enum DebugType
+    {
+        DebugTypeError = 33356,
+        DebugTypeDeprecatedBehavior = 33357,
+        DebugTypeUndefinedBehavior = 33358,
+        DebugTypePortability = 33359,
+        DebugTypePerformance = 33360,
+        DebugTypeOther = 33361,
+        DebugTypeMarker = 33384,
+        DebugTypePushGroup = 33385,
+        DebugTypePopGroup = 33386
+    }
+
+    public enum DebugSeverity
+    {
+        DebugSeverityNotification = 33387,
+        DebugSeverityHigh = 37190,
+        DebugSeverityMedium = 37191,
+        DebugSeverityLow = 37192
+    }
 }

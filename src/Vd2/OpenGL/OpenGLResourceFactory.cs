@@ -29,7 +29,7 @@
 
         public override Pipeline CreatePipeline(ref PipelineDescription description)
         {
-            return new OpenGLPipeline(ref description);
+            return new OpenGLPipeline(_gd, ref description);
         }
 
         public override ResourceLayout CreateResourceLayout(ref ResourceLayoutDescription description)

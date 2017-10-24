@@ -2,11 +2,11 @@
 {
     internal class SetResourceSetEntry : OpenGLCommandEntry
     {
-        private ResourceSet rs;
+        public readonly ResourceSet ResourceSet;
 
         public SetResourceSetEntry(ResourceSet rs)
         {
-            this.rs = rs;
+            this.ResourceSet = rs;
         }
     }
 }

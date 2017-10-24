@@ -174,11 +174,167 @@ namespace Vd2.OpenGL
         private void SetPipeline(SetPipelineEntry spe)
         {
             _pipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(spe.Pipeline);
+            PipelineDescription desc = _pipeline.Description;
+
+            // Blend State
+
+            BlendStateDescription blendState = desc.BlendState;
+            glBlendColor(blendState.BlendFactor.R, blendState.BlendFactor.G, blendState.BlendFactor.B, blendState.BlendFactor.A);
+            CheckLastError();
+
+            for (uint i = 0; i < blendState.AttachmentStates.Length; i++)
+            {
+                BlendAttachmentDescription attachment = blendState.AttachmentStates[i];
+                if (!attachment.BlendEnabled)
+                {
+                    glDisablei(EnableCap.Blend, i);
+                    CheckLastError();
+                }
+                else
+                {
+                    glEnablei(EnableCap.Blend, i);
+                    CheckLastError();
+
+                    glBlendFuncSeparatei(
+                        i,
+                        OpenGLFormats.VdToGLBlendFactorSrc(attachment.SourceColorFactor),
+                        OpenGLFormats.VdToGLBlendFactorDest(attachment.DestinationColorFactor),
+                        OpenGLFormats.VdToGLBlendFactorSrc(attachment.SourceAlphaFactor),
+                        OpenGLFormats.VdToGLBlendFactorDest(attachment.DestinationAlphaFactor));
+                    CheckLastError();
+
+                    glBlendEquationSeparatei(
+                        i,
+                        OpenGLFormats.VdToGLBlendEquationMode(attachment.ColorFunction),
+                        OpenGLFormats.VdToGLBlendEquationMode(attachment.AlphaFunction));
+                    CheckLastError();
+                }
+            }
+
+            // Depth Stencil State
+
+            DepthStencilStateDescription dss = desc.DepthStencilState;
+            if (!dss.DepthTestEnabled)
+            {
+                glDisable(EnableCap.DepthTest);
+                CheckLastError();
+            }
+            else
+            {
+                glEnable(EnableCap.DepthTest);
+                CheckLastError();
+
+                glDepthFunc(OpenGLFormats.VdToGLDepthFunction(dss.ComparisonKind));
+                CheckLastError();
+            }
+
+            glDepthMask(dss.DepthWriteEnabled);
+            CheckLastError();
+
+            // Rasterizer State
+
+            RasterizerStateDescription rs = desc.RasterizerState;
+            if (rs.CullMode == FaceCullMode.None)
+            {
+                glDisable(EnableCap.CullFace);
+                CheckLastError();
+
+                glCullFace(OpenGLFormats.VdToGLCullFaceMode(rs.CullMode));
+                CheckLastError();
+            }
+            else
+            {
+                glEnable(EnableCap.CullFace);
+                CheckLastError();
+            }
+
+            glPolygonMode(MaterialFace.FrontAndBack, OpenGLFormats.VdToGLPolygonMode(rs.FillMode));
+            CheckLastError();
+
+            if (!rs.ScissorTestEnabled)
+            {
+                glDisable(EnableCap.ScissorTest);
+                CheckLastError();
+            }
+            else
+            {
+                glEnable(EnableCap.ScissorTest);
+                CheckLastError();
+            }
+
+            if (!rs.DepthClipEnabled)
+            {
+                glEnable(EnableCap.DepthClamp);
+                CheckLastError();
+            }
+            else
+            {
+                glDisable(EnableCap.DepthClamp);
+                CheckLastError();
+            }
+
+            // Primitive Topology
+            _primitiveType = OpenGLFormats.VdToGLPrimitiveType(desc.PrimitiveTopology);
+
+            // Shader Set
+            glUseProgram(_pipeline.Program);
+            CheckLastError();
         }
 
         private void SetResourceSet(SetResourceSetEntry srse)
         {
-            throw new NotImplementedException();
+            OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(srse.ResourceSet);
+            for (uint slot = 0; slot < glResourceSet.Resources.Length; slot++)
+            {
+                BindableResource resource = glResourceSet.Resources[(int)slot];
+                if (resource is OpenGLUniformBuffer glUB)
+                {
+                    OpenGLUniformBinding uniformBindingInfo = _pipeline.GetUniformBindingForSlot(slot);
+                    glUniformBlockBinding(_pipeline.Program, uniformBindingInfo.BlockLocation, slot);
+                    CheckLastError();
+
+                    glBindBufferRange(BufferRangeTarget.UniformBuffer, slot, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
+                    CheckLastError();
+                }
+                else if (resource is OpenGLTextureView glTexView)
+                {
+                    OpenGLTextureBindingSlotInfo textureBindingInfo = _pipeline.GetTextureBindingInfo(slot);
+                    TextureTarget target;
+                    uint texture;
+                    if (glTexView.Target is OpenGLTexture2D glTex2D)
+                    {
+                        target = TextureTarget.Texture2D;
+                        texture = glTex2D.Texture;
+                    }
+                    else if (glTexView.Target is OpenGLTextureCube glTexCube)
+                    {
+                        target = TextureTarget.TextureCubeMap;
+                        texture = glTexCube.Texture;
+                    }
+                    else
+                    {
+                        throw new VdException("Invalid texture type in resource binding: " + glTexView.Target.GetType());
+                    }
+
+                    glActiveTexture(TextureUnit.Texture0 + textureBindingInfo.RelativeIndex);
+                    glBindTexture(target, texture);
+                }
+                else if (resource is OpenGLSampler glSampler)
+                {
+                    OpenGLTextureBindingSlotInfo samplerBindingInfo = _pipeline.GetSamplerBindingInfo(slot);
+                    bool mipmapped = false;
+                    if (!mipmapped)
+                    {
+                        glBindSampler((uint)samplerBindingInfo.RelativeIndex, glSampler.NoMipmapSampler);
+                        CheckLastError();
+                    }
+                    else
+                    {
+                        glBindSampler((uint)samplerBindingInfo.RelativeIndex, glSampler.MipmapSampler);
+                        CheckLastError();
+                    }
+                }
+            }
         }
 
         private void SetScissorRect(SetScissorRectEntry ssre)

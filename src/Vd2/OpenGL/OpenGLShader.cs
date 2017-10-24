@@ -14,6 +14,8 @@ namespace Vd2.OpenGL
 
         private uint _shader;
 
+        public uint Shader => _shader;
+
         public OpenGLShader(OpenGLGraphicsDevice gd, ShaderStages stage, StagingBlock stagingBlock)
         {
             _gd = gd;

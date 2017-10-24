@@ -6,6 +6,8 @@ namespace Vd2.OpenGL
     {
         private readonly OpenGLCommandEntryList _commands = new OpenGLCommandEntryList();
 
+        public OpenGLCommandEntryList Commands => _commands;
+
         public OpenGLCommandList(ref CommandListDescription description) : base(ref description)
         {
 

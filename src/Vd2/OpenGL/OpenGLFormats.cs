@@ -160,5 +160,135 @@ namespace Vd2.OpenGL
                     throw Illegal.Value<DepthComparisonKind>();
             }
         }
+
+        internal static BlendingFactorSrc VdToGLBlendFactorSrc(BlendFactor factor)
+        {
+            switch (factor)
+            {
+                case BlendFactor.Zero:
+                    return BlendingFactorSrc.Zero;
+                case BlendFactor.One:
+                    return BlendingFactorSrc.One;
+                case BlendFactor.SourceAlpha:
+                    return BlendingFactorSrc.SrcAlpha;
+                case BlendFactor.InverseSourceAlpha:
+                    return BlendingFactorSrc.OneMinusSrcAlpha;
+                case BlendFactor.DestinationAlpha:
+                    return BlendingFactorSrc.DstAlpha;
+                case BlendFactor.InverseDestinationAlpha:
+                    return BlendingFactorSrc.OneMinusDstAlpha;
+                case BlendFactor.SourceColor:
+                    return BlendingFactorSrc.SrcColor;
+                case BlendFactor.InverseSourceColor:
+                    return BlendingFactorSrc.OneMinusSrcColor;
+                case BlendFactor.DestinationColor:
+                    return BlendingFactorSrc.DstColor;
+                case BlendFactor.InverseDestinationColor:
+                    return BlendingFactorSrc.OneMinusDstColor;
+                case BlendFactor.BlendFactor:
+                    return BlendingFactorSrc.ConstantColor;
+                case BlendFactor.InverseBlendFactor:
+                    return BlendingFactorSrc.OneMinusConstantColor;
+                default:
+                    throw Illegal.Value<BlendFactor>();
+            }
+        }
+
+        internal static BlendEquationMode VdToGLBlendEquationMode(BlendFunction function)
+        {
+            switch (function)
+            {
+                case BlendFunction.Add:
+                    return BlendEquationMode.FuncAdd;
+                case BlendFunction.Subtract:
+                    return BlendEquationMode.FuncSubtract;
+                case BlendFunction.ReverseSubtract:
+                    return BlendEquationMode.FuncReverseSubtract;
+                case BlendFunction.Minimum:
+                    return BlendEquationMode.Min;
+                case BlendFunction.Maximum:
+                    return BlendEquationMode.Max;
+                default:
+                    throw Illegal.Value<BlendFunction>();
+            }
+        }
+
+        internal static PolygonMode VdToGLPolygonMode(TriangleFillMode fillMode)
+        {
+            switch (fillMode)
+            {
+                case TriangleFillMode.Solid:
+                    return PolygonMode.Fill;
+                case TriangleFillMode.Wireframe:
+                    return PolygonMode.Line;
+                default:
+                    throw Illegal.Value<TriangleFillMode>();
+            }
+        }
+
+        internal static CullFaceMode VdToGLCullFaceMode(FaceCullMode cullMode)
+        {
+            switch (cullMode)
+            {
+                case FaceCullMode.Back:
+                    return CullFaceMode.Back;
+                case FaceCullMode.Front:
+                    return CullFaceMode.Front;
+                default:
+                    throw Illegal.Value<FaceCullMode>();
+            }
+        }
+
+        internal static PrimitiveType VdToGLPrimitiveType(PrimitiveTopology primitiveTopology)
+        {
+            switch (primitiveTopology)
+            {
+                case PrimitiveTopology.TriangleList:
+                    return PrimitiveType.Triangles;
+                case PrimitiveTopology.TriangleStrip:
+                    return PrimitiveType.TriangleStrip;
+                case PrimitiveTopology.LineList:
+                    return PrimitiveType.Lines;
+                case PrimitiveTopology.LineStrip:
+                    return PrimitiveType.LineStrip;
+                case PrimitiveTopology.PointList:
+                    return PrimitiveType.Points;
+                default:
+                    throw Illegal.Value<PrimitiveTopology>();
+            }
+        }
+
+        internal static BlendingFactorDest VdToGLBlendFactorDest(BlendFactor factor)
+        {
+            switch (factor)
+            {
+                case BlendFactor.Zero:
+                    return BlendingFactorDest.Zero;
+                case BlendFactor.One:
+                    return BlendingFactorDest.One;
+                case BlendFactor.SourceAlpha:
+                    return BlendingFactorDest.SrcAlpha;
+                case BlendFactor.InverseSourceAlpha:
+                    return BlendingFactorDest.OneMinusSrcAlpha;
+                case BlendFactor.DestinationAlpha:
+                    return BlendingFactorDest.DstAlpha;
+                case BlendFactor.InverseDestinationAlpha:
+                    return BlendingFactorDest.OneMinusDstAlpha;
+                case BlendFactor.SourceColor:
+                    return BlendingFactorDest.SrcColor;
+                case BlendFactor.InverseSourceColor:
+                    return BlendingFactorDest.OneMinusSrcColor;
+                case BlendFactor.DestinationColor:
+                    return BlendingFactorDest.DstColor;
+                case BlendFactor.InverseDestinationColor:
+                    return BlendingFactorDest.OneMinusDstColor;
+                case BlendFactor.BlendFactor:
+                    return BlendingFactorDest.ConstantColor;
+                case BlendFactor.InverseBlendFactor:
+                    return BlendingFactorDest.OneMinusConstantColor;
+                default:
+                    throw Illegal.Value<BlendFactor>();
+            }
+        }
     }
 }

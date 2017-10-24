@@ -263,9 +263,153 @@ namespace Vd2.OpenGLBinding
         private static glDeleteSamplers_t p_glDeleteSamplers;
         public static void glDeleteSamplers(uint n, ref uint samplers) => p_glDeleteSamplers(n, ref samplers);
 
+        private delegate void glBlendFuncSeparatei_t(
+            uint buf,
+            BlendingFactorSrc srcRGB,
+            BlendingFactorDest dstRGB,
+            BlendingFactorSrc srcAlpha,
+            BlendingFactorDest dstAlpha);
+        private static glBlendFuncSeparatei_t p_glBlendFuncSeparatei;
+        public static void glBlendFuncSeparatei(
+            uint buf,
+            BlendingFactorSrc srcRGB,
+            BlendingFactorDest dstRGB,
+            BlendingFactorSrc srcAlpha,
+            BlendingFactorDest dstAlpha) => p_glBlendFuncSeparatei(buf, srcRGB, dstRGB, srcAlpha, dstAlpha);
+
+        private delegate void glEnable_t(EnableCap cap);
+        private static glEnable_t p_glEnable;
+        public static void glEnable(EnableCap cap) => p_glEnable(cap);
+
+        private delegate void glEnablei_t(EnableCap cap, uint index);
+        private static glEnablei_t p_glEnablei;
+        public static void glEnablei(EnableCap cap, uint index) => p_glEnablei(cap, index);
+
+        private delegate void glDisable_t(EnableCap cap);
+        private static glDisable_t p_glDisable;
+        public static void glDisable(EnableCap cap) => p_glDisable(cap);
+
+        private delegate void glDisablei_t(EnableCap cap, uint index);
+        private static glDisablei_t p_glDisablei;
+        public static void glDisablei(EnableCap cap, uint index) => p_glDisablei(cap, index);
+
+        private delegate void glBlendEquationSeparatei_t(uint buf, BlendEquationMode modeRGB, BlendEquationMode modeAlpha);
+        private static glBlendEquationSeparatei_t p_glBlendEquationSeparatei;
+        public static void glBlendEquationSeparatei(uint buf, BlendEquationMode modeRGB, BlendEquationMode modeAlpha)
+            => p_glBlendEquationSeparatei(buf, modeRGB, modeAlpha);
+
+        private delegate void glBlendColor_t(float red, float green, float blue, float alpha);
+        private static glBlendColor_t p_glBlendColor;
+        public static void glBlendColor(float red, float green, float blue, float alpha)
+            => p_glBlendColor(red, green, blue, alpha);
+
+        private delegate void glDepthFunc_t(DepthFunction func);
+        private static glDepthFunc_t p_glDepthFunc;
+        public static void glDepthFunc(DepthFunction func) => p_glDepthFunc(func);
+
+        private delegate void glDepthMask_t(GLboolean flag);
+        private static glDepthMask_t p_glDepthMask;
+        public static void glDepthMask(GLboolean flag) => p_glDepthMask(flag);
+
+        private delegate void glCullFace_t(CullFaceMode mode);
+        private static glCullFace_t p_glCullFace;
+        public static void glCullFace(CullFaceMode mode) => p_glCullFace(mode);
+
+        private delegate void glPolygonMode_t(MaterialFace face, PolygonMode mode);
+        private static glPolygonMode_t p_glPolygonMode;
+        public static void glPolygonMode(MaterialFace face, PolygonMode mode) => p_glPolygonMode(face, mode);
+
+        private delegate uint glCreateProgram_t();
+        private static glCreateProgram_t p_glCreateProgram;
+        public static uint glCreateProgram() => p_glCreateProgram();
+
+        private delegate void glAttachShader_t(uint program, uint shader);
+        private static glAttachShader_t p_glAttachShader;
+        public static void glAttachShader(uint program, uint shader) => p_glAttachShader(program, shader);
+
+        private delegate void glBindAttribLocation_t(uint program, uint index, byte* name);
+        private static glBindAttribLocation_t p_glBindAttribLocation;
+        public static void glBindAttribLocation(uint program, uint index, byte* name)
+            => p_glBindAttribLocation(program, index, name);
+
+        private delegate void glLinkProgram_t(uint program);
+        private static glLinkProgram_t p_glLinkProgram;
+        public static void glLinkProgram(uint program) => p_glLinkProgram(program);
+
+        private delegate void glGetProgramiv_t(uint program, GetProgramParameterName pname, int* @params);
+        private static glGetProgramiv_t p_glGetProgramiv;
+        public static void glGetProgramiv(uint program, GetProgramParameterName pname, int* @params)
+            => p_glGetProgramiv(program, pname, @params);
+
+        private delegate void glGetProgramInfoLog_t(uint program, uint maxLength, uint* length, byte* infoLog);
+        private static glGetProgramInfoLog_t p_glGetProgramInfoLog;
+        public static void glGetProgramInfoLog(uint program, uint maxLength, uint* length, byte* infoLog)
+            => p_glGetProgramInfoLog(program, maxLength, length, infoLog);
+
+        private delegate void glUniformBlockBinding_t(uint program, uint uniformBlockIndex, uint uniformBlockBinding);
+        private static glUniformBlockBinding_t p_glUniformBlockBinding;
+        public static void glUniformBlockBinding(uint program, uint uniformBlockIndex, uint uniformBlockBinding)
+            => p_glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
+
+        private delegate void glDeleteProgram_t(uint program);
+        private static glDeleteProgram_t p_glDeleteProgram;
+        public static void glDeleteProgram(uint program) => p_glDeleteProgram(program);
+
+        private delegate void glUniform1i_t(int location, int v0);
+        private static glUniform1i_t p_glUniform1i;
+        public static void glUniform1i(int location, int v0) => p_glUniform1i(location, v0);
+
+        private delegate uint glGetUniformBlockIndex_t(uint program, byte* uniformBlockName);
+        private static glGetUniformBlockIndex_t p_glGetUniformBlockIndex;
+        public static uint glGetUniformBlockIndex(uint program, byte* uniformBlockName)
+            => p_glGetUniformBlockIndex(program, uniformBlockName);
+
+        private delegate int glGetUniformLocation_t(uint program, byte* name);
+        private static glGetUniformLocation_t p_glGetUniformLocation;
+        public static int glGetUniformLocation(uint program, byte* name) => p_glGetUniformLocation(program, name);
+
+        private delegate int glGetAttribLocation_t(uint program, byte* name);
+        private static glGetAttribLocation_t p_glGetAttribLocation;
+        public static int glGetAttribLocation(uint program, byte* name) => p_glGetAttribLocation(program, name);
+
+        private delegate void glUseProgram_t(uint program);
+        private static glUseProgram_t p_glUseProgram;
+        public static void glUseProgram(uint program) => p_glUseProgram(program);
+
+        private delegate void glBindBufferRange_t(
+            BufferRangeTarget target,
+            uint index,
+            uint buffer,
+            IntPtr offset,
+            UIntPtr size);
+        private static glBindBufferRange_t p_glBindBufferRange;
+        public static void glBindBufferRange(
+            BufferRangeTarget target,
+            uint index,
+            uint buffer,
+            IntPtr offset,
+            UIntPtr size) => p_glBindBufferRange(target, index, buffer, offset, size);
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        public delegate void DebugProc(
+            DebugSource source,
+            DebugType type,
+            uint id,
+            DebugSeverity severity,
+            uint length,
+            byte* message,
+            void* userParam);
+
+        private delegate void glDebugMessageCallback_t(DebugProc callback, void* userParam);
+        private static glDebugMessageCallback_t p_glDebugMessageCallback;
+        public static void glDebugMessageCallback(DebugProc callback, void* userParam)
+            => p_glDebugMessageCallback(callback, userParam);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
+
+            // ^^ put to bottom
 
             LoadFunction(out p_glGenVertexArrays);
             LoadFunction(out p_glGetError);
@@ -308,8 +452,35 @@ namespace Vd2.OpenGLBinding
             LoadFunction(out p_glGenSamplers);
             LoadFunction(out p_glSamplerParameterf);
             LoadFunction(out p_glSamplerParameteri);
+            LoadFunction(out p_glSamplerParameterfv);
             LoadFunction(out p_glBindSampler);
             LoadFunction(out p_glDeleteSamplers);
+            LoadFunction(out p_glBlendFuncSeparatei);
+            LoadFunction(out p_glEnable);
+            LoadFunction(out p_glEnablei);
+            LoadFunction(out p_glDisable);
+            LoadFunction(out p_glDisablei);
+            LoadFunction(out p_glBlendEquationSeparatei);
+            LoadFunction(out p_glBlendColor);
+            LoadFunction(out p_glDepthFunc);
+            LoadFunction(out p_glDepthMask);
+            LoadFunction(out p_glCullFace);
+            LoadFunction(out p_glPolygonMode);
+            LoadFunction(out p_glCreateProgram);
+            LoadFunction(out p_glAttachShader);
+            LoadFunction(out p_glBindAttribLocation);
+            LoadFunction(out p_glLinkProgram);
+            LoadFunction(out p_glGetProgramiv);
+            LoadFunction(out p_glGetProgramInfoLog);
+            LoadFunction(out p_glUniformBlockBinding);
+            LoadFunction(out p_glDeleteProgram);
+            LoadFunction(out p_glUniform1i);
+            LoadFunction(out p_glGetUniformBlockIndex);
+            LoadFunction(out p_glGetUniformLocation);
+            LoadFunction(out p_glGetAttribLocation);
+            LoadFunction(out p_glUseProgram);
+            LoadFunction(out p_glBindBufferRange);
+            LoadFunction(out p_glDebugMessageCallback);
         }
 
         private static void LoadFunction<T>(out T field)

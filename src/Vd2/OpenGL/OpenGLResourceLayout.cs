@@ -2,16 +2,15 @@
 {
     internal class OpenGLResourceLayout : ResourceLayout
     {
-        private ResourceLayoutDescription description;
+        public ResourceLayoutDescription Description { get; }
 
         public OpenGLResourceLayout(ref ResourceLayoutDescription description)
         {
-            this.description = description;
+            Description = description;
         }
 
         public override void Dispose()
         {
-            throw new System.NotImplementedException();
         }
     }
 }

@@ -2,11 +2,13 @@
 {
     internal class OpenGLResourceSet : ResourceSet
     {
-        private ResourceSetDescription description;
+        public ResourceLayout Layout { get; }
+        public BindableResource[] Resources { get; }
 
         public OpenGLResourceSet(ref ResourceSetDescription description)
         {
-            this.description = description;
+            Layout = description.Layout;
+            Resources = description.BoundResources;
         }
 
         public override void Dispose()

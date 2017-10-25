@@ -42,6 +42,7 @@ namespace Vd2.NeoDemo
                 WindowTitle = "Vd NeoDemo"
             };
             GraphicsDeviceCreateInfo gdCI = new GraphicsDeviceCreateInfo();
+            gdCI.Backend = GraphicsBackend.OpenGL;
 #if DEBUG
             gdCI.DebugDevice = true;
 #endif
@@ -148,6 +149,11 @@ namespace Vd2.NeoDemo
                 InputSnapshot snapshot = _window.PumpEvents();
                 InputTracker.UpdateFrameInput(snapshot);
                 Update((float)deltaSeconds);
+                if (!_window.Exists)
+                {
+                    break;
+                }
+
                 Draw();
             }
         }
@@ -222,7 +228,7 @@ namespace Vd2.NeoDemo
                     {
                         RefreshDeviceObjects(100);
                     }
-                    
+
                     ImGui.EndMenu();
                 }
 
@@ -268,10 +274,11 @@ namespace Vd2.NeoDemo
 
         private void Draw()
         {
+            Debug.Assert(_window.Exists);
             int width = _window.Width;
             int height = _window.Height;
 
-            if (_windowResized && _window.Exists)
+            if (_windowResized)
             {
                 _windowResized = false;
                 _gd.ResizeMainWindow((uint)width, (uint)height);
@@ -286,11 +293,7 @@ namespace Vd2.NeoDemo
             _scene.RenderAllStages(_gd, _frameCommands, _sc);
             _frameCommands.End();
             _gd.ExecuteCommands(_frameCommands);
-
-            if (_window.Exists)
-            {
-                _gd.SwapBuffers();
-            }
+            _gd.SwapBuffers();
         }
 
         private void ChangeBackend(GraphicsBackend backend)

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Vd2.OpenGLBinding
 {
-    // GLsizei = uint
+    // uint = uint
     // GLuint = uint
     // GLuint64 = uint64
     // GLenum = uint
@@ -405,11 +405,101 @@ namespace Vd2.OpenGLBinding
         public static void glDebugMessageCallback(DebugProc callback, void* userParam)
             => p_glDebugMessageCallback(callback, userParam);
 
+        private delegate void glNamedBufferData_t(uint buffer, uint size, void* data, BufferUsageHint usage);
+        private static glNamedBufferData_t p_glNamedBufferData;
+        public static void glNamedBufferData(uint buffer, uint size, void* data, BufferUsageHint usage)
+            => p_glNamedBufferData(buffer, size, data, usage);
+
+        private delegate void glTexImage2D_t(
+            TextureTarget target,
+            int level,
+            PixelInternalFormat internalFormat,
+            uint width,
+            uint height,
+            int border,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* data);
+        private static glTexImage2D_t p_glTexImage2D;
+        public static void glTexImage2D(
+            TextureTarget target,
+            int level,
+            PixelInternalFormat internalFormat,
+            uint width,
+            uint height,
+            int border,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* data) => p_glTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
+
+        private delegate void glEnableVertexAttribArray_t(uint index);
+        private static glEnableVertexAttribArray_t p_glEnableVertexAttribArray;
+        public static void glEnableVertexAttribArray(uint index) => p_glEnableVertexAttribArray(index);
+
+        private delegate void glDisableVertexAttribArray_t(uint index);
+        private static glDisableVertexAttribArray_t p_glDisableVertexAttribArray;
+        public static void glDisableVertexAttribArray(uint index) => p_glDisableVertexAttribArray(index);
+
+        private delegate void glVertexAttribPointer_t(
+            uint index,
+            int size,
+            VertexAttribPointerType type,
+            GLboolean normalized,
+            uint stride,
+            void* pointer);
+        private static glVertexAttribPointer_t p_glVertexAttribPointer;
+        public static void glVertexAttribPointer(
+            uint index,
+            int size,
+            VertexAttribPointerType type,
+            GLboolean normalized,
+            uint stride,
+            void* pointer) => p_glVertexAttribPointer(index, size, type, normalized, stride, pointer);
+
+        private delegate void glVertexAttribIPointer_t(
+            uint index,
+            int size,
+            VertexAttribPointerType type,
+            GLboolean normalized,
+            uint stride,
+            void* pointer);
+        private static glVertexAttribIPointer_t p_glVertexAttribIPointer;
+        public static void glVertexAttribIPointer(
+            uint index,
+            int size,
+            VertexAttribPointerType type,
+            GLboolean normalized,
+            uint stride,
+            void* pointer) => p_glVertexAttribIPointer(index, size, type, normalized, stride, pointer);
+
+        private delegate void glVertexAttribDivisor_t(uint index, uint divisor);
+        private static glVertexAttribDivisor_t p_glVertexAttribDivisor;
+        public static void glVertexAttribDivisor(uint index, uint divisor) => p_glVertexAttribDivisor(index, divisor);
+
+        private delegate void glFrontFace_t(FrontFaceDirection mode);
+        private static glFrontFace_t p_glFrontFace;
+        public static void glFrontFace(FrontFaceDirection mode) => p_glFrontFace(mode);
+
+        private delegate void glGetIntegerv_t(GetPName pname, int* data);
+        private static glGetIntegerv_t p_glGetIntegerv;
+        public static void glGetIntegerv(GetPName pname, int* data) => p_glGetIntegerv(pname, data);
+
+        private delegate void glBindTextureUnit_t(uint unit, uint texture);
+        private static glBindTextureUnit_t p_glBindTextureUnit;
+        public static void glBindTextureUnit(uint unit, uint texture) => p_glBindTextureUnit(unit, texture);
+
+        private delegate void glTexParameteri_t(TextureTarget target, TextureParameterName pname, int param);
+        private static glTexParameteri_t p_glTexParameteri;
+        public static void glTexParameteri(TextureTarget target, TextureParameterName pname, int param)
+            => p_glTexParameteri(target, pname, param);
+
+        private delegate byte* glGetStringi_t(StringNameIndexed name, uint index);
+        private static glGetStringi_t p_glGetStringi;
+        public static byte* glGetStringi(StringNameIndexed name, uint index) => p_glGetStringi(name, index);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
-
-            // ^^ put to bottom
 
             LoadFunction(out p_glGenVertexArrays);
             LoadFunction(out p_glGetError);
@@ -481,6 +571,18 @@ namespace Vd2.OpenGLBinding
             LoadFunction(out p_glUseProgram);
             LoadFunction(out p_glBindBufferRange);
             LoadFunction(out p_glDebugMessageCallback);
+            LoadFunction(out p_glNamedBufferData);
+            LoadFunction(out p_glTexImage2D);
+            LoadFunction(out p_glEnableVertexAttribArray);
+            LoadFunction(out p_glDisableVertexAttribArray);
+            LoadFunction(out p_glVertexAttribPointer);
+            LoadFunction(out p_glVertexAttribIPointer);
+            LoadFunction(out p_glVertexAttribDivisor);
+            LoadFunction(out p_glFrontFace);
+            LoadFunction(out p_glGetIntegerv);
+            LoadFunction(out p_glBindTextureUnit);
+            LoadFunction(out p_glTexParameteri);
+            LoadFunction(out p_glGetStringi);
         }
 
         private static void LoadFunction<T>(out T field)

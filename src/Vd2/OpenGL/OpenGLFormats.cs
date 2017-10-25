@@ -37,6 +37,27 @@ namespace Vd2.OpenGL
             }
         }
 
+        internal static PixelInternalFormat VdToGLPixelInternalFormat(PixelFormat format)
+        {
+            switch (format)
+            {
+                case PixelFormat.R8_G8_B8_A8_UNorm:
+                    return PixelInternalFormat.Rgba;
+                case PixelFormat.B8_G8_R8_A8_UNorm:
+                    return PixelInternalFormat.Rgba;
+                case PixelFormat.R8_UNorm:
+                    return PixelInternalFormat.R8ui;
+                case PixelFormat.R16_UNorm:
+                    return PixelInternalFormat.R16ui;
+                case PixelFormat.R32_G32_B32_A32_Float:
+                    return PixelInternalFormat.Rgba32f;
+                case PixelFormat.R32_Float:
+                    return PixelInternalFormat.R32f;
+                default:
+                    throw Illegal.Value<PixelFormat>();
+            }
+        }
+
         internal static TextureWrapMode VdToGLTextureWrapMode(SamplerAddressMode mode)
         {
             switch (mode)
@@ -133,6 +154,24 @@ namespace Vd2.OpenGL
                     break;
                 default:
                     throw Illegal.Value<SamplerFilter>();
+            }
+        }
+
+        internal static VertexAttribPointerType VdToGLVertexAttribPointerType(VertexElementFormat format)
+        {
+            switch (format)
+            {
+                case VertexElementFormat.Float1:
+                case VertexElementFormat.Float2:
+                case VertexElementFormat.Float3:
+                case VertexElementFormat.Float4:
+                    return VertexAttribPointerType.Float;
+                case VertexElementFormat.Byte1:
+                case VertexElementFormat.Byte2:
+                case VertexElementFormat.Byte4:
+                    return VertexAttribPointerType.UnsignedByte;
+                default:
+                    throw Illegal.Value<VertexElementFormat>();
             }
         }
 
@@ -255,6 +294,19 @@ namespace Vd2.OpenGL
                     return PrimitiveType.Points;
                 default:
                     throw Illegal.Value<PrimitiveTopology>();
+            }
+        }
+
+        internal static FrontFaceDirection VdToGLFrontFaceDirection(FrontFace frontFace)
+        {
+            switch (frontFace)
+            {
+                case FrontFace.Clockwise:
+                    return FrontFaceDirection.Cw;
+                case FrontFace.CounterClockwise:
+                    return FrontFaceDirection.Ccw;
+                default:
+                    throw Illegal.Value<FrontFace>();
             }
         }
 

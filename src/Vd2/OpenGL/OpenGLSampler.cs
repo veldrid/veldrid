@@ -88,7 +88,9 @@ namespace Vd2.OpenGL
                 if (description.Filter == SamplerFilter.Anisotropic)
                 {
                     glSamplerParameterf(_sampler, SamplerParameterName.TextureMaxAnisotropyExt, description.MaximumAnisotropy);
+                    CheckLastError();
                     glSamplerParameteri(_sampler, SamplerParameterName.TextureMinFilter, mipmapped ? (int)TextureMinFilter.LinearMipmapLinear : (int)TextureMinFilter.Linear);
+                    CheckLastError();
                     glSamplerParameteri(_sampler, SamplerParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
                     CheckLastError();
                 }

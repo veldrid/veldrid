@@ -21,7 +21,6 @@ namespace Vd2
             Aniso4xSampler = ResourceFactory.CreateSampler(SamplerDescription.Aniso4x);
         }
 
-
         public Sampler PointSampler { get; private set; }
         public Sampler LinearSampler { get; private set; }
         public Sampler Aniso4xSampler { get; private set; }

@@ -37,37 +37,44 @@ namespace Vd2.OpenGL
 
             uint colorCount = (uint)ColorTextures.Count;
 
-            for (int i = 0; i < colorCount; i++)
+            if (colorCount > 0)
             {
-                Texture2D target = ColorTextures[i];
-                OpenGLTexture2D glTex2D = Util.AssertSubtype<Texture2D, OpenGLTexture2D>(target);
-                glActiveTexture(TextureUnit.Texture0);
-                CheckLastError();
+                for (int i = 0; i < colorCount; i++)
+                {
+                    Texture2D target = ColorTextures[i];
+                    OpenGLTexture2D glTex2D = Util.AssertSubtype<Texture2D, OpenGLTexture2D>(target);
+                    glTex2D.EnsureResourcesCreated();
 
-                glBindTexture(TextureTarget.Texture2D, glTex2D.Texture);
-                CheckLastError();
+                    glActiveTexture(TextureUnit.Texture0);
+                    CheckLastError();
 
-                glFramebufferTexture2D(
-                    FramebufferTarget.Framebuffer,
-                    FramebufferAttachment.ColorAttachment0 + i,
-                    TextureTarget.Texture2D,
-                    glTex2D.Texture,
-                    0);
+                    glBindTexture(TextureTarget.Texture2D, glTex2D.Texture);
+                    CheckLastError();
+
+                    glFramebufferTexture2D(
+                        FramebufferTarget.Framebuffer,
+                        FramebufferAttachment.ColorAttachment0 + i,
+                        TextureTarget.Texture2D,
+                        glTex2D.Texture,
+                        0);
+                    CheckLastError();
+                }
+
+                DrawBuffersEnum* bufs = stackalloc DrawBuffersEnum[(int)colorCount];
+                for (int i = 0; i < colorCount; i++)
+                {
+                    bufs[i] = DrawBuffersEnum.ColorAttachment0 + i;
+                }
+                glDrawBuffers(colorCount, bufs);
                 CheckLastError();
             }
-
-            DrawBuffersEnum* bufs = stackalloc DrawBuffersEnum[(int)colorCount];
-            for (int i = 0; i < colorCount; i++)
-            {
-                bufs[i] = DrawBuffersEnum.ColorAttachment0 + i;
-            }
-            glDrawBuffers(colorCount, bufs);
-            CheckLastError();
 
             uint depthTextureID = 0;
             if (DepthTexture != null)
             {
                 OpenGLTexture2D glDepthTex = Util.AssertSubtype<Texture2D, OpenGLTexture2D>(DepthTexture);
+                glDepthTex.EnsureResourcesCreated();
+
                 depthTextureID = glDepthTex.Texture;
                 glActiveTexture(TextureUnit.Texture0);
                 CheckLastError();
@@ -78,10 +85,10 @@ namespace Vd2.OpenGL
 
             glFramebufferTexture2D(
                 FramebufferTarget.Framebuffer,
-                 FramebufferAttachment.DepthAttachment,
-                  TextureTarget.Texture2D,
-                  depthTextureID,
-                  0);
+                FramebufferAttachment.DepthAttachment,
+                TextureTarget.Texture2D,
+                depthTextureID,
+                0);
             CheckLastError();
 
             FramebufferErrorCode errorCode = glCheckFramebufferStatus(FramebufferTarget.Framebuffer);

@@ -112,7 +112,7 @@ namespace Vd2.NeoDemo
             cl.SetFramebuffer(sc.NearShadowMapFramebuffer);
             cl.SetViewport(0, new Viewport(0, 0, sc.NearShadowMapTexture.Width, sc.NearShadowMapTexture.Height, 0, 1));
             cl.SetScissorRect(0, 0, 0, sc.NearShadowMapTexture.Width, sc.NearShadowMapTexture.Height);
-            cl.ClearDepthTarget(1f);
+            cl.ClearDepthTarget(01f);
             Render(gd, cl, sc, RenderPasses.ShadowMapNear, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             // Mid
@@ -144,12 +144,11 @@ namespace Vd2.NeoDemo
             Render(gd, cl, sc, RenderPasses.ShadowMapFar, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             cl.SetFramebuffer(gd.SwapchainFramebuffer);
-            Texture2D colorTex = gd.SwapchainFramebuffer.ColorTextures[0];
-            float scWidth = colorTex.Width;
-            float scHeight = colorTex.Height;
+            float scWidth = gd.SwapchainFramebuffer.Width;
+            float scHeight = gd.SwapchainFramebuffer.Height;
             cl.SetViewport(0, new Viewport(0, 0, scWidth, scHeight, 0, 1));
             cl.SetScissorRect(0, 0, 0, (uint)scWidth, (uint)scHeight);
-            cl.ClearColorTarget(0, RgbaFloat.Black);
+            cl.ClearColorTarget(0, RgbaFloat.CornflowerBlue);
             cl.ClearDepthTarget(1f);
             BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
             Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
@@ -243,9 +242,8 @@ namespace Vd2.NeoDemo
             _tasks[3] = Task.Run(() =>
             {
                 cls[4].SetFramebuffer(gd.SwapchainFramebuffer);
-                Texture2D colorTex = gd.SwapchainFramebuffer.ColorTextures[0];
-                float scWidth = colorTex.Width;
-                float scHeight = colorTex.Height;
+                float scWidth = gd.SwapchainFramebuffer.Width;
+                float scHeight = gd.SwapchainFramebuffer.Height;
                 cls[4].SetViewport(0, new Viewport(0, 0, scWidth, scHeight, 0, 1));
                 cls[4].SetScissorRect(0, 0, 0, (uint)scWidth, (uint)scHeight);
                 cls[4].ClearColorTarget(0, RgbaFloat.Black);

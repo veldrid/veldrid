@@ -258,8 +258,8 @@ namespace Vd2.NeoDemo.Objects
         {
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
-            cl.SetResourceSet(_shadowMapResourceSets[shadowMapIndex]);
             cl.SetPipeline(_shadowMapPipeline);
+            cl.SetResourceSet(_shadowMapResourceSets[shadowMapIndex]);
             cl.Draw((uint)_indexCount, 1, 0, 0, 0);
         }
 

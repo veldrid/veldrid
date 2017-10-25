@@ -2,15 +2,27 @@
 using static Vd2.OpenGLBinding.OpenGLNative;
 using static Vd2.OpenGL.OpenGLUtil;
 using Vd2.OpenGLBinding;
+using System.Numerics;
 
 namespace Vd2.OpenGL
 {
     internal unsafe class OpenGLCommandExecutor
     {
+        private readonly OpenGLTextureSamplerManager _textureSamplerManager;
         private PrimitiveType _primitiveType;
         private DrawElementsType _drawElementsType;
-        private OpenGLVertexBuffer[] _vertexBuffers = new OpenGLVertexBuffer[10];
+        private OpenGLVertexBuffer[] _vertexBuffers = new OpenGLVertexBuffer[10]; // TODO: Real limit
+        private readonly uint[] _vertexAttribDivisors = new uint[10]; // TODO: Real limit
         private OpenGLPipeline _pipeline;
+        private Framebuffer _fb;
+        private bool _isSwapchainFB;
+        private uint _vertexAttributesBound;
+
+        public OpenGLCommandExecutor(OpenGLExtensions extensions)
+        {
+            _extensions = extensions;
+            _textureSamplerManager = new OpenGLTextureSamplerManager(extensions);
+        }
 
         public void Execute(OpenGLCommandEntryList list)
         {
@@ -77,14 +89,22 @@ namespace Vd2.OpenGL
         private void ClearManagedState()
         {
             Util.ClearArray(_vertexBuffers);
+            _vertexAttributesBound = 0;
+
             _primitiveType = 0;
             _drawElementsType = 0;
+            _pipeline = null;
+            _fb = null;
+            _isSwapchainFB = false;
         }
 
         private void ClearColorTarget(ClearColorTargetEntry ccte)
         {
-            glDrawBuffer((DrawBufferMode)((uint)DrawBufferMode.ColorAttachment0 + ccte.Index));
-            CheckLastError();
+            if (!_isSwapchainFB)
+            {
+                glDrawBuffer((DrawBufferMode)((uint)DrawBufferMode.ColorAttachment0 + ccte.Index));
+                CheckLastError();
+            }
 
             RgbaFloat color = ccte.ClearColor;
             glClearColor(color.R, color.G, color.B, color.A);
@@ -97,10 +117,17 @@ namespace Vd2.OpenGL
         private void ClearDepthTarget(ClearDepthTargetEntry cdte)
         {
             glClearDepth(cdte.Depth);
+            CheckLastError();
+
+            glDepthMask(true);
+            glClear(ClearBufferMask.DepthBufferBit);
+            CheckLastError();
         }
 
         private void Draw(DrawEntry de)
         {
+            FlushVertexLayouts();
+
             uint indexSize = _drawElementsType == DrawElementsType.UnsignedShort ? 2u : 4u;
             void* indices = new IntPtr(de.IndexStart * indexSize).ToPointer();
 
@@ -138,6 +165,54 @@ namespace Vd2.OpenGL
             }
         }
 
+        private void FlushVertexLayouts()
+        {
+            uint totalSlotsBound = 0;
+            VertexLayoutDescription[] layouts = _pipeline.Description.ShaderSet.VertexLayouts;
+            for (int i = 0; i < layouts.Length; i++)
+            {
+                VertexLayoutDescription input = layouts[i];
+                OpenGLVertexBuffer vb = _vertexBuffers[i];
+                glBindBuffer(BufferTarget.ArrayBuffer, vb.Buffer);
+                uint offset = 0;
+                for (uint slot = 0; slot < input.Elements.Length; slot++)
+                {
+                    ref VertexElementDescription element = ref input.Elements[slot]; // Large structure -- use by reference.
+                    uint actualSlot = totalSlotsBound + slot;
+                    if (actualSlot >= _vertexAttributesBound)
+                    {
+                        glEnableVertexAttribArray(actualSlot);
+                    }
+                    bool normalized = true;
+                    glVertexAttribPointer(
+                        actualSlot,
+                        FormatHelpers.GetElementCount(element.Format),
+                        OpenGLFormats.VdToGLVertexAttribPointerType(element.Format),
+                        normalized,
+                        (uint)_pipeline.VertexStrides[i],
+                        (void*)offset);
+
+                    uint stepRate = element.InstanceStepRate;
+                    if (_vertexAttribDivisors[actualSlot] != stepRate)
+                    {
+                        glVertexAttribDivisor(actualSlot, stepRate);
+                        _vertexAttribDivisors[actualSlot] = stepRate;
+                    }
+
+                    offset += FormatHelpers.GetSizeInBytes(element.Format);
+                }
+
+                totalSlotsBound += (uint)input.Elements.Length;
+            }
+
+            for (uint extraSlot = totalSlotsBound; extraSlot < _vertexAttributesBound; extraSlot++)
+            {
+                glDisableVertexAttribArray(extraSlot);
+            }
+
+            _vertexAttributesBound = totalSlotsBound;
+        }
+
         private void End(EndEntry ee)
         {
         }
@@ -150,16 +225,20 @@ namespace Vd2.OpenGL
                 glFB.EnsureResourcesCreated();
                 glBindFramebuffer(FramebufferTarget.Framebuffer, glFB.Framebuffer);
                 CheckLastError();
+                _isSwapchainFB = false;
             }
             else if (fb is OpenGLSwapchainFramebuffer)
             {
                 glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
                 CheckLastError();
+                _isSwapchainFB = true;
             }
             else
             {
                 throw new VdException("Invalid Framebuffer type: " + fb.GetType().Name);
             }
+
+            _fb = fb;
         }
 
         private void SetIndexBuffer(SetIndexBufferEntry sibe)
@@ -169,6 +248,8 @@ namespace Vd2.OpenGL
 
             glBindBuffer(BufferTarget.ElementArrayBuffer, glIB.Buffer);
             CheckLastError();
+
+            _drawElementsType = glIB.DrawElementsType;
         }
 
         private void SetPipeline(SetPipelineEntry spe)
@@ -238,13 +319,13 @@ namespace Vd2.OpenGL
             {
                 glDisable(EnableCap.CullFace);
                 CheckLastError();
-
-                glCullFace(OpenGLFormats.VdToGLCullFaceMode(rs.CullMode));
-                CheckLastError();
             }
             else
             {
                 glEnable(EnableCap.CullFace);
+                CheckLastError();
+
+                glCullFace(OpenGLFormats.VdToGLCullFaceMode(rs.CullMode));
                 CheckLastError();
             }
 
@@ -273,6 +354,9 @@ namespace Vd2.OpenGL
                 CheckLastError();
             }
 
+            glFrontFace(OpenGLFormats.VdToGLFrontFaceDirection(rs.FrontFace));
+            CheckLastError();
+
             // Primitive Topology
             _primitiveType = OpenGLFormats.VdToGLPrimitiveType(desc.PrimitiveTopology);
 
@@ -283,6 +367,8 @@ namespace Vd2.OpenGL
 
         private void SetResourceSet(SetResourceSetEntry srse)
         {
+            _pipeline.EnsureResourcesCreated();
+
             OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(srse.ResourceSet);
             for (uint slot = 0; slot < glResourceSet.Resources.Length; slot++)
             {
@@ -299,40 +385,19 @@ namespace Vd2.OpenGL
                 else if (resource is OpenGLTextureView glTexView)
                 {
                     OpenGLTextureBindingSlotInfo textureBindingInfo = _pipeline.GetTextureBindingInfo(slot);
-                    TextureTarget target;
-                    uint texture;
-                    if (glTexView.Target is OpenGLTexture2D glTex2D)
-                    {
-                        target = TextureTarget.Texture2D;
-                        texture = glTex2D.Texture;
-                    }
-                    else if (glTexView.Target is OpenGLTextureCube glTexCube)
-                    {
-                        target = TextureTarget.TextureCubeMap;
-                        texture = glTexCube.Texture;
-                    }
-                    else
-                    {
-                        throw new VdException("Invalid texture type in resource binding: " + glTexView.Target.GetType());
-                    }
+                    _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
 
-                    glActiveTexture(TextureUnit.Texture0 + textureBindingInfo.RelativeIndex);
-                    glBindTexture(target, texture);
+                    glUseProgram(_pipeline.Program); // TODO This is broken, why do i need to set this again?
+                    CheckLastError();
+
+                    glUniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
+                    CheckLastError();
                 }
                 else if (resource is OpenGLSampler glSampler)
                 {
+                    glSampler.EnsureResourcesCreated();
                     OpenGLTextureBindingSlotInfo samplerBindingInfo = _pipeline.GetSamplerBindingInfo(slot);
-                    bool mipmapped = false;
-                    if (!mipmapped)
-                    {
-                        glBindSampler((uint)samplerBindingInfo.RelativeIndex, glSampler.NoMipmapSampler);
-                        CheckLastError();
-                    }
-                    else
-                    {
-                        glBindSampler((uint)samplerBindingInfo.RelativeIndex, glSampler.MipmapSampler);
-                        CheckLastError();
-                    }
+                    _textureSamplerManager.SetSampler((uint)samplerBindingInfo.RelativeIndex, glSampler);
                 }
             }
         }
@@ -342,7 +407,7 @@ namespace Vd2.OpenGL
             glScissorIndexed(
                 ssre.Index,
                 (int)ssre.X,
-                (int)(ssre.Y + ssre.Height),
+                (int)(_viewports[(int)ssre.Index].Height - (int)ssre.Height - ssre.Y),
                 ssre.Width,
                 ssre.Height);
             CheckLastError();
@@ -356,9 +421,12 @@ namespace Vd2.OpenGL
             Util.EnsureArraySize(ref _vertexBuffers, svbe.Index + 1);
             _vertexBuffers[svbe.Index] = glVB;
         }
+        private readonly Viewport[] _viewports = new Viewport[20];
+        private OpenGLExtensions _extensions;
 
         private void SetViewport(SetViewportEntry sve)
         {
+            _viewports[(int)sve.Index] = sve.Viewport;
             glViewportIndexed(sve.Index, sve.Viewport.X, sve.Viewport.Y, sve.Viewport.Width, sve.Viewport.Height);
             CheckLastError();
 
@@ -371,12 +439,24 @@ namespace Vd2.OpenGL
             OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(ube.Buffer);
             glBuffer.EnsureResourcesCreated();
 
-            glNamedBufferSubData(
-                glBuffer.Buffer,
-                (IntPtr)ube.BufferOffsetInBytes,
-                ube.StagingBlock.SizeInBytes,
-                ube.StagingBlock.Data.ToPointer());
-            CheckLastError();
+            if (_extensions.ARB_DirectStateAccess)
+            {
+                glNamedBufferSubData(
+                    glBuffer.Buffer,
+                    (IntPtr)ube.BufferOffsetInBytes,
+                    ube.StagingBlock.SizeInBytes,
+                    ube.StagingBlock.Data.ToPointer());
+                CheckLastError();
+            }
+            else
+            {
+                glBindBuffer(glBuffer.Target, glBuffer.Buffer);
+                glBufferSubData(
+                    glBuffer.Target,
+                    (IntPtr)ube.BufferOffsetInBytes,
+                    (UIntPtr)ube.StagingBlock.SizeInBytes,
+                    ube.StagingBlock.Data.ToPointer());
+            }
 
             ube.StagingBlock.Pool.Free(ube.StagingBlock);
         }
@@ -468,9 +548,9 @@ namespace Vd2.OpenGL
                 case CubeFace.PositiveY:
                     return TextureTarget.TextureCubeMapPositiveY;
                 case CubeFace.NegativeZ:
-                    return TextureTarget.TextureCubeMapNegativeZ;
-                case CubeFace.PositiveZ:
                     return TextureTarget.TextureCubeMapPositiveZ;
+                case CubeFace.PositiveZ:
+                    return TextureTarget.TextureCubeMapNegativeZ;
                 default:
                     throw Illegal.Value<CubeFace>();
             }

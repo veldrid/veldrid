@@ -8,7 +8,7 @@ namespace Vd2.OpenGL
         public DrawElementsType DrawElementsType { get; }
 
         public OpenGLIndexBuffer(ref IndexBufferDescription description)
-            : base(description.SizeInBytes, description.Dynamic)
+            : base(description.SizeInBytes, description.Dynamic, BufferTarget.ElementArrayBuffer)
         {
             Format = description.Format;
             DrawElementsType = OpenGLFormats.VdToGLDrawElementsType(description.Format);

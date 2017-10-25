@@ -18,12 +18,21 @@ namespace Vd2.OpenGL
 
         public PipelineDescription Description { get; }
 
+        public int[] VertexStrides { get; }
+
         public uint Program => _program;
 
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref PipelineDescription description)
         {
             _gd = gd;
             Description = description;
+
+            int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
+            VertexStrides = new int[numVertexBuffers];
+            for (int i = 0; i < numVertexBuffers; i++)
+            {
+                VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
+            }
         }
 
         public bool Created { get; private set; }
@@ -44,6 +53,7 @@ namespace Vd2.OpenGL
             foreach (ShaderStageDescription stageDesc in shaderSet.ShaderStages)
             {
                 OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(stageDesc.Shader);
+                glShader.EnsureResourcesCreated();
                 glAttachShader(_program, glShader.Shader);
                 CheckLastError();
             }

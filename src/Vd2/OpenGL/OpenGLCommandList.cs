@@ -73,6 +73,11 @@ namespace Vd2.OpenGL
             _commands.SetViewport(index, ref viewport);
         }
 
+        internal void Reset()
+        {
+            _commands.Reset();
+        }
+
         public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             _commands.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);

@@ -185,12 +185,14 @@ namespace Vd2.StartupUtilities
                 }
             }
 
+            int result = Sdl2Native.SDL_GL_SetSwapInterval(0);
+
             return Hacks.CreateOpenGL(
                 contextHandle,
                 Sdl2Native.SDL_GL_GetProcAddress,
                 () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle),
                 (uint)window.Width,
-                (uint)window.Handle,
+                (uint)window.Height,
                 gdCI.DebugDevice);
         }
 

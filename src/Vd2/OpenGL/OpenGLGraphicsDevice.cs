@@ -4,6 +4,8 @@ using System;
 using Vd2.OpenGLBinding;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Vd2.OpenGL
 {
@@ -14,14 +16,17 @@ namespace Vd2.OpenGL
             = new ConcurrentQueue<OpenGLDeferredResource>();
         private readonly Action _swapBuffers;
         private readonly OpenGLSwapchainFramebuffer _swapchainFramebuffer;
-        private readonly OpenGLCommandExecutor _commandExecutor = new OpenGLCommandExecutor();
+        private readonly OpenGLCommandExecutor _commandExecutor;
         private DebugProc _debugMessageCallback;
+        private readonly OpenGLExtensions _extensions;
 
         public override GraphicsBackend BackendType => GraphicsBackend.OpenGL;
 
         public override ResourceFactory ResourceFactory { get; }
 
         public override Framebuffer SwapchainFramebuffer => _swapchainFramebuffer;
+
+        public OpenGLExtensions Extensions => _extensions;
 
         public OpenGLGraphicsDevice(
             IntPtr glContext,
@@ -49,6 +54,29 @@ namespace Vd2.OpenGL
                 EnableDebugCallback();
             }
 
+            // Set miscellaneous initial states.
+            glEnable(EnableCap.TextureCubeMapSeamless);
+            CheckLastError();
+
+            int extensionCount;
+            glGetIntegerv(GetPName.NumExtensions, &extensionCount);
+            CheckLastError();
+
+            HashSet<string> extensions = new HashSet<string>();
+            for (uint i = 0; i < extensionCount; i++)
+            {
+                byte* extensionNamePtr = glGetStringi(StringNameIndexed.Extensions, i);
+                CheckLastError();
+                if (extensionNamePtr != null)
+                {
+                    string extensionName = Util.GetString(extensionNamePtr);
+                    extensions.Add(extensionName);
+                }
+            }
+
+            _extensions = new OpenGLExtensions(extensions);
+            _commandExecutor = new OpenGLCommandExecutor(_extensions);
+
             PostContextCreated();
         }
 
@@ -56,6 +84,7 @@ namespace Vd2.OpenGL
         {
             OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
             _commandExecutor.Execute(glCommandList.Commands);
+            glCommandList.Reset();
         }
 
         public override void ResizeMainWindow(uint width, uint height)

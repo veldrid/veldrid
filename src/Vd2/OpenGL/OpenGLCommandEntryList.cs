@@ -10,6 +10,11 @@ namespace Vd2.OpenGL
 
         public IReadOnlyList<OpenGLCommandEntry> Commands => _commands;
 
+        internal void Reset()
+        {
+            _commands.Clear();
+        }
+
         internal void Begin()
         {
             _commands.Add(new BeginEntry());

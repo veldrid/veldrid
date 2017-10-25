@@ -6,6 +6,7 @@ namespace Vd2.OpenGL
     internal static class OpenGLUtil
     {
         [Conditional("DEBUG")]
+        [DebuggerNonUserCode]
         internal static void CheckLastError()
         {
             uint error = glGetError();

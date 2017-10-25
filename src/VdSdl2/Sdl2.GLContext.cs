@@ -38,6 +38,10 @@ namespace VdSdl2
         private delegate int SDL_GL_MakeCurrent_t(SDL_Window Sdl2Window, IntPtr context);
         private static SDL_GL_MakeCurrent_t s_gl_makeCurrent = LoadFunction<SDL_GL_MakeCurrent_t>("SDL_GL_MakeCurrent");
         public static int SDL_GL_MakeCurrent(SDL_Window Sdl2Window, IntPtr context) => s_gl_makeCurrent(Sdl2Window, context);
+
+        private delegate int SDL_GL_SetSwapInterval_t(int interval);
+        private static SDL_GL_SetSwapInterval_t s_gl_setSwapInterval = LoadFunction<SDL_GL_SetSwapInterval_t>("SDL_GL_SetSwapInterval");
+        public static int SDL_GL_SetSwapInterval(int interval) => s_gl_setSwapInterval(interval);
     }
 
     public enum SDL_GLAttribute

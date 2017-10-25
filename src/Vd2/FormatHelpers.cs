@@ -43,5 +43,25 @@ namespace Vd2
                     throw Illegal.Value<VertexElementFormat>();
             }
         }
+
+        internal static int GetElementCount(VertexElementFormat format)
+        {
+            switch (format)
+            {
+                case VertexElementFormat.Float1:
+                case VertexElementFormat.Byte1:
+                    return 1;
+                case VertexElementFormat.Float2:
+                case VertexElementFormat.Byte2:
+                    return 2;
+                case VertexElementFormat.Float3:
+                    return 3;
+                case VertexElementFormat.Float4:
+                case VertexElementFormat.Byte4:
+                    return 4;
+                default:
+                    throw Illegal.Value<VertexElementFormat>();
+            }
+        }
     }
 }

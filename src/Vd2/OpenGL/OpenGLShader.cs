@@ -21,7 +21,6 @@ namespace Vd2.OpenGL
             _gd = gd;
             _shaderType = OpenGLFormats.VdToGLShaderType(stage);
             _stagingBlock = stagingBlock;
-
         }
 
         public bool Created { get; private set; }
@@ -46,15 +45,22 @@ namespace Vd2.OpenGL
             glShaderSource(_shader, 1, textsPtr, &length);
             CheckLastError();
 
+            glCompileShader(_shader);
+            CheckLastError();
+
             int compileStatus;
             glGetShaderiv(_shader, ShaderParameter.CompileStatus, &compileStatus);
             CheckLastError();
 
             if (compileStatus != 1)
             {
-                byte* infoLog = stackalloc byte[4096];
+                int infoLogLength;
+                glGetShaderiv(_shader, ShaderParameter.InfoLogLength, &infoLogLength);
+                CheckLastError();
+
+                byte* infoLog = stackalloc byte[infoLogLength];
                 uint returnedInfoLength;
-                glGetShaderInfoLog(_shader, 4096, &returnedInfoLength, infoLog);
+                glGetShaderInfoLog(_shader, (uint)infoLogLength, &returnedInfoLength, infoLog);
                 CheckLastError();
 
                 string message = Encoding.UTF8.GetString(infoLog, (int)returnedInfoLength);

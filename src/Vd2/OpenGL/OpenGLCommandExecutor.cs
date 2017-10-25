@@ -445,7 +445,7 @@ namespace Vd2.OpenGL
                     glBuffer.Buffer,
                     (IntPtr)ube.BufferOffsetInBytes,
                     ube.StagingBlock.SizeInBytes,
-                    ube.StagingBlock.Data.ToPointer());
+                    ube.StagingBlock.Data);
                 CheckLastError();
             }
             else
@@ -455,7 +455,7 @@ namespace Vd2.OpenGL
                     glBuffer.Target,
                     (IntPtr)ube.BufferOffsetInBytes,
                     (UIntPtr)ube.StagingBlock.SizeInBytes,
-                    ube.StagingBlock.Data.ToPointer());
+                    ube.StagingBlock.Data);
             }
 
             ube.StagingBlock.Pool.Free(ube.StagingBlock);
@@ -485,7 +485,7 @@ namespace Vd2.OpenGL
                 ut2de.Height,
                 glTex2D.GLPixelFormat,
                 glTex2D.GLPixelType,
-                ut2de.StagingBlock.Data.ToPointer());
+                ut2de.StagingBlock.Data);
             CheckLastError();
 
             ut2de.StagingBlock.Pool.Free(ut2de.StagingBlock);
@@ -523,7 +523,7 @@ namespace Vd2.OpenGL
                 utce.Height,
                 glTexCube.GLPixelFormat,
                 glTexCube.GLPixelType,
-                utce.StagingBlock.Data.ToPointer());
+                utce.StagingBlock.Data);
             CheckLastError();
 
             utce.StagingBlock.Pool.Free(utce.StagingBlock);

@@ -38,7 +38,7 @@ namespace Vd2.OpenGL
             _shader = glCreateShader(_shaderType);
             CheckLastError();
 
-            byte* textPtr = (byte*)_stagingBlock.Data.ToPointer();
+            byte* textPtr = (byte*)_stagingBlock.Data;
             int length = (int)_stagingBlock.SizeInBytes;
             byte** textsPtr = &textPtr;
 

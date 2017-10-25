@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -6,11 +7,14 @@ namespace Vd2.OpenGL
 {
     internal unsafe class StagingMemoryPool
     {
+        private readonly ArrayPool<byte> _arrayPool = ArrayPool<byte>.Shared;
+
         public StagingBlock Stage(IntPtr source, uint sizeInBytes)
         {
-            IntPtr data = Marshal.AllocHGlobal((int)sizeInBytes);
-            Unsafe.CopyBlock(data.ToPointer(), source.ToPointer(), sizeInBytes);
-            return new StagingBlock(data, sizeInBytes, this);
+            byte[] array = _arrayPool.Rent((int)sizeInBytes);
+            GCHandle gcHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+            Unsafe.CopyBlock(gcHandle.AddrOfPinnedObject().ToPointer(), source.ToPointer(), sizeInBytes);
+            return new StagingBlock(array, gcHandle, sizeInBytes, this);
         }
 
         public StagingBlock Stage(byte[] bytes)
@@ -23,21 +27,26 @@ namespace Vd2.OpenGL
 
         public void Free(StagingBlock block)
         {
-            Marshal.FreeHGlobal(block.Data);
+            block.GCHandle.Free();
+            _arrayPool.Return(block.Array);
         }
     }
 
     internal unsafe struct StagingBlock
     {
-        public readonly IntPtr Data;
+        public readonly byte[] Array;
+        public readonly GCHandle GCHandle;
         public readonly uint SizeInBytes;
         public readonly StagingMemoryPool Pool;
+        public readonly void* Data;
 
-        public StagingBlock(IntPtr data, uint sizeInBytes, StagingMemoryPool pool)
+        public StagingBlock(byte[] array, GCHandle gcHandle, uint sizeInBytes, StagingMemoryPool pool)
         {
-            Data = data;
+            Array = array;
+            GCHandle = gcHandle;
             SizeInBytes = sizeInBytes;
             Pool = pool;
+            Data = GCHandle.AddrOfPinnedObject().ToPointer();
         }
 
         internal void Free()

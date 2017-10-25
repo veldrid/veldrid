@@ -83,7 +83,7 @@ namespace Vd2.OpenGL
         public override void ExecuteCommands(CommandList cl)
         {
             OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
-            _commandExecutor.Execute(glCommandList.Commands);
+            glCommandList.Commands.ExecuteAll(_commandExecutor);
             glCommandList.Reset();
         }
 

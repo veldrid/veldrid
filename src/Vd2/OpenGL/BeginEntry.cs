@@ -2,5 +2,8 @@
 {
     internal class BeginEntry : OpenGLCommandEntry
     {
+        public override void ClearReferences()
+        {
+        }
     }
 }

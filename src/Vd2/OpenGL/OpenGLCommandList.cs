@@ -1,16 +1,16 @@
 ﻿using System;
+using Vd2.OpenGL.NoAllocEntryList;
 
 namespace Vd2.OpenGL
 {
     internal class OpenGLCommandList : CommandList
     {
-        private readonly OpenGLCommandEntryList _commands = new OpenGLCommandEntryList();
+        private readonly OpenGLCommandEntryList _commands = new OpenGLNoAllocCommandEntryList();
 
-        public OpenGLCommandEntryList Commands => _commands;
+        internal OpenGLCommandEntryList Commands => _commands;
 
         public OpenGLCommandList(ref CommandListDescription description) : base(ref description)
         {
-
         }
 
         public override void Begin()

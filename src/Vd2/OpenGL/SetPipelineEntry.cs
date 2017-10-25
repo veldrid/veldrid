@@ -2,11 +2,24 @@
 {
     internal class SetPipelineEntry : OpenGLCommandEntry
     {
-        public readonly Pipeline Pipeline;
+        public Pipeline Pipeline;
 
         public SetPipelineEntry(Pipeline pipeline)
         {
             Pipeline = pipeline;
+        }
+
+        public SetPipelineEntry() { }
+
+        public SetPipelineEntry Init(Pipeline pipeline)
+        {
+            Pipeline = pipeline;
+            return this;
+        }
+
+        public override void ClearReferences()
+        {
+            Pipeline = null;
         }
     }
 }

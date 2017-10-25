@@ -17,6 +17,8 @@ namespace Vd2.OpenGL
         private Framebuffer _fb;
         private bool _isSwapchainFB;
         private uint _vertexAttributesBound;
+        private readonly Viewport[] _viewports = new Viewport[20];
+        private OpenGLExtensions _extensions;
 
         public OpenGLCommandExecutor(OpenGLExtensions extensions)
         {
@@ -24,64 +26,7 @@ namespace Vd2.OpenGL
             _textureSamplerManager = new OpenGLTextureSamplerManager(extensions);
         }
 
-        public void Execute(OpenGLCommandEntryList list)
-        {
-            foreach (OpenGLCommandEntry command in list.Commands)
-            {
-                switch (command)
-                {
-                    case BeginEntry be:
-                        Begin(be);
-                        break;
-                    case ClearColorTargetEntry ccte:
-                        ClearColorTarget(ccte);
-                        break;
-                    case ClearDepthTargetEntry cdte:
-                        ClearDepthTarget(cdte);
-                        break;
-                    case DrawEntry de:
-                        Draw(de);
-                        break;
-                    case EndEntry ee:
-                        End(ee);
-                        break;
-                    case SetFramebufferEntry sfbe:
-                        SetFramebuffer(sfbe);
-                        break;
-                    case SetIndexBufferEntry sibe:
-                        SetIndexBuffer(sibe);
-                        break;
-                    case SetPipelineEntry spe:
-                        SetPipeline(spe);
-                        break;
-                    case SetResourceSetEntry srse:
-                        SetResourceSet(srse);
-                        break;
-                    case SetScissorRectEntry ssre:
-                        SetScissorRect(ssre);
-                        break;
-                    case SetVertexBufferEntry svbe:
-                        SetVertexBuffer(svbe);
-                        break;
-                    case SetViewportEntry sve:
-                        SetViewport(sve);
-                        break;
-                    case UpdateBufferEntry ube:
-                        UpdateBuffer(ube);
-                        break;
-                    case UpdateTexture2DEntry ut2de:
-                        UpdateTexture2D(ut2de);
-                        break;
-                    case UpdateTextureCubeEntry utce:
-                        UpdateTextureCube(utce);
-                        break;
-                    default:
-                        throw new NotImplementedException("Command type not handled: " + command.GetType().Name);
-                }
-            }
-        }
-
-        private void Begin(BeginEntry be)
+        public void Begin()
         {
             ClearManagedState();
         }
@@ -98,15 +43,15 @@ namespace Vd2.OpenGL
             _isSwapchainFB = false;
         }
 
-        private void ClearColorTarget(ClearColorTargetEntry ccte)
+        public void ClearColorTarget(uint index, RgbaFloat clearColor)
         {
             if (!_isSwapchainFB)
             {
-                glDrawBuffer((DrawBufferMode)((uint)DrawBufferMode.ColorAttachment0 + ccte.Index));
+                glDrawBuffer((DrawBufferMode)((uint)DrawBufferMode.ColorAttachment0 + index));
                 CheckLastError();
             }
 
-            RgbaFloat color = ccte.ClearColor;
+            RgbaFloat color = clearColor;
             glClearColor(color.R, color.G, color.B, color.A);
             CheckLastError();
 
@@ -114,9 +59,9 @@ namespace Vd2.OpenGL
             CheckLastError();
         }
 
-        private void ClearDepthTarget(ClearDepthTargetEntry cdte)
+        public void ClearDepthTarget(float depth)
         {
-            glClearDepth(cdte.Depth);
+            glClearDepth(depth);
             CheckLastError();
 
             glDepthMask(true);
@@ -124,42 +69,48 @@ namespace Vd2.OpenGL
             CheckLastError();
         }
 
-        private void Draw(DrawEntry de)
+        public void Draw(
+            uint indexCount,
+            uint instanceCount,
+            uint indexStart,
+            int vertexOffset,
+            uint instanceStart)
+
         {
             FlushVertexLayouts();
 
             uint indexSize = _drawElementsType == DrawElementsType.UnsignedShort ? 2u : 4u;
-            void* indices = new IntPtr(de.IndexStart * indexSize).ToPointer();
+            void* indices = new IntPtr(indexStart * indexSize).ToPointer();
 
-            if (de.InstanceCount == 1)
+            if (instanceCount == 1)
             {
-                if (de.VertexOffset == 0)
+                if (vertexOffset == 0)
                 {
-                    glDrawElements(_primitiveType, de.IndexCount, _drawElementsType, indices);
+                    glDrawElements(_primitiveType, indexCount, _drawElementsType, indices);
                     CheckLastError();
                 }
                 else
                 {
-                    glDrawElementsBaseVertex(_primitiveType, de.IndexCount, _drawElementsType, indices, de.VertexOffset);
+                    glDrawElementsBaseVertex(_primitiveType, indexCount, _drawElementsType, indices, vertexOffset);
                     CheckLastError();
                 }
             }
             else
             {
-                if (de.VertexOffset == 0)
+                if (vertexOffset == 0)
                 {
-                    glDrawElementsInstanced(_primitiveType, de.IndexCount, _drawElementsType, indices, de.InstanceCount);
+                    glDrawElementsInstanced(_primitiveType, indexCount, _drawElementsType, indices, instanceCount);
                     CheckLastError();
                 }
                 else
                 {
                     glDrawElementsInstancedBaseVertex(
                         _primitiveType,
-                        de.IndexCount,
+                        indexCount,
                         _drawElementsType,
                         indices,
-                        de.InstanceCount,
-                        de.VertexOffset);
+                        instanceCount,
+                        vertexOffset);
                     CheckLastError();
                 }
             }
@@ -213,13 +164,12 @@ namespace Vd2.OpenGL
             _vertexAttributesBound = totalSlotsBound;
         }
 
-        private void End(EndEntry ee)
+        public void End()
         {
         }
 
-        private void SetFramebuffer(SetFramebufferEntry sfbe)
+        public void SetFramebuffer(Framebuffer fb)
         {
-            Framebuffer fb = sfbe.Framebuffer;
             if (fb is OpenGLFramebuffer glFB)
             {
                 glFB.EnsureResourcesCreated();
@@ -241,9 +191,9 @@ namespace Vd2.OpenGL
             _fb = fb;
         }
 
-        private void SetIndexBuffer(SetIndexBufferEntry sibe)
+        public void SetIndexBuffer(IndexBuffer ib)
         {
-            OpenGLIndexBuffer glIB = Util.AssertSubtype<IndexBuffer, OpenGLIndexBuffer>(sibe.IndexBuffer);
+            OpenGLIndexBuffer glIB = Util.AssertSubtype<IndexBuffer, OpenGLIndexBuffer>(ib);
             glIB.EnsureResourcesCreated();
 
             glBindBuffer(BufferTarget.ElementArrayBuffer, glIB.Buffer);
@@ -252,9 +202,9 @@ namespace Vd2.OpenGL
             _drawElementsType = glIB.DrawElementsType;
         }
 
-        private void SetPipeline(SetPipelineEntry spe)
+        public void SetPipeline(Pipeline pipeline)
         {
-            _pipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(spe.Pipeline);
+            _pipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(pipeline);
             PipelineDescription desc = _pipeline.Description;
 
             // Blend State
@@ -365,11 +315,11 @@ namespace Vd2.OpenGL
             CheckLastError();
         }
 
-        private void SetResourceSet(SetResourceSetEntry srse)
+        public void SetResourceSet(ResourceSet rs)
         {
             _pipeline.EnsureResourcesCreated();
 
-            OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(srse.ResourceSet);
+            OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(rs);
             for (uint slot = 0; slot < glResourceSet.Resources.Length; slot++)
             {
                 BindableResource resource = glResourceSet.Resources[(int)slot];
@@ -402,50 +352,48 @@ namespace Vd2.OpenGL
             }
         }
 
-        private void SetScissorRect(SetScissorRectEntry ssre)
+        public void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
             glScissorIndexed(
-                ssre.Index,
-                (int)ssre.X,
-                (int)(_viewports[(int)ssre.Index].Height - (int)ssre.Height - ssre.Y),
-                ssre.Width,
-                ssre.Height);
+                index,
+                (int)x,
+                (int)(_viewports[(int)index].Height - (int)height - y),
+                width,
+                height);
             CheckLastError();
         }
 
-        private void SetVertexBuffer(SetVertexBufferEntry svbe)
+        public void SetVertexBuffer(uint index, VertexBuffer vb)
         {
-            OpenGLVertexBuffer glVB = Util.AssertSubtype<VertexBuffer, OpenGLVertexBuffer>(svbe.VertexBuffer);
+            OpenGLVertexBuffer glVB = Util.AssertSubtype<VertexBuffer, OpenGLVertexBuffer>(vb);
             glVB.EnsureResourcesCreated();
 
-            Util.EnsureArraySize(ref _vertexBuffers, svbe.Index + 1);
-            _vertexBuffers[svbe.Index] = glVB;
+            Util.EnsureArraySize(ref _vertexBuffers, index + 1);
+            _vertexBuffers[index] = glVB;
         }
-        private readonly Viewport[] _viewports = new Viewport[20];
-        private OpenGLExtensions _extensions;
 
-        private void SetViewport(SetViewportEntry sve)
+        public void SetViewport(uint index, ref Viewport viewport)
         {
-            _viewports[(int)sve.Index] = sve.Viewport;
-            glViewportIndexed(sve.Index, sve.Viewport.X, sve.Viewport.Y, sve.Viewport.Width, sve.Viewport.Height);
+            _viewports[(int)index] = viewport;
+            glViewportIndexed(index, viewport.X, viewport.Y, viewport.Width, viewport.Height);
             CheckLastError();
 
-            glDepthRangeIndexed(sve.Index, sve.Viewport.MinDepth, sve.Viewport.MaxDepth);
+            glDepthRangeIndexed(index, viewport.MinDepth, viewport.MaxDepth);
             CheckLastError();
         }
 
-        private void UpdateBuffer(UpdateBufferEntry ube)
+        public void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, StagingBlock stagingBlock)
         {
-            OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(ube.Buffer);
+            OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(buffer);
             glBuffer.EnsureResourcesCreated();
 
             if (_extensions.ARB_DirectStateAccess)
             {
                 glNamedBufferSubData(
                     glBuffer.Buffer,
-                    (IntPtr)ube.BufferOffsetInBytes,
-                    ube.StagingBlock.SizeInBytes,
-                    ube.StagingBlock.Data);
+                    (IntPtr)bufferOffsetInBytes,
+                    stagingBlock.SizeInBytes,
+                    stagingBlock.Data);
                 CheckLastError();
             }
             else
@@ -453,17 +401,25 @@ namespace Vd2.OpenGL
                 glBindBuffer(glBuffer.Target, glBuffer.Buffer);
                 glBufferSubData(
                     glBuffer.Target,
-                    (IntPtr)ube.BufferOffsetInBytes,
-                    (UIntPtr)ube.StagingBlock.SizeInBytes,
-                    ube.StagingBlock.Data);
+                    (IntPtr)bufferOffsetInBytes,
+                    (UIntPtr)stagingBlock.SizeInBytes,
+                    stagingBlock.Data);
             }
 
-            ube.StagingBlock.Pool.Free(ube.StagingBlock);
+            stagingBlock.Pool.Free(stagingBlock);
         }
 
-        private void UpdateTexture2D(UpdateTexture2DEntry ut2de)
+        public void UpdateTexture2D(
+            Texture2D texture2D,
+            StagingBlock stagingBlock,
+            uint x,
+            uint y,
+            uint width,
+            uint height,
+            uint mipLevel,
+            uint arrayLayer)
         {
-            OpenGLTexture2D glTex2D = Util.AssertSubtype<Texture2D, OpenGLTexture2D>(ut2de.Texture2D);
+            OpenGLTexture2D glTex2D = Util.AssertSubtype<Texture2D, OpenGLTexture2D>(texture2D);
             glTex2D.EnsureResourcesCreated();
 
             glBindTexture(TextureTarget.Texture2D, glTex2D.Texture);
@@ -478,17 +434,17 @@ namespace Vd2.OpenGL
 
             glTexSubImage2D(
                 TextureTarget.Texture2D,
-                (int)ut2de.MipLevel,
-                (int)ut2de.X,
-                (int)ut2de.Y,
-                ut2de.Width,
-                ut2de.Height,
+                (int)mipLevel,
+                (int)x,
+                (int)y,
+                width,
+                height,
                 glTex2D.GLPixelFormat,
                 glTex2D.GLPixelType,
-                ut2de.StagingBlock.Data);
+                stagingBlock.Data);
             CheckLastError();
 
-            ut2de.StagingBlock.Pool.Free(ut2de.StagingBlock);
+            stagingBlock.Pool.Free(stagingBlock);
 
             if (pixelSize < 4)
             {
@@ -497,9 +453,18 @@ namespace Vd2.OpenGL
             }
         }
 
-        private void UpdateTextureCube(UpdateTextureCubeEntry utce)
+        public void UpdateTextureCube(
+            TextureCube textureCube,
+            StagingBlock stagingBlock,
+            CubeFace face,
+            uint x,
+            uint y,
+            uint width,
+            uint height,
+            uint mipLevel,
+            uint arrayLayer)
         {
-            OpenGLTextureCube glTexCube = Util.AssertSubtype<TextureCube, OpenGLTextureCube>(utce.TextureCube);
+            OpenGLTextureCube glTexCube = Util.AssertSubtype<TextureCube, OpenGLTextureCube>(textureCube);
             glTexCube.EnsureResourcesCreated();
 
             glBindTexture(TextureTarget.TextureCubeMap, glTexCube.Texture);
@@ -512,21 +477,21 @@ namespace Vd2.OpenGL
                 CheckLastError();
             }
 
-            TextureTarget target = GetCubeFaceTarget(utce.Face);
+            TextureTarget target = GetCubeFaceTarget(face);
 
             glTexSubImage2D(
                 target,
-                (int)utce.MipLevel,
-                (int)utce.X,
-                (int)utce.Y,
-                utce.Width,
-                utce.Height,
+                (int)mipLevel,
+                (int)x,
+                (int)y,
+                width,
+                height,
                 glTexCube.GLPixelFormat,
                 glTexCube.GLPixelType,
-                utce.StagingBlock.Data);
+                stagingBlock.Data);
             CheckLastError();
 
-            utce.StagingBlock.Pool.Free(utce.StagingBlock);
+            stagingBlock.Pool.Free(stagingBlock);
 
             if (pixelSize < 4)
             {

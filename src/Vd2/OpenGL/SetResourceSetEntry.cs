@@ -2,11 +2,24 @@
 {
     internal class SetResourceSetEntry : OpenGLCommandEntry
     {
-        public readonly ResourceSet ResourceSet;
+        public ResourceSet ResourceSet;
 
         public SetResourceSetEntry(ResourceSet rs)
         {
-            this.ResourceSet = rs;
+            ResourceSet = rs;
+        }
+
+        public SetResourceSetEntry() { }
+
+        public SetResourceSetEntry Init(ResourceSet rs)
+        {
+            ResourceSet = rs;
+            return this;
+        }
+
+        public override void ClearReferences()
+        {
+            ResourceSet = null;
         }
     }
 }

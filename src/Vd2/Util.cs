@@ -15,7 +15,7 @@ namespace Vd2
 #if DEBUG
             if (value == null)
             {
-                return null;
+                throw new VdException($"Expected object of type {typeof(TDerived).FullName} but received null instead.");
             }
 
             if (!(value is TDerived derived))

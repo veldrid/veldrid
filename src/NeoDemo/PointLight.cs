@@ -14,7 +14,6 @@ namespace Vd2.NeoDemo
     public struct PointLightsInfo
     {
         public int NumActiveLights;
-        public Vector3 _padding;
         [ArraySize(4)] public PointLightInfo[] PointLights;
 
         public Blittable GetBlittable()

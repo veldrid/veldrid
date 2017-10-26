@@ -19,6 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="$(AssetsDir)\Models\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Assets\Models\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)..\VdSdl2\native\win-x64\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

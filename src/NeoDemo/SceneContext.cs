@@ -48,7 +48,18 @@ namespace Vd2.NeoDemo
             }
 
             PointLightsBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<PointLightsInfo.Blittable>()));
-            cl.UpdateBuffer(PointLightsBuffer, 0, new PointLightsInfo.Blittable());
+
+            PointLightsInfo pli = new PointLightsInfo();
+            pli.NumActiveLights = 4;
+            pli.PointLights = new PointLightInfo[4]
+            {
+                new PointLightInfo { Color = new Vector3(0.6f, 1, 1f), Position = new Vector3(-50, 5, 0), Range = 75f },
+                new PointLightInfo { Color = new Vector3(1, 0.6f, 1f), Position = new Vector3(0, 5, 0), Range = 60f },
+                new PointLightInfo { Color = new Vector3(1, 1, 0.6f), Position = new Vector3(50, 5, 0), Range = 10f },
+                new PointLightInfo { Color = new Vector3(0.75f, 0.75f, 1f), Position = new Vector3(25, 5, 45), Range = 150f },
+            };
+
+            cl.UpdateBuffer(PointLightsBuffer, 0, pli.GetBlittable());
 
             NearShadowMapTexture = factory.CreateTexture2D(new TextureDescription(2048, 2048, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
             NearShadowMapView = factory.CreateTextureView(new TextureViewDescription(NearShadowMapTexture));

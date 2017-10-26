@@ -72,7 +72,7 @@ namespace Vd2
             return true;
         }
 
-        internal static bool ArrayEqualsBlittable<T>(T[] left, T[] right) where T : struct, IEquatable<T>
+        internal static bool ArrayEqualsEquatable<T>(T[] left, T[] right) where T : struct, IEquatable<T>
         {
             if (left.Length != right.Length)
             {

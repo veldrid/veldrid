@@ -1,9 +1,9 @@
 ﻿using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Numerics;
-using System.Runtime.InteropServices;
-using Vd2;
 using Vd2.ImageSharp;
 using Vd2.NeoDemo.Objects;
 using Vd2.StartupUtilities;
@@ -42,7 +42,6 @@ namespace Vd2.NeoDemo
                 WindowTitle = "Vd NeoDemo"
             };
             GraphicsDeviceCreateInfo gdCI = new GraphicsDeviceCreateInfo();
-            gdCI.Backend = GraphicsBackend.OpenGL;
 #if DEBUG
             gdCI.DebugDevice = true;
 #endif
@@ -62,45 +61,10 @@ namespace Vd2.NeoDemo
             _scene.AddRenderable(_igRenderable);
             _scene.AddUpdateable(_igRenderable);
 
-            InfiniteGrid grid = new InfiniteGrid();
-            _scene.AddRenderable(grid);
-
             Skybox skybox = Skybox.LoadDefaultSkybox();
             _scene.AddRenderable(skybox);
 
-            //AddTexturedMesh(
-            //    initCL,
-            //    "Textures/spnza_bricks_a_diff.png",
-            //    PrimitiveShapes.Box(10, 10, 10, 10),
-            //    new Vector3(0, 0, -5),
-            //    Quaternion.Identity,
-            //    Vector3.One);
-
-            //AddTexturedMesh(
-            //    initCL,
-            //    "Textures/spnza_bricks_a_diff.png",
-            //    PrimitiveShapes.Box(5, 5, 5, 5f),
-            //    new Vector3(-3, -9, 2),
-            //    Quaternion.Identity,
-            //    Vector3.One);
-
-            //AddTexturedMesh(
-            //    initCL,
-            //    "Textures/spnza_bricks_a_diff.png",
-            //    PrimitiveShapes.Box(27, 3, 27, 27f),
-            //    new Vector3(-5, -16, 5),
-            //    Quaternion.Identity,
-            //    Vector3.One);
-
-            //AddTexturedMesh(
-            //    initCL,
-            //    "Textures/spnza_bricks_a_diff.png",
-            //    PrimitiveShapes.Plane(100, 100, 5),
-            //    new Vector3(0, -20, 0),
-            //    Quaternion.Identity,
-            //    Vector3.One);
-
-            AddSponzaAtriumObjects();
+            AddSponzaAtriumObjects(initCL);
 
             ShadowmapDrawer texDrawer = new ShadowmapDrawer(() => _window, () => _sc.NearShadowMapView);
             _resizeHandled += (w, h) => texDrawer.OnWindowResized();
@@ -120,14 +84,69 @@ namespace Vd2.NeoDemo
             CreateAllObjects();
         }
 
-        private void AddSponzaAtriumObjects()
+        private void AddSponzaAtriumObjects(CommandList cl)
         {
+            ObjParser parser = new ObjParser();
+            using (FileStream objStream = File.OpenRead(AssetHelper.GetPath("Models/SponzaAtrium/sponza.obj")))
+            {
+                ObjFile atriumFile = parser.Parse(objStream);
+                MtlFile atriumMtls;
+                using (FileStream mtlStream = File.OpenRead(AssetHelper.GetPath("Models/SponzaAtrium/sponza.mtl")))
+                {
+                    atriumMtls = new MtlParser().Parse(mtlStream);
+                }
+
+                int x = 0;
+                foreach (ObjFile.MeshGroup group in atriumFile.MeshGroups)
+                {
+                    ConstructedMeshInfo mesh = atriumFile.GetMesh(group);
+                    MaterialDefinition materialDef = atriumMtls.Definitions[mesh.MaterialName];
+                    ImageSharpTexture overrideTextureData = null;
+                    ImageSharpTexture alphaTexture = null;
+                    MaterialPropsAndBuffer materialProps = CommonMaterials.Brick;
+                    if (materialDef.DiffuseTexture != null)
+                    {
+                        string texturePath = AssetHelper.GetPath("Models/SponzaAtrium/" + materialDef.DiffuseTexture);
+                        overrideTextureData = LoadTexture(texturePath);
+                    }
+                    if (materialDef.AlphaMap != null)
+                    {
+                        string texturePath = AssetHelper.GetPath("Models/SponzaAtrium/" + materialDef.AlphaMap);
+                        alphaTexture = LoadTexture(texturePath);
+                    }
+                    if (materialDef.Name.Contains("vase"))
+                    {
+                        materialProps = CommonMaterials.Vase;
+                    }
+
+                    AddTexturedMesh(cl, mesh, overrideTextureData, alphaTexture, materialProps, Vector3.Zero, Quaternion.Identity, new Vector3(0.1f));
+                }
+            }
         }
 
-        private void AddTexturedMesh(CommandList cl, string texPath, MeshData meshData, Vector3 position, Quaternion rotation, Vector3 scale)
+        private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
+        private ImageSharpTexture LoadTexture(string texturePath)
         {
-            ImageSharpTexture texData = new ImageSharpTexture(AssetHelper.GetPath(texPath));
-            TexturedMesh mesh = new TexturedMesh(meshData, texData, CommonMaterials.Brick);
+            if (!_textures.TryGetValue(texturePath, out ImageSharpTexture tex))
+            {
+                tex = new ImageSharpTexture(texturePath);
+                _textures.Add(texturePath, tex);
+            }
+
+            return tex;
+        }
+
+        private void AddTexturedMesh(
+            CommandList cl,
+            MeshData meshData,
+            ImageSharpTexture texData,
+            ImageSharpTexture alphaTexData,
+            MaterialPropsAndBuffer materialProps,
+            Vector3 position,
+            Quaternion rotation,
+            Vector3 scale)
+        {
+            TexturedMesh mesh = new TexturedMesh(meshData, texData, alphaTexData, materialProps ?? CommonMaterials.Brick);
             mesh.Transform.Position = position;
             mesh.Transform.Rotation = rotation;
             mesh.Transform.Scale = scale;
@@ -345,6 +364,7 @@ namespace Vd2.NeoDemo
             _sc.DestroyDeviceObjects();
             _scene.DestroyAllDeviceObjects();
             CommonMaterials.DestroyAllDeviceObjects();
+            StaticResourceCache.DestroyAllDeviceObjects();
         }
 
         private void CreateAllObjects()

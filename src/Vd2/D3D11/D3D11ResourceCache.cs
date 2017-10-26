@@ -220,7 +220,7 @@ namespace Vd2.D3D11
 
             public bool Equals(InputLayoutCacheKey other)
             {
-                return Util.ArrayEqualsBlittable(VertexLayouts, other.VertexLayouts);
+                return Util.ArrayEqualsEquatable(VertexLayouts, other.VertexLayouts);
             }
 
             public override int GetHashCode()

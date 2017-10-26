@@ -63,6 +63,16 @@ namespace Vd2.Utilities
                     m.M44 - m.M43));
         }
 
+        public BoundingFrustum(Plane left, Plane right, Plane bottom, Plane top, Plane near, Plane far)
+        {
+            _planes.Left = left;
+            _planes.Right = right;
+            _planes.Bottom = bottom;
+            _planes.Top = top;
+            _planes.Near = near;
+            _planes.Far = far;
+        }
+
         public ContainmentType Contains(Vector3 point)
         {
             Plane* planes = (Plane*)Unsafe.AsPointer(ref _planes); // Is this safe?

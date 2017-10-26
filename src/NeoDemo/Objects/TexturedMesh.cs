@@ -12,6 +12,7 @@ namespace Vd2.NeoDemo.Objects
     {
         private readonly MeshData _meshData;
         private readonly ImageSharpTexture _textureData;
+        private readonly ImageSharpTexture _alphaTextureData;
         private readonly Transform _transform = new Transform();
 
         private BoundingBox _centeredBounds;
@@ -44,18 +45,12 @@ namespace Vd2.NeoDemo.Objects
 
         public Transform Transform => _transform;
 
-        public TexturedMesh(MeshData meshData, ImageSharpTexture textureData, MaterialProperties materialProps)
-            : this(meshData, textureData, new MaterialPropsAndBuffer(materialProps))
-        {
-            _materialPropsOwned = true;
-        }
-
-        public TexturedMesh(MeshData meshData, ImageSharpTexture textureData, MaterialPropsAndBuffer materialProps)
+        public TexturedMesh(MeshData meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
         {
             _meshData = meshData;
             _centeredBounds = meshData.GetBoundingBox();
             _textureData = textureData;
-            MaterialProperties defaultProps = new MaterialProperties { SpecularIntensity = new Vector3(0.3f), SpecularPower = 10f };
+            _alphaTextureData = alphaTexture;
             _materialProps = materialProps;
         }
 
@@ -76,14 +71,28 @@ namespace Vd2.NeoDemo.Objects
 
             _disposeCollector.Add(_vb, _ib, _worldBuffer, _inverseTransposeWorldBuffer);
 
-            _texture = _textureData.CreateDeviceTexture(factory, cl);
-            _textureView = factory.CreateTextureView(_texture);
-            _alphamapTexture = factory.CreateTexture2D(new TextureDescription(1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
-            RgbaByte color = RgbaByte.White;
-            cl.UpdateTexture2D(_alphamapTexture, (IntPtr)(&color), 4, 0, 0, 1, 1, 0, 0);
-            _alphaMapView = factory.CreateTextureView(_alphamapTexture);
+            if (_textureData != null)
+            {
+                _texture = StaticResourceCache.GetTexture2D(factory, _textureData, cl);
+            }
+            else
+            {
+                _texture = factory.CreateTexture2D(new TextureDescription(1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+                RgbaByte color = RgbaByte.Pink;
+                cl.UpdateTexture2D(_texture, (IntPtr)(&color), 4, 0, 0, 1, 1, 0, 0);
+            }
 
-            _disposeCollector.Add(_texture, _textureView, _alphamapTexture, _alphaMapView);
+            _textureView = StaticResourceCache.GetTextureView(factory, _texture);
+
+            if (_alphaTextureData != null)
+            {
+                _alphamapTexture = _alphaTextureData.CreateDeviceTexture(factory, cl);
+            }
+            else
+            {
+                _alphamapTexture = StaticResourceCache.GetPinkTexture(factory, cl);
+            }
+            _alphaMapView = StaticResourceCache.GetTextureView(factory, _alphamapTexture);
 
             VertexLayoutDescription[] shadowDepthVertexLayouts = new VertexLayoutDescription[]
             {
@@ -93,17 +102,15 @@ namespace Vd2.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            Shader depthVS = ShaderHelper.LoadShader(factory, "ShadowDepth", ShaderStages.Vertex);
-            Shader depthFS = ShaderHelper.LoadShader(factory, "ShadowDepth", ShaderStages.Fragment);
+            Shader depthVS = StaticResourceCache.GetShader(factory, "ShadowDepth", ShaderStages.Vertex);
+            Shader depthFS = StaticResourceCache.GetShader(factory, "ShadowDepth", ShaderStages.Fragment);
             ShaderStageDescription[] shadowDepthShaderStages = new ShaderStageDescription[]
             {
                 new ShaderStageDescription(ShaderStages.Vertex, depthVS, "VS"),
                 new ShaderStageDescription(ShaderStages.Fragment, depthFS, "FS"),
             };
 
-            _disposeCollector.Add(depthVS, depthFS);
-
-            _depthLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+            _depthLayout = StaticResourceCache.GetResourceLayout(factory, new ResourceLayoutDescription(
              new ResourceLayoutElementDescription("ViewProjection", ResourceKind.Uniform, ShaderStages.Vertex),
              new ResourceLayoutElementDescription("World", ResourceKind.Uniform, ShaderStages.Vertex)));
 
@@ -115,11 +122,10 @@ namespace Vd2.NeoDemo.Objects
                 new ShaderSetDescription(shadowDepthVertexLayouts, shadowDepthShaderStages),
                 _depthLayout,
                 DemoOutputsDescriptions.ShadowMapPass);
-            _shadowMapPipeline = factory.CreatePipeline(ref depthPD);
+            _shadowMapPipeline = StaticResourceCache.GetPipeline(factory, ref depthPD);
 
             _shadowMapResourceSets = CreateShadowMapResourceSets(factory, cl, sc);
 
-            _disposeCollector.Add(_depthLayout, _shadowMapPipeline);
             _disposeCollector.Add(_shadowMapResourceSets);
 
             VertexLayoutDescription[] mainVertexLayouts = new VertexLayoutDescription[]
@@ -130,16 +136,15 @@ namespace Vd2.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            Shader mainVS = ShaderHelper.LoadShader(factory, "ShadowMain", ShaderStages.Vertex);
-            Shader mainFS = ShaderHelper.LoadShader(factory, "ShadowMain", ShaderStages.Fragment);
+            Shader mainVS = StaticResourceCache.GetShader(factory, "ShadowMain", ShaderStages.Vertex);
+            Shader mainFS = StaticResourceCache.GetShader(factory, "ShadowMain", ShaderStages.Fragment);
             ShaderStageDescription[] mainShaderStages = new ShaderStageDescription[]
             {
                 new ShaderStageDescription(ShaderStages.Vertex, mainVS, "VS"),
                 new ShaderStageDescription(ShaderStages.Fragment, mainFS, "FS"),
             };
-            _disposeCollector.Add(mainVS, mainFS);
 
-            _mainLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+            _mainLayout = StaticResourceCache.GetResourceLayout(factory, new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("View", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("World", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
@@ -169,7 +174,7 @@ namespace Vd2.NeoDemo.Objects
                 new ShaderSetDescription(mainVertexLayouts, mainShaderStages),
                 _mainLayout,
                 gd.SwapchainFramebuffer.OutputDescription);
-            _pipeline = factory.CreatePipeline(ref mainPD);
+            _pipeline = StaticResourceCache.GetPipeline(factory, ref mainPD);
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(_mainLayout,
                 sc.ProjectionMatrixBuffer,
@@ -193,7 +198,7 @@ namespace Vd2.NeoDemo.Objects
                 sc.FarShadowMapView,
                 gd.PointSampler));
 
-            _disposeCollector.Add(_mainLayout, _pipeline, _resourceSet);
+            _disposeCollector.Add(_resourceSet);
         }
 
         private ResourceSet[] CreateShadowMapResourceSets(ResourceFactory factory, CommandList cl, SceneContext sc)

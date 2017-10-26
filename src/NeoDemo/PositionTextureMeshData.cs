@@ -38,7 +38,7 @@ namespace Vd2.NeoDemo
                 fixed (VertexPositionTexture* vertexPtr = &Vertices[0])
                 {
                     Vector3* positionPtr = (Vector3*)vertexPtr;
-                    return BoundingBox.CreateFromVertices(
+                    return BoundingBox.CreateFromPoints(
                         positionPtr,
                         Vertices.Length,
                         VertexPositionTexture.SizeInBytes,

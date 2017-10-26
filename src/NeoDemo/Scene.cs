@@ -329,7 +329,7 @@ namespace Vd2.NeoDemo
                 radius * _fScale);
             Matrix4x4 viewProjectionMatrix = lightView * lightProjection;
 
-            lightFrustum = new BoundingFrustum(lightProjection);
+            lightFrustum = new BoundingFrustum(viewProjectionMatrix);
             return viewProjectionMatrix;
         }
 

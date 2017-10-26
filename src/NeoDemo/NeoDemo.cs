@@ -68,37 +68,39 @@ namespace Vd2.NeoDemo
             Skybox skybox = Skybox.LoadDefaultSkybox();
             _scene.AddRenderable(skybox);
 
-            AddTexturedMesh(
-                initCL,
-                "Textures/spnza_bricks_a_diff.png",
-                PrimitiveShapes.Box(10, 10, 10, 10),
-                new Vector3(0, 0, -5),
-                Quaternion.Identity,
-                Vector3.One);
+            //AddTexturedMesh(
+            //    initCL,
+            //    "Textures/spnza_bricks_a_diff.png",
+            //    PrimitiveShapes.Box(10, 10, 10, 10),
+            //    new Vector3(0, 0, -5),
+            //    Quaternion.Identity,
+            //    Vector3.One);
 
-            AddTexturedMesh(
-                initCL,
-                "Textures/spnza_bricks_a_diff.png",
-                PrimitiveShapes.Box(5, 5, 5, 5f),
-                new Vector3(-3, -9, 2),
-                Quaternion.Identity,
-                Vector3.One);
+            //AddTexturedMesh(
+            //    initCL,
+            //    "Textures/spnza_bricks_a_diff.png",
+            //    PrimitiveShapes.Box(5, 5, 5, 5f),
+            //    new Vector3(-3, -9, 2),
+            //    Quaternion.Identity,
+            //    Vector3.One);
 
-            AddTexturedMesh(
-                initCL,
-                "Textures/spnza_bricks_a_diff.png",
-                PrimitiveShapes.Box(27, 3, 27, 27f),
-                new Vector3(-5, -16, 5),
-                Quaternion.Identity,
-                Vector3.One);
+            //AddTexturedMesh(
+            //    initCL,
+            //    "Textures/spnza_bricks_a_diff.png",
+            //    PrimitiveShapes.Box(27, 3, 27, 27f),
+            //    new Vector3(-5, -16, 5),
+            //    Quaternion.Identity,
+            //    Vector3.One);
 
-            AddTexturedMesh(
-                initCL,
-                "Textures/spnza_bricks_a_diff.png",
-                PrimitiveShapes.Plane(100, 100, 5),
-                new Vector3(0, -20, 0),
-                Quaternion.Identity,
-                Vector3.One);
+            //AddTexturedMesh(
+            //    initCL,
+            //    "Textures/spnza_bricks_a_diff.png",
+            //    PrimitiveShapes.Plane(100, 100, 5),
+            //    new Vector3(0, -20, 0),
+            //    Quaternion.Identity,
+            //    Vector3.One);
+
+            AddSponzaAtriumObjects();
 
             ShadowmapDrawer texDrawer = new ShadowmapDrawer(() => _window, () => _sc.NearShadowMapView);
             _resizeHandled += (w, h) => texDrawer.OnWindowResized();
@@ -116,6 +118,10 @@ namespace Vd2.NeoDemo
             _scene.AddRenderable(texDrawer3);
 
             CreateAllObjects();
+        }
+
+        private void AddSponzaAtriumObjects()
+        {
         }
 
         private void AddTexturedMesh(CommandList cl, string texPath, MeshData meshData, Vector3 position, Quaternion rotation, Vector3 scale)

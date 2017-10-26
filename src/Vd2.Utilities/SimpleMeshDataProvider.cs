@@ -43,7 +43,7 @@ namespace Vd2.Utilities
         {
             fixed (void* ptr = Vertices)
             {
-                return BoundingBox.CreateFromVertices(
+                return BoundingBox.CreateFromPoints(
                     (Vector3*)ptr,
                     Vertices.Length,
                     VertexPositionNormalTexture.SizeInBytes,

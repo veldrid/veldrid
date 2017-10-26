@@ -68,8 +68,8 @@ namespace Vd2.Utilities
             Quaternion rotation,
             Vector3 offset,
             Vector3 scale)
-            => CreateFromVertices(vertices, Unsafe.SizeOf<Vector3>(), numVertices, rotation, offset, scale);
-        public static unsafe BoundingBox CreateFromVertices(
+            => CreateFromPoints(vertices, Unsafe.SizeOf<Vector3>(), numVertices, rotation, offset, scale);
+        public static unsafe BoundingBox CreateFromPoints(
             Vector3* vertexPtr,
             int numVertices,
             int vertexStride,

@@ -167,7 +167,7 @@ namespace Vd2.NeoDemo.Objects
                 new ResourceLayoutElementDescription("ShadowMapSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             PipelineDescription mainPD = new PipelineDescription(
-                BlendStateDescription.SingleOverrideBlend,
+                _alphamapTexture != null ? BlendStateDescription.SingleAlphaBlend : BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.LessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
@@ -232,7 +232,20 @@ namespace Vd2.NeoDemo.Objects
             return RenderOrderKey.Create(_pipeline.GetHashCode(), Vector3.Distance(_transform.Position, cameraPosition));
         }
 
-        public override RenderPasses RenderPasses => RenderPasses.AllShadowMap | RenderPasses.Standard;
+        public override RenderPasses RenderPasses
+        {
+            get
+            {
+                if (_alphaTextureData != null)
+                {
+                    return RenderPasses.AllShadowMap | RenderPasses.AlphaBlend;
+                }
+                else
+                {
+                    return RenderPasses.AllShadowMap | RenderPasses.Standard;
+                }
+            }
+        }
 
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
@@ -246,7 +259,7 @@ namespace Vd2.NeoDemo.Objects
                 int shadowMapIndex = renderPass == RenderPasses.ShadowMapNear ? 0 : renderPass == RenderPasses.ShadowMapMid ? 1 : 2;
                 RenderShadowMap(cl, sc, shadowMapIndex);
             }
-            else if (renderPass == RenderPasses.Standard)
+            else if (renderPass == RenderPasses.Standard || renderPass == RenderPasses.AlphaBlend)
             {
                 RenderStandard(cl, sc);
             }

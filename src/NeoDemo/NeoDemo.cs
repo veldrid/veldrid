@@ -241,6 +241,12 @@ namespace Vd2.NeoDemo
                         DrawMaterialMenu(CommonMaterials.Brick);
                         ImGui.EndMenu();
                     }
+                    if (ImGui.BeginMenu("Vase"))
+                    {
+                        DrawMaterialMenu(CommonMaterials.Vase);
+                        ImGui.EndMenu();
+                    }
+
                     ImGui.EndMenu();
                 }
                 if (ImGui.BeginMenu("Debug"))

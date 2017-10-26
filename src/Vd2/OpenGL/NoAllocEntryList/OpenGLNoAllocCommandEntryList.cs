@@ -65,16 +65,42 @@ namespace Vd2.OpenGL.NoAllocEntryList
             _blocks.Add(_currentBlock);
         }
 
+        public void Reset()
+        {
+            FreeAllHandles();
+            _totalEntries = 0;
+            _currentBlock = _blocks[0];
+            foreach (EntryStorageBlock block in _blocks)
+            {
+                block.Clear();
+            }
+        }
+
         public void* GetStorageChunk(uint size, out byte* terminatorWritePtr)
         {
             terminatorWritePtr = null;
             if (!_currentBlock.Alloc(size, out void* ptr))
             {
-                _currentBlock = EntryStorageBlock.New();
-                _blocks.Add(_currentBlock);
-                bool result = _currentBlock.Alloc(size, out ptr);
-                Debug.Assert(result);
+                int currentBlockIndex = _blocks.IndexOf(_currentBlock);
+                bool anyWorked = false;
+                for (int i = currentBlockIndex + 1; i < _blocks.Count; i++)
+                {
+                    EntryStorageBlock nextBlock = _blocks[i];
+                    if (nextBlock.Alloc(size, out ptr))
+                    {
+                        _currentBlock = nextBlock;
+                        anyWorked = true;
+                        break;
+                    }
+                }
 
+                if (!anyWorked)
+                {
+                    _currentBlock = EntryStorageBlock.New();
+                    _blocks.Add(_currentBlock);
+                    bool result = _currentBlock.Alloc(size, out ptr);
+                    Debug.Assert(result);
+                }
             }
             if (_currentBlock.RemainingSize > size)
             {
@@ -323,17 +349,6 @@ namespace Vd2.OpenGL.NoAllocEntryList
             }
         }
 
-        public void Reset()
-        {
-            FreeAllHandles();
-            _totalEntries = 0;
-            _currentBlock = _blocks[0];
-            foreach (EntryStorageBlock block in _blocks)
-            {
-                block.Clear();
-            }
-        }
-
         public void Begin()
         {
             NoAllocBeginEntry entry = new NoAllocBeginEntry();
@@ -471,7 +486,7 @@ namespace Vd2.OpenGL.NoAllocEntryList
             }
         }
 
-        private struct EntryStorageBlock
+        private struct EntryStorageBlock : IEquatable<EntryStorageBlock>
         {
             private const int DefaultStorageBlockSize = 40000;
             private readonly byte[] _bytes;
@@ -520,6 +535,11 @@ namespace Vd2.OpenGL.NoAllocEntryList
             {
                 _unusedStart = 0;
                 Util.ClearArray(_bytes);
+            }
+
+            public bool Equals(EntryStorageBlock other)
+            {
+                return _bytes == other._bytes;
             }
         }
     }

@@ -43,6 +43,10 @@ namespace Vd2.D3D11
 
                 ShaderResourceView = new ShaderResourceView(device, d3dTexCube.DeviceTexture, srvDesc);
             }
+            else
+            {
+                throw new VdException("Invalid texture type used in D3D11 Texture View: " + description.Target.GetType().FullName);
+            }
         }
 
         public override void Dispose()

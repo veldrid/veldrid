@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2\Vd2.csproj" />
+    <ProjectReference Include="..\Vd2\Vd2.csproj" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-ci0027" />
   </ItemGroup>
 

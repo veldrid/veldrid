@@ -8,8 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepositoryRootDirectory)\src\Vd2\Vd2.csproj" />
-    <PackageReference Include="System.Text.Primitives" Version="0.1.0-e171026-1" />
+    <ProjectReference Include="..\Vd2\Vd2.csproj" />
   </ItemGroup>
 
 </Project>

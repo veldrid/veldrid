@@ -7,6 +7,7 @@
         public static readonly RgbaByte Black = new RgbaByte(0, 0, 0, 255);
         public static readonly RgbaByte White = new RgbaByte(255, 255, 255, 255);
         public static readonly RgbaByte Cyan = new RgbaByte(0, 255, 255, 255);
+        public static readonly RgbaByte Pink = new RgbaByte(255, 155, 191, 255);
 
         public RgbaByte(uint data)
         {

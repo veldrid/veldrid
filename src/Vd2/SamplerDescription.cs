@@ -1,6 +1,8 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
-    public struct SamplerDescription
+    public struct SamplerDescription : IEquatable<SamplerDescription>
     {
         public SamplerAddressMode AddressModeU;
         public SamplerAddressMode AddressModeV;
@@ -72,5 +74,34 @@
             MaximumLod = uint.MaxValue,
             MaximumAnisotropy = 4,
         };
+
+        public bool Equals(SamplerDescription other)
+        {
+            return AddressModeU == other.AddressModeU
+                && AddressModeV == other.AddressModeV
+                && AddressModeW == other.AddressModeW
+                && Filter == other.Filter
+                && ComparisonKind.GetValueOrDefault() == other.ComparisonKind.GetValueOrDefault()
+                && MaximumAnisotropy == other.MaximumAnisotropy
+                && MinimumLod == other.MinimumLod
+                && MaximumLod == other.MaximumLod
+                && LodBias == other.LodBias
+                && BorderColor == other.BorderColor;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(
+                AddressModeU.GetHashCode(),
+                AddressModeV.GetHashCode(),
+                AddressModeW.GetHashCode(),
+                Filter.GetHashCode(),
+                ComparisonKind.GetHashCode(),
+                MaximumAnisotropy.GetHashCode(),
+                MinimumLod.GetHashCode(),
+                MaximumLod.GetHashCode(),
+                LodBias.GetHashCode(),
+                BorderColor.GetHashCode());
+        }
     }
 }

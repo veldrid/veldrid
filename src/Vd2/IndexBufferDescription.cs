@@ -1,6 +1,8 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
-    public struct IndexBufferDescription
+    public struct IndexBufferDescription : IEquatable<IndexBufferDescription>
     {
         public ulong SizeInBytes;
         public IndexFormat Format;
@@ -18,6 +20,16 @@
             SizeInBytes = sizeInBytes;
             Format = format;
             Dynamic = dynamic;
+        }
+
+        public bool Equals(IndexBufferDescription other)
+        {
+            return SizeInBytes.Equals(other.SizeInBytes) && Format == other.Format && Dynamic.Equals(other.Dynamic);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(SizeInBytes.GetHashCode(), Format.GetHashCode(), Dynamic.GetHashCode());
         }
     }
 }

@@ -1,6 +1,8 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
-    public struct ShaderDescription
+    public struct ShaderDescription : IEquatable<ShaderDescription>
     {
         public ShaderStages Stage;
         public byte[] ShaderBytes;
@@ -9,6 +11,16 @@
         {
             Stage = stage;
             ShaderBytes = shaderBytes;
+        }
+
+        public bool Equals(ShaderDescription other)
+        {
+            return Stage == other.Stage && ShaderBytes == other.ShaderBytes;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(Stage.GetHashCode(), ShaderBytes.GetHashCode());
         }
     }
 }

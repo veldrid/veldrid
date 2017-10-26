@@ -1,6 +1,8 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
-    public struct BufferDescription
+    public struct BufferDescription : IEquatable<BufferDescription>
     {
         public ulong SizeInBytes;
         public bool Dynamic;
@@ -15,6 +17,16 @@
         {
             SizeInBytes = sizeInBytes;
             Dynamic = dynamic;
+        }
+
+        public bool Equals(BufferDescription other)
+        {
+            return SizeInBytes.Equals(other.SizeInBytes) && Dynamic.Equals(other.Dynamic);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(SizeInBytes.GetHashCode(), Dynamic.GetHashCode());
         }
     }
 }

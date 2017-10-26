@@ -28,7 +28,7 @@ namespace Vd2
 
         public bool Equals(VertexLayoutDescription other)
         {
-            return Stride.Equals(other.Stride) && Util.ArrayEqualsBlittable(Elements, other.Elements);
+            return Stride.Equals(other.Stride) && Util.ArrayEqualsEquatable(Elements, other.Elements);
         }
 
         public override int GetHashCode()

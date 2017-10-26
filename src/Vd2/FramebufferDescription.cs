@@ -1,6 +1,8 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
-    public struct FramebufferDescription
+    public struct FramebufferDescription : IEquatable<FramebufferDescription>
     {
         public Texture2D DepthTarget;
         public Texture2D[] ColorTargets;
@@ -9,6 +11,16 @@
         {
             DepthTarget = depthTarget;
             ColorTargets = colorTargets;
+        }
+
+        public bool Equals(FramebufferDescription other)
+        {
+            return DepthTarget.Equals(other.DepthTarget) && Util.ArrayEquals(ColorTargets, other.ColorTargets);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(DepthTarget.GetHashCode(), HashHelper.Array(ColorTargets));
         }
     }
 }

@@ -25,7 +25,7 @@ namespace Vd2
         public bool Equals(BlendStateDescription other)
         {
             return BlendFactor.Equals(other.BlendFactor)
-                && Util.ArrayEqualsBlittable(AttachmentStates, other.AttachmentStates); 
+                && Util.ArrayEqualsEquatable(AttachmentStates, other.AttachmentStates); 
         }
 
         public override int GetHashCode()

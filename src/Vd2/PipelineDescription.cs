@@ -1,6 +1,8 @@
-﻿namespace Vd2
+﻿using System;
+
+namespace Vd2
 {
-    public struct PipelineDescription
+    public struct PipelineDescription : IEquatable<PipelineDescription>
     {
         public BlendStateDescription BlendState;
         public DepthStencilStateDescription DepthStencilState;
@@ -26,6 +28,29 @@
             ShaderSet = shaderSet;
             ResourceLayout = resourceLayout;
             Outputs = outputs;
+        }
+
+        public bool Equals(PipelineDescription other)
+        {
+            return BlendState.Equals(other.BlendState)
+                && DepthStencilState.Equals(other.DepthStencilState)
+                && RasterizerState.Equals(other.RasterizerState)
+                && PrimitiveTopology == other.PrimitiveTopology
+                && ShaderSet.Equals(other.ShaderSet)
+                && ResourceLayout.Equals(other.ResourceLayout)
+                && Outputs.Equals(other.Outputs);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(
+                BlendState.GetHashCode(),
+                DepthStencilState.GetHashCode(),
+                RasterizerState.GetHashCode(),
+                PrimitiveTopology.GetHashCode(),
+                ShaderSet.GetHashCode(),
+                ResourceLayout.GetHashCode(),
+                Outputs.GetHashCode());
         }
     }
 }

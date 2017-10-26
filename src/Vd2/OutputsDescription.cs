@@ -2,7 +2,7 @@
 
 namespace Vd2
 {
-    public struct OutputDescription
+    public struct OutputDescription : IEquatable<OutputDescription>
     {
         public OutputAttachmentDescription? DepthAttachment;
         public OutputAttachmentDescription[] ColorAttachments;
@@ -27,6 +27,17 @@ namespace Vd2
             }
 
             return new OutputDescription(depthAttachment, colorAttachments);
+        }
+
+        public bool Equals(OutputDescription other)
+        {
+            return DepthAttachment.GetValueOrDefault().Equals(other.DepthAttachment.GetValueOrDefault())
+                && Util.ArrayEqualsEquatable(ColorAttachments, other.ColorAttachments);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(DepthAttachment.GetHashCode(), HashHelper.Array(ColorAttachments));
         }
     }
 }

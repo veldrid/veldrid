@@ -21,6 +21,9 @@ namespace Veldrid.NeoDemo
 
         private static readonly Dictionary<Texture, TextureView> s_textureViews = new Dictionary<Texture, TextureView>();
 
+        private static readonly Dictionary<ResourceSetDescription, ResourceSet> s_resourceSets
+            = new Dictionary<ResourceSetDescription, ResourceSet>();
+
         private static Texture2D _pinkTex;
 
         public static Pipeline GetPipeline(ResourceFactory factory, ref PipelineDescription desc)
@@ -90,6 +93,12 @@ namespace Veldrid.NeoDemo
 
             _pinkTex.Dispose();
             _pinkTex = null;
+
+            foreach (KeyValuePair<ResourceSetDescription, ResourceSet> kvp in s_resourceSets)
+            {
+                kvp.Value.Dispose();
+            }
+            s_resourceSets.Clear();
         }
 
         internal static Texture2D GetTexture2D(ResourceFactory factory, ImageSharpTexture textureData, CommandList cl)
@@ -124,6 +133,17 @@ namespace Veldrid.NeoDemo
             }
 
             return _pinkTex;
+        }
+
+        internal static ResourceSet GetResourceSet(ResourceFactory factory, ResourceSetDescription description)
+        {
+            if (!s_resourceSets.TryGetValue(description, out ResourceSet ret))
+            {
+                ret = factory.CreateResourceSet(ref description);
+                s_resourceSets.Add(description, ret);
+            }
+
+            return ret;
         }
     }
 }

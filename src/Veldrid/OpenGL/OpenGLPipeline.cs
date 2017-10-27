@@ -21,6 +21,8 @@ namespace Veldrid.OpenGL
 
         public uint Program => _program;
 
+        public uint GetUniformBufferCount(uint setSlot) => _setInfos[setSlot].UniformBufferCount;
+
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref PipelineDescription description)
         {
             _gd = gd;
@@ -239,12 +241,15 @@ namespace Veldrid.OpenGL
         private readonly Dictionary<uint, OpenGLTextureBindingSlotInfo> _textureBindings;
         private readonly Dictionary<uint, OpenGLTextureBindingSlotInfo> _samplerBindings;
 
+        public uint UniformBufferCount { get; }
+
         public SetBindingsInfo(
             Dictionary<uint, OpenGLUniformBinding> uniformBindings,
             Dictionary<uint, OpenGLTextureBindingSlotInfo> textureBindings,
             Dictionary<uint, OpenGLTextureBindingSlotInfo> samplerBindings)
         {
             _uniformBindings = uniformBindings;
+            UniformBufferCount = (uint)uniformBindings.Count;
             _textureBindings = textureBindings;
             _samplerBindings = samplerBindings;
         }

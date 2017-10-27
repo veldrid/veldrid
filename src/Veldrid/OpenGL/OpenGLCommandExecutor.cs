@@ -332,16 +332,19 @@ namespace Veldrid.OpenGL
 
             OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(rs);
             _resourceSets[slot] = glResourceSet;
+
+            uint ubBaseIndex = GetUniformBaseIndex(slot);
+
             for (uint element = 0; element < glResourceSet.Resources.Length; element++)
             {
                 BindableResource resource = glResourceSet.Resources[(int)element];
                 if (resource is OpenGLUniformBuffer glUB)
                 {
                     OpenGLUniformBinding uniformBindingInfo = _pipeline.GetUniformBindingForSlot(slot, element);
-                    glUniformBlockBinding(_pipeline.Program, uniformBindingInfo.BlockLocation, element);
+                    glUniformBlockBinding(_pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + element);
                     CheckLastError();
 
-                    glBindBufferRange(BufferRangeTarget.UniformBuffer, element, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
+                    glBindBufferRange(BufferRangeTarget.UniformBuffer, ubBaseIndex + element, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
                     CheckLastError();
                 }
                 else if (resource is OpenGLTextureView glTexView)
@@ -362,6 +365,17 @@ namespace Veldrid.OpenGL
                     _textureSamplerManager.SetSampler((uint)samplerBindingInfo.RelativeIndex, glSampler);
                 }
             }
+        }
+
+        private uint GetUniformBaseIndex(uint slot)
+        {
+            uint ret = 0;
+            for (uint i = 0; i < slot; i++)
+            {
+                ret += _pipeline.GetUniformBufferCount(i);
+            }
+
+            return ret;
         }
 
         public void SetScissorRect(uint index, uint x, uint y, uint width, uint height)

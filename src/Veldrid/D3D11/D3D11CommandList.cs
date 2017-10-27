@@ -264,8 +264,8 @@ namespace Veldrid.D3D11
             int ret = 0;
             for (int i = 0; i < slot; i++)
             {
-                Debug.Assert(layouts[slot] != null);
-                ret += layouts[slot].UniformBufferCount;
+                Debug.Assert(layouts[i] != null);
+                ret += layouts[i].UniformBufferCount;
             }
 
             return ret;
@@ -277,8 +277,8 @@ namespace Veldrid.D3D11
             int ret = 0;
             for (int i = 0; i < slot; i++)
             {
-                Debug.Assert(layouts[slot] != null);
-                ret += layouts[slot].TextureCount;
+                Debug.Assert(layouts[i] != null);
+                ret += layouts[i].TextureCount;
             }
 
             return ret;
@@ -290,8 +290,8 @@ namespace Veldrid.D3D11
             int ret = 0;
             for (int i = 0; i < slot; i++)
             {
-                Debug.Assert(layouts[slot] != null);
-                ret += layouts[slot].SamplerCount;
+                Debug.Assert(layouts[i] != null);
+                ret += layouts[i].SamplerCount;
             }
 
             return ret;

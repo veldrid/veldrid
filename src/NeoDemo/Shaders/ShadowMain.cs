@@ -10,48 +10,49 @@ namespace Shaders
 {
     public partial class ShadowMain
     {
-        // Shared resources
+        // Shared resources -- Proj-View
         [ResourceSet(0)]
         public Matrix4x4 Projection;
         [ResourceSet(0)]
         public Matrix4x4 View;
-        [ResourceSet(0)]
+
+        [ResourceSet(1)]
         public Matrix4x4 LightViewProjection1;
-        [ResourceSet(0)]
+        [ResourceSet(1)]
         public Matrix4x4 LightViewProjection2;
-        [ResourceSet(0)]
+        [ResourceSet(1)]
         public Matrix4x4 LightViewProjection3;
-        [ResourceSet(0)]
+        [ResourceSet(1)]
         public DepthCascadeLimits DepthLimits;
-        [ResourceSet(0)]
+        [ResourceSet(1)]
         public DirectionalLightInfo LightInfo;
-        [ResourceSet(0)]
+        [ResourceSet(1)]
         public CameraInfo CameraInfo;
-        [ResourceSet(0)]
+        [ResourceSet(1)]
         public PointLightsInfo PointLights;
 
         // Per-Object resources
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public Matrix4x4 World;
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public Matrix4x4 InverseTransposeWorld;
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public MaterialProperties MaterialProperties;
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public Texture2DResource SurfaceTexture;
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public SamplerResource RegularSampler;
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public Texture2DResource AlphaMap;
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public SamplerResource AlphaMapSampler;
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public Texture2DResource ShadowMapNear;
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public Texture2DResource ShadowMapMid;
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public Texture2DResource ShadowMapFar;
-        [ResourceSet(1)]
+        [ResourceSet(2)]
         public SamplerResource ShadowMapSampler;
 
         public struct VertexInput

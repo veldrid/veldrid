@@ -8,7 +8,10 @@ namespace Shaders
 {
     public class ShadowDepth
     {
+        [ResourceSet(0)]
         public Matrix4x4 ViewProjection;
+
+        [ResourceSet(1)]
         public Matrix4x4 World;
 
         [VertexShader]

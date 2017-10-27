@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
-using Vd2;
+using Veldrid;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public class SceneContext
     {
@@ -53,9 +53,9 @@ namespace Vd2.NeoDemo
             pli.NumActiveLights = 4;
             pli.PointLights = new PointLightInfo[4]
             {
-                new PointLightInfo { Color = new Vector3(0.6f, 1, 1f), Position = new Vector3(-50, 5, 0), Range = 75f },
-                new PointLightInfo { Color = new Vector3(1, 0.6f, 1f), Position = new Vector3(0, 5, 0), Range = 60f },
-                new PointLightInfo { Color = new Vector3(1, 1, 0.6f), Position = new Vector3(50, 5, 0), Range = 10f },
+                new PointLightInfo { Color = new Vector3(1f, 1f, 1f), Position = new Vector3(-50, 5, 0), Range = 75f },
+                new PointLightInfo { Color = new Vector3(1f, .75f, .9f), Position = new Vector3(0, 5, 0), Range = 100f },
+                new PointLightInfo { Color = new Vector3(1f, 1f, 0.6f), Position = new Vector3(50, 5, 0), Range = 40f },
                 new PointLightInfo { Color = new Vector3(0.75f, 0.75f, 1f), Position = new Vector3(25, 5, 45), Range = 150f },
             };
 

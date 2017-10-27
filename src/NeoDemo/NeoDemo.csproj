@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <RootNamespace>Vd2.NeoDemo</RootNamespace>
+    <RootNamespace>Veldrid.NeoDemo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssetsDir>$(MSBuildThisFileDirectory)Assets</AssetsDir>
     <ShaderOutputPath>$(AssetsDir)\Shaders.Generated</ShaderOutputPath>
@@ -26,23 +26,23 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)..\VdSdl2\native\win-x64\SDL2.dll">
+    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.Sdl2\native\win-x64\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)..\VdSdl2\native\osx-x64\libsdl2.dylib">
+    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.Sdl2\native\osx-x64\libsdl2.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ShaderGen.Primitives" Version="1.0.7" />
-    <PackageReference Include="ShaderGen.Build" Version="1.0.20" PrivateAssets="All" />
-    <ProjectReference Include="..\Vd2\Vd2.csproj" />
-    <ProjectReference Include="..\VdSdl2\VdSdl2.csproj" />
-    <ProjectReference Include="..\Vd2.StartupUtilities\Vd2.StartupUtilities.csproj" />
-    <ProjectReference Include="..\Vd2.ImageSharp\Vd2.ImageSharp.csproj" />
-    <ProjectReference Include="..\Vd2.Utilities\Vd2.Utilities.csproj" />
-    <ProjectReference Include="..\Vd2.ImGui\Vd2.ImGui.csproj" />
+    <PackageReference Include="ShaderGen.Primitives" Version="1.0.8" />
+    <PackageReference Include="ShaderGen.Build" Version="1.0.21" PrivateAssets="All" />
+    <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="..\Veldrid.Sdl2\Veldrid.Sdl2.csproj" />
+    <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
+    <ProjectReference Include="..\Veldrid.ImageSharp\Veldrid.ImageSharp.csproj" />
+    <ProjectReference Include="..\Veldrid.Utilities\Veldrid.Utilities.csproj" />
+    <ProjectReference Include="..\Veldrid.ImGui\Veldrid.ImGui.csproj" />
   </ItemGroup>
 
   <Target Name="IncludeGeneratedShaderContent" AfterTargets="AssignTargetPaths">

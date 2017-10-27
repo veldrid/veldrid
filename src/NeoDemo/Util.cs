@@ -2,7 +2,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     internal static class Util
     {

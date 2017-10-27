@@ -1,7 +1,7 @@
 ﻿using ShaderGen;
 using System.Numerics;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public struct PointLightInfo
     {

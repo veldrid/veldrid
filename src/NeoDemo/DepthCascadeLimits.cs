@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct DepthCascadeLimits

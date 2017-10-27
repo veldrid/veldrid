@@ -2,9 +2,9 @@
 using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using VdSdl2;
+using Veldrid.Sdl2;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public class Camera : IUpdateable
     {
@@ -40,7 +40,7 @@ namespace Vd2.NeoDemo
         public Matrix4x4 ViewMatrix => _viewMatrix;
         public Matrix4x4 ProjectionMatrix => _projectionMatrix;
 
-        public Vector3 Position => _position;
+        public Vector3 Position { get => _position; set { _position = value; UpdateViewMatrix(); } }
         public Vector3 LookDirection => _lookDirection;
 
         public float FarDistance => _far;
@@ -49,6 +49,9 @@ namespace Vd2.NeoDemo
         public float NearDistance => _near;
 
         public float AspectRatio => _windowWidth / _windowHeight;
+
+        public float Yaw { get => _yaw; set { _yaw = value; UpdateViewMatrix(); } }
+        public float Pitch { get => _pitch; set { _pitch = value; UpdateViewMatrix(); } }
 
         public void Update(float deltaSeconds)
         {
@@ -85,7 +88,7 @@ namespace Vd2.NeoDemo
 
             if (motionDir != Vector3.Zero)
             {
-                Quaternion lookRotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, 0f);
+                Quaternion lookRotation = Quaternion.CreateFromYawPitchRoll(Yaw, Pitch, 0f);
                 motionDir = Vector3.Transform(motionDir, lookRotation);
                 _position += motionDir * _moveSpeed * sprintFactor * deltaSeconds;
                 UpdateViewMatrix();
@@ -96,13 +99,10 @@ namespace Vd2.NeoDemo
 
             if (!ImGui.IsMouseHoveringAnyWindow() && (InputTracker.GetMouseButton(MouseButton.Left) || InputTracker.GetMouseButton(MouseButton.Right)))
             {
-                _yaw += -mouseDelta.X * 0.01f;
-                _pitch += -mouseDelta.Y * 0.01f;
-                _pitch = Math.Clamp(_pitch, -1.55f, 1.55f);
+                Yaw += -mouseDelta.X * 0.01f;
+                Pitch += -mouseDelta.Y * 0.01f;
+                Pitch = Math.Clamp(Pitch, -1.55f, 1.55f);
 
-                Quaternion lookRotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, 0f);
-                Vector3 lookDir = Vector3.Transform(-Vector3.UnitZ, lookRotation);
-                _lookDirection = lookDir;
                 UpdateViewMatrix();
             }
         }
@@ -122,6 +122,9 @@ namespace Vd2.NeoDemo
 
         private void UpdateViewMatrix()
         {
+            Quaternion lookRotation = Quaternion.CreateFromYawPitchRoll(Yaw, Pitch, 0f);
+            Vector3 lookDir = Vector3.Transform(-Vector3.UnitZ, lookRotation);
+            _lookDirection = lookDir;
             _viewMatrix = Matrix4x4.CreateLookAt(_position, _position + _lookDirection, Vector3.UnitY);
             ViewChanged?.Invoke(_viewMatrix);
         }

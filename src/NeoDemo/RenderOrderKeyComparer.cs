@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     internal class RenderOrderKeyComparer : IComparer<Renderable>
     {

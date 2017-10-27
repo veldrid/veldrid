@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using ShaderGen;
 using static ShaderGen.ShaderBuiltins;
-using Vd2.NeoDemo;
+using Veldrid.NeoDemo;
 using System;
 
 [assembly: ShaderSet("ShadowMain", "Shaders.ShadowMain.VS", "Shaders.ShadowMain.FS")]

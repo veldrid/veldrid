@@ -1,6 +1,6 @@
-﻿using Vd2;
+﻿using Veldrid;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     internal static class DemoOutputsDescriptions
     {

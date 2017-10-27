@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
-using VdSdl2;
+using Veldrid.Sdl2;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public static class InputTracker
     {

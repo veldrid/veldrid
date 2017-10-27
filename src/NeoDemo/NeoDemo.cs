@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
-using Vd2.ImageSharp;
-using Vd2.NeoDemo.Objects;
-using Vd2.StartupUtilities;
-using Vd2.Utilities;
-using VdSdl2;
+using Veldrid.ImageSharp;
+using Veldrid.NeoDemo.Objects;
+using Veldrid.StartupUtilities;
+using Veldrid.Utilities;
+using Veldrid.Sdl2;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public class NeoDemo
     {
@@ -39,14 +39,15 @@ namespace Vd2.NeoDemo
                 WindowWidth = 960,
                 WindowHeight = 540,
                 WindowInitialState = WindowState.Normal,
-                WindowTitle = "Vd NeoDemo"
+                WindowTitle = "Veldrid NeoDemo"
             };
             GraphicsDeviceCreateInfo gdCI = new GraphicsDeviceCreateInfo();
+            //gdCI.Backend = GraphicsBackend.OpenGL;
 #if DEBUG
             gdCI.DebugDevice = true;
 #endif
 
-            Vd2Startup.CreateWindowAndGraphicsDevice(ref windowCI, ref gdCI, out _window, out _gd);
+            VeldridStartup.CreateWindowAndGraphicsDevice(ref windowCI, ref gdCI, out _window, out _gd);
             _window.Resized += () => _windowResized = true;
 
             CommandList initCL = _gd.ResourceFactory.CreateCommandList();
@@ -65,6 +66,9 @@ namespace Vd2.NeoDemo
             _scene.AddRenderable(skybox);
 
             AddSponzaAtriumObjects(initCL);
+            _sc.Camera.Position = new Vector3(-80, 25, -4.3f);
+            _sc.Camera.Yaw = -MathF.PI / 2;
+            _sc.Camera.Pitch = -MathF.PI / 9;
 
             ShadowmapDrawer texDrawer = new ShadowmapDrawer(() => _window, () => _sc.NearShadowMapView);
             _resizeHandled += (w, h) => texDrawer.OnWindowResized();
@@ -96,7 +100,6 @@ namespace Vd2.NeoDemo
                     atriumMtls = new MtlParser().Parse(mtlStream);
                 }
 
-                int x = 0;
                 foreach (ObjFile.MeshGroup group in atriumFile.MeshGroups)
                 {
                     ConstructedMeshInfo mesh = atriumFile.GetMesh(group);
@@ -107,12 +110,12 @@ namespace Vd2.NeoDemo
                     if (materialDef.DiffuseTexture != null)
                     {
                         string texturePath = AssetHelper.GetPath("Models/SponzaAtrium/" + materialDef.DiffuseTexture);
-                        overrideTextureData = LoadTexture(texturePath);
+                        overrideTextureData = LoadTexture(texturePath, true);
                     }
                     if (materialDef.AlphaMap != null)
                     {
                         string texturePath = AssetHelper.GetPath("Models/SponzaAtrium/" + materialDef.AlphaMap);
-                        alphaTexture = LoadTexture(texturePath);
+                        alphaTexture = LoadTexture(texturePath, false);
                     }
                     if (materialDef.Name.Contains("vase"))
                     {
@@ -125,11 +128,11 @@ namespace Vd2.NeoDemo
         }
 
         private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
-        private ImageSharpTexture LoadTexture(string texturePath)
+        private ImageSharpTexture LoadTexture(string texturePath, bool mipmap) // Plz don't call this with the same texturePath and different mipmap values.
         {
             if (!_textures.TryGetValue(texturePath, out ImageSharpTexture tex))
             {
-                tex = new ImageSharpTexture(texturePath);
+                tex = new ImageSharpTexture(texturePath, mipmap);
                 _textures.Add(texturePath, tex);
             }
 
@@ -343,12 +346,12 @@ namespace Vd2.NeoDemo
                     WindowWidth = _window.Width,
                     WindowHeight = _window.Height,
                     WindowInitialState = _window.WindowState,
-                    WindowTitle = "Vd NeoDemo"
+                    WindowTitle = "Veldrid NeoDemo"
                 };
 
                 _window.Close();
 
-                _window = Vd2Startup.CreateWindow(ref windowCI);
+                _window = VeldridStartup.CreateWindow(ref windowCI);
                 _window.Resized += () => _windowResized = true;
             }
 
@@ -360,7 +363,7 @@ namespace Vd2.NeoDemo
 #endif
             };
 
-            _gd = Vd2Startup.CreateGraphicsDevice(ref rcCI, _window);
+            _gd = VeldridStartup.CreateGraphicsDevice(ref rcCI, _window);
 
             CreateAllObjects();
         }
@@ -371,6 +374,7 @@ namespace Vd2.NeoDemo
             _scene.DestroyAllDeviceObjects();
             CommonMaterials.DestroyAllDeviceObjects();
             StaticResourceCache.DestroyAllDeviceObjects();
+            _gd.WaitForIdle();
         }
 
         private void CreateAllObjects()

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Numerics;
-using Vd2.Utilities;
+using Veldrid.Utilities;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public abstract class Renderable : IDisposable
     {

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Vd2.ImageSharp;
+using Veldrid.ImageSharp;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     // Non-thread-safe cache for resources.
     internal static class StaticResourceCache

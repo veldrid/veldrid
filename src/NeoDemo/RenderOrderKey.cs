@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public struct RenderOrderKey : IComparable<RenderOrderKey>, IComparable
     {
@@ -11,8 +12,11 @@ namespace Vd2.NeoDemo
             Value = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static RenderOrderKey Create(int materialID, float cameraDistance)
             => Create((uint)materialID, cameraDistance);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static RenderOrderKey Create(uint materialID, float cameraDistance)
         {
             uint cameraDistanceInt = (uint)Math.Min(uint.MaxValue, (cameraDistance * 1000f));

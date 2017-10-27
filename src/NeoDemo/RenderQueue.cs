@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public class RenderQueue : IEnumerable<Renderable>
     {

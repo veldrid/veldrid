@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     [Flags]
     public enum RenderPasses : byte

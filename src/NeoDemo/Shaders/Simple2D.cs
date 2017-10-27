@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using ShaderGen;
 using static ShaderGen.ShaderBuiltins;
-using Vd2.NeoDemo.Objects;
+using Veldrid.NeoDemo.Objects;
 
 [assembly: ShaderSet("Simple2D", "Shaders.Simple2D.VS", "Shaders.Simple2D.FS")]
 

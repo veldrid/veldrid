@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public struct RenderItemIndex : IComparable<RenderItemIndex>, IComparable
     {

@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
-using Vd2;
-using Vd2.Utilities;
+using Veldrid;
+using Veldrid.Utilities;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public static class CubeModel
     {

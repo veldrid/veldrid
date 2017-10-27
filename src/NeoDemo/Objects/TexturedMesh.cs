@@ -2,11 +2,11 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System;
-using Vd2.ImageSharp;
-using Vd2.Utilities;
+using Veldrid.ImageSharp;
+using Veldrid.Utilities;
 using System.Collections.Generic;
 
-namespace Vd2.NeoDemo.Objects
+namespace Veldrid.NeoDemo.Objects
 {
     public class TexturedMesh : CullRenderable
     {
@@ -120,7 +120,7 @@ namespace Vd2.NeoDemo.Objects
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(shadowDepthVertexLayouts, shadowDepthShaderStages),
-                _depthLayout,
+                new ResourceLayout[] { _depthLayout },
                 DemoOutputsDescriptions.ShadowMapPass);
             _shadowMapPipeline = StaticResourceCache.GetPipeline(factory, ref depthPD);
 
@@ -172,7 +172,7 @@ namespace Vd2.NeoDemo.Objects
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(mainVertexLayouts, mainShaderStages),
-                _mainLayout,
+                new ResourceLayout[] { _mainLayout },
                 gd.SwapchainFramebuffer.OutputDescription);
             _pipeline = StaticResourceCache.GetPipeline(factory, ref mainPD);
 
@@ -277,7 +277,7 @@ namespace Vd2.NeoDemo.Objects
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_shadowMapPipeline);
-            cl.SetResourceSet(_shadowMapResourceSets[shadowMapIndex]);
+            cl.SetResourceSet(0, _shadowMapResourceSets[shadowMapIndex]);
             cl.Draw((uint)_indexCount, 1, 0, 0, 0);
         }
 
@@ -286,7 +286,7 @@ namespace Vd2.NeoDemo.Objects
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(_resourceSet);
+            cl.SetResourceSet(0, _resourceSet);
             cl.Draw((uint)_indexCount, 1, 0, 0, 0);
         }
     }

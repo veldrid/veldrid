@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Vd2;
+using Veldrid;
 
-namespace Vd2.NeoDemo
+namespace Veldrid.NeoDemo
 {
     public class DirectionalLight
     {

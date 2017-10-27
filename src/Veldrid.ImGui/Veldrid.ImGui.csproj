@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyVersion>4.0.0</AssemblyVersion>
+    <PackageVersion>$(AssemblyVersion)</PackageVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile Condition="'$(Configuration)' == 'Release'">$(BinDir)/$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets/GLSL/imgui-vertex.glsl">
+      <LogicalName>imgui-vertex.glsl</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets/GLSL/imgui-frag.glsl">
+      <LogicalName>imgui-frag.glsl</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets/HLSL/imgui-vertex.hlsl.bytes">
+      <LogicalName>imgui-vertex.hlsl.bytes</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets/HLSL/imgui-frag.hlsl.bytes">
+      <LogicalName>imgui-frag.hlsl.bytes</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets/SPIR-V/imgui-vertex.spv">
+      <LogicalName>imgui-vertex.spv</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets/SPIR-V/imgui-frag.spv">
+      <LogicalName>imgui-frag.spv</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="..\Veldrid.Sdl2\Veldrid.Sdl2.csproj" />
+    <PackageReference Include="ImGui.NET" Version="0.2.1" />
+  </ItemGroup>
+
+</Project>

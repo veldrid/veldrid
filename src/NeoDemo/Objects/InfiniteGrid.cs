@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Numerics;
-using Vd2.Utilities;
+using Veldrid.Utilities;
 
-namespace Vd2.NeoDemo.Objects
+namespace Veldrid.NeoDemo.Objects
 {
     public class InfiniteGrid : CullRenderable
     {
@@ -67,7 +67,7 @@ namespace Vd2.NeoDemo.Objects
                 new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, FrontFace.Clockwise, true, true),
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, shaderStages),
-                layout,
+                new ResourceLayout[] { layout },
                 gd.SwapchainFramebuffer.OutputDescription);
 
             _pipeline = factory.CreatePipeline(ref pd);
@@ -94,7 +94,7 @@ namespace Vd2.NeoDemo.Objects
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(_resourceSet);
+            cl.SetResourceSet(0, _resourceSet);
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.Draw(6, 1, 0, 0, 0);

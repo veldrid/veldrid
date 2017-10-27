@@ -3,9 +3,9 @@ using SixLabors.ImageSharp.Advanced;
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using Vd2.Utilities;
+using Veldrid.Utilities;
 
-namespace Vd2.NeoDemo.Objects
+namespace Veldrid.NeoDemo.Objects
 {
     public class Skybox : Renderable
     {
@@ -104,7 +104,7 @@ namespace Vd2.NeoDemo.Objects
                 new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, FrontFace.Clockwise, false, true),
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, shaderStages),
-                _layout,
+                new ResourceLayout[] { _layout },
                 gd.SwapchainFramebuffer.OutputDescription);
 
             _pipeline = factory.CreatePipeline(ref pd);
@@ -146,7 +146,7 @@ namespace Vd2.NeoDemo.Objects
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(_resourceSet);
+            cl.SetResourceSet(0, _resourceSet);
             cl.Draw((uint)s_indices.Length, 1, 0, 0, 0);
         }
 

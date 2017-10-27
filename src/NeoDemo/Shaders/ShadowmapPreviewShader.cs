@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using ShaderGen;
 using static ShaderGen.ShaderBuiltins;
-using Vd2.NeoDemo.Objects;
+using Veldrid.NeoDemo.Objects;
 
 [assembly: ShaderSet("ShadowmapPreviewShader", "Shaders.ShadowmapPreviewShader.VS", "Shaders.ShadowmapPreviewShader.FS")]
 

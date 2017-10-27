@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using VdSdl2;
+using Veldrid.Sdl2;
 
-namespace Vd2.NeoDemo.Objects
+namespace Veldrid.NeoDemo.Objects
 {
     public class ShadowmapDrawer : Renderable
     {
@@ -80,7 +80,7 @@ namespace Vd2.NeoDemo.Objects
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, shaderStages),
-                layout,
+                new ResourceLayout[] { layout },
                 gd.SwapchainFramebuffer.OutputDescription);
 
             _pipeline = factory.CreatePipeline(ref pd);
@@ -133,7 +133,7 @@ namespace Vd2.NeoDemo.Objects
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib);
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(_resourceSet);
+            cl.SetResourceSet(0, _resourceSet);
             cl.Draw((uint)s_quadIndices.Length, 1, 0, 0, 0);
         }
 

@@ -205,6 +205,7 @@ namespace Veldrid.Vk
         {
             if (_currentPipeline != pipeline)
             {
+                Util.ClearArray(_currentResourceSets); // TODO: Cache this information per-pipeline rather than wiping it.
                 VkPipeline vkPipeline = Util.AssertSubtype<Pipeline, VkPipeline>(pipeline);
                 vkCmdBindPipeline(_cb, VkPipelineBindPoint.Graphics, vkPipeline.DevicePipeline);
                 _currentPipeline = vkPipeline;

@@ -137,37 +137,6 @@ namespace Veldrid.Vk
             }
         }
 
-        public VkCommandBuffer BeginOneTimeCommands()
-        {
-            VkCommandBufferAllocateInfo allocInfo = VkCommandBufferAllocateInfo.New();
-            allocInfo.commandBufferCount = 1;
-            allocInfo.commandPool = _graphicsCommandPool;
-            allocInfo.level = VkCommandBufferLevel.Primary;
-
-            vkAllocateCommandBuffers(_device, ref allocInfo, out VkCommandBuffer cb);
-
-            VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
-            beginInfo.flags = VkCommandBufferUsageFlags.OneTimeSubmit;
-
-            vkBeginCommandBuffer(cb, ref beginInfo);
-
-            return cb;
-        }
-
-        public void EndOneTimeCommands(VkCommandBuffer cb, VkFence fence)
-        {
-            vkEndCommandBuffer(cb);
-
-            VkSubmitInfo submitInfo = VkSubmitInfo.New();
-            submitInfo.commandBufferCount = 1;
-            submitInfo.pCommandBuffers = &cb;
-
-            vkQueueSubmit(GraphicsQueue, 1, ref submitInfo, fence);
-            vkQueueWaitIdle(GraphicsQueue);
-
-            vkFreeCommandBuffers(_device, GraphicsCommandPool, 1, ref cb);
-        }
-
         private void CreateInstance(bool debug)
         {
             HashSet<string> availableInstanceLayers = new HashSet<string>(EnumerateInstanceLayers());

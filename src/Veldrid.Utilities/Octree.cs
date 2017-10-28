@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.Utilities
 {
@@ -147,8 +148,9 @@ namespace Veldrid.Utilities
         private readonly List<OctreeItem<T>> _items = new List<OctreeItem<T>>();
         private readonly OctreeNodeCache _nodeCache;
         private OctreeNode<T>[] _children = Array.Empty<OctreeNode<T>>();
+        private BoundingBox _bounds;
 
-        public BoundingBox Bounds { get; private set; }
+        public BoundingBox Bounds { get { return _bounds; } set { _bounds = value; } }
         public int MaxChildren { get; private set; }
         public OctreeNode<T>[] Children { get => _children; private set => _children = value; }
         public OctreeNode<T> Parent { get; private set; }
@@ -330,25 +332,31 @@ namespace Veldrid.Utilities
             RecycleChildren();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void GetContainedObjects(BoundingFrustum frustum, List<T> results)
         {
             Debug.Assert(results != null);
-            frustum = CoreGetContainedObjects(ref frustum, results, null);
+            CoreGetContainedObjects(ref frustum, results, null);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void GetContainedObjects(ref BoundingFrustum frustum, List<T> results)
         {
             Debug.Assert(results != null);
-            frustum = CoreGetContainedObjects(ref frustum, results, null);
+            CoreGetContainedObjects(ref frustum, results, null);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void GetContainedObjects(ref BoundingFrustum frustum, List<T> results, Func<T, bool> filter)
         {
             Debug.Assert(results != null);
-            frustum = CoreGetContainedObjects(ref frustum, results, filter);
+            CoreGetContainedObjects(ref frustum, results, filter);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void GetAllContainedObjects(List<T> results) => GetAllContainedObjects(results, null);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void GetAllContainedObjects(List<T> results, Func<T, bool> filter)
         {
             Debug.Assert(results != null);
@@ -415,9 +423,10 @@ namespace Veldrid.Utilities
             return count;
         }
 
-        private BoundingFrustum CoreGetContainedObjects(ref BoundingFrustum frustum, List<T> results, Func<T, bool> filter)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CoreGetContainedObjects(ref BoundingFrustum frustum, List<T> results, Func<T, bool> filter)
         {
-            ContainmentType ct = frustum.Contains(Bounds);
+            ContainmentType ct = frustum.Contains(ref _bounds);
             if (ct == ContainmentType.Contains)
             {
                 CoreGetAllContainedObjects(results, filter);
@@ -440,8 +449,6 @@ namespace Veldrid.Utilities
                     _children[i].CoreGetContainedObjects(ref frustum, results, filter);
                 }
             }
-
-            return frustum;
         }
 
         public IEnumerable<OctreeItem<T>> GetAllOctreeItems()
@@ -459,6 +466,7 @@ namespace Veldrid.Utilities
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CoreGetAllContainedObjects(List<T> results, Func<T, bool> filter)
         {
             for (int i = 0; i < _items.Count; i++)

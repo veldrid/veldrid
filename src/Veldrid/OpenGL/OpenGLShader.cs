@@ -12,6 +12,10 @@ namespace Veldrid.OpenGL
         private readonly ShaderType _shaderType;
         private readonly StagingBlock _stagingBlock;
 
+        private string _name;
+        private bool _nameChanged;
+        public string Name { get => _name; set { _name = value; _nameChanged = true; } }
+
         private uint _shader;
 
         public uint Shader => _shader;
@@ -30,6 +34,11 @@ namespace Veldrid.OpenGL
             if (!Created)
             {
                 CreateGLResources();
+            }
+            if (_nameChanged)
+            {
+                _nameChanged = false;
+                SetObjectLabel(ObjectLabelIdentifier.Shader, _shader, _name);
             }
         }
 

@@ -9,6 +9,10 @@ namespace Veldrid.OpenGL
         private readonly OpenGLGraphicsDevice _gd;
         private uint _framebuffer;
 
+        private string _name;
+        private bool _nameChanged;
+        public string Name { get => _name; set { _name = value; _nameChanged = true; } }
+
         public uint Framebuffer => _framebuffer;
 
         public bool Created { get; private set; }
@@ -24,6 +28,11 @@ namespace Veldrid.OpenGL
             if (!Created)
             {
                 CreateGLResources();
+            }
+            if (_nameChanged)
+            {
+                _nameChanged = false;
+                SetObjectLabel(ObjectLabelIdentifier.Framebuffer, _framebuffer, _name);
             }
         }
 

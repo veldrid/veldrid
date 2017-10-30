@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Veldrid
 {
-    public abstract class Framebuffer : IDisposable
+    public abstract class Framebuffer : DeviceResource, IDisposable
     {
         public virtual Texture2D DepthTexture { get; }
         public virtual IReadOnlyList<Texture2D> ColorTextures { get; }

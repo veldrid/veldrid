@@ -2,7 +2,7 @@
 
 namespace Veldrid
 {
-    public interface Buffer : IDisposable
+    public interface Buffer : DeviceResource, IDisposable
     {
         ulong SizeInBytes { get; }
     }

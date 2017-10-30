@@ -103,6 +103,31 @@ namespace Veldrid.OpenGL
             FlushDisposables();
         }
 
+        public override void SetResourceName(DeviceResource resource, string name)
+        {
+            switch (resource)
+            {
+                case OpenGLBuffer buffer:
+                    buffer.Name = name;
+                    break;
+                case OpenGLFramebuffer framebuffer:
+                    framebuffer.Name = name;
+                    break;
+                case OpenGLSampler sampler:
+                    sampler.Name = name;
+                    break;
+                case OpenGLShader shader:
+                    shader.Name = name;
+                    break;
+                case OpenGLTexture2D tex2D:
+                    tex2D.Name = name;
+                    break;
+                case OpenGLTextureCube texCube:
+                    texCube.Name = name;
+                    break;
+            }
+        }
+
         public override void WaitForIdle()
         {
             FlushDisposables();

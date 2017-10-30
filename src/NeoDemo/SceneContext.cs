@@ -37,8 +37,11 @@ namespace Veldrid.NeoDemo
             ProjectionMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription(64));
             ViewMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription(64));
             LightViewProjectionBuffer0 = factory.CreateUniformBuffer(new BufferDescription(64, true));
+            gd.SetResourceName(LightViewProjectionBuffer0, "LightViewProjectionBuffer0");
             LightViewProjectionBuffer1 = factory.CreateUniformBuffer(new BufferDescription(64, true));
+            gd.SetResourceName(LightViewProjectionBuffer1, "LightViewProjectionBuffer1");
             LightViewProjectionBuffer2 = factory.CreateUniformBuffer(new BufferDescription(64, true));
+            gd.SetResourceName(LightViewProjectionBuffer2, "LightViewProjectionBuffer2");
             DepthLimitsBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<DepthCascadeLimits>()));
             LightInfoBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<DirectionalLightInfo>()));
             CameraInfoBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>()));
@@ -62,6 +65,7 @@ namespace Veldrid.NeoDemo
             cl.UpdateBuffer(PointLightsBuffer, 0, pli.GetBlittable());
 
             NearShadowMapTexture = factory.CreateTexture2D(new TextureDescription(2048, 2048, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
+            gd.SetResourceName(NearShadowMapTexture, "Near Shadow Map");
             NearShadowMapView = factory.CreateTextureView(new TextureViewDescription(NearShadowMapTexture));
             NearShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(NearShadowMapTexture));
 

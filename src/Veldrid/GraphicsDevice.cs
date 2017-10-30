@@ -13,6 +13,7 @@ namespace Veldrid
         public abstract void ResizeMainWindow(uint width, uint height);
         public abstract void WaitForIdle();
         public abstract void Dispose();
+        public abstract void SetResourceName(DeviceResource resource, string name);
 
         protected void PostContextCreated()
         {

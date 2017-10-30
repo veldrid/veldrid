@@ -1719,4 +1719,19 @@ namespace Veldrid.OpenGLBinding
         Extensions = 7939,
         ShadingLanguageVersion = 35724
     }
+
+    public enum ObjectLabelIdentifier
+    {
+        Texture = 5890,
+        VertexArray = 32884,
+        Buffer = 33504,
+        Shader = 33505,
+        Program = 33506,
+        Query = 33507,
+        ProgramPipeline = 33508,
+        Sampler = 33510,
+        Framebuffer = 36160,
+        Renderbuffer = 36161,
+        TransformFeedback = 36386
+    }
 }

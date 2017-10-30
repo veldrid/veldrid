@@ -157,7 +157,7 @@ namespace Veldrid.Vk
 
         public override void SetFramebuffer(Framebuffer fb)
         {
-            if (_activeRenderPass.Handle != IntPtr.Zero)
+            if (_activeRenderPass.Handle != VkRenderPass.Null)
             {
                 EndCurrentRenderPass();
             }

@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid
 {
-    public abstract class CommandList : IDisposable
+    public abstract class CommandList : DeviceResource, IDisposable
     {
         public CommandList(ref CommandListDescription description)
         {

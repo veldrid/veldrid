@@ -11,6 +11,10 @@ namespace Veldrid.OpenGL
         private readonly InternalSamplerState _noMipmapState;
         private readonly InternalSamplerState _mipmapState;
 
+        private string _name;
+        private bool _nameChanged;
+        public string Name { get => _name; set { _name = value; _nameChanged = true; } }
+
         public uint NoMipmapSampler => _noMipmapState.Sampler;
         public uint MipmapSampler => _mipmapState.Sampler;
 
@@ -30,6 +34,12 @@ namespace Veldrid.OpenGL
             if (!Created)
             {
                 CreateGLResources();
+            }
+            if (_nameChanged)
+            {
+                _nameChanged = false;
+                SetObjectLabel(ObjectLabelIdentifier.Sampler, _noMipmapState.Sampler, string.Format("{0}_WithoutMipmapping", _name));
+                SetObjectLabel(ObjectLabelIdentifier.Sampler, _mipmapState.Sampler, string.Format("{0}_WithMipmapping", _name));
             }
         }
 

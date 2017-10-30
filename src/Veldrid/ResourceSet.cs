@@ -2,7 +2,7 @@
 
 namespace Veldrid
 {
-    public abstract class ResourceSet : IDisposable
+    public abstract class ResourceSet : DeviceResource, IDisposable
     {
         public abstract void Dispose();
     }

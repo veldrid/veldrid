@@ -57,6 +57,8 @@ namespace Veldrid.D3D11
 
         public SharpDX.Direct3D11.CommandList DeviceCommandList { get; set; }
 
+        internal DeviceContext DeviceContext => _context;
+
         public override void Begin()
         {
             DeviceCommandList?.Dispose();

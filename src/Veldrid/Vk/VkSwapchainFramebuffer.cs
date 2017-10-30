@@ -153,7 +153,7 @@ namespace Veldrid.Vk
 
             VkResult result = vkCreateSwapchainKHR(_gd.Device, ref swapchainCI, null, out _swapchain);
             CheckResult(result);
-            if (oldSwapchain != NullHandle)
+            if (oldSwapchain != VkSwapchainKHR.Null)
             {
                 vkDestroySwapchainKHR(_gd.Device, oldSwapchain, null);
             }

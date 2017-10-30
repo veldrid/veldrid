@@ -115,6 +115,44 @@ namespace Veldrid.D3D11
             _swapChain.Present(0, PresentFlags.None);
         }
 
+        public override void SetResourceName(DeviceResource resource, string name)
+        {
+            switch (resource)
+            {
+                case D3D11Buffer buffer:
+                    buffer.Buffer.DebugName = name;
+                    break;
+                case D3D11CommandList commandList:
+                    commandList.DeviceContext.DebugName = name;
+                    break;
+                case D3D11Framebuffer framebuffer:
+                    for (int i = 0; i < framebuffer.RenderTargetViews.Length; i++)
+                    {
+                        framebuffer.RenderTargetViews[i].DebugName = string.Format("{0}_RTV{1}", name, i);
+                    }
+                    if (framebuffer.DepthStencilView != null)
+                    {
+                        framebuffer.DepthStencilView.DebugName = string.Format("{0}_DSV", name);
+                    }
+                    break;
+                case D3D11Sampler sampler:
+                    sampler.DeviceSampler.DebugName = name;
+                    break;
+                case D3D11Shader shader:
+                    shader.DeviceShader.DebugName = name;
+                    break;
+                case D3D11Texture2D tex2D:
+                    tex2D.DeviceTexture.DebugName = name;
+                    break;
+                case D3D11TextureCube texCube:
+                    texCube.DeviceTexture.DebugName = name;
+                    break;
+                case D3D11TextureView texView:
+                    texView.ShaderResourceView.DebugName = name;
+                    break;
+            }
+        }
+
         public override void Dispose()
         {
             DeviceDebug deviceDebug = _device.QueryInterfaceOrNull<DeviceDebug>();

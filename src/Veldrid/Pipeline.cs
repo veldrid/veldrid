@@ -2,7 +2,7 @@
 
 namespace Veldrid
 {
-    public abstract class Pipeline : IDisposable
+    public abstract class Pipeline : DeviceResource, IDisposable
     {
         public abstract void Dispose();
     }

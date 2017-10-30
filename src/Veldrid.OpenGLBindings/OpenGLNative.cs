@@ -497,6 +497,11 @@ namespace Veldrid.OpenGLBinding
         private static glGetStringi_t p_glGetStringi;
         public static byte* glGetStringi(StringNameIndexed name, uint index) => p_glGetStringi(name, index);
 
+        private delegate void glObjectLabel_t(ObjectLabelIdentifier identifier, uint name, uint length, byte* label);
+        private static glObjectLabel_t p_glObjectLabel;
+        public static void glObjectLabel(ObjectLabelIdentifier identifier, uint name, uint length, byte* label)
+            => p_glObjectLabel(identifier, name, length, label);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -583,6 +588,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction(out p_glBindTextureUnit);
             LoadFunction(out p_glTexParameteri);
             LoadFunction(out p_glGetStringi);
+            LoadFunction(out p_glObjectLabel);
         }
 
         private static void LoadFunction<T>(out T field)

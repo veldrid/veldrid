@@ -2,7 +2,7 @@
 
 namespace Veldrid
 {
-    public abstract class Sampler : BindableResource, IDisposable
+    public abstract class Sampler : DeviceResource, BindableResource, IDisposable
     {
         public abstract void Dispose();
     }

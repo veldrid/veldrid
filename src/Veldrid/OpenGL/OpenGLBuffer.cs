@@ -11,6 +11,10 @@ namespace Veldrid.OpenGL
         private uint _buffer;
         private bool _dynamic;
 
+        private string _name;
+        private bool _nameChanged;
+        public string Name { get => _name; set { _name = value; _nameChanged = true; } }
+
         public ulong SizeInBytes { get; }
         public BufferTarget Target { get; }
 
@@ -30,6 +34,11 @@ namespace Veldrid.OpenGL
             if (!Created)
             {
                 CreateGLResources();
+            }
+            if (_nameChanged)
+            {
+                _nameChanged = false;
+                SetObjectLabel(ObjectLabelIdentifier.Buffer, _buffer, _name);
             }
         }
 

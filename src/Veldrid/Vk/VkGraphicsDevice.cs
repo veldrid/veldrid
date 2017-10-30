@@ -35,6 +35,8 @@ namespace Veldrid.Vk
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private PFN_vkDebugReportCallbackEXT _debugCallbackFunc;
         private readonly List<VkCommandList> _commandListsToDispose = new List<VkCommandList>();
+        private bool _debugMarkerEnabled;
+        private vkDebugMarkerSetObjectNameEXT_d _setObjectNameDelegate;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
@@ -122,6 +124,84 @@ namespace Veldrid.Vk
             _scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence);
             vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
             vkResetFences(_device, 1, ref _imageAvailableFence);
+        }
+
+        public override void SetResourceName(DeviceResource resource, string name)
+        {
+            if (_debugMarkerEnabled)
+            {
+                switch (resource)
+                {
+                    case VkBuffer buffer:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.BufferEXT, buffer.DeviceBuffer.Handle, name);
+                        break;
+                    case VkCommandList commandList:
+                        SetDebugMarkerName(
+                            VkDebugReportObjectTypeEXT.CommandBufferEXT,
+                            (ulong)commandList.CommandBuffer.Handle,
+                            string.Format("{0}_CommandBuffer"));
+                        SetDebugMarkerName(
+                            VkDebugReportObjectTypeEXT.CommandPoolEXT,
+                            commandList.CommandPool.Handle,
+                            string.Format("{0}_CommandPool"));
+                        break;
+                    case VkFramebuffer framebuffer:
+                        SetDebugMarkerName(
+                            VkDebugReportObjectTypeEXT.FramebufferEXT,
+                            framebuffer.CurrentFramebuffer.Handle,
+                            name);
+                        break;
+                    case VkPipeline pipeline:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.PipelineEXT, pipeline.DevicePipeline.Handle, name);
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.PipelineLayoutEXT, pipeline.PipelineLayout.Handle, name);
+                        break;
+                    case VkResourceLayout resourceLayout:
+                        SetDebugMarkerName(
+                            VkDebugReportObjectTypeEXT.DescriptorSetLayoutEXT,
+                            resourceLayout.DescriptorSetLayout.Handle,
+                            name);
+                        break;
+                    case VkResourceSet resourceSet:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.DescriptorSetEXT, resourceSet.DescriptorSet.Handle, name);
+                        break;
+                    case VkSampler sampler:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.SamplerEXT, sampler.DeviceSampler.Handle, name);
+                        break;
+                    case VkShader shader:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ShaderModuleEXT, shader.ShaderModule.Handle, name);
+                        break;
+                    case VkTexture2D tex2D:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageEXT, tex2D.DeviceImage.Handle, name);
+                        break;
+                    case VkTextureCube texCube:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageEXT, texCube.DeviceImage.Handle, name);
+                        break;
+                    case VkTextureView texView:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageViewEXT, texView.ImageView.Handle, name);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private void SetDebugMarkerName(VkDebugReportObjectTypeEXT type, ulong target, string name)
+        {
+            Debug.Assert(_setObjectNameDelegate != null);
+
+            VkDebugMarkerObjectNameInfoEXT nameInfo = VkDebugMarkerObjectNameInfoEXT.New();
+            nameInfo.objectType = type;
+            nameInfo.@object = target;
+
+            int byteCount = Encoding.UTF8.GetByteCount(name);
+            byte* utf8Ptr = stackalloc byte[byteCount];
+            fixed (char* namePtr = name)
+            {
+                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                nameInfo.pObjectName = utf8Ptr;
+                VkResult result = _setObjectNameDelegate(_device, &nameInfo);
+                CheckResult(result);
+            }
         }
 
         private void FlushDestroyedCommandBuffers()
@@ -300,6 +380,25 @@ namespace Veldrid.Vk
             deviceFeatures.geometryShader = true;
             deviceFeatures.depthClamp = true;
 
+            bool debugMarkerSupported = false;
+
+            uint propertyCount = 0;
+            VkResult result = vkEnumerateDeviceExtensionProperties(_physicalDevice, (byte*)null, &propertyCount, null);
+            CheckResult(result);
+            VkExtensionProperties* properties = stackalloc VkExtensionProperties[(int)propertyCount];
+            result = vkEnumerateDeviceExtensionProperties(_physicalDevice, (byte*)null, &propertyCount, properties);
+            CheckResult(result);
+
+            for (int i = 0; i < propertyCount; i++)
+            {
+                if (Util.GetString(properties[i].extensionName) == "VK_EXT_debug_marker")
+                {
+                    Console.WriteLine("VK_EXT_debug_marker is available.");
+                    debugMarkerSupported = true;
+                    break;
+                }
+            }
+
             VkDeviceCreateInfo deviceCreateInfo = VkDeviceCreateInfo.New();
 
             fixed (VkDeviceQueueCreateInfo* qciPtr = &queueCreateInfos.Items[0])
@@ -314,15 +413,33 @@ namespace Veldrid.Vk
                 deviceCreateInfo.enabledLayerCount = layerNames.Count;
                 deviceCreateInfo.ppEnabledLayerNames = (byte**)layerNames.Data;
 
-                byte* extensionNames = CommonStrings.VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-                deviceCreateInfo.enabledExtensionCount = 1;
-                deviceCreateInfo.ppEnabledExtensionNames = &extensionNames;
+                StackList<IntPtr> extensionNames = new StackList<IntPtr>();
+                extensionNames.Add(CommonStrings.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+                if (debugMarkerSupported)
+                {
+                    extensionNames.Add(CommonStrings.VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
+                    _debugMarkerEnabled = true;
+                }
+                deviceCreateInfo.enabledExtensionCount = extensionNames.Count;
+                deviceCreateInfo.ppEnabledExtensionNames = (byte**)extensionNames.Data;
 
-                vkCreateDevice(_physicalDevice, ref deviceCreateInfo, null, out _device);
+                result = vkCreateDevice(_physicalDevice, ref deviceCreateInfo, null, out _device);
+                CheckResult(result);
             }
 
             vkGetDeviceQueue(_device, _graphicsQueueIndex, 0, out _graphicsQueue);
             vkGetDeviceQueue(_device, _presentQueueIndex, 0, out _presentQueue);
+
+            if (debugMarkerSupported)
+            {
+                IntPtr setObjectNamePtr;
+                using (FixedUtf8String debugExtFnName = "vkDebugMarkerSetObjectNameEXT")
+                {
+                    setObjectNamePtr = vkGetInstanceProcAddr(_instance, debugExtFnName);
+                }
+
+                _setObjectNameDelegate = Marshal.GetDelegateForFunctionPointer<vkDebugMarkerSetObjectNameEXT_d>(setObjectNamePtr);
+            }
         }
 
         private void GetQueueFamilyIndices()
@@ -445,4 +562,6 @@ namespace Veldrid.Vk
         VkInstance instance,
         VkDebugReportCallbackEXT callback,
         VkAllocationCallbacks* pAllocator);
+
+    internal unsafe delegate VkResult vkDebugMarkerSetObjectNameEXT_d(VkDevice device, VkDebugMarkerObjectNameInfoEXT* pNameInfo);
 }

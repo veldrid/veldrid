@@ -405,6 +405,11 @@ namespace Veldrid.OpenGLBinding
         public static void glDebugMessageCallback(DebugProc callback, void* userParam)
             => p_glDebugMessageCallback(callback, userParam);
 
+        private delegate void glBufferData_t(BufferTarget target, UIntPtr size, void* data, BufferUsageHint usage);
+        private static glBufferData_t p_glBufferData;
+        public static void glBufferData(BufferTarget target, UIntPtr size, void* data, BufferUsageHint usage)
+            => p_glBufferData(target, size, data, usage);
+
         private delegate void glNamedBufferData_t(uint buffer, uint size, void* data, BufferUsageHint usage);
         private static glNamedBufferData_t p_glNamedBufferData;
         public static void glNamedBufferData(uint buffer, uint size, void* data, BufferUsageHint usage)
@@ -576,6 +581,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction(out p_glUseProgram);
             LoadFunction(out p_glBindBufferRange);
             LoadFunction(out p_glDebugMessageCallback);
+            LoadFunction(out p_glBufferData);
             LoadFunction(out p_glNamedBufferData);
             LoadFunction(out p_glTexImage2D);
             LoadFunction(out p_glEnableVertexAttribArray);

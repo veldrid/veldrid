@@ -51,7 +51,7 @@ namespace Veldrid.OpenGL
             glBindBuffer(Target, _buffer);
             CheckLastError();
 
-            glNamedBufferData(_buffer, (uint)SizeInBytes, null, _dynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.StaticDraw);
+            glBufferData(Target, (UIntPtr)SizeInBytes, null, _dynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.StaticDraw);
             CheckLastError();
 
             Created = true;

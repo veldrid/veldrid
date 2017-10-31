@@ -12,6 +12,8 @@ namespace Veldrid.D3D11
         private readonly DeviceContext _immediateContext;
         private readonly SwapChain _swapChain;
         private D3D11Framebuffer _swapChainFramebuffer;
+        private readonly bool _supportsConcurrentResources;
+        private readonly bool _supportsCommandLists;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
@@ -20,6 +22,10 @@ namespace Veldrid.D3D11
         public override Framebuffer SwapchainFramebuffer => _swapChainFramebuffer;
 
         public SharpDX.Direct3D11.Device Device => _device;
+
+        public bool SupportsConcurrentResources => _supportsConcurrentResources;
+
+        public bool SupportsCommandLists => _supportsCommandLists;
 
         public List<D3D11CommandList> CommandListsReferencingSwapchain { get; internal set; } = new List<D3D11CommandList>();
 
@@ -47,6 +53,7 @@ namespace Veldrid.D3D11
                 out _device,
                 out _swapChain);
             _immediateContext = _device.ImmediateContext;
+            _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
 
             Factory factory = _swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(hwnd, WindowAssociationFlags.IgnoreAll);

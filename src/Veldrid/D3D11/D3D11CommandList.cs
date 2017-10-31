@@ -9,6 +9,8 @@ namespace Veldrid.D3D11
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly DeviceContext _context;
+        private readonly bool _supportsCommandLists;
+        private readonly DeviceContext1 _context1;
         private bool _begun;
 
         private RawViewportF[] _viewports = new RawViewportF[0];
@@ -53,6 +55,11 @@ namespace Veldrid.D3D11
         {
             _gd = gd;
             _context = new DeviceContext(gd.Device);
+            _context1 = _context.QueryInterfaceOrNull<DeviceContext1>();
+            if (_context1 == null)
+            {
+                throw new VeldridException("Direct3D 11.1 is required.");
+            }
         }
 
         public SharpDX.Direct3D11.CommandList DeviceCommandList { get; set; }
@@ -595,7 +602,14 @@ namespace Veldrid.D3D11
                 };
             }
 
-            _context.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+            if (bufferOffsetInBytes == 0)
+            {
+                _context.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+            }
+            else
+            {
+                _context1.UpdateSubresource1(d3dBuffer.Buffer, 0, subregion, source, 0, 0, 0);
+            }
         }
 
         public override void UpdateTexture2D(

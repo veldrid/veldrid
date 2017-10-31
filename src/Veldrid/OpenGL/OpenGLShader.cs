@@ -77,7 +77,7 @@ namespace Veldrid.OpenGL
 
                 string message = Encoding.UTF8.GetString(infoLog, (int)returnedInfoLength);
 
-                throw new VeldridException("Unabled to compile shader code: " + message);
+                throw new VeldridException($"Unable to compile shader code for shader [{_name}] of type {_shaderType}: {message}");
             }
 
             _stagingBlock.Free();

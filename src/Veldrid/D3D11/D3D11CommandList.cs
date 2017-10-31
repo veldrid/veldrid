@@ -9,7 +9,6 @@ namespace Veldrid.D3D11
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly DeviceContext _context;
-        private readonly bool _supportsCommandLists;
         private readonly DeviceContext1 _context1;
         private bool _begun;
 

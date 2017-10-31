@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
-    <ProjectReference Include="..\Veldrid.Sdl2\Veldrid.Sdl2.csproj" />
+    <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
   </ItemGroup>
 
 </Project>

@@ -26,10 +26,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.Sdl2\native\win-x64\SDL2.dll">
+    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.SDL2\native\win-x64\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.Sdl2\native\osx-x64\libsdl2.dylib">
+    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.SDL2\native\osx-x64\libsdl2.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -38,7 +38,7 @@
     <PackageReference Include="ShaderGen.Primitives" Version="1.0.8" />
     <PackageReference Include="ShaderGen.Build" Version="1.0.23" PrivateAssets="All" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
-    <ProjectReference Include="..\Veldrid.Sdl2\Veldrid.Sdl2.csproj" />
+    <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
     <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
     <ProjectReference Include="..\Veldrid.ImageSharp\Veldrid.ImageSharp.csproj" />
     <ProjectReference Include="..\Veldrid.Utilities\Veldrid.Utilities.csproj" />

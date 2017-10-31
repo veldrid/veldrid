@@ -4,7 +4,7 @@ VisualStudioVersion = 15.0.27004.2002
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid", "Veldrid\Veldrid.csproj", "{60D56E4A-FA7A-4664-BEF0-0A29F41518BF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.Sdl2", "Veldrid.Sdl2\Veldrid.Sdl2.csproj", "{8B11C7C1-EA56-4449-B7A4-ECBB17D566C3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.SDL2", "Veldrid.SDL2\Veldrid.SDL2.csproj", "{8B11C7C1-EA56-4449-B7A4-ECBB17D566C3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeoDemo", "NeoDemo\NeoDemo.csproj", "{5359D055-6DD0-47FE-BA32-F6FDFAAFE999}"
 EndProject

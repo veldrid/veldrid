@@ -22,8 +22,8 @@ namespace Veldrid.Vk
 
         private bool _commandBufferBegun;
         private bool _commandBufferEnded;
-        private VkResourceSet[] _currentResourceSets = new VkResourceSet[10]; // TODO: Real limit / dynamic size.
-        private bool[] _resourceSetsChanged = new bool[10]; // TODO: Real limit / dynamic size.
+        private VkResourceSet[] _currentResourceSets;
+        private bool[] _resourceSetsChanged;
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
@@ -217,8 +217,10 @@ namespace Veldrid.Vk
         {
             if (_currentPipeline != pipeline)
             {
-                Util.ClearArray(_currentResourceSets); // TODO: Cache this information per-pipeline rather than wiping it.
                 VkPipeline vkPipeline = Util.AssertSubtype<Pipeline, VkPipeline>(pipeline);
+                Util.EnsureArraySize(ref _currentResourceSets, vkPipeline.ResourceSetCount);
+                Util.ClearArray(_currentResourceSets); // TODO: Cache this information per-pipeline rather than wiping it.
+                Util.EnsureArraySize(ref _resourceSetsChanged, vkPipeline.ResourceSetCount);
                 vkCmdBindPipeline(_cb, VkPipelineBindPoint.Graphics, vkPipeline.DevicePipeline);
                 _currentPipeline = vkPipeline;
             }

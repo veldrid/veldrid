@@ -18,6 +18,8 @@ namespace Veldrid.Vk
 
         public VkPipelineLayout PipelineLayout => _pipelineLayout;
 
+        public uint ResourceSetCount { get; }
+
         public VkPipeline(VkGraphicsDevice gd, ref PipelineDescription description)
         {
             _gd = gd;
@@ -265,6 +267,8 @@ namespace Veldrid.Vk
 
             VkResult result = vkCreateGraphicsPipelines(_gd.Device, VkPipelineCache.Null, 1, ref pipelineCI, null, out _devicePipeline);
             CheckResult(result);
+
+            ResourceSetCount = (uint)description.ResourceLayouts.Length;
         }
 
         public override void Dispose()

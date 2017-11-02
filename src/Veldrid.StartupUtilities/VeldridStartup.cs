@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Veldrid.Vk;
 using Veldrid.Sdl2;
+using Veldrid.OpenGL;
 
 namespace Veldrid.StartupUtilities
 {
@@ -187,11 +188,15 @@ namespace Veldrid.StartupUtilities
 
             int result = Sdl2Native.SDL_GL_SetSwapInterval(0);
 
-            return Hacks.CreateOpenGL(
+            OpenGLPlatformInfo platformInfo = new OpenGLPlatformInfo(
                 contextHandle,
                 Sdl2Native.SDL_GL_GetProcAddress,
+                context => Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, context),
                 Sdl2Native.SDL_GL_DeleteContext,
-                () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle),
+                () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
+
+            return Hacks.CreateOpenGL(
+                platformInfo,
                 (uint)window.Width,
                 (uint)window.Height,
                 gdCI.DebugDevice);

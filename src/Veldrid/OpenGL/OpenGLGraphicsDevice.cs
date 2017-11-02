@@ -22,6 +22,9 @@ namespace Veldrid.OpenGL
         private DebugProc _debugMessageCallback;
         private readonly OpenGLExtensions _extensions;
 
+        private readonly Action<IntPtr> _makeCurrent;
+        private int _contextCurrentThreadID;
+
         public override GraphicsBackend BackendType => GraphicsBackend.OpenGL;
 
         public override ResourceFactory ResourceFactory { get; }
@@ -31,18 +34,16 @@ namespace Veldrid.OpenGL
         public OpenGLExtensions Extensions => _extensions;
 
         public OpenGLGraphicsDevice(
-            IntPtr glContext,
-            Func<string, IntPtr> getProcAddress,
-            Action<IntPtr> deleteContext,
-            Action swapBuffers,
+            OpenGLPlatformInfo platformInfo,
             uint width,
             uint height,
             bool debugDevice)
         {
-            _glContext = glContext;
-            _deleteContext = deleteContext;
-            _swapBuffers = swapBuffers;
-            LoadAllFunctions(glContext, getProcAddress);
+            _glContext = platformInfo.OpenGLContextHandle;
+            _makeCurrent = platformInfo.MakeCurrent;
+            _deleteContext = platformInfo.DeleteContext;
+            _swapBuffers = platformInfo.SwapBuffers;
+            LoadAllFunctions(_glContext, platformInfo.GetProcAddress);
 
             ResourceFactory = new OpenGLResourceFactory(this);
 
@@ -87,9 +88,20 @@ namespace Veldrid.OpenGL
 
         public override void ExecuteCommands(CommandList cl)
         {
+            EnsureCurrentContext();
             OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
             glCommandList.Commands.ExecuteAll(_commandExecutor);
             glCommandList.Reset();
+        }
+
+        private void EnsureCurrentContext()
+        {
+            int currentThreadID = Environment.CurrentManagedThreadId;
+            if (_contextCurrentThreadID != currentThreadID)
+            {
+                _contextCurrentThreadID = currentThreadID;
+                _makeCurrent(_glContext);
+            }
         }
 
         public override void ResizeMainWindow(uint width, uint height)

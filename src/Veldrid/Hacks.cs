@@ -18,15 +18,12 @@ namespace Veldrid
         }
 
         public static GraphicsDevice CreateOpenGL(
-            IntPtr glContext,
-            Func<string, IntPtr> getProcAddress,
-            Action<IntPtr> deleteContext,
-            Action swapBuffer,
+            OpenGLPlatformInfo platformInfo,
             uint width,
             uint height,
             bool debugDevice)
         {
-            return new OpenGLGraphicsDevice(glContext, getProcAddress, deleteContext, swapBuffer, width, height, debugDevice);
+            return new OpenGLGraphicsDevice(platformInfo, width, height, debugDevice);
         }
     }
 }

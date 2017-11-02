@@ -13,7 +13,7 @@ namespace Veldrid.OpenGL
         private readonly OpenGLGraphicsDevice _gd;
         private uint _program;
 
-        private readonly SetBindingsInfo[] _setInfos = new SetBindingsInfo[10]; // TODO: Real / dynamic limit.
+        private SetBindingsInfo[] _setInfos;
 
         public PipelineDescription Description { get; }
 
@@ -123,9 +123,11 @@ namespace Veldrid.OpenGL
                 throw new VeldridException($"Error linking GL program: {log}");
             }
 
+            int resourceLayoutCount = Description.ResourceLayouts.Length;
+            _setInfos = new SetBindingsInfo[resourceLayoutCount];
             int lastTextureLocation = -1;
             int relativeTextureIndex = -1;
-            for (uint setSlot = 0; setSlot < Description.ResourceLayouts.Length; setSlot++)
+            for (uint setSlot = 0; setSlot < resourceLayoutCount; setSlot++)
             {
                 ResourceLayout setLayout = Description.ResourceLayouts[setSlot];
                 OpenGLResourceLayout glSetLayout = Util.AssertSubtype<ResourceLayout, OpenGLResourceLayout>(setLayout);
@@ -207,18 +209,21 @@ namespace Veldrid.OpenGL
 
         public OpenGLUniformBinding GetUniformBindingForSlot(uint set, uint slot)
         {
+            Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
             return setInfo.GetUniformBindingForSlot(slot);
         }
 
         public OpenGLTextureBindingSlotInfo GetTextureBindingInfo(uint set, uint slot)
         {
+            Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
             return setInfo.GetTextureBindingInfo(slot);
         }
 
         public OpenGLTextureBindingSlotInfo GetSamplerBindingInfo(uint set, uint slot)
         {
+            Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
             return setInfo.GetSamplerBindingInfo(slot);
         }

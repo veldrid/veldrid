@@ -11,15 +11,15 @@ namespace Veldrid.OpenGL
         private readonly OpenGLTextureSamplerManager _textureSamplerManager;
         private PrimitiveType _primitiveType;
         private DrawElementsType _drawElementsType;
-        private OpenGLVertexBuffer[] _vertexBuffers = new OpenGLVertexBuffer[10]; // TODO: Real limit
-        private readonly uint[] _vertexAttribDivisors = new uint[10]; // TODO: Real limit
+        private OpenGLVertexBuffer[] _vertexBuffers = new OpenGLVertexBuffer[1];
+        private uint[] _vertexAttribDivisors = new uint[1];
         private OpenGLPipeline _pipeline;
         private Framebuffer _fb;
         private bool _isSwapchainFB;
         private uint _vertexAttributesBound;
         private readonly Viewport[] _viewports = new Viewport[20];
         private OpenGLExtensions _extensions;
-        private OpenGLResourceSet[] _resourceSets = new OpenGLResourceSet[10]; // TODO: Real / dynamic limit
+        private OpenGLResourceSet[] _resourceSets = new OpenGLResourceSet[1];
 
         public OpenGLCommandExecutor(OpenGLExtensions extensions)
         {
@@ -209,9 +209,9 @@ namespace Veldrid.OpenGL
             {
                 return;
             }
-
             _pipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(pipeline);
             PipelineDescription desc = _pipeline.Description;
+            Util.ClearArray(_resourceSets); // Invalidate resource set bindings -- they may be invalid.
 
             // Blend State
 
@@ -319,6 +319,18 @@ namespace Veldrid.OpenGL
             // Shader Set
             glUseProgram(_pipeline.Program);
             CheckLastError();
+
+            int vertexStridesCount = _pipeline.VertexStrides.Length;
+            Util.EnsureArraySize(ref _vertexBuffers, (uint)vertexStridesCount);
+
+            uint totalVertexElements = 0;
+            for (int i = 0; i < desc.ShaderSet.VertexLayouts.Length; i++)
+            {
+                totalVertexElements += (uint)desc.ShaderSet.VertexLayouts[i].Elements.Length;
+            }
+            Util.EnsureArraySize(ref _vertexAttribDivisors, totalVertexElements);
+
+            Util.EnsureArraySize(ref _resourceSets, (uint)desc.ResourceLayouts.Length);
         }
 
         public void SetResourceSet(uint slot, ResourceSet rs)

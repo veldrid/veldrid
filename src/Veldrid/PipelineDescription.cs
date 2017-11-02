@@ -9,7 +9,7 @@ namespace Veldrid
         public RasterizerStateDescription RasterizerState;
         public PrimitiveTopology PrimitiveTopology;
         public ShaderSetDescription ShaderSet;
-        public ResourceLayout[] ResourceLayouts; // TODO: Allow multiple resource layouts
+        public ResourceLayout[] ResourceLayouts;
         public OutputDescription Outputs;
 
         public PipelineDescription(

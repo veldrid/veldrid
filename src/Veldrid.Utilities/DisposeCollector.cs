@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Veldrid.NeoDemo.Objects
+namespace Veldrid.Utilities
 {
-    internal class DisposeCollector
+    public class DisposeCollector
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
 

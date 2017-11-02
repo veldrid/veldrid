@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Veldrid.Sdl2;
+using Veldrid.Utilities;
 
 namespace Veldrid.NeoDemo.Objects
 {

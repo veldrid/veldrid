@@ -57,41 +57,39 @@ namespace Veldrid.NeoDemo.Objects
 
         public unsafe override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
-            ResourceFactory factory = gd.ResourceFactory;
-            _vb = _meshData.CreateVertexBuffer(factory, cl);
-            _ib = _meshData.CreateIndexBuffer(factory, cl, out _indexCount);
+            ResourceFactory disposeFactory = new DisposeCollectorResourceFactory(gd.ResourceFactory, _disposeCollector);
+            _vb = _meshData.CreateVertexBuffer(disposeFactory, cl);
+            _ib = _meshData.CreateIndexBuffer(disposeFactory, cl, out _indexCount);
 
-            _worldBuffer = factory.CreateUniformBuffer(new BufferDescription(64, true));
-            _inverseTransposeWorldBuffer = factory.CreateUniformBuffer(new BufferDescription(64, true));
+            _worldBuffer = disposeFactory.CreateUniformBuffer(new BufferDescription(64, true));
+            _inverseTransposeWorldBuffer = disposeFactory.CreateUniformBuffer(new BufferDescription(64, true));
             if (_materialPropsOwned)
             {
                 _materialProps.CreateDeviceObjects(gd, cl, sc);
             }
 
-            _disposeCollector.Add(_vb, _ib, _worldBuffer, _inverseTransposeWorldBuffer);
-
             if (_textureData != null)
             {
-                _texture = StaticResourceCache.GetTexture2D(factory, _textureData, cl);
+                _texture = StaticResourceCache.GetTexture2D(gd.ResourceFactory, _textureData, cl);
             }
             else
             {
-                _texture = factory.CreateTexture2D(new TextureDescription(1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+                _texture = disposeFactory.CreateTexture2D(new TextureDescription(1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
                 RgbaByte color = RgbaByte.Pink;
                 cl.UpdateTexture2D(_texture, (IntPtr)(&color), 4, 0, 0, 1, 1, 0, 0);
             }
 
-            _textureView = StaticResourceCache.GetTextureView(factory, _texture);
+            _textureView = StaticResourceCache.GetTextureView(gd.ResourceFactory, _texture);
 
             if (_alphaTextureData != null)
             {
-                _alphamapTexture = _alphaTextureData.CreateDeviceTexture(factory, cl);
+                _alphamapTexture = _alphaTextureData.CreateDeviceTexture(gd.ResourceFactory, cl);
             }
             else
             {
-                _alphamapTexture = StaticResourceCache.GetPinkTexture(factory, cl);
+                _alphamapTexture = StaticResourceCache.GetPinkTexture(gd.ResourceFactory, cl);
             }
-            _alphaMapView = StaticResourceCache.GetTextureView(factory, _alphamapTexture);
+            _alphaMapView = StaticResourceCache.GetTextureView(gd.ResourceFactory, _alphamapTexture);
 
             VertexLayoutDescription[] shadowDepthVertexLayouts = new VertexLayoutDescription[]
             {
@@ -101,8 +99,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            Shader depthVS = StaticResourceCache.GetShader(factory, "ShadowDepth", ShaderStages.Vertex);
-            Shader depthFS = StaticResourceCache.GetShader(factory, "ShadowDepth", ShaderStages.Fragment);
+            Shader depthVS = StaticResourceCache.GetShader(gd.ResourceFactory, "ShadowDepth", ShaderStages.Vertex);
+            Shader depthFS = StaticResourceCache.GetShader(gd.ResourceFactory, "ShadowDepth", ShaderStages.Fragment);
             ShaderStageDescription[] shadowDepthShaderStages = new ShaderStageDescription[]
             {
                 new ShaderStageDescription(ShaderStages.Vertex, depthVS, "VS"),
@@ -110,11 +108,11 @@ namespace Veldrid.NeoDemo.Objects
             };
 
             ResourceLayout projViewCombinedLayout = StaticResourceCache.GetResourceLayout(
-                factory,
+                gd.ResourceFactory,
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("ViewProjection", ResourceKind.Uniform, ShaderStages.Vertex)));
 
-            ResourceLayout worldLayout = StaticResourceCache.GetResourceLayout(factory, new ResourceLayoutDescription(
+            ResourceLayout worldLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("World", ResourceKind.Uniform, ShaderStages.Vertex)));
 
             PipelineDescription depthPD = new PipelineDescription(
@@ -125,9 +123,9 @@ namespace Veldrid.NeoDemo.Objects
                 new ShaderSetDescription(shadowDepthVertexLayouts, shadowDepthShaderStages),
                 new ResourceLayout[] { projViewCombinedLayout, worldLayout },
                 DemoOutputsDescriptions.ShadowMapPass);
-            _shadowMapPipeline = StaticResourceCache.GetPipeline(factory, ref depthPD);
+            _shadowMapPipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref depthPD);
 
-            _shadowMapResourceSets = CreateShadowMapResourceSets(factory, cl, sc, projViewCombinedLayout, worldLayout);
+            _shadowMapResourceSets = CreateShadowMapResourceSets(gd.ResourceFactory, cl, sc, projViewCombinedLayout, worldLayout);
 
             VertexLayoutDescription[] mainVertexLayouts = new VertexLayoutDescription[]
             {
@@ -137,8 +135,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            Shader mainVS = StaticResourceCache.GetShader(factory, "ShadowMain", ShaderStages.Vertex);
-            Shader mainFS = StaticResourceCache.GetShader(factory, "ShadowMain", ShaderStages.Fragment);
+            Shader mainVS = StaticResourceCache.GetShader(gd.ResourceFactory, "ShadowMain", ShaderStages.Vertex);
+            Shader mainFS = StaticResourceCache.GetShader(gd.ResourceFactory, "ShadowMain", ShaderStages.Fragment);
             ShaderStageDescription[] mainShaderStages = new ShaderStageDescription[]
             {
                 new ShaderStageDescription(ShaderStages.Vertex, mainVS, "VS"),
@@ -146,10 +144,10 @@ namespace Veldrid.NeoDemo.Objects
             };
 
             ResourceLayout projViewLayout = StaticResourceCache.GetResourceLayout(
-                factory,
+                gd.ResourceFactory,
                 StaticResourceCache.ProjViewLayoutDescription);
 
-            ResourceLayout mainSharedLayout = StaticResourceCache.GetResourceLayout(factory, new ResourceLayoutDescription(
+            ResourceLayout mainSharedLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("LightViewProjection1", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("LightViewProjection2", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("LightViewProjection3", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
@@ -158,7 +156,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("CameraInfo", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("PointLights", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment)));
 
-            ResourceLayout mainPerObjectLayout = StaticResourceCache.GetResourceLayout(factory, new ResourceLayoutDescription(
+            ResourceLayout mainPerObjectLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("World", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("InverseTransposeWorld", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("MaterialProperties", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
@@ -179,13 +177,13 @@ namespace Veldrid.NeoDemo.Objects
                 new ShaderSetDescription(mainVertexLayouts, mainShaderStages),
                 new ResourceLayout[] { projViewLayout, mainSharedLayout, mainPerObjectLayout },
                 gd.SwapchainFramebuffer.OutputDescription);
-            _pipeline = StaticResourceCache.GetPipeline(factory, ref mainPD);
+            _pipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref mainPD);
 
-            _mainProjViewRS = StaticResourceCache.GetResourceSet(factory, new ResourceSetDescription(projViewLayout,
+            _mainProjViewRS = StaticResourceCache.GetResourceSet(gd.ResourceFactory, new ResourceSetDescription(projViewLayout,
                 sc.ProjectionMatrixBuffer,
                 sc.ViewMatrixBuffer));
 
-            _mainSharedRS = StaticResourceCache.GetResourceSet(factory, new ResourceSetDescription(mainSharedLayout,
+            _mainSharedRS = StaticResourceCache.GetResourceSet(gd.ResourceFactory, new ResourceSetDescription(mainSharedLayout,
                 sc.LightViewProjectionBuffer0,
                 sc.LightViewProjectionBuffer1,
                 sc.LightViewProjectionBuffer2,
@@ -194,7 +192,7 @@ namespace Veldrid.NeoDemo.Objects
                 sc.CameraInfoBuffer,
                 sc.PointLightsBuffer));
 
-            _mainPerObjectRS = factory.CreateResourceSet(new ResourceSetDescription(mainPerObjectLayout,
+            _mainPerObjectRS = disposeFactory.CreateResourceSet(new ResourceSetDescription(mainPerObjectLayout,
                 _worldBuffer,
                 _inverseTransposeWorldBuffer,
                 _materialProps.UniformBuffer,
@@ -206,8 +204,6 @@ namespace Veldrid.NeoDemo.Objects
                 sc.MidShadowMapView,
                 sc.FarShadowMapView,
                 gd.PointSampler));
-
-            _disposeCollector.Add(_mainPerObjectRS);
         }
 
         private ResourceSet[] CreateShadowMapResourceSets(
@@ -229,7 +225,6 @@ namespace Veldrid.NeoDemo.Objects
                     worldLayout,
                     _worldBuffer));
                 ret[i * 2 + 1] = worldRS;
-                _disposeCollector.Add(worldRS);
             }
 
             return ret;

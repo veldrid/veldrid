@@ -27,9 +27,7 @@ namespace Veldrid.Vk
         private VkCommandPool _perFrameCommandPool;
         private VkDescriptorPool _descriptorPool;
         private VkCommandPool _graphicsCommandPool;
-        private VkSemaphore _imageAvailableSemaphore;
         private VkFence _imageAvailableFence;
-        private RawList<VkSemaphore> _renderPassSemaphores = new RawList<VkSemaphore>();
         private VkQueue _graphicsQueue;
         private VkQueue _presentQueue;
         private VkDebugReportCallbackEXT _debugCallbackHandle;
@@ -63,7 +61,6 @@ namespace Veldrid.Vk
             CreatePerFrameCommandPool();
             CreateDescriptorPool();
             CreateGraphicsCommandPool();
-            CreateSemaphores();
 
             _scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence);
             vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
@@ -509,22 +506,6 @@ namespace Veldrid.Vk
             commandPoolCI.queueFamilyIndex = _graphicsQueueIndex;
             VkResult result = vkCreateCommandPool(_device, ref commandPoolCI, null, out _graphicsCommandPool);
             CheckResult(result);
-        }
-
-        private void CreateSemaphores()
-        {
-            VkSemaphoreCreateInfo semaphoreCI = VkSemaphoreCreateInfo.New();
-            vkCreateSemaphore(_device, ref semaphoreCI, null, out _imageAvailableSemaphore);
-            const int MaxRenderPasses = 10;
-            _renderPassSemaphores.Resize(MaxRenderPasses);
-            for (int i = 0; i < MaxRenderPasses; i++)
-            {
-                vkCreateSemaphore(_device, ref semaphoreCI, null, out _renderPassSemaphores[i]);
-            }
-
-            VkFenceCreateInfo fenceCI = VkFenceCreateInfo.New();
-            fenceCI.flags = VkFenceCreateFlags.None;
-            vkCreateFence(_device, ref fenceCI, null, out _imageAvailableFence);
         }
 
         public override void Dispose()

@@ -32,7 +32,11 @@ namespace Veldrid
 
         internal static void EnsureArraySize<T>(ref T[] array, uint size)
         {
-            if (array.Length < size)
+            if (array == null)
+            {
+                array = new T[size];
+            }
+            else if (array.Length < size)
             {
                 Array.Resize(ref array, (int)size);
             }

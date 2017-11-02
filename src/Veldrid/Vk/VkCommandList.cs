@@ -28,6 +28,27 @@ namespace Veldrid.Vk
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
 
+        internal void CollectDisposables(List<VkImage> images, List<VkMemoryBlock> memories)
+        {
+            if (_imagesToDestroy != null)
+            {
+                foreach (VkImage image in _imagesToDestroy)
+                {
+                    images.Add(image);
+                }
+                _imagesToDestroy.Clear();
+            }
+
+            if (_memoriesToFree != null)
+            {
+                foreach (VkMemoryBlock memory in _memoriesToFree)
+                {
+                    memories.Add(memory);
+                }
+                memories.Clear();
+            }
+        }
+
         public VkCommandList(VkGraphicsDevice gd, ref CommandListDescription description)
             : base(ref description)
         {
@@ -144,15 +165,6 @@ namespace Veldrid.Vk
             }
 
             vkEndCommandBuffer(_cb);
-
-            //foreach (VkImage image in _imagesToDestroy)
-            //{
-            //    vkDestroyImage(_gd.Device, image, null);
-            //}
-            //foreach (VkMemoryBlock memory in _memoriesToFree)
-            //{
-            //    _gd.MemoryManager.Free(memory);
-            //}
         }
 
         public override void SetFramebuffer(Framebuffer fb)

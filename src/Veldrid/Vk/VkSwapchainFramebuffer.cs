@@ -226,6 +226,7 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
+            _depthTexture?.Dispose();
             for (int i = 0; i < _scFramebuffers.Length; i++)
             {
                 _scFramebuffers[i].Dispose();

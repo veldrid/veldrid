@@ -181,7 +181,7 @@ namespace Veldrid.OpenGL
             };
         }
 
-        public override void Dispose()
+        protected override void PlatformDispose()
         {
             FlushDisposables();
             _deleteContext(_glContext);

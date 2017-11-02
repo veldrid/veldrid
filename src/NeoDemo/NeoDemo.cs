@@ -51,6 +51,7 @@ namespace Veldrid.NeoDemo
             _window.Resized += () => _windowResized = true;
 
             CommandList initCL = _gd.ResourceFactory.CreateCommandList();
+            _gd.SetResourceName(initCL, "Initialization Command List");
             initCL.Begin();
 
             _scene = new Scene(_window.Width, _window.Height);
@@ -370,6 +371,7 @@ namespace Veldrid.NeoDemo
 
         private void DestroyAllObjects()
         {
+            _frameCommands.Dispose();
             _sc.DestroyDeviceObjects();
             _scene.DestroyAllDeviceObjects();
             CommonMaterials.DestroyAllDeviceObjects();
@@ -380,7 +382,9 @@ namespace Veldrid.NeoDemo
         private void CreateAllObjects()
         {
             _frameCommands = _gd.ResourceFactory.CreateCommandList();
+            _gd.SetResourceName(_frameCommands, "Frame Commands List");
             CommandList initCL = _gd.ResourceFactory.CreateCommandList();
+            _gd.SetResourceName(initCL, "Recreation Initialization Command List");
             initCL.Begin();
             _sc.CreateDeviceObjects(_gd, initCL, _sc);
             CommonMaterials.CreateAllDeviceObjects(_gd, initCL, _sc);

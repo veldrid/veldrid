@@ -3,10 +3,11 @@ using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System;
 
 namespace Veldrid.Vk
 {
-    public unsafe class VkDeviceMemoryManager
+    public unsafe class VkDeviceMemoryManager : IDisposable
     {
         private readonly VkDevice _device;
         private readonly VkPhysicalDevice _physicalDevice;
@@ -74,7 +75,7 @@ namespace Veldrid.Vk
             return ret;
         }
 
-        private class ChunkAllocatorSet
+        private class ChunkAllocatorSet : IDisposable
         {
             private readonly VkDevice _device;
             private readonly uint _memoryTypeIndex;
@@ -113,9 +114,17 @@ namespace Veldrid.Vk
                     }
                 }
             }
+
+            public void Dispose()
+            {
+                foreach (ChunkAllocator allocator in _allocators)
+                {
+                    allocator.Dispose();
+                }
+            }
         }
 
-        private class ChunkAllocator
+        private class ChunkAllocator : IDisposable
         {
             private const ulong PersistentMappedChunkSize = 1024 * 1024 * 64;
             private const ulong UnmappedChunkSize = 1024 * 1024 * 256;
@@ -248,7 +257,25 @@ namespace Veldrid.Vk
             {
                 Debug.Assert(_allocatedBlocks.Remove(block), "Unable to remove a supposedly allocated block.");
             }
+
+            public void Dispose()
+            {
+                vkFreeMemory(_device, _memory, null);
+            }
 #endif
+        }
+
+        public void Dispose()
+        {
+            foreach (KeyValuePair<uint, ChunkAllocatorSet> kvp in _allocatorsByMemoryType)
+            {
+                kvp.Value.Dispose();
+            }
+
+            foreach (KeyValuePair<uint, ChunkAllocatorSet> kvp in _allocatorsByMemoryTypeUnmapped)
+            {
+                kvp.Value.Dispose();
+            }
         }
     }
 

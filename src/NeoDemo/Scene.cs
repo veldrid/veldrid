@@ -451,6 +451,7 @@ namespace Veldrid.NeoDemo
             }
 
             _resourceUpdateCL = gd.ResourceFactory.CreateCommandList();
+            gd.SetResourceName(_resourceUpdateCL, "Scene Resource Update Command List");
         }
 
         private class RenderPassesComparer : IEqualityComparer<RenderPasses>

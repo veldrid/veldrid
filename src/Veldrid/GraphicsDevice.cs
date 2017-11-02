@@ -12,8 +12,9 @@ namespace Veldrid
         public abstract Framebuffer SwapchainFramebuffer { get; }
         public abstract void ResizeMainWindow(uint width, uint height);
         public abstract void WaitForIdle();
-        public abstract void Dispose();
         public abstract void SetResourceName(DeviceResource resource, string name);
+
+        protected abstract void PlatformDispose();
 
         protected void PostContextCreated()
         {
@@ -25,5 +26,13 @@ namespace Veldrid
         public Sampler PointSampler { get; private set; }
         public Sampler LinearSampler { get; private set; }
         public Sampler Aniso4xSampler { get; private set; }
+
+        public void Dispose()
+        {
+            PointSampler.Dispose();
+            LinearSampler.Dispose();
+            Aniso4xSampler.Dispose();
+            PlatformDispose();
+        }
     }
 }

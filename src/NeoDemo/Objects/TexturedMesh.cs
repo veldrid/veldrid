@@ -83,7 +83,7 @@ namespace Veldrid.NeoDemo.Objects
 
             if (_alphaTextureData != null)
             {
-                _alphamapTexture = _alphaTextureData.CreateDeviceTexture(gd.ResourceFactory, cl);
+                _alphamapTexture = _alphaTextureData.CreateDeviceTexture(disposeFactory, cl);
             }
             else
             {

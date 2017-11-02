@@ -160,7 +160,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void Dispose()
+        protected override void PlatformDispose()
         {
             DeviceDebug deviceDebug = _device.QueryInterfaceOrNull<DeviceDebug>();
             if (deviceDebug != null)

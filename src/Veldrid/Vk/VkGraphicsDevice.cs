@@ -24,7 +24,6 @@ namespace Veldrid.Vk
         private readonly VkSwapchainFramebuffer _scFB;
         private uint _graphicsQueueIndex;
         private uint _presentQueueIndex;
-        private VkCommandPool _perFrameCommandPool;
         private VkDescriptorPool _descriptorPool;
         private VkCommandPool _graphicsCommandPool;
         private VkFence _imageAvailableFence;
@@ -35,6 +34,10 @@ namespace Veldrid.Vk
         private readonly List<VkCommandList> _commandListsToDispose = new List<VkCommandList>();
         private bool _debugMarkerEnabled;
         private vkDebugMarkerSetObjectNameEXT_d _setObjectNameDelegate;
+
+        private readonly object _disposablesLock = new object();
+        private readonly List<VkImage> _imagesToDestroy = new List<VkImage>();
+        private readonly List<VkMemoryBlock> _memoriesToFree = new List<VkMemoryBlock>();
 
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
@@ -58,7 +61,6 @@ namespace Veldrid.Vk
             _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
             ResourceFactory = new VkResourceFactory(this);
             _scFB = new VkSwapchainFramebuffer(this, _surface, width, height);
-            CreatePerFrameCommandPool();
             CreateDescriptorPool();
             CreateGraphicsCommandPool();
             CreateFences();
@@ -85,6 +87,11 @@ namespace Veldrid.Vk
             si.pWaitDstStageMask = &waitDstStageMask;
 
             vkQueueSubmit(_graphicsQueue, 1, ref si, VkFence.Null);
+
+            lock (_disposablesLock)
+            {
+                vkCL.CollectDisposables(_imagesToDestroy, _memoriesToFree);
+            }
         }
 
         public void EnqueueDisposedCommandBuffer(VkCommandList vkCL)
@@ -106,7 +113,7 @@ namespace Veldrid.Vk
         public override void SwapBuffers()
         {
             vkQueueWaitIdle(_graphicsQueue); // Meh
-            FlushDestroyedCommandBuffers();
+            FlushQueuedDisposables();
 
             // Then, present the swapchain.
             VkPresentInfoKHR presentInfo = VkPresentInfoKHR.New();
@@ -202,7 +209,7 @@ namespace Veldrid.Vk
             }
         }
 
-        private void FlushDestroyedCommandBuffers()
+        private void FlushQueuedDisposables()
         {
             lock (_commandListsToDispose)
             {
@@ -212,6 +219,20 @@ namespace Veldrid.Vk
                 }
 
                 _commandListsToDispose.Clear();
+            }
+            lock (_disposablesLock)
+            {
+                foreach (VkImage image in _imagesToDestroy)
+                {
+                    vkDestroyImage(_device, image, null);
+                }
+                _imagesToDestroy.Clear();
+
+                foreach (VkMemoryBlock memory in _memoriesToFree)
+                {
+                    _memoryManager.Free(memory);
+                }
+                _memoriesToFree.Clear();
             }
         }
 
@@ -472,14 +493,6 @@ namespace Veldrid.Vk
             }
         }
 
-        private void CreatePerFrameCommandPool()
-        {
-            VkCommandPoolCreateInfo commandPoolCI = VkCommandPoolCreateInfo.New();
-            commandPoolCI.flags = VkCommandPoolCreateFlags.ResetCommandBuffer | VkCommandPoolCreateFlags.Transient;
-            commandPoolCI.queueFamilyIndex = _graphicsQueueIndex;
-            vkCreateCommandPool(_device, ref commandPoolCI, null, out _perFrameCommandPool);
-        }
-
         private void CreateDescriptorPool()
         {
             VkDescriptorPoolSize* sizes = stackalloc VkDescriptorPoolSize[3];
@@ -516,7 +529,7 @@ namespace Veldrid.Vk
             vkCreateFence(_device, ref fenceCI, null, out _imageAvailableFence);
         }
 
-        public override void Dispose()
+        protected override void PlatformDispose()
         {
             _scFB.Dispose();
             vkDestroySurfaceKHR(_instance, _surface, null);
@@ -531,6 +544,12 @@ namespace Veldrid.Vk
                 CheckResult(debugDestroyResult);
             }
 
+            vkDestroyDescriptorPool(_device, _descriptorPool, null);
+            vkDestroyCommandPool(_device, _graphicsCommandPool, null);
+            vkDestroyFence(_device, _imageAvailableFence, null);
+
+            _memoryManager.Dispose();
+
             VkResult result = vkDeviceWaitIdle(_device);
             CheckResult(result);
             vkDestroyDevice(_device, null);
@@ -539,6 +558,7 @@ namespace Veldrid.Vk
 
         public override void WaitForIdle()
         {
+            FlushQueuedDisposables();
             vkQueueWaitIdle(_graphicsQueue);
         }
     }

@@ -408,7 +408,6 @@ namespace Veldrid
                             }
                         }
 
-                        // TODO: This doesn't take into account viewport coordinates.
                         cl.SetScissorRect(
                             0,
                             (uint)pcmd->ClipRect.X,

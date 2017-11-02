@@ -257,12 +257,12 @@ namespace Veldrid.Vk
             {
                 Debug.Assert(_allocatedBlocks.Remove(block), "Unable to remove a supposedly allocated block.");
             }
+#endif
 
             public void Dispose()
             {
                 vkFreeMemory(_device, _memory, null);
             }
-#endif
         }
 
         public void Dispose()

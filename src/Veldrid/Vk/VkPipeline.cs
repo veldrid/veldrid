@@ -2,6 +2,7 @@
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System;
+using System.Diagnostics;
 
 namespace Veldrid.Vk
 {
@@ -11,6 +12,7 @@ namespace Veldrid.Vk
         private readonly Vulkan.VkPipeline _devicePipeline;
         private readonly VkPipelineLayout _pipelineLayout;
         private readonly VkRenderPass _renderPass;
+        private bool _disposed;
 
         public Vulkan.VkPipeline DevicePipeline => _devicePipeline;
 
@@ -267,6 +269,8 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
+            Debug.Assert(!_disposed);
+            _disposed = true;
             vkDestroyPipelineLayout(_gd.Device, _pipelineLayout, null);
             vkDestroyPipeline(_gd.Device, _devicePipeline, null);
             vkDestroyRenderPass(_gd.Device, _renderPass, null);

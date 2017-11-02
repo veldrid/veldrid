@@ -230,6 +230,8 @@ namespace Veldrid.Vk
             {
                 _scFramebuffers[i].Dispose();
             }
+
+            vkDestroySwapchainKHR(_gd.Device, _swapchain, null);
         }
     }
 }

@@ -519,6 +519,7 @@ namespace Veldrid.Vk
         public override void Dispose()
         {
             _scFB.Dispose();
+            vkDestroySurfaceKHR(_instance, _surface, null);
             if (_debugCallbackFunc != null)
             {
                 _debugCallbackFunc = null;
@@ -532,6 +533,7 @@ namespace Veldrid.Vk
 
             VkResult result = vkDeviceWaitIdle(_device);
             CheckResult(result);
+            vkDestroyDevice(_device, null);
             vkDestroyInstance(_instance, null);
         }
 

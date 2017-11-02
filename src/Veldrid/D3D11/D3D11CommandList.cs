@@ -18,9 +18,9 @@ namespace Veldrid.D3D11
         private bool _scissorRectsChanged;
 
         private uint _numVertexBindings = 0;
-        private readonly SharpDX.Direct3D11.Buffer[] _vertexBindings = new SharpDX.Direct3D11.Buffer[10];
+        private SharpDX.Direct3D11.Buffer[] _vertexBindings = new SharpDX.Direct3D11.Buffer[1];
         private int[] _vertexStrides;
-        private int[] _vertexOffsets = new int[10];
+        private int[] _vertexOffsets = new int[1];
 
         // Cached pipeline State
         private D3D11Pipeline _pipeline;
@@ -36,7 +36,7 @@ namespace Veldrid.D3D11
         private HullShader _hullShader;
         private DomainShader _domainShader;
         private PixelShader _pixelShader;
-        private D3D11ResourceSet[] _resourceSets = new D3D11ResourceSet[10]; // TODO: Real / dynamic limit
+        private D3D11ResourceSet[] _resourceSets = new D3D11ResourceSet[1];
 
         // Cached resources
         private const int MaxCachedUniformBuffers = 15;
@@ -161,6 +161,7 @@ namespace Veldrid.D3D11
             {
                 D3D11Pipeline d3dPipeline = Util.AssertSubtype<Pipeline, D3D11Pipeline>(pipeline);
                 _pipeline = d3dPipeline;
+                Util.ClearArray(_resourceSets); // Invalidate resource set bindings -- they may be invalid.
 
                 BlendState blendState = d3dPipeline.BlendState;
                 if (_blendState != blendState)
@@ -233,12 +234,21 @@ namespace Veldrid.D3D11
                 }
 
                 _vertexStrides = d3dPipeline.VertexStrides;
+                int vertexStridesCount = _vertexStrides.Length;
+                Util.EnsureArraySize(ref _vertexBindings, (uint)vertexStridesCount);
+                Util.EnsureArraySize(ref _vertexOffsets, (uint)vertexStridesCount);
+
+                Util.EnsureArraySize(ref _resourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
             }
         }
 
         public override void SetResourceSet(uint slot, ResourceSet rs)
         {
-            // TODO: Cache these.
+            if (_resourceSets[slot] == rs)
+            {
+                return;
+            }
+
             D3D11ResourceSet d3d11RS = Util.AssertSubtype<ResourceSet, D3D11ResourceSet>(rs);
             _resourceSets[slot] = d3d11RS;
             int cbBase = GetConstantBufferBase(slot);

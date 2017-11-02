@@ -159,9 +159,9 @@ namespace Veldrid.OpenGLBinding
         public static void glBindBuffer(BufferTarget target, uint buffer) => p_glBindBuffer(target, buffer);
 
         private delegate void glViewportIndexedf_t(uint index, float x, float y, float w, float h);
-        private static glViewportIndexedf_t p_glViewportIndexed;
+        private static glViewportIndexedf_t p_glViewportIndexedf;
         public static void glViewportIndexed(uint index, float x, float y, float w, float h)
-            => p_glViewportIndexed(index, x, y, w, h);
+            => p_glViewportIndexedf(index, x, y, w, h);
 
         private delegate void glDepthRangeIndexed_t(uint index, double nearVal, double farVal);
         private static glDepthRangeIndexed_t p_glDepthRangeIndexed;
@@ -511,97 +511,94 @@ namespace Veldrid.OpenGLBinding
         {
             s_getProcAddress = getProcAddress;
 
-            LoadFunction(out p_glGenVertexArrays);
-            LoadFunction(out p_glGetError);
-            LoadFunction(out p_glBindVertexArray);
-            LoadFunction(out p_glClearColor);
-            LoadFunction(out p_glDrawBuffer);
-            LoadFunction(out p_glDrawBuffers);
-            LoadFunction(out p_glClear);
-            LoadFunction(out p_glClearDepth);
-            LoadFunction(out p_glClearDepthf);
-            LoadFunction(out p_glDrawElements);
-            LoadFunction(out p_glDrawElementsBaseVertex);
-            LoadFunction(out p_glDrawElementsInstanced);
-            LoadFunction(out p_glDrawElementsInstancedBaseVertex);
-            LoadFunction(out p_glGenBuffers);
-            LoadFunction(out p_glDeleteBuffers);
-            LoadFunction(out p_glGenFramebuffers);
-            LoadFunction(out p_glActiveTexture);
-            LoadFunction(out p_glFramebufferTexture2D);
-            LoadFunction(out p_glBindTexture);
-            LoadFunction(out p_glBindFramebuffer);
-            LoadFunction(out p_glDeleteFramebuffers);
-            LoadFunction(out p_glGenTextures);
-            LoadFunction(out p_glDeleteTextures);
-            LoadFunction(out p_glCheckFramebufferStatus);
-            LoadFunction(out p_glBindBuffer);
-            LoadFunction(out p_glViewportIndexed);
-            LoadFunction(out p_glDepthRangeIndexed);
-            LoadFunction(out p_glBufferSubData);
-            LoadFunction(out p_glNamedBufferSubData);
-            LoadFunction(out p_glScissorIndexed);
-            LoadFunction(out p_glTexSubImage2D);
-            LoadFunction(out p_glPixelStorei);
-            LoadFunction(out p_glShaderSource);
-            LoadFunction(out p_glCreateShader);
-            LoadFunction(out p_glCompileShader);
-            LoadFunction(out p_glGetShaderiv);
-            LoadFunction(out p_glGetShaderInfoLog);
-            LoadFunction(out p_glDeleteShader);
-            LoadFunction(out p_glGenSamplers);
-            LoadFunction(out p_glSamplerParameterf);
-            LoadFunction(out p_glSamplerParameteri);
-            LoadFunction(out p_glSamplerParameterfv);
-            LoadFunction(out p_glBindSampler);
-            LoadFunction(out p_glDeleteSamplers);
-            LoadFunction(out p_glBlendFuncSeparatei);
-            LoadFunction(out p_glEnable);
-            LoadFunction(out p_glEnablei);
-            LoadFunction(out p_glDisable);
-            LoadFunction(out p_glDisablei);
-            LoadFunction(out p_glBlendEquationSeparatei);
-            LoadFunction(out p_glBlendColor);
-            LoadFunction(out p_glDepthFunc);
-            LoadFunction(out p_glDepthMask);
-            LoadFunction(out p_glCullFace);
-            LoadFunction(out p_glPolygonMode);
-            LoadFunction(out p_glCreateProgram);
-            LoadFunction(out p_glAttachShader);
-            LoadFunction(out p_glBindAttribLocation);
-            LoadFunction(out p_glLinkProgram);
-            LoadFunction(out p_glGetProgramiv);
-            LoadFunction(out p_glGetProgramInfoLog);
-            LoadFunction(out p_glUniformBlockBinding);
-            LoadFunction(out p_glDeleteProgram);
-            LoadFunction(out p_glUniform1i);
-            LoadFunction(out p_glGetUniformBlockIndex);
-            LoadFunction(out p_glGetUniformLocation);
-            LoadFunction(out p_glGetAttribLocation);
-            LoadFunction(out p_glUseProgram);
-            LoadFunction(out p_glBindBufferRange);
-            LoadFunction(out p_glDebugMessageCallback);
-            LoadFunction(out p_glBufferData);
-            LoadFunction(out p_glNamedBufferData);
-            LoadFunction(out p_glTexImage2D);
-            LoadFunction(out p_glEnableVertexAttribArray);
-            LoadFunction(out p_glDisableVertexAttribArray);
-            LoadFunction(out p_glVertexAttribPointer);
-            LoadFunction(out p_glVertexAttribIPointer);
-            LoadFunction(out p_glVertexAttribDivisor);
-            LoadFunction(out p_glFrontFace);
-            LoadFunction(out p_glGetIntegerv);
-            LoadFunction(out p_glBindTextureUnit);
-            LoadFunction(out p_glTexParameteri);
-            LoadFunction(out p_glGetStringi);
-            LoadFunction(out p_glObjectLabel);
+            LoadFunction("glGenVertexArrays", out p_glGenVertexArrays);
+            LoadFunction("glGetError", out p_glGetError);
+            LoadFunction("glBindVertexArray", out p_glBindVertexArray);
+            LoadFunction("glClearColor", out p_glClearColor);
+            LoadFunction("glDrawBuffer", out p_glDrawBuffer);
+            LoadFunction("glDrawBuffers", out p_glDrawBuffers);
+            LoadFunction("glClear", out p_glClear);
+            LoadFunction("glClearDepth", out p_glClearDepth);
+            LoadFunction("glClearDepthf", out p_glClearDepthf);
+            LoadFunction("glDrawElements", out p_glDrawElements);
+            LoadFunction("glDrawElementsBaseVertex", out p_glDrawElementsBaseVertex);
+            LoadFunction("glDrawElementsInstanced", out p_glDrawElementsInstanced);
+            LoadFunction("glDrawElementsInstancedBaseVertex", out p_glDrawElementsInstancedBaseVertex);
+            LoadFunction("glGenBuffers", out p_glGenBuffers);
+            LoadFunction("glDeleteBuffers", out p_glDeleteBuffers);
+            LoadFunction("glGenFramebuffers", out p_glGenFramebuffers);
+            LoadFunction("glActiveTexture", out p_glActiveTexture);
+            LoadFunction("glFramebufferTexture2D", out p_glFramebufferTexture2D);
+            LoadFunction("glBindTexture", out p_glBindTexture);
+            LoadFunction("glBindFramebuffer", out p_glBindFramebuffer);
+            LoadFunction("glDeleteFramebuffers", out p_glDeleteFramebuffers);
+            LoadFunction("glGenTextures", out p_glGenTextures);
+            LoadFunction("glDeleteTextures", out p_glDeleteTextures);
+            LoadFunction("glCheckFramebufferStatus", out p_glCheckFramebufferStatus);
+            LoadFunction("glBindBuffer", out p_glBindBuffer);
+            LoadFunction("glViewportIndexedf", out p_glViewportIndexedf);
+            LoadFunction("glDepthRangeIndexed", out p_glDepthRangeIndexed);
+            LoadFunction("glBufferSubData", out p_glBufferSubData);
+            LoadFunction("glNamedBufferSubData", out p_glNamedBufferSubData);
+            LoadFunction("glScissorIndexed", out p_glScissorIndexed);
+            LoadFunction("glTexSubImage2D", out p_glTexSubImage2D);
+            LoadFunction("glPixelStorei", out p_glPixelStorei);
+            LoadFunction("glShaderSource", out p_glShaderSource);
+            LoadFunction("glCreateShader", out p_glCreateShader);
+            LoadFunction("glCompileShader", out p_glCompileShader);
+            LoadFunction("glGetShaderiv", out p_glGetShaderiv);
+            LoadFunction("glGetShaderInfoLog", out p_glGetShaderInfoLog);
+            LoadFunction("glDeleteShader", out p_glDeleteShader);
+            LoadFunction("glGenSamplers", out p_glGenSamplers);
+            LoadFunction("glSamplerParameterf", out p_glSamplerParameterf);
+            LoadFunction("glSamplerParameteri", out p_glSamplerParameteri);
+            LoadFunction("glSamplerParameterfv", out p_glSamplerParameterfv);
+            LoadFunction("glBindSampler", out p_glBindSampler);
+            LoadFunction("glDeleteSamplers", out p_glDeleteSamplers);
+            LoadFunction("glBlendFuncSeparatei", out p_glBlendFuncSeparatei);
+            LoadFunction("glEnable", out p_glEnable);
+            LoadFunction("glEnablei", out p_glEnablei);
+            LoadFunction("glDisable", out p_glDisable);
+            LoadFunction("glDisablei", out p_glDisablei);
+            LoadFunction("glBlendEquationSeparatei", out p_glBlendEquationSeparatei);
+            LoadFunction("glBlendColor", out p_glBlendColor);
+            LoadFunction("glDepthFunc", out p_glDepthFunc);
+            LoadFunction("glDepthMask", out p_glDepthMask);
+            LoadFunction("glCullFace", out p_glCullFace);
+            LoadFunction("glPolygonMode", out p_glPolygonMode);
+            LoadFunction("glCreateProgram", out p_glCreateProgram);
+            LoadFunction("glAttachShader", out p_glAttachShader);
+            LoadFunction("glBindAttribLocation", out p_glBindAttribLocation);
+            LoadFunction("glLinkProgram", out p_glLinkProgram);
+            LoadFunction("glGetProgramiv", out p_glGetProgramiv);
+            LoadFunction("glGetProgramInfoLog", out p_glGetProgramInfoLog);
+            LoadFunction("glUniformBlockBinding", out p_glUniformBlockBinding);
+            LoadFunction("glDeleteProgram", out p_glDeleteProgram);
+            LoadFunction("glUniform1i", out p_glUniform1i);
+            LoadFunction("glGetUniformBlockIndex", out p_glGetUniformBlockIndex);
+            LoadFunction("glGetUniformLocation", out p_glGetUniformLocation);
+            LoadFunction("glGetAttribLocation", out p_glGetAttribLocation);
+            LoadFunction("glUseProgram", out p_glUseProgram);
+            LoadFunction("glBindBufferRange", out p_glBindBufferRange);
+            LoadFunction("glDebugMessageCallback", out p_glDebugMessageCallback);
+            LoadFunction("glBufferData", out p_glBufferData);
+            LoadFunction("glNamedBufferData", out p_glNamedBufferData);
+            LoadFunction("glTexImage2D", out p_glTexImage2D);
+            LoadFunction("glEnableVertexAttribArray", out p_glEnableVertexAttribArray);
+            LoadFunction("glDisableVertexAttribArray", out p_glDisableVertexAttribArray);
+            LoadFunction("glVertexAttribPointer", out p_glVertexAttribPointer);
+            LoadFunction("glVertexAttribIPointer", out p_glVertexAttribIPointer);
+            LoadFunction("glVertexAttribDivisor", out p_glVertexAttribDivisor);
+            LoadFunction("glFrontFace", out p_glFrontFace);
+            LoadFunction("glGetIntegerv", out p_glGetIntegerv);
+            LoadFunction("glBindTextureUnit", out p_glBindTextureUnit);
+            LoadFunction("glTexParameteri", out p_glTexParameteri);
+            LoadFunction("glGetStringi", out p_glGetStringi);
+            LoadFunction("glObjectLabel", out p_glObjectLabel);
         }
 
-        private static void LoadFunction<T>(out T field)
+        private static void LoadFunction<T>(string name, out T field)
         {
-            // TODO: Remove this reflection.
-            string name = typeof(T).Name;
-            name = name.Substring(0, name.Length - 2); // Remove _t
             IntPtr funcPtr = s_getProcAddress(name);
             if (funcPtr != IntPtr.Zero)
             {
@@ -611,6 +608,14 @@ namespace Veldrid.OpenGLBinding
             {
                 field = default(T);
             }
+        }
+
+        private static void LoadFunction<T>(out T field)
+        {
+            // Slow version using reflection -- prefer above.
+            string name = typeof(T).Name;
+            name = name.Substring(0, name.Length - 2); // Remove _t
+            LoadFunction(name, out field);
         }
     }
 }

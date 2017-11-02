@@ -61,6 +61,7 @@ namespace Veldrid.Vk
             CreatePerFrameCommandPool();
             CreateDescriptorPool();
             CreateGraphicsCommandPool();
+            CreateFences();
 
             _scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence);
             vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
@@ -506,6 +507,13 @@ namespace Veldrid.Vk
             commandPoolCI.queueFamilyIndex = _graphicsQueueIndex;
             VkResult result = vkCreateCommandPool(_device, ref commandPoolCI, null, out _graphicsCommandPool);
             CheckResult(result);
+        }
+
+        private void CreateFences()
+        {
+            VkFenceCreateInfo fenceCI = VkFenceCreateInfo.New();
+            fenceCI.flags = VkFenceCreateFlags.None;
+            vkCreateFence(_device, ref fenceCI, null, out _imageAvailableFence);
         }
 
         public override void Dispose()

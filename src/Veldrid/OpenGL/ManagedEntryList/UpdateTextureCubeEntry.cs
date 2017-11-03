@@ -1,73 +1,67 @@
-﻿namespace Veldrid.OpenGL
+﻿namespace Veldrid.OpenGL.ManagedEntryList
 {
-    internal class UpdateTextureEntry : OpenGLCommandEntry
+    internal class UpdateTextureCubeEntry : OpenGLCommandEntry
     {
-        public Texture Texture;
+        public Texture TextureCube;
         public StagingBlock StagingBlock;
+        public CubeFace Face;
         public uint X;
         public uint Y;
-        public uint Z;
         public uint Width;
         public uint Height;
-        public uint Depth;
         public uint MipLevel;
         public uint ArrayLayer;
 
-        public UpdateTextureEntry(
-            Texture texture,
+        public UpdateTextureCubeEntry(
+            Texture textureCube,
             StagingBlock stagingBlock,
+            CubeFace face,
             uint x,
             uint y,
-            uint z,
             uint width,
             uint height,
-            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
-            Texture = texture;
+            TextureCube = textureCube;
             StagingBlock = stagingBlock;
+            Face = face;
             X = x;
             Y = y;
-            Z = z;
             Width = width;
             Height = height;
-            Depth = depth;
             MipLevel = mipLevel;
             ArrayLayer = arrayLayer;
         }
 
-        public UpdateTextureEntry() { }
+        public UpdateTextureCubeEntry() { }
 
-        public UpdateTextureEntry Init(
-            Texture texture,
+        public UpdateTextureCubeEntry Init(
+            Texture textureCube,
             StagingBlock stagingBlock,
+            CubeFace face,
             uint x,
             uint y,
-            uint z,
             uint width,
             uint height,
-            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
-            Texture = texture;
+            TextureCube = textureCube;
             StagingBlock = stagingBlock;
+            Face = face;
             X = x;
             Y = y;
-            Z = z;
             Width = width;
             Height = height;
-            Depth = depth;
             MipLevel = mipLevel;
             ArrayLayer = arrayLayer;
-
             return this;
         }
 
         public override void ClearReferences()
         {
-            Texture = null;
+            TextureCube = null;
         }
     }
 }

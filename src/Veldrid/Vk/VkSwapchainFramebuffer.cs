@@ -19,17 +19,17 @@ namespace Veldrid.Vk
         private VkImage[] _scImages;
         private VkFormat _scImageFormat;
         private VkExtent2D _scExtent;
-        private VkTexture2D[][] _scColorTextures;
+        private VkTexture[][] _scColorTextures;
 
-        private VkTexture2D _depthTexture;
+        private VkTexture _depthTexture;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
 
         public override VkRenderPass RenderPass => _scFramebuffers[0].RenderPass;
 
-        public override IReadOnlyList<Texture2D> ColorTextures => _scColorTextures[(int)_currentImageIndex];
+        public override IReadOnlyList<Texture> ColorTextures => _scColorTextures[(int)_currentImageIndex];
 
-        public override Texture2D DepthTexture => _depthTexture;
+        public override Texture DepthTexture => _depthTexture;
 
         public override uint Width => _scExtent.width;
         public override uint Height => _scExtent.height;
@@ -179,9 +179,10 @@ namespace Veldrid.Vk
         private void CreateDepthTexture()
         {
             _depthTexture?.Dispose();
-            _depthTexture = (VkTexture2D)_gd.ResourceFactory.CreateTexture2D(new TextureDescription(
+            _depthTexture = (VkTexture)_gd.ResourceFactory.CreateTexture(new TextureDescription(
                 _scExtent.width,
                 _scExtent.height,
+                1,
                 1,
                 1,
                  PixelFormat.R16_UNorm,
@@ -204,11 +205,11 @@ namespace Veldrid.Vk
             EnsureSize(ref _scColorTextures, _scImages.Length);
             for (uint i = 0; i < _scImages.Length; i++)
             {
-                VkTexture2D colorTex = new VkTexture2D(_gd, _scExtent.width, _scExtent.height, 1, 1, _scImageFormat, TextureUsage.RenderTarget, _scImages[i]);
+                VkTexture colorTex = new VkTexture(_gd, _scExtent.width, _scExtent.height, 1, 1, _scImageFormat, TextureUsage.RenderTarget, _scImages[i]);
                 FramebufferDescription desc = new FramebufferDescription(_depthTexture, colorTex);
                 VkFramebuffer fb = (VkFramebuffer)_gd.ResourceFactory.CreateFramebuffer(ref desc);
                 _scFramebuffers[i] = fb;
-                _scColorTextures[i] = new VkTexture2D[] { colorTex };
+                _scColorTextures[i] = new VkTexture[] { colorTex };
             }
         }
 

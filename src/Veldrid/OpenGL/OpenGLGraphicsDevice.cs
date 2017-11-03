@@ -131,11 +131,8 @@ namespace Veldrid.OpenGL
                 case OpenGLShader shader:
                     shader.Name = name;
                     break;
-                case OpenGLTexture2D tex2D:
-                    tex2D.Name = name;
-                    break;
-                case OpenGLTextureCube texCube:
-                    texCube.Name = name;
+                case OpenGLTexture tex:
+                    tex.Name = name;
                     break;
             }
         }

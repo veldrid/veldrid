@@ -53,14 +53,9 @@
             return new OpenGLShader(_gd, description.Stage, stagingBlock);
         }
 
-        public override Texture2D CreateTexture2D(ref TextureDescription description)
+        public override Texture CreateTexture(ref TextureDescription description)
         {
-            return new OpenGLTexture2D(_gd, ref description);
-        }
-
-        public override TextureCube CreateTextureCube(ref TextureDescription description)
-        {
-            return new OpenGLTextureCube(_gd, ref description);
+            return new OpenGLTexture(_gd, ref description);
         }
 
         public override TextureView CreateTextureView(ref TextureViewDescription description)

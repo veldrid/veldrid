@@ -28,10 +28,10 @@ namespace Veldrid.OpenGL
 
         public void SetTexture(uint textureUnit, OpenGLTextureView textureView)
         {
+            uint textureID = textureView.Target.Texture;
+
             if (_textureUnitTextures[textureUnit] != textureView)
             {
-                GetTextureAndTarget(textureView.Target, out uint textureID, out TextureTarget textureTarget);
-
                 if (_dsaAvailable)
                 {
                     glBindTextureUnit(textureUnit, textureID);
@@ -41,7 +41,7 @@ namespace Veldrid.OpenGL
                 {
                     glActiveTexture(TextureUnit.Texture0 + (int)textureUnit);
                     CheckLastError();
-                    glBindTexture(textureTarget, textureID);
+                    glBindTexture(GetTextureTarget(textureView.Target), textureID);
                     CheckLastError();
                 }
 
@@ -86,21 +86,19 @@ namespace Veldrid.OpenGL
             }
         }
 
-        private void GetTextureAndTarget(Texture tex, out uint textureID, out TextureTarget target)
+        private TextureTarget GetTextureTarget(OpenGLTexture tex)
         {
-            if (tex is OpenGLTexture2D glTex2D)
+            if ((tex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
             {
-                textureID = glTex2D.Texture;
-                target = TextureTarget.Texture2D;
+                return tex.ArrayLayers == 1 ? TextureTarget.TextureCubeMap : TextureTarget.TextureCubeMapArray;
             }
-            else if (tex is OpenGLTextureCube glTexCube)
+            else if (tex.Depth == 1)
             {
-                textureID = glTexCube.Texture;
-                target = TextureTarget.TextureCubeMap;
+                return tex.ArrayLayers == 1 ? TextureTarget.Texture2D : TextureTarget.Texture2DArray;
             }
             else
             {
-                throw new VeldridException("Invalid texture type used in OpenGL backend: " + tex.GetType().Name);
+                return TextureTarget.Texture3D;
             }
         }
 

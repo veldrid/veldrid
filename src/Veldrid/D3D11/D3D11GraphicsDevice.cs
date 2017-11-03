@@ -100,8 +100,8 @@ namespace Veldrid.D3D11
                     OptionFlags = ResourceOptionFlags.None
                 }))
             {
-                D3D11Texture2D backBufferVdTexture = new D3D11Texture2D(backBufferTexture);
-                D3D11Texture2D depthVdTexture = new D3D11Texture2D(depthBufferTexture);
+                D3D11Texture backBufferVdTexture = new D3D11Texture(backBufferTexture);
+                D3D11Texture depthVdTexture = new D3D11Texture(depthBufferTexture);
                 FramebufferDescription desc = new FramebufferDescription(depthVdTexture, backBufferVdTexture);
                 _swapChainFramebuffer = new D3D11Framebuffer(_device, ref desc);
                 _swapChainFramebuffer.IsSwapchainFramebuffer = true;
@@ -148,11 +148,8 @@ namespace Veldrid.D3D11
                 case D3D11Shader shader:
                     shader.DeviceShader.DebugName = name;
                     break;
-                case D3D11Texture2D tex2D:
-                    tex2D.DeviceTexture.DebugName = name;
-                    break;
-                case D3D11TextureCube texCube:
-                    texCube.DeviceTexture.DebugName = name;
+                case D3D11Texture tex:
+                    tex.DeviceTexture.DebugName = name;
                     break;
                 case D3D11TextureView texView:
                     texView.ShaderResourceView.DebugName = name;

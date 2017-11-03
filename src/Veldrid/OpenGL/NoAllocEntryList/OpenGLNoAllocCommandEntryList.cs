@@ -53,8 +53,8 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte UpdateBufferEntryID = 13;
         private static readonly uint UpdateBufferEntrySize = Util.USizeOf<NoAllocUpdateBufferEntry>();
 
-        private const byte UpdateTexture2DEntryID = 14;
-        private static readonly uint UpdateTexture2DEntrySize = Util.USizeOf<NoAllocUpdateTexture2DEntry>();
+        private const byte UpdateTextureEntryID = 14;
+        private static readonly uint UpdateTextureEntrySize = Util.USizeOf<NoAllocUpdateTextureEntry>();
 
         private const byte UpdateTextureCubeEntryID = 15;
         private static readonly uint UpdateTextureCubeEntrySize = Util.USizeOf<NoAllocUpdateTextureCubeEntry>();
@@ -221,23 +221,25 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         executor.UpdateBuffer(ube.Buffer.Item, ube.BufferOffsetInBytes, ube.StagingBlock.StagingBlock);
                         currentOffset += UpdateBufferEntrySize;
                         break;
-                    case UpdateTexture2DEntryID:
-                        ref NoAllocUpdateTexture2DEntry ut2de = ref Unsafe.AsRef<NoAllocUpdateTexture2DEntry>(entryBasePtr);
-                        executor.UpdateTexture2D(
-                            ut2de.Texture2D,
-                            ut2de.StagingBlock.StagingBlock,
-                            ut2de.X,
-                            ut2de.Y,
-                            ut2de.Width,
-                            ut2de.Height,
-                            ut2de.MipLevel,
-                            ut2de.ArrayLayer);
-                        currentOffset += UpdateTexture2DEntrySize;
+                    case UpdateTextureEntryID:
+                        ref NoAllocUpdateTextureEntry ute = ref Unsafe.AsRef<NoAllocUpdateTextureEntry>(entryBasePtr);
+                        executor.UpdateTexture(
+                            ute.Texture,
+                            ute.StagingBlock.StagingBlock,
+                            ute.X,
+                            ute.Y,
+                            ute.Z,
+                            ute.Width,
+                            ute.Height,
+                            ute.Depth,
+                            ute.MipLevel,
+                            ute.ArrayLayer);
+                        currentOffset += UpdateTextureEntrySize;
                         break;
                     case UpdateTextureCubeEntryID:
                         ref NoAllocUpdateTextureCubeEntry utce = ref Unsafe.AsRef<NoAllocUpdateTextureCubeEntry>(entryBasePtr);
                         executor.UpdateTextureCube(
-                            utce.TextureCube,
+                            utce.Texture,
                             utce.StagingBlock.StagingBlock,
                             utce.Face,
                             utce.X,
@@ -334,15 +336,15 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         ube.StagingBlock.GCHandle.Free();
                         currentOffset += UpdateBufferEntrySize;
                         break;
-                    case UpdateTexture2DEntryID:
-                        ref NoAllocUpdateTexture2DEntry ut2de = ref Unsafe.AsRef<NoAllocUpdateTexture2DEntry>(entryBasePtr);
-                        ut2de.Texture2D.Free();
-                        ut2de.StagingBlock.GCHandle.Free();
-                        currentOffset += UpdateTexture2DEntrySize;
+                    case UpdateTextureEntryID:
+                        ref NoAllocUpdateTextureEntry ute = ref Unsafe.AsRef<NoAllocUpdateTextureEntry>(entryBasePtr);
+                        ute.Texture.Free();
+                        ute.StagingBlock.GCHandle.Free();
+                        currentOffset += UpdateTextureEntrySize;
                         break;
                     case UpdateTextureCubeEntryID:
                         ref NoAllocUpdateTextureCubeEntry utce = ref Unsafe.AsRef<NoAllocUpdateTextureCubeEntry>(entryBasePtr);
-                        utce.TextureCube.Free();
+                        utce.Texture.Free();
                         utce.StagingBlock.GCHandle.Free();
                         currentOffset += UpdateTextureCubeEntrySize;
                         break;
@@ -431,32 +433,36 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(UpdateBufferEntryID, ref entry);
         }
 
-        public void UpdateTexture2D(
-            Texture2D texture2D,
+        public void UpdateTexture(
+            Texture texture,
             IntPtr source,
             uint sizeInBytes,
             uint x,
             uint y,
+            uint z,
             uint width,
             uint height,
+            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
             StagingBlock stagingBlock = _memoryPool.Stage(source, sizeInBytes);
-            NoAllocUpdateTexture2DEntry entry = new NoAllocUpdateTexture2DEntry(
-                texture2D,
+            NoAllocUpdateTextureEntry entry = new NoAllocUpdateTextureEntry(
+                texture,
                 stagingBlock,
                 x,
                 y,
+                z,
                 width,
                 height,
+                depth,
                 mipLevel,
                 arrayLayer);
-            AddEntry(UpdateTexture2DEntryID, ref entry);
+            AddEntry(UpdateTextureEntryID, ref entry);
         }
 
         public void UpdateTextureCube(
-            TextureCube textureCube,
+            Texture textureCube,
             IntPtr source,
             uint sizeInBytes,
             CubeFace face,

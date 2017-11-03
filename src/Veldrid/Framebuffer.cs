@@ -5,14 +5,14 @@ namespace Veldrid
 {
     public abstract class Framebuffer : DeviceResource, IDisposable
     {
-        public virtual Texture2D DepthTexture { get; }
-        public virtual IReadOnlyList<Texture2D> ColorTextures { get; }
+        public virtual Texture DepthTexture { get; }
+        public virtual IReadOnlyList<Texture> ColorTextures { get; }
         public virtual OutputDescription OutputDescription { get; }
 
         public virtual uint Width { get; }
         public virtual uint Height { get; }
 
-        internal Framebuffer(Texture2D depthTexture, IReadOnlyList<Texture2D> colorTextures)
+        internal Framebuffer(Texture depthTexture, IReadOnlyList<Texture> colorTextures)
         {
             ColorTextures = colorTextures;
             DepthTexture = depthTexture;

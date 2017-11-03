@@ -94,7 +94,7 @@ namespace Veldrid.Vk
                 clearValue = clearValue
             };
 
-            Texture2D colorTex = ((Texture2D)_currentFramebuffer.ColorTextures[(int)index]);
+            Texture colorTex = _currentFramebuffer.ColorTextures[(int)index];
             VkClearRect clearRect = new VkClearRect
             {
                 baseArrayLayer = 0,
@@ -114,7 +114,7 @@ namespace Veldrid.Vk
                 clearValue = clearValue
             };
 
-            Texture2D depthTex = (Texture2D)_currentFramebuffer.DepthTexture;
+            Texture depthTex = _currentFramebuffer.DepthTexture;
             VkClearRect clearRect = new VkClearRect
             {
                 baseArrayLayer = 0,
@@ -289,18 +289,20 @@ namespace Veldrid.Vk
             }
         }
 
-        public override void UpdateTexture2D(
-            Texture2D texture2D,
+        public override void UpdateTexture(
+            Texture texture,
             IntPtr source,
             uint sizeInBytes,
             uint x,
             uint y,
+            uint z,
             uint width,
             uint height,
+            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
-            VkTexture2D vkTex2D = Util.AssertSubtype<Texture2D, VkTexture2D>(texture2D);
+            VkTexture tex = Util.AssertSubtype<Texture, VkTexture>(texture);
 
             if (x != 0 || y != 0)
             {
@@ -314,8 +316,9 @@ namespace Veldrid.Vk
                 _gd.MemoryManager,
                 width,
                 height,
+                depth,
                 1,
-                VkFormats.VdToVkPixelFormat(vkTex2D.Format),
+                VkFormats.VdToVkPixelFormat(tex.Format),
                 VkImageTiling.Linear,
                 VkImageUsageFlags.TransferSrc,
                 VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
@@ -339,7 +342,7 @@ namespace Veldrid.Vk
             }
             else
             {
-                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture2D.Format);
+                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
                 for (uint yy = 0; yy < height; yy++)
                 {
                     byte* dstRowStart = ((byte*)mappedPtr) + (rowPitch * yy);
@@ -351,10 +354,10 @@ namespace Veldrid.Vk
             vkUnmapMemory(_gd.Device, stagingMemory.DeviceMemory);
 
             TransitionImageLayout(stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
-            TransitionImageLayout(vkTex2D.DeviceImage, mipLevel, 1, 0, 1, vkTex2D.ImageLayouts[mipLevel], VkImageLayout.TransferDstOptimal);
-            CopyImage(stagingImage, 0, vkTex2D.DeviceImage, mipLevel, width, height);
-            TransitionImageLayout(vkTex2D.DeviceImage, mipLevel, 1, 0, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
-            vkTex2D.ImageLayouts[mipLevel] = VkImageLayout.ShaderReadOnlyOptimal;
+            TransitionImageLayout(tex.DeviceImage, mipLevel, 1, 0, 1, tex.ImageLayouts[mipLevel], VkImageLayout.TransferDstOptimal);
+            CopyImage(stagingImage, 0, tex.DeviceImage, mipLevel, width, height);
+            TransitionImageLayout(tex.DeviceImage, mipLevel, 1, 0, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
+            tex.ImageLayouts[mipLevel] = VkImageLayout.ShaderReadOnlyOptimal;
 
             if (_imagesToDestroy == null)
             {
@@ -370,7 +373,7 @@ namespace Veldrid.Vk
         }
 
         public override void UpdateTextureCube(
-            TextureCube textureCube,
+            Texture textureCube,
             IntPtr source,
             uint sizeInBytes,
             CubeFace face,
@@ -381,7 +384,7 @@ namespace Veldrid.Vk
             uint mipLevel,
             uint arrayLayer)
         {
-            VkTextureCube vkTexCube = Util.AssertSubtype<TextureCube, VkTextureCube>(textureCube);
+            VkTexture vkTexCube = Util.AssertSubtype<Texture, VkTexture>(textureCube);
 
             if (x != 0 || y != 0)
             {
@@ -395,6 +398,7 @@ namespace Veldrid.Vk
                 _gd.MemoryManager,
                 width,
                 height,
+                1,
                 1,
                 VkFormats.VdToVkPixelFormat(vkTexCube.Format),
                 VkImageTiling.Linear,
@@ -433,11 +437,12 @@ namespace Veldrid.Vk
 
             uint cubeArrayLayer = GetArrayLayer(face);
 
+            // TODO: These transitions are sub-optimal.
             TransitionImageLayout(stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
-            TransitionImageLayout(vkTexCube.DeviceImage, 0, 1, 0, 6, vkTexCube.ImageLayout, VkImageLayout.TransferDstOptimal);
+            TransitionImageLayout(vkTexCube.DeviceImage, 0, 1, 0, 6, vkTexCube.ImageLayouts[0], VkImageLayout.TransferDstOptimal);
             CopyImage(stagingImage, 0, vkTexCube.DeviceImage, mipLevel, width, height, cubeArrayLayer);
             TransitionImageLayout(vkTexCube.DeviceImage, 0, 1, 0, 6, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
-            vkTexCube.ImageLayout = VkImageLayout.ShaderReadOnlyOptimal;
+            vkTexCube.ImageLayouts[0] = VkImageLayout.ShaderReadOnlyOptimal;
 
             if (_imagesToDestroy == null)
             {

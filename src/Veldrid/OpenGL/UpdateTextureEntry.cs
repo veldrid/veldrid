@@ -1,54 +1,64 @@
 ﻿namespace Veldrid.OpenGL
 {
-    internal class UpdateTexture2DEntry : OpenGLCommandEntry
+    internal class UpdateTextureEntry : OpenGLCommandEntry
     {
-        public Texture2D Texture2D;
+        public Texture Texture;
         public StagingBlock StagingBlock;
         public uint X;
         public uint Y;
+        public uint Z;
         public uint Width;
         public uint Height;
+        public uint Depth;
         public uint MipLevel;
         public uint ArrayLayer;
 
-        public UpdateTexture2DEntry(
-            Texture2D texture2D,
+        public UpdateTextureEntry(
+            Texture texture,
             StagingBlock stagingBlock,
             uint x,
             uint y,
+            uint z,
             uint width,
             uint height,
+            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
-            Texture2D = texture2D;
+            Texture = texture;
             StagingBlock = stagingBlock;
             X = x;
             Y = y;
+            Z = z;
             Width = width;
             Height = height;
+            Depth = depth;
             MipLevel = mipLevel;
             ArrayLayer = arrayLayer;
         }
 
-        public UpdateTexture2DEntry() { }
+        public UpdateTextureEntry() { }
 
-        public UpdateTexture2DEntry Init(
-            Texture2D texture2D,
+        public UpdateTextureEntry Init(
+            Texture texture,
             StagingBlock stagingBlock,
             uint x,
             uint y,
+            uint z,
             uint width,
             uint height,
+            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
-            Texture2D = texture2D;
+            Texture = texture;
             StagingBlock = stagingBlock;
             X = x;
             Y = y;
+            Z = z;
             Width = width;
             Height = height;
+            Depth = depth;
             MipLevel = mipLevel;
             ArrayLayer = arrayLayer;
 
@@ -57,7 +67,7 @@
 
         public override void ClearReferences()
         {
-            Texture2D = null;
+            Texture = null;
         }
     }
 }

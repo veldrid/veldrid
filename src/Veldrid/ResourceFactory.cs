@@ -8,10 +8,8 @@ namespace Veldrid
         public abstract Pipeline CreatePipeline(ref PipelineDescription description);
         public Framebuffer CreateFramebuffer(FramebufferDescription description) => CreateFramebuffer(ref description);
         public abstract Framebuffer CreateFramebuffer(ref FramebufferDescription description);
-        public Texture2D CreateTexture2D(TextureDescription description) => CreateTexture2D(ref description);
-        public abstract Texture2D CreateTexture2D(ref TextureDescription description);
-        public TextureCube CreateTextureCube(TextureDescription description) => CreateTextureCube(ref description);
-        public abstract TextureCube CreateTextureCube(ref TextureDescription description);
+        public Texture CreateTexture(TextureDescription description) => CreateTexture(ref description);
+        public abstract Texture CreateTexture(ref TextureDescription description);
         public TextureView CreateTextureView(Texture target) => CreateTextureView(new TextureViewDescription(target));
         public TextureView CreateTextureView(TextureViewDescription description) => CreateTextureView(ref description);
         public abstract TextureView CreateTextureView(ref TextureViewDescription description);

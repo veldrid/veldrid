@@ -621,31 +621,33 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void UpdateTexture2D(
-            Texture2D texture2D,
+        public override void UpdateTexture(
+            Texture texture,
             IntPtr source,
             uint sizeInBytes,
             uint x,
             uint y,
+            uint z,
             uint width,
             uint height,
+            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
-            SharpDX.Direct3D11.Texture2D deviceTexture = Util.AssertSubtype<Texture2D, D3D11Texture2D>(texture2D).DeviceTexture;
+            Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(texture).DeviceTexture;
             ResourceRegion resourceRegion = new ResourceRegion(
                 left: (int)x,
                 top: (int)y,
-                front: 0,
-                right: (int)x + (int)width,
-                bottom: (int)y + (int)height,
-                back: 1);
-            uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture2D.Format) * width;
+                front: (int)z,
+                right: (int)(x + width),
+                bottom: (int)(y + height),
+                back: (int)(z + depth));
+            uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture.Format) * width;
             _context.UpdateSubresource(deviceTexture, (int)mipLevel, resourceRegion, source, (int)srcRowPitch, 0);
         }
 
         public override void UpdateTextureCube(
-            TextureCube textureCube,
+            Texture textureCube,
             IntPtr source,
             uint sizeInBytes,
             CubeFace face,
@@ -656,7 +658,7 @@ namespace Veldrid.D3D11
             uint mipLevel,
             uint arrayLayer)
         {
-            SharpDX.Direct3D11.Texture2D deviceTexture = Util.AssertSubtype<TextureCube, D3D11TextureCube>(textureCube).DeviceTexture;
+            Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(textureCube).DeviceTexture;
 
             ResourceRegion resourceRegion = new ResourceRegion(
                 left: (int)x,

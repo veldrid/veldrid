@@ -20,7 +20,7 @@ namespace Veldrid
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
         private UniformBuffer _projMatrixBuffer;
-        private Texture2D _fontTexture;
+        private Texture _fontTexture;
         private TextureView _fontTextureView;
         private Shader _vertexShader;
         private Shader _fragmentShader;
@@ -174,21 +174,24 @@ namespace Veldrid
             // Store our identifier
             io.FontAtlas.SetTexID(_fontAtlasID);
 
-            _fontTexture = gd.ResourceFactory.CreateTexture2D(new TextureDescription(
+            _fontTexture = gd.ResourceFactory.CreateTexture(new TextureDescription(
                 (uint)textureData.Width,
                 (uint)textureData.Height,
                 1,
                 1,
+                1,
                 PixelFormat.R8_G8_B8_A8_UNorm,
                 TextureUsage.Sampled));
-            cl.UpdateTexture2D(
+            cl.UpdateTexture(
                 _fontTexture,
                 (IntPtr)textureData.Pixels,
                 (uint)(textureData.BytesPerPixel * textureData.Width * textureData.Height),
                 0,
                 0,
+                0,
                 (uint)textureData.Width,
                 (uint)textureData.Height,
+                1,
                 0,
                 0);
             _fontTextureView = gd.ResourceFactory.CreateTextureView(_fontTexture);

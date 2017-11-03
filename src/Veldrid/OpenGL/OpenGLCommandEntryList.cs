@@ -17,8 +17,29 @@ namespace Veldrid.OpenGL
         void SetVertexBuffer(uint index, VertexBuffer vb);
         void SetViewport(uint index, ref Viewport viewport);
         void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
-        void UpdateTexture2D(Texture2D texture2D, IntPtr source, uint sizeInBytes, uint x, uint y, uint width, uint height, uint mipLevel, uint arrayLayer);
-        void UpdateTextureCube(TextureCube textureCube, IntPtr source, uint sizeInBytes, CubeFace face, uint x, uint y, uint width, uint height, uint mipLevel, uint arrayLayer);
+        void UpdateTexture(
+            Texture texture,
+            IntPtr source,
+            uint sizeInBytes,
+            uint x,
+            uint y,
+            uint z,
+            uint width,
+            uint height,
+            uint depth,
+            uint mipLevel,
+            uint arrayLayer);
+        void UpdateTextureCube(
+            Texture textureCube,
+            IntPtr source,
+            uint sizeInBytes,
+            CubeFace face,
+            uint x,
+            uint y,
+            uint width,
+            uint height,
+            uint mipLevel,
+            uint arrayLayer);
 
         void ExecuteAll(OpenGLCommandExecutor executor);
         void Reset();

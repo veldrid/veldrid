@@ -50,21 +50,21 @@ namespace Veldrid.OpenGL
             {
                 for (int i = 0; i < colorCount; i++)
                 {
-                    Texture2D target = ColorTextures[i];
-                    OpenGLTexture2D glTex2D = Util.AssertSubtype<Texture2D, OpenGLTexture2D>(target);
-                    glTex2D.EnsureResourcesCreated();
+                    Texture target = ColorTextures[i];
+                    OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(target);
+                    glTex.EnsureResourcesCreated();
 
                     glActiveTexture(TextureUnit.Texture0);
                     CheckLastError();
 
-                    glBindTexture(TextureTarget.Texture2D, glTex2D.Texture);
+                    glBindTexture(TextureTarget.Texture2D, glTex.Texture);
                     CheckLastError();
 
                     glFramebufferTexture2D(
                         FramebufferTarget.Framebuffer,
                         FramebufferAttachment.ColorAttachment0 + i,
                         TextureTarget.Texture2D,
-                        glTex2D.Texture,
+                        glTex.Texture,
                         0);
                     CheckLastError();
                 }
@@ -81,7 +81,7 @@ namespace Veldrid.OpenGL
             uint depthTextureID = 0;
             if (DepthTexture != null)
             {
-                OpenGLTexture2D glDepthTex = Util.AssertSubtype<Texture2D, OpenGLTexture2D>(DepthTexture);
+                OpenGLTexture glDepthTex = Util.AssertSubtype<Texture, OpenGLTexture>(DepthTexture);
                 glDepthTex.EnsureResourcesCreated();
 
                 depthTextureID = glDepthTex.Texture;

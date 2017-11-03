@@ -83,22 +83,24 @@ namespace Veldrid.OpenGL
             _commands.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }
 
-        public override void UpdateTexture2D(
-            Texture2D texture2D,
+        public override void UpdateTexture(
+            Texture texture,
             IntPtr source,
             uint sizeInBytes,
             uint x,
             uint y,
+            uint z,
             uint width,
             uint height,
+            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
-            _commands.UpdateTexture2D(texture2D, source, sizeInBytes, x, y, width, height, mipLevel, arrayLayer);
+            _commands.UpdateTexture(texture, source, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
         }
 
         public override void UpdateTextureCube(
-            TextureCube textureCube,
+            Texture textureCube,
             IntPtr source,
             uint sizeInBytes,
             CubeFace face,

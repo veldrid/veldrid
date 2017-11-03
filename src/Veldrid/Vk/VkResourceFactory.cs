@@ -55,14 +55,9 @@ namespace Veldrid.Vk
             return new VkShader(_gd, ref description);
         }
 
-        public override Texture2D CreateTexture2D(ref TextureDescription description)
+        public override Texture CreateTexture(ref TextureDescription description)
         {
-            return new VkTexture2D(_gd, ref description);
-        }
-
-        public override TextureCube CreateTextureCube(ref TextureDescription description)
-        {
-            return new VkTextureCube(_gd, ref description);
+            return new VkTexture(_gd, ref description);
         }
 
         public override TextureView CreateTextureView(ref TextureViewDescription description)

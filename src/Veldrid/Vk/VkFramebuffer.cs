@@ -30,8 +30,8 @@ namespace Veldrid.Vk
                 throw new NotImplementedException("Laziness");
             }
 
-            VkTexture2D vkColorTex = ColorTextures.Count > 0 ? Util.AssertSubtype<Texture2D, VkTexture2D>(ColorTextures[0]) : null;
-            VkTexture2D vkDepthTex = Util.AssertSubtype<Texture2D, VkTexture2D>(DepthTexture);
+            VkTexture vkColorTex = ColorTextures.Count > 0 ? Util.AssertSubtype<Texture, VkTexture>(ColorTextures[0]) : null;
+            VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(DepthTexture);
 
             VkAttachmentDescription colorAttachmentDesc = new VkAttachmentDescription();
             colorAttachmentDesc.format = vkColorTex?.VkFormat ?? 0;
@@ -110,8 +110,8 @@ namespace Veldrid.Vk
             VkImageView* fbAttachments = stackalloc VkImageView[(int)fbAttachmentsCount];
             for (int i = 0; i < fbAttachmentsCount - 1; i++)
             {
-                Texture2D colorTarget = description.ColorTargets[i];
-                VkTexture2D vkColorTarget = Util.AssertSubtype<Texture2D, VkTexture2D>(colorTarget);
+                Texture colorTarget = description.ColorTargets[i];
+                VkTexture vkColorTarget = Util.AssertSubtype<Texture, VkTexture>(colorTarget);
                 VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();
                 imageViewCI.image = vkColorTarget.DeviceImage;
                 imageViewCI.format = vkColorTarget.VkFormat;
@@ -126,7 +126,7 @@ namespace Veldrid.Vk
             // Depth
             if (description.DepthTarget != null)
             {
-                VkTexture2D vkDepthTarget = Util.AssertSubtype<Texture2D, VkTexture2D>(description.DepthTarget);
+                VkTexture vkDepthTarget = Util.AssertSubtype<Texture, VkTexture>(description.DepthTarget);
                 VkImageViewCreateInfo depthViewCI = VkImageViewCreateInfo.New();
                 depthViewCI.image = vkDepthTarget.DeviceImage;
                 depthViewCI.format = vkDepthTarget.VkFormat;

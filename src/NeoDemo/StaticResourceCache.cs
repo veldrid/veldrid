@@ -16,15 +16,15 @@ namespace Veldrid.NeoDemo
         private static readonly Dictionary<(string, ShaderStages), Shader> s_shaders
             = new Dictionary<(string, ShaderStages), Shader>();
 
-        private static readonly Dictionary<ImageSharpTexture, Texture2D> s_textures
-            = new Dictionary<ImageSharpTexture, Texture2D>();
+        private static readonly Dictionary<ImageSharpTexture, Texture> s_textures
+            = new Dictionary<ImageSharpTexture, Texture>();
 
         private static readonly Dictionary<Texture, TextureView> s_textureViews = new Dictionary<Texture, TextureView>();
 
         private static readonly Dictionary<ResourceSetDescription, ResourceSet> s_resourceSets
             = new Dictionary<ResourceSetDescription, ResourceSet>();
 
-        private static Texture2D _pinkTex;
+        private static Texture _pinkTex;
 
         public static readonly ResourceLayoutDescription ProjViewLayoutDescription = new ResourceLayoutDescription(
             new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
@@ -83,7 +83,7 @@ namespace Veldrid.NeoDemo
             }
             s_shaders.Clear();
 
-            foreach (KeyValuePair<ImageSharpTexture, Texture2D> kvp in s_textures)
+            foreach (KeyValuePair<ImageSharpTexture, Texture> kvp in s_textures)
             {
                 kvp.Value.Dispose();
             }
@@ -105,9 +105,9 @@ namespace Veldrid.NeoDemo
             s_resourceSets.Clear();
         }
 
-        internal static Texture2D GetTexture2D(ResourceFactory factory, ImageSharpTexture textureData, CommandList cl)
+        internal static Texture GetTexture2D(ResourceFactory factory, ImageSharpTexture textureData, CommandList cl)
         {
-            if (!s_textures.TryGetValue(textureData, out Texture2D tex))
+            if (!s_textures.TryGetValue(textureData, out Texture tex))
             {
                 tex = textureData.CreateDeviceTexture(factory, cl);
                 s_textures.Add(textureData, tex);
@@ -116,7 +116,7 @@ namespace Veldrid.NeoDemo
             return tex;
         }
 
-        internal static TextureView GetTextureView(ResourceFactory factory, Texture2D texture)
+        internal static TextureView GetTextureView(ResourceFactory factory, Texture texture)
         {
             if (!s_textureViews.TryGetValue(texture, out TextureView view))
             {
@@ -127,13 +127,13 @@ namespace Veldrid.NeoDemo
             return view;
         }
 
-        internal static unsafe Texture2D GetPinkTexture(ResourceFactory factory, CommandList cl)
+        internal static unsafe Texture GetPinkTexture(ResourceFactory factory, CommandList cl)
         {
             if (_pinkTex == null)
             {
                 RgbaByte pink = RgbaByte.Pink;
-                _pinkTex = factory.CreateTexture2D(new TextureDescription(1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
-                cl.UpdateTexture2D(_pinkTex, (IntPtr)(&pink), 4, 0, 0, 1, 1, 0, 0);
+                _pinkTex = factory.CreateTexture(new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+                cl.UpdateTexture(_pinkTex, (IntPtr)(&pink), 4, 0, 0, 0, 1, 1, 1, 0, 0);
             }
 
             return _pinkTex;

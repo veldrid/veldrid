@@ -36,6 +36,7 @@ namespace Veldrid.Vk
             VkDeviceMemoryManager memoryManager,
             uint width,
             uint height,
+            uint depth,
             uint arrayLayers,
             VkFormat format,
             VkImageTiling tiling,
@@ -48,7 +49,7 @@ namespace Veldrid.Vk
             imageCI.imageType = VkImageType.Image2D;
             imageCI.extent.width = width;
             imageCI.extent.height = height;
-            imageCI.extent.depth = 1;
+            imageCI.extent.depth = depth;
             imageCI.mipLevels = 1;
             imageCI.arrayLayers = arrayLayers;
             imageCI.format = format;

@@ -10,43 +10,45 @@ namespace Veldrid.D3D11
         public D3D11TextureView(Device device, ref TextureViewDescription description)
             : base(description.Target)
         {
-            // TODO: This is stupid.
-            if (description.Target is D3D11Texture2D d3dTex2d)
-            {
-                SharpDX.DXGI.Format dxgiFormat = D3D11Formats.GetViewFormat(d3dTex2d.DeviceTexture.Description.Format);
-                ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
-                {
-                    Format = dxgiFormat,
-                    Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D,
-                    Texture2D = new ShaderResourceViewDescription.Texture2DResource
-                    {
-                        MipLevels = (int)d3dTex2d.MipLevels,
-                        MostDetailedMip = 0
-                    }
-                };
+            D3D11Texture d3dTex = Util.AssertSubtype<Texture, D3D11Texture>(description.Target);
+            ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription();
+            srvDesc.Format = D3D11Formats.GetViewFormat(d3dTex.DeviceTexture.Description.Format);
 
-                ShaderResourceView = new ShaderResourceView(device, d3dTex2d.DeviceTexture, srvDesc);
+            if ((d3dTex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+            {
+                if (d3dTex.ArrayLayers == 1)
+                {
+                    srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.TextureCube;
+                    srvDesc.TextureCube.MipLevels = (int)d3dTex.MipLevels;
+                }
+                else
+                {
+                    srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.TextureCubeArray;
+                    srvDesc.TextureCubeArray.MipLevels = (int)d3dTex.MipLevels;
+                    srvDesc.TextureCubeArray.CubeCount = (int)d3dTex.ArrayLayers;
+                }
             }
-            else if (description.Target is D3D11TextureCube d3dTexCube)
+            else if (d3dTex.Depth == 1)
             {
-                SharpDX.DXGI.Format dxgiFormat = D3D11Formats.GetViewFormat(d3dTexCube.DeviceTexture.Description.Format);
-                ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
+                if (d3dTex.ArrayLayers == 1)
                 {
-                    Format = dxgiFormat,
-                    Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.TextureCube,
-                    TextureCube = new ShaderResourceViewDescription.TextureCubeResource
-                    {
-                        MipLevels = (int)d3dTexCube.MipLevels,
-                        MostDetailedMip = 0
-                    }
-                };
-
-                ShaderResourceView = new ShaderResourceView(device, d3dTexCube.DeviceTexture, srvDesc);
+                    srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
+                    srvDesc.Texture2D.MipLevels = (int)d3dTex.MipLevels;
+                }
+                else
+                {
+                    srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2DArray;
+                    srvDesc.Texture2DArray.MipLevels = (int)d3dTex.MipLevels;
+                    srvDesc.Texture2DArray.ArraySize = (int)d3dTex.ArrayLayers;
+                }
             }
             else
             {
-                throw new VeldridException("Invalid texture type used in D3D11 Texture View: " + description.Target.GetType().FullName);
+                srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture3D;
+                srvDesc.Texture3D.MipLevels = (int)d3dTex.MipLevels;
             }
+
+            ShaderResourceView = new ShaderResourceView(device, d3dTex.DeviceTexture, srvDesc);
         }
 
         public override void Dispose()

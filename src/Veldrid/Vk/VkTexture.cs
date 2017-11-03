@@ -5,7 +5,7 @@ using System;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkTexture2D : Texture2D
+    internal unsafe class VkTexture : Texture
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImage _image;
@@ -14,6 +14,8 @@ namespace Veldrid.Vk
         public override uint Width { get; }
 
         public override uint Height { get; }
+
+        public override uint Depth { get; }
 
         public override PixelFormat Format { get; }
 
@@ -29,11 +31,12 @@ namespace Veldrid.Vk
 
         public VkImageLayout[] ImageLayouts { get; internal set; }
 
-        internal VkTexture2D(VkGraphicsDevice gd, ref TextureDescription description)
+        internal VkTexture(VkGraphicsDevice gd, ref TextureDescription description)
         {
             _gd = gd;
             Width = description.Width;
             Height = description.Height;
+            Depth = description.Depth;
             MipLevels = description.MipLevels;
             ArrayLayers = description.ArrayLayers;
             Format = description.Format;
@@ -61,10 +64,10 @@ namespace Veldrid.Vk
             VkImageCreateInfo imageCI = VkImageCreateInfo.New();
             imageCI.mipLevels = MipLevels;
             imageCI.arrayLayers = description.ArrayLayers;
-            imageCI.imageType = VkImageType.Image2D;
+            imageCI.imageType = Depth == 1 ? VkImageType.Image2D : VkImageType.Image3D;
             imageCI.extent.width = Width;
             imageCI.extent.height = Height;
-            imageCI.extent.depth = 1;
+            imageCI.extent.depth = Depth;
             imageCI.initialLayout = VkImageLayout.Preinitialized;
             imageCI.usage = VkImageUsageFlags.TransferDst | VkImageUsageFlags.Sampled;
             bool isDepthStencil = (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
@@ -80,6 +83,11 @@ namespace Veldrid.Vk
             imageCI.format = VkFormat;
 
             imageCI.samples = VkSampleCountFlags.Count1;
+            if ((Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+            {
+                imageCI.flags = VkImageCreateFlags.CubeCompatible;
+                imageCI.arrayLayers *= 6;
+            }
 
             VkResult result = vkCreateImage(gd.Device, ref imageCI, null, out _image);
             CheckResult(result);
@@ -102,7 +110,7 @@ namespace Veldrid.Vk
             vkBindImageMemory(gd.Device, _image, _memory.DeviceMemory, _memory.Offset);
         }
 
-        internal VkTexture2D(
+        internal VkTexture(
             VkGraphicsDevice gd,
             uint width,
             uint height,
@@ -116,6 +124,7 @@ namespace Veldrid.Vk
             MipLevels = mipLevels;
             Width = width;
             Height = height;
+            Depth = 1;
             VkFormat = vkFormat;
             Format = VkFormats.VkToVdPixelFormat(VkFormat);
             ArrayLayers = arrayLayers;

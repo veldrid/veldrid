@@ -81,23 +81,25 @@ namespace Veldrid.OpenGL
             _commands.Add(new UpdateBufferEntry(buffer, bufferOffsetInBytes, stagingBlock));
         }
 
-        public void UpdateTexture2D(
-            Texture2D texture2D,
+        public void UpdateTexture(
+            Texture texture,
             IntPtr source,
             uint sizeInBytes,
             uint x,
             uint y,
+            uint z,
             uint width,
             uint height,
+            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
             StagingBlock stagingBlock = _memoryPool.Stage(source, sizeInBytes);
-            _commands.Add(new UpdateTexture2DEntry(texture2D, stagingBlock, x, y, width, height, mipLevel, arrayLayer));
+            _commands.Add(new UpdateTextureEntry(texture, stagingBlock, x, y, z, width, height, depth, mipLevel, arrayLayer));
         }
 
         public void UpdateTextureCube(
-            TextureCube textureCube,
+            Texture textureCube,
             IntPtr source,
             uint sizeInBytes,
             CubeFace face,
@@ -157,16 +159,18 @@ namespace Veldrid.OpenGL
                     case UpdateBufferEntry ube:
                         executor.UpdateBuffer(ube.Buffer, ube.BufferOffsetInBytes, ube.StagingBlock);
                         break;
-                    case UpdateTexture2DEntry ut2de:
-                        executor.UpdateTexture2D(
-                            ut2de.Texture2D,
-                            ut2de.StagingBlock,
-                            ut2de.X,
-                            ut2de.Y,
-                            ut2de.Width,
-                            ut2de.Height,
-                            ut2de.MipLevel,
-                            ut2de.ArrayLayer);
+                    case UpdateTextureEntry ute:
+                        executor.UpdateTexture(
+                            ute.Texture,
+                            ute.StagingBlock,
+                            ute.X,
+                            ute.Y,
+                            ute.Z,
+                            ute.Width,
+                            ute.Height,
+                            ute.Depth,
+                            ute.MipLevel,
+                            ute.ArrayLayer);
                         break;
                     case UpdateTextureCubeEntry utce:
                         executor.UpdateTextureCube(

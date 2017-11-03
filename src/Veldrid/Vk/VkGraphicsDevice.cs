@@ -175,11 +175,8 @@ namespace Veldrid.Vk
                     case VkShader shader:
                         SetDebugMarkerName(VkDebugReportObjectTypeEXT.ShaderModuleEXT, shader.ShaderModule.Handle, name);
                         break;
-                    case VkTexture2D tex2D:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageEXT, tex2D.DeviceImage.Handle, name);
-                        break;
-                    case VkTextureCube texCube:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageEXT, texCube.DeviceImage.Handle, name);
+                    case VkTexture tex:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageEXT, tex.DeviceImage.Handle, name);
                         break;
                     case VkTextureView texView:
                         SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageViewEXT, texView.ImageView.Handle, name);

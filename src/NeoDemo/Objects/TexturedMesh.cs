@@ -19,9 +19,9 @@ namespace Veldrid.NeoDemo.Objects
         private VertexBuffer _vb;
         private IndexBuffer _ib;
         private int _indexCount;
-        private Texture2D _texture;
+        private Texture _texture;
         private TextureView _textureView;
-        private Texture2D _alphamapTexture;
+        private Texture _alphamapTexture;
         private TextureView _alphaMapView;
 
         private Pipeline _pipeline;
@@ -74,9 +74,9 @@ namespace Veldrid.NeoDemo.Objects
             }
             else
             {
-                _texture = disposeFactory.CreateTexture2D(new TextureDescription(1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+                _texture = disposeFactory.CreateTexture(new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
                 RgbaByte color = RgbaByte.Pink;
-                cl.UpdateTexture2D(_texture, (IntPtr)(&color), 4, 0, 0, 1, 1, 0, 0);
+                cl.UpdateTexture(_texture, (IntPtr)(&color), 4, 0, 0, 0, 1, 1, 1, 0, 0);
             }
 
             _textureView = StaticResourceCache.GetTextureView(gd.ResourceFactory, _texture);

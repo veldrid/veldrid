@@ -74,18 +74,11 @@ namespace Veldrid.Utilities
             return shader;
         }
 
-        public override Texture2D CreateTexture2D(ref TextureDescription description)
+        public override Texture CreateTexture(ref TextureDescription description)
         {
-            Texture2D tex2D = Factory.CreateTexture2D(ref description);
-            DisposeCollector.Add(tex2D);
-            return tex2D;
-        }
-
-        public override TextureCube CreateTextureCube(ref TextureDescription description)
-        {
-            TextureCube texCube = Factory.CreateTextureCube(ref description);
-            DisposeCollector.Add(texCube);
-            return texCube;
+            Texture tex = Factory.CreateTexture(ref description);
+            DisposeCollector.Add(tex);
+            return tex;
         }
 
         public override TextureView CreateTextureView(ref TextureViewDescription description)

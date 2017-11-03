@@ -2,7 +2,7 @@
 {
     internal class UpdateTextureCubeEntry : OpenGLCommandEntry
     {
-        public TextureCube TextureCube;
+        public Texture TextureCube;
         public StagingBlock StagingBlock;
         public CubeFace Face;
         public uint X;
@@ -13,7 +13,7 @@
         public uint ArrayLayer;
 
         public UpdateTextureCubeEntry(
-            TextureCube textureCube,
+            Texture textureCube,
             StagingBlock stagingBlock,
             CubeFace face,
             uint x,
@@ -37,7 +37,7 @@
         public UpdateTextureCubeEntry() { }
 
         public UpdateTextureCubeEntry Init(
-            TextureCube textureCube,
+            Texture textureCube,
             StagingBlock stagingBlock,
             CubeFace face,
             uint x,

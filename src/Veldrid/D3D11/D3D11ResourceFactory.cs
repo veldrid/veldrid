@@ -57,14 +57,9 @@ namespace Veldrid.D3D11
             return new D3D11Shader(_device, description);
         }
 
-        public override Texture2D CreateTexture2D(ref TextureDescription description)
+        public override Texture CreateTexture(ref TextureDescription description)
         {
-            return new D3D11Texture2D(_device, ref description);
-        }
-
-        public override TextureCube CreateTextureCube(ref TextureDescription description)
-        {
-            return new D3D11TextureCube(_device, ref description);
+            return new D3D11Texture(_device, ref description);
         }
 
         public override TextureView CreateTextureView(ref TextureViewDescription description)

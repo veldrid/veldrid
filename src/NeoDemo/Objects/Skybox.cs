@@ -48,7 +48,7 @@ namespace Veldrid.NeoDemo.Objects
 
             _viewMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription((ulong)Unsafe.SizeOf<Matrix4x4>()));
 
-            TextureCube textureCube;
+            Texture textureCube;
             TextureView textureView;
             fixed (Rgba32* frontPin = &_front.DangerousGetPinnableReferenceToPixelBuffer())
             fixed (Rgba32* backPin = &_back.DangerousGetPinnableReferenceToPixelBuffer())
@@ -59,13 +59,14 @@ namespace Veldrid.NeoDemo.Objects
             {
                 uint width = (uint)_front.Width;
                 uint height = (uint)_front.Height;
-                textureCube = factory.CreateTextureCube(new TextureDescription(
+                textureCube = factory.CreateTexture(new TextureDescription(
                     width,
                     height,
                     1,
                     1,
+                    1,
                     PixelFormat.R8_G8_B8_A8_UNorm,
-                    TextureUsage.Sampled));
+                    TextureUsage.Sampled | TextureUsage.Cubemap));
 
                 uint faceSize = (uint)(_front.Width * _front.Height * Unsafe.SizeOf<Rgba32>());
                 cl.UpdateTextureCube(textureCube, (IntPtr)leftPin, faceSize, CubeFace.NegativeX, 0, 0, width, height, 0, 0);

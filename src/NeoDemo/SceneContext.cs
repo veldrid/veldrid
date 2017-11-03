@@ -16,15 +16,15 @@ namespace Veldrid.NeoDemo
         public UniformBuffer CameraInfoBuffer { get; private set; }
         public UniformBuffer PointLightsBuffer { get; private set; }
 
-        public Texture2D NearShadowMapTexture { get; private set; }
+        public Texture NearShadowMapTexture { get; private set; }
         public TextureView NearShadowMapView { get; private set; }
         public Framebuffer NearShadowMapFramebuffer { get; private set; }
 
-        public Texture2D MidShadowMapTexture { get; private set; }
+        public Texture MidShadowMapTexture { get; private set; }
         public TextureView MidShadowMapView { get; private set; }
         public Framebuffer MidShadowMapFramebuffer { get; private set; }
 
-        public Texture2D FarShadowMapTexture { get; private set; }
+        public Texture FarShadowMapTexture { get; private set; }
         public TextureView FarShadowMapView { get; private set; }
         public Framebuffer FarShadowMapFramebuffer { get; private set; }
 
@@ -64,16 +64,16 @@ namespace Veldrid.NeoDemo
 
             cl.UpdateBuffer(PointLightsBuffer, 0, pli.GetBlittable());
 
-            NearShadowMapTexture = factory.CreateTexture2D(new TextureDescription(2048, 2048, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
+            NearShadowMapTexture = factory.CreateTexture(new TextureDescription(2048, 2048, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
             gd.SetResourceName(NearShadowMapTexture, "Near Shadow Map");
             NearShadowMapView = factory.CreateTextureView(new TextureViewDescription(NearShadowMapTexture));
             NearShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(NearShadowMapTexture));
 
-            MidShadowMapTexture = factory.CreateTexture2D(new TextureDescription(2048, 2048, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
+            MidShadowMapTexture = factory.CreateTexture(new TextureDescription(2048, 2048, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
             MidShadowMapView = factory.CreateTextureView(new TextureViewDescription(MidShadowMapTexture));
             MidShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(MidShadowMapTexture));
 
-            FarShadowMapTexture = factory.CreateTexture2D(new TextureDescription(4096, 4096, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
+            FarShadowMapTexture = factory.CreateTexture(new TextureDescription(4096, 4096, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
             FarShadowMapView = factory.CreateTextureView(new TextureViewDescription(FarShadowMapTexture));
             FarShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(FarShadowMapTexture));
         }

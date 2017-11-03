@@ -6,6 +6,7 @@ namespace Veldrid
     {
         public uint Width;
         public uint Height;
+        public uint Depth;
         public uint MipLevels;
         public uint ArrayLayers;
         public PixelFormat Format;
@@ -14,6 +15,7 @@ namespace Veldrid
         public TextureDescription(
             uint width,
             uint height,
+            uint depth,
             uint mipLevels,
             uint arrayLayers,
             PixelFormat format,
@@ -21,6 +23,7 @@ namespace Veldrid
         {
             Width = width;
             Height = height;
+            Depth = depth;
             MipLevels = mipLevels;
             ArrayLayers = arrayLayers;
             Format = format;
@@ -31,6 +34,7 @@ namespace Veldrid
         {
             return Width.Equals(other.Width)
                 && Height.Equals(other.Height)
+                && Depth.Equals(other.Depth)
                 && MipLevels.Equals(other.MipLevels)
                 && ArrayLayers.Equals(other.ArrayLayers)
                 && Format == other.Format
@@ -42,6 +46,7 @@ namespace Veldrid
             return HashHelper.Combine(
                 Width.GetHashCode(),
                 Height.GetHashCode(),
+                Depth.GetHashCode(),
                 MipLevels.GetHashCode(),
                 ArrayLayers.GetHashCode(),
                 Format.GetHashCode(),

@@ -21,7 +21,7 @@ namespace Veldrid.OpenGL
         private readonly EntryPool<SetVertexBufferEntry> _setVertexBufferEntryPool = new EntryPool<SetVertexBufferEntry>();
         private readonly EntryPool<SetViewportEntry> _setViewportEntryPool = new EntryPool<SetViewportEntry>();
         private readonly EntryPool<UpdateBufferEntry> _updateBufferEntryPool = new EntryPool<UpdateBufferEntry>();
-        private readonly EntryPool<UpdateTexture2DEntry> _updateTexture2DEntryPool = new EntryPool<UpdateTexture2DEntry>();
+        private readonly EntryPool<UpdateTextureEntry> _updateTextureEntryPool = new EntryPool<UpdateTextureEntry>();
         private readonly EntryPool<UpdateTextureCubeEntry> _updateTextureCubeEntryPool = new EntryPool<UpdateTextureCubeEntry>();
 
         public IReadOnlyList<OpenGLCommandEntry> Commands => _commands;
@@ -97,23 +97,25 @@ namespace Veldrid.OpenGL
             _commands.Add(_updateBufferEntryPool.Rent().Init(buffer, bufferOffsetInBytes, stagingBlock));
         }
 
-        public void UpdateTexture2D(
-            Texture2D texture2D,
+        public void UpdateTexture(
+            Texture texture,
             IntPtr source,
             uint sizeInBytes,
             uint x,
             uint y,
+            uint z,
             uint width,
             uint height,
+            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
             StagingBlock stagingBlock = _memoryPool.Stage(source, sizeInBytes);
-            _commands.Add(_updateTexture2DEntryPool.Rent().Init(texture2D, stagingBlock, x, y, width, height, mipLevel, arrayLayer));
+            _commands.Add(_updateTextureEntryPool.Rent().Init(texture, stagingBlock, x, y, z, width, height, depth, mipLevel, arrayLayer));
         }
 
         public void UpdateTextureCube(
-            TextureCube textureCube,
+            Texture textureCube,
             IntPtr source,
             uint sizeInBytes,
             CubeFace face,
@@ -186,17 +188,19 @@ namespace Veldrid.OpenGL
                         executor.UpdateBuffer(ube.Buffer, ube.BufferOffsetInBytes, ube.StagingBlock);
                         _updateBufferEntryPool.Return(ube);
                         break;
-                    case UpdateTexture2DEntry ut2de:
-                        executor.UpdateTexture2D(
-                            ut2de.Texture2D,
-                            ut2de.StagingBlock,
-                            ut2de.X,
-                            ut2de.Y,
-                            ut2de.Width,
-                            ut2de.Height,
-                            ut2de.MipLevel,
-                            ut2de.ArrayLayer);
-                        _updateTexture2DEntryPool.Return(ut2de);
+                    case UpdateTextureEntry ute:
+                        executor.UpdateTexture(
+                            ute.Texture,
+                            ute.StagingBlock,
+                            ute.X,
+                            ute.Y,
+                            ute.Z,
+                            ute.Width,
+                            ute.Height,
+                            ute.Depth,
+                            ute.MipLevel,
+                            ute.ArrayLayer);
+                        _updateTextureEntryPool.Return(ute);
                         break;
                     case UpdateTextureCubeEntry utce:
                         executor.UpdateTextureCube(

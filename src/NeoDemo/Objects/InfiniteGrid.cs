@@ -33,10 +33,10 @@ namespace Veldrid.NeoDemo.Objects
             const int gridSize = 64;
             RgbaByte borderColor = new RgbaByte(255, 255, 255, 150);
             RgbaByte[] pixels = CreateGridTexturePixels(gridSize, 1, borderColor, new RgbaByte());
-            Texture2D gridTexture = factory.CreateTexture2D(new TextureDescription(gridSize, gridSize, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+            Texture gridTexture = factory.CreateTexture(new TextureDescription(gridSize, gridSize, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
             fixed (RgbaByte* pixelsPtr = pixels)
             {
-                cl.UpdateTexture2D(gridTexture, (IntPtr)pixelsPtr, pixels.SizeInBytes(), 0, 0, gridSize, gridSize, 0, 0);
+                cl.UpdateTexture(gridTexture, (IntPtr)pixelsPtr, pixels.SizeInBytes(), 0, 0, 0, gridSize, gridSize, 1, 0, 0);
             }
 
             TextureView textureView = factory.CreateTextureView(new TextureViewDescription(gridTexture));

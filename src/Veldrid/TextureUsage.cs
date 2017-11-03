@@ -8,5 +8,6 @@ namespace Veldrid
         Sampled = 1 << 0,
         RenderTarget = 1 << 1,
         DepthStencil = 1 << 2,
+        Cubemap = 1 << 3,
     }
 }

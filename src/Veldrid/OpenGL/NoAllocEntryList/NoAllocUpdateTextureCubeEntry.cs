@@ -2,7 +2,7 @@
 {
     internal struct NoAllocUpdateTextureCubeEntry
     {
-        public readonly HandleTracked<TextureCube> TextureCube;
+        public readonly HandleTracked<Texture> Texture;
         public readonly HandleTrackedStagingBlock StagingBlock;
         public readonly CubeFace Face;
         public readonly uint X;
@@ -13,7 +13,7 @@
         public readonly uint ArrayLayer;
 
         public NoAllocUpdateTextureCubeEntry(
-            TextureCube textureCube,
+            Texture texture,
             StagingBlock stagingBlock,
             CubeFace face,
             uint x,
@@ -23,7 +23,7 @@
             uint mipLevel,
             uint arrayLayer)
         {
-            TextureCube = textureCube;
+            Texture = texture;
             StagingBlock = new HandleTrackedStagingBlock(stagingBlock);
             Face = face;
             X = x;

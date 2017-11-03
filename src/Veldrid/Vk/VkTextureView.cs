@@ -16,18 +16,9 @@ namespace Veldrid.Vk
         {
             _gd = gd;
             VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();
-            if (description.Target is VkTexture2D vkTex2D)
-            {
-                imageViewCI.viewType = vkTex2D.ArrayLayers == 1 ? VkImageViewType.Image2D : VkImageViewType.Image2DArray;
-                imageViewCI.image = vkTex2D.DeviceImage;
-                imageViewCI.format = vkTex2D.VkFormat;
-            }
-            else if (description.Target is VkTextureCube vkTexCube)
-            {
-                imageViewCI.viewType = vkTexCube.ArrayLayers == 6 ? VkImageViewType.ImageCube : VkImageViewType.ImageCubeArray;
-                imageViewCI.image = vkTexCube.DeviceImage;
-                imageViewCI.format = vkTexCube.VkFormat;
-            }
+            VkTexture tex = Util.AssertSubtype<Texture, VkTexture>(description.Target);
+            imageViewCI.image = tex.DeviceImage;
+            imageViewCI.format = tex.VkFormat;
 
             VkImageAspectFlags aspectFlags;
             if ((description.Target.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
@@ -39,7 +30,26 @@ namespace Veldrid.Vk
                 aspectFlags = VkImageAspectFlags.Color;
             }
 
-            imageViewCI.subresourceRange = new VkImageSubresourceRange(aspectFlags, 0, description.Target.MipLevels, 0, description.Target.ArrayLayers);
+            imageViewCI.subresourceRange = new VkImageSubresourceRange(
+                aspectFlags,
+                0,
+                description.Target.MipLevels,
+                0,
+                description.Target.ArrayLayers);
+
+            if ((tex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+            {
+                imageViewCI.viewType = tex.ArrayLayers == 1 ? VkImageViewType.ImageCube : VkImageViewType.ImageCubeArray;
+                imageViewCI.subresourceRange.layerCount *= 6;
+            }
+            else if (tex.Depth == 1)
+            {
+                imageViewCI.viewType = tex.ArrayLayers == 1 ? VkImageViewType.Image2D : VkImageViewType.Image2DArray;
+            }
+            else
+            {
+                imageViewCI.viewType = VkImageViewType.Image3D;
+            }
 
             vkCreateImageView(_gd.Device, ref imageViewCI, null, out _imageView);
         }

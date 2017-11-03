@@ -4,10 +4,10 @@ namespace Veldrid
 {
     public struct FramebufferDescription : IEquatable<FramebufferDescription>
     {
-        public Texture2D DepthTarget;
-        public Texture2D[] ColorTargets;
+        public Texture DepthTarget;
+        public Texture[] ColorTargets;
 
-        public FramebufferDescription(Texture2D depthTarget, params Texture2D[] colorTargets)
+        public FramebufferDescription(Texture depthTarget, params Texture[] colorTargets)
         {
             DepthTarget = depthTarget;
             ColorTargets = colorTargets;

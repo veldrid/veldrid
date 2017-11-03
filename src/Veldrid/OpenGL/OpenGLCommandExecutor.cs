@@ -455,23 +455,30 @@ namespace Veldrid.OpenGL
             stagingBlock.Pool.Free(stagingBlock);
         }
 
-        public void UpdateTexture2D(
-            Texture2D texture2D,
+        public void UpdateTexture(
+            Texture texture,
             StagingBlock stagingBlock,
             uint x,
             uint y,
+            uint z,
             uint width,
             uint height,
+            uint depth,
             uint mipLevel,
             uint arrayLayer)
         {
-            OpenGLTexture2D glTex2D = Util.AssertSubtype<Texture2D, OpenGLTexture2D>(texture2D);
-            glTex2D.EnsureResourcesCreated();
+            if (texture.ArrayLayers != 1 || texture.Depth != 1)
+            {
+                throw new NotImplementedException(); // TODO
+            }
 
-            glBindTexture(TextureTarget.Texture2D, glTex2D.Texture);
+            OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(texture);
+            glTex.EnsureResourcesCreated();
+
+            glBindTexture(TextureTarget.Texture2D, glTex.Texture);
             CheckLastError();
 
-            uint pixelSize = FormatHelpers.GetSizeInBytes(glTex2D.Format);
+            uint pixelSize = FormatHelpers.GetSizeInBytes(glTex.Format);
             if (pixelSize < 4)
             {
                 glPixelStorei(PixelStoreParameter.UnpackAlignment, (int)pixelSize);
@@ -487,8 +494,8 @@ namespace Veldrid.OpenGL
                     (int)y,
                     width,
                     height,
-                    glTex2D.GLPixelFormat,
-                    glTex2D.GLPixelType,
+                    glTex.GLPixelFormat,
+                    glTex.GLPixelType,
                     dataPtr);
                 CheckLastError();
             }
@@ -503,7 +510,7 @@ namespace Veldrid.OpenGL
         }
 
         public void UpdateTextureCube(
-            TextureCube textureCube,
+            Texture textureCube,
             StagingBlock stagingBlock,
             CubeFace face,
             uint x,
@@ -513,7 +520,12 @@ namespace Veldrid.OpenGL
             uint mipLevel,
             uint arrayLayer)
         {
-            OpenGLTextureCube glTexCube = Util.AssertSubtype<TextureCube, OpenGLTextureCube>(textureCube);
+            OpenGLTexture glTexCube = Util.AssertSubtype<Texture, OpenGLTexture>(textureCube);
+            if (glTexCube.ArrayLayers != 1)
+            {
+                throw new NotImplementedException(); // TODO
+            }
+
             glTexCube.EnsureResourcesCreated();
 
             glBindTexture(TextureTarget.TextureCubeMap, glTexCube.Texture);

@@ -26,20 +26,22 @@ namespace Veldrid
         public abstract void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
 
         // Resource Update
-        public abstract void UpdateTexture2D(
-            Texture2D texture2D,
+        public abstract void UpdateTexture(
+            Texture texture,
             IntPtr source,
             uint sizeInBytes,
             uint x,
             uint y,
+            uint z,
             uint width,
             uint height,
+            uint depth,
             uint mipLevel,
             uint arrayLayer);
 
         // Resource Update
         public abstract void UpdateTextureCube(
-            TextureCube textureCube,
+            Texture texture,
             IntPtr source,
             uint sizeInBytes,
             CubeFace face,

@@ -12,7 +12,7 @@ namespace Veldrid.OpenGL
 
         public override OutputDescription OutputDescription { get; }
 
-        internal OpenGLSwapchainFramebuffer(uint width, uint height) : base(null, Array.Empty<Texture2D>())
+        internal OpenGLSwapchainFramebuffer(uint width, uint height) : base(null, Array.Empty<Texture>())
         {
             _width = width;
             _height = height;

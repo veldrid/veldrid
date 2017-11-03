@@ -5,7 +5,7 @@ namespace Veldrid.Vk
 {
     internal abstract class VkFramebufferBase : Framebuffer
     {
-        public VkFramebufferBase(Texture2D depthTexture, IReadOnlyList<Texture2D> colorTextures)
+        public VkFramebufferBase(Texture depthTexture, IReadOnlyList<Texture> colorTextures)
             : base(depthTexture, colorTextures)
         {
         }

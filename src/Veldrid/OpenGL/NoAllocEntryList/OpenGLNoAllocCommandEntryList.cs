@@ -218,14 +218,17 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case UpdateBufferEntryID:
                         ref NoAllocUpdateBufferEntry ube = ref Unsafe.AsRef<NoAllocUpdateBufferEntry>(entryBasePtr);
-                        executor.UpdateBuffer(ube.Buffer.Item, ube.BufferOffsetInBytes, ube.StagingBlock.StagingBlock);
+                        executor.UpdateBuffer(
+                            ube.Buffer.Item, 
+                            ube.BufferOffsetInBytes, 
+                            new StagingBlock(ube.StagingBlock.Array, ube.StagingBlock.SizeInBytes, _memoryPool));
                         currentOffset += UpdateBufferEntrySize;
                         break;
                     case UpdateTextureEntryID:
                         ref NoAllocUpdateTextureEntry ute = ref Unsafe.AsRef<NoAllocUpdateTextureEntry>(entryBasePtr);
                         executor.UpdateTexture(
                             ute.Texture,
-                            ute.StagingBlock.StagingBlock,
+                            new StagingBlock(ute.StagingBlock.Array, ute.StagingBlock.SizeInBytes, _memoryPool),
                             ute.X,
                             ute.Y,
                             ute.Z,
@@ -240,7 +243,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         ref NoAllocUpdateTextureCubeEntry utce = ref Unsafe.AsRef<NoAllocUpdateTextureCubeEntry>(entryBasePtr);
                         executor.UpdateTextureCube(
                             utce.Texture,
-                            utce.StagingBlock.StagingBlock,
+                            new StagingBlock(utce.StagingBlock.Array, utce.StagingBlock.SizeInBytes, _memoryPool),
                             utce.Face,
                             utce.X,
                             utce.Y,

@@ -12,26 +12,26 @@ namespace Veldrid.OpenGL
 
         public StagingBlock Stage(IntPtr source, uint sizeInBytes)
         {
-            //byte[] array = _arrayPool.Rent((int)sizeInBytes);
-            byte[] array = new byte[(int)sizeInBytes];
+            byte[] array = _arrayPool.Rent((int)sizeInBytes);
             fixed (byte* arrayPtr = &array[0])
             {
+                Debug.Assert(array.Length >= sizeInBytes);
                 Unsafe.CopyBlock(arrayPtr, source.ToPointer(), sizeInBytes);
             }
+
             return new StagingBlock(array, sizeInBytes, this);
         }
 
         public StagingBlock Stage(byte[] bytes)
         {
-            //byte[] array = _arrayPool.Rent(bytes.Length);
-            byte[] array = new byte[bytes.Length];
+            byte[] array = _arrayPool.Rent(bytes.Length);
             Array.Copy(bytes, array, bytes.Length);
             return new StagingBlock(array, (uint)bytes.Length, this);
         }
 
         public void Free(StagingBlock block)
         {
-            //_arrayPool.Return(block.Array);
+            _arrayPool.Return(block.Array);
         }
     }
 
@@ -59,13 +59,16 @@ namespace Veldrid.OpenGL
 
     internal unsafe struct HandleTrackedStagingBlock
     {
-        public readonly StagingBlock StagingBlock;
-        public GCHandle GCHandle;
+        public readonly GCHandle GCHandle;
+
+        public byte[] Array => (byte[])GCHandle.Target;
+
+        public uint SizeInBytes { get; }
 
         public HandleTrackedStagingBlock(StagingBlock stagingBlock)
         {
-            StagingBlock = stagingBlock;
             GCHandle = GCHandle.Alloc(stagingBlock.Array, GCHandleType.Pinned);
+            SizeInBytes = stagingBlock.SizeInBytes;
         }
     }
 }

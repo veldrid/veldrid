@@ -259,6 +259,10 @@ namespace Veldrid.NeoDemo
                     {
                         RefreshDeviceObjects(1);
                     }
+                    if (ImGui.MenuItem("Refresh Device Objects (10 times)"))
+                    {
+                        RefreshDeviceObjects(10);
+                    }
                     if (ImGui.MenuItem("Refresh Device Objects (100 times)"))
                     {
                         RefreshDeviceObjects(100);

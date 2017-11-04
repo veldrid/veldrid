@@ -467,15 +467,11 @@ namespace Veldrid.OpenGL
             uint mipLevel,
             uint arrayLayer)
         {
-            if (texture.ArrayLayers != 1 || texture.Depth != 1)
-            {
-                throw new NotImplementedException(); // TODO
-            }
-
             OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(texture);
             glTex.EnsureResourcesCreated();
 
-            glBindTexture(TextureTarget.Texture2D, glTex.Texture);
+            TextureTarget texTarget = glTex.TextureTarget;
+            glBindTexture(texTarget, glTex.Texture);
             CheckLastError();
 
             uint pixelSize = FormatHelpers.GetSizeInBytes(glTex.Format);
@@ -487,17 +483,52 @@ namespace Veldrid.OpenGL
 
             fixed (byte* dataPtr = stagingBlock.Array)
             {
-                glTexSubImage2D(
-                    TextureTarget.Texture2D,
-                    (int)mipLevel,
-                    (int)x,
-                    (int)y,
-                    width,
-                    height,
-                    glTex.GLPixelFormat,
-                    glTex.GLPixelType,
-                    dataPtr);
-                CheckLastError();
+                if (texTarget == TextureTarget.Texture2D)
+                {
+                    glTexSubImage2D(
+                        TextureTarget.Texture2D,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        width,
+                        height,
+                        glTex.GLPixelFormat,
+                        glTex.GLPixelType,
+                        dataPtr);
+                    CheckLastError();
+                }
+                else if (texTarget == TextureTarget.Texture2DArray)
+                {
+                    glTexSubImage3D(
+                        TextureTarget.Texture2DArray,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)z,
+                        width,
+                        height,
+                        arrayLayer,
+                        glTex.GLPixelFormat,
+                        glTex.GLPixelType,
+                        dataPtr);
+                    CheckLastError();
+                }
+                else if (texTarget == TextureTarget.Texture3D)
+                {
+                    glTexSubImage3D(
+                        TextureTarget.Texture3D,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)z,
+                        width,
+                        height,
+                        depth,
+                        glTex.GLPixelFormat,
+                        glTex.GLPixelType,
+                        dataPtr);
+                    CheckLastError();
+                }
             }
 
             stagingBlock.Pool.Free(stagingBlock);
@@ -523,7 +554,7 @@ namespace Veldrid.OpenGL
             OpenGLTexture glTexCube = Util.AssertSubtype<Texture, OpenGLTexture>(textureCube);
             if (glTexCube.ArrayLayers != 1)
             {
-                throw new NotImplementedException(); // TODO
+                throw new NotImplementedException();
             }
 
             glTexCube.EnsureResourcesCreated();

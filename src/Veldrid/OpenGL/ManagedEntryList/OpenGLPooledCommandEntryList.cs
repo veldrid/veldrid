@@ -216,7 +216,7 @@ namespace Veldrid.OpenGL.ManagedEntryList
                         _updateTextureCubeEntryPool.Return(utce);
                         break;
                     default:
-                        throw new NotImplementedException("Command type not handled: " + executor.GetType().Name);
+                        throw new InvalidOperationException("Command type not handled: " + executor.GetType().Name);
                 }
             }
         }

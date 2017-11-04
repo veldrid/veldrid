@@ -209,6 +209,33 @@ namespace Veldrid.OpenGLBinding
             GLPixelType type,
             void* pixels) => p_glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
 
+        private delegate void glTexSubImage3D_t(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            int yoffset,
+            int zoffset,
+            uint width,
+            uint height,
+            uint depth,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* pixels);
+        private static glTexSubImage3D_t p_glTexSubImage3D;
+        public static void glTexSubImage3D(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            int yoffset,
+            int zoffset,
+            uint width,
+            uint height,
+            uint depth,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* pixels)
+            => p_glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels);
+
         private delegate void glShaderSource_t(uint shader, uint count, byte** @string, int* length);
         private static glShaderSource_t p_glShaderSource;
         public static void glShaderSource(uint shader, uint count, byte** @string, int* length)
@@ -437,6 +464,30 @@ namespace Veldrid.OpenGLBinding
             GLPixelType type,
             void* data) => p_glTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
 
+        private delegate void glTexImage3D_t(
+            TextureTarget target,
+            int level,
+            PixelInternalFormat internalFormat,
+            uint width,
+            uint height,
+            uint depth,
+            int border,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* data);
+        private static glTexImage3D_t p_glTexImage3D;
+        public static void glTexImage3D(
+            TextureTarget target,
+            int level,
+            PixelInternalFormat internalFormat,
+            uint width,
+            uint height,
+            uint depth,
+            int border,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* data) => p_glTexImage3D(target, level, internalFormat, width, height, depth, border, format, type, data);
+
         private delegate void glEnableVertexAttribArray_t(uint index);
         private static glEnableVertexAttribArray_t p_glEnableVertexAttribArray;
         public static void glEnableVertexAttribArray(uint index) => p_glEnableVertexAttribArray(index);
@@ -542,6 +593,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glNamedBufferSubData", out p_glNamedBufferSubData);
             LoadFunction("glScissorIndexed", out p_glScissorIndexed);
             LoadFunction("glTexSubImage2D", out p_glTexSubImage2D);
+            LoadFunction("glTexSubImage3D", out p_glTexSubImage3D);
             LoadFunction("glPixelStorei", out p_glPixelStorei);
             LoadFunction("glShaderSource", out p_glShaderSource);
             LoadFunction("glCreateShader", out p_glCreateShader);
@@ -584,6 +636,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glBufferData", out p_glBufferData);
             LoadFunction("glNamedBufferData", out p_glNamedBufferData);
             LoadFunction("glTexImage2D", out p_glTexImage2D);
+            LoadFunction("glTexImage3D", out p_glTexImage3D);
             LoadFunction("glEnableVertexAttribArray", out p_glEnableVertexAttribArray);
             LoadFunction("glDisableVertexAttribArray", out p_glDisableVertexAttribArray);
             LoadFunction("glVertexAttribPointer", out p_glVertexAttribPointer);

@@ -133,6 +133,28 @@ namespace Veldrid.OpenGL
                     levelHeight = Math.Max(1, levelHeight / 2);
                 }
             }
+            else if (TextureTarget == TextureTarget.Texture2DArray)
+            {
+                uint levelWidth = Width;
+                uint levelHeight = Height;
+                for (int currentLevel = 0; currentLevel < MipLevels; currentLevel++)
+                {
+                    glTexImage3D(
+                        TextureTarget.Texture2DArray,
+                        currentLevel,
+                        GLInternalFormat,
+                        levelWidth,
+                        levelHeight,
+                        ArrayLayers,
+                        0, // border
+                        GLPixelFormat,
+                        GLPixelType,
+                        null);
+
+                    levelWidth = Math.Max(1, levelWidth / 2);
+                    levelHeight = Math.Max(1, levelHeight / 2);
+                }
+            }
             else if (TextureTarget == TextureTarget.TextureCubeMap)
             {
                 uint levelWidth = Width;
@@ -159,9 +181,65 @@ namespace Veldrid.OpenGL
                     levelHeight = Math.Max(1, levelHeight / 2);
                 }
             }
+            else if (TextureTarget == TextureTarget.TextureCubeMapArray)
+            {
+                uint levelWidth = Width;
+                uint levelHeight = Height;
+                for (int currentLevel = 0; currentLevel < MipLevels; currentLevel++)
+                {
+                    for (int face = 0; face < 6; face++)
+                    {
+                        // Set size, load empty data into texture
+                        glTexImage3D(
+                            TextureTarget.Texture2DArray,
+                            currentLevel,
+                            GLInternalFormat,
+                            levelWidth,
+                            levelHeight,
+                            ArrayLayers * 6,
+                            0, // border
+                            GLPixelFormat,
+                            GLPixelType,
+                            null);
+                        CheckLastError();
+                    }
+
+                    levelWidth = Math.Max(1, levelWidth / 2);
+                    levelHeight = Math.Max(1, levelHeight / 2);
+                }
+            }
+            else if (TextureTarget == TextureTarget.Texture3D)
+            {
+                uint levelWidth = Width;
+                uint levelHeight = Height;
+                uint levelDepth = Depth;
+                for (int currentLevel = 0; currentLevel < MipLevels; currentLevel++)
+                {
+                    for (int face = 0; face < 6; face++)
+                    {
+                        // Set size, load empty data into texture
+                        glTexImage3D(
+                            TextureTarget.Texture3D,
+                            currentLevel,
+                            GLInternalFormat,
+                            levelWidth,
+                            levelHeight,
+                            levelDepth,
+                            0, // border
+                            GLPixelFormat,
+                            GLPixelType,
+                            null);
+                        CheckLastError();
+                    }
+
+                    levelWidth = Math.Max(1, levelWidth / 2);
+                    levelHeight = Math.Max(1, levelHeight / 2);
+                    levelDepth = Math.Max(1, levelDepth / 2);
+                }
+            }
             else
             {
-                throw new NotImplementedException(); // TODO
+                throw new NotImplementedException();
             }
 
             Created = true;

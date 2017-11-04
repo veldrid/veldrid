@@ -185,7 +185,7 @@ namespace Veldrid.OpenGL.ManagedEntryList
                             utce.ArrayLayer);
                         break;
                     default:
-                        throw new NotImplementedException("Command type not handled: " + executor.GetType().Name);
+                        throw new InvalidOperationException("Command type not handled: " + executor.GetType().Name);
                 }
             }
         }

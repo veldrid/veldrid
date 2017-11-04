@@ -24,29 +24,33 @@ namespace Veldrid.Vk
 
             VkRenderPassCreateInfo renderPassCI = VkRenderPassCreateInfo.New();
 
-            if (ColorTextures.Count > 1)
+            StackList<VkAttachmentDescription> attachments = new StackList<VkAttachmentDescription>();
+
+            uint colorAttachmentCount = (uint)ColorTextures.Count;
+            StackList<VkAttachmentDescription> colorAttachmentDescriptions = new StackList<VkAttachmentDescription>();
+            StackList<VkAttachmentReference> colorAttachmentRefs = new StackList<VkAttachmentReference>();
+            for (int i = 0; i < colorAttachmentCount; i++)
             {
-                // TODO: Stop being lazy
-                throw new NotImplementedException("Laziness");
+                VkTexture vkColorTex = Util.AssertSubtype<Texture, VkTexture>(ColorTextures[i]);
+                VkAttachmentDescription colorAttachmentDesc = new VkAttachmentDescription();
+                colorAttachmentDesc.format = vkColorTex.VkFormat;
+                colorAttachmentDesc.samples = VkSampleCountFlags.Count1;
+                colorAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
+                colorAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
+                colorAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
+                colorAttachmentDesc.stencilStoreOp = VkAttachmentStoreOp.DontCare;
+                colorAttachmentDesc.initialLayout = VkImageLayout.Undefined;
+                colorAttachmentDesc.finalLayout = VkImageLayout.PresentSrcKHR;
+                colorAttachmentDescriptions.Add(colorAttachmentDesc);
+                attachments.Add(colorAttachmentDesc);
+
+                VkAttachmentReference colorAttachmentRef = new VkAttachmentReference();
+                colorAttachmentRef.attachment = (uint)i;
+                colorAttachmentRef.layout = VkImageLayout.ColorAttachmentOptimal;
+                colorAttachmentRefs.Add(colorAttachmentRef);
             }
 
-            VkTexture vkColorTex = ColorTextures.Count > 0 ? Util.AssertSubtype<Texture, VkTexture>(ColorTextures[0]) : null;
             VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(DepthTexture);
-
-            VkAttachmentDescription colorAttachmentDesc = new VkAttachmentDescription();
-            colorAttachmentDesc.format = vkColorTex?.VkFormat ?? 0;
-            colorAttachmentDesc.samples = VkSampleCountFlags.Count1;
-            colorAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
-            colorAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
-            colorAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
-            colorAttachmentDesc.stencilStoreOp = VkAttachmentStoreOp.DontCare;
-            colorAttachmentDesc.initialLayout = VkImageLayout.Undefined;
-            colorAttachmentDesc.finalLayout = VkImageLayout.PresentSrcKHR;
-
-            VkAttachmentReference colorAttachmentRef = new VkAttachmentReference();
-            colorAttachmentRef.attachment = 0;
-            colorAttachmentRef.layout = VkImageLayout.ColorAttachmentOptimal;
-
             VkAttachmentDescription depthAttachmentDesc = new VkAttachmentDescription();
             VkAttachmentReference depthAttachmentRef = new VkAttachmentReference();
             if (vkDepthTex != null)
@@ -60,18 +64,16 @@ namespace Veldrid.Vk
                 depthAttachmentDesc.initialLayout = VkImageLayout.Undefined;
                 depthAttachmentDesc.finalLayout = VkImageLayout.ShaderReadOnlyOptimal;
 
-                depthAttachmentRef.attachment = vkColorTex == null ? 0u : 1u;
+                depthAttachmentRef.attachment = (uint)description.ColorTargets.Length;
                 depthAttachmentRef.layout = VkImageLayout.DepthStencilAttachmentOptimal;
             }
 
             VkSubpassDescription subpass = new VkSubpassDescription();
-            StackList<VkAttachmentDescription, Size512Bytes> attachments = new StackList<VkAttachmentDescription, Size512Bytes>();
             subpass.pipelineBindPoint = VkPipelineBindPoint.Graphics;
-            if (ColorTextures.Count == 1)
+            if (ColorTextures.Count > 0)
             {
-                subpass.colorAttachmentCount = 1;
-                subpass.pColorAttachments = &colorAttachmentRef;
-                attachments.Add(colorAttachmentDesc);
+                subpass.colorAttachmentCount = colorAttachmentCount;
+                subpass.pColorAttachments = (VkAttachmentReference*)colorAttachmentRefs.Data;
             }
 
             if (DepthTexture != null)
@@ -138,10 +140,10 @@ namespace Veldrid.Vk
                 _attachmentViews.Add(*dest);
             }
 
-            if (vkColorTex != null)
+            if (ColorTextures.Count > 0)
             {
-                fbCI.width= vkColorTex.Width;
-                fbCI.height = vkColorTex.Height;
+                fbCI.width= ColorTextures[0].Width;
+                fbCI.height = ColorTextures[0].Height;
             }
             else if (vkDepthTex != null)
             {

@@ -4,6 +4,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyVersion>4.0.0</AssemblyVersion>
+    <DocumentationFile>$(BinDir)\$(AssemblyName).xml</DocumentationFile>
+    <NoWarn Condition="'$(Configuration)' == 'Debug'">1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

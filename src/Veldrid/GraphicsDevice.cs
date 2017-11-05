@@ -2,6 +2,9 @@
 
 namespace Veldrid
 {
+    /// <summary>
+    /// Represents an abstract graphics device, capable of creating device resources and executing commands.
+    /// </summary>
     public abstract class GraphicsDevice : IDisposable
     {
         public abstract GraphicsBackend BackendType { get; }

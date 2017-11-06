@@ -8,6 +8,7 @@ namespace Veldrid.Vk
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkDescriptorSet _descriptorSet;
+        private bool _disposed;
 
         public VkDescriptorSet DescriptorSet => _descriptorSet;
 
@@ -67,8 +68,12 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            VkDescriptorSet ds = _descriptorSet;
-            vkFreeDescriptorSets(_gd.Device, _gd.SharedDescriptorPool, 1, ref ds);
+            if (!_disposed)
+            {
+                _disposed = true;
+                VkDescriptorSet ds = _descriptorSet;
+                vkFreeDescriptorSets(_gd.Device, _gd.SharedDescriptorPool, 1, ref ds);
+            }
         }
     }
 }

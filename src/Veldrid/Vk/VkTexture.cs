@@ -10,6 +10,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly VkImage _image;
         private readonly VkMemoryBlock _memory;
+        private bool _disposed;
 
         public override uint Width { get; }
 
@@ -134,10 +135,15 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            vkDestroyImage(_gd.Device, _image, null);
-            if (_memory != null)
+            if (!_disposed)
             {
-                _gd.MemoryManager.Free(_memory);
+                _disposed = true;
+
+                vkDestroyImage(_gd.Device, _image, null);
+                if (_memory != null)
+                {
+                    _gd.MemoryManager.Free(_memory);
+                }
             }
         }
     }

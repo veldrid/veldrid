@@ -71,7 +71,7 @@ namespace Veldrid.Vk
             if (_commandBufferBegun)
             {
                 throw new VeldridException(
-                    "CommandList must be in it's initial state, or End() must have been called, for Begin() to be valid to call.");
+                    "CommandList must be in its initial state, or End() must have been called, for Begin() to be valid to call.");
             }
             if (_commandBufferEnded)
             {
@@ -172,6 +172,19 @@ namespace Veldrid.Vk
             if (_activeRenderPass.Handle != VkRenderPass.Null)
             {
                 EndCurrentRenderPass();
+                // Place a barrier between RenderPasses, so that color / depth outputs
+                // can be read in subsequent passes.
+                vkCmdPipelineBarrier(
+                    _cb,
+                    VkPipelineStageFlags.ColorAttachmentOutput,
+                    VkPipelineStageFlags.TopOfPipe,
+                    VkDependencyFlags.ByRegion,
+                    0,
+                    null,
+                    0,
+                    null,
+                    0,
+                    null);
             }
 
             VkFramebufferBase vkFB = Util.AssertSubtype<Framebuffer, VkFramebufferBase>(fb);

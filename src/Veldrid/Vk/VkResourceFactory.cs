@@ -22,7 +22,7 @@ namespace Veldrid.Vk
 
         public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)
         {
-            return new VkFramebuffer(_gd, ref description);
+            return new VkFramebuffer(_gd, ref description, false);
         }
 
         public override IndexBuffer CreateIndexBuffer(ref IndexBufferDescription description)

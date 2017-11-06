@@ -207,7 +207,7 @@ namespace Veldrid.Vk
             {
                 VkTexture colorTex = new VkTexture(_gd, _scExtent.width, _scExtent.height, 1, 1, _scImageFormat, TextureUsage.RenderTarget, _scImages[i]);
                 FramebufferDescription desc = new FramebufferDescription(_depthTexture, colorTex);
-                VkFramebuffer fb = (VkFramebuffer)_gd.ResourceFactory.CreateFramebuffer(ref desc);
+                VkFramebuffer fb = new VkFramebuffer(_gd, ref desc, true);
                 _scFramebuffers[i] = fb;
                 _scColorTextures[i] = new VkTexture[] { colorTex };
             }

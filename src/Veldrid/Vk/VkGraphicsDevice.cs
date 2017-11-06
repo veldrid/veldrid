@@ -556,8 +556,8 @@ namespace Veldrid.Vk
 
         public override void WaitForIdle()
         {
-            FlushQueuedDisposables();
             vkQueueWaitIdle(_graphicsQueue);
+            FlushQueuedDisposables();
         }
     }
 

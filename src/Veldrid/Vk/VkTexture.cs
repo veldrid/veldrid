@@ -70,7 +70,7 @@ namespace Veldrid.Vk
             imageCI.extent.height = Height;
             imageCI.extent.depth = Depth;
             imageCI.initialLayout = VkImageLayout.Preinitialized;
-            imageCI.usage = VkImageUsageFlags.TransferDst | VkImageUsageFlags.Sampled;
+            imageCI.usage = VkImageUsageFlags.TransferDst;
             bool isDepthStencil = (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
             if ((description.Usage & TextureUsage.Sampled) == TextureUsage.Sampled)
             {
@@ -80,6 +80,11 @@ namespace Veldrid.Vk
             {
                 imageCI.usage |= VkImageUsageFlags.DepthStencilAttachment;
             }
+            if ((description.Usage & TextureUsage.RenderTarget) == TextureUsage.RenderTarget)
+            {
+                imageCI.usage |= VkImageUsageFlags.ColorAttachment;
+            }
+
             imageCI.tiling = VkImageTiling.Optimal;
             imageCI.format = VkFormat;
 

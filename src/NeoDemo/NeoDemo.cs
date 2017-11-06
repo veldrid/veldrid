@@ -42,7 +42,7 @@ namespace Veldrid.NeoDemo
                 WindowTitle = "Veldrid NeoDemo"
             };
             GraphicsDeviceCreateInfo gdCI = new GraphicsDeviceCreateInfo();
-            //gdCI.Backend = GraphicsBackend.Vulkan;
+            gdCI.Backend = GraphicsBackend.Vulkan;
 #if DEBUG
             gdCI.DebugDevice = true;
 #endif
@@ -50,13 +50,9 @@ namespace Veldrid.NeoDemo
             VeldridStartup.CreateWindowAndGraphicsDevice(ref windowCI, ref gdCI, out _window, out _gd);
             _window.Resized += () => _windowResized = true;
 
-            CommandList initCL = _gd.ResourceFactory.CreateCommandList();
-            _gd.SetResourceName(initCL, "Initialization Command List");
-            initCL.Begin();
-
             _scene = new Scene(_window.Width, _window.Height);
 
-            _sc.SetCurrentScene(_scene, initCL);
+            _sc.SetCurrentScene(_scene);
 
             _igRenderable = new ImGuiRenderable(_window.Width, _window.Height);
             _resizeHandled += (w, h) => _igRenderable.WindowResized(w, h);
@@ -66,7 +62,7 @@ namespace Veldrid.NeoDemo
             Skybox skybox = Skybox.LoadDefaultSkybox();
             _scene.AddRenderable(skybox);
 
-            AddSponzaAtriumObjects(initCL);
+            AddSponzaAtriumObjects();
             _sc.Camera.Position = new Vector3(-80, 25, -4.3f);
             _sc.Camera.Yaw = -MathF.PI / 2;
             _sc.Camera.Pitch = -MathF.PI / 9;
@@ -86,10 +82,16 @@ namespace Veldrid.NeoDemo
             texDrawer3.Position = new Vector2(30 + (texDrawer3.Size.X * 2), 25);
             _scene.AddRenderable(texDrawer3);
 
+            ScreenDuplicator duplicator = new ScreenDuplicator();
+            _scene.AddRenderable(duplicator);
+
+            _fsq = new FullScreenQuad();
+            _scene.AddRenderable(_fsq);
+
             CreateAllObjects();
         }
 
-        private void AddSponzaAtriumObjects(CommandList cl)
+        private void AddSponzaAtriumObjects()
         {
             ObjParser parser = new ObjParser();
             using (FileStream objStream = File.OpenRead(AssetHelper.GetPath("Models/SponzaAtrium/sponza.obj")))
@@ -123,12 +125,14 @@ namespace Veldrid.NeoDemo
                         materialProps = CommonMaterials.Vase;
                     }
 
-                    AddTexturedMesh(cl, mesh, overrideTextureData, alphaTexture, materialProps, Vector3.Zero, Quaternion.Identity, new Vector3(0.1f));
+                    AddTexturedMesh(mesh, overrideTextureData, alphaTexture, materialProps, Vector3.Zero, Quaternion.Identity, new Vector3(0.1f));
                 }
             }
         }
 
         private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
+        private FullScreenQuad _fsq;
+
         private ImageSharpTexture LoadTexture(string texturePath, bool mipmap) // Plz don't call this with the same texturePath and different mipmap values.
         {
             if (!_textures.TryGetValue(texturePath, out ImageSharpTexture tex))
@@ -141,7 +145,6 @@ namespace Veldrid.NeoDemo
         }
 
         private void AddTexturedMesh(
-            CommandList cl,
             MeshData meshData,
             ImageSharpTexture texData,
             ImageSharpTexture alphaTexData,
@@ -206,10 +209,6 @@ namespace Veldrid.NeoDemo
                         {
                             ChangeBackend(GraphicsBackend.OpenGL);
                         }
-                        if (ImGui.MenuItem("OpenGL ES"))
-                        {
-                            ChangeBackend(GraphicsBackend.OpenGLES);
-                        }
                         if (ImGui.MenuItem("Direct3D 11"))
                         {
                             ChangeBackend(GraphicsBackend.Direct3D11);
@@ -234,6 +233,11 @@ namespace Veldrid.NeoDemo
                     {
                         ImGui.SetTooltip(
                             "Causes a new OS Sdl2Window to be created whenever the graphics backend is switched. This is much safer, and is the default.");
+                    }
+                    bool tinted = _fsq.UseTintedTexture;
+                    if (ImGui.MenuItem("Tinted output", string.Empty, tinted, true))
+                    {
+                        _fsq.UseTintedTexture = !tinted;
                     }
 
                     ImGui.EndMenu();
@@ -323,6 +327,12 @@ namespace Veldrid.NeoDemo
                 _gd.ResizeMainWindow((uint)width, (uint)height);
                 _scene.Camera.WindowResized(width, height);
                 _resizeHandled?.Invoke(width, height);
+                CommandList cl = _gd.ResourceFactory.CreateCommandList();
+                cl.Begin();
+                _sc.RecreateWindowSizedResources(_gd, cl);
+                cl.End();
+                _gd.ExecuteCommands(cl);
+                cl.Dispose();
             }
 
             _frameCommands.Begin();
@@ -330,8 +340,6 @@ namespace Veldrid.NeoDemo
             _sc.UpdateCameraBuffers(_frameCommands); // Meh
 
             _scene.RenderAllStages(_gd, _frameCommands, _sc);
-            _frameCommands.End();
-            _gd.ExecuteCommands(_frameCommands);
             _gd.SwapBuffers();
         }
 

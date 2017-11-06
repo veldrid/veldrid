@@ -34,8 +34,7 @@ namespace Shaders
 
         public struct FragmentInput
         {
-            [PositionSemantic]
-            public Vector4 Position;
+            [SystemPositionSemantic] public Vector4 Position;
         }
     }
 }

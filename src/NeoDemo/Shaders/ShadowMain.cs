@@ -64,7 +64,7 @@ namespace Shaders
 
         public struct PixelInput
         {
-            [PositionSemantic] public Vector4 Position;
+            [SystemPositionSemantic] public Vector4 Position;
             [PositionSemantic] public Vector3 Position_WorldSpace;
             [TextureCoordinateSemantic] public Vector4 LightPosition1;
             [TextureCoordinateSemantic] public Vector4 LightPosition2;

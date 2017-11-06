@@ -176,7 +176,7 @@ namespace Veldrid.NeoDemo.Objects
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(mainVertexLayouts, mainShaderStages),
                 new ResourceLayout[] { projViewLayout, mainSharedLayout, mainPerObjectLayout },
-                gd.SwapchainFramebuffer.OutputDescription);
+                sc.MainSceneFramebuffer.OutputDescription);
             _pipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref mainPD);
 
             _mainProjViewRS = StaticResourceCache.GetResourceSet(gd.ResourceFactory, new ResourceSetDescription(projViewLayout,

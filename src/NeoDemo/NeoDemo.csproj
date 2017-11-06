@@ -35,8 +35,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ShaderGen.Primitives" Version="1.0.8" />
-    <PackageReference Include="ShaderGen.Build" Version="1.0.23" PrivateAssets="All" />
+    <PackageReference Include="ShaderGen.Primitives" Version="1.0.9" />
+    <PackageReference Include="ShaderGen.Build" Version="1.0.25" PrivateAssets="All" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
     <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />

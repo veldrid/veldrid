@@ -77,7 +77,7 @@ namespace Veldrid.NeoDemo
         {
             if (ThreadedRendering)
             {
-                RenderAllMultiThreaded(gd, sc);
+                RenderAllMultiThreaded(gd, cl, sc);
             }
             else
             {
@@ -143,17 +143,35 @@ namespace Veldrid.NeoDemo
             cl.ClearDepthTarget(1f);
             Render(gd, cl, sc, RenderPasses.ShadowMapFar, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
-            cl.SetFramebuffer(gd.SwapchainFramebuffer);
-            float scWidth = gd.SwapchainFramebuffer.Width;
-            float scHeight = gd.SwapchainFramebuffer.Height;
-            cl.SetViewport(0, new Viewport(0, 0, scWidth, scHeight, 0, 1));
-            cl.SetScissorRect(0, 0, 0, (uint)scWidth, (uint)scHeight);
+            cl.SetFramebuffer(sc.MainSceneFramebuffer);
+            float fbWidth = sc.MainSceneFramebuffer.Width;
+            float fbHeight = sc.MainSceneFramebuffer.Height;
+            cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
+            cl.SetScissorRect(0, 0, 0, (uint)fbWidth, (uint)fbHeight);
             cl.ClearColorTarget(0, RgbaFloat.CornflowerBlue);
             cl.ClearDepthTarget(1f);
             BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
             Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
             Render(gd, cl, sc, RenderPasses.AlphaBlend, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
             Render(gd, cl, sc, RenderPasses.Overlay, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+
+            cl.SetFramebuffer(sc.DuplicatorFramebuffer);
+            fbWidth = sc.DuplicatorFramebuffer.Width;
+            fbHeight = sc.DuplicatorFramebuffer.Height;
+            cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
+            cl.SetViewport(1, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
+            cl.SetScissorRect(0, 0, 0, (uint)fbWidth, (uint)fbHeight);
+            cl.SetScissorRect(1, 0, 0, (uint)fbWidth, (uint)fbHeight);
+            Render(gd, cl, sc, RenderPasses.Duplicator, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+
+            cl.SetFramebuffer(gd.SwapchainFramebuffer);
+            fbWidth = gd.SwapchainFramebuffer.Width;
+            fbHeight = gd.SwapchainFramebuffer.Height;
+            cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
+            cl.SetScissorRect(0, 0, 0, (uint)fbWidth, (uint)fbHeight);
+            Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+
+            cl.End();
 
             _resourceUpdateCL.Begin();
             foreach (Renderable renderable in _allPerFrameRenderablesSet)
@@ -162,9 +180,11 @@ namespace Veldrid.NeoDemo
             }
             _resourceUpdateCL.End();
             gd.ExecuteCommands(_resourceUpdateCL);
+
+            gd.ExecuteCommands(cl);
         }
 
-        private void RenderAllMultiThreaded(GraphicsDevice gd, SceneContext sc)
+        private void RenderAllMultiThreaded(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             Matrix4x4 cameraProj = Camera.ProjectionMatrix;
             Vector4 nearLimitCS = Vector4.Transform(new Vector3(0, 0, -_nearCascadeLimit), cameraProj);
@@ -241,9 +261,9 @@ namespace Veldrid.NeoDemo
 
             _tasks[3] = Task.Run(() =>
             {
-                cls[4].SetFramebuffer(gd.SwapchainFramebuffer);
-                float scWidth = gd.SwapchainFramebuffer.Width;
-                float scHeight = gd.SwapchainFramebuffer.Height;
+                cls[4].SetFramebuffer(sc.MainSceneFramebuffer);
+                float scWidth = sc.MainSceneFramebuffer.Width;
+                float scHeight = sc.MainSceneFramebuffer.Height;
                 cls[4].SetViewport(0, new Viewport(0, 0, scWidth, scHeight, 0, 1));
                 cls[4].SetScissorRect(0, 0, 0, (uint)scWidth, (uint)scHeight);
                 cls[4].ClearColorTarget(0, RgbaFloat.Black);
@@ -264,6 +284,24 @@ namespace Veldrid.NeoDemo
             gd.ExecuteCommands(_resourceUpdateCL);
 
             for (int i = 0; i < cls.Length; i++) { cls[i].End(); gd.ExecuteCommands(cls[i]); cls[i].Dispose(); }
+
+            cl.SetFramebuffer(sc.DuplicatorFramebuffer);
+            uint fbWidth = sc.DuplicatorFramebuffer.Width;
+            uint fbHeight = sc.DuplicatorFramebuffer.Height;
+            cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
+            cl.SetViewport(1, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
+            cl.SetScissorRect(0, 0, 0, fbWidth, fbHeight);
+            cl.SetScissorRect(1, 0, 0, fbWidth, fbHeight);
+            Render(gd, cl, sc, RenderPasses.Duplicator, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            cl.SetFramebuffer(gd.SwapchainFramebuffer);
+            fbWidth = gd.SwapchainFramebuffer.Width;
+            fbHeight = gd.SwapchainFramebuffer.Height;
+            cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
+            cl.SetScissorRect(0, 0, 0, fbWidth, fbHeight);
+            Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+
+            cl.End();
+            gd.ExecuteCommands(cl);
         }
 
         private Matrix4x4 UpdateDirectionalLightMatrices(

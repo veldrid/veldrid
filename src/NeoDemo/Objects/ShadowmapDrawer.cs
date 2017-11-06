@@ -82,7 +82,7 @@ namespace Veldrid.NeoDemo.Objects
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, shaderStages),
                 new ResourceLayout[] { layout },
-                gd.SwapchainFramebuffer.OutputDescription);
+                sc.MainSceneFramebuffer.OutputDescription);
 
             _pipeline = factory.CreatePipeline(ref pd);
 

@@ -39,7 +39,7 @@ namespace Shaders
 
         public struct FragmentIn
         {
-            [PositionSemantic] public Vector4 Position;
+            [SystemPositionSemantic] public Vector4 Position;
             [TextureCoordinateSemantic] public Vector2 TexCoord;
         }
     }

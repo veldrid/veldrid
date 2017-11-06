@@ -20,7 +20,7 @@ namespace Shaders
 
         public struct FSInput
         {
-            [PositionSemantic] public Vector4 FragPosition;
+            [SystemPositionSemantic] public Vector4 FragPosition;
             [PositionSemantic] public Vector3 WorldPosition;
         }
 

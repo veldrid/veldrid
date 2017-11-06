@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Veldrid;
 
@@ -27,6 +28,23 @@ namespace Veldrid.NeoDemo
         public Texture FarShadowMapTexture { get; private set; }
         public TextureView FarShadowMapView { get; private set; }
         public Framebuffer FarShadowMapFramebuffer { get; private set; }
+
+        // MainSceneView and Duplicator resource sets both use this.
+        public ResourceLayout TextureSamplerResourceLayout { get; private set; }
+
+        public Texture MainSceneColorTexture { get; private set; }
+        public Texture MainSceneDepthTexture { get; private set; }
+        public TextureView MainSceneColorView { get; private set; }
+        public Framebuffer MainSceneFramebuffer { get; private set; }
+        public ResourceSet MainSceneViewResourceSet { get; private set; }
+
+        public Texture DuplicatorTarget0 { get; private set; }
+        public TextureView DuplicatorTargetView0 { get; private set; }
+        public ResourceSet DuplicatorTargetSet0 { get; internal set; }
+        public Texture DuplicatorTarget1 { get; private set; }
+        public TextureView DuplicatorTargetView1 { get; private set; }
+        public ResourceSet DuplicatorTargetSet1 { get; internal set; }
+        public Framebuffer DuplicatorFramebuffer { get; private set; }
 
         public Camera Camera { get; set; }
         public DirectionalLight DirectionalLight { get; } = new DirectionalLight();
@@ -76,6 +94,11 @@ namespace Veldrid.NeoDemo
             FarShadowMapTexture = factory.CreateTexture(new TextureDescription(4096, 4096, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
             FarShadowMapView = factory.CreateTextureView(new TextureViewDescription(FarShadowMapTexture));
             FarShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(FarShadowMapTexture));
+
+            TextureSamplerResourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("SourceTexture", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("SourceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
+            RecreateWindowSizedResources(gd, cl);
         }
 
         public virtual void DestroyDeviceObjects()
@@ -98,9 +121,22 @@ namespace Veldrid.NeoDemo
             DepthLimitsBuffer.Dispose();
             CameraInfoBuffer.Dispose();
             PointLightsBuffer.Dispose();
+            MainSceneColorTexture.Dispose();
+            MainSceneColorView.Dispose();
+            MainSceneDepthTexture.Dispose();
+            MainSceneFramebuffer.Dispose();
+            MainSceneViewResourceSet.Dispose();
+            DuplicatorTarget0.Dispose();
+            DuplicatorTarget1.Dispose();
+            DuplicatorTargetView0.Dispose();
+            DuplicatorTargetView1.Dispose();
+            DuplicatorTargetSet0.Dispose();
+            DuplicatorTargetSet1.Dispose();
+            DuplicatorFramebuffer.Dispose();
+            TextureSamplerResourceLayout.Dispose();
         }
 
-        public void SetCurrentScene(Scene scene, CommandList cl)
+        public void SetCurrentScene(Scene scene)
         {
             Camera = scene.Camera;
         }
@@ -110,6 +146,55 @@ namespace Veldrid.NeoDemo
             cl.UpdateBuffer(ProjectionMatrixBuffer, 0, Camera.ProjectionMatrix);
             cl.UpdateBuffer(ViewMatrixBuffer, 0, Camera.ViewMatrix);
             cl.UpdateBuffer(CameraInfoBuffer, 0, Camera.GetCameraInfo());
+        }
+
+        internal void RecreateWindowSizedResources(GraphicsDevice gd, CommandList cl)
+        {
+            MainSceneColorTexture?.Dispose();
+            MainSceneDepthTexture?.Dispose();
+            MainSceneColorView?.Dispose();
+            MainSceneViewResourceSet?.Dispose();
+            MainSceneFramebuffer?.Dispose();
+            DuplicatorTarget0?.Dispose();
+            DuplicatorTarget1?.Dispose();
+            DuplicatorTargetView0?.Dispose();
+            DuplicatorTargetView1?.Dispose();
+            DuplicatorTargetSet0?.Dispose();
+            DuplicatorTargetSet1?.Dispose();
+            DuplicatorFramebuffer?.Dispose();
+
+            ResourceFactory factory = gd.ResourceFactory;
+            TextureDescription colorTargetDesc = new TextureDescription(
+                gd.SwapchainFramebuffer.Width,
+                gd.SwapchainFramebuffer.Height,
+                1,
+                1,
+                1,
+                PixelFormat.R8_G8_B8_A8_UNorm,
+                TextureUsage.RenderTarget | TextureUsage.Sampled);
+
+            MainSceneColorTexture = factory.CreateTexture(ref colorTargetDesc);
+            MainSceneColorView = factory.CreateTextureView(MainSceneColorTexture);
+            MainSceneDepthTexture = factory.CreateTexture(new TextureDescription(
+                gd.SwapchainFramebuffer.Width,
+                gd.SwapchainFramebuffer.Height,
+                1,
+                1,
+                1,
+                PixelFormat.R16_UNorm,
+                TextureUsage.DepthStencil));
+            MainSceneFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(MainSceneDepthTexture, MainSceneColorTexture));
+            MainSceneViewResourceSet = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, MainSceneColorView, gd.PointSampler));
+
+            DuplicatorTarget0 = factory.CreateTexture(ref colorTargetDesc);
+            DuplicatorTargetView0 = factory.CreateTextureView(DuplicatorTarget0);
+            DuplicatorTarget1 = factory.CreateTexture(ref colorTargetDesc);
+            DuplicatorTargetView1 = factory.CreateTextureView(DuplicatorTarget1);
+            DuplicatorTargetSet0 = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, DuplicatorTargetView0, gd.PointSampler));
+            DuplicatorTargetSet1 = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, DuplicatorTargetView1, gd.PointSampler));
+
+            FramebufferDescription fbDesc = new FramebufferDescription(null, DuplicatorTarget0, DuplicatorTarget1);
+            DuplicatorFramebuffer = factory.CreateFramebuffer(ref fbDesc);
         }
     }
 }

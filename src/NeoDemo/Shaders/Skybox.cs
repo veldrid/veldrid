@@ -20,7 +20,7 @@ namespace Shaders
 
         public struct FSInput
         {
-            [PositionSemantic] public Vector4 Position;
+            [SystemPositionSemantic] public Vector4 Position;
             [TextureCoordinateSemantic] public Vector3 TexCoord;
         }
 

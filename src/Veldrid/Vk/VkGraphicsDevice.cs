@@ -144,11 +144,11 @@ namespace Veldrid.Vk
                         SetDebugMarkerName(
                             VkDebugReportObjectTypeEXT.CommandBufferEXT,
                             (ulong)commandList.CommandBuffer.Handle,
-                            string.Format("{0}_CommandBuffer"));
+                            string.Format("{0}_CommandBuffer", name));
                         SetDebugMarkerName(
                             VkDebugReportObjectTypeEXT.CommandPoolEXT,
                             commandList.CommandPool.Handle,
-                            string.Format("{0}_CommandPool"));
+                            string.Format("{0}_CommandPool", name));
                         break;
                     case VkFramebuffer framebuffer:
                         SetDebugMarkerName(

@@ -12,6 +12,24 @@ namespace Veldrid
         public BlendFactor DestinationAlphaFactor;
         public BlendFunction AlphaFunction;
 
+        public BlendAttachmentDescription(
+            bool blendEnabled,
+            BlendFactor sourceColorFactor,
+            BlendFactor destinationColorFactor,
+            BlendFunction colorFunction,
+            BlendFactor sourceAlphaFactor,
+            BlendFactor destinationAlphaFactor,
+            BlendFunction alphaFunction)
+        {
+            BlendEnabled = blendEnabled;
+            SourceColorFactor = sourceColorFactor;
+            DestinationColorFactor = destinationColorFactor;
+            ColorFunction = colorFunction;
+            SourceAlphaFactor = sourceAlphaFactor;
+            DestinationAlphaFactor = destinationAlphaFactor;
+            AlphaFunction = alphaFunction;
+        }
+
         public static readonly BlendAttachmentDescription OverrideBlend = new BlendAttachmentDescription
         {
             SourceColorFactor = BlendFactor.One,

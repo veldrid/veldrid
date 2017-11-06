@@ -7,6 +7,12 @@ namespace Veldrid
         public RgbaFloat BlendFactor;
         public BlendAttachmentDescription[] AttachmentStates;
 
+        public BlendStateDescription(RgbaFloat blendFactor, params BlendAttachmentDescription[] attachmentStates)
+        {
+            BlendFactor = blendFactor;
+            AttachmentStates = attachmentStates;
+        }
+
         public static readonly BlendStateDescription SingleOverrideBlend = new BlendStateDescription
         {
             AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.OverrideBlend }

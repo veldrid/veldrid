@@ -8,8 +8,11 @@ namespace Veldrid.Vk
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImageView _imageView;
+        private bool _disposed;
 
         public VkImageView ImageView => _imageView;
+
+        public new VkTexture Target => (VkTexture)base.Target;
 
         public VkTextureView(VkGraphicsDevice gd, ref TextureViewDescription description)
             : base(description.Target)
@@ -56,7 +59,11 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            vkDestroyImageView(_gd.Device, ImageView, null);
+            if (!_disposed)
+            {
+                _disposed = true;
+                vkDestroyImageView(_gd.Device, ImageView, null);
+            }
         }
     }
 }

@@ -188,27 +188,30 @@ namespace Veldrid.Vk
             pipelineCI.layout = _pipelineLayout;
 
             // Create fake RenderPass for compatibility.
+
             VkRenderPassCreateInfo renderPassCI = VkRenderPassCreateInfo.New();
             OutputDescription outputDesc = description.Outputs;
-            if (outputDesc.ColorAttachments.Length > 1)
+            StackList<VkAttachmentDescription, Size512Bytes> attachments = new StackList<VkAttachmentDescription, Size512Bytes>();
+
+            // TODO: A huge portion of this next part is duplicated in VkFramebuffer.cs.
+
+            StackList<VkAttachmentDescription> colorAttachmentDescs = new StackList<VkAttachmentDescription>();
+            StackList<VkAttachmentReference> colorAttachmentRefs = new StackList<VkAttachmentReference>();
+            for (uint i = 0; i < outputDesc.ColorAttachments.Length; i++)
             {
-                throw new NotImplementedException("Laziness");
+                colorAttachmentDescs[i].format = VkFormats.VdToVkPixelFormat(outputDesc.ColorAttachments[i].Format);
+                colorAttachmentDescs[i].samples = VkSampleCountFlags.Count1;
+                colorAttachmentDescs[i].loadOp = VkAttachmentLoadOp.DontCare;
+                colorAttachmentDescs[i].storeOp = VkAttachmentStoreOp.Store;
+                colorAttachmentDescs[i].stencilLoadOp = VkAttachmentLoadOp.DontCare;
+                colorAttachmentDescs[i].stencilStoreOp = VkAttachmentStoreOp.DontCare;
+                colorAttachmentDescs[i].initialLayout = VkImageLayout.Undefined;
+                colorAttachmentDescs[i].finalLayout = VkImageLayout.ShaderReadOnlyOptimal;
+                attachments.Add(colorAttachmentDescs[i]);
+
+                colorAttachmentRefs[i].attachment = i;
+                colorAttachmentRefs[i].layout = VkImageLayout.ColorAttachmentOptimal;
             }
-
-            VkAttachmentDescription colorAttachmentDesc = new VkAttachmentDescription();
-            colorAttachmentDesc.format = outputDesc.ColorAttachments.Length > 0
-                ? VkFormats.VdToVkPixelFormat(outputDesc.ColorAttachments[0].Format) : 0;
-            colorAttachmentDesc.samples = VkSampleCountFlags.Count1;
-            colorAttachmentDesc.loadOp = VkAttachmentLoadOp.Clear;
-            colorAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
-            colorAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
-            colorAttachmentDesc.stencilStoreOp = VkAttachmentStoreOp.DontCare;
-            colorAttachmentDesc.initialLayout = VkImageLayout.Undefined;
-            colorAttachmentDesc.finalLayout = VkImageLayout.PresentSrcKHR;
-
-            VkAttachmentReference colorAttachmentRef = new VkAttachmentReference();
-            colorAttachmentRef.attachment = 0;
-            colorAttachmentRef.layout = VkImageLayout.ColorAttachmentOptimal;
 
             VkAttachmentDescription depthAttachmentDesc = new VkAttachmentDescription();
             VkAttachmentReference depthAttachmentRef = new VkAttachmentReference();
@@ -216,25 +219,24 @@ namespace Veldrid.Vk
             {
                 depthAttachmentDesc.format = VkFormats.VdToVkPixelFormat(outputDesc.DepthAttachment.Value.Format, toDepthFormat: true);
                 depthAttachmentDesc.samples = VkSampleCountFlags.Count1;
-                depthAttachmentDesc.loadOp = VkAttachmentLoadOp.Clear;
+                depthAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
                 depthAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
                 depthAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
                 depthAttachmentDesc.stencilStoreOp = VkAttachmentStoreOp.DontCare;
                 depthAttachmentDesc.initialLayout = VkImageLayout.Undefined;
                 depthAttachmentDesc.finalLayout = VkImageLayout.DepthStencilAttachmentOptimal;
 
-                depthAttachmentRef.attachment = outputDesc.ColorAttachments.Length == 0 ? 0u : 1u;
+                depthAttachmentRef.attachment = (uint)outputDesc.ColorAttachments.Length;
                 depthAttachmentRef.layout = VkImageLayout.DepthStencilAttachmentOptimal;
             }
 
             VkSubpassDescription subpass = new VkSubpassDescription();
-            StackList<VkAttachmentDescription, Size512Bytes> attachments = new StackList<VkAttachmentDescription, Size512Bytes>();
             subpass.pipelineBindPoint = VkPipelineBindPoint.Graphics;
-            if (outputDesc.ColorAttachments.Length > 0)
+            subpass.colorAttachmentCount = (uint)outputDesc.ColorAttachments.Length;
+            subpass.pColorAttachments = (VkAttachmentReference*)colorAttachmentRefs.Data;
+            for (int i = 0; i < colorAttachmentDescs.Count; i++)
             {
-                subpass.colorAttachmentCount = 1;
-                subpass.pColorAttachments = &colorAttachmentRef;
-                attachments.Add(colorAttachmentDesc);
+                attachments.Add(colorAttachmentDescs[i]);
             }
 
             if (outputDesc.DepthAttachment != null)

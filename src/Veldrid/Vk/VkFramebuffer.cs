@@ -13,11 +13,12 @@ namespace Veldrid.Vk
         private readonly Vulkan.VkFramebuffer _deviceFramebuffer;
         private readonly VkRenderPass _renderPass;
         private readonly List<VkImageView> _attachmentViews = new List<VkImageView>();
+        private bool _disposed;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _deviceFramebuffer;
         public override VkRenderPass RenderPass => _renderPass;
 
-        public VkFramebuffer(VkGraphicsDevice gd, ref FramebufferDescription description)
+        public VkFramebuffer(VkGraphicsDevice gd, ref FramebufferDescription description, bool isPresented)
             : base(description.DepthTarget, description.ColorTargets)
         {
             _gd = gd;
@@ -40,7 +41,7 @@ namespace Veldrid.Vk
                 colorAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
                 colorAttachmentDesc.stencilStoreOp = VkAttachmentStoreOp.DontCare;
                 colorAttachmentDesc.initialLayout = VkImageLayout.Undefined;
-                colorAttachmentDesc.finalLayout = VkImageLayout.PresentSrcKHR;
+                colorAttachmentDesc.finalLayout = isPresented ? VkImageLayout.PresentSrcKHR : VkImageLayout.ShaderReadOnlyOptimal;
                 colorAttachmentDescriptions.Add(colorAttachmentDesc);
                 attachments.Add(colorAttachmentDesc);
 
@@ -50,11 +51,11 @@ namespace Veldrid.Vk
                 colorAttachmentRefs.Add(colorAttachmentRef);
             }
 
-            VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(DepthTexture);
             VkAttachmentDescription depthAttachmentDesc = new VkAttachmentDescription();
             VkAttachmentReference depthAttachmentRef = new VkAttachmentReference();
-            if (vkDepthTex != null)
+            if (DepthTexture != null)
             {
+                VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(DepthTexture);
                 depthAttachmentDesc.format = vkDepthTex.VkFormat;
                 depthAttachmentDesc.samples = VkSampleCountFlags.Count1;
                 depthAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
@@ -110,10 +111,9 @@ namespace Veldrid.Vk
             }
 
             VkImageView* fbAttachments = stackalloc VkImageView[(int)fbAttachmentsCount];
-            for (int i = 0; i < fbAttachmentsCount - 1; i++)
+            for (int i = 0; i < colorAttachmentCount; i++)
             {
-                Texture colorTarget = description.ColorTargets[i];
-                VkTexture vkColorTarget = Util.AssertSubtype<Texture, VkTexture>(colorTarget);
+                VkTexture vkColorTarget = Util.AssertSubtype<Texture, VkTexture>(description.ColorTargets[i]);
                 VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();
                 imageViewCI.image = vkColorTarget.DeviceImage;
                 imageViewCI.format = vkColorTarget.VkFormat;
@@ -142,13 +142,13 @@ namespace Veldrid.Vk
 
             if (ColorTextures.Count > 0)
             {
-                fbCI.width= ColorTextures[0].Width;
+                fbCI.width = ColorTextures[0].Width;
                 fbCI.height = ColorTextures[0].Height;
             }
-            else if (vkDepthTex != null)
+            else if (DepthTexture != null)
             {
-                fbCI.width = vkDepthTex.Width;
-                fbCI.height = vkDepthTex.Height;
+                fbCI.width = DepthTexture.Width;
+                fbCI.height = DepthTexture.Height;
             }
 
             fbCI.attachmentCount = fbAttachmentsCount;
@@ -162,11 +162,16 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            vkDestroyFramebuffer(_gd.Device, _deviceFramebuffer, null);
-            vkDestroyRenderPass(_gd.Device, _renderPass, null);
-            foreach (VkImageView view in _attachmentViews)
+            if (!_disposed)
             {
-                vkDestroyImageView(_gd.Device, view, null);
+                _disposed = true;
+
+                vkDestroyFramebuffer(_gd.Device, _deviceFramebuffer, null);
+                vkDestroyRenderPass(_gd.Device, _renderPass, null);
+                foreach (VkImageView view in _attachmentViews)
+                {
+                    vkDestroyImageView(_gd.Device, view, null);
+                }
             }
         }
     }

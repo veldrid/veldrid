@@ -22,6 +22,13 @@ namespace Veldrid
             ComparisonKind = DepthComparisonKind.LessEqual
         };
 
+        public static readonly DepthStencilStateDescription Disabled = new DepthStencilStateDescription
+        {
+            DepthTestEnabled = false,
+            DepthWriteEnabled = false,
+            ComparisonKind = DepthComparisonKind.LessEqual
+        };
+
         public bool Equals(DepthStencilStateDescription other)
         {
             return DepthTestEnabled.Equals(other.DepthTestEnabled) && DepthWriteEnabled.Equals(other.DepthWriteEnabled)

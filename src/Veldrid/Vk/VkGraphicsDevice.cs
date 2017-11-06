@@ -395,6 +395,7 @@ namespace Veldrid.Vk
             deviceFeatures.fillModeNonSolid = true;
             deviceFeatures.geometryShader = true;
             deviceFeatures.depthClamp = true;
+            deviceFeatures.multiViewport = true;
 
             bool debugMarkerSupported = false;
 

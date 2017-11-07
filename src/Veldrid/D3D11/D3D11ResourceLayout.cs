@@ -56,7 +56,7 @@
         {
         }
 
-        public struct ResourceBindingInfo
+        internal struct ResourceBindingInfo
         {
             public int Slot;
             public ShaderStages Stages;

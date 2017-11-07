@@ -98,15 +98,15 @@ namespace Veldrid
             };
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("ProjectionMatrixBuffer", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("FontTexture", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ProjectionMatrixBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("FontTexture", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("FontSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
 
             PipelineDescription pd = new PipelineDescription(
                 BlendStateDescription.SingleAlphaBlend,
                 new DepthStencilStateDescription(false, false, DepthComparisonKind.Always),
-                new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, FrontFace.Clockwise, false, true),
+                new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, false, true),
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, shaderStages),
                 new ResourceLayout[] { _layout },

@@ -73,7 +73,7 @@ namespace Veldrid.StartupUtilities
                 case GraphicsBackend.Vulkan:
                     return CreateVulkanGraphicsDevice(ref graphicsDeviceCI, window);
                 case GraphicsBackend.OpenGL:
-                    return CreateDefaultOpenGLRenderContext(ref graphicsDeviceCI, window);
+                    return CreateDefaultOpenGLGraphicsDevice(ref graphicsDeviceCI, window);
                 //case GraphicsBackend.OpenGLES:
                 //    return CreateDefaultOpenGLESRenderContext(ref contextCI, window);
                 default:
@@ -104,7 +104,7 @@ namespace Veldrid.StartupUtilities
             Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
             Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
             VkSurfaceSource surfaceSource = GetSurfaceSource(sysWmInfo);
-            GraphicsDevice gd = Hacks.CreateVulkan(surfaceSource, (uint)window.Width, (uint)window.Height, contextCI.DebugDevice);
+            GraphicsDevice gd = GraphicsDevice.CreateVulkan(surfaceSource, (uint)window.Width, (uint)window.Height, contextCI.DebugDevice);
 
             return gd;
         }
@@ -163,7 +163,7 @@ namespace Veldrid.StartupUtilities
         //    return rc;
         //}
 
-        public static GraphicsDevice CreateDefaultOpenGLRenderContext(ref GraphicsDeviceCreateInfo gdCI, Sdl2Window window)
+        public static GraphicsDevice CreateDefaultOpenGLGraphicsDevice(ref GraphicsDeviceCreateInfo gdCI, Sdl2Window window)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;
             if (gdCI.DebugDevice)
@@ -195,7 +195,7 @@ namespace Veldrid.StartupUtilities
                 Sdl2Native.SDL_GL_DeleteContext,
                 () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
 
-            return Hacks.CreateOpenGL(
+            return GraphicsDevice.CreateOpenGL(
                 platformInfo,
                 (uint)window.Width,
                 (uint)window.Height,
@@ -210,7 +210,7 @@ namespace Veldrid.StartupUtilities
                 flags |= SharpDX.Direct3D11.DeviceCreationFlags.Debug;
             }
 
-            return Hacks.CreateD3D11(window.Handle, window.Width, window.Height);
+            return GraphicsDevice.CreateD3D11(window.Handle, (uint)window.Width, (uint)window.Height);
         }
 
         private static unsafe string GetString(byte* stringStart)

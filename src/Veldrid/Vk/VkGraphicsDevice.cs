@@ -69,7 +69,7 @@ namespace Veldrid.Vk
             vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
             vkResetFences(_device, 1, ref _imageAvailableFence);
 
-            PostContextCreated();
+            PostDeviceCreated();
         }
 
         public override ResourceFactory ResourceFactory { get; }

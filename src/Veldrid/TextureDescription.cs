@@ -2,16 +2,58 @@
 
 namespace Veldrid
 {
+    /// <summary>
+    /// Describes a <see cref="Texture"/>, for creation using a <see cref="ResourceFactory"/>.
+    /// </summary>
     public struct TextureDescription : IEquatable<TextureDescription>
     {
+        /// <summary>
+        /// The total width, in texels.
+        /// </summary>
         public uint Width;
+        /// <summary>
+        /// The total height, in texels.
+        /// </summary>
         public uint Height;
+        /// <summary>
+        /// The total depth, in texels.
+        /// </summary>
         public uint Depth;
+        /// <summary>
+        /// The number of mipmap levels.
+        /// </summary>
         public uint MipLevels;
+        /// <summary>
+        /// The number of array layers.
+        /// </summary>
         public uint ArrayLayers;
+        /// <summary>
+        /// The format of individual texture elements.
+        /// </summary>
         public PixelFormat Format;
+        /// <summary>
+        /// Controls how the Texture is permitted to be used. If the Texture will be sampled from a shader, then
+        /// <see cref="TextureUsage.Sampled"/> must be included. If the Texture will be used as a depth target in a
+        /// <see cref="Framebuffer"/>, then <see cref="TextureUsage.DepthStencil"/> must be included. If the Texture will be used
+        /// as a color target in a <see cref="Framebuffer"/>, then <see cref="TextureUsage.RenderTarget"/> must be included.
+        /// If the Texture will be used as a 2D cubemap, then <see cref="TextureUsage.Cubemap"/> must be included.
+        /// </summary>
         public TextureUsage Usage;
 
+        /// <summary>
+        /// Contsructs a new TextureDescription.
+        /// </summary>
+        /// <param name="width">The total width, in texels.</param>
+        /// <param name="height">The total height, in texels.</param>
+        /// <param name="depth">The total depth, in texels.</param>
+        /// <param name="mipLevels">The number of mipmap levels.</param>
+        /// <param name="arrayLayers">The number of array layers.</param>
+        /// <param name="format">The format of individual texture elements.</param>
+        /// <param name="usage">Controls how the Texture is permitted to be used. If the Texture will be sampled from a shader,
+        /// then <see cref="TextureUsage.Sampled"/> must be included. If the Texture will be used as a depth target in a
+        /// <see cref="Framebuffer"/>, then <see cref="TextureUsage.DepthStencil"/> must be included. If the Texture will be used
+        /// as a color target in a <see cref="Framebuffer"/>, then <see cref="TextureUsage.RenderTarget"/> must be included.
+        /// If the Texture will be used as a 2D cubemap, then <see cref="TextureUsage.Cubemap"/> must be included.</param>
         public TextureDescription(
             uint width,
             uint height,
@@ -30,6 +72,11 @@ namespace Veldrid
             Usage = usage;
         }
 
+        /// <summary>
+        /// Element-wise equality.
+        /// </summary>
+        /// <param name="other">The instance to compare to.</param>
+        /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(TextureDescription other)
         {
             return Width.Equals(other.Width)
@@ -41,6 +88,10 @@ namespace Veldrid
                 && Usage == other.Usage;
         }
 
+        /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
             return HashHelper.Combine(

@@ -80,9 +80,9 @@ namespace Veldrid.Vk
         {
             switch (kind)
             {
-                case ResourceKind.Uniform:
+                case ResourceKind.UniformBuffer:
                     return VkDescriptorType.UniformBuffer;
-                case ResourceKind.Texture:
+                case ResourceKind.TextureView:
                     return VkDescriptorType.SampledImage;
                 case ResourceKind.Sampler:
                     return VkDescriptorType.Sampler;
@@ -91,16 +91,16 @@ namespace Veldrid.Vk
             }
         }
 
-        internal static VkPolygonMode VdToVkPolygonMode(TriangleFillMode fillMode)
+        internal static VkPolygonMode VdToVkPolygonMode(PolygonFillMode fillMode)
         {
             switch (fillMode)
             {
-                case TriangleFillMode.Solid:
+                case PolygonFillMode.Solid:
                     return VkPolygonMode.Fill;
-                case TriangleFillMode.Wireframe:
+                case PolygonFillMode.Wireframe:
                     return VkPolygonMode.Line;
                 default:
-                    throw Illegal.Value<TriangleFillMode>();
+                    throw Illegal.Value<PolygonFillMode>();
             }
         }
 

@@ -27,8 +27,8 @@ namespace Veldrid.NeoDemo
         private static Texture _pinkTex;
 
         public static readonly ResourceLayoutDescription ProjViewLayoutDescription = new ResourceLayoutDescription(
-            new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
-            new ResourceLayoutElementDescription("View", ResourceKind.Uniform, ShaderStages.Vertex));
+            new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+            new ResourceLayoutElementDescription("View", ResourceKind.UniformBuffer, ShaderStages.Vertex));
 
         public static Pipeline GetPipeline(ResourceFactory factory, ref PipelineDescription desc)
         {

@@ -2,15 +2,43 @@
 
 namespace Veldrid
 {
+    /// <summary>
+    /// A device resource used to store arbitrary image data in a specific format.
+    /// </summary>
     public abstract class Texture : DeviceResource, IDisposable
     {
+        /// <summary>
+        /// The format of individual texture elements stored in this instance.
+        /// </summary>
         public abstract PixelFormat Format { get; }
+        /// <summary>
+        /// The total width of this instance, in texels.
+        /// </summary>
         public abstract uint Width { get; }
+        /// <summary>
+        /// The total height of this instance, in texels.
+        /// </summary>
         public abstract uint Height { get; }
+        /// <summary>
+        /// The total depth of this instance, in texels.
+        /// </summary>
         public abstract uint Depth { get; }
+        /// <summary>
+        /// The total number of mipmap levels in this instance.
+        /// </summary>
         public abstract uint MipLevels { get; }
+        /// <summary>
+        /// The total number of array layers in this instance.
+        /// </summary>
         public abstract uint ArrayLayers { get; }
+        /// <summary>
+        /// The usage flags given when this instance was created. This property controls how this instance is permitted to be
+        /// used, and it is an error to attempt to use the Texture outside of those contexts.
+        /// </summary>
         public abstract TextureUsage Usage { get; }
+        /// <summary>
+        /// Frees unmanaged device resources controlled by this instance.
+        /// </summary>
         public abstract void Dispose();
     }
 }

@@ -172,16 +172,16 @@ namespace Veldrid.D3D11
             }
         }
 
-        internal static FillMode VdToD3D11FillMode(TriangleFillMode fillMode)
+        internal static FillMode VdToD3D11FillMode(PolygonFillMode fillMode)
         {
             switch (fillMode)
             {
-                case TriangleFillMode.Solid:
+                case PolygonFillMode.Solid:
                     return FillMode.Solid;
-                case TriangleFillMode.Wireframe:
+                case PolygonFillMode.Wireframe:
                     return FillMode.Wireframe;
                 default:
-                    throw Illegal.Value<TriangleFillMode>();
+                    throw Illegal.Value<PolygonFillMode>();
             }
         }
 

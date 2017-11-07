@@ -61,7 +61,7 @@ namespace Veldrid.D3D11
             ResourceFactory = new D3D11ResourceFactory(this);
             RecreateSwapchainFramebuffer(width, height);
 
-            PostContextCreated();
+            PostDeviceCreated();
         }
 
         public override void ResizeMainWindow(uint width, uint height)

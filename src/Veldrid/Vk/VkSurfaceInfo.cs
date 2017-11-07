@@ -6,11 +6,31 @@ using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
+    /// <summary>
+    /// An object which can be used to create a VkSurfaceKHR.
+    /// </summary>
     public abstract class VkSurfaceSource
     {
+        /// <summary>
+        /// Creates a new VkSurfaceKHR attached to this source.
+        /// </summary>
+        /// <param name="instance">The VkInstance to use.</param>
+        /// <returns>A new VkSurfaceKHR.</returns>
         public abstract VkSurfaceKHR CreateSurface(VkInstance instance);
 
+        /// <summary>
+        /// Creates a new <see cref="VkSurfaceSource"/> from the given Win32 instance and window handle.
+        /// </summary>
+        /// <param name="hinstance">The Win32 instance handle.</param>
+        /// <param name="hwnd">The Win32 window handle.</param>
+        /// <returns>A new VkSurfaceSource.</returns>
         public static VkSurfaceSource CreateWin32(IntPtr hinstance, IntPtr hwnd) => new Win32VkSurfaceInfo(hinstance, hwnd);
+        /// <summary>
+        /// Creates a new VkSurfaceSource from the given Xlib information.
+        /// </summary>
+        /// <param name="display">A pointer to the Xlib Display.</param>
+        /// <param name="window">An Xlib window.</param>
+        /// <returns>A new VkSurfaceSource.</returns>
         public unsafe static VkSurfaceSource CreateXlib(Display* display, Window window) => new XlibVkSurfaceInfo(display, window);
     }
 

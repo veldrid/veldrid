@@ -94,15 +94,15 @@ namespace Veldrid.NeoDemo.Objects
             };
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("View", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("CubeTexture", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("View", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("CubeTexture", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("CubeSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             PipelineDescription pd = new PipelineDescription(
                 BlendStateDescription.SingleAlphaBlend,
                 DepthStencilStateDescription.LessEqual,
-                new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, FrontFace.Clockwise, false, true),
+                new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, false, true),
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, shaderStages),
                 new ResourceLayout[] { _layout },

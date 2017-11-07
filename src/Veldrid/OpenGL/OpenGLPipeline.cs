@@ -140,7 +140,7 @@ namespace Veldrid.OpenGL
                 for (uint i = 0; i < resources.Length; i++)
                 {
                     ResourceLayoutElementDescription resource = resources[i];
-                    if (resource.Kind == ResourceKind.Uniform)
+                    if (resource.Kind == ResourceKind.UniformBuffer)
                     {
                         string resourceName = resource.Name;
                         int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;
@@ -166,7 +166,7 @@ namespace Veldrid.OpenGL
                             //_constantBindings[i] = new OpenGLUniformBinding(_program, storageAdapter);
                         }
                     }
-                    else if (resource.Kind == ResourceKind.Texture)
+                    else if (resource.Kind == ResourceKind.TextureView)
                     {
                         string resourceName = resource.Name;
                         int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;

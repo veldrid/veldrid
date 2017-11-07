@@ -252,16 +252,16 @@ namespace Veldrid.OpenGL
             }
         }
 
-        internal static PolygonMode VdToGLPolygonMode(TriangleFillMode fillMode)
+        internal static PolygonMode VdToGLPolygonMode(PolygonFillMode fillMode)
         {
             switch (fillMode)
             {
-                case TriangleFillMode.Solid:
+                case PolygonFillMode.Solid:
                     return PolygonMode.Fill;
-                case TriangleFillMode.Wireframe:
+                case PolygonFillMode.Wireframe:
                     return PolygonMode.Line;
                 default:
-                    throw Illegal.Value<TriangleFillMode>();
+                    throw Illegal.Value<PolygonFillMode>();
             }
         }
 

@@ -70,9 +70,9 @@ namespace Veldrid.NeoDemo.Objects
             };
 
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("Projection", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("SizePos", ResourceKind.Uniform, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("Tex", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("SizePos", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("Tex", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("TexSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             PipelineDescription pd = new PipelineDescription(

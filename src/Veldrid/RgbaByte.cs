@@ -1,22 +1,51 @@
 ﻿namespace Veldrid
 {
+    /// <summary>
+    /// A color stored in four 8-bit unsigned normalized integer values, in RGBA component order.
+    /// </summary>
     public struct RgbaByte
     {
-        public readonly byte R, G, B, A;
+        /// <summary>
+        /// The red component.
+        /// </summary>
+        public readonly byte R;
+        /// <summary>
+        /// The green component.
+        /// </summary>
+        public readonly byte G;
+        /// <summary>
+        /// The blue component.
+        /// </summary>
+        public readonly byte B;
+        /// <summary>
+        /// The alpha component.
+        /// </summary>
+        public readonly byte A;
 
+        /// <summary>
+        /// Black (0, 0, 0, 255)
+        /// </summary>
         public static readonly RgbaByte Black = new RgbaByte(0, 0, 0, 255);
+        /// <summary>
+        /// White (255, 255, 255, 255)
+        /// </summary>
         public static readonly RgbaByte White = new RgbaByte(255, 255, 255, 255);
+        /// <summary>
+        /// Cyan (0, 255, 255, 255)
+        /// </summary>
         public static readonly RgbaByte Cyan = new RgbaByte(0, 255, 255, 255);
+        /// <summary>
+        /// Pink (255, 155, 191, 255)
+        /// </summary>
         public static readonly RgbaByte Pink = new RgbaByte(255, 155, 191, 255);
 
-        public RgbaByte(uint data)
-        {
-            R = (byte)((data & 0xFF000000) >> 24);
-            G = (byte)((data & 0x00FF0000) >> 16);
-            B = (byte)((data & 0x0000FF00) >> 8);
-            A = (byte)((data & 0x000000FF) >> 0);
-        }
-
+        /// <summary>
+        /// Constructs a new RgbaByte from the given components.
+        /// </summary>
+        /// <param name="r">The red component.</param>
+        /// <param name="g">The green component.</param>
+        /// <param name="b">The blue component.</param>
+        /// <param name="a">The alpha component.</param>
         public RgbaByte(byte r, byte g, byte b, byte a)
         {
             R = r;

@@ -83,7 +83,7 @@ namespace Veldrid.OpenGL
             _extensions = new OpenGLExtensions(extensions);
             _commandExecutor = new OpenGLCommandExecutor(_extensions);
 
-            PostContextCreated();
+            PostDeviceCreated();
         }
 
         public override void ExecuteCommands(CommandList cl)

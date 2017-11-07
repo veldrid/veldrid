@@ -4,28 +4,150 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid
 {
+    /// <summary>
+    /// A device resource which allows the recording of graphics commands, which can later be executed by a
+    /// <see cref="GraphicsDevice"/>.
+    /// Before graphics commands can be issued, the <see cref="Begin"/> method must be invoked.
+    /// When the <see cref="CommandList"/> is ready to be executed, <see cref="End"/> must be invoked, and then
+    /// <see cref="GraphicsDevice.ExecuteCommands(CommandList)"/> should be used.
+    /// NOTE: The use of <see cref="CommandList"/> is not thread-safe. Access to the <see cref="CommandList"/> must be
+    /// externally synchronized.
+    /// There are some limitations dictating proper usage and ordering of graphics commands. For example, a
+    /// <see cref="Framebuffer"/>, <see cref="Pipeline"/>, <see cref="VertexBuffer"/>, and <see cref="IndexBuffer"/> must all be
+    /// bound before a call to <see cref="Draw(uint, uint, uint, int, uint)"/> will succeed.
+    /// These limitations are described in each function, where applicable.
+    /// <see cref="CommandList"/> instances cannot be executed multiple times per-recording. When executed by a
+    /// <see cref="GraphicsDevice"/>, they must be reset and commands must be issued again.
+    /// </summary>
     public abstract class CommandList : DeviceResource, IDisposable
     {
-        public CommandList(ref CommandListDescription description)
+        internal CommandList(ref CommandListDescription description)
         {
         }
 
+        /// <summary>
+        /// Puts this <see cref="CommandList"/> into the initial state.
+        /// This function must be called before other graphics commands can be issued.
+        /// Begin must only be called if it has not been previously called, if <see cref="End"/> has been called,
+        /// or if <see cref="GraphicsDevice.ExecuteCommands(CommandList)"/> has been called on this instance.
+        /// </summary>
         public abstract void Begin();
+
+        /// <summary>
+        /// Completes this list of graphics commands, putting it into an executable state for a <see cref="GraphicsDevice"/>.
+        /// This function must only be called after <see cref="Begin"/> has been called.
+        /// It is an error to call this function in succession, unless <see cref="Begin"/> has been called in between invocations.
+        /// </summary>
         public abstract void End();
 
+        /// <summary>
+        /// Sets the active <see cref="Pipeline"/> used for rendering.
+        /// When drawing, the active <see cref="Pipeline"/> must be compatible with the bound <see cref="Framebuffer"/>,
+        /// <see cref="ResourceSet"/>, and <see cref="VertexBuffer"/> objects.
+        /// </summary>
+        /// <param name="pipeline">The new <see cref="Pipeline"/> object.</param>
         public abstract void SetPipeline(Pipeline pipeline);
+
+        /// <summary>
+        /// Sets the active <see cref="VertexBuffer"/> for the given index.
+        /// When drawing, the bound <see cref="VertexBuffer"/> objects must be compatible with the bound <see cref="Pipeline"/>.
+        /// </summary>
+        /// <param name="index">The buffer slot.</param>
+        /// <param name="vb">The new <see cref="VertexBuffer"/>.</param>
         public abstract void SetVertexBuffer(uint index, VertexBuffer vb);
+
+        /// <summary>
+        /// Sets the active <see cref="IndexBuffer"/>.
+        /// When drawing, an <see cref="IndexBuffer"/> must be bound.
+        /// </summary>
+        /// <param name="ib">The new <see cref="IndexBuffer"/>.</param>
         public abstract void SetIndexBuffer(IndexBuffer ib);
+
+        /// <summary>
+        /// Sets the active <see cref="ResourceSet"/> for the given index.
+        /// </summary>
+        /// <param name="slot">The resource slot.</param>
+        /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
         public abstract void SetResourceSet(uint slot, ResourceSet rs);
+
+        /// <summary>
+        /// Sets the active <see cref="Framebuffer"/> which will be rendered to.
+        /// When drawing, the active <see cref="Framebuffer"/> must be compatible with the active <see cref="Pipeline"/>.
+        /// A compatible <see cref="Pipeline"/> has the same number of output attachments with matching formats.
+        /// </summary>
+        /// <param name="fb">The new <see cref="Framebuffer"/>.</param>
         public abstract void SetFramebuffer(Framebuffer fb);
+
+        /// <summary>
+        /// Clears the color target at the given index of the active <see cref="Framebuffer"/>.
+        /// The index given must be less than the number of color attachments in the active <see cref="Framebuffer"/>.
+        /// </summary>
+        /// <param name="index">The color target index.</param>
+        /// <param name="clearColor">The value to clear the target to.</param>
         public abstract void ClearColorTarget(uint index, RgbaFloat clearColor);
+
+        /// <summary>
+        /// Clears the depth target of the active <see cref="Framebuffer"/>.
+        /// The active <see cref="Framebuffer"/> must have a depth attachment.
+        /// </summary>
+        /// <param name="depth">The value to clear the depth target to.</param>
         public abstract void ClearDepthTarget(float depth);
+
+        /// <summary>
+        /// Sets the active <see cref="Viewport"/> at the given index.
+        /// The index given must be less than the number of color attachments in the active <see cref="Framebuffer"/>.
+        /// </summary>
+        /// <param name="index">The color target index.</param>
+        /// <param name="viewport">The new <see cref="Viewport"/>.</param>
         public void SetViewport(uint index, Viewport viewport) => SetViewport(index, ref viewport);
+
+        /// <summary>
+        /// Sets the active <see cref="Viewport"/> at the given index.
+        /// The index given must be less than the number of color attachments in the active <see cref="Framebuffer"/>.
+        /// </summary>
+        /// <param name="index">The color target index.</param>
+        /// <param name="viewport">The new <see cref="Viewport"/>.</param>
         public abstract void SetViewport(uint index, ref Viewport viewport);
+
+        /// <summary>
+        /// Sets the active scissor rectangle at the given index.
+        /// The index given must be less than the number of color attachments in the active <see cref="Framebuffer"/>.
+        /// </summary>
+        /// <param name="index">The color target index.</param>
+        /// <param name="x">The X value of the scissor rectangle.</param>
+        /// <param name="y">The Y value of the scissor rectangle.</param>
+        /// <param name="width">The width of the scissor rectangle.</param>
+        /// <param name="height">The height of the scissor rectangle.</param>
         public abstract void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
+
+        /// <summary>
+        /// Draws primitives from the currently-bound state in this <see cref="CommandList"/>.
+        /// </summary>
+        /// <param name="indexCount">The number of indices.</param>
+        /// <param name="instanceCount">The number of instances.</param>
+        /// <param name="indexStart">The number of indices to skip in the active <see cref="IndexBuffer"/>.</param>
+        /// <param name="vertexOffset">The base vertex value, which is added to each index value read from the <see cref="IndexBuffer"/>.</param>
+        /// <param name="instanceStart">The starting instance value.</param>
         public abstract void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
 
-        // Resource Update
+        /// <summary>
+        /// Updates a portion of a <see cref="Texture"/> resource with new data.
+        /// Cube textures should instead use 
+        /// <see cref="UpdateTextureCube(Texture, IntPtr, uint, CubeFace, uint, uint, uint, uint, uint, uint)"/>.
+        /// </summary>
+        /// <param name="texture">The resource to update.</param>
+        /// <param name="source">A pointer to the start of the data to upload.</param>
+        /// <param name="sizeInBytes">The number of bytes to upload. This value must match the total size of the texture region specified.</param>
+        /// <param name="x">The minimum X value of the updated region.</param>
+        /// <param name="y">The minimum Y value of the updated region.</param>
+        /// <param name="z">The minimum Z value of the updated region.</param>
+        /// <param name="width">The width of the updated region, in texels.</param>
+        /// <param name="height">The height of the updated region, in texels.</param>
+        /// <param name="depth">The depth of the updated region, in texels.</param>
+        /// <param name="mipLevel">The mipmap level to update. Must be less than the total number of mipmaps contained in the
+        /// <see cref="Texture"/>.</param>
+        /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
+        /// <see cref="Texture"/>.</param>
         public abstract void UpdateTexture(
             Texture texture,
             IntPtr source,
@@ -39,7 +161,21 @@ namespace Veldrid
             uint mipLevel,
             uint arrayLayer);
 
-        // Resource Update
+        /// <summary>
+        /// Updates a portion of a <see cref="Texture"/> resource with new data. This function operates on cubemap textures.
+        /// </summary>
+        /// <param name="texture">The resource to update.</param>
+        /// <param name="source">A pointer to the start of the data to upload.</param>
+        /// <param name="sizeInBytes">The number of bytes to upload. This value must match the total size of the texture region specified.</param>
+        /// <param name="face">The <see cref="CubeFace"/> into which the texture data is uploaded.</param>
+        /// <param name="x">The minimum X value of the updated region.</param>
+        /// <param name="y">The minimum Y value of the updated region.</param>
+        /// <param name="width">The width of the updated region, in texels.</param>
+        /// <param name="height">The height of the updated region, in texels.</param>
+        /// <param name="mipLevel">The mipmap level to update. Must be less than the total number of mipmaps contained in the
+        /// <see cref="Texture"/>.</param>
+        /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
+        /// <see cref="Texture"/>.</param>
         public abstract void UpdateTextureCube(
             Texture texture,
             IntPtr source,
@@ -52,6 +188,15 @@ namespace Veldrid
             uint mipLevel,
             uint arrayLayer);
 
+        /// <summary>
+        /// Updates a <see cref="Buffer"/> region with new data.
+        /// This function must be used with a blittable value type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of data to upload.</typeparam>
+        /// <param name="buffer">The resource to update.</param>
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/> storage, at
+        /// which new data will be uploaded.</param>
+        /// <param name="source">The value to upload.</param>
         public unsafe void UpdateBuffer<T>(
             Buffer buffer,
             uint bufferOffsetInBytes,
@@ -64,6 +209,15 @@ namespace Veldrid
             }
         }
 
+        /// <summary>
+        /// Updates a <see cref="Buffer"/> region with new data.
+        /// This function must be used with a blittable value type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of data to upload.</typeparam>
+        /// <param name="buffer">The resource to update.</param>
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// which new data will be uploaded.</param>
+        /// <param name="source">A reference to the single value to upload.</param>
         public unsafe void UpdateBuffer<T>(
             Buffer buffer,
             uint bufferOffsetInBytes,
@@ -76,6 +230,16 @@ namespace Veldrid
             }
         }
 
+        /// <summary>
+        /// Updates a <see cref="Buffer"/> region with new data.
+        /// This function must be used with a blittable value type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of data to upload.</typeparam>
+        /// <param name="buffer">The resource to update.</param>
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// which new data will be uploaded.</param>
+        /// <param name="source">A reference to the first of a series of values to upload.</param>
+        /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
         public unsafe void UpdateBuffer<T>(
             Buffer buffer,
             uint bufferOffsetInBytes,
@@ -89,6 +253,15 @@ namespace Veldrid
             }
         }
 
+        /// <summary>
+        /// Updates a <see cref="Buffer"/> region with new data.
+        /// This function must be used with a blittable value type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of data to upload.</typeparam>
+        /// <param name="buffer">The resource to update.</param>
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// which new data will be uploaded.</param>
+        /// <param name="source">An array containing the data to upload.</param>
         public unsafe void UpdateBuffer<T>(
             Buffer buffer,
             uint bufferOffsetInBytes,
@@ -99,12 +272,23 @@ namespace Veldrid
             gch.Free();
         }
 
+        /// <summary>
+        /// Updates a <see cref="Buffer"/> region with new data.
+        /// </summary>
+        /// <param name="buffer">The resource to update.</param>
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// which new data will be uploaded.</param>
+        /// <param name="source">A pointer to the start of the data to upload.</param>
+        /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
         public abstract void UpdateBuffer(
             Buffer buffer,
             uint bufferOffsetInBytes,
             IntPtr source,
             uint sizeInBytes);
 
+        /// <summary>
+        /// Frees unmanaged device resources controlled by this instance.
+        /// </summary>
         public abstract void Dispose();
     }
 }

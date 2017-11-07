@@ -17,7 +17,7 @@ namespace Veldrid.NeoDemo.Objects
             _disposeCollector = factory.DisposeCollector;
 
             ResourceLayout resourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("SourceTexture", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("SourceTexture", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("SourceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             PipelineDescription pd = new PipelineDescription(
@@ -25,7 +25,7 @@ namespace Veldrid.NeoDemo.Objects
                     RgbaFloat.Black,
                     BlendAttachmentDescription.OverrideBlend),
                 DepthStencilStateDescription.Disabled,
-                new RasterizerStateDescription(FaceCullMode.None, TriangleFillMode.Solid, FrontFace.Clockwise, true, true),
+                new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, true),
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(
                     new VertexLayoutDescription[]

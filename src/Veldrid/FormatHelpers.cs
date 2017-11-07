@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace Veldrid
+﻿namespace Veldrid
 {
-    public static class FormatHelpers
+    internal static class FormatHelpers
     {
         public static uint GetSizeInBytes(PixelFormat format)
         {
@@ -22,7 +20,7 @@ namespace Veldrid
             }
         }
 
-        internal static uint GetSizeInBytes(VertexElementFormat format)
+        public static uint GetSizeInBytes(VertexElementFormat format)
         {
             switch (format)
             {
@@ -44,7 +42,7 @@ namespace Veldrid
             }
         }
 
-        internal static int GetElementCount(VertexElementFormat format)
+        public static int GetElementCount(VertexElementFormat format)
         {
             switch (format)
             {

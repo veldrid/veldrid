@@ -22,10 +22,10 @@
                 int slot;
                 switch (elements[i].Kind)
                 {
-                    case ResourceKind.Uniform:
+                    case ResourceKind.UniformBuffer:
                         slot = cbIndex++;
                         break;
-                    case ResourceKind.Texture:
+                    case ResourceKind.TextureView:
                         slot = texIndex++;
                         break;
                     case ResourceKind.Sampler:

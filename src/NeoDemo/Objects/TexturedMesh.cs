@@ -110,10 +110,10 @@ namespace Veldrid.NeoDemo.Objects
             ResourceLayout projViewCombinedLayout = StaticResourceCache.GetResourceLayout(
                 gd.ResourceFactory,
                 new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("ViewProjection", ResourceKind.Uniform, ShaderStages.Vertex)));
+                    new ResourceLayoutElementDescription("ViewProjection", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
             ResourceLayout worldLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("World", ResourceKind.Uniform, ShaderStages.Vertex)));
+                new ResourceLayoutElementDescription("World", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
             PipelineDescription depthPD = new PipelineDescription(
                 BlendStateDescription.Empty,
@@ -148,25 +148,25 @@ namespace Veldrid.NeoDemo.Objects
                 StaticResourceCache.ProjViewLayoutDescription);
 
             ResourceLayout mainSharedLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("LightViewProjection1", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("LightViewProjection2", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("LightViewProjection3", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("DepthLimits", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("LightInfo", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("CameraInfo", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("PointLights", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment)));
+                new ResourceLayoutElementDescription("LightViewProjection1", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("LightViewProjection2", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("LightViewProjection3", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("DepthLimits", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("LightInfo", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("CameraInfo", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("PointLights", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment)));
 
             ResourceLayout mainPerObjectLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("World", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("InverseTransposeWorld", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("MaterialProperties", ResourceKind.Uniform, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("World", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("InverseTransposeWorld", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("MaterialProperties", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("RegularSampler", ResourceKind.Sampler, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("AlphaMap", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("AlphaMap", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("AlphaMapSampler", ResourceKind.Sampler, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("ShadowMapNear", ResourceKind.Texture, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("ShadowMapMid", ResourceKind.Texture, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("ShadowMapFar", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ShadowMapNear", ResourceKind.TextureView, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ShadowMapMid", ResourceKind.TextureView, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ShadowMapFar", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("ShadowMapSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             PipelineDescription mainPD = new PipelineDescription(

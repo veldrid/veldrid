@@ -16,7 +16,7 @@ namespace Veldrid.NeoDemo.Objects
             _disposeCollector = factory.DisposeCollector;
 
             ResourceLayout resourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("SourceTexture", ResourceKind.Texture, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("SourceTexture", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("SourceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
             PipelineDescription pd = new PipelineDescription(

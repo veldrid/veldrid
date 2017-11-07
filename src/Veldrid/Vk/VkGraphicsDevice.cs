@@ -378,8 +378,10 @@ namespace Veldrid.Vk
             GetQueueFamilyIndices();
 
             HashSet<uint> familyIndices = new HashSet<uint> { _graphicsQueueIndex, _presentQueueIndex };
-            RawList<VkDeviceQueueCreateInfo> queueCreateInfos = new RawList<VkDeviceQueueCreateInfo>();
+            VkDeviceQueueCreateInfo* queueCreateInfos = stackalloc VkDeviceQueueCreateInfo[familyIndices.Count];
+            uint queueCreateInfosCount = (uint)familyIndices.Count;
 
+            int i = 0;
             foreach (uint index in familyIndices)
             {
                 VkDeviceQueueCreateInfo queueCreateInfo = VkDeviceQueueCreateInfo.New();
@@ -387,7 +389,8 @@ namespace Veldrid.Vk
                 queueCreateInfo.queueCount = 1;
                 float priority = 1f;
                 queueCreateInfo.pQueuePriorities = &priority;
-                queueCreateInfos.Add(queueCreateInfo);
+                queueCreateInfos[i] = queueCreateInfo;
+                i += 1;
             }
 
             VkPhysicalDeviceFeatures deviceFeatures = new VkPhysicalDeviceFeatures();
@@ -406,43 +409,38 @@ namespace Veldrid.Vk
             result = vkEnumerateDeviceExtensionProperties(_physicalDevice, (byte*)null, &propertyCount, properties);
             CheckResult(result);
 
-            for (int i = 0; i < propertyCount; i++)
+            for (int property = 0; property < propertyCount; property++)
             {
-                if (Util.GetString(properties[i].extensionName) == "VK_EXT_debug_marker")
+                if (Util.GetString(properties[property].extensionName) == "VK_EXT_debug_marker")
                 {
-                    Console.WriteLine("VK_EXT_debug_marker is available.");
                     debugMarkerSupported = true;
                     break;
                 }
             }
 
             VkDeviceCreateInfo deviceCreateInfo = VkDeviceCreateInfo.New();
+            deviceCreateInfo.queueCreateInfoCount = queueCreateInfosCount;
+            deviceCreateInfo.pQueueCreateInfos = queueCreateInfos;
 
-            fixed (VkDeviceQueueCreateInfo* qciPtr = &queueCreateInfos.Items[0])
+            deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+
+            StackList<IntPtr> layerNames = new StackList<IntPtr>();
+            layerNames.Add(CommonStrings.StandardValidationLayerName);
+            deviceCreateInfo.enabledLayerCount = layerNames.Count;
+            deviceCreateInfo.ppEnabledLayerNames = (byte**)layerNames.Data;
+
+            StackList<IntPtr> extensionNames = new StackList<IntPtr>();
+            extensionNames.Add(CommonStrings.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+            if (debugMarkerSupported)
             {
-                deviceCreateInfo.pQueueCreateInfos = qciPtr;
-                deviceCreateInfo.queueCreateInfoCount = queueCreateInfos.Count;
-
-                deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
-
-                StackList<IntPtr> layerNames = new StackList<IntPtr>();
-                layerNames.Add(CommonStrings.StandardValidationLayerName);
-                deviceCreateInfo.enabledLayerCount = layerNames.Count;
-                deviceCreateInfo.ppEnabledLayerNames = (byte**)layerNames.Data;
-
-                StackList<IntPtr> extensionNames = new StackList<IntPtr>();
-                extensionNames.Add(CommonStrings.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-                if (debugMarkerSupported)
-                {
-                    extensionNames.Add(CommonStrings.VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
-                    _debugMarkerEnabled = true;
-                }
-                deviceCreateInfo.enabledExtensionCount = extensionNames.Count;
-                deviceCreateInfo.ppEnabledExtensionNames = (byte**)extensionNames.Data;
-
-                result = vkCreateDevice(_physicalDevice, ref deviceCreateInfo, null, out _device);
-                CheckResult(result);
+                extensionNames.Add(CommonStrings.VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
+                _debugMarkerEnabled = true;
             }
+            deviceCreateInfo.enabledExtensionCount = extensionNames.Count;
+            deviceCreateInfo.ppEnabledExtensionNames = (byte**)extensionNames.Data;
+
+            result = vkCreateDevice(_physicalDevice, ref deviceCreateInfo, null, out _device);
+            CheckResult(result);
 
             vkGetDeviceQueue(_device, _graphicsQueueIndex, 0, out _graphicsQueue);
             vkGetDeviceQueue(_device, _presentQueueIndex, 0, out _presentQueue);

@@ -240,7 +240,7 @@ namespace Veldrid.OpenGL
         }
     }
 
-    public struct SetBindingsInfo
+    internal struct SetBindingsInfo
     {
         private readonly Dictionary<uint, OpenGLUniformBinding> _uniformBindings;
         private readonly Dictionary<uint, OpenGLTextureBindingSlotInfo> _textureBindings;
@@ -290,7 +290,7 @@ namespace Veldrid.OpenGL
         }
     }
 
-    public struct OpenGLTextureBindingSlotInfo
+    internal struct OpenGLTextureBindingSlotInfo
     {
         /// <summary>
         /// The relative index of this binding with relation to the other textures used by a shader.
@@ -303,7 +303,7 @@ namespace Veldrid.OpenGL
         public int UniformLocation;
     }
 
-    public class OpenGLUniformBinding
+    internal class OpenGLUniformBinding
     {
         public uint Program { get; }
         public uint BlockLocation { get; }

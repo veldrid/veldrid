@@ -2,7 +2,7 @@
 
 namespace Veldrid.OpenGL
 {
-    public class OpenGLExtensions
+    internal class OpenGLExtensions
     {
         private readonly HashSet<string> _extensions;
 

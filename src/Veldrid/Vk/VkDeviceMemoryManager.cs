@@ -7,7 +7,7 @@ using System;
 
 namespace Veldrid.Vk
 {
-    public unsafe class VkDeviceMemoryManager : IDisposable
+    internal unsafe class VkDeviceMemoryManager : IDisposable
     {
         private readonly VkDevice _device;
         private readonly VkPhysicalDevice _physicalDevice;
@@ -280,7 +280,7 @@ namespace Veldrid.Vk
     }
 
     [DebuggerDisplay("[Mem:{DeviceMemory.Handle}] Off:{Offset}, Size:{Size}")]
-    public unsafe class VkMemoryBlock
+    internal unsafe class VkMemoryBlock
     {
         public readonly uint MemoryTypeIndex;
         public readonly VkDeviceMemory DeviceMemory;

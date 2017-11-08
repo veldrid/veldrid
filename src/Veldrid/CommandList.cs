@@ -22,6 +22,11 @@ namespace Veldrid
     /// </summary>
     public abstract class CommandList : DeviceResource, IDisposable
     {
+        /// <summary>
+        /// The active <see cref="Framebuffer"/>.
+        /// </summary>
+        protected Framebuffer _framebuffer;
+
         internal CommandList(ref CommandListDescription description)
         {
         }
@@ -77,7 +82,20 @@ namespace Veldrid
         /// A compatible <see cref="Pipeline"/> has the same number of output attachments with matching formats.
         /// </summary>
         /// <param name="fb">The new <see cref="Framebuffer"/>.</param>
-        public abstract void SetFramebuffer(Framebuffer fb);
+        public void SetFramebuffer(Framebuffer fb)
+        {
+            if (_framebuffer != fb)
+            {
+                _framebuffer = fb;
+                SetFramebufferCore(fb);
+            }
+        }
+
+        /// <summary>
+        /// Performs API-specific handling of the <see cref="Framebuffer"/> resource.
+        /// </summary>
+        /// <param name="fb"></param>
+        protected abstract void SetFramebufferCore(Framebuffer fb);
 
         /// <summary>
         /// Clears the color target at the given index of the active <see cref="Framebuffer"/>.
@@ -95,6 +113,28 @@ namespace Veldrid
         public abstract void ClearDepthTarget(float depth);
 
         /// <summary>
+        /// Sets all active viewports to cover the entire active <see cref="Framebuffer"/>.
+        /// </summary>
+        public void SetFullViewports()
+        {
+            SetViewport(0, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
+
+            for (uint index = 1; index < _framebuffer.ColorTextures.Count; index++)
+            {
+                SetViewport(index, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
+            }
+        }
+
+        /// <summary>
+        /// Sets the active viewport at the given index to cover the entire active <see cref="Framebuffer"/>.
+        /// </summary>
+        /// <param name="index">The color target index.</param>
+        public void SetFullViewport(uint index)
+        {
+            SetViewport(index, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
+        }
+
+        /// <summary>
         /// Sets the active <see cref="Viewport"/> at the given index.
         /// The index given must be less than the number of color attachments in the active <see cref="Framebuffer"/>.
         /// </summary>
@@ -109,6 +149,28 @@ namespace Veldrid
         /// <param name="index">The color target index.</param>
         /// <param name="viewport">The new <see cref="Viewport"/>.</param>
         public abstract void SetViewport(uint index, ref Viewport viewport);
+
+        /// <summary>
+        /// Sets all active scissor rectangles to cover the active <see cref="Framebuffer"/>.
+        /// </summary>
+        public void SetFullScissorRects()
+        {
+            SetScissorRect(0, 0, 0, _framebuffer.Width, _framebuffer.Height);
+
+            for (uint index = 1; index < _framebuffer.ColorTextures.Count; index++)
+            {
+                SetScissorRect(index, 0, 0, _framebuffer.Width, _framebuffer.Height);
+            }
+        }
+
+        /// <summary>
+        /// Sets the active scissor rectangle at the given index to cover the active <see cref="Framebuffer"/>.
+        /// </summary>
+        /// <param name="index">The color target index.</param>
+        public void SetFullScissorRect(uint index)
+        {
+            SetScissorRect(index, 0, 0, _framebuffer.Width, _framebuffer.Height);
+        }
 
         /// <summary>
         /// Sets the active scissor rectangle at the given index.

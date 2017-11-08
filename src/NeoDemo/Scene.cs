@@ -110,8 +110,8 @@ namespace Veldrid.NeoDemo
                 out BoundingFrustum lightFrustum);
             cl.UpdateBuffer(sc.LightViewProjectionBuffer0, 0, ref viewProj0);
             cl.SetFramebuffer(sc.NearShadowMapFramebuffer);
-            cl.SetViewport(0, new Viewport(0, 0, sc.NearShadowMapTexture.Width, sc.NearShadowMapTexture.Height, 0, 1));
-            cl.SetScissorRect(0, 0, 0, sc.NearShadowMapTexture.Width, sc.NearShadowMapTexture.Height);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
             cl.ClearDepthTarget(01f);
             Render(gd, cl, sc, RenderPasses.ShadowMapNear, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
@@ -124,8 +124,8 @@ namespace Veldrid.NeoDemo
                 out lightFrustum);
             cl.UpdateBuffer(sc.LightViewProjectionBuffer1, 0, ref viewProj1);
             cl.SetFramebuffer(sc.MidShadowMapFramebuffer);
-            cl.SetViewport(0, new Viewport(0, 0, sc.MidShadowMapTexture.Width, sc.MidShadowMapTexture.Height, 0, 1));
-            cl.SetScissorRect(0, 0, 0, sc.MidShadowMapTexture.Width, sc.MidShadowMapTexture.Height);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
             cl.ClearDepthTarget(1f);
             Render(gd, cl, sc, RenderPasses.ShadowMapMid, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
@@ -138,8 +138,8 @@ namespace Veldrid.NeoDemo
                 out lightFrustum);
             cl.UpdateBuffer(sc.LightViewProjectionBuffer2, 0, ref viewProj2);
             cl.SetFramebuffer(sc.FarShadowMapFramebuffer);
-            cl.SetViewport(0, new Viewport(0, 0, sc.FarShadowMapTexture.Width, sc.FarShadowMapTexture.Height, 0, 1));
-            cl.SetScissorRect(0, 0, 0, sc.FarShadowMapTexture.Width, sc.FarShadowMapTexture.Height);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
             cl.ClearDepthTarget(1f);
             Render(gd, cl, sc, RenderPasses.ShadowMapFar, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
@@ -147,8 +147,8 @@ namespace Veldrid.NeoDemo
             float fbWidth = sc.MainSceneFramebuffer.Width;
             float fbHeight = sc.MainSceneFramebuffer.Height;
             cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
-            cl.SetScissorRect(0, 0, 0, (uint)fbWidth, (uint)fbHeight);
-            cl.ClearColorTarget(0, RgbaFloat.CornflowerBlue);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
             cl.ClearDepthTarget(1f);
             BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
             Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
@@ -158,17 +158,15 @@ namespace Veldrid.NeoDemo
             cl.SetFramebuffer(sc.DuplicatorFramebuffer);
             fbWidth = sc.DuplicatorFramebuffer.Width;
             fbHeight = sc.DuplicatorFramebuffer.Height;
-            cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
-            cl.SetViewport(1, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
-            cl.SetScissorRect(0, 0, 0, (uint)fbWidth, (uint)fbHeight);
-            cl.SetScissorRect(1, 0, 0, (uint)fbWidth, (uint)fbHeight);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
             Render(gd, cl, sc, RenderPasses.Duplicator, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             cl.SetFramebuffer(gd.SwapchainFramebuffer);
             fbWidth = gd.SwapchainFramebuffer.Width;
             fbHeight = gd.SwapchainFramebuffer.Height;
-            cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
-            cl.SetScissorRect(0, 0, 0, (uint)fbWidth, (uint)fbHeight);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
             Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             cl.End();

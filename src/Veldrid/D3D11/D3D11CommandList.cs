@@ -25,7 +25,6 @@ namespace Veldrid.D3D11
         // Cached pipeline State
         private D3D11Pipeline _pipeline;
         private IndexBuffer _ib;
-        private D3D11Framebuffer _fb;
         private BlendState _blendState;
         private DepthStencilState _depthStencilState;
         private RasterizerState _rasterizerState;
@@ -65,6 +64,8 @@ namespace Veldrid.D3D11
 
         internal DeviceContext DeviceContext => _context;
 
+        private D3D11Framebuffer D3D11Framebuffer => Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(_framebuffer);
+
         public override void Begin()
         {
             DeviceCommandList?.Dispose();
@@ -86,7 +87,7 @@ namespace Veldrid.D3D11
             _vertexStrides = null;
             Util.ClearArray(_vertexOffsets);
 
-            _fb = null;
+            _framebuffer = null;
 
             Util.ClearArray(_viewports);
             Util.ClearArray(_scissors);
@@ -563,29 +564,25 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void SetFramebuffer(Framebuffer fb)
+        protected override void SetFramebufferCore(Framebuffer fb)
         {
-            if (_fb != fb)
+            D3D11Framebuffer d3dFB = Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(fb);
+            if (d3dFB.IsSwapchainFramebuffer)
             {
-                D3D11Framebuffer d3dFB = Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(fb);
-                if (d3dFB.IsSwapchainFramebuffer)
-                {
-                    _gd.CommandListsReferencingSwapchain.Add(this);
-                }
-
-                _fb = d3dFB;
-                _context.OutputMerger.SetRenderTargets(d3dFB.DepthStencilView, d3dFB.RenderTargetViews);
+                _gd.CommandListsReferencingSwapchain.Add(this);
             }
+
+            _context.OutputMerger.SetRenderTargets(d3dFB.DepthStencilView, d3dFB.RenderTargetViews);
         }
 
         public override void ClearColorTarget(uint index, RgbaFloat clearColor)
         {
-            _context.ClearRenderTargetView(_fb.RenderTargetViews[index], new RawColor4(clearColor.R, clearColor.G, clearColor.B, clearColor.A));
+            _context.ClearRenderTargetView(D3D11Framebuffer.RenderTargetViews[index], new RawColor4(clearColor.R, clearColor.G, clearColor.B, clearColor.A));
         }
 
         public override void ClearDepthTarget(float depth)
         {
-            _context.ClearDepthStencilView(_fb.DepthStencilView, DepthStencilClearFlags.Depth, depth, 0);
+            _context.ClearDepthStencilView(D3D11Framebuffer.DepthStencilView, DepthStencilClearFlags.Depth, depth, 0);
         }
 
         public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)

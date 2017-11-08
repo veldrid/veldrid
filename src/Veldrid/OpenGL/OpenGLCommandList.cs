@@ -38,7 +38,7 @@ namespace Veldrid.OpenGL
             _commands.End();
         }
 
-        public override void SetFramebuffer(Framebuffer fb)
+        protected override void SetFramebufferCore(Framebuffer fb)
         {
             _commands.SetFramebuffer(fb);
         }

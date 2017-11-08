@@ -18,6 +18,7 @@ namespace Veldrid
     /// These limitations are described in each function, where applicable.
     /// <see cref="CommandList"/> instances cannot be executed multiple times per-recording. When executed by a
     /// <see cref="GraphicsDevice"/>, they must be reset and commands must be issued again.
+    /// See <see cref="CommandListDescription"/>.
     /// </summary>
     public abstract class CommandList : DeviceResource, IDisposable
     {

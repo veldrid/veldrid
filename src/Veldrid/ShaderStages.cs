@@ -9,7 +9,7 @@ namespace Veldrid
     public enum ShaderStages : byte
     {
         /// <summary>
-        /// No stage.
+        /// No stages.
         /// </summary>
         None = 0,
         /// <summary>

@@ -4,6 +4,7 @@ namespace Veldrid
 {
     /// <summary>
     /// A bindable device resource which provides a shader with access to a sampled <see cref="Texture"/> object.
+    /// See <see cref="TextureViewDescription"/>.
     /// </summary>
     public abstract class TextureView : BindableResource, IDisposable
     {

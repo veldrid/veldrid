@@ -4,6 +4,7 @@ namespace Veldrid
 {
     /// <summary>
     /// A device resource encapsulating a single shader module.
+    /// See <see cref="ShaderDescription"/>.
     /// </summary>
     public abstract class Shader : DeviceResource, IDisposable
     {

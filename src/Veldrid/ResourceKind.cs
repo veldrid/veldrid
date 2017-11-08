@@ -6,15 +6,15 @@
     public enum ResourceKind : byte
     {
         /// <summary>
-        /// A <see cref="UniformBuffer"/>.
+        /// A <see cref="Veldrid.UniformBuffer"/>.
         /// </summary>
         UniformBuffer,
         /// <summary>
-        /// A <see cref="TextureView"/>.
+        /// A <see cref="Veldrid.TextureView"/>.
         /// </summary>
         TextureView,
         /// <summary>
-        /// A <see cref="Sampler"/>.
+        /// A <see cref="Veldrid.Sampler"/>.
         /// </summary>
         Sampler,
     }

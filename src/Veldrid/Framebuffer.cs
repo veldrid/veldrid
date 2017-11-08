@@ -5,6 +5,7 @@ namespace Veldrid
 {
     /// <summary>
     /// A device resource used to control which color and depth textures are rendered to.
+    /// See <see cref="FramebufferDescription"/>.
     /// </summary>
     public abstract class Framebuffer : DeviceResource, IDisposable
     {

@@ -2,6 +2,7 @@
 {
     /// <summary>
     /// A <see cref="Buffer"/> object which can be used to store index data.
+    /// See <see cref="IndexBufferDescription"/>.
     /// </summary>
     public interface IndexBuffer : Buffer
     {

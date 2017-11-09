@@ -261,7 +261,7 @@ namespace Veldrid.Vk
             {
                 VkPipeline vkPipeline = Util.AssertSubtype<Pipeline, VkPipeline>(pipeline);
                 Util.EnsureArraySize(ref _currentResourceSets, vkPipeline.ResourceSetCount);
-                Util.ClearArray(_currentResourceSets); // TODO: Cache this information per-pipeline rather than wiping it.
+                Util.ClearArray(_currentResourceSets);
                 Util.EnsureArraySize(ref _resourceSetsChanged, vkPipeline.ResourceSetCount);
                 vkCmdBindPipeline(_cb, VkPipelineBindPoint.Graphics, vkPipeline.DevicePipeline);
                 _currentPipeline = vkPipeline;

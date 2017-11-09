@@ -557,6 +557,45 @@ namespace Veldrid.Vk
             vkQueueWaitIdle(_graphicsQueue);
             FlushQueuedDisposables();
         }
+
+        public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
+        {
+            VkImageUsageFlags usageFlags = VkImageUsageFlags.Sampled;
+            usageFlags |= depthFormat ? VkImageUsageFlags.DepthStencilAttachment : VkImageUsageFlags.ColorAttachment;
+
+            vkGetPhysicalDeviceImageFormatProperties(
+                _physicalDevice,
+                VkFormats.VdToVkPixelFormat(format),
+                VkImageType.Image2D,
+                VkImageTiling.Optimal,
+                usageFlags,
+                VkImageCreateFlags.None,
+                out VkImageFormatProperties formatProperties);
+
+            VkSampleCountFlags vkSampleCounts = formatProperties.sampleCounts;
+            if ((vkSampleCounts & VkSampleCountFlags.Count32) == VkSampleCountFlags.Count32)
+            {
+                return TextureSampleCount.Count32;
+            }
+            else if ((vkSampleCounts & VkSampleCountFlags.Count16) == VkSampleCountFlags.Count16)
+            {
+                return TextureSampleCount.Count16;
+            }
+            else if ((vkSampleCounts & VkSampleCountFlags.Count8) == VkSampleCountFlags.Count8)
+            {
+                return TextureSampleCount.Count8;
+            }
+            else if ((vkSampleCounts & VkSampleCountFlags.Count4) == VkSampleCountFlags.Count4)
+            {
+                return TextureSampleCount.Count4;
+            }
+            else if ((vkSampleCounts & VkSampleCountFlags.Count2) == VkSampleCountFlags.Count2)
+            {
+                return TextureSampleCount.Count2;
+            }
+
+            return TextureSampleCount.Count1;
+        }
     }
 
     internal unsafe delegate VkResult vkCreateDebugReportCallbackEXT_d(

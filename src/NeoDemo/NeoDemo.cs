@@ -30,6 +30,9 @@ namespace Veldrid.NeoDemo
 
         private event Action<int, int> _resizeHandled;
 
+        private readonly string[] _msaaOptions = new string[] { "Off", "2x", "4x", "8x", "16x", "32x" };
+        private int _msaaOption = 0;
+
         public NeoDemo()
         {
             WindowCreateInfo windowCI = new WindowCreateInfo
@@ -133,6 +136,7 @@ namespace Veldrid.NeoDemo
 
         private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
         private FullScreenQuad _fsq;
+        private TextureSampleCount? _newSampleCount;
 
         private ImageSharpTexture LoadTexture(string texturePath, bool mipmap) // Plz don't call this with the same texturePath and different mipmap values.
         {
@@ -216,6 +220,15 @@ namespace Veldrid.NeoDemo
                         }
                         ImGui.EndMenu();
                     }
+                    if (ImGui.BeginMenu("MSAA"))
+                    {
+                        if (ImGui.Combo("MSAA", ref _msaaOption, _msaaOptions))
+                        {
+                            ChangeMsaa(_msaaOption);
+                        }
+
+                        ImGui.EndMenu();
+                    }
                     bool isFullscreen = _window.WindowState == WindowState.BorderlessFullScreen;
                     if (ImGui.MenuItem("Fullscreen", "F11", isFullscreen, true))
                     {
@@ -289,6 +302,12 @@ namespace Veldrid.NeoDemo
             _window.Title = _gd.BackendType.ToString();
         }
 
+        private void ChangeMsaa(int msaaOption)
+        {
+            TextureSampleCount sampleCount = (TextureSampleCount)msaaOption;
+            _newSampleCount = sampleCount;
+        }
+
         private void RefreshDeviceObjects(int numTimes)
         {
             for (int i = 0; i < numTimes; i++)
@@ -336,7 +355,16 @@ namespace Veldrid.NeoDemo
                 cl.Dispose();
             }
 
+            if (_newSampleCount != null)
+            {
+                _sc.MainSceneSampleCount = _newSampleCount.Value;
+                _newSampleCount = null;
+                DestroyAllObjects();
+                CreateAllObjects();
+            }
+
             _frameCommands.Begin();
+
             CommonMaterials.FlushAll(_frameCommands);
             _sc.UpdateCameraBuffers(_frameCommands); // Meh
 

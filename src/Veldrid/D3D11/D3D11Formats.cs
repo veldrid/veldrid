@@ -117,7 +117,6 @@ namespace Veldrid.D3D11
                 case 8: return TextureSampleCount.Count8;
                 case 16: return TextureSampleCount.Count16;
                 case 32: return TextureSampleCount.Count32;
-                case 64: return TextureSampleCount.Count64;
                 default: throw new VeldridException("Unsupported multisample count: " + sampleDescription.Count);
             }
         }

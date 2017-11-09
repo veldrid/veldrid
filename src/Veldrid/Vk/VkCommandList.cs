@@ -149,7 +149,7 @@ namespace Veldrid.Vk
             vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
-        public override void ResolveTexture(Texture source, Texture destination)
+        protected override void ResolveTextureCore(Texture source, Texture destination)
         {
             if (_activeRenderPass != VkRenderPass.Null)
             {

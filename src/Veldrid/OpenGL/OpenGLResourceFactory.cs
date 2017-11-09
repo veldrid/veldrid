@@ -1,4 +1,8 @@
-﻿namespace Veldrid.OpenGL
+﻿using static Veldrid.OpenGLBinding.OpenGLNative;
+using Veldrid.OpenGL;
+using Veldrid.OpenGLBinding;
+
+namespace Veldrid.OpenGL
 {
     internal class OpenGLResourceFactory : ResourceFactory
     {
@@ -7,7 +11,7 @@
 
         public override GraphicsBackend BackendType => GraphicsBackend.OpenGL;
 
-        public OpenGLResourceFactory(OpenGLGraphicsDevice gd)
+        public unsafe OpenGLResourceFactory(OpenGLGraphicsDevice gd)
         {
             _gd = gd;
         }

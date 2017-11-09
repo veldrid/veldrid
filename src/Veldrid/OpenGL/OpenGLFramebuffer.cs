@@ -11,6 +11,8 @@ namespace Veldrid.OpenGL
 
         private string _name;
         private bool _nameChanged;
+        private bool _disposed;
+
         public string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public uint Framebuffer => _framebuffer;
@@ -119,9 +121,13 @@ namespace Veldrid.OpenGL
 
         public void DestroyGLResources()
         {
-            uint framebuffer = _framebuffer;
-            glDeleteFramebuffers(1, ref framebuffer);
-            CheckLastError();
+            if (!_disposed)
+            {
+                _disposed = true;
+                uint framebuffer = _framebuffer;
+                glDeleteFramebuffers(1, ref framebuffer);
+                CheckLastError();
+            }
         }
     }
 }

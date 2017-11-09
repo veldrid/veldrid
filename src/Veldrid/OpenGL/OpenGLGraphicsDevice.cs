@@ -24,6 +24,7 @@ namespace Veldrid.OpenGL
 
         private readonly Action<IntPtr> _makeCurrent;
         private int _contextCurrentThreadID;
+        private readonly TextureSampleCount _maxColorTextureSamples;
 
         public override GraphicsBackend BackendType => GraphicsBackend.OpenGL;
 
@@ -83,6 +84,34 @@ namespace Veldrid.OpenGL
             _extensions = new OpenGLExtensions(extensions);
             _commandExecutor = new OpenGLCommandExecutor(_extensions);
 
+            int maxColorTextureSamples;
+            glGetIntegerv(GetPName.MaxColorTextureSamples, &maxColorTextureSamples);
+            OpenGLUtil.CheckLastError();
+            if (maxColorTextureSamples >= 32)
+            {
+                _maxColorTextureSamples = TextureSampleCount.Count32;
+            }
+            else if (maxColorTextureSamples >= 16)
+            {
+                _maxColorTextureSamples = TextureSampleCount.Count16;
+            }
+            else if (maxColorTextureSamples >= 8)
+            {
+                _maxColorTextureSamples = TextureSampleCount.Count8;
+            }
+            else if (maxColorTextureSamples >= 4)
+            {
+                _maxColorTextureSamples = TextureSampleCount.Count4;
+            }
+            else if (maxColorTextureSamples >= 2)
+            {
+                _maxColorTextureSamples = TextureSampleCount.Count2;
+            }
+            else
+            {
+                _maxColorTextureSamples = TextureSampleCount.Count1;
+            }
+
             PostDeviceCreated();
         }
 
@@ -140,6 +169,11 @@ namespace Veldrid.OpenGL
         public override void WaitForIdle()
         {
             FlushDisposables();
+        }
+
+        public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
+        {
+            return _maxColorTextureSamples;
         }
 
         internal void EnqueueDisposal(OpenGLDeferredResource resource)

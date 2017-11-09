@@ -49,6 +49,7 @@ namespace Veldrid.NeoDemo
 
         public Camera Camera { get; set; }
         public DirectionalLight DirectionalLight { get; } = new DirectionalLight();
+        public TextureSampleCount MainSceneSampleCount { get; internal set; }
 
         public virtual void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
@@ -168,6 +169,10 @@ namespace Veldrid.NeoDemo
 
             ResourceFactory factory = gd.ResourceFactory;
 
+            TextureSampleCount mainSceneSampleCountCapped = (TextureSampleCount)Math.Min(
+                (int)gd.GetSampleCountLimit(PixelFormat.R8_G8_B8_A8_UNorm, false), 
+                (int)MainSceneSampleCount);
+
             TextureDescription mainColorDesc = new TextureDescription(
                 gd.SwapchainFramebuffer.Width,
                 gd.SwapchainFramebuffer.Height,
@@ -176,11 +181,18 @@ namespace Veldrid.NeoDemo
                 1,
                 PixelFormat.R8_G8_B8_A8_UNorm,
                 TextureUsage.RenderTarget | TextureUsage.Sampled,
-                TextureSampleCount.Count8);
+                mainSceneSampleCountCapped);
 
             MainSceneColorTexture = factory.CreateTexture(ref mainColorDesc);
-            mainColorDesc.SampleCount = TextureSampleCount.Count1;
-            MainSceneResolvedColorTexture = factory.CreateTexture(ref mainColorDesc);
+            if (mainSceneSampleCountCapped != TextureSampleCount.Count1)
+            {
+                mainColorDesc.SampleCount = TextureSampleCount.Count1;
+                MainSceneResolvedColorTexture = factory.CreateTexture(ref mainColorDesc);
+            }
+            else
+            {
+                MainSceneResolvedColorTexture = MainSceneColorTexture;
+            }
             MainSceneResolvedColorView = factory.CreateTextureView(MainSceneResolvedColorTexture);
             MainSceneDepthTexture = factory.CreateTexture(new TextureDescription(
                 gd.SwapchainFramebuffer.Width,
@@ -190,7 +202,7 @@ namespace Veldrid.NeoDemo
                 1,
                 PixelFormat.R16_UNorm,
                 TextureUsage.DepthStencil,
-                TextureSampleCount.Count8));
+                mainSceneSampleCountCapped));
             MainSceneFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(MainSceneDepthTexture, MainSceneColorTexture));
             MainSceneViewResourceSet = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, MainSceneResolvedColorView, gd.PointSampler));
 

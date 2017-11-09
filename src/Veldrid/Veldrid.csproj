@@ -6,6 +6,7 @@
     <AssemblyVersion>4.0.0</AssemblyVersion>
     <DocumentationFile>$(BinDir)\$(AssemblyName).xml</DocumentationFile>
     <NoWarn Condition="'$(Configuration)' == 'Debug'">1591</NoWarn>
+    <DefineConstants Condition="'$(Configuration)' == 'Debug'">$(DefineConstants);VALIDATE_USAGE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

@@ -107,8 +107,6 @@ namespace Veldrid.Vk
                     return VkSampleCountFlags.Count16;
                 case TextureSampleCount.Count32:
                     return VkSampleCountFlags.Count32;
-                case TextureSampleCount.Count64:
-                    return VkSampleCountFlags.Count64;
                 default:
                     throw Illegal.Value<TextureSampleCount>();
             }

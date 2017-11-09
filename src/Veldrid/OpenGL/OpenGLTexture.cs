@@ -14,6 +14,7 @@ namespace Veldrid.OpenGL
 
         private string _name;
         private bool _nameChanged;
+        private bool _disposed;
 
         public string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
@@ -169,6 +170,7 @@ namespace Veldrid.OpenGL
                         GLPixelFormat,
                         GLPixelType,
                         null);
+                    CheckLastError();
 
                     levelWidth = Math.Max(1, levelWidth / 2);
                     levelHeight = Math.Max(1, levelHeight / 2);
@@ -183,6 +185,7 @@ namespace Veldrid.OpenGL
                     Width,
                     Height,
                     false);
+                CheckLastError();
             }
             else if (TextureTarget == TextureTarget.Texture2DMultisampleArray)
             {
@@ -194,6 +197,7 @@ namespace Veldrid.OpenGL
                     Height,
                     ArrayLayers,
                     false);
+                CheckLastError();
             }
             else if (TextureTarget == TextureTarget.TextureCubeMap)
             {
@@ -331,12 +335,17 @@ namespace Veldrid.OpenGL
 
         public void DestroyGLResources()
         {
-            glDeleteTextures(1, ref _texture);
-            CheckLastError();
-
-            if (_framebuffer != 0)
+            if (!_disposed)
             {
-                glDeleteFramebuffers(1, ref _framebuffer);
+                _disposed = true;
+
+                glDeleteTextures(1, ref _texture);
+                CheckLastError();
+
+                if (_framebuffer != 0)
+                {
+                    glDeleteFramebuffers(1, ref _framebuffer);
+                }
             }
         }
     }

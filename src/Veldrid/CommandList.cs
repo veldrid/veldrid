@@ -200,7 +200,32 @@ namespace Veldrid
         /// (<see cref="Texture.SampleCount"/> > 1).</param>
         /// <param name="destination">The destination of the resolve operation. Must be a non-multisampled <see cref="Texture"/>
         /// (<see cref="Texture.SampleCount"/> == 1).</param>
-        public abstract void ResolveTexture(Texture source, Texture destination);
+        public void ResolveTexture(Texture source, Texture destination)
+        {
+#if VALIDATE_USAGE
+            if (source.SampleCount == TextureSampleCount.Count1)
+            {
+                throw new VeldridException(
+                    $"The {nameof(source)} parameter of {nameof(ResolveTexture)} must be a multisample texture.");
+            }
+            if (destination.SampleCount != TextureSampleCount.Count1)
+            {
+                throw new VeldridException(
+                    $"The {nameof(destination)} parameter of {nameof(ResolveTexture)} must be a non-multisample texture. Instead, it is a texture with {FormatHelpers.GetSampleCountUInt32(source.SampleCount)} samples.");
+            }
+#endif
+
+            ResolveTextureCore(source, destination);
+        }
+
+        /// <summary>
+        /// Resolves a multisampled source <see cref="Texture"/> into a non-multisampled destination <see cref="Texture"/>.
+        /// </summary>
+        /// <param name="source">The source of the resolve operation. Must be a multisampled <see cref="Texture"/>
+        /// (<see cref="Texture.SampleCount"/> > 1).</param>
+        /// <param name="destination">The destination of the resolve operation. Must be a non-multisampled <see cref="Texture"/>
+        /// (<see cref="Texture.SampleCount"/> == 1).</param>
+        protected abstract void ResolveTextureCore(Texture source, Texture destination);
 
         /// <summary>
         /// Updates a portion of a <see cref="Texture"/> resource with new data.

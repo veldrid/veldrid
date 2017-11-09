@@ -80,8 +80,6 @@ namespace Veldrid
                     return 16;
                 case TextureSampleCount.Count32:
                     return 32;
-                case TextureSampleCount.Count64:
-                    return 64;
                 default:
                     throw Illegal.Value<TextureSampleCount>();
             }

@@ -155,7 +155,10 @@ namespace Veldrid.NeoDemo
             Render(gd, cl, sc, RenderPasses.AlphaBlend, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
             Render(gd, cl, sc, RenderPasses.Overlay, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
-            cl.ResolveTexture(sc.MainSceneColorTexture, sc.MainSceneResolvedColorTexture);
+            if (sc.MainSceneColorTexture.SampleCount != TextureSampleCount.Count1)
+            {
+                cl.ResolveTexture(sc.MainSceneColorTexture, sc.MainSceneResolvedColorTexture);
+            }
 
             cl.SetFramebuffer(sc.DuplicatorFramebuffer);
             fbWidth = sc.DuplicatorFramebuffer.Width;
@@ -285,7 +288,10 @@ namespace Veldrid.NeoDemo
 
             for (int i = 0; i < cls.Length; i++) { cls[i].End(); gd.ExecuteCommands(cls[i]); cls[i].Dispose(); }
 
-            cl.ResolveTexture(sc.MainSceneColorTexture, sc.MainSceneResolvedColorTexture);
+            if (sc.MainSceneColorTexture.SampleCount != TextureSampleCount.Count1)
+            {
+                cl.ResolveTexture(sc.MainSceneColorTexture, sc.MainSceneResolvedColorTexture);
+            }
 
             cl.SetFramebuffer(sc.DuplicatorFramebuffer);
             uint fbWidth = sc.DuplicatorFramebuffer.Width;

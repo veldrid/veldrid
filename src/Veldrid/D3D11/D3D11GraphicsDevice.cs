@@ -157,6 +157,38 @@ namespace Veldrid.D3D11
             }
         }
 
+        public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
+        {
+            Format dxgiFormat = D3D11Formats.ToDxgiFormat(format, depthFormat);
+            if (CheckFormat(dxgiFormat, 32))
+            {
+                return TextureSampleCount.Count32;
+            }
+            else if (CheckFormat(dxgiFormat, 16))
+            {
+                return TextureSampleCount.Count16;
+            }
+            else if (CheckFormat(dxgiFormat, 8))
+            {
+                return TextureSampleCount.Count8;
+            }
+            else if (CheckFormat(dxgiFormat, 4))
+            {
+                return TextureSampleCount.Count4;
+            }
+            else if (CheckFormat(dxgiFormat, 2))
+            {
+                return TextureSampleCount.Count2;
+            }
+
+            return TextureSampleCount.Count1;
+        }
+
+        private bool CheckFormat(Format format, int sampleCount)
+        {
+            return _device.CheckMultisampleQualityLevels(format, sampleCount) != 0;
+        }
+
         protected override void PlatformDispose()
         {
             DeviceDebug deviceDebug = _device.QueryInterfaceOrNull<DeviceDebug>();

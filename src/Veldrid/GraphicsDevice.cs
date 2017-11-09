@@ -61,6 +61,15 @@ namespace Veldrid
         public abstract void SetResourceName(DeviceResource resource, string name);
 
         /// <summary>
+        /// Gets the maximum sample count supported by the given <see cref="PixelFormat"/>.
+        /// </summary>
+        /// <param name="format">The format to query.</param>
+        /// <param name="depthFormat">Whether the format will be used in a depth texture.</param>
+        /// <returns>A <see cref="TextureSampleCount"/> value representing the maximum count that a <see cref="Texture"/> of that
+        /// format can be created with.</returns>
+        public abstract TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat);
+
+        /// <summary>
         /// Performs API-specific disposal of resources controlled by this instance.
         /// </summary>
         protected abstract void PlatformDispose();

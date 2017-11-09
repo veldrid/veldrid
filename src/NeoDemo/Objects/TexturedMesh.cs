@@ -125,7 +125,7 @@ namespace Veldrid.NeoDemo.Objects
                 DemoOutputsDescriptions.ShadowMapPass);
             _shadowMapPipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref depthPD);
 
-            _shadowMapResourceSets = CreateShadowMapResourceSets(gd.ResourceFactory, cl, sc, projViewCombinedLayout, worldLayout);
+            _shadowMapResourceSets = CreateShadowMapResourceSets(gd.ResourceFactory, disposeFactory, cl, sc, projViewCombinedLayout, worldLayout);
 
             VertexLayoutDescription[] mainVertexLayouts = new VertexLayoutDescription[]
             {
@@ -207,7 +207,8 @@ namespace Veldrid.NeoDemo.Objects
         }
 
         private ResourceSet[] CreateShadowMapResourceSets(
-            ResourceFactory factory,
+            ResourceFactory sharedFactory,
+            ResourceFactory disposeFactory,
             CommandList cl,
             SceneContext sc,
             ResourceLayout projViewLayout,
@@ -218,10 +219,10 @@ namespace Veldrid.NeoDemo.Objects
             for (int i = 0; i < 3; i++)
             {
                 UniformBuffer viewProjBuffer = i == 0 ? sc.LightViewProjectionBuffer0 : i == 1 ? sc.LightViewProjectionBuffer1 : sc.LightViewProjectionBuffer2;
-                ret[i * 2] = StaticResourceCache.GetResourceSet(factory, new ResourceSetDescription(
+                ret[i * 2] = StaticResourceCache.GetResourceSet(sharedFactory, new ResourceSetDescription(
                     projViewLayout,
                     viewProjBuffer));
-                ResourceSet worldRS = factory.CreateResourceSet(new ResourceSetDescription(
+                ResourceSet worldRS = disposeFactory.CreateResourceSet(new ResourceSetDescription(
                     worldLayout,
                     _worldBuffer));
                 ret[i * 2 + 1] = worldRS;

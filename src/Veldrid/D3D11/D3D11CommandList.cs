@@ -339,7 +339,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void ResolveTexture(Texture source, Texture destination)
+        protected override void ResolveTextureCore(Texture source, Texture destination)
         {
             D3D11Texture d3d11Source = Util.AssertSubtype<Texture, D3D11Texture>(source);
             D3D11Texture d3d11Destination = Util.AssertSubtype<Texture, D3D11Texture>(destination);

@@ -338,7 +338,15 @@ namespace Veldrid.Vk
             byte* pMessage,
             void* pUserData)
         {
-            Console.WriteLine($"[{(VkDebugReportFlagsEXT)flags}] ({objectType}) {Util.GetString(pMessage)}");
+            string message = Util.GetString(pMessage);
+            VkDebugReportFlagsEXT debugReportFlags = (VkDebugReportFlagsEXT)flags;
+
+            if (Debugger.IsAttached)
+            {
+                Debugger.Break();
+            }
+
+            Console.WriteLine($"[{debugReportFlags}] ({objectType}) {message}");
             return 0;
         }
 

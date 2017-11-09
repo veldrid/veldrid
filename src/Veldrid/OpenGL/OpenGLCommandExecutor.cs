@@ -373,8 +373,11 @@ namespace Veldrid.OpenGL
                 else if (resource is OpenGLSampler glSampler)
                 {
                     glSampler.EnsureResourcesCreated();
-                    OpenGLTextureBindingSlotInfo samplerBindingInfo = _pipeline.GetSamplerBindingInfo(slot, element);
-                    _textureSamplerManager.SetSampler((uint)samplerBindingInfo.RelativeIndex, glSampler);
+                    OpenGLSamplerBindingSlotInfo samplerBindingInfo = _pipeline.GetSamplerBindingInfo(slot, element);
+                    foreach (int index in samplerBindingInfo.RelativeIndices)
+                    {
+                        _textureSamplerManager.SetSampler((uint)index, glSampler);
+                    }
                 }
             }
         }

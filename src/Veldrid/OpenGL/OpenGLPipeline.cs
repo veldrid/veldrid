@@ -135,8 +135,9 @@ namespace Veldrid.OpenGL
 
                 Dictionary<uint, OpenGLUniformBinding> uniformBindings = new Dictionary<uint, OpenGLUniformBinding>();
                 Dictionary<uint, OpenGLTextureBindingSlotInfo> textureBindings = new Dictionary<uint, OpenGLTextureBindingSlotInfo>();
-                Dictionary<uint, OpenGLTextureBindingSlotInfo> samplerBindings = new Dictionary<uint, OpenGLTextureBindingSlotInfo>();
+                Dictionary<uint, OpenGLSamplerBindingSlotInfo> samplerBindings = new Dictionary<uint, OpenGLSamplerBindingSlotInfo>();
 
+                List<int> samplerTrackedRelativeTextureIndices = new List<int>();
                 for (uint i = 0; i < resources.Length; i++)
                 {
                     ResourceLayoutElementDescription resource = resources[i];
@@ -178,23 +179,18 @@ namespace Veldrid.OpenGL
                         relativeTextureIndex += 1;
                         textureBindings[i] = new OpenGLTextureBindingSlotInfo() { RelativeIndex = relativeTextureIndex, UniformLocation = location };
                         lastTextureLocation = location;
+                        samplerTrackedRelativeTextureIndices.Add(relativeTextureIndex);
                     }
                     else
                     {
                         Debug.Assert(resource.Kind == ResourceKind.Sampler);
 
-                        // TODO: Samplers should be able to bind to multiple texture slots
-                        // if multiple textures are declared without an intervening sampler. For example:
-                        //     Slot    Resource
-                        // -------------------------
-                        //     [0]     Texture0
-                        //     [1]     Sampler0
-                        //     [2]     Texture1
-                        //     [3]     Texture2
-                        //     [4]     Sampler1*
-                        // Sampler1 should be active for both Texture1 and Texture2.
-
-                        samplerBindings[i] = new OpenGLTextureBindingSlotInfo() { RelativeIndex = relativeTextureIndex, UniformLocation = lastTextureLocation };
+                        int[] relativeIndices = samplerTrackedRelativeTextureIndices.ToArray();
+                        samplerTrackedRelativeTextureIndices.Clear();
+                        samplerBindings[i] = new OpenGLSamplerBindingSlotInfo()
+                        {
+                            RelativeIndices = relativeIndices
+                        };
                     }
                 }
 
@@ -218,7 +214,7 @@ namespace Veldrid.OpenGL
             return setInfo.GetTextureBindingInfo(slot);
         }
 
-        public OpenGLTextureBindingSlotInfo GetSamplerBindingInfo(uint set, uint slot)
+        public OpenGLSamplerBindingSlotInfo GetSamplerBindingInfo(uint set, uint slot)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
@@ -241,14 +237,14 @@ namespace Veldrid.OpenGL
     {
         private readonly Dictionary<uint, OpenGLUniformBinding> _uniformBindings;
         private readonly Dictionary<uint, OpenGLTextureBindingSlotInfo> _textureBindings;
-        private readonly Dictionary<uint, OpenGLTextureBindingSlotInfo> _samplerBindings;
+        private readonly Dictionary<uint, OpenGLSamplerBindingSlotInfo> _samplerBindings;
 
         public uint UniformBufferCount { get; }
 
         public SetBindingsInfo(
             Dictionary<uint, OpenGLUniformBinding> uniformBindings,
             Dictionary<uint, OpenGLTextureBindingSlotInfo> textureBindings,
-            Dictionary<uint, OpenGLTextureBindingSlotInfo> samplerBindings)
+            Dictionary<uint, OpenGLSamplerBindingSlotInfo> samplerBindings)
         {
             _uniformBindings = uniformBindings;
             UniformBufferCount = (uint)uniformBindings.Count;
@@ -266,9 +262,9 @@ namespace Veldrid.OpenGL
             return binding;
         }
 
-        public OpenGLTextureBindingSlotInfo GetSamplerBindingInfo(uint slot)
+        public OpenGLSamplerBindingSlotInfo GetSamplerBindingInfo(uint slot)
         {
-            if (!_samplerBindings.TryGetValue(slot, out OpenGLTextureBindingSlotInfo binding))
+            if (!_samplerBindings.TryGetValue(slot, out OpenGLSamplerBindingSlotInfo binding))
             {
                 throw new VeldridException("There is no sampler in slot " + slot);
             }
@@ -298,6 +294,15 @@ namespace Veldrid.OpenGL
         /// The uniform location of the binding in the shader program.
         /// </summary>
         public int UniformLocation;
+    }
+
+    internal struct OpenGLSamplerBindingSlotInfo
+    {
+        /// <summary>
+        /// The relative indices of this binding with relation to the other textures used by a shader.
+        /// Generally, these are the texture units that the sampler will be bound to.
+        /// </summary>
+        public int[] RelativeIndices;
     }
 
     internal class OpenGLUniformBinding

@@ -120,16 +120,6 @@ namespace Veldrid.OpenGL
             glBindTexture(TextureTarget, _texture);
             CheckLastError();
 
-            if (SampleCount == TextureSampleCount.Count1) // Sampler parameters cannot be set on multisampled textures.
-            {
-                // TODO: Remove this -- it is a hack working around improper sampler support.
-                TextureMinFilter minFilter = MipLevels > 1 ? TextureMinFilter.LinearMipmapLinear : TextureMinFilter.Linear;
-                glTexParameteri(TextureTarget, TextureParameterName.TextureMinFilter, (int)minFilter);
-                CheckLastError();
-                glTexParameteri(TextureTarget, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-                CheckLastError();
-            }
-
             if (TextureTarget == TextureTarget.Texture2D)
             {
                 uint levelWidth = Width;

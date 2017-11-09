@@ -12,8 +12,10 @@ namespace Veldrid.D3D11
         public override uint ArrayLayers { get; }
         public override PixelFormat Format { get; }
         public override TextureUsage Usage { get; }
+        public override TextureSampleCount SampleCount { get; }
 
         public Texture2D DeviceTexture { get; }
+        public SharpDX.DXGI.Format DxgiFormat { get; }
 
         public D3D11Texture(Device device, ref TextureDescription description)
         {
@@ -24,8 +26,9 @@ namespace Veldrid.D3D11
             ArrayLayers = description.ArrayLayers;
             Format = description.Format;
             Usage = description.Usage;
+            SampleCount = description.SampleCount;
 
-            SharpDX.DXGI.Format dxgiFormat = D3D11Formats.ToDxgiFormat(
+            DxgiFormat = D3D11Formats.ToDxgiFormat(
                 description.Format,
                 (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
 
@@ -50,17 +53,18 @@ namespace Veldrid.D3D11
                 optionFlags = ResourceOptionFlags.TextureCube;
                 arraySize *= 6;
             }
+
             Texture2DDescription deviceDescription = new Texture2DDescription()
             {
                 Width = (int)description.Width,
                 Height = (int)description.Height,
                 MipLevels = (int)description.MipLevels,
                 ArraySize = arraySize,
-                Format = dxgiFormat,
+                Format = DxgiFormat,
                 BindFlags = bindFlags,
                 CpuAccessFlags = CpuAccessFlags.None,
                 Usage = ResourceUsage.Default,
-                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                SampleDescription = new SharpDX.DXGI.SampleDescription((int)FormatHelpers.GetSampleCountUInt32(SampleCount), 0),
                 OptionFlags = optionFlags,
             };
 
@@ -76,6 +80,7 @@ namespace Veldrid.D3D11
             MipLevels = (uint)existingTexture.Description.MipLevels;
             ArrayLayers = (uint)existingTexture.Description.ArraySize;
             Format = D3D11Formats.ToVdFormat(existingTexture.Description.Format);
+            SampleCount = D3D11Formats.ToVdSampleCount(existingTexture.Description.SampleDescription);
         }
 
         public override void Dispose()

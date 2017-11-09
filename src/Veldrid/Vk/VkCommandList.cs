@@ -149,6 +149,35 @@ namespace Veldrid.Vk
             vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
+        public override void ResolveTexture(Texture source, Texture destination)
+        {
+            if (_activeRenderPass != VkRenderPass.Null)
+            {
+                EndCurrentRenderPass();
+            }
+
+            VkTexture vkSource = Util.AssertSubtype<Texture, VkTexture>(source);
+            VkTexture vkDestination = Util.AssertSubtype<Texture, VkTexture>(destination);
+            VkImageAspectFlags aspectFlags = ((source.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil) 
+                ? VkImageAspectFlags.Depth 
+                : VkImageAspectFlags.Color;
+            VkImageResolve region = new VkImageResolve
+            {
+                extent = new VkExtent3D { width = source.Width, height = source.Height, depth = source.Depth },
+                srcSubresource = new VkImageSubresourceLayers { layerCount = 1, aspectMask = aspectFlags },
+                dstSubresource = new VkImageSubresourceLayers { layerCount = 1, aspectMask = aspectFlags }
+            };
+
+            vkCmdResolveImage(
+                _cb,
+                vkSource.DeviceImage,
+                vkSource.ImageLayouts[0],
+                vkDestination.DeviceImage,
+                vkDestination.ImageLayouts[0],
+                1,
+                ref region);
+        }
+
         public override void End()
         {
             if (!_commandBufferBegun)

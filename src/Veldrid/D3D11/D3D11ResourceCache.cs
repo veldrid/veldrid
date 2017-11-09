@@ -14,8 +14,8 @@ namespace Veldrid.D3D11
         private readonly Dictionary<DepthStencilStateDescription, DepthStencilState> _depthStencilStates
             = new Dictionary<DepthStencilStateDescription, DepthStencilState>();
 
-        private readonly Dictionary<RasterizerStateDescription, RasterizerState> _rasterizerStates
-            = new Dictionary<RasterizerStateDescription, RasterizerState>();
+        private readonly Dictionary<D3D11RasterizerStateCacheKey, RasterizerState> _rasterizerStates
+            = new Dictionary<D3D11RasterizerStateCacheKey, RasterizerState>();
 
         private readonly Dictionary<InputLayoutCacheKey, InputLayout> _inputLayouts
             = new Dictionary<InputLayoutCacheKey, InputLayout>();
@@ -83,27 +83,28 @@ namespace Veldrid.D3D11
             return new DepthStencilState(_device, dssDesc);
         }
 
-        internal RasterizerState GetRasterizerState(ref RasterizerStateDescription description)
+        internal RasterizerState GetRasterizerState(ref RasterizerStateDescription description, bool multisample)
         {
-            if (!_rasterizerStates.TryGetValue(description, out RasterizerState rasterizerState))
+            D3D11RasterizerStateCacheKey key = new D3D11RasterizerStateCacheKey(description, multisample);
+            if (!_rasterizerStates.TryGetValue(key, out RasterizerState rasterizerState))
             {
-                rasterizerState = CreateNewRasterizerState(ref description);
-                RasterizerStateDescription key = description;
+                rasterizerState = CreateNewRasterizerState(ref key);
                 _rasterizerStates.Add(key, rasterizerState);
             }
 
             return rasterizerState;
         }
 
-        private RasterizerState CreateNewRasterizerState(ref RasterizerStateDescription description)
+        private RasterizerState CreateNewRasterizerState(ref D3D11RasterizerStateCacheKey key)
         {
             SharpDX.Direct3D11.RasterizerStateDescription rssDesc = new SharpDX.Direct3D11.RasterizerStateDescription
             {
-                CullMode = D3D11Formats.VdToD3D11CullMode(description.CullMode),
-                FillMode = D3D11Formats.VdToD3D11FillMode(description.FillMode),
-                IsDepthClipEnabled = description.DepthClipEnabled,
-                IsScissorEnabled = description.ScissorTestEnabled,
-                IsFrontCounterClockwise = description.FrontFace == FrontFace.CounterClockwise
+                CullMode = D3D11Formats.VdToD3D11CullMode(key.VeldridDescription.CullMode),
+                FillMode = D3D11Formats.VdToD3D11FillMode(key.VeldridDescription.FillMode),
+                IsDepthClipEnabled = key.VeldridDescription.DepthClipEnabled,
+                IsScissorEnabled = key.VeldridDescription.ScissorTestEnabled,
+                IsFrontCounterClockwise = key.VeldridDescription.FrontFace == FrontFace.CounterClockwise,
+                IsMultisampleEnabled = key.Multisampled
             };
 
             return new RasterizerState(_device, rssDesc);
@@ -226,6 +227,29 @@ namespace Veldrid.D3D11
             public override int GetHashCode()
             {
                 return HashHelper.Array(VertexLayouts);
+            }
+        }
+
+        private struct D3D11RasterizerStateCacheKey : IEquatable<D3D11RasterizerStateCacheKey>
+        {
+            public RasterizerStateDescription VeldridDescription;
+            public bool Multisampled;
+
+            public D3D11RasterizerStateCacheKey(RasterizerStateDescription veldridDescription, bool multisampled)
+            {
+                VeldridDescription = veldridDescription;
+                Multisampled = multisampled;
+            }
+
+            public bool Equals(D3D11RasterizerStateCacheKey other)
+            {
+                return VeldridDescription.Equals(other.VeldridDescription)
+                    && Multisampled.Equals(other.Multisampled);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashHelper.Combine(VeldridDescription.GetHashCode(), Multisampled.GetHashCode());
             }
         }
     }

@@ -33,6 +33,11 @@ namespace Veldrid.OpenGL
             _commands.Draw(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
+        public override void ResolveTexture(Texture source, Texture destination)
+        {
+            _commands.ResolveTexture(source, destination);
+        }
+
         public override void End()
         {
             _commands.End();

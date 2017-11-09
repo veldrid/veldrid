@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Veldrid
 {
@@ -15,6 +16,10 @@ namespace Veldrid
         /// An array of attachment descriptions, one for each color attachment. May be empty.
         /// </summary>
         public OutputAttachmentDescription[] ColorAttachments;
+        /// <summary>
+        /// The number of samples in each target attachment.
+        /// </summary>
+        public TextureSampleCount SampleCount;
 
         /// <summary>
         /// Constructs a new <see cref="OutputDescription"/>.
@@ -25,22 +30,42 @@ namespace Veldrid
         {
             DepthAttachment = depthAttachment;
             ColorAttachments = colorAttachments ?? Array.Empty<OutputAttachmentDescription>();
+            SampleCount = TextureSampleCount.Count1;
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="OutputDescription"/>.
+        /// </summary>
+        /// <param name="depthAttachment">A description of the depth attachment.</param>
+        /// <param name="colorAttachments">An array of descriptions of each color attachment.</param>
+        /// <param name="sampleCount">The number of samples in each target attachment.</param>
+        public OutputDescription(
+            OutputAttachmentDescription? depthAttachment,
+            OutputAttachmentDescription[] colorAttachments,
+            TextureSampleCount sampleCount)
+        {
+            DepthAttachment = depthAttachment;
+            ColorAttachments = colorAttachments ?? Array.Empty<OutputAttachmentDescription>();
+            SampleCount = sampleCount;
         }
 
         internal static OutputDescription CreateFromFramebuffer(Framebuffer fb)
         {
+            TextureSampleCount sampleCount = 0;
             OutputAttachmentDescription? depthAttachment = null;
             if (fb.DepthTexture != null)
             {
                 depthAttachment = new OutputAttachmentDescription(fb.DepthTexture.Format);
+                sampleCount = fb.DepthTexture.SampleCount;
             }
             OutputAttachmentDescription[] colorAttachments = new OutputAttachmentDescription[fb.ColorTextures.Count];
             for (int i = 0; i < colorAttachments.Length; i++)
             {
                 colorAttachments[i] = new OutputAttachmentDescription(fb.ColorTextures[i].Format);
+                sampleCount = fb.ColorTextures[i].SampleCount;
             }
 
-            return new OutputDescription(depthAttachment, colorAttachments);
+            return new OutputDescription(depthAttachment, colorAttachments, sampleCount);
         }
 
         /// <summary>

@@ -379,6 +379,39 @@ namespace Veldrid.OpenGL
             }
         }
 
+        public void ResolveTexture(Texture source, Texture destination)
+        {
+            OpenGLTexture glSourceTex = Util.AssertSubtype<Texture, OpenGLTexture>(source);
+            OpenGLTexture glDestinationTex = Util.AssertSubtype<Texture, OpenGLTexture>(destination);
+            glSourceTex.EnsureResourcesCreated();
+            glDestinationTex.EnsureResourcesCreated();
+
+            uint sourceFramebuffer = glSourceTex.GetFramebuffer();
+            uint destinationFramebuffer = glDestinationTex.GetFramebuffer();
+
+            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, sourceFramebuffer);
+            CheckLastError();
+
+            glBindFramebuffer(FramebufferTarget.DrawFramebuffer, destinationFramebuffer);
+            CheckLastError();
+
+            glDisable(EnableCap.ScissorTest);
+            CheckLastError();
+
+            glBlitFramebuffer(
+                0,
+                0,
+                (int)source.Width,
+                (int)source.Height,
+                0,
+                0,
+                (int)destination.Width,
+                (int)destination.Height,
+                ClearBufferMask.ColorBufferBit,
+                BlitFramebufferFilter.Nearest);
+            CheckLastError();
+        }
+
         private uint GetUniformBaseIndex(uint slot)
         {
             uint ret = 0;

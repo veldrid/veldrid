@@ -38,6 +38,11 @@ namespace Veldrid
         /// </summary>
         public abstract TextureUsage Usage { get; }
         /// <summary>
+        /// The number of samples in this instance. If this returns any value other than <see cref="TextureSampleCount.Count1"/>,
+        /// then this instance is a multipsample texture.
+        /// </summary>
+        public abstract TextureSampleCount SampleCount { get; }
+        /// <summary>
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
         public abstract void Dispose();

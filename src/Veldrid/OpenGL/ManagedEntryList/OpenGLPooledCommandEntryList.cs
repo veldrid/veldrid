@@ -23,6 +23,7 @@ namespace Veldrid.OpenGL.ManagedEntryList
         private readonly EntryPool<UpdateBufferEntry> _updateBufferEntryPool = new EntryPool<UpdateBufferEntry>();
         private readonly EntryPool<UpdateTextureEntry> _updateTextureEntryPool = new EntryPool<UpdateTextureEntry>();
         private readonly EntryPool<UpdateTextureCubeEntry> _updateTextureCubeEntryPool = new EntryPool<UpdateTextureCubeEntry>();
+        private readonly EntryPool<ResolveTextureEntry> _resolveTextureEntryPool = new EntryPool<ResolveTextureEntry>();
 
         public IReadOnlyList<OpenGLCommandEntry> Commands => _commands;
 
@@ -130,6 +131,11 @@ namespace Veldrid.OpenGL.ManagedEntryList
             _commands.Add(_updateTextureCubeEntryPool.Rent().Init(textureCube, stagingBlock, face, x, y, width, height, mipLevel, arrayLayer));
         }
 
+        public void ResolveTexture(Texture source, Texture destination)
+        {
+            _commands.Add(_resolveTextureEntryPool.Rent().Init(source, destination));
+        }
+
         public void ExecuteAll(OpenGLCommandExecutor executor)
         {
             foreach (OpenGLCommandEntry entry in _commands)
@@ -215,13 +221,17 @@ namespace Veldrid.OpenGL.ManagedEntryList
                             utce.ArrayLayer);
                         _updateTextureCubeEntryPool.Return(utce);
                         break;
+                    case ResolveTextureEntry rte:
+                        executor.ResolveTexture(rte.Source, rte.Destination);
+                        _resolveTextureEntryPool.Return(rte);
+                        break;
                     default:
                         throw new InvalidOperationException("Command type not handled: " + executor.GetType().Name);
                 }
             }
         }
 
-        private class EntryPool<T> where T: OpenGLCommandEntry, new()
+        private class EntryPool<T> where T : OpenGLCommandEntry, new()
         {
             private readonly Queue<T> _entries = new Queue<T>();
 

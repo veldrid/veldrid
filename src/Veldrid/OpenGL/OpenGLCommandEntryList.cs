@@ -16,6 +16,7 @@ namespace Veldrid.OpenGL
         void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
         void SetVertexBuffer(uint index, VertexBuffer vb);
         void SetViewport(uint index, ref Viewport viewport);
+        void ResolveTexture(Texture source, Texture destination);
         void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
         void UpdateTexture(
             Texture texture,

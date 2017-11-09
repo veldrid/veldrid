@@ -107,6 +107,21 @@ namespace Veldrid.D3D11
             }
         }
 
+        internal static TextureSampleCount ToVdSampleCount(SampleDescription sampleDescription)
+        {
+            switch (sampleDescription.Count)
+            {
+                case 1: return TextureSampleCount.Count1;
+                case 2: return TextureSampleCount.Count2;
+                case 4: return TextureSampleCount.Count4;
+                case 8: return TextureSampleCount.Count8;
+                case 16: return TextureSampleCount.Count16;
+                case 32: return TextureSampleCount.Count32;
+                case 64: return TextureSampleCount.Count64;
+                default: throw new VeldridException("Unsupported multisample count: " + sampleDescription.Count);
+            }
+        }
+
         internal static BlendOperation VdToD3D11BlendOperation(BlendFunction function)
         {
             switch (function)

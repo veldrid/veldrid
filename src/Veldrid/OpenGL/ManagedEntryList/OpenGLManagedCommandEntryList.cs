@@ -111,7 +111,14 @@ namespace Veldrid.OpenGL.ManagedEntryList
             uint arrayLayer)
         {
             StagingBlock stagingBlock = _memoryPool.Stage(source, sizeInBytes);
-            _commands.Add(new UpdateTextureCubeEntry(textureCube, stagingBlock, face, x, y, width, height, mipLevel, arrayLayer));
+            _commands.Add(
+                new UpdateTextureCubeEntry(textureCube, stagingBlock, face, x, y, width, height, mipLevel, arrayLayer));
+        }
+
+        public void ResolveTexture(Texture source, Texture destination)
+        {
+            _commands.Add(new ResolveTextureEntry(source, destination));
+
         }
 
         public void ExecuteAll(OpenGLCommandExecutor executor)
@@ -183,6 +190,9 @@ namespace Veldrid.OpenGL.ManagedEntryList
                             utce.Height,
                             utce.MipLevel,
                             utce.ArrayLayer);
+                        break;
+                    case ResolveTextureEntry rte:
+                        executor.ResolveTexture(rte.Source, rte.Destination);
                         break;
                     default:
                         throw new InvalidOperationException("Command type not handled: " + executor.GetType().Name);

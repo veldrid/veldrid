@@ -35,7 +35,7 @@ namespace Veldrid.Vk
                 VkTexture vkColorTex = Util.AssertSubtype<Texture, VkTexture>(ColorTextures[i]);
                 VkAttachmentDescription colorAttachmentDesc = new VkAttachmentDescription();
                 colorAttachmentDesc.format = vkColorTex.VkFormat;
-                colorAttachmentDesc.samples = VkSampleCountFlags.Count1;
+                colorAttachmentDesc.samples = vkColorTex.VkSampleCount;
                 colorAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
                 colorAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
                 colorAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
@@ -57,7 +57,7 @@ namespace Veldrid.Vk
             {
                 VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(DepthTexture);
                 depthAttachmentDesc.format = vkDepthTex.VkFormat;
-                depthAttachmentDesc.samples = VkSampleCountFlags.Count1;
+                depthAttachmentDesc.samples = vkDepthTex.VkSampleCount;
                 depthAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
                 depthAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
                 depthAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;

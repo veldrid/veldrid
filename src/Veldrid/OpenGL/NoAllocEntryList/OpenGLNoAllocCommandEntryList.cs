@@ -59,6 +59,9 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte UpdateTextureCubeEntryID = 15;
         private static readonly uint UpdateTextureCubeEntrySize = Util.USizeOf<NoAllocUpdateTextureCubeEntry>();
 
+        private const byte ResolveTextureEntryID = 16;
+        private static readonly uint ResolveTextureEntrySize = Util.USizeOf<NoAllocResolveTextureEntry>();
+
         public OpenGLNoAllocCommandEntryList()
         {
             _currentBlock = EntryStorageBlock.New();
@@ -253,6 +256,11 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                             utce.ArrayLayer);
                         currentOffset += UpdateTextureCubeEntrySize;
                         break;
+                    case ResolveTextureEntryID:
+                        ref NoAllocResolveTextureEntry rte = ref Unsafe.AsRef<NoAllocResolveTextureEntry>(entryBasePtr);
+                        executor.ResolveTexture(rte.Source.Item, rte.Destination.Item);
+                        currentOffset += ResolveTextureEntrySize;
+                        break;
                     default:
                         throw new InvalidOperationException("Invalid entry ID: " + id);
                 }
@@ -351,6 +359,12 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         utce.StagingBlock.GCHandle.Free();
                         currentOffset += UpdateTextureCubeEntrySize;
                         break;
+                    case ResolveTextureEntryID:
+                        ref NoAllocResolveTextureEntry rte = ref Unsafe.AsRef<NoAllocResolveTextureEntry>(entryBasePtr);
+                        rte.Source.Free();
+                        rte.Destination.Free();
+                        currentOffset += ResolveTextureEntrySize;
+                        break;
                     default:
                         throw new InvalidOperationException("Invalid entry ID: " + id);
                 }
@@ -427,6 +441,12 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         {
             NoAllocSetViewportEntry entry = new NoAllocSetViewportEntry(index, ref viewport);
             AddEntry(SetViewportEntryID, ref entry);
+        }
+
+        public void ResolveTexture(Texture source, Texture destination)
+        {
+            NoAllocResolveTextureEntry entry = new NoAllocResolveTextureEntry(source, destination);
+            AddEntry(ResolveTextureEntryID, ref entry);
         }
 
         public void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)

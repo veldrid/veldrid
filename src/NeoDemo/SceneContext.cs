@@ -34,8 +34,9 @@ namespace Veldrid.NeoDemo
 
         public Texture MainSceneColorTexture { get; private set; }
         public Texture MainSceneDepthTexture { get; private set; }
-        public TextureView MainSceneColorView { get; private set; }
         public Framebuffer MainSceneFramebuffer { get; private set; }
+        public Texture MainSceneResolvedColorTexture { get; private set; }
+        public TextureView MainSceneResolvedColorView { get; private set; }
         public ResourceSet MainSceneViewResourceSet { get; private set; }
 
         public Texture DuplicatorTarget0 { get; private set; }
@@ -122,7 +123,8 @@ namespace Veldrid.NeoDemo
             CameraInfoBuffer.Dispose();
             PointLightsBuffer.Dispose();
             MainSceneColorTexture.Dispose();
-            MainSceneColorView.Dispose();
+            MainSceneResolvedColorTexture.Dispose();
+            MainSceneResolvedColorView.Dispose();
             MainSceneDepthTexture.Dispose();
             MainSceneFramebuffer.Dispose();
             MainSceneViewResourceSet.Dispose();
@@ -152,7 +154,8 @@ namespace Veldrid.NeoDemo
         {
             MainSceneColorTexture?.Dispose();
             MainSceneDepthTexture?.Dispose();
-            MainSceneColorView?.Dispose();
+            MainSceneResolvedColorTexture?.Dispose();
+            MainSceneResolvedColorView?.Dispose();
             MainSceneViewResourceSet?.Dispose();
             MainSceneFramebuffer?.Dispose();
             DuplicatorTarget0?.Dispose();
@@ -164,6 +167,33 @@ namespace Veldrid.NeoDemo
             DuplicatorFramebuffer?.Dispose();
 
             ResourceFactory factory = gd.ResourceFactory;
+
+            TextureDescription mainColorDesc = new TextureDescription(
+                gd.SwapchainFramebuffer.Width,
+                gd.SwapchainFramebuffer.Height,
+                1,
+                1,
+                1,
+                PixelFormat.R8_G8_B8_A8_UNorm,
+                TextureUsage.RenderTarget | TextureUsage.Sampled,
+                TextureSampleCount.Count8);
+
+            MainSceneColorTexture = factory.CreateTexture(ref mainColorDesc);
+            mainColorDesc.SampleCount = TextureSampleCount.Count1;
+            MainSceneResolvedColorTexture = factory.CreateTexture(ref mainColorDesc);
+            MainSceneResolvedColorView = factory.CreateTextureView(MainSceneResolvedColorTexture);
+            MainSceneDepthTexture = factory.CreateTexture(new TextureDescription(
+                gd.SwapchainFramebuffer.Width,
+                gd.SwapchainFramebuffer.Height,
+                1,
+                1,
+                1,
+                PixelFormat.R16_UNorm,
+                TextureUsage.DepthStencil,
+                TextureSampleCount.Count8));
+            MainSceneFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(MainSceneDepthTexture, MainSceneColorTexture));
+            MainSceneViewResourceSet = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, MainSceneResolvedColorView, gd.PointSampler));
+
             TextureDescription colorTargetDesc = new TextureDescription(
                 gd.SwapchainFramebuffer.Width,
                 gd.SwapchainFramebuffer.Height,
@@ -172,20 +202,6 @@ namespace Veldrid.NeoDemo
                 1,
                 PixelFormat.R8_G8_B8_A8_UNorm,
                 TextureUsage.RenderTarget | TextureUsage.Sampled);
-
-            MainSceneColorTexture = factory.CreateTexture(ref colorTargetDesc);
-            MainSceneColorView = factory.CreateTextureView(MainSceneColorTexture);
-            MainSceneDepthTexture = factory.CreateTexture(new TextureDescription(
-                gd.SwapchainFramebuffer.Width,
-                gd.SwapchainFramebuffer.Height,
-                1,
-                1,
-                1,
-                PixelFormat.R16_UNorm,
-                TextureUsage.DepthStencil));
-            MainSceneFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(MainSceneDepthTexture, MainSceneColorTexture));
-            MainSceneViewResourceSet = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, MainSceneColorView, gd.PointSampler));
-
             DuplicatorTarget0 = factory.CreateTexture(ref colorTargetDesc);
             DuplicatorTargetView0 = factory.CreateTextureView(DuplicatorTarget0);
             DuplicatorTarget1 = factory.CreateTexture(ref colorTargetDesc);

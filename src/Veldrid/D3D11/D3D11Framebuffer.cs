@@ -16,9 +16,12 @@ namespace Veldrid.D3D11
             if (description.DepthTarget != null)
             {
                 D3D11Texture d3dDepthTarget = Util.AssertSubtype<Texture, D3D11Texture>(description.DepthTarget);
+                DepthStencilViewDimension dimension = d3dDepthTarget.SampleCount == TextureSampleCount.Count1
+                    ? DepthStencilViewDimension.Texture2D
+                    : DepthStencilViewDimension.Texture2DMultisampled;
                 DepthStencilViewDescription dsvDesc = new DepthStencilViewDescription()
                 {
-                    Dimension = DepthStencilViewDimension.Texture2D,
+                    Dimension = dimension,
                     Format = D3D11Formats.GetDepthFormat(d3dDepthTarget.Format)
                 };
                 DepthStencilView = new DepthStencilView(device, d3dDepthTarget.DeviceTexture, dsvDesc);
@@ -30,10 +33,13 @@ namespace Veldrid.D3D11
                 for (int i = 0; i < RenderTargetViews.Length; i++)
                 {
                     D3D11Texture d3dColorTarget = Util.AssertSubtype<Texture, D3D11Texture>(description.ColorTargets[i]);
+                    RenderTargetViewDimension dimension = d3dColorTarget.SampleCount == TextureSampleCount.Count1
+                        ? RenderTargetViewDimension.Texture2D
+                        : RenderTargetViewDimension.Texture2DMultisampled;
                     RenderTargetViewDescription rtvDesc = new RenderTargetViewDescription
                     {
+                        Dimension = dimension,
                         Format = D3D11Formats.ToDxgiFormat(d3dColorTarget.Format, false),
-                        Dimension = RenderTargetViewDimension.Texture2D,
                     };
                     RenderTargetViews[i] = new RenderTargetView(device, d3dColorTarget.DeviceTexture, rtvDesc);
                 }

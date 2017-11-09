@@ -1734,4 +1734,10 @@ namespace Veldrid.OpenGLBinding
         Renderbuffer = 36161,
         TransformFeedback = 36386
     }
+
+    public enum BlitFramebufferFilter
+    {
+        Nearest = 9728,
+        Linear = 9729
+    }
 }

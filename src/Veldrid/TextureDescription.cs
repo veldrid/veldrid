@@ -39,9 +39,14 @@ namespace Veldrid
         /// If the Texture will be used as a 2D cubemap, then <see cref="TextureUsage.Cubemap"/> must be included.
         /// </summary>
         public TextureUsage Usage;
+        /// <summary>
+        /// The number of samples. If equal to <see cref="TextureSampleCount.Count1"/>, this instance does not describe a
+        /// multisample <see cref="Texture"/>.
+        /// </summary>
+        public TextureSampleCount SampleCount;
 
         /// <summary>
-        /// Contsructs a new TextureDescription.
+        /// Contsructs a new TextureDescription describing a non-multisampled <see cref="Texture"/>.
         /// </summary>
         /// <param name="width">The total width, in texels.</param>
         /// <param name="height">The total height, in texels.</param>
@@ -70,6 +75,43 @@ namespace Veldrid
             ArrayLayers = arrayLayers;
             Format = format;
             Usage = usage;
+            SampleCount = TextureSampleCount.Count1;
+        }
+
+        /// <summary>
+        /// Contsructs a new TextureDescription.
+        /// </summary>
+        /// <param name="width">The total width, in texels.</param>
+        /// <param name="height">The total height, in texels.</param>
+        /// <param name="depth">The total depth, in texels.</param>
+        /// <param name="mipLevels">The number of mipmap levels.</param>
+        /// <param name="arrayLayers">The number of array layers.</param>
+        /// <param name="format">The format of individual texture elements.</param>
+        /// <param name="usage">Controls how the Texture is permitted to be used. If the Texture will be sampled from a shader,
+        /// then <see cref="TextureUsage.Sampled"/> must be included. If the Texture will be used as a depth target in a
+        /// <see cref="Framebuffer"/>, then <see cref="TextureUsage.DepthStencil"/> must be included. If the Texture will be used
+        /// as a color target in a <see cref="Framebuffer"/>, then <see cref="TextureUsage.RenderTarget"/> must be included.
+        /// If the Texture will be used as a 2D cubemap, then <see cref="TextureUsage.Cubemap"/> must be included.</param>
+        /// <param name="sampleCount">The number of samples. If any other value than <see cref="TextureSampleCount.Count1"/> is
+        /// provided, then this describes a multisample texture.</param>
+        public TextureDescription(
+            uint width,
+            uint height,
+            uint depth,
+            uint mipLevels,
+            uint arrayLayers,
+            PixelFormat format,
+            TextureUsage usage,
+            TextureSampleCount sampleCount)
+        {
+            Width = width;
+            Height = height;
+            Depth = depth;
+            MipLevels = mipLevels;
+            ArrayLayers = arrayLayers;
+            Format = format;
+            Usage = usage;
+            SampleCount = sampleCount;
         }
 
         /// <summary>

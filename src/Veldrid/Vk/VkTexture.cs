@@ -26,9 +26,12 @@ namespace Veldrid.Vk
 
         public override TextureUsage Usage { get; }
 
+        public override TextureSampleCount SampleCount { get; }
+
         public VkImage DeviceImage => _image;
         public VkMemoryBlock MemoryBlock => _memory;
         public VkFormat VkFormat { get; }
+        public VkSampleCountFlags VkSampleCount { get; }
 
         public VkImageLayout[] ImageLayouts { get; internal set; }
 
@@ -42,6 +45,8 @@ namespace Veldrid.Vk
             ArrayLayers = description.ArrayLayers;
             Format = description.Format;
             Usage = description.Usage;
+            SampleCount = description.SampleCount;
+            VkSampleCount = VkFormats.VdToVkSampleCount(SampleCount);
             if ((description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
             {
                 if (Format != PixelFormat.R16_UNorm && Format != PixelFormat.R32_Float)
@@ -88,7 +93,7 @@ namespace Veldrid.Vk
             imageCI.tiling = VkImageTiling.Optimal;
             imageCI.format = VkFormat;
 
-            imageCI.samples = VkSampleCountFlags.Count1;
+            imageCI.samples = VkSampleCount;
             if ((Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
             {
                 imageCI.flags = VkImageCreateFlags.CubeCompatible;
@@ -124,6 +129,7 @@ namespace Veldrid.Vk
             uint arrayLayers,
             VkFormat vkFormat,
             TextureUsage usage,
+            TextureSampleCount sampleCount,
             VkImage existingImage)
         {
             _gd = gd;
@@ -135,6 +141,8 @@ namespace Veldrid.Vk
             Format = VkFormats.VkToVdPixelFormat(VkFormat);
             ArrayLayers = arrayLayers;
             Usage = usage;
+            SampleCount = sampleCount;
+            VkSampleCount = VkFormats.VdToVkSampleCount(sampleCount);
             _image = existingImage;
         }
 

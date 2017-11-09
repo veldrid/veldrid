@@ -88,7 +88,12 @@ namespace Veldrid.Vk
 
             // Multisample
             VkPipelineMultisampleStateCreateInfo multisampleCI = VkPipelineMultisampleStateCreateInfo.New();
-            multisampleCI.rasterizationSamples = VkSampleCountFlags.Count1;
+            VkSampleCountFlags vkSampleCount = VkFormats.VdToVkSampleCount(description.Outputs.SampleCount);
+            multisampleCI.rasterizationSamples = vkSampleCount;
+            if (vkSampleCount != VkSampleCountFlags.Count1)
+            {
+                multisampleCI.sampleShadingEnable = true;
+            }
 
             pipelineCI.pMultisampleState = &multisampleCI;
 
@@ -200,7 +205,7 @@ namespace Veldrid.Vk
             for (uint i = 0; i < outputDesc.ColorAttachments.Length; i++)
             {
                 colorAttachmentDescs[i].format = VkFormats.VdToVkPixelFormat(outputDesc.ColorAttachments[i].Format);
-                colorAttachmentDescs[i].samples = VkSampleCountFlags.Count1;
+                colorAttachmentDescs[i].samples = vkSampleCount;
                 colorAttachmentDescs[i].loadOp = VkAttachmentLoadOp.DontCare;
                 colorAttachmentDescs[i].storeOp = VkAttachmentStoreOp.Store;
                 colorAttachmentDescs[i].stencilLoadOp = VkAttachmentLoadOp.DontCare;
@@ -218,7 +223,7 @@ namespace Veldrid.Vk
             if (outputDesc.DepthAttachment != null)
             {
                 depthAttachmentDesc.format = VkFormats.VdToVkPixelFormat(outputDesc.DepthAttachment.Value.Format, toDepthFormat: true);
-                depthAttachmentDesc.samples = VkSampleCountFlags.Count1;
+                depthAttachmentDesc.samples = vkSampleCount;
                 depthAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
                 depthAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
                 depthAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;

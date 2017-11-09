@@ -1,4 +1,6 @@
-﻿namespace Veldrid
+﻿using System;
+
+namespace Veldrid
 {
     internal static class FormatHelpers
     {
@@ -59,6 +61,29 @@
                     return 4;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
+            }
+        }
+
+        internal static uint GetSampleCountUInt32(TextureSampleCount sampleCount)
+        {
+            switch (sampleCount)
+            {
+                case TextureSampleCount.Count1:
+                    return 1;
+                case TextureSampleCount.Count2:
+                    return 2;
+                case TextureSampleCount.Count4:
+                    return 4;
+                case TextureSampleCount.Count8:
+                    return 8;
+                case TextureSampleCount.Count16:
+                    return 16;
+                case TextureSampleCount.Count32:
+                    return 32;
+                case TextureSampleCount.Count64:
+                    return 64;
+                default:
+                    throw Illegal.Value<TextureSampleCount>();
             }
         }
     }

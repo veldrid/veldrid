@@ -23,7 +23,9 @@ namespace Veldrid.D3D11
         {
             BlendState = cache.GetBlendState(ref description.BlendState);
             DepthStencilState = cache.GetDepthStencilState(ref description.DepthStencilState);
-            RasterizerState = cache.GetRasterizerState(ref description.RasterizerState);
+            RasterizerState = cache.GetRasterizerState(
+                ref description.RasterizerState,
+                description.Outputs.SampleCount != TextureSampleCount.Count1);
             PrimitiveTopology = D3D11Formats.VdToD3D11PrimitiveTopology(description.PrimitiveTopology);
 
             byte[] vsBytecode = null;

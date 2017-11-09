@@ -205,7 +205,16 @@ namespace Veldrid.Vk
             EnsureSize(ref _scColorTextures, _scImages.Length);
             for (uint i = 0; i < _scImages.Length; i++)
             {
-                VkTexture colorTex = new VkTexture(_gd, _scExtent.width, _scExtent.height, 1, 1, _scImageFormat, TextureUsage.RenderTarget, _scImages[i]);
+                VkTexture colorTex = new VkTexture(
+                    _gd,
+                    _scExtent.width,
+                    _scExtent.height,
+                    1,
+                    1,
+                    _scImageFormat,
+                    TextureUsage.RenderTarget,
+                    TextureSampleCount.Count1,
+                    _scImages[i]);
                 FramebufferDescription desc = new FramebufferDescription(_depthTexture, colorTex);
                 VkFramebuffer fb = new VkFramebuffer(_gd, ref desc, true);
                 _scFramebuffers[i] = fb;

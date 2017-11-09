@@ -558,6 +558,78 @@ namespace Veldrid.OpenGLBinding
         public static void glObjectLabel(ObjectLabelIdentifier identifier, uint name, uint length, byte* label)
             => p_glObjectLabel(identifier, name, length, label);
 
+        private delegate void glTexImage2DMultisample_t(
+            TextureTarget target,
+            uint samples,
+            PixelInternalFormat internalformat,
+            uint width,
+            uint height,
+            GLboolean fixedsamplelocations);
+        private static glTexImage2DMultisample_t p_glTexImage2DMultisample;
+        public static void glTexImage2DMultiSample(
+            TextureTarget target,
+            uint samples,
+            PixelInternalFormat internalformat,
+            uint width,
+            uint height,
+            GLboolean fixedsamplelocations) => p_glTexImage2DMultisample(
+                target,
+                samples,
+                internalformat,
+                width,
+                height,
+                fixedsamplelocations);
+
+        private delegate void glTexImage3DMultisample_t(
+            TextureTarget target,
+            uint samples,
+            PixelInternalFormat internalformat,
+            uint width,
+            uint height,
+            uint depth,
+            GLboolean fixedsamplelocations);
+        private static glTexImage3DMultisample_t p_glTexImage3DMultisample;
+        public static void glTexImage3DMultisample(
+            TextureTarget target,
+            uint samples,
+            PixelInternalFormat internalformat,
+            uint width,
+            uint height,
+            uint depth,
+            GLboolean fixedsamplelocations) => p_glTexImage3DMultisample(
+                target,
+                samples,
+                internalformat,
+                width,
+                height,
+                depth,
+                fixedsamplelocations);
+
+        private delegate void glBlitFramebuffer_t(
+            int srcX0,
+            int srcY0,
+            int srcX1,
+            int srcY1,
+            int dstX0,
+            int dstY0,
+            int dstX1,
+            int dstY1,
+            ClearBufferMask mask,
+            BlitFramebufferFilter filter);
+        private static glBlitFramebuffer_t p_glBlitFramebuffer;
+        public static void glBlitFramebuffer(
+            int srcX0,
+            int srcY0,
+            int srcX1,
+            int srcY1,
+            int dstX0,
+            int dstY0,
+            int dstX1,
+            int dstY1,
+            ClearBufferMask mask,
+            BlitFramebufferFilter filter)
+            => p_glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -648,6 +720,9 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTexParameteri", out p_glTexParameteri);
             LoadFunction("glGetStringi", out p_glGetStringi);
             LoadFunction("glObjectLabel", out p_glObjectLabel);
+            LoadFunction("glTexImage2DMultisample", out p_glTexImage2DMultisample);
+            LoadFunction("glTexImage3DMultisample", out p_glTexImage3DMultisample);
+            LoadFunction("glBlitFramebuffer", out p_glBlitFramebuffer);
         }
 
         private static void LoadFunction<T>(string name, out T field)

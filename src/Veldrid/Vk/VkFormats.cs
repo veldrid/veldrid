@@ -91,6 +91,29 @@ namespace Veldrid.Vk
             }
         }
 
+        internal static VkSampleCountFlags VdToVkSampleCount(TextureSampleCount sampleCount)
+        {
+            switch (sampleCount)
+            {
+                case TextureSampleCount.Count1:
+                    return VkSampleCountFlags.Count1;
+                case TextureSampleCount.Count2:
+                    return VkSampleCountFlags.Count2;
+                case TextureSampleCount.Count4:
+                    return VkSampleCountFlags.Count4;
+                case TextureSampleCount.Count8:
+                    return VkSampleCountFlags.Count8;
+                case TextureSampleCount.Count16:
+                    return VkSampleCountFlags.Count16;
+                case TextureSampleCount.Count32:
+                    return VkSampleCountFlags.Count32;
+                case TextureSampleCount.Count64:
+                    return VkSampleCountFlags.Count64;
+                default:
+                    throw Illegal.Value<TextureSampleCount>();
+            }
+        }
+
         internal static VkPolygonMode VdToVkPolygonMode(PolygonFillMode fillMode)
         {
             switch (fillMode)

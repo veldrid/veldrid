@@ -159,11 +159,8 @@ namespace Veldrid.OpenGL
                         }
                         else
                         {
+                            // TODO: Support raw uniform values, not wrapped in a uniform block.
                             throw new System.NotImplementedException();
-                            //int uniformLocation = glGetUniformLocation(_program, resource.Name);
-
-                            //OpenGLUniformStorageAdapter storageAdapter = new OpenGLUniformStorageAdapter(_program, uniformLocation);
-                            //_constantBindings[i] = new OpenGLUniformBinding(_program, storageAdapter);
                         }
                     }
                     else if (resource.Kind == ResourceKind.TextureView)

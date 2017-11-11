@@ -25,10 +25,11 @@ namespace Veldrid
         private Shader _vertexShader;
         private Shader _fragmentShader;
         private ResourceLayout _layout;
+        private ResourceLayout _textureLayout;
         private Pipeline _pipeline;
-        private ResourceSet _resourceSet;
-
-        private int _fontAtlasID = 1;
+        private ResourceSet _mainResourceSet;
+        private ResourceSet _fontTextureResourceSet;
+        private IntPtr _fontAtlasID = (IntPtr)1;
         private bool _controlDown;
         private bool _shiftDown;
         private bool _altDown;
@@ -99,9 +100,9 @@ namespace Veldrid
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("ProjectionMatrixBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
-                new ResourceLayoutElementDescription("FontTexture", ResourceKind.TextureView, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("FontSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
-
+                new ResourceLayoutElementDescription("MainSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
+            _textureLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("MainTexture", ResourceKind.TextureView, ShaderStages.Fragment)));
 
             PipelineDescription pd = new PipelineDescription(
                 BlendStateDescription.SingleAlphaBlend,
@@ -109,14 +110,15 @@ namespace Veldrid
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, false, true),
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, shaderStages),
-                new ResourceLayout[] { _layout },
+                new ResourceLayout[] { _layout, _textureLayout },
                 outputDescription);
             _pipeline = factory.CreatePipeline(ref pd);
 
-            _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,
+            _mainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,
                 _projMatrixBuffer,
-                _fontTextureView,
                 gd.PointSampler));
+
+            _fontTextureResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_textureLayout, _fontTextureView));
         }
 
         private byte[] LoadEmbeddedShaderCode(ResourceFactory factory, string name, ShaderStages stage)
@@ -384,7 +386,7 @@ namespace Veldrid
             cl.SetVertexBuffer(0, _vertexBuffer);
             cl.SetIndexBuffer(_indexBuffer);
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(0, _resourceSet);
+            cl.SetResourceSet(0, _mainResourceSet);
 
             ImGui.ScaleClipRects(draw_data, ImGui.GetIO().DisplayFramebufferScale);
 
@@ -405,9 +407,13 @@ namespace Veldrid
                     {
                         if (pcmd->TextureId != IntPtr.Zero)
                         {
-                            if (pcmd->TextureId != new IntPtr(_fontAtlasID))
+                            if (pcmd->TextureId == _fontAtlasID)
                             {
-                                throw new NotImplementedException();
+                                cl.SetResourceSet(1, _fontTextureResourceSet);
+                            }
+                            else
+                            {
+                                cl.SetResourceSet(1, ImGuiImageHelper.GetResourceSet(pcmd->TextureId));
                             }
                         }
 
@@ -440,8 +446,9 @@ namespace Veldrid
             _vertexShader.Dispose();
             _fragmentShader.Dispose();
             _layout.Dispose();
+            _textureLayout.Dispose();
             _pipeline.Dispose();
-            _resourceSet.Dispose();
+            _mainResourceSet.Dispose();
         }
     }
 }

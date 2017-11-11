@@ -9,19 +9,19 @@ namespace Veldrid
     /// </summary>
     public static class ImGuiImageHelper
     {
-        private static readonly Dictionary<Texture, TextureViewInfo> s_viewsByTexture = new Dictionary<Texture, TextureViewInfo>();
-        private static Dictionary<IntPtr, TextureViewInfo> s_viewsById = new Dictionary<IntPtr, TextureViewInfo>();
+        private static readonly Dictionary<ResourceSet, ResourceSetInfo> s_viewsByTexture = new Dictionary<ResourceSet, ResourceSetInfo>();
+        private static Dictionary<IntPtr, ResourceSetInfo> s_viewsById = new Dictionary<IntPtr, ResourceSetInfo>();
         private static int s_lastAssigned = 100;
 
-        private struct TextureViewInfo
+        private struct ResourceSetInfo
         {
             public readonly IntPtr ImGuiBinding;
-            public readonly TextureView View;
+            public readonly ResourceSet ResourceSet;
 
-            public TextureViewInfo(IntPtr imGuiBinding, TextureView textureView)
+            public ResourceSetInfo(IntPtr imGuiBinding, ResourceSet resourceSet)
             {
                 ImGuiBinding = imGuiBinding;
-                View = textureView;
+                ResourceSet = resourceSet;
             }
         }
 
@@ -29,24 +29,14 @@ namespace Veldrid
         /// Gets or creates a handle for a texture to be drawn with ImGui.
         /// Pass the returned handle to Image() or ImageButton().
         /// </summary>
-        public static IntPtr GetOrCreateImGuiBinding(GraphicsDevice gd, Texture texture)
+        public static IntPtr GetOrCreateImGuiBinding(ResourceSet resourceSet)
         {
-            TextureView texView = gd.ResourceFactory.CreateTextureView(texture);
-            return GetOrCreateImGuiBinding(gd, texView);
-        }
-
-        /// <summary>
-        /// Gets or creates a handle for a texture to be drawn with ImGui.
-        /// Pass the returned handle to Image() or ImageButton().
-        /// </summary>
-        public static IntPtr GetOrCreateImGuiBinding(GraphicsDevice gd, TextureView view)
-        {
-            if (!s_viewsByTexture.TryGetValue(view.Target, out TextureViewInfo tvi))
+            if (!s_viewsByTexture.TryGetValue(resourceSet, out ResourceSetInfo tvi))
             {
                 IntPtr imGuiBinding = new IntPtr(++s_lastAssigned);
-                tvi = new TextureViewInfo(imGuiBinding, view);
+                tvi = new ResourceSetInfo(imGuiBinding, resourceSet);
 
-                s_viewsByTexture.Add(view.Target, tvi);
+                s_viewsByTexture.Add(resourceSet, tvi);
                 s_viewsById.Add(imGuiBinding, tvi);
             }
 
@@ -56,14 +46,14 @@ namespace Veldrid
         /// <summary>
         /// Retrieves the shader texture binding for the given helper handle.
         /// </summary>
-        public static TextureView GetShaderTextureBinding(IntPtr imGuiBinding)
+        public static ResourceSet GetResourceSet(IntPtr imGuiBinding)
         {
-            if (!s_viewsById.TryGetValue(imGuiBinding, out TextureViewInfo tvi))
+            if (!s_viewsById.TryGetValue(imGuiBinding, out ResourceSetInfo tvi))
             {
                 throw new InvalidOperationException("No registered ImGui binding with id " + imGuiBinding.ToString());
             }
 
-            return tvi.View;
+            return tvi.ResourceSet;
         }
 
         /// <summary>
@@ -72,9 +62,9 @@ namespace Veldrid
         /// </summary>
         public static void InvalidateCache()
         {
-            foreach (KeyValuePair<Texture, TextureViewInfo> kvp in s_viewsByTexture)
+            foreach (KeyValuePair<ResourceSet, ResourceSetInfo> kvp in s_viewsByTexture)
             {
-                kvp.Value.View.Dispose();
+                kvp.Value.ResourceSet.Dispose();
             }
         }
     }

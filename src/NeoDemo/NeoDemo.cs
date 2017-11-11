@@ -412,6 +412,7 @@ namespace Veldrid.NeoDemo
 
         private void DestroyAllObjects()
         {
+            _gd.WaitForIdle();
             _frameCommands.Dispose();
             _sc.DestroyDeviceObjects();
             _scene.DestroyAllDeviceObjects();

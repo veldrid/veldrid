@@ -128,7 +128,7 @@ namespace Veldrid.OpenGLBinding
         FramebufferExt = 36160
     }
 
-    public enum FramebufferAttachment
+    public enum GLFramebufferAttachment
     {
         FrontLeft = 1024,
         FrontRight = 1025,

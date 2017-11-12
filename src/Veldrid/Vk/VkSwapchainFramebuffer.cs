@@ -19,17 +19,17 @@ namespace Veldrid.Vk
         private VkImage[] _scImages;
         private VkFormat _scImageFormat;
         private VkExtent2D _scExtent;
-        private VkTexture[][] _scColorTextures;
+        private FramebufferAttachment[][] _scColorTextures;
 
-        private VkTexture _depthTexture;
+        private FramebufferAttachment? _depthAttachment;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
 
         public override VkRenderPass RenderPass => _scFramebuffers[0].RenderPass;
 
-        public override IReadOnlyList<Texture> ColorTextures => _scColorTextures[(int)_currentImageIndex];
+        public override IReadOnlyList<FramebufferAttachment> ColorTargets => _scColorTextures[(int)_currentImageIndex];
 
-        public override Texture DepthTexture => _depthTexture;
+        public override FramebufferAttachment? DepthTarget => _depthAttachment;
 
         public override uint Width => _scExtent.width;
         public override uint Height => _scExtent.height;
@@ -178,15 +178,16 @@ namespace Veldrid.Vk
 
         private void CreateDepthTexture()
         {
-            _depthTexture?.Dispose();
-            _depthTexture = (VkTexture)_gd.ResourceFactory.CreateTexture(new TextureDescription(
+            _depthAttachment?.Target.Dispose();
+            VkTexture depthTexture = (VkTexture)_gd.ResourceFactory.CreateTexture(new TextureDescription(
                 _scExtent.width,
                 _scExtent.height,
                 1,
                 1,
                 1,
-                 PixelFormat.R16_UNorm,
+                PixelFormat.R16_UNorm,
                 TextureUsage.DepthStencil));
+            _depthAttachment = new FramebufferAttachment(depthTexture, 0);
         }
 
         private void CreateFramebuffers()
@@ -215,10 +216,10 @@ namespace Veldrid.Vk
                     TextureUsage.RenderTarget,
                     TextureSampleCount.Count1,
                     _scImages[i]);
-                FramebufferDescription desc = new FramebufferDescription(_depthTexture, colorTex);
+                FramebufferDescription desc = new FramebufferDescription(_depthAttachment?.Target, colorTex);
                 VkFramebuffer fb = new VkFramebuffer(_gd, ref desc, true);
                 _scFramebuffers[i] = fb;
-                _scColorTextures[i] = new VkTexture[] { colorTex };
+                _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
             }
         }
 
@@ -236,7 +237,7 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            _depthTexture?.Dispose();
+            _depthAttachment?.Target.Dispose();
             for (int i = 0; i < _scFramebuffers.Length; i++)
             {
                 _scFramebuffers[i].Dispose();

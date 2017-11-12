@@ -1,6 +1,7 @@
 ﻿using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
+using System.Diagnostics;
 
 namespace Veldrid.OpenGL
 {
@@ -46,14 +47,14 @@ namespace Veldrid.OpenGL
             glBindFramebuffer(FramebufferTarget.Framebuffer, _framebuffer);
             CheckLastError();
 
-            uint colorCount = (uint)ColorTextures.Count;
+            uint colorCount = (uint)ColorTargets.Count;
 
             if (colorCount > 0)
             {
                 for (int i = 0; i < colorCount; i++)
                 {
-                    Texture target = ColorTextures[i];
-                    OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(target);
+                    FramebufferAttachment colorAttachment = ColorTargets[i];
+                    OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(colorAttachment.Target);
                     glTex.EnsureResourcesCreated();
 
                     glActiveTexture(TextureUnit.Texture0);
@@ -62,13 +63,25 @@ namespace Veldrid.OpenGL
                     glBindTexture(glTex.TextureTarget, glTex.Texture);
                     CheckLastError();
 
-                    glFramebufferTexture2D(
-                        FramebufferTarget.Framebuffer,
-                        FramebufferAttachment.ColorAttachment0 + i,
-                        glTex.TextureTarget,
-                        glTex.Texture,
-                        0);
-                    CheckLastError();
+                    if (glTex.ArrayLayers == 1)
+                    {
+                        glFramebufferTexture2D(
+                            FramebufferTarget.Framebuffer,
+                            GLFramebufferAttachment.ColorAttachment0 + i,
+                            glTex.TextureTarget,
+                            glTex.Texture,
+                            0);
+                        CheckLastError();
+                    }
+                    else
+                    {
+                        glFramebufferTextureLayer(
+                            FramebufferTarget.Framebuffer,
+                            GLFramebufferAttachment.ColorAttachment0 + i,
+                            glTex.Texture,
+                            0,
+                            (int)colorAttachment.ArrayLayer);
+                    }
                 }
 
                 DrawBuffersEnum* bufs = stackalloc DrawBuffersEnum[(int)colorCount];
@@ -82,9 +95,9 @@ namespace Veldrid.OpenGL
 
             uint depthTextureID = 0;
             TextureTarget depthTarget = TextureTarget.Texture2D;
-            if (DepthTexture != null)
+            if (DepthTarget != null)
             {
-                OpenGLTexture glDepthTex = Util.AssertSubtype<Texture, OpenGLTexture>(DepthTexture);
+                OpenGLTexture glDepthTex = Util.AssertSubtype<Texture, OpenGLTexture>(DepthTarget.Value.Target);
                 glDepthTex.EnsureResourcesCreated();
                 depthTarget = glDepthTex.TextureTarget;
 
@@ -94,15 +107,29 @@ namespace Veldrid.OpenGL
 
                 glBindTexture(depthTarget, glDepthTex.Texture);
                 CheckLastError();
-            }
 
-            glFramebufferTexture2D(
-                FramebufferTarget.Framebuffer,
-                FramebufferAttachment.DepthAttachment,
-                depthTarget,
-                depthTextureID,
-                0);
-            CheckLastError();
+                if (glDepthTex.ArrayLayers == 1)
+                {
+                    glFramebufferTexture2D(
+                        FramebufferTarget.Framebuffer,
+                        GLFramebufferAttachment.DepthAttachment,
+                        depthTarget,
+                        depthTextureID,
+                        0);
+                    CheckLastError();
+                }
+                else
+                {
+                    glFramebufferTextureLayer(
+                        FramebufferTarget.Framebuffer,
+                        GLFramebufferAttachment.DepthAttachment,
+                        glDepthTex.Texture,
+                        0,
+                        (int)DepthTarget.Value.ArrayLayer);
+                    CheckLastError();
+                }
+
+            }
 
             FramebufferErrorCode errorCode = glCheckFramebufferStatus(FramebufferTarget.Framebuffer);
             CheckLastError();

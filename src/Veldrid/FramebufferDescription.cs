@@ -11,13 +11,13 @@ namespace Veldrid
         /// The depth texture, which must have been created with <see cref="TextureUsage.DepthStencil"/> usage flags.
         /// May be null.
         /// </summary>
-        public Texture DepthTarget;
+        public FramebufferAttachmentDescription? DepthTarget;
 
         /// <summary>
         /// An array of color textures, all of which must have been created with <see cref="TextureUsage.RenderTarget"/>
         /// usage flags. May be null or empty.
         /// </summary>
-        public Texture[] ColorTargets;
+        public FramebufferAttachmentDescription[] ColorTargets;
 
         /// <summary>
         /// Constructs a new <see cref="FramebufferDescription"/>.
@@ -27,6 +27,25 @@ namespace Veldrid
         /// <param name="colorTargets">An array of color textures, all of which must have been created with
         /// <see cref="TextureUsage.RenderTarget"/> usage flags. May be null or empty.</param>
         public FramebufferDescription(Texture depthTarget, params Texture[] colorTargets)
+        {
+            if (depthTarget != null)
+            {
+                DepthTarget = new FramebufferAttachmentDescription(depthTarget, 0);
+            }
+            else
+            {
+                DepthTarget = null;
+            }
+            ColorTargets = new FramebufferAttachmentDescription[colorTargets.Length];
+            for (int i = 0; i < colorTargets.Length; i++)
+            {
+                ColorTargets[i] = new FramebufferAttachmentDescription(colorTargets[i], 0);
+            }
+        }
+
+        public FramebufferDescription(
+            FramebufferAttachmentDescription? depthTarget,
+            FramebufferAttachmentDescription[] colorTargets)
         {
             DepthTarget = depthTarget;
             ColorTargets = colorTargets;
@@ -39,7 +58,7 @@ namespace Veldrid
         /// <returns>True if all elements and all array elements are equal; false otherswise.</returns>
         public bool Equals(FramebufferDescription other)
         {
-            return DepthTarget.Equals(other.DepthTarget) && Util.ArrayEquals(ColorTargets, other.ColorTargets);
+            return DepthTarget.Equals(other.DepthTarget) && Util.ArrayEqualsEquatable(ColorTargets, other.ColorTargets);
         }
 
         /// <summary>

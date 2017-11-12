@@ -27,12 +27,12 @@ namespace Veldrid.Vk
 
             StackList<VkAttachmentDescription> attachments = new StackList<VkAttachmentDescription>();
 
-            uint colorAttachmentCount = (uint)ColorTextures.Count;
+            uint colorAttachmentCount = (uint)ColorTargets.Count;
             StackList<VkAttachmentDescription> colorAttachmentDescriptions = new StackList<VkAttachmentDescription>();
             StackList<VkAttachmentReference> colorAttachmentRefs = new StackList<VkAttachmentReference>();
             for (int i = 0; i < colorAttachmentCount; i++)
             {
-                VkTexture vkColorTex = Util.AssertSubtype<Texture, VkTexture>(ColorTextures[i]);
+                VkTexture vkColorTex = Util.AssertSubtype<Texture, VkTexture>(ColorTargets[i].Target);
                 VkAttachmentDescription colorAttachmentDesc = new VkAttachmentDescription();
                 colorAttachmentDesc.format = vkColorTex.VkFormat;
                 colorAttachmentDesc.samples = vkColorTex.VkSampleCount;
@@ -53,9 +53,9 @@ namespace Veldrid.Vk
 
             VkAttachmentDescription depthAttachmentDesc = new VkAttachmentDescription();
             VkAttachmentReference depthAttachmentRef = new VkAttachmentReference();
-            if (DepthTexture != null)
+            if (DepthTarget != null)
             {
-                VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(DepthTexture);
+                VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
                 depthAttachmentDesc.format = vkDepthTex.VkFormat;
                 depthAttachmentDesc.samples = vkDepthTex.VkSampleCount;
                 depthAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
@@ -71,13 +71,13 @@ namespace Veldrid.Vk
 
             VkSubpassDescription subpass = new VkSubpassDescription();
             subpass.pipelineBindPoint = VkPipelineBindPoint.Graphics;
-            if (ColorTextures.Count > 0)
+            if (ColorTargets.Count > 0)
             {
                 subpass.colorAttachmentCount = colorAttachmentCount;
                 subpass.pColorAttachments = (VkAttachmentReference*)colorAttachmentRefs.Data;
             }
 
-            if (DepthTexture != null)
+            if (DepthTarget != null)
             {
                 subpass.pDepthStencilAttachment = &depthAttachmentRef;
                 attachments.Add(depthAttachmentDesc);
@@ -88,7 +88,7 @@ namespace Veldrid.Vk
             subpassDependency.srcStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             subpassDependency.dstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             subpassDependency.dstAccessMask = VkAccessFlags.ColorAttachmentRead | VkAccessFlags.ColorAttachmentWrite;
-            if (DepthTexture != null)
+            if (DepthTarget != null)
             {
                 subpassDependency.dstAccessMask |= VkAccessFlags.DepthStencilAttachmentRead | VkAccessFlags.DepthStencilAttachmentWrite;
             }
@@ -113,12 +113,17 @@ namespace Veldrid.Vk
             VkImageView* fbAttachments = stackalloc VkImageView[(int)fbAttachmentsCount];
             for (int i = 0; i < colorAttachmentCount; i++)
             {
-                VkTexture vkColorTarget = Util.AssertSubtype<Texture, VkTexture>(description.ColorTargets[i]);
+                VkTexture vkColorTarget = Util.AssertSubtype<Texture, VkTexture>(description.ColorTargets[i].Target);
                 VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();
                 imageViewCI.image = vkColorTarget.DeviceImage;
                 imageViewCI.format = vkColorTarget.VkFormat;
                 imageViewCI.viewType = VkImageViewType.Image2D;
-                imageViewCI.subresourceRange = new VkImageSubresourceRange(VkImageAspectFlags.Color, 0, 1, 0, 1);
+                imageViewCI.subresourceRange = new VkImageSubresourceRange(
+                    VkImageAspectFlags.Color,
+                    0,
+                    1,
+                    description.ColorTargets[i].ArrayLayer,
+                    1);
                 VkImageView* dest = (fbAttachments + i);
                 VkResult result = vkCreateImageView(_gd.Device, ref imageViewCI, null, dest);
                 CheckResult(result);
@@ -128,27 +133,32 @@ namespace Veldrid.Vk
             // Depth
             if (description.DepthTarget != null)
             {
-                VkTexture vkDepthTarget = Util.AssertSubtype<Texture, VkTexture>(description.DepthTarget);
+                VkTexture vkDepthTarget = Util.AssertSubtype<Texture, VkTexture>(description.DepthTarget.Value.Target);
                 VkImageViewCreateInfo depthViewCI = VkImageViewCreateInfo.New();
                 depthViewCI.image = vkDepthTarget.DeviceImage;
                 depthViewCI.format = vkDepthTarget.VkFormat;
                 depthViewCI.viewType = VkImageViewType.Image2D;
-                depthViewCI.subresourceRange = new VkImageSubresourceRange(VkImageAspectFlags.Depth, 0, 1, 0, 1);
+                depthViewCI.subresourceRange = new VkImageSubresourceRange(
+                    VkImageAspectFlags.Depth,
+                    0,
+                    1,
+                    description.DepthTarget.Value.ArrayLayer,
+                    1);
                 VkImageView* dest = (fbAttachments + (fbAttachmentsCount - 1));
                 VkResult result = vkCreateImageView(_gd.Device, ref depthViewCI, null, dest);
                 CheckResult(result);
                 _attachmentViews.Add(*dest);
             }
 
-            if (ColorTextures.Count > 0)
+            if (ColorTargets.Count > 0)
             {
-                fbCI.width = ColorTextures[0].Width;
-                fbCI.height = ColorTextures[0].Height;
+                fbCI.width = ColorTargets[0].Target.Width;
+                fbCI.height = ColorTargets[0].Target.Height;
             }
-            else if (DepthTexture != null)
+            else if (DepthTarget != null)
             {
-                fbCI.width = DepthTexture.Width;
-                fbCI.height = DepthTexture.Height;
+                fbCI.width = DepthTarget.Value.Target.Width;
+                fbCI.height = DepthTarget.Value.Target.Height;
             }
 
             fbCI.attachmentCount = fbAttachmentsCount;

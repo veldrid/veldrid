@@ -119,7 +119,7 @@ namespace Veldrid
         {
             SetViewport(0, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
 
-            for (uint index = 1; index < _framebuffer.ColorTextures.Count; index++)
+            for (uint index = 1; index < _framebuffer.ColorTargets.Count; index++)
             {
                 SetViewport(index, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
             }
@@ -157,7 +157,7 @@ namespace Veldrid
         {
             SetScissorRect(0, 0, 0, _framebuffer.Width, _framebuffer.Height);
 
-            for (uint index = 1; index < _framebuffer.ColorTextures.Count; index++)
+            for (uint index = 1; index < _framebuffer.ColorTargets.Count; index++)
             {
                 SetScissorRect(index, 0, 0, _framebuffer.Width, _framebuffer.Height);
             }

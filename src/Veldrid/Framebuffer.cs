@@ -10,14 +10,14 @@ namespace Veldrid
     public abstract class Framebuffer : DeviceResource, IDisposable
     {
         /// <summary>
-        /// Gets the depth texture associated with this instance. May be null if no depth texture is used.
+        /// Gets the depth attachment associated with this instance. May be null if no depth texture is used.
         /// </summary>
-        public virtual Texture DepthTexture { get; }
+        public virtual FramebufferAttachment? DepthTarget { get; }
 
         /// <summary>
-        /// Gets the collection of color textures associated with this instance. May be empty.
+        /// Gets the collection of color attachments associated with this instance. May be empty.
         /// </summary>
-        public virtual IReadOnlyList<Texture> ColorTextures { get; }
+        public virtual IReadOnlyList<FramebufferAttachment> ColorTargets { get; }
 
         /// <summary>
         /// Gets an <see cref="Veldrid.OutputDescription"/> which describes the number and formats of the color targets in this instance.
@@ -34,26 +34,57 @@ namespace Veldrid
         /// </summary>
         public virtual uint Height { get; }
 
-        internal Framebuffer(Texture depthTexture, IReadOnlyList<Texture> colorTextures)
+        internal Framebuffer(FramebufferAttachment? depthTexture, IReadOnlyList<FramebufferAttachment> colorTextures)
         {
-            ColorTextures = colorTextures;
-            DepthTexture = depthTexture;
+            ColorTargets = colorTextures;
+            DepthTarget = depthTexture;
 
             if (colorTextures.Count > 0)
             {
-                Width = colorTextures[0].Width;
-                Height = colorTextures[0].Height;
+                Width = colorTextures[0].Target.Width;
+                Height = colorTextures[0].Target.Height;
             }
             else if (depthTexture != null)
             {
-                Width = depthTexture.Width;
-                Height = depthTexture.Height;
+                Width = depthTexture.Value.Target.Width;
+                Height = depthTexture.Value.Target.Height;
             }
 
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
         }
 
         internal Framebuffer() { }
+
+        internal Framebuffer(
+            FramebufferAttachmentDescription? depthTargetDesc,
+            IReadOnlyList<FramebufferAttachmentDescription> colorTargetDescs)
+        {
+            if (depthTargetDesc != null)
+            {
+                FramebufferAttachmentDescription depthAttachment = depthTargetDesc.Value;
+                DepthTarget = new FramebufferAttachment(depthAttachment.Target, depthAttachment.ArrayLayer);
+            }
+            FramebufferAttachment[] colorTargets = new FramebufferAttachment[colorTargetDescs.Count];
+            for (int i = 0; i < colorTargets.Length; i++)
+            {
+                colorTargets[i] = new FramebufferAttachment(colorTargetDescs[i].Target, colorTargetDescs[i].ArrayLayer);
+            }
+
+            ColorTargets = colorTargets;
+
+            if (ColorTargets.Count > 0)
+            {
+                Width = ColorTargets[0].Target.Width;
+                Height = ColorTargets[0].Target.Height;
+            }
+            else if (DepthTarget != null)
+            {
+                Width = DepthTarget.Value.Target.Width;
+                Height = DepthTarget.Value.Target.Height;
+            }
+
+            OutputDescription = OutputDescription.CreateFromFramebuffer(this);
+        }
 
         /// <summary>
         /// Frees unmanaged device resources controlled by this instance.

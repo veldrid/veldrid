@@ -53,16 +53,16 @@ namespace Veldrid
         {
             TextureSampleCount sampleCount = 0;
             OutputAttachmentDescription? depthAttachment = null;
-            if (fb.DepthTexture != null)
+            if (fb.DepthTarget != null)
             {
-                depthAttachment = new OutputAttachmentDescription(fb.DepthTexture.Format);
-                sampleCount = fb.DepthTexture.SampleCount;
+                depthAttachment = new OutputAttachmentDescription(fb.DepthTarget.Value.Target.Format);
+                sampleCount = fb.DepthTarget.Value.Target.SampleCount;
             }
-            OutputAttachmentDescription[] colorAttachments = new OutputAttachmentDescription[fb.ColorTextures.Count];
+            OutputAttachmentDescription[] colorAttachments = new OutputAttachmentDescription[fb.ColorTargets.Count];
             for (int i = 0; i < colorAttachments.Length; i++)
             {
-                colorAttachments[i] = new OutputAttachmentDescription(fb.ColorTextures[i].Format);
-                sampleCount = fb.ColorTextures[i].SampleCount;
+                colorAttachments[i] = new OutputAttachmentDescription(fb.ColorTargets[i].Target.Format);
+                sampleCount = fb.ColorTargets[i].Target.SampleCount;
             }
 
             return new OutputDescription(depthAttachment, colorAttachments, sampleCount);

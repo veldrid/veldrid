@@ -94,7 +94,7 @@ namespace Veldrid.Vk
                 clearValue = clearValue
             };
 
-            Texture colorTex = _currentFramebuffer.ColorTextures[(int)index];
+            Texture colorTex = _currentFramebuffer.ColorTargets[(int)index].Target;
             VkClearRect clearRect = new VkClearRect
             {
                 baseArrayLayer = 0,
@@ -114,7 +114,7 @@ namespace Veldrid.Vk
                 clearValue = clearValue
             };
 
-            Texture depthTex = _currentFramebuffer.DepthTexture;
+            Texture depthTex = _currentFramebuffer.DepthTarget.Value.Target;
             VkClearRect clearRect = new VkClearRect
             {
                 baseArrayLayer = 0,

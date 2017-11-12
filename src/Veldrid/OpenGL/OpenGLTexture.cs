@@ -302,7 +302,7 @@ namespace Veldrid.OpenGL
 
                 glFramebufferTexture2D(
                     framebufferTarget,
-                    FramebufferAttachment.ColorAttachment0,
+                    GLFramebufferAttachment.ColorAttachment0,
                     TextureTarget,
                     Texture,
                     0);

@@ -15,7 +15,7 @@ namespace Veldrid.D3D11
         {
             if (description.DepthTarget != null)
             {
-                D3D11Texture d3dDepthTarget = Util.AssertSubtype<Texture, D3D11Texture>(description.DepthTarget);
+                D3D11Texture d3dDepthTarget = Util.AssertSubtype<Texture, D3D11Texture>(description.DepthTarget.Value.Target);
                 DepthStencilViewDimension dimension = d3dDepthTarget.SampleCount == TextureSampleCount.Count1
                     ? DepthStencilViewDimension.Texture2D
                     : DepthStencilViewDimension.Texture2DMultisampled;
@@ -32,15 +32,43 @@ namespace Veldrid.D3D11
                 RenderTargetViews = new RenderTargetView[description.ColorTargets.Length];
                 for (int i = 0; i < RenderTargetViews.Length; i++)
                 {
-                    D3D11Texture d3dColorTarget = Util.AssertSubtype<Texture, D3D11Texture>(description.ColorTargets[i]);
-                    RenderTargetViewDimension dimension = d3dColorTarget.SampleCount == TextureSampleCount.Count1
-                        ? RenderTargetViewDimension.Texture2D
-                        : RenderTargetViewDimension.Texture2DMultisampled;
+                    D3D11Texture d3dColorTarget = Util.AssertSubtype<Texture, D3D11Texture>(description.ColorTargets[i].Target);
                     RenderTargetViewDescription rtvDesc = new RenderTargetViewDescription
                     {
-                        Dimension = dimension,
                         Format = D3D11Formats.ToDxgiFormat(d3dColorTarget.Format, false),
                     };
+                    if (d3dColorTarget.ArrayLayers == 1)
+                    {
+                        if (d3dColorTarget.SampleCount == TextureSampleCount.Count1)
+                        {
+                            rtvDesc.Dimension = RenderTargetViewDimension.Texture2D;
+                        }
+                        else
+                        {
+                            rtvDesc.Dimension = RenderTargetViewDimension.Texture2DMultisampled;
+                        }
+                    }
+                    else
+                    {
+                        if (d3dColorTarget.SampleCount == TextureSampleCount.Count1)
+                        {
+                            rtvDesc.Dimension = RenderTargetViewDimension.Texture2DArray;
+                            rtvDesc.Texture2DArray = new RenderTargetViewDescription.Texture2DArrayResource
+                            {
+                                ArraySize = 1,
+                                FirstArraySlice = (int)description.ColorTargets[i].ArrayLayer
+                            };
+                        }
+                        else
+                        {
+                            rtvDesc.Dimension = RenderTargetViewDimension.Texture2DMultisampledArray;
+                            rtvDesc.Texture2DMSArray = new RenderTargetViewDescription.Texture2DMultisampledArrayResource
+                            {
+                                ArraySize = 1,
+                                FirstArraySlice = (int)description.ColorTargets[i].ArrayLayer
+                            };
+                        }
+                    }
                     RenderTargetViews[i] = new RenderTargetView(device, d3dColorTarget.DeviceTexture, rtvDesc);
                 }
             }

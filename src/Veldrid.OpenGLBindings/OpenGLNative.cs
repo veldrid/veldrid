@@ -116,14 +116,14 @@ namespace Veldrid.OpenGLBinding
 
         private delegate void glFramebufferTexture2D_t(
             FramebufferTarget target,
-            FramebufferAttachment attachment,
+            GLFramebufferAttachment attachment,
             TextureTarget textarget,
             uint texture,
             int level);
         private static glFramebufferTexture2D_t p_glFramebufferTexture2D;
         public static void glFramebufferTexture2D(
             FramebufferTarget target,
-            FramebufferAttachment attachment,
+            GLFramebufferAttachment attachment,
             TextureTarget textarget,
             uint texture,
             int level) => p_glFramebufferTexture2D(target, attachment, textarget, texture, level);
@@ -630,6 +630,20 @@ namespace Veldrid.OpenGLBinding
             BlitFramebufferFilter filter)
             => p_glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 
+        private delegate void glFramebufferTextureLayer_t(
+            FramebufferTarget target,
+            GLFramebufferAttachment attachment,
+            uint texture,
+            int level,
+            int layer);
+        private static glFramebufferTextureLayer_t p_glFramebufferTextureLayer;
+        public static void glFramebufferTextureLayer(
+            FramebufferTarget target,
+            GLFramebufferAttachment attachment,
+            uint texture,
+            int level,
+            int layer) => p_glFramebufferTextureLayer(target, attachment, texture, level, layer);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -723,6 +737,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTexImage2DMultisample", out p_glTexImage2DMultisample);
             LoadFunction("glTexImage3DMultisample", out p_glTexImage3DMultisample);
             LoadFunction("glBlitFramebuffer", out p_glBlitFramebuffer);
+            LoadFunction("glFramebufferTextureLayer", out p_glFramebufferTextureLayer);
         }
 
         private static void LoadFunction<T>(string name, out T field)

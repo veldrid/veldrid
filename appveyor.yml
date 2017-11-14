@@ -1,3 +1,10 @@
 build_script:
   ci-build.cmd
 
+deploy:
+  provider: NuGet
+  server: https://www.myget.org/F/mellinoe/api/v2/package
+  api_key:
+    secure: 2THjR9L+JBB3MCjzjC9e9eEJ9drdpgV6J/Hqej2yydtT0hvqf3kZNxtoiGz91CG7
+  skip_symbols: false
+  artifact: bin/packages/.*\.nupkg/

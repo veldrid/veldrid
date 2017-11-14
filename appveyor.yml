@@ -7,4 +7,4 @@ deploy:
   api_key:
     secure: 2THjR9L+JBB3MCjzjC9e9eEJ9drdpgV6J/Hqej2yydtT0hvqf3kZNxtoiGz91CG7
   skip_symbols: false
-  artifact: bin/packages/.*\.nupkg/
+  artifact: bin/Packages/Release/.*\.nupkg/

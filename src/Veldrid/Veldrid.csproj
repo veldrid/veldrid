@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyVersion>4.0.0</AssemblyVersion>
     <DocumentationFile>$(BinDir)\$(AssemblyName).xml</DocumentationFile>
     <NoWarn Condition="'$(Configuration)' == 'Debug'">1591</NoWarn>
     <DefineConstants Condition="'$(Configuration)' == 'Debug'">$(DefineConstants);VALIDATE_USAGE</DefineConstants>
@@ -18,6 +17,7 @@
     <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" />
     <PackageReference Include="SharpDX.DXGI" Version="4.0.1" />
     <PackageReference Include="Vk" Version="1.0.11" />
+    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="All" Version="2.0.41" />
     <ProjectReference Include="..\Veldrid.OpenGLBindings\Veldrid.OpenGLBindings.csproj" />
   </ItemGroup>
 

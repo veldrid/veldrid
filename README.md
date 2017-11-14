@@ -1,6 +1,6 @@
 # Veldrid
 
-_Note: This repository contains an in-development new version of Veldrid. Older versions of Veldrid can be found in the [Veldrid-legacy](https://github.com/mellinoe/Veldrid-Legacy) repository._
+_Note: This repository contains a new in-development version of Veldrid. Older versions of Veldrid can be found in the [Veldrid-legacy](https://github.com/mellinoe/Veldrid-Legacy) repository._
 
 Veldrid is a cross-platform, graphics API-agnostic rendering library for .NET. It allows you to use a single set of rendering commands and run your application on a number of different graphics API's. With some small exceptions, applications written against Veldrid will run on any of its backends without modification.
 
@@ -9,6 +9,10 @@ Supported backends:
 * Direct3D 11
 * Vulkan
 * OpenGL 3
+
+[Veldrid documentation site](https://mellinoe.github.io/veldrid-docs/)
+
+Pre-release versions of Veldrid are available from MyGet: https://www.myget.org/feed/mellinoe/package/nuget/Veldrid
 
 ![Sponza](https://i.imgur.com/K7pk9iK.jpg)
 

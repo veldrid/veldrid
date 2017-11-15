@@ -95,7 +95,7 @@ namespace Veldrid.NeoDemo
             }
             s_textureViews.Clear();
 
-            _pinkTex.Dispose();
+            _pinkTex?.Dispose();
             _pinkTex = null;
 
             foreach (KeyValuePair<ResourceSetDescription, ResourceSet> kvp in s_resourceSets)

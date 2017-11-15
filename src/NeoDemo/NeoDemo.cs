@@ -193,6 +193,8 @@ namespace Veldrid.NeoDemo
 
                 Draw();
             }
+
+            DestroyAllObjects();
         }
 
         private void Update(float deltaSeconds)

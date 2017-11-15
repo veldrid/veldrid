@@ -58,7 +58,7 @@ namespace Veldrid
         ///     FillMode = PolygonFillMode.Solid
         ///     FrontFace = FrontFace.Clockwise
         ///     DepthClipEnabled = true
-        ///     ScissorTestEnabled = true
+        ///     ScissorTestEnabled = false
         /// </summary>
         public static readonly RasterizerStateDescription Default = new RasterizerStateDescription
         {
@@ -66,7 +66,7 @@ namespace Veldrid
             FillMode = PolygonFillMode.Solid,
             FrontFace = FrontFace.Clockwise,
             DepthClipEnabled = true,
-            ScissorTestEnabled = true,
+            ScissorTestEnabled = false,
         };
 
         /// <summary>

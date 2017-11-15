@@ -183,7 +183,7 @@ namespace Veldrid.OpenGL
 
         private void FlushDisposables()
         {
-            // Check if the OpeNGL context has already been destroyed by the OS. If so, just exit out.
+            // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
             uint error = glGetError();
             if (error == (uint)ErrorCode.InvalidOperation)
             {

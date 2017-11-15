@@ -25,7 +25,7 @@ namespace Veldrid.NeoDemo.Objects
                     RgbaFloat.Black,
                     BlendAttachmentDescription.OverrideBlend),
                 DepthStencilStateDescription.Disabled,
-                new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, true),
+                new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, false),
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(
                     new VertexLayoutDescription[]

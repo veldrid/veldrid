@@ -45,8 +45,8 @@ namespace Veldrid.NeoDemo
                 WindowTitle = "Veldrid NeoDemo"
             };
             GraphicsDeviceCreateInfo gdCI = new GraphicsDeviceCreateInfo();
-            //gdCI.Backend = GraphicsBackend.Vulkan;
-            gdCI.Backend = GraphicsBackend.OpenGL;
+            gdCI.Backend = GraphicsBackend.Vulkan;
+            //gdCI.Backend = GraphicsBackend.OpenGL;
 #if DEBUG
             gdCI.DebugDevice = true;
 #endif

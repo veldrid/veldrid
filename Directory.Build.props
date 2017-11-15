@@ -12,4 +12,23 @@
     <Copyright>Copyright 2017 (c) Eric Mellino. All rights reserved.</Copyright>
     <Authors>Eric Mellino</Authors>
   </PropertyGroup>
+
+  <!-- Workaround for NuGet bug, see https://github.com/AArnott/Nerdbank.GitVersioning/issues/113 -->
+  <PropertyGroup>
+    <NerdbankGitVersioningVersion>1.6.25</NerdbankGitVersioningVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" Version="$(NerdbankGitVersioningVersion)" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' == 'true' ">
+    <Import Project="$(UserProfile)\.nuget\packages\nerdbank.gitversioning\$(NerdbankGitVersioningVersion)\buildCrossTargeting\Nerdbank.GitVersioning.targets"
+            Condition="Exists('$(UserProfile)\.nuget\packages\nerdbank.gitversioning\$(NerdbankGitVersioningVersion)\buildCrossTargeting\Nerdbank.GitVersioning.targets')" />
+  </ImportGroup>
+  <Target Name="FixUpVersion"
+      BeforeTargets="_GenerateRestoreProjectSpec"
+      DependsOnTargets="GetBuildVersion"
+      Condition=" '$(NerdbankGitVersioningTasksPath)' != '' " />
+
 </Project>

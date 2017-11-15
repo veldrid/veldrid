@@ -14,7 +14,7 @@ namespace Veldrid.OpenGL
             uint error = glGetError();
             if (error != 0)
             {
-                throw new VeldridException("glGetError indicated an error: " + error);
+                throw new VeldridException("glGetError indicated an error: " + (ErrorCode)error);
             }
         }
 

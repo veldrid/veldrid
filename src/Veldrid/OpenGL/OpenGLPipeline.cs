@@ -12,6 +12,7 @@ namespace Veldrid.OpenGL
         private const uint GL_INVALID_INDEX = 0xFFFFFFFF;
         private readonly OpenGLGraphicsDevice _gd;
         private uint _program;
+        private bool _disposed;
 
         private SetBindingsInfo[] _setInfos;
 
@@ -228,8 +229,12 @@ namespace Veldrid.OpenGL
 
         public void DestroyGLResources()
         {
-            glDeleteProgram(_program);
-            CheckLastError();
+            if (!_disposed)
+            {
+                _disposed = true;
+                glDeleteProgram(_program);
+                CheckLastError();
+            }
         }
     }
 

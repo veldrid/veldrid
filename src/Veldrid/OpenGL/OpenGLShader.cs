@@ -12,6 +12,7 @@ namespace Veldrid.OpenGL
         private readonly ShaderType _shaderType;
         private readonly StagingBlock _stagingBlock;
 
+        private bool _disposed;
         private string _name;
         private bool _nameChanged;
         public string Name { get => _name; set { _name = value; _nameChanged = true; } }
@@ -90,8 +91,12 @@ namespace Veldrid.OpenGL
 
         public void DestroyGLResources()
         {
-            glDeleteShader(_shader);
-            CheckLastError();
+            if (!_disposed)
+            {
+                _disposed = true;
+                glDeleteShader(_shader);
+                CheckLastError();
+            }
         }
     }
 }

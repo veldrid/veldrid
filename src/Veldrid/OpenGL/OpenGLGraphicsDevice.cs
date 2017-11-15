@@ -86,7 +86,7 @@ namespace Veldrid.OpenGL
 
             int maxColorTextureSamples;
             glGetIntegerv(GetPName.MaxColorTextureSamples, &maxColorTextureSamples);
-            OpenGLUtil.CheckLastError();
+            CheckLastError();
             if (maxColorTextureSamples >= 32)
             {
                 _maxColorTextureSamples = TextureSampleCount.Count32;
@@ -183,6 +183,13 @@ namespace Veldrid.OpenGL
 
         private void FlushDisposables()
         {
+            // Check if the OpeNGL context has already been destroyed by the OS. If so, just exit out.
+            uint error = glGetError();
+            if (error == (uint)ErrorCode.InvalidOperation)
+            {
+                return;
+            }
+
             while (_resourcesToDispose.TryDequeue(out OpenGLDeferredResource resource))
             {
                 resource.DestroyGLResources();
@@ -194,10 +201,12 @@ namespace Veldrid.OpenGL
         public void EnableDebugCallback(DebugProc callback)
         {
             glEnable(EnableCap.DebugOutput);
+            CheckLastError();
             // The debug callback delegate must be persisted, otherwise errors will occur
             // when the OpenGL drivers attempt to call it after it has been collected.
             _debugMessageCallback = callback;
             glDebugMessageCallback(_debugMessageCallback, null);
+            CheckLastError();
         }
 
         private DebugProc DefaultDebugCallback(DebugSeverity minimumSeverity)
@@ -214,6 +223,7 @@ namespace Veldrid.OpenGL
 
         protected override void PlatformDispose()
         {
+            EnsureCurrentContext();
             FlushDisposables();
             _deleteContext(_glContext);
         }

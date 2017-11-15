@@ -29,19 +29,6 @@ namespace Veldrid.OpenGL
 
         public void Begin()
         {
-            ClearManagedState();
-        }
-
-        private void ClearManagedState()
-        {
-            Util.ClearArray(_vertexBuffers);
-            _vertexAttributesBound = 0;
-
-            _primitiveType = 0;
-            _drawElementsType = 0;
-            _pipeline = null;
-            _fb = null;
-            _isSwapchainFB = false;
         }
 
         public void ClearColorTarget(uint index, RgbaFloat clearColor)
@@ -210,6 +197,7 @@ namespace Veldrid.OpenGL
                 return;
             }
             _pipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(pipeline);
+            _pipeline.EnsureResourcesCreated();
             PipelineDescription desc = _pipeline.Description;
             Util.ClearArray(_resourceSets); // Invalidate resource set bindings -- they may be invalid.
 
@@ -339,8 +327,6 @@ namespace Veldrid.OpenGL
             {
                 return;
             }
-
-            _pipeline.EnsureResourcesCreated();
 
             OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(rs);
             _resourceSets[slot] = glResourceSet;

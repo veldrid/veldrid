@@ -1740,4 +1740,22 @@ namespace Veldrid.OpenGLBinding
         Nearest = 9728,
         Linear = 9729
     }
+
+    public enum ErrorCode : int
+    {
+        NoError = ((int)0),
+        InvalidEnum = ((int)0x0500),
+        InvalidValue = ((int)0x0501),
+        InvalidOperation = ((int)0x0502),
+        StackOverflow = ((int)0x0503),
+        StackUnderflow = ((int)0x0504),
+        OutOfMemory = ((int)0x0505),
+        InvalidFramebufferOperation = ((int)0x0506),
+        InvalidFramebufferOperationExt = ((int)0x0506),
+        InvalidFramebufferOperationOes = ((int)0x0506),
+        ContextLost = ((int)0x0507),
+        TableTooLarge = ((int)0x8031),
+        TableTooLargeExt = ((int)0x8031),
+        TextureTooLargeExt = ((int)0x8065),
+    }
 }

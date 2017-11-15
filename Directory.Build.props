@@ -15,7 +15,7 @@
 
   <!-- Workaround for NuGet bug, see https://github.com/AArnott/Nerdbank.GitVersioning/issues/113 -->
   <PropertyGroup>
-    <NerdbankGitVersioningVersion>1.6.25</NerdbankGitVersioningVersion>
+    <NerdbankGitVersioningVersion>2.0.41</NerdbankGitVersioningVersion>
   </PropertyGroup>
 
   <ItemGroup>

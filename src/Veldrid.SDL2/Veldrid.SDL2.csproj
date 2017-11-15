@@ -25,7 +25,6 @@
     <PackageReference Include="NativeLibraryLoader" Version="1.0.1" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
-    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="All" Version="2.0.41" />
   </ItemGroup>
 
 </Project>

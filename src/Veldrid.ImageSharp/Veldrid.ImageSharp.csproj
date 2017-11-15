@@ -12,7 +12,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-ci0027" />
-    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="All" Version="2.0.41" />
   </ItemGroup>
 
 </Project>

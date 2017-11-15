@@ -24,6 +24,7 @@ namespace Veldrid.Vk
         private bool _commandBufferEnded;
         private VkResourceSet[] _currentResourceSets;
         private bool[] _resourceSetsChanged;
+        private VkRect2D[] _scissorRects;
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
@@ -146,6 +147,11 @@ namespace Veldrid.Vk
                 }
             }
 
+            if (!_currentPipeline.ScissorTestEnabled)
+            {
+                SetFullScissorRects();
+            }
+
             vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
@@ -158,8 +164,8 @@ namespace Veldrid.Vk
 
             VkTexture vkSource = Util.AssertSubtype<Texture, VkTexture>(source);
             VkTexture vkDestination = Util.AssertSubtype<Texture, VkTexture>(destination);
-            VkImageAspectFlags aspectFlags = ((source.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil) 
-                ? VkImageAspectFlags.Depth 
+            VkImageAspectFlags aspectFlags = ((source.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
+                ? VkImageAspectFlags.Depth
                 : VkImageAspectFlags.Color;
             VkImageResolve region = new VkImageResolve
             {
@@ -218,6 +224,7 @@ namespace Veldrid.Vk
 
             VkFramebufferBase vkFB = Util.AssertSubtype<Framebuffer, VkFramebufferBase>(fb);
             _currentFramebuffer = vkFB;
+            Util.EnsureArraySize(ref _scissorRects, Math.Max(1, (uint)vkFB.ColorTargets.Count));
 
             BeginCurrentRenderPass();
         }
@@ -281,7 +288,11 @@ namespace Veldrid.Vk
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
             VkRect2D scissor = new VkRect2D((int)x, (int)y, (int)width, (int)height);
-            vkCmdSetScissor(_cb, index, 1, ref scissor);
+            if (_scissorRects[index] != scissor)
+            {
+                _scissorRects[index] = scissor;
+                vkCmdSetScissor(_cb, index, 1, ref scissor);
+            }
         }
 
         public override void SetViewport(uint index, ref Viewport viewport)

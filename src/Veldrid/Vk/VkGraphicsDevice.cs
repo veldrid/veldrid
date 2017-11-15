@@ -341,10 +341,12 @@ namespace Veldrid.Vk
             string message = Util.GetString(pMessage);
             VkDebugReportFlagsEXT debugReportFlags = (VkDebugReportFlagsEXT)flags;
 
+#if DEBUG
             if (Debugger.IsAttached)
             {
                 Debugger.Break();
             }
+#endif
 
             Console.WriteLine($"[{debugReportFlags}] ({objectType}) {message}");
             return 0;

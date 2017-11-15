@@ -20,6 +20,8 @@ namespace Veldrid.Vk
 
         public uint ResourceSetCount { get; }
 
+        public bool ScissorTestEnabled { get; }
+
         public VkPipeline(VkGraphicsDevice gd, ref PipelineDescription description)
         {
             _gd = gd;
@@ -66,6 +68,8 @@ namespace Veldrid.Vk
             rsCI.lineWidth = 1f;
 
             pipelineCI.pRasterizationState = &rsCI;
+
+            ScissorTestEnabled = rsDesc.ScissorTestEnabled;
 
             // Dynamic State
             VkPipelineDynamicStateCreateInfo dynamicStateCI = VkPipelineDynamicStateCreateInfo.New();

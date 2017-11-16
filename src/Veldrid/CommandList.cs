@@ -31,6 +31,11 @@ namespace Veldrid
         {
         }
 
+        internal void ClearCachedState()
+        {
+            _framebuffer = null;
+        }
+
         /// <summary>
         /// Puts this <see cref="CommandList"/> into the initial state.
         /// This function must be called before other graphics commands can be issued.

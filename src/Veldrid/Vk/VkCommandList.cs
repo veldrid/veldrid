@@ -22,9 +22,9 @@ namespace Veldrid.Vk
 
         private bool _commandBufferBegun;
         private bool _commandBufferEnded;
-        private VkResourceSet[] _currentResourceSets;
+        private VkResourceSet[] _currentResourceSets = Array.Empty<VkResourceSet>();
         private bool[] _resourceSetsChanged;
-        private VkRect2D[] _scissorRects;
+        private VkRect2D[] _scissorRects = Array.Empty<VkRect2D>();
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
@@ -83,10 +83,18 @@ namespace Veldrid.Vk
             VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
             vkBeginCommandBuffer(_cb, ref beginInfo);
             _commandBufferBegun = true;
+
+            ClearCachedState();
+            _currentFramebuffer = null;
+            _currentPipeline = null;
+            Util.ClearArray(_currentResourceSets);
+            Util.ClearArray(_scissorRects);
         }
 
         public override void ClearColorTarget(uint index, RgbaFloat clearColor)
         {
+            EnsureRenderPassActive();
+
             VkClearValue clearValue = new VkClearValue { color = new VkClearColorValue(clearColor.R, clearColor.G, clearColor.B, clearColor.A) };
             VkClearAttachment clearAttachment = new VkClearAttachment
             {
@@ -108,6 +116,8 @@ namespace Veldrid.Vk
 
         public override void ClearDepthTarget(float depth)
         {
+            EnsureRenderPassActive();
+
             VkClearValue clearValue = new VkClearValue { depthStencil = new VkClearDepthStencilValue(depth, 0) };
             VkClearAttachment clearAttachment = new VkClearAttachment
             {
@@ -128,6 +138,8 @@ namespace Veldrid.Vk
 
         public override void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
+            EnsureRenderPassActive();
+
             // TODO: This should only call vkCmdBindDescriptorSets once, or rather, only the ones that changed.
             for (int i = 0; i < _resourceSetsChanged.Length; i++)
             {
@@ -227,6 +239,14 @@ namespace Veldrid.Vk
             Util.EnsureArraySize(ref _scissorRects, Math.Max(1, (uint)vkFB.ColorTargets.Count));
 
             BeginCurrentRenderPass();
+        }
+
+        private void EnsureRenderPassActive()
+        {
+            if (_activeRenderPass == VkRenderPass.Null)
+            {
+                BeginCurrentRenderPass();
+            }
         }
 
         private void BeginCurrentRenderPass()

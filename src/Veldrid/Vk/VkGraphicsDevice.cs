@@ -537,6 +537,8 @@ namespace Veldrid.Vk
 
         protected override void PlatformDispose()
         {
+            FlushQueuedDisposables();
+
             _scFB.Dispose();
             vkDestroySurfaceKHR(_instance, _surface, null);
             if (_debugCallbackFunc != null)

@@ -145,6 +145,7 @@ namespace Veldrid.NeoDemo
             float fbHeight = sc.MainSceneFramebuffer.Height;
             cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
             cl.SetFullViewports();
+            cl.SetFullScissorRects();
             cl.ClearDepthTarget(1f);
             BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
             Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);

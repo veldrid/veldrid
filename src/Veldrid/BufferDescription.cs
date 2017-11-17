@@ -27,6 +27,7 @@ namespace Veldrid
         /// Constructs a new <see cref="BufferDescription"/> describing a non-dynamic <see cref="Buffer"/>.
         /// </summary>
         /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
+        /// <param name="usage">Indicates how the <see cref="Buffer"/> will be used.</param>
         public BufferDescription(ulong sizeInBytes, BufferUsage usage)
         {
             SizeInBytes = sizeInBytes;
@@ -38,6 +39,7 @@ namespace Veldrid
         /// Constructs a new <see cref="BufferDescription"/>.
         /// </summary>
         /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
+        /// <param name="usage">Indicates how the <see cref="Buffer"/> will be used.</param>
         /// <param name="dynamic">Whether the <see cref="Buffer"/> should be specialized for continuous updates.</param>
         public BufferDescription(ulong sizeInBytes, BufferUsage usage, bool dynamic)
         {

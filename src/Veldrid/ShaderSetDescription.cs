@@ -9,7 +9,7 @@ namespace Veldrid
     {
         /// <summary>
         /// An array of <see cref="VertexLayoutDescription"/> describing the set of vertex layouts understood by the
-        /// <see cref="Pipeline"/>. Each element in this array describes the input layout of a single <see cref="VertexBuffer"/>
+        /// <see cref="Pipeline"/>. Each element in this array describes the input layout of a single <see cref="Buffer"/>
         /// to be bound when drawing.
         /// </summary>
         public VertexLayoutDescription[] VertexLayouts;
@@ -25,7 +25,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="vertexLayouts">An array of <see cref="VertexLayoutDescription"/> describing the set of vertex layouts
         /// understood by the <see cref="Pipeline"/>. Each element in this array describes the input layout of a single
-        /// <see cref="VertexBuffer"/> to be bound when drawing.</param>
+        /// <see cref="Buffer"/> to be bound when drawing.</param>
         /// <param name="shaderStages">An array of <see cref="ShaderStageDescription"/>, one for each shader stage which is to be
         /// active in the <see cref="Pipeline"/>. At a minimum, every <see cref="ShaderSetDescription"/> must specify a Vertex
         /// and Fragment shader. All other stages are optional, but if either Tessellation stage is present, then the other must

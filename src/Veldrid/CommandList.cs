@@ -85,6 +85,7 @@ namespace Veldrid
         /// When drawing, an <see cref="Buffer"/> must be bound.
         /// </summary>
         /// <param name="buffer">The new <see cref="Buffer"/>.</param>
+        /// <param name="format">The format of data in the <see cref="Buffer"/>.</param>
         public void SetIndexBuffer(Buffer buffer, IndexFormat format)
         {
 #if VALIDATE_USAGE

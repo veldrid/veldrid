@@ -8,8 +8,8 @@ namespace Veldrid.NeoDemo.Objects
     {
         private readonly BoundingBox _boundingBox = new BoundingBox(new Vector3(-1000, -1, -1000), new Vector3(1000, 1, 1000));
 
-        private VertexBuffer _vb;
-        private IndexBuffer _ib;
+        private Buffer _vb;
+        private Buffer _ib;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
 
@@ -18,7 +18,7 @@ namespace Veldrid.NeoDemo.Objects
         public unsafe override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             ResourceFactory factory = gd.ResourceFactory;
-            _vb = factory.CreateVertexBuffer(new BufferDescription(VertexPosition.SizeInBytes * 4));
+            _vb = factory.CreateBuffer(new BufferDescription(VertexPosition.SizeInBytes * 4, BufferUsage.VertexBuffer));
             cl.UpdateBuffer(_vb, 0, new VertexPosition[]
             {
                 new VertexPosition(new Vector3(-1000, 0, -1000)),
@@ -27,7 +27,7 @@ namespace Veldrid.NeoDemo.Objects
                 new VertexPosition(new Vector3(-1000, 0, +1000)),
             });
 
-            _ib = factory.CreateIndexBuffer(new IndexBufferDescription(6 * 2, IndexFormat.UInt16));
+            _ib = factory.CreateBuffer(new BufferDescription(6 * 2, BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, new ushort[] { 0, 1, 2, 0, 2, 3 });
 
             const int gridSize = 64;
@@ -96,7 +96,7 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(0, _resourceSet);
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib);
+            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.Draw(6, 1, 0, 0, 0);
         }
 

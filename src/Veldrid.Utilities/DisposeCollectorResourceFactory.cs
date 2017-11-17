@@ -32,11 +32,11 @@ namespace Veldrid.Utilities
             return fb;
         }
 
-        public override IndexBuffer CreateIndexBuffer(ref IndexBufferDescription description)
+        public override Buffer CreateBuffer(ref BufferDescription description)
         {
-            IndexBuffer ib = Factory.CreateIndexBuffer(ref description);
-            DisposeCollector.Add(ib);
-            return ib;
+            Buffer buffer = Factory.CreateBuffer(ref description);
+            DisposeCollector.Add(buffer);
+            return buffer;
         }
 
         public override Pipeline CreatePipeline(ref PipelineDescription description)
@@ -86,20 +86,6 @@ namespace Veldrid.Utilities
             TextureView texView = Factory.CreateTextureView(ref description);
             DisposeCollector.Add(texView);
             return texView;
-        }
-
-        public override UniformBuffer CreateUniformBuffer(ref BufferDescription description)
-        {
-            UniformBuffer ub = Factory.CreateUniformBuffer(ref description);
-            DisposeCollector.Add(ub);
-            return ub;
-        }
-
-        public override VertexBuffer CreateVertexBuffer(ref BufferDescription description)
-        {
-            VertexBuffer vb = Factory.CreateVertexBuffer(ref description);
-            DisposeCollector.Add(vb);
-            return vb;
         }
     }
 }

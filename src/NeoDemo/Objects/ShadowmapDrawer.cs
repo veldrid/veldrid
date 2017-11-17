@@ -11,10 +11,10 @@ namespace Veldrid.NeoDemo.Objects
         private readonly Func<Sdl2Window> _windowGetter;
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
 
-        private VertexBuffer _vb;
-        private IndexBuffer _ib;
-        private UniformBuffer _orthographicBuffer;
-        private UniformBuffer _sizeInfoBuffer;
+        private Buffer _vb;
+        private Buffer _ib;
+        private Buffer _orthographicBuffer;
+        private Buffer _sizeInfoBuffer;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
 
@@ -49,9 +49,9 @@ namespace Veldrid.NeoDemo.Objects
         public override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             ResourceFactory factory = gd.ResourceFactory;
-            _vb = factory.CreateVertexBuffer(new BufferDescription(s_quadVerts.SizeInBytes()));
+            _vb = factory.CreateBuffer(new BufferDescription(s_quadVerts.SizeInBytes(), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(_vb, 0, s_quadVerts);
-            _ib = factory.CreateIndexBuffer(new IndexBufferDescription(s_quadIndices.SizeInBytes(), IndexFormat.UInt16));
+            _ib = factory.CreateBuffer(new BufferDescription(s_quadIndices.SizeInBytes(), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, s_quadIndices);
 
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
@@ -86,9 +86,9 @@ namespace Veldrid.NeoDemo.Objects
 
             _pipeline = factory.CreatePipeline(ref pd);
 
-            _sizeInfoBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<SizeInfo>()));
+            _sizeInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<SizeInfo>(), BufferUsage.UniformBuffer));
             UpdateSizeInfoBuffer();
-            _orthographicBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<Matrix4x4>()));
+            _orthographicBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<Matrix4x4>(), BufferUsage.UniformBuffer));
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 layout,
@@ -132,7 +132,7 @@ namespace Veldrid.NeoDemo.Objects
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib);
+            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(0, _resourceSet);
             cl.Draw((uint)s_quadIndices.Length, 1, 0, 0, 0);

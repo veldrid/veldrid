@@ -16,16 +16,19 @@ namespace Veldrid.Utilities
             Indices = indices;
         }
 
-        public VertexBuffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
+        public Buffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
         {
-            VertexBuffer vb = factory.CreateVertexBuffer(new BufferDescription((uint)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes)));
+            Buffer vb = factory.CreateBuffer(
+                new BufferDescription(
+                    (uint)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes),
+                    BufferUsage.VertexBuffer));
             cl.UpdateBuffer(vb, 0, Vertices);
             return vb;
         }
 
-        public IndexBuffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
+        public Buffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
         {
-            IndexBuffer ib = factory.CreateIndexBuffer(new IndexBufferDescription((uint)(Indices.Length * sizeof(ushort)), IndexFormat.UInt16));
+            Buffer ib = factory.CreateBuffer(new BufferDescription((uint)(Indices.Length * sizeof(ushort)), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(ib, 0, Indices);
             indexCount = Indices.Length;
             return ib;

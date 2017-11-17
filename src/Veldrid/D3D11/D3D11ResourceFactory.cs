@@ -27,11 +27,6 @@ namespace Veldrid.D3D11
             return new D3D11Framebuffer(_device, ref description);
         }
 
-        public override IndexBuffer CreateIndexBuffer(ref IndexBufferDescription description)
-        {
-            return new D3D11IndexBuffer(_device, ref description);
-        }
-
         public override Pipeline CreatePipeline(ref PipelineDescription description)
         {
             return new D3D11Pipeline(_cache, ref description);
@@ -67,14 +62,9 @@ namespace Veldrid.D3D11
             return new D3D11TextureView(_device, ref description);
         }
 
-        public override UniformBuffer CreateUniformBuffer(ref BufferDescription description)
+        public override Buffer CreateBuffer(ref BufferDescription description)
         {
-            return new D3D11UniformBuffer(_device, ref description);
-        }
-
-        public override VertexBuffer CreateVertexBuffer(ref BufferDescription description)
-        {
-            return new D3D11VertexBuffer(_device, ref description);
+            return new D3D11Buffer(_device, description.SizeInBytes, description.Usage);
         }
     }
 }

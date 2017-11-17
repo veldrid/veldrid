@@ -6,8 +6,9 @@ using System.Diagnostics;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe abstract class OpenGLBuffer : Buffer, OpenGLDeferredResource
+    internal unsafe class OpenGLBuffer : Buffer, OpenGLDeferredResource
     {
+        private readonly OpenGLGraphicsDevice _gd;
         private uint _buffer;
         private bool _dynamic;
 
@@ -15,18 +16,19 @@ namespace Veldrid.OpenGL
         private bool _nameChanged;
         public string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
-        public ulong SizeInBytes { get; }
-        public BufferTarget Target { get; }
+        public override ulong SizeInBytes { get; }
+        public override BufferUsage Usage { get; }
 
         public uint Buffer => _buffer;
 
         public bool Created { get; private set; }
 
-        public OpenGLBuffer(ulong sizeInBytes, bool dynamic, BufferTarget target)
+        public OpenGLBuffer(OpenGLGraphicsDevice gd, ulong sizeInBytes, bool dynamic, BufferUsage usage)
         {
+            _gd = gd;
             SizeInBytes = sizeInBytes;
             _dynamic = dynamic;
-            Target = target;
+            Usage = usage;
         }
 
         public void EnsureResourcesCreated()
@@ -48,17 +50,24 @@ namespace Veldrid.OpenGL
             glGenBuffers(1, out _buffer);
             CheckLastError();
 
-            glBindBuffer(Target, _buffer);
+            // Bind to a target not used anywhere else
+            // TODO: Make this more robust.
+            glBindBuffer(BufferTarget.TextureBuffer, _buffer);
             CheckLastError();
 
-            glBufferData(Target, (UIntPtr)SizeInBytes, null, _dynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.StaticDraw);
+            glBufferData(
+                BufferTarget.TextureBuffer,
+                (UIntPtr)SizeInBytes,
+                null,
+                _dynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.StaticDraw);
             CheckLastError();
 
             Created = true;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            _gd.EnqueueDisposal(this);
         }
 
         public void DestroyGLResources()

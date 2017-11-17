@@ -17,9 +17,9 @@ namespace Veldrid
         private readonly Assembly _assembly;
 
         // Context objects
-        private VertexBuffer _vertexBuffer;
-        private IndexBuffer _indexBuffer;
-        private UniformBuffer _projMatrixBuffer;
+        private Buffer _vertexBuffer;
+        private Buffer _indexBuffer;
+        private Buffer _projMatrixBuffer;
         private Texture _fontTexture;
         private TextureView _fontTextureView;
         private Shader _vertexShader;
@@ -73,11 +73,11 @@ namespace Veldrid
         {
             _gd = gd;
             ResourceFactory factory = gd.ResourceFactory;
-            _vertexBuffer = factory.CreateVertexBuffer(new BufferDescription(10000, true));
-            _indexBuffer = factory.CreateIndexBuffer(new IndexBufferDescription(2000, IndexFormat.UInt16, true));
+            _vertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer, true));
+            _indexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer, true));
             RecreateFontDeviceTexture(gd, cl);
 
-            _projMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription(64));
+            _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
             byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex);
             byte[] fragmentShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-frag", ShaderStages.Fragment);
@@ -339,14 +339,14 @@ namespace Veldrid
             if (totalVBSize > _vertexBuffer.SizeInBytes)
             {
                 _vertexBuffer.Dispose();
-                _vertexBuffer = gd.ResourceFactory.CreateVertexBuffer(new BufferDescription((ulong)(totalVBSize * 1.5f), true));
+                _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((ulong)(totalVBSize * 1.5f), BufferUsage.VertexBuffer, true));
             }
 
             uint totalIBSize = (uint)(draw_data->TotalIdxCount * sizeof(ushort));
             if (totalIBSize > _indexBuffer.SizeInBytes)
             {
                 _indexBuffer.Dispose();
-                _indexBuffer = gd.ResourceFactory.CreateIndexBuffer(new IndexBufferDescription((ulong)(totalIBSize * 1.5f), IndexFormat.UInt16, true));
+                _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((ulong)(totalIBSize * 1.5f), BufferUsage.IndexBuffer, true));
             }
 
             for (int i = 0; i < draw_data->CmdListsCount; i++)
@@ -384,7 +384,7 @@ namespace Veldrid
             }
 
             cl.SetVertexBuffer(0, _vertexBuffer);
-            cl.SetIndexBuffer(_indexBuffer);
+            cl.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(0, _mainResourceSet);
 

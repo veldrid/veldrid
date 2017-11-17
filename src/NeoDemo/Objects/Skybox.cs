@@ -17,9 +17,9 @@ namespace Veldrid.NeoDemo.Objects
         private readonly Image<Rgba32> _bottom;
 
         // Context objects
-        private VertexBuffer _vb;
-        private IndexBuffer _ib;
-        private UniformBuffer _viewMatrixBuffer;
+        private Buffer _vb;
+        private Buffer _ib;
+        private Buffer _viewMatrixBuffer;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
@@ -40,13 +40,13 @@ namespace Veldrid.NeoDemo.Objects
         {
             ResourceFactory factory = gd.ResourceFactory;
 
-            _vb = factory.CreateVertexBuffer(new BufferDescription(s_vertices.SizeInBytes()));
+            _vb = factory.CreateBuffer(new BufferDescription(s_vertices.SizeInBytes(), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(_vb, 0, s_vertices);
 
-            _ib = factory.CreateIndexBuffer(new IndexBufferDescription(s_indices.SizeInBytes(), IndexFormat.UInt16));
+            _ib = factory.CreateBuffer(new BufferDescription(s_indices.SizeInBytes(), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, s_indices);
 
-            _viewMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription((ulong)Unsafe.SizeOf<Matrix4x4>()));
+            _viewMatrixBuffer = factory.CreateBuffer(new BufferDescription((ulong)Unsafe.SizeOf<Matrix4x4>(), BufferUsage.UniformBuffer));
 
             Texture textureCube;
             TextureView textureView;
@@ -145,7 +145,7 @@ namespace Veldrid.NeoDemo.Objects
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib);
+            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(0, _resourceSet);
             cl.Draw((uint)s_indices.Length, 1, 0, 0, 0);

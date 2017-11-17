@@ -3,8 +3,8 @@
 namespace Veldrid
 {
     /// <summary>
-    /// Describes a <see cref="Buffer"/>, used in the creation of <see cref="VertexBuffer"/> and <see cref="UniformBuffer"/>
-    /// objects by a <see cref="ResourceFactory"/>.
+    /// Describes a <see cref="Buffer"/>, used in the creation of <see cref="Buffer"/> objects by a
+    /// <see cref="ResourceFactory"/>.
     /// </summary>
     public struct BufferDescription : IEquatable<BufferDescription>
     {
@@ -12,6 +12,10 @@ namespace Veldrid
         /// The desired capacity, in bytes, of the <see cref="Buffer"/>.
         /// </summary>
         public ulong SizeInBytes;
+        /// <summary>
+        /// Indicates how the <see cref="Buffer"/> will be used.
+        /// </summary>
+        public BufferUsage Usage;
         /// <summary>
         /// A value indicating whether the <see cref="Buffer"/> will be updated often.
         /// "false" should be used for static or rarely-changing data, and "true" should be used for data which will change
@@ -23,9 +27,10 @@ namespace Veldrid
         /// Constructs a new <see cref="BufferDescription"/> describing a non-dynamic <see cref="Buffer"/>.
         /// </summary>
         /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
-        public BufferDescription(ulong sizeInBytes)
+        public BufferDescription(ulong sizeInBytes, BufferUsage usage)
         {
             SizeInBytes = sizeInBytes;
+            Usage = usage;
             Dynamic = false;
         }
 
@@ -34,9 +39,10 @@ namespace Veldrid
         /// </summary>
         /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
         /// <param name="dynamic">Whether the <see cref="Buffer"/> should be specialized for continuous updates.</param>
-        public BufferDescription(ulong sizeInBytes, bool dynamic)
+        public BufferDescription(ulong sizeInBytes, BufferUsage usage, bool dynamic)
         {
             SizeInBytes = sizeInBytes;
+            Usage = usage;
             Dynamic = dynamic;
         }
 

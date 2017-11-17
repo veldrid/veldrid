@@ -7,8 +7,8 @@ namespace Veldrid.NeoDemo.Objects
     {
         private DisposeCollector _disposeCollector;
         private Pipeline _pipeline;
-        private IndexBuffer _ib;
-        private VertexBuffer _vb;
+        private Buffer _ib;
+        private Buffer _vb;
 
         public override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
@@ -43,11 +43,11 @@ namespace Veldrid.NeoDemo.Objects
                 sc.DuplicatorFramebuffer.OutputDescription);
             _pipeline = factory.CreatePipeline(ref pd);
 
-            _vb = factory.CreateVertexBuffer(new BufferDescription((uint)s_quadVerts.Length * sizeof(float)));
+            _vb = factory.CreateBuffer(new BufferDescription((uint)s_quadVerts.Length * sizeof(float), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(_vb, 0, s_quadVerts);
 
-            _ib = factory.CreateIndexBuffer(
-                new IndexBufferDescription((uint)s_quadIndices.Length * sizeof(ushort), IndexFormat.UInt16));
+            _ib = factory.CreateBuffer(
+                new BufferDescription((uint)s_quadIndices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, s_quadIndices);
         }
 
@@ -66,7 +66,7 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(0, sc.MainSceneViewResourceSet);
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib);
+            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.Draw(6, 1, 0, 0, 0);
         }
 

@@ -2,7 +2,6 @@
 using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
-using System.Numerics;
 
 namespace Veldrid.OpenGL
 {
@@ -11,7 +10,7 @@ namespace Veldrid.OpenGL
         private readonly OpenGLTextureSamplerManager _textureSamplerManager;
         private PrimitiveType _primitiveType;
         private DrawElementsType _drawElementsType;
-        private OpenGLVertexBuffer[] _vertexBuffers = new OpenGLVertexBuffer[1];
+        private OpenGLBuffer[] _vertexBuffers = new OpenGLBuffer[1];
         private uint[] _vertexAttribDivisors = new uint[1];
         private OpenGLPipeline _pipeline;
         private Framebuffer _fb;
@@ -111,7 +110,7 @@ namespace Veldrid.OpenGL
             for (int i = 0; i < layouts.Length; i++)
             {
                 VertexLayoutDescription input = layouts[i];
-                OpenGLVertexBuffer vb = _vertexBuffers[i];
+                OpenGLBuffer vb = _vertexBuffers[i];
                 glBindBuffer(BufferTarget.ArrayBuffer, vb.Buffer);
                 uint offset = 0;
                 for (uint slot = 0; slot < input.Elements.Length; slot++)
@@ -179,15 +178,15 @@ namespace Veldrid.OpenGL
             _fb = fb;
         }
 
-        public void SetIndexBuffer(IndexBuffer ib)
+        public void SetIndexBuffer(Buffer ib, IndexFormat format)
         {
-            OpenGLIndexBuffer glIB = Util.AssertSubtype<IndexBuffer, OpenGLIndexBuffer>(ib);
+            OpenGLBuffer glIB = Util.AssertSubtype<Buffer, OpenGLBuffer>(ib);
             glIB.EnsureResourcesCreated();
 
             glBindBuffer(BufferTarget.ElementArrayBuffer, glIB.Buffer);
             CheckLastError();
 
-            _drawElementsType = glIB.DrawElementsType;
+            _drawElementsType = OpenGLFormats.VdToGLDrawElementsType(format);
         }
 
         public void SetPipeline(Pipeline pipeline)
@@ -336,7 +335,7 @@ namespace Veldrid.OpenGL
             for (uint element = 0; element < glResourceSet.Resources.Length; element++)
             {
                 BindableResource resource = glResourceSet.Resources[(int)element];
-                if (resource is OpenGLUniformBuffer glUB)
+                if (resource is OpenGLBuffer glUB)
                 {
                     OpenGLUniformBinding uniformBindingInfo = _pipeline.GetUniformBindingForSlot(slot, element);
                     glUniformBlockBinding(_pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + element);
@@ -423,9 +422,9 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void SetVertexBuffer(uint index, VertexBuffer vb)
+        public void SetVertexBuffer(uint index, Buffer vb)
         {
-            OpenGLVertexBuffer glVB = Util.AssertSubtype<VertexBuffer, OpenGLVertexBuffer>(vb);
+            OpenGLBuffer glVB = Util.AssertSubtype<Buffer, OpenGLBuffer>(vb);
             glVB.EnsureResourcesCreated();
 
             Util.EnsureArraySize(ref _vertexBuffers, index + 1);
@@ -461,12 +460,13 @@ namespace Veldrid.OpenGL
             }
             else
             {
-                glBindBuffer(glBuffer.Target, glBuffer.Buffer);
+                BufferTarget bufferTarget = BufferTarget.CopyWriteBuffer;
+                glBindBuffer(bufferTarget, glBuffer.Buffer);
                 CheckLastError();
                 fixed (byte* dataPtr = &stagingBlock.Array[0])
                 {
                     glBufferSubData(
-                        glBuffer.Target,
+                        bufferTarget,
                         (IntPtr)bufferOffsetInBytes,
                         (UIntPtr)stagingBlock.SizeInBytes,
                         dataPtr);

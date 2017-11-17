@@ -10,20 +10,39 @@ namespace Veldrid.Vk
         private readonly Vulkan.VkBuffer _deviceBuffer;
         private readonly VkMemoryBlock _memory;
 
-        public ulong SizeInBytes { get; }
+        public override ulong SizeInBytes { get; }
+        public override BufferUsage Usage { get; }
 
         public Vulkan.VkBuffer DeviceBuffer => _deviceBuffer;
         public VkMemoryBlock Memory => _memory;
 
-        public VkBuffer(VkGraphicsDevice gd, ulong sizeInBytes, bool dynamic, VkBufferUsageFlags usage)
+        public VkBuffer(VkGraphicsDevice gd, ulong sizeInBytes, bool dynamic, BufferUsage usage)
         {
             _gd = gd;
             SizeInBytes = sizeInBytes;
-            usage |= VkBufferUsageFlags.TransferSrc | VkBufferUsageFlags.TransferDst;
+            Usage = usage;
+
+            VkBufferUsageFlags vkUsage = VkBufferUsageFlags.TransferSrc | VkBufferUsageFlags.TransferDst;
+            if ((usage & BufferUsage.VertexBuffer) == BufferUsage.VertexBuffer)
+            {
+                vkUsage |= VkBufferUsageFlags.VertexBuffer;
+            }
+            if ((usage & BufferUsage.IndexBuffer) == BufferUsage.IndexBuffer)
+            {
+                vkUsage |= VkBufferUsageFlags.IndexBuffer;
+            }
+            if ((usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer)
+            {
+                vkUsage |= VkBufferUsageFlags.UniformBuffer;
+            }
+            if ((usage & BufferUsage.StorageBuffer) == BufferUsage.StorageBuffer)
+            {
+                vkUsage |= VkBufferUsageFlags.StorageBuffer;
+            }
 
             VkBufferCreateInfo bufferCI = VkBufferCreateInfo.New();
             bufferCI.size = sizeInBytes;
-            bufferCI.usage = usage;
+            bufferCI.usage = vkUsage;
             VkResult result = vkCreateBuffer(gd.Device, ref bufferCI, null, out _deviceBuffer);
             CheckResult(result);
 
@@ -41,7 +60,7 @@ namespace Veldrid.Vk
             CheckResult(result);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             vkDestroyBuffer(_gd.Device, _deviceBuffer, null);
             _gd.MemoryManager.Free(Memory);

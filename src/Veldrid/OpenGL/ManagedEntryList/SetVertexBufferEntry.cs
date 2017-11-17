@@ -3,26 +3,26 @@
     internal class SetVertexBufferEntry : OpenGLCommandEntry
     {
         public uint Index;
-        public VertexBuffer VertexBuffer;
+        public Buffer Buffer;
 
-        public SetVertexBufferEntry(uint index, VertexBuffer vb)
+        public SetVertexBufferEntry(uint index, Buffer buffer)
         {
             Index = index;
-            VertexBuffer = vb;
+            Buffer = buffer;
         }
 
         public SetVertexBufferEntry() { }
 
-        public SetVertexBufferEntry Init(uint index, VertexBuffer vb)
+        public SetVertexBufferEntry Init(uint index, Buffer buffer)
         {
             Index = index;
-            VertexBuffer = vb;
+            Buffer = buffer;
             return this;
         }
 
         public override void ClearReferences()
         {
-            VertexBuffer = null;
+            Buffer = null;
         }
     }
 }

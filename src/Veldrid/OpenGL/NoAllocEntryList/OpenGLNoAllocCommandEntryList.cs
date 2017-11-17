@@ -191,7 +191,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case SetIndexBufferEntryID:
                         ref NoAllocSetIndexBufferEntry sibe = ref Unsafe.AsRef<NoAllocSetIndexBufferEntry>(entryBasePtr);
-                        executor.SetIndexBuffer(sibe.IndexBuffer.Item);
+                        executor.SetIndexBuffer(sibe.Buffer.Item, sibe.Format);
                         currentOffset += SetIndexBufferEntrySize;
                         break;
                     case SetPipelineEntryID:
@@ -211,7 +211,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case SetVertexBufferEntryID:
                         ref NoAllocSetVertexBufferEntry svbe = ref Unsafe.AsRef<NoAllocSetVertexBufferEntry>(entryBasePtr);
-                        executor.SetVertexBuffer(svbe.Index, svbe.VertexBuffer.Item);
+                        executor.SetVertexBuffer(svbe.Index, svbe.Buffer.Item);
                         currentOffset += SetVertexBufferEntrySize;
                         break;
                     case SetViewportEntryID:
@@ -222,8 +222,8 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                     case UpdateBufferEntryID:
                         ref NoAllocUpdateBufferEntry ube = ref Unsafe.AsRef<NoAllocUpdateBufferEntry>(entryBasePtr);
                         executor.UpdateBuffer(
-                            ube.Buffer.Item, 
-                            ube.BufferOffsetInBytes, 
+                            ube.Buffer.Item,
+                            ube.BufferOffsetInBytes,
                             new StagingBlock(ube.StagingBlock.Array, ube.StagingBlock.SizeInBytes, _memoryPool));
                         currentOffset += UpdateBufferEntrySize;
                         break;
@@ -317,7 +317,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case SetIndexBufferEntryID:
                         ref NoAllocSetIndexBufferEntry sibe = ref Unsafe.AsRef<NoAllocSetIndexBufferEntry>(entryBasePtr);
-                        sibe.IndexBuffer.Free();
+                        sibe.Buffer.Free();
                         currentOffset += SetIndexBufferEntrySize;
                         break;
                     case SetPipelineEntryID:
@@ -335,7 +335,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case SetVertexBufferEntryID:
                         ref NoAllocSetVertexBufferEntry svbe = ref Unsafe.AsRef<NoAllocSetVertexBufferEntry>(entryBasePtr);
-                        svbe.VertexBuffer.Free();
+                        svbe.Buffer.Free();
                         currentOffset += SetVertexBufferEntrySize;
                         break;
                     case SetViewportEntryID:
@@ -407,9 +407,9 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(SetFramebufferEntryID, ref entry);
         }
 
-        public void SetIndexBuffer(IndexBuffer ib)
+        public void SetIndexBuffer(Buffer buffer, IndexFormat format)
         {
-            NoAllocSetIndexBufferEntry entry = new NoAllocSetIndexBufferEntry(ib);
+            NoAllocSetIndexBufferEntry entry = new NoAllocSetIndexBufferEntry(buffer, format);
             AddEntry(SetIndexBufferEntryID, ref entry);
         }
 
@@ -431,9 +431,9 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(SetScissorRectEntryID, ref entry);
         }
 
-        public void SetVertexBuffer(uint index, VertexBuffer vb)
+        public void SetVertexBuffer(uint index, Buffer buffer)
         {
-            NoAllocSetVertexBufferEntry entry = new NoAllocSetVertexBufferEntry(index, vb);
+            NoAllocSetVertexBufferEntry entry = new NoAllocSetVertexBufferEntry(index, buffer);
             AddEntry(SetVertexBufferEntryID, ref entry);
         }
 

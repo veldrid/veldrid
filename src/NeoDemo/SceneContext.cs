@@ -7,15 +7,15 @@ namespace Veldrid.NeoDemo
 {
     public class SceneContext
     {
-        public UniformBuffer ProjectionMatrixBuffer { get; private set; }
-        public UniformBuffer ViewMatrixBuffer { get; private set; }
-        public UniformBuffer LightInfoBuffer { get; private set; }
-        public UniformBuffer LightViewProjectionBuffer0 { get; internal set; }
-        public UniformBuffer LightViewProjectionBuffer1 { get; internal set; }
-        public UniformBuffer LightViewProjectionBuffer2 { get; internal set; }
-        public UniformBuffer DepthLimitsBuffer { get; internal set; }
-        public UniformBuffer CameraInfoBuffer { get; private set; }
-        public UniformBuffer PointLightsBuffer { get; private set; }
+        public Buffer ProjectionMatrixBuffer { get; private set; }
+        public Buffer ViewMatrixBuffer { get; private set; }
+        public Buffer LightInfoBuffer { get; private set; }
+        public Buffer LightViewProjectionBuffer0 { get; internal set; }
+        public Buffer LightViewProjectionBuffer1 { get; internal set; }
+        public Buffer LightViewProjectionBuffer2 { get; internal set; }
+        public Buffer DepthLimitsBuffer { get; internal set; }
+        public Buffer CameraInfoBuffer { get; private set; }
+        public Buffer PointLightsBuffer { get; private set; }
 
         public Texture NearShadowMapTexture { get; private set; }
         public TextureView NearShadowMapView { get; private set; }
@@ -54,23 +54,23 @@ namespace Veldrid.NeoDemo
         public virtual void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             ResourceFactory factory = gd.ResourceFactory;
-            ProjectionMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription(64));
-            ViewMatrixBuffer = factory.CreateUniformBuffer(new BufferDescription(64));
-            LightViewProjectionBuffer0 = factory.CreateUniformBuffer(new BufferDescription(64, true));
+            ProjectionMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            ViewMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            LightViewProjectionBuffer0 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer, true));
             gd.SetResourceName(LightViewProjectionBuffer0, "LightViewProjectionBuffer0");
-            LightViewProjectionBuffer1 = factory.CreateUniformBuffer(new BufferDescription(64, true));
+            LightViewProjectionBuffer1 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer, true));
             gd.SetResourceName(LightViewProjectionBuffer1, "LightViewProjectionBuffer1");
-            LightViewProjectionBuffer2 = factory.CreateUniformBuffer(new BufferDescription(64, true));
+            LightViewProjectionBuffer2 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer, true));
             gd.SetResourceName(LightViewProjectionBuffer2, "LightViewProjectionBuffer2");
-            DepthLimitsBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<DepthCascadeLimits>()));
-            LightInfoBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<DirectionalLightInfo>()));
-            CameraInfoBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>()));
+            DepthLimitsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DepthCascadeLimits>(), BufferUsage.UniformBuffer));
+            LightInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DirectionalLightInfo>(), BufferUsage.UniformBuffer));
+            CameraInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer));
             if (Camera != null)
             {
                 UpdateCameraBuffers(cl);
             }
 
-            PointLightsBuffer = factory.CreateUniformBuffer(new BufferDescription((uint)Unsafe.SizeOf<PointLightsInfo.Blittable>()));
+            PointLightsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<PointLightsInfo.Blittable>(), BufferUsage.UniformBuffer));
 
             PointLightsInfo pli = new PointLightsInfo();
             pli.NumActiveLights = 4;
@@ -170,7 +170,7 @@ namespace Veldrid.NeoDemo
             ResourceFactory factory = gd.ResourceFactory;
 
             TextureSampleCount mainSceneSampleCountCapped = (TextureSampleCount)Math.Min(
-                (int)gd.GetSampleCountLimit(PixelFormat.R8_G8_B8_A8_UNorm, false), 
+                (int)gd.GetSampleCountLimit(PixelFormat.R8_G8_B8_A8_UNorm, false),
                 (int)MainSceneSampleCount);
 
             TextureDescription mainColorDesc = new TextureDescription(

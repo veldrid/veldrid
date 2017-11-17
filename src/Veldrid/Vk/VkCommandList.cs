@@ -268,18 +268,18 @@ namespace Veldrid.Vk
             _activeRenderPass = VkRenderPass.Null;
         }
 
-        public override void SetVertexBuffer(uint index, VertexBuffer vb)
+        protected override void SetVertexBufferCore(uint index, Buffer buffer)
         {
-            VkBuffer vkBuffer = Util.AssertSubtype<VertexBuffer, VkVertexBuffer>(vb);
+            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(buffer);
             Vulkan.VkBuffer deviceBuffer = vkBuffer.DeviceBuffer;
             ulong offset = 0;
             vkCmdBindVertexBuffers(_cb, index, 1, ref deviceBuffer, ref offset);
         }
 
-        public override void SetIndexBuffer(IndexBuffer ib)
+        protected override void SetIndexBufferCore(Buffer buffer, IndexFormat format)
         {
-            VkBuffer vkBuffer = Util.AssertSubtype<IndexBuffer, VkIndexBuffer>(ib);
-            vkCmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, 0, VkFormats.VdToVkIndexFormat(ib.Format));
+            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(buffer);
+            vkCmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, 0, VkFormats.VdToVkIndexFormat(format));
         }
 
         public override void SetPipeline(Pipeline pipeline)
@@ -295,7 +295,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public override void SetResourceSet(uint slot, ResourceSet rs)
+        protected override void SetResourceSetCore(uint slot, ResourceSet rs)
         {
             if (_currentResourceSets[slot] != rs)
             {

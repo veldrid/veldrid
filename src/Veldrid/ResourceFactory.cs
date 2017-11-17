@@ -69,43 +69,17 @@ namespace Veldrid
         public abstract TextureView CreateTextureView(ref TextureViewDescription description);
 
         /// <summary>
-        /// Creates a new <see cref="VertexBuffer"/>.
+        /// Creates a new <see cref="Buffer"/>.
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
-        /// <returns>A new <see cref="VertexBuffer"/>.</returns>
-        public VertexBuffer CreateVertexBuffer(BufferDescription description) => CreateVertexBuffer(ref description);
+        /// <returns>A new <see cref="Buffer"/>.</returns>
+        public Buffer CreateBuffer(BufferDescription description) => CreateBuffer(ref description);
         /// <summary>
-        /// Creates a new <see cref="VertexBuffer"/>.
+        /// Creates a new <see cref="Buffer"/>.
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
-        /// <returns>A new <see cref="VertexBuffer"/>.</returns>
-        public abstract VertexBuffer CreateVertexBuffer(ref BufferDescription description);
-
-        /// <summary>
-        /// Creates a new <see cref="IndexBuffer"/>.
-        /// </summary>
-        /// <param name="description">The desired properties of the created object.</param>
-        /// <returns>A new <see cref="IndexBuffer"/>.</returns>
-        public IndexBuffer CreateIndexBuffer(IndexBufferDescription description) => CreateIndexBuffer(ref description);
-        /// <summary>
-        /// Creates a new <see cref="IndexBuffer"/>.
-        /// </summary>
-        /// <param name="description">The desired properties of the created object.</param>
-        /// <returns>A new <see cref="IndexBuffer"/>.</returns>
-        public abstract IndexBuffer CreateIndexBuffer(ref IndexBufferDescription description);
-
-        /// <summary>
-        /// Creates a new <see cref="UniformBuffer"/>.
-        /// </summary>
-        /// <param name="description">The desired properties of the created object.</param>
-        /// <returns>A new <see cref="UniformBuffer"/>.</returns>
-        public UniformBuffer CreateUniformBuffer(BufferDescription description) => CreateUniformBuffer(ref description);
-        /// <summary>
-        /// Creates a new <see cref="UniformBuffer"/>.
-        /// </summary>
-        /// <param name="description">The desired properties of the created object.</param>
-        /// <returns>A new <see cref="UniformBuffer"/>.</returns>
-        public abstract UniformBuffer CreateUniformBuffer(ref BufferDescription description);
+        /// <returns>A new <see cref="Buffer"/>.</returns>
+        public abstract Buffer CreateBuffer(ref BufferDescription description);
 
         /// <summary>
         /// Creates a new <see cref="Sampler"/>.
@@ -176,5 +150,6 @@ namespace Veldrid
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="ResourceSet"/>.</returns>
         public abstract ResourceSet CreateResourceSet(ref ResourceSetDescription description);
+
     }
 }

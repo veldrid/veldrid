@@ -12,7 +12,7 @@
 
             foreach (BindableResource resource in description.BoundResources)
             {
-                if (!(resource is D3D11UniformBuffer || resource is D3D11TextureView || resource is D3D11Sampler))
+                if (!(resource is D3D11Buffer || resource is D3D11TextureView || resource is D3D11Sampler))
                 {
                     throw new VeldridException("Invalid resource type present in D3D11ResourceSet: " + resource.GetType().Name);
                 }

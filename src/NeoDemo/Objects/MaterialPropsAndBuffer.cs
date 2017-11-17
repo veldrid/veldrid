@@ -8,7 +8,7 @@ namespace Veldrid.NeoDemo.Objects
         private bool _newProperties;
 
         public string Name { get; set; }
-        public UniformBuffer UniformBuffer { get; private set; }
+        public Buffer UniformBuffer { get; private set; }
 
         public MaterialProperties Properties
         {
@@ -23,7 +23,8 @@ namespace Veldrid.NeoDemo.Objects
 
         public void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
-            UniformBuffer = gd.ResourceFactory.CreateUniformBuffer(new BufferDescription((ulong)Unsafe.SizeOf<MaterialProperties>()));
+            UniformBuffer = gd.ResourceFactory.CreateBuffer(
+                new BufferDescription((ulong)Unsafe.SizeOf<MaterialProperties>(), BufferUsage.UniformBuffer));
             cl.UpdateBuffer(UniformBuffer, 0, ref _properties);
         }
 

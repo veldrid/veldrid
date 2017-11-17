@@ -18,17 +18,17 @@ namespace Veldrid.NeoDemo
                 Indices = indices;
             }
 
-            public IndexBuffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
+            public Buffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
             {
-                IndexBuffer ret = factory.CreateIndexBuffer(new IndexBufferDescription(Indices.SizeInBytes(), IndexFormat.UInt16));
+                Buffer ret = factory.CreateBuffer(new BufferDescription(Indices.SizeInBytes(), BufferUsage.IndexBuffer));
                 cl.UpdateBuffer(ret, 0, Indices);
                 indexCount = Indices.Length;
                 return ret;
             }
 
-            public VertexBuffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
+            public Buffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
             {
-                VertexBuffer ret = factory.CreateVertexBuffer(new BufferDescription(Vertices.SizeInBytes()));
+                Buffer ret = factory.CreateBuffer(new BufferDescription(Vertices.SizeInBytes(), BufferUsage.VertexBuffer));
                 cl.UpdateBuffer(ret, 0, Vertices);
                 return ret;
             }

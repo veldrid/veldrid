@@ -62,9 +62,9 @@ namespace Veldrid.OpenGL.ManagedEntryList
             _commands.Add(_setFramebufferEntryPool.Rent().Init(fb));
         }
 
-        public void SetIndexBuffer(IndexBuffer ib)
+        public void SetIndexBuffer(Buffer buffer, IndexFormat format)
         {
-            _commands.Add(_setIndexBufferEntryPool.Rent().Init(ib));
+            _commands.Add(_setIndexBufferEntryPool.Rent().Init(buffer, format));
         }
 
         public void SetPipeline(Pipeline pipeline)
@@ -82,7 +82,7 @@ namespace Veldrid.OpenGL.ManagedEntryList
             _commands.Add(_setScissorRectEntryPool.Rent().Init(index, x, y, width, height));
         }
 
-        public void SetVertexBuffer(uint index, VertexBuffer vb)
+        public void SetVertexBuffer(uint index, Buffer vb)
         {
             _commands.Add(_setVertexBufferEntryPool.Rent().Init(index, vb));
         }
@@ -167,7 +167,7 @@ namespace Veldrid.OpenGL.ManagedEntryList
                         _setFramebufferEntryPool.Return(sfbe);
                         break;
                     case SetIndexBufferEntry sibe:
-                        executor.SetIndexBuffer(sibe.IndexBuffer);
+                        executor.SetIndexBuffer(sibe.Buffer, sibe.Format);
                         _setIndexBufferEntryPool.Return(sibe);
                         break;
                     case SetPipelineEntry spe:
@@ -183,7 +183,7 @@ namespace Veldrid.OpenGL.ManagedEntryList
                         _setScissorRectEntryPool.Return(ssre);
                         break;
                     case SetVertexBufferEntry svbe:
-                        executor.SetVertexBuffer(svbe.Index, svbe.VertexBuffer);
+                        executor.SetVertexBuffer(svbe.Index, svbe.Buffer);
                         _setVertexBufferEntryPool.Return(svbe);
                         break;
                     case SetViewportEntry sve:

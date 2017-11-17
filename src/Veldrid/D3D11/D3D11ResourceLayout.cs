@@ -5,6 +5,7 @@
         private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
 
         public int UniformBufferCount { get; }
+        public int StorageBufferCount { get; }
         public int TextureCount { get; }
         public int SamplerCount { get; }
 
@@ -16,6 +17,7 @@
             int cbIndex = 0;
             int texIndex = 0;
             int samplerIndex = 0;
+            int unorderedAccessIndex = 0;
 
             for (int i = 0; i < _bindingInfosByVdIndex.Length; i++)
             {
@@ -24,6 +26,9 @@
                 {
                     case ResourceKind.UniformBuffer:
                         slot = cbIndex++;
+                        break;
+                    case ResourceKind.StorageBuffer:
+                        slot = unorderedAccessIndex++;
                         break;
                     case ResourceKind.TextureView:
                         slot = texIndex++;
@@ -34,10 +39,11 @@
                     default: throw Illegal.Value<ResourceKind>();
                 }
 
-                _bindingInfosByVdIndex[i] = new ResourceBindingInfo(slot, elements[i].Stages);
+                _bindingInfosByVdIndex[i] = new ResourceBindingInfo(slot, elements[i].Stages, elements[i].Kind);
             }
 
             UniformBufferCount = cbIndex;
+            StorageBufferCount = unorderedAccessIndex;
             TextureCount = texIndex;
             SamplerCount = samplerIndex;
         }
@@ -60,11 +66,13 @@
         {
             public int Slot;
             public ShaderStages Stages;
+            public ResourceKind Kind;
 
-            public ResourceBindingInfo(int slot, ShaderStages stages)
+            public ResourceBindingInfo(int slot, ShaderStages stages, ResourceKind kind)
             {
                 Slot = slot;
                 Stages = stages;
+                Kind = kind;
             }
         }
     }

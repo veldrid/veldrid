@@ -13,7 +13,7 @@ namespace Veldrid
     /// NOTE: The use of <see cref="CommandList"/> is not thread-safe. Access to the <see cref="CommandList"/> must be
     /// externally synchronized.
     /// There are some limitations dictating proper usage and ordering of graphics commands. For example, a
-    /// <see cref="Framebuffer"/>, <see cref="Pipeline"/>, <see cref="VertexBuffer"/>, and <see cref="IndexBuffer"/> must all be
+    /// <see cref="Framebuffer"/>, <see cref="Pipeline"/>, vertex buffer, and index buffer must all be
     /// bound before a call to <see cref="Draw(uint, uint, uint, int, uint)"/> will succeed.
     /// These limitations are described in each function, where applicable.
     /// <see cref="CommandList"/> instances cannot be executed multiple times per-recording. When executed by a
@@ -54,32 +54,64 @@ namespace Veldrid
         /// <summary>
         /// Sets the active <see cref="Pipeline"/> used for rendering.
         /// When drawing, the active <see cref="Pipeline"/> must be compatible with the bound <see cref="Framebuffer"/>,
-        /// <see cref="ResourceSet"/>, and <see cref="VertexBuffer"/> objects.
+        /// <see cref="ResourceSet"/>, and <see cref="Buffer"/> objects.
         /// </summary>
         /// <param name="pipeline">The new <see cref="Pipeline"/> object.</param>
         public abstract void SetPipeline(Pipeline pipeline);
 
         /// <summary>
-        /// Sets the active <see cref="VertexBuffer"/> for the given index.
-        /// When drawing, the bound <see cref="VertexBuffer"/> objects must be compatible with the bound <see cref="Pipeline"/>.
+        /// Sets the active <see cref="Buffer"/> for the given index.
+        /// When drawing, the bound <see cref="Buffer"/> objects must be compatible with the bound <see cref="Pipeline"/>.
         /// </summary>
         /// <param name="index">The buffer slot.</param>
-        /// <param name="vb">The new <see cref="VertexBuffer"/>.</param>
-        public abstract void SetVertexBuffer(uint index, VertexBuffer vb);
+        /// <param name="buffer">The new <see cref="Buffer"/>.</param>
+        public void SetVertexBuffer(uint index, Buffer buffer)
+        {
+#if VALIDATE_USAGE
+            if ((buffer.Usage & BufferUsage.VertexBuffer) == 0)
+            {
+                throw new VeldridException(
+                    $"Buffer cannot be bound as a vertex buffer because it was not created with BufferUsage.VertexBuffer.");
+            }
+#endif
+            SetVertexBufferCore(index, buffer);
+        }
+
+        // TODO: private protected
+        protected abstract void SetVertexBufferCore(uint index, Buffer buffer);
 
         /// <summary>
-        /// Sets the active <see cref="IndexBuffer"/>.
-        /// When drawing, an <see cref="IndexBuffer"/> must be bound.
+        /// Sets the active <see cref="Buffer"/>.
+        /// When drawing, an <see cref="Buffer"/> must be bound.
         /// </summary>
-        /// <param name="ib">The new <see cref="IndexBuffer"/>.</param>
-        public abstract void SetIndexBuffer(IndexBuffer ib);
+        /// <param name="buffer">The new <see cref="Buffer"/>.</param>
+        public void SetIndexBuffer(Buffer buffer, IndexFormat format)
+        {
+#if VALIDATE_USAGE
+            if ((buffer.Usage & BufferUsage.IndexBuffer) == 0)
+            {
+                throw new VeldridException(
+                    $"Buffer cannot be bound as an index buffer because it was not created with BufferUsage.IndexBuffer.");
+            }
+#endif
+            SetIndexBufferCore(buffer, format);
+        }
+
+        // TODO: private protected
+        protected abstract void SetIndexBufferCore(Buffer buffer, IndexFormat format);
 
         /// <summary>
         /// Sets the active <see cref="ResourceSet"/> for the given index.
         /// </summary>
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
-        public abstract void SetResourceSet(uint slot, ResourceSet rs);
+        public void SetResourceSet(uint slot, ResourceSet rs)
+        {
+            SetResourceSetCore(slot, rs);
+        }
+
+        // TODO: private protected
+        protected abstract void SetResourceSetCore(uint slot, ResourceSet rs);
 
         /// <summary>
         /// Sets the active <see cref="Framebuffer"/> which will be rendered to.
@@ -193,8 +225,8 @@ namespace Veldrid
         /// </summary>
         /// <param name="indexCount">The number of indices.</param>
         /// <param name="instanceCount">The number of instances.</param>
-        /// <param name="indexStart">The number of indices to skip in the active <see cref="IndexBuffer"/>.</param>
-        /// <param name="vertexOffset">The base vertex value, which is added to each index value read from the <see cref="IndexBuffer"/>.</param>
+        /// <param name="indexStart">The number of indices to skip in the active index buffer.</param>
+        /// <param name="vertexOffset">The base vertex value, which is added to each index value read from the index buffer.</param>
         /// <param name="instanceStart">The starting instance value.</param>
         public abstract void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
 

@@ -28,6 +28,29 @@ namespace Veldrid.D3D11
             }
         }
 
+        internal static BindFlags VdToD3D11BindFlags(BufferUsage usage)
+        {
+            BindFlags flags = BindFlags.None;
+            if ((usage & BufferUsage.VertexBuffer) == BufferUsage.VertexBuffer)
+            {
+                flags |= BindFlags.VertexBuffer;
+            }
+            if ((usage & BufferUsage.IndexBuffer) == BufferUsage.IndexBuffer)
+            {
+                flags |= BindFlags.IndexBuffer;
+            }
+            if ((usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer)
+            {
+                flags |= BindFlags.ConstantBuffer;
+            }
+            if ((usage & BufferUsage.StorageBuffer) == BufferUsage.StorageBuffer)
+            {
+                flags |= BindFlags.UnorderedAccess;
+            }
+
+            return flags;
+        }
+
         internal static Format GetViewFormat(Format format)
         {
             switch (format)

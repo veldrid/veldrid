@@ -14,14 +14,14 @@ namespace Veldrid.Utilities
         /// </summary>
         /// <param name="factory">The <see cref="ResourceFactory"/> to use for device resource creation.</param>
         /// <returns></returns>
-        VertexBuffer CreateVertexBuffer(ResourceFactory factory, CommandList cl);
+        Buffer CreateVertexBuffer(ResourceFactory factory, CommandList cl);
 
         /// <summary>
         /// Constructs a <see cref="IndexBuffer"/> from this <see cref="MeshData"/>.
         /// </summary>
         /// <param name="factory">The <see cref="ResourceFactory"/> to use for device resource creation.</param>
         /// <returns></returns>
-        IndexBuffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount);
+        Buffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount);
 
         /// <summary>
         /// Gets a centered <see cref="BoundingSphere"/> which completely encapsulates the vertices of this mesh.

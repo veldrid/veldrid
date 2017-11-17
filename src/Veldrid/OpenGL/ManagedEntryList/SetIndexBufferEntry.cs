@@ -2,24 +2,27 @@
 {
     internal class SetIndexBufferEntry : OpenGLCommandEntry
     {
-        public IndexBuffer IndexBuffer;
+        public Buffer Buffer;
+        public IndexFormat Format;
 
-        public SetIndexBufferEntry(IndexBuffer ib)
+        public SetIndexBufferEntry(Buffer buffer, IndexFormat format)
         {
-            IndexBuffer = ib;
+            Buffer = buffer;
+            Format = format;
         }
 
         public SetIndexBufferEntry() { }
 
-        public SetIndexBufferEntry Init(IndexBuffer ib)
+        public SetIndexBufferEntry Init(Buffer buffer, IndexFormat format)
         {
-            IndexBuffer = ib;
+            Buffer = buffer;
+            Format = format;
             return this;
         }
 
         public override void ClearReferences()
         {
-            IndexBuffer = null;
+            Buffer = null;
         }
     }
 }

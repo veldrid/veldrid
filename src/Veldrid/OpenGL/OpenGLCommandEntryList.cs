@@ -10,11 +10,11 @@ namespace Veldrid.OpenGL
         void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
         void End();
         void SetFramebuffer(Framebuffer fb);
-        void SetIndexBuffer(IndexBuffer ib);
+        void SetIndexBuffer(Buffer buffer, IndexFormat format);
         void SetPipeline(Pipeline pipeline);
         void SetResourceSet(uint slot, ResourceSet rs);
         void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
-        void SetVertexBuffer(uint index, VertexBuffer vb);
+        void SetVertexBuffer(uint index, Buffer buffer);
         void SetViewport(uint index, ref Viewport viewport);
         void ResolveTexture(Texture source, Texture destination);
         void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);

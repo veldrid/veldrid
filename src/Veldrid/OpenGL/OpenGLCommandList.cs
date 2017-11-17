@@ -48,9 +48,9 @@ namespace Veldrid.OpenGL
             _commands.SetFramebuffer(fb);
         }
 
-        public override void SetIndexBuffer(IndexBuffer ib)
+        protected override void SetIndexBufferCore(Buffer buffer, IndexFormat format)
         {
-            _commands.SetIndexBuffer(ib);
+            _commands.SetIndexBuffer(buffer, format);
         }
 
         public override void SetPipeline(Pipeline pipeline)
@@ -58,7 +58,7 @@ namespace Veldrid.OpenGL
             _commands.SetPipeline(pipeline);
         }
 
-        public override void SetResourceSet(uint slot, ResourceSet rs)
+        protected override void SetResourceSetCore(uint slot, ResourceSet rs)
         {
             _commands.SetResourceSet(slot, rs);
         }
@@ -68,9 +68,9 @@ namespace Veldrid.OpenGL
             _commands.SetScissorRect(index, x, y, width, height);
         }
 
-        public override void SetVertexBuffer(uint index, VertexBuffer vb)
+        protected override void SetVertexBufferCore(uint index, Buffer buffer)
         {
-            _commands.SetVertexBuffer(index, vb);
+            _commands.SetVertexBuffer(index, buffer);
         }
 
         public override void SetViewport(uint index, ref Viewport viewport)

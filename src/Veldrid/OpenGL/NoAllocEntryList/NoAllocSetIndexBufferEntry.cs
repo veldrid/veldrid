@@ -2,11 +2,13 @@
 {
     internal struct NoAllocSetIndexBufferEntry
     {
-        public readonly HandleTracked<IndexBuffer> IndexBuffer;
+        public readonly HandleTracked<Buffer> Buffer;
+        public IndexFormat Format;
 
-        public NoAllocSetIndexBufferEntry(IndexBuffer ib)
+        public NoAllocSetIndexBufferEntry(Buffer ib, IndexFormat format)
         {
-            IndexBuffer = new HandleTracked<IndexBuffer>(ib);
+            Buffer = new HandleTracked<Buffer>(ib);
+            Format = format;
         }
     }
 }

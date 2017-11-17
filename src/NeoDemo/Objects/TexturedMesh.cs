@@ -16,8 +16,8 @@ namespace Veldrid.NeoDemo.Objects
         private readonly Transform _transform = new Transform();
 
         private BoundingBox _centeredBounds;
-        private VertexBuffer _vb;
-        private IndexBuffer _ib;
+        private Buffer _vb;
+        private Buffer _ib;
         private int _indexCount;
         private Texture _texture;
         private TextureView _textureView;
@@ -31,8 +31,8 @@ namespace Veldrid.NeoDemo.Objects
         private Pipeline _shadowMapPipeline;
         private ResourceSet[] _shadowMapResourceSets;
 
-        private UniformBuffer _worldBuffer;
-        private UniformBuffer _inverseTransposeWorldBuffer;
+        private Buffer _worldBuffer;
+        private Buffer _inverseTransposeWorldBuffer;
 
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
 
@@ -61,8 +61,8 @@ namespace Veldrid.NeoDemo.Objects
             _vb = _meshData.CreateVertexBuffer(disposeFactory, cl);
             _ib = _meshData.CreateIndexBuffer(disposeFactory, cl, out _indexCount);
 
-            _worldBuffer = disposeFactory.CreateUniformBuffer(new BufferDescription(64, true));
-            _inverseTransposeWorldBuffer = disposeFactory.CreateUniformBuffer(new BufferDescription(64, true));
+            _worldBuffer = disposeFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer, true));
+            _inverseTransposeWorldBuffer = disposeFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer, true));
             if (_materialPropsOwned)
             {
                 _materialProps.CreateDeviceObjects(gd, cl, sc);
@@ -218,7 +218,7 @@ namespace Veldrid.NeoDemo.Objects
 
             for (int i = 0; i < 3; i++)
             {
-                UniformBuffer viewProjBuffer = i == 0 ? sc.LightViewProjectionBuffer0 : i == 1 ? sc.LightViewProjectionBuffer1 : sc.LightViewProjectionBuffer2;
+                Buffer viewProjBuffer = i == 0 ? sc.LightViewProjectionBuffer0 : i == 1 ? sc.LightViewProjectionBuffer1 : sc.LightViewProjectionBuffer2;
                 ret[i * 2] = StaticResourceCache.GetResourceSet(sharedFactory, new ResourceSetDescription(
                     projViewLayout,
                     viewProjBuffer));
@@ -289,7 +289,7 @@ namespace Veldrid.NeoDemo.Objects
         private void RenderShadowMap(CommandList cl, SceneContext sc, int shadowMapIndex)
         {
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib);
+            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(_shadowMapPipeline);
             cl.SetResourceSet(0, _shadowMapResourceSets[shadowMapIndex * 2]);
             cl.SetResourceSet(1, _shadowMapResourceSets[shadowMapIndex * 2 + 1]);
@@ -299,7 +299,7 @@ namespace Veldrid.NeoDemo.Objects
         private void RenderStandard(CommandList cl, SceneContext sc)
         {
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib);
+            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(0, _mainProjViewRS);
             cl.SetResourceSet(1, _mainSharedRS);

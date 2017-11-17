@@ -7,8 +7,8 @@ namespace Veldrid.NeoDemo.Objects
     {
         private DisposeCollector _disposeCollector;
         private Pipeline _pipeline;
-        private IndexBuffer _ib;
-        private VertexBuffer _vb;
+        private Buffer _ib;
+        private Buffer _vb;
         public bool UseTintedTexture { get; set; }
 
         public override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
@@ -43,11 +43,11 @@ namespace Veldrid.NeoDemo.Objects
                 gd.SwapchainFramebuffer.OutputDescription);
             _pipeline = factory.CreatePipeline(ref pd);
 
-            _vb = factory.CreateVertexBuffer(new BufferDescription(s_quadVerts.SizeInBytes() * sizeof(float)));
+            _vb = factory.CreateBuffer(new BufferDescription(s_quadVerts.SizeInBytes() * sizeof(float), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(_vb, 0, s_quadVerts);
 
-            _ib = factory.CreateIndexBuffer(
-                new IndexBufferDescription(s_quadIndices.SizeInBytes(), IndexFormat.UInt16));
+            _ib = factory.CreateBuffer(
+                new BufferDescription(s_quadIndices.SizeInBytes(), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, s_quadIndices);
         }
 
@@ -66,7 +66,7 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetPipeline(_pipeline);
             cl.SetResourceSet(0, UseTintedTexture ? sc.DuplicatorTargetSet1 : sc.DuplicatorTargetSet0);
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib);
+            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.Draw(6, 1, 0, 0, 0);
         }
 

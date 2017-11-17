@@ -1,7 +1,7 @@
 ﻿namespace Veldrid
 {
     /// <summary>
-    /// The format of index data used in an <see cref="IndexBuffer"/>.
+    /// The format of index data used in a <see cref="Buffer"/>.
     /// </summary>
     public enum IndexFormat : byte
     {

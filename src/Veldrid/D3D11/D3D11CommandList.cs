@@ -24,7 +24,7 @@ namespace Veldrid.D3D11
 
         // Cached pipeline State
         private D3D11Pipeline _pipeline;
-        private IndexBuffer _ib;
+        private Buffer _ib;
         private BlendState _blendState;
         private DepthStencilState _depthStencilState;
         private RasterizerState _rasterizerState;
@@ -39,8 +39,8 @@ namespace Veldrid.D3D11
 
         // Cached resources
         private const int MaxCachedUniformBuffers = 15;
-        private readonly D3D11UniformBuffer[] _vertexBoundUniformBuffers = new D3D11UniformBuffer[MaxCachedUniformBuffers];
-        private readonly D3D11UniformBuffer[] _fragmentBoundUniformBuffers = new D3D11UniformBuffer[MaxCachedUniformBuffers];
+        private readonly D3D11Buffer[] _vertexBoundUniformBuffers = new D3D11Buffer[MaxCachedUniformBuffers];
+        private readonly D3D11Buffer[] _fragmentBoundUniformBuffers = new D3D11Buffer[MaxCachedUniformBuffers];
         private const int MaxCachedTextureViews = 16;
         private readonly D3D11TextureView[] _vertexBoundTextureViews = new D3D11TextureView[MaxCachedTextureViews];
         private readonly D3D11TextureView[] _fragmentBoundTextureViews = new D3D11TextureView[MaxCachedTextureViews];
@@ -146,13 +146,13 @@ namespace Veldrid.D3D11
             ResetManagedState();
         }
 
-        public override void SetIndexBuffer(IndexBuffer ib)
+        protected override void SetIndexBufferCore(Buffer buffer, IndexFormat format)
         {
-            if (_ib != ib)
+            if (_ib != buffer)
             {
-                _ib = ib;
-                D3D11IndexBuffer d3d11Buffer = Util.AssertSubtype<IndexBuffer, D3D11IndexBuffer>(ib);
-                _context.InputAssembler.SetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(ib.Format), 0);
+                _ib = buffer;
+                D3D11Buffer d3d11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(buffer);
+                _context.InputAssembler.SetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(format), 0);
             }
         }
 
@@ -243,7 +243,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void SetResourceSet(uint slot, ResourceSet rs)
+        protected override void SetResourceSetCore(uint slot, ResourceSet rs)
         {
             if (_resourceSets[slot] == rs)
             {
@@ -253,6 +253,7 @@ namespace Veldrid.D3D11
             D3D11ResourceSet d3d11RS = Util.AssertSubtype<ResourceSet, D3D11ResourceSet>(rs);
             _resourceSets[slot] = d3d11RS;
             int cbBase = GetConstantBufferBase(slot);
+            int uaBase = GetUnorderedAccessBase(slot);
             int textureBase = GetTextureBase(slot);
             int samplerBase = GetSamplerBase(slot);
 
@@ -262,17 +263,25 @@ namespace Veldrid.D3D11
             {
                 BindableResource resource = resources[i];
                 D3D11ResourceLayout.ResourceBindingInfo rbi = layout.GetDeviceSlotIndex(i);
-                if (resource is D3D11UniformBuffer ub)
+                switch (rbi.Kind)
                 {
-                    BindUniformBuffer(ub, cbBase + rbi.Slot, rbi.Stages);
-                }
-                else if (resource is D3D11TextureView texView)
-                {
-                    BindTextureView(texView, textureBase + rbi.Slot, rbi.Stages);
-                }
-                else if (resource is D3D11Sampler sampler)
-                {
-                    BindSampler(sampler, samplerBase + rbi.Slot, rbi.Stages);
+                    case ResourceKind.UniformBuffer:
+                        D3D11Buffer uniformBuffer = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
+                        BindUniformBuffer(uniformBuffer, cbBase + rbi.Slot, rbi.Stages);
+                        break;
+                    case ResourceKind.StorageBuffer:
+                        D3D11Buffer storageBuffer = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
+                        BindUnorderedAccessBuffer(storageBuffer, uaBase + rbi.Slot, rbi.Stages);
+                        break;
+                    case ResourceKind.TextureView:
+                        D3D11TextureView texView = Util.AssertSubtype<BindableResource, D3D11TextureView>(resource);
+                        BindTextureView(texView, textureBase + rbi.Slot, rbi.Stages);
+                        break;
+                    case ResourceKind.Sampler:
+                        var sampler = Util.AssertSubtype<BindableResource, D3D11Sampler>(resource);
+                        BindSampler(sampler, samplerBase + rbi.Slot, rbi.Stages);
+                        break;
+                    default: throw Illegal.Value<ResourceKind>();
                 }
             }
         }
@@ -285,6 +294,19 @@ namespace Veldrid.D3D11
             {
                 Debug.Assert(layouts[i] != null);
                 ret += layouts[i].UniformBufferCount;
+            }
+
+            return ret;
+        }
+
+        private int GetUnorderedAccessBase(uint slot)
+        {
+            D3D11ResourceLayout[] layouts = _pipeline.ResourceLayouts;
+            int ret = 0;
+            for (int i = 0; i < slot; i++)
+            {
+                Debug.Assert(layouts[i] != null);
+                ret += layouts[i].StorageBufferCount;
             }
 
             return ret;
@@ -316,9 +338,9 @@ namespace Veldrid.D3D11
             return ret;
         }
 
-        public override void SetVertexBuffer(uint index, VertexBuffer vb)
+        protected override void SetVertexBufferCore(uint index, Buffer buffer)
         {
-            D3D11VertexBuffer d3d11Buffer = Util.AssertSubtype<VertexBuffer, D3D11VertexBuffer>(vb);
+            D3D11Buffer d3d11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(buffer);
             _vertexBindings[index] = d3d11Buffer.Buffer;
             _numVertexBindings = Math.Max((index + 1), _numVertexBindings);
         }
@@ -464,7 +486,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        private void BindUniformBuffer(D3D11UniformBuffer ub, int slot, ShaderStages stages)
+        private void BindUniformBuffer(D3D11Buffer ub, int slot, ShaderStages stages)
         {
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
@@ -518,6 +540,11 @@ namespace Veldrid.D3D11
                     _context.PixelShader.SetConstantBuffer(slot, ub.Buffer);
                 }
             }
+        }
+
+        private void BindUnorderedAccessBuffer(D3D11Buffer storageBuffer, int slot, ShaderStages stages)
+        {
+            Debug.Assert(stages == ShaderStages.Fragment);
         }
 
         private void BindSampler(D3D11Sampler sampler, int slot, ShaderStages stages)

@@ -25,11 +25,6 @@ namespace Veldrid.Vk
             return new VkFramebuffer(_gd, ref description, false);
         }
 
-        public override IndexBuffer CreateIndexBuffer(ref IndexBufferDescription description)
-        {
-            return new VkIndexBuffer(_gd, ref description);
-        }
-
         public override Pipeline CreatePipeline(ref PipelineDescription description)
         {
             return new VkPipeline(_gd, ref description);
@@ -65,14 +60,9 @@ namespace Veldrid.Vk
             return new VkTextureView(_gd, ref description);
         }
 
-        public override UniformBuffer CreateUniformBuffer(ref BufferDescription description)
+        public override Buffer CreateBuffer(ref BufferDescription description)
         {
-            return new VkUniformBuffer(_gd, ref description);
-        }
-
-        public override VertexBuffer CreateVertexBuffer(ref BufferDescription description)
-        {
-            return new VkVertexBuffer(_gd, ref description);
+            return new VkBuffer(_gd, description.SizeInBytes, description.Dynamic, description.Usage);
         }
     }
 }

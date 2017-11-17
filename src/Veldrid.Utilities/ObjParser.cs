@@ -570,17 +570,17 @@ namespace Veldrid.Utilities
             MaterialName = materialName;
         }
 
-        public VertexBuffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
+        public Buffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
         {
-            VertexBuffer vb = factory.CreateVertexBuffer(
-                new BufferDescription((ulong)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes), false));
+            Buffer vb = factory.CreateBuffer(
+                new BufferDescription((ulong)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(vb, 0, Vertices);
             return vb;
         }
 
-        public IndexBuffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
+        public Buffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
         {
-            IndexBuffer ib = factory.CreateIndexBuffer( new IndexBufferDescription((ulong)(Indices.Length * sizeof(int)), IndexFormat.UInt16, false));
+            Buffer ib = factory.CreateBuffer(new BufferDescription((ulong)(Indices.Length * sizeof(int)), BufferUsage.IndexBuffer, false));
             cl.UpdateBuffer(ib, 0, Indices);
             indexCount = Indices.Length;
             return ib;
@@ -599,11 +599,11 @@ namespace Veldrid.Utilities
             fixed (VertexPositionNormalTexture* ptr = Vertices)
             {
                 return BoundingBox.CreateFromPoints(
-                    (Vector3*)ptr, 
-                    Vertices.Length, 
-                    VertexPositionNormalTexture.SizeInBytes, 
-                    Quaternion.Identity, 
-                    Vector3.Zero, 
+                    (Vector3*)ptr,
+                    Vertices.Length,
+                    VertexPositionNormalTexture.SizeInBytes,
+                    Quaternion.Identity,
+                    Vector3.Zero,
                     Vector3.One);
             }
         }

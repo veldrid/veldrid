@@ -71,7 +71,7 @@ namespace Veldrid.D3D11
             }
 
             Debug.Assert(vsBytecode != null || ComputeShader != null);
-            if (vsBytecode != null)
+            if (vsBytecode != null && description.ShaderSet.VertexLayouts.Length > 0)
             {
                 InputLayout = cache.GetInputLayout(description.ShaderSet.VertexLayouts, vsBytecode);
                 int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
@@ -80,6 +80,10 @@ namespace Veldrid.D3D11
                 {
                     VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
                 }
+            }
+            else
+            {
+                VertexStrides = Array.Empty<int>();
             }
         }
 

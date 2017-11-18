@@ -5,7 +5,7 @@
         public new OpenGLTexture Target { get; }
 
         public OpenGLTextureView(ref TextureViewDescription description)
-            : base(description.Target)
+            : base(ref description)
         {
             Target = Util.AssertSubtype<Texture, OpenGLTexture>(description.Target);
         }

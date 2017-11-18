@@ -10,17 +10,21 @@
         /// </summary>
         UniformBuffer,
         /// <summary>
-        /// A <see cref="Buffer"/> accessed as a read-write storage buffer.
-        /// </summary>
-        StorageBufferReadWrite,
-        /// <summary>
         /// A <see cref="Buffer"/> accessed as a read-only storage buffer.
         /// </summary>
-        StorageBufferReadOnly,
+        StructuredBufferReadOnly,
         /// <summary>
-        /// A <see cref="Veldrid.TextureView"/>.
+        /// A <see cref="Buffer"/> accessed as a read-write storage buffer.
         /// </summary>
-        TextureView,
+        StructuredBufferReadWrite,
+        /// <summary>
+        /// A read-only <see cref="Texture"/>, accessed through a <see cref="TextureView"/>.
+        /// </summary>
+        TextureReadOnly,
+        /// <summary>
+        /// A read-write <see cref="Texture"/>, accessed through a <see cref="TextureView"/>.
+        /// </summary>
+        TextureReadWrite,
         /// <summary>
         /// A <see cref="Veldrid.Sampler"/>.
         /// </summary>

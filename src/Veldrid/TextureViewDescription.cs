@@ -13,6 +13,14 @@ namespace Veldrid
         /// </summary>
         public Texture Target;
 
+        public uint BaseMipLevel;
+
+        public uint MipLevels;
+
+        public uint BaseArrayLayer;
+
+        public uint ArrayLayers;
+
         /// <summary>
         /// Constructs a new TextureViewDescription.
         /// </summary>
@@ -21,6 +29,10 @@ namespace Veldrid
         public TextureViewDescription(Texture target)
         {
             Target = target;
+            BaseMipLevel = 0;
+            MipLevels = target.MipLevels;
+            BaseArrayLayer = 0;
+            ArrayLayers = target.ArrayLayers;
         }
 
         /// <summary>

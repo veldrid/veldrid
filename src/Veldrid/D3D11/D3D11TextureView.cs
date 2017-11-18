@@ -7,8 +7,10 @@ namespace Veldrid.D3D11
     {
         public ShaderResourceView ShaderResourceView { get; }
 
+        // TODO: Implement read-write textures.
+        // Store a UAV in here if texture is created with Storage flag.
         public D3D11TextureView(Device device, ref TextureViewDescription description)
-            : base(description.Target)
+            : base(ref description)
         {
             D3D11Texture d3dTex = Util.AssertSubtype<Texture, D3D11Texture>(description.Target);
             ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription();

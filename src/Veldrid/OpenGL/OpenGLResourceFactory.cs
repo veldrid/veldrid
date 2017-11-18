@@ -57,12 +57,12 @@ namespace Veldrid.OpenGL
             return new OpenGLShader(_gd, description.Stage, stagingBlock);
         }
 
-        public override Texture CreateTexture(ref TextureDescription description)
+        protected override Texture CreateTextureCore(ref TextureDescription description)
         {
             return new OpenGLTexture(_gd, ref description);
         }
 
-        public override TextureView CreateTextureView(ref TextureViewDescription description)
+        protected override TextureView CreateTextureViewCore(ref TextureViewDescription description)
         {
             return new OpenGLTextureView(ref description);
         }

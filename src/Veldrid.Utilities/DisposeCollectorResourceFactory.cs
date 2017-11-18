@@ -81,14 +81,14 @@ namespace Veldrid.Utilities
             return shader;
         }
 
-        public override Texture CreateTexture(ref TextureDescription description)
+        protected override Texture CreateTextureCore(ref TextureDescription description)
         {
             Texture tex = Factory.CreateTexture(ref description);
             DisposeCollector.Add(tex);
             return tex;
         }
 
-        public override TextureView CreateTextureView(ref TextureViewDescription description)
+        protected override TextureView CreateTextureViewCore(ref TextureViewDescription description)
         {
             TextureView texView = Factory.CreateTextureView(ref description);
             DisposeCollector.Add(texView);

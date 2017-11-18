@@ -51,7 +51,19 @@ namespace Veldrid
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="Texture"/>.</returns>
-        public abstract Texture CreateTexture(ref TextureDescription description);
+        public Texture CreateTexture(ref TextureDescription description)
+        {
+            // TODO: Implement read-write textures.
+            if ((description.Usage & TextureUsage.Storage) == TextureUsage.Storage)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            return CreateTextureCore(ref description);
+        }
+
+        // TODO: private protected
+        protected abstract Texture CreateTextureCore(ref TextureDescription description);
 
         /// <summary>
         /// Creates a new <see cref="TextureView"/>.
@@ -65,12 +77,21 @@ namespace Veldrid
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="TextureView"/>.</returns>
         public TextureView CreateTextureView(TextureViewDescription description) => CreateTextureView(ref description);
-        /// <summary>
-        /// Creates a new <see cref="TextureView"/>.
-        /// </summary>
-        /// <param name="description">The desired properties of the created object.</param>
-        /// <returns>A new <see cref="TextureView"/>.</returns>
-        public abstract TextureView CreateTextureView(ref TextureViewDescription description);
+        public TextureView CreateTextureView(ref TextureViewDescription description)
+        {
+            // TODO: Implement support for different-sized TextureViews.
+            // On OpenGL this requires glTextureView, a 4.3 feature.
+            if (description.BaseMipLevel != 0 || description.MipLevels != description.Target.MipLevels
+                || description.BaseArrayLayer != 0 || description.ArrayLayers != description.Target.ArrayLayers)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            return CreateTextureViewCore(ref description);
+        }
+
+        // TODO: private protected
+        protected abstract TextureView CreateTextureViewCore(ref TextureViewDescription description);
 
         /// <summary>
         /// Creates a new <see cref="Buffer"/>.

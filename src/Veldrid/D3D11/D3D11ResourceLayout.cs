@@ -27,14 +27,17 @@
                     case ResourceKind.UniformBuffer:
                         slot = cbIndex++;
                         break;
-                    case ResourceKind.StorageBufferReadOnly:
+                    case ResourceKind.StructuredBufferReadOnly:
                         slot = texIndex++;
                         break;
-                    case ResourceKind.StorageBufferReadWrite:
+                    case ResourceKind.StructuredBufferReadWrite:
                         slot = unorderedAccessIndex++;
                         break;
-                    case ResourceKind.TextureView:
+                    case ResourceKind.TextureReadOnly:
                         slot = texIndex++;
+                        break;
+                    case ResourceKind.TextureReadWrite:
+                        slot = unorderedAccessIndex++;
                         break;
                     case ResourceKind.Sampler:
                         slot = samplerIndex++;

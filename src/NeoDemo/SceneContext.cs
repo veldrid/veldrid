@@ -98,7 +98,7 @@ namespace Veldrid.NeoDemo
             FarShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(FarShadowMapTexture));
 
             TextureSamplerResourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("SourceTexture", ResourceKind.TextureView, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("SourceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("SourceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
             RecreateWindowSizedResources(gd, cl);
         }

@@ -13,9 +13,18 @@ namespace Veldrid
         /// </summary>
         public Texture Target { get; }
 
-        internal TextureView(Texture target)
+        public uint BaseMipLevel { get; }
+        public uint MipLevels { get; }
+        public uint BaseArrayLayer { get; }
+        public uint ArrayLayers { get; }
+
+        internal TextureView(ref TextureViewDescription description)
         {
-            Target = target;
+            Target = description.Target;
+            BaseMipLevel = description.BaseMipLevel;
+            MipLevels = description.MipLevels;
+            BaseArrayLayer = description.BaseMipLevel;
+            ArrayLayers = description.ArrayLayers;
         }
 
         /// <summary>

@@ -15,7 +15,7 @@ namespace Veldrid.Vk
         public new VkTexture Target => (VkTexture)base.Target;
 
         public VkTextureView(VkGraphicsDevice gd, ref TextureViewDescription description)
-            : base(description.Target)
+            : base(ref description)
         {
             _gd = gd;
             VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();

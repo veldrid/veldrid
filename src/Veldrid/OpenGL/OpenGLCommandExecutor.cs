@@ -417,8 +417,8 @@ namespace Veldrid.OpenGL
                         glBindBufferRange(BufferRangeTarget.UniformBuffer, ubBaseIndex + element, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
                         CheckLastError();
                         break;
-                    case ResourceKind.StorageBufferReadWrite:
-                    case ResourceKind.StorageBufferReadOnly:
+                    case ResourceKind.StructuredBufferReadWrite:
+                    case ResourceKind.StructuredBufferReadOnly:
                         OpenGLBuffer glBuffer = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
                         OpenGLShaderStorageBinding shaderStorageBinding = _graphicsPipeline.GetStorageBufferBindingForSlot(slot, element);
                         glShaderStorageBlockBinding(_graphicsPipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + element);
@@ -427,7 +427,7 @@ namespace Veldrid.OpenGL
                         glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, ssboBaseIndex + element, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
                         CheckLastError();
                         break;
-                    case ResourceKind.TextureView:
+                    case ResourceKind.TextureReadOnly:
                         OpenGLTextureView glTexView = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
                         OpenGLTextureBindingSlotInfo textureBindingInfo = _graphicsPipeline.GetTextureBindingInfo(slot, element);
                         _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
@@ -438,6 +438,9 @@ namespace Veldrid.OpenGL
                         glUniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
                         CheckLastError();
                         break;
+                    case ResourceKind.TextureReadWrite:
+                        // TODO: Implement read-write textures.
+                        throw new NotImplementedException();
                     case ResourceKind.Sampler:
                         OpenGLSampler glSampler = Util.AssertSubtype<BindableResource, OpenGLSampler>(resource);
                         glSampler.EnsureResourcesCreated();
@@ -482,8 +485,8 @@ namespace Veldrid.OpenGL
                         glBindBufferRange(BufferRangeTarget.UniformBuffer, ubBaseIndex + element, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
                         CheckLastError();
                         break;
-                    case ResourceKind.StorageBufferReadWrite:
-                    case ResourceKind.StorageBufferReadOnly:
+                    case ResourceKind.StructuredBufferReadWrite:
+                    case ResourceKind.StructuredBufferReadOnly:
                         OpenGLBuffer glBuffer = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
                         OpenGLShaderStorageBinding shaderStorageBinding = _computePipeline.GetStorageBufferBindingForSlot(slot, element);
                         glShaderStorageBlockBinding(_computePipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + element);
@@ -492,7 +495,7 @@ namespace Veldrid.OpenGL
                         glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, ssboBaseIndex + element, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
                         CheckLastError();
                         break;
-                    case ResourceKind.TextureView:
+                    case ResourceKind.TextureReadOnly:
                         OpenGLTextureView glTexView = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
                         OpenGLTextureBindingSlotInfo textureBindingInfo = _computePipeline.GetTextureBindingInfo(slot, element);
                         _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
@@ -503,6 +506,9 @@ namespace Veldrid.OpenGL
                         glUniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
                         CheckLastError();
                         break;
+                    case ResourceKind.TextureReadWrite:
+                        // TODO: Implement read-write textures.
+                        throw new NotImplementedException();
                     case ResourceKind.Sampler:
                         OpenGLSampler glSampler = Util.AssertSubtype<BindableResource, OpenGLSampler>(resource);
                         glSampler.EnsureResourcesCreated();

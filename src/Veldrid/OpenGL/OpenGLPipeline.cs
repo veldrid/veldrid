@@ -198,7 +198,7 @@ namespace Veldrid.OpenGL
                             throw new System.NotImplementedException();
                         }
                     }
-                    else if (resource.Kind == ResourceKind.TextureView)
+                    else if (resource.Kind == ResourceKind.TextureReadOnly)
                     {
                         string resourceName = resource.Name;
                         int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;
@@ -215,8 +215,13 @@ namespace Veldrid.OpenGL
                         lastTextureLocation = location;
                         samplerTrackedRelativeTextureIndices.Add(relativeTextureIndex);
                     }
-                    else if (resource.Kind == ResourceKind.StorageBufferReadOnly
-                        || resource.Kind == ResourceKind.StorageBufferReadWrite)
+                    else if (resource.Kind == ResourceKind.TextureReadWrite)
+                    {
+                        // TODO: Implement read-write textures (image load-store, OpenGL 4.2).
+                        throw new NotImplementedException();
+                    }
+                    else if (resource.Kind == ResourceKind.StructuredBufferReadOnly
+                        || resource.Kind == ResourceKind.StructuredBufferReadWrite)
                     {
                         string resourceName = resource.Name;
                         int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;
@@ -235,7 +240,6 @@ namespace Veldrid.OpenGL
 
                         storageBufferBindings[i] = new OpenGLShaderStorageBinding(storageBlockBinding);
                     }
-
                     else
                     {
                         Debug.Assert(resource.Kind == ResourceKind.Sampler);

@@ -82,11 +82,13 @@ namespace Veldrid.Vk
             {
                 case ResourceKind.UniformBuffer:
                     return VkDescriptorType.UniformBuffer;
-                case ResourceKind.StorageBufferReadWrite:
-                case ResourceKind.StorageBufferReadOnly:
+                case ResourceKind.StructuredBufferReadWrite:
+                case ResourceKind.StructuredBufferReadOnly:
                     return VkDescriptorType.StorageBuffer;
-                case ResourceKind.TextureView:
+                case ResourceKind.TextureReadOnly:
                     return VkDescriptorType.SampledImage;
+                case ResourceKind.TextureReadWrite:
+                    return VkDescriptorType.StorageImage;
                 case ResourceKind.Sampler:
                     return VkDescriptorType.Sampler;
                 default:

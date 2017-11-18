@@ -289,18 +289,21 @@ namespace Veldrid.D3D11
                         D3D11Buffer uniformBuffer = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
                         BindUniformBuffer(uniformBuffer, cbBase + rbi.Slot, rbi.Stages);
                         break;
-                    case ResourceKind.StorageBufferReadOnly:
+                    case ResourceKind.StructuredBufferReadOnly:
                         D3D11Buffer storageBufferRO = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
                         BindStorageBufferView(storageBufferRO, textureBase + rbi.Slot, rbi.Stages);
                         break;
-                    case ResourceKind.StorageBufferReadWrite:
+                    case ResourceKind.StructuredBufferReadWrite:
                         D3D11Buffer storageBuffer = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
                         BindUnorderedAccessBuffer(storageBuffer, uaBase + rbi.Slot, rbi.Stages);
                         break;
-                    case ResourceKind.TextureView:
+                    case ResourceKind.TextureReadOnly:
                         D3D11TextureView texView = Util.AssertSubtype<BindableResource, D3D11TextureView>(resource);
                         BindTextureView(texView, textureBase + rbi.Slot, rbi.Stages);
                         break;
+                    case ResourceKind.TextureReadWrite:
+                        // TODO: Implement read-write textures.
+                        throw new NotImplementedException();
                     case ResourceKind.Sampler:
                         D3D11Sampler sampler = Util.AssertSubtype<BindableResource, D3D11Sampler>(resource);
                         BindSampler(sampler, samplerBase + rbi.Slot, rbi.Stages);
@@ -337,18 +340,22 @@ namespace Veldrid.D3D11
                         D3D11Buffer uniformBuffer = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
                         BindUniformBuffer(uniformBuffer, cbBase + rbi.Slot, rbi.Stages);
                         break;
-                    case ResourceKind.StorageBufferReadOnly:
+                    case ResourceKind.StructuredBufferReadOnly:
                         D3D11Buffer storageBufferRO = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
                         BindStorageBufferView(storageBufferRO, textureBase + rbi.Slot, rbi.Stages);
                         break;
-                    case ResourceKind.StorageBufferReadWrite:
+                    case ResourceKind.StructuredBufferReadWrite:
                         D3D11Buffer storageBuffer = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
                         BindUnorderedAccessBuffer(storageBuffer, uaBase + rbi.Slot, rbi.Stages);
                         break;
-                    case ResourceKind.TextureView:
+                    case ResourceKind.TextureReadOnly:
                         D3D11TextureView texView = Util.AssertSubtype<BindableResource, D3D11TextureView>(resource);
                         BindTextureView(texView, textureBase + rbi.Slot, rbi.Stages);
                         break;
+                    case ResourceKind.TextureReadWrite:
+                        // TODO: Implement read-write textures.
+                        // Store a UAV in the D3D11TextureView if texture is created with Storage flag.
+                        throw new NotImplementedException();
                     case ResourceKind.Sampler:
                         D3D11Sampler sampler = Util.AssertSubtype<BindableResource, D3D11Sampler>(resource);
                         BindSampler(sampler, samplerBase + rbi.Slot, rbi.Stages);

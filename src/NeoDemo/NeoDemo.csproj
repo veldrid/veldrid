@@ -8,6 +8,7 @@
     <AssetsDir>$(MSBuildThisFileDirectory)Assets</AssetsDir>
     <ShaderOutputPath>$(AssetsDir)\Shaders.Generated</ShaderOutputPath>
     <ListAllShaderPaths>true</ListAllShaderPaths>
+    <ShaderContentIncludePath>Assets\Shaders.Generated</ShaderContentIncludePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,8 +35,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ShaderGen.Primitives" Version="1.0.9" />
-    <PackageReference Include="ShaderGen.Build" Version="1.0.25" PrivateAssets="All" />
+    <PackageReference Include="ShaderGen.Primitives" Version="1.0.12" />
+    <PackageReference Include="ShaderGen.Build" Version="1.0.30" PrivateAssets="All" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
     <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
@@ -43,17 +44,5 @@
     <ProjectReference Include="..\Veldrid.Utilities\Veldrid.Utilities.csproj" />
     <ProjectReference Include="..\Veldrid.ImGui\Veldrid.ImGui.csproj" />
   </ItemGroup>
-
-<!--
-  <Target Name="IncludeGeneratedShaderContent" AfterTargets="AssignTargetPaths">
-    <Message Importance="high" Text="@(GeneratedShader)" />
-    <ItemGroup>
-      <ContentWithTargetPath Include="@(GeneratedShader)">
-        <TargetPath>Assets\Shaders.Generated\%(FileName)%(Extension)</TargetPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </ContentWithTargetPath>
-    </ItemGroup>
-  </Target>
--->
 
 </Project>

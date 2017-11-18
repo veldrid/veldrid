@@ -43,7 +43,12 @@ namespace Veldrid.D3D11
             {
                 flags |= BindFlags.ConstantBuffer;
             }
-            if ((usage & BufferUsage.StorageBuffer) == BufferUsage.StorageBuffer)
+            if ((usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
+                || (usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
+            {
+                flags |= BindFlags.ShaderResource;
+            }
+            if ((usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
             {
                 flags |= BindFlags.UnorderedAccess;
             }

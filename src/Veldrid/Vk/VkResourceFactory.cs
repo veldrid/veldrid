@@ -25,7 +25,12 @@ namespace Veldrid.Vk
             return new VkFramebuffer(_gd, ref description, false);
         }
 
-        public override Pipeline CreatePipeline(ref PipelineDescription description)
+        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        {
+            return new VkPipeline(_gd, ref description);
+        }
+
+        public override Pipeline CreateComputePipeline(ref ComputePipelineDescription description)
         {
             return new VkPipeline(_gd, ref description);
         }
@@ -60,7 +65,7 @@ namespace Veldrid.Vk
             return new VkTextureView(_gd, ref description);
         }
 
-        public override Buffer CreateBuffer(ref BufferDescription description)
+        protected override Buffer CreateBufferCore(ref BufferDescription description)
         {
             return new VkBuffer(_gd, description.SizeInBytes, description.Dynamic, description.Usage);
         }

@@ -1,4 +1,6 @@
-﻿using SharpDX.Direct3D11;
+﻿using System;
+using SharpDX.Direct3D11;
+using System.Diagnostics;
 
 namespace Veldrid.D3D11
 {
@@ -12,7 +14,11 @@ namespace Veldrid.D3D11
 
         public SharpDX.Direct3D11.Buffer Buffer => _buffer;
 
-        public D3D11Buffer(Device device, ulong sizeInBytes, BufferUsage usage)
+        public UnorderedAccessView UnorderedAccessView { get; }
+
+        internal ShaderResourceView ShaderResourceView { get; }
+
+        public D3D11Buffer(Device device, ulong sizeInBytes, BufferUsage usage, uint structureByteStride)
         {
             SizeInBytes = sizeInBytes;
             Usage = usage;
@@ -20,11 +26,43 @@ namespace Veldrid.D3D11
                 (int)sizeInBytes,
                 D3D11Formats.VdToD3D11BindFlags(usage),
                 ResourceUsage.Default);
+            if ((usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
+                || (usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
+            {
+                bd.OptionFlags = ResourceOptionFlags.BufferStructured;
+                bd.StructureByteStride = (int)structureByteStride;
+            }
             _buffer = new SharpDX.Direct3D11.Buffer(device, bd);
+
+            if ((usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite
+                || (usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly)
+            {
+                ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
+                {
+                    Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.ExtendedBuffer
+                };
+                srvDesc.BufferEx.ElementCount = 1024;
+                ShaderResourceView = new ShaderResourceView(device, _buffer, srvDesc);
+            }
+
+            if ((usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
+            {
+                UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription
+                {
+                    Dimension = UnorderedAccessViewDimension.Buffer
+                };
+
+                uavDesc.Buffer.ElementCount = (int)(SizeInBytes / structureByteStride);
+                uavDesc.Format = SharpDX.DXGI.Format.Unknown;
+
+                UnorderedAccessView = new UnorderedAccessView(device, _buffer, uavDesc);
+            }
         }
 
         public override void Dispose()
         {
+            ShaderResourceView?.Dispose();
+            UnorderedAccessView?.Dispose();
             _buffer.Dispose();
         }
     }

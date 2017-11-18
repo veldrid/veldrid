@@ -10,7 +10,7 @@ namespace Shaders
     public class Simple2D
     {
         public Matrix4x4 Projection;
-        public ShadowmapDrawer.SizeInfo SizePos;
+        public ShadowmapDrawIndexeder.SizeInfo SizePos;
         public Texture2DResource Tex;
         public SamplerResource TexSampler;
 

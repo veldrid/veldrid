@@ -82,7 +82,8 @@ namespace Veldrid.Vk
             {
                 case ResourceKind.UniformBuffer:
                     return VkDescriptorType.UniformBuffer;
-                case ResourceKind.StorageBuffer:
+                case ResourceKind.StorageBufferReadWrite:
+                case ResourceKind.StorageBufferReadOnly:
                     return VkDescriptorType.StorageBuffer;
                 case ResourceKind.TextureView:
                     return VkDescriptorType.SampledImage;
@@ -254,6 +255,9 @@ namespace Veldrid.Vk
 
             if ((stage & ShaderStages.Fragment) == ShaderStages.Fragment)
                 ret |= VkShaderStageFlags.Fragment;
+
+            if ((stage & ShaderStages.Compute) == ShaderStages.Compute)
+                ret |= VkShaderStageFlags.Compute;
 
             return ret;
         }

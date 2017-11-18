@@ -104,7 +104,7 @@ namespace Veldrid
             _textureLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("MainTexture", ResourceKind.TextureView, ShaderStages.Fragment)));
 
-            PipelineDescription pd = new PipelineDescription(
+            GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
                 BlendStateDescription.SingleAlphaBlend,
                 new DepthStencilStateDescription(false, false, DepthComparisonKind.Always),
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, false, true),
@@ -112,7 +112,7 @@ namespace Veldrid
                 new ShaderSetDescription(vertexLayouts, shaderStages),
                 new ResourceLayout[] { _layout, _textureLayout },
                 outputDescription);
-            _pipeline = factory.CreatePipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(ref pd);
 
             _mainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,
                 _projMatrixBuffer,
@@ -386,7 +386,7 @@ namespace Veldrid
             cl.SetVertexBuffer(0, _vertexBuffer);
             cl.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(0, _mainResourceSet);
+            cl.SetGraphicsResourceSet(0, _mainResourceSet);
 
             ImGui.ScaleClipRects(draw_data, ImGui.GetIO().DisplayFramebufferScale);
 
@@ -409,11 +409,11 @@ namespace Veldrid
                         {
                             if (pcmd->TextureId == _fontAtlasID)
                             {
-                                cl.SetResourceSet(1, _fontTextureResourceSet);
+                                cl.SetGraphicsResourceSet(1, _fontTextureResourceSet);
                             }
                             else
                             {
-                                cl.SetResourceSet(1, ImGuiImageHelper.GetResourceSet(pcmd->TextureId));
+                                cl.SetGraphicsResourceSet(1, ImGuiImageHelper.GetResourceSet(pcmd->TextureId));
                             }
                         }
 
@@ -424,7 +424,7 @@ namespace Veldrid
                             (uint)pcmd->ClipRect.Z,
                             (uint)pcmd->ClipRect.W);
 
-                        cl.Draw(pcmd->ElemCount, 1, (uint)idx_offset, vtx_offset, 0);
+                        cl.DrawIndexed(pcmd->ElemCount, 1, (uint)idx_offset, vtx_offset, 0);
                     }
 
                     idx_offset += (int)pcmd->ElemCount;

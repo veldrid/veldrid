@@ -30,9 +30,18 @@ namespace Veldrid.OpenGL.ManagedEntryList
             _commands.Add(new ClearDepthTargetEntry(depth));
         }
 
-        public void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        public void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
-            _commands.Add(new DrawEntry(indexCount, instanceCount, indexStart, vertexOffset, instanceStart));
+            _commands.Add(new DrawEntry(vertexCount, instanceCount, vertexStart, instanceStart));
+        }
+
+        public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        {
+            _commands.Add(new DrawIndexedEntry(indexCount, instanceCount, indexStart, vertexOffset, instanceStart));
+        }
+        public void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
+        {
+            _commands.Add(new DispatchEntry(groupCountX, groupCountY, groupCountZ));
         }
 
         public void End()
@@ -55,9 +64,14 @@ namespace Veldrid.OpenGL.ManagedEntryList
             _commands.Add(new SetPipelineEntry(pipeline));
         }
 
-        public void SetResourceSet(uint slot, ResourceSet rs)
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs)
         {
-            _commands.Add(new SetResourceSetEntry(slot, rs));
+            _commands.Add(new SetGraphicsResourceSetEntry(slot, rs));
+        }
+
+        public void SetComputeResourceSet(uint slot, ResourceSet rs)
+        {
+            _commands.Add(new SetComputeResourceSetEntry(slot, rs));
         }
 
         public void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
@@ -136,8 +150,8 @@ namespace Veldrid.OpenGL.ManagedEntryList
                     case ClearDepthTargetEntry cdte:
                         executor.ClearDepthTarget(cdte.Depth);
                         break;
-                    case DrawEntry de:
-                        executor.Draw(de.IndexCount, de.InstanceCount, de.IndexStart, de.VertexOffset, de.InstanceCount);
+                    case DrawIndexedEntry de:
+                        executor.DrawIndexed(de.IndexCount, de.InstanceCount, de.IndexStart, de.VertexOffset, de.InstanceCount);
                         break;
                     case EndEntry ee:
                         executor.End();
@@ -151,8 +165,8 @@ namespace Veldrid.OpenGL.ManagedEntryList
                     case SetPipelineEntry spe:
                         executor.SetPipeline(spe.Pipeline);
                         break;
-                    case SetResourceSetEntry srse:
-                        executor.SetResourceSet(srse.Slot, srse.ResourceSet);
+                    case SetGraphicsResourceSetEntry srse:
+                        executor.SetGraphicsResourceSet(srse.Slot, srse.ResourceSet);
                         break;
                     case SetScissorRectEntry ssre:
                         executor.SetScissorRect(ssre.Index, ssre.X, ssre.Y, ssre.Width, ssre.Height);

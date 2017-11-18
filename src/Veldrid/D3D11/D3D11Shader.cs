@@ -27,6 +27,9 @@ namespace Veldrid.D3D11
                 case ShaderStages.Fragment:
                     DeviceShader = new PixelShader(device, description.ShaderBytes);
                     break;
+                case ShaderStages.Compute:
+                    DeviceShader = new ComputeShader(device, description.ShaderBytes);
+                    break;
                 default:
                     throw Illegal.Value<ShaderStages>();
             }

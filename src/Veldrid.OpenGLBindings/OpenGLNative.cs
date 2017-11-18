@@ -98,6 +98,29 @@ namespace Veldrid.OpenGLBinding
             uint primcount,
             int basevertex) => p_glDrawElementsInstancedBaseVertex(mode, count, type, indices, primcount, basevertex);
 
+        private delegate void glDrawArrays_t(PrimitiveType mode, int first, uint count);
+        private static glDrawArrays_t p_glDrawArrays;
+        public static void glDrawArrays(PrimitiveType mode, int first, uint count) => p_glDrawArrays(mode, first, count);
+
+        private delegate void glDrawArraysInstanced_t(PrimitiveType mode, int first, uint count, uint primcount);
+        private static glDrawArraysInstanced_t p_glDrawArraysInstanced;
+        public static void glDrawArraysInstanced(PrimitiveType mode, int first, uint count, uint primcount)
+            => p_glDrawArraysInstanced(mode, first, count, primcount);
+
+        private delegate void glDrawArraysInstancedBaseInstance_t(
+            PrimitiveType mode,
+            int first,
+            uint count,
+            uint primcount,
+            uint baseinstance);
+        private static glDrawArraysInstancedBaseInstance_t p_glDrawArraysInstancedBaseInstance;
+        public static void glDrawArraysInstancedBaseInstance(
+            PrimitiveType mode,
+            int first,
+            uint count,
+            uint primcount,
+            uint baseinstance) => p_glDrawArraysInstancedBaseInstance(mode, first, count, primcount, baseinstance);
+
         private delegate void glGenBuffers_t(uint n, out uint buffers);
         private static glGenBuffers_t p_glGenBuffers;
         public static void glGenBuffers(uint n, out uint buffers) => p_glGenBuffers(n, out buffers);
@@ -644,6 +667,21 @@ namespace Veldrid.OpenGLBinding
             int level,
             int layer) => p_glFramebufferTextureLayer(target, attachment, texture, level, layer);
 
+        private delegate void glDispatchCompute_t(uint num_groups_x, uint num_groups_y, uint num_groups_z);
+        private static glDispatchCompute_t p_glDispatchCompute;
+        public static void glDispatchCompute(uint num_groups_x, uint num_groups_y, uint num_groups_z)
+            => p_glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
+
+        private delegate uint glGetProgramResourceIndex_t(uint program, ProgramInterface programInterface, byte* name);
+        private static glGetProgramResourceIndex_t p_glGetProgramResourceIndex;
+        public static uint glGetProgramResourceIndex(uint program, ProgramInterface programInterface, byte* name)
+            => p_glGetProgramResourceIndex(program, programInterface, name);
+
+        private delegate void glShaderStorageBlockBinding_t(uint program, uint storageBlockIndex, uint storageBlockBinding);
+        private static glShaderStorageBlockBinding_t p_glShaderStorageBlockBinding;
+        public static void glShaderStorageBlockBinding(uint program, uint storageBlockIndex, uint storageBlockBinding)
+            => p_glShaderStorageBlockBinding(program, storageBlockIndex, storageBlockBinding);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -661,6 +699,9 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glDrawElementsBaseVertex", out p_glDrawElementsBaseVertex);
             LoadFunction("glDrawElementsInstanced", out p_glDrawElementsInstanced);
             LoadFunction("glDrawElementsInstancedBaseVertex", out p_glDrawElementsInstancedBaseVertex);
+            LoadFunction("glDrawArrays", out p_glDrawArrays);
+            LoadFunction("glDrawArraysInstanced", out p_glDrawArraysInstanced);
+            LoadFunction("glDrawArraysInstancedBaseInstance", out p_glDrawArraysInstancedBaseInstance);
             LoadFunction("glGenBuffers", out p_glGenBuffers);
             LoadFunction("glDeleteBuffers", out p_glDeleteBuffers);
             LoadFunction("glGenFramebuffers", out p_glGenFramebuffers);
@@ -738,6 +779,9 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTexImage3DMultisample", out p_glTexImage3DMultisample);
             LoadFunction("glBlitFramebuffer", out p_glBlitFramebuffer);
             LoadFunction("glFramebufferTextureLayer", out p_glFramebufferTextureLayer);
+            LoadFunction("glDispatchCompute", out p_glDispatchCompute);
+            LoadFunction("glGetProgramResourceIndex", out p_glGetProgramResourceIndex);
+            LoadFunction("glShaderStorageBlockBinding", out p_glShaderStorageBlockBinding);
         }
 
         private static void LoadFunction<T>(string name, out T field)

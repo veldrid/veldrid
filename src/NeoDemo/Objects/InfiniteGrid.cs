@@ -61,7 +61,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("GridTexture", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("GridSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            PipelineDescription pd = new PipelineDescription(
+            GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
                 BlendStateDescription.SingleAlphaBlend,
                 DepthStencilStateDescription.LessEqual,
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, true),
@@ -70,7 +70,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayout[] { layout },
                 sc.MainSceneFramebuffer.OutputDescription);
 
-            _pipeline = factory.CreatePipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(ref pd);
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 layout,
@@ -94,10 +94,10 @@ namespace Veldrid.NeoDemo.Objects
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(0, _resourceSet);
+            cl.SetGraphicsResourceSet(0, _resourceSet);
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
-            cl.Draw(6, 1, 0, 0, 0);
+            cl.DrawIndexed(6, 1, 0, 0, 0);
         }
 
         public override RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)

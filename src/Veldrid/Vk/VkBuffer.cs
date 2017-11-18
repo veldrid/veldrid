@@ -35,7 +35,8 @@ namespace Veldrid.Vk
             {
                 vkUsage |= VkBufferUsageFlags.UniformBuffer;
             }
-            if ((usage & BufferUsage.StorageBuffer) == BufferUsage.StorageBuffer)
+            if ((usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite
+                || (usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly)
             {
                 vkUsage |= VkBufferUsageFlags.StorageBuffer;
             }

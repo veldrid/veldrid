@@ -7,12 +7,15 @@ namespace Veldrid.OpenGL
         void Begin();
         void ClearColorTarget(uint index, RgbaFloat clearColor);
         void ClearDepthTarget(float depth);
-        void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
+        void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
+        void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
+        void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ);
         void End();
         void SetFramebuffer(Framebuffer fb);
         void SetIndexBuffer(Buffer buffer, IndexFormat format);
         void SetPipeline(Pipeline pipeline);
-        void SetResourceSet(uint slot, ResourceSet rs);
+        void SetGraphicsResourceSet(uint slot, ResourceSet rs);
+        void SetComputeResourceSet(uint slot, ResourceSet rs);
         void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
         void SetVertexBuffer(uint index, Buffer buffer);
         void SetViewport(uint index, ref Viewport viewport);
@@ -41,7 +44,6 @@ namespace Veldrid.OpenGL
             uint height,
             uint mipLevel,
             uint arrayLayer);
-
         void ExecuteAll(OpenGLCommandExecutor executor);
         void Reset();
     }

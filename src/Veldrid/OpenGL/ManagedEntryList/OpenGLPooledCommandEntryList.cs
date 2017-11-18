@@ -12,11 +12,14 @@ namespace Veldrid.OpenGL.ManagedEntryList
         private readonly EntryPool<ClearColorTargetEntry> _clearColorTargetEntryPool = new EntryPool<ClearColorTargetEntry>();
         private readonly EntryPool<ClearDepthTargetEntry> _clearDepthTargetEntryPool = new EntryPool<ClearDepthTargetEntry>();
         private readonly EntryPool<DrawEntry> _drawEntryPool = new EntryPool<DrawEntry>();
+        private readonly EntryPool<DrawIndexedEntry> _drawIndexedEntryPool = new EntryPool<DrawIndexedEntry>();
+        private readonly EntryPool<DispatchEntry> _dispatchEntryPool = new EntryPool<DispatchEntry>();
         private readonly EntryPool<EndEntry> _endEntryPool = new EntryPool<EndEntry>();
         private readonly EntryPool<SetFramebufferEntry> _setFramebufferEntryPool = new EntryPool<SetFramebufferEntry>();
         private readonly EntryPool<SetIndexBufferEntry> _setIndexBufferEntryPool = new EntryPool<SetIndexBufferEntry>();
         private readonly EntryPool<SetPipelineEntry> _setPipelineEntryPool = new EntryPool<SetPipelineEntry>();
-        private readonly EntryPool<SetResourceSetEntry> _setResourceSetEntryPool = new EntryPool<SetResourceSetEntry>();
+        private readonly EntryPool<SetGraphicsResourceSetEntry> _setGraphicsResourceSetEntryPool = new EntryPool<SetGraphicsResourceSetEntry>();
+        private readonly EntryPool<SetComputeResourceSetEntry> _setComputeResourceSetEntryPool = new EntryPool<SetComputeResourceSetEntry>();
         private readonly EntryPool<SetScissorRectEntry> _setScissorRectEntryPool = new EntryPool<SetScissorRectEntry>();
         private readonly EntryPool<SetVertexBufferEntry> _setVertexBufferEntryPool = new EntryPool<SetVertexBufferEntry>();
         private readonly EntryPool<SetViewportEntry> _setViewportEntryPool = new EntryPool<SetViewportEntry>();
@@ -47,9 +50,19 @@ namespace Veldrid.OpenGL.ManagedEntryList
             _commands.Add(_clearDepthTargetEntryPool.Rent().Init(depth));
         }
 
-        public void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        public void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
-            _commands.Add(_drawEntryPool.Rent().Init(indexCount, instanceCount, indexStart, vertexOffset, instanceStart));
+            _commands.Add(_drawEntryPool.Rent().Init(vertexCount, instanceCount, vertexStart, instanceStart));
+        }
+
+        public void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        {
+            _commands.Add(_drawIndexedEntryPool.Rent().Init(indexCount, instanceCount, indexStart, vertexOffset, instanceStart));
         }
 
         public void End()
@@ -72,9 +85,14 @@ namespace Veldrid.OpenGL.ManagedEntryList
             _commands.Add(_setPipelineEntryPool.Rent().Init(pipeline));
         }
 
-        public void SetResourceSet(uint slot, ResourceSet rs)
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs)
         {
-            _commands.Add(_setResourceSetEntryPool.Rent().Init(slot, rs));
+            _commands.Add(_setGraphicsResourceSetEntryPool.Rent().Init(slot, rs));
+        }
+
+        public void SetComputeResourceSet(uint slot, ResourceSet rs)
+        {
+            _commands.Add(_setComputeResourceSetEntryPool.Rent().Init(slot, rs));
         }
 
         public void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
@@ -155,8 +173,16 @@ namespace Veldrid.OpenGL.ManagedEntryList
                         _clearDepthTargetEntryPool.Return(cdte);
                         break;
                     case DrawEntry de:
-                        executor.Draw(de.IndexCount, de.InstanceCount, de.IndexStart, de.VertexOffset, de.InstanceCount);
+                        executor.Draw(de.VertexCount, de.InstanceCount, de.VertexStart, de.InstanceStart);
                         _drawEntryPool.Return(de);
+                        break;
+                    case DrawIndexedEntry die:
+                        executor.DrawIndexed(die.IndexCount, die.InstanceCount, die.IndexStart, die.VertexOffset, die.InstanceCount);
+                        _drawIndexedEntryPool.Return(die);
+                        break;
+                    case DispatchEntry dispatchEntry:
+                        executor.Dispatch(dispatchEntry.GroupCountX, dispatchEntry.GroupCountY, dispatchEntry.GroupCountZ);
+                        _dispatchEntryPool.Return(dispatchEntry);
                         break;
                     case EndEntry ee:
                         executor.End();
@@ -174,9 +200,13 @@ namespace Veldrid.OpenGL.ManagedEntryList
                         executor.SetPipeline(spe.Pipeline);
                         _setPipelineEntryPool.Return(spe);
                         break;
-                    case SetResourceSetEntry srse:
-                        executor.SetResourceSet(srse.Slot, srse.ResourceSet);
-                        _setResourceSetEntryPool.Return(srse);
+                    case SetGraphicsResourceSetEntry sgrse:
+                        executor.SetGraphicsResourceSet(sgrse.Slot, sgrse.ResourceSet);
+                        _setGraphicsResourceSetEntryPool.Return(sgrse);
+                        break;
+                    case SetComputeResourceSetEntry scrse:
+                        executor.SetComputeResourceSet(scrse.Slot, scrse.ResourceSet);
+                        _setComputeResourceSetEntryPool.Return(scrse);
                         break;
                     case SetScissorRectEntry ssre:
                         executor.SetScissorRect(ssre.Index, ssre.X, ssre.Y, ssre.Width, ssre.Height);

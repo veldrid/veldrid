@@ -23,8 +23,8 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte ClearDepthTargetID = 3;
         private static readonly uint ClearDepthTargetEntrySize = Util.USizeOf<NoAllocClearDepthTargetEntry>();
 
-        private const byte DrawEntryID = 4;
-        private static readonly uint DrawEntrySize = Util.USizeOf<NoAllocDrawEntry>();
+        private const byte DrawIndexedEntryID = 4;
+        private static readonly uint DrawIndexedEntrySize = Util.USizeOf<NoAllocDrawIndexedEntry>();
 
         private const byte EndEntryID = 5;
         private static readonly uint EndEntrySize = Util.USizeOf<NoAllocEndEntry>();
@@ -38,8 +38,8 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte SetPipelineEntryID = 8;
         private static readonly uint SetPipelineEntrySize = Util.USizeOf<NoAllocSetPipelineEntry>();
 
-        private const byte SetResourceSetEntryID = 9;
-        private static readonly uint SetResourceSetEntrySize = Util.USizeOf<NoAllocSetResourceSetEntry>();
+        private const byte SetGraphicsResourceSetEntryID = 9;
+        private static readonly uint SetGraphicsResourceSetEntrySize = Util.USizeOf<NoAllocSetGraphicsResourceSetEntry>();
 
         private const byte SetScissorRectEntryID = 10;
         private static readonly uint SetScissorRectEntrySize = Util.USizeOf<NoAllocSetScissorRectEntry>();
@@ -61,6 +61,15 @@ namespace Veldrid.OpenGL.NoAllocEntryList
 
         private const byte ResolveTextureEntryID = 16;
         private static readonly uint ResolveTextureEntrySize = Util.USizeOf<NoAllocResolveTextureEntry>();
+
+        private const byte DrawEntryID = 17;
+        private static readonly uint DrawEntrySize = Util.USizeOf<NoAllocDrawEntry>();
+
+        private const byte DispatchEntryID = 18;
+        private static readonly uint DispatchEntrySize = Util.USizeOf<NoAllocDispatchEntry>();
+
+        private const byte SetComputeResourceSetEntryID = 19;
+        private static readonly uint SetComputeResourceSetEntrySize = Util.USizeOf<NoAllocSetComputeResourceSetEntry>();
 
         public OpenGLNoAllocCommandEntryList()
         {
@@ -177,8 +186,18 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case DrawEntryID:
                         ref NoAllocDrawEntry de = ref Unsafe.AsRef<NoAllocDrawEntry>(entryBasePtr);
-                        executor.Draw(de.IndexCount, de.InstanceCount, de.IndexStart, de.VertexOffset, de.InstanceCount);
+                        executor.Draw(de.VertexCount, de.InstanceCount, de.VertexStart, de.InstanceStart);
                         currentOffset += DrawEntrySize;
+                        break;
+                    case DrawIndexedEntryID:
+                        ref NoAllocDrawIndexedEntry die = ref Unsafe.AsRef<NoAllocDrawIndexedEntry>(entryBasePtr);
+                        executor.DrawIndexed(die.IndexCount, die.InstanceCount, die.IndexStart, die.VertexOffset, die.InstanceCount);
+                        currentOffset += DrawIndexedEntrySize;
+                        break;
+                    case DispatchEntryID:
+                        ref NoAllocDispatchEntry dispatchEntry = ref Unsafe.AsRef<NoAllocDispatchEntry>(entryBasePtr);
+                        executor.Dispatch(dispatchEntry.GroupCountX, dispatchEntry.GroupCountY, dispatchEntry.GroupCountZ);
+                        currentOffset += DispatchEntrySize;
                         break;
                     case EndEntryID:
                         executor.End();
@@ -199,10 +218,15 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         executor.SetPipeline(spe.Pipeline);
                         currentOffset += SetPipelineEntrySize;
                         break;
-                    case SetResourceSetEntryID:
-                        ref NoAllocSetResourceSetEntry srse = ref Unsafe.AsRef<NoAllocSetResourceSetEntry>(entryBasePtr);
-                        executor.SetResourceSet(srse.Slot, srse.ResourceSet);
-                        currentOffset += SetResourceSetEntrySize;
+                    case SetGraphicsResourceSetEntryID:
+                        ref NoAllocSetGraphicsResourceSetEntry sgrse = ref Unsafe.AsRef<NoAllocSetGraphicsResourceSetEntry>(entryBasePtr);
+                        executor.SetGraphicsResourceSet(sgrse.Slot, sgrse.ResourceSet);
+                        currentOffset += SetGraphicsResourceSetEntrySize;
+                        break;
+                    case SetComputeResourceSetEntryID:
+                        ref NoAllocSetComputeResourceSetEntry scrse = ref Unsafe.AsRef<NoAllocSetComputeResourceSetEntry>(entryBasePtr);
+                        executor.SetComputeResourceSet(scrse.Slot, scrse.ResourceSet);
+                        currentOffset += SetComputeResourceSetEntrySize;
                         break;
                     case SetScissorRectEntryID:
                         ref NoAllocSetScissorRectEntry ssre = ref Unsafe.AsRef<NoAllocSetScissorRectEntry>(entryBasePtr);
@@ -307,6 +331,12 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                     case DrawEntryID:
                         currentOffset += DrawEntrySize;
                         break;
+                    case DrawIndexedEntryID:
+                        currentOffset += DrawIndexedEntrySize;
+                        break;
+                    case DispatchEntryID:
+                        currentOffset += DispatchEntrySize;
+                        break;
                     case EndEntryID:
                         currentOffset += EndEntrySize;
                         break;
@@ -325,10 +355,15 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         spe.Pipeline.Free();
                         currentOffset += SetPipelineEntrySize;
                         break;
-                    case SetResourceSetEntryID:
-                        ref NoAllocSetResourceSetEntry srse = ref Unsafe.AsRef<NoAllocSetResourceSetEntry>(entryBasePtr);
-                        srse.ResourceSet.Free();
-                        currentOffset += SetResourceSetEntrySize;
+                    case SetGraphicsResourceSetEntryID:
+                        ref NoAllocSetGraphicsResourceSetEntry sgrse = ref Unsafe.AsRef<NoAllocSetGraphicsResourceSetEntry>(entryBasePtr);
+                        sgrse.ResourceSet.Free();
+                        currentOffset += SetGraphicsResourceSetEntrySize;
+                        break;
+                    case SetComputeResourceSetEntryID:
+                        ref NoAllocSetComputeResourceSetEntry scrse = ref Unsafe.AsRef<NoAllocSetComputeResourceSetEntry>(entryBasePtr);
+                        scrse.ResourceSet.Free();
+                        currentOffset += SetComputeResourceSetEntrySize;
                         break;
                     case SetScissorRectEntryID:
                         currentOffset += SetScissorRectEntrySize;
@@ -389,10 +424,22 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(ClearDepthTargetID, ref entry);
         }
 
-        public void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        public void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
-            NoAllocDrawEntry entry = new NoAllocDrawEntry(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
+            NoAllocDrawEntry entry = new NoAllocDrawEntry(vertexCount, instanceCount, vertexStart, instanceStart);
             AddEntry(DrawEntryID, ref entry);
+        }
+
+        public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        {
+            NoAllocDrawIndexedEntry entry = new NoAllocDrawIndexedEntry(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
+            AddEntry(DrawIndexedEntryID, ref entry);
+        }
+
+        public void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
+        {
+            NoAllocDispatchEntry entry = new NoAllocDispatchEntry(groupCountX, groupCountY, groupCountZ);
+            AddEntry(DispatchEntryID, ref entry);
         }
 
         public void End()
@@ -419,10 +466,16 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(SetPipelineEntryID, ref entry);
         }
 
-        public void SetResourceSet(uint slot, ResourceSet rs)
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs)
         {
-            NoAllocSetResourceSetEntry entry = new NoAllocSetResourceSetEntry(slot, rs);
-            AddEntry(SetResourceSetEntryID, ref entry);
+            NoAllocSetGraphicsResourceSetEntry entry = new NoAllocSetGraphicsResourceSetEntry(slot, rs);
+            AddEntry(SetGraphicsResourceSetEntryID, ref entry);
+        }
+
+        public void SetComputeResourceSet(uint slot, ResourceSet rs)
+        {
+            NoAllocSetComputeResourceSetEntry entry = new NoAllocSetComputeResourceSetEntry(slot, rs);
+            AddEntry(SetComputeResourceSetEntryID, ref entry);
         }
 
         public void SetScissorRect(uint index, uint x, uint y, uint width, uint height)

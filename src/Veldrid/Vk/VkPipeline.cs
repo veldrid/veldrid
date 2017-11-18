@@ -22,9 +22,12 @@ namespace Veldrid.Vk
 
         public bool ScissorTestEnabled { get; }
 
-        public VkPipeline(VkGraphicsDevice gd, ref PipelineDescription description)
+        public override bool IsComputePipeline { get; }
+
+        public VkPipeline(VkGraphicsDevice gd, ref GraphicsPipelineDescription description)
         {
             _gd = gd;
+            IsComputePipeline = false;
 
             VkGraphicsPipelineCreateInfo pipelineCI = VkGraphicsPipelineCreateInfo.New();
 
@@ -282,13 +285,58 @@ namespace Veldrid.Vk
             ResourceSetCount = (uint)description.ResourceLayouts.Length;
         }
 
+        public VkPipeline(VkGraphicsDevice gd, ref ComputePipelineDescription description)
+        {
+            _gd = gd;
+            IsComputePipeline = true;
+
+            VkComputePipelineCreateInfo pipelineCI = VkComputePipelineCreateInfo.New();
+
+            // Pipeline Layout
+            ResourceLayout[] resourceLayouts = description.ResourceLayouts;
+            VkPipelineLayoutCreateInfo pipelineLayoutCI = VkPipelineLayoutCreateInfo.New();
+            pipelineLayoutCI.setLayoutCount = (uint)resourceLayouts.Length;
+            VkDescriptorSetLayout* dsls = stackalloc VkDescriptorSetLayout[resourceLayouts.Length];
+            for (int i = 0; i < resourceLayouts.Length; i++)
+            {
+                dsls[i] = Util.AssertSubtype<ResourceLayout, VkResourceLayout>(resourceLayouts[i]).DescriptorSetLayout;
+            }
+            pipelineLayoutCI.pSetLayouts = dsls;
+
+            vkCreatePipelineLayout(_gd.Device, ref pipelineLayoutCI, null, out _pipelineLayout);
+            pipelineCI.layout = _pipelineLayout;
+
+            // Shader Stage
+            ShaderStageDescription stageDesc = description.ShaderStage;
+            VkShader vkShader = Util.AssertSubtype<Shader, VkShader>(stageDesc.Shader);
+            VkPipelineShaderStageCreateInfo stageCI = VkPipelineShaderStageCreateInfo.New();
+            stageCI.module = vkShader.ShaderModule;
+            stageCI.stage = VkFormats.VdToVkShaderStages(stageDesc.Stage);
+            stageCI.pName = CommonStrings.main; // Meh
+            pipelineCI.stage = stageCI;
+
+            VkResult result = vkCreateComputePipelines(
+                _gd.Device,
+                VkPipelineCache.Null,
+                1,
+                ref pipelineCI,
+                null,
+                out _devicePipeline);
+            CheckResult(result);
+
+            ResourceSetCount = (uint)description.ResourceLayouts.Length;
+        }
+
         public override void Dispose()
         {
             Debug.Assert(!_disposed);
             _disposed = true;
             vkDestroyPipelineLayout(_gd.Device, _pipelineLayout, null);
             vkDestroyPipeline(_gd.Device, _devicePipeline, null);
-            vkDestroyRenderPass(_gd.Device, _renderPass, null);
+            if (!IsComputePipeline)
+            {
+                vkDestroyRenderPass(_gd.Device, _renderPass, null);
+            }
         }
     }
 }

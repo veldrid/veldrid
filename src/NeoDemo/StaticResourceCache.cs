@@ -7,8 +7,8 @@ namespace Veldrid.NeoDemo
     // Non-thread-safe cache for resources.
     internal static class StaticResourceCache
     {
-        private static readonly Dictionary<PipelineDescription, Pipeline> s_pipelines
-            = new Dictionary<PipelineDescription, Pipeline>();
+        private static readonly Dictionary<GraphicsPipelineDescription, Pipeline> s_pipelines
+            = new Dictionary<GraphicsPipelineDescription, Pipeline>();
 
         private static readonly Dictionary<ResourceLayoutDescription, ResourceLayout> s_layouts
             = new Dictionary<ResourceLayoutDescription, ResourceLayout>();
@@ -30,11 +30,11 @@ namespace Veldrid.NeoDemo
             new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
             new ResourceLayoutElementDescription("View", ResourceKind.UniformBuffer, ShaderStages.Vertex));
 
-        public static Pipeline GetPipeline(ResourceFactory factory, ref PipelineDescription desc)
+        public static Pipeline GetPipeline(ResourceFactory factory, ref GraphicsPipelineDescription desc)
         {
             if (!s_pipelines.TryGetValue(desc, out Pipeline p))
             {
-                p = factory.CreatePipeline(ref desc);
+                p = factory.CreateGraphicsPipeline(ref desc);
                 s_pipelines.Add(desc, p);
             }
 
@@ -65,7 +65,7 @@ namespace Veldrid.NeoDemo
 
         public static void DestroyAllDeviceObjects()
         {
-            foreach (KeyValuePair<PipelineDescription, Pipeline> kvp in s_pipelines)
+            foreach (KeyValuePair<GraphicsPipelineDescription, Pipeline> kvp in s_pipelines)
             {
                 kvp.Value.Dispose();
             }

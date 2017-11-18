@@ -71,20 +71,20 @@ namespace Veldrid.NeoDemo
             _sc.Camera.Yaw = -MathF.PI / 2;
             _sc.Camera.Pitch = -MathF.PI / 9;
 
-            ShadowmapDrawer texDrawer = new ShadowmapDrawer(() => _window, () => _sc.NearShadowMapView);
-            _resizeHandled += (w, h) => texDrawer.OnWindowResized();
-            texDrawer.Position = new Vector2(10, 25);
-            _scene.AddRenderable(texDrawer);
+            ShadowmapDrawIndexeder texDrawIndexeder = new ShadowmapDrawIndexeder(() => _window, () => _sc.NearShadowMapView);
+            _resizeHandled += (w, h) => texDrawIndexeder.OnWindowResized();
+            texDrawIndexeder.Position = new Vector2(10, 25);
+            _scene.AddRenderable(texDrawIndexeder);
 
-            ShadowmapDrawer texDrawer2 = new ShadowmapDrawer(() => _window, () => _sc.MidShadowMapView);
-            _resizeHandled += (w, h) => texDrawer2.OnWindowResized();
-            texDrawer2.Position = new Vector2(20 + texDrawer2.Size.X, 25);
-            _scene.AddRenderable(texDrawer2);
+            ShadowmapDrawIndexeder texDrawIndexeder2 = new ShadowmapDrawIndexeder(() => _window, () => _sc.MidShadowMapView);
+            _resizeHandled += (w, h) => texDrawIndexeder2.OnWindowResized();
+            texDrawIndexeder2.Position = new Vector2(20 + texDrawIndexeder2.Size.X, 25);
+            _scene.AddRenderable(texDrawIndexeder2);
 
-            ShadowmapDrawer texDrawer3 = new ShadowmapDrawer(() => _window, () => _sc.FarShadowMapView);
-            _resizeHandled += (w, h) => texDrawer3.OnWindowResized();
-            texDrawer3.Position = new Vector2(30 + (texDrawer3.Size.X * 2), 25);
-            _scene.AddRenderable(texDrawer3);
+            ShadowmapDrawIndexeder texDrawIndexeder3 = new ShadowmapDrawIndexeder(() => _window, () => _sc.FarShadowMapView);
+            _resizeHandled += (w, h) => texDrawIndexeder3.OnWindowResized();
+            texDrawIndexeder3.Position = new Vector2(30 + (texDrawIndexeder3.Size.X * 2), 25);
+            _scene.AddRenderable(texDrawIndexeder3);
 
             ScreenDuplicator duplicator = new ScreenDuplicator();
             _scene.AddRenderable(duplicator);
@@ -191,7 +191,7 @@ namespace Veldrid.NeoDemo
                     break;
                 }
 
-                Draw();
+                DrawIndexed();
             }
 
             DestroyAllObjects();
@@ -262,12 +262,12 @@ namespace Veldrid.NeoDemo
                 {
                     if (ImGui.BeginMenu("Brick"))
                     {
-                        DrawMaterialMenu(CommonMaterials.Brick);
+                        DrawIndexedMaterialMenu(CommonMaterials.Brick);
                         ImGui.EndMenu();
                     }
                     if (ImGui.BeginMenu("Vase"))
                     {
-                        DrawMaterialMenu(CommonMaterials.Vase);
+                        DrawIndexedMaterialMenu(CommonMaterials.Vase);
                         ImGui.EndMenu();
                     }
 
@@ -319,7 +319,7 @@ namespace Veldrid.NeoDemo
             }
         }
 
-        private void DrawMaterialMenu(MaterialPropsAndBuffer brick)
+        private void DrawIndexedMaterialMenu(MaterialPropsAndBuffer brick)
         {
             MaterialProperties props = brick.Properties;
             float intensity = props.SpecularIntensity.X;
@@ -337,7 +337,7 @@ namespace Veldrid.NeoDemo
             _window.WindowState = isFullscreen ? WindowState.Normal : WindowState.BorderlessFullScreen;
         }
 
-        private void Draw()
+        private void DrawIndexed()
         {
             Debug.Assert(_window.Exists);
             int width = _window.Width;

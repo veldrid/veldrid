@@ -46,7 +46,7 @@ namespace Veldrid.D3D11
 #else
             DeviceCreationFlags creationFlags = DeviceCreationFlags.None;
 #endif 
-            SharpDX.Direct3D11.Device.CreateWithSwapChain(
+            SharpDX.Direct3D11.Device4.CreateWithSwapChain(
                 SharpDX.Direct3D.DriverType.Hardware,
                 creationFlags,
                 swapChainDescription,

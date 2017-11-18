@@ -32,6 +32,8 @@ namespace Veldrid.OpenGL
                     return ShaderType.TessEvaluationShader;
                 case ShaderStages.Fragment:
                     return ShaderType.FragmentShader;
+                case ShaderStages.Compute:
+                    return ShaderType.ComputeShader;
                 default:
                     throw Illegal.Value<ShaderStages>();
             }

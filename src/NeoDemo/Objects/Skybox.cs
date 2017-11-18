@@ -99,7 +99,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("CubeTexture", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("CubeSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            PipelineDescription pd = new PipelineDescription(
+            GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
                 BlendStateDescription.SingleAlphaBlend,
                 DepthStencilStateDescription.LessEqual,
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, false, true),
@@ -108,7 +108,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayout[] { _layout },
                 sc.MainSceneFramebuffer.OutputDescription);
 
-            _pipeline = factory.CreatePipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(ref pd);
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _layout,
@@ -147,8 +147,8 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(0, _resourceSet);
-            cl.Draw((uint)s_indices.Length, 1, 0, 0, 0);
+            cl.SetGraphicsResourceSet(0, _resourceSet);
+            cl.DrawIndexed((uint)s_indices.Length, 1, 0, 0, 0);
         }
 
         private static Matrix4x4 ConvertToMatrix3x3(Matrix4x4 m)

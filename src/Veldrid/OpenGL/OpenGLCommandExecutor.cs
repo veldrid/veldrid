@@ -8,17 +8,23 @@ namespace Veldrid.OpenGL
     internal unsafe class OpenGLCommandExecutor
     {
         private readonly OpenGLTextureSamplerManager _textureSamplerManager;
-        private PrimitiveType _primitiveType;
-        private DrawElementsType _drawElementsType;
-        private OpenGLBuffer[] _vertexBuffers = new OpenGLBuffer[1];
-        private uint[] _vertexAttribDivisors = new uint[1];
-        private OpenGLPipeline _pipeline;
+        private OpenGLExtensions _extensions;
+
         private Framebuffer _fb;
         private bool _isSwapchainFB;
+        private OpenGLPipeline _graphicsPipeline;
+        private OpenGLResourceSet[] _graphicsResourceSets = new OpenGLResourceSet[1];
+        private OpenGLBuffer[] _vertexBuffers = new OpenGLBuffer[1];
+        private uint[] _vertexAttribDivisors = new uint[1];
         private uint _vertexAttributesBound;
         private readonly Viewport[] _viewports = new Viewport[20];
-        private OpenGLExtensions _extensions;
-        private OpenGLResourceSet[] _resourceSets = new OpenGLResourceSet[1];
+        private DrawElementsType _drawElementsType;
+        private PrimitiveType _primitiveType;
+
+        private OpenGLPipeline _computePipeline;
+        private OpenGLResourceSet[] _computeResourceSets = new OpenGLResourceSet[1];
+
+        private bool _graphicsPipelineActive;
 
         public OpenGLCommandExecutor(OpenGLExtensions extensions)
         {
@@ -56,15 +62,33 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void Draw(
-            uint indexCount,
-            uint instanceCount,
-            uint indexStart,
-            int vertexOffset,
-            uint instanceStart)
-
+        public void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
-            FlushVertexLayouts();
+            PreDrawCommand();
+
+            if (instanceCount == 1)
+            {
+                glDrawArrays(_primitiveType, (int)vertexStart, vertexCount);
+                CheckLastError();
+            }
+            else
+            {
+                if (instanceStart == 0)
+                {
+                    glDrawArraysInstanced(_primitiveType, (int)vertexStart, vertexCount, instanceCount);
+                    CheckLastError();
+                }
+                else
+                {
+                    glDrawArraysInstancedBaseInstance(_primitiveType, (int)vertexStart, vertexCount, instanceCount, instanceStart);
+                    CheckLastError();
+                }
+            }
+        }
+
+        public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        {
+            PreDrawCommand();
 
             uint indexSize = _drawElementsType == DrawElementsType.UnsignedShort ? 2u : 4u;
             void* indices = new IntPtr(indexStart * indexSize).ToPointer();
@@ -103,10 +127,20 @@ namespace Veldrid.OpenGL
             }
         }
 
+        private void PreDrawCommand()
+        {
+            if (!_graphicsPipelineActive)
+            {
+                ActivateGraphicsPipeline();
+            }
+
+            FlushVertexLayouts();
+        }
+
         private void FlushVertexLayouts()
         {
             uint totalSlotsBound = 0;
-            VertexLayoutDescription[] layouts = _pipeline.Description.ShaderSet.VertexLayouts;
+            VertexLayoutDescription[] layouts = _graphicsPipeline.GraphicsDescription.ShaderSet.VertexLayouts;
             for (int i = 0; i < layouts.Length; i++)
             {
                 VertexLayoutDescription input = layouts[i];
@@ -127,7 +161,7 @@ namespace Veldrid.OpenGL
                         FormatHelpers.GetElementCount(element.Format),
                         OpenGLFormats.VdToGLVertexAttribPointerType(element.Format),
                         normalized,
-                        (uint)_pipeline.VertexStrides[i],
+                        (uint)_graphicsPipeline.VertexStrides[i],
                         (void*)offset);
 
                     uint stepRate = element.InstanceStepRate;
@@ -149,6 +183,17 @@ namespace Veldrid.OpenGL
             }
 
             _vertexAttributesBound = totalSlotsBound;
+        }
+
+        internal void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
+        {
+            if (_graphicsPipelineActive)
+            {
+                ActivateComputePipeline();
+            }
+
+            glDispatchCompute(groupCountX, groupCountY, groupCountZ);
+            CheckLastError();
         }
 
         public void End()
@@ -191,14 +236,24 @@ namespace Veldrid.OpenGL
 
         public void SetPipeline(Pipeline pipeline)
         {
-            if (_pipeline == pipeline)
+            if (!pipeline.IsComputePipeline && _graphicsPipeline != pipeline)
             {
-                return;
+                _graphicsPipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(pipeline);
+                ActivateGraphicsPipeline();
             }
-            _pipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(pipeline);
-            _pipeline.EnsureResourcesCreated();
-            PipelineDescription desc = _pipeline.Description;
-            Util.ClearArray(_resourceSets); // Invalidate resource set bindings -- they may be invalid.
+            else if (pipeline.IsComputePipeline && _computePipeline != pipeline)
+            {
+                _computePipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(pipeline);
+                ActivateComputePipeline();
+            }
+        }
+
+        private void ActivateGraphicsPipeline()
+        {
+            _graphicsPipelineActive = true;
+            _graphicsPipeline.EnsureResourcesCreated();
+            GraphicsPipelineDescription desc = _graphicsPipeline.GraphicsDescription;
+            Util.ClearArray(_graphicsResourceSets); // Invalidate resource set bindings -- they may be invalid.
 
             // Blend State
 
@@ -304,10 +359,10 @@ namespace Veldrid.OpenGL
             _primitiveType = OpenGLFormats.VdToGLPrimitiveType(desc.PrimitiveTopology);
 
             // Shader Set
-            glUseProgram(_pipeline.Program);
+            glUseProgram(_graphicsPipeline.Program);
             CheckLastError();
 
-            int vertexStridesCount = _pipeline.VertexStrides.Length;
+            int vertexStridesCount = _graphicsPipeline.VertexStrides.Length;
             Util.EnsureArraySize(ref _vertexBuffers, (uint)vertexStridesCount);
 
             uint totalVertexElements = 0;
@@ -317,52 +372,147 @@ namespace Veldrid.OpenGL
             }
             Util.EnsureArraySize(ref _vertexAttribDivisors, totalVertexElements);
 
-            Util.EnsureArraySize(ref _resourceSets, (uint)desc.ResourceLayouts.Length);
+            Util.EnsureArraySize(ref _graphicsResourceSets, (uint)desc.ResourceLayouts.Length);
         }
 
-        public void SetResourceSet(uint slot, ResourceSet rs)
+        private void ActivateComputePipeline()
         {
-            if (_resourceSets[slot] == rs)
+            _graphicsPipelineActive = false;
+            _computePipeline.EnsureResourcesCreated();
+            Util.ClearArray(_computeResourceSets); // Invalidate resource set bindings -- they may be invalid.
+            Util.EnsureArraySize(ref _computeResourceSets, (uint)_computePipeline.ComputeDescription.ResourceLayouts.Length);
+
+            // Shader Set
+            glUseProgram(_computePipeline.Program);
+            CheckLastError();
+        }
+
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs)
+        {
+            if (_graphicsResourceSets[slot] == rs)
             {
                 return;
             }
 
             OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(rs);
-            _resourceSets[slot] = glResourceSet;
+            OpenGLResourceLayout glLayout = glResourceSet.Layout;
+            ResourceLayoutElementDescription[] layoutElements = glLayout.Description.Elements;
+            _graphicsResourceSets[slot] = glResourceSet;
 
-            uint ubBaseIndex = GetUniformBaseIndex(slot);
+            uint ubBaseIndex = GetUniformBaseIndex(slot, true);
+            uint ssboBaseIndex = GetShaderStorageBaseIndex(slot, true);
 
             for (uint element = 0; element < glResourceSet.Resources.Length; element++)
             {
+                ResourceKind kind = layoutElements[element].Kind;
                 BindableResource resource = glResourceSet.Resources[(int)element];
-                if (resource is OpenGLBuffer glUB)
+                switch (kind)
                 {
-                    OpenGLUniformBinding uniformBindingInfo = _pipeline.GetUniformBindingForSlot(slot, element);
-                    glUniformBlockBinding(_pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + element);
-                    CheckLastError();
+                    case ResourceKind.UniformBuffer:
+                        OpenGLBuffer glUB = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
+                        OpenGLUniformBinding uniformBindingInfo = _graphicsPipeline.GetUniformBindingForSlot(slot, element);
+                        glUniformBlockBinding(_graphicsPipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + element);
+                        CheckLastError();
 
-                    glBindBufferRange(BufferRangeTarget.UniformBuffer, ubBaseIndex + element, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
-                    CheckLastError();
+                        glBindBufferRange(BufferRangeTarget.UniformBuffer, ubBaseIndex + element, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
+                        CheckLastError();
+                        break;
+                    case ResourceKind.StorageBufferReadWrite:
+                    case ResourceKind.StorageBufferReadOnly:
+                        OpenGLBuffer glBuffer = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
+                        OpenGLShaderStorageBinding shaderStorageBinding = _graphicsPipeline.GetStorageBufferBindingForSlot(slot, element);
+                        glShaderStorageBlockBinding(_graphicsPipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + element);
+                        CheckLastError();
+
+                        glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, ssboBaseIndex + element, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
+                        CheckLastError();
+                        break;
+                    case ResourceKind.TextureView:
+                        OpenGLTextureView glTexView = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
+                        OpenGLTextureBindingSlotInfo textureBindingInfo = _graphicsPipeline.GetTextureBindingInfo(slot, element);
+                        _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
+
+                        glUseProgram(_graphicsPipeline.Program); // TODO This is broken, why do i need to set this again?
+                        CheckLastError();
+
+                        glUniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
+                        CheckLastError();
+                        break;
+                    case ResourceKind.Sampler:
+                        OpenGLSampler glSampler = Util.AssertSubtype<BindableResource, OpenGLSampler>(resource);
+                        glSampler.EnsureResourcesCreated();
+                        OpenGLSamplerBindingSlotInfo samplerBindingInfo = _graphicsPipeline.GetSamplerBindingInfo(slot, element);
+                        foreach (int index in samplerBindingInfo.RelativeIndices)
+                        {
+                            _textureSamplerManager.SetSampler((uint)index, glSampler);
+                        }
+                        break;
+                    default: throw Illegal.Value<ResourceKind>();
                 }
-                else if (resource is OpenGLTextureView glTexView)
-                {
-                    OpenGLTextureBindingSlotInfo textureBindingInfo = _pipeline.GetTextureBindingInfo(slot, element);
-                    _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
+            }
+        }
 
-                    glUseProgram(_pipeline.Program); // TODO This is broken, why do i need to set this again?
-                    CheckLastError();
+        public void SetComputeResourceSet(uint slot, ResourceSet rs)
+        {
+            if (_computeResourceSets[slot] == rs)
+            {
+                return;
+            }
 
-                    glUniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
-                    CheckLastError();
-                }
-                else if (resource is OpenGLSampler glSampler)
+            OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(rs);
+            OpenGLResourceLayout glLayout = glResourceSet.Layout;
+            ResourceLayoutElementDescription[] layoutElements = glLayout.Description.Elements;
+            _computeResourceSets[slot] = glResourceSet;
+
+            uint ubBaseIndex = GetUniformBaseIndex(slot, false);
+            uint ssboBaseIndex = GetShaderStorageBaseIndex(slot, false);
+
+            for (uint element = 0; element < glResourceSet.Resources.Length; element++)
+            {
+                ResourceKind kind = layoutElements[element].Kind;
+                BindableResource resource = glResourceSet.Resources[(int)element];
+                switch (kind)
                 {
-                    glSampler.EnsureResourcesCreated();
-                    OpenGLSamplerBindingSlotInfo samplerBindingInfo = _pipeline.GetSamplerBindingInfo(slot, element);
-                    foreach (int index in samplerBindingInfo.RelativeIndices)
-                    {
-                        _textureSamplerManager.SetSampler((uint)index, glSampler);
-                    }
+                    case ResourceKind.UniformBuffer:
+                        OpenGLBuffer glUB = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
+                        OpenGLUniformBinding uniformBindingInfo = _computePipeline.GetUniformBindingForSlot(slot, element);
+                        glUniformBlockBinding(_computePipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + element);
+                        CheckLastError();
+
+                        glBindBufferRange(BufferRangeTarget.UniformBuffer, ubBaseIndex + element, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
+                        CheckLastError();
+                        break;
+                    case ResourceKind.StorageBufferReadWrite:
+                    case ResourceKind.StorageBufferReadOnly:
+                        OpenGLBuffer glBuffer = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
+                        OpenGLShaderStorageBinding shaderStorageBinding = _computePipeline.GetStorageBufferBindingForSlot(slot, element);
+                        glShaderStorageBlockBinding(_computePipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + element);
+                        CheckLastError();
+
+                        glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, ssboBaseIndex + element, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
+                        CheckLastError();
+                        break;
+                    case ResourceKind.TextureView:
+                        OpenGLTextureView glTexView = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
+                        OpenGLTextureBindingSlotInfo textureBindingInfo = _computePipeline.GetTextureBindingInfo(slot, element);
+                        _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
+
+                        glUseProgram(_computePipeline.Program); // TODO This is broken, why do i need to set this again?
+                        CheckLastError();
+
+                        glUniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
+                        CheckLastError();
+                        break;
+                    case ResourceKind.Sampler:
+                        OpenGLSampler glSampler = Util.AssertSubtype<BindableResource, OpenGLSampler>(resource);
+                        glSampler.EnsureResourcesCreated();
+                        OpenGLSamplerBindingSlotInfo samplerBindingInfo = _computePipeline.GetSamplerBindingInfo(slot, element);
+                        foreach (int index in samplerBindingInfo.RelativeIndices)
+                        {
+                            _textureSamplerManager.SetSampler((uint)index, glSampler);
+                        }
+                        break;
+                    default: throw Illegal.Value<ResourceKind>();
                 }
             }
         }
@@ -400,12 +550,25 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        private uint GetUniformBaseIndex(uint slot)
+        private uint GetUniformBaseIndex(uint slot, bool graphics)
         {
+            OpenGLPipeline pipeline = graphics ? _graphicsPipeline : _computePipeline;
             uint ret = 0;
             for (uint i = 0; i < slot; i++)
             {
-                ret += _pipeline.GetUniformBufferCount(i);
+                ret += pipeline.GetUniformBufferCount(i);
+            }
+
+            return ret;
+        }
+
+        private uint GetShaderStorageBaseIndex(uint slot, bool graphics)
+        {
+            OpenGLPipeline pipeline = graphics ? _graphicsPipeline : _computePipeline;
+            uint ret = 0;
+            for (uint i = 0; i < slot; i++)
+            {
+                ret += pipeline.GetUniformBufferCount(i);
             }
 
             return ret;

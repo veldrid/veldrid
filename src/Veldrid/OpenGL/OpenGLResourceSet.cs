@@ -2,12 +2,12 @@
 {
     internal class OpenGLResourceSet : ResourceSet
     {
-        public ResourceLayout Layout { get; }
+        public OpenGLResourceLayout Layout { get; }
         public BindableResource[] Resources { get; }
 
         public OpenGLResourceSet(ref ResourceSetDescription description)
         {
-            Layout = description.Layout;
+            Layout = Util.AssertSubtype<ResourceLayout, OpenGLResourceLayout>(description.Layout);
             Resources = description.BoundResources;
         }
 

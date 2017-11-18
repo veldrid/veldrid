@@ -26,7 +26,12 @@ namespace Veldrid.OpenGL
             return new OpenGLFramebuffer(_gd, ref description);
         }
 
-        public override Pipeline CreatePipeline(ref PipelineDescription description)
+        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        {
+            return new OpenGLPipeline(_gd, ref description);
+        }
+
+        public override Pipeline CreateComputePipeline(ref ComputePipelineDescription description)
         {
             return new OpenGLPipeline(_gd, ref description);
         }
@@ -62,7 +67,7 @@ namespace Veldrid.OpenGL
             return new OpenGLTextureView(ref description);
         }
 
-        public override Buffer CreateBuffer(ref BufferDescription description)
+        protected override Buffer CreateBufferCore(ref BufferDescription description)
         {
             return new OpenGLBuffer(_gd, description.SizeInBytes, description.Dynamic, description.Usage);
         }

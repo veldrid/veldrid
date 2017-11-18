@@ -6,7 +6,7 @@ using Veldrid.Utilities;
 
 namespace Veldrid.NeoDemo.Objects
 {
-    public class ShadowmapDrawer : Renderable
+    public class ShadowmapDrawIndexeder : Renderable
     {
         private readonly Func<Sdl2Window> _windowGetter;
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
@@ -34,7 +34,7 @@ namespace Veldrid.NeoDemo.Objects
             _si = new SizeInfo { Size = _size, Position = _position };
         }
 
-        public ShadowmapDrawer(Func<Sdl2Window> windowGetter, Func<TextureView> bindingGetter)
+        public ShadowmapDrawIndexeder(Func<Sdl2Window> windowGetter, Func<TextureView> bindingGetter)
         {
             _windowGetter = windowGetter;
             OnWindowResized();
@@ -75,7 +75,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("Tex", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("TexSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            PipelineDescription pd = new PipelineDescription(
+            GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
                 new DepthStencilStateDescription(false, true, DepthComparisonKind.Always),
                 RasterizerStateDescription.Default,
@@ -84,7 +84,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayout[] { layout },
                 sc.MainSceneFramebuffer.OutputDescription);
 
-            _pipeline = factory.CreatePipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(ref pd);
 
             _sizeInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<SizeInfo>(), BufferUsage.UniformBuffer));
             UpdateSizeInfoBuffer();
@@ -134,8 +134,8 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(0, _resourceSet);
-            cl.Draw((uint)s_quadIndices.Length, 1, 0, 0, 0);
+            cl.SetGraphicsResourceSet(0, _resourceSet);
+            cl.DrawIndexed((uint)s_quadIndices.Length, 1, 0, 0, 0);
         }
 
         private static float[] s_quadVerts = new float[]

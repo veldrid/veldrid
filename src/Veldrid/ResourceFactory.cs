@@ -15,13 +15,17 @@ namespace Veldrid
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="Pipeline"/>.</returns>
-        public Pipeline CreatePipeline(PipelineDescription description) => CreatePipeline(ref description);
+        public Pipeline CreateGraphicsPipeline(GraphicsPipelineDescription description) => CreateGraphicsPipeline(ref description);
         /// <summary>
         /// Creates a new <see cref="Pipeline"/> object.
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="Pipeline"/>.</returns>
-        public abstract Pipeline CreatePipeline(ref PipelineDescription description);
+        public abstract Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description);
+
+        public Pipeline CreateComputePipeline(ComputePipelineDescription description) => CreateComputePipeline(ref description);
+
+        public abstract Pipeline CreateComputePipeline(ref ComputePipelineDescription description);
 
         /// <summary>
         /// Creates a new <see cref="Framebuffer"/>.
@@ -79,7 +83,27 @@ namespace Veldrid
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="Buffer"/>.</returns>
-        public abstract Buffer CreateBuffer(ref BufferDescription description);
+        public Buffer CreateBuffer(ref BufferDescription description)
+        {
+#if VALIDATE_USAGE
+            if ((description.Usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
+                || (description.Usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
+            {
+                if (description.StructureByteStride == 0)
+                {
+                    throw new VeldridException("Structured Buffer objects must have a non-zero StructureByteStride.");
+                }
+            }
+            else if (description.StructureByteStride != 0)
+            {
+                throw new VeldridException("Non-structured Buffers must have a StructureByteStride of zero.");
+            }
+#endif
+            return CreateBufferCore(ref description);
+        }
+
+        // TODO: private protected
+        protected abstract Buffer CreateBufferCore(ref BufferDescription description);
 
         /// <summary>
         /// Creates a new <see cref="Sampler"/>.

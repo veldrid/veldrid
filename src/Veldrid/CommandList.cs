@@ -14,7 +14,7 @@ namespace Veldrid
     /// externally synchronized.
     /// There are some limitations dictating proper usage and ordering of graphics commands. For example, a
     /// <see cref="Framebuffer"/>, <see cref="Pipeline"/>, vertex buffer, and index buffer must all be
-    /// bound before a call to <see cref="Draw(uint, uint, uint, int, uint)"/> will succeed.
+    /// bound before a call to <see cref="DrawIndexed(uint, uint, uint, int, uint)"/> will succeed.
     /// These limitations are described in each function, where applicable.
     /// <see cref="CommandList"/> instances cannot be executed multiple times per-recording. When executed by a
     /// <see cref="GraphicsDevice"/>, they must be reset and commands must be issued again.
@@ -106,13 +106,21 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
-        public void SetResourceSet(uint slot, ResourceSet rs)
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs)
         {
-            SetResourceSetCore(slot, rs);
+            SetGraphicsResourceSetCore(slot, rs);
         }
 
         // TODO: private protected
-        protected abstract void SetResourceSetCore(uint slot, ResourceSet rs);
+        protected abstract void SetGraphicsResourceSetCore(uint slot, ResourceSet rs);
+
+        public void SetComputeResourceSet(uint slot, ResourceSet rs)
+        {
+            SetComputeResourceSetCore(slot, rs);
+        }
+
+        // TODO: private protected
+        protected abstract void SetComputeResourceSetCore(uint slot, ResourceSet set);
 
         /// <summary>
         /// Sets the active <see cref="Framebuffer"/> which will be rendered to.
@@ -221,6 +229,8 @@ namespace Veldrid
         /// <param name="height">The height of the scissor rectangle.</param>
         public abstract void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
 
+        public abstract void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
+
         /// <summary>
         /// Draws primitives from the currently-bound state in this <see cref="CommandList"/>.
         /// </summary>
@@ -229,7 +239,9 @@ namespace Veldrid
         /// <param name="indexStart">The number of indices to skip in the active index buffer.</param>
         /// <param name="vertexOffset">The base vertex value, which is added to each index value read from the index buffer.</param>
         /// <param name="instanceStart">The starting instance value.</param>
-        public abstract void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
+        public abstract void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
+
+        public abstract void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ);
 
         /// <summary>
         /// Resolves a multisampled source <see cref="Texture"/> into a non-multisampled destination <see cref="Texture"/>.

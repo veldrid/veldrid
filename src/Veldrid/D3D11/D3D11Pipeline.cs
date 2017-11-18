@@ -16,10 +16,13 @@ namespace Veldrid.D3D11
         public HullShader HullShader { get; } // May be null.
         public DomainShader DomainShader { get; } // May be null.
         public PixelShader PixelShader { get; }
+        public ComputeShader ComputeShader { get; }
         public D3D11ResourceLayout[] ResourceLayouts { get; }
         public int[] VertexStrides { get; }
 
-        public D3D11Pipeline(D3D11ResourceCache cache, ref PipelineDescription description)
+        public override bool IsComputePipeline { get; }
+
+        public D3D11Pipeline(D3D11ResourceCache cache, ref GraphicsPipelineDescription description)
         {
             BlendState = cache.GetBlendState(ref description.BlendState);
             DepthStencilState = cache.GetDepthStencilState(ref description.DepthStencilState);
@@ -54,6 +57,10 @@ namespace Veldrid.D3D11
                 {
                     PixelShader = (PixelShader)((D3D11Shader)stages[i].Shader).DeviceShader;
                 }
+                if (stages[i].Stage == ShaderStages.Compute)
+                {
+                    ComputeShader = (ComputeShader)((D3D11Shader)stages[i].Shader).DeviceShader;
+                }
             }
 
             ResourceLayout[] genericLayouts = description.ResourceLayouts;
@@ -63,13 +70,28 @@ namespace Veldrid.D3D11
                 ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(genericLayouts[i]);
             }
 
-            Debug.Assert(vsBytecode != null);
-            InputLayout = cache.GetInputLayout(description.ShaderSet.VertexLayouts, vsBytecode);
-            int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
-            VertexStrides = new int[numVertexBuffers];
-            for (int i = 0; i < numVertexBuffers; i++)
+            Debug.Assert(vsBytecode != null || ComputeShader != null);
+            if (vsBytecode != null)
             {
-                VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
+                InputLayout = cache.GetInputLayout(description.ShaderSet.VertexLayouts, vsBytecode);
+                int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
+                VertexStrides = new int[numVertexBuffers];
+                for (int i = 0; i < numVertexBuffers; i++)
+                {
+                    VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
+                }
+            }
+        }
+
+        public D3D11Pipeline(D3D11ResourceCache cache, ref ComputePipelineDescription description)
+        {
+            IsComputePipeline = true;
+            ComputeShader = (ComputeShader)((D3D11Shader)description.ShaderStage.Shader).DeviceShader;
+            ResourceLayout[] genericLayouts = description.ResourceLayouts;
+            ResourceLayouts = new D3D11ResourceLayout[genericLayouts.Length];
+            for (int i = 0; i < ResourceLayouts.Length; i++)
+            {
+                ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(genericLayouts[i]);
             }
         }
 

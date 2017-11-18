@@ -28,9 +28,19 @@ namespace Veldrid.OpenGL
             _commands.ClearDepthTarget(depth);
         }
 
-        public override void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        public override void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
-            _commands.Draw(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
+            _commands.Draw(vertexCount, instanceCount, vertexStart, instanceStart);
+        }
+
+        public override void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        {
+            _commands.DrawIndexed(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
+        }
+
+        public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
+        {
+            _commands.Dispatch(groupCountX, groupCountY, groupCountZ);
         }
 
         protected override void ResolveTextureCore(Texture source, Texture destination)
@@ -58,9 +68,14 @@ namespace Veldrid.OpenGL
             _commands.SetPipeline(pipeline);
         }
 
-        protected override void SetResourceSetCore(uint slot, ResourceSet rs)
+        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs)
         {
-            _commands.SetResourceSet(slot, rs);
+            _commands.SetGraphicsResourceSet(slot, rs);
+        }
+
+        protected override void SetComputeResourceSetCore(uint slot, ResourceSet rs)
+        {
+            _commands.SetComputeResourceSet(slot, rs);
         }
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)

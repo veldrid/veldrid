@@ -3,9 +3,9 @@
 namespace Veldrid
 {
     /// <summary>
-    /// Describes a <see cref="Pipeline"/>, for creation using a <see cref="ResourceFactory"/>.
+    /// Describes a graphics <see cref="Pipeline"/>, for creation using a <see cref="ResourceFactory"/>.
     /// </summary>
-    public struct PipelineDescription : IEquatable<PipelineDescription>
+    public struct GraphicsPipelineDescription : IEquatable<GraphicsPipelineDescription>
     {
         /// <summary>
         /// A description of the blend state, which controls how color values are blended into each color target.
@@ -38,7 +38,7 @@ namespace Veldrid
         public OutputDescription Outputs;
 
         /// <summary>
-        /// Constructs a new <see cref="PipelineDescription"/>.
+        /// Constructs a new <see cref="GraphicsPipelineDescription"/>.
         /// </summary>
         /// <param name="blendState">A description of the blend state, which controls how color values are blended into each
         /// color target.</param>
@@ -52,7 +52,7 @@ namespace Veldrid
         /// <param name="resourceLayouts">An array of <see cref="ResourceLayout"/>, which controls the layout of shader resoruces
         /// in the <see cref="Pipeline"/>.</param>
         /// <param name="outputs">A description of the output attachments used by the <see cref="Pipeline"/>.</param>
-        public PipelineDescription(
+        public GraphicsPipelineDescription(
             BlendStateDescription blendState,
             DepthStencilStateDescription depthStencilStateDescription,
             RasterizerStateDescription rasterizerState,
@@ -75,7 +75,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="other">The instance to compare to.</param>
         /// <returns>True if all elements and all array elements are equal; false otherswise.</returns>
-        public bool Equals(PipelineDescription other)
+        public bool Equals(GraphicsPipelineDescription other)
         {
             return BlendState.Equals(other.BlendState)
                 && DepthStencilState.Equals(other.DepthStencilState)

@@ -13,18 +13,25 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private VkCommandPool _pool;
         private VkCommandBuffer _cb;
-        private VkFramebufferBase _currentFramebuffer;
-        private VkRenderPass _activeRenderPass;
-        private VkPipeline _currentPipeline;
 
         private List<VkImage> _imagesToDestroy;
         private List<VkMemoryBlock> _memoriesToFree;
 
         private bool _commandBufferBegun;
         private bool _commandBufferEnded;
-        private VkResourceSet[] _currentResourceSets = Array.Empty<VkResourceSet>();
-        private bool[] _resourceSetsChanged;
         private VkRect2D[] _scissorRects = Array.Empty<VkRect2D>();
+
+        // Graphics State
+        private VkFramebufferBase _currentFramebuffer;
+        private VkRenderPass _activeRenderPass;
+        private VkPipeline _currentGraphicsPipeline;
+        private VkResourceSet[] _currentGraphicsResourceSets = Array.Empty<VkResourceSet>();
+        private bool[] _graphicsResourceSetsChanged;
+
+        // Compute State
+        private VkPipeline _currentComputePipeline;
+        private VkResourceSet[] _currentComputeResourceSets = Array.Empty<VkResourceSet>();
+        private bool[] _computeResourceSetsChanged;
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
@@ -86,9 +93,12 @@ namespace Veldrid.Vk
 
             ClearCachedState();
             _currentFramebuffer = null;
-            _currentPipeline = null;
-            Util.ClearArray(_currentResourceSets);
+            _currentGraphicsPipeline = null;
+            Util.ClearArray(_currentGraphicsResourceSets);
             Util.ClearArray(_scissorRects);
+
+            _currentComputePipeline = null;
+            Util.ClearArray(_currentComputeResourceSets);
         }
 
         public override void ClearColorTarget(uint index, RgbaFloat clearColor)
@@ -136,21 +146,33 @@ namespace Veldrid.Vk
             vkCmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
         }
 
-        public override void Draw(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        public override void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
+        {
+            PreDrawCommand();
+            vkCmdDraw(_cb, vertexCount, instanceCount, vertexStart, instanceStart);
+        }
+
+        public override void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        {
+            PreDrawCommand();
+            vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
+        }
+
+        private void PreDrawCommand()
         {
             EnsureRenderPassActive();
 
             // TODO: This should only call vkCmdBindDescriptorSets once, or rather, only the ones that changed.
-            for (int i = 0; i < _resourceSetsChanged.Length; i++)
+            for (int i = 0; i < _graphicsResourceSetsChanged.Length; i++)
             {
-                if (_resourceSetsChanged[i])
+                if (_graphicsResourceSetsChanged[i])
                 {
-                    _resourceSetsChanged[i] = false;
-                    VkDescriptorSet ds = _currentResourceSets[i].DescriptorSet;
+                    _graphicsResourceSetsChanged[i] = false;
+                    VkDescriptorSet ds = _currentGraphicsResourceSets[i].DescriptorSet;
                     vkCmdBindDescriptorSets(
                         _cb,
                          VkPipelineBindPoint.Graphics,
-                         _currentPipeline.PipelineLayout,
+                         _currentGraphicsPipeline.PipelineLayout,
                          (uint)i,
                          1,
                          ref ds,
@@ -159,12 +181,36 @@ namespace Veldrid.Vk
                 }
             }
 
-            if (!_currentPipeline.ScissorTestEnabled)
+            if (!_currentGraphicsPipeline.ScissorTestEnabled)
             {
                 SetFullScissorRects();
             }
+        }
 
-            vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
+        public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
+        {
+            EnsureNoRenderPass();
+
+            // TODO: This should only call vkCmdBindDescriptorSets once, or rather, only the ones that changed.
+            for (int i = 0; i < _computeResourceSetsChanged.Length; i++)
+            {
+                if (_computeResourceSetsChanged[i])
+                {
+                    _computeResourceSetsChanged[i] = false;
+                    VkDescriptorSet ds = _currentComputeResourceSets[i].DescriptorSet;
+                    vkCmdBindDescriptorSets(
+                        _cb,
+                         VkPipelineBindPoint.Compute,
+                         _currentComputePipeline.PipelineLayout,
+                         (uint)i,
+                         1,
+                         ref ds,
+                         0,
+                         null);
+                }
+            }
+
+            vkCmdDispatch(_cb, groupCountX, groupCountY, groupCountZ);
         }
 
         protected override void ResolveTextureCore(Texture source, Texture destination)
@@ -249,6 +295,14 @@ namespace Veldrid.Vk
             }
         }
 
+        private void EnsureNoRenderPass()
+        {
+            if (_activeRenderPass != VkRenderPass.Null)
+            {
+                EndCurrentRenderPass();
+            }
+        }
+
         private void BeginCurrentRenderPass()
         {
             Debug.Assert(_activeRenderPass == VkRenderPass.Null);
@@ -284,24 +338,43 @@ namespace Veldrid.Vk
 
         public override void SetPipeline(Pipeline pipeline)
         {
-            if (_currentPipeline != pipeline)
+            if (!pipeline.IsComputePipeline && _currentGraphicsPipeline != pipeline)
             {
                 VkPipeline vkPipeline = Util.AssertSubtype<Pipeline, VkPipeline>(pipeline);
-                Util.EnsureArraySize(ref _currentResourceSets, vkPipeline.ResourceSetCount);
-                Util.ClearArray(_currentResourceSets);
-                Util.EnsureArraySize(ref _resourceSetsChanged, vkPipeline.ResourceSetCount);
+                Util.EnsureArraySize(ref _currentGraphicsResourceSets, vkPipeline.ResourceSetCount);
+                Util.ClearArray(_currentGraphicsResourceSets);
+                Util.EnsureArraySize(ref _graphicsResourceSetsChanged, vkPipeline.ResourceSetCount);
                 vkCmdBindPipeline(_cb, VkPipelineBindPoint.Graphics, vkPipeline.DevicePipeline);
-                _currentPipeline = vkPipeline;
+                _currentGraphicsPipeline = vkPipeline;
+            }
+            else if (pipeline.IsComputePipeline && _currentComputePipeline != pipeline)
+            {
+                VkPipeline vkPipeline = Util.AssertSubtype<Pipeline, VkPipeline>(pipeline);
+                Util.EnsureArraySize(ref _currentComputeResourceSets, vkPipeline.ResourceSetCount);
+                Util.ClearArray(_currentComputeResourceSets);
+                Util.EnsureArraySize(ref _computeResourceSetsChanged, vkPipeline.ResourceSetCount);
+                vkCmdBindPipeline(_cb, VkPipelineBindPoint.Compute, vkPipeline.DevicePipeline);
+                _currentComputePipeline = vkPipeline;
             }
         }
 
-        protected override void SetResourceSetCore(uint slot, ResourceSet rs)
+        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs)
         {
-            if (_currentResourceSets[slot] != rs)
+            if (_currentGraphicsResourceSets[slot] != rs)
             {
                 VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
-                _currentResourceSets[slot] = vkRS;
-                _resourceSetsChanged[slot] = true;
+                _currentGraphicsResourceSets[slot] = vkRS;
+                _graphicsResourceSetsChanged[slot] = true;
+            }
+        }
+
+        protected override void SetComputeResourceSetCore(uint slot, ResourceSet rs)
+        {
+            if (_currentComputeResourceSets[slot] != rs)
+            {
+                VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
+                _currentComputeResourceSets[slot] = vkRS;
+                _computeResourceSetsChanged[slot] = true;
             }
         }
 

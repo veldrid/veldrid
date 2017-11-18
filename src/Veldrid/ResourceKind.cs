@@ -10,9 +10,13 @@
         /// </summary>
         UniformBuffer,
         /// <summary>
-        /// A <see cref="Buffer"/> accessed as a storage buffer.
+        /// A <see cref="Buffer"/> accessed as a read-write storage buffer.
         /// </summary>
-        StorageBuffer,
+        StorageBufferReadWrite,
+        /// <summary>
+        /// A <see cref="Buffer"/> accessed as a read-only storage buffer.
+        /// </summary>
+        StorageBufferReadOnly,
         /// <summary>
         /// A <see cref="Veldrid.TextureView"/>.
         /// </summary>

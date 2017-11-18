@@ -1758,4 +1758,29 @@ namespace Veldrid.OpenGLBinding
         TableTooLargeExt = ((int)0x8031),
         TextureTooLargeExt = ((int)0x8065),
     }
+
+    public enum ProgramInterface : int
+    {
+        TransformFeedbackBuffer = ((int)0x8C8E),
+        AtomicCounterBuffer = ((int)0x92C0),
+        Uniform = ((int)0x92E1),
+        UniformBlock = ((int)0x92E2),
+        ProgramInput = ((int)0x92E3),
+        ProgramOutput = ((int)0x92E4),
+        BufferVariable = ((int)0x92E5),
+        ShaderStorageBlock = ((int)0x92E6),
+        VertexSubroutine = ((int)0x92E8),
+        TessControlSubroutine = ((int)0x92E9),
+        TessEvaluationSubroutine = ((int)0x92EA),
+        GeometrySubroutine = ((int)0x92EB),
+        FragmentSubroutine = ((int)0x92EC),
+        ComputeSubroutine = ((int)0x92ED),
+        VertexSubroutineUniform = ((int)0x92EE),
+        TessControlSubroutineUniform = ((int)0x92EF),
+        TessEvaluationSubroutineUniform = ((int)0x92F0),
+        GeometrySubroutineUniform = ((int)0x92F1),
+        FragmentSubroutineUniform = ((int)0x92F2),
+        ComputeSubroutineUniform = ((int)0x92F3),
+        TransformFeedbackVarying = ((int)0x92F4),
+    }
 }

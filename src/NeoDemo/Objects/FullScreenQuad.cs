@@ -20,7 +20,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("SourceTexture", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("SourceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            PipelineDescription pd = new PipelineDescription(
+            GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
                 new BlendStateDescription(
                     RgbaFloat.Black,
                     BlendAttachmentDescription.OverrideBlend),
@@ -41,7 +41,7 @@ namespace Veldrid.NeoDemo.Objects
                     }),
                 new ResourceLayout[] { resourceLayout },
                 gd.SwapchainFramebuffer.OutputDescription);
-            _pipeline = factory.CreatePipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(ref pd);
 
             _vb = factory.CreateBuffer(new BufferDescription(s_quadVerts.SizeInBytes() * sizeof(float), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(_vb, 0, s_quadVerts);
@@ -64,10 +64,10 @@ namespace Veldrid.NeoDemo.Objects
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(0, UseTintedTexture ? sc.DuplicatorTargetSet1 : sc.DuplicatorTargetSet0);
+            cl.SetGraphicsResourceSet(0, UseTintedTexture ? sc.DuplicatorTargetSet1 : sc.DuplicatorTargetSet0);
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
-            cl.Draw(6, 1, 0, 0, 0);
+            cl.DrawIndexed(6, 1, 0, 0, 0);
         }
 
         public override RenderPasses RenderPasses => RenderPasses.SwapchainOutput;

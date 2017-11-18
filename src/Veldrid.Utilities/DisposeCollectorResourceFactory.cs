@@ -32,16 +32,23 @@ namespace Veldrid.Utilities
             return fb;
         }
 
-        public override Buffer CreateBuffer(ref BufferDescription description)
+        protected override Buffer CreateBufferCore(ref BufferDescription description)
         {
             Buffer buffer = Factory.CreateBuffer(ref description);
             DisposeCollector.Add(buffer);
             return buffer;
         }
 
-        public override Pipeline CreatePipeline(ref PipelineDescription description)
+        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
         {
-            Pipeline pipeline = Factory.CreatePipeline(ref description);
+            Pipeline pipeline = Factory.CreateGraphicsPipeline(ref description);
+            DisposeCollector.Add(pipeline);
+            return pipeline;
+        }
+
+        public override Pipeline CreateComputePipeline(ref ComputePipelineDescription description)
+        {
+            Pipeline pipeline = Factory.CreateComputePipeline(ref description);
             DisposeCollector.Add(pipeline);
             return pipeline;
         }

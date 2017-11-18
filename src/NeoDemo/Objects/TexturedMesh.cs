@@ -115,7 +115,7 @@ namespace Veldrid.NeoDemo.Objects
             ResourceLayout worldLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("World", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
-            PipelineDescription depthPD = new PipelineDescription(
+            GraphicsPipelineDescription depthPD = new GraphicsPipelineDescription(
                 BlendStateDescription.Empty,
                 DepthStencilStateDescription.LessEqual,
                 RasterizerStateDescription.Default,
@@ -169,7 +169,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("ShadowMapFar", ResourceKind.TextureView, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("ShadowMapSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            PipelineDescription mainPD = new PipelineDescription(
+            GraphicsPipelineDescription mainPD = new GraphicsPipelineDescription(
                 _alphamapTexture != null ? BlendStateDescription.SingleAlphaBlend : BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.LessEqual,
                 RasterizerStateDescription.Default,
@@ -291,9 +291,9 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(_shadowMapPipeline);
-            cl.SetResourceSet(0, _shadowMapResourceSets[shadowMapIndex * 2]);
-            cl.SetResourceSet(1, _shadowMapResourceSets[shadowMapIndex * 2 + 1]);
-            cl.Draw((uint)_indexCount, 1, 0, 0, 0);
+            cl.SetGraphicsResourceSet(0, _shadowMapResourceSets[shadowMapIndex * 2]);
+            cl.SetGraphicsResourceSet(1, _shadowMapResourceSets[shadowMapIndex * 2 + 1]);
+            cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }
 
         private void RenderStandard(CommandList cl, SceneContext sc)
@@ -301,10 +301,10 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(_pipeline);
-            cl.SetResourceSet(0, _mainProjViewRS);
-            cl.SetResourceSet(1, _mainSharedRS);
-            cl.SetResourceSet(2, _mainPerObjectRS);
-            cl.Draw((uint)_indexCount, 1, 0, 0, 0);
+            cl.SetGraphicsResourceSet(0, _mainProjViewRS);
+            cl.SetGraphicsResourceSet(1, _mainSharedRS);
+            cl.SetGraphicsResourceSet(2, _mainPerObjectRS);
+            cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }
     }
 }

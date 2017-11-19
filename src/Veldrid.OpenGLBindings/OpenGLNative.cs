@@ -682,6 +682,29 @@ namespace Veldrid.OpenGLBinding
         public static void glShaderStorageBlockBinding(uint program, uint storageBlockIndex, uint storageBlockBinding)
             => p_glShaderStorageBlockBinding(program, storageBlockIndex, storageBlockBinding);
 
+        private delegate void glMultiDrawElementsIndirect_t(
+            PrimitiveType mode,
+            DrawElementsType type,
+            IntPtr indirect,
+            uint drawcount,
+            uint stride);
+        private static glMultiDrawElementsIndirect_t p_glMultiDrawElementsIndirect;
+        public static void glMultiDrawElementsIndirect(
+            PrimitiveType mode,
+            DrawElementsType type,
+            IntPtr indirect,
+            uint drawcount,
+            uint stride) => p_glMultiDrawElementsIndirect(mode, type, indirect, drawcount, stride);
+
+        private delegate void glMultiDrawArraysIndirect_t(PrimitiveType mode, IntPtr indirect, uint drawcount, uint stride);
+        private static glMultiDrawArraysIndirect_t p_glMultiDrawArraysIndirect;
+        public static void glMultiDrawArraysIndirect(PrimitiveType mode, IntPtr indirect, uint drawcount, uint stride)
+            => p_glMultiDrawArraysIndirect(mode, indirect, drawcount, stride);
+
+        private delegate void glDispatchComputeIndirect_t(IntPtr indirect);
+        private static glDispatchComputeIndirect_t p_glDispatchComputeIndirect;
+        public static void glDispatchComputeIndirect(IntPtr indirect) => p_glDispatchComputeIndirect(indirect);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -782,6 +805,9 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glDispatchCompute", out p_glDispatchCompute);
             LoadFunction("glGetProgramResourceIndex", out p_glGetProgramResourceIndex);
             LoadFunction("glShaderStorageBlockBinding", out p_glShaderStorageBlockBinding);
+            LoadFunction("glMultiDrawElementsIndirect", out p_glMultiDrawElementsIndirect);
+            LoadFunction("glMultiDrawArraysIndirect", out p_glMultiDrawArraysIndirect);
+            LoadFunction("glDispatchComputeIndirect", out p_glDispatchComputeIndirect);
         }
 
         private static void LoadFunction<T>(string name, out T field)

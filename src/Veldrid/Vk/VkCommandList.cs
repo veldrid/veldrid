@@ -158,6 +158,20 @@ namespace Veldrid.Vk
             vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
+        protected override void DrawIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            PreDrawCommand();
+            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(indirectBuffer);
+            vkCmdDrawIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
+        }
+
+        protected override void DrawIndexedIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            PreDrawCommand();
+            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(indirectBuffer);
+            vkCmdDrawIndexedIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
+        }
+
         private void PreDrawCommand()
         {
             EnsureRenderPassActive();
@@ -211,6 +225,14 @@ namespace Veldrid.Vk
             }
 
             vkCmdDispatch(_cb, groupCountX, groupCountY, groupCountZ);
+        }
+
+        protected override void DispatchIndirectCore(Buffer indirectBuffer, uint offset)
+        {
+            EnsureNoRenderPass();
+
+            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(indirectBuffer);
+            vkCmdDispatchIndirect(_cb, vkBuffer.DeviceBuffer, offset);
         }
 
         protected override void ResolveTextureCore(Texture source, Texture destination)

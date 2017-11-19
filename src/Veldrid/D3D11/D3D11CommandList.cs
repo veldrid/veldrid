@@ -453,9 +453,41 @@ namespace Veldrid.D3D11
             }
         }
 
+        protected override void DrawIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            PreDrawCommand();
+
+            D3D11Buffer d3d11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(indirectBuffer);
+            int currentOffset = (int)offset;
+            for (uint i = 0; i < drawCount; i++)
+            {
+                _context.DrawInstancedIndirect(d3d11Buffer.Buffer, currentOffset);
+                currentOffset += (int)stride;
+            }
+        }
+
+        protected override void DrawIndexedIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            PreDrawCommand();
+
+            D3D11Buffer d3d11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(indirectBuffer);
+            int currentOffset = (int)offset;
+            for (uint i = 0; i < drawCount; i++)
+            {
+                _context.DrawIndexedInstancedIndirect(d3d11Buffer.Buffer, currentOffset);
+                currentOffset += (int)stride;
+            }
+        }
+
         public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
         {
             _context.Dispatch((int)groupCountX, (int)groupCountY, (int)groupCountZ);
+        }
+
+        protected override void DispatchIndirectCore(Buffer indirectBuffer, uint offset)
+        {
+            D3D11Buffer d3d11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(indirectBuffer);
+            _context.DispatchIndirect(d3d11Buffer.Buffer, (int)offset);
         }
 
         private void PreDrawCommand()

@@ -38,9 +38,24 @@ namespace Veldrid.OpenGL
             _commands.DrawIndexed(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
+        protected override void DrawIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            _commands.DrawIndirect(indirectBuffer, offset, drawCount, stride);
+        }
+
+        protected override void DrawIndexedIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            _commands.DrawIndexedIndirect(indirectBuffer, offset, drawCount, stride);
+        }
+
         public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
         {
             _commands.Dispatch(groupCountX, groupCountY, groupCountZ);
+        }
+
+        protected override void DispatchIndirectCore(Buffer indirectBuffer, uint offset)
+        {
+            _commands.DispatchIndirect(indirectBuffer, offset);
         }
 
         protected override void ResolveTextureCore(Texture source, Texture destination)

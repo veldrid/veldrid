@@ -32,6 +32,10 @@ namespace Veldrid.D3D11
                 bd.OptionFlags = ResourceOptionFlags.BufferStructured;
                 bd.StructureByteStride = (int)structureByteStride;
             }
+            if ((usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
+            {
+                bd.OptionFlags = ResourceOptionFlags.DrawIndirectArguments;
+            }
             _buffer = new SharpDX.Direct3D11.Buffer(device, bd);
 
             if ((usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite

@@ -40,6 +40,10 @@ namespace Veldrid.Vk
             {
                 vkUsage |= VkBufferUsageFlags.StorageBuffer;
             }
+            if ((usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
+            {
+                vkUsage |= VkBufferUsageFlags.IndirectBuffer;
+            }
 
             VkBufferCreateInfo bufferCI = VkBufferCreateInfo.New();
             bufferCI.size = sizeInBytes;

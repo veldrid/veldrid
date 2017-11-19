@@ -39,9 +39,25 @@ namespace Veldrid.OpenGL.ManagedEntryList
         {
             _commands.Add(new DrawIndexedEntry(indexCount, instanceCount, indexStart, vertexOffset, instanceStart));
         }
+
+        public void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            _commands.Add(new DrawIndirectEntry(indirectBuffer, offset, drawCount, stride));
+        }
+
+        public void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            _commands.Add(new DrawIndexedIndirectEntry(indirectBuffer, offset, drawCount, stride));
+        }
+
         public void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
         {
             _commands.Add(new DispatchEntry(groupCountX, groupCountY, groupCountZ));
+        }
+
+        public void DispatchIndirect(Buffer indirectBuffer, uint offset)
+        {
+            _commands.Add(new DispatchIndirectEntry(indirectBuffer, offset));
         }
 
         public void End()
@@ -150,8 +166,23 @@ namespace Veldrid.OpenGL.ManagedEntryList
                     case ClearDepthTargetEntry cdte:
                         executor.ClearDepthTarget(cdte.Depth);
                         break;
-                    case DrawIndexedEntry de:
-                        executor.DrawIndexed(de.IndexCount, de.InstanceCount, de.IndexStart, de.VertexOffset, de.InstanceCount);
+                    case DrawEntry de:
+                        executor.Draw(de.VertexCount, de.InstanceCount, de.VertexCount, de.InstanceCount);
+                        break;
+                    case DrawIndexedEntry dIdx:
+                        executor.DrawIndexed(dIdx.IndexCount, dIdx.InstanceCount, dIdx.IndexStart, dIdx.VertexOffset, dIdx.InstanceCount);
+                        break;
+                    case DrawIndirectEntry dInd:
+                        executor.DrawIndirect(dInd.IndirectBuffer, dInd.Offset, dInd.DrawCount, dInd.Stride);
+                        break;
+                    case DrawIndexedIndirectEntry dIdxInd:
+                        executor.DrawIndexedIndirect(dIdxInd.IndirectBuffer, dIdxInd.Offset, dIdxInd.DrawCount, dIdxInd.Stride);
+                        break;
+                    case DispatchEntry dispatch:
+                        executor.Dispatch(dispatch.GroupCountX, dispatch.GroupCountY, dispatch.GroupCountZ);
+                        break;
+                    case DispatchIndirectEntry dispInd:
+                        executor.DispatchIndirect(dispInd.IndirectBuffer, dispInd.Offset);
                         break;
                     case EndEntry ee:
                         executor.End();

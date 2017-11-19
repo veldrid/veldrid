@@ -27,6 +27,9 @@ namespace Veldrid.OpenGL.ManagedEntryList
         private readonly EntryPool<UpdateTextureEntry> _updateTextureEntryPool = new EntryPool<UpdateTextureEntry>();
         private readonly EntryPool<UpdateTextureCubeEntry> _updateTextureCubeEntryPool = new EntryPool<UpdateTextureCubeEntry>();
         private readonly EntryPool<ResolveTextureEntry> _resolveTextureEntryPool = new EntryPool<ResolveTextureEntry>();
+        private readonly EntryPool<DrawIndirectEntry> _drawIndirectEntryPool = new EntryPool<DrawIndirectEntry>();
+        private readonly EntryPool<DrawIndexedIndirectEntry> _drawIndexedIndirectEntryPool = new EntryPool<DrawIndexedIndirectEntry>();
+        private readonly EntryPool<DispatchIndirectEntry> _dispatchIndirectEntryPool = new EntryPool<DispatchIndirectEntry>();
 
         public IReadOnlyList<OpenGLCommandEntry> Commands => _commands;
 
@@ -57,12 +60,27 @@ namespace Veldrid.OpenGL.ManagedEntryList
 
         public void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
         {
-            throw new NotImplementedException();
+            _commands.Add(_dispatchEntryPool.Rent().Init(groupCountX, groupCountY, groupCountZ));
         }
 
         public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
             _commands.Add(_drawIndexedEntryPool.Rent().Init(indexCount, instanceCount, indexStart, vertexOffset, instanceStart));
+        }
+
+        public void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            _commands.Add(_drawIndirectEntryPool.Rent().Init(indirectBuffer, offset, drawCount, stride));
+        }
+
+        public void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            _commands.Add(_drawIndexedIndirectEntryPool.Rent().Init(indirectBuffer, offset, drawCount, stride));
+        }
+
+        public void DispatchIndirect(Buffer indirectBuffer, uint offset)
+        {
+            _commands.Add(_dispatchIndirectEntryPool.Rent().Init(indirectBuffer, offset));
         }
 
         public void End()
@@ -180,9 +198,21 @@ namespace Veldrid.OpenGL.ManagedEntryList
                         executor.DrawIndexed(die.IndexCount, die.InstanceCount, die.IndexStart, die.VertexOffset, die.InstanceCount);
                         _drawIndexedEntryPool.Return(die);
                         break;
+                    case DrawIndirectEntry dInd:
+                        executor.DrawIndirect(dInd.IndirectBuffer, dInd.Offset, dInd.DrawCount, dInd.Stride);
+                        _drawIndirectEntryPool.Return(dInd);
+                        break;
+                    case DrawIndexedIndirectEntry dIdxInd:
+                        executor.DrawIndexedIndirect(dIdxInd.IndirectBuffer, dIdxInd.Offset, dIdxInd.DrawCount, dIdxInd.Stride);
+                        _drawIndexedIndirectEntryPool.Return(dIdxInd);
+                        break;
                     case DispatchEntry dispatchEntry:
                         executor.Dispatch(dispatchEntry.GroupCountX, dispatchEntry.GroupCountY, dispatchEntry.GroupCountZ);
                         _dispatchEntryPool.Return(dispatchEntry);
+                        break;
+                    case DispatchIndirectEntry dispInd:
+                        executor.DispatchIndirect(dispInd.IndirectBuffer, dispInd.Offset);
+                        _dispatchIndirectEntryPool.Return(dispInd);
                         break;
                     case EndEntry ee:
                         executor.End();

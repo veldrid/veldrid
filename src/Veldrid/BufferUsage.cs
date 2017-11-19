@@ -7,5 +7,6 @@
         UniformBuffer = 1 << 2,
         StructuredBufferReadOnly = 1 << 3,
         StructuredBufferReadWrite = 1 << 4,
+        IndirectBuffer = 1 << 5,
     }
 }

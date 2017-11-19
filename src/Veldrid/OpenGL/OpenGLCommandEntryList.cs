@@ -9,6 +9,8 @@ namespace Veldrid.OpenGL
         void ClearDepthTarget(float depth);
         void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
         void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
+        void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
+        void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
         void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ);
         void End();
         void SetFramebuffer(Framebuffer fb);
@@ -45,6 +47,7 @@ namespace Veldrid.OpenGL
             uint mipLevel,
             uint arrayLayer);
         void ExecuteAll(OpenGLCommandExecutor executor);
+        void DispatchIndirect(Buffer indirectBuffer, uint offset);
         void Reset();
     }
 }

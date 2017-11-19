@@ -127,6 +127,30 @@ namespace Veldrid.OpenGL
             }
         }
 
+        public void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            PreDrawCommand();
+
+            OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(indirectBuffer);
+            glBindBuffer(BufferTarget.DrawIndirectBuffer, glBuffer.Buffer);
+            CheckLastError();
+
+            glMultiDrawArraysIndirect(_primitiveType, (IntPtr)offset, drawCount, stride);
+            CheckLastError();
+        }
+
+        public void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            PreDrawCommand();
+
+            OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(indirectBuffer);
+            glBindBuffer(BufferTarget.DrawIndirectBuffer, glBuffer.Buffer);
+            CheckLastError();
+
+            glMultiDrawElementsIndirect(_primitiveType, _drawElementsType, (IntPtr)offset, drawCount, stride);
+            CheckLastError();
+        }
+
         private void PreDrawCommand()
         {
             if (!_graphicsPipelineActive)
@@ -194,6 +218,15 @@ namespace Veldrid.OpenGL
 
             glDispatchCompute(groupCountX, groupCountY, groupCountZ);
             CheckLastError();
+        }
+
+        public void DispatchIndirect(Buffer indirectBuffer, uint offset)
+        {
+            OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(indirectBuffer);
+            glBindBuffer(BufferTarget.DrawIndirectBuffer, glBuffer.Buffer);
+            CheckLastError();
+
+            glDispatchComputeIndirect((IntPtr)offset);
         }
 
         public void End()

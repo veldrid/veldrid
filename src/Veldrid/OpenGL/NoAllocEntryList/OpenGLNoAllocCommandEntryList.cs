@@ -71,6 +71,15 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte SetComputeResourceSetEntryID = 19;
         private static readonly uint SetComputeResourceSetEntrySize = Util.USizeOf<NoAllocSetComputeResourceSetEntry>();
 
+        private const byte DrawIndirectEntryID = 20;
+        private static readonly uint DrawIndirectEntrySize = Util.USizeOf<NoAllocDrawIndirectEntry>();
+
+        private const byte DrawIndexedIndirectEntryID = 21;
+        private static readonly uint DrawIndexedIndirectEntrySize = Util.USizeOf<NoAllocDrawIndexedIndirectEntry>();
+
+        private const byte DispatchIndirectEntryID = 22;
+        private static readonly uint DispatchIndirectEntrySize = Util.USizeOf<NoAllocDispatchIndirectEntry>();
+
         public OpenGLNoAllocCommandEntryList()
         {
             _currentBlock = EntryStorageBlock.New();
@@ -194,10 +203,29 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         executor.DrawIndexed(die.IndexCount, die.InstanceCount, die.IndexStart, die.VertexOffset, die.InstanceCount);
                         currentOffset += DrawIndexedEntrySize;
                         break;
+                    case DrawIndirectEntryID:
+                        ref NoAllocDrawIndirectEntry drawIndirectEntry = ref Unsafe.AsRef<NoAllocDrawIndirectEntry>(entryBasePtr);
+                        executor.DrawIndirect(
+                            drawIndirectEntry.IndirectBuffer,
+                            drawIndirectEntry.Offset,
+                            drawIndirectEntry.DrawCount,
+                            drawIndirectEntry.Stride);
+                        currentOffset += DrawIndirectEntrySize;
+                        break;
+                    case DrawIndexedIndirectEntryID:
+                        ref NoAllocDrawIndexedIndirectEntry diie = ref Unsafe.AsRef<NoAllocDrawIndexedIndirectEntry>(entryBasePtr);
+                        executor.DrawIndexedIndirect(diie.IndirectBuffer, diie.Offset, diie.DrawCount, diie.Stride);
+                        currentOffset += DrawIndexedIndirectEntrySize;
+                        break;
                     case DispatchEntryID:
                         ref NoAllocDispatchEntry dispatchEntry = ref Unsafe.AsRef<NoAllocDispatchEntry>(entryBasePtr);
                         executor.Dispatch(dispatchEntry.GroupCountX, dispatchEntry.GroupCountY, dispatchEntry.GroupCountZ);
                         currentOffset += DispatchEntrySize;
+                        break;
+                    case DispatchIndirectEntryID:
+                        ref NoAllocDispatchIndirectEntry dispatchIndir = ref Unsafe.AsRef<NoAllocDispatchIndirectEntry>(entryBasePtr);
+                        executor.DispatchIndirect(dispatchIndir.IndirectBuffer, dispatchIndir.Offset);
+                        currentOffset += DispatchIndirectEntrySize;
                         break;
                     case EndEntryID:
                         executor.End();
@@ -334,8 +362,23 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                     case DrawIndexedEntryID:
                         currentOffset += DrawIndexedEntrySize;
                         break;
+                    case DrawIndirectEntryID:
+                        ref NoAllocDrawIndirectEntry drawIndirectEntry = ref Unsafe.AsRef<NoAllocDrawIndirectEntry>(entryBasePtr);
+                        drawIndirectEntry.IndirectBuffer.Free();
+                        currentOffset += DrawIndirectEntrySize;
+                        break;
+                    case DrawIndexedIndirectEntryID:
+                        ref NoAllocDrawIndexedIndirectEntry diie = ref Unsafe.AsRef<NoAllocDrawIndexedIndirectEntry>(entryBasePtr);
+                        diie.IndirectBuffer.Free();
+                        currentOffset += DrawIndexedIndirectEntrySize;
+                        break;
                     case DispatchEntryID:
                         currentOffset += DispatchEntrySize;
+                        break;
+                    case DispatchIndirectEntryID:
+                        ref NoAllocDispatchIndirectEntry dispatchIndirect = ref Unsafe.AsRef<NoAllocDispatchIndirectEntry>(entryBasePtr);
+                        dispatchIndirect.IndirectBuffer.Free();
+                        currentOffset += DispatchIndirectEntrySize;
                         break;
                     case EndEntryID:
                         currentOffset += EndEntrySize;
@@ -436,10 +479,27 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(DrawIndexedEntryID, ref entry);
         }
 
+        public void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            NoAllocDrawIndirectEntry entry = new NoAllocDrawIndirectEntry(indirectBuffer, offset, drawCount, stride);
+            AddEntry(DrawIndirectEntryID, ref entry);
+        }
+
+        public void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            NoAllocDrawIndexedIndirectEntry entry = new NoAllocDrawIndexedIndirectEntry(indirectBuffer, offset, drawCount, stride);
+        }
+
         public void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
         {
             NoAllocDispatchEntry entry = new NoAllocDispatchEntry(groupCountX, groupCountY, groupCountZ);
             AddEntry(DispatchEntryID, ref entry);
+        }
+
+        public void DispatchIndirect(Buffer indirectBuffer, uint offset)
+        {
+            NoAllocDispatchIndirectEntry entry = new NoAllocDispatchIndirectEntry(indirectBuffer, offset);
+            AddEntry(DispatchIndirectEntryID, ref entry);
         }
 
         public void End()

@@ -241,7 +241,69 @@ namespace Veldrid
         /// <param name="instanceStart">The starting instance value.</param>
         public abstract void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
 
+        public void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            ValidateIndirectBuffer(indirectBuffer);
+            ValidateIndirectOffset(offset);
+            ValidateIndirectStride(stride, Unsafe.SizeOf<IndirectDrawArguments>());
+
+            DrawIndirectCore(indirectBuffer, offset, drawCount, stride);
+        }
+
+        // TODO: private protected
+        protected abstract void DrawIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
+
+        public void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        {
+            ValidateIndirectBuffer(indirectBuffer);
+            ValidateIndirectOffset(offset);
+            ValidateIndirectStride(stride, Unsafe.SizeOf<IndirectDrawIndexedArguments>());
+
+            DrawIndexedIndirectCore(indirectBuffer, offset, drawCount, stride);
+        }
+
+        // TODO: private protected
+        protected abstract void DrawIndexedIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
+
+        [System.Diagnostics.Conditional("VALIDATE_USAGE")]
+        private static void ValidateIndirectOffset(uint offset)
+        {
+            if ((offset % 4) != 0)
+            {
+                throw new VeldridException($"{nameof(offset)} must be a multiple of 4.");
+            }
+        }
+
+        private static void ValidateIndirectBuffer(Buffer indirectBuffer)
+        {
+            if ((indirectBuffer.Usage & BufferUsage.IndirectBuffer) != BufferUsage.IndirectBuffer)
+            {
+                throw new VeldridException(
+                    $"{nameof(indirectBuffer)} parameter must have been created with BufferUsage.IndirectBuffer. Instead, it was {indirectBuffer.Usage}.");
+            }
+        }
+
+        [System.Diagnostics.Conditional("VALIDATE_USAGE")]
+        private static void ValidateIndirectStride(uint stride, int argumentSize)
+        {
+            if (stride < argumentSize || ((stride % 4) != 0))
+            {
+                throw new VeldridException(
+                    $"{nameof(stride)} parameter must be a multiple of 4, and must be larger than the size of the corresponding argument structure.");
+            }
+        }
+
         public abstract void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ);
+
+        public void DispatchIndirect(Buffer indirectBuffer, uint offset)
+        {
+            ValidateIndirectBuffer(indirectBuffer);
+            ValidateIndirectOffset(offset);
+            DispatchIndirectCore(indirectBuffer, offset);
+        }
+
+        // TODO: private protected
+        protected abstract void DispatchIndirectCore(Buffer indirectBuffer, uint offset);
 
         /// <summary>
         /// Resolves a multisampled source <see cref="Texture"/> into a non-multisampled destination <see cref="Texture"/>.

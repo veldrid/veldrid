@@ -55,6 +55,13 @@ namespace Veldrid.Vk
                     imageInfos[i].imageLayout = VkImageLayout.ShaderReadOnlyOptimal;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
                 }
+                else if (type == VkDescriptorType.StorageImage)
+                {
+                    VkTextureView textureView = Util.AssertSubtype<BindableResource, VkTextureView>(boundResources[i]);
+                    imageInfos[i].imageView = textureView.ImageView;
+                    imageInfos[i].imageLayout = VkImageLayout.General;
+                    descriptorWrites[i].pImageInfo = &imageInfos[i];
+                }
                 else if (type == VkDescriptorType.Sampler)
                 {
                     VkSampler sampler = Util.AssertSubtype<BindableResource, VkSampler>(boundResources[i]);

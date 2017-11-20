@@ -6,9 +6,8 @@ namespace Veldrid.D3D11
     internal class D3D11TextureView : TextureView
     {
         public ShaderResourceView ShaderResourceView { get; }
+        public UnorderedAccessView UnorderedAccessView { get; }
 
-        // TODO: Implement read-write textures.
-        // Store a UAV in here if texture is created with Storage flag.
         public D3D11TextureView(Device device, ref TextureViewDescription description)
             : base(ref description)
         {
@@ -51,6 +50,39 @@ namespace Veldrid.D3D11
             }
 
             ShaderResourceView = new ShaderResourceView(device, d3dTex.DeviceTexture, srvDesc);
+
+            if ((d3dTex.Usage & TextureUsage.Storage) == TextureUsage.Storage)
+            {
+                UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription();
+                uavDesc.Format = D3D11Formats.GetViewFormat(d3dTex.DeviceTexture.Description.Format);
+
+                if ((d3dTex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+                {
+                    throw new NotSupportedException();
+                }
+                else if (d3dTex.Depth == 1)
+                {
+                    if (d3dTex.ArrayLayers == 1)
+                    {
+                        uavDesc.Dimension = UnorderedAccessViewDimension.Texture2D;
+                        uavDesc.Texture2D.MipSlice = 0;
+                    }
+                    else
+                    {
+                        uavDesc.Dimension = UnorderedAccessViewDimension.Texture2DArray;
+                        uavDesc.Texture2DArray.MipSlice = 0;
+                        uavDesc.Texture2DArray.ArraySize = (int)d3dTex.ArrayLayers;
+                    }
+                }
+                else
+                {
+                    uavDesc.Dimension = UnorderedAccessViewDimension.Texture3D;
+                    uavDesc.Texture3D.MipSlice = 0;
+                    uavDesc.Texture3D.WSize = (int)d3dTex.Depth;
+                }
+
+                UnorderedAccessView = new UnorderedAccessView(device, d3dTex.DeviceTexture, uavDesc);
+            }
         }
 
         public override void Dispose()

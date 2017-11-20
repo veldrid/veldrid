@@ -67,7 +67,7 @@ namespace Veldrid.Vk
             rsCI.cullMode = VkFormats.VdToVkCullMode(rsDesc.CullMode);
             rsCI.polygonMode = VkFormats.VdToVkPolygonMode(rsDesc.FillMode);
             rsCI.depthClampEnable = !rsDesc.DepthClipEnabled;
-            rsCI.frontFace = VkFrontFace.Clockwise;
+            rsCI.frontFace = rsDesc.FrontFace == FrontFace.Clockwise ? VkFrontFace.Clockwise : VkFrontFace.CounterClockwise;
             rsCI.lineWidth = 1f;
 
             pipelineCI.pRasterizationState = &rsCI;

@@ -501,7 +501,8 @@ namespace Veldrid.Vk
 
         private void CreateDescriptorPool()
         {
-            VkDescriptorPoolSize* sizes = stackalloc VkDescriptorPoolSize[4];
+            uint poolSizeCount = 5;
+            VkDescriptorPoolSize* sizes = stackalloc VkDescriptorPoolSize[(int)poolSizeCount];
             sizes[0].type = VkDescriptorType.UniformBuffer;
             sizes[0].descriptorCount = 5000;
             sizes[1].type = VkDescriptorType.SampledImage;
@@ -510,12 +511,15 @@ namespace Veldrid.Vk
             sizes[2].descriptorCount = 5000;
             sizes[3].type = VkDescriptorType.StorageBuffer;
             sizes[3].descriptorCount = 5000;
+            sizes[4].type = VkDescriptorType.StorageImage;
+            sizes[4].descriptorCount = 5000;
+
 
             VkDescriptorPoolCreateInfo descriptorPoolCI = VkDescriptorPoolCreateInfo.New();
             descriptorPoolCI.flags = VkDescriptorPoolCreateFlags.FreeDescriptorSet;
             descriptorPoolCI.maxSets = 5000;
             descriptorPoolCI.pPoolSizes = sizes;
-            descriptorPoolCI.poolSizeCount = 4;
+            descriptorPoolCI.poolSizeCount = poolSizeCount;
 
             VkResult result = vkCreateDescriptorPool(_device, ref descriptorPoolCI, null, out _descriptorPool);
             CheckResult(result);

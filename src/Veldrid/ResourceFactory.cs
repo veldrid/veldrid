@@ -53,12 +53,6 @@ namespace Veldrid
         /// <returns>A new <see cref="Texture"/>.</returns>
         public Texture CreateTexture(ref TextureDescription description)
         {
-            // TODO: Implement read-write textures.
-            if ((description.Usage & TextureUsage.Storage) == TextureUsage.Storage)
-            {
-                throw new System.NotImplementedException();
-            }
-
             return CreateTextureCore(ref description);
         }
 

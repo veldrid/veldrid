@@ -218,6 +218,8 @@ namespace Veldrid.OpenGL
 
             glDispatchCompute(groupCountX, groupCountY, groupCountZ);
             CheckLastError();
+
+            PostDispatchCommand();
         }
 
         public void DispatchIndirect(Buffer indirectBuffer, uint offset)
@@ -227,6 +229,16 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
             glDispatchComputeIndirect((IntPtr)offset);
+            CheckLastError();
+
+            PostDispatchCommand();
+        }
+
+        private static void PostDispatchCommand()
+        {
+            // TODO: Smart barriers?
+            glMemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+            CheckLastError();
         }
 
         public void End()
@@ -432,60 +444,7 @@ namespace Veldrid.OpenGL
             ResourceLayoutElementDescription[] layoutElements = glLayout.Description.Elements;
             _graphicsResourceSets[slot] = glResourceSet;
 
-            uint ubBaseIndex = GetUniformBaseIndex(slot, true);
-            uint ssboBaseIndex = GetShaderStorageBaseIndex(slot, true);
-
-            for (uint element = 0; element < glResourceSet.Resources.Length; element++)
-            {
-                ResourceKind kind = layoutElements[element].Kind;
-                BindableResource resource = glResourceSet.Resources[(int)element];
-                switch (kind)
-                {
-                    case ResourceKind.UniformBuffer:
-                        OpenGLBuffer glUB = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
-                        OpenGLUniformBinding uniformBindingInfo = _graphicsPipeline.GetUniformBindingForSlot(slot, element);
-                        glUniformBlockBinding(_graphicsPipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + element);
-                        CheckLastError();
-
-                        glBindBufferRange(BufferRangeTarget.UniformBuffer, ubBaseIndex + element, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
-                        CheckLastError();
-                        break;
-                    case ResourceKind.StructuredBufferReadWrite:
-                    case ResourceKind.StructuredBufferReadOnly:
-                        OpenGLBuffer glBuffer = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
-                        OpenGLShaderStorageBinding shaderStorageBinding = _graphicsPipeline.GetStorageBufferBindingForSlot(slot, element);
-                        glShaderStorageBlockBinding(_graphicsPipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + element);
-                        CheckLastError();
-
-                        glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, ssboBaseIndex + element, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
-                        CheckLastError();
-                        break;
-                    case ResourceKind.TextureReadOnly:
-                        OpenGLTextureView glTexView = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
-                        OpenGLTextureBindingSlotInfo textureBindingInfo = _graphicsPipeline.GetTextureBindingInfo(slot, element);
-                        _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
-
-                        glUseProgram(_graphicsPipeline.Program); // TODO This is broken, why do i need to set this again?
-                        CheckLastError();
-
-                        glUniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
-                        CheckLastError();
-                        break;
-                    case ResourceKind.TextureReadWrite:
-                        // TODO: Implement read-write textures.
-                        throw new NotImplementedException();
-                    case ResourceKind.Sampler:
-                        OpenGLSampler glSampler = Util.AssertSubtype<BindableResource, OpenGLSampler>(resource);
-                        glSampler.EnsureResourcesCreated();
-                        OpenGLSamplerBindingSlotInfo samplerBindingInfo = _graphicsPipeline.GetSamplerBindingInfo(slot, element);
-                        foreach (int index in samplerBindingInfo.RelativeIndices)
-                        {
-                            _textureSamplerManager.SetSampler((uint)index, glSampler);
-                        }
-                        break;
-                    default: throw Illegal.Value<ResourceKind>();
-                }
-            }
+            ActivateResourceSet(slot, true, glResourceSet, layoutElements);
         }
 
         public void SetComputeResourceSet(uint slot, ResourceSet rs)
@@ -500,8 +459,18 @@ namespace Veldrid.OpenGL
             ResourceLayoutElementDescription[] layoutElements = glLayout.Description.Elements;
             _computeResourceSets[slot] = glResourceSet;
 
-            uint ubBaseIndex = GetUniformBaseIndex(slot, false);
-            uint ssboBaseIndex = GetShaderStorageBaseIndex(slot, false);
+            ActivateResourceSet(slot, false, glResourceSet, layoutElements);
+        }
+
+        private void ActivateResourceSet(
+            uint slot,
+            bool graphics,
+            OpenGLResourceSet glResourceSet,
+            ResourceLayoutElementDescription[] layoutElements)
+        {
+            OpenGLPipeline pipeline = graphics ? _graphicsPipeline : _computePipeline;
+            uint ubBaseIndex = GetUniformBaseIndex(slot, graphics);
+            uint ssboBaseIndex = GetShaderStorageBaseIndex(slot, graphics);
 
             for (uint element = 0; element < glResourceSet.Resources.Length; element++)
             {
@@ -511,8 +480,8 @@ namespace Veldrid.OpenGL
                 {
                     case ResourceKind.UniformBuffer:
                         OpenGLBuffer glUB = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
-                        OpenGLUniformBinding uniformBindingInfo = _computePipeline.GetUniformBindingForSlot(slot, element);
-                        glUniformBlockBinding(_computePipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + element);
+                        OpenGLUniformBinding uniformBindingInfo = pipeline.GetUniformBindingForSlot(slot, element);
+                        glUniformBlockBinding(pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + element);
                         CheckLastError();
 
                         glBindBufferRange(BufferRangeTarget.UniformBuffer, ubBaseIndex + element, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
@@ -521,8 +490,8 @@ namespace Veldrid.OpenGL
                     case ResourceKind.StructuredBufferReadWrite:
                     case ResourceKind.StructuredBufferReadOnly:
                         OpenGLBuffer glBuffer = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
-                        OpenGLShaderStorageBinding shaderStorageBinding = _computePipeline.GetStorageBufferBindingForSlot(slot, element);
-                        glShaderStorageBlockBinding(_computePipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + element);
+                        OpenGLShaderStorageBinding shaderStorageBinding = pipeline.GetStorageBufferBindingForSlot(slot, element);
+                        glShaderStorageBlockBinding(pipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + element);
                         CheckLastError();
 
                         glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, ssboBaseIndex + element, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
@@ -530,22 +499,36 @@ namespace Veldrid.OpenGL
                         break;
                     case ResourceKind.TextureReadOnly:
                         OpenGLTextureView glTexView = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
-                        OpenGLTextureBindingSlotInfo textureBindingInfo = _computePipeline.GetTextureBindingInfo(slot, element);
+                        glTexView.Target.EnsureResourcesCreated();
+                        OpenGLTextureBindingSlotInfo textureBindingInfo = pipeline.GetTextureBindingInfo(slot, element);
                         _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
 
-                        glUseProgram(_computePipeline.Program); // TODO This is broken, why do i need to set this again?
+                        glUseProgram(pipeline.Program); // TODO This is broken, why do i need to set this again?
                         CheckLastError();
 
                         glUniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
                         CheckLastError();
                         break;
                     case ResourceKind.TextureReadWrite:
-                        // TODO: Implement read-write textures.
-                        throw new NotImplementedException();
+                        OpenGLTextureView glTexViewRW = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
+                        glTexViewRW.Target.EnsureResourcesCreated();
+                        OpenGLTextureBindingSlotInfo imageBindingInfo = pipeline.GetTextureBindingInfo(slot, element);
+                        glBindImageTexture(
+                            (uint)imageBindingInfo.RelativeIndex,
+                            glTexViewRW.Target.Texture,
+                            0,
+                            false,
+                            0,
+                            TextureAccess.ReadWrite,
+                            glTexViewRW.GetReadWriteSizedInternalFormat());
+                        CheckLastError();
+                        glUniform1i(imageBindingInfo.UniformLocation, imageBindingInfo.RelativeIndex);
+                        CheckLastError();
+                        break;
                     case ResourceKind.Sampler:
                         OpenGLSampler glSampler = Util.AssertSubtype<BindableResource, OpenGLSampler>(resource);
                         glSampler.EnsureResourcesCreated();
-                        OpenGLSamplerBindingSlotInfo samplerBindingInfo = _computePipeline.GetSamplerBindingInfo(slot, element);
+                        OpenGLSamplerBindingSlotInfo samplerBindingInfo = pipeline.GetSamplerBindingInfo(slot, element);
                         foreach (int index in samplerBindingInfo.RelativeIndices)
                         {
                             _textureSamplerManager.SetSampler((uint)index, glSampler);

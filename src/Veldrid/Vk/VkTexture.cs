@@ -89,6 +89,10 @@ namespace Veldrid.Vk
             {
                 imageCI.usage |= VkImageUsageFlags.ColorAttachment;
             }
+            if ((description.Usage & TextureUsage.Storage) == TextureUsage.Storage)
+            {
+                imageCI.usage |= VkImageUsageFlags.Storage;
+            }
 
             imageCI.tiling = VkImageTiling.Optimal;
             imageCI.format = VkFormat;

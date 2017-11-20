@@ -1783,4 +1783,65 @@ namespace Veldrid.OpenGLBinding
         ComputeSubroutineUniform = ((int)0x92F3),
         TransformFeedbackVarying = ((int)0x92F4),
     }
+
+    public enum TextureAccess : int
+    {
+        ReadOnly = ((int)0x88B8),
+        WriteOnly = ((int)0x88B9),
+        ReadWrite = ((int)0x88BA),
+    }
+
+    public enum SizedInternalFormat : int
+    {
+        Rgba8 = ((int)0x8058),
+        Rgba16 = ((int)0x805B),
+        R8 = ((int)0x8229),
+        R16 = ((int)0x822A),
+        Rg8 = ((int)0x822B),
+        Rg16 = ((int)0x822C),
+        R16f = ((int)0x822D),
+        R32f = ((int)0x822E),
+        Rg16f = ((int)0x822F),
+        Rg32f = ((int)0x8230),
+        R8i = ((int)0x8231),
+        R8ui = ((int)0x8232),
+        R16i = ((int)0x8233),
+        R16ui = ((int)0x8234),
+        R32i = ((int)0x8235),
+        R32ui = ((int)0x8236),
+        Rg8i = ((int)0x8237),
+        Rg8ui = ((int)0x8238),
+        Rg16i = ((int)0x8239),
+        Rg16ui = ((int)0x823A),
+        Rg32i = ((int)0x823B),
+        Rg32ui = ((int)0x823C),
+        Rgba32f = ((int)0x8814),
+        Rgba16f = ((int)0x881A),
+        Rgba32ui = ((int)0x8D70),
+        Rgba16ui = ((int)0x8D76),
+        Rgba8ui = ((int)0x8D7C),
+        Rgba32i = ((int)0x8D82),
+        Rgba16i = ((int)0x8D88),
+        Rgba8i = ((int)0x8D8E),
+    }
+
+    public enum MemoryBarrierFlags : int
+    {
+        VertexAttribArrayBarrierBit = ((int)0x00000001),
+        ElementArrayBarrierBit = ((int)0x00000002),
+        UniformBarrierBit = ((int)0x00000004),
+        TextureFetchBarrierBit = ((int)0x00000008),
+        ShaderImageAccessBarrierBit = ((int)0x00000020),
+        CommandBarrierBit = ((int)0x00000040),
+        PixelBufferBarrierBit = ((int)0x00000080),
+        TextureUpdateBarrierBit = ((int)0x00000100),
+        BufferUpdateBarrierBit = ((int)0x00000200),
+        FramebufferBarrierBit = ((int)0x00000400),
+        TransformFeedbackBarrierBit = ((int)0x00000800),
+        AtomicCounterBarrierBit = ((int)0x00001000),
+        ShaderStorageBarrierBit = ((int)0x00002000),
+        ClientMappedBufferBarrierBit = ((int)0x00004000),
+        QueryBufferBarrierBit = ((int)0x00008000),
+        AllBarrierBits = unchecked((int)0xFFFFFFFF),
+    }
 }

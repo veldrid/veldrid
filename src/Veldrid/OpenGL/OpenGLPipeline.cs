@@ -160,6 +160,7 @@ namespace Veldrid.OpenGL
             _setInfos = new SetBindingsInfo[resourceLayoutCount];
             int lastTextureLocation = -1;
             int relativeTextureIndex = -1;
+            int relativeImageIndex = -1;
             for (uint setSlot = 0; setSlot < resourceLayoutCount; setSlot++)
             {
                 ResourceLayout setLayout = layouts[setSlot];
@@ -188,6 +189,7 @@ namespace Veldrid.OpenGL
                         resourceNamePtr[byteCount - 1] = 0; // Add null terminator.
 
                         uint blockIndex = glGetUniformBlockIndex(_program, resourceNamePtr);
+                        CheckLastError();
                         if (blockIndex != GL_INVALID_INDEX)
                         {
                             uniformBindings[i] = new OpenGLUniformBinding(_program, blockIndex);
@@ -210,6 +212,7 @@ namespace Veldrid.OpenGL
                         }
                         resourceNamePtr[byteCount - 1] = 0; // Add null terminator.
                         int location = glGetUniformLocation(_program, resourceNamePtr);
+                        CheckLastError();
                         relativeTextureIndex += 1;
                         textureBindings[i] = new OpenGLTextureBindingSlotInfo() { RelativeIndex = relativeTextureIndex, UniformLocation = location };
                         lastTextureLocation = location;
@@ -217,8 +220,19 @@ namespace Veldrid.OpenGL
                     }
                     else if (resource.Kind == ResourceKind.TextureReadWrite)
                     {
-                        // TODO: Implement read-write textures (image load-store, OpenGL 4.2).
-                        throw new NotImplementedException();
+                        string resourceName = resource.Name;
+                        int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;
+                        byte* resourceNamePtr = stackalloc byte[byteCount];
+                        fixed (char* charPtr = resourceName)
+                        {
+                            int bytesWritten = Encoding.UTF8.GetBytes(charPtr, resourceName.Length, resourceNamePtr, byteCount);
+                            Debug.Assert(bytesWritten == byteCount - 1);
+                        }
+                        resourceNamePtr[byteCount - 1] = 0; // Add null terminator.
+                        int location = glGetUniformLocation(_program, resourceNamePtr);
+                        CheckLastError();
+                        relativeImageIndex += 1;
+                        textureBindings[i] = new OpenGLTextureBindingSlotInfo() { RelativeIndex = relativeImageIndex, UniformLocation = location };
                     }
                     else if (resource.Kind == ResourceKind.StructuredBufferReadOnly
                         || resource.Kind == ResourceKind.StructuredBufferReadWrite)

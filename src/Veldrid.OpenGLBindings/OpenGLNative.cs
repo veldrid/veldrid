@@ -705,6 +705,67 @@ namespace Veldrid.OpenGLBinding
         private static glDispatchComputeIndirect_t p_glDispatchComputeIndirect;
         public static void glDispatchComputeIndirect(IntPtr indirect) => p_glDispatchComputeIndirect(indirect);
 
+        private delegate void glBindImageTexture_t(
+            uint unit​,
+            uint texture​,
+            int level​,
+            GLboolean layered​,
+            int layer​,
+            TextureAccess access​,
+            SizedInternalFormat format​);
+        private static glBindImageTexture_t p_glBindImageTexture;
+        public static void glBindImageTexture(
+            uint unit​,
+            uint texture​,
+            int level​,
+            GLboolean layered​,
+            int layer​,
+            TextureAccess access​,
+            SizedInternalFormat format​) => p_glBindImageTexture(unit, texture, level, layered, layer, access, format);
+
+        private delegate void glMemoryBarrier_t(MemoryBarrierFlags barriers);
+        private static glMemoryBarrier_t p_glMemoryBarrier;
+        public static void glMemoryBarrier(MemoryBarrierFlags barriers) => p_glMemoryBarrier(barriers);
+
+        private delegate void glTexStorage1D_t(
+            TextureTarget target,
+            uint levels,
+            SizedInternalFormat internalformat,
+            uint width);
+        private static glTexStorage1D_t p_glTexStorage1D;
+        public static void glTexStorage1D(TextureTarget target, uint levels, SizedInternalFormat internalformat, uint width)
+            => p_glTexStorage1D(target, levels, internalformat, width);
+
+        private delegate void glTexStorage2D_t(
+            TextureTarget target,
+            uint levels,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height);
+        private static glTexStorage2D_t p_glTexStorage2D;
+        public static void glTexStorage2D(
+            TextureTarget target,
+            uint levels,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height) => p_glTexStorage2D(target, levels, internalformat, width, height);
+
+        private delegate void glTexStorage3D_t(
+            TextureTarget target,
+            uint levels,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            uint depth);
+        private static glTexStorage3D_t p_glTexStorage3D;
+        public static void glTexStorage3D(
+            TextureTarget target,
+            uint levels,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            uint depth) => p_glTexStorage3D(target, levels, internalformat, width, height, depth);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -808,6 +869,11 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glMultiDrawElementsIndirect", out p_glMultiDrawElementsIndirect);
             LoadFunction("glMultiDrawArraysIndirect", out p_glMultiDrawArraysIndirect);
             LoadFunction("glDispatchComputeIndirect", out p_glDispatchComputeIndirect);
+            LoadFunction("glBindImageTexture", out p_glBindImageTexture);
+            LoadFunction("glMemoryBarrier", out p_glMemoryBarrier);
+            LoadFunction("glTexStorage1D", out p_glTexStorage1D);
+            LoadFunction("glTexStorage2D", out p_glTexStorage2D);
+            LoadFunction("glTexStorage3D", out p_glTexStorage3D);
         }
 
         private static void LoadFunction<T>(string name, out T field)

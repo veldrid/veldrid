@@ -45,6 +45,10 @@ namespace Veldrid.D3D11
             {
                 bindFlags |= BindFlags.ShaderResource;
             }
+            if ((description.Usage & TextureUsage.Storage) == TextureUsage.Storage)
+            {
+                bindFlags |= BindFlags.UnorderedAccess;
+            }
 
             ResourceOptionFlags optionFlags = ResourceOptionFlags.None;
             int arraySize = (int)description.ArrayLayers;

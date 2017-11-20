@@ -117,6 +117,26 @@ namespace Veldrid.OpenGL
             }
         }
 
+        internal static SizedInternalFormat VdToGLSizedInternalFormat(PixelFormat format, bool depthFormat)
+        {
+            switch (format)
+            {
+                case PixelFormat.R8_G8_B8_A8_UNorm:
+                case PixelFormat.B8_G8_R8_A8_UNorm:
+                    return SizedInternalFormat.Rgba8;
+                case PixelFormat.R8_UNorm:
+                    return SizedInternalFormat.R8;
+                case PixelFormat.R16_UNorm:
+                    return depthFormat ? (SizedInternalFormat)PixelInternalFormat.DepthComponent16 : SizedInternalFormat.R16;
+                case PixelFormat.R32_G32_B32_A32_Float:
+                    return SizedInternalFormat.Rgba32f;
+                case PixelFormat.R32_Float:
+                    return depthFormat ? (SizedInternalFormat)PixelInternalFormat.DepthComponent32f : SizedInternalFormat.R32f;
+                default:
+                    throw Illegal.Value<PixelFormat>();
+            }
+        }
+
         internal static void VdToGLTextureMinMagFilter(SamplerFilter filter, bool mip, out TextureMinFilter min, out TextureMagFilter mag)
         {
             switch (filter)

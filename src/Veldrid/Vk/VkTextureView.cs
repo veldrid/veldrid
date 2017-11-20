@@ -35,19 +35,19 @@ namespace Veldrid.Vk
 
             imageViewCI.subresourceRange = new VkImageSubresourceRange(
                 aspectFlags,
-                0,
-                description.Target.MipLevels,
-                0,
-                description.Target.ArrayLayers);
+                description.BaseMipLevel,
+                description.MipLevels,
+                description.BaseArrayLayer,
+                description.ArrayLayers);
 
             if ((tex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
             {
-                imageViewCI.viewType = tex.ArrayLayers == 1 ? VkImageViewType.ImageCube : VkImageViewType.ImageCubeArray;
+                imageViewCI.viewType = description.ArrayLayers == 1 ? VkImageViewType.ImageCube : VkImageViewType.ImageCubeArray;
                 imageViewCI.subresourceRange.layerCount *= 6;
             }
             else if (tex.Depth == 1)
             {
-                imageViewCI.viewType = tex.ArrayLayers == 1 ? VkImageViewType.Image2D : VkImageViewType.Image2DArray;
+                imageViewCI.viewType = description.ArrayLayers == 1 ? VkImageViewType.Image2D : VkImageViewType.Image2DArray;
             }
             else
             {

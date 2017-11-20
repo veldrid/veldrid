@@ -22,6 +22,8 @@ namespace Veldrid.Vk
         private FramebufferAttachment[][] _scColorTextures;
 
         private FramebufferAttachment? _depthAttachment;
+        private uint _desiredWidth;
+        private uint _desiredHeight;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
 
@@ -31,8 +33,11 @@ namespace Veldrid.Vk
 
         public override FramebufferAttachment? DepthTarget => _depthAttachment;
 
-        public override uint Width => _scExtent.width;
-        public override uint Height => _scExtent.height;
+        public override uint RenderableWidth => _scExtent.width;
+        public override uint RenderableHeight => _scExtent.height;
+
+        public override uint Width => _desiredWidth;
+        public override uint Height => _desiredHeight;
 
         public VkSwapchainKHR Swapchain => _swapchain;
 
@@ -49,7 +54,7 @@ namespace Veldrid.Vk
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
         }
 
-        public void AcquireNextImage(VkDevice device, VkSemaphore semaphore, VkFence fence)
+        public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, VkFence fence)
         {
             VkResult result = vkAcquireNextImageKHR(
                 device,
@@ -60,12 +65,16 @@ namespace Veldrid.Vk
                 ref _currentImageIndex);
             if (result == VkResult.ErrorOutOfDateKHR || result == VkResult.SuboptimalKHR)
             {
-                // RecreateSwapChain();
+                CreateSwapchain(Width, Height);
+
+                return false;
             }
             else if (result != VkResult.Success)
             {
                 throw new VeldridException("Could not acquire next image from the Vulkan swapchain.");
             }
+
+            return true;
         }
 
         public void Resize(uint width, uint height)
@@ -75,6 +84,8 @@ namespace Veldrid.Vk
 
         private void CreateSwapchain(uint width, uint height)
         {
+            _desiredWidth = width;
+            _desiredHeight = height;
             _currentImageIndex = 0;
             uint surfaceFormatCount = 0;
             vkGetPhysicalDeviceSurfaceFormatsKHR(_gd.PhysicalDevice, _surface, ref surfaceFormatCount, null);
@@ -125,7 +136,9 @@ namespace Veldrid.Vk
             swapchainCI.presentMode = presentMode;
             swapchainCI.imageFormat = surfaceFormat.format;
             swapchainCI.imageColorSpace = surfaceFormat.colorSpace;
-            swapchainCI.imageExtent = new VkExtent2D { width = (uint)width, height = (uint)height };
+            uint clampedWidth = Util.Clamp(width, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
+            uint clampedHeight = Util.Clamp(height, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
+            swapchainCI.imageExtent = new VkExtent2D { width = clampedWidth, height = clampedHeight };
             swapchainCI.minImageCount = imageCount;
             swapchainCI.imageArrayLayers = 1;
             swapchainCI.imageUsage = VkImageUsageFlags.ColorAttachment;
@@ -180,8 +193,8 @@ namespace Veldrid.Vk
         {
             _depthAttachment?.Target.Dispose();
             VkTexture depthTexture = (VkTexture)_gd.ResourceFactory.CreateTexture(new TextureDescription(
-                _scExtent.width,
-                _scExtent.height,
+                Math.Max(1, _scExtent.width),
+                Math.Max(1, _scExtent.height),
                 1,
                 1,
                 1,
@@ -208,8 +221,8 @@ namespace Veldrid.Vk
             {
                 VkTexture colorTex = new VkTexture(
                     _gd,
-                    _scExtent.width,
-                    _scExtent.height,
+                    Math.Max(1, _scExtent.width),
+                    Math.Max(1, _scExtent.height),
                     1,
                     1,
                     _scImageFormat,

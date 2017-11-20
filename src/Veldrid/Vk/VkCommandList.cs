@@ -332,7 +332,7 @@ namespace Veldrid.Vk
             VkRenderPassBeginInfo renderPassBI = VkRenderPassBeginInfo.New();
             renderPassBI.framebuffer = _currentFramebuffer.CurrentFramebuffer;
             renderPassBI.renderPass = _currentFramebuffer.RenderPass;
-            renderPassBI.renderArea = new VkRect2D(_currentFramebuffer.Width, _currentFramebuffer.Height);
+            renderPassBI.renderArea = new VkRect2D(_currentFramebuffer.RenderableWidth, _currentFramebuffer.RenderableHeight);
             vkCmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
             _activeRenderPass = _currentFramebuffer.RenderPass;
         }

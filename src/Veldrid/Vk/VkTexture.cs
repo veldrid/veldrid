@@ -2,6 +2,7 @@
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System;
+using System.Diagnostics;
 
 namespace Veldrid.Vk
 {
@@ -136,6 +137,7 @@ namespace Veldrid.Vk
             TextureSampleCount sampleCount,
             VkImage existingImage)
         {
+            Debug.Assert(width > 0 && height > 0);
             _gd = gd;
             MipLevels = mipLevels;
             Width = width;

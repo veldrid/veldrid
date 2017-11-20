@@ -98,5 +98,21 @@ namespace Veldrid
         {
             Array.Clear(array, 0, array.Length);
         }
+
+        public static uint Clamp(uint value, uint min, uint max)
+        {
+            if (value <= min)
+            {
+                return min;
+            }
+            else if (value >= max)
+            {
+                return max;
+            }
+            else
+            {
+                return value;
+            }
+        }
     }
 }

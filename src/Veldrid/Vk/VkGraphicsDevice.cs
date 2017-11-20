@@ -126,9 +126,11 @@ namespace Veldrid.Vk
 
             vkQueuePresentKHR(_presentQueue, ref presentInfo);
 
-            _scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence);
-            vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-            vkResetFences(_device, 1, ref _imageAvailableFence);
+            if (_scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence))
+            {
+                vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
+                vkResetFences(_device, 1, ref _imageAvailableFence);
+            }
         }
 
         public override void SetResourceName(DeviceResource resource, string name)

@@ -18,6 +18,9 @@ namespace Veldrid.Vk
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _deviceFramebuffer;
         public override VkRenderPass RenderPass => _renderPass;
 
+        public override uint RenderableWidth => Width;
+        public override uint RenderableHeight => Height;
+
         public VkFramebuffer(VkGraphicsDevice gd, ref FramebufferDescription description, bool isPresented)
             : base(description.DepthTarget, description.ColorTargets)
         {
@@ -137,7 +140,7 @@ namespace Veldrid.Vk
                 VkImageViewCreateInfo depthViewCI = VkImageViewCreateInfo.New();
                 depthViewCI.image = vkDepthTarget.DeviceImage;
                 depthViewCI.format = vkDepthTarget.VkFormat;
-                depthViewCI.viewType = VkImageViewType.Image2D;
+                depthViewCI.viewType = description.DepthTarget.Value.Target.ArrayLayers == 1 ? VkImageViewType.Image2D : VkImageViewType.Image2DArray;
                 depthViewCI.subresourceRange = new VkImageSubresourceRange(
                     VkImageAspectFlags.Depth,
                     0,

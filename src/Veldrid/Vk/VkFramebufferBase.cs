@@ -12,6 +12,9 @@ namespace Veldrid.Vk
         {
         }
 
+        public abstract uint RenderableWidth { get; }
+        public abstract uint RenderableHeight { get; }
+
         public VkFramebufferBase() { }
 
         public abstract Vulkan.VkFramebuffer CurrentFramebuffer { get; }

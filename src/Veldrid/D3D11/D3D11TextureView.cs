@@ -20,12 +20,15 @@ namespace Veldrid.D3D11
                 if (d3dTex.ArrayLayers == 1)
                 {
                     srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.TextureCube;
-                    srvDesc.TextureCube.MipLevels = (int)d3dTex.MipLevels;
+                    srvDesc.TextureCube.MostDetailedMip = (int)description.BaseMipLevel;
+                    srvDesc.TextureCube.MipLevels = (int)description.MipLevels;
                 }
                 else
                 {
                     srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.TextureCubeArray;
-                    srvDesc.TextureCubeArray.MipLevels = (int)d3dTex.MipLevels;
+                    srvDesc.TextureCubeArray.MostDetailedMip = (int)description.BaseMipLevel;
+                    srvDesc.TextureCubeArray.MipLevels = (int)description.MipLevels;
+                    srvDesc.TextureCubeArray.First2DArrayFace = (int)description.BaseArrayLayer;
                     srvDesc.TextureCubeArray.CubeCount = (int)d3dTex.ArrayLayers;
                 }
             }
@@ -34,19 +37,23 @@ namespace Veldrid.D3D11
                 if (d3dTex.ArrayLayers == 1)
                 {
                     srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
-                    srvDesc.Texture2D.MipLevels = (int)d3dTex.MipLevels;
+                    srvDesc.Texture2D.MostDetailedMip = (int)description.BaseMipLevel;
+                    srvDesc.Texture2D.MipLevels = (int)description.MipLevels;
                 }
                 else
                 {
                     srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2DArray;
-                    srvDesc.Texture2DArray.MipLevels = (int)d3dTex.MipLevels;
-                    srvDesc.Texture2DArray.ArraySize = (int)d3dTex.ArrayLayers;
+                    srvDesc.Texture2DArray.MostDetailedMip = (int)description.BaseMipLevel;
+                    srvDesc.Texture2DArray.MipLevels = (int)description.MipLevels;
+                    srvDesc.Texture2DArray.FirstArraySlice = (int)description.ArrayLayers;
+                    srvDesc.Texture2DArray.ArraySize = (int)description.ArrayLayers;
                 }
             }
             else
             {
                 srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture3D;
-                srvDesc.Texture3D.MipLevels = (int)d3dTex.MipLevels;
+                srvDesc.Texture3D.MostDetailedMip = (int)description.BaseMipLevel;
+                srvDesc.Texture3D.MipLevels = (int)description.MipLevels;
             }
 
             ShaderResourceView = new ShaderResourceView(device, d3dTex.DeviceTexture, srvDesc);
@@ -65,20 +72,22 @@ namespace Veldrid.D3D11
                     if (d3dTex.ArrayLayers == 1)
                     {
                         uavDesc.Dimension = UnorderedAccessViewDimension.Texture2D;
-                        uavDesc.Texture2D.MipSlice = 0;
+                        uavDesc.Texture2D.MipSlice = (int)description.BaseMipLevel;
                     }
                     else
                     {
                         uavDesc.Dimension = UnorderedAccessViewDimension.Texture2DArray;
-                        uavDesc.Texture2DArray.MipSlice = 0;
-                        uavDesc.Texture2DArray.ArraySize = (int)d3dTex.ArrayLayers;
+                        uavDesc.Texture2DArray.MipSlice = (int)description.BaseMipLevel;
+                        uavDesc.Texture2DArray.FirstArraySlice = (int)description.BaseArrayLayer;
+                        uavDesc.Texture2DArray.ArraySize = (int)description.ArrayLayers;
                     }
                 }
                 else
                 {
                     uavDesc.Dimension = UnorderedAccessViewDimension.Texture3D;
-                    uavDesc.Texture3D.MipSlice = 0;
-                    uavDesc.Texture3D.WSize = (int)d3dTex.Depth;
+                    uavDesc.Texture3D.MipSlice = (int)description.BaseMipLevel;
+                    uavDesc.Texture3D.FirstWSlice = (int)description.BaseArrayLayer;
+                    uavDesc.Texture3D.WSize = (int)description.ArrayLayers;
                 }
 
                 UnorderedAccessView = new UnorderedAccessView(device, d3dTex.DeviceTexture, uavDesc);

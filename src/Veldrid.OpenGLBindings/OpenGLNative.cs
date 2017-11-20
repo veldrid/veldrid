@@ -766,6 +766,27 @@ namespace Veldrid.OpenGLBinding
             uint height,
             uint depth) => p_glTexStorage3D(target, levels, internalformat, width, height, depth);
 
+        private delegate void glTextureView_t(
+            uint texture,
+            TextureTarget target,
+            uint origtexture,
+            PixelInternalFormat internalformat,
+            uint minlevel,
+            uint numlevels,
+            uint minlayer,
+            uint numlayers);
+        private static glTextureView_t p_glTextureView;
+        public static void glTextureView(
+            uint texture,
+            TextureTarget target,
+            uint origtexture,
+            PixelInternalFormat internalformat,
+            uint minlevel,
+            uint numlevels,
+            uint minlayer,
+            uint numlayers)
+                => p_glTextureView(texture, target, origtexture, internalformat, minlevel, numlevels, minlayer, numlayers);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -874,6 +895,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTexStorage1D", out p_glTexStorage1D);
             LoadFunction("glTexStorage2D", out p_glTexStorage2D);
             LoadFunction("glTexStorage3D", out p_glTexStorage3D);
+            LoadFunction("glTextureView", out p_glTextureView);
         }
 
         private static void LoadFunction<T>(string name, out T field)

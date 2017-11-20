@@ -73,13 +73,15 @@ namespace Veldrid
         public TextureView CreateTextureView(TextureViewDescription description) => CreateTextureView(ref description);
         public TextureView CreateTextureView(ref TextureViewDescription description)
         {
-            // TODO: Implement support for different-sized TextureViews.
-            // On OpenGL this requires glTextureView, a 4.3 feature.
-            if (description.BaseMipLevel != 0 || description.MipLevels != description.Target.MipLevels
-                || description.BaseArrayLayer != 0 || description.ArrayLayers != description.Target.ArrayLayers)
+#if VALIDATE_USAGE
+            if (description.MipLevels == 0 || description.ArrayLayers == 0
+                || (description.BaseMipLevel + description.MipLevels) > description.MipLevels
+                || (description.BaseArrayLayer + description.ArrayLayers) > description.ArrayLayers)
             {
-                throw new System.NotImplementedException();
+                throw new VeldridException(
+                    "TextureView mip level and array layer range must be contained in the target Texture.");
             }
+#endif
 
             return CreateTextureViewCore(ref description);
         }

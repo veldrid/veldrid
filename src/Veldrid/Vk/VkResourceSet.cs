@@ -79,7 +79,8 @@ namespace Veldrid.Vk
             {
                 _disposed = true;
                 VkDescriptorSet ds = _descriptorSet;
-                vkFreeDescriptorSets(_gd.Device, _gd.SharedDescriptorPool, 1, ref ds);
+                VkResult result = vkFreeDescriptorSets(_gd.Device, _gd.SharedDescriptorPool, 1, ref ds);
+                CheckResult(result);
             }
         }
     }

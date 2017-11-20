@@ -1,20 +1,55 @@
-﻿using System;
+﻿using System.Diagnostics;
 using Veldrid.OpenGLBinding;
+using static Veldrid.OpenGLBinding.OpenGLNative;
+using static Veldrid.OpenGL.OpenGLUtil;
 
 namespace Veldrid.OpenGL
 {
-    internal class OpenGLTextureView : TextureView
+    internal class OpenGLTextureView : TextureView, OpenGLDeferredResource
     {
+        private readonly OpenGLGraphicsDevice _gd;
+        private bool _needsTextureView;
+        private uint _textureView;
+        private bool _disposed;
+
         public new OpenGLTexture Target { get; }
 
-        public OpenGLTextureView(ref TextureViewDescription description)
-            : base(ref description)
+        public uint GLTargetTexture
         {
-            Target = Util.AssertSubtype<Texture, OpenGLTexture>(description.Target);
+            get
+            {
+                Debug.Assert(Created);
+                if (_textureView == 0)
+                {
+                    Debug.Assert(Target.Created);
+                    return Target.Texture;
+                }
+                else
+                {
+                    return _textureView;
+                }
+            }
         }
 
-        public override void Dispose()
+        public bool Created { get; private set; }
+
+        public OpenGLTextureView(OpenGLGraphicsDevice gd, ref TextureViewDescription description)
+            : base(ref description)
         {
+            _gd = gd;
+            Target = Util.AssertSubtype<Texture, OpenGLTexture>(description.Target);
+
+            if (BaseMipLevel == 0 && MipLevels == Target.MipLevels
+                && BaseArrayLayer == 0 && ArrayLayers == Target.ArrayLayers)
+            {
+                if (!_gd.Extensions.ARB_TextureView)
+                {
+                    throw new VeldridException(
+                        "TextureView objects covering a subset of a Texture's dimensions require OpenGL 4.3, or ARB_texture_view.");
+                }
+                _needsTextureView = true;
+            }
+
         }
 
         public SizedInternalFormat GetReadWriteSizedInternalFormat()
@@ -34,6 +69,98 @@ namespace Veldrid.OpenGL
                     return SizedInternalFormat.R32f;
                 default:
                     throw Illegal.Value<PixelFormat>();
+            }
+        }
+
+        public void EnsureResourcesCreated()
+        {
+            Target.EnsureResourcesCreated();
+            if (!Created)
+            {
+                CreateGLResources();
+                Created = true;
+            }
+        }
+
+        private void CreateGLResources()
+        {
+            if (!_needsTextureView)
+            {
+                return;
+            }
+
+            glGenTextures(1, out _textureView);
+            CheckLastError();
+
+            TextureTarget originalTarget = Target.TextureTarget;
+            TextureTarget newTarget;
+            if (originalTarget == TextureTarget.Texture2D)
+            {
+                newTarget = TextureTarget.Texture2D;
+            }
+            else if (originalTarget == TextureTarget.Texture2DArray)
+            {
+                if (ArrayLayers > 1)
+                {
+                    newTarget = TextureTarget.Texture2DArray;
+                }
+                else
+                {
+                    newTarget = TextureTarget.Texture2D;
+                }
+            }
+            else if (originalTarget == TextureTarget.Texture2DMultisample)
+            {
+                newTarget = TextureTarget.Texture2DMultisample;
+            }
+            else if (originalTarget == TextureTarget.Texture2DMultisampleArray)
+            {
+                if (ArrayLayers > 1)
+                {
+                    newTarget = TextureTarget.Texture2DMultisampleArray;
+                }
+                else
+                {
+                    newTarget = TextureTarget.Texture2DMultisample;
+                }
+            }
+            else if (originalTarget == TextureTarget.Texture3D)
+            {
+                newTarget = TextureTarget.Texture3D;
+            }
+            else
+            {
+                throw new VeldridException("The given TextureView parameters are not supported with the OpenGL backend.");
+            }
+
+            Debug.Assert(Target.Created);
+            glTextureView(
+                Target.Texture,
+                newTarget,
+                Target.Texture,
+                Target.GLInternalFormat,
+                BaseMipLevel,
+                MipLevels,
+                BaseArrayLayer,
+                ArrayLayers);
+            CheckLastError();
+        }
+
+        public override void Dispose()
+        {
+            _gd.EnqueueDisposal(this);
+        }
+
+        public void DestroyGLResources()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                if (_textureView != 0)
+                {
+                    glDeleteTextures(1, ref _textureView);
+                    CheckLastError();
+                }
             }
         }
     }

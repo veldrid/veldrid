@@ -12,12 +12,14 @@ namespace Veldrid.OpenGL
 
             ARB_DirectStateAccess = IsExtensionSupported("GL_ARB_direct_state_access");
             ARB_MultiBind = IsExtensionSupported("GL_ARB_multi_bind");
-            ARB_TextureStorage = IsExtensionSupported("GL_ARB_texture_storage");
+            ARB_TextureStorage = IsExtensionSupported("GL_ARB_texture_storage"); // OpenGL 4.2 / 4.3 (multisampled)
+            ARB_TextureView = IsExtensionSupported("GL_ARB_texture_view"); // OpenGL 4.3
         }
 
         public readonly bool ARB_DirectStateAccess;
         public readonly bool ARB_MultiBind;
         public readonly bool ARB_TextureStorage;
+        public readonly bool ARB_TextureView;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.

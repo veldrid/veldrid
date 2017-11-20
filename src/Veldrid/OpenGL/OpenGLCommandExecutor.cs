@@ -499,7 +499,7 @@ namespace Veldrid.OpenGL
                         break;
                     case ResourceKind.TextureReadOnly:
                         OpenGLTextureView glTexView = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
-                        glTexView.Target.EnsureResourcesCreated();
+                        glTexView.EnsureResourcesCreated();
                         OpenGLTextureBindingSlotInfo textureBindingInfo = pipeline.GetTextureBindingInfo(slot, element);
                         _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
 
@@ -511,7 +511,7 @@ namespace Veldrid.OpenGL
                         break;
                     case ResourceKind.TextureReadWrite:
                         OpenGLTextureView glTexViewRW = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
-                        glTexViewRW.Target.EnsureResourcesCreated();
+                        glTexViewRW.EnsureResourcesCreated();
                         OpenGLTextureBindingSlotInfo imageBindingInfo = pipeline.GetTextureBindingInfo(slot, element);
                         glBindImageTexture(
                             (uint)imageBindingInfo.RelativeIndex,

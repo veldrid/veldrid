@@ -35,6 +35,15 @@ namespace Veldrid
             ArrayLayers = target.ArrayLayers;
         }
 
+        public TextureViewDescription(Texture target, uint baseMipLevel, uint mipLevels, uint baseArrayLayer, uint arrayLayers)
+        {
+            Target = target;
+            BaseMipLevel = baseMipLevel;
+            MipLevels = mipLevels;
+            BaseArrayLayer = baseArrayLayer;
+            ArrayLayers = arrayLayers;
+        }
+
         /// <summary>
         /// Element-wise equality.
         /// </summary>

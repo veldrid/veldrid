@@ -53,6 +53,12 @@ namespace Veldrid
         /// <returns>A new <see cref="Texture"/>.</returns>
         public Texture CreateTexture(ref TextureDescription description)
         {
+#if VALIDATE_USAGE
+            if (description.Width == 0 || description.Height == 0 || description.Depth == 0)
+            {
+                throw new VeldridException("Width, Height, and Depth must be non-zero.");
+            }
+#endif
             return CreateTextureCore(ref description);
         }
 
@@ -75,8 +81,8 @@ namespace Veldrid
         {
 #if VALIDATE_USAGE
             if (description.MipLevels == 0 || description.ArrayLayers == 0
-                || (description.BaseMipLevel + description.MipLevels) > description.MipLevels
-                || (description.BaseArrayLayer + description.ArrayLayers) > description.ArrayLayers)
+                || (description.BaseMipLevel + description.MipLevels) > description.Target.MipLevels
+                || (description.BaseArrayLayer + description.ArrayLayers) > description.Target.ArrayLayers)
             {
                 throw new VeldridException(
                     "TextureView mip level and array layer range must be contained in the target Texture.");

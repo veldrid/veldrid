@@ -45,7 +45,7 @@ namespace Veldrid.D3D11
                     srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2DArray;
                     srvDesc.Texture2DArray.MostDetailedMip = (int)description.BaseMipLevel;
                     srvDesc.Texture2DArray.MipLevels = (int)description.MipLevels;
-                    srvDesc.Texture2DArray.FirstArraySlice = (int)description.ArrayLayers;
+                    srvDesc.Texture2DArray.FirstArraySlice = (int)description.BaseArrayLayer;
                     srvDesc.Texture2DArray.ArraySize = (int)description.ArrayLayers;
                 }
             }

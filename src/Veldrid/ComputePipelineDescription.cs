@@ -16,6 +16,11 @@ namespace Veldrid
         /// </summary>
         public ResourceLayout[] ResourceLayouts;
 
+        /// <summary>
+        /// Constructs a new ComputePipelineDescription.
+        /// </summary>
+        /// <param name="shaderStage"></param>
+        /// <param name="resourceLayouts"></param>
         public ComputePipelineDescription(ShaderStageDescription shaderStage, ResourceLayout[] resourceLayouts)
         {
             ShaderStage = shaderStage;

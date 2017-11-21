@@ -9,6 +9,10 @@ namespace Veldrid
     /// </summary>
     public abstract class Pipeline : DeviceResource, IDisposable
     {
+        /// <summary>
+        /// Gets a value indicating whether this instance represents a compute Pipeline.
+        /// If false, this instance is a graphics pipeline.
+        /// </summary>
         public abstract bool IsComputePipeline { get; }
 
         /// <summary>

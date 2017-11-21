@@ -12,10 +12,21 @@ namespace Veldrid
         /// The target <see cref="Texture"/> object to be sampled via this instance.
         /// </summary>
         public Texture Target { get; }
-
+        /// <summary>
+        /// The base mip level visible in the view.
+        /// </summary>
         public uint BaseMipLevel { get; }
+        /// <summary>
+        /// The number of mip levels visible in the view.
+        /// </summary>
         public uint MipLevels { get; }
+        /// <summary>
+        /// The base array layer visible in the view.
+        /// </summary>
         public uint BaseArrayLayer { get; }
+        /// <summary>
+        /// The number of array layers visible in the view.
+        /// </summary>
         public uint ArrayLayers { get; }
 
         internal TextureView(ref TextureViewDescription description)

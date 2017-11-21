@@ -32,6 +32,9 @@ namespace Veldrid
         /// The fragment (or pixel) shader stage.
         /// </summary>
         Fragment = 1 << 4,
+        /// <summary>
+        /// The compute shader stage.
+        /// </summary>
         Compute = 1 << 5,
     }
 }

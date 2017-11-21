@@ -20,11 +20,21 @@ namespace Veldrid
         /// Creates a new <see cref="Pipeline"/> object.
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
-        /// <returns>A new <see cref="Pipeline"/>.</returns>
+        /// <returns>A new <see cref="Pipeline"/> which, when bound to a CommandList, is used to dispatch draw commands.</returns>
         public abstract Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description);
 
+        /// <summary>
+        /// Creates a new compute <see cref="Pipeline"/> object.
+        /// </summary>
+        /// <param name="description">The desirede properties of the created object.</param>
+        /// <returns>A new <see cref="Pipeline"/> which, when bound to a CommandList, is used to dispatch compute commands.</returns>
         public Pipeline CreateComputePipeline(ComputePipelineDescription description) => CreateComputePipeline(ref description);
 
+        /// <summary>
+        /// Creates a new compute <see cref="Pipeline"/> object.
+        /// </summary>
+        /// <param name="description">The desirede properties of the created object.</param>
+        /// <returns>A new <see cref="Pipeline"/> which, when bound to a CommandList, is used to dispatch compute commands.</returns>
         public abstract Pipeline CreateComputePipeline(ref ComputePipelineDescription description);
 
         /// <summary>
@@ -77,6 +87,11 @@ namespace Veldrid
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="TextureView"/>.</returns>
         public TextureView CreateTextureView(TextureViewDescription description) => CreateTextureView(ref description);
+        /// <summary>
+        /// Creates a new <see cref="TextureView"/>.
+        /// </summary>
+        /// <param name="description">The desired properties of the created object.</param>
+        /// <returns>A new <see cref="TextureView"/>.</returns>
         public TextureView CreateTextureView(ref TextureViewDescription description)
         {
 #if VALIDATE_USAGE

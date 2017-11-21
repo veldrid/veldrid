@@ -8,17 +8,24 @@ namespace Veldrid
     public struct TextureViewDescription : IEquatable<TextureViewDescription>
     {
         /// <summary>
-        /// The desired target <see cref="Texture"/>. This <see cref="Texture"/> must have been created with the
-        /// <see cref="TextureUsage.Sampled"/> usage flag.
+        /// The desired target <see cref="Texture"/>.
         /// </summary>
         public Texture Target;
-
+        /// <summary>
+        /// The base mip level visible in the view. Must be less than <see cref="Texture.MipLevels"/>.
+        /// /// </summary>
         public uint BaseMipLevel;
-
+        /// <summary>
+        /// The number of mip levels visible in the view.
+        /// </summary>
         public uint MipLevels;
-
+        /// <summary>
+        /// The base array layer visible in the view.
+        /// </summary>
         public uint BaseArrayLayer;
-
+        /// <summary>
+        /// The number of array layers visible in the view.
+        /// </summary>
         public uint ArrayLayers;
 
         /// <summary>
@@ -35,6 +42,14 @@ namespace Veldrid
             ArrayLayers = target.ArrayLayers;
         }
 
+        /// <summary>
+        /// Constructs a new TextureViewDescription.
+        /// </summary>
+        /// <param name="target">The desired target <see cref="Texture"/>.</param>
+        /// <param name="baseMipLevel">The base mip level visible in the view. Must be less than <see cref="Texture.MipLevels"/>.</param>
+        /// <param name="mipLevels">The number of mip levels visible in the view.</param>
+        /// <param name="baseArrayLayer">The base array layer visible in the view.</param>
+        /// <param name="arrayLayers">The number of array layers visible in the view.</param>
         public TextureViewDescription(Texture target, uint baseMipLevel, uint mipLevels, uint baseArrayLayer, uint arrayLayers)
         {
             Target = target;

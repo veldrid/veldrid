@@ -43,6 +43,12 @@ namespace Veldrid
             }
         }
 
+        /// <summary>
+        /// Constructs a new <see cref="FramebufferDescription"/>.
+        /// </summary>
+        /// <param name="depthTarget">A description of the depth attachment. May be null if no depth attachment will be used.</param>
+        /// <param name="colorTargets">An array of descriptions of color attachments. May be empty if no color attachments will
+        /// be used.</param>
         public FramebufferDescription(
             FramebufferAttachmentDescription? depthTarget,
             FramebufferAttachmentDescription[] colorTargets)

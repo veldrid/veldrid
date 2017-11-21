@@ -102,7 +102,8 @@ namespace Veldrid
         protected abstract void SetIndexBufferCore(Buffer buffer, IndexFormat format);
 
         /// <summary>
-        /// Sets the active <see cref="ResourceSet"/> for the given index.
+        /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the graphics
+        /// Pipeline.
         /// </summary>
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
@@ -114,6 +115,12 @@ namespace Veldrid
         // TODO: private protected
         protected abstract void SetGraphicsResourceSetCore(uint slot, ResourceSet rs);
 
+        /// <summary>
+        /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the compute
+        /// Pipeline.
+        /// </summary>
+        /// <param name="slot">The resource slot.</param>
+        /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
         public void SetComputeResourceSet(uint slot, ResourceSet rs)
         {
             SetComputeResourceSetCore(slot, rs);
@@ -229,10 +236,17 @@ namespace Veldrid
         /// <param name="height">The height of the scissor rectangle.</param>
         public abstract void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
 
+        /// <summary>
+        /// Draws primitives from the currently-bound state in this CommandList. An index Buffer is not used.
+        /// </summary>
+        /// <param name="vertexCount">The number of vertices.</param>
+        /// <param name="instanceCount">The number of instances.</param>
+        /// <param name="vertexStart">The first vertex to use when drawing.</param>
+        /// <param name="instanceStart">The starting instance value.</param>
         public abstract void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
 
         /// <summary>
-        /// Draws primitives from the currently-bound state in this <see cref="CommandList"/>.
+        /// Draws indexed primitives from the currently-bound state in this <see cref="CommandList"/>.
         /// </summary>
         /// <param name="indexCount">The number of indices.</param>
         /// <param name="instanceCount">The number of instances.</param>
@@ -241,6 +255,17 @@ namespace Veldrid
         /// <param name="instanceStart">The starting instance value.</param>
         public abstract void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
 
+        /// <summary>
+        /// Issues indirect draw commands based on the information contained in the given indirect <see cref="Buffer"/>.
+        /// The information stored in the indirect Buffer should conform to the structure of <see cref="IndirectDrawArguments"/>.
+        /// </summary>
+        /// <param name="indirectBuffer">The indirect Buffer to read from. Must have been created with the
+        /// <see cref="BufferUsage.IndirectBuffer"/> flag.</param>
+        /// <param name="offset">An offset, in bytes, from the start of the indirect buffer from which the draw commands will be
+        /// read. This value must be a multiple of 4.</param>
+        /// <param name="drawCount">The number of draw commands to read and issue from the indirect Buffer.</param>
+        /// <param name="stride">The stride, in bytes, between consecutive draw commands in the indirect Buffer. This value must
+        /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawArguments"/>.</param>
         public void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             ValidateIndirectBuffer(indirectBuffer);
@@ -253,6 +278,18 @@ namespace Veldrid
         // TODO: private protected
         protected abstract void DrawIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
 
+        /// <summary>
+        /// Issues indirect, indexed draw commands based on the information contained in the given indirect <see cref="Buffer"/>.
+        /// The information stored in the indirect Buffer should conform to the structure of
+        /// <see cref="IndirectDrawIndexedArguments"/>.
+        /// </summary>
+        /// <param name="indirectBuffer">The indirect Buffer to read from. Must have been created with the
+        /// <see cref="BufferUsage.IndirectBuffer"/> flag.</param>
+        /// <param name="offset">An offset, in bytes, from the start of the indirect buffer from which the draw commands will be
+        /// read. This value must be a multiple of 4.</param>
+        /// <param name="drawCount">The number of draw commands to read and issue from the indirect Buffer.</param>
+        /// <param name="stride">The stride, in bytes, between consecutive draw commands in the indirect Buffer. This value must
+        /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawIndexedArguments"/>.</param>
         public void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             ValidateIndirectBuffer(indirectBuffer);
@@ -293,8 +330,23 @@ namespace Veldrid
             }
         }
 
+        /// <summary>
+        /// Dispatches a compute operation from the currently-bound compute state of this Pipeline.
+        /// </summary>
+        /// <param name="groupCountX">The X dimension of the compute thread groups that are dispatched.</param>
+        /// <param name="groupCountY">The Y dimension of the compute thread groups that are dispatched.</param>
+        /// <param name="groupCountZ">The Z dimension of the compute thread groups that are dispatched.</param>
         public abstract void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ);
 
+        /// <summary>
+        /// Issues an indirect compute dispatch command based on the information contained in the given indirect
+        /// <see cref="Buffer"/>. The information stored in the indirect Buffer should conform to the structure of
+        /// <see cref="IndirectDispatchArguments"/>.
+        /// </summary>
+        /// <param name="indirectBuffer">The indirect Buffer to read from. Must have been created with the
+        /// <see cref="BufferUsage.IndirectBuffer"/> flag.</param>
+        /// <param name="offset">An offset, in bytes, from the start of the indirect buffer from which the draw commands will be
+        /// read. This value must be a multiple of 4.</param>
         public void DispatchIndirect(Buffer indirectBuffer, uint offset)
         {
             ValidateIndirectBuffer(indirectBuffer);

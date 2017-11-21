@@ -2,6 +2,7 @@
 using Veldrid.OpenGLBinding;
 using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
+using System;
 
 namespace Veldrid.OpenGL
 {
@@ -13,6 +14,7 @@ namespace Veldrid.OpenGL
         private bool _disposed;
 
         public new OpenGLTexture Target { get; }
+        public TextureTarget TextureTarget { get; private set; }
 
         public uint GLTargetTexture
         {
@@ -39,8 +41,8 @@ namespace Veldrid.OpenGL
             _gd = gd;
             Target = Util.AssertSubtype<Texture, OpenGLTexture>(description.Target);
 
-            if (BaseMipLevel == 0 && MipLevels == Target.MipLevels
-                && BaseArrayLayer == 0 && ArrayLayers == Target.ArrayLayers)
+            if (BaseMipLevel != 0 || MipLevels != Target.MipLevels
+                || BaseArrayLayer != 0 || ArrayLayers != Target.ArrayLayers)
             {
                 if (!_gd.Extensions.ARB_TextureView)
                 {
@@ -49,7 +51,6 @@ namespace Veldrid.OpenGL
                 }
                 _needsTextureView = true;
             }
-
         }
 
         public SizedInternalFormat GetReadWriteSizedInternalFormat()
@@ -86,6 +87,7 @@ namespace Veldrid.OpenGL
         {
             if (!_needsTextureView)
             {
+                TextureTarget = Target.TextureTarget;
                 return;
             }
 
@@ -93,57 +95,79 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
             TextureTarget originalTarget = Target.TextureTarget;
-            TextureTarget newTarget;
             if (originalTarget == TextureTarget.Texture2D)
             {
-                newTarget = TextureTarget.Texture2D;
+                TextureTarget = TextureTarget.Texture2D;
             }
             else if (originalTarget == TextureTarget.Texture2DArray)
             {
                 if (ArrayLayers > 1)
                 {
-                    newTarget = TextureTarget.Texture2DArray;
+                    TextureTarget = TextureTarget.Texture2DArray;
                 }
                 else
                 {
-                    newTarget = TextureTarget.Texture2D;
+                    TextureTarget = TextureTarget.Texture2D;
                 }
             }
             else if (originalTarget == TextureTarget.Texture2DMultisample)
             {
-                newTarget = TextureTarget.Texture2DMultisample;
+                TextureTarget = TextureTarget.Texture2DMultisample;
             }
             else if (originalTarget == TextureTarget.Texture2DMultisampleArray)
             {
                 if (ArrayLayers > 1)
                 {
-                    newTarget = TextureTarget.Texture2DMultisampleArray;
+                    TextureTarget = TextureTarget.Texture2DMultisampleArray;
                 }
                 else
                 {
-                    newTarget = TextureTarget.Texture2DMultisample;
+                    TextureTarget = TextureTarget.Texture2DMultisample;
                 }
             }
             else if (originalTarget == TextureTarget.Texture3D)
             {
-                newTarget = TextureTarget.Texture3D;
+                TextureTarget = TextureTarget.Texture3D;
             }
             else
             {
                 throw new VeldridException("The given TextureView parameters are not supported with the OpenGL backend.");
             }
 
+            PixelInternalFormat internalFormat = GetCompatibleInternalFormat(
+                Target.Format,
+                (Target.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
             Debug.Assert(Target.Created);
             glTextureView(
+                _textureView,
+                TextureTarget,
                 Target.Texture,
-                newTarget,
-                Target.Texture,
-                Target.GLInternalFormat,
+                internalFormat,
                 BaseMipLevel,
                 MipLevels,
                 BaseArrayLayer,
                 ArrayLayers);
             CheckLastError();
+        }
+
+        private PixelInternalFormat GetCompatibleInternalFormat(PixelFormat vdFormat, bool depthFormat)
+        {
+            switch (vdFormat)
+            {
+                case PixelFormat.R8_G8_B8_A8_UNorm:
+                case PixelFormat.B8_G8_R8_A8_UNorm:
+                    return PixelInternalFormat.Rgba8ui;
+                case PixelFormat.R8_UNorm:
+                    return PixelInternalFormat.R8ui;
+                case PixelFormat.R16_UNorm:
+                    return depthFormat ? PixelInternalFormat.DepthComponent16 : PixelInternalFormat.R16ui;
+                case PixelFormat.R32_G32_B32_A32_Float:
+                    return PixelInternalFormat.Rgba32f;
+                case PixelFormat.R32_Float:
+                    return depthFormat ? PixelInternalFormat.DepthComponent32f : PixelInternalFormat.R32f;
+                default:
+                    throw Illegal.Value<PixelInternalFormat>();
+            }
         }
 
         public override void Dispose()

@@ -23,7 +23,7 @@ namespace Veldrid
             Target = description.Target;
             BaseMipLevel = description.BaseMipLevel;
             MipLevels = description.MipLevels;
-            BaseArrayLayer = description.BaseMipLevel;
+            BaseArrayLayer = description.BaseArrayLayer;
             ArrayLayers = description.ArrayLayers;
         }
 

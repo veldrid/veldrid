@@ -120,6 +120,8 @@ namespace Veldrid.OpenGL
             glBindTexture(TextureTarget, _texture);
             CheckLastError();
 
+            bool isDepthTex = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
+
             if (TextureTarget == TextureTarget.Texture2D)
             {
                 if (_gd.Extensions.ARB_TextureStorage)
@@ -127,9 +129,7 @@ namespace Veldrid.OpenGL
                     glTexStorage2D(
                         TextureTarget.Texture2D,
                         MipLevels,
-                        OpenGLFormats.VdToGLSizedInternalFormat(
-                            Format,
-                            (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil),
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
                         Height);
                     CheckLastError();
@@ -163,12 +163,12 @@ namespace Veldrid.OpenGL
                 if (_gd.Extensions.ARB_TextureStorage)
                 {
                     glTexStorage3D(
-                        TextureTarget.Texture3D,
+                        TextureTarget.Texture2DArray,
                         MipLevels,
-                        OpenGLFormats.VdToGLSizedInternalFormat(Format, false),
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
                         Height,
-                        Depth);
+                        ArrayLayers);
                     CheckLastError();
                 }
                 else
@@ -225,7 +225,7 @@ namespace Veldrid.OpenGL
                     glTexStorage2D(
                         TextureTarget.TextureCubeMap,
                         MipLevels,
-                        OpenGLFormats.VdToGLSizedInternalFormat(Format, false),
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
                         Height);
                     CheckLastError();
@@ -264,7 +264,7 @@ namespace Veldrid.OpenGL
                     glTexStorage3D(
                         TextureTarget.TextureCubeMapArray,
                         MipLevels,
-                        OpenGLFormats.VdToGLSizedInternalFormat(Format, false),
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
                         Height,
                         ArrayLayers);
@@ -305,7 +305,7 @@ namespace Veldrid.OpenGL
                     glTexStorage3D(
                         TextureTarget.Texture3D,
                         MipLevels,
-                        OpenGLFormats.VdToGLSizedInternalFormat(Format, false),
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
                         Height,
                         Depth);

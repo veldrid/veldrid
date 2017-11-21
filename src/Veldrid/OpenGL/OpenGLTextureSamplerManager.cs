@@ -28,7 +28,7 @@ namespace Veldrid.OpenGL
 
         public void SetTexture(uint textureUnit, OpenGLTextureView textureView)
         {
-            uint textureID = textureView.Target.Texture;
+            uint textureID = textureView.GLTargetTexture;
 
             if (_textureUnitTextures[textureUnit] != textureView)
             {
@@ -41,11 +41,11 @@ namespace Veldrid.OpenGL
                 {
                     glActiveTexture(TextureUnit.Texture0 + (int)textureUnit);
                     CheckLastError();
-                    glBindTexture(GetTextureTarget(textureView.Target), textureID);
+                    glBindTexture(textureView.TextureTarget, textureID);
                     CheckLastError();
                 }
 
-                EnsureSamplerMipmapState(textureUnit, textureView.Target.MipLevels > 1);
+                EnsureSamplerMipmapState(textureUnit, textureView.MipLevels > 1);
                 _textureUnitTextures[textureUnit] = textureView;
             }
         }
@@ -58,7 +58,7 @@ namespace Veldrid.OpenGL
                 OpenGLTextureView texBinding = _textureUnitTextures[textureUnit];
                 if (texBinding != null)
                 {
-                    mipmapped = texBinding.Target.MipLevels > 1;
+                    mipmapped = texBinding.MipLevels > 1;
                 }
 
                 uint samplerID = mipmapped ? sampler.MipmapSampler : sampler.NoMipmapSampler;
@@ -69,7 +69,7 @@ namespace Veldrid.OpenGL
             }
             else if (_textureUnitTextures[textureUnit] != null)
             {
-                EnsureSamplerMipmapState(textureUnit, _textureUnitTextures[textureUnit].Target.MipLevels > 1);
+                EnsureSamplerMipmapState(textureUnit, _textureUnitTextures[textureUnit].MipLevels > 1);
             }
         }
 
@@ -83,22 +83,6 @@ namespace Veldrid.OpenGL
                 CheckLastError();
 
                 _textureUnitSamplers[textureUnit].Mipmapped = mipmapped;
-            }
-        }
-
-        private TextureTarget GetTextureTarget(OpenGLTexture tex)
-        {
-            if ((tex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
-            {
-                return tex.ArrayLayers == 1 ? TextureTarget.TextureCubeMap : TextureTarget.TextureCubeMapArray;
-            }
-            else if (tex.Depth == 1)
-            {
-                return tex.ArrayLayers == 1 ? TextureTarget.Texture2D : TextureTarget.Texture2DArray;
-            }
-            else
-            {
-                return TextureTarget.Texture3D;
             }
         }
 

@@ -16,14 +16,37 @@ namespace Veldrid.D3D11
             if (description.DepthTarget != null)
             {
                 D3D11Texture d3dDepthTarget = Util.AssertSubtype<Texture, D3D11Texture>(description.DepthTarget.Value.Target);
-                DepthStencilViewDimension dimension = d3dDepthTarget.SampleCount == TextureSampleCount.Count1
-                    ? DepthStencilViewDimension.Texture2D
-                    : DepthStencilViewDimension.Texture2DMultisampled;
                 DepthStencilViewDescription dsvDesc = new DepthStencilViewDescription()
                 {
-                    Dimension = dimension,
-                    Format = D3D11Formats.GetDepthFormat(d3dDepthTarget.Format)
+                    Format = D3D11Formats.GetDepthFormat(d3dDepthTarget.Format),
                 };
+                if (d3dDepthTarget.ArrayLayers == 1)
+                {
+                    if (d3dDepthTarget.SampleCount == TextureSampleCount.Count1)
+                    {
+                        dsvDesc.Dimension = DepthStencilViewDimension.Texture2D;
+                    }
+                    else
+                    {
+                        dsvDesc.Dimension = DepthStencilViewDimension.Texture2DMultisampled;
+                    }
+                }
+                else
+                {
+                    if (d3dDepthTarget.SampleCount == TextureSampleCount.Count1)
+                    {
+                        dsvDesc.Dimension = DepthStencilViewDimension.Texture2DArray;
+                        dsvDesc.Texture2DArray.FirstArraySlice = (int)description.DepthTarget.Value.ArrayLayer;
+                        dsvDesc.Texture2DArray.ArraySize = 1;
+                    }
+                    else
+                    {
+                        dsvDesc.Dimension = DepthStencilViewDimension.Texture2DMultisampledArray;
+                        dsvDesc.Texture2DMSArray.FirstArraySlice = (int)description.DepthTarget.Value.ArrayLayer;
+                        dsvDesc.Texture2DMSArray.ArraySize = 1;
+                    }
+                }
+
                 DepthStencilView = new DepthStencilView(device, d3dDepthTarget.DeviceTexture, dsvDesc);
             }
 

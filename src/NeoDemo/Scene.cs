@@ -106,7 +106,7 @@ namespace Veldrid.NeoDemo
                 sc,
                 Camera.NearDistance,
                 _nearCascadeLimit,
-                sc.NearShadowMapTexture.Width,
+                sc.ShadowMapTexture.Width,
                 out BoundingFrustum lightFrustum);
             cl.UpdateBuffer(sc.LightViewProjectionBuffer0, 0, ref viewProj0);
             cl.SetFramebuffer(sc.NearShadowMapFramebuffer);
@@ -119,7 +119,7 @@ namespace Veldrid.NeoDemo
                 sc,
                 _nearCascadeLimit,
                 _midCascadeLimit,
-                sc.MidShadowMapTexture.Width,
+                sc.ShadowMapTexture.Width,
                 out lightFrustum);
             cl.UpdateBuffer(sc.LightViewProjectionBuffer1, 0, ref viewProj1);
             cl.SetFramebuffer(sc.MidShadowMapFramebuffer);
@@ -132,7 +132,7 @@ namespace Veldrid.NeoDemo
                 sc,
                 _midCascadeLimit,
                 _farCascadeLimit,
-                sc.FarShadowMapTexture.Width,
+                sc.ShadowMapTexture.Width,
                 out lightFrustum);
             cl.UpdateBuffer(sc.LightViewProjectionBuffer2, 0, ref viewProj2);
             cl.SetFramebuffer(sc.FarShadowMapFramebuffer);
@@ -210,13 +210,13 @@ namespace Veldrid.NeoDemo
                     sc,
                     Camera.NearDistance,
                     _nearCascadeLimit,
-                    sc.NearShadowMapTexture.Width,
+                    sc.ShadowMapTexture.Width,
                     out BoundingFrustum lightFrustum0);
                 cls[1].UpdateBuffer(sc.LightViewProjectionBuffer0, 0, ref viewProj0);
 
                 cls[1].SetFramebuffer(sc.NearShadowMapFramebuffer);
-                cls[1].SetViewport(0, new Viewport(0, 0, sc.NearShadowMapTexture.Width, sc.NearShadowMapTexture.Height, 0, 1));
-                cls[1].SetScissorRect(0, 0, 0, sc.NearShadowMapTexture.Width, sc.NearShadowMapTexture.Height);
+                cls[1].SetViewport(0, new Viewport(0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height, 0, 1));
+                cls[1].SetScissorRect(0, 0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height);
                 cls[1].ClearDepthTarget(1f);
                 Render(gd, cls[1], sc, RenderPasses.ShadowMapNear, lightFrustum0, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, true);
             });
@@ -228,13 +228,13 @@ namespace Veldrid.NeoDemo
                     sc,
                     _nearCascadeLimit,
                     _midCascadeLimit,
-                    sc.MidShadowMapTexture.Width,
+                    sc.ShadowMapTexture.Width,
                     out var lightFrustum1);
                 cls[2].UpdateBuffer(sc.LightViewProjectionBuffer1, 0, ref viewProj1);
 
                 cls[2].SetFramebuffer(sc.MidShadowMapFramebuffer);
-                cls[2].SetViewport(0, new Viewport(0, 0, sc.MidShadowMapTexture.Width, sc.MidShadowMapTexture.Height, 0, 1));
-                cls[2].SetScissorRect(0, 0, 0, sc.MidShadowMapTexture.Width, sc.MidShadowMapTexture.Height);
+                cls[2].SetViewport(0, new Viewport(0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height, 0, 1));
+                cls[2].SetScissorRect(0, 0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height);
                 cls[2].ClearDepthTarget(1f);
                 Render(gd, cls[2], sc, RenderPasses.ShadowMapMid, lightFrustum1, _renderQueues[1], _cullableStage[1], _renderableStage[1], null, true);
             });
@@ -246,13 +246,13 @@ namespace Veldrid.NeoDemo
                     sc,
                     _midCascadeLimit,
                     _farCascadeLimit,
-                    sc.FarShadowMapTexture.Width,
+                    sc.ShadowMapTexture.Width,
                     out var lightFrustum2);
                 cls[3].UpdateBuffer(sc.LightViewProjectionBuffer2, 0, ref viewProj2);
 
                 cls[3].SetFramebuffer(sc.FarShadowMapFramebuffer);
-                cls[3].SetViewport(0, new Viewport(0, 0, sc.FarShadowMapTexture.Width, sc.FarShadowMapTexture.Height, 0, 1));
-                cls[3].SetScissorRect(0, 0, 0, sc.FarShadowMapTexture.Width, sc.FarShadowMapTexture.Height);
+                cls[3].SetViewport(0, new Viewport(0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height, 0, 1));
+                cls[3].SetScissorRect(0, 0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height);
                 cls[3].ClearDepthTarget(1f);
                 Render(gd, cls[3], sc, RenderPasses.ShadowMapFar, lightFrustum2, _renderQueues[2], _cullableStage[2], _renderableStage[2], null, true);
             });

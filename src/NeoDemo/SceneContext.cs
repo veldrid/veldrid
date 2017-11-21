@@ -17,15 +17,13 @@ namespace Veldrid.NeoDemo
         public Buffer CameraInfoBuffer { get; private set; }
         public Buffer PointLightsBuffer { get; private set; }
 
-        public Texture NearShadowMapTexture { get; private set; }
+        public Texture ShadowMapTexture { get; private set; }
         public TextureView NearShadowMapView { get; private set; }
         public Framebuffer NearShadowMapFramebuffer { get; private set; }
 
-        public Texture MidShadowMapTexture { get; private set; }
         public TextureView MidShadowMapView { get; private set; }
         public Framebuffer MidShadowMapFramebuffer { get; private set; }
 
-        public Texture FarShadowMapTexture { get; private set; }
         public TextureView FarShadowMapView { get; private set; }
         public Framebuffer FarShadowMapFramebuffer { get; private set; }
 
@@ -84,18 +82,19 @@ namespace Veldrid.NeoDemo
 
             cl.UpdateBuffer(PointLightsBuffer, 0, pli.GetBlittable());
 
-            NearShadowMapTexture = factory.CreateTexture(new TextureDescription(2048, 2048, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
-            gd.SetResourceName(NearShadowMapTexture, "Near Shadow Map");
-            NearShadowMapView = factory.CreateTextureView(new TextureViewDescription(NearShadowMapTexture));
-            NearShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(NearShadowMapTexture));
+            ShadowMapTexture = factory.CreateTexture(new TextureDescription(2048, 2048, 1, 1, 3, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
+            gd.SetResourceName(ShadowMapTexture, "Shadow Map");
+            NearShadowMapView = factory.CreateTextureView(new TextureViewDescription(ShadowMapTexture, 0, 1, 0, 1));
+            NearShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
+                new FramebufferAttachmentDescription(ShadowMapTexture, 0), Array.Empty<FramebufferAttachmentDescription>()));
 
-            MidShadowMapTexture = factory.CreateTexture(new TextureDescription(2048, 2048, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
-            MidShadowMapView = factory.CreateTextureView(new TextureViewDescription(MidShadowMapTexture));
-            MidShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(MidShadowMapTexture));
+            MidShadowMapView = factory.CreateTextureView(new TextureViewDescription(ShadowMapTexture, 0, 1, 1, 1));
+            MidShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
+                new FramebufferAttachmentDescription(ShadowMapTexture, 1), Array.Empty<FramebufferAttachmentDescription>()));
 
-            FarShadowMapTexture = factory.CreateTexture(new TextureDescription(4096, 4096, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
-            FarShadowMapView = factory.CreateTextureView(new TextureViewDescription(FarShadowMapTexture));
-            FarShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(FarShadowMapTexture));
+            FarShadowMapView = factory.CreateTextureView(new TextureViewDescription(ShadowMapTexture, 0, 1, 2, 1));
+            FarShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
+                new FramebufferAttachmentDescription(ShadowMapTexture, 2), Array.Empty<FramebufferAttachmentDescription>()));
 
             TextureSamplerResourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("SourceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
@@ -113,13 +112,11 @@ namespace Veldrid.NeoDemo
             LightViewProjectionBuffer2.Dispose();
             NearShadowMapView.Dispose();
             NearShadowMapFramebuffer.Dispose();
-            NearShadowMapTexture.Dispose();
+            ShadowMapTexture.Dispose();
             MidShadowMapView.Dispose();
             MidShadowMapFramebuffer.Dispose();
-            MidShadowMapTexture.Dispose();
             FarShadowMapView.Dispose();
             FarShadowMapFramebuffer.Dispose();
-            FarShadowMapTexture.Dispose();
             DepthLimitsBuffer.Dispose();
             CameraInfoBuffer.Dispose();
             PointLightsBuffer.Dispose();

@@ -30,7 +30,7 @@ namespace Veldrid
 #endif
         }
 
-        internal static void EnsureArraySize<T>(ref T[] array, uint size)
+        internal static void EnsureArrayMinimumSize<T>(ref T[] array, uint size)
         {
             if (array == null)
             {

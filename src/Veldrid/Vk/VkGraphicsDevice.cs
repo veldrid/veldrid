@@ -222,6 +222,12 @@ namespace Veldrid.Vk
             }
             lock (_disposablesLock)
             {
+                foreach (Vulkan.VkBuffer buffer in _buffersToDestroy)
+                {
+                    vkDestroyBuffer(_device, buffer, null);
+                }
+                _buffersToDestroy.Clear();
+
                 foreach (VkImage image in _imagesToDestroy)
                 {
                     vkDestroyImage(_device, image, null);

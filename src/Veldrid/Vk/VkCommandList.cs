@@ -383,11 +383,11 @@ namespace Veldrid.Vk
 
             VkFramebufferBase vkFB = Util.AssertSubtype<Framebuffer, VkFramebufferBase>(fb);
             _currentFramebuffer = vkFB;
-            Util.EnsureArraySize(ref _scissorRects, Math.Max(1, (uint)vkFB.ColorTargets.Count));
+            Util.EnsureArrayMinimumSize(ref _scissorRects, Math.Max(1, (uint)vkFB.ColorTargets.Count));
             uint clearValueCount = (uint)vkFB.ColorTargets.Count;
-            Util.EnsureArraySize(ref _clearValues, clearValueCount + 1); // Leave an extra space for the depth value (tracked separately).
+            Util.EnsureArrayMinimumSize(ref _clearValues, clearValueCount + 1); // Leave an extra space for the depth value (tracked separately).
             Util.ClearArray(_validColorClearValues);
-            Util.EnsureArraySize(ref _validColorClearValues, clearValueCount);
+            Util.EnsureArrayMinimumSize(ref _validColorClearValues, clearValueCount);
         }
 
         private void EnsureRenderPassActive()
@@ -410,10 +410,11 @@ namespace Veldrid.Vk
         {
             Debug.Assert(_activeRenderPass == VkRenderPass.Null);
 
+            uint attachmentCount = _currentFramebuffer.AttachmentCount;
             bool haveAnyAttachments = _framebuffer.ColorTargets.Count > 0 || _framebuffer.DepthTarget != null;
             bool haveAllClearValues = _depthClearValue.HasValue || _framebuffer.DepthTarget == null;
             bool haveAnyClearValues = _depthClearValue.HasValue;
-            for (int i = 0; i < _validColorClearValues.Length; i++)
+            for (int i = 0; i < _currentFramebuffer.ColorTargets.Count; i++)
             {
                 if (!_validColorClearValues[i])
                 {
@@ -440,7 +441,7 @@ namespace Veldrid.Vk
                         _depthClearValue = null;
                     }
 
-                    for (uint i = 0; i < _validColorClearValues.Length; i++)
+                    for (uint i = 0; i < _currentFramebuffer.ColorTargets.Count; i++)
                     {
                         if (_validColorClearValues[i])
                         {
@@ -458,12 +459,13 @@ namespace Veldrid.Vk
             }
             else
             {
+                // We have clear values for every attachment.
                 renderPassBI.renderPass = _currentFramebuffer.RenderPassClear;
                 fixed (VkClearValue* clearValuesPtr = &_clearValues[0])
                 {
-                    renderPassBI.clearValueCount = (uint)_clearValues.Length;
+                    renderPassBI.clearValueCount = attachmentCount;
                     renderPassBI.pClearValues = clearValuesPtr;
-                    _clearValues[_clearValues.Length - 1] = _depthClearValue.Value;
+                    _clearValues[_currentFramebuffer.ColorTargets.Count] = _depthClearValue.Value;
                     vkCmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
                     _activeRenderPass = _currentFramebuffer.RenderPassClear;
                     Util.ClearArray(_validColorClearValues);
@@ -497,18 +499,18 @@ namespace Veldrid.Vk
             if (!pipeline.IsComputePipeline && _currentGraphicsPipeline != pipeline)
             {
                 VkPipeline vkPipeline = Util.AssertSubtype<Pipeline, VkPipeline>(pipeline);
-                Util.EnsureArraySize(ref _currentGraphicsResourceSets, vkPipeline.ResourceSetCount);
+                Util.EnsureArrayMinimumSize(ref _currentGraphicsResourceSets, vkPipeline.ResourceSetCount);
                 Util.ClearArray(_currentGraphicsResourceSets);
-                Util.EnsureArraySize(ref _graphicsResourceSetsChanged, vkPipeline.ResourceSetCount);
+                Util.EnsureArrayMinimumSize(ref _graphicsResourceSetsChanged, vkPipeline.ResourceSetCount);
                 vkCmdBindPipeline(_cb, VkPipelineBindPoint.Graphics, vkPipeline.DevicePipeline);
                 _currentGraphicsPipeline = vkPipeline;
             }
             else if (pipeline.IsComputePipeline && _currentComputePipeline != pipeline)
             {
                 VkPipeline vkPipeline = Util.AssertSubtype<Pipeline, VkPipeline>(pipeline);
-                Util.EnsureArraySize(ref _currentComputeResourceSets, vkPipeline.ResourceSetCount);
+                Util.EnsureArrayMinimumSize(ref _currentComputeResourceSets, vkPipeline.ResourceSetCount);
                 Util.ClearArray(_currentComputeResourceSets);
-                Util.EnsureArraySize(ref _computeResourceSetsChanged, vkPipeline.ResourceSetCount);
+                Util.EnsureArrayMinimumSize(ref _computeResourceSetsChanged, vkPipeline.ResourceSetCount);
                 vkCmdBindPipeline(_cb, VkPipelineBindPoint.Compute, vkPipeline.DevicePipeline);
                 _currentComputePipeline = vkPipeline;
             }

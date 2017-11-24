@@ -216,8 +216,8 @@ namespace Veldrid.Vk
                 Array.Clear(_scFramebuffers, 0, _scFramebuffers.Length);
             }
 
-            EnsureSize(ref _scFramebuffers, _scImages.Length);
-            EnsureSize(ref _scColorTextures, _scImages.Length);
+            Util.EnsureArrayMinimumSize(ref _scFramebuffers, (uint)_scImages.Length);
+            Util.EnsureArrayMinimumSize(ref _scColorTextures,(uint) _scImages.Length);
             for (uint i = 0; i < _scImages.Length; i++)
             {
                 VkTexture colorTex = new VkTexture(
@@ -234,18 +234,6 @@ namespace Veldrid.Vk
                 VkFramebuffer fb = new VkFramebuffer(_gd, ref desc, true);
                 _scFramebuffers[i] = fb;
                 _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
-            }
-        }
-
-        private void EnsureSize<T>(ref T[] array, int size)
-        {
-            if (array == null)
-            {
-                array = new T[size];
-            }
-            else
-            {
-                Util.EnsureArraySize(ref array, (uint)size);
             }
         }
 

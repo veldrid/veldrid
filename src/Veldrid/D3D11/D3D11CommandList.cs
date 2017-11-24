@@ -255,12 +255,12 @@ namespace Veldrid.D3D11
                 if (_vertexStrides != null)
                 {
                     int vertexStridesCount = _vertexStrides.Length;
-                    Util.EnsureArraySize(ref _vertexBindings, (uint)vertexStridesCount);
-                    Util.EnsureArraySize(ref _vertexOffsets, (uint)vertexStridesCount);
+                    Util.EnsureArrayMinimumSize(ref _vertexBindings, (uint)vertexStridesCount);
+                    Util.EnsureArrayMinimumSize(ref _vertexOffsets, (uint)vertexStridesCount);
                 }
 
-                Util.EnsureArraySize(ref _graphicsResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
-                Util.EnsureArraySize(ref _invalidatedGraphicsResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
+                Util.EnsureArrayMinimumSize(ref _graphicsResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
+                Util.EnsureArrayMinimumSize(ref _invalidatedGraphicsResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
             }
             else if (pipeline.IsComputePipeline && _computePipeline != pipeline)
             {
@@ -271,8 +271,8 @@ namespace Veldrid.D3D11
 
                 ComputeShader computeShader = d3dPipeline.ComputeShader;
                 _context.ComputeShader.Set(computeShader);
-                Util.EnsureArraySize(ref _computeResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
-                Util.EnsureArraySize(ref _invalidatedComputeResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
+                Util.EnsureArrayMinimumSize(ref _computeResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
+                Util.EnsureArrayMinimumSize(ref _invalidatedComputeResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
             }
         }
 
@@ -519,7 +519,8 @@ namespace Veldrid.D3D11
             FlushScissorRects();
             FlushVertexBindings();
 
-            for (uint i = 0; i < _invalidatedGraphicsResourceSets.Length; i++)
+            int graphicsResourceCount = _graphicsPipeline.ResourceLayouts.Length;
+            for (uint i = 0; i < graphicsResourceCount; i++)
             {
                 if (_invalidatedGraphicsResourceSets[i])
                 {
@@ -547,7 +548,8 @@ namespace Veldrid.D3D11
 
         private void PreDispatchCommand()
         {
-            for (uint i = 0; i < _invalidatedComputeResourceSets.Length; i++)
+            int computeResourceCount = _computePipeline.ResourceLayouts.Length;
+            for (uint i = 0; i < computeResourceCount; i++)
             {
                 if (_invalidatedComputeResourceSets[i])
                 {
@@ -585,6 +587,8 @@ namespace Veldrid.D3D11
                 _scissorRectsChanged = false;
                 if (_scissors.Length > 0)
                 {
+                    // Because this array is resized using Util.EnsureMinimumArraySize, this might set more scissor rectangles
+                    // than are actually needed, but this is okay -- extras are essentially ignored and should be harmless.
                     _context.Rasterizer.SetScissorRectangles(_scissors);
                 }
             }
@@ -607,14 +611,14 @@ namespace Veldrid.D3D11
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
             _scissorRectsChanged = true;
-            Util.EnsureArraySize(ref _scissors, index + 1);
+            Util.EnsureArrayMinimumSize(ref _scissors, index + 1);
             _scissors[index] = new RawRectangle((int)x, (int)y, (int)(x + width), (int)(y + height));
         }
 
         public override void SetViewport(uint index, ref Viewport viewport)
         {
             _viewportsChanged = true;
-            Util.EnsureArraySize(ref _viewports, index + 1);
+            Util.EnsureArrayMinimumSize(ref _viewports, index + 1);
             _viewports[index] = new RawViewportF
             {
                 X = viewport.X,

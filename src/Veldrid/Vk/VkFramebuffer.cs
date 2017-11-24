@@ -33,7 +33,6 @@ namespace Veldrid.Vk
             StackList<VkAttachmentDescription> attachments = new StackList<VkAttachmentDescription>();
 
             uint colorAttachmentCount = (uint)ColorTargets.Count;
-            StackList<VkAttachmentDescription> colorAttachmentDescriptions = new StackList<VkAttachmentDescription>();
             StackList<VkAttachmentReference> colorAttachmentRefs = new StackList<VkAttachmentReference>();
             for (int i = 0; i < colorAttachmentCount; i++)
             {
@@ -47,7 +46,6 @@ namespace Veldrid.Vk
                 colorAttachmentDesc.stencilStoreOp = VkAttachmentStoreOp.DontCare;
                 colorAttachmentDesc.initialLayout = VkImageLayout.Undefined;
                 colorAttachmentDesc.finalLayout = isPresented ? VkImageLayout.PresentSrcKHR : VkImageLayout.ShaderReadOnlyOptimal;
-                colorAttachmentDescriptions.Add(colorAttachmentDesc);
                 attachments.Add(colorAttachmentDesc);
 
                 VkAttachmentReference colorAttachmentRef = new VkAttachmentReference();
@@ -110,13 +108,12 @@ namespace Veldrid.Vk
 
             if (DepthTarget != null)
             {
-                depthAttachmentDesc.loadOp = VkAttachmentLoadOp.Clear;
-                depthAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.Clear;
+                attachments[attachments.Count - 1].loadOp = VkAttachmentLoadOp.Clear;
             }
 
             for (int i = 0; i < colorAttachmentCount; i++)
             {
-                colorAttachmentDescriptions[i].loadOp = VkAttachmentLoadOp.Clear;
+                attachments[i].loadOp = VkAttachmentLoadOp.Clear;
             }
 
             creationResult = vkCreateRenderPass(_gd.Device, ref renderPassCI, null, out _renderPassClear);
@@ -197,6 +194,7 @@ namespace Veldrid.Vk
 
                 vkDestroyFramebuffer(_gd.Device, _deviceFramebuffer, null);
                 vkDestroyRenderPass(_gd.Device, _renderPassNoClear, null);
+                vkDestroyRenderPass(_gd.Device, _renderPassClear, null);
                 foreach (VkImageView view in _attachmentViews)
                 {
                     vkDestroyImageView(_gd.Device, view, null);

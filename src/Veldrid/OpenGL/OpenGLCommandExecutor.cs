@@ -408,16 +408,16 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
             int vertexStridesCount = _graphicsPipeline.VertexStrides.Length;
-            Util.EnsureArraySize(ref _vertexBuffers, (uint)vertexStridesCount);
+            Util.EnsureArrayMinimumSize(ref _vertexBuffers, (uint)vertexStridesCount);
 
             uint totalVertexElements = 0;
             for (int i = 0; i < desc.ShaderSet.VertexLayouts.Length; i++)
             {
                 totalVertexElements += (uint)desc.ShaderSet.VertexLayouts[i].Elements.Length;
             }
-            Util.EnsureArraySize(ref _vertexAttribDivisors, totalVertexElements);
+            Util.EnsureArrayMinimumSize(ref _vertexAttribDivisors, totalVertexElements);
 
-            Util.EnsureArraySize(ref _graphicsResourceSets, (uint)desc.ResourceLayouts.Length);
+            Util.EnsureArrayMinimumSize(ref _graphicsResourceSets, (uint)desc.ResourceLayouts.Length);
         }
 
         private void ActivateComputePipeline()
@@ -425,7 +425,7 @@ namespace Veldrid.OpenGL
             _graphicsPipelineActive = false;
             _computePipeline.EnsureResourcesCreated();
             Util.ClearArray(_computeResourceSets); // Invalidate resource set bindings -- they may be invalid.
-            Util.EnsureArraySize(ref _computeResourceSets, (uint)_computePipeline.ComputeDescription.ResourceLayouts.Length);
+            Util.EnsureArrayMinimumSize(ref _computeResourceSets, (uint)_computePipeline.ComputeDescription.ResourceLayouts.Length);
 
             // Shader Set
             glUseProgram(_computePipeline.Program);
@@ -612,7 +612,7 @@ namespace Veldrid.OpenGL
             OpenGLBuffer glVB = Util.AssertSubtype<Buffer, OpenGLBuffer>(vb);
             glVB.EnsureResourcesCreated();
 
-            Util.EnsureArraySize(ref _vertexBuffers, index + 1);
+            Util.EnsureArrayMinimumSize(ref _vertexBuffers, index + 1);
             _vertexBuffers[index] = glVB;
         }
 

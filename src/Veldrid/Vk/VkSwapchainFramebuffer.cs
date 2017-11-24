@@ -46,6 +46,8 @@ namespace Veldrid.Vk
 
         public override OutputDescription OutputDescription { get; }
 
+        public override uint AttachmentCount { get; }
+
         public VkSwapchainFramebuffer(VkGraphicsDevice gd, VkSurfaceKHR surface, uint width, uint height)
             : base()
         {
@@ -53,6 +55,8 @@ namespace Veldrid.Vk
             _surface = surface;
             CreateSwapchain(width, height);
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
+
+            AttachmentCount = 2; // 1 Color + 1 Depth
         }
 
         public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, VkFence fence)

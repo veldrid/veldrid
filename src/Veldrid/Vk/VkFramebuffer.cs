@@ -23,6 +23,8 @@ namespace Veldrid.Vk
         public override uint RenderableWidth => Width;
         public override uint RenderableHeight => Height;
 
+        public override uint AttachmentCount { get; }
+
         public VkFramebuffer(VkGraphicsDevice gd, ref FramebufferDescription description, bool isPresented)
             : base(description.DepthTarget, description.ColorTargets)
         {
@@ -184,6 +186,12 @@ namespace Veldrid.Vk
 
             creationResult = vkCreateFramebuffer(_gd.Device, ref fbCI, null, out _deviceFramebuffer);
             CheckResult(creationResult);
+
+            if (DepthTarget != null)
+            {
+                AttachmentCount += 1;
+            }
+            AttachmentCount += (uint)ColorTargets.Count;
         }
 
         public override void Dispose()

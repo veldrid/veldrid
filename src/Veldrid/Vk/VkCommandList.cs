@@ -421,6 +421,10 @@ namespace Veldrid.Vk
                     haveAllClearValues = false;
                     haveAnyClearValues = true;
                 }
+                else
+                {
+                    haveAnyClearValues = true;
+                }
             }
 
             VkRenderPassBeginInfo renderPassBI = VkRenderPassBeginInfo.New();

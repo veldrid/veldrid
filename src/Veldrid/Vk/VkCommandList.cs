@@ -5,6 +5,7 @@ using static Veldrid.Vk.VulkanUtil;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 
 namespace Veldrid.Vk
 {
@@ -43,13 +44,13 @@ namespace Veldrid.Vk
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
 
-        internal void CollectDisposables(List<Vulkan.VkBuffer> buffers, List<VkImage> images, List<VkMemoryBlock> memories)
+        internal void CollectDisposables(ConcurrentQueue<Vulkan.VkBuffer> buffers, ConcurrentQueue<VkImage> images, ConcurrentQueue<VkMemoryBlock> memories)
         {
             if (_buffersToDestroy != null)
             {
                 foreach (Vulkan.VkBuffer buffer in _buffersToDestroy)
                 {
-                    buffers.Add(buffer);
+                    buffers.Enqueue(buffer);
                 }
                 _buffersToDestroy.Clear();
             }
@@ -58,7 +59,7 @@ namespace Veldrid.Vk
             {
                 foreach (VkImage image in _imagesToDestroy)
                 {
-                    images.Add(image);
+                    images.Enqueue(image);
                 }
                 _imagesToDestroy.Clear();
             }
@@ -67,7 +68,7 @@ namespace Veldrid.Vk
             {
                 foreach (VkMemoryBlock memory in _memoriesToFree)
                 {
-                    memories.Add(memory);
+                    memories.Enqueue(memory);
                 }
                 _memoriesToFree.Clear();
             }

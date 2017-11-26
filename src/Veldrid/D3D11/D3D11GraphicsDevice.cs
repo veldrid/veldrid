@@ -14,6 +14,7 @@ namespace Veldrid.D3D11
         private D3D11Framebuffer _swapChainFramebuffer;
         private readonly bool _supportsConcurrentResources;
         private readonly bool _supportsCommandLists;
+        private readonly object _immediateContextLock = new object();
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
@@ -111,7 +112,10 @@ namespace Veldrid.D3D11
         public override void ExecuteCommands(CommandList cl)
         {
             D3D11CommandList d3d11CL = Util.AssertSubtype<CommandList, D3D11CommandList>(cl);
-            _immediateContext.ExecuteCommandList(d3d11CL.DeviceCommandList, false);
+            lock (_immediateContextLock)
+            {
+                _immediateContext.ExecuteCommandList(d3d11CL.DeviceCommandList, false);
+            }
             d3d11CL.DeviceCommandList.Dispose();
             d3d11CL.DeviceCommandList = null;
             CommandListsReferencingSwapchain.Remove(d3d11CL);

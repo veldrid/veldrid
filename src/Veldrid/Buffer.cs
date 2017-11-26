@@ -20,6 +20,12 @@ namespace Veldrid
         public abstract BufferUsage Usage { get; }
 
         /// <summary>
+        /// Indicates whether this Buffer is optimized for frequent updates. Dynamic Buffers are able to be mapped into
+        /// CPU-visible memory using the <see cref="GraphicsDevice.Map(MappableResource, uint, uint)"/> method.
+        /// </summary>
+        public abstract bool Dynamic { get; }
+
+        /// <summary>
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
         public abstract void Dispose();

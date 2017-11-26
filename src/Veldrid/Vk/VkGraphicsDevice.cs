@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Vulkan;
@@ -28,6 +30,7 @@ namespace Veldrid.Vk
         private VkCommandPool _graphicsCommandPool;
         private VkFence _imageAvailableFence;
         private VkQueue _graphicsQueue;
+        private readonly object _graphicsQueueLock = new object();
         private VkQueue _presentQueue;
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private PFN_vkDebugReportCallbackEXT _debugCallbackFunc;
@@ -35,10 +38,9 @@ namespace Veldrid.Vk
         private bool _debugMarkerEnabled;
         private vkDebugMarkerSetObjectNameEXT_d _setObjectNameDelegate;
 
-        private readonly object _disposablesLock = new object();
-        private readonly List<Vulkan.VkBuffer> _buffersToDestroy = new List<Vulkan.VkBuffer>();
-        private readonly List<VkImage> _imagesToDestroy = new List<VkImage>();
-        private readonly List<VkMemoryBlock> _memoriesToFree = new List<VkMemoryBlock>();
+        private readonly ConcurrentQueue<Vulkan.VkBuffer> _buffersToDestroy = new ConcurrentQueue<Vulkan.VkBuffer>();
+        private readonly ConcurrentQueue<VkImage> _imagesToDestroy = new ConcurrentQueue<VkImage>();
+        private readonly ConcurrentQueue<VkMemoryBlock> _memoriesToFree = new ConcurrentQueue<VkMemoryBlock>();
 
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
@@ -87,12 +89,11 @@ namespace Veldrid.Vk
             VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             si.pWaitDstStageMask = &waitDstStageMask;
 
-            vkQueueSubmit(_graphicsQueue, 1, ref si, VkFence.Null);
-
-            lock (_disposablesLock)
+            lock (_graphicsQueueLock)
             {
-                vkCL.CollectDisposables(_buffersToDestroy, _imagesToDestroy, _memoriesToFree);
+                vkQueueSubmit(_graphicsQueue, 1, ref si, VkFence.Null);
             }
+            vkCL.CollectDisposables(_buffersToDestroy, _imagesToDestroy, _memoriesToFree);
         }
 
         public void EnqueueDisposedCommandBuffer(VkCommandList vkCL)
@@ -220,25 +221,19 @@ namespace Veldrid.Vk
 
                 _commandListsToDispose.Clear();
             }
-            lock (_disposablesLock)
+            while (_buffersToDestroy.TryDequeue(out Vulkan.VkBuffer buffer))
             {
-                foreach (Vulkan.VkBuffer buffer in _buffersToDestroy)
-                {
-                    vkDestroyBuffer(_device, buffer, null);
-                }
-                _buffersToDestroy.Clear();
+                vkDestroyBuffer(_device, buffer, null);
+            }
 
-                foreach (VkImage image in _imagesToDestroy)
-                {
-                    vkDestroyImage(_device, image, null);
-                }
-                _imagesToDestroy.Clear();
+            while (_imagesToDestroy.TryDequeue(out VkImage image))
+            {
+                vkDestroyImage(_device, image, null);
+            }
 
-                foreach (VkMemoryBlock memory in _memoriesToFree)
-                {
-                    _memoryManager.Free(memory);
-                }
-                _memoriesToFree.Clear();
+            while (_memoriesToFree.TryDequeue(out VkMemoryBlock memory))
+            {
+                _memoryManager.Free(memory);
             }
         }
 
@@ -550,6 +545,23 @@ namespace Veldrid.Vk
             vkCreateFence(_device, ref fenceCI, null, out _imageAvailableFence);
         }
 
+        protected override MappedResource MapCore(MappableResource resource, uint offsetInBytes, uint sizeInBytes)
+        {
+            VkMemoryBlock memoryBlock;
+            if (resource is VkBuffer buffer)
+            {
+                memoryBlock = buffer.Memory;
+            }
+            else
+            {
+                Debug.Assert(resource is VkTexture);
+                memoryBlock = ((VkTexture)resource).MemoryBlock;
+            }
+
+            Debug.Assert(memoryBlock.IsPersistentMapped);
+            return new MappedResource(resource, (IntPtr)memoryBlock.BlockMappedPointer, (uint)memoryBlock.Size);
+        }
+
         protected override void PlatformDispose()
         {
             FlushQueuedDisposables();
@@ -622,6 +634,365 @@ namespace Veldrid.Vk
             }
 
             return TextureSampleCount.Count1;
+        }
+
+        public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        {
+            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(buffer);
+            VkMemoryBlock memoryBlock = null;
+            Vulkan.VkBuffer copySrcBuffer = Vulkan.VkBuffer.Null;
+            IntPtr mappedPtr;
+            bool isPersistentMapped = vkBuffer.Memory.IsPersistentMapped;
+            if (isPersistentMapped)
+            {
+                mappedPtr = (IntPtr)vkBuffer.Memory.BlockMappedPointer;
+            }
+            else
+            {
+                VkBufferCreateInfo bufferCI = VkBufferCreateInfo.New();
+                bufferCI.usage = VkBufferUsageFlags.TransferSrc;
+                bufferCI.size = vkBuffer.BufferMemoryRequirements.size;
+                VkResult result = vkCreateBuffer(Device, ref bufferCI, null, out copySrcBuffer);
+                CheckResult(result);
+
+                vkGetBufferMemoryRequirements(Device, copySrcBuffer, out VkMemoryRequirements memReqs);
+
+                memoryBlock = MemoryManager.Allocate(
+                    PhysicalDeviceMemProperties,
+                    memReqs.memoryTypeBits,
+                    VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
+                    true,
+                    memReqs.size,
+                    memReqs.alignment);
+
+                result = vkBindBufferMemory(Device, copySrcBuffer, memoryBlock.DeviceMemory, memoryBlock.Offset);
+                CheckResult(result);
+
+                mappedPtr = (IntPtr)memoryBlock.BlockMappedPointer;
+            }
+
+            byte* destPtr = (byte*)mappedPtr + bufferOffsetInBytes;
+            Unsafe.CopyBlock(destPtr, source.ToPointer(), sizeInBytes);
+
+            VkCommandBuffer cb = GetFreeCommandBuffer();
+
+            if (!isPersistentMapped)
+            {
+                VkBufferCopy copyRegion = new VkBufferCopy { size = vkBuffer.BufferMemoryRequirements.size };
+                vkCmdCopyBuffer(cb, copySrcBuffer, vkBuffer.DeviceBuffer, 1, ref copyRegion);
+
+                _buffersToDestroy.Enqueue(copySrcBuffer);
+                _memoriesToFree.Enqueue(memoryBlock);
+            }
+        }
+
+        private VkCommandBuffer GetFreeCommandBuffer()
+        {
+            throw new NotImplementedException();
+        }
+
+        private IntPtr MapBuffer(VkBuffer buffer, uint numBytes)
+        {
+            if (buffer.Memory.IsPersistentMapped)
+            {
+                return (IntPtr)buffer.Memory.BlockMappedPointer;
+            }
+            else
+            {
+                void* mappedPtr;
+                VkResult result = vkMapMemory(Device, buffer.Memory.DeviceMemory, buffer.Memory.Offset, numBytes, 0, &mappedPtr);
+                CheckResult(result);
+                return (IntPtr)mappedPtr;
+            }
+        }
+
+        private void UnmapBuffer(VkBuffer buffer)
+        {
+            if (!buffer.Memory.IsPersistentMapped)
+            {
+                vkUnmapMemory(Device, buffer.Memory.DeviceMemory);
+            }
+        }
+
+        public override void UpdateTexture(
+            Texture texture,
+            IntPtr source,
+            uint sizeInBytes,
+            uint x,
+            uint y,
+            uint z,
+            uint width,
+            uint height,
+            uint depth,
+            uint mipLevel,
+            uint arrayLayer)
+        {
+            VkTexture tex = Util.AssertSubtype<Texture, VkTexture>(texture);
+
+            if (x != 0 || y != 0)
+            {
+                throw new NotImplementedException();
+            }
+
+            // First, create a staging texture.
+            CreateImage(
+                Device,
+                PhysicalDeviceMemProperties,
+                MemoryManager,
+                width,
+                height,
+                depth,
+                1,
+                VkFormats.VdToVkPixelFormat(tex.Format),
+                VkImageTiling.Linear,
+                VkImageUsageFlags.TransferSrc,
+                VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
+                out VkImage stagingImage,
+                out VkMemoryBlock stagingMemory);
+
+            VkImageSubresource subresource = new VkImageSubresource();
+            subresource.aspectMask = VkImageAspectFlags.Color;
+            subresource.mipLevel = 0;
+            subresource.arrayLayer = 0;
+            vkGetImageSubresourceLayout(Device, stagingImage, ref subresource, out VkSubresourceLayout stagingLayout);
+            ulong rowPitch = stagingLayout.rowPitch;
+
+            void* mappedPtr;
+            VkResult result = vkMapMemory(Device, stagingMemory.DeviceMemory, stagingMemory.Offset, stagingLayout.size, 0, &mappedPtr);
+            CheckResult(result);
+
+            if (rowPitch == width)
+            {
+                System.Buffer.MemoryCopy(source.ToPointer(), mappedPtr, sizeInBytes, sizeInBytes);
+            }
+            else
+            {
+                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
+                for (uint yy = 0; yy < height; yy++)
+                {
+                    byte* dstRowStart = ((byte*)mappedPtr) + (rowPitch * yy);
+                    byte* srcRowStart = ((byte*)source.ToPointer()) + (width * yy * pixelSizeInBytes);
+                    Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
+                }
+            }
+
+            vkUnmapMemory(Device, stagingMemory.DeviceMemory);
+
+            VkCommandBuffer cb = GetFreeCommandBuffer();
+            TransitionImageLayout(cb, stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
+            TransitionImageLayout(cb, tex.DeviceImage, mipLevel, 1, 0, 1, tex.ImageLayouts[mipLevel], VkImageLayout.TransferDstOptimal);
+            CopyImage(cb, stagingImage, 0, tex.DeviceImage, mipLevel, width, height);
+            TransitionImageLayout(cb, tex.DeviceImage, mipLevel, 1, 0, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
+            tex.ImageLayouts[mipLevel] = VkImageLayout.ShaderReadOnlyOptimal;
+
+            _imagesToDestroy.Enqueue(stagingImage);
+            _memoriesToFree.Enqueue(stagingMemory);
+        }
+
+        public override void UpdateTextureCube(
+            Texture textureCube,
+            IntPtr source,
+            uint sizeInBytes,
+            CubeFace face,
+            uint x,
+            uint y,
+            uint width,
+            uint height,
+            uint mipLevel,
+            uint arrayLayer)
+        {
+            VkTexture vkTexCube = Util.AssertSubtype<Texture, VkTexture>(textureCube);
+
+            if (x != 0 || y != 0)
+            {
+                throw new NotImplementedException();
+            }
+
+            // First, create a staging texture.
+            CreateImage(
+                Device,
+                PhysicalDeviceMemProperties,
+                MemoryManager,
+                width,
+                height,
+                1,
+                1,
+                VkFormats.VdToVkPixelFormat(vkTexCube.Format),
+                VkImageTiling.Linear,
+                VkImageUsageFlags.TransferSrc,
+                VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
+                out VkImage stagingImage,
+                out VkMemoryBlock stagingMemory);
+
+            VkImageSubresource subresource = new VkImageSubresource();
+            subresource.aspectMask = VkImageAspectFlags.Color;
+            subresource.mipLevel = 0;
+            subresource.arrayLayer = 0;
+            vkGetImageSubresourceLayout(Device, stagingImage, ref subresource, out VkSubresourceLayout stagingLayout);
+            ulong rowPitch = stagingLayout.rowPitch;
+
+            void* mappedPtr;
+            VkResult result = vkMapMemory(Device, stagingMemory.DeviceMemory, stagingMemory.Offset, stagingLayout.size, 0, &mappedPtr);
+            CheckResult(result);
+
+            if (rowPitch == width)
+            {
+                System.Buffer.MemoryCopy(source.ToPointer(), mappedPtr, sizeInBytes, sizeInBytes);
+            }
+            else
+            {
+                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(vkTexCube.Format);
+                for (uint yy = 0; yy < height; yy++)
+                {
+                    byte* dstRowStart = ((byte*)mappedPtr) + (rowPitch * yy);
+                    byte* srcRowStart = ((byte*)source.ToPointer()) + (width * yy * pixelSizeInBytes);
+                    Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
+                }
+            }
+
+            vkUnmapMemory(Device, stagingMemory.DeviceMemory);
+
+            uint cubeArrayLayer = GetArrayLayer(face);
+
+            // TODO: These transitions are sub-optimal.
+            VkCommandBuffer cb = GetFreeCommandBuffer();
+            TransitionImageLayout(cb, stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
+            TransitionImageLayout(cb, vkTexCube.DeviceImage, 0, 1, 0, 6, vkTexCube.ImageLayouts[0], VkImageLayout.TransferDstOptimal);
+            CopyImage(cb, stagingImage, 0, vkTexCube.DeviceImage, mipLevel, width, height, cubeArrayLayer);
+            TransitionImageLayout(cb, vkTexCube.DeviceImage, 0, 1, 0, 6, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
+            vkTexCube.ImageLayouts[0] = VkImageLayout.ShaderReadOnlyOptimal;
+
+            _imagesToDestroy.Enqueue(stagingImage);
+            _memoriesToFree.Enqueue(stagingMemory);
+        }
+
+        private uint GetArrayLayer(CubeFace face)
+        {
+            switch (face)
+            {
+                case CubeFace.NegativeX:
+                    return 1;
+                case CubeFace.PositiveX:
+                    return 0;
+                case CubeFace.NegativeY:
+                    return 3;
+                case CubeFace.PositiveY:
+                    return 2;
+                case CubeFace.NegativeZ:
+                    return 4;
+                case CubeFace.PositiveZ:
+                    return 5;
+                default:
+                    throw Illegal.Value<CubeFace>();
+            }
+        }
+
+        protected void TransitionImageLayout(
+            VkCommandBuffer cb,
+            VkImage image,
+            uint baseMipLevel,
+            uint levelCount,
+            uint baseArrayLayer,
+            uint layerCount,
+            VkImageLayout oldLayout,
+            VkImageLayout newLayout)
+        {
+            Debug.Assert(oldLayout != newLayout);
+            VkImageMemoryBarrier barrier = VkImageMemoryBarrier.New();
+            barrier.oldLayout = oldLayout;
+            barrier.newLayout = newLayout;
+            barrier.srcQueueFamilyIndex = QueueFamilyIgnored;
+            barrier.dstQueueFamilyIndex = QueueFamilyIgnored;
+            barrier.image = image;
+            barrier.subresourceRange.aspectMask = VkImageAspectFlags.Color;
+            barrier.subresourceRange.baseMipLevel = baseMipLevel;
+            barrier.subresourceRange.levelCount = levelCount;
+            barrier.subresourceRange.baseArrayLayer = baseArrayLayer;
+            barrier.subresourceRange.layerCount = layerCount;
+
+            VkPipelineStageFlags srcStageFlags = VkPipelineStageFlags.None;
+            VkPipelineStageFlags dstStageFlags = VkPipelineStageFlags.None;
+
+            if ((oldLayout == VkImageLayout.Undefined || oldLayout == VkImageLayout.Preinitialized) && newLayout == VkImageLayout.TransferDstOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.None;
+                barrier.dstAccessMask = VkAccessFlags.TransferWrite;
+                srcStageFlags = VkPipelineStageFlags.TopOfPipe;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
+            }
+            else if (oldLayout == VkImageLayout.ShaderReadOnlyOptimal && newLayout == VkImageLayout.TransferDstOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.ShaderRead;
+                barrier.dstAccessMask = VkAccessFlags.TransferWrite;
+                srcStageFlags = VkPipelineStageFlags.FragmentShader;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
+            }
+            else if (oldLayout == VkImageLayout.Preinitialized && newLayout == VkImageLayout.TransferSrcOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.None;
+                barrier.dstAccessMask = VkAccessFlags.TransferRead;
+                srcStageFlags = VkPipelineStageFlags.TopOfPipe;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
+            }
+            else if (oldLayout == VkImageLayout.TransferDstOptimal && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.TransferWrite;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
+                srcStageFlags = VkPipelineStageFlags.Transfer;
+                dstStageFlags = VkPipelineStageFlags.FragmentShader;
+            }
+            else
+            {
+                Debug.Fail("Invalid image layout transition.");
+            }
+
+            vkCmdPipelineBarrier(
+                cb,
+                srcStageFlags,
+                dstStageFlags,
+                VkDependencyFlags.None,
+                0, null,
+                0, null,
+                1, &barrier);
+        }
+
+        protected void CopyImage(
+            VkCommandBuffer cb,
+            VkImage srcImage,
+            uint srcMipLevel,
+            VkImage dstImage,
+            uint dstMipLevel,
+            uint width,
+            uint height,
+            uint baseArrayLayer = 0)
+        {
+            VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers();
+            srcSubresource.mipLevel = srcMipLevel;
+            srcSubresource.layerCount = 1;
+            srcSubresource.aspectMask = VkImageAspectFlags.Color;
+            srcSubresource.baseArrayLayer = 0;
+
+            VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers();
+            dstSubresource.mipLevel = dstMipLevel;
+            dstSubresource.baseArrayLayer = baseArrayLayer;
+            dstSubresource.layerCount = 1;
+            dstSubresource.aspectMask = VkImageAspectFlags.Color;
+
+            VkImageCopy region = new VkImageCopy();
+            region.dstSubresource = dstSubresource;
+            region.srcSubresource = srcSubresource;
+            region.extent.width = width;
+            region.extent.height = height;
+            region.extent.depth = 1;
+
+            vkCmdCopyImage(
+                cb,
+                srcImage,
+                VkImageLayout.TransferSrcOptimal,
+                dstImage,
+                VkImageLayout.TransferDstOptimal,
+                1,
+                ref region);
         }
     }
 

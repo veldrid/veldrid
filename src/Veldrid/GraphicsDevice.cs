@@ -105,8 +105,6 @@ namespace Veldrid
 
         /// <summary>
         /// Updates a portion of a <see cref="Texture"/> resource with new data.
-        /// Cube textures should instead use 
-        /// <see cref="UpdateTextureCube(Texture, IntPtr, uint, CubeFace, uint, uint, uint, uint, uint, uint)"/>.
         /// </summary>
         /// <param name="texture">The resource to update.</param>
         /// <param name="source">A pointer to the start of the data to upload.</param>
@@ -131,33 +129,6 @@ namespace Veldrid
             uint width,
             uint height,
             uint depth,
-            uint mipLevel,
-            uint arrayLayer);
-
-        /// <summary>
-        /// Updates a portion of a <see cref="Texture"/> resource with new data. This function operates on cubemap textures.
-        /// </summary>
-        /// <param name="texture">The resource to update.</param>
-        /// <param name="source">A pointer to the start of the data to upload.</param>
-        /// <param name="sizeInBytes">The number of bytes to upload. This value must match the total size of the texture region specified.</param>
-        /// <param name="face">The <see cref="CubeFace"/> into which the texture data is uploaded.</param>
-        /// <param name="x">The minimum X value of the updated region.</param>
-        /// <param name="y">The minimum Y value of the updated region.</param>
-        /// <param name="width">The width of the updated region, in texels.</param>
-        /// <param name="height">The height of the updated region, in texels.</param>
-        /// <param name="mipLevel">The mipmap level to update. Must be less than the total number of mipmaps contained in the
-        /// <see cref="Texture"/>.</param>
-        /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
-        /// <see cref="Texture"/>.</param>
-        public abstract void UpdateTextureCube(
-            Texture texture,
-            IntPtr source,
-            uint sizeInBytes,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
             uint mipLevel,
             uint arrayLayer);
 

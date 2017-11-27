@@ -249,24 +249,6 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public override void UpdateTextureCube(
-            Texture texture,
-            IntPtr source,
-            uint sizeInBytes,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
-            uint mipLevel,
-            uint arrayLayer)
-        {
-            lock (_contextLock)
-            {
-                _commandExecutor.UpdateTextureCube(texture, source, face, x, y, width, height, mipLevel, arrayLayer);
-            }
-        }
-
         internal void EnqueueDisposal(OpenGLDeferredResource resource)
         {
             _resourcesToDispose.Enqueue(resource);

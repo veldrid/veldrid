@@ -670,8 +670,17 @@ namespace Veldrid.OpenGL
             glTex.EnsureResourcesCreated();
 
             TextureTarget texTarget = glTex.TextureTarget;
-            glBindTexture(texTarget, glTex.Texture);
-            CheckLastError();
+
+            if (texTarget == TextureTarget.TextureCubeMap)
+            {
+                glBindTexture(texTarget, glTex.Texture);
+                CheckLastError();
+            }
+            else
+            {
+                glBindTexture(texTarget, glTex.Texture);
+                CheckLastError();
+            }
 
             uint pixelSize = FormatHelpers.GetSizeInBytes(glTex.Format);
             if (pixelSize < 4)
@@ -726,6 +735,21 @@ namespace Veldrid.OpenGL
                     dataPtr.ToPointer());
                 CheckLastError();
             }
+            else if (texTarget == TextureTarget.TextureCubeMap)
+            {
+                TextureTarget cubeTarget = GetCubeTarget(arrayLayer);
+                glTexSubImage2D(
+                    cubeTarget,
+                    (int)mipLevel,
+                    (int)x,
+                    (int)y,
+                    width,
+                    height,
+                    glTex.GLPixelFormat,
+                    glTex.GLPixelType,
+                    dataPtr.ToPointer());
+                CheckLastError();
+            }
 
             if (pixelSize < 4)
             {
@@ -734,76 +758,97 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void UpdateTextureCube(
-            Texture textureCube,
-            IntPtr dataPtr,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
-            uint mipLevel,
-            uint arrayLayer)
+        private TextureTarget GetCubeTarget(uint arrayLayer)
         {
-            OpenGLTexture glTexCube = Util.AssertSubtype<Texture, OpenGLTexture>(textureCube);
-            if (glTexCube.ArrayLayers != 1)
+            switch (arrayLayer)
             {
-                throw new NotImplementedException();
-            }
-
-            glTexCube.EnsureResourcesCreated();
-
-            glBindTexture(TextureTarget.TextureCubeMap, glTexCube.Texture);
-            CheckLastError();
-
-            uint pixelSize = FormatHelpers.GetSizeInBytes(glTexCube.Format);
-            if (pixelSize < 4)
-            {
-                glPixelStorei(PixelStoreParameter.UnpackAlignment, (int)pixelSize);
-                CheckLastError();
-            }
-
-            TextureTarget target = GetCubeFaceTarget(face);
-
-            glTexSubImage2D(
-                target,
-                (int)mipLevel,
-                (int)x,
-                (int)y,
-                width,
-                height,
-                glTexCube.GLPixelFormat,
-                glTexCube.GLPixelType,
-                dataPtr.ToPointer());
-            CheckLastError();
-
-            if (pixelSize < 4)
-            {
-                glPixelStorei(PixelStoreParameter.UnpackAlignment, 4);
-                CheckLastError();
-            }
-        }
-
-        private TextureTarget GetCubeFaceTarget(CubeFace face)
-        {
-            switch (face)
-            {
-                case CubeFace.NegativeX:
-                    return TextureTarget.TextureCubeMapNegativeX;
-                case CubeFace.PositiveX:
+                case 0:
                     return TextureTarget.TextureCubeMapPositiveX;
-                case CubeFace.NegativeY:
-                    return TextureTarget.TextureCubeMapNegativeY;
-                case CubeFace.PositiveY:
+                case 1:
+                    return TextureTarget.TextureCubeMapNegativeX;
+                case 2:
                     return TextureTarget.TextureCubeMapPositiveY;
-                case CubeFace.NegativeZ:
+                case 3:
+                    return TextureTarget.TextureCubeMapNegativeY;
+                case 4:
                     return TextureTarget.TextureCubeMapPositiveZ;
-                case CubeFace.PositiveZ:
+                case 5:
                     return TextureTarget.TextureCubeMapNegativeZ;
                 default:
-                    throw Illegal.Value<CubeFace>();
+                    throw new VeldridException("Unexpected array layer in UpdateTexture called on a cubemap texture.");
             }
         }
+
+        //public void UpdateTextureCube(
+        //    Texture textureCube,
+        //    IntPtr dataPtr,
+        //    CubeFace face,
+        //    uint x,
+        //    uint y,
+        //    uint width,
+        //    uint height,
+        //    uint mipLevel,
+        //    uint arrayLayer)
+        //{
+        //    OpenGLTexture glTexCube = Util.AssertSubtype<Texture, OpenGLTexture>(textureCube);
+        //    if (glTexCube.ArrayLayers != 1)
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+
+        //    glTexCube.EnsureResourcesCreated();
+
+        //    glBindTexture(TextureTarget.TextureCubeMap, glTexCube.Texture);
+        //    CheckLastError();
+
+        //    uint pixelSize = FormatHelpers.GetSizeInBytes(glTexCube.Format);
+        //    if (pixelSize < 4)
+        //    {
+        //        glPixelStorei(PixelStoreParameter.UnpackAlignment, (int)pixelSize);
+        //        CheckLastError();
+        //    }
+
+        //    TextureTarget target = GetCubeFaceTarget(face);
+
+        //    glTexSubImage2D(
+        //        target,
+        //        (int)mipLevel,
+        //        (int)x,
+        //        (int)y,
+        //        width,
+        //        height,
+        //        glTexCube.GLPixelFormat,
+        //        glTexCube.GLPixelType,
+        //        dataPtr.ToPointer());
+        //    CheckLastError();
+
+        //    if (pixelSize < 4)
+        //    {
+        //        glPixelStorei(PixelStoreParameter.UnpackAlignment, 4);
+        //        CheckLastError();
+        //    }
+        //}
+
+        //private TextureTarget GetCubeFaceTarget(CubeFace face)
+        //{
+        //    switch (face)
+        //    {
+        //        case CubeFace.NegativeX:
+        //            return TextureTarget.TextureCubeMapNegativeX;
+        //        case CubeFace.PositiveX:
+        //            return TextureTarget.TextureCubeMapPositiveX;
+        //        case CubeFace.NegativeY:
+        //            return TextureTarget.TextureCubeMapNegativeY;
+        //        case CubeFace.PositiveY:
+        //            return TextureTarget.TextureCubeMapPositiveY;
+        //        case CubeFace.NegativeZ:
+        //            return TextureTarget.TextureCubeMapPositiveZ;
+        //        case CubeFace.PositiveZ:
+        //            return TextureTarget.TextureCubeMapNegativeZ;
+        //        default:
+        //            throw Illegal.Value<CubeFace>();
+        //    }
+        //}
 
         public void CopyBuffer(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
         {

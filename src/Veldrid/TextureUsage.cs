@@ -25,9 +25,7 @@ namespace Veldrid
         /// </summary>
         DepthStencil = 1 << 3,
         /// <summary>
-        /// The Texture is a two-dimensional cubemap. It should be updated using the
-        /// <see cref="GraphicsDevice.UpdateTextureCube(Texture, IntPtr, uint, CubeFace, uint, uint, uint, uint, uint, uint)"/>
-        /// method.
+        /// The Texture is a two-dimensional cubemap.
         /// </summary>
         Cubemap = 1 << 4,
         Mappable = 1 << 5,

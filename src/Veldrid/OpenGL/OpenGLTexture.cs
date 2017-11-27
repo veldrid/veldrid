@@ -374,7 +374,7 @@ namespace Veldrid.OpenGL
                 glBindTexture(TextureTarget, Texture);
                 CheckLastError();
 
-                if (TextureTarget == TextureTarget.Texture2D)
+                if (TextureTarget == TextureTarget.Texture2D || TextureTarget == TextureTarget.Texture2DMultisample)
                 {
                     glFramebufferTexture2D(
                         framebufferTarget,
@@ -384,7 +384,9 @@ namespace Veldrid.OpenGL
                         (int)mipLevel);
                     CheckLastError();
                 }
-                else if (TextureTarget == TextureTarget.Texture2DArray || TextureTarget == TextureTarget.Texture3D)
+                else if (TextureTarget == TextureTarget.Texture2DArray
+                    || TextureTarget == TextureTarget.Texture2DMultisampleArray
+                    || TextureTarget == TextureTarget.Texture3D)
                 {
                     glFramebufferTextureLayer(
                         framebufferTarget,

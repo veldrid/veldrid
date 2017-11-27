@@ -70,12 +70,12 @@ namespace Veldrid.NeoDemo.Objects
                     TextureUsage.Sampled | TextureUsage.Cubemap));
 
                 uint faceSize = (uint)(_front.Width * _front.Height * Unsafe.SizeOf<Rgba32>());
-                gd.UpdateTextureCube(textureCube, (IntPtr)leftPin, faceSize, CubeFace.NegativeX, 0, 0, width, height, 0, 0);
-                gd.UpdateTextureCube(textureCube, (IntPtr)rightPin, faceSize, CubeFace.PositiveX, 0, 0, width, height, 0, 0);
-                gd.UpdateTextureCube(textureCube, (IntPtr)bottomPin, faceSize, CubeFace.NegativeY, 0, 0, width, height, 0, 0);
-                gd.UpdateTextureCube(textureCube, (IntPtr)topPin, faceSize, CubeFace.PositiveY, 0, 0, width, height, 0, 0);
-                gd.UpdateTextureCube(textureCube, (IntPtr)backPin, faceSize, CubeFace.NegativeZ, 0, 0, width, height, 0, 0);
-                gd.UpdateTextureCube(textureCube, (IntPtr)frontPin, faceSize, CubeFace.PositiveZ, 0, 0, width, height, 0, 0);
+                gd.UpdateTexture(textureCube, (IntPtr)rightPin, faceSize, 0, 0, 0, width, height, 1, 0, 0);
+                gd.UpdateTexture(textureCube, (IntPtr)leftPin, faceSize, 0, 0, 0, width, height, 1, 0, 1);
+                gd.UpdateTexture(textureCube, (IntPtr)topPin, faceSize, 0, 0, 0, width, height, 1, 0, 2);
+                gd.UpdateTexture(textureCube, (IntPtr)bottomPin, faceSize, 0, 0, 0, width, height, 1, 0, 3);
+                gd.UpdateTexture(textureCube, (IntPtr)backPin, faceSize, 0, 0, 0, width, height, 1, 0, 4);
+                gd.UpdateTexture(textureCube, (IntPtr)frontPin, faceSize, 0, 0, 0, width, height, 1, 0, 5);
 
                 textureView = factory.CreateTextureView(new TextureViewDescription(textureCube));
             }

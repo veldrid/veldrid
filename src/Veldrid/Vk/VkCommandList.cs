@@ -303,9 +303,9 @@ namespace Veldrid.Vk
             vkCmdResolveImage(
                 _cb,
                 vkSource.DeviceImage,
-                vkSource.ImageLayouts[0],
+                vkSource.GetImageLayout(0, 0),
                 vkDestination.DeviceImage,
-                vkDestination.ImageLayouts[0],
+                vkDestination.GetImageLayout(0, 0),
                 1,
                 ref region);
         }
@@ -602,17 +602,6 @@ namespace Veldrid.Vk
 
             VkTexture srcVkTexture = Util.AssertSubtype<Texture, VkTexture>(source);
             VkTexture dstVkTexture = Util.AssertSubtype<Texture, VkTexture>(destination);
-
-            TransitionImageLayout(
-                _cb,
-                srcVkTexture.DeviceImage,
-                srcMipLevel,
-                1,
-                srcBaseArrayLayer,
-                layerCount,
-                srcVkTexture.ImageLayouts[srcMipLevel],
-                VkImageLayout.TransferSrcOptimal);
-            srcVkTexture.ImageLayouts[srcMipLevel] = VkImageLayout.TransferSrcOptimal;
 
             srcVkTexture.TransitionImageLayout(
                 _cb,

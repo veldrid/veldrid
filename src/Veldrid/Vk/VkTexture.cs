@@ -11,6 +11,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly VkImage _image;
         private readonly VkMemoryBlock _memory;
+        private readonly uint _actualImageArrayLayers;
         private bool _disposed;
 
         public override uint Width { get; }
@@ -34,7 +35,7 @@ namespace Veldrid.Vk
         public VkFormat VkFormat { get; }
         public VkSampleCountFlags VkSampleCount { get; }
 
-        public VkImageLayout[] ImageLayouts { get; internal set; }
+        private VkImageLayout[] _imageLayouts;
 
         internal VkTexture(VkGraphicsDevice gd, ref TextureDescription description)
         {
@@ -44,6 +45,10 @@ namespace Veldrid.Vk
             Depth = description.Depth;
             MipLevels = description.MipLevels;
             ArrayLayers = description.ArrayLayers;
+            bool isCubemap = ((description.Usage) & TextureUsage.Cubemap) == TextureUsage.Cubemap;
+            _actualImageArrayLayers = isCubemap
+? 6 * ArrayLayers
+                : ArrayLayers;
             Format = description.Format;
             Usage = description.Usage;
             SampleCount = description.SampleCount;
@@ -70,7 +75,7 @@ namespace Veldrid.Vk
 
             VkImageCreateInfo imageCI = VkImageCreateInfo.New();
             imageCI.mipLevels = MipLevels;
-            imageCI.arrayLayers = description.ArrayLayers;
+            imageCI.arrayLayers = _actualImageArrayLayers;
             imageCI.imageType = Depth == 1 ? VkImageType.Image2D : VkImageType.Image3D;
             imageCI.extent.width = Width;
             imageCI.extent.height = Height;
@@ -99,18 +104,17 @@ namespace Veldrid.Vk
             imageCI.format = VkFormat;
 
             imageCI.samples = VkSampleCount;
-            if ((Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+            if (isCubemap)
             {
                 imageCI.flags = VkImageCreateFlags.CubeCompatible;
-                imageCI.arrayLayers *= 6;
             }
 
             VkResult result = vkCreateImage(gd.Device, ref imageCI, null, out _image);
             CheckResult(result);
-            ImageLayouts = new VkImageLayout[MipLevels];
-            for (int i = 0; i < MipLevels; i++)
+            _imageLayouts = new VkImageLayout[MipLevels * _actualImageArrayLayers];
+            for (int i = 0; i < _imageLayouts.Length; i++)
             {
-                ImageLayouts[i] = VkImageLayout.Preinitialized;
+                _imageLayouts[i] = VkImageLayout.Preinitialized;
             }
 
             vkGetImageMemoryRequirements(gd.Device, _image, out VkMemoryRequirements memoryRequirements);
@@ -174,7 +178,20 @@ namespace Veldrid.Vk
             uint layerCount,
             VkImageLayout newLayout)
         {
-            if (ImageLayouts[baseMipLevel] != newLayout)
+#if DEBUG
+            VkImageLayout oldLayout = _imageLayouts[GetImageLayoutIndex(baseMipLevel, baseArrayLayer)];
+            for (uint level = 0; level < levelCount; level++)
+            {
+                for (uint layer = 0; layer < layerCount; layer++)
+                {
+                    if (_imageLayouts[GetImageLayoutIndex(baseMipLevel + level, baseArrayLayer + layer)] != oldLayout)
+                    {
+                        throw new VeldridException("Unexpected image layout.");
+                    }
+                }
+            }
+#endif
+            if (oldLayout != newLayout)
             {
                 VulkanUtil.TransitionImageLayout(
                     cb,
@@ -183,10 +200,27 @@ namespace Veldrid.Vk
                     levelCount,
                     baseArrayLayer,
                     layerCount,
-                    ImageLayouts[baseMipLevel],
+                    _imageLayouts[GetImageLayoutIndex(baseMipLevel, baseArrayLayer)],
                     newLayout);
-                ImageLayouts[baseMipLevel] = newLayout;
+
+                for (uint level = 0; level < levelCount; level++)
+                {
+                    for (uint layer = 0; layer < layerCount; layer++)
+                    {
+                        _imageLayouts[GetImageLayoutIndex(baseMipLevel + level, baseArrayLayer + layer)] = newLayout;
+                    }
+                }
             }
+        }
+
+        private uint GetImageLayoutIndex(uint mipLevel, uint arrayLayer)
+        {
+            return arrayLayer * MipLevels + mipLevel;
+        }
+
+        internal VkImageLayout GetImageLayout(uint mipLevel, uint arrayLayer)
+        {
+            return _imageLayouts[GetImageLayoutIndex(mipLevel, arrayLayer)];
         }
     }
 }

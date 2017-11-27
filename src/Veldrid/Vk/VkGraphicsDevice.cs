@@ -849,10 +849,9 @@ namespace Veldrid.Vk
             SharedCommandPool pool = GetFreeCommandPool();
             VkCommandBuffer cb = pool.BeginNewCommandBuffer();
             TransitionImageLayout(cb, stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
-            TransitionImageLayout(cb, tex.DeviceImage, mipLevel, 1, 0, 1, tex.ImageLayouts[mipLevel], VkImageLayout.TransferDstOptimal);
-            CopyImage(cb, stagingImage, 0, tex.DeviceImage, mipLevel, width, height);
-            TransitionImageLayout(cb, tex.DeviceImage, mipLevel, 1, 0, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
-            tex.ImageLayouts[mipLevel] = VkImageLayout.ShaderReadOnlyOptimal;
+            tex.TransitionImageLayout(cb, mipLevel, 1, arrayLayer, 1, VkImageLayout.TransferDstOptimal);
+            CopyImage(cb, stagingImage, 0, tex.DeviceImage, mipLevel, width, height, arrayLayer);
+            tex.TransitionImageLayout(cb, mipLevel, 1, arrayLayer, 1, VkImageLayout.ShaderReadOnlyOptimal);
 
             pool.EndAndSubmit(cb);
 
@@ -860,106 +859,106 @@ namespace Veldrid.Vk
             _memoriesToFree.Enqueue(stagingMemory);
         }
 
-        public override void UpdateTextureCube(
-            Texture textureCube,
-            IntPtr source,
-            uint sizeInBytes,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
-            uint mipLevel,
-            uint arrayLayer)
-        {
-            VkTexture vkTexCube = Util.AssertSubtype<Texture, VkTexture>(textureCube);
+        //public override void UpdateTextureCube(
+        //    Texture textureCube,
+        //    IntPtr source,
+        //    uint sizeInBytes,
+        //    CubeFace face,
+        //    uint x,
+        //    uint y,
+        //    uint width,
+        //    uint height,
+        //    uint mipLevel,
+        //    uint arrayLayer)
+        //{
+        //    VkTexture vkTexCube = Util.AssertSubtype<Texture, VkTexture>(textureCube);
 
-            if (x != 0 || y != 0)
-            {
-                throw new NotImplementedException();
-            }
+        //    if (x != 0 || y != 0)
+        //    {
+        //        throw new NotImplementedException();
+        //    }
 
-            // First, create a staging texture.
-            CreateImage(
-                Device,
-                PhysicalDeviceMemProperties,
-                MemoryManager,
-                width,
-                height,
-                1,
-                1,
-                VkFormats.VdToVkPixelFormat(vkTexCube.Format),
-                VkImageTiling.Linear,
-                VkImageUsageFlags.TransferSrc,
-                VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
-                out VkImage stagingImage,
-                out VkMemoryBlock stagingMemory);
+        //    // First, create a staging texture.
+        //    CreateImage(
+        //        Device,
+        //        PhysicalDeviceMemProperties,
+        //        MemoryManager,
+        //        width,
+        //        height,
+        //        1,
+        //        1,
+        //        VkFormats.VdToVkPixelFormat(vkTexCube.Format),
+        //        VkImageTiling.Linear,
+        //        VkImageUsageFlags.TransferSrc,
+        //        VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
+        //        out VkImage stagingImage,
+        //        out VkMemoryBlock stagingMemory);
 
-            VkImageSubresource subresource = new VkImageSubresource();
-            subresource.aspectMask = VkImageAspectFlags.Color;
-            subresource.mipLevel = 0;
-            subresource.arrayLayer = 0;
-            vkGetImageSubresourceLayout(Device, stagingImage, ref subresource, out VkSubresourceLayout stagingLayout);
-            ulong rowPitch = stagingLayout.rowPitch;
+        //    VkImageSubresource subresource = new VkImageSubresource();
+        //    subresource.aspectMask = VkImageAspectFlags.Color;
+        //    subresource.mipLevel = 0;
+        //    subresource.arrayLayer = 0;
+        //    vkGetImageSubresourceLayout(Device, stagingImage, ref subresource, out VkSubresourceLayout stagingLayout);
+        //    ulong rowPitch = stagingLayout.rowPitch;
 
-            void* mappedPtr;
-            VkResult result = vkMapMemory(Device, stagingMemory.DeviceMemory, stagingMemory.Offset, stagingLayout.size, 0, &mappedPtr);
-            CheckResult(result);
+        //    void* mappedPtr;
+        //    VkResult result = vkMapMemory(Device, stagingMemory.DeviceMemory, stagingMemory.Offset, stagingLayout.size, 0, &mappedPtr);
+        //    CheckResult(result);
 
-            if (rowPitch == width)
-            {
-                System.Buffer.MemoryCopy(source.ToPointer(), mappedPtr, sizeInBytes, sizeInBytes);
-            }
-            else
-            {
-                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(vkTexCube.Format);
-                for (uint yy = 0; yy < height; yy++)
-                {
-                    byte* dstRowStart = ((byte*)mappedPtr) + (rowPitch * yy);
-                    byte* srcRowStart = ((byte*)source.ToPointer()) + (width * yy * pixelSizeInBytes);
-                    Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
-                }
-            }
+        //    if (rowPitch == width)
+        //    {
+        //        System.Buffer.MemoryCopy(source.ToPointer(), mappedPtr, sizeInBytes, sizeInBytes);
+        //    }
+        //    else
+        //    {
+        //        uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(vkTexCube.Format);
+        //        for (uint yy = 0; yy < height; yy++)
+        //        {
+        //            byte* dstRowStart = ((byte*)mappedPtr) + (rowPitch * yy);
+        //            byte* srcRowStart = ((byte*)source.ToPointer()) + (width * yy * pixelSizeInBytes);
+        //            Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
+        //        }
+        //    }
 
-            vkUnmapMemory(Device, stagingMemory.DeviceMemory);
+        //    vkUnmapMemory(Device, stagingMemory.DeviceMemory);
 
-            uint cubeArrayLayer = GetArrayLayer(face);
+        //    uint cubeArrayLayer = GetArrayLayer(face);
 
-            // TODO: These transitions are sub-optimal.
-            SharedCommandPool pool = GetFreeCommandPool();
-            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-            TransitionImageLayout(cb, stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
-            TransitionImageLayout(cb, vkTexCube.DeviceImage, 0, 1, 0, 6, vkTexCube.ImageLayouts[0], VkImageLayout.TransferDstOptimal);
-            CopyImage(cb, stagingImage, 0, vkTexCube.DeviceImage, mipLevel, width, height, cubeArrayLayer);
-            TransitionImageLayout(cb, vkTexCube.DeviceImage, 0, 1, 0, 6, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
-            vkTexCube.ImageLayouts[0] = VkImageLayout.ShaderReadOnlyOptimal;
+        //    // TODO: These transitions are sub-optimal.
+        //    SharedCommandPool pool = GetFreeCommandPool();
+        //    VkCommandBuffer cb = pool.BeginNewCommandBuffer();
+        //    TransitionImageLayout(cb, stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
+        //    TransitionImageLayout(cb, vkTexCube.DeviceImage, 0, 1, 0, 6, vkTexCube.ImageLayouts[0], VkImageLayout.TransferDstOptimal);
+        //    CopyImage(cb, stagingImage, 0, vkTexCube.DeviceImage, mipLevel, width, height, cubeArrayLayer);
+        //    TransitionImageLayout(cb, vkTexCube.DeviceImage, 0, 1, 0, 6, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
+        //    vkTexCube.ImageLayouts[0] = VkImageLayout.ShaderReadOnlyOptimal;
 
-            pool.EndAndSubmit(cb);
+        //    pool.EndAndSubmit(cb);
 
-            _imagesToDestroy.Enqueue(stagingImage);
-            _memoriesToFree.Enqueue(stagingMemory);
-        }
+        //    _imagesToDestroy.Enqueue(stagingImage);
+        //    _memoriesToFree.Enqueue(stagingMemory);
+        //}
 
-        private uint GetArrayLayer(CubeFace face)
-        {
-            switch (face)
-            {
-                case CubeFace.NegativeX:
-                    return 1;
-                case CubeFace.PositiveX:
-                    return 0;
-                case CubeFace.NegativeY:
-                    return 3;
-                case CubeFace.PositiveY:
-                    return 2;
-                case CubeFace.NegativeZ:
-                    return 4;
-                case CubeFace.PositiveZ:
-                    return 5;
-                default:
-                    throw Illegal.Value<CubeFace>();
-            }
-        }
+        //private uint GetArrayLayer(CubeFace face)
+        //{
+        //    switch (face)
+        //    {
+        //        case CubeFace.NegativeX:
+        //            return 1;
+        //        case CubeFace.PositiveX:
+        //            return 0;
+        //        case CubeFace.NegativeY:
+        //            return 3;
+        //        case CubeFace.PositiveY:
+        //            return 2;
+        //        case CubeFace.NegativeZ:
+        //            return 4;
+        //        case CubeFace.PositiveZ:
+        //            return 5;
+        //        default:
+        //            throw Illegal.Value<CubeFace>();
+        //    }
+        //}
 
         protected void CopyImage(
             VkCommandBuffer cb,

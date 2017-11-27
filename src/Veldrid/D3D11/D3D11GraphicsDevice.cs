@@ -263,77 +263,19 @@ namespace Veldrid.D3D11
             uint arrayLayer)
         {
             Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(texture).DeviceTexture;
+            int subresource = D3D11Util.ComputeSubresource(mipLevel, texture.MipLevels, arrayLayer);
             ResourceRegion resourceRegion = new ResourceRegion(
                 left: (int)x,
+                right: (int)(x + width),
                 top: (int)y,
                 front: (int)z,
-                right: (int)(x + width),
                 bottom: (int)(y + height),
                 back: (int)(z + depth));
             uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture.Format) * width;
             lock (_immediateContextLock)
             {
-                _immediateContext.UpdateSubresource(deviceTexture, (int)mipLevel, resourceRegion, source, (int)srcRowPitch, 0);
-            }
-        }
-
-        public override void UpdateTextureCube(
-            Texture textureCube,
-            IntPtr source,
-            uint sizeInBytes,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
-            uint mipLevel,
-            uint arrayLayer)
-        {
-            Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(textureCube).DeviceTexture;
-
-            ResourceRegion resourceRegion = new ResourceRegion(
-                left: (int)x,
-                right: (int)x + (int)width,
-                top: (int)y,
-                bottom: (int)y + (int)height,
-                front: 0,
-                back: 1);
-            uint srcRowPitch = FormatHelpers.GetSizeInBytes(textureCube.Format) * width;
-            int subresource = GetSubresource(face, mipLevel, textureCube.MipLevels);
-            lock (_immediateContextLock)
-            {
                 _immediateContext.UpdateSubresource(deviceTexture, subresource, resourceRegion, source, (int)srcRowPitch, 0);
             }
-        }
-
-        private int GetSubresource(CubeFace face, uint level, uint totalLevels)
-        {
-            int faceOffset;
-            switch (face)
-            {
-                case CubeFace.NegativeX:
-                    faceOffset = 1;
-                    break;
-                case CubeFace.PositiveX:
-                    faceOffset = 0;
-                    break;
-                case CubeFace.NegativeY:
-                    faceOffset = 3;
-                    break;
-                case CubeFace.PositiveY:
-                    faceOffset = 2;
-                    break;
-                case CubeFace.NegativeZ:
-                    faceOffset = 4;
-                    break;
-                case CubeFace.PositiveZ:
-                    faceOffset = 5;
-                    break;
-                default:
-                    throw Illegal.Value<CubeFace>();
-            }
-
-            return faceOffset * (int)totalLevels + (int)level;
         }
 
         protected override void PlatformDispose()

@@ -787,6 +787,70 @@ namespace Veldrid.OpenGLBinding
             uint numlayers)
                 => p_glTextureView(texture, target, origtexture, internalformat, minlevel, numlevels, minlayer, numlayers);
 
+        private delegate void* glMapBuffer_t(BufferTarget target, BufferAccess access);
+        private static glMapBuffer_t p_glMapBuffer;
+        public static void* glMapBuffer(BufferTarget target, BufferAccess access) => p_glMapBuffer(target, access);
+
+        private delegate GLboolean glUnmapBuffer_t(BufferTarget target);
+        private static glUnmapBuffer_t p_glUnmapBuffer;
+        public static GLboolean glUnmapBuffer(BufferTarget target) => p_glUnmapBuffer(target);
+
+        private delegate void glCopyBufferSubData_t(
+            BufferTarget readTarget,
+            BufferTarget writeTarget,
+            IntPtr readOffset,
+            IntPtr writeOffset,
+            IntPtr size);
+        private static glCopyBufferSubData_t p_glCopyBufferSubData;
+        public static void glCopyBufferSubData(
+            BufferTarget readTarget,
+            BufferTarget writeTarget,
+            IntPtr readOffset,
+            IntPtr writeOffset,
+            IntPtr size) => p_glCopyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size);
+
+        private delegate void glCopyTexSubImage2D_t(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            int yoffset,
+            int x,
+            int y,
+            uint width,
+            uint height);
+        private static glCopyTexSubImage2D_t p_glCopyTexSubImage2D;
+        public static void glCopyTexSubImage2D(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            int yoffset,
+            int x,
+            int y,
+            uint width,
+            uint height) => p_glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+
+        private delegate void glCopyTexSubImage3D_t(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            int yoffset,
+            int zoffset,
+            int x,
+            int y,
+            uint width,
+            uint height);
+        private static glCopyTexSubImage3D_t p_glCopyTexSubImage3D;
+        public static void glCopyTexSubImage3D(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            int yoffset,
+            int zoffset,
+            int x,
+            int y,
+            uint width,
+            uint height) => p_glCopyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y, width, height);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -896,6 +960,11 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTexStorage2D", out p_glTexStorage2D);
             LoadFunction("glTexStorage3D", out p_glTexStorage3D);
             LoadFunction("glTextureView", out p_glTextureView);
+            LoadFunction("glMapBuffer", out p_glMapBuffer);
+            LoadFunction("glUnmapBuffer", out p_glUnmapBuffer);
+            LoadFunction("glCopyBufferSubData", out p_glCopyBufferSubData);
+            LoadFunction("glCopyTexSubImage2D", out p_glCopyTexSubImage2D);
+            LoadFunction("glCopyTexSubImage3D", out p_glCopyTexSubImage3D);
         }
 
         private static void LoadFunction<T>(string name, out T field)

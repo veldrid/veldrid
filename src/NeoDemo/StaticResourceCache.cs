@@ -105,11 +105,11 @@ namespace Veldrid.NeoDemo
             s_resourceSets.Clear();
         }
 
-        internal static Texture GetTexture2D(ResourceFactory factory, ImageSharpTexture textureData, CommandList cl)
+        internal static Texture GetTexture2D(GraphicsDevice gd, ResourceFactory factory, ImageSharpTexture textureData)
         {
             if (!s_textures.TryGetValue(textureData, out Texture tex))
             {
-                tex = textureData.CreateDeviceTexture(factory, cl);
+                tex = textureData.CreateDeviceTexture(gd, factory);
                 s_textures.Add(textureData, tex);
             }
 
@@ -127,13 +127,13 @@ namespace Veldrid.NeoDemo
             return view;
         }
 
-        internal static unsafe Texture GetPinkTexture(ResourceFactory factory, CommandList cl)
+        internal static unsafe Texture GetPinkTexture(GraphicsDevice gd, ResourceFactory factory)
         {
             if (_pinkTex == null)
             {
                 RgbaByte pink = RgbaByte.Pink;
                 _pinkTex = factory.CreateTexture(new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
-                cl.UpdateTexture(_pinkTex, (IntPtr)(&pink), 4, 0, 0, 0, 1, 1, 1, 0, 0);
+                gd.UpdateTexture(_pinkTex, (IntPtr)(&pink), 4, 0, 0, 0, 1, 1, 1, 0, 0);
             }
 
             return _pinkTex;

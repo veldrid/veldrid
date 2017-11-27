@@ -44,11 +44,6 @@ namespace Veldrid
         /// multisample <see cref="Texture"/>.
         /// </summary>
         public TextureSampleCount SampleCount;
-        /// <summary>
-        /// Indicates whether this Texture is optimized for frequent updates. Dynamic Textures are able to be mapped into
-        /// CPU-visible memory using the <see cref="GraphicsDevice.Map(MappableResource, uint, uint)"/> method.
-        /// </summary>
-        public bool Dynamic;
 
         /// <summary>
         /// Contsructs a new TextureDescription describing a non-multisampled <see cref="Texture"/>.
@@ -81,7 +76,6 @@ namespace Veldrid
             Format = format;
             Usage = usage;
             SampleCount = TextureSampleCount.Count1;
-            Dynamic = false;
         }
 
         /// <summary>
@@ -100,9 +94,6 @@ namespace Veldrid
         /// If the Texture will be used as a 2D cubemap, then <see cref="TextureUsage.Cubemap"/> must be included.</param>
         /// <param name="sampleCount">The number of samples. If any other value than <see cref="TextureSampleCount.Count1"/> is
         /// provided, then this describes a multisample texture.</param>
-        /// <param name="dynamic">Indicates whether this Texture is optimized for frequent updates. Dynamic Textures are able to
-        /// be mapped into CPU-visible memory using the <see cref="GraphicsDevice.Map(MappableResource, uint, uint)"/> method.
-        /// </param>
         public TextureDescription(
             uint width,
             uint height,
@@ -111,8 +102,7 @@ namespace Veldrid
             uint arrayLayers,
             PixelFormat format,
             TextureUsage usage,
-            TextureSampleCount sampleCount,
-            bool dynamic)
+            TextureSampleCount sampleCount)
         {
             Width = width;
             Height = height;
@@ -122,7 +112,6 @@ namespace Veldrid
             Format = format;
             Usage = usage;
             SampleCount = sampleCount;
-            Dynamic = dynamic;
         }
 
         /// <summary>
@@ -138,8 +127,7 @@ namespace Veldrid
                 && MipLevels.Equals(other.MipLevels)
                 && ArrayLayers.Equals(other.ArrayLayers)
                 && Format == other.Format
-                && Usage == other.Usage
-                && Dynamic == other.Dynamic;
+                && Usage == other.Usage;
         }
 
         /// <summary>
@@ -155,8 +143,7 @@ namespace Veldrid
                 MipLevels.GetHashCode(),
                 ArrayLayers.GetHashCode(),
                 Format.GetHashCode(),
-                Usage.GetHashCode(),
-                Dynamic.GetHashCode());
+                Usage.GetHashCode());
         }
     }
 }

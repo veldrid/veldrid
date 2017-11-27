@@ -19,7 +19,7 @@ namespace Veldrid.Vk
 
         public VkMemoryRequirements BufferMemoryRequirements => _bufferMemoryRequirements;
 
-        public VkBuffer(VkGraphicsDevice gd, uint sizeInBytes, bool dynamic, BufferUsage usage)
+        public VkBuffer(VkGraphicsDevice gd, uint sizeInBytes, BufferUsage usage)
         {
             _gd = gd;
             SizeInBytes = sizeInBytes;
@@ -55,6 +55,8 @@ namespace Veldrid.Vk
             CheckResult(result);
 
             vkGetBufferMemoryRequirements(gd.Device, _deviceBuffer, out _bufferMemoryRequirements);
+
+            bool dynamic = (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
 
             VkMemoryPropertyFlags memoryPropertyFlags =
                 dynamic

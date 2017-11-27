@@ -36,7 +36,7 @@ namespace Veldrid.NeoDemo.Objects
             Texture gridTexture = factory.CreateTexture(new TextureDescription(gridSize, gridSize, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
             fixed (RgbaByte* pixelsPtr = pixels)
             {
-                cl.UpdateTexture(gridTexture, (IntPtr)pixelsPtr, pixels.SizeInBytes(), 0, 0, 0, gridSize, gridSize, 1, 0, 0);
+                gd.UpdateTexture(gridTexture, (IntPtr)pixelsPtr, pixels.SizeInBytes(), 0, 0, 0, gridSize, gridSize, 1, 0, 0);
             }
 
             TextureView textureView = factory.CreateTextureView(new TextureViewDescription(gridTexture));

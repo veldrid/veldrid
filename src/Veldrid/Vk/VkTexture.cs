@@ -165,5 +165,28 @@ namespace Veldrid.Vk
                 }
             }
         }
+
+        internal void TransitionImageLayout(
+            VkCommandBuffer cb,
+            uint baseMipLevel,
+            uint levelCount,
+            uint baseArrayLayer,
+            uint layerCount,
+            VkImageLayout newLayout)
+        {
+            if (ImageLayouts[baseMipLevel] != newLayout)
+            {
+                VulkanUtil.TransitionImageLayout(
+                    cb,
+                    DeviceImage,
+                    baseMipLevel,
+                    levelCount,
+                    baseArrayLayer,
+                    layerCount,
+                    ImageLayouts[baseMipLevel],
+                    newLayout);
+                ImageLayouts[baseMipLevel] = newLayout;
+            }
+        }
     }
 }

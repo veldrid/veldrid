@@ -15,10 +15,6 @@ namespace Veldrid.Vk
         private VkCommandPool _pool;
         private VkCommandBuffer _cb;
 
-        private List<VkImage> _imagesToDestroy;
-        private List<Vulkan.VkBuffer> _buffersToDestroy;
-        private List<VkMemoryBlock> _memoriesToFree;
-
         private bool _commandBufferBegun;
         private bool _commandBufferEnded;
         private VkRect2D[] _scissorRects = Array.Empty<VkRect2D>();
@@ -43,36 +39,6 @@ namespace Veldrid.Vk
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
-
-        internal void CollectDisposables(ConcurrentQueue<Vulkan.VkBuffer> buffers, ConcurrentQueue<VkImage> images, ConcurrentQueue<VkMemoryBlock> memories)
-        {
-            if (_buffersToDestroy != null)
-            {
-                foreach (Vulkan.VkBuffer buffer in _buffersToDestroy)
-                {
-                    buffers.Enqueue(buffer);
-                }
-                _buffersToDestroy.Clear();
-            }
-
-            if (_imagesToDestroy != null)
-            {
-                foreach (VkImage image in _imagesToDestroy)
-                {
-                    images.Enqueue(image);
-                }
-                _imagesToDestroy.Clear();
-            }
-
-            if (_memoriesToFree != null)
-            {
-                foreach (VkMemoryBlock memory in _memoriesToFree)
-                {
-                    memories.Enqueue(memory);
-                }
-                _memoriesToFree.Clear();
-            }
-        }
 
         public VkCommandList(VkGraphicsDevice gd, ref CommandListDescription description)
             : base(ref description)
@@ -570,375 +536,105 @@ namespace Veldrid.Vk
 
         public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(buffer);
-            VkMemoryBlock memoryBlock = null;
-            Vulkan.VkBuffer copySrcBuffer = Vulkan.VkBuffer.Null;
-            IntPtr mappedPtr;
-            bool isPersistentMapped = vkBuffer.Memory.IsPersistentMapped;
-            if (isPersistentMapped)
-            {
-                mappedPtr = (IntPtr)vkBuffer.Memory.BlockMappedPointer;
-            }
-            else
-            {
-                VkBufferCreateInfo bufferCI = VkBufferCreateInfo.New();
-                bufferCI.usage = VkBufferUsageFlags.TransferSrc;
-                bufferCI.size = vkBuffer.BufferMemoryRequirements.size;
-                VkResult result = vkCreateBuffer(_gd.Device, ref bufferCI, null, out copySrcBuffer);
-                CheckResult(result);
-
-                vkGetBufferMemoryRequirements(_gd.Device, copySrcBuffer, out VkMemoryRequirements memReqs);
-
-                memoryBlock = _gd.MemoryManager.Allocate(
-                    _gd.PhysicalDeviceMemProperties,
-                    memReqs.memoryTypeBits,
-                    VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
-                    true,
-                    memReqs.size,
-                    memReqs.alignment);
-
-                result = vkBindBufferMemory(_gd.Device, copySrcBuffer, memoryBlock.DeviceMemory, memoryBlock.Offset);
-                CheckResult(result);
-
-                mappedPtr = (IntPtr)memoryBlock.BlockMappedPointer;
-            }
-
-            byte* destPtr = (byte*)mappedPtr + bufferOffsetInBytes;
-            Unsafe.CopyBlock(destPtr, source.ToPointer(), sizeInBytes);
-
-            if (!isPersistentMapped)
-            {
-                EnsureNoRenderPass();
-                VkBufferCopy copyRegion = new VkBufferCopy { size = vkBuffer.BufferMemoryRequirements.size };
-                vkCmdCopyBuffer(_cb, copySrcBuffer, vkBuffer.DeviceBuffer, 1, ref copyRegion);
-
-                if (_buffersToDestroy == null)
-                {
-                    _buffersToDestroy = new List<Vulkan.VkBuffer>();
-                }
-                _buffersToDestroy.Add(copySrcBuffer);
-
-                if (_memoriesToFree == null)
-                {
-                    _memoriesToFree = new List<VkMemoryBlock>();
-                }
-                _memoriesToFree.Add(memoryBlock);
-            }
+            // TODO: This should grab a pooled staging buffer, upload the data to that, and then queue a copy from it to the true
+            // destination buffer given. Then, it should queue up the buffer to be returned to the pool.
+            // Calling GraphicsDevice.UpdateBuffer will not work correctly -- it doesn't queue up the copies into this VkCommandBuffer,
+            // it just submits them immediately on a transient command buffer. Therefore, calling this function multiple times on
+            // the same CommandList will cause earlier copies to be overwritten.
+            _gd.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }
 
-        private IntPtr MapBuffer(VkBuffer buffer, uint numBytes)
+        protected override void CopyBufferCore(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
         {
-            if (buffer.Memory.IsPersistentMapped)
+            EnsureNoRenderPass();
+
+            VkBuffer srcVkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(source);
+            VkBuffer dstVkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(destination);
+
+            VkBufferCopy region = new VkBufferCopy
             {
-                return (IntPtr)buffer.Memory.BlockMappedPointer;
-            }
-            else
-            {
-                void* mappedPtr;
-                VkResult result = vkMapMemory(_gd.Device, buffer.Memory.DeviceMemory, buffer.Memory.Offset, numBytes, 0, &mappedPtr);
-                CheckResult(result);
-                return (IntPtr)mappedPtr;
-            }
+                srcOffset = sourceOffset,
+                dstOffset = destinationOffset,
+                size = sizeInBytes
+            };
+
+            vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, ref region);
         }
 
-        private void UnmapBuffer(VkBuffer buffer)
-        {
-            if (!buffer.Memory.IsPersistentMapped)
-            {
-                vkUnmapMemory(_gd.Device, buffer.Memory.DeviceMemory);
-            }
-        }
-
-        public override void UpdateTexture(
-            Texture texture,
-            IntPtr source,
-            uint sizeInBytes,
-            uint x,
-            uint y,
-            uint z,
-            uint width,
-            uint height,
-            uint depth,
-            uint mipLevel,
-            uint arrayLayer)
-        {
-            VkTexture tex = Util.AssertSubtype<Texture, VkTexture>(texture);
-
-            if (x != 0 || y != 0)
-            {
-                throw new NotImplementedException();
-            }
-
-            // First, create a staging texture.
-            CreateImage(
-                _gd.Device,
-                _gd.PhysicalDeviceMemProperties,
-                _gd.MemoryManager,
-                width,
-                height,
-                depth,
-                1,
-                VkFormats.VdToVkPixelFormat(tex.Format),
-                VkImageTiling.Linear,
-                VkImageUsageFlags.TransferSrc,
-                VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
-                out VkImage stagingImage,
-                out VkMemoryBlock stagingMemory);
-
-            VkImageSubresource subresource = new VkImageSubresource();
-            subresource.aspectMask = VkImageAspectFlags.Color;
-            subresource.mipLevel = 0;
-            subresource.arrayLayer = 0;
-            vkGetImageSubresourceLayout(_gd.Device, stagingImage, ref subresource, out VkSubresourceLayout stagingLayout);
-            ulong rowPitch = stagingLayout.rowPitch;
-
-            void* mappedPtr;
-            VkResult result = vkMapMemory(_gd.Device, stagingMemory.DeviceMemory, stagingMemory.Offset, stagingLayout.size, 0, &mappedPtr);
-            CheckResult(result);
-
-            if (rowPitch == width)
-            {
-                System.Buffer.MemoryCopy(source.ToPointer(), mappedPtr, sizeInBytes, sizeInBytes);
-            }
-            else
-            {
-                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
-                for (uint yy = 0; yy < height; yy++)
-                {
-                    byte* dstRowStart = ((byte*)mappedPtr) + (rowPitch * yy);
-                    byte* srcRowStart = ((byte*)source.ToPointer()) + (width * yy * pixelSizeInBytes);
-                    Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
-                }
-            }
-
-            vkUnmapMemory(_gd.Device, stagingMemory.DeviceMemory);
-
-            TransitionImageLayout(stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
-            TransitionImageLayout(tex.DeviceImage, mipLevel, 1, 0, 1, tex.ImageLayouts[mipLevel], VkImageLayout.TransferDstOptimal);
-            CopyImage(stagingImage, 0, tex.DeviceImage, mipLevel, width, height);
-            TransitionImageLayout(tex.DeviceImage, mipLevel, 1, 0, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
-            tex.ImageLayouts[mipLevel] = VkImageLayout.ShaderReadOnlyOptimal;
-
-            if (_imagesToDestroy == null)
-            {
-                _imagesToDestroy = new List<VkImage>();
-            }
-            _imagesToDestroy.Add(stagingImage);
-
-            if (_memoriesToFree == null)
-            {
-                _memoriesToFree = new List<VkMemoryBlock>();
-            }
-            _memoriesToFree.Add(stagingMemory);
-        }
-
-        public override void UpdateTextureCube(
-            Texture textureCube,
-            IntPtr source,
-            uint sizeInBytes,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
-            uint mipLevel,
-            uint arrayLayer)
-        {
-            VkTexture vkTexCube = Util.AssertSubtype<Texture, VkTexture>(textureCube);
-
-            if (x != 0 || y != 0)
-            {
-                throw new NotImplementedException();
-            }
-
-            // First, create a staging texture.
-            CreateImage(
-                _gd.Device,
-                _gd.PhysicalDeviceMemProperties,
-                _gd.MemoryManager,
-                width,
-                height,
-                1,
-                1,
-                VkFormats.VdToVkPixelFormat(vkTexCube.Format),
-                VkImageTiling.Linear,
-                VkImageUsageFlags.TransferSrc,
-                VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
-                out VkImage stagingImage,
-                out VkMemoryBlock stagingMemory);
-
-            VkImageSubresource subresource = new VkImageSubresource();
-            subresource.aspectMask = VkImageAspectFlags.Color;
-            subresource.mipLevel = 0;
-            subresource.arrayLayer = 0;
-            vkGetImageSubresourceLayout(_gd.Device, stagingImage, ref subresource, out VkSubresourceLayout stagingLayout);
-            ulong rowPitch = stagingLayout.rowPitch;
-
-            void* mappedPtr;
-            VkResult result = vkMapMemory(_gd.Device, stagingMemory.DeviceMemory, stagingMemory.Offset, stagingLayout.size, 0, &mappedPtr);
-            CheckResult(result);
-
-            if (rowPitch == width)
-            {
-                System.Buffer.MemoryCopy(source.ToPointer(), mappedPtr, sizeInBytes, sizeInBytes);
-            }
-            else
-            {
-                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(vkTexCube.Format);
-                for (uint yy = 0; yy < height; yy++)
-                {
-                    byte* dstRowStart = ((byte*)mappedPtr) + (rowPitch * yy);
-                    byte* srcRowStart = ((byte*)source.ToPointer()) + (width * yy * pixelSizeInBytes);
-                    Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
-                }
-            }
-
-            vkUnmapMemory(_gd.Device, stagingMemory.DeviceMemory);
-
-            uint cubeArrayLayer = GetArrayLayer(face);
-
-            // TODO: These transitions are sub-optimal.
-            TransitionImageLayout(stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
-            TransitionImageLayout(vkTexCube.DeviceImage, 0, 1, 0, 6, vkTexCube.ImageLayouts[0], VkImageLayout.TransferDstOptimal);
-            CopyImage(stagingImage, 0, vkTexCube.DeviceImage, mipLevel, width, height, cubeArrayLayer);
-            TransitionImageLayout(vkTexCube.DeviceImage, 0, 1, 0, 6, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
-            vkTexCube.ImageLayouts[0] = VkImageLayout.ShaderReadOnlyOptimal;
-
-            if (_imagesToDestroy == null)
-            {
-                _imagesToDestroy = new List<VkImage>();
-            }
-            _imagesToDestroy.Add(stagingImage);
-
-            if (_memoriesToFree == null)
-            {
-                _memoriesToFree = new List<VkMemoryBlock>();
-            }
-            _memoriesToFree.Add(stagingMemory);
-        }
-
-        private uint GetArrayLayer(CubeFace face)
-        {
-            switch (face)
-            {
-                case CubeFace.NegativeX:
-                    return 1;
-                case CubeFace.PositiveX:
-                    return 0;
-                case CubeFace.NegativeY:
-                    return 3;
-                case CubeFace.PositiveY:
-                    return 2;
-                case CubeFace.NegativeZ:
-                    return 4;
-                case CubeFace.PositiveZ:
-                    return 5;
-                default:
-                    throw Illegal.Value<CubeFace>();
-            }
-        }
-
-        protected void TransitionImageLayout(
-            VkImage image,
-            uint baseMipLevel,
-            uint levelCount,
-            uint baseArrayLayer,
-            uint layerCount,
-            VkImageLayout oldLayout,
-            VkImageLayout newLayout)
-        {
-            Debug.Assert(oldLayout != newLayout);
-            VkImageMemoryBarrier barrier = VkImageMemoryBarrier.New();
-            barrier.oldLayout = oldLayout;
-            barrier.newLayout = newLayout;
-            barrier.srcQueueFamilyIndex = QueueFamilyIgnored;
-            barrier.dstQueueFamilyIndex = QueueFamilyIgnored;
-            barrier.image = image;
-            barrier.subresourceRange.aspectMask = VkImageAspectFlags.Color;
-            barrier.subresourceRange.baseMipLevel = baseMipLevel;
-            barrier.subresourceRange.levelCount = levelCount;
-            barrier.subresourceRange.baseArrayLayer = baseArrayLayer;
-            barrier.subresourceRange.layerCount = layerCount;
-
-            VkPipelineStageFlags srcStageFlags = VkPipelineStageFlags.None;
-            VkPipelineStageFlags dstStageFlags = VkPipelineStageFlags.None;
-
-            if ((oldLayout == VkImageLayout.Undefined || oldLayout == VkImageLayout.Preinitialized) && newLayout == VkImageLayout.TransferDstOptimal)
-            {
-                barrier.srcAccessMask = VkAccessFlags.None;
-                barrier.dstAccessMask = VkAccessFlags.TransferWrite;
-                srcStageFlags = VkPipelineStageFlags.TopOfPipe;
-                dstStageFlags = VkPipelineStageFlags.Transfer;
-            }
-            else if (oldLayout == VkImageLayout.ShaderReadOnlyOptimal && newLayout == VkImageLayout.TransferDstOptimal)
-            {
-                barrier.srcAccessMask = VkAccessFlags.ShaderRead;
-                barrier.dstAccessMask = VkAccessFlags.TransferWrite;
-                srcStageFlags = VkPipelineStageFlags.FragmentShader;
-                dstStageFlags = VkPipelineStageFlags.Transfer;
-            }
-            else if (oldLayout == VkImageLayout.Preinitialized && newLayout == VkImageLayout.TransferSrcOptimal)
-            {
-                barrier.srcAccessMask = VkAccessFlags.None;
-                barrier.dstAccessMask = VkAccessFlags.TransferRead;
-                srcStageFlags = VkPipelineStageFlags.TopOfPipe;
-                dstStageFlags = VkPipelineStageFlags.Transfer;
-            }
-            else if (oldLayout == VkImageLayout.TransferDstOptimal && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
-            {
-                barrier.srcAccessMask = VkAccessFlags.TransferWrite;
-                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
-                srcStageFlags = VkPipelineStageFlags.Transfer;
-                dstStageFlags = VkPipelineStageFlags.FragmentShader;
-            }
-            else
-            {
-                Debug.Fail("Invalid image layout transition.");
-            }
-
-            vkCmdPipelineBarrier(
-                _cb,
-                srcStageFlags,
-                dstStageFlags,
-                VkDependencyFlags.None,
-                0, null,
-                0, null,
-                1, &barrier);
-        }
-
-        protected void CopyImage(
-            VkImage srcImage,
+        protected override void CopyTextureCore(
+            Texture source,
+            uint srcX, uint srcY, uint srcZ,
             uint srcMipLevel,
-            VkImage dstImage,
+            uint srcBaseArrayLayer,
+            Texture destination,
+            uint dstX, uint dstY, uint dstZ,
             uint dstMipLevel,
-            uint width,
-            uint height,
-            uint baseArrayLayer = 0)
+            uint dstBaseArrayLayer,
+            uint width, uint height, uint depth,
+            uint layerCount)
         {
-            VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers();
-            srcSubresource.mipLevel = srcMipLevel;
-            srcSubresource.layerCount = 1;
-            srcSubresource.aspectMask = VkImageAspectFlags.Color;
-            srcSubresource.baseArrayLayer = 0;
+            EnsureNoRenderPass();
 
-            VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers();
-            dstSubresource.mipLevel = dstMipLevel;
-            dstSubresource.baseArrayLayer = baseArrayLayer;
-            dstSubresource.layerCount = 1;
-            dstSubresource.aspectMask = VkImageAspectFlags.Color;
+            VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
+            {
+                aspectMask = VkImageAspectFlags.Color | VkImageAspectFlags.Depth,
+                layerCount = layerCount,
+                mipLevel = srcMipLevel,
+                baseArrayLayer = srcBaseArrayLayer
+            };
 
-            VkImageCopy region = new VkImageCopy();
-            region.dstSubresource = dstSubresource;
-            region.srcSubresource = srcSubresource;
-            region.extent.width = width;
-            region.extent.height = height;
-            region.extent.depth = 1;
+            VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
+            {
+                aspectMask = VkImageAspectFlags.Color | VkImageAspectFlags.Depth,
+                layerCount = layerCount,
+                mipLevel = dstMipLevel,
+                baseArrayLayer = dstBaseArrayLayer
+            };
+
+            VkImageCopy region = new VkImageCopy
+            {
+                srcOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
+                dstOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY, z = (int)dstZ },
+                srcSubresource = srcSubresource,
+                dstSubresource = dstSubresource,
+                extent = new VkExtent3D { width = width, height = height, depth = depth }
+            };
+
+            VkTexture srcVkTexture = Util.AssertSubtype<Texture, VkTexture>(source);
+            VkTexture dstVkTexture = Util.AssertSubtype<Texture, VkTexture>(destination);
+
+            TransitionImageLayout(
+                _cb,
+                srcVkTexture.DeviceImage,
+                srcMipLevel,
+                1,
+                srcBaseArrayLayer,
+                layerCount,
+                srcVkTexture.ImageLayouts[srcMipLevel],
+                VkImageLayout.TransferSrcOptimal);
+            srcVkTexture.ImageLayouts[srcMipLevel] = VkImageLayout.TransferSrcOptimal;
+
+            srcVkTexture.TransitionImageLayout(
+                _cb,
+                srcMipLevel,
+                1,
+                srcBaseArrayLayer,
+                layerCount,
+                VkImageLayout.TransferSrcOptimal);
+
+            dstVkTexture.TransitionImageLayout(
+                _cb,
+                dstMipLevel,
+                1,
+                dstBaseArrayLayer,
+                layerCount,
+                VkImageLayout.TransferDstOptimal);
 
             vkCmdCopyImage(
                 _cb,
-                srcImage,
+                srcVkTexture.DeviceImage,
                 VkImageLayout.TransferSrcOptimal,
-                dstImage,
+                dstVkTexture.DeviceImage,
                 VkImageLayout.TransferDstOptimal,
                 1,
                 ref region);

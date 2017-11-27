@@ -69,7 +69,10 @@ namespace Veldrid.OpenGL
 
         protected override Buffer CreateBufferCore(ref BufferDescription description)
         {
-            return new OpenGLBuffer(_gd, description.SizeInBytes, description.Dynamic, description.Usage);
+            return new OpenGLBuffer(
+                _gd, 
+                description.SizeInBytes, 
+                description.Usage);
         }
     }
 }

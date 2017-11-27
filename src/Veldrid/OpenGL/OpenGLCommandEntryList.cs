@@ -23,31 +23,21 @@ namespace Veldrid.OpenGL
         void SetViewport(uint index, ref Viewport viewport);
         void ResolveTexture(Texture source, Texture destination);
         void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
-        void UpdateTexture(
-            Texture texture,
-            IntPtr source,
-            uint sizeInBytes,
-            uint x,
-            uint y,
-            uint z,
-            uint width,
-            uint height,
-            uint depth,
-            uint mipLevel,
-            uint arrayLayer);
-        void UpdateTextureCube(
-            Texture textureCube,
-            IntPtr source,
-            uint sizeInBytes,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
-            uint mipLevel,
-            uint arrayLayer);
         void ExecuteAll(OpenGLCommandExecutor executor);
         void DispatchIndirect(Buffer indirectBuffer, uint offset);
+        void CopyBuffer(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes);
+        void CopyTexture(
+            Texture source,
+            uint srcX, uint srcY, uint srcZ,
+            uint srcMipLevel,
+            uint srcBaseArrayLayer,
+            Texture destination,
+            uint dstX, uint dstY, uint dstZ,
+            uint dstMipLevel,
+            uint dstBaseArrayLayer,
+            uint width, uint height, uint depth,
+            uint layerCount);
+
         void Reset();
     }
 }

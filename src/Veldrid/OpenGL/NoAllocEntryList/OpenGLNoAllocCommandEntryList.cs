@@ -53,11 +53,11 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte UpdateBufferEntryID = 13;
         private static readonly uint UpdateBufferEntrySize = Util.USizeOf<NoAllocUpdateBufferEntry>();
 
-        private const byte UpdateTextureEntryID = 14;
-        private static readonly uint UpdateTextureEntrySize = Util.USizeOf<NoAllocUpdateTextureEntry>();
+        private const byte CopyBufferEntryID = 14;
+        private static readonly uint CopyBufferEntrySize = Util.USizeOf<NoAllocCopyBufferEntry>();
 
-        private const byte UpdateTextureCubeEntryID = 15;
-        private static readonly uint UpdateTextureCubeEntrySize = Util.USizeOf<NoAllocUpdateTextureCubeEntry>();
+        private const byte CopyTextureEntryID = 15;
+        private static readonly uint CopyTextureEntrySize = Util.USizeOf<NoAllocCopyTextureEntry>();
 
         private const byte ResolveTextureEntryID = 16;
         private static readonly uint ResolveTextureEntrySize = Util.USizeOf<NoAllocResolveTextureEntry>();
@@ -273,40 +273,39 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case UpdateBufferEntryID:
                         ref NoAllocUpdateBufferEntry ube = ref Unsafe.AsRef<NoAllocUpdateBufferEntry>(entryBasePtr);
-                        executor.UpdateBuffer(
-                            ube.Buffer.Item,
-                            ube.BufferOffsetInBytes,
-                            new StagingBlock(ube.StagingBlock.Array, ube.StagingBlock.SizeInBytes, _memoryPool));
+                        fixed (byte* dataPtr = &ube.StagingBlock.Array[0])
+                        {
+                            executor.UpdateBuffer(
+                                ube.Buffer.Item,
+                                ube.BufferOffsetInBytes,
+                                (IntPtr)dataPtr, ube.StagingBlock.SizeInBytes);
+                        }
                         currentOffset += UpdateBufferEntrySize;
                         break;
-                    case UpdateTextureEntryID:
-                        ref NoAllocUpdateTextureEntry ute = ref Unsafe.AsRef<NoAllocUpdateTextureEntry>(entryBasePtr);
-                        executor.UpdateTexture(
-                            ute.Texture,
-                            new StagingBlock(ute.StagingBlock.Array, ute.StagingBlock.SizeInBytes, _memoryPool),
-                            ute.X,
-                            ute.Y,
-                            ute.Z,
-                            ute.Width,
-                            ute.Height,
-                            ute.Depth,
-                            ute.MipLevel,
-                            ute.ArrayLayer);
-                        currentOffset += UpdateTextureEntrySize;
+                    case CopyBufferEntryID:
+                        ref NoAllocCopyBufferEntry cbe = ref Unsafe.AsRef<NoAllocCopyBufferEntry>(entryBasePtr);
+                        executor.CopyBuffer(
+                            cbe.Source,
+                            cbe.SourceOffset,
+                            cbe.Destination,
+                            cbe.DestinationOffset,
+                            cbe.SizeInBytes);
+                        currentOffset += CopyBufferEntrySize;
                         break;
-                    case UpdateTextureCubeEntryID:
-                        ref NoAllocUpdateTextureCubeEntry utce = ref Unsafe.AsRef<NoAllocUpdateTextureCubeEntry>(entryBasePtr);
-                        executor.UpdateTextureCube(
-                            utce.Texture,
-                            new StagingBlock(utce.StagingBlock.Array, utce.StagingBlock.SizeInBytes, _memoryPool),
-                            utce.Face,
-                            utce.X,
-                            utce.Y,
-                            utce.Width,
-                            utce.Height,
-                            utce.MipLevel,
-                            utce.ArrayLayer);
-                        currentOffset += UpdateTextureCubeEntrySize;
+                    case CopyTextureEntryID:
+                        ref NoAllocCopyTextureEntry cte = ref Unsafe.AsRef<NoAllocCopyTextureEntry>(entryBasePtr);
+                        executor.CopyTexture(
+                            cte.Source,
+                            cte.SrcX, cte.SrcY, cte.SrcZ,
+                            cte.SrcMipLevel,
+                            cte.SrcBaseArrayLayer,
+                            cte.Destination,
+                            cte.DstX, cte.DstY, cte.DstZ,
+                            cte.DstMipLevel,
+                            cte.DstBaseArrayLayer,
+                            cte.Width, cte.Height, cte.Depth,
+                            cte.LayerCount);
+                        currentOffset += CopyTextureEntrySize;
                         break;
                     case ResolveTextureEntryID:
                         ref NoAllocResolveTextureEntry rte = ref Unsafe.AsRef<NoAllocResolveTextureEntry>(entryBasePtr);
@@ -425,17 +424,17 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         ube.StagingBlock.GCHandle.Free();
                         currentOffset += UpdateBufferEntrySize;
                         break;
-                    case UpdateTextureEntryID:
-                        ref NoAllocUpdateTextureEntry ute = ref Unsafe.AsRef<NoAllocUpdateTextureEntry>(entryBasePtr);
-                        ute.Texture.Free();
-                        ute.StagingBlock.GCHandle.Free();
-                        currentOffset += UpdateTextureEntrySize;
+                    case CopyBufferEntryID:
+                        ref NoAllocCopyBufferEntry cbe = ref Unsafe.AsRef<NoAllocCopyBufferEntry>(entryBasePtr);
+                        cbe.Source.Free();
+                        cbe.Destination.Free();
+                        currentOffset += CopyBufferEntrySize;
                         break;
-                    case UpdateTextureCubeEntryID:
-                        ref NoAllocUpdateTextureCubeEntry utce = ref Unsafe.AsRef<NoAllocUpdateTextureCubeEntry>(entryBasePtr);
-                        utce.Texture.Free();
-                        utce.StagingBlock.GCHandle.Free();
-                        currentOffset += UpdateTextureCubeEntrySize;
+                    case CopyTextureEntryID:
+                        ref NoAllocCopyTextureEntry cte = ref Unsafe.AsRef<NoAllocCopyTextureEntry>(entryBasePtr);
+                        cte.Source.Free();
+                        cte.Destination.Free();
+                        currentOffset += CopyTextureEntrySize;
                         break;
                     case ResolveTextureEntryID:
                         ref NoAllocResolveTextureEntry rte = ref Unsafe.AsRef<NoAllocResolveTextureEntry>(entryBasePtr);
@@ -569,58 +568,41 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(UpdateBufferEntryID, ref entry);
         }
 
-        public void UpdateTexture(
-            Texture texture,
-            IntPtr source,
-            uint sizeInBytes,
-            uint x,
-            uint y,
-            uint z,
-            uint width,
-            uint height,
-            uint depth,
-            uint mipLevel,
-            uint arrayLayer)
+        public void CopyBuffer(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
         {
-            StagingBlock stagingBlock = _memoryPool.Stage(source, sizeInBytes);
-            NoAllocUpdateTextureEntry entry = new NoAllocUpdateTextureEntry(
-                texture,
-                stagingBlock,
-                x,
-                y,
-                z,
-                width,
-                height,
-                depth,
-                mipLevel,
-                arrayLayer);
-            AddEntry(UpdateTextureEntryID, ref entry);
+            NoAllocCopyBufferEntry entry = new NoAllocCopyBufferEntry(
+                source,
+                sourceOffset,
+                destination,
+                destinationOffset,
+                sizeInBytes);
+            AddEntry(CopyBufferEntryID, ref entry);
         }
 
-        public void UpdateTextureCube(
-            Texture textureCube,
-            IntPtr source,
-            uint sizeInBytes,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
-            uint mipLevel,
-            uint arrayLayer)
+        public void CopyTexture(
+            Texture source,
+            uint srcX, uint srcY, uint srcZ,
+            uint srcMipLevel,
+            uint srcBaseArrayLayer,
+            Texture destination,
+            uint dstX, uint dstY, uint dstZ,
+            uint dstMipLevel,
+            uint dstBaseArrayLayer,
+            uint width, uint height, uint depth,
+            uint layerCount)
         {
-            StagingBlock stagingBlock = _memoryPool.Stage(source, sizeInBytes);
-            NoAllocUpdateTextureCubeEntry entry = new NoAllocUpdateTextureCubeEntry(
-                textureCube,
-                stagingBlock,
-                face,
-                x,
-                y,
-                width,
-                height,
-                mipLevel,
-                arrayLayer);
-            AddEntry(UpdateTextureCubeEntryID, ref entry);
+            NoAllocCopyTextureEntry entry = new NoAllocCopyTextureEntry(
+                source,
+                srcX, srcY, srcZ,
+                srcMipLevel,
+                srcBaseArrayLayer,
+                destination,
+                dstX, dstY, dstZ,
+                dstMipLevel,
+                dstBaseArrayLayer,
+                width, height, depth,
+                layerCount);
+            AddEntry(CopyTextureEntryID, ref entry);
         }
 
         public void Dispose()

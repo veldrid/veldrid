@@ -573,14 +573,14 @@ namespace Veldrid.Utilities
         public Buffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
         {
             Buffer vb = factory.CreateBuffer(
-                new BufferDescription((ulong)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes), BufferUsage.VertexBuffer));
+                new BufferDescription((uint)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(vb, 0, Vertices);
             return vb;
         }
 
         public Buffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
         {
-            Buffer ib = factory.CreateBuffer(new BufferDescription((ulong)(Indices.Length * sizeof(int)), BufferUsage.IndexBuffer, false));
+            Buffer ib = factory.CreateBuffer(new BufferDescription((uint)(Indices.Length * sizeof(int)), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(ib, 0, Indices);
             indexCount = Indices.Length;
             return ib;

@@ -118,35 +118,39 @@ namespace Veldrid.OpenGL
             _commands.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }
 
-        public override void UpdateTexture(
-            Texture texture,
-            IntPtr source,
-            uint sizeInBytes,
-            uint x,
-            uint y,
-            uint z,
-            uint width,
-            uint height,
-            uint depth,
-            uint mipLevel,
-            uint arrayLayer)
+        protected override void CopyBufferCore(
+            Buffer source,
+            uint sourceOffset,
+            Buffer destination,
+            uint destinationOffset,
+            uint sizeInBytes)
         {
-            _commands.UpdateTexture(texture, source, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
+            _commands.CopyBuffer(source, sourceOffset, destination, destinationOffset, sizeInBytes);
         }
 
-        public override void UpdateTextureCube(
-            Texture textureCube,
-            IntPtr source,
-            uint sizeInBytes,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
-            uint mipLevel,
-            uint arrayLayer)
+        protected override void CopyTextureCore(
+            Texture source,
+            uint srcX, uint srcY, uint srcZ,
+            uint srcMipLevel,
+            uint srcBaseArrayLayer,
+            Texture destination,
+            uint dstX, uint dstY, uint dstZ,
+            uint dstMipLevel,
+            uint dstBaseArrayLayer,
+            uint width, uint height, uint depth,
+            uint layerCount)
         {
-            _commands.UpdateTextureCube(textureCube, source, sizeInBytes, face, x, y, width, height, mipLevel, arrayLayer);
+            _commands.CopyTexture(
+                source,
+                srcX, srcY, srcZ,
+                srcMipLevel,
+                srcBaseArrayLayer,
+                destination,
+                dstX, dstY, dstZ,
+                dstMipLevel,
+                dstBaseArrayLayer,
+                width, height, depth,
+                layerCount);
         }
 
         public override void Dispose()

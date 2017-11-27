@@ -392,64 +392,6 @@ namespace Veldrid
         protected abstract void ResolveTextureCore(Texture source, Texture destination);
 
         /// <summary>
-        /// Updates a portion of a <see cref="Texture"/> resource with new data.
-        /// Cube textures should instead use 
-        /// <see cref="UpdateTextureCube(Texture, IntPtr, uint, CubeFace, uint, uint, uint, uint, uint, uint)"/>.
-        /// </summary>
-        /// <param name="texture">The resource to update.</param>
-        /// <param name="source">A pointer to the start of the data to upload.</param>
-        /// <param name="sizeInBytes">The number of bytes to upload. This value must match the total size of the texture region specified.</param>
-        /// <param name="x">The minimum X value of the updated region.</param>
-        /// <param name="y">The minimum Y value of the updated region.</param>
-        /// <param name="z">The minimum Z value of the updated region.</param>
-        /// <param name="width">The width of the updated region, in texels.</param>
-        /// <param name="height">The height of the updated region, in texels.</param>
-        /// <param name="depth">The depth of the updated region, in texels.</param>
-        /// <param name="mipLevel">The mipmap level to update. Must be less than the total number of mipmaps contained in the
-        /// <see cref="Texture"/>.</param>
-        /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
-        /// <see cref="Texture"/>.</param>
-        public abstract void UpdateTexture(
-            Texture texture,
-            IntPtr source,
-            uint sizeInBytes,
-            uint x,
-            uint y,
-            uint z,
-            uint width,
-            uint height,
-            uint depth,
-            uint mipLevel,
-            uint arrayLayer);
-
-        /// <summary>
-        /// Updates a portion of a <see cref="Texture"/> resource with new data. This function operates on cubemap textures.
-        /// </summary>
-        /// <param name="texture">The resource to update.</param>
-        /// <param name="source">A pointer to the start of the data to upload.</param>
-        /// <param name="sizeInBytes">The number of bytes to upload. This value must match the total size of the texture region specified.</param>
-        /// <param name="face">The <see cref="CubeFace"/> into which the texture data is uploaded.</param>
-        /// <param name="x">The minimum X value of the updated region.</param>
-        /// <param name="y">The minimum Y value of the updated region.</param>
-        /// <param name="width">The width of the updated region, in texels.</param>
-        /// <param name="height">The height of the updated region, in texels.</param>
-        /// <param name="mipLevel">The mipmap level to update. Must be less than the total number of mipmaps contained in the
-        /// <see cref="Texture"/>.</param>
-        /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
-        /// <see cref="Texture"/>.</param>
-        public abstract void UpdateTextureCube(
-            Texture texture,
-            IntPtr source,
-            uint sizeInBytes,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
-            uint mipLevel,
-            uint arrayLayer);
-
-        /// <summary>
         /// Updates a <see cref="Buffer"/> region with new data.
         /// This function must be used with a blittable value type <typeparamref name="T"/>.
         /// </summary>
@@ -546,6 +488,54 @@ namespace Veldrid
             uint bufferOffsetInBytes,
             IntPtr source,
             uint sizeInBytes);
+
+        public void CopyBuffer(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
+        {
+#if VALIDATE_USAGE
+#endif
+            CopyBufferCore(source, sourceOffset, destination, destinationOffset, sizeInBytes);
+        }
+
+        protected abstract void CopyBufferCore(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes);
+
+        public void CopyTexture(
+            Texture source,
+            uint srcX, uint srcY, uint srcZ,
+            uint srcMipLevel,
+            uint srcBaseArrayLayer,
+            Texture destination,
+            uint dstX, uint dstY, uint dstZ,
+            uint dstMipLevel,
+            uint dstBaseArrayLayer,
+            uint width, uint height, uint depth,
+            uint layerCount)
+        {
+#if VALIDATE_USAGE
+#endif
+            CopyTextureCore(
+                source,
+                srcX, srcY, srcZ,
+                srcMipLevel,
+                srcBaseArrayLayer,
+                destination,
+                dstX, dstY, dstZ,
+                dstMipLevel,
+                dstBaseArrayLayer,
+                width, height, depth,
+                layerCount);
+        }
+
+        protected abstract void CopyTextureCore(
+            Texture source,
+            uint srcX, uint srcY, uint srcZ,
+            uint srcMipLevel,
+            uint srcBaseArrayLayer,
+            Texture destination,
+            uint dstX, uint dstY, uint dstZ,
+            uint dstMipLevel,
+            uint dstBaseArrayLayer,
+            uint width, uint height, uint depth,
+            uint layerCount);
 
         /// <summary>
         /// Frees unmanaged device resources controlled by this instance.

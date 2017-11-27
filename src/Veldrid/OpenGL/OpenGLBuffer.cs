@@ -23,11 +23,11 @@ namespace Veldrid.OpenGL
 
         public bool Created { get; private set; }
 
-        public OpenGLBuffer(OpenGLGraphicsDevice gd, uint sizeInBytes, bool dynamic, BufferUsage usage)
+        public OpenGLBuffer(OpenGLGraphicsDevice gd, uint sizeInBytes, BufferUsage usage)
         {
             _gd = gd;
             SizeInBytes = sizeInBytes;
-            _dynamic = dynamic;
+            _dynamic = (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
             Usage = usage;
         }
 

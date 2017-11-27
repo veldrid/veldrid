@@ -73,11 +73,11 @@ namespace Veldrid
         {
             _gd = gd;
             ResourceFactory factory = gd.ResourceFactory;
-            _vertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer, true));
-            _indexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer, true));
+            _vertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+            _indexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer | BufferUsage.Dynamic));
             RecreateFontDeviceTexture(gd, cl);
 
-            _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer, true));
+            _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
             byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex);
             byte[] fragmentShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-frag", ShaderStages.Fragment);
@@ -184,7 +184,7 @@ namespace Veldrid
                 1,
                 PixelFormat.R8_G8_B8_A8_UNorm,
                 TextureUsage.Sampled));
-            cl.UpdateTexture(
+            gd.UpdateTexture(
                 _fontTexture,
                 (IntPtr)textureData.Pixels,
                 (uint)(textureData.BytesPerPixel * textureData.Width * textureData.Height),
@@ -339,14 +339,14 @@ namespace Veldrid
             if (totalVBSize > _vertexBuffer.SizeInBytes)
             {
                 _vertexBuffer.Dispose();
-                _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((ulong)(totalVBSize * 1.5f), BufferUsage.VertexBuffer, true));
+                _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.Dynamic));
             }
 
             uint totalIBSize = (uint)(draw_data->TotalIdxCount * sizeof(ushort));
             if (totalIBSize > _indexBuffer.SizeInBytes)
             {
                 _indexBuffer.Dispose();
-                _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((ulong)(totalIBSize * 1.5f), BufferUsage.IndexBuffer, true));
+                _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
             }
 
             for (int i = 0; i < draw_data->CmdListsCount; i++)

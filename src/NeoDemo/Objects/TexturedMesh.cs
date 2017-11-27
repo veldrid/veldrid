@@ -61,8 +61,8 @@ namespace Veldrid.NeoDemo.Objects
             _vb = _meshData.CreateVertexBuffer(disposeFactory, cl);
             _ib = _meshData.CreateIndexBuffer(disposeFactory, cl, out _indexCount);
 
-            _worldBuffer = disposeFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer, true));
-            _inverseTransposeWorldBuffer = disposeFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer, true));
+            _worldBuffer = disposeFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _inverseTransposeWorldBuffer = disposeFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             if (_materialPropsOwned)
             {
                 _materialProps.CreateDeviceObjects(gd, cl, sc);
@@ -70,24 +70,24 @@ namespace Veldrid.NeoDemo.Objects
 
             if (_textureData != null)
             {
-                _texture = StaticResourceCache.GetTexture2D(gd.ResourceFactory, _textureData, cl);
+                _texture = StaticResourceCache.GetTexture2D(gd, gd.ResourceFactory, _textureData);
             }
             else
             {
                 _texture = disposeFactory.CreateTexture(new TextureDescription(1, 1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
                 RgbaByte color = RgbaByte.Pink;
-                cl.UpdateTexture(_texture, (IntPtr)(&color), 4, 0, 0, 0, 1, 1, 1, 0, 0);
+                gd.UpdateTexture(_texture, (IntPtr)(&color), 4, 0, 0, 0, 1, 1, 1, 0, 0);
             }
 
             _textureView = StaticResourceCache.GetTextureView(gd.ResourceFactory, _texture);
 
             if (_alphaTextureData != null)
             {
-                _alphamapTexture = _alphaTextureData.CreateDeviceTexture(disposeFactory, cl);
+                _alphamapTexture = _alphaTextureData.CreateDeviceTexture(gd , disposeFactory);
             }
             else
             {
-                _alphamapTexture = StaticResourceCache.GetPinkTexture(gd.ResourceFactory, cl);
+                _alphamapTexture = StaticResourceCache.GetPinkTexture(gd, gd.ResourceFactory);
             }
             _alphaMapView = StaticResourceCache.GetTextureView(gd.ResourceFactory, _alphamapTexture);
 
@@ -282,8 +282,8 @@ namespace Veldrid.NeoDemo.Objects
         public override void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             Matrix4x4 world = _transform.GetTransformMatrix();
-            cl.UpdateBuffer(_worldBuffer, 0, ref world);
-            cl.UpdateBuffer(_inverseTransposeWorldBuffer, 0, VdUtilities.CalculateInverseTranspose(ref world));
+            gd.UpdateBuffer(_worldBuffer, 0, ref world);
+            gd.UpdateBuffer(_inverseTransposeWorldBuffer, 0, VdUtilities.CalculateInverseTranspose(ref world));
         }
 
         private void RenderShadowMap(CommandList cl, SceneContext sc, int shadowMapIndex)

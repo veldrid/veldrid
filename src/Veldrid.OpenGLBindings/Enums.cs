@@ -1844,4 +1844,12 @@ namespace Veldrid.OpenGLBinding
         QueryBufferBarrierBit = ((int)0x00008000),
         AllBarrierBits = unchecked((int)0xFFFFFFFF),
     }
+
+
+    public enum BufferAccess : int
+    {
+        ReadOnly = ((int)0x88B8),
+        WriteOnly = ((int)0x88B9),
+        ReadWrite = ((int)0x88BA),
+    }
 }

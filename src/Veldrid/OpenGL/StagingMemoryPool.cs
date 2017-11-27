@@ -33,6 +33,11 @@ namespace Veldrid.OpenGL
         {
             _arrayPool.Return(block.Array);
         }
+
+        public void Free(byte[] array)
+        {
+            _arrayPool.Return(array);
+        }
     }
 
     internal unsafe struct StagingBlock

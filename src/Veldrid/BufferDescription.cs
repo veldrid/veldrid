@@ -39,7 +39,6 @@ namespace Veldrid
         /// </summary>
         /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
         /// <param name="usage">Indicates how the <see cref="Buffer"/> will be used.</param>
-        /// <param name="dynamic">Whether the <see cref="Buffer"/> should be specialized for continuous updates.</param>
         /// <param name="structureByteStride">For structured buffers, this value indicates the size in bytes of a single
         /// structure element, and must be non-zero. For all other buffer types, this value must be zero.</param>
         public BufferDescription(uint sizeInBytes, BufferUsage usage, uint structureByteStride)

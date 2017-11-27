@@ -124,6 +124,75 @@ namespace Veldrid.Vk
 
             return ret;
         }
+
+        public static void TransitionImageLayout(
+            VkCommandBuffer cb,
+            VkImage image,
+            uint baseMipLevel,
+            uint levelCount,
+            uint baseArrayLayer,
+            uint layerCount,
+            VkImageLayout oldLayout,
+            VkImageLayout newLayout)
+        {
+            Debug.Assert(oldLayout != newLayout);
+            VkImageMemoryBarrier barrier = VkImageMemoryBarrier.New();
+            barrier.oldLayout = oldLayout;
+            barrier.newLayout = newLayout;
+            barrier.srcQueueFamilyIndex = QueueFamilyIgnored;
+            barrier.dstQueueFamilyIndex = QueueFamilyIgnored;
+            barrier.image = image;
+            barrier.subresourceRange.aspectMask = VkImageAspectFlags.Color;
+            barrier.subresourceRange.baseMipLevel = baseMipLevel;
+            barrier.subresourceRange.levelCount = levelCount;
+            barrier.subresourceRange.baseArrayLayer = baseArrayLayer;
+            barrier.subresourceRange.layerCount = layerCount;
+
+            VkPipelineStageFlags srcStageFlags = VkPipelineStageFlags.None;
+            VkPipelineStageFlags dstStageFlags = VkPipelineStageFlags.None;
+
+            if ((oldLayout == VkImageLayout.Undefined || oldLayout == VkImageLayout.Preinitialized) && newLayout == VkImageLayout.TransferDstOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.None;
+                barrier.dstAccessMask = VkAccessFlags.TransferWrite;
+                srcStageFlags = VkPipelineStageFlags.TopOfPipe;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
+            }
+            else if (oldLayout == VkImageLayout.ShaderReadOnlyOptimal && newLayout == VkImageLayout.TransferDstOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.ShaderRead;
+                barrier.dstAccessMask = VkAccessFlags.TransferWrite;
+                srcStageFlags = VkPipelineStageFlags.FragmentShader;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
+            }
+            else if (oldLayout == VkImageLayout.Preinitialized && newLayout == VkImageLayout.TransferSrcOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.None;
+                barrier.dstAccessMask = VkAccessFlags.TransferRead;
+                srcStageFlags = VkPipelineStageFlags.TopOfPipe;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
+            }
+            else if (oldLayout == VkImageLayout.TransferDstOptimal && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.TransferWrite;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
+                srcStageFlags = VkPipelineStageFlags.Transfer;
+                dstStageFlags = VkPipelineStageFlags.FragmentShader;
+            }
+            else
+            {
+                Debug.Fail("Invalid image layout transition.");
+            }
+
+            vkCmdPipelineBarrier(
+                cb,
+                srcStageFlags,
+                dstStageFlags,
+                VkDependencyFlags.None,
+                0, null,
+                0, null,
+                1, &barrier);
+        }
     }
 
     internal unsafe static class VkPhysicalDeviceMemoryPropertiesEx

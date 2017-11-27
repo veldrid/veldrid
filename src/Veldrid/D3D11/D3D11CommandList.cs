@@ -945,85 +945,54 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void UpdateTexture(
-            Texture texture,
-            IntPtr source,
-            uint sizeInBytes,
-            uint x,
-            uint y,
-            uint z,
-            uint width,
-            uint height,
-            uint depth,
-            uint mipLevel,
-            uint arrayLayer)
+        protected override void CopyBufferCore(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
         {
-            Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(texture).DeviceTexture;
-            ResourceRegion resourceRegion = new ResourceRegion(
-                left: (int)x,
-                top: (int)y,
-                front: (int)z,
-                right: (int)(x + width),
-                bottom: (int)(y + height),
-                back: (int)(z + depth));
-            uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture.Format) * width;
-            _context.UpdateSubresource(deviceTexture, (int)mipLevel, resourceRegion, source, (int)srcRowPitch, 0);
+            D3D11Buffer srcD3D11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(source);
+            D3D11Buffer dstD3D11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(destination);
+
+            ResourceRegion region = new ResourceRegion((int)sourceOffset, 0, 0, (int)(sourceOffset + sizeInBytes), 1, 1);
+
+            _context.CopySubresourceRegion(srcD3D11Buffer.Buffer, 0, region, dstD3D11Buffer.Buffer, 0, (int)destinationOffset, 0, 0);
         }
 
-        public override void UpdateTextureCube(
-            Texture textureCube,
-            IntPtr source,
-            uint sizeInBytes,
-            CubeFace face,
-            uint x,
-            uint y,
-            uint width,
-            uint height,
-            uint mipLevel,
-            uint arrayLayer)
+        protected override void CopyTextureCore(
+            Texture source,
+            uint srcX, uint srcY, uint srcZ,
+            uint srcMipLevel,
+            uint srcBaseArrayLayer,
+            Texture destination,
+            uint dstX, uint dstY, uint dstZ,
+            uint dstMipLevel,
+            uint dstBaseArrayLayer,
+            uint width, uint height, uint depth,
+            uint layerCount)
         {
-            Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(textureCube).DeviceTexture;
+            D3D11Texture srcD3D11Texture = Util.AssertSubtype<Texture, D3D11Texture>(source);
+            D3D11Texture dstD3D11Texture = Util.AssertSubtype<Texture, D3D11Texture>(destination);
 
-            ResourceRegion resourceRegion = new ResourceRegion(
-                left: (int)x,
-                right: (int)x + (int)width,
-                top: (int)y,
-                bottom: (int)y + (int)height,
-                front: 0,
-                back: 1);
-            uint srcRowPitch = FormatHelpers.GetSizeInBytes(textureCube.Format) * width;
-            int subresource = GetSubresource(face, mipLevel, textureCube.MipLevels);
-            _context.UpdateSubresource(deviceTexture, subresource, resourceRegion, source, (int)srcRowPitch, 0);
-        }
+            ResourceRegion region = new ResourceRegion(
+                (int)srcX,
+                (int)srcY,
+                (int)srcZ,
+                (int)(srcX + width),
+                (int)(srcY + height),
+                (int)(srcZ + depth));
 
-        private int GetSubresource(CubeFace face, uint level, uint totalLevels)
-        {
-            int faceOffset;
-            switch (face)
+            for (uint i = 0; i < layerCount; i++)
             {
-                case CubeFace.NegativeX:
-                    faceOffset = 1;
-                    break;
-                case CubeFace.PositiveX:
-                    faceOffset = 0;
-                    break;
-                case CubeFace.NegativeY:
-                    faceOffset = 3;
-                    break;
-                case CubeFace.PositiveY:
-                    faceOffset = 2;
-                    break;
-                case CubeFace.NegativeZ:
-                    faceOffset = 4;
-                    break;
-                case CubeFace.PositiveZ:
-                    faceOffset = 5;
-                    break;
-                default:
-                    throw Illegal.Value<CubeFace>();
-            }
+                int srcSubresource = D3D11Util.ComputeSubresource(srcMipLevel, source.MipLevels, srcBaseArrayLayer + i);
+                int dstSubresource = D3D11Util.ComputeSubresource(dstMipLevel, destination.MipLevels, dstBaseArrayLayer + i);
 
-            return faceOffset * (int)totalLevels + (int)level;
+                _context.CopySubresourceRegion(
+                    srcD3D11Texture.DeviceTexture,
+                    srcSubresource,
+                    region,
+                    dstD3D11Texture.DeviceTexture,
+                    dstSubresource,
+                    (int)dstX,
+                    (int)dstY,
+                    (int)dstZ);
+            }
         }
 
         public override void Dispose()

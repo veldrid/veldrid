@@ -546,8 +546,8 @@ namespace Veldrid.OpenGL
             glSourceTex.EnsureResourcesCreated();
             glDestinationTex.EnsureResourcesCreated();
 
-            uint sourceFramebuffer = glSourceTex.GetFramebuffer();
-            uint destinationFramebuffer = glDestinationTex.GetFramebuffer();
+            uint sourceFramebuffer = glSourceTex.GetFramebuffer(0, 0);
+            uint destinationFramebuffer = glDestinationTex.GetFramebuffer(0, 0);
 
             glBindFramebuffer(FramebufferTarget.ReadFramebuffer, sourceFramebuffer);
             CheckLastError();
@@ -626,21 +626,18 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, StagingBlock stagingBlock)
+        public void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr dataPtr, uint sizeInBytes)
         {
             OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(buffer);
             glBuffer.EnsureResourcesCreated();
 
             if (_extensions.ARB_DirectStateAccess)
             {
-                fixed (byte* dataPtr = stagingBlock.Array)
-                {
-                    glNamedBufferSubData(
-                        glBuffer.Buffer,
-                        (IntPtr)bufferOffsetInBytes,
-                        stagingBlock.SizeInBytes,
-                        dataPtr);
-                }
+                glNamedBufferSubData(
+                    glBuffer.Buffer,
+                    (IntPtr)bufferOffsetInBytes,
+                    sizeInBytes,
+                    dataPtr.ToPointer());
                 CheckLastError();
             }
             else
@@ -648,23 +645,18 @@ namespace Veldrid.OpenGL
                 BufferTarget bufferTarget = BufferTarget.CopyWriteBuffer;
                 glBindBuffer(bufferTarget, glBuffer.Buffer);
                 CheckLastError();
-                fixed (byte* dataPtr = &stagingBlock.Array[0])
-                {
-                    glBufferSubData(
-                        bufferTarget,
-                        (IntPtr)bufferOffsetInBytes,
-                        (UIntPtr)stagingBlock.SizeInBytes,
-                        dataPtr);
-                }
+                glBufferSubData(
+                    bufferTarget,
+                    (IntPtr)bufferOffsetInBytes,
+                    (UIntPtr)sizeInBytes,
+                    dataPtr.ToPointer());
                 CheckLastError();
             }
-
-            stagingBlock.Pool.Free(stagingBlock);
         }
 
         public void UpdateTexture(
             Texture texture,
-            StagingBlock stagingBlock,
+            IntPtr dataPtr,
             uint x,
             uint y,
             uint z,
@@ -688,57 +680,52 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
-            fixed (byte* dataPtr = stagingBlock.Array)
+            if (texTarget == TextureTarget.Texture2D)
             {
-                if (texTarget == TextureTarget.Texture2D)
-                {
-                    glTexSubImage2D(
-                        TextureTarget.Texture2D,
-                        (int)mipLevel,
-                        (int)x,
-                        (int)y,
-                        width,
-                        height,
-                        glTex.GLPixelFormat,
-                        glTex.GLPixelType,
-                        dataPtr);
-                    CheckLastError();
-                }
-                else if (texTarget == TextureTarget.Texture2DArray)
-                {
-                    glTexSubImage3D(
-                        TextureTarget.Texture2DArray,
-                        (int)mipLevel,
-                        (int)x,
-                        (int)y,
-                        (int)z,
-                        width,
-                        height,
-                        arrayLayer,
-                        glTex.GLPixelFormat,
-                        glTex.GLPixelType,
-                        dataPtr);
-                    CheckLastError();
-                }
-                else if (texTarget == TextureTarget.Texture3D)
-                {
-                    glTexSubImage3D(
-                        TextureTarget.Texture3D,
-                        (int)mipLevel,
-                        (int)x,
-                        (int)y,
-                        (int)z,
-                        width,
-                        height,
-                        depth,
-                        glTex.GLPixelFormat,
-                        glTex.GLPixelType,
-                        dataPtr);
-                    CheckLastError();
-                }
+                glTexSubImage2D(
+                    TextureTarget.Texture2D,
+                    (int)mipLevel,
+                    (int)x,
+                    (int)y,
+                    width,
+                    height,
+                    glTex.GLPixelFormat,
+                    glTex.GLPixelType,
+                    dataPtr.ToPointer());
+                CheckLastError();
             }
-
-            stagingBlock.Pool.Free(stagingBlock);
+            else if (texTarget == TextureTarget.Texture2DArray)
+            {
+                glTexSubImage3D(
+                    TextureTarget.Texture2DArray,
+                    (int)mipLevel,
+                    (int)x,
+                    (int)y,
+                    (int)z,
+                    width,
+                    height,
+                    arrayLayer,
+                    glTex.GLPixelFormat,
+                    glTex.GLPixelType,
+                    dataPtr.ToPointer());
+                CheckLastError();
+            }
+            else if (texTarget == TextureTarget.Texture3D)
+            {
+                glTexSubImage3D(
+                    TextureTarget.Texture3D,
+                    (int)mipLevel,
+                    (int)x,
+                    (int)y,
+                    (int)z,
+                    width,
+                    height,
+                    depth,
+                    glTex.GLPixelFormat,
+                    glTex.GLPixelType,
+                    dataPtr.ToPointer());
+                CheckLastError();
+            }
 
             if (pixelSize < 4)
             {
@@ -749,7 +736,7 @@ namespace Veldrid.OpenGL
 
         public void UpdateTextureCube(
             Texture textureCube,
-            StagingBlock stagingBlock,
+            IntPtr dataPtr,
             CubeFace face,
             uint x,
             uint y,
@@ -778,22 +765,17 @@ namespace Veldrid.OpenGL
 
             TextureTarget target = GetCubeFaceTarget(face);
 
-            fixed (byte* dataPtr = stagingBlock.Array)
-            {
-                glTexSubImage2D(
-                    target,
-                    (int)mipLevel,
-                    (int)x,
-                    (int)y,
-                    width,
-                    height,
-                    glTexCube.GLPixelFormat,
-                    glTexCube.GLPixelType,
-                    dataPtr);
-            }
+            glTexSubImage2D(
+                target,
+                (int)mipLevel,
+                (int)x,
+                (int)y,
+                width,
+                height,
+                glTexCube.GLPixelFormat,
+                glTexCube.GLPixelType,
+                dataPtr.ToPointer());
             CheckLastError();
-
-            stagingBlock.Pool.Free(stagingBlock);
 
             if (pixelSize < 4)
             {
@@ -820,6 +802,103 @@ namespace Veldrid.OpenGL
                     return TextureTarget.TextureCubeMapNegativeZ;
                 default:
                     throw Illegal.Value<CubeFace>();
+            }
+        }
+
+        public void CopyBuffer(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
+        {
+            OpenGLBuffer srcGLBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(source);
+            OpenGLBuffer dstGLBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(destination);
+
+            // TODO: glCopyNamedBufferSubData
+
+            glBindBuffer(BufferTarget.CopyReadBuffer, srcGLBuffer.Buffer);
+            CheckLastError();
+
+            glBindBuffer(BufferTarget.CopyWriteBuffer, dstGLBuffer.Buffer);
+            CheckLastError();
+
+            glCopyBufferSubData(
+                BufferTarget.CopyReadBuffer,
+                BufferTarget.CopyWriteBuffer,
+                (IntPtr)sourceOffset,
+                (IntPtr)destinationOffset,
+                (IntPtr)sizeInBytes);
+            CheckLastError();
+        }
+
+        public void CopyTexture(
+            Texture source,
+            uint srcX, uint srcY, uint srcZ,
+            uint srcMipLevel,
+            uint srcBaseArrayLayer,
+            Texture destination,
+            uint dstX, uint dstY, uint dstZ,
+            uint dstMipLevel,
+            uint dstBaseArrayLayer,
+            uint width, uint height, uint depth,
+            uint layerCount)
+        {
+            OpenGLTexture srcGLTexture = Util.AssertSubtype<Texture, OpenGLTexture>(source);
+            OpenGLTexture dstGLTexture = Util.AssertSubtype<Texture, OpenGLTexture>(destination);
+
+            for (uint layer = 0; layer < layerCount; layer++)
+            {
+                TextureTarget dstTarget = dstGLTexture.TextureTarget;
+                if (dstTarget == TextureTarget.Texture2D)
+                {
+                    glBindFramebuffer(
+                        FramebufferTarget.ReadFramebuffer,
+                        srcGLTexture.GetFramebuffer(srcMipLevel, srcBaseArrayLayer + layerCount));
+                    CheckLastError();
+
+                    glBindTexture(TextureTarget.Texture2D, dstGLTexture.Texture);
+                    CheckLastError();
+
+                    glCopyTexSubImage2D(TextureTarget.Texture2D, (int)dstMipLevel, (int)dstX, (int)dstY, (int)srcX, (int)srcY, width, height);
+                    CheckLastError();
+                }
+                else if (dstTarget == TextureTarget.Texture2DArray)
+                {
+                    glBindFramebuffer(
+                        FramebufferTarget.ReadFramebuffer,
+                        srcGLTexture.GetFramebuffer(srcMipLevel, srcBaseArrayLayer + layerCount));
+
+                    glBindTexture(TextureTarget.Texture2DArray, dstGLTexture.Texture);
+                    CheckLastError();
+
+                    glCopyTexSubImage3D(
+                        TextureTarget.Texture2DArray,
+                        (int)dstMipLevel,
+                        (int)dstX,
+                        (int)dstY,
+                        (int)(dstBaseArrayLayer + layer),
+                        (int)srcX,
+                        (int)srcY,
+                        width,
+                        height);
+                    CheckLastError();
+                }
+                else if (dstTarget == TextureTarget.Texture3D)
+                {
+                    glBindTexture(TextureTarget.Texture3D, dstGLTexture.Texture);
+                    CheckLastError();
+
+                    for (int i = 0; i < depth; i++)
+                    {
+                        glCopyTexSubImage3D(
+                            TextureTarget.Texture3D,
+                            (int)dstMipLevel,
+                            (int)dstX,
+                            (int)dstY,
+                            (int)dstZ,
+                            (int)srcX,
+                            (int)srcY,
+                            width,
+                            height);
+                    }
+                    CheckLastError();
+                }
             }
         }
     }

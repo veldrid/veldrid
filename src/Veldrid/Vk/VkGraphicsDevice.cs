@@ -28,6 +28,7 @@ namespace Veldrid.Vk
         private uint _presentQueueIndex;
         private VkDescriptorPool _descriptorPool;
         private VkCommandPool _graphicsCommandPool;
+        private readonly object _graphicsCommandPoolLock = new object();
         private VkFence _imageAvailableFence;
         private VkQueue _graphicsQueue;
         private readonly object _graphicsQueueLock = new object();
@@ -35,12 +36,17 @@ namespace Veldrid.Vk
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private PFN_vkDebugReportCallbackEXT _debugCallbackFunc;
         private readonly List<VkCommandList> _commandListsToDispose = new List<VkCommandList>();
+        private readonly ConcurrentQueue<SharedCommandPool> _commandBuffersToFree
+            = new ConcurrentQueue<SharedCommandPool>();
         private bool _debugMarkerEnabled;
         private vkDebugMarkerSetObjectNameEXT_d _setObjectNameDelegate;
 
         private readonly ConcurrentQueue<Vulkan.VkBuffer> _buffersToDestroy = new ConcurrentQueue<Vulkan.VkBuffer>();
         private readonly ConcurrentQueue<VkImage> _imagesToDestroy = new ConcurrentQueue<VkImage>();
         private readonly ConcurrentQueue<VkMemoryBlock> _memoriesToFree = new ConcurrentQueue<VkMemoryBlock>();
+
+        private const int SharedCommandPoolCount = 4;
+        private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
 
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
@@ -49,7 +55,6 @@ namespace Veldrid.Vk
         public VkPhysicalDeviceMemoryProperties PhysicalDeviceMemProperties => _physicalDeviceMemProperties;
         public VkQueue GraphicsQueue => _graphicsQueue;
         public uint GraphicsQueueIndex => _graphicsQueueIndex;
-        public VkCommandPool GraphicsCommandPool => _graphicsCommandPool;
         public VkQueue PresentQueue => _presentQueue;
         public uint PresentQueueIndex => _presentQueueIndex;
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
@@ -66,6 +71,10 @@ namespace Veldrid.Vk
             _scFB = new VkSwapchainFramebuffer(this, _surface, width, height);
             CreateDescriptorPool();
             CreateGraphicsCommandPool();
+            for (int i = 0; i < SharedCommandPoolCount; i++)
+            {
+                _sharedGraphicsCommandPools.Push(new SharedCommandPool(this, true));
+            }
             CreateFences();
 
             _scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence);
@@ -83,7 +92,7 @@ namespace Veldrid.Vk
         {
             VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
             VkCommandBuffer vkCB = vkCL.CommandBuffer;
-            vkCL.CollectDisposables(_buffersToDestroy, _imagesToDestroy, _memoriesToFree);
+            SubmitCommandBuffer(vkCB);
         }
 
         private void SubmitCommandBuffer(VkCommandBuffer vkCB)
@@ -225,6 +234,23 @@ namespace Veldrid.Vk
 
                 _commandListsToDispose.Clear();
             }
+
+            lock (_graphicsCommandPoolLock)
+            {
+                while (_commandBuffersToFree.TryDequeue(out SharedCommandPool sharedPool))
+                {
+                    if (sharedPool.IsCached)
+                    {
+                        sharedPool.Reset();
+                        _sharedGraphicsCommandPools.Push(sharedPool);
+                    }
+                    else
+                    {
+                        sharedPool.Destroy();
+                    }
+                }
+            }
+
             while (_buffersToDestroy.TryDequeue(out Vulkan.VkBuffer buffer))
             {
                 vkDestroyBuffer(_device, buffer, null);
@@ -549,7 +575,7 @@ namespace Veldrid.Vk
             vkCreateFence(_device, ref fenceCI, null, out _imageAvailableFence);
         }
 
-        protected override MappedResource MapCore(MappableResource resource, uint offsetInBytes, uint sizeInBytes)
+        protected override MappedResource MapCore(MappableResource resource, uint subresource)
         {
             VkMemoryBlock memoryBlock;
             if (resource is VkBuffer buffer)
@@ -573,6 +599,25 @@ namespace Veldrid.Vk
             }
         }
 
+        protected override void UnmapCore(MappableResource resource, uint subresource)
+        {
+            VkMemoryBlock memoryBlock;
+            if (resource is VkBuffer buffer)
+            {
+                memoryBlock = buffer.Memory;
+            }
+            else
+            {
+                Debug.Assert(resource is VkTexture);
+                memoryBlock = ((VkTexture)resource).MemoryBlock;
+            }
+
+            if (!memoryBlock.IsPersistentMapped)
+            {
+                vkUnmapMemory(_device, memoryBlock.DeviceMemory);
+            }
+        }
+
         protected override void PlatformDispose()
         {
             FlushQueuedDisposables();
@@ -593,6 +638,11 @@ namespace Veldrid.Vk
             vkDestroyDescriptorPool(_device, _descriptorPool, null);
             vkDestroyCommandPool(_device, _graphicsCommandPool, null);
             vkDestroyFence(_device, _imageAvailableFence, null);
+
+            while (_sharedGraphicsCommandPools.TryPop(out SharedCommandPool sharedPool))
+            {
+                sharedPool.Destroy();
+            }
 
             _memoryManager.Dispose();
 
@@ -685,41 +735,28 @@ namespace Veldrid.Vk
             byte* destPtr = (byte*)mappedPtr + bufferOffsetInBytes;
             Unsafe.CopyBlock(destPtr, source.ToPointer(), sizeInBytes);
 
-            VkCommandBuffer cb = GetFreeCommandBuffer();
-
             if (!isPersistentMapped)
             {
+                SharedCommandPool pool = GetFreeCommandPool();
+                VkCommandBuffer cb = pool.BeginNewCommandBuffer();
+
                 VkBufferCopy copyRegion = new VkBufferCopy { size = vkBuffer.BufferMemoryRequirements.size };
                 vkCmdCopyBuffer(cb, copySrcBuffer, vkBuffer.DeviceBuffer, 1, ref copyRegion);
 
                 _buffersToDestroy.Enqueue(copySrcBuffer);
                 _memoriesToFree.Enqueue(memoryBlock);
+                pool.EndAndSubmit(cb);
+            }
+        }
+
+        private SharedCommandPool GetFreeCommandPool()
+        {
+            if (!_sharedGraphicsCommandPools.TryPop(out SharedCommandPool sharedPool))
+            {
+                sharedPool = new SharedCommandPool(this, false);
             }
 
-            vkEndCommandBuffer(cb);
-            SubmitCommandBuffer(cb);
-        }
-
-        private VkCommandBuffer GetFreeCommandBuffer()
-        {
-            VkCommandBufferAllocateInfo cbAI = VkCommandBufferAllocateInfo.New();
-            cbAI.level = VkCommandBufferLevel.Primary;
-            cbAI.commandBufferCount = 1;
-            cbAI.commandPool = _graphicsCommandPool;
-            VkResult result = vkAllocateCommandBuffers(_device, ref cbAI, out VkCommandBuffer ret);
-            CheckResult(result);
-
-            VkCommandBufferBeginInfo cbBI = VkCommandBufferBeginInfo.New();
-            cbBI.flags = VkCommandBufferUsageFlags.OneTimeSubmit;
-            result = vkBeginCommandBuffer(ret, ref cbBI);
-            CheckResult(result);
-
-            return ret;
-        }
-
-        private void ReturnCommandBuffer(VkCommandBuffer cb)
-        {
-            vkFreeCommandBuffers(_device, _graphicsCommandPool, 1, ref cb);
+            return sharedPool;
         }
 
         private IntPtr MapBuffer(VkBuffer buffer, uint numBytes)
@@ -809,15 +846,15 @@ namespace Veldrid.Vk
 
             vkUnmapMemory(Device, stagingMemory.DeviceMemory);
 
-            VkCommandBuffer cb = GetFreeCommandBuffer();
+            SharedCommandPool pool = GetFreeCommandPool();
+            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
             TransitionImageLayout(cb, stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
             TransitionImageLayout(cb, tex.DeviceImage, mipLevel, 1, 0, 1, tex.ImageLayouts[mipLevel], VkImageLayout.TransferDstOptimal);
             CopyImage(cb, stagingImage, 0, tex.DeviceImage, mipLevel, width, height);
             TransitionImageLayout(cb, tex.DeviceImage, mipLevel, 1, 0, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
             tex.ImageLayouts[mipLevel] = VkImageLayout.ShaderReadOnlyOptimal;
 
-            vkEndCommandBuffer(cb);
-            SubmitCommandBuffer(cb);
+            pool.EndAndSubmit(cb);
 
             _imagesToDestroy.Enqueue(stagingImage);
             _memoriesToFree.Enqueue(stagingMemory);
@@ -889,15 +926,15 @@ namespace Veldrid.Vk
             uint cubeArrayLayer = GetArrayLayer(face);
 
             // TODO: These transitions are sub-optimal.
-            VkCommandBuffer cb = GetFreeCommandBuffer();
+            SharedCommandPool pool = GetFreeCommandPool();
+            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
             TransitionImageLayout(cb, stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
             TransitionImageLayout(cb, vkTexCube.DeviceImage, 0, 1, 0, 6, vkTexCube.ImageLayouts[0], VkImageLayout.TransferDstOptimal);
             CopyImage(cb, stagingImage, 0, vkTexCube.DeviceImage, mipLevel, width, height, cubeArrayLayer);
             TransitionImageLayout(cb, vkTexCube.DeviceImage, 0, 1, 0, 6, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
             vkTexCube.ImageLayouts[0] = VkImageLayout.ShaderReadOnlyOptimal;
 
-            vkEndCommandBuffer(cb);
-            SubmitCommandBuffer(cb);
+            pool.EndAndSubmit(cb);
 
             _imagesToDestroy.Enqueue(stagingImage);
             _memoriesToFree.Enqueue(stagingMemory);
@@ -922,75 +959,6 @@ namespace Veldrid.Vk
                 default:
                     throw Illegal.Value<CubeFace>();
             }
-        }
-
-        protected void TransitionImageLayout(
-            VkCommandBuffer cb,
-            VkImage image,
-            uint baseMipLevel,
-            uint levelCount,
-            uint baseArrayLayer,
-            uint layerCount,
-            VkImageLayout oldLayout,
-            VkImageLayout newLayout)
-        {
-            Debug.Assert(oldLayout != newLayout);
-            VkImageMemoryBarrier barrier = VkImageMemoryBarrier.New();
-            barrier.oldLayout = oldLayout;
-            barrier.newLayout = newLayout;
-            barrier.srcQueueFamilyIndex = QueueFamilyIgnored;
-            barrier.dstQueueFamilyIndex = QueueFamilyIgnored;
-            barrier.image = image;
-            barrier.subresourceRange.aspectMask = VkImageAspectFlags.Color;
-            barrier.subresourceRange.baseMipLevel = baseMipLevel;
-            barrier.subresourceRange.levelCount = levelCount;
-            barrier.subresourceRange.baseArrayLayer = baseArrayLayer;
-            barrier.subresourceRange.layerCount = layerCount;
-
-            VkPipelineStageFlags srcStageFlags = VkPipelineStageFlags.None;
-            VkPipelineStageFlags dstStageFlags = VkPipelineStageFlags.None;
-
-            if ((oldLayout == VkImageLayout.Undefined || oldLayout == VkImageLayout.Preinitialized) && newLayout == VkImageLayout.TransferDstOptimal)
-            {
-                barrier.srcAccessMask = VkAccessFlags.None;
-                barrier.dstAccessMask = VkAccessFlags.TransferWrite;
-                srcStageFlags = VkPipelineStageFlags.TopOfPipe;
-                dstStageFlags = VkPipelineStageFlags.Transfer;
-            }
-            else if (oldLayout == VkImageLayout.ShaderReadOnlyOptimal && newLayout == VkImageLayout.TransferDstOptimal)
-            {
-                barrier.srcAccessMask = VkAccessFlags.ShaderRead;
-                barrier.dstAccessMask = VkAccessFlags.TransferWrite;
-                srcStageFlags = VkPipelineStageFlags.FragmentShader;
-                dstStageFlags = VkPipelineStageFlags.Transfer;
-            }
-            else if (oldLayout == VkImageLayout.Preinitialized && newLayout == VkImageLayout.TransferSrcOptimal)
-            {
-                barrier.srcAccessMask = VkAccessFlags.None;
-                barrier.dstAccessMask = VkAccessFlags.TransferRead;
-                srcStageFlags = VkPipelineStageFlags.TopOfPipe;
-                dstStageFlags = VkPipelineStageFlags.Transfer;
-            }
-            else if (oldLayout == VkImageLayout.TransferDstOptimal && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
-            {
-                barrier.srcAccessMask = VkAccessFlags.TransferWrite;
-                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
-                srcStageFlags = VkPipelineStageFlags.Transfer;
-                dstStageFlags = VkPipelineStageFlags.FragmentShader;
-            }
-            else
-            {
-                Debug.Fail("Invalid image layout transition.");
-            }
-
-            vkCmdPipelineBarrier(
-                cb,
-                srcStageFlags,
-                dstStageFlags,
-                VkDependencyFlags.None,
-                0, null,
-                0, null,
-                1, &barrier);
         }
 
         protected void CopyImage(
@@ -1030,6 +998,61 @@ namespace Veldrid.Vk
                 VkImageLayout.TransferDstOptimal,
                 1,
                 ref region);
+        }
+
+        private class SharedCommandPool
+        {
+            private readonly VkGraphicsDevice _gd;
+            private readonly VkCommandPool _pool;
+            public bool IsCached { get; }
+
+            public SharedCommandPool(VkGraphicsDevice gd, bool isCached)
+            {
+                _gd = gd;
+                IsCached = isCached;
+
+                VkCommandPoolCreateInfo commandPoolCI = VkCommandPoolCreateInfo.New();
+                commandPoolCI.flags = VkCommandPoolCreateFlags.Transient;
+                commandPoolCI.queueFamilyIndex = _gd.GraphicsQueueIndex;
+                VkResult result = vkCreateCommandPool(_gd.Device, ref commandPoolCI, null, out _pool);
+                CheckResult(result);
+            }
+
+            public VkCommandBuffer BeginNewCommandBuffer()
+            {
+                VkCommandBufferAllocateInfo allocateInfo = VkCommandBufferAllocateInfo.New();
+                allocateInfo.commandBufferCount = 1;
+                allocateInfo.level = VkCommandBufferLevel.Primary;
+                allocateInfo.commandPool = _pool;
+                VkResult result = vkAllocateCommandBuffers(_gd.Device, ref allocateInfo, out VkCommandBuffer cb);
+                CheckResult(result);
+
+                VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
+                beginInfo.flags = VkCommandBufferUsageFlags.OneTimeSubmit;
+                result = vkBeginCommandBuffer(cb, ref beginInfo);
+                CheckResult(result);
+
+                return cb;
+            }
+
+            public void EndAndSubmit(VkCommandBuffer cb)
+            {
+                VkResult result = vkEndCommandBuffer(cb);
+                CheckResult(result);
+                _gd.SubmitCommandBuffer(cb);
+                _gd._commandBuffersToFree.Enqueue(this);
+            }
+
+            public void Reset()
+            {
+                VkResult result = vkResetCommandPool(_gd.Device, _pool, VkCommandPoolResetFlags.None);
+                CheckResult(result);
+            }
+
+            internal void Destroy()
+            {
+                vkDestroyCommandPool(_gd.Device, _pool, null);
+            }
         }
     }
 

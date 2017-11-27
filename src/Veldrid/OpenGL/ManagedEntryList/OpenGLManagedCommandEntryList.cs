@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if OPENGL_MANAGED_COMMAND_ENTRY_LIST
+using System;
 using System.Collections.Generic;
 
 namespace Veldrid.OpenGL.ManagedEntryList
@@ -151,7 +152,7 @@ namespace Veldrid.OpenGL.ManagedEntryList
 
         }
 
-        public void ExecuteAll(OpenGLCommandExecutor executor)
+        public unsafe void ExecuteAll(OpenGLCommandExecutor executor)
         {
             foreach (OpenGLCommandEntry entry in _commands)
             {
@@ -209,32 +210,44 @@ namespace Veldrid.OpenGL.ManagedEntryList
                         executor.SetViewport(sve.Index, ref sve.Viewport);
                         break;
                     case UpdateBufferEntry ube:
-                        executor.UpdateBuffer(ube.Buffer, ube.BufferOffsetInBytes, ube.StagingBlock);
+                        fixed (byte* dataPtr = &ube.StagingBlock.Array[0])
+                        {
+                            executor.UpdateBuffer(ube.Buffer, ube.BufferOffsetInBytes, (IntPtr)dataPtr, ube.StagingBlock.SizeInBytes);
+                        }
+                        ube.StagingBlock.Free();
                         break;
                     case UpdateTextureEntry ute:
-                        executor.UpdateTexture(
-                            ute.Texture,
-                            ute.StagingBlock,
-                            ute.X,
-                            ute.Y,
-                            ute.Z,
-                            ute.Width,
-                            ute.Height,
-                            ute.Depth,
-                            ute.MipLevel,
-                            ute.ArrayLayer);
+                        fixed (byte* dataPtr = &ute.StagingBlock.Array[0])
+                        {
+                            executor.UpdateTexture(
+                                ute.Texture,
+                                (IntPtr)dataPtr,
+                                ute.X,
+                                ute.Y,
+                                ute.Z,
+                                ute.Width,
+                                ute.Height,
+                                ute.Depth,
+                                ute.MipLevel,
+                                ute.ArrayLayer);
+                        }
+                        ute.StagingBlock.Free();
                         break;
                     case UpdateTextureCubeEntry utce:
-                        executor.UpdateTextureCube(
-                            utce.TextureCube,
-                            utce.StagingBlock,
-                            utce.Face,
-                            utce.X,
-                            utce.Y,
-                            utce.Width,
-                            utce.Height,
-                            utce.MipLevel,
-                            utce.ArrayLayer);
+                        fixed (byte* dataPtr = &utce.StagingBlock.Array[0])
+                        {
+                            executor.UpdateTextureCube(
+                                utce.TextureCube,
+                                (IntPtr)dataPtr,
+                                utce.Face,
+                                utce.X,
+                                utce.Y,
+                                utce.Width,
+                                utce.Height,
+                                utce.MipLevel,
+                                utce.ArrayLayer);
+                        }
+                        utce.StagingBlock.Free();
                         break;
                     case ResolveTextureEntry rte:
                         executor.ResolveTexture(rte.Source, rte.Destination);
@@ -246,3 +259,4 @@ namespace Veldrid.OpenGL.ManagedEntryList
         }
     }
 }
+#endif

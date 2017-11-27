@@ -55,7 +55,7 @@ namespace Veldrid.ImageSharp
             }
         }
 
-        public unsafe Texture CreateDeviceTexture(ResourceFactory factory, CommandList cl)
+        public unsafe Texture CreateDeviceTexture(GraphicsDevice gd, ResourceFactory factory)
         {
             Texture tex = factory.CreateTexture(new TextureDescription(Width, Height, 1, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
             for (int level = 0; level < MipLevels; level++)
@@ -63,7 +63,7 @@ namespace Veldrid.ImageSharp
                 Image<Rgba32> image = Images[level];
                 fixed (void* pin = &image.DangerousGetPinnableReferenceToPixelBuffer())
                 {
-                    cl.UpdateTexture(
+                    gd.UpdateTexture(
                         tex,
                         (IntPtr)pin,
                         (uint)(PixelSizeInBytes * image.Width * image.Height),

@@ -10,7 +10,7 @@ namespace Veldrid.OpenGL
     {
         private readonly OpenGLGraphicsDevice _gd;
         private uint _texture;
-        private uint _framebuffer;
+        private uint[] _framebuffers;
 
         private string _name;
         private bool _nameChanged;
@@ -32,6 +32,8 @@ namespace Veldrid.OpenGL
             ArrayLayers = description.ArrayLayers;
             Usage = description.Usage;
             SampleCount = description.SampleCount;
+
+            _framebuffers = new uint[MipLevels * ArrayLayers];
 
             GLPixelFormat = OpenGLFormats.VdToGLPixelFormat(Format);
             GLPixelType = OpenGLFormats.VdToGLPixelType(Format);
@@ -349,19 +351,21 @@ namespace Veldrid.OpenGL
             Created = true;
         }
 
-        public uint GetFramebuffer()
+        public uint GetFramebuffer(uint mipLevel, uint arrayLayer)
         {
             Debug.Assert(Created);
-            if (_framebuffer == 0)
+
+            int arrayIndex = (int)(arrayLayer * MipLevels + mipLevel);
+            if (_framebuffers[arrayIndex] == 0)
             {
                 FramebufferTarget framebufferTarget = SampleCount == TextureSampleCount.Count1
                     ? FramebufferTarget.DrawFramebuffer
                     : FramebufferTarget.ReadFramebuffer;
 
-                glGenFramebuffers(1, out _framebuffer);
+                glGenFramebuffers(1, out _framebuffers[arrayIndex]);
                 CheckLastError();
 
-                glBindFramebuffer(framebufferTarget, _framebuffer);
+                glBindFramebuffer(framebufferTarget, _framebuffers[arrayIndex]);
                 CheckLastError();
 
                 glActiveTexture(TextureUnit.Texture0);
@@ -370,22 +374,35 @@ namespace Veldrid.OpenGL
                 glBindTexture(TextureTarget, Texture);
                 CheckLastError();
 
-                glFramebufferTexture2D(
-                    framebufferTarget,
-                    GLFramebufferAttachment.ColorAttachment0,
-                    TextureTarget,
-                    Texture,
-                    0);
-                CheckLastError();
+                if (TextureTarget == TextureTarget.Texture2D)
+                {
+                    glFramebufferTexture2D(
+                        framebufferTarget,
+                        GLFramebufferAttachment.ColorAttachment0,
+                        TextureTarget,
+                        Texture,
+                        (int)mipLevel);
+                    CheckLastError();
+                }
+                else if (TextureTarget == TextureTarget.Texture2DArray || TextureTarget == TextureTarget.Texture3D)
+                {
+                    glFramebufferTextureLayer(
+                        framebufferTarget,
+                        GLFramebufferAttachment.ColorAttachment0,
+                        Texture,
+                        (int)mipLevel,
+                        (int)arrayLayer);
+                    CheckLastError();
+                }
 
                 FramebufferErrorCode errorCode = glCheckFramebufferStatus(framebufferTarget);
                 if (errorCode != FramebufferErrorCode.FramebufferComplete)
                 {
-                    throw new VeldridException("Failed to create texture resolve FBO: " + errorCode);
+                    throw new VeldridException("Failed to create texture copy FBO: " + errorCode);
                 }
             }
 
-            return _framebuffer;
+            return _framebuffers[arrayIndex];
         }
 
         public override void Dispose()
@@ -402,9 +419,12 @@ namespace Veldrid.OpenGL
                 glDeleteTextures(1, ref _texture);
                 CheckLastError();
 
-                if (_framebuffer != 0)
+                for (int i = 0; i < _framebuffers.Length; i++)
                 {
-                    glDeleteFramebuffers(1, ref _framebuffer);
+                    if (_framebuffers[i] != 0)
+                    {
+                        glDeleteFramebuffers(1, ref _framebuffers[i]);
+                    }
                 }
             }
         }

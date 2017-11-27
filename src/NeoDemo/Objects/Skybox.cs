@@ -46,7 +46,8 @@ namespace Veldrid.NeoDemo.Objects
             _ib = factory.CreateBuffer(new BufferDescription(s_indices.SizeInBytes(), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, s_indices);
 
-            _viewMatrixBuffer = factory.CreateBuffer(new BufferDescription((ulong)Unsafe.SizeOf<Matrix4x4>(), BufferUsage.UniformBuffer));
+            _viewMatrixBuffer = factory.CreateBuffer(
+                new BufferDescription((uint)Unsafe.SizeOf<Matrix4x4>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
             Texture textureCube;
             TextureView textureView;
@@ -69,12 +70,12 @@ namespace Veldrid.NeoDemo.Objects
                     TextureUsage.Sampled | TextureUsage.Cubemap));
 
                 uint faceSize = (uint)(_front.Width * _front.Height * Unsafe.SizeOf<Rgba32>());
-                cl.UpdateTextureCube(textureCube, (IntPtr)leftPin, faceSize, CubeFace.NegativeX, 0, 0, width, height, 0, 0);
-                cl.UpdateTextureCube(textureCube, (IntPtr)rightPin, faceSize, CubeFace.PositiveX, 0, 0, width, height, 0, 0);
-                cl.UpdateTextureCube(textureCube, (IntPtr)bottomPin, faceSize, CubeFace.NegativeY, 0, 0, width, height, 0, 0);
-                cl.UpdateTextureCube(textureCube, (IntPtr)topPin, faceSize, CubeFace.PositiveY, 0, 0, width, height, 0, 0);
-                cl.UpdateTextureCube(textureCube, (IntPtr)backPin, faceSize, CubeFace.NegativeZ, 0, 0, width, height, 0, 0);
-                cl.UpdateTextureCube(textureCube, (IntPtr)frontPin, faceSize, CubeFace.PositiveZ, 0, 0, width, height, 0, 0);
+                gd.UpdateTextureCube(textureCube, (IntPtr)leftPin, faceSize, CubeFace.NegativeX, 0, 0, width, height, 0, 0);
+                gd.UpdateTextureCube(textureCube, (IntPtr)rightPin, faceSize, CubeFace.PositiveX, 0, 0, width, height, 0, 0);
+                gd.UpdateTextureCube(textureCube, (IntPtr)bottomPin, faceSize, CubeFace.NegativeY, 0, 0, width, height, 0, 0);
+                gd.UpdateTextureCube(textureCube, (IntPtr)topPin, faceSize, CubeFace.PositiveY, 0, 0, width, height, 0, 0);
+                gd.UpdateTextureCube(textureCube, (IntPtr)backPin, faceSize, CubeFace.NegativeZ, 0, 0, width, height, 0, 0);
+                gd.UpdateTextureCube(textureCube, (IntPtr)frontPin, faceSize, CubeFace.PositiveZ, 0, 0, width, height, 0, 0);
 
                 textureView = factory.CreateTextureView(new TextureViewDescription(textureCube));
             }

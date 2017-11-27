@@ -67,7 +67,7 @@ namespace Veldrid.Vk
 
         protected override Buffer CreateBufferCore(ref BufferDescription description)
         {
-            return new VkBuffer(_gd, description.SizeInBytes, description.Dynamic, description.Usage);
+            return new VkBuffer(_gd, description.SizeInBytes, description.Usage);
         }
     }
 }

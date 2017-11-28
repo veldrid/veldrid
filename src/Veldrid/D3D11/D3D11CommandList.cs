@@ -3,6 +3,8 @@ using SharpDX.Direct3D11;
 using SharpDX.Mathematics.Interop;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Veldrid.D3D11
 {
@@ -12,6 +14,7 @@ namespace Veldrid.D3D11
         private readonly DeviceContext _context;
         private readonly DeviceContext1 _context1;
         private bool _begun;
+        private bool _disposed;
 
         private RawViewportF[] _viewports = new RawViewportF[0];
         private RawRectangle[] _scissors = new RawRectangle[0];
@@ -59,7 +62,8 @@ namespace Veldrid.D3D11
 
         private readonly Dictionary<Texture, List<BoundTextureInfo>> _boundSRVs = new Dictionary<Texture, List<BoundTextureInfo>>();
         private readonly Dictionary<Texture, List<BoundTextureInfo>> _boundUAVs = new Dictionary<Texture, List<BoundTextureInfo>>();
-        private readonly List<List<BoundTextureInfo>> _boundTextureInfoPool = new List<List<BoundTextureInfo>>(0);
+        private readonly List<List<BoundTextureInfo>> _boundTextureInfoPool = new List<List<BoundTextureInfo>>(MaxCachedTextureInfoLists);
+        private const int MaxCachedTextureInfoLists = 20;
 
         public D3D11CommandList(D3D11GraphicsDevice gd, ref CommandListDescription description)
             : base(ref description)
@@ -131,6 +135,22 @@ namespace Veldrid.D3D11
 
             _computePipeline = null;
             Util.ClearArray(_computeResourceSets);
+
+            foreach (KeyValuePair<Texture, List<BoundTextureInfo>> kvp in _boundSRVs)
+            {
+                List<BoundTextureInfo> list = kvp.Value;
+                list.Clear();
+                PoolBoundTextureList(list);
+            }
+            _boundSRVs.Clear();
+
+            foreach (KeyValuePair<Texture, List<BoundTextureInfo>> kvp in _boundUAVs)
+            {
+                List<BoundTextureInfo> list = kvp.Value;
+                list.Clear();
+                PoolBoundTextureList(list);
+            }
+            _boundUAVs.Clear();
         }
 
         public override void End()
@@ -368,6 +388,14 @@ namespace Veldrid.D3D11
                 Debug.Assert(result);
 
                 btis.Clear();
+                PoolBoundTextureList(btis);
+            }
+        }
+
+        private void PoolBoundTextureList(List<BoundTextureInfo> btis)
+        {
+            if (_boundTextureInfoPool.Count < MaxCachedTextureInfoLists)
+            {
                 _boundTextureInfoPool.Add(btis);
             }
         }
@@ -393,7 +421,7 @@ namespace Veldrid.D3D11
                 Debug.Assert(result);
 
                 btis.Clear();
-                _boundTextureInfoPool.Add(btis);
+                PoolBoundTextureList(btis);
             }
         }
 
@@ -912,7 +940,7 @@ namespace Veldrid.D3D11
             _context.ClearDepthStencilView(D3D11Framebuffer.DepthStencilView, DepthStencilClearFlags.Depth, depth, 0);
         }
 
-        public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        public unsafe override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             D3D11Buffer d3dBuffer = Util.AssertSubtype<Buffer, D3D11Buffer>(buffer);
             if (sizeInBytes == 0)
@@ -920,28 +948,54 @@ namespace Veldrid.D3D11
                 return;
             }
 
-            ResourceRegion? subregion = null;
-            if ((d3dBuffer.Buffer.Description.BindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
-            {
-                // For a shader-constant buffer; set pDstBox to null. It is not possible to use
-                // this method to partially update a shader-constant buffer
+            bool useMap = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
 
-                subregion = new ResourceRegion()
+            if (useMap)
+            {
+                if (bufferOffsetInBytes != 0)
                 {
-                    Left = (int)bufferOffsetInBytes,
-                    Right = (int)(sizeInBytes + bufferOffsetInBytes),
-                    Bottom = 1,
-                    Back = 1
-                };
-            }
-
-            if (bufferOffsetInBytes == 0)
-            {
-                _context.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+                    throw new NotImplementedException("bufferOffsetInBytes must be 0 for Dynamic Buffers.");
+                }
+                SharpDX.DataBox db = _context.MapSubresource(
+                    d3dBuffer.Buffer,
+                    0,
+                    SharpDX.Direct3D11.MapMode.WriteDiscard,
+                    MapFlags.None);
+                if (sizeInBytes < 1024)
+                {
+                    Unsafe.CopyBlock(db.DataPointer.ToPointer(), source.ToPointer(), sizeInBytes);
+                }
+                else
+                {
+                    System.Buffer.MemoryCopy(source.ToPointer(), db.DataPointer.ToPointer(), buffer.SizeInBytes, sizeInBytes);
+                }
+                _context.UnmapSubresource(d3dBuffer.Buffer, 0);
             }
             else
             {
-                _context1.UpdateSubresource1(d3dBuffer.Buffer, 0, subregion, source, 0, 0, 0);
+                ResourceRegion? subregion = null;
+                if ((d3dBuffer.Buffer.Description.BindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
+                {
+                    // For a shader-constant buffer; set pDstBox to null. It is not possible to use
+                    // this method to partially update a shader-constant buffer
+
+                    subregion = new ResourceRegion()
+                    {
+                        Left = (int)bufferOffsetInBytes,
+                        Right = (int)(sizeInBytes + bufferOffsetInBytes),
+                        Bottom = 1,
+                        Back = 1
+                    };
+                }
+
+                if (bufferOffsetInBytes == 0)
+                {
+                    _context.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+                }
+                else
+                {
+                    _context1.UpdateSubresource1(d3dBuffer.Buffer, 0, subregion, source, 0, 0, 0);
+                }
             }
         }
 
@@ -997,8 +1051,13 @@ namespace Veldrid.D3D11
 
         public override void Dispose()
         {
-            DeviceCommandList?.Dispose();
-            _context.Dispose();
+            if (!_disposed)
+            {
+                DeviceCommandList?.Dispose();
+                _context.Dispose();
+                _context1.Dispose();
+                _disposed = true;
+            }
         }
 
         private struct BoundTextureInfo

@@ -71,14 +71,31 @@ namespace Veldrid
         /// format can be created with.</returns>
         public abstract TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat);
 
-        public MappedResource Map(MappableResource resource, uint subresource)
+        /// <summary>
+        /// Maps a <see cref="Buffer"/> or <see cref="Texture"/> into a CPU-accessible data region. For Texture resources, this
+        /// overload maps the first subresource.
+        /// </summary>
+        /// <param name="resource">The <see cref="Buffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="mode">The <see cref="MapMode"/> to use.</param>
+        /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
+        public MappedResource Map(MappableResource resource, MapMode mode) => Map(resource, mode, 0);
+        /// <summary>
+        /// Maps a <see cref="Buffer"/> or <see cref="Texture"/> into a CPU-accessible data region.
+        /// </summary>
+        /// <param name="resource">The <see cref="Buffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="mode">The <see cref="MapMode"/> to use.</param>
+        /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.
+        /// For <see cref="Buffer"/> resources, this parameter must be 0.</param>
+        /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
+        public MappedResource Map(MappableResource resource, MapMode mode, uint subresource)
         {
 #if VALIDATE_USAGE
             if (resource is Buffer buffer)
             {
-                if ((buffer.Usage & BufferUsage.Mappable) != BufferUsage.Mappable)
+                if ((buffer.Usage & BufferUsage.Dynamic) != BufferUsage.Dynamic
+                    && (buffer.Usage & BufferUsage.Staging) != BufferUsage.Staging)
                 {
-                    throw new VeldridException("Buffers must have the Mappable usage flag to be mapped.");
+                    throw new VeldridException("Buffers must have the Staging or Dynamic usage flag to be mapped.");
                 }
                 if (subresource != 0)
                 {
@@ -91,11 +108,23 @@ namespace Veldrid
             }
 #endif
 
-            return MapCore(resource, subresource);
+            return MapCore(resource, mode, subresource);
         }
 
-        protected abstract MappedResource MapCore(MappableResource resource, uint subresource);
+        protected abstract MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource);
 
+        /// <summary>
+        /// Invalidates a previously-mapped data region for the given <see cref="Buffer"/> or <see cref="Texture"/>.
+        /// For <see cref="Texture"/> resources, this unmaps the first subresource.
+        /// </summary>
+        /// <param name="resource">The resource to unmap.</param>
+        public void Unmap(MappableResource resource) => Unmap(resource, 0);
+        /// <summary>
+        /// Invalidates a previously-mapped data region for the given <see cref="Buffer"/> or <see cref="Texture"/>.
+        /// </summary>
+        /// <param name="resource">The resource to unmap.</param>
+        /// <param name="subresource">The subresource to unmap. Subresources are indexed first by mip slice, then by array layer.
+        /// For <see cref="Buffer"/> resources, this parameter must be 0.</param>
         public void Unmap(MappableResource resource, uint subresource)
         {
             UnmapCore(resource, subresource);

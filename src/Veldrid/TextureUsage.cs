@@ -28,6 +28,11 @@ namespace Veldrid
         /// The Texture is a two-dimensional cubemap.
         /// </summary>
         Cubemap = 1 << 4,
-        Mappable = 1 << 5,
+        /// <summary>
+        /// The Texture is used as a read-write staging resource for uploading Texture data.
+        /// With this flag, a Texture can be mapped using the <see cref="GraphicsDevice.Map(MappableResource, MapMode, uint)"/>
+        /// method.
+        /// </summary>
+        Staging = 1 << 5,
     }
 }

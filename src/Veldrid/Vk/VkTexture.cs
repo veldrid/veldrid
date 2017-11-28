@@ -178,8 +178,8 @@ namespace Veldrid.Vk
             uint layerCount,
             VkImageLayout newLayout)
         {
-#if DEBUG
             VkImageLayout oldLayout = _imageLayouts[GetImageLayoutIndex(baseMipLevel, baseArrayLayer)];
+#if DEBUG
             for (uint level = 0; level < levelCount; level++)
             {
                 for (uint layer = 0; layer < layerCount; layer++)

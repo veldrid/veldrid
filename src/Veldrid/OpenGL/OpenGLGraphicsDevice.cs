@@ -6,6 +6,8 @@ using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
+using System.Threading;
 
 namespace Veldrid.OpenGL
 {
@@ -21,11 +23,17 @@ namespace Veldrid.OpenGL
         private readonly OpenGLCommandExecutor _commandExecutor;
         private DebugProc _debugMessageCallback;
         private readonly OpenGLExtensions _extensions;
-        private readonly object _contextLock = new object();
 
         private readonly Action<IntPtr> _makeCurrent;
-        private int _contextCurrentThreadID;
         private readonly TextureSampleCount _maxColorTextureSamples;
+
+        private readonly StagingMemoryPool _stagingMemoryPool = new StagingMemoryPool();
+        private readonly BlockingCollection<ExecutionThreadWorkItem> _workItems;
+        private readonly ExecutionThread _executionThread;
+
+        private readonly object _commandListDisposalLock = new object();
+        private readonly HashSet<OpenGLCommandList> _submittedCommandLists = new HashSet<OpenGLCommandList>();
+        private readonly HashSet<OpenGLCommandList> _commandListsToDispose = new HashSet<OpenGLCommandList>();
 
         public override GraphicsBackend BackendType => GraphicsBackend.OpenGL;
 
@@ -113,28 +121,18 @@ namespace Veldrid.OpenGL
                 _maxColorTextureSamples = TextureSampleCount.Count1;
             }
 
+            _workItems = new BlockingCollection<ExecutionThreadWorkItem>(new ConcurrentQueue<ExecutionThreadWorkItem>());
+            platformInfo.ClearCurrentContext();
+            _executionThread = new ExecutionThread(this, _workItems, _makeCurrent, _glContext);
+
             PostDeviceCreated();
         }
 
         public override void ExecuteCommands(CommandList cl)
         {
-            lock (_contextLock)
-            {
-                EnsureCurrentContext();
-                OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
-                glCommandList.Commands.ExecuteAll(_commandExecutor);
-                glCommandList.Reset();
-            }
-        }
-
-        private void EnsureCurrentContext()
-        {
-            int currentThreadID = Environment.CurrentManagedThreadId;
-            if (_contextCurrentThreadID != currentThreadID)
-            {
-                _contextCurrentThreadID = currentThreadID;
-                _makeCurrent(_glContext);
-            }
+            OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
+            _submittedCommandLists.Add(glCommandList);
+            _executionThread.ExecuteCommands(glCommandList);
         }
 
         public override void ResizeMainWindow(uint width, uint height)
@@ -144,8 +142,11 @@ namespace Veldrid.OpenGL
 
         public override void SwapBuffers()
         {
-            _swapBuffers();
-            FlushDisposables();
+            _executionThread.Run(() =>
+            {
+                _swapBuffers();
+                FlushDisposables();
+            });
         }
 
         public override void SetResourceName(DeviceResource resource, string name)
@@ -180,22 +181,12 @@ namespace Veldrid.OpenGL
             return _maxColorTextureSamples;
         }
 
-        protected override MappedResource MapCore(MappableResource resource, uint subresource)
+        protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
         {
             if (resource is OpenGLBuffer buffer)
             {
-                void* mappedPtr;
-                lock (_contextLock)
-                {
-                    buffer.EnsureResourcesCreated();
-                    glBindBuffer(BufferTarget.CopyReadBuffer, buffer.Buffer);
-                    CheckLastError();
-
-                    mappedPtr = glMapBuffer(BufferTarget.CopyReadBuffer, BufferAccess.ReadWrite);
-                    CheckLastError();
-                }
-
-                return new MappedResource(resource, (IntPtr)mappedPtr, buffer.SizeInBytes);
+                IntPtr mappedPtr = _executionThread.Map(resource, mode, subresource);
+                return new MappedResource(buffer, mode, mappedPtr, buffer.SizeInBytes);
             }
             else
             {
@@ -207,27 +198,17 @@ namespace Veldrid.OpenGL
         {
             if (resource is OpenGLBuffer buffer)
             {
-                lock (_contextLock)
-                {
-                    glBindBuffer(BufferTarget.CopyReadBuffer, buffer.Buffer);
-                    CheckLastError();
-
-                    glUnmapBuffer(BufferTarget.CopyReadBuffer);
-                    CheckLastError();
-                }
+                _executionThread.Unmap(resource, subresource);
             }
             else
             {
-                throw new NotImplementedException();
             }
         }
 
         public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            lock (_contextLock)
-            {
-                _commandExecutor.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);
-            }
+            StagingBlock sb = _stagingMemoryPool.Stage(source, sizeInBytes);
+            _executionThread.UpdateBuffer(buffer, bufferOffsetInBytes, sb);
         }
 
         public override void UpdateTexture(
@@ -243,15 +224,51 @@ namespace Veldrid.OpenGL
             uint mipLevel,
             uint arrayLayer)
         {
-            lock (_contextLock)
+            StagingBlock sb = _stagingMemoryPool.Stage(source, sizeInBytes);
+            _executionThread.Run(() =>
             {
-                _commandExecutor.UpdateTexture(texture, source, x, y, z, width, height, depth, mipLevel, arrayLayer);
-            }
+                fixed (byte* dataPtr = &sb.Array[0])
+                {
+                    _commandExecutor.UpdateTexture(texture, (IntPtr)dataPtr, x, y, z, width, height, depth, mipLevel, arrayLayer);
+                    sb.Free();
+                }
+            });
         }
 
         internal void EnqueueDisposal(OpenGLDeferredResource resource)
         {
             _resourcesToDispose.Enqueue(resource);
+        }
+
+        internal void EnqueueDisposal(OpenGLCommandList commandList)
+        {
+            lock (_commandListDisposalLock)
+            {
+                if (_submittedCommandLists.Contains(commandList))
+                {
+                    _commandListsToDispose.Add(commandList);
+                }
+                else
+                {
+                    commandList.DestroyResources();
+                }
+            }
+        }
+
+        internal bool CheckCommandListDisposal(OpenGLCommandList commandList)
+        {
+            lock (_commandListDisposalLock)
+            {
+                bool result = _submittedCommandLists.Remove(commandList);
+                Debug.Assert(result);
+                if (_commandListsToDispose.Remove(commandList))
+                {
+                    commandList.DestroyResources();
+                    return true;
+                }
+
+                return false;
+            }
         }
 
         private void FlushDisposables()
@@ -289,16 +306,311 @@ namespace Veldrid.OpenGL
                 if (severity >= minimumSeverity)
                 {
                     string messageString = Marshal.PtrToStringAnsi((IntPtr)message, (int)length);
-                    System.Diagnostics.Debug.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
+                    Debug.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
                 }
             };
         }
 
         protected override void PlatformDispose()
         {
-            EnsureCurrentContext();
-            FlushDisposables();
-            _deleteContext(_glContext);
+            _executionThread.Terminate(() =>
+            {
+                FlushDisposables();
+                _deleteContext(_glContext);
+            });
+        }
+
+        private class ExecutionThread
+        {
+            private readonly OpenGLGraphicsDevice _gd;
+            private readonly BlockingCollection<ExecutionThreadWorkItem> _workItems;
+            private readonly Action<IntPtr> _makeCurrent;
+            private readonly IntPtr _context;
+            private bool _terminated;
+
+            public ExecutionThread(
+                OpenGLGraphicsDevice gd,
+                BlockingCollection<ExecutionThreadWorkItem> workItems,
+                Action<IntPtr> makeCurrent,
+                IntPtr context)
+            {
+                // TODO: Only need _gd._commandExecutor here.
+                _gd = gd;
+                _workItems = workItems;
+                _makeCurrent = makeCurrent;
+                _context = context;
+                new Thread(Run).Start();
+            }
+
+            private void Run()
+            {
+                _makeCurrent(_context);
+                while (!_terminated)
+                {
+                    ExecutionThreadWorkItem workItem = _workItems.Take();
+                    ExecuteWorkItem(workItem);
+                }
+            }
+
+            private void ExecuteWorkItem(ExecutionThreadWorkItem workItem)
+            {
+                _makeCurrent(_context);
+                if (workItem.CommandListToExecute != null)
+                {
+                    workItem.CommandListToExecute.Commands.ExecuteAll(_gd._commandExecutor);
+                    if (!_gd.CheckCommandListDisposal(workItem.CommandListToExecute))
+                    {
+                        workItem.CommandListToExecute.Reset();
+                    }
+                }
+                else if (workItem.ResourceToMap != null)
+                {
+                    if (workItem.Map)
+                    {
+                        ExecuteMapResource(
+                            workItem.ResourceToMap,
+                            workItem.MapMode,
+                            workItem.MapSubresource,
+                            workItem.ValueDestination,
+                            workItem.ResetEvent);
+                    }
+                    else
+                    {
+                        ExecuteUnmapResource(workItem.ResourceToMap, workItem.MapSubresource);
+                    }
+                }
+                else if (workItem.UpdateBuffer != null)
+                {
+                    StagingBlock stagingBlock = workItem.UpdateBufferStagedSource;
+                    fixed (byte* dataPtr = &stagingBlock.Array[0])
+                    {
+                        _gd._commandExecutor.UpdateBuffer(
+                            workItem.UpdateBuffer,
+                            workItem.UpdateBufferOffsetInBytes,
+                            (IntPtr)dataPtr,
+                            stagingBlock.SizeInBytes);
+                    }
+                    stagingBlock.Free();
+                }
+                else if (workItem.Delegate != null)
+                {
+                    workItem.Delegate();
+                }
+                else
+                {
+                    Debug.Assert(workItem.TerminateAction != null);
+                    workItem.TerminateAction();
+                    _terminated = true;
+                }
+            }
+
+            private void ExecuteMapResource(
+                MappableResource resource,
+                MapMode mode,
+                uint mapSubresource,
+                IntPtr* result,
+                ManualResetEventSlim mre)
+            {
+                if (resource is OpenGLBuffer buffer)
+                {
+                    buffer.EnsureResourcesCreated();
+                    void* mappedPtr;
+                    BufferAccessMask accessMask = OpenGLFormats.VdToGLMapMode(mode);
+                    if (_gd.Extensions.ARB_DirectStateAccess)
+                    {
+                        mappedPtr = glMapNamedBufferRange(buffer.Buffer, IntPtr.Zero, buffer.SizeInBytes, accessMask);
+                        CheckLastError();
+                    }
+                    else
+                    {
+                        glBindBuffer(BufferTarget.CopyWriteBuffer, buffer.Buffer);
+                        CheckLastError();
+
+                        mappedPtr = glMapBufferRange(BufferTarget.CopyWriteBuffer, IntPtr.Zero, (IntPtr)buffer.SizeInBytes, accessMask);
+                        CheckLastError();
+                    }
+
+                    *result = (IntPtr)mappedPtr;
+                    mre.Set();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            private void ExecuteUnmapResource(MappableResource resource, uint mapSubresource)
+            {
+                if (resource is OpenGLBuffer buffer)
+                {
+                    if (_gd.Extensions.ARB_DirectStateAccess)
+                    {
+                        glUnmapNamedBuffer(buffer.Buffer);
+                        CheckLastError();
+                    }
+                    else
+                    {
+                        glBindBuffer(BufferTarget.CopyWriteBuffer, buffer.Buffer);
+                        CheckLastError();
+
+                        glUnmapBuffer(BufferTarget.CopyWriteBuffer);
+                        CheckLastError();
+                    }
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public IntPtr Map(MappableResource resource, MapMode mode, uint subresource)
+            {
+                IntPtr result;
+                ManualResetEventSlim mre = new ManualResetEventSlim(false);
+                _workItems.Add(new ExecutionThreadWorkItem(resource, mode, subresource, true, &result, mre));
+                mre.Wait();
+                return result;
+            }
+
+            public void ExecuteCommands(OpenGLCommandList commandList)
+            {
+
+                _workItems.Add(new ExecutionThreadWorkItem(commandList));
+            }
+
+            internal void Unmap(MappableResource resource, uint subresource)
+            {
+                _workItems.Add(new ExecutionThreadWorkItem(resource, 0, subresource, false, null, null));
+            }
+
+            internal void UpdateBuffer(Buffer buffer, uint offsetInBytes, StagingBlock stagingBlock)
+            {
+                _workItems.Add(new ExecutionThreadWorkItem(buffer, offsetInBytes, stagingBlock));
+            }
+
+            internal void Run(Action a)
+            {
+                _workItems.Add(new ExecutionThreadWorkItem(a));
+            }
+
+            internal void Terminate(Action a)
+            {
+                _workItems.Add(new ExecutionThreadWorkItem(a, isTermination: true));
+            }
+        }
+
+        private unsafe struct ExecutionThreadWorkItem
+        {
+            public readonly MappableResource ResourceToMap;
+            public readonly MapMode MapMode;
+            public readonly uint MapSubresource;
+            public readonly bool Map; // false == Unmap
+
+            public readonly OpenGLCommandList CommandListToExecute;
+
+            public readonly Buffer UpdateBuffer;
+            public readonly uint UpdateBufferOffsetInBytes;
+            public readonly StagingBlock UpdateBufferStagedSource;
+
+            public readonly IntPtr* ValueDestination;
+            public readonly ManualResetEventSlim ResetEvent;
+
+            public readonly Action Delegate;
+            public readonly Action TerminateAction;
+
+            public ExecutionThreadWorkItem(
+                MappableResource resource,
+                MapMode mapMode,
+                uint subresource,
+                bool map,
+                IntPtr* valueDestination,
+                ManualResetEventSlim resetEvent)
+            {
+                ResourceToMap = resource;
+                MapMode = mapMode;
+                MapSubresource = subresource;
+                Map = map;
+
+                CommandListToExecute = null;
+
+                UpdateBuffer = null;
+                UpdateBufferOffsetInBytes = 0;
+                UpdateBufferStagedSource = default(StagingBlock);
+
+                ValueDestination = valueDestination;
+                ResetEvent = resetEvent;
+
+                Delegate = null;
+                TerminateAction = null;
+            }
+
+            public ExecutionThreadWorkItem(OpenGLCommandList commandList)
+            {
+                CommandListToExecute = commandList;
+
+                ResourceToMap = null;
+                MapMode = 0;
+                MapSubresource = 0;
+                Map = false;
+
+                UpdateBuffer = null;
+                UpdateBufferOffsetInBytes = 0;
+                UpdateBufferStagedSource = default(StagingBlock);
+
+                ValueDestination = null;
+                ResetEvent = null;
+
+                Delegate = null;
+                TerminateAction = null;
+            }
+
+            public ExecutionThreadWorkItem(Buffer updateBuffer, uint offsetInBytes, StagingBlock stagedSource)
+            {
+                UpdateBuffer = updateBuffer;
+                UpdateBufferOffsetInBytes = offsetInBytes;
+                UpdateBufferStagedSource = stagedSource;
+
+                CommandListToExecute = null;
+
+                ResourceToMap = null;
+                MapMode = 0;
+                MapSubresource = 0;
+                Map = false;
+
+                ValueDestination = null;
+                ResetEvent = null;
+
+                Delegate = null;
+                TerminateAction = null;
+            }
+
+            public ExecutionThreadWorkItem(Action a, bool isTermination = false)
+            {
+                CommandListToExecute = null;
+
+                ResourceToMap = null;
+                MapMode = 0;
+                MapSubresource = 0;
+                Map = false;
+
+                UpdateBuffer = null;
+                UpdateBufferOffsetInBytes = 0;
+                UpdateBufferStagedSource = default(StagingBlock);
+
+                ValueDestination = null;
+                ResetEvent = null;
+
+                if (isTermination)
+                {
+                    TerminateAction = a;
+                    Delegate = null;
+                }
+                else
+                {
+                    Delegate = a;
+                    TerminateAction = null;
+                }
+            }
         }
     }
 }

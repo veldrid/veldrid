@@ -25,7 +25,7 @@ namespace Veldrid.NeoDemo
 
         public Camera Camera => _camera;
 
-        public bool ThreadedRendering { get; set; }
+        public bool ThreadedRendering { get; set; } = false;
 
         float _lScale = 1f;
         float _rScale = 1f;
@@ -202,7 +202,7 @@ namespace Veldrid.NeoDemo
 
             _resourceUpdateCL.UpdateBuffer(sc.LightInfoBuffer, 0, sc.DirectionalLight.GetInfo());
 
-            _allPerFrameRenderablesConcurrentBag.Clear();
+            _allPerFrameRenderablesSet.Clear();
             _tasks[0] = Task.Run(() =>
             {
                 // Near
@@ -231,7 +231,7 @@ namespace Veldrid.NeoDemo
                     sc.ShadowMapTexture.Width,
                     out var lightFrustum1);
                 cls[2].UpdateBuffer(sc.LightViewProjectionBuffer1, 0, ref viewProj1);
-
+                
                 cls[2].SetFramebuffer(sc.MidShadowMapFramebuffer);
                 cls[2].SetViewport(0, new Viewport(0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height, 0, 1));
                 cls[2].SetScissorRect(0, 0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height);
@@ -249,7 +249,7 @@ namespace Veldrid.NeoDemo
                     sc.ShadowMapTexture.Width,
                     out var lightFrustum2);
                 cls[3].UpdateBuffer(sc.LightViewProjectionBuffer2, 0, ref viewProj2);
-
+                
                 cls[3].SetFramebuffer(sc.FarShadowMapFramebuffer);
                 cls[3].SetViewport(0, new Viewport(0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height, 0, 1));
                 cls[3].SetScissorRect(0, 0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height);
@@ -274,7 +274,7 @@ namespace Veldrid.NeoDemo
 
             Task.WaitAll(_tasks);
 
-            foreach (Renderable renderable in _allPerFrameRenderablesConcurrentBag.ToHashSet())
+            foreach (Renderable renderable in _allPerFrameRenderablesSet)
             {
                 renderable.UpdatePerFrameResources(gd, _resourceUpdateCL, sc);
             }
@@ -412,8 +412,11 @@ namespace Veldrid.NeoDemo
 
             if (threaded)
             {
-                foreach (CullRenderable thing in cullRenderableList) { _allPerFrameRenderablesConcurrentBag.Add(thing); }
-                foreach (Renderable thing in renderableList) { _allPerFrameRenderablesConcurrentBag.Add(thing); }
+                lock (_allPerFrameRenderablesSet)
+                {
+                    foreach (CullRenderable thing in cullRenderableList) { _allPerFrameRenderablesSet.Add(thing); }
+                    foreach (Renderable thing in renderableList) { _allPerFrameRenderablesSet.Add(thing); }
+                }
             }
             else
             {
@@ -423,7 +426,6 @@ namespace Veldrid.NeoDemo
         }
 
         private readonly HashSet<Renderable> _allPerFrameRenderablesSet = new HashSet<Renderable>();
-        private readonly ConcurrentBag<Renderable> _allPerFrameRenderablesConcurrentBag = new ConcurrentBag<Renderable>();
         private readonly RenderQueue[] _renderQueues = Enumerable.Range(0, 4).Select(i => new RenderQueue()).ToArray();
         private readonly List<CullRenderable>[] _cullableStage = Enumerable.Range(0, 4).Select(i => new List<CullRenderable>()).ToArray();
         private readonly List<Renderable>[] _renderableStage = Enumerable.Range(0, 4).Select(i => new List<Renderable>()).ToArray();

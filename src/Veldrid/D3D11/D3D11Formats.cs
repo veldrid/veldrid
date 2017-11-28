@@ -195,6 +195,21 @@ namespace Veldrid.D3D11
             }
         }
 
+        internal static SharpDX.Direct3D11.MapMode VdToD3D11MapMode(MapMode mode)
+        {
+            switch (mode)
+            {
+                case MapMode.Read:
+                    return SharpDX.Direct3D11.MapMode.Read;
+                case MapMode.Write:
+                    return SharpDX.Direct3D11.MapMode.WriteDiscard;
+                case MapMode.ReadWrite:
+                    return SharpDX.Direct3D11.MapMode.ReadWrite;
+                default:
+                    throw Illegal.Value<MapMode>();
+            }
+        }
+
         internal static SharpDX.Direct3D.PrimitiveTopology VdToD3D11PrimitiveTopology(PrimitiveTopology primitiveTopology)
         {
             switch (primitiveTopology)

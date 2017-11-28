@@ -191,10 +191,11 @@ namespace Veldrid.NeoDemo
                     break;
                 }
 
-                DrawIndexed();
+                Draw();
             }
 
             DestroyAllObjects();
+            _gd.Dispose();
         }
 
         private void Update(float deltaSeconds)
@@ -337,7 +338,7 @@ namespace Veldrid.NeoDemo
             _window.WindowState = isFullscreen ? WindowState.Normal : WindowState.BorderlessFullScreen;
         }
 
-        private void DrawIndexed()
+        private void Draw()
         {
             Debug.Assert(_window.Exists);
             int width = _window.Width;
@@ -368,7 +369,7 @@ namespace Veldrid.NeoDemo
             _frameCommands.Begin();
 
             CommonMaterials.FlushAll(_frameCommands);
-            _sc.UpdateCameraBuffers(_frameCommands); // Meh
+            _sc.UpdateCameraBuffers(_gd); // Meh
 
             _scene.RenderAllStages(_gd, _frameCommands, _sc);
             _gd.SwapBuffers();

@@ -791,9 +791,17 @@ namespace Veldrid.OpenGLBinding
         private static glMapBuffer_t p_glMapBuffer;
         public static void* glMapBuffer(BufferTarget target, BufferAccess access) => p_glMapBuffer(target, access);
 
+        private delegate void* glMapNamedBuffer_t(uint buffer, BufferAccess access);
+        private static glMapNamedBuffer_t p_glMapNamedBuffer;
+        public static void* glMapNamedBuffer(uint buffer, BufferAccess access) => p_glMapNamedBuffer(buffer, access);
+
         private delegate GLboolean glUnmapBuffer_t(BufferTarget target);
         private static glUnmapBuffer_t p_glUnmapBuffer;
         public static GLboolean glUnmapBuffer(BufferTarget target) => p_glUnmapBuffer(target);
+
+        private delegate GLboolean glUnmapNamedBuffer_t(uint buffer);
+        private static glUnmapNamedBuffer_t p_glUnmapNamedBuffer;
+        public static GLboolean glUnmapNamedBuffer(uint buffer) => p_glUnmapNamedBuffer(buffer);
 
         private delegate void glCopyBufferSubData_t(
             BufferTarget readTarget,
@@ -850,6 +858,16 @@ namespace Veldrid.OpenGLBinding
             int y,
             uint width,
             uint height) => p_glCopyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y, width, height);
+
+        private delegate void* glMapBufferRange_t(BufferTarget target, IntPtr offset, IntPtr length, BufferAccessMask access);
+        private static glMapBufferRange_t p_glMapBufferRange;
+        public static void* glMapBufferRange(BufferTarget target, IntPtr offset, IntPtr length, BufferAccessMask access)
+            => p_glMapBufferRange(target, offset, length, access);
+
+        private delegate void* glMapNamedBufferRange_t(uint buffer, IntPtr offset, uint length, BufferAccessMask access);
+        private static glMapNamedBufferRange_t p_glMapNamedBufferRange;
+        public static void* glMapNamedBufferRange(uint buffer, IntPtr offset, uint length, BufferAccessMask access)
+            => p_glMapNamedBufferRange(buffer, offset, length, access);
 
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
@@ -961,10 +979,14 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTexStorage3D", out p_glTexStorage3D);
             LoadFunction("glTextureView", out p_glTextureView);
             LoadFunction("glMapBuffer", out p_glMapBuffer);
+            LoadFunction("glMapNamedBuffer", out p_glMapNamedBuffer);
             LoadFunction("glUnmapBuffer", out p_glUnmapBuffer);
+            LoadFunction("glUnmapNamedBuffer", out p_glUnmapNamedBuffer);
             LoadFunction("glCopyBufferSubData", out p_glCopyBufferSubData);
             LoadFunction("glCopyTexSubImage2D", out p_glCopyTexSubImage2D);
             LoadFunction("glCopyTexSubImage3D", out p_glCopyTexSubImage3D);
+            LoadFunction("glMapBufferRange", out p_glMapBufferRange);
+            LoadFunction("glMapNamedBufferRange", out p_glMapNamedBufferRange);
         }
 
         private static void LoadFunction<T>(string name, out T field)

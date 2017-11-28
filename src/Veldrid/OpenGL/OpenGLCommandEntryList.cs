@@ -39,5 +39,6 @@ namespace Veldrid.OpenGL
             uint layerCount);
 
         void Reset();
+        void Dispose();
     }
 }

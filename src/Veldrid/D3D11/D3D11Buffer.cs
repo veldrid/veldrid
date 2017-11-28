@@ -36,6 +36,18 @@ namespace Veldrid.D3D11
             {
                 bd.OptionFlags = ResourceOptionFlags.DrawIndirectArguments;
             }
+
+            if ((usage & BufferUsage.Dynamic) == BufferUsage.Dynamic)
+            {
+                bd.Usage = ResourceUsage.Dynamic;
+                bd.CpuAccessFlags = CpuAccessFlags.Write;
+            }
+            else if ((usage & BufferUsage.Staging) == BufferUsage.Staging)
+            {
+                bd.Usage = ResourceUsage.Staging;
+                bd.CpuAccessFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
+            }
+
             _buffer = new SharpDX.Direct3D11.Buffer(device, bd);
 
             if ((usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite

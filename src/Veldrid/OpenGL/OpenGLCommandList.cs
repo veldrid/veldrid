@@ -5,12 +5,14 @@ namespace Veldrid.OpenGL
 {
     internal class OpenGLCommandList : CommandList
     {
+        private readonly OpenGLGraphicsDevice _gd;
         private readonly OpenGLCommandEntryList _commands = new OpenGLNoAllocCommandEntryList();
 
         internal OpenGLCommandEntryList Commands => _commands;
 
-        public OpenGLCommandList(ref CommandListDescription description) : base(ref description)
+        public OpenGLCommandList(OpenGLGraphicsDevice gd, ref CommandListDescription description) : base(ref description)
         {
+            _gd = gd;
         }
 
         public override void Begin()
@@ -155,6 +157,12 @@ namespace Veldrid.OpenGL
 
         public override void Dispose()
         {
+            _gd.EnqueueDisposal(this);
+        }
+
+        public void DestroyResources()
+        {
+            _commands.Dispose();
         }
     }
 }

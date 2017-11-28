@@ -3,7 +3,7 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.D3D11
 {
@@ -85,8 +85,8 @@ namespace Veldrid.D3D11
             _swapChain.ResizeBuffers(2, width, height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
 
             // Get the backbuffer from the swapchain
-            using (SharpDX.Direct3D11.Texture2D backBufferTexture = _swapChain.GetBackBuffer<SharpDX.Direct3D11.Texture2D>(0))
-            using (SharpDX.Direct3D11.Texture2D depthBufferTexture = new SharpDX.Direct3D11.Texture2D(
+            using (Texture2D backBufferTexture = _swapChain.GetBackBuffer<Texture2D>(0))
+            using (Texture2D depthBufferTexture = new Texture2D(
                 _device,
                 new Texture2DDescription()
                 {
@@ -194,18 +194,18 @@ namespace Veldrid.D3D11
             return _device.CheckMultisampleQualityLevels(format, sampleCount) != 0;
         }
 
-        protected override MappedResource MapCore(MappableResource resource, uint subresource)
+        protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
         {
             if (resource is D3D11Buffer buffer)
             {
                 DataBox db = _immediateContext.MapSubresource(
                     buffer.Buffer,
                     0,
-                    MapMode.ReadWrite,
+                    D3D11Formats.VdToD3D11MapMode(mode),
                     SharpDX.Direct3D11.MapFlags.None,
                     out DataStream ds);
 
-                return new MappedResource(resource, db.DataPointer, buffer.SizeInBytes);
+                return new MappedResource(resource, mode, db.DataPointer, buffer.SizeInBytes);
             }
             else throw new NotImplementedException();
         }
@@ -221,7 +221,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        public unsafe override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             D3D11Buffer d3dBuffer = Util.AssertSubtype<Buffer, D3D11Buffer>(buffer);
             if (sizeInBytes == 0)
@@ -229,23 +229,45 @@ namespace Veldrid.D3D11
                 return;
             }
 
-            ResourceRegion? subregion = null;
-            if ((d3dBuffer.Buffer.Description.BindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
-            {
-                // For a shader-constant buffer; set pDstBox to null. It is not possible to use
-                // this method to partially update a shader-constant buffer
+            bool useMap = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
 
-                subregion = new ResourceRegion()
-                {
-                    Left = (int)bufferOffsetInBytes,
-                    Right = (int)(sizeInBytes + bufferOffsetInBytes),
-                    Bottom = 1,
-                    Back = 1
-                };
-            }
-            lock (_immediateContextLock)
+            if (useMap)
             {
-                _immediateContext.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+                if (bufferOffsetInBytes != 0)
+                {
+                    throw new NotImplementedException("bufferOffsetInBytes must be 0 for Dynamic Buffers.");
+                }
+                MappedResource mr = MapCore(buffer, MapMode.Write, 0);
+                if (sizeInBytes < 1024)
+                {
+                    Unsafe.CopyBlock(mr.Data.ToPointer(), source.ToPointer(), sizeInBytes);
+                }
+                else
+                {
+                    System.Buffer.MemoryCopy(source.ToPointer(), mr.Data.ToPointer(), buffer.SizeInBytes, sizeInBytes);
+                }
+                UnmapCore(buffer, 0);
+            }
+            else
+            {
+                ResourceRegion? subregion = null;
+                if ((d3dBuffer.Buffer.Description.BindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
+                {
+                    // For a shader-constant buffer; set pDstBox to null. It is not possible to use
+                    // this method to partially update a shader-constant buffer
+
+                    subregion = new ResourceRegion()
+                    {
+                        Left = (int)bufferOffsetInBytes,
+                        Right = (int)(sizeInBytes + bufferOffsetInBytes),
+                        Bottom = 1,
+                        Back = 1
+                    };
+                }
+                lock (_immediateContextLock)
+                {
+                    _immediateContext.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+                }
             }
         }
 

@@ -1852,4 +1852,17 @@ namespace Veldrid.OpenGLBinding
         WriteOnly = ((int)0x88B9),
         ReadWrite = ((int)0x88BA),
     }
+
+    [Flags]
+    public enum BufferAccessMask : int
+    {
+        Read = ((int)0x0001),
+        Write = ((int)0x0002),
+        InvalidateRange = ((int)0x0004),
+        InvalidateBuffer = ((int)0x0008),
+        FlushExplicit = ((int)0x0010),
+        Unsynchronized = ((int)0x0020),
+        Persistent = ((int)0x0040),
+        Coherent = ((int)0x0080),
+    }
 }

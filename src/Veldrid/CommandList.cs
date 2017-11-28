@@ -489,6 +489,15 @@ namespace Veldrid
             IntPtr source,
             uint sizeInBytes);
 
+        /// <summary>
+        /// Copies a region from the source <see cref="Buffer"/> to another region in the destination <see cref="Buffer"/>.
+        /// </summary>
+        /// <param name="source">The source <see cref="Buffer"/> from which data will be copied.</param>
+        /// <param name="sourceOffset">An offset into <paramref name="source"/> at which the copy region begins.</param>
+        /// <param name="destination">The destination <see cref="Buffer"/> into which data will be copied.</param>
+        /// <param name="destinationOffset">An offset into <paramref name="destination"/> at which the data will be copied.
+        /// </param>
+        /// <param name="sizeInBytes">The number of bytes to copy.</param>
         public void CopyBuffer(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
         {
 #if VALIDATE_USAGE
@@ -498,6 +507,25 @@ namespace Veldrid
 
         protected abstract void CopyBufferCore(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes);
 
+        /// <summary>
+        /// Copies a region from one <see cref="Texture"/> into another.
+        /// </summary>
+        /// <param name="source">The source <see cref="Texture"/> from which data is copied.</param>
+        /// <param name="srcX">The X coordinate of the source copy region.</param>
+        /// <param name="srcY">The Y coordinate of the source copy region.</param>
+        /// <param name="srcZ">The Z coordinate of the source copy region.</param>
+        /// <param name="srcMipLevel">The mip level to copy from the source Texture.</param>
+        /// <param name="srcBaseArrayLayer">The starting array layer to copy from the source Texture.</param>
+        /// <param name="destination">The destination <see cref="Texture"/> into which data is copied.</param>
+        /// <param name="dstX">The X coordinate of the destination copy region.</param>
+        /// <param name="dstY">The Y coordinate of the destination copy region.</param>
+        /// <param name="dstZ">The Z coordinate of the destination copy region.</param>
+        /// <param name="dstMipLevel">The mip level to copy the data into.</param>
+        /// <param name="dstBaseArrayLayer">The starting array layer to copy data into.</param>
+        /// <param name="width">The width in texels of the copy region.</param>
+        /// <param name="height">The height in texels of the copy region.</param>
+        /// <param name="depth">The depth in texels, of the copy region.</param>
+        /// <param name="layerCount">The number of array layers to copy.</param>
         public void CopyTexture(
             Texture source,
             uint srcX, uint srcY, uint srcZ,

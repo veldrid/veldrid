@@ -97,6 +97,18 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             }
         }
 
+        public void Dispose()
+        {
+            FreeAllHandles();
+            _totalEntries = 0;
+            _currentBlock = _blocks[0];
+            foreach (EntryStorageBlock block in _blocks)
+            {
+                block.Clear();
+                block.Free();
+            }
+        }
+
         public void* GetStorageChunk(uint size, out byte* terminatorWritePtr)
         {
             terminatorWritePtr = null;
@@ -603,14 +615,6 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                 width, height, depth,
                 layerCount);
             AddEntry(CopyTextureEntryID, ref entry);
-        }
-
-        public void Dispose()
-        {
-            foreach (EntryStorageBlock block in _blocks)
-            {
-                block.Free();
-            }
         }
 
         private struct EntryStorageBlock : IEquatable<EntryStorageBlock>

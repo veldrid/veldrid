@@ -179,6 +179,21 @@ namespace Veldrid.OpenGL
             }
         }
 
+        internal static BufferAccessMask VdToGLMapMode(MapMode mode)
+        {
+            switch (mode)
+            {
+                case MapMode.Read:
+                    return BufferAccessMask.Read;
+                case MapMode.Write:
+                    return BufferAccessMask.Write | BufferAccessMask.InvalidateBuffer;
+                case MapMode.ReadWrite:
+                    return BufferAccessMask.Read | BufferAccessMask.Write;
+                default:
+                    throw Illegal.Value<MapMode>();
+            }
+        }
+
         internal static VertexAttribPointerType VdToGLVertexAttribPointerType(VertexElementFormat format)
         {
             switch (format)

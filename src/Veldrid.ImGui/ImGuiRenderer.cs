@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid
 {
@@ -349,24 +350,26 @@ namespace Veldrid
                 _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
             }
 
+            MappedResource vbMap = _gd.Map(_vertexBuffer, MapMode.Write);
+            MappedResource ibMap = _gd.Map(_indexBuffer, MapMode.Write);
             for (int i = 0; i < draw_data->CmdListsCount; i++)
             {
                 NativeDrawList* cmd_list = draw_data->CmdLists[i];
 
-                cl.UpdateBuffer(
-                    _vertexBuffer,
-                    (uint)(vertexOffsetInVertices * sizeof(DrawVert)),
-                    new IntPtr(cmd_list->VtxBuffer.Data),
+                Unsafe.CopyBlock(
+                    (byte*)vbMap.Data.ToPointer() + vertexOffsetInVertices * sizeof(DrawVert),
+                    cmd_list->VtxBuffer.Data,
                     (uint)(cmd_list->VtxBuffer.Size * sizeof(DrawVert)));
-                cl.UpdateBuffer(
-                    _indexBuffer,
-                    (uint)(indexOffsetInElements * sizeof(ushort)),
-                    new IntPtr(cmd_list->IdxBuffer.Data),
+                Unsafe.CopyBlock(
+                    (byte*)ibMap.Data.ToPointer() + indexOffsetInElements * sizeof(ushort),
+                    cmd_list->IdxBuffer.Data,
                     (uint)(cmd_list->IdxBuffer.Size * sizeof(ushort)));
 
                 vertexOffsetInVertices += (uint)cmd_list->VtxBuffer.Size;
                 indexOffsetInElements += (uint)cmd_list->IdxBuffer.Size;
             }
+            _gd.Unmap(_vertexBuffer);
+            _gd.Unmap(_indexBuffer);
 
             // Setup orthographic projection matrix into our constant buffer
             {

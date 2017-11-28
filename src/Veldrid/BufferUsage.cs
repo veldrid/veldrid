@@ -35,10 +35,16 @@
         /// This flag enables the use of a buffer in the DrawIndirect methods of <see cref="CommandList"/>.
         /// </summary>
         IndirectBuffer = 1 << 5,
-        Mappable = 1 << 6,
         /// <summary>
-        /// A mappable Buffer which will be written to and read from continuously.
+        /// Indicates that a <see cref="Buffer"/> will be updated with new data very frequently. Dynamic Buffers are able to be
+        /// mapped with <see cref="MapMode.Write"/>.
         /// </summary>
-        Dynamic = 1 << 7,
+        Dynamic = 1 << 6,
+        /// <summary>
+        /// Indicates that a <see cref="Buffer"/> will be used as a staging Buffer. Staging Buffers can be used to transfer data
+        /// to-and-from the CPU using <see cref="GraphicsDevice.Map(MappableResource, MapMode)"/>. Staging Buffers can use all
+        /// <see cref="MapMode"/> values.
+        /// </summary>
+        Staging = 1 << 7,
     }
 }

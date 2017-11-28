@@ -18,7 +18,7 @@ namespace Veldrid.OpenGL
 
         public override CommandList CreateCommandList(ref CommandListDescription description)
         {
-            return new OpenGLCommandList(ref description);
+            return new OpenGLCommandList(_gd, ref description);
         }
 
         public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)

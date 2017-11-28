@@ -192,6 +192,7 @@ namespace Veldrid.StartupUtilities
                 contextHandle,
                 Sdl2Native.SDL_GL_GetProcAddress,
                 context => Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, context),
+                () => Sdl2Native.SDL_GL_MakeCurrent(new SDL_Window(IntPtr.Zero), IntPtr.Zero),
                 Sdl2Native.SDL_GL_DeleteContext,
                 () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
 

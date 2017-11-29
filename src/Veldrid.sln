@@ -18,6 +18,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.ImGui", "Veldrid.Im
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.OpenGLBindings", "Veldrid.OpenGLBindings\Veldrid.OpenGLBindings.csproj", "{6E93B2E1-BF0B-4268-94BA-E951ECC4DD7F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.Tests", "Veldrid.Tests\Veldrid.Tests.csproj", "{63CBCF9E-E4B6-4932-90FA-4671F7351685}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +126,18 @@ Global
 		{6E93B2E1-BF0B-4268-94BA-E951ECC4DD7F}.Release|x64.Build.0 = Release|Any CPU
 		{6E93B2E1-BF0B-4268-94BA-E951ECC4DD7F}.Release|x86.ActiveCfg = Release|Any CPU
 		{6E93B2E1-BF0B-4268-94BA-E951ECC4DD7F}.Release|x86.Build.0 = Release|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Debug|x64.Build.0 = Debug|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Debug|x86.Build.0 = Debug|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Release|x64.ActiveCfg = Release|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Release|x64.Build.0 = Release|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Release|x86.ActiveCfg = Release|Any CPU
+		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

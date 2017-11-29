@@ -1,8 +1,11 @@
-﻿namespace Veldrid
+﻿using System;
+
+namespace Veldrid
 {
     /// <summary>
     /// A bitmask describing the permitted uses of a <see cref="Buffer"/> object.
     /// </summary>
+    [Flags]
     public enum BufferUsage : byte
     {
         /// <summary>
@@ -44,6 +47,7 @@
         /// Indicates that a <see cref="Buffer"/> will be used as a staging Buffer. Staging Buffers can be used to transfer data
         /// to-and-from the CPU using <see cref="GraphicsDevice.Map(MappableResource, MapMode)"/>. Staging Buffers can use all
         /// <see cref="MapMode"/> values.
+        /// If this flag is present, no other flags are permitted.
         /// </summary>
         Staging = 1 << 7,
     }

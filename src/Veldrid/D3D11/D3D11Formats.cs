@@ -195,14 +195,15 @@ namespace Veldrid.D3D11
             }
         }
 
-        internal static SharpDX.Direct3D11.MapMode VdToD3D11MapMode(MapMode mode)
+        internal static SharpDX.Direct3D11.MapMode VdToD3D11MapMode(BufferUsage usage, MapMode mode)
         {
+            bool isDynamic = ((usage & BufferUsage.Dynamic) == BufferUsage.Dynamic);
             switch (mode)
             {
                 case MapMode.Read:
                     return SharpDX.Direct3D11.MapMode.Read;
                 case MapMode.Write:
-                    return SharpDX.Direct3D11.MapMode.WriteDiscard;
+                    return isDynamic ? SharpDX.Direct3D11.MapMode.WriteDiscard : SharpDX.Direct3D11.MapMode.Write;
                 case MapMode.ReadWrite:
                     return SharpDX.Direct3D11.MapMode.ReadWrite;
                 default:

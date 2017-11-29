@@ -113,6 +113,14 @@ namespace Veldrid
 
         protected abstract MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource);
 
+        public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode) where T : struct
+            => Map<T>(resource, mode, 0);
+        public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode, uint subresource) where T : struct
+        {
+            MappedResource mappedResource = Map(resource, mode, subresource);
+            return new MappedResourceView<T>(mappedResource);
+        }
+
         /// <summary>
         /// Invalidates a previously-mapped data region for the given <see cref="Buffer"/> or <see cref="Texture"/>.
         /// For <see cref="Texture"/> resources, this unmaps the first subresource.

@@ -3,6 +3,7 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Veldrid.D3D11
@@ -16,6 +17,10 @@ namespace Veldrid.D3D11
         private readonly bool _supportsConcurrentResources;
         private readonly bool _supportsCommandLists;
         private readonly object _immediateContextLock = new object();
+
+        private readonly object _mappedResourceLock = new object();
+        private readonly Dictionary<MappableResource, MappedResourceInfo> _mappedResources
+            = new Dictionary<MappableResource, MappedResourceInfo>();
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
@@ -196,27 +201,75 @@ namespace Veldrid.D3D11
 
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
         {
-            if (resource is D3D11Buffer buffer)
+            lock (_mappedResourceLock)
             {
-                DataBox db = _immediateContext.MapSubresource(
-                    buffer.Buffer,
-                    0,
-                    D3D11Formats.VdToD3D11MapMode(mode),
-                    SharpDX.Direct3D11.MapFlags.None,
-                    out DataStream ds);
+                if (_mappedResources.TryGetValue(resource, out MappedResourceInfo info))
+                {
+                    if (info.Mode != mode)
+                    {
+                        throw new VeldridException("The given resource was already mapped with a different MapMode.");
+                    }
 
-                return new MappedResource(resource, mode, db.DataPointer, buffer.SizeInBytes);
+                    info.RefCount += 1;
+                    _mappedResources[resource] = info;
+                }
+                else
+                {
+                    // No current mapping exists -- create one.
+
+                    if (resource is D3D11Buffer buffer)
+                    {
+                        lock (_immediateContextLock)
+                        {
+                            DataBox db = _immediateContext.MapSubresource(
+                                buffer.Buffer,
+                                0,
+                                D3D11Formats.VdToD3D11MapMode(buffer.Usage, mode),
+                                SharpDX.Direct3D11.MapFlags.None,
+                                out DataStream ds);
+
+                            info.MappedResource = new MappedResource(resource, mode, db.DataPointer, buffer.SizeInBytes);
+                            info.RefCount = 1;
+                            info.Mode = mode;
+                            _mappedResources.Add(resource, info);
+                        }
+                    }
+                    else throw new NotImplementedException();
+                }
+
+                return info.MappedResource;
             }
-            else throw new NotImplementedException();
         }
 
         protected override void UnmapCore(MappableResource resource, uint subresource)
         {
-            lock (_immediateContextLock)
+            bool commitUnmap;
+
+            lock (_mappedResourceLock)
             {
-                if (resource is D3D11Buffer buffer)
+                if (!_mappedResources.TryGetValue(resource, out MappedResourceInfo info))
                 {
-                    _immediateContext.UnmapSubresource(buffer.Buffer, 0);
+                    throw new VeldridException($"The given resource ({resource}) is not mapped.");
+                }
+
+                info.RefCount -= 1;
+                commitUnmap = info.RefCount == 0;
+                if (commitUnmap)
+                {
+                    lock (_immediateContextLock)
+                    {
+                        if (resource is D3D11Buffer buffer)
+                        {
+                            _immediateContext.UnmapSubresource(buffer.Buffer, 0);
+                        }
+                        else
+                        {
+                            throw new NotImplementedException();
+                        }
+
+                        bool result = _mappedResources.Remove(resource);
+                        Debug.Assert(result);
+                    }
                 }
             }
         }
@@ -229,7 +282,8 @@ namespace Veldrid.D3D11
                 return;
             }
 
-            bool useMap = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
+            bool useMap = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic
+                || (buffer.Usage & BufferUsage.Staging) == BufferUsage.Staging;
 
             if (useMap)
             {
@@ -237,6 +291,7 @@ namespace Veldrid.D3D11
                 {
                     throw new NotImplementedException("bufferOffsetInBytes must be 0 for Dynamic Buffers.");
                 }
+
                 MappedResource mr = MapCore(buffer, MapMode.Write, 0);
                 if (sizeInBytes < 1024)
                 {

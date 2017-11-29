@@ -136,6 +136,10 @@ namespace Veldrid
             {
                 throw new VeldridException("Non-structured Buffers must have a StructureByteStride of zero.");
             }
+            if ((description.Usage & BufferUsage.Staging) != 0 && description.Usage != BufferUsage.Staging)
+            {
+                throw new VeldridException("Buffers with Staging Usage must not specify any other Usage flags.");
+            }
 #endif
             return CreateBufferCore(ref description);
         }

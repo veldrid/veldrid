@@ -855,6 +855,9 @@ namespace Veldrid.OpenGL
             OpenGLBuffer srcGLBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(source);
             OpenGLBuffer dstGLBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(destination);
 
+            srcGLBuffer.EnsureResourcesCreated();
+            dstGLBuffer.EnsureResourcesCreated();
+
             // TODO: glCopyNamedBufferSubData
 
             glBindBuffer(BufferTarget.CopyReadBuffer, srcGLBuffer.Buffer);

@@ -56,10 +56,11 @@ namespace Veldrid.Vk
 
             vkGetBufferMemoryRequirements(gd.Device, _deviceBuffer, out _bufferMemoryRequirements);
 
-            bool dynamic = (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
+            bool hostVisible = (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic
+                || (usage & BufferUsage.Staging) == BufferUsage.Staging;
 
             VkMemoryPropertyFlags memoryPropertyFlags =
-                dynamic
+                hostVisible
                 ? VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent
                 : VkMemoryPropertyFlags.DeviceLocal;
 
@@ -67,7 +68,7 @@ namespace Veldrid.Vk
                 gd.PhysicalDeviceMemProperties,
                 _bufferMemoryRequirements.memoryTypeBits,
                 memoryPropertyFlags,
-                dynamic,
+                hostVisible,
                 _bufferMemoryRequirements.size,
                 _bufferMemoryRequirements.alignment);
             _memory = memoryToken;

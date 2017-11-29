@@ -107,6 +107,10 @@ namespace Veldrid.Sdl2
                 {
                     return WindowState.Maximized;
                 }
+                else if ((flags & SDL_WindowFlags.Hidden) == SDL_WindowFlags.Hidden)
+                {
+                    return WindowState.Hidden;
+                }
 
                 return WindowState.Normal;
             }
@@ -128,6 +132,9 @@ namespace Veldrid.Sdl2
                         break;
                     case WindowState.BorderlessFullScreen:
                         SDL_SetWindowFullscreen(_window, SDL_FullscreenMode.FullScreenDesktop);
+                        break;
+                    case WindowState.Hidden:
+                        SDL_HideWindow(_window);
                         break;
                     default:
                         throw new InvalidOperationException("Illegal WindowState value: " + value);

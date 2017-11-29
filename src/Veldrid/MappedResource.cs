@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid
 {
@@ -49,6 +50,37 @@ namespace Veldrid
             RowPitch = 0;
             DepthPitch = 0;
             ArrayPitch = 0;
+        }
+    }
+
+    public unsafe struct MappedResourceView<T> where T : struct
+    {
+        private static readonly int s_sizeofT = Unsafe.SizeOf<T>();
+
+        public readonly MappedResource MappedResource;
+        public readonly uint SizeInBytes;
+        public readonly int Count;
+
+        public MappedResourceView(MappedResource rawResource)
+        {
+            MappedResource = rawResource;
+            SizeInBytes = rawResource.SizeInBytes;
+            Count = (int)(SizeInBytes / s_sizeofT);
+        }
+
+        public ref T this[int index]
+        {
+            get
+            {
+                if (index >= Count || index < 0)
+                {
+                    throw new IndexOutOfRangeException(
+                        $"Given index ({index}) must be non-negative and less than Count ({Count}).");
+                }
+
+                byte* ptr = (byte*)MappedResource.Data + (index * s_sizeofT);
+                return ref Unsafe.AsRef<T>(ptr);
+            }
         }
     }
 }

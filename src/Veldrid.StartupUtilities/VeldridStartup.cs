@@ -22,14 +22,19 @@ namespace Veldrid.StartupUtilities
 
         public static Sdl2Window CreateWindow(ref WindowCreateInfo windowCI)
         {
+            SDL_WindowFlags flags = SDL_WindowFlags.OpenGL | SDL_WindowFlags.Resizable
+                    | GetWindowFlags(windowCI.WindowInitialState);
+            if (windowCI.WindowInitialState != WindowState.Hidden)
+            {
+                flags |= SDL_WindowFlags.Shown;
+            }
             Sdl2Window window = new Sdl2Window(
                 windowCI.WindowTitle,
                 windowCI.X,
                 windowCI.Y,
                 windowCI.WindowWidth,
                 windowCI.WindowHeight,
-                SDL_WindowFlags.OpenGL | SDL_WindowFlags.Shown | SDL_WindowFlags.Resizable
-                    | GetWindowFlags(windowCI.WindowInitialState),
+                flags,
                 false);
 
             return window;
@@ -54,6 +59,8 @@ namespace Veldrid.StartupUtilities
                     return SDL_WindowFlags.Minimized;
                 case WindowState.BorderlessFullScreen:
                     return SDL_WindowFlags.FullScreenDesktop;
+                case WindowState.Hidden:
+                    return SDL_WindowFlags.Hidden;
                 default:
                     throw new VeldridException("Invalid WindowState: " + state);
             }
@@ -192,6 +199,7 @@ namespace Veldrid.StartupUtilities
                 contextHandle,
                 Sdl2Native.SDL_GL_GetProcAddress,
                 context => Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, context),
+                () => Sdl2Native.SDL_GL_GetCurrentContext(),
                 () => Sdl2Native.SDL_GL_MakeCurrent(new SDL_Window(IntPtr.Zero), IntPtr.Zero),
                 Sdl2Native.SDL_GL_DeleteContext,
                 () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle));
@@ -224,6 +232,5 @@ namespace Veldrid.StartupUtilities
 
             return Encoding.UTF8.GetString(stringStart, characters);
         }
-
     }
 }

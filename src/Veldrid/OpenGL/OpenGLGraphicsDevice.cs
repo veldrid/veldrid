@@ -17,6 +17,8 @@ namespace Veldrid.OpenGL
         private readonly ConcurrentQueue<OpenGLDeferredResource> _resourcesToDispose
             = new ConcurrentQueue<OpenGLDeferredResource>();
         private readonly IntPtr _glContext;
+        private readonly Action<IntPtr> _makeCurrent;
+        private readonly Func<IntPtr> _getCurrentContext;
         private readonly Action<IntPtr> _deleteContext;
         private readonly Action _swapBuffers;
         private readonly OpenGLSwapchainFramebuffer _swapchainFramebuffer;
@@ -24,7 +26,6 @@ namespace Veldrid.OpenGL
         private DebugProc _debugMessageCallback;
         private readonly OpenGLExtensions _extensions;
 
-        private readonly Action<IntPtr> _makeCurrent;
         private readonly TextureSampleCount _maxColorTextureSamples;
 
         private readonly StagingMemoryPool _stagingMemoryPool = new StagingMemoryPool();
@@ -34,6 +35,10 @@ namespace Veldrid.OpenGL
         private readonly object _commandListDisposalLock = new object();
         private readonly HashSet<OpenGLCommandList> _submittedCommandLists = new HashSet<OpenGLCommandList>();
         private readonly HashSet<OpenGLCommandList> _commandListsToDispose = new HashSet<OpenGLCommandList>();
+
+        private readonly object _mappedResourceLock = new object();
+        private readonly Dictionary<MappableResource, MappedResourceInfo> _mappedResources
+            = new Dictionary<MappableResource, MappedResourceInfo>();
 
         public override GraphicsBackend BackendType => GraphicsBackend.OpenGL;
 
@@ -51,6 +56,7 @@ namespace Veldrid.OpenGL
         {
             _glContext = platformInfo.OpenGLContextHandle;
             _makeCurrent = platformInfo.MakeCurrent;
+            _getCurrentContext = platformInfo.GetCurrentContext;
             _deleteContext = platformInfo.DeleteContext;
             _swapBuffers = platformInfo.SwapBuffers;
             LoadAllFunctions(_glContext, platformInfo.GetProcAddress);
@@ -173,7 +179,7 @@ namespace Veldrid.OpenGL
 
         public override void WaitForIdle()
         {
-            FlushDisposables();
+            _executionThread.WaitForIdle();
         }
 
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
@@ -183,6 +189,21 @@ namespace Veldrid.OpenGL
 
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
         {
+            lock (_mappedResourceLock)
+            {
+                if (_mappedResources.TryGetValue(resource, out MappedResourceInfo info))
+                {
+                    if (info.Mode != mode)
+                    {
+                        throw new VeldridException("The given resource was already mapped with a different MapMode.");
+                    }
+
+                    info.RefCount += 1;
+                    _mappedResources[resource] = info;
+                    return info.MappedResource;
+                }
+            }
+
             if (resource is OpenGLBuffer buffer)
             {
                 IntPtr mappedPtr = _executionThread.Map(resource, mode, subresource);
@@ -207,6 +228,13 @@ namespace Veldrid.OpenGL
 
         public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
+            lock (_mappedResourceLock)
+            {
+                if (_mappedResources.ContainsKey(buffer))
+                {
+                    throw new VeldridException("Cannot call UpdateBuffer on a currently-mapped Buffer.");
+                }
+            }
             StagingBlock sb = _stagingMemoryPool.Stage(source, sizeInBytes);
             _executionThread.UpdateBuffer(buffer, bufferOffsetInBytes, sb);
         }
@@ -315,7 +343,15 @@ namespace Veldrid.OpenGL
         {
             _executionThread.Terminate(() =>
             {
-                FlushDisposables();
+                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
+                uint error = glGetError();
+                if (error == (uint)ErrorCode.InvalidOperation)
+                {
+                    return;
+                }
+                _makeCurrent(_glContext);
+
+                //FlushDisposables();
                 _deleteContext(_glContext);
             });
         }
@@ -327,6 +363,8 @@ namespace Veldrid.OpenGL
             private readonly Action<IntPtr> _makeCurrent;
             private readonly IntPtr _context;
             private bool _terminated;
+            private readonly List<Exception> _exceptions = new List<Exception>();
+            private readonly object _exceptionsLock = new object();
 
             public ExecutionThread(
                 OpenGLGraphicsDevice gd,
@@ -354,53 +392,74 @@ namespace Veldrid.OpenGL
 
             private void ExecuteWorkItem(ExecutionThreadWorkItem workItem)
             {
-                _makeCurrent(_context);
-                if (workItem.CommandListToExecute != null)
+                try
                 {
-                    workItem.CommandListToExecute.Commands.ExecuteAll(_gd._commandExecutor);
-                    if (!_gd.CheckCommandListDisposal(workItem.CommandListToExecute))
+                    if (workItem.CommandListToExecute != null)
                     {
-                        workItem.CommandListToExecute.Reset();
+                        try
+                        {
+                            workItem.CommandListToExecute.Commands.ExecuteAll(_gd._commandExecutor);
+                        }
+                        finally
+                        {
+                            if (!_gd.CheckCommandListDisposal(workItem.CommandListToExecute))
+                            {
+                                workItem.CommandListToExecute.Reset();
+                            }
+                        }
                     }
-                }
-                else if (workItem.ResourceToMap != null)
-                {
-                    if (workItem.Map)
+                    else if (workItem.ResourceToMap != null)
                     {
-                        ExecuteMapResource(
-                            workItem.ResourceToMap,
-                            workItem.MapMode,
-                            workItem.MapSubresource,
-                            workItem.ValueDestination,
-                            workItem.ResetEvent);
+                        if (workItem.Map)
+                        {
+                            ExecuteMapResource(
+                                workItem.ResourceToMap,
+                                workItem.MapMode,
+                                workItem.MapSubresource,
+                                workItem.ValueDestination,
+                                workItem.ResetEvent);
+                        }
+                        else
+                        {
+                            ExecuteUnmapResource(workItem.ResourceToMap, workItem.MapSubresource, workItem.ResetEvent);
+                        }
+                    }
+                    else if (workItem.UpdateBuffer != null)
+                    {
+                        StagingBlock stagingBlock = workItem.UpdateBufferStagedSource;
+                        fixed (byte* dataPtr = &stagingBlock.Array[0])
+                        {
+                            _gd._commandExecutor.UpdateBuffer(
+                                workItem.UpdateBuffer,
+                                workItem.UpdateBufferOffsetInBytes,
+                                (IntPtr)dataPtr,
+                                stagingBlock.SizeInBytes);
+                        }
+                        stagingBlock.Free();
+                    }
+                    else if (workItem.Delegate != null)
+                    {
+                        workItem.Delegate();
+                    }
+                    else if (workItem.ResetEvent != null)
+                    {
+                        // Wait for idle.
+                        _gd.FlushDisposables(); // TODO: This should be in this class.
+                        workItem.ResetEvent.Set();
                     }
                     else
                     {
-                        ExecuteUnmapResource(workItem.ResourceToMap, workItem.MapSubresource);
+                        Debug.Assert(workItem.TerminateAction != null);
+                        workItem.TerminateAction();
+                        _terminated = true;
                     }
                 }
-                else if (workItem.UpdateBuffer != null)
+                catch (Exception e)
                 {
-                    StagingBlock stagingBlock = workItem.UpdateBufferStagedSource;
-                    fixed (byte* dataPtr = &stagingBlock.Array[0])
+                    lock (_exceptionsLock)
                     {
-                        _gd._commandExecutor.UpdateBuffer(
-                            workItem.UpdateBuffer,
-                            workItem.UpdateBufferOffsetInBytes,
-                            (IntPtr)dataPtr,
-                            stagingBlock.SizeInBytes);
+                        _exceptions.Add(e);
                     }
-                    stagingBlock.Free();
-                }
-                else if (workItem.Delegate != null)
-                {
-                    workItem.Delegate();
-                }
-                else
-                {
-                    Debug.Assert(workItem.TerminateAction != null);
-                    workItem.TerminateAction();
-                    _terminated = true;
                 }
             }
 
@@ -411,91 +470,169 @@ namespace Veldrid.OpenGL
                 IntPtr* result,
                 ManualResetEventSlim mre)
             {
-                if (resource is OpenGLBuffer buffer)
+                try
                 {
-                    buffer.EnsureResourcesCreated();
-                    void* mappedPtr;
-                    BufferAccessMask accessMask = OpenGLFormats.VdToGLMapMode(mode);
-                    if (_gd.Extensions.ARB_DirectStateAccess)
+                    lock (_gd._mappedResourceLock)
                     {
-                        mappedPtr = glMapNamedBufferRange(buffer.Buffer, IntPtr.Zero, buffer.SizeInBytes, accessMask);
-                        CheckLastError();
-                    }
-                    else
-                    {
-                        glBindBuffer(BufferTarget.CopyWriteBuffer, buffer.Buffer);
-                        CheckLastError();
+                        Debug.Assert(!_gd._mappedResources.ContainsKey(resource));
+                        if (resource is OpenGLBuffer buffer)
+                        {
+                            buffer.EnsureResourcesCreated();
+                            void* mappedPtr;
+                            BufferAccessMask accessMask = OpenGLFormats.VdToGLMapMode(mode);
+                            if (_gd.Extensions.ARB_DirectStateAccess)
+                            {
+                                mappedPtr = glMapNamedBufferRange(buffer.Buffer, IntPtr.Zero, buffer.SizeInBytes, accessMask);
+                                CheckLastError();
+                            }
+                            else
+                            {
+                                glBindBuffer(BufferTarget.CopyWriteBuffer, buffer.Buffer);
+                                CheckLastError();
 
-                        mappedPtr = glMapBufferRange(BufferTarget.CopyWriteBuffer, IntPtr.Zero, (IntPtr)buffer.SizeInBytes, accessMask);
-                        CheckLastError();
-                    }
+                                mappedPtr = glMapBufferRange(BufferTarget.CopyWriteBuffer, IntPtr.Zero, (IntPtr)buffer.SizeInBytes, accessMask);
+                                CheckLastError();
+                            }
 
-                    *result = (IntPtr)mappedPtr;
-                    mre.Set();
+                            MappedResourceInfo info = new MappedResourceInfo();
+                            info.MappedResource = new MappedResource(
+                                resource,
+                                mode,
+                                (IntPtr)mappedPtr,
+                                buffer.SizeInBytes);
+                            info.RefCount = 1;
+                            info.Mode = mode;
+                            _gd._mappedResources.Add(resource, info);
+                            *result = info.MappedResource.Data;
+                        }
+                        else
+                        {
+                            throw new NotImplementedException();
+                        }
+                    }
                 }
-                else
+                catch
                 {
-                    throw new NotImplementedException();
+                    *result = new IntPtr(-1);
+                }
+                finally
+                {
+                    mre.Set();
                 }
             }
 
-            private void ExecuteUnmapResource(MappableResource resource, uint mapSubresource)
+            private void ExecuteUnmapResource(MappableResource resource, uint mapSubresource, ManualResetEventSlim mre)
             {
-                if (resource is OpenGLBuffer buffer)
+                lock (_gd._mappedResourceLock)
                 {
-                    if (_gd.Extensions.ARB_DirectStateAccess)
+                    MappedResourceInfo info = _gd._mappedResources[resource];
+                    if (info.RefCount == 1)
                     {
-                        glUnmapNamedBuffer(buffer.Buffer);
-                        CheckLastError();
-                    }
-                    else
-                    {
-                        glBindBuffer(BufferTarget.CopyWriteBuffer, buffer.Buffer);
-                        CheckLastError();
+                        if (resource is OpenGLBuffer buffer)
+                        {
+                            if (_gd.Extensions.ARB_DirectStateAccess)
+                            {
+                                glUnmapNamedBuffer(buffer.Buffer);
+                                CheckLastError();
+                            }
+                            else
+                            {
+                                glBindBuffer(BufferTarget.CopyWriteBuffer, buffer.Buffer);
+                                CheckLastError();
 
-                        glUnmapBuffer(BufferTarget.CopyWriteBuffer);
-                        CheckLastError();
+                                glUnmapBuffer(BufferTarget.CopyWriteBuffer);
+                                CheckLastError();
+                            }
+                        }
+                        else
+                        {
+                            throw new NotImplementedException();
+                        }
+
+                        _gd._mappedResources.Remove(resource);
                     }
                 }
-                else
+
+                mre.Set();
+            }
+
+            private void CheckExceptions()
+            {
+                lock (_exceptionsLock)
                 {
-                    throw new NotImplementedException();
+                    if (_exceptions.Count > 0)
+                    {
+                        Exception innerException = _exceptions.Count == 1
+                            ? _exceptions[0]
+                            : new AggregateException(_exceptions.ToArray());
+                        _exceptions.Clear();
+                        throw new VeldridException(
+                            "Error(s) were encountered during the execution of OpenGL commands. See InnerException for more information.",
+                            innerException);
+
+                    }
                 }
             }
 
             public IntPtr Map(MappableResource resource, MapMode mode, uint subresource)
             {
+                CheckExceptions();
+
                 IntPtr result;
                 ManualResetEventSlim mre = new ManualResetEventSlim(false);
                 _workItems.Add(new ExecutionThreadWorkItem(resource, mode, subresource, true, &result, mre));
                 mre.Wait();
+                if (result == new IntPtr(-1))
+                {
+                    throw new VeldridException("Failed to map OpenGL resource.");
+                }
                 return result;
-            }
-
-            public void ExecuteCommands(OpenGLCommandList commandList)
-            {
-
-                _workItems.Add(new ExecutionThreadWorkItem(commandList));
             }
 
             internal void Unmap(MappableResource resource, uint subresource)
             {
-                _workItems.Add(new ExecutionThreadWorkItem(resource, 0, subresource, false, null, null));
+                CheckExceptions();
+
+                ManualResetEventSlim mre = new ManualResetEventSlim(false);
+                _workItems.Add(new ExecutionThreadWorkItem(resource, 0, subresource, false, null, mre));
+                mre.Wait();
+            }
+
+            public void ExecuteCommands(OpenGLCommandList commandList)
+            {
+                CheckExceptions();
+
+                _workItems.Add(new ExecutionThreadWorkItem(commandList));
             }
 
             internal void UpdateBuffer(Buffer buffer, uint offsetInBytes, StagingBlock stagingBlock)
             {
+                CheckExceptions();
+
                 _workItems.Add(new ExecutionThreadWorkItem(buffer, offsetInBytes, stagingBlock));
             }
 
             internal void Run(Action a)
             {
+                CheckExceptions();
+
                 _workItems.Add(new ExecutionThreadWorkItem(a));
             }
 
             internal void Terminate(Action a)
             {
+                CheckExceptions();
+
                 _workItems.Add(new ExecutionThreadWorkItem(a, isTermination: true));
+            }
+
+            internal void WaitForIdle()
+            {
+                ManualResetEventSlim mre = new ManualResetEventSlim();
+                _workItems.Add(new ExecutionThreadWorkItem(mre));
+                mre.Wait();
+
+                CheckExceptions();
             }
         }
 
@@ -610,6 +747,28 @@ namespace Veldrid.OpenGL
                     Delegate = a;
                     TerminateAction = null;
                 }
+            }
+
+            public ExecutionThreadWorkItem(ManualResetEventSlim mre)
+            {
+                ResetEvent = mre;
+
+                CommandListToExecute = null;
+
+                ResourceToMap = null;
+                MapMode = 0;
+                MapSubresource = 0;
+                Map = false;
+
+                UpdateBuffer = null;
+                UpdateBufferOffsetInBytes = 0;
+                UpdateBufferStagedSource = default(StagingBlock);
+
+                ValueDestination = null;
+
+                Delegate = null;
+
+                TerminateAction = null;
             }
         }
     }

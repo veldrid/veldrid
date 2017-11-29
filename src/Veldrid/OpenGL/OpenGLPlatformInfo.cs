@@ -21,6 +21,10 @@ namespace Veldrid.OpenGL
         /// </summary>
         public Action<IntPtr> MakeCurrent { get; }
         /// <summary>
+        /// A delegate which can be used to retrieve the calling thread's active OpenGL context.
+        /// </summary>
+        public Func<IntPtr> GetCurrentContext { get; }
+        /// <summary>
         /// A delegate which can be used to clear the calling thread's GL context.
         /// </summary>
         public Action ClearCurrentContext { get; }
@@ -40,6 +44,7 @@ namespace Veldrid.OpenGL
         /// <param name="getProcAddress">A delegate which can be used to retrieve OpenGL function pointers by name.</param>
         /// <param name="makeCurrent">A delegate which can be used to make the given OpenGL context current on the calling
         /// thread.</param>
+        /// <param name="getCurrentContext">A delegate which can be used to retrieve the calling thread's active OpenGL context.</param>
         /// <param name="clearCurrentContext">A delegate which can be used to clear the calling thread's GL context.</param>
         /// <param name="deleteContext">A delegate which can be used to delete the given context.</param>
         /// <param name="swapBuffers">A delegate which can be used to swap the main back buffer associated with the OpenGL
@@ -48,6 +53,7 @@ namespace Veldrid.OpenGL
             IntPtr openGLContextHandle,
             Func<string, IntPtr> getProcAddress,
             Action<IntPtr> makeCurrent,
+            Func<IntPtr> getCurrentContext,
             Action clearCurrentContext,
             Action<IntPtr> deleteContext,
             Action swapBuffers)
@@ -55,6 +61,7 @@ namespace Veldrid.OpenGL
             OpenGLContextHandle = openGLContextHandle;
             GetProcAddress = getProcAddress;
             MakeCurrent = makeCurrent;
+            GetCurrentContext = getCurrentContext;
             ClearCurrentContext = clearCurrentContext;
             DeleteContext = deleteContext;
             SwapBuffers = swapBuffers;

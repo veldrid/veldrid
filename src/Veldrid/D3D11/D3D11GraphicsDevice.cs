@@ -224,7 +224,7 @@ namespace Veldrid.D3D11
                             DataBox db = _immediateContext.MapSubresource(
                                 buffer.Buffer,
                                 0,
-                                D3D11Formats.VdToD3D11MapMode(buffer.Usage, mode),
+                                D3D11Formats.VdToD3D11MapMode((buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic, mode),
                                 SharpDX.Direct3D11.MapFlags.None,
                                 out DataStream ds);
 
@@ -234,7 +234,31 @@ namespace Veldrid.D3D11
                             _mappedResources.Add(resource, info);
                         }
                     }
-                    else throw new NotImplementedException();
+                    else
+                    {
+                        D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
+                        lock (_immediateContextLock)
+                        {
+                            DataBox db = _immediateContext.MapSubresource(
+                                texture.DeviceTexture,
+                                (int)subresource,
+                                D3D11Formats.VdToD3D11MapMode(false, mode),
+                                SharpDX.Direct3D11.MapFlags.None,
+                                out DataStream ds);
+
+                            info.MappedResource = new MappedResource(
+                                resource,
+                                mode,
+                                db.DataPointer,
+                                (uint)ds.Length,
+                                subresource,
+                                (uint)db.RowPitch,
+                                (uint)db.SlicePitch);
+                            info.RefCount = 1;
+                            info.Mode = mode;
+                            _mappedResources.Add(resource, info);
+                        }
+                    }
                 }
 
                 return info.MappedResource;
@@ -264,7 +288,8 @@ namespace Veldrid.D3D11
                         }
                         else
                         {
-                            throw new NotImplementedException();
+                            D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
+                            _immediateContext.UnmapSubresource(texture.DeviceTexture, (int)subresource);
                         }
 
                         bool result = _mappedResources.Remove(resource);

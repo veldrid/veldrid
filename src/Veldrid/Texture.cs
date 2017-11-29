@@ -6,7 +6,7 @@ namespace Veldrid
     /// A device resource used to store arbitrary image data in a specific format.
     /// See <see cref="TextureDescription"/>.
     /// </summary>
-    public abstract class Texture : DeviceResource, IDisposable
+    public abstract class Texture : DeviceResource, MappableResource, IDisposable
     {
         /// <summary>
         /// The format of individual texture elements stored in this instance.

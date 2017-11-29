@@ -11,6 +11,7 @@ namespace Veldrid.OpenGL
         private readonly OpenGLGraphicsDevice _gd;
         private uint _texture;
         private uint[] _framebuffers;
+        private uint[] _pbos;
 
         private string _name;
         private bool _nameChanged;
@@ -34,6 +35,7 @@ namespace Veldrid.OpenGL
             SampleCount = description.SampleCount;
 
             _framebuffers = new uint[MipLevels * ArrayLayers];
+            _pbos = new uint[MipLevels * ArrayLayers];
 
             GLPixelFormat = OpenGLFormats.VdToGLPixelFormat(Format);
             GLPixelType = OpenGLFormats.VdToGLPixelType(Format);
@@ -355,17 +357,17 @@ namespace Veldrid.OpenGL
         {
             Debug.Assert(Created);
 
-            int arrayIndex = (int)(arrayLayer * MipLevels + mipLevel);
-            if (_framebuffers[arrayIndex] == 0)
+            int subresource = GetSubresourceIndex(mipLevel, arrayLayer);
+            if (_framebuffers[subresource] == 0)
             {
                 FramebufferTarget framebufferTarget = SampleCount == TextureSampleCount.Count1
                     ? FramebufferTarget.DrawFramebuffer
                     : FramebufferTarget.ReadFramebuffer;
 
-                glGenFramebuffers(1, out _framebuffers[arrayIndex]);
+                glGenFramebuffers(1, out _framebuffers[subresource]);
                 CheckLastError();
 
-                glBindFramebuffer(framebufferTarget, _framebuffers[arrayIndex]);
+                glBindFramebuffer(framebufferTarget, _framebuffers[subresource]);
                 CheckLastError();
 
                 glActiveTexture(TextureUnit.Texture0);
@@ -404,7 +406,58 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            return _framebuffers[arrayIndex];
+            return _framebuffers[subresource];
+        }
+
+        public uint GetPixelBuffer(uint subresource)
+        {
+            Debug.Assert(Created);
+            if (_pbos[subresource] == 0)
+            {
+                glGenBuffers(1, out _pbos[subresource]);
+                CheckLastError();
+
+                glBindBuffer(BufferTarget.PixelUnpackBuffer, _pbos[subresource]);
+                CheckLastError();
+
+                glBufferData(
+                    BufferTarget.PixelUnpackBuffer,
+                    (UIntPtr)(Width * Height * FormatHelpers.GetSizeInBytes(Format)),
+                    null,
+                    BufferUsageHint.StaticCopy);
+                CheckLastError();
+            }
+
+            return _pbos[subresource];
+        }
+
+        internal int GetSubresourceIndex(uint mipLevel, uint arrayLayer)
+        {
+            return (int)(arrayLayer * MipLevels + mipLevel);
+        }
+
+        internal void GetMipLevelAndArrayLayer(uint subresource, out uint mipLevel, out uint arrayLayer)
+        {
+            arrayLayer = subresource / MipLevels;
+            mipLevel = subresource - (arrayLayer * MipLevels);
+        }
+
+        internal void GetMipDimensions(uint mipLevel, out uint width, out uint height, out uint depth)
+        {
+            width = GetDimension(Width, mipLevel);
+            height = GetDimension(Height, mipLevel);
+            depth = GetDimension(Depth, mipLevel);
+        }
+
+        private static uint GetDimension(uint largestLevelDimension, uint mipLevel)
+        {
+            uint ret = largestLevelDimension;
+            for (uint i = 0; i < mipLevel; i++)
+            {
+                ret /= 2;
+            }
+
+            return Math.Max(1, ret);
         }
 
         public override void Dispose()

@@ -104,7 +104,15 @@ namespace Veldrid
             }
             else if (resource is Texture tex)
             {
-                throw new NotImplementedException();
+                if ((tex.Usage & TextureUsage.Staging) == 0)
+                {
+                    throw new VeldridException("Texture must have the Staging usage flag to be mapped.");
+                }
+                if (subresource >= tex.ArrayLayers * tex.MipLevels)
+                {
+                    throw new VeldridException(
+                        "Subresource must be less than the number of subresources in the Texture being mapped.");
+                }
             }
 #endif
 

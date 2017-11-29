@@ -47,7 +47,7 @@ namespace Veldrid.Vk
             ArrayLayers = description.ArrayLayers;
             bool isCubemap = ((description.Usage) & TextureUsage.Cubemap) == TextureUsage.Cubemap;
             _actualImageArrayLayers = isCubemap
-? 6 * ArrayLayers
+                ? 6 * ArrayLayers
                 : ArrayLayers;
             Format = description.Format;
             Usage = description.Usage;
@@ -100,7 +100,9 @@ namespace Veldrid.Vk
                 imageCI.usage |= VkImageUsageFlags.Storage;
             }
 
-            imageCI.tiling = VkImageTiling.Optimal;
+            bool isStaging = (Usage & TextureUsage.Staging) == TextureUsage.Staging;
+
+            imageCI.tiling = isStaging ? VkImageTiling.Linear : VkImageTiling.Optimal;
             imageCI.format = VkFormat;
 
             imageCI.samples = VkSampleCount;
@@ -117,12 +119,16 @@ namespace Veldrid.Vk
                 _imageLayouts[i] = VkImageLayout.Preinitialized;
             }
 
+            VkMemoryPropertyFlags memoryProperties = isStaging
+                ? VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent
+                : VkMemoryPropertyFlags.DeviceLocal;
+
             vkGetImageMemoryRequirements(gd.Device, _image, out VkMemoryRequirements memoryRequirements);
 
             VkMemoryBlock memoryToken = gd.MemoryManager.Allocate(
                 gd.PhysicalDeviceMemProperties,
                 memoryRequirements.memoryTypeBits,
-                VkMemoryPropertyFlags.DeviceLocal,
+                memoryProperties,
                 false,
                 memoryRequirements.size,
                 memoryRequirements.alignment);

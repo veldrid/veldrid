@@ -32,7 +32,10 @@ namespace Veldrid.D3D11
                 description.Format,
                 (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
 
+            CpuAccessFlags cpuFlags = CpuAccessFlags.None;
+            ResourceUsage resourceUsage = ResourceUsage.Default;
             BindFlags bindFlags = BindFlags.None;
+
             if ((description.Usage & TextureUsage.RenderTarget) == TextureUsage.RenderTarget)
             {
                 bindFlags |= BindFlags.RenderTarget;
@@ -48,6 +51,11 @@ namespace Veldrid.D3D11
             if ((description.Usage & TextureUsage.Storage) == TextureUsage.Storage)
             {
                 bindFlags |= BindFlags.UnorderedAccess;
+            }
+            if ((description.Usage & TextureUsage.Staging) == TextureUsage.Staging)
+            {
+                cpuFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
+                resourceUsage = ResourceUsage.Staging;
             }
 
             ResourceOptionFlags optionFlags = ResourceOptionFlags.None;
@@ -66,8 +74,8 @@ namespace Veldrid.D3D11
                 ArraySize = arraySize,
                 Format = DxgiFormat,
                 BindFlags = bindFlags,
-                CpuAccessFlags = CpuAccessFlags.None,
-                Usage = ResourceUsage.Default,
+                CpuAccessFlags = cpuFlags,
+                Usage = resourceUsage,
                 SampleDescription = new SharpDX.DXGI.SampleDescription((int)FormatHelpers.GetSampleCountUInt32(SampleCount), 0),
                 OptionFlags = optionFlags,
             };

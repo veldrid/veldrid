@@ -499,7 +499,7 @@ namespace Veldrid.OpenGL
                             OpenGLTexture texture = Util.AssertSubtype<MappableResource, OpenGLTexture>(resource);
                             texture.EnsureResourcesCreated();
 
-                            texture.GetMipLevelAndArrayLayer(subresource, out uint mipLevel, out uint arrayLayer);
+                            Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
                             texture.GetMipDimensions(mipLevel, out uint width, out uint height, out uint depth);
 
                             uint pbo = texture.GetPixelBuffer(subresource);

@@ -578,25 +578,45 @@ namespace Veldrid.Vk
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
         {
             VkMemoryBlock memoryBlock;
+            IntPtr mappedPtr;
+            uint sizeInBytes;
+            uint offset = 0;
+            uint rowPitch = 0;
+            uint depthPitch = 0;
             if (resource is VkBuffer buffer)
             {
                 memoryBlock = buffer.Memory;
+                sizeInBytes = buffer.SizeInBytes;
             }
             else
             {
-                Debug.Assert(resource is VkTexture);
-                memoryBlock = ((VkTexture)resource).MemoryBlock;
+                VkTexture texture = Util.AssertSubtype<MappableResource, VkTexture>(resource);
+                memoryBlock = texture.MemoryBlock;
+                VkSubresourceLayout layout = texture.GetSubresourceLayout(subresource);
+                offset = (uint)layout.offset;
+                sizeInBytes = (uint)layout.size;
+                rowPitch = (uint)layout.rowPitch;
+                depthPitch = (uint)layout.depthPitch;
             }
 
             if (memoryBlock.IsPersistentMapped)
             {
-                return new MappedResource(resource, mode, (IntPtr)memoryBlock.BlockMappedPointer, (uint)memoryBlock.Size);
+                mappedPtr = (IntPtr)memoryBlock.BlockMappedPointer;
             }
             else
             {
-                IntPtr mappedPtr = _memoryManager.Map(memoryBlock);
-                return new MappedResource(resource, mode, mappedPtr, (uint)memoryBlock.Size);
+                mappedPtr = _memoryManager.Map(memoryBlock);
             }
+
+            byte* dataPtr = (byte*)mappedPtr.ToPointer() + offset;
+            return new MappedResource(
+                resource,
+                mode,
+                (IntPtr)dataPtr,
+                sizeInBytes,
+                subresource,
+                rowPitch,
+                depthPitch);
         }
 
         protected override void UnmapCore(MappableResource resource, uint subresource)

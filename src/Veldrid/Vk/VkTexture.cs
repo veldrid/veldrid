@@ -162,6 +162,23 @@ namespace Veldrid.Vk
             _image = existingImage;
         }
 
+        internal VkSubresourceLayout GetSubresourceLayout(uint subresource)
+        {
+            Util.GetMipLevelAndArrayLayer(this, subresource, out uint mipLevel, out uint arrayLayer);
+            VkImageAspectFlags aspect = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil
+                ? VkImageAspectFlags.Depth
+                : VkImageAspectFlags.Color;
+            VkImageSubresource imageSubresource = new VkImageSubresource
+            {
+                arrayLayer = arrayLayer,
+                mipLevel = mipLevel,
+                aspectMask = aspect,
+            };
+
+            vkGetImageSubresourceLayout(_gd.Device, _image, ref imageSubresource, out VkSubresourceLayout layout);
+            return layout;
+        }
+
         public override void Dispose()
         {
             if (!_disposed)

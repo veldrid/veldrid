@@ -16,6 +16,8 @@ namespace Veldrid.Tests
     }
 
     public class VulkanTextureTests : TextureTestBase<VulkanDeviceCreator> { }
+#if TEST_D3D11
     public class D3D11TextureTests : TextureTestBase<D3D11DeviceCreator> { }
+#endif
     public class OpenGLTextureTests : TextureTestBase<OpenGLDeviceCreator> { }
 }

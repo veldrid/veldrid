@@ -238,6 +238,8 @@ namespace Veldrid.Tests
     }
 
     public class VulkanBufferTests : BufferTestBase<VulkanDeviceCreator> { }
-    public class D3D11BufferTests : BufferTestBase<D3D11DeviceCreator> { }
     public class OpenGLBufferTests : BufferTestBase<OpenGLDeviceCreator> { }
+#if TEST_D3D11
+    public class D3D11BufferTests : BufferTestBase<D3D11DeviceCreator> { }
+#endif
 }

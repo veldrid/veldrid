@@ -357,7 +357,7 @@ namespace Veldrid.OpenGL
         {
             Debug.Assert(Created);
 
-            int subresource = GetSubresourceIndex(mipLevel, arrayLayer);
+            int subresource = Util.GetSubresourceIndex(this, mipLevel, arrayLayer);
             if (_framebuffers[subresource] == 0)
             {
                 FramebufferTarget framebufferTarget = SampleCount == TextureSampleCount.Count1
@@ -429,17 +429,6 @@ namespace Veldrid.OpenGL
             }
 
             return _pbos[subresource];
-        }
-
-        internal int GetSubresourceIndex(uint mipLevel, uint arrayLayer)
-        {
-            return (int)(arrayLayer * MipLevels + mipLevel);
-        }
-
-        internal void GetMipLevelAndArrayLayer(uint subresource, out uint mipLevel, out uint arrayLayer)
-        {
-            arrayLayer = subresource / MipLevels;
-            mipLevel = subresource - (arrayLayer * MipLevels);
         }
 
         internal void GetMipDimensions(uint mipLevel, out uint width, out uint height, out uint depth)

@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>false</IsPackable>
+    <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);TEST_D3D11</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

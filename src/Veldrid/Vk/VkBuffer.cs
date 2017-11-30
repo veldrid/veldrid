@@ -10,6 +10,7 @@ namespace Veldrid.Vk
         private readonly Vulkan.VkBuffer _deviceBuffer;
         private readonly VkMemoryBlock _memory;
         private readonly VkMemoryRequirements _bufferMemoryRequirements;
+        private bool _destroyed;
 
         public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }
@@ -85,8 +86,12 @@ namespace Veldrid.Vk
 
         public void DestroyResources()
         {
-            vkDestroyBuffer(_gd.Device, _deviceBuffer, null);
-            _gd.MemoryManager.Free(Memory);
+            if (_destroyed)
+            {
+                _destroyed = true;
+                vkDestroyBuffer(_gd.Device, _deviceBuffer, null);
+                _gd.MemoryManager.Free(Memory);
+            }
         }
     }
 }

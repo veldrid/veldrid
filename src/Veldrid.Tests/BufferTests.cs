@@ -114,6 +114,7 @@ namespace Veldrid.Tests
             copyCL.CopyBuffer(src, 0, dst, 0, src.SizeInBytes);
             copyCL.End();
             GD.ExecuteCommands(copyCL);
+            src.Dispose();
             GD.WaitForIdle();
 
             MappedResourceView<int> view = GD.Map<int>(dst, MapMode.Read);

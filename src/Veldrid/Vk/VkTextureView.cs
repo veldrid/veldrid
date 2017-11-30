@@ -20,7 +20,7 @@ namespace Veldrid.Vk
             _gd = gd;
             VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();
             VkTexture tex = Util.AssertSubtype<Texture, VkTexture>(description.Target);
-            imageViewCI.image = tex.DeviceImage;
+            imageViewCI.image = tex.OptimalDeviceImage;
             imageViewCI.format = tex.VkFormat;
 
             VkImageAspectFlags aspectFlags;

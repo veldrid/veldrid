@@ -24,6 +24,7 @@ namespace Veldrid.Vk
         private FramebufferAttachment? _depthAttachment;
         private uint _desiredWidth;
         private uint _desiredHeight;
+        private bool _destroyed;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
 
@@ -243,13 +244,22 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            _depthAttachment?.Target.Dispose();
-            for (int i = 0; i < _scFramebuffers.Length; i++)
-            {
-                _scFramebuffers[i].Dispose();
-            }
+            _gd.DeferredDisposal(this);
+        }
 
-            vkDestroySwapchainKHR(_gd.Device, _swapchain, null);
+        public override void DestroyResources()
+        {
+            if (!_destroyed)
+            {
+                _destroyed = true;
+                _depthAttachment?.Target.Dispose();
+                for (int i = 0; i < _scFramebuffers.Length; i++)
+                {
+                    _scFramebuffers[i].Dispose();
+                }
+
+                vkDestroySwapchainKHR(_gd.Device, _swapchain, null);
+            }
         }
     }
 }

@@ -48,6 +48,12 @@ namespace Veldrid.Vk
         private const int SharedCommandPoolCount = 4;
         private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
 
+        // Disposal tracking
+        private readonly object _deferredDisposalLock = new object();
+        private readonly HashSet<VkDeferredDisposal> _deferredDisposals = new HashSet<VkDeferredDisposal>();
+        private readonly object _commandListsLock = new object();
+        private readonly List<VkCommandList> _submittedCommandLists = new List<VkCommandList>();
+
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
         public VkDevice Device => _device;
@@ -91,6 +97,14 @@ namespace Veldrid.Vk
         public override void ExecuteCommands(CommandList cl)
         {
             VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
+            lock (_commandListsLock)
+            {
+                _submittedCommandLists.Add(vkCL);
+                foreach (VkDeferredDisposal resource in vkCL.ReferencedResources)
+                {
+                    resource.ReferenceTracker.Increment();
+                }
+            }
             VkCommandBuffer vkCB = vkCL.CommandBuffer;
             SubmitCommandBuffer(vkCB);
         }
@@ -106,6 +120,21 @@ namespace Veldrid.Vk
             lock (_graphicsQueueLock)
             {
                 vkQueueSubmit(_graphicsQueue, 1, ref si, VkFence.Null);
+            }
+        }
+
+        internal void DeferredDisposal(VkDeferredDisposal vdd)
+        {
+            if (vdd.ReferenceTracker.ReferenceCount == 0)
+            {
+                vdd.DestroyResources();
+            }
+            else
+            {
+                lock (_deferredDisposalLock)
+                {
+                    _deferredDisposals.Add(vdd);
+                }
             }
         }
 
@@ -127,8 +156,7 @@ namespace Veldrid.Vk
 
         public override void SwapBuffers()
         {
-            vkQueueWaitIdle(_graphicsQueue); // Meh
-            FlushQueuedDisposables();
+            WaitForIdle();
 
             // Then, present the swapchain.
             VkPresentInfoKHR presentInfo = VkPresentInfoKHR.New();
@@ -193,7 +221,7 @@ namespace Veldrid.Vk
                         SetDebugMarkerName(VkDebugReportObjectTypeEXT.ShaderModuleEXT, shader.ShaderModule.Handle, name);
                         break;
                     case VkTexture tex:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageEXT, tex.DeviceImage.Handle, name);
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageEXT, tex.OptimalDeviceImage.Handle, name);
                         break;
                     case VkTextureView texView:
                         SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageViewEXT, texView.ImageView.Handle, name);
@@ -591,7 +619,7 @@ namespace Veldrid.Vk
             else
             {
                 VkTexture texture = Util.AssertSubtype<MappableResource, VkTexture>(resource);
-                memoryBlock = texture.MemoryBlock;
+                memoryBlock = texture.GetMemoryBlock(subresource);
                 VkSubresourceLayout layout = texture.GetSubresourceLayout(subresource);
                 offset = (uint)layout.offset;
                 sizeInBytes = (uint)layout.size;
@@ -629,7 +657,7 @@ namespace Veldrid.Vk
             else
             {
                 Debug.Assert(resource is VkTexture);
-                memoryBlock = ((VkTexture)resource).MemoryBlock;
+                memoryBlock = ((VkTexture)resource).GetMemoryBlock(subresource);
             }
 
             if (!memoryBlock.IsPersistentMapped)
@@ -640,7 +668,7 @@ namespace Veldrid.Vk
 
         protected override void PlatformDispose()
         {
-            FlushQueuedDisposables();
+            WaitForIdle();
 
             _scFB.Dispose();
             vkDestroySurfaceKHR(_instance, _surface, null);
@@ -675,6 +703,26 @@ namespace Veldrid.Vk
         public override void WaitForIdle()
         {
             vkQueueWaitIdle(_graphicsQueue);
+            lock (_commandListsLock)
+            {
+                lock (_deferredDisposalLock)
+                {
+                    foreach (VkCommandList vkCL in _submittedCommandLists)
+                    {
+                        foreach (VkDeferredDisposal vdd in vkCL.ReferencedResources)
+                        {
+                            if (vdd.ReferenceTracker.Decrement() == 0)
+                            {
+                                if (_deferredDisposals.Remove(vdd))
+                                {
+                                    vdd.DestroyResources();
+                                }
+                            }
+                        }
+                    }
+                    _submittedCommandLists.Clear();
+                }
+            }
             FlushQueuedDisposables();
         }
 
@@ -822,32 +870,53 @@ namespace Veldrid.Vk
                 throw new NotImplementedException();
             }
 
-            // First, create a staging texture.
-            CreateImage(
-                Device,
-                PhysicalDeviceMemProperties,
-                MemoryManager,
-                width,
-                height,
-                depth,
-                1,
-                VkFormats.VdToVkPixelFormat(tex.Format),
-                VkImageTiling.Linear,
-                VkImageUsageFlags.TransferSrc,
-                VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
-                out VkImage stagingImage,
-                out VkMemoryBlock stagingMemory);
-
-            VkImageSubresource subresource = new VkImageSubresource();
-            subresource.aspectMask = VkImageAspectFlags.Color;
-            subresource.mipLevel = 0;
-            subresource.arrayLayer = 0;
-            vkGetImageSubresourceLayout(Device, stagingImage, ref subresource, out VkSubresourceLayout stagingLayout);
-            ulong rowPitch = stagingLayout.rowPitch;
-
+            bool createStaging = (texture.Usage & TextureUsage.Staging) == 0;
+            VkImage tempStagingImage = default(VkImage);
+            VkMemoryBlock tempStagingMemory = default(VkMemoryBlock);
             void* mappedPtr;
-            VkResult result = vkMapMemory(Device, stagingMemory.DeviceMemory, stagingMemory.Offset, stagingLayout.size, 0, &mappedPtr);
-            CheckResult(result);
+            ulong rowPitch;
+
+            if (createStaging)
+            {
+                // If the destination texture is not a staging texture, then create a temporary one.
+                CreateImage(
+                    Device,
+                    PhysicalDeviceMemProperties,
+                    MemoryManager,
+                    width,
+                    height,
+                    depth,
+                    1,
+                    VkFormats.VdToVkPixelFormat(tex.Format),
+                    VkImageTiling.Linear,
+                    VkImageUsageFlags.TransferSrc,
+                    VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
+                    out tempStagingImage,
+                    out tempStagingMemory);
+
+                VkImageSubresource subresource = new VkImageSubresource();
+                subresource.aspectMask = VkImageAspectFlags.Color;
+                subresource.mipLevel = 0;
+                subresource.arrayLayer = 0;
+                vkGetImageSubresourceLayout(Device, tempStagingImage, ref subresource, out VkSubresourceLayout stagingLayout);
+                rowPitch = stagingLayout.rowPitch;
+
+                VkResult result = vkMapMemory(Device, tempStagingMemory.DeviceMemory, tempStagingMemory.Offset, stagingLayout.size, 0, &mappedPtr);
+                CheckResult(result);
+            }
+            else
+            {
+                uint subresource = Util.GetSubresourceIndex(tex, mipLevel, arrayLayer);
+                mappedPtr = tex.GetStagingMemoryBlock(subresource).BlockMappedPointer;
+
+                VkImageSubresource vkIS = new VkImageSubresource();
+                vkIS.aspectMask = VkImageAspectFlags.Color;
+                vkIS.mipLevel = 0;
+                vkIS.arrayLayer = 0;
+                VkImage actualStagingImage = tex.GetStagingImage(subresource);
+                vkGetImageSubresourceLayout(Device, actualStagingImage, ref vkIS, out VkSubresourceLayout stagingLayout);
+                rowPitch = stagingLayout.rowPitch;
+            }
 
             if (rowPitch == width)
             {
@@ -864,22 +933,24 @@ namespace Veldrid.Vk
                 }
             }
 
-            vkUnmapMemory(Device, stagingMemory.DeviceMemory);
+            if (createStaging)
+            {
+                vkUnmapMemory(Device, tempStagingMemory.DeviceMemory);
+                SharedCommandPool pool = GetFreeCommandPool();
+                VkCommandBuffer cb = pool.BeginNewCommandBuffer();
+                TransitionImageLayout(cb, tempStagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
+                tex.TransitionImageLayout(cb, mipLevel, 1, arrayLayer, 1, VkImageLayout.TransferDstOptimal);
+                CopyFromStagingImage(cb, tempStagingImage, 0, tex.OptimalDeviceImage, mipLevel, width, height, arrayLayer);
+                tex.TransitionImageLayout(cb, mipLevel, 1, arrayLayer, 1, VkImageLayout.ShaderReadOnlyOptimal);
 
-            SharedCommandPool pool = GetFreeCommandPool();
-            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-            TransitionImageLayout(cb, stagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
-            tex.TransitionImageLayout(cb, mipLevel, 1, arrayLayer, 1, VkImageLayout.TransferDstOptimal);
-            CopyImage(cb, stagingImage, 0, tex.DeviceImage, mipLevel, width, height, arrayLayer);
-            tex.TransitionImageLayout(cb, mipLevel, 1, arrayLayer, 1, VkImageLayout.ShaderReadOnlyOptimal);
+                pool.EndAndSubmit(cb);
 
-            pool.EndAndSubmit(cb);
-
-            _imagesToDestroy.Enqueue(stagingImage);
-            _memoriesToFree.Enqueue(stagingMemory);
+                _imagesToDestroy.Enqueue(tempStagingImage);
+                _memoriesToFree.Enqueue(tempStagingMemory);
+            }
         }
 
-        protected void CopyImage(
+        protected void CopyFromStagingImage(
             VkCommandBuffer cb,
             VkImage srcImage,
             uint srcMipLevel,

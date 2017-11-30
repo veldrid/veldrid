@@ -4,13 +4,15 @@ using static Veldrid.Vk.VulkanUtil;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkResourceSet : ResourceSet
+    internal unsafe class VkResourceSet : ResourceSet, VkDeferredDisposal
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkDescriptorSet _descriptorSet;
         private bool _disposed;
 
         public VkDescriptorSet DescriptorSet => _descriptorSet;
+
+        public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
 
         public VkResourceSet(VkGraphicsDevice gd, ref ResourceSetDescription description)
         {
@@ -74,6 +76,11 @@ namespace Veldrid.Vk
         }
 
         public override void Dispose()
+        {
+            _gd.DeferredDisposal(this);
+        }
+
+        public void DestroyResources()
         {
             if (!_disposed)
             {

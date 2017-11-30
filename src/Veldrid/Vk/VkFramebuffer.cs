@@ -14,7 +14,7 @@ namespace Veldrid.Vk
         private readonly VkRenderPass _renderPassNoClear;
         private readonly VkRenderPass _renderPassClear;
         private readonly List<VkImageView> _attachmentViews = new List<VkImageView>();
-        private bool _disposed;
+        private bool _destroyed;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _deviceFramebuffer;
         public override VkRenderPass RenderPassNoClear => _renderPassNoClear;
@@ -133,7 +133,7 @@ namespace Veldrid.Vk
             {
                 VkTexture vkColorTarget = Util.AssertSubtype<Texture, VkTexture>(description.ColorTargets[i].Target);
                 VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();
-                imageViewCI.image = vkColorTarget.DeviceImage;
+                imageViewCI.image = vkColorTarget.OptimalDeviceImage;
                 imageViewCI.format = vkColorTarget.VkFormat;
                 imageViewCI.viewType = VkImageViewType.Image2D;
                 imageViewCI.subresourceRange = new VkImageSubresourceRange(
@@ -153,7 +153,7 @@ namespace Veldrid.Vk
             {
                 VkTexture vkDepthTarget = Util.AssertSubtype<Texture, VkTexture>(description.DepthTarget.Value.Target);
                 VkImageViewCreateInfo depthViewCI = VkImageViewCreateInfo.New();
-                depthViewCI.image = vkDepthTarget.DeviceImage;
+                depthViewCI.image = vkDepthTarget.OptimalDeviceImage;
                 depthViewCI.format = vkDepthTarget.VkFormat;
                 depthViewCI.viewType = description.DepthTarget.Value.Target.ArrayLayers == 1 ? VkImageViewType.Image2D : VkImageViewType.Image2DArray;
                 depthViewCI.subresourceRange = new VkImageSubresourceRange(
@@ -196,9 +196,14 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            if (!_disposed)
+            _gd.DeferredDisposal(this);
+        }
+
+        public override void DestroyResources()
+        {
+            if (!_destroyed)
             {
-                _disposed = true;
+                _destroyed = true;
 
                 vkDestroyFramebuffer(_gd.Device, _deviceFramebuffer, null);
                 vkDestroyRenderPass(_gd.Device, _renderPassNoClear, null);

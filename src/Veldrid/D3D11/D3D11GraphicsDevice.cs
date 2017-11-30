@@ -19,8 +19,8 @@ namespace Veldrid.D3D11
         private readonly object _immediateContextLock = new object();
 
         private readonly object _mappedResourceLock = new object();
-        private readonly Dictionary<MappableResource, MappedResourceInfo> _mappedResources
-            = new Dictionary<MappableResource, MappedResourceInfo>();
+        private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
+            = new Dictionary<MappedResourceCacheKey, MappedResourceInfo>();
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
@@ -201,9 +201,10 @@ namespace Veldrid.D3D11
 
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
         {
+            MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
             lock (_mappedResourceLock)
             {
-                if (_mappedResources.TryGetValue(resource, out MappedResourceInfo info))
+                if (_mappedResources.TryGetValue(key, out MappedResourceInfo info))
                 {
                     if (info.Mode != mode)
                     {
@@ -211,7 +212,7 @@ namespace Veldrid.D3D11
                     }
 
                     info.RefCount += 1;
-                    _mappedResources[resource] = info;
+                    _mappedResources[key] = info;
                 }
                 else
                 {
@@ -231,7 +232,7 @@ namespace Veldrid.D3D11
                             info.MappedResource = new MappedResource(resource, mode, db.DataPointer, buffer.SizeInBytes);
                             info.RefCount = 1;
                             info.Mode = mode;
-                            _mappedResources.Add(resource, info);
+                            _mappedResources.Add(key, info);
                         }
                     }
                     else
@@ -256,7 +257,7 @@ namespace Veldrid.D3D11
                                 (uint)db.SlicePitch);
                             info.RefCount = 1;
                             info.Mode = mode;
-                            _mappedResources.Add(resource, info);
+                            _mappedResources.Add(key, info);
                         }
                     }
                 }
@@ -267,11 +268,12 @@ namespace Veldrid.D3D11
 
         protected override void UnmapCore(MappableResource resource, uint subresource)
         {
+            MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
             bool commitUnmap;
 
             lock (_mappedResourceLock)
             {
-                if (!_mappedResources.TryGetValue(resource, out MappedResourceInfo info))
+                if (!_mappedResources.TryGetValue(key, out MappedResourceInfo info))
                 {
                     throw new VeldridException($"The given resource ({resource}) is not mapped.");
                 }
@@ -292,7 +294,7 @@ namespace Veldrid.D3D11
                             _immediateContext.UnmapSubresource(texture.DeviceTexture, (int)subresource);
                         }
 
-                        bool result = _mappedResources.Remove(resource);
+                        bool result = _mappedResources.Remove(key);
                         Debug.Assert(result);
                     }
                 }
@@ -351,7 +353,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void UpdateTexture(
+        public unsafe override void UpdateTexture(
             Texture texture,
             IntPtr source,
             uint sizeInBytes,
@@ -365,18 +367,45 @@ namespace Veldrid.D3D11
             uint arrayLayer)
         {
             Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(texture).DeviceTexture;
-            int subresource = D3D11Util.ComputeSubresource(mipLevel, texture.MipLevels, arrayLayer);
-            ResourceRegion resourceRegion = new ResourceRegion(
-                left: (int)x,
-                right: (int)(x + width),
-                top: (int)y,
-                front: (int)z,
-                bottom: (int)(y + height),
-                back: (int)(z + depth));
-            uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture.Format) * width;
-            lock (_immediateContextLock)
+            bool useMap = (texture.Usage & TextureUsage.Staging) == TextureUsage.Staging;
+            if (useMap)
             {
-                _immediateContext.UpdateSubresource(deviceTexture, subresource, resourceRegion, source, (int)srcRowPitch, 0);
+                uint subresource = Util.GetSubresourceIndex(texture, mipLevel, arrayLayer);
+                MappedResourceCacheKey key = new MappedResourceCacheKey(texture, subresource);
+                MappedResource map = MapCore(texture, MapMode.Write, subresource);
+
+                if (map.RowPitch == width)
+                {
+                    System.Buffer.MemoryCopy(source.ToPointer(), map.Data.ToPointer(), sizeInBytes, sizeInBytes);
+                }
+                else
+                {
+                    uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
+                    for (uint yy = 0; yy < height; yy++)
+                    {
+                        byte* dstRowStart = ((byte*)map.Data) + (map.RowPitch * yy);
+                        byte* srcRowStart = ((byte*)source.ToPointer()) + (width * yy * pixelSizeInBytes);
+                        Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
+                    }
+                }
+
+                UnmapCore(texture, subresource);
+            }
+            else
+            {
+                int subresource = D3D11Util.ComputeSubresource(mipLevel, texture.MipLevels, arrayLayer);
+                ResourceRegion resourceRegion = new ResourceRegion(
+                    left: (int)x,
+                    right: (int)(x + width),
+                    top: (int)y,
+                    front: (int)z,
+                    bottom: (int)(y + height),
+                    back: (int)(z + depth));
+                uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture.Format) * width;
+                lock (_immediateContextLock)
+                {
+                    _immediateContext.UpdateSubresource(deviceTexture, subresource, resourceRegion, source, (int)srcRowPitch, 0);
+                }
             }
         }
 

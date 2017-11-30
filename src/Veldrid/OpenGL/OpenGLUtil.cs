@@ -18,10 +18,8 @@ namespace Veldrid.OpenGL
                 {
                     Debugger.Break();
                 }
-                else
-                {
-                    throw new VeldridException("glGetError indicated an error: " + (ErrorCode)error);
-                }
+
+                throw new VeldridException("glGetError indicated an error: " + (ErrorCode)error);
             }
         }
 

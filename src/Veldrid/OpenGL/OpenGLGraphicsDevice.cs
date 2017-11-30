@@ -500,7 +500,7 @@ namespace Veldrid.OpenGL
                             texture.EnsureResourcesCreated();
 
                             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
-                            texture.GetMipDimensions(mipLevel, out uint width, out uint height, out uint depth);
+                            Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
 
                             uint pbo = texture.GetPixelBuffer(subresource);
 

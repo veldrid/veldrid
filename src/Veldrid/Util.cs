@@ -115,15 +115,33 @@ namespace Veldrid
             }
         }
 
-        internal static int GetSubresourceIndex(Texture tex, uint mipLevel, uint arrayLayer)
+        internal static uint GetSubresourceIndex(Texture tex, uint mipLevel, uint arrayLayer)
         {
-            return (int)(arrayLayer * tex.MipLevels + mipLevel);
+            return arrayLayer * tex.MipLevels + mipLevel;
         }
 
         internal static void GetMipLevelAndArrayLayer(Texture tex, uint subresource, out uint mipLevel, out uint arrayLayer)
         {
             arrayLayer = subresource / tex.MipLevels;
             mipLevel = subresource - (arrayLayer * tex.MipLevels);
+        }
+
+        internal static void GetMipDimensions(Texture tex, uint mipLevel, out uint width, out uint height, out uint depth)
+        {
+            width = GetDimension(tex.Width, mipLevel);
+            height = GetDimension(tex.Height, mipLevel);
+            depth = GetDimension(tex.Depth, mipLevel);
+        }
+
+        internal static uint GetDimension(uint largestLevelDimension, uint mipLevel)
+        {
+            uint ret = largestLevelDimension;
+            for (uint i = 0; i < mipLevel; i++)
+            {
+                ret /= 2;
+            }
+
+            return Math.Max(1, ret);
         }
     }
 }

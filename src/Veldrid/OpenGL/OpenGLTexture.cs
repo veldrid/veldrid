@@ -357,7 +357,7 @@ namespace Veldrid.OpenGL
         {
             Debug.Assert(Created);
 
-            int subresource = Util.GetSubresourceIndex(this, mipLevel, arrayLayer);
+            uint subresource = Util.GetSubresourceIndex(this, mipLevel, arrayLayer);
             if (_framebuffers[subresource] == 0)
             {
                 FramebufferTarget framebufferTarget = SampleCount == TextureSampleCount.Count1
@@ -429,24 +429,6 @@ namespace Veldrid.OpenGL
             }
 
             return _pbos[subresource];
-        }
-
-        internal void GetMipDimensions(uint mipLevel, out uint width, out uint height, out uint depth)
-        {
-            width = GetDimension(Width, mipLevel);
-            height = GetDimension(Height, mipLevel);
-            depth = GetDimension(Depth, mipLevel);
-        }
-
-        private static uint GetDimension(uint largestLevelDimension, uint mipLevel)
-        {
-            uint ret = largestLevelDimension;
-            for (uint i = 0; i < mipLevel; i++)
-            {
-                ret /= 2;
-            }
-
-            return Math.Max(1, ret);
         }
 
         public override void Dispose()

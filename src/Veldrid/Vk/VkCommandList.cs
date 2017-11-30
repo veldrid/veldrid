@@ -12,6 +12,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private VkCommandPool _pool;
         private VkCommandBuffer _cb;
+        private bool _destroyed;
         private readonly HashSet<VkDeferredDisposal> _referencedResources = new HashSet<VkDeferredDisposal>();
 
         private bool _commandBufferBegun;
@@ -676,7 +677,11 @@ namespace Veldrid.Vk
         // Must only be called once the command buffer has fully executed.
         public void DestroyCommandPool()
         {
-            vkDestroyCommandPool(_gd.Device, _pool, null);
+            if (!_destroyed)
+            {
+                _destroyed = true;
+                vkDestroyCommandPool(_gd.Device, _pool, null);
+            }
         }
     }
 }

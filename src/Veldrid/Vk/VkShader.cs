@@ -9,6 +9,7 @@ namespace Veldrid.Vk
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkShaderModule _shaderModule;
+        private bool _disposed;
 
         public VkShaderModule ShaderModule => _shaderModule;
 
@@ -28,7 +29,11 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            vkDestroyShaderModule(_gd.Device, ShaderModule, null);
+            if (!_disposed)
+            {
+                _disposed = true;
+                vkDestroyShaderModule(_gd.Device, ShaderModule, null);
+            }
         }
     }
 }

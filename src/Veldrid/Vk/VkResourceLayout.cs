@@ -9,6 +9,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly VkDescriptorSetLayout _dsl;
         private readonly VkDescriptorType[] _descriptorTypes;
+        private bool _disposed;
 
         public VkDescriptorSetLayout DescriptorSetLayout => _dsl;
         public VkDescriptorType[] DescriptorTypes => _descriptorTypes;
@@ -41,7 +42,11 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            vkDestroyDescriptorSetLayout(_gd.Device, _dsl, null);
+            if (!_disposed)
+            {
+                _disposed = true;
+                vkDestroyDescriptorSetLayout(_gd.Device, _dsl, null);
+            }
         }
     }
 }

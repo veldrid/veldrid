@@ -7,6 +7,7 @@ namespace Veldrid.Vk
     {
         private readonly VkDevice _device;
         private readonly Vulkan.VkSampler _sampler;
+        private bool _disposed;
 
         public Vulkan.VkSampler DeviceSampler => _sampler;
 
@@ -41,7 +42,11 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            vkDestroySampler(_device, _sampler, null);
+            if (!_disposed)
+            {
+                vkDestroySampler(_device, _sampler, null);
+                _disposed = true;
+            }
         }
     }
 }

@@ -890,6 +890,9 @@ namespace Veldrid.OpenGL
             OpenGLTexture srcGLTexture = Util.AssertSubtype<Texture, OpenGLTexture>(source);
             OpenGLTexture dstGLTexture = Util.AssertSubtype<Texture, OpenGLTexture>(destination);
 
+            srcGLTexture.EnsureResourcesCreated();
+            dstGLTexture.EnsureResourcesCreated();
+
             for (uint layer = 0; layer < layerCount; layer++)
             {
                 TextureTarget dstTarget = dstGLTexture.TextureTarget;
@@ -897,13 +900,18 @@ namespace Veldrid.OpenGL
                 {
                     glBindFramebuffer(
                         FramebufferTarget.ReadFramebuffer,
-                        srcGLTexture.GetFramebuffer(srcMipLevel, srcBaseArrayLayer + layerCount));
+                        srcGLTexture.GetFramebuffer(srcMipLevel, srcBaseArrayLayer + layer));
                     CheckLastError();
 
                     glBindTexture(TextureTarget.Texture2D, dstGLTexture.Texture);
                     CheckLastError();
 
-                    glCopyTexSubImage2D(TextureTarget.Texture2D, (int)dstMipLevel, (int)dstX, (int)dstY, (int)srcX, (int)srcY, width, height);
+                    glCopyTexSubImage2D(
+                        TextureTarget.Texture2D,
+                        (int)dstMipLevel,
+                        (int)dstX, (int)dstY,
+                        (int)srcX, (int)srcY,
+                        width, height);
                     CheckLastError();
                 }
                 else if (dstTarget == TextureTarget.Texture2DArray)

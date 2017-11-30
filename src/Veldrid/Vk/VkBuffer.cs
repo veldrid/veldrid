@@ -86,7 +86,7 @@ namespace Veldrid.Vk
 
         public void DestroyResources()
         {
-            if (_destroyed)
+            if (!_destroyed)
             {
                 _destroyed = true;
                 vkDestroyBuffer(_gd.Device, _deviceBuffer, null);

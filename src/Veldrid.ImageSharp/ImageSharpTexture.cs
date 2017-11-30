@@ -57,6 +57,49 @@ namespace Veldrid.ImageSharp
 
         public unsafe Texture CreateDeviceTexture(GraphicsDevice gd, ResourceFactory factory)
         {
+            return CreateTextureViaStaging(gd, factory);
+        }
+
+        private unsafe Texture CreateTextureViaStaging(GraphicsDevice gd, ResourceFactory factory)
+        {
+            Texture staging = factory.CreateTexture(
+                new TextureDescription(Width, Height, 1, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            Texture ret = factory.CreateTexture(
+                new TextureDescription(Width, Height, 1, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+
+            CommandList cl = gd.ResourceFactory.CreateCommandList();
+            cl.Begin();
+            for (int level = 0; level < MipLevels; level++)
+            {
+                Image<Rgba32> image = Images[level];
+                fixed (void* pin = &image.DangerousGetPinnableReferenceToPixelBuffer())
+                {
+                    gd.UpdateTexture(
+                        staging,
+                        (IntPtr)pin,
+                        (uint)(PixelSizeInBytes * image.Width * image.Height),
+                        0, 0, 0,
+                        (uint)image.Width, (uint)image.Height, 1,
+                        (uint)level,
+                        0);
+                    cl.CopyTexture(
+                        staging, 0, 0, 0, (uint)level, 0,
+                        ret, 0, 0, 0, (uint)level, 0,
+                        (uint)image.Width, (uint)image.Height, 1, 1);
+                }
+            }
+            cl.End();
+
+            gd.ExecuteCommands(cl);
+            cl.Dispose();
+            staging.Dispose();
+
+            return ret;
+        }
+
+        private unsafe Texture CreateTextureViaUpdate(GraphicsDevice gd, ResourceFactory factory)
+        {
             Texture tex = factory.CreateTexture(new TextureDescription(Width, Height, 1, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
             for (int level = 0; level < MipLevels; level++)
             {

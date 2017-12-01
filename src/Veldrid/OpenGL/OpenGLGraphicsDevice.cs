@@ -504,30 +504,44 @@ namespace Veldrid.OpenGL
 
                             uint pbo = texture.GetPixelBuffer(subresource);
 
-                            glBindBuffer(BufferTarget.PixelUnpackBuffer, pbo);
+                            glBindBuffer(BufferTarget.PixelPackBuffer, pbo);
                             CheckLastError();
 
                             if (mode == MapMode.Read || mode == MapMode.ReadWrite)
                             {
                                 // Read data into buffer.
                                 // glGetTexImage
-                                _gd._commandExecutor.UpdateTexture(
-                                    texture,
-                                    IntPtr.Zero,
-                                    0, 0, 0,
-                                    width, height, depth,
-                                    mipLevel,
-                                    arrayLayer);
+                                if (_gd.Extensions.ARB_DirectStateAccess)
+                                {
+                                    int zoffset = texture.ArrayLayers > 1 ? (int)arrayLayer : 0;
+                                    glGetTextureSubImage(
+                                        texture.Texture,
+                                        (int)mipLevel,
+                                        0, 0, zoffset,
+                                        width, height, depth,
+                                        texture.GLPixelFormat,
+                                        texture.GLPixelType,
+                                        texture.GetPixelBufferSize(subresource),
+                                        null);
+                                    CheckLastError();
+                                }
+                                else
+                                {
+                                    throw new NotImplementedException();
+                                }
                             }
 
                             uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
                             uint sizeInBytes = texture.Width * texture.Height * pixelSize;
                             BufferAccessMask accessMask = OpenGLFormats.VdToGLMapMode(mode);
                             void* mappedPtr = glMapBufferRange(
-                                BufferTarget.PixelUnpackBuffer,
+                                BufferTarget.PixelPackBuffer,
                                 IntPtr.Zero,
                                 (IntPtr)sizeInBytes,
                                 accessMask);
+                            CheckLastError();
+
+                            glBindBuffer(BufferTarget.PixelPackBuffer, 0);
                             CheckLastError();
 
                             uint rowPitch = texture.Width * pixelSize;
@@ -559,9 +573,9 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            private void ExecuteUnmapResource(MappableResource resource, uint mapSubresource, ManualResetEventSlim mre)
+            private void ExecuteUnmapResource(MappableResource resource, uint subresource, ManualResetEventSlim mre)
             {
-                MappedResourceCacheKey key = new MappedResourceCacheKey(resource, mapSubresource);
+                MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
                 lock (_gd._mappedResourceLock)
                 {
                     MappedResourceInfo info = _gd._mappedResources[key];
@@ -586,17 +600,29 @@ namespace Veldrid.OpenGL
                         else
                         {
                             OpenGLTexture texture = Util.AssertSubtype<MappableResource, OpenGLTexture>(resource);
-                            uint pbo = texture.GetPixelBuffer(mapSubresource);
+                            uint pbo = texture.GetPixelBuffer(subresource);
 
-                            glBindBuffer(BufferTarget.PixelPackBuffer, pbo);
+                            glBindBuffer(BufferTarget.PixelUnpackBuffer, pbo);
                             CheckLastError();
 
-                            if (info.Mode == MapMode.ReadWrite || info.Mode == MapMode.Write)
+                            glUnmapBuffer(BufferTarget.PixelUnpackBuffer);
+                            CheckLastError();
+
+                            if (info.Mode == MapMode.Write || info.Mode == MapMode.ReadWrite)
                             {
-                                // glTexImage
+                                Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
+                                Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
+
+                                _gd._commandExecutor.UpdateTexture(
+                                    texture,
+                                    IntPtr.Zero,
+                                    0, 0, 0,
+                                    width, height, depth,
+                                    mipLevel,
+                                    arrayLayer);
                             }
 
-                            glUnmapBuffer(BufferTarget.PixelPackBuffer);
+                            glBindBuffer(BufferTarget.PixelUnpackBuffer, 0);
                             CheckLastError();
                         }
 

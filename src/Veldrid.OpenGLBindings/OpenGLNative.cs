@@ -869,6 +869,57 @@ namespace Veldrid.OpenGLBinding
         public static void* glMapNamedBufferRange(uint buffer, IntPtr offset, uint length, BufferAccessMask access)
             => p_glMapNamedBufferRange(buffer, offset, length, access);
 
+        private delegate void glGetTexImage_t(
+            TextureTarget target,
+            int level,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* pixels);
+        private static glGetTexImage_t p_glGetTexImage;
+        public static void glGetTexImage(TextureTarget target, int level, GLPixelFormat format, GLPixelType type, void* pixels)
+            => p_glGetTexImage(target, level, format, type, pixels);
+
+        private delegate void glGetTextureSubImage_t(
+            uint texture,
+            int level,
+            int xoffset,
+            int yoffset,
+            int zoffset,
+            uint width,
+            uint height,
+            uint depth,
+            GLPixelFormat format,
+            GLPixelType type,
+            uint bufSize,
+            void* pixels);
+        private static glGetTextureSubImage_t p_glGetTextureSubImage;
+        public static void glGetTextureSubImage(
+            uint texture,
+            int level,
+            int xoffset,
+            int yoffset,
+            int zoffset,
+            uint width,
+            uint height,
+            uint depth,
+            GLPixelFormat format,
+            GLPixelType type,
+            uint bufSize,
+            void* pixels)
+            => p_glGetTextureSubImage(
+                texture,
+                level,
+                xoffset,
+                yoffset,
+                zoffset,
+                width,
+                height,
+                depth,
+                format,
+                type,
+                bufSize,
+                pixels);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -987,6 +1038,8 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glCopyTexSubImage3D", out p_glCopyTexSubImage3D);
             LoadFunction("glMapBufferRange", out p_glMapBufferRange);
             LoadFunction("glMapNamedBufferRange", out p_glMapNamedBufferRange);
+            LoadFunction("glGetTexImage", out p_glGetTexImage);
+            LoadFunction("glGetTextureSubImage", out p_glGetTextureSubImage);
         }
 
         private static void LoadFunction<T>(string name, out T field)

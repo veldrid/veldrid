@@ -8,6 +8,11 @@ namespace Veldrid
     /// </summary>
     public abstract class Texture : DeviceResource, MappableResource, IDisposable
     {
+        public uint ComputeSubresource(uint mipLevel, uint arrayLayer)
+        {
+            return Util.GetSubresourceIndex(this, mipLevel, arrayLayer);
+        }
+
         /// <summary>
         /// The format of individual texture elements stored in this instance.
         /// </summary>

@@ -86,9 +86,9 @@ namespace Veldrid.OpenGL
                 case PixelFormat.B8_G8_R8_A8_UNorm:
                     return GLPixelFormat.Bgra;
                 case PixelFormat.R8_UNorm:
-                    return GLPixelFormat.RedInteger;
+                    return GLPixelFormat.Red;
                 case PixelFormat.R16_UNorm:
-                    return GLPixelFormat.RedInteger;
+                    return GLPixelFormat.Red;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return GLPixelFormat.Rgba;
                 case PixelFormat.R32_Float:

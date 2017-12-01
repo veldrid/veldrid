@@ -12,6 +12,7 @@ namespace Veldrid.OpenGL
         private uint _texture;
         private uint[] _framebuffers;
         private uint[] _pbos;
+        private uint[] _pboSizes;
 
         private string _name;
         private bool _nameChanged;
@@ -36,6 +37,7 @@ namespace Veldrid.OpenGL
 
             _framebuffers = new uint[MipLevels * ArrayLayers];
             _pbos = new uint[MipLevels * ArrayLayers];
+            _pboSizes = new uint[MipLevels * ArrayLayers];
 
             GLPixelFormat = OpenGLFormats.VdToGLPixelFormat(Format);
             GLPixelType = OpenGLFormats.VdToGLPixelType(Format);
@@ -417,18 +419,27 @@ namespace Veldrid.OpenGL
                 glGenBuffers(1, out _pbos[subresource]);
                 CheckLastError();
 
-                glBindBuffer(BufferTarget.PixelUnpackBuffer, _pbos[subresource]);
+                glBindBuffer(BufferTarget.CopyWriteBuffer, _pbos[subresource]);
                 CheckLastError();
 
+                uint dataSize = Width * Height * FormatHelpers.GetSizeInBytes(Format);
                 glBufferData(
-                    BufferTarget.PixelUnpackBuffer,
-                    (UIntPtr)(Width * Height * FormatHelpers.GetSizeInBytes(Format)),
+                    BufferTarget.CopyWriteBuffer,
+                    (UIntPtr)dataSize,
                     null,
                     BufferUsageHint.StaticCopy);
                 CheckLastError();
+                _pboSizes[subresource] = dataSize;
             }
 
             return _pbos[subresource];
+        }
+
+        public uint GetPixelBufferSize(uint subresource)
+        {
+            Debug.Assert(Created);
+            Debug.Assert(_pbos[subresource] != 0);
+            return _pboSizes[subresource];
         }
 
         public override void Dispose()
@@ -450,6 +461,14 @@ namespace Veldrid.OpenGL
                     if (_framebuffers[i] != 0)
                     {
                         glDeleteFramebuffers(1, ref _framebuffers[i]);
+                    }
+                }
+
+                for (int i = 0; i < _pbos.Length; i++)
+                {
+                    if (_pbos[i] != 0)
+                    {
+                        glDeleteBuffers(1, ref _pbos[i]);
                     }
                 }
             }

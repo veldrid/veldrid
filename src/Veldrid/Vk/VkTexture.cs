@@ -219,18 +219,19 @@ namespace Veldrid.Vk
 
         internal VkSubresourceLayout GetSubresourceLayout(uint subresource)
         {
+            bool staging = _stagingImages != null;
             Util.GetMipLevelAndArrayLayer(this, subresource, out uint mipLevel, out uint arrayLayer);
             VkImageAspectFlags aspect = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil
                 ? VkImageAspectFlags.Depth
                 : VkImageAspectFlags.Color;
             VkImageSubresource imageSubresource = new VkImageSubresource
             {
-                arrayLayer = arrayLayer,
-                mipLevel = mipLevel,
+                arrayLayer = staging ? 0 : arrayLayer,
+                mipLevel = staging ? 0 : mipLevel,
                 aspectMask = aspect,
             };
 
-            VkImage image = _stagingImages != null
+            VkImage image = staging
                 ? _stagingImages[subresource]
                 : _optimalImage;
 

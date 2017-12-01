@@ -4,6 +4,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.ImageSharp
 {
@@ -70,23 +71,20 @@ namespace Veldrid.ImageSharp
 
             CommandList cl = gd.ResourceFactory.CreateCommandList();
             cl.Begin();
-            for (int level = 0; level < MipLevels; level++)
+            for (uint level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
                 fixed (void* pin = &image.DangerousGetPinnableReferenceToPixelBuffer())
                 {
-                    gd.UpdateTexture(
-                        staging,
-                        (IntPtr)pin,
-                        (uint)(PixelSizeInBytes * image.Width * image.Height),
-                        0, 0, 0,
-                        (uint)image.Width, (uint)image.Height, 1,
-                        (uint)level,
-                        0);
+                    MappedResource map = gd.Map(staging, MapMode.Write, level);
+                    Unsafe.CopyBlock(map.Data.ToPointer(), pin, (uint)(image.Width * image.Height * 4));
+                    gd.Unmap(staging, level);
+
                     cl.CopyTexture(
                         staging, 0, 0, 0, (uint)level, 0,
                         ret, 0, 0, 0, (uint)level, 0,
                         (uint)image.Width, (uint)image.Height, 1, 1);
+
                 }
             }
             cl.End();

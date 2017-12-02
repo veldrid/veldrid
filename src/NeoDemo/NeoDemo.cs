@@ -410,7 +410,7 @@ namespace Veldrid.NeoDemo
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            _gd = VeldridStartup.CreateGraphicsDevice(gdOptions, backend, _window);
+            _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend);
 
             CreateAllObjects();
         }

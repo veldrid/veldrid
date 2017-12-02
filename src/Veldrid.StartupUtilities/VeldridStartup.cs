@@ -18,7 +18,7 @@ namespace Veldrid.StartupUtilities
             out GraphicsDevice gd)
         {
             window = CreateWindow(ref windowCI);
-            gd = CreateGraphicsDevice(deviceOptions, preferredBackend, window);
+            gd = CreateGraphicsDevice(window, deviceOptions, preferredBackend);
         }
 
         public static Sdl2Window CreateWindow(ref WindowCreateInfo windowCI)
@@ -67,7 +67,18 @@ namespace Veldrid.StartupUtilities
             }
         }
 
-        public static GraphicsDevice CreateGraphicsDevice(GraphicsDeviceOptions options, GraphicsBackend? preferredBackend, Sdl2Window window)
+
+
+        public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window)
+            => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), null);
+        public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsDeviceOptions options)
+            => CreateGraphicsDevice(window, options, null);
+        public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsBackend? preferredBackend)
+            => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), preferredBackend);
+        public static GraphicsDevice CreateGraphicsDevice(
+            Sdl2Window window,
+            GraphicsDeviceOptions options,
+            GraphicsBackend? preferredBackend)
         {
             if (!preferredBackend.HasValue)
             {

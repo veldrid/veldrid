@@ -47,20 +47,38 @@ namespace Veldrid.OpenGL
         public void CreateGLResources()
         {
             Debug.Assert(!Created);
-            glGenBuffers(1, out _buffer);
-            CheckLastError();
 
-            // Bind to a target not used anywhere else
-            // TODO: Make this more robust.
-            glBindBuffer(BufferTarget.TextureBuffer, _buffer);
-            CheckLastError();
+            if (_gd.Extensions.ARB_DirectStateAccess)
+            {
+                uint buffer;
+                glCreateBuffers(1, &buffer);
+                CheckLastError();
+                _buffer = buffer;
 
-            glBufferData(
-                BufferTarget.TextureBuffer,
-                (UIntPtr)SizeInBytes,
-                null,
-                _dynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.StaticDraw);
-            CheckLastError();
+                glNamedBufferData(
+                    _buffer,
+                    SizeInBytes,
+                    null,
+                    _dynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.StaticDraw);
+                CheckLastError();
+            }
+            else
+            {
+                glGenBuffers(1, out _buffer);
+                CheckLastError();
+
+                // Bind to a target not used anywhere else
+                glBindBuffer(BufferTarget.TextureBuffer, _buffer);
+                CheckLastError();
+
+                glBufferData(
+                    BufferTarget.TextureBuffer,
+                    (UIntPtr)SizeInBytes,
+                    null,
+                    _dynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.StaticDraw);
+                CheckLastError();
+
+            }
 
             Created = true;
         }

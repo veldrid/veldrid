@@ -25,6 +25,7 @@ namespace Veldrid.Vk
 
         // Graphics State
         private VkFramebufferBase _currentFramebuffer;
+        private bool _currentFramebufferEverActive;
         private VkRenderPass _activeRenderPass;
         private VkPipeline _currentGraphicsPipeline;
         private VkResourceSet[] _currentGraphicsResourceSets = Array.Empty<VkResourceSet>();
@@ -334,6 +335,11 @@ namespace Veldrid.Vk
             {
                 EndCurrentRenderPass();
             }
+            else if (!_currentFramebufferEverActive && _currentFramebuffer != null)
+            {
+                BeginCurrentRenderPass();
+                EndCurrentRenderPass();
+            }
 
             vkEndCommandBuffer(_cb);
         }
@@ -360,6 +366,7 @@ namespace Veldrid.Vk
 
             VkFramebufferBase vkFB = Util.AssertSubtype<Framebuffer, VkFramebufferBase>(fb);
             _currentFramebuffer = vkFB;
+            _currentFramebufferEverActive = false;
             Util.EnsureArrayMinimumSize(ref _scissorRects, Math.Max(1, (uint)vkFB.ColorTargets.Count));
             uint clearValueCount = (uint)vkFB.ColorTargets.Count;
             Util.EnsureArrayMinimumSize(ref _clearValues, clearValueCount + 1); // Leave an extra space for the depth value (tracked separately).
@@ -387,6 +394,8 @@ namespace Veldrid.Vk
         private void BeginCurrentRenderPass()
         {
             Debug.Assert(_activeRenderPass == VkRenderPass.Null);
+            Debug.Assert(_currentFramebuffer != null);
+            _currentFramebufferEverActive = true;
 
             uint attachmentCount = _currentFramebuffer.AttachmentCount;
             bool haveAnyAttachments = _framebuffer.ColorTargets.Count > 0 || _framebuffer.DepthTarget != null;

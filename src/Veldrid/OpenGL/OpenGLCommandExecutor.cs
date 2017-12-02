@@ -502,10 +502,6 @@ namespace Veldrid.OpenGL
                         glTexView.EnsureResourcesCreated();
                         OpenGLTextureBindingSlotInfo textureBindingInfo = pipeline.GetTextureBindingInfo(slot, element);
                         _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
-
-                        glUseProgram(pipeline.Program); // TODO This is broken, why do i need to set this again?
-                        CheckLastError();
-
                         glUniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
                         CheckLastError();
                         break;

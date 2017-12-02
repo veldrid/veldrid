@@ -73,6 +73,10 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
         protected abstract Texture CreateTextureCore(ref TextureDescription description);
 
         /// <summary>
@@ -108,6 +112,10 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
         protected abstract TextureView CreateTextureViewCore(ref TextureViewDescription description);
 
         /// <summary>
@@ -145,6 +153,10 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
         protected abstract Buffer CreateBufferCore(ref BufferDescription description);
 
         /// <summary>

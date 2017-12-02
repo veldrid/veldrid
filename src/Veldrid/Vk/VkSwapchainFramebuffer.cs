@@ -11,8 +11,10 @@ namespace Veldrid.Vk
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkSurfaceKHR _surface;
-
+        private readonly PixelFormat? _depthFormat;
         private VkSwapchainKHR _swapchain;
+        private bool _syncToVBlank;
+        private bool? _newSyncToVBlank;
 
         private VkFramebuffer[] _scFramebuffers;
         private uint _currentImageIndex;
@@ -49,19 +51,46 @@ namespace Veldrid.Vk
 
         public override uint AttachmentCount { get; }
 
-        public VkSwapchainFramebuffer(VkGraphicsDevice gd, VkSurfaceKHR surface, uint width, uint height)
+        public bool SyncToVerticalBlank
+        {
+            get => _newSyncToVBlank ?? _syncToVBlank;
+            set
+            {
+                if (_syncToVBlank != value)
+                {
+                    _newSyncToVBlank = value;
+                }
+            }
+        }
+
+        public VkSwapchainFramebuffer(
+            VkGraphicsDevice gd,
+            VkSurfaceKHR surface,
+            uint width,
+            uint height,
+            bool syncToVBlank,
+            PixelFormat? depthFormat)
             : base()
         {
             _gd = gd;
             _surface = surface;
+            _syncToVBlank = syncToVBlank;
+            _depthFormat = depthFormat;
             CreateSwapchain(width, height);
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
 
-            AttachmentCount = 2; // 1 Color + 1 Depth
+            AttachmentCount = depthFormat.HasValue ? 2u : 1u; // 1 Color + 1 Depth
         }
 
         public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, VkFence fence)
         {
+            if (_newSyncToVBlank != null)
+            {
+                _syncToVBlank = _newSyncToVBlank.Value;
+                _newSyncToVBlank = null;
+                CreateSwapchain(Width, Height);
+            }
+
             VkResult result = vkAcquireNextImageKHR(
                 device,
                 _swapchain,
@@ -125,13 +154,24 @@ namespace Veldrid.Vk
             vkGetPhysicalDeviceSurfacePresentModesKHR(_gd.PhysicalDevice, _surface, ref presentModeCount, out presentModes[0]);
 
             VkPresentModeKHR presentMode = VkPresentModeKHR.FifoKHR;
-            if (presentModes.Contains(VkPresentModeKHR.MailboxKHR))
+
+            if (_syncToVBlank)
             {
-                presentMode = VkPresentModeKHR.MailboxKHR;
+                if (presentModes.Contains(VkPresentModeKHR.FifoRelaxedKHR))
+                {
+                    presentMode = VkPresentModeKHR.FifoRelaxedKHR;
+                }
             }
-            else if (presentModes.Contains(VkPresentModeKHR.ImmediateKHR))
+            else
             {
-                presentMode = VkPresentModeKHR.ImmediateKHR;
+                if (presentModes.Contains(VkPresentModeKHR.MailboxKHR))
+                {
+                    presentMode = VkPresentModeKHR.MailboxKHR;
+                }
+                else if (presentModes.Contains(VkPresentModeKHR.ImmediateKHR))
+                {
+                    presentMode = VkPresentModeKHR.ImmediateKHR;
+                }
             }
 
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_gd.PhysicalDevice, _surface, out VkSurfaceCapabilitiesKHR surfaceCapabilities);
@@ -197,16 +237,19 @@ namespace Veldrid.Vk
 
         private void CreateDepthTexture()
         {
-            _depthAttachment?.Target.Dispose();
-            VkTexture depthTexture = (VkTexture)_gd.ResourceFactory.CreateTexture(new TextureDescription(
-                Math.Max(1, _scExtent.width),
-                Math.Max(1, _scExtent.height),
-                1,
-                1,
-                1,
-                PixelFormat.R16_UNorm,
-                TextureUsage.DepthStencil));
-            _depthAttachment = new FramebufferAttachment(depthTexture, 0);
+            if (_depthFormat.HasValue)
+            {
+                _depthAttachment?.Target.Dispose();
+                VkTexture depthTexture = (VkTexture)_gd.ResourceFactory.CreateTexture(new TextureDescription(
+                    Math.Max(1, _scExtent.width),
+                    Math.Max(1, _scExtent.height),
+                    1,
+                    1,
+                    1,
+                    _depthFormat.Value,
+                    TextureUsage.DepthStencil));
+                _depthAttachment = new FramebufferAttachment(depthTexture, 0);
+            }
         }
 
         private void CreateFramebuffers()
@@ -222,7 +265,7 @@ namespace Veldrid.Vk
             }
 
             Util.EnsureArrayMinimumSize(ref _scFramebuffers, (uint)_scImages.Length);
-            Util.EnsureArrayMinimumSize(ref _scColorTextures,(uint) _scImages.Length);
+            Util.EnsureArrayMinimumSize(ref _scColorTextures, (uint)_scImages.Length);
             for (uint i = 0; i < _scImages.Length; i++)
             {
                 VkTexture colorTex = new VkTexture(

@@ -21,6 +21,7 @@ namespace Veldrid.OpenGL
         private readonly Func<IntPtr> _getCurrentContext;
         private readonly Action<IntPtr> _deleteContext;
         private readonly Action _swapBuffers;
+        private readonly Action<bool> _setSyncToVBlank;
         private readonly OpenGLSwapchainFramebuffer _swapchainFramebuffer;
         private readonly OpenGLCommandExecutor _commandExecutor;
         private DebugProc _debugMessageCallback;
@@ -37,9 +38,11 @@ namespace Veldrid.OpenGL
         private readonly HashSet<OpenGLCommandList> _commandListsToDispose = new HashSet<OpenGLCommandList>();
 
         private readonly object _mappedResourceLock = new object();
-        private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
-            = new Dictionary<MappedResourceCacheKey, MappedResourceInfo>();
+        private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfoWithStaging> _mappedResources
+            = new Dictionary<MappedResourceCacheKey, MappedResourceInfoWithStaging>();
         private readonly MapResultHolder _mapResultHolder = new MapResultHolder();
+
+        private bool _syncToVBlank;
 
         public override GraphicsBackend BackendType => GraphicsBackend.OpenGL;
 
@@ -49,17 +52,32 @@ namespace Veldrid.OpenGL
 
         public OpenGLExtensions Extensions => _extensions;
 
+        public override bool SyncToVerticalBlank
+        {
+            get => _syncToVBlank;
+            set
+            {
+                if (_syncToVBlank != value)
+                {
+                    _syncToVBlank = value;
+                    _executionThread.Run(() => _setSyncToVBlank(value));
+                }
+            }
+        }
+
         public OpenGLGraphicsDevice(
+            GraphicsDeviceOptions options,
             OpenGLPlatformInfo platformInfo,
             uint width,
-            uint height,
-            bool debugDevice)
+            uint height)
         {
+            _syncToVBlank = options.SyncToVerticalBlank;
             _glContext = platformInfo.OpenGLContextHandle;
             _makeCurrent = platformInfo.MakeCurrent;
             _getCurrentContext = platformInfo.GetCurrentContext;
             _deleteContext = platformInfo.DeleteContext;
             _swapBuffers = platformInfo.SwapBuffers;
+            _setSyncToVBlank = platformInfo.SetSyncToVerticalBlank;
             LoadAllFunctions(_glContext, platformInfo.GetProcAddress);
 
             ResourceFactory = new OpenGLResourceFactory(this);
@@ -70,9 +88,9 @@ namespace Veldrid.OpenGL
             glBindVertexArray(_vao);
             CheckLastError();
 
-            _swapchainFramebuffer = new OpenGLSwapchainFramebuffer(width, height);
+            _swapchainFramebuffer = new OpenGLSwapchainFramebuffer(width, height, options.SwapchainDepthFormat);
 
-            if (debugDevice)
+            if (options.Debug)
             {
                 EnableDebugCallback();
             }
@@ -193,7 +211,7 @@ namespace Veldrid.OpenGL
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
             lock (_mappedResourceLock)
             {
-                if (_mappedResources.TryGetValue(key, out MappedResourceInfo info))
+                if (_mappedResources.TryGetValue(key, out MappedResourceInfoWithStaging info))
                 {
                     if (info.Mode != mode)
                     {
@@ -482,7 +500,7 @@ namespace Veldrid.OpenGL
                                 CheckLastError();
                             }
 
-                            MappedResourceInfo info = new MappedResourceInfo();
+                            MappedResourceInfoWithStaging info = new MappedResourceInfoWithStaging();
                             info.MappedResource = new MappedResource(
                                 resource,
                                 mode,
@@ -502,15 +520,14 @@ namespace Veldrid.OpenGL
                             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
                             Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
 
-                            uint pbo = texture.GetPixelBuffer(subresource);
+                            uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
+                            uint sizeInBytes = texture.Width * texture.Height * pixelSize;
 
-                            glBindBuffer(BufferTarget.PixelPackBuffer, pbo);
-                            CheckLastError();
+                            FixedStagingBlock block = _gd._stagingMemoryPool.GetFixedStagingBlock(sizeInBytes);
 
                             if (mode == MapMode.Read || mode == MapMode.ReadWrite)
                             {
                                 // Read data into buffer.
-                                // glGetTexImage
                                 if (_gd.Extensions.ARB_DirectStateAccess)
                                 {
                                     int zoffset = texture.ArrayLayers > 1 ? (int)arrayLayer : 0;
@@ -521,8 +538,8 @@ namespace Veldrid.OpenGL
                                         width, height, depth,
                                         texture.GLPixelFormat,
                                         texture.GLPixelType,
-                                        texture.GetPixelBufferSize(subresource),
-                                        null);
+                                        sizeInBytes,
+                                        block.Data);
                                     CheckLastError();
                                 }
                                 else
@@ -531,32 +548,20 @@ namespace Veldrid.OpenGL
                                 }
                             }
 
-                            uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
-                            uint sizeInBytes = texture.Width * texture.Height * pixelSize;
-                            BufferAccessMask accessMask = OpenGLFormats.VdToGLMapMode(mode);
-                            void* mappedPtr = glMapBufferRange(
-                                BufferTarget.PixelPackBuffer,
-                                IntPtr.Zero,
-                                (IntPtr)sizeInBytes,
-                                accessMask);
-                            CheckLastError();
-
-                            glBindBuffer(BufferTarget.PixelPackBuffer, 0);
-                            CheckLastError();
-
                             uint rowPitch = texture.Width * pixelSize;
                             uint depthPitch = pixelSize * texture.Width * texture.Height;
-                            MappedResourceInfo info = new MappedResourceInfo();
+                            MappedResourceInfoWithStaging info = new MappedResourceInfoWithStaging();
                             info.MappedResource = new MappedResource(
                                 resource,
                                 mode,
-                                (IntPtr)mappedPtr,
+                                (IntPtr)block.Data,
                                 sizeInBytes,
                                 subresource,
                                 rowPitch,
                                 depthPitch);
                             info.RefCount = 1;
                             info.Mode = mode;
+                            info.StagingBlock = block;
                             _gd._mappedResources.Add(key, info);
                             _gd._mapResultHolder.Resource = info.MappedResource;
                             _gd._mapResultHolder.Succeeded = true;
@@ -578,7 +583,7 @@ namespace Veldrid.OpenGL
                 MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
                 lock (_gd._mappedResourceLock)
                 {
-                    MappedResourceInfo info = _gd._mappedResources[key];
+                    MappedResourceInfoWithStaging info = _gd._mappedResources[key];
                     if (info.RefCount == 1)
                     {
                         if (resource is OpenGLBuffer buffer)
@@ -600,30 +605,24 @@ namespace Veldrid.OpenGL
                         else
                         {
                             OpenGLTexture texture = Util.AssertSubtype<MappableResource, OpenGLTexture>(resource);
-                            uint pbo = texture.GetPixelBuffer(subresource);
-
-                            glBindBuffer(BufferTarget.PixelUnpackBuffer, pbo);
-                            CheckLastError();
-
-                            glUnmapBuffer(BufferTarget.PixelUnpackBuffer);
-                            CheckLastError();
 
                             if (info.Mode == MapMode.Write || info.Mode == MapMode.ReadWrite)
                             {
                                 Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
                                 Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
 
+                                IntPtr data = (IntPtr)info.StagingBlock.Data;
+
                                 _gd._commandExecutor.UpdateTexture(
                                     texture,
-                                    IntPtr.Zero,
+                                    data,
                                     0, 0, 0,
                                     width, height, depth,
                                     mipLevel,
                                     arrayLayer);
                             }
 
-                            glBindBuffer(BufferTarget.PixelUnpackBuffer, 0);
-                            CheckLastError();
+                            info.StagingBlock.Free();
                         }
 
                         _gd._mappedResources.Remove(key);
@@ -843,55 +842,14 @@ namespace Veldrid.OpenGL
         {
             public bool Succeeded;
             public MappedResource Resource;
+        }
 
-            //public MappableResource Resource;
-            //public MapMode Mode;
-            //public IntPtr Data;
-            //public uint SizeInBytes;
-            //public uint Subresource;
-            //public uint RowPitch;
-            //public uint DepthPitch;
-
-            //public void Set(
-            //    MappableResource resource,
-            //    MapMode mode,
-            //    IntPtr data,
-            //    uint sizeInBytes,
-            //    uint subresource,
-            //    uint rowPitch,
-            //    uint depthPitch)
-            //{
-            //    Resource = resource;
-            //    Mode = mode;
-            //    Data = data;
-            //    SizeInBytes = sizeInBytes;
-            //    Subresource = subresource;
-            //    RowPitch = rowPitch;
-            //    DepthPitch = depthPitch;
-            //}
-
-            //internal void FromMappedResource(MappedResource mr)
-            //{
-            //    Resource = mr.Resource;
-            //    Mode = mr.Mode;
-            //    Data = mr.Data;
-            //    SizeInBytes = mr.SizeInBytes;
-            //    Subresource = mr.Subresource;
-            //    RowPitch = mr.RowPitch;
-            //    DepthPitch = mr.DepthPitch;
-            //}
-
-            //internal MappedResource ToMappedResource()
-            //{
-            //    return new MappedResource(
-            //        Resource,
-            //        Mode,
-            //        Data,
-            //        SizeInBytes,
-            //        Subresource,
-            //        RowPitch,
-            //        DepthPitch);
-            //}
+        internal struct MappedResourceInfoWithStaging
+        {
+            public int RefCount;
+            public MapMode Mode;
+            public MappedResource MappedResource;
+            public FixedStagingBlock StagingBlock;
         }
     }
 }

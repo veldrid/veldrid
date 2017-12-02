@@ -36,6 +36,10 @@ namespace Veldrid.OpenGL
         /// A delegate which can be used to swap the main back buffer associated with the OpenGL context.
         /// </summary>
         public Action SwapBuffers { get; }
+        /// <summary>
+        /// A delegate which can be used to set the synchronization behavior of the OpenGL context.
+        /// </summary>
+        public Action<bool> SetSyncToVerticalBlank { get; }
 
         /// <summary>
         /// Constructs a new OpenGLPlatformInfo.
@@ -49,6 +53,8 @@ namespace Veldrid.OpenGL
         /// <param name="deleteContext">A delegate which can be used to delete the given context.</param>
         /// <param name="swapBuffers">A delegate which can be used to swap the main back buffer associated with the OpenGL
         /// context.</param>
+        /// <param name="setSyncToVerticalBlank">A delegate which can be used to set the synchronization behavior of the OpenGL
+        /// context.</param>
         public OpenGLPlatformInfo(
             IntPtr openGLContextHandle,
             Func<string, IntPtr> getProcAddress,
@@ -56,7 +62,8 @@ namespace Veldrid.OpenGL
             Func<IntPtr> getCurrentContext,
             Action clearCurrentContext,
             Action<IntPtr> deleteContext,
-            Action swapBuffers)
+            Action swapBuffers,
+            Action<bool> setSyncToVerticalBlank)
         {
             OpenGLContextHandle = openGLContextHandle;
             GetProcAddress = getProcAddress;
@@ -65,6 +72,7 @@ namespace Veldrid.OpenGL
             ClearCurrentContext = clearCurrentContext;
             DeleteContext = deleteContext;
             SwapBuffers = swapBuffers;
+            SetSyncToVerticalBlank = setSyncToVerticalBlank;
         }
     }
 }

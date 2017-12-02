@@ -8,7 +8,13 @@ namespace Veldrid
     /// </summary>
     public abstract class Texture : DeviceResource, MappableResource, IDisposable
     {
-        public uint ComputeSubresource(uint mipLevel, uint arrayLayer)
+        /// <summary>
+        /// Calculates the subresource index, given a mipmap level and array layer.
+        /// </summary>
+        /// <param name="mipLevel">The mip level. This should be less than <see cref="MipLevels"/>.</param>
+        /// <param name="arrayLayer">The array layer. This should be less than <see cref="ArrayLayers"/>.</param>
+        /// <returns>The subresource index.</returns>
+        public uint CalculateSubresource(uint mipLevel, uint arrayLayer)
         {
             return Util.GetSubresourceIndex(this, mipLevel, arrayLayer);
         }

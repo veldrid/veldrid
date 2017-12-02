@@ -29,7 +29,18 @@ namespace Veldrid.OpenGL
             return new StagingBlock(array, (uint)bytes.Length, this);
         }
 
+        public FixedStagingBlock GetFixedStagingBlock(uint sizeInBytes)
+        {
+            byte[] array = _arrayPool.Rent((int)sizeInBytes);
+            return new FixedStagingBlock(array, sizeInBytes, this);
+        }
+
         public void Free(StagingBlock block)
+        {
+            _arrayPool.Return(block.Array);
+        }
+
+        public void Free(FixedStagingBlock block)
         {
             _arrayPool.Return(block.Array);
         }
@@ -58,6 +69,33 @@ namespace Veldrid.OpenGL
 
         internal void Free()
         {
+            Pool.Free(this);
+        }
+    }
+
+    internal unsafe struct FixedStagingBlock
+    {
+        public readonly byte[] Array;
+        public readonly uint SizeInBytes;
+        public readonly StagingMemoryPool Pool;
+        public readonly GCHandle GCHandle;
+        public readonly void* Data;
+
+        public FixedStagingBlock(byte[] array, uint sizeInBytes, StagingMemoryPool pool)
+        {
+            Debug.Assert(array != null);
+            Debug.Assert(array.Length > 0);
+            Debug.Assert(sizeInBytes > 0);
+            Array = array;
+            SizeInBytes = sizeInBytes;
+            Pool = pool;
+            GCHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+            Data = (void*)GCHandle.AddrOfPinnedObject();
+        }
+
+        internal void Free()
+        {
+            GCHandle.Free();
             Pool.Free(this);
         }
     }

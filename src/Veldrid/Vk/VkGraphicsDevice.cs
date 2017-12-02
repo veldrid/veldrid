@@ -66,15 +66,21 @@ namespace Veldrid.Vk
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
         public VkDescriptorPool SharedDescriptorPool => _descriptorPool;
 
-        public VkGraphicsDevice(VkSurfaceSource surfaceSource, uint width, uint height, bool debugDevice)
+        public VkGraphicsDevice(GraphicsDeviceOptions options, VkSurfaceSource surfaceSource, uint width, uint height)
         {
-            CreateInstance(debugDevice);
+            CreateInstance(options.Debug);
             CreateSurface(surfaceSource);
             CreatePhysicalDevice();
             CreateLogicalDevice();
             _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
             ResourceFactory = new VkResourceFactory(this);
-            _scFB = new VkSwapchainFramebuffer(this, _surface, width, height);
+            _scFB = new VkSwapchainFramebuffer(
+                this,
+                _surface,
+                width,
+                height,
+                options.SyncToVerticalBlank,
+                options.SwapchainDepthFormat);
             CreateDescriptorPool();
             CreateGraphicsCommandPool();
             for (int i = 0; i < SharedCommandPoolCount; i++)
@@ -93,6 +99,12 @@ namespace Veldrid.Vk
         public override ResourceFactory ResourceFactory { get; }
 
         public override Framebuffer SwapchainFramebuffer => _scFB;
+
+        public override bool SyncToVerticalBlank
+        {
+            get => _scFB.SyncToVerticalBlank;
+            set => _scFB.SyncToVerticalBlank = value;
+        }
 
         public override void ExecuteCommands(CommandList cl)
         {

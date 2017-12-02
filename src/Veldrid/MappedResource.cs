@@ -71,14 +71,33 @@ namespace Veldrid
         }
     }
 
+    /// <summary>
+    /// A typed view of a <see cref="MappedResource"/>. Provides by-reference structured access to individual elements in the
+    /// mapped resource.
+    /// </summary>
+    /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
     public unsafe struct MappedResourceView<T> where T : struct
     {
         private static readonly int s_sizeofT = Unsafe.SizeOf<T>();
 
+        /// <summary>
+        /// The <see cref="MappedResource"/> that this instance views.
+        /// </summary>
         public readonly MappedResource MappedResource;
+        /// <summary>
+        /// The total size in bytes of the mapped resource.
+        /// </summary>
         public readonly uint SizeInBytes;
+        /// <summary>
+        /// The total number of structures that is contained in the resource. This is effectively the total number of bytes
+        /// divided by the size of the structure type.
+        /// </summary>
         public readonly int Count;
 
+        /// <summary>
+        /// Constructs a new MappedResourceView which wraps the given <see cref="MappedResource"/>.
+        /// </summary>
+        /// <param name="rawResource">The raw resource which has been mapped.</param>
         public MappedResourceView(MappedResource rawResource)
         {
             MappedResource = rawResource;
@@ -86,6 +105,11 @@ namespace Veldrid
             Count = (int)(SizeInBytes / s_sizeofT);
         }
 
+        /// <summary>
+        /// Gets a reference to the structure value at the given index.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <returns>A reference to the value at the given index.</returns>
         public ref T this[int index]
         {
             get

@@ -22,6 +22,11 @@ namespace Veldrid
         public abstract ResourceFactory ResourceFactory { get; }
 
         /// <summary>
+        /// Gets or sets whether <see cref="SwapBuffers"/> should be synchronized to the window system's vertical refresh rate.
+        /// </summary>
+        public abstract bool SyncToVerticalBlank { get; set; }
+
+        /// <summary>
         /// Submits the given <see cref="CommandList"/> for execution by this device.
         /// Commands submitted in this way may not be completed when this method returns.
         /// Use <see cref="WaitForIdle"/> to wait for all submitted commands to complete.
@@ -119,10 +124,33 @@ namespace Veldrid
             return MapCore(resource, mode, subresource);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="resource"></param>
+        /// <param name="mode"></param>
+        /// <param name="subresource"></param>
+        /// <returns></returns>
         protected abstract MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource);
 
+        /// <summary>
+        /// Maps a <see cref="Buffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
+        /// view over that region. For Texture resources, this overload maps the first subresource.
+        /// </summary>
+        /// <param name="resource">The <see cref="Buffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="mode">The <see cref="MapMode"/> to use.</param>
+        /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
+        /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
         public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode) where T : struct
             => Map<T>(resource, mode, 0);
+        /// <summary>
+        /// Maps a <see cref="Buffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
+        /// view over that region.
+        /// </summary>
+        /// <param name="resource">The <see cref="Buffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="mode">The <see cref="MapMode"/> to use.</param>
+        /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.</param>
+        /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
+        /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
         public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode, uint subresource) where T : struct
         {
             MappedResource mappedResource = Map(resource, mode, subresource);
@@ -146,6 +174,10 @@ namespace Veldrid
             UnmapCore(resource, subresource);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="resource"></param>
+        /// <param name="subresource"></param>
         protected abstract void UnmapCore(MappableResource resource, uint subresource);
 
         /// <summary>
@@ -323,46 +355,45 @@ namespace Veldrid
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
         /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="hwnd">The Win32 window handle to render into.</param>
         /// <param name="width">The initial width of the window.</param>
         /// <param name="height">The initial height of the window.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
-        public static GraphicsDevice CreateD3D11(IntPtr hwnd, uint width, uint height)
+        public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, IntPtr hwnd, uint width, uint height)
         {
-            return new D3D11.D3D11GraphicsDevice(hwnd, (int)width, (int)height);
+            return new D3D11.D3D11GraphicsDevice(options, hwnd, (int)width, (int)height);
         }
 
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Vulkan.
         /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="surfaceSource">The source from which a Vulkan surface can be created.</param>
         /// <param name="width">The initial width of the window.</param>
         /// <param name="height">The initial height of the window.</param>
-        /// <param name="debugDevice">Indicates whether the Vulkan device will support debug features, provided they are
-        /// supported by the host system.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
-        public static GraphicsDevice CreateVulkan(Vk.VkSurfaceSource surfaceSource, uint width, uint height, bool debugDevice)
+        public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, Vk.VkSurfaceSource surfaceSource, uint width, uint height)
         {
-            return new Vk.VkGraphicsDevice(surfaceSource, width, height, debugDevice);
+            return new Vk.VkGraphicsDevice(options, surfaceSource, width, height);
         }
 
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using OpenGL.
         /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="platformInfo">An <see cref="OpenGL.OpenGLPlatformInfo"/> object encapsulating necessary OpenGL context
         /// information.</param>
         /// <param name="width">The initial width of the window.</param>
         /// <param name="height">The initial height of the window.</param>
-        /// <param name="debugDevice">Indicates whether the OpenGL device will support debug features, provided they are
-        /// supported by the host system.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the OpenGL API.</returns>
         public static GraphicsDevice CreateOpenGL(
+            GraphicsDeviceOptions options,
             OpenGL.OpenGLPlatformInfo platformInfo,
             uint width,
-            uint height,
-            bool debugDevice)
+            uint height)
         {
-            return new OpenGL.OpenGLGraphicsDevice(platformInfo, width, height, debugDevice);
+            return new OpenGL.OpenGLGraphicsDevice(options, platformInfo, width, height);
         }
     }
 }

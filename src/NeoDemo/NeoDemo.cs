@@ -32,6 +32,10 @@ namespace Veldrid.NeoDemo
 
         private readonly string[] _msaaOptions = new string[] { "Off", "2x", "4x", "8x", "16x", "32x" };
         private int _msaaOption = 0;
+        private TextureSampleCount? _newSampleCount;
+
+        private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
+        private FullScreenQuad _fsq;
 
         public NeoDemo()
         {
@@ -44,14 +48,15 @@ namespace Veldrid.NeoDemo
                 WindowInitialState = WindowState.Normal,
                 WindowTitle = "Veldrid NeoDemo"
             };
-            GraphicsDeviceCreateInfo gdCI = new GraphicsDeviceCreateInfo();
-            //gdCI.Backend = GraphicsBackend.Vulkan;
-            gdCI.Backend = GraphicsBackend.OpenGL;
+            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false);
+            GraphicsBackend? backend = null;
+            //backend = GraphicsBackend.Vulkan;
+            //backend = GraphicsBackend.OpenGL;
 #if DEBUG
-            gdCI.DebugDevice = true;
+            gdOptions.Debug = true;
 #endif
 
-            VeldridStartup.CreateWindowAndGraphicsDevice(ref windowCI, ref gdCI, out _window, out _gd);
+            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, backend, out _window, out _gd);
             _window.Resized += () => _windowResized = true;
 
             _scene = new Scene(_window.Width, _window.Height);
@@ -133,10 +138,6 @@ namespace Veldrid.NeoDemo
                 }
             }
         }
-
-        private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
-        private FullScreenQuad _fsq;
-        private TextureSampleCount? _newSampleCount;
 
         private ImageSharpTexture LoadTexture(string texturePath, bool mipmap) // Plz don't call this with the same texturePath and different mipmap values.
         {
@@ -255,6 +256,11 @@ namespace Veldrid.NeoDemo
                     if (ImGui.MenuItem("Tinted output", string.Empty, tinted, true))
                     {
                         _fsq.UseTintedTexture = !tinted;
+                    }
+                    bool vsync = _gd.SyncToVerticalBlank;
+                    if (ImGui.MenuItem("VSync", string.Empty, vsync, true))
+                    {
+                        _gd.SyncToVerticalBlank = !_gd.SyncToVerticalBlank;
                     }
 
                     ImGui.EndMenu();
@@ -378,7 +384,7 @@ namespace Veldrid.NeoDemo
         private void ChangeBackend(GraphicsBackend backend)
         {
             DestroyAllObjects();
-
+            bool syncToVBlank = _gd.SyncToVerticalBlank;
             _gd.Dispose();
 
             if (_recreateWindow)
@@ -400,15 +406,11 @@ namespace Veldrid.NeoDemo
                 _window.Resized += () => _windowResized = true;
             }
 
-            GraphicsDeviceCreateInfo rcCI = new GraphicsDeviceCreateInfo
-            {
-                Backend = backend,
+            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, syncToVBlank);
 #if DEBUG
-                DebugDevice = true
+            gdOptions.Debug = true;
 #endif
-            };
-
-            _gd = VeldridStartup.CreateGraphicsDevice(ref rcCI, _window);
+            _gd = VeldridStartup.CreateGraphicsDevice(gdOptions, backend, _window);
 
             CreateAllObjects();
         }

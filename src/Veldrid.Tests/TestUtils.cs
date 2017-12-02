@@ -41,13 +41,9 @@ namespace Veldrid.Tests
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceCreateInfo gdci = new GraphicsDeviceCreateInfo
-            {
-                Backend = GraphicsBackend.Vulkan,
-                DebugDevice = true
-            };
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, null, false);
 
-            VeldridStartup.CreateWindowAndGraphicsDevice(ref wci, ref gdci, out window, out gd);
+            VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.Vulkan, out window, out gd);
         }
 
         internal static void CreateD3D11Device(out Sdl2Window window, out GraphicsDevice gd)
@@ -66,13 +62,9 @@ namespace Veldrid.Tests
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceCreateInfo gdci = new GraphicsDeviceCreateInfo
-            {
-                Backend = GraphicsBackend.Direct3D11,
-                DebugDevice = true
-            };
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, null, false);
 
-            VeldridStartup.CreateWindowAndGraphicsDevice(ref wci, ref gdci, out window, out gd);
+            VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.Direct3D11, out window, out gd);
         }
 
         internal static void CreateOpenGLDevice(out Sdl2Window window, out GraphicsDevice gd)
@@ -91,13 +83,9 @@ namespace Veldrid.Tests
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceCreateInfo gdci = new GraphicsDeviceCreateInfo
-            {
-                Backend = GraphicsBackend.OpenGL,
-                DebugDevice = true
-            };
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, null, false);
 
-            VeldridStartup.CreateWindowAndGraphicsDevice(ref wci, ref gdci, out window, out gd);
+            VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGL, out window, out gd);
         }
 
         internal static unsafe string GetString(byte* stringStart)

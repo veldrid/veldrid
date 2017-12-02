@@ -22,6 +22,10 @@ namespace Veldrid.D3D11
         private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
             = new Dictionary<MappedResourceCacheKey, MappedResourceInfo>();
 
+        private bool _syncToVBlank;
+        private int _syncInterval;
+        private readonly Format? _depthFormat;
+
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
         public override ResourceFactory ResourceFactory { get; }
@@ -36,8 +40,22 @@ namespace Veldrid.D3D11
 
         public List<D3D11CommandList> CommandListsReferencingSwapchain { get; internal set; } = new List<D3D11CommandList>();
 
-        public D3D11GraphicsDevice(IntPtr hwnd, int width, int height)
+        public override bool SyncToVerticalBlank
         {
+            get => _syncToVBlank;
+            set
+            {
+                _syncToVBlank = value;
+                _syncInterval = GetSyncInterval(_syncToVBlank);
+            }
+        }
+
+        public D3D11GraphicsDevice(GraphicsDeviceOptions options, IntPtr hwnd, int width, int height)
+        {
+            SyncToVerticalBlank = options.SyncToVerticalBlank;
+            _depthFormat = options.SwapchainDepthFormat.HasValue
+                ? D3D11Formats.GetDepthFormat(options.SwapchainDepthFormat.Value)
+                : (Format?)null;
             SwapChainDescription swapChainDescription = new SwapChainDescription()
             {
                 BufferCount = 1,
@@ -51,9 +69,9 @@ namespace Veldrid.D3D11
 #if DEBUG
             DeviceCreationFlags creationFlags = DeviceCreationFlags.Debug;
 #else
-            DeviceCreationFlags creationFlags = DeviceCreationFlags.None;
+            DeviceCreationFlags creationFlags = options.Debug ? DeviceCreationFlags.Debug : DeviceCreationFlags.None;
 #endif 
-            SharpDX.Direct3D11.Device4.CreateWithSwapChain(
+            SharpDX.Direct3D11.Device.CreateWithSwapChain(
                 SharpDX.Direct3D.DriverType.Hardware,
                 creationFlags,
                 swapChainDescription,
@@ -91,24 +109,31 @@ namespace Veldrid.D3D11
 
             // Get the backbuffer from the swapchain
             using (Texture2D backBufferTexture = _swapChain.GetBackBuffer<Texture2D>(0))
-            using (Texture2D depthBufferTexture = new Texture2D(
-                _device,
-                new Texture2DDescription()
-                {
-                    Format = Format.D16_UNorm,
-                    ArraySize = 1,
-                    MipLevels = 1,
-                    Width = backBufferTexture.Description.Width,
-                    Height = backBufferTexture.Description.Height,
-                    SampleDescription = new SampleDescription(1, 0),
-                    Usage = ResourceUsage.Default,
-                    BindFlags = BindFlags.DepthStencil,
-                    CpuAccessFlags = CpuAccessFlags.None,
-                    OptionFlags = ResourceOptionFlags.None
-                }))
             {
+                Texture2D depthBufferTexture = null;
+                if (_depthFormat != null)
+                {
+                    depthBufferTexture = new Texture2D(
+                        _device,
+                        new Texture2DDescription()
+                        {
+                            Format = _depthFormat.Value,
+                            ArraySize = 1,
+                            MipLevels = 1,
+                            Width = backBufferTexture.Description.Width,
+                            Height = backBufferTexture.Description.Height,
+                            SampleDescription = new SampleDescription(1, 0),
+                            Usage = ResourceUsage.Default,
+                            BindFlags = BindFlags.DepthStencil,
+                            CpuAccessFlags = CpuAccessFlags.None,
+                            OptionFlags = ResourceOptionFlags.None
+                        });
+                }
+
                 D3D11Texture backBufferVdTexture = new D3D11Texture(backBufferTexture);
-                D3D11Texture depthVdTexture = new D3D11Texture(depthBufferTexture);
+                D3D11Texture depthVdTexture = depthBufferTexture != null
+                    ? new D3D11Texture(depthBufferTexture)
+                    : null;
                 FramebufferDescription desc = new FramebufferDescription(depthVdTexture, backBufferVdTexture);
                 _swapChainFramebuffer = new D3D11Framebuffer(_device, ref desc);
                 _swapChainFramebuffer.IsSwapchainFramebuffer = true;
@@ -129,7 +154,7 @@ namespace Veldrid.D3D11
 
         public override void SwapBuffers()
         {
-            _swapChain.Present(0, PresentFlags.None);
+            _swapChain.Present(_syncInterval, PresentFlags.None);
         }
 
         public override void SetResourceName(DeviceResource resource, string name)
@@ -407,6 +432,11 @@ namespace Veldrid.D3D11
                     _immediateContext.UpdateSubresource(deviceTexture, subresource, resourceRegion, source, (int)srcRowPitch, 0);
                 }
             }
+        }
+
+        private static int GetSyncInterval(bool syncToVBlank)
+        {
+            return syncToVBlank ? 1 : 0;
         }
 
         protected override void PlatformDispose()

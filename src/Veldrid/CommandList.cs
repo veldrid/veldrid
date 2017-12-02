@@ -78,6 +78,10 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="buffer"></param>
         protected abstract void SetVertexBufferCore(uint index, Buffer buffer);
 
         /// <summary>
@@ -99,6 +103,10 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="format"></param>
         protected abstract void SetIndexBufferCore(Buffer buffer, IndexFormat format);
 
         /// <summary>
@@ -113,6 +121,10 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <param name="rs"></param>
         protected abstract void SetGraphicsResourceSetCore(uint slot, ResourceSet rs);
 
         /// <summary>
@@ -127,6 +139,10 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <param name="set"></param>
         protected abstract void SetComputeResourceSetCore(uint slot, ResourceSet set);
 
         /// <summary>
@@ -276,6 +292,12 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="indirectBuffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="drawCount"></param>
+        /// <param name="stride"></param>
         protected abstract void DrawIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
 
         /// <summary>
@@ -300,6 +322,12 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="indirectBuffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="drawCount"></param>
+        /// <param name="stride"></param>
         protected abstract void DrawIndexedIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
 
         [System.Diagnostics.Conditional("VALIDATE_USAGE")]
@@ -355,6 +383,10 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="indirectBuffer"></param>
+        /// <param name="offset"></param>
         protected abstract void DispatchIndirectCore(Buffer indirectBuffer, uint offset);
 
         /// <summary>
@@ -505,6 +537,13 @@ namespace Veldrid
             CopyBufferCore(source, sourceOffset, destination, destinationOffset, sizeInBytes);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceOffset"></param>
+        /// <param name="destination"></param>
+        /// <param name="destinationOffset"></param>
+        /// <param name="sizeInBytes"></param>
         protected abstract void CopyBufferCore(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes);
 
         /// <summary>
@@ -553,6 +592,24 @@ namespace Veldrid
                 layerCount);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="srcX"></param>
+        /// <param name="srcY"></param>
+        /// <param name="srcZ"></param>
+        /// <param name="srcMipLevel"></param>
+        /// <param name="srcBaseArrayLayer"></param>
+        /// <param name="destination"></param>
+        /// <param name="dstX"></param>
+        /// <param name="dstY"></param>
+        /// <param name="dstZ"></param>
+        /// <param name="dstMipLevel"></param>
+        /// <param name="dstBaseArrayLayer"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="depth"></param>
+        /// <param name="layerCount"></param>
         protected abstract void CopyTextureCore(
             Texture source,
             uint srcX, uint srcY, uint srcZ,

@@ -447,7 +447,10 @@ namespace Veldrid.Vk
                 {
                     renderPassBI.clearValueCount = attachmentCount;
                     renderPassBI.pClearValues = clearValuesPtr;
-                    _clearValues[_currentFramebuffer.ColorTargets.Count] = _depthClearValue.Value;
+                    if (_depthClearValue.HasValue)
+                    {
+                        _clearValues[_currentFramebuffer.ColorTargets.Count] = _depthClearValue.Value;
+                    }
                     vkCmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
                     _activeRenderPass = _currentFramebuffer.RenderPassClear;
                     Util.ClearArray(_validColorClearValues);

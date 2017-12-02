@@ -77,7 +77,20 @@ namespace Veldrid.ImageSharp
                 fixed (void* pin = &image.DangerousGetPinnableReferenceToPixelBuffer())
                 {
                     MappedResource map = gd.Map(staging, MapMode.Write, level);
-                    Unsafe.CopyBlock(map.Data.ToPointer(), pin, (uint)(image.Width * image.Height * 4));
+                    uint rowWidth = (uint)(image.Width * 4);
+                    if (rowWidth == map.RowPitch)
+                    {
+                        Unsafe.CopyBlock(map.Data.ToPointer(), pin, (uint)(image.Width * image.Height * 4));
+                    }
+                    else
+                    {
+                        for (uint y = 0; y < image.Height; y++)
+                        {
+                            byte* dstStart = (byte*)map.Data.ToPointer() + y * map.RowPitch;
+                            byte* srcStart = (byte*)pin + y * rowWidth;
+                            Unsafe.CopyBlock(dstStart, srcStart, rowWidth);
+                        }
+                    }
                     gd.Unmap(staging, level);
 
                     cl.CopyTexture(

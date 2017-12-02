@@ -146,7 +146,7 @@ namespace Veldrid
         ///     LodBias = 0
         ///     MinimumLod = 0
         ///     MaximumLod = uint.MaxValue
-        ///     MaximumAnisotropy = 0
+        ///     MaximumAnisotropy = 4
         /// </summary>
         public static readonly SamplerDescription Aniso4x = new SamplerDescription
         {

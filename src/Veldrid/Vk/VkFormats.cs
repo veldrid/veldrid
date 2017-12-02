@@ -31,6 +31,10 @@ namespace Veldrid.Vk
             switch (filter)
             {
                 case SamplerFilter.Anisotropic:
+                    minFilter = VkFilter.Linear;
+                    magFilter = VkFilter.Linear;
+                    mipmapMode = VkSamplerMipmapMode.Linear;
+                    break;
                 case SamplerFilter.MinPoint_MagPoint_MipPoint:
                     minFilter = VkFilter.Nearest;
                     magFilter = VkFilter.Nearest;

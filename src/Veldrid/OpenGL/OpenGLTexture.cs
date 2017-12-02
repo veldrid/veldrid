@@ -120,17 +120,38 @@ namespace Veldrid.OpenGL
                 throw new NotImplementedException(); // TODO: Implement 3D textures.
             }
 
-            glGenTextures(1, out _texture);
-            CheckLastError();
+            bool dsa = _gd.Extensions.ARB_DirectStateAccess;
+            if (dsa)
+            {
+                uint texture;
+                glCreateTextures(TextureTarget, 1, &texture);
+                CheckLastError();
+                _texture = texture;
+            }
+            else
+            {
+                glGenTextures(1, out _texture);
+                CheckLastError();
 
-            glBindTexture(TextureTarget, _texture);
-            CheckLastError();
+                glBindTexture(TextureTarget, _texture);
+                CheckLastError();
+            }
 
             bool isDepthTex = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
 
             if (TextureTarget == TextureTarget.Texture2D)
             {
-                if (_gd.Extensions.ARB_TextureStorage)
+                if (dsa)
+                {
+                    glTextureStorage2D(
+                        _texture,
+                        MipLevels,
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                        Width,
+                        Height);
+                    CheckLastError();
+                }
+                else if (_gd.Extensions.ARB_TextureStorage)
                 {
                     glTexStorage2D(
                         TextureTarget.Texture2D,
@@ -166,7 +187,18 @@ namespace Veldrid.OpenGL
             }
             else if (TextureTarget == TextureTarget.Texture2DArray)
             {
-                if (_gd.Extensions.ARB_TextureStorage)
+                if (dsa)
+                {
+                    glTextureStorage3D(
+                        _texture,
+                        MipLevels,
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                        Width,
+                        Height,
+                        ArrayLayers);
+                    CheckLastError();
+                }
+                else if (_gd.Extensions.ARB_TextureStorage)
                 {
                     glTexStorage3D(
                         TextureTarget.Texture2DArray,
@@ -203,30 +235,67 @@ namespace Veldrid.OpenGL
             }
             else if (TextureTarget == TextureTarget.Texture2DMultisample)
             {
-                glTexImage2DMultiSample(
-                    TextureTarget.Texture2DMultisample,
-                    FormatHelpers.GetSampleCountUInt32(SampleCount),
-                    GLInternalFormat,
-                    Width,
-                    Height,
-                    false);
-                CheckLastError();
+                if (dsa)
+                {
+                    glTextureStorage2DMultisample(
+                        _texture,
+                        FormatHelpers.GetSampleCountUInt32(SampleCount),
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                        Width,
+                        Height,
+                        false);
+                }
+                else
+                {
+                    glTexImage2DMultiSample(
+                        TextureTarget.Texture2DMultisample,
+                        FormatHelpers.GetSampleCountUInt32(SampleCount),
+                        GLInternalFormat,
+                        Width,
+                        Height,
+                        false);
+                    CheckLastError();
+                }
             }
             else if (TextureTarget == TextureTarget.Texture2DMultisampleArray)
             {
-                glTexImage3DMultisample(
-                    TextureTarget.Texture2DMultisampleArray,
-                    FormatHelpers.GetSampleCountUInt32(SampleCount),
-                    GLInternalFormat,
-                    Width,
-                    Height,
-                    ArrayLayers,
-                    false);
-                CheckLastError();
+                if (dsa)
+                {
+                    glTextureStorage3DMultisample(
+                        _texture,
+                        FormatHelpers.GetSampleCountUInt32(SampleCount),
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                        Width,
+                        Height,
+                        Depth,
+                        false);
+                }
+                else
+                {
+                    glTexImage3DMultisample(
+                        TextureTarget.Texture2DMultisampleArray,
+                        FormatHelpers.GetSampleCountUInt32(SampleCount),
+                        GLInternalFormat,
+                        Width,
+                        Height,
+                        ArrayLayers,
+                        false);
+                    CheckLastError();
+                }
             }
             else if (TextureTarget == TextureTarget.TextureCubeMap)
             {
-                if (_gd.Extensions.ARB_TextureStorage)
+                if (dsa)
+                {
+                    glTextureStorage2D(
+                        _texture,
+                        MipLevels,
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                        Width,
+                        Height);
+                    CheckLastError();
+                }
+                else if (_gd.Extensions.ARB_TextureStorage)
                 {
                     glTexStorage2D(
                         TextureTarget.TextureCubeMap,
@@ -265,7 +334,18 @@ namespace Veldrid.OpenGL
             }
             else if (TextureTarget == TextureTarget.TextureCubeMapArray)
             {
-                if (_gd.Extensions.ARB_TextureStorage)
+                if (dsa)
+                {
+                    glTextureStorage3D(
+                        _texture,
+                        MipLevels,
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                        Width,
+                        Height,
+                        ArrayLayers);
+                    CheckLastError();
+                }
+                else if (_gd.Extensions.ARB_TextureStorage)
                 {
                     glTexStorage3D(
                         TextureTarget.TextureCubeMapArray,
@@ -306,7 +386,18 @@ namespace Veldrid.OpenGL
             }
             else if (TextureTarget == TextureTarget.Texture3D)
             {
-                if (_gd.Extensions.ARB_TextureStorage)
+                if (dsa)
+                {
+                    glTextureStorage3D(
+                        _texture,
+                        MipLevels,
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                        Width,
+                        Height,
+                        Depth);
+                    CheckLastError();
+                }
+                else if (_gd.Extensions.ARB_TextureStorage)
                 {
                     glTexStorage3D(
                         TextureTarget.Texture3D,
@@ -349,7 +440,7 @@ namespace Veldrid.OpenGL
             }
             else
             {
-                throw new NotImplementedException();
+                throw new VeldridException("Invalid texture target: " + TextureTarget);
             }
 
             Created = true;

@@ -766,6 +766,81 @@ namespace Veldrid.OpenGLBinding
             uint height,
             uint depth) => p_glTexStorage3D(target, levels, internalformat, width, height, depth);
 
+        private delegate void glTextureStorage1D_t(
+            uint texture,
+            uint levels,
+            SizedInternalFormat internalformat,
+            uint width);
+        private static glTextureStorage1D_t p_glTextureStorage1D;
+        public static void glTextureStorage1D(uint texture, uint levels, SizedInternalFormat internalformat, uint width)
+            => p_glTextureStorage1D(texture, levels, internalformat, width);
+
+        private delegate void glTextureStorage2D_t(
+            uint texture,
+            uint levels,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height);
+        private static glTextureStorage2D_t p_glTextureStorage2D;
+        public static void glTextureStorage2D(
+            uint texture,
+            uint levels,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height) => p_glTextureStorage2D(texture, levels, internalformat, width, height);
+
+        private delegate void glTextureStorage3D_t(
+            uint texture,
+            uint levels,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            uint depth);
+        private static glTextureStorage3D_t p_glTextureStorage3D;
+        public static void glTextureStorage3D(
+            uint texture,
+            uint levels,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            uint depth) => p_glTextureStorage3D(texture, levels, internalformat, width, height, depth);
+
+        private delegate void glTextureStorage2DMultisample_t(
+            uint texture,
+            uint samples,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            GLboolean fixedsamplelocations);
+        private static glTextureStorage2DMultisample_t p_glTextureStorage2DMultisample;
+        public static void glTextureStorage2DMultisample(
+            uint texture,
+            uint samples,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            GLboolean fixedsamplelocations)
+            => p_glTextureStorage2DMultisample(texture, samples, internalformat, width, height, fixedsamplelocations);
+
+        private delegate void glTextureStorage3DMultisample_t(
+            uint texture,
+            uint samples,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            uint depth,
+            GLboolean fixedsamplelocations);
+        private static glTextureStorage3DMultisample_t p_glTextureStorage3DMultisample;
+        public static void glTextureStorage3DMultisample(
+            uint texture,
+            uint samples,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            uint depth,
+            GLboolean fixedsamplelocations)
+            => p_glTextureStorage3DMultisample(texture, samples, internalformat, width, height, depth, fixedsamplelocations);
+
         private delegate void glTextureView_t(
             uint texture,
             TextureTarget target,
@@ -938,6 +1013,11 @@ namespace Veldrid.OpenGLBinding
         private static glCreateBuffers_t p_glCreateBuffers;
         public static void glCreateBuffers(uint n, uint* buffers) => p_glCreateBuffers(n, buffers);
 
+        private delegate void glCreateTextures_t(TextureTarget target, uint n, uint* textures);
+        private static glCreateTextures_t p_glCreateTextures;
+        public static void glCreateTextures(TextureTarget target, uint n, uint* textures)
+            => p_glCreateTextures(target, n, textures);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -1046,6 +1126,11 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTexStorage1D", out p_glTexStorage1D);
             LoadFunction("glTexStorage2D", out p_glTexStorage2D);
             LoadFunction("glTexStorage3D", out p_glTexStorage3D);
+            LoadFunction("glTextureStorage1D", out p_glTextureStorage1D);
+            LoadFunction("glTextureStorage2D", out p_glTextureStorage2D);
+            LoadFunction("glTextureStorage3D", out p_glTextureStorage3D);
+            LoadFunction("glTextureStorage2DMultisample", out p_glTextureStorage2DMultisample);
+            LoadFunction("glTextureStorage3DMultisample", out p_glTextureStorage3DMultisample);
             LoadFunction("glTextureView", out p_glTextureView);
             LoadFunction("glMapBuffer", out p_glMapBuffer);
             LoadFunction("glMapNamedBuffer", out p_glMapNamedBuffer);
@@ -1060,6 +1145,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glGetTextureSubImage", out p_glGetTextureSubImage);
             LoadFunction("glCopyNamedBufferSubData", out p_glCopyNamedBufferSubData);
             LoadFunction("glCreateBuffers", out p_glCreateBuffers);
+            LoadFunction("glCreateTextures", out p_glCreateTextures);
         }
 
         private static void LoadFunction<T>(string name, out T field)

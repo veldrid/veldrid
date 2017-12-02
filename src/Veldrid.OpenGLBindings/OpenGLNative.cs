@@ -920,6 +920,20 @@ namespace Veldrid.OpenGLBinding
                 bufSize,
                 pixels);
 
+        private delegate void glCopyNamedBufferSubData_t(
+            uint readBuffer,
+            uint writeBuffer,
+            IntPtr readOffset,
+            IntPtr writeOffset,
+            uint size);
+        private static glCopyNamedBufferSubData_t p_glCopyNamedBufferSubData;
+        public static void glCopyNamedBufferSubData(
+            uint readBuffer,
+            uint writeBuffer,
+            IntPtr readOffset,
+            IntPtr writeOffset,
+            uint size) => p_glCopyNamedBufferSubData(readBuffer, writeBuffer, readOffset, writeOffset, size);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -1040,6 +1054,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glMapNamedBufferRange", out p_glMapNamedBufferRange);
             LoadFunction("glGetTexImage", out p_glGetTexImage);
             LoadFunction("glGetTextureSubImage", out p_glGetTextureSubImage);
+            LoadFunction("glCopyNamedBufferSubData", out p_glCopyNamedBufferSubData);
         }
 
         private static void LoadFunction<T>(string name, out T field)

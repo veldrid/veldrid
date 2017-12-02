@@ -395,7 +395,7 @@ namespace Veldrid.D3D11
             bool useMap = (texture.Usage & TextureUsage.Staging) == TextureUsage.Staging;
             if (useMap)
             {
-                uint subresource = Util.GetSubresourceIndex(texture, mipLevel, arrayLayer);
+                uint subresource = texture.CalculateSubresource(mipLevel, arrayLayer);
                 MappedResourceCacheKey key = new MappedResourceCacheKey(texture, subresource);
                 MappedResource map = MapCore(texture, MapMode.Write, subresource);
 

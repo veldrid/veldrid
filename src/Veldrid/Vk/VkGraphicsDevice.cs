@@ -918,7 +918,7 @@ namespace Veldrid.Vk
             }
             else
             {
-                uint subresource = Util.GetSubresourceIndex(tex, mipLevel, arrayLayer);
+                uint subresource = tex.CalculateSubresource(mipLevel, arrayLayer);
                 mappedPtr = tex.GetStagingMemoryBlock(subresource).BlockMappedPointer;
 
                 VkImageSubresource vkIS = new VkImageSubresource();

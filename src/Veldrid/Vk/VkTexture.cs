@@ -149,7 +149,7 @@ namespace Veldrid.Vk
                 {
                     for (uint level = 0; level < MipLevels; level++)
                     {
-                        uint subresource = Util.GetSubresourceIndex(this, level, arrayLayer);
+                        uint subresource = CalculateSubresource(level, arrayLayer);
                         Util.GetMipDimensions(
                             this,
                             level,
@@ -247,13 +247,13 @@ namespace Veldrid.Vk
             uint layerCount,
             VkImageLayout newLayout)
         {
-            VkImageLayout oldLayout = _imageLayouts[Util.GetSubresourceIndex(this, baseMipLevel, baseArrayLayer)];
+            VkImageLayout oldLayout = _imageLayouts[CalculateSubresource(baseMipLevel, baseArrayLayer)];
 #if DEBUG
             for (uint level = 0; level < levelCount; level++)
             {
                 for (uint layer = 0; layer < layerCount; layer++)
                 {
-                    if (_imageLayouts[Util.GetSubresourceIndex(this, baseMipLevel + level, baseArrayLayer + layer)] != oldLayout)
+                    if (_imageLayouts[CalculateSubresource(baseMipLevel + level, baseArrayLayer + layer)] != oldLayout)
                     {
                         throw new VeldridException("Unexpected image layout.");
                     }
@@ -271,14 +271,14 @@ namespace Veldrid.Vk
                         levelCount,
                         baseArrayLayer,
                         layerCount,
-                        _imageLayouts[Util.GetSubresourceIndex(this, baseMipLevel, baseArrayLayer)],
+                        _imageLayouts[CalculateSubresource(baseMipLevel, baseArrayLayer)],
                         newLayout);
 
                     for (uint level = 0; level < levelCount; level++)
                     {
                         for (uint layer = 0; layer < layerCount; layer++)
                         {
-                            _imageLayouts[Util.GetSubresourceIndex(this, baseMipLevel + level, baseArrayLayer + layer)] = newLayout;
+                            _imageLayouts[CalculateSubresource(baseMipLevel + level, baseArrayLayer + layer)] = newLayout;
                         }
                     }
                 }
@@ -289,7 +289,7 @@ namespace Veldrid.Vk
                     {
                         for (uint level = baseMipLevel; level < baseMipLevel + levelCount; level++)
                         {
-                            uint subresource = Util.GetSubresourceIndex(this, level, arrayLayer);
+                            uint subresource = CalculateSubresource(level, arrayLayer);
                             VkImage image = _stagingImages[subresource];
                             VulkanUtil.TransitionImageLayout(
                                 cb,
@@ -307,7 +307,7 @@ namespace Veldrid.Vk
 
         internal VkImageLayout GetImageLayout(uint mipLevel, uint arrayLayer)
         {
-            return _imageLayouts[Util.GetSubresourceIndex(this, mipLevel, arrayLayer)];
+            return _imageLayouts[CalculateSubresource(mipLevel, arrayLayer)];
         }
 
         internal VkMemoryBlock GetMemoryBlock(uint subresource)

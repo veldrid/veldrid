@@ -854,21 +854,31 @@ namespace Veldrid.OpenGL
             srcGLBuffer.EnsureResourcesCreated();
             dstGLBuffer.EnsureResourcesCreated();
 
-            // TODO: glCopyNamedBufferSubData
+            if (_extensions.ARB_DirectStateAccess)
+            {
+                glCopyNamedBufferSubData(
+                    srcGLBuffer.Buffer,
+                    dstGLBuffer.Buffer,
+                    (IntPtr)sourceOffset,
+                    (IntPtr)destinationOffset,
+                    sizeInBytes);
+            }
+            else
+            {
+                glBindBuffer(BufferTarget.CopyReadBuffer, srcGLBuffer.Buffer);
+                CheckLastError();
 
-            glBindBuffer(BufferTarget.CopyReadBuffer, srcGLBuffer.Buffer);
-            CheckLastError();
+                glBindBuffer(BufferTarget.CopyWriteBuffer, dstGLBuffer.Buffer);
+                CheckLastError();
 
-            glBindBuffer(BufferTarget.CopyWriteBuffer, dstGLBuffer.Buffer);
-            CheckLastError();
-
-            glCopyBufferSubData(
-                BufferTarget.CopyReadBuffer,
-                BufferTarget.CopyWriteBuffer,
-                (IntPtr)sourceOffset,
-                (IntPtr)destinationOffset,
-                (IntPtr)sizeInBytes);
-            CheckLastError();
+                glCopyBufferSubData(
+                    BufferTarget.CopyReadBuffer,
+                    BufferTarget.CopyWriteBuffer,
+                    (IntPtr)sourceOffset,
+                    (IntPtr)destinationOffset,
+                    (IntPtr)sizeInBytes);
+                CheckLastError();
+            }
         }
 
         public void CopyTexture(

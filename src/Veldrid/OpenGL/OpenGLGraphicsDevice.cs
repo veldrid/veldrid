@@ -379,7 +379,6 @@ namespace Veldrid.OpenGL
                 Action<IntPtr> makeCurrent,
                 IntPtr context)
             {
-                // TODO: Only need _gd._commandExecutor here.
                 _gd = gd;
                 _workItems = workItems;
                 _makeCurrent = makeCurrent;

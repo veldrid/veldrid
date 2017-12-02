@@ -16,7 +16,7 @@ namespace Veldrid
         /// <returns>The subresource index.</returns>
         public uint CalculateSubresource(uint mipLevel, uint arrayLayer)
         {
-            return Util.GetSubresourceIndex(this, mipLevel, arrayLayer);
+            return arrayLayer * MipLevels + mipLevel;
         }
 
         /// <summary>

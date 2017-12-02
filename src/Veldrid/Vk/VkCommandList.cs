@@ -662,10 +662,10 @@ namespace Veldrid.Vk
                 VkImageLayout.TransferDstOptimal);
 
             VkImage srcImage = sourceIsStaging
-                ? srcVkTexture.GetStagingImage(Util.GetSubresourceIndex(source, srcMipLevel, srcBaseArrayLayer))
+                ? srcVkTexture.GetStagingImage(source.CalculateSubresource(srcMipLevel, srcBaseArrayLayer))
                 : srcVkTexture.OptimalDeviceImage;
             VkImage dstImage = destIsStaging
-                ? dstVkTexture.GetStagingImage(Util.GetSubresourceIndex(destination, dstMipLevel, dstBaseArrayLayer))
+                ? dstVkTexture.GetStagingImage(destination.CalculateSubresource(dstMipLevel, dstBaseArrayLayer))
                 : dstVkTexture.OptimalDeviceImage;
 
             vkCmdCopyImage(

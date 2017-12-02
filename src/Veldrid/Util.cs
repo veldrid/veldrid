@@ -115,12 +115,6 @@ namespace Veldrid
             }
         }
 
-        // TODO: Move entirely into Texture.ComputeSubresource
-        internal static uint GetSubresourceIndex(Texture tex, uint mipLevel, uint arrayLayer)
-        {
-            return arrayLayer * tex.MipLevels + mipLevel;
-        }
-
         internal static void GetMipLevelAndArrayLayer(Texture tex, uint subresource, out uint mipLevel, out uint arrayLayer)
         {
             arrayLayer = subresource / tex.MipLevels;

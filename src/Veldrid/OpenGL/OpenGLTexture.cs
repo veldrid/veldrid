@@ -359,7 +359,7 @@ namespace Veldrid.OpenGL
         {
             Debug.Assert(Created);
 
-            uint subresource = Util.GetSubresourceIndex(this, mipLevel, arrayLayer);
+            uint subresource = CalculateSubresource(mipLevel, arrayLayer);
             if (_framebuffers[subresource] == 0)
             {
                 FramebufferTarget framebufferTarget = SampleCount == TextureSampleCount.Count1

@@ -202,36 +202,6 @@ namespace Veldrid.Tests
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.Write));
         }
 
-        [Fact]
-        public void MapThenCopy_Fails()
-        {
-            if (GD.BackendType == GraphicsBackend.Vulkan)
-            {
-                return; // TODO: Inconsistency
-            }
-
-            if (GD.BackendType == GraphicsBackend.Direct3D11)
-            {
-                return; // TODO: This should actually fail.
-            }
-
-            Buffer src = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
-            Buffer dst = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
-
-            GD.Map(src, MapMode.ReadWrite);
-
-            CommandList copyCL = RF.CreateCommandList();
-            copyCL.Begin();
-            copyCL.CopyBuffer(src, 0, dst, 0, 1024);
-            copyCL.End();
-
-            Assert.Throws<VeldridException>(() =>
-            {
-                GD.ExecuteCommands(copyCL);
-                GD.WaitForIdle();
-            });
-        }
-
         private Buffer CreateBuffer(uint size, BufferUsage usage)
         {
             return RF.CreateBuffer(new BufferDescription(size, usage));

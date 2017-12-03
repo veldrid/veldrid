@@ -12,8 +12,26 @@ namespace Veldrid.StartupUtilities
     {
         public static void CreateWindowAndGraphicsDevice(
             WindowCreateInfo windowCI,
+            out Sdl2Window window,
+            out GraphicsDevice gd)
+            => CreateWindowAndGraphicsDevice(
+                windowCI,
+                new GraphicsDeviceOptions(),
+                GetPlatformDefaultBackend(),
+                out window,
+                out gd);
+
+        public static void CreateWindowAndGraphicsDevice(
+            WindowCreateInfo windowCI,
             GraphicsDeviceOptions deviceOptions,
-            GraphicsBackend? preferredBackend,
+            out Sdl2Window window,
+            out GraphicsDevice gd)
+            => CreateWindowAndGraphicsDevice(windowCI, deviceOptions, GetPlatformDefaultBackend(), out window, out gd);
+
+        public static void CreateWindowAndGraphicsDevice(
+            WindowCreateInfo windowCI,
+            GraphicsDeviceOptions deviceOptions,
+            GraphicsBackend preferredBackend,
             out Sdl2Window window,
             out GraphicsDevice gd)
         {
@@ -70,20 +88,16 @@ namespace Veldrid.StartupUtilities
 
 
         public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window)
-            => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), null);
+            => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), GetPlatformDefaultBackend());
         public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsDeviceOptions options)
-            => CreateGraphicsDevice(window, options, null);
+            => CreateGraphicsDevice(window, options, GetPlatformDefaultBackend());
         public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsBackend? preferredBackend)
-            => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), preferredBackend);
+            => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), GetPlatformDefaultBackend());
         public static GraphicsDevice CreateGraphicsDevice(
             Sdl2Window window,
             GraphicsDeviceOptions options,
-            GraphicsBackend? preferredBackend)
+            GraphicsBackend preferredBackend)
         {
-            if (!preferredBackend.HasValue)
-            {
-                preferredBackend = GetPlatformDefaultBackend();
-            }
             switch (preferredBackend)
             {
                 case GraphicsBackend.Direct3D11:
@@ -95,11 +109,11 @@ namespace Veldrid.StartupUtilities
                 //case GraphicsBackend.OpenGLES:
                 //    return CreateDefaultOpenGLESRenderContext(ref contextCI, window);
                 default:
-                    throw new VeldridException("Invalid GraphicsBackend: " + preferredBackend.Value);
+                    throw new VeldridException("Invalid GraphicsBackend: " + preferredBackend);
             }
         }
 
-        private static GraphicsBackend? GetPlatformDefaultBackend()
+        private static GraphicsBackend GetPlatformDefaultBackend()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

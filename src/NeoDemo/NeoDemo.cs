@@ -49,14 +49,17 @@ namespace Veldrid.NeoDemo
                 WindowTitle = "Veldrid NeoDemo"
             };
             GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false);
-            GraphicsBackend? backend = null;
-            //backend = GraphicsBackend.Vulkan;
-            //backend = GraphicsBackend.OpenGL;
 #if DEBUG
             gdOptions.Debug = true;
 #endif
 
-            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, backend, out _window, out _gd);
+            VeldridStartup.CreateWindowAndGraphicsDevice(
+                windowCI,
+                gdOptions,
+                //GraphicsBackend.Vulkan,
+                //GraphicsBackend.OpenGL,
+                out _window,
+                out _gd);
             _window.Resized += () => _windowResized = true;
 
             _scene = new Scene(_window.Width, _window.Height);

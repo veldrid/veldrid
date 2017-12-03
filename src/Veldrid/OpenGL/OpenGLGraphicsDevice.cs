@@ -167,6 +167,8 @@ namespace Veldrid.OpenGL
 
         public override void SwapBuffers()
         {
+            WaitForIdle();
+
             _executionThread.Run(() =>
             {
                 _swapBuffers();

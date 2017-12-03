@@ -543,7 +543,23 @@ namespace Veldrid.OpenGL
                                 }
                                 else
                                 {
-                                    throw new NotImplementedException();
+                                    if (texture.TextureTarget == TextureTarget.Texture2DArray
+                                        || texture.TextureTarget == TextureTarget.Texture2DMultisampleArray
+                                        || texture.TextureTarget == TextureTarget.TextureCubeMapArray)
+                                    {
+                                        throw new NotImplementedException();
+                                    }
+
+                                    glBindTexture(texture.TextureTarget, texture.Texture);
+                                    CheckLastError();
+
+                                    glGetTexImage(
+                                        texture.TextureTarget,
+                                        (int)mipLevel,
+                                        texture.GLPixelFormat,
+                                        texture.GLPixelType,
+                                        block.Data);
+                                    CheckLastError();
                                 }
                             }
 

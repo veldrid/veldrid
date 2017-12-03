@@ -91,8 +91,8 @@ namespace Veldrid.StartupUtilities
             => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), GetPlatformDefaultBackend());
         public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsDeviceOptions options)
             => CreateGraphicsDevice(window, options, GetPlatformDefaultBackend());
-        public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsBackend? preferredBackend)
-            => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), GetPlatformDefaultBackend());
+        public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsBackend preferredBackend)
+            => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), preferredBackend);
         public static GraphicsDevice CreateGraphicsDevice(
             Sdl2Window window,
             GraphicsDeviceOptions options,

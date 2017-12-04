@@ -23,11 +23,11 @@ namespace Veldrid.NeoDemo
         {
             if (_imguiRenderer == null)
             {
-                _imguiRenderer = new ImGuiRenderer(gd, cl, sc.MainSceneFramebuffer.OutputDescription, _width, _height);
+                _imguiRenderer = new ImGuiRenderer(gd, sc.MainSceneFramebuffer.OutputDescription, _width, _height);
             }
             else
             {
-                _imguiRenderer.CreateDeviceResources(gd, cl, sc.MainSceneFramebuffer.OutputDescription);
+                _imguiRenderer.CreateDeviceResources(gd, sc.MainSceneFramebuffer.OutputDescription);
             }
         }
 
@@ -55,8 +55,7 @@ namespace Veldrid.NeoDemo
 
         public void Update(float deltaSeconds)
         {
-            _imguiRenderer.Update(deltaSeconds);
-            _imguiRenderer.OnInputUpdated(InputTracker.FrameSnapshot);
+            _imguiRenderer.Update(deltaSeconds, InputTracker.FrameSnapshot);
         }
     }
 }

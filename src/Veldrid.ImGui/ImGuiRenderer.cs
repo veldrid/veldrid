@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Reflection;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Veldrid
 {
@@ -17,7 +18,7 @@ namespace Veldrid
         private GraphicsDevice _gd;
         private readonly Assembly _assembly;
 
-        // Context objects
+        // Device objects
         private Buffer _vertexBuffer;
         private Buffer _indexBuffer;
         private Buffer _projMatrixBuffer;
@@ -39,10 +40,19 @@ namespace Veldrid
         private int _windowHeight;
         private Vector2 _scaleFactor = Vector2.One;
 
+        // Image trackers
+        private readonly Dictionary<TextureView, ResourceSetInfo> _setsByView
+            = new Dictionary<TextureView, ResourceSetInfo>();
+        private readonly Dictionary<Texture, TextureView> _autoViewsByTexture
+            = new Dictionary<Texture, TextureView>();
+        private readonly Dictionary<IntPtr, ResourceSetInfo> _viewsById = new Dictionary<IntPtr, ResourceSetInfo>();
+        private readonly List<IDisposable> _ownedResources = new List<IDisposable>();
+        private int _lastAssignedID = 100;
+
         /// <summary>
         /// Constructs a new ImGuiRenderer.
         /// </summary>
-        public ImGuiRenderer(GraphicsDevice gd, CommandList cl, OutputDescription outputDescription, int width, int height)
+        public ImGuiRenderer(GraphicsDevice gd,  OutputDescription outputDescription, int width, int height)
         {
             _gd = gd;
             _assembly = typeof(ImGuiRenderer).GetTypeInfo().Assembly;
@@ -51,7 +61,7 @@ namespace Veldrid
 
             ImGui.GetIO().FontAtlas.AddDefaultFont();
 
-            CreateDeviceResources(gd, cl, outputDescription);
+            CreateDeviceResources(gd,  outputDescription);
             SetOpenTKKeyMappings();
 
             SetPerFrameImGuiData(1f / 60f);
@@ -70,13 +80,13 @@ namespace Veldrid
             Dispose();
         }
 
-        public void CreateDeviceResources(GraphicsDevice gd, CommandList cl, OutputDescription outputDescription)
+        public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription)
         {
             _gd = gd;
             ResourceFactory factory = gd.ResourceFactory;
             _vertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer | BufferUsage.Dynamic));
             _indexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer | BufferUsage.Dynamic));
-            RecreateFontDeviceTexture(gd, cl);
+            RecreateFontDeviceTexture(gd);
 
             _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
@@ -120,6 +130,60 @@ namespace Veldrid
                 gd.PointSampler));
 
             _fontTextureResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_textureLayout, _fontTextureView));
+        }
+
+        /// <summary>
+        /// Gets or creates a handle for a texture to be drawn with ImGui.
+        /// Pass the returned handle to Image() or ImageButton().
+        /// </summary>
+        public IntPtr GetOrCreateImGuiBinding(ResourceFactory factory, TextureView textureView)
+        {
+            if (!_setsByView.TryGetValue(textureView, out ResourceSetInfo rsi))
+            {
+                ResourceSet resourceSet = factory.CreateResourceSet(new ResourceSetDescription(_textureLayout, textureView));
+                rsi = new ResourceSetInfo(GetNextImGuiBindingID(), resourceSet);
+
+                _setsByView.Add(textureView, rsi);
+                _viewsById.Add(rsi.ImGuiBinding, rsi);
+                _ownedResources.Add(resourceSet);
+            }
+
+            return rsi.ImGuiBinding;
+        }
+
+        private IntPtr GetNextImGuiBindingID()
+        {
+            int newID = Interlocked.Increment(ref _lastAssignedID);
+            return (IntPtr)newID;
+        }
+
+        /// <summary>
+        /// Gets or creates a handle for a texture to be drawn with ImGui.
+        /// Pass the returned handle to Image() or ImageButton().
+        /// </summary>
+        public IntPtr GetOrCreateImGuiBinding(ResourceFactory factory, Texture texture)
+        {
+            if (!_autoViewsByTexture.TryGetValue(texture, out TextureView textureView))
+            {
+                textureView = factory.CreateTextureView(texture);
+                _autoViewsByTexture.Add(texture, textureView);
+                _ownedResources.Add(textureView);
+            }
+
+            return GetOrCreateImGuiBinding(factory, textureView);
+        }
+
+        /// <summary>
+        /// Retrieves the shader texture binding for the given helper handle.
+        /// </summary>
+        public ResourceSet GetImageResourceSet(IntPtr imGuiBinding)
+        {
+            if (!_viewsById.TryGetValue(imGuiBinding, out ResourceSetInfo tvi))
+            {
+                throw new InvalidOperationException("No registered ImGui binding with id " + imGuiBinding.ToString());
+            }
+
+            return tvi.ResourceSet;
         }
 
         private byte[] LoadEmbeddedShaderCode(ResourceFactory factory, string name, ShaderStages stage)
@@ -168,7 +232,7 @@ namespace Veldrid
         /// <summary>
         /// Recreates the device texture used to render text.
         /// </summary>
-        public unsafe void RecreateFontDeviceTexture(GraphicsDevice gd, CommandList cl)
+        public unsafe void RecreateFontDeviceTexture(GraphicsDevice gd)
         {
             IO io = ImGui.GetIO();
             // Build
@@ -202,18 +266,6 @@ namespace Veldrid
             io.FontAtlas.ClearTexData();
         }
 
-        private string[] _stages = { "Standard" };
-
-        public void SetRenderStages(string[] stages) { _stages = stages; }
-
-        /// <summary>
-        /// Gets a list of stages participated by this RenderItem.
-        /// </summary>
-        public IList<string> GetStagesParticipated()
-        {
-            return _stages;
-        }
-
         /// <summary>
         /// Renders the ImGui draw list data.
         /// </summary>
@@ -226,9 +278,11 @@ namespace Veldrid
         /// <summary>
         /// Updates ImGui input and IO configuration state.
         /// </summary>
-        public void Update(float deltaSeconds)
+        public void Update(float deltaSeconds, InputSnapshot snapshot)
         {
             SetPerFrameImGuiData(deltaSeconds);
+            UpdateImGuiInput(snapshot);
+            ImGui.NewFrame();
         }
 
         /// <summary>
@@ -243,16 +297,6 @@ namespace Veldrid
                 _windowHeight / _scaleFactor.Y);
             io.DisplayFramebufferScale = _scaleFactor;
             io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
-        }
-
-        /// <summary>
-        /// Updates the current input state tracked by ImGui.
-        /// This calls ImGui.NewFrame().
-        /// </summary>
-        public void OnInputUpdated(InputSnapshot snapshot)
-        {
-            UpdateImGuiInput(snapshot);
-            ImGui.NewFrame();
         }
 
         private unsafe void UpdateImGuiInput(InputSnapshot snapshot)
@@ -416,7 +460,7 @@ namespace Veldrid
                             }
                             else
                             {
-                                cl.SetGraphicsResourceSet(1, ImGuiImageHelper.GetResourceSet(pcmd->TextureId));
+                                cl.SetGraphicsResourceSet(1, GetImageResourceSet(pcmd->TextureId));
                             }
                         }
 
@@ -452,6 +496,23 @@ namespace Veldrid
             _textureLayout.Dispose();
             _pipeline.Dispose();
             _mainResourceSet.Dispose();
+
+            foreach (IDisposable resource in _ownedResources)
+            {
+                resource.Dispose();
+            }
+        }
+
+        private struct ResourceSetInfo
+        {
+            public readonly IntPtr ImGuiBinding;
+            public readonly ResourceSet ResourceSet;
+
+            public ResourceSetInfo(IntPtr imGuiBinding, ResourceSet resourceSet)
+            {
+                ImGuiBinding = imGuiBinding;
+                ResourceSet = resourceSet;
+            }
         }
     }
 }

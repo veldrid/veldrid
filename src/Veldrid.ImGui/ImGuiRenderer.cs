@@ -52,7 +52,7 @@ namespace Veldrid
         /// <summary>
         /// Constructs a new ImGuiRenderer.
         /// </summary>
-        public ImGuiRenderer(GraphicsDevice gd,  OutputDescription outputDescription, int width, int height)
+        public ImGuiRenderer(GraphicsDevice gd, OutputDescription outputDescription, int width, int height)
         {
             _gd = gd;
             _assembly = typeof(ImGuiRenderer).GetTypeInfo().Assembly;
@@ -61,7 +61,7 @@ namespace Veldrid
 
             ImGui.GetIO().FontAtlas.AddDefaultFont();
 
-            CreateDeviceResources(gd,  outputDescription);
+            CreateDeviceResources(gd, outputDescription);
             SetOpenTKKeyMappings();
 
             SetPerFrameImGuiData(1f / 60f);
@@ -153,7 +153,7 @@ namespace Veldrid
 
         private IntPtr GetNextImGuiBindingID()
         {
-            int newID = Interlocked.Increment(ref _lastAssignedID);
+            int newID = _lastAssignedID++;
             return (IntPtr)newID;
         }
 

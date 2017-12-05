@@ -30,7 +30,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
-    <PackageReference Include="ImGui.NET" Version="0.3.1" />
+    <PackageReference Include="ImGui.NET" Version="0.3.2" />
   </ItemGroup>
 
 </Project>

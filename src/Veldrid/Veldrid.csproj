@@ -16,7 +16,7 @@
     <PackageReference Include="SharpDX.D3DCompiler" Version="4.0.1" />
     <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" />
     <PackageReference Include="SharpDX.DXGI" Version="4.0.1" />
-    <PackageReference Include="Vk" Version="1.0.12" />
+    <PackageReference Include="Vk" Version="1.0.13" />
     <ProjectReference Include="..\Veldrid.OpenGLBindings\Veldrid.OpenGLBindings.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.Vk
 {
-    public struct DescriptorResourceCounts
+    internal struct DescriptorResourceCounts
     {
         public readonly uint UniformBufferCount;
         public readonly uint SampledImageCount;

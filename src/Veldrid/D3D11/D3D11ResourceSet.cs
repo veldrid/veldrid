@@ -2,6 +2,8 @@
 {
     internal class D3D11ResourceSet : ResourceSet
     {
+        private string _name;
+
         public BindableResource[] Resources { get; }
         public D3D11ResourceLayout Layout { get; }
 
@@ -17,6 +19,12 @@
                     throw new VeldridException("Invalid resource type present in D3D11ResourceSet: " + resource.GetType().Name);
                 }
             }
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set => _name = value;
         }
 
         public override void Dispose()

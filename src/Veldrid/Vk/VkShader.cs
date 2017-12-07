@@ -10,6 +10,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly VkShaderModule _shaderModule;
         private bool _disposed;
+        private string _name;
 
         public VkShaderModule ShaderModule => _shaderModule;
 
@@ -25,6 +26,16 @@ namespace Veldrid.Vk
                 shaderModuleCI.pCode = (uint*)codePtr;
                 VkResult result = vkCreateShaderModule(gd.Device, ref shaderModuleCI, null, out _shaderModule);
                 CheckResult(result);
+            }
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
             }
         }
 

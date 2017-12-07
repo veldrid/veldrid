@@ -5,6 +5,8 @@ namespace Veldrid.D3D11
 {
     internal class D3D11Shader : Shader
     {
+        private string _name;
+
         public DeviceChild DeviceShader { get; }
         public byte[] Bytecode { get; internal set; }
 
@@ -36,6 +38,16 @@ namespace Veldrid.D3D11
             }
 
             Bytecode = description.ShaderBytes;
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                DeviceShader.DebugName = value;
+            }
         }
 
         public override void Dispose()

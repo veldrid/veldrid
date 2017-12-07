@@ -14,7 +14,7 @@ namespace Veldrid.OpenGL
 
         private string _name;
         private bool _nameChanged;
-        public string Name { get => _name; set { _name = value; _nameChanged = true; } }
+        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }

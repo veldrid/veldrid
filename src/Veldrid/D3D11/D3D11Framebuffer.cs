@@ -5,6 +5,8 @@ namespace Veldrid.D3D11
 {
     internal class D3D11Framebuffer : Framebuffer
     {
+        private string _name;
+
         public RenderTargetView[] RenderTargetViews { get; }
         public DepthStencilView DepthStencilView { get; }
 
@@ -98,6 +100,23 @@ namespace Veldrid.D3D11
             else
             {
                 RenderTargetViews = Array.Empty<RenderTargetView>();
+            }
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                for (int i = 0; i < RenderTargetViews.Length; i++)
+                {
+                    RenderTargetViews[i].DebugName = value + "_RTV" + i;
+                }
+                if (DepthStencilView != null)
+                {
+                    DepthStencilView.DebugName = value + "_DSV";
+                }
             }
         }
 

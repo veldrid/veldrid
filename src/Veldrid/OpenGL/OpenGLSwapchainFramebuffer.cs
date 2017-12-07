@@ -12,6 +12,7 @@ namespace Veldrid.OpenGL
         public override uint Height => _height;
 
         public override OutputDescription OutputDescription { get; }
+        public override string Name { get; set; }
 
         internal OpenGLSwapchainFramebuffer(uint width, uint height, PixelFormat? depthFormat)
             : base(null, Array.Empty<FramebufferAttachment>())

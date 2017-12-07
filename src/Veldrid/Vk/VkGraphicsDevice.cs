@@ -188,7 +188,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public override void SetResourceName(DeviceResource resource, string name)
+        internal void SetResourceName(DeviceResource resource, string name)
         {
             if (_debugMarkerEnabled)
             {

@@ -9,6 +9,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly VkImageView _imageView;
         private bool _disposed;
+        private string _name;
 
         public VkImageView ImageView => _imageView;
 
@@ -55,6 +56,16 @@ namespace Veldrid.Vk
             }
 
             vkCreateImageView(_gd.Device, ref imageViewCI, null, out _imageView);
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
+            }
         }
 
         public override void Dispose()

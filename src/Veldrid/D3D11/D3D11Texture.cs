@@ -5,6 +5,8 @@ namespace Veldrid.D3D11
 {
     internal class D3D11Texture : Texture
     {
+        private string _name;
+
         public override uint Width { get; }
         public override uint Height { get; }
         public override uint Depth { get; }
@@ -93,6 +95,16 @@ namespace Veldrid.D3D11
             ArrayLayers = (uint)existingTexture.Description.ArraySize;
             Format = D3D11Formats.ToVdFormat(existingTexture.Description.Format);
             SampleCount = D3D11Formats.ToVdSampleCount(existingTexture.Description.SampleDescription);
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                DeviceTexture.DebugName = value;
+            }
         }
 
         public override void Dispose()

@@ -48,6 +48,7 @@ namespace Veldrid.D3D11
         private D3D11ResourceSet[] _computeResourceSets = new D3D11ResourceSet[1];
         // Resource sets are invalidated when a new resource set is bound with an incompatible SRV or UAV.
         private bool[] _invalidatedComputeResourceSets = new bool[1];
+        private string _name;
 
         // Cached resources
         private const int MaxCachedUniformBuffers = 15;
@@ -1046,6 +1047,16 @@ namespace Veldrid.D3D11
                     (int)dstX,
                     (int)dstY,
                     (int)dstZ);
+            }
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _context.DebugName = value;
             }
         }
 

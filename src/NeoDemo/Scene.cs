@@ -231,7 +231,7 @@ namespace Veldrid.NeoDemo
                     sc.ShadowMapTexture.Width,
                     out var lightFrustum1);
                 cls[2].UpdateBuffer(sc.LightViewProjectionBuffer1, 0, ref viewProj1);
-                
+
                 cls[2].SetFramebuffer(sc.MidShadowMapFramebuffer);
                 cls[2].SetViewport(0, new Viewport(0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height, 0, 1));
                 cls[2].SetScissorRect(0, 0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height);
@@ -249,7 +249,7 @@ namespace Veldrid.NeoDemo
                     sc.ShadowMapTexture.Width,
                     out var lightFrustum2);
                 cls[3].UpdateBuffer(sc.LightViewProjectionBuffer2, 0, ref viewProj2);
-                
+
                 cls[3].SetFramebuffer(sc.FarShadowMapFramebuffer);
                 cls[3].SetViewport(0, new Viewport(0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height, 0, 1));
                 cls[3].SetScissorRect(0, 0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height);
@@ -494,7 +494,7 @@ namespace Veldrid.NeoDemo
             }
 
             _resourceUpdateCL = gd.ResourceFactory.CreateCommandList();
-            gd.SetResourceName(_resourceUpdateCL, "Scene Resource Update Command List");
+            _resourceUpdateCL.Name = "Scene Resource Update Command List";
         }
 
         private class RenderPassesComparer : IEqualityComparer<RenderPasses>

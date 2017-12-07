@@ -7,6 +7,7 @@ namespace Veldrid.D3D11
     internal class D3D11Buffer : Buffer
     {
         private readonly SharpDX.Direct3D11.Buffer _buffer;
+        private string _name;
 
         public override uint SizeInBytes { get; }
 
@@ -72,6 +73,24 @@ namespace Veldrid.D3D11
                 uavDesc.Format = SharpDX.DXGI.Format.Unknown;
 
                 UnorderedAccessView = new UnorderedAccessView(device, _buffer, uavDesc);
+            }
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                Buffer.DebugName = value;
+                if (ShaderResourceView != null)
+                {
+                    ShaderResourceView.DebugName = value + "_SRV";
+                }
+                if (UnorderedAccessView != null)
+                {
+                    UnorderedAccessView.DebugName = value + "_UAV";
+                }
             }
         }
 

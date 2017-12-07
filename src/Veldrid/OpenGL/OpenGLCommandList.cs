@@ -10,6 +10,8 @@ namespace Veldrid.OpenGL
 
         internal OpenGLCommandEntryList Commands => _commands;
 
+        public override string Name { get; set; }
+
         public OpenGLCommandList(OpenGLGraphicsDevice gd, ref CommandListDescription description) : base(ref description)
         {
             _gd = gd;

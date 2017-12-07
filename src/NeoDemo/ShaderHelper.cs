@@ -13,7 +13,7 @@ namespace Veldrid.NeoDemo
             string entryPoint)
         {
             Shader shader = factory.CreateShader(new ShaderDescription(stage, LoadBytecode(factory, setName, stage), entryPoint));
-            gd.SetResourceName(shader, $"{setName}-{stage.ToString()}");
+            shader.Name = $"{setName}-{stage.ToString()}";
             return shader;
         }
 

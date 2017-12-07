@@ -13,6 +13,10 @@ namespace Veldrid.OpenGL
         private uint _textureView;
         private bool _disposed;
 
+        private string _name;
+        private bool _nameChanged;
+        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
+
         public new OpenGLTexture Target { get; }
         public TextureTarget TextureTarget { get; private set; }
 
@@ -80,6 +84,10 @@ namespace Veldrid.OpenGL
             {
                 CreateGLResources();
                 Created = true;
+            }
+            if (_nameChanged && _needsTextureView)
+            {
+                SetObjectLabel(ObjectLabelIdentifier.Texture, _textureView, _name);
             }
         }
 

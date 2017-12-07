@@ -87,6 +87,12 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
+        /// tools.
+        /// </summary>
+        public abstract string Name { get; set; }
+
+        /// <summary>
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
         public abstract void Dispose();

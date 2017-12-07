@@ -11,6 +11,7 @@ namespace Veldrid.Vk
         private readonly VkMemoryBlock _memory;
         private readonly VkMemoryRequirements _bufferMemoryRequirements;
         private bool _destroyed;
+        private string _name;
 
         public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }
@@ -77,6 +78,16 @@ namespace Veldrid.Vk
             _memory = memoryToken;
             result = vkBindBufferMemory(gd.Device, _deviceBuffer, _memory.DeviceMemory, _memory.Offset);
             CheckResult(result);
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
+            }
         }
 
         public override void Dispose()

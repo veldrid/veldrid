@@ -13,7 +13,7 @@ namespace Veldrid.OpenGL
 
         private string _name;
         private bool _nameChanged;
-        public string Name { get => _name; set { _name = value; _nameChanged = true; } }
+        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public uint NoMipmapSampler => _noMipmapState.Sampler;
         public uint MipmapSampler => _mipmapState.Sampler;

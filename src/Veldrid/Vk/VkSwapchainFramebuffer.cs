@@ -27,6 +27,7 @@ namespace Veldrid.Vk
         private uint _desiredWidth;
         private uint _desiredHeight;
         private bool _destroyed;
+        private string _name;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
 
@@ -282,6 +283,16 @@ namespace Veldrid.Vk
                 VkFramebuffer fb = new VkFramebuffer(_gd, ref desc, true);
                 _scFramebuffers[i] = fb;
                 _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
+            }
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
             }
         }
 

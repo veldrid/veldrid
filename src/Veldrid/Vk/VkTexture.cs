@@ -44,6 +44,7 @@ namespace Veldrid.Vk
         public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
 
         private VkImageLayout[] _imageLayouts;
+        private string _name;
 
         internal VkTexture(VkGraphicsDevice gd, ref TextureDescription description)
         {
@@ -319,6 +320,16 @@ namespace Veldrid.Vk
             else
             {
                 return _optimalMemory;
+            }
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
             }
         }
 

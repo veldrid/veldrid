@@ -432,9 +432,9 @@ namespace Veldrid.NeoDemo
         private void CreateAllObjects()
         {
             _frameCommands = _gd.ResourceFactory.CreateCommandList();
-            _gd.SetResourceName(_frameCommands, "Frame Commands List");
+            _frameCommands.Name = "Frame Commands List";
             CommandList initCL = _gd.ResourceFactory.CreateCommandList();
-            _gd.SetResourceName(initCL, "Recreation Initialization Command List");
+            initCL.Name = "Recreation Initialization Command List";
             initCL.Begin();
             _sc.CreateDeviceObjects(_gd, initCL, _sc);
             CommonMaterials.CreateAllDeviceObjects(_gd, initCL, _sc);

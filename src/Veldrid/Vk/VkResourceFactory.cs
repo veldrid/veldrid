@@ -47,7 +47,7 @@ namespace Veldrid.Vk
 
         public override Sampler CreateSampler(ref SamplerDescription description)
         {
-            return new VkSampler(_device, ref description);
+            return new VkSampler(_gd, ref description);
         }
 
         public override Shader CreateShader(ref ShaderDescription description)

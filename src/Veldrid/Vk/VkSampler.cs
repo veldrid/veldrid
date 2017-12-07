@@ -5,15 +5,16 @@ namespace Veldrid.Vk
 {
     internal unsafe class VkSampler : Sampler
     {
-        private readonly VkDevice _device;
+        private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkSampler _sampler;
         private bool _disposed;
+        private string _name;
 
         public Vulkan.VkSampler DeviceSampler => _sampler;
 
-        public VkSampler(VkDevice device, ref SamplerDescription description)
+        public VkSampler(VkGraphicsDevice gd, ref SamplerDescription description)
         {
-            _device = device;
+            _gd = gd;
             VkFormats.GetFilterParams(description.Filter, out VkFilter minFilter, out VkFilter magFilter, out VkSamplerMipmapMode mipmapMode);
 
             VkSamplerCreateInfo samplerCI = new VkSamplerCreateInfo
@@ -37,14 +38,24 @@ namespace Veldrid.Vk
                 borderColor = VkFormats.VdToVkSamplerBorderColor(description.BorderColor)
             };
 
-            vkCreateSampler(device, ref samplerCI, null, out _sampler);
+            vkCreateSampler(_gd.Device, ref samplerCI, null, out _sampler);
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
+            }
         }
 
         public override void Dispose()
         {
             if (!_disposed)
             {
-                vkDestroySampler(_device, _sampler, null);
+                vkDestroySampler(_gd.Device, _sampler, null);
                 _disposed = true;
             }
         }

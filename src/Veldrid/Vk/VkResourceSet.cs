@@ -9,6 +9,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly VkDescriptorSet _descriptorSet;
         private bool _disposed;
+        private string _name;
 
         public VkDescriptorSet DescriptorSet => _descriptorSet;
 
@@ -73,6 +74,16 @@ namespace Veldrid.Vk
             }
 
             vkUpdateDescriptorSets(_gd.Device, descriptorWriteCount, descriptorWrites, 0, null);
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
+            }
         }
 
         public override void Dispose()

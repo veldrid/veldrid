@@ -15,7 +15,7 @@ namespace Veldrid.OpenGL
         private bool _disposed;
         private string _name;
         private bool _nameChanged;
-        public string Name { get => _name; set { _name = value; _nameChanged = true; } }
+        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         private uint _shader;
 

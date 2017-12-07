@@ -176,28 +176,6 @@ namespace Veldrid.OpenGL
             });
         }
 
-        public override void SetResourceName(DeviceResource resource, string name)
-        {
-            switch (resource)
-            {
-                case OpenGLBuffer buffer:
-                    buffer.Name = name;
-                    break;
-                case OpenGLFramebuffer framebuffer:
-                    framebuffer.Name = name;
-                    break;
-                case OpenGLSampler sampler:
-                    sampler.Name = name;
-                    break;
-                case OpenGLShader shader:
-                    shader.Name = name;
-                    break;
-                case OpenGLTexture tex:
-                    tex.Name = name;
-                    break;
-            }
-        }
-
         public override void WaitForIdle()
         {
             _executionThread.WaitForIdle();

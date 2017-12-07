@@ -5,6 +5,8 @@ namespace Veldrid.D3D11
 {
     internal class D3D11Sampler : Sampler
     {
+        private string _name;
+
         public SamplerState DeviceSampler { get; }
 
         public D3D11Sampler(Device device, ref SamplerDescription description)
@@ -39,6 +41,16 @@ namespace Veldrid.D3D11
                     return new RawColor4(1, 1, 1, 1);
                 default:
                     throw Illegal.Value<SamplerBorderColor>();
+            }
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                DeviceSampler.DebugName = value;
             }
         }
 

@@ -6,6 +6,8 @@ namespace Veldrid.D3D11
 {
     internal class D3D11Pipeline : Pipeline
     {
+        private string _name;
+
         public BlendState BlendState { get; }
         public DepthStencilState DepthStencilState { get; }
         public RasterizerState RasterizerState { get; }
@@ -97,6 +99,12 @@ namespace Veldrid.D3D11
             {
                 ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(genericLayouts[i]);
             }
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set => _name = value;
         }
 
         public override void Dispose()

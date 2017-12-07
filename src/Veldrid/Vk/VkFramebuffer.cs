@@ -15,6 +15,7 @@ namespace Veldrid.Vk
         private readonly VkRenderPass _renderPassClear;
         private readonly List<VkImageView> _attachmentViews = new List<VkImageView>();
         private bool _destroyed;
+        private string _name;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _deviceFramebuffer;
         public override VkRenderPass RenderPassNoClear => _renderPassNoClear;
@@ -192,6 +193,16 @@ namespace Veldrid.Vk
                 AttachmentCount += 1;
             }
             AttachmentCount += (uint)ColorTargets.Count;
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
+            }
         }
 
         public override void Dispose()

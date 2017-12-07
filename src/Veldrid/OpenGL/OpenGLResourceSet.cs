@@ -4,6 +4,7 @@
     {
         public OpenGLResourceLayout Layout { get; }
         public BindableResource[] Resources { get; }
+        public override string Name { get; set; }
 
         public OpenGLResourceSet(ref ResourceSetDescription description)
         {

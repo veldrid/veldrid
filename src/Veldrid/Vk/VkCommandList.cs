@@ -37,6 +37,7 @@ namespace Veldrid.Vk
         private VkResourceSet[] _currentComputeResourceSets = Array.Empty<VkResourceSet>();
         private bool[] _computeResourceSetsChanged;
         private int _newComputeResourceSets;
+        private string _name;
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
@@ -679,6 +680,16 @@ namespace Veldrid.Vk
 
             _referencedResources.Add(srcVkTexture);
             _referencedResources.Add(dstVkTexture);
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
+            }
         }
 
         public override void Dispose()

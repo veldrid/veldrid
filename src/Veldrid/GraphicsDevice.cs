@@ -60,14 +60,6 @@ namespace Veldrid
         public abstract void WaitForIdle();
 
         /// <summary>
-        /// Associates an arbitrary name with a resource. On some systems, this functionality requires special device creation
-        /// options. Can be used to overwrite or remove a previously-assigned name.
-        /// </summary>
-        /// <param name="resource">The target resource.</param>
-        /// <param name="name">The name.</param>
-        public abstract void SetResourceName(DeviceResource resource, string name);
-
-        /// <summary>
         /// Gets the maximum sample count supported by the given <see cref="PixelFormat"/>.
         /// </summary>
         /// <param name="format">The format to query.</param>

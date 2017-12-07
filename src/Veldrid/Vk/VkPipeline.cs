@@ -13,6 +13,7 @@ namespace Veldrid.Vk
         private readonly VkPipelineLayout _pipelineLayout;
         private readonly VkRenderPass _renderPass;
         private bool _disposed;
+        private string _name;
 
         public Vulkan.VkPipeline DevicePipeline => _devicePipeline;
 
@@ -327,6 +328,16 @@ namespace Veldrid.Vk
             CheckResult(result);
 
             ResourceSetCount = (uint)description.ResourceLayouts.Length;
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
+            }
         }
 
         public override void Dispose()

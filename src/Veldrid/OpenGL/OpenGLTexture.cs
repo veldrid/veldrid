@@ -13,12 +13,11 @@ namespace Veldrid.OpenGL
         private uint[] _framebuffers;
         private uint[] _pbos;
         private uint[] _pboSizes;
+        private bool _disposed;
 
         private string _name;
         private bool _nameChanged;
-        private bool _disposed;
-
-        public string Name { get => _name; set { _name = value; _nameChanged = true; } }
+        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public uint Texture => _texture;
 

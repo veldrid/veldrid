@@ -3,6 +3,7 @@
     internal class D3D11ResourceLayout : ResourceLayout
     {
         private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
+        private string _name;
 
         public int UniformBufferCount { get; }
         public int StorageBufferCount { get; }
@@ -62,6 +63,12 @@
             }
 
             return _bindingInfosByVdIndex[resourceLayoutIndex];
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set => _name = value;
         }
 
         public override void Dispose()

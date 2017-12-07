@@ -10,6 +10,7 @@ namespace Veldrid.Vk
         private readonly VkDescriptorSetLayout _dsl;
         private readonly VkDescriptorType[] _descriptorTypes;
         private bool _disposed;
+        private string _name;
 
         public VkDescriptorSetLayout DescriptorSetLayout => _dsl;
         public VkDescriptorType[] DescriptorTypes => _descriptorTypes;
@@ -38,6 +39,16 @@ namespace Veldrid.Vk
 
             VkResult result = vkCreateDescriptorSetLayout(_gd.Device, ref dslCI, null, out _dsl);
             CheckResult(result);
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _gd.SetResourceName(this, value);
+            }
         }
 
         public override void Dispose()

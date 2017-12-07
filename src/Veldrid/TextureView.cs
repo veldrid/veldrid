@@ -6,7 +6,7 @@ namespace Veldrid
     /// A bindable device resource which provides a shader with access to a sampled <see cref="Texture"/> object.
     /// See <see cref="TextureViewDescription"/>.
     /// </summary>
-    public abstract class TextureView : BindableResource, IDisposable
+    public abstract class TextureView : BindableResource, DeviceResource, IDisposable
     {
         /// <summary>
         /// The target <see cref="Texture"/> object to be sampled via this instance.
@@ -37,6 +37,12 @@ namespace Veldrid
             BaseArrayLayer = description.BaseArrayLayer;
             ArrayLayers = description.ArrayLayers;
         }
+
+        /// <summary>
+        /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
+        /// tools.
+        /// </summary>
+        public abstract string Name { get; set; }
 
         /// <summary>
         /// Frees unmanaged device resources controlled by this instance.

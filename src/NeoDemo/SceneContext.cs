@@ -55,11 +55,11 @@ namespace Veldrid.NeoDemo
             ProjectionMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             ViewMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             LightViewProjectionBuffer0 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            gd.SetResourceName(LightViewProjectionBuffer0, "LightViewProjectionBuffer0");
+            LightViewProjectionBuffer0.Name = "LightViewProjectionBuffer0";
             LightViewProjectionBuffer1 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            gd.SetResourceName(LightViewProjectionBuffer1, "LightViewProjectionBuffer1");
+            LightViewProjectionBuffer1.Name = "LightViewProjectionBuffer1";
             LightViewProjectionBuffer2 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            gd.SetResourceName(LightViewProjectionBuffer2, "LightViewProjectionBuffer2");
+            LightViewProjectionBuffer2.Name = "LightViewProjectionBuffer2";
             DepthLimitsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DepthCascadeLimits>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             LightInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DirectionalLightInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             CameraInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
@@ -83,7 +83,7 @@ namespace Veldrid.NeoDemo
             cl.UpdateBuffer(PointLightsBuffer, 0, pli.GetBlittable());
 
             ShadowMapTexture = factory.CreateTexture(new TextureDescription(2048, 2048, 1, 1, 3, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
-            gd.SetResourceName(ShadowMapTexture, "Shadow Map");
+            ShadowMapTexture.Name = "Shadow Map";
             NearShadowMapView = factory.CreateTextureView(new TextureViewDescription(ShadowMapTexture, 0, 1, 0, 1));
             NearShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
                 new FramebufferAttachmentDescription(ShadowMapTexture, 0), Array.Empty<FramebufferAttachmentDescription>()));

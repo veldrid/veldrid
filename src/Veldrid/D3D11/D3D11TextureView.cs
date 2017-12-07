@@ -5,6 +5,8 @@ namespace Veldrid.D3D11
 {
     internal class D3D11TextureView : TextureView
     {
+        private string _name;
+
         public ShaderResourceView ShaderResourceView { get; }
         public UnorderedAccessView UnorderedAccessView { get; }
 
@@ -91,6 +93,23 @@ namespace Veldrid.D3D11
                 }
 
                 UnorderedAccessView = new UnorderedAccessView(device, d3dTex.DeviceTexture, uavDesc);
+            }
+        }
+
+        public override string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                if (ShaderResourceView != null)
+                {
+                    ShaderResourceView.DebugName = value + "_SRV";
+                }
+                if (UnorderedAccessView != null)
+                {
+                    UnorderedAccessView.DebugName = value + "_UAV";
+                }
             }
         }
 

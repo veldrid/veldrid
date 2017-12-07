@@ -26,7 +26,6 @@ namespace Veldrid.Vk
         private readonly VkSwapchainFramebuffer _scFB;
         private uint _graphicsQueueIndex;
         private uint _presentQueueIndex;
-        private VkDescriptorPool _descriptorPool;
         private VkCommandPool _graphicsCommandPool;
         private readonly object _graphicsCommandPoolLock = new object();
         private VkFence _imageAvailableFence;
@@ -47,6 +46,7 @@ namespace Veldrid.Vk
 
         private const int SharedCommandPoolCount = 4;
         private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
+        private VkDescriptorPoolManager _descriptorPoolManager;
 
         // Disposal tracking
         private readonly object _deferredDisposalLock = new object();
@@ -64,7 +64,7 @@ namespace Veldrid.Vk
         public VkQueue PresentQueue => _presentQueue;
         public uint PresentQueueIndex => _presentQueueIndex;
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
-        public VkDescriptorPool SharedDescriptorPool => _descriptorPool;
+        public VkDescriptorPoolManager DescriptorPoolManager => _descriptorPoolManager;
 
         public VkGraphicsDevice(GraphicsDeviceOptions options, VkSurfaceSource surfaceSource, uint width, uint height)
         {
@@ -576,28 +576,7 @@ namespace Veldrid.Vk
 
         private void CreateDescriptorPool()
         {
-            uint poolSizeCount = 5;
-            VkDescriptorPoolSize* sizes = stackalloc VkDescriptorPoolSize[(int)poolSizeCount];
-            sizes[0].type = VkDescriptorType.UniformBuffer;
-            sizes[0].descriptorCount = 5000;
-            sizes[1].type = VkDescriptorType.SampledImage;
-            sizes[1].descriptorCount = 5000;
-            sizes[2].type = VkDescriptorType.Sampler;
-            sizes[2].descriptorCount = 5000;
-            sizes[3].type = VkDescriptorType.StorageBuffer;
-            sizes[3].descriptorCount = 5000;
-            sizes[4].type = VkDescriptorType.StorageImage;
-            sizes[4].descriptorCount = 5000;
-
-
-            VkDescriptorPoolCreateInfo descriptorPoolCI = VkDescriptorPoolCreateInfo.New();
-            descriptorPoolCI.flags = VkDescriptorPoolCreateFlags.FreeDescriptorSet;
-            descriptorPoolCI.maxSets = 5000;
-            descriptorPoolCI.pPoolSizes = sizes;
-            descriptorPoolCI.poolSizeCount = poolSizeCount;
-
-            VkResult result = vkCreateDescriptorPool(_device, ref descriptorPoolCI, null, out _descriptorPool);
-            CheckResult(result);
+            _descriptorPoolManager = new VkDescriptorPoolManager(this);
         }
 
         private void CreateGraphicsCommandPool()
@@ -696,7 +675,7 @@ namespace Veldrid.Vk
                 CheckResult(debugDestroyResult);
             }
 
-            vkDestroyDescriptorPool(_device, _descriptorPool, null);
+            _descriptorPoolManager.DestroyAll();
             vkDestroyCommandPool(_device, _graphicsCommandPool, null);
             vkDestroyFence(_device, _imageAvailableFence, null);
 

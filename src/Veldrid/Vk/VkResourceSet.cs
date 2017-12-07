@@ -7,11 +7,12 @@ namespace Veldrid.Vk
     internal unsafe class VkResourceSet : ResourceSet, VkDeferredDisposal
     {
         private readonly VkGraphicsDevice _gd;
-        private readonly VkDescriptorSet _descriptorSet;
+        private readonly DescriptorResourceCounts _descriptorCounts;
+        private readonly DescriptorAllocationToken _descriptorAllocationToken;
         private bool _disposed;
         private string _name;
 
-        public VkDescriptorSet DescriptorSet => _descriptorSet;
+        public VkDescriptorSet DescriptorSet => _descriptorAllocationToken.Set;
 
         public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
 
@@ -20,13 +21,9 @@ namespace Veldrid.Vk
             _gd = gd;
             VkResourceLayout vkLayout = Util.AssertSubtype<ResourceLayout, VkResourceLayout>(description.Layout);
 
-            VkDescriptorSetAllocateInfo dsAI = VkDescriptorSetAllocateInfo.New();
-            dsAI.descriptorSetCount = 1;
             VkDescriptorSetLayout dsl = vkLayout.DescriptorSetLayout;
-            dsAI.pSetLayouts = &dsl;
-            dsAI.descriptorPool = _gd.SharedDescriptorPool;
-            VkResult result = vkAllocateDescriptorSets(_gd.Device, ref dsAI, out _descriptorSet);
-            CheckResult(result);
+            _descriptorCounts = vkLayout.DescriptorResourceCounts;
+            _descriptorAllocationToken = _gd.DescriptorPoolManager.Allocate(_descriptorCounts, dsl);
 
             BindableResource[] boundResources = description.BoundResources;
             uint descriptorWriteCount = (uint)boundResources.Length;
@@ -42,7 +39,7 @@ namespace Veldrid.Vk
                 descriptorWrites[i].descriptorCount = 1;
                 descriptorWrites[i].descriptorType = type;
                 descriptorWrites[i].dstBinding = (uint)i;
-                descriptorWrites[i].dstSet = _descriptorSet;
+                descriptorWrites[i].dstSet = _descriptorAllocationToken.Set;
 
                 if (type == VkDescriptorType.UniformBuffer || type == VkDescriptorType.StorageBuffer)
                 {
@@ -96,9 +93,7 @@ namespace Veldrid.Vk
             if (!_disposed)
             {
                 _disposed = true;
-                VkDescriptorSet ds = _descriptorSet;
-                VkResult result = vkFreeDescriptorSets(_gd.Device, _gd.SharedDescriptorPool, 1, ref ds);
-                CheckResult(result);
+                _gd.DescriptorPoolManager.Free(_descriptorAllocationToken, _descriptorCounts);
             }
         }
     }

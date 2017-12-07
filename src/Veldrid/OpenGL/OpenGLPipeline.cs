@@ -79,9 +79,9 @@ namespace Veldrid.OpenGL
             ShaderSetDescription shaderSet = GraphicsDescription.ShaderSet;
             _program = glCreateProgram();
             CheckLastError();
-            foreach (ShaderStageDescription stageDesc in shaderSet.ShaderStages)
+            foreach (Shader stage in shaderSet.Shaders)
             {
-                OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(stageDesc.Shader);
+                OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(stage);
                 glShader.EnsureResourcesCreated();
                 glAttachShader(_program, glShader.Shader);
                 CheckLastError();
@@ -275,7 +275,7 @@ namespace Veldrid.OpenGL
         {
             _program = glCreateProgram();
             CheckLastError();
-            OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(ComputeDescription.ShaderStage.Shader);
+            OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(ComputeDescription.ComputeShader);
             glShader.EnsureResourcesCreated();
             glAttachShader(_program, glShader.Shader);
             CheckLastError();

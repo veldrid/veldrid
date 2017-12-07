@@ -8,9 +8,10 @@ namespace Veldrid
     public struct ComputePipelineDescription : IEquatable<ComputePipelineDescription>
     {
         /// <summary>
-        /// A description of the shader set to be used.
+        /// The compute <see cref="Shader"/> to be used in the Pipeline. This must be a Shader with
+        /// <see cref="ShaderStages.Compute"/>.
         /// </summary>
-        public ShaderStageDescription ShaderStage;
+        public Shader ComputeShader;
         /// <summary>
         /// An array of <see cref="ResourceLayout"/>, which controls the layout of shader resoruces in the <see cref="Pipeline"/>.
         /// </summary>
@@ -19,22 +20,24 @@ namespace Veldrid
         /// <summary>
         /// Constructs a new ComputePipelineDescription.
         /// </summary>
-        /// <param name="shaderStage">The compute shader description.</param>
+        /// <param name="computeShader">The compute <see cref="Shader"/> to be used in the Pipeline. This must be a Shader with
+        /// <see cref="ShaderStages.Compute"/>.</param>
         /// <param name="resourceLayouts">The set of resource layouts available to the Pipeline.</param>
-        public ComputePipelineDescription(ShaderStageDescription shaderStage, ResourceLayout[] resourceLayouts)
+        public ComputePipelineDescription(Shader computeShader, ResourceLayout[] resourceLayouts)
         {
-            ShaderStage = shaderStage;
+            ComputeShader = computeShader;
             ResourceLayouts = resourceLayouts;
         }
 
         /// <summary>
         /// Constructs a new ComputePipelineDescription.
         /// </summary>
-        /// <param name="shaderStage">The compute shader description.</param>
+        /// <param name="shaderStage">The compute <see cref="Shader"/> to be used in the Pipeline. This must be a Shader with
+        /// <see cref="ShaderStages.Compute"/>.</param>
         /// <param name="resourceLayout">The resource layout available to the Pipeline.</param>
-        public ComputePipelineDescription(ShaderStageDescription shaderStage, ResourceLayout resourceLayout)
+        public ComputePipelineDescription(Shader shaderStage, ResourceLayout resourceLayout)
         {
-            ShaderStage = shaderStage;
+            ComputeShader = shaderStage;
             ResourceLayouts = new[] { resourceLayout };
         }
 
@@ -46,7 +49,7 @@ namespace Veldrid
         /// <returns>True if all elements and all array elements are equal; false otherswise.</returns>
         public bool Equals(ComputePipelineDescription other)
         {
-            return ShaderStage.Equals(other.ShaderStage) && Util.ArrayEquals(ResourceLayouts, other.ResourceLayouts);
+            return ComputeShader.Equals(other.ComputeShader) && Util.ArrayEquals(ResourceLayouts, other.ResourceLayouts);
         }
 
         /// <summary>
@@ -55,7 +58,7 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(ShaderStage.GetHashCode(), HashHelper.Array(ResourceLayouts));
+            return HashHelper.Combine(ComputeShader.GetHashCode(), HashHelper.Array(ResourceLayouts));
         }
     }
 }

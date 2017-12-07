@@ -11,6 +11,7 @@ namespace Veldrid
         /// The shader stage this instance describes.
         /// </summary>
         public ShaderStages Stage;
+
         /// <summary>
         /// An array containing the raw shader bytes.
         /// For Direct3D11 shaders, this array must contain HLSL bytecode.
@@ -20,14 +21,21 @@ namespace Veldrid
         public byte[] ShaderBytes;
 
         /// <summary>
+        /// The name of the entry point function in the shader module to be used in this stage.
+        /// </summary>
+        public string EntryPoint;
+
+        /// <summary>
         /// Constructs a new ShaderDescription.
         /// </summary>
         /// <param name="stage">The shader stage to create.</param>
         /// <param name="shaderBytes">An array containing the raw shader bytes.</param>
-        public ShaderDescription(ShaderStages stage, byte[] shaderBytes)
+        /// <param name="entryPoint">The name of the entry point function in the shader module to be used in this stage.</param>
+        public ShaderDescription(ShaderStages stage, byte[] shaderBytes, string entryPoint)
         {
             Stage = stage;
             ShaderBytes = shaderBytes;
+            EntryPoint = entryPoint;
         }
 
         /// <summary>

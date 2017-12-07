@@ -86,13 +86,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3))
             };
 
-            Shader vs = ShaderHelper.LoadShader(gd, factory, "Skybox", ShaderStages.Vertex);
-            Shader fs = ShaderHelper.LoadShader(gd, factory, "Skybox", ShaderStages.Fragment);
-            ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
-            {
-                new ShaderStageDescription(vs, "VS"),
-                new ShaderStageDescription(fs, "VS"),
-            };
+            Shader vs = ShaderHelper.LoadShader(gd, factory, "Skybox", ShaderStages.Vertex, "VS");
+            Shader fs = ShaderHelper.LoadShader(gd, factory, "Skybox", ShaderStages.Fragment, "FS");
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -105,7 +100,7 @@ namespace Veldrid.NeoDemo.Objects
                 DepthStencilStateDescription.LessEqual,
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, false, true),
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(vertexLayouts, shaderStages),
+                new ShaderSetDescription(vertexLayouts, new[] { vs, fs }),
                 new ResourceLayout[] { _layout },
                 sc.MainSceneFramebuffer.OutputDescription);
 

@@ -47,13 +47,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3))
             };
 
-            Shader gridVS = ShaderHelper.LoadShader(gd, factory, "Grid", ShaderStages.Vertex);
-            Shader gridFS = ShaderHelper.LoadShader(gd, factory, "Grid", ShaderStages.Fragment);
-            ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
-            {
-                new ShaderStageDescription(gridVS, "VS"),
-                new ShaderStageDescription(gridFS, "FS"),
-            };
+            Shader gridVS = ShaderHelper.LoadShader(gd, factory, "Grid", ShaderStages.Vertex, "VS");
+            Shader gridFS = ShaderHelper.LoadShader(gd, factory, "Grid", ShaderStages.Fragment, "FS");
 
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -66,7 +61,7 @@ namespace Veldrid.NeoDemo.Objects
                 DepthStencilStateDescription.LessEqual,
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, true),
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(vertexLayouts, shaderStages),
+                new ShaderSetDescription(vertexLayouts, new[] { gridVS, gridFS }),
                 new ResourceLayout[] { layout },
                 sc.MainSceneFramebuffer.OutputDescription);
 

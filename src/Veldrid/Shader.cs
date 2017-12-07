@@ -19,6 +19,11 @@ namespace Veldrid
         public ShaderStages Stage { get; }
 
         /// <summary>
+        /// The name of the entry point function.
+        /// </summary>
+        public string EntryPoint { get; }
+
+        /// <summary>
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
         public abstract void Dispose();

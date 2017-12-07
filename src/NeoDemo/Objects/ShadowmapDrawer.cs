@@ -61,13 +61,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate,  VertexElementFormat.Float2))
             };
 
-            Shader vs = ShaderHelper.LoadShader(gd, factory, "ShadowmapPreviewShader", ShaderStages.Vertex);
-            Shader fs = ShaderHelper.LoadShader(gd, factory, "ShadowmapPreviewShader", ShaderStages.Fragment);
-            ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
-            {
-                new ShaderStageDescription(vs, "VS"),
-                new ShaderStageDescription(fs, "FS"),
-            };
+            Shader vs = ShaderHelper.LoadShader(gd, factory, "ShadowmapPreviewShader", ShaderStages.Vertex, "VS");
+            Shader fs = ShaderHelper.LoadShader(gd, factory, "ShadowmapPreviewShader", ShaderStages.Fragment, "FS");
 
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -80,7 +75,7 @@ namespace Veldrid.NeoDemo.Objects
                 new DepthStencilStateDescription(false, true, DepthComparisonKind.Always),
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(vertexLayouts, shaderStages),
+                new ShaderSetDescription(vertexLayouts, new[] { vs, fs }),
                 new ResourceLayout[] { layout },
                 sc.MainSceneFramebuffer.OutputDescription);
 

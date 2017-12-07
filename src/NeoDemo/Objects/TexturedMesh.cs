@@ -99,13 +99,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            Shader depthVS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowDepth", ShaderStages.Vertex);
-            Shader depthFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowDepth", ShaderStages.Fragment);
-            ShaderStageDescription[] shadowDepthShaderStages = new ShaderStageDescription[]
-            {
-                new ShaderStageDescription(depthVS, "VS"),
-                new ShaderStageDescription(depthFS, "FS"),
-            };
+            Shader depthVS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowDepth", ShaderStages.Vertex, "VS");
+            Shader depthFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowDepth", ShaderStages.Fragment, "FS");
 
             ResourceLayout projViewCombinedLayout = StaticResourceCache.GetResourceLayout(
                 gd.ResourceFactory,
@@ -120,7 +115,7 @@ namespace Veldrid.NeoDemo.Objects
                 DepthStencilStateDescription.LessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(shadowDepthVertexLayouts, shadowDepthShaderStages),
+                new ShaderSetDescription(shadowDepthVertexLayouts, new[] { depthVS, depthFS }),
                 new ResourceLayout[] { projViewCombinedLayout, worldLayout },
                 DemoOutputsDescriptions.ShadowMapPass);
             _shadowMapPipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref depthPD);
@@ -135,13 +130,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            Shader mainVS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Vertex);
-            Shader mainFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Fragment);
-            ShaderStageDescription[] mainShaderStages = new ShaderStageDescription[]
-            {
-                new ShaderStageDescription(mainVS, "VS"),
-                new ShaderStageDescription(mainFS, "FS"),
-            };
+            Shader mainVS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Vertex, "VS");
+            Shader mainFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Fragment, "FS");
 
             ResourceLayout projViewLayout = StaticResourceCache.GetResourceLayout(
                 gd.ResourceFactory,
@@ -174,7 +164,7 @@ namespace Veldrid.NeoDemo.Objects
                 DepthStencilStateDescription.LessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(mainVertexLayouts, mainShaderStages),
+                new ShaderSetDescription(mainVertexLayouts, new[] { mainVS, mainFS }),
                 new ResourceLayout[] { projViewLayout, mainSharedLayout, mainPerObjectLayout },
                 sc.MainSceneFramebuffer.OutputDescription);
             _pipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref mainPD);

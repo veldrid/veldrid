@@ -28,16 +28,16 @@ namespace Veldrid.NeoDemo.Objects
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(
-                    new VertexLayoutDescription[]
+                    new[]
                     {
                         new VertexLayoutDescription(
                             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
                             new VertexElementDescription("TexCoords", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
                     },
-                    new ShaderStageDescription[]
+                    new[]
                     {
-                        new ShaderStageDescription(ShaderHelper.LoadShader(gd, factory, "ScreenDuplicator", ShaderStages.Vertex), "VS"),
-                        new ShaderStageDescription(ShaderHelper.LoadShader(gd, factory, "ScreenDuplicator", ShaderStages.Fragment), "FS"),
+                        ShaderHelper.LoadShader(gd, factory, "ScreenDuplicator", ShaderStages.Vertex, "VS"),
+                        ShaderHelper.LoadShader(gd, factory, "ScreenDuplicator", ShaderStages.Fragment, "FS"),
                     }),
                 new ResourceLayout[] { resourceLayout },
                 sc.DuplicatorFramebuffer.OutputDescription);

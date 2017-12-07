@@ -92,8 +92,8 @@ namespace Veldrid
 
             byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex);
             byte[] fragmentShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-frag", ShaderStages.Fragment);
-            _vertexShader = factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vertexShaderBytes));
-            _fragmentShader = factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fragmentShaderBytes));
+            _vertexShader = factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vertexShaderBytes, "VS"));
+            _fragmentShader = factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fragmentShaderBytes, "FS"));
 
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
@@ -101,12 +101,6 @@ namespace Veldrid
                     new VertexElementDescription("in_position", VertexElementSemantic.Position, VertexElementFormat.Float2),
                     new VertexElementDescription("in_texCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
                     new VertexElementDescription("in_color", VertexElementSemantic.Color, VertexElementFormat.Byte4))
-            };
-
-            ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
-            {
-                new ShaderStageDescription(_vertexShader, "VS"),
-                new ShaderStageDescription(_fragmentShader, "FS")
             };
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
@@ -120,7 +114,7 @@ namespace Veldrid
                 new DepthStencilStateDescription(false, false, DepthComparisonKind.Always),
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, false, true),
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(vertexLayouts, shaderStages),
+                new ShaderSetDescription(vertexLayouts, new[] { _vertexShader, _fragmentShader }),
                 new ResourceLayout[] { _layout, _textureLayout },
                 outputDescription);
             _pipeline = factory.CreateGraphicsPipeline(ref pd);

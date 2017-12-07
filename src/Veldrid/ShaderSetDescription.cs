@@ -14,11 +14,11 @@ namespace Veldrid
         /// </summary>
         public VertexLayoutDescription[] VertexLayouts;
         /// <summary>
-        /// An array of <see cref="ShaderStageDescription"/>, one for each shader stage which is to be active in the
-        /// <see cref="Pipeline"/>. At a minimum, every <see cref="ShaderSetDescription"/> must specify a Vertex and Fragment
+        /// An array of <see cref="Shader"/> objects, one for each shader stage which is to be active in the
+        /// <see cref="Pipeline"/>. At a minimum, every graphics Pipeline must include a Vertex and Fragment
         /// shader. All other stages are optional, but if either Tessellation stage is present, then the other must also be.
         /// </summary>
-        public ShaderStageDescription[] ShaderStages;
+        public Shader[] Shaders;
 
         /// <summary>
         /// Constructs a new ShaderSetDescription.
@@ -26,14 +26,13 @@ namespace Veldrid
         /// <param name="vertexLayouts">An array of <see cref="VertexLayoutDescription"/> describing the set of vertex layouts
         /// understood by the <see cref="Pipeline"/>. Each element in this array describes the input layout of a single
         /// <see cref="Buffer"/> to be bound when drawing.</param>
-        /// <param name="shaderStages">An array of <see cref="ShaderStageDescription"/>, one for each shader stage which is to be
-        /// active in the <see cref="Pipeline"/>. At a minimum, every <see cref="ShaderSetDescription"/> must specify a Vertex
-        /// and Fragment shader. All other stages are optional, but if either Tessellation stage is present, then the other must
-        /// also be.</param>
-        public ShaderSetDescription(VertexLayoutDescription[] vertexLayouts, ShaderStageDescription[] shaderStages)
+        /// <param name="shaders">An array of <see cref="Shader"/> objects, one for each shader stage which is to be active
+        /// in the <see cref="Pipeline"/>. At a minimum, every graphics Pipeline must include a Vertex and Fragment shader. All
+        /// other stages are optional, but if either Tessellation stage is present, then the other must also be.</param>
+        public ShaderSetDescription(VertexLayoutDescription[] vertexLayouts, Shader[] shaders)
         {
             VertexLayouts = vertexLayouts;
-            ShaderStages = shaderStages;
+            Shaders = shaders;
         }
 
         /// <summary>
@@ -52,7 +51,7 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(HashHelper.Array(VertexLayouts), HashHelper.Array(ShaderStages));
+            return HashHelper.Combine(HashHelper.Array(VertexLayouts), HashHelper.Array(Shaders));
         }
     }
 }

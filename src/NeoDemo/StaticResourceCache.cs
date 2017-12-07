@@ -52,11 +52,16 @@ namespace Veldrid.NeoDemo
             return p;
         }
 
-        public static Shader GetShader(GraphicsDevice gd, ResourceFactory factory, string name, ShaderStages stage)
+        public static Shader GetShader(
+            GraphicsDevice gd,
+            ResourceFactory factory,
+            string name,
+            ShaderStages stage,
+            string entryPoint)
         {
             if (!s_shaders.TryGetValue((name, stage), out Shader shader))
             {
-                shader = ShaderHelper.LoadShader(gd, factory, name, stage);
+                shader = ShaderHelper.LoadShader(gd, factory, name, stage, entryPoint);
                 s_shaders.Add((name, stage), shader);
             }
 

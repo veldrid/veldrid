@@ -165,14 +165,14 @@ namespace Veldrid.Vk
             pipelineCI.pVertexInputState = &vertexInputCI;
 
             // Shader Stage
-            ShaderStageDescription[] stageDescs = description.ShaderSet.ShaderStages;
+            Shader[] shaders = description.ShaderSet.Shaders;
             StackList<VkPipelineShaderStageCreateInfo> stages = new StackList<VkPipelineShaderStageCreateInfo>();
-            foreach (ShaderStageDescription stageDesc in stageDescs)
+            foreach (Shader shader in shaders)
             {
-                VkShader vkShader = Util.AssertSubtype<Shader, VkShader>(stageDesc.Shader);
+                VkShader vkShader = Util.AssertSubtype<Shader, VkShader>(shader);
                 VkPipelineShaderStageCreateInfo stageCI = VkPipelineShaderStageCreateInfo.New();
                 stageCI.module = vkShader.ShaderModule;
-                stageCI.stage = VkFormats.VdToVkShaderStages(stageDesc.Shader.Stage);
+                stageCI.stage = VkFormats.VdToVkShaderStages(shader.Stage);
                 stageCI.pName = CommonStrings.main; // Meh
                 stages.Add(stageCI);
             }
@@ -309,11 +309,11 @@ namespace Veldrid.Vk
             pipelineCI.layout = _pipelineLayout;
 
             // Shader Stage
-            ShaderStageDescription stageDesc = description.ShaderStage;
-            VkShader vkShader = Util.AssertSubtype<Shader, VkShader>(stageDesc.Shader);
+            Shader shader = description.ComputeShader;
+            VkShader vkShader = Util.AssertSubtype<Shader, VkShader>(shader);
             VkPipelineShaderStageCreateInfo stageCI = VkPipelineShaderStageCreateInfo.New();
             stageCI.module = vkShader.ShaderModule;
-            stageCI.stage = VkFormats.VdToVkShaderStages(stageDesc.Shader.Stage);
+            stageCI.stage = VkFormats.VdToVkShaderStages(shader.Stage);
             stageCI.pName = CommonStrings.main; // Meh
             pipelineCI.stage = stageCI;
 

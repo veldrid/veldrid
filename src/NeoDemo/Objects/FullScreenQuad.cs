@@ -28,16 +28,16 @@ namespace Veldrid.NeoDemo.Objects
                 new RasterizerStateDescription(FaceCullMode.Back, PolygonFillMode.Solid, FrontFace.Clockwise, true, false),
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(
-                    new VertexLayoutDescription[]
+                    new[]
                     {
                         new VertexLayoutDescription(
                             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
                             new VertexElementDescription("TexCoords", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
                     },
-                    new ShaderStageDescription[]
+                    new[]
                     {
-                        new ShaderStageDescription(ShaderHelper.LoadShader(gd, factory, "FullScreenQuad", ShaderStages.Vertex), "VS"),
-                        new ShaderStageDescription(ShaderHelper.LoadShader(gd, factory, "FullScreenQuad", ShaderStages.Fragment), "FS"),
+                        ShaderHelper.LoadShader(gd, factory, "FullScreenQuad", ShaderStages.Vertex, "VS"),
+                        ShaderHelper.LoadShader(gd, factory, "FullScreenQuad", ShaderStages.Fragment, "FS"),
                     }),
                 new ResourceLayout[] { resourceLayout },
                 gd.SwapchainFramebuffer.OutputDescription);

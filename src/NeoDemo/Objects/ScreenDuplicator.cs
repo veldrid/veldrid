@@ -36,8 +36,8 @@ namespace Veldrid.NeoDemo.Objects
                     },
                     new ShaderStageDescription[]
                     {
-                        new ShaderStageDescription(ShaderStages.Vertex, ShaderHelper.LoadShader(gd, factory, "ScreenDuplicator", ShaderStages.Vertex), "VS"),
-                        new ShaderStageDescription(ShaderStages.Fragment, ShaderHelper.LoadShader(gd, factory, "ScreenDuplicator", ShaderStages.Fragment), "FS"),
+                        new ShaderStageDescription(ShaderHelper.LoadShader(gd, factory, "ScreenDuplicator", ShaderStages.Vertex), "VS"),
+                        new ShaderStageDescription(ShaderHelper.LoadShader(gd, factory, "ScreenDuplicator", ShaderStages.Fragment), "FS"),
                     }),
                 new ResourceLayout[] { resourceLayout },
                 sc.DuplicatorFramebuffer.OutputDescription);

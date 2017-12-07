@@ -51,8 +51,8 @@ namespace Veldrid.NeoDemo.Objects
             Shader gridFS = ShaderHelper.LoadShader(gd, factory, "Grid", ShaderStages.Fragment);
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
-                new ShaderStageDescription(ShaderStages.Vertex, gridVS, "VS"),
-                new ShaderStageDescription(ShaderStages.Fragment, gridFS, "FS"),
+                new ShaderStageDescription(gridVS, "VS"),
+                new ShaderStageDescription(gridFS, "FS"),
             };
 
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(

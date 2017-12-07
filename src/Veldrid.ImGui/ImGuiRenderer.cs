@@ -105,8 +105,8 @@ namespace Veldrid
 
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
-                new ShaderStageDescription(ShaderStages.Vertex, _vertexShader, "VS"),
-                new ShaderStageDescription(ShaderStages.Fragment, _fragmentShader, "FS")
+                new ShaderStageDescription(_vertexShader, "VS"),
+                new ShaderStageDescription(_fragmentShader, "FS")
             };
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(

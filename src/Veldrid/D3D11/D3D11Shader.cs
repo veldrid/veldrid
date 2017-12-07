@@ -9,6 +9,7 @@ namespace Veldrid.D3D11
         public byte[] Bytecode { get; internal set; }
 
         public D3D11Shader(Device device, ShaderDescription description)
+            : base(description.Stage)
         {
             switch (description.Stage)
             {

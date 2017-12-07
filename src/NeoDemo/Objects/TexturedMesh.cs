@@ -103,8 +103,8 @@ namespace Veldrid.NeoDemo.Objects
             Shader depthFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowDepth", ShaderStages.Fragment);
             ShaderStageDescription[] shadowDepthShaderStages = new ShaderStageDescription[]
             {
-                new ShaderStageDescription(ShaderStages.Vertex, depthVS, "VS"),
-                new ShaderStageDescription(ShaderStages.Fragment, depthFS, "FS"),
+                new ShaderStageDescription(depthVS, "VS"),
+                new ShaderStageDescription(depthFS, "FS"),
             };
 
             ResourceLayout projViewCombinedLayout = StaticResourceCache.GetResourceLayout(
@@ -139,8 +139,8 @@ namespace Veldrid.NeoDemo.Objects
             Shader mainFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Fragment);
             ShaderStageDescription[] mainShaderStages = new ShaderStageDescription[]
             {
-                new ShaderStageDescription(ShaderStages.Vertex, mainVS, "VS"),
-                new ShaderStageDescription(ShaderStages.Fragment, mainFS, "FS"),
+                new ShaderStageDescription(mainVS, "VS"),
+                new ShaderStageDescription(mainFS, "FS"),
             };
 
             ResourceLayout projViewLayout = StaticResourceCache.GetResourceLayout(

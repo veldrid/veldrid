@@ -14,6 +14,7 @@ namespace Veldrid.Vk
         public VkShaderModule ShaderModule => _shaderModule;
 
         public VkShader(VkGraphicsDevice gd, ref ShaderDescription description)
+            : base(description.Stage)
         {
             _gd = gd;
 

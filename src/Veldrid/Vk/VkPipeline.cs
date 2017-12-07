@@ -172,7 +172,7 @@ namespace Veldrid.Vk
                 VkShader vkShader = Util.AssertSubtype<Shader, VkShader>(stageDesc.Shader);
                 VkPipelineShaderStageCreateInfo stageCI = VkPipelineShaderStageCreateInfo.New();
                 stageCI.module = vkShader.ShaderModule;
-                stageCI.stage = VkFormats.VdToVkShaderStages(stageDesc.Stage);
+                stageCI.stage = VkFormats.VdToVkShaderStages(stageDesc.Shader.Stage);
                 stageCI.pName = CommonStrings.main; // Meh
                 stages.Add(stageCI);
             }
@@ -313,7 +313,7 @@ namespace Veldrid.Vk
             VkShader vkShader = Util.AssertSubtype<Shader, VkShader>(stageDesc.Shader);
             VkPipelineShaderStageCreateInfo stageCI = VkPipelineShaderStageCreateInfo.New();
             stageCI.module = vkShader.ShaderModule;
-            stageCI.stage = VkFormats.VdToVkShaderStages(stageDesc.Stage);
+            stageCI.stage = VkFormats.VdToVkShaderStages(stageDesc.Shader.Stage);
             stageCI.pName = CommonStrings.main; // Meh
             pipelineCI.stage = stageCI;
 

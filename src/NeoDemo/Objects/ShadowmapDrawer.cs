@@ -65,8 +65,8 @@ namespace Veldrid.NeoDemo.Objects
             Shader fs = ShaderHelper.LoadShader(gd, factory, "ShadowmapPreviewShader", ShaderStages.Fragment);
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
-                new ShaderStageDescription(ShaderStages.Vertex, vs, "VS"),
-                new ShaderStageDescription(ShaderStages.Fragment, fs, "FS"),
+                new ShaderStageDescription(vs, "VS"),
+                new ShaderStageDescription(fs, "FS"),
             };
 
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(

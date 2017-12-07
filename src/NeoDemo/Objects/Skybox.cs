@@ -90,8 +90,8 @@ namespace Veldrid.NeoDemo.Objects
             Shader fs = ShaderHelper.LoadShader(gd, factory, "Skybox", ShaderStages.Fragment);
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
-                new ShaderStageDescription(ShaderStages.Vertex, vs, "VS"),
-                new ShaderStageDescription(ShaderStages.Fragment, fs, "VS"),
+                new ShaderStageDescription(vs, "VS"),
+                new ShaderStageDescription(fs, "VS"),
             };
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(

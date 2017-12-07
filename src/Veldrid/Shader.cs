@@ -8,6 +8,16 @@ namespace Veldrid
     /// </summary>
     public abstract class Shader : DeviceResource, IDisposable
     {
+        internal Shader(ShaderStages stage)
+        {
+            Stage = stage;
+        }
+
+        /// <summary>
+        /// The shader stage this instance can be used in.
+        /// </summary>
+        public ShaderStages Stage { get; }
+
         /// <summary>
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>

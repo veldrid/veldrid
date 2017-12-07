@@ -35,29 +35,29 @@ namespace Veldrid.D3D11
             ShaderStageDescription[] stages = description.ShaderSet.ShaderStages;
             for (int i = 0; i < description.ShaderSet.ShaderStages.Length; i++)
             {
-                if (stages[i].Stage == ShaderStages.Vertex)
+                if (stages[i].Shader.Stage == ShaderStages.Vertex)
                 {
                     D3D11Shader d3d11VertexShader = ((D3D11Shader)stages[i].Shader);
                     VertexShader = (VertexShader)d3d11VertexShader.DeviceShader;
                     vsBytecode = d3d11VertexShader.Bytecode;
                 }
-                if (stages[i].Stage == ShaderStages.Geometry)
+                if (stages[i].Shader.Stage == ShaderStages.Geometry)
                 {
                     GeometryShader = (GeometryShader)((D3D11Shader)stages[i].Shader).DeviceShader;
                 }
-                if (stages[i].Stage == ShaderStages.TessellationControl)
+                if (stages[i].Shader.Stage == ShaderStages.TessellationControl)
                 {
                     HullShader = (HullShader)((D3D11Shader)stages[i].Shader).DeviceShader;
                 }
-                if (stages[i].Stage == ShaderStages.TessellationEvaluation)
+                if (stages[i].Shader.Stage == ShaderStages.TessellationEvaluation)
                 {
                     DomainShader = (DomainShader)((D3D11Shader)stages[i].Shader).DeviceShader;
                 }
-                if (stages[i].Stage == ShaderStages.Fragment)
+                if (stages[i].Shader.Stage == ShaderStages.Fragment)
                 {
                     PixelShader = (PixelShader)((D3D11Shader)stages[i].Shader).DeviceShader;
                 }
-                if (stages[i].Stage == ShaderStages.Compute)
+                if (stages[i].Shader.Stage == ShaderStages.Compute)
                 {
                     ComputeShader = (ComputeShader)((D3D11Shader)stages[i].Shader).DeviceShader;
                 }

@@ -22,6 +22,7 @@ namespace Veldrid.OpenGL
         public uint Shader => _shader;
 
         public OpenGLShader(OpenGLGraphicsDevice gd, ShaderStages stage, StagingBlock stagingBlock)
+            : base(stage)
         {
             _gd = gd;
             _shaderType = OpenGLFormats.VdToGLShaderType(stage);

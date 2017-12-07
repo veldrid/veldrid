@@ -8,10 +8,6 @@ namespace Veldrid
     public struct ShaderStageDescription : IEquatable<ShaderStageDescription>
     {
         /// <summary>
-        /// The particular stage.
-        /// </summary>
-        public ShaderStages Stage;
-        /// <summary>
         /// The shader module.
         /// </summary>
         public Shader Shader;
@@ -23,12 +19,10 @@ namespace Veldrid
         /// <summary>
         /// Constructs a new ShaderStageDescription.
         /// </summary>
-        /// <param name="stage">The particular stage.</param>
         /// <param name="shader">The shader module.</param>
         /// <param name="entryPoint">The name of the entry point function in the shader module to be used in this stage.</param>
-        public ShaderStageDescription(ShaderStages stage, Shader shader, string entryPoint)
+        public ShaderStageDescription(Shader shader, string entryPoint)
         {
-            Stage = stage;
             Shader = shader;
             EntryPoint = entryPoint;
         }
@@ -40,7 +34,7 @@ namespace Veldrid
         /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(ShaderStageDescription other)
         {
-            return Stage == other.Stage && Shader.Equals(other.Shader) && EntryPoint.Equals(other.EntryPoint);
+            return Shader.Equals(other.Shader) && EntryPoint.Equals(other.EntryPoint);
         }
 
         /// <summary>
@@ -49,7 +43,7 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(Stage.GetHashCode(), Shader.GetHashCode(), EntryPoint.GetHashCode());
+            return HashHelper.Combine(Shader.GetHashCode(), EntryPoint.GetHashCode());
         }
     }
 }

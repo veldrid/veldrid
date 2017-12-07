@@ -36,8 +36,8 @@ namespace Veldrid.NeoDemo.Objects
                     },
                     new ShaderStageDescription[]
                     {
-                        new ShaderStageDescription(ShaderStages.Vertex, ShaderHelper.LoadShader(gd, factory, "FullScreenQuad", ShaderStages.Vertex), "VS"),
-                        new ShaderStageDescription(ShaderStages.Fragment, ShaderHelper.LoadShader(gd, factory, "FullScreenQuad", ShaderStages.Fragment), "FS"),
+                        new ShaderStageDescription(ShaderHelper.LoadShader(gd, factory, "FullScreenQuad", ShaderStages.Vertex), "VS"),
+                        new ShaderStageDescription(ShaderHelper.LoadShader(gd, factory, "FullScreenQuad", ShaderStages.Fragment), "FS"),
                     }),
                 new ResourceLayout[] { resourceLayout },
                 gd.SwapchainFramebuffer.OutputDescription);

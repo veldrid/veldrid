@@ -429,7 +429,7 @@ namespace Veldrid.OpenGL
                     else if (workItem.ResetEvent != null)
                     {
                         // Wait for idle.
-                        _gd.FlushDisposables(); // TODO: This should be in this class.
+                        _gd.FlushDisposables();
                         workItem.ResetEvent.Set();
                     }
                     else

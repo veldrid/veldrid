@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -22,9 +23,15 @@ namespace Veldrid.D3D11
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return Format.R32G32B32A32_Float;
                 case PixelFormat.R32_Float:
-                    return depthFormat ? Format.D32_Float : Format.R32_Float;
+                    return depthFormat ? Format.R32_Typeless : Format.R32_Float;
                 case PixelFormat.BC3_UNorm:
                     return Format.BC3_UNorm;
+                case PixelFormat.D24_UNorm_S8_UInt:
+                    Debug.Assert(depthFormat);
+                    return Format.R24G8_Typeless;
+                case PixelFormat.D32_Float_S8_UInt:
+                    Debug.Assert(depthFormat);
+                    return Format.R32G8X24_Typeless;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -64,6 +71,12 @@ namespace Veldrid.D3D11
             {
                 case Format.R16_Typeless:
                     return Format.R16_UNorm;
+                case Format.R32_Typeless:
+                    return Format.R32_Float;
+                case Format.R32G8X24_Typeless:
+                    return Format.R32_Float_X8X24_Typeless;
+                case Format.R24G8_Typeless:
+                    return Format.R24_UNorm_X8_Typeless;
                 default:
                     return format;
             }
@@ -115,6 +128,31 @@ namespace Veldrid.D3D11
             }
         }
 
+        internal static SharpDX.Direct3D11.StencilOperation VdToD3D11StencilOperation(StencilOperation op)
+        {
+            switch (op)
+            {
+                case StencilOperation.Keep:
+                    return SharpDX.Direct3D11.StencilOperation.Keep;
+                case StencilOperation.Zero:
+                    return SharpDX.Direct3D11.StencilOperation.Zero;
+                case StencilOperation.Replace:
+                    return SharpDX.Direct3D11.StencilOperation.Replace;
+                case StencilOperation.IncrementAndClamp:
+                    return SharpDX.Direct3D11.StencilOperation.IncrementAndClamp;
+                case StencilOperation.DecrementAndClamp:
+                    return SharpDX.Direct3D11.StencilOperation.DecrementAndClamp;
+                case StencilOperation.Invert:
+                    return SharpDX.Direct3D11.StencilOperation.Invert;
+                case StencilOperation.IncrementAndWrap:
+                    return SharpDX.Direct3D11.StencilOperation.Increment;
+                case StencilOperation.DecrementAndWrap:
+                    return SharpDX.Direct3D11.StencilOperation.Decrement;
+                default:
+                    throw Illegal.Value<StencilOperation>();
+            }
+        }
+
         internal static PixelFormat ToVdFormat(Format format)
         {
             switch (format)
@@ -132,6 +170,10 @@ namespace Veldrid.D3D11
                     return PixelFormat.R32_G32_B32_A32_Float;
                 case Format.R32_Float:
                     return PixelFormat.R32_Float;
+                case Format.D24_UNorm_S8_UInt:
+                    return PixelFormat.D24_UNorm_S8_UInt;
+                case Format.D32_Float_S8X24_UInt:
+                    return PixelFormat.D32_Float_S8_UInt;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -282,28 +324,28 @@ namespace Veldrid.D3D11
             }
         }
 
-        internal static Comparison VdToD3D11DepthComparison(DepthComparisonKind comparisonKind)
+        internal static Comparison VdToD3D11Comparison(ComparisonKind comparisonKind)
         {
             switch (comparisonKind)
             {
-                case DepthComparisonKind.Never:
+                case ComparisonKind.Never:
                     return Comparison.Never;
-                case DepthComparisonKind.Less:
+                case ComparisonKind.Less:
                     return Comparison.Less;
-                case DepthComparisonKind.Equal:
+                case ComparisonKind.Equal:
                     return Comparison.Equal;
-                case DepthComparisonKind.LessEqual:
+                case ComparisonKind.LessEqual:
                     return Comparison.LessEqual;
-                case DepthComparisonKind.Greater:
+                case ComparisonKind.Greater:
                     return Comparison.Greater;
-                case DepthComparisonKind.NotEqual:
+                case ComparisonKind.NotEqual:
                     return Comparison.NotEqual;
-                case DepthComparisonKind.GreaterEqual:
+                case ComparisonKind.GreaterEqual:
                     return Comparison.GreaterEqual;
-                case DepthComparisonKind.Always:
+                case ComparisonKind.Always:
                     return Comparison.Always;
                 default:
-                    throw Illegal.Value<DepthComparisonKind>();
+                    throw Illegal.Value<ComparisonKind>();
             }
         }
 
@@ -332,6 +374,10 @@ namespace Veldrid.D3D11
                     return Format.D32_Float;
                 case PixelFormat.R16_UNorm:
                     return Format.D16_UNorm;
+                case PixelFormat.D24_UNorm_S8_UInt:
+                    return Format.D24_UNorm_S8_UInt;
+                case PixelFormat.D32_Float_S8_UInt:
+                    return Format.D32_Float_S8X24_UInt;
                 default:
                     throw new VeldridException("Invalid depth texture format: " + format);
             }

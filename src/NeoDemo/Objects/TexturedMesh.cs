@@ -112,7 +112,7 @@ namespace Veldrid.NeoDemo.Objects
 
             GraphicsPipelineDescription depthPD = new GraphicsPipelineDescription(
                 BlendStateDescription.Empty,
-                DepthStencilStateDescription.LessEqual,
+                DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(shadowDepthVertexLayouts, new[] { depthVS, depthFS }),
@@ -161,7 +161,7 @@ namespace Veldrid.NeoDemo.Objects
 
             GraphicsPipelineDescription mainPD = new GraphicsPipelineDescription(
                 _alphamapTexture != null ? BlendStateDescription.SingleAlphaBlend : BlendStateDescription.SingleOverrideBlend,
-                DepthStencilStateDescription.LessEqual,
+                DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(mainVertexLayouts, new[] { mainVS, mainFS }),

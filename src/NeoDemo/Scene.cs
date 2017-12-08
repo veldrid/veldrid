@@ -111,7 +111,7 @@ namespace Veldrid.NeoDemo
             cl.UpdateBuffer(sc.LightViewProjectionBuffer0, 0, ref viewProj0);
             cl.SetFramebuffer(sc.NearShadowMapFramebuffer);
             cl.SetFullViewports();
-            cl.ClearDepthTarget(01f);
+            cl.ClearDepthStencil(01f);
             Render(gd, cl, sc, RenderPasses.ShadowMapNear, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             // Mid
@@ -124,7 +124,7 @@ namespace Veldrid.NeoDemo
             cl.UpdateBuffer(sc.LightViewProjectionBuffer1, 0, ref viewProj1);
             cl.SetFramebuffer(sc.MidShadowMapFramebuffer);
             cl.SetFullViewports();
-            cl.ClearDepthTarget(1f);
+            cl.ClearDepthStencil(1f);
             Render(gd, cl, sc, RenderPasses.ShadowMapMid, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             // Far
@@ -137,7 +137,7 @@ namespace Veldrid.NeoDemo
             cl.UpdateBuffer(sc.LightViewProjectionBuffer2, 0, ref viewProj2);
             cl.SetFramebuffer(sc.FarShadowMapFramebuffer);
             cl.SetFullViewports();
-            cl.ClearDepthTarget(1f);
+            cl.ClearDepthStencil(1f);
             Render(gd, cl, sc, RenderPasses.ShadowMapFar, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             cl.SetFramebuffer(sc.MainSceneFramebuffer);
@@ -146,7 +146,7 @@ namespace Veldrid.NeoDemo
             cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
             cl.SetFullViewports();
             cl.SetFullScissorRects();
-            cl.ClearDepthTarget(1f);
+            cl.ClearDepthStencil(1f);
             BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
             Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
             Render(gd, cl, sc, RenderPasses.AlphaBlend, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
@@ -217,7 +217,7 @@ namespace Veldrid.NeoDemo
                 cls[1].SetFramebuffer(sc.NearShadowMapFramebuffer);
                 cls[1].SetViewport(0, new Viewport(0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height, 0, 1));
                 cls[1].SetScissorRect(0, 0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height);
-                cls[1].ClearDepthTarget(1f);
+                cls[1].ClearDepthStencil(1f);
                 Render(gd, cls[1], sc, RenderPasses.ShadowMapNear, lightFrustum0, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, true);
             });
 
@@ -235,7 +235,7 @@ namespace Veldrid.NeoDemo
                 cls[2].SetFramebuffer(sc.MidShadowMapFramebuffer);
                 cls[2].SetViewport(0, new Viewport(0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height, 0, 1));
                 cls[2].SetScissorRect(0, 0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height);
-                cls[2].ClearDepthTarget(1f);
+                cls[2].ClearDepthStencil(1f);
                 Render(gd, cls[2], sc, RenderPasses.ShadowMapMid, lightFrustum1, _renderQueues[1], _cullableStage[1], _renderableStage[1], null, true);
             });
 
@@ -253,7 +253,7 @@ namespace Veldrid.NeoDemo
                 cls[3].SetFramebuffer(sc.FarShadowMapFramebuffer);
                 cls[3].SetViewport(0, new Viewport(0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height, 0, 1));
                 cls[3].SetScissorRect(0, 0, 0, sc.ShadowMapTexture.Width, sc.ShadowMapTexture.Height);
-                cls[3].ClearDepthTarget(1f);
+                cls[3].ClearDepthStencil(1f);
                 Render(gd, cls[3], sc, RenderPasses.ShadowMapFar, lightFrustum2, _renderQueues[2], _cullableStage[2], _renderableStage[2], null, true);
             });
 
@@ -265,7 +265,7 @@ namespace Veldrid.NeoDemo
                 cls[4].SetViewport(0, new Viewport(0, 0, scWidth, scHeight, 0, 1));
                 cls[4].SetScissorRect(0, 0, 0, (uint)scWidth, (uint)scHeight);
                 cls[4].ClearColorTarget(0, RgbaFloat.Black);
-                cls[4].ClearDepthTarget(1f);
+                cls[4].ClearDepthStencil(1f);
                 BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
                 Render(gd, cls[4], sc, RenderPasses.Standard, cameraFrustum, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
                 Render(gd, cls[4], sc, RenderPasses.AlphaBlend, cameraFrustum, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);

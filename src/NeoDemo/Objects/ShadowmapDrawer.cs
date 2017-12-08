@@ -72,7 +72,7 @@ namespace Veldrid.NeoDemo.Objects
 
             GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
-                new DepthStencilStateDescription(false, true, DepthComparisonKind.Always),
+                new DepthStencilStateDescription(false, true, ComparisonKind.Always),
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, new[] { vs, fs }),

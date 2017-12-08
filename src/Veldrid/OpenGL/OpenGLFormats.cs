@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Veldrid.OpenGLBinding;
 
 namespace Veldrid.OpenGL
@@ -57,6 +58,10 @@ namespace Veldrid.OpenGL
                     return PixelInternalFormat.R32f;
                 case PixelFormat.BC3_UNorm:
                     return PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
+                case PixelFormat.D32_Float_S8_UInt:
+                    return PixelInternalFormat.Depth32fStencil8;
+                case PixelFormat.D24_UNorm_S8_UInt:
+                    return PixelInternalFormat.Depth24Stencil8;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -97,6 +102,10 @@ namespace Veldrid.OpenGL
                     return GLPixelFormat.Red;
                 case PixelFormat.BC3_UNorm:
                     return GLPixelFormat.Rgba;
+                case PixelFormat.D24_UNorm_S8_UInt:
+                    return GLPixelFormat.DepthStencil;
+                case PixelFormat.D32_Float_S8_UInt:
+                    return GLPixelFormat.DepthStencil;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -118,6 +127,10 @@ namespace Veldrid.OpenGL
                     return GLPixelType.Float;
                 case PixelFormat.BC3_UNorm:
                     return GLPixelType.UnsignedByte; // ?
+                case PixelFormat.D32_Float_S8_UInt:
+                    return GLPixelType.Float32UnsignedInt248Rev;
+                case PixelFormat.D24_UNorm_S8_UInt:
+                    return GLPixelType.UnsignedInt248;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -140,6 +153,12 @@ namespace Veldrid.OpenGL
                     return depthFormat ? (SizedInternalFormat)PixelInternalFormat.DepthComponent32f : SizedInternalFormat.R32f;
                 case PixelFormat.BC3_UNorm:
                     return (SizedInternalFormat)PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
+                case PixelFormat.D32_Float_S8_UInt:
+                    Debug.Assert(depthFormat);
+                    return (SizedInternalFormat)PixelInternalFormat.Depth32fStencil8;
+                case PixelFormat.D24_UNorm_S8_UInt:
+                    Debug.Assert(depthFormat);
+                    return (SizedInternalFormat)PixelInternalFormat.Depth24Stencil8;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -220,28 +239,28 @@ namespace Veldrid.OpenGL
             }
         }
 
-        internal static DepthFunction VdToGLDepthFunction(DepthComparisonKind value)
+        internal static DepthFunction VdToGLDepthFunction(ComparisonKind value)
         {
             switch (value)
             {
-                case DepthComparisonKind.Never:
+                case ComparisonKind.Never:
                     return DepthFunction.Never;
-                case DepthComparisonKind.Less:
+                case ComparisonKind.Less:
                     return DepthFunction.Less;
-                case DepthComparisonKind.Equal:
+                case ComparisonKind.Equal:
                     return DepthFunction.Equal;
-                case DepthComparisonKind.LessEqual:
+                case ComparisonKind.LessEqual:
                     return DepthFunction.Lequal;
-                case DepthComparisonKind.Greater:
+                case ComparisonKind.Greater:
                     return DepthFunction.Greater;
-                case DepthComparisonKind.NotEqual:
+                case ComparisonKind.NotEqual:
                     return DepthFunction.Notequal;
-                case DepthComparisonKind.GreaterEqual:
+                case ComparisonKind.GreaterEqual:
                     return DepthFunction.Gequal;
-                case DepthComparisonKind.Always:
+                case ComparisonKind.Always:
                     return DepthFunction.Always;
                 default:
-                    throw Illegal.Value<DepthComparisonKind>();
+                    throw Illegal.Value<ComparisonKind>();
             }
         }
 
@@ -307,6 +326,31 @@ namespace Veldrid.OpenGL
                     return PolygonMode.Line;
                 default:
                     throw Illegal.Value<PolygonFillMode>();
+            }
+        }
+
+        internal static StencilFunction VdToGLStencilFunction(ComparisonKind comparison)
+        {
+            switch (comparison)
+            {
+                case ComparisonKind.Never:
+                    return StencilFunction.Never;
+                case ComparisonKind.Less:
+                    return StencilFunction.Less;
+                case ComparisonKind.Equal:
+                    return StencilFunction.Equal;
+                case ComparisonKind.LessEqual:
+                    return StencilFunction.Lequal;
+                case ComparisonKind.Greater:
+                    return StencilFunction.Greater;
+                case ComparisonKind.NotEqual:
+                    return StencilFunction.Notequal;
+                case ComparisonKind.GreaterEqual:
+                    return StencilFunction.Gequal;
+                case ComparisonKind.Always:
+                    return StencilFunction.Always;
+                default:
+                    throw Illegal.Value<ComparisonKind>();
             }
         }
 

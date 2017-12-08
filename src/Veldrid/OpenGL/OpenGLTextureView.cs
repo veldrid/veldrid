@@ -173,7 +173,14 @@ namespace Veldrid.OpenGL
                     return PixelInternalFormat.Rgba32f;
                 case PixelFormat.R32_Float:
                     return depthFormat ? PixelInternalFormat.DepthComponent32f : PixelInternalFormat.R32f;
+                case PixelFormat.D32_Float_S8_UInt:
+                    Debug.Assert(depthFormat);
+                    return PixelInternalFormat.Depth32fStencil8;
+                case PixelFormat.D24_UNorm_S8_UInt:
+                    Debug.Assert(depthFormat);
+                    return PixelInternalFormat.Depth24Stencil8;
                 default:
+                    Debug.Fail("Invalid format.");
                     throw Illegal.Value<PixelInternalFormat>();
             }
         }

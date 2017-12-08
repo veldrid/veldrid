@@ -52,13 +52,16 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void ClearDepthTarget(float depth)
+        public void ClearDepthStencil(float depth, byte stencil)
         {
             glClearDepth(depth);
             CheckLastError();
 
+            glClearStencil(stencil);
+            CheckLastError();
+
             glDepthMask(true);
-            glClear(ClearBufferMask.DepthBufferBit);
+            glClear(ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             CheckLastError();
         }
 
@@ -348,12 +351,40 @@ namespace Veldrid.OpenGL
                 glEnable(EnableCap.DepthTest);
                 CheckLastError();
 
-                glDepthFunc(OpenGLFormats.VdToGLDepthFunction(dss.ComparisonKind));
+                glDepthFunc(OpenGLFormats.VdToGLDepthFunction(dss.DepthComparison));
                 CheckLastError();
             }
 
             glDepthMask(dss.DepthWriteEnabled);
             CheckLastError();
+
+            if (dss.StencilTestEnabled)
+            {
+                glEnable(EnableCap.StencilTest);
+                CheckLastError();
+
+                glStencilFuncSeparate(
+                    CullFaceMode.Front,
+                    OpenGLFormats.VdToGLStencilFunction(dss.StencilFront.Comparison),
+                    (int)dss.StencilReference,
+                    dss.StencilReadMask);
+                CheckLastError();
+
+                glStencilFuncSeparate(
+                    CullFaceMode.Back,
+                    OpenGLFormats.VdToGLStencilFunction(dss.StencilBack.Comparison),
+                    (int)dss.StencilReference,
+                    dss.StencilReadMask);
+                CheckLastError();
+
+                glStencilMask(dss.StencilWriteMask);
+                CheckLastError();
+            }
+            else
+            {
+                glDisable(EnableCap.StencilTest);
+                CheckLastError();
+            }
 
             // Rasterizer State
 

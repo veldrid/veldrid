@@ -62,12 +62,13 @@ namespace Veldrid.Vk
             if (DepthTarget != null)
             {
                 VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
+                bool hasStencil = FormatHelpers.IsStencilFormat(vkDepthTex.Format);
                 depthAttachmentDesc.format = vkDepthTex.VkFormat;
                 depthAttachmentDesc.samples = vkDepthTex.VkSampleCount;
                 depthAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
                 depthAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
-                depthAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
-                depthAttachmentDesc.stencilStoreOp = VkAttachmentStoreOp.DontCare;
+                depthAttachmentDesc.stencilLoadOp = hasStencil ? VkAttachmentLoadOp.Load : VkAttachmentLoadOp.DontCare;
+                depthAttachmentDesc.stencilStoreOp = hasStencil ? VkAttachmentStoreOp.Store : VkAttachmentStoreOp.DontCare;
                 depthAttachmentDesc.initialLayout = VkImageLayout.Undefined;
                 depthAttachmentDesc.finalLayout = VkImageLayout.ShaderReadOnlyOptimal;
 
@@ -153,12 +154,13 @@ namespace Veldrid.Vk
             if (description.DepthTarget != null)
             {
                 VkTexture vkDepthTarget = Util.AssertSubtype<Texture, VkTexture>(description.DepthTarget.Value.Target);
+                bool hasStencil = FormatHelpers.IsStencilFormat(vkDepthTarget.Format);
                 VkImageViewCreateInfo depthViewCI = VkImageViewCreateInfo.New();
                 depthViewCI.image = vkDepthTarget.OptimalDeviceImage;
                 depthViewCI.format = vkDepthTarget.VkFormat;
                 depthViewCI.viewType = description.DepthTarget.Value.Target.ArrayLayers == 1 ? VkImageViewType.Image2D : VkImageViewType.Image2DArray;
                 depthViewCI.subresourceRange = new VkImageSubresourceRange(
-                    VkImageAspectFlags.Depth,
+                    hasStencil ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil : VkImageAspectFlags.Depth,
                     0,
                     1,
                     description.DepthTarget.Value.ArrayLayer,

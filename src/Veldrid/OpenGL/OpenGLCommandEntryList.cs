@@ -6,7 +6,7 @@ namespace Veldrid.OpenGL
     {
         void Begin();
         void ClearColorTarget(uint index, RgbaFloat clearColor);
-        void ClearDepthTarget(float depth);
+        void ClearDepthTarget(float depth, byte stencil);
         void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
         void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
         void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);

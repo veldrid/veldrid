@@ -92,7 +92,22 @@ namespace Veldrid.Vk
             VkPipelineDepthStencilStateCreateInfo dssCI = VkPipelineDepthStencilStateCreateInfo.New();
             dssCI.depthWriteEnable = vdDssDesc.DepthWriteEnabled;
             dssCI.depthTestEnable = vdDssDesc.DepthTestEnabled;
-            dssCI.depthCompareOp = VkFormats.VdToVkCompareOp(vdDssDesc.ComparisonKind);
+            dssCI.depthCompareOp = VkFormats.VdToVkCompareOp(vdDssDesc.DepthComparison);
+            dssCI.stencilTestEnable = vdDssDesc.StencilTestEnabled;
+
+            dssCI.front.failOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilFront.Fail);
+            dssCI.front.passOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilFront.Pass);
+            dssCI.front.depthFailOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilFront.DepthFail);
+            dssCI.front.compareMask = vdDssDesc.StencilReadMask;
+            dssCI.front.writeMask = vdDssDesc.StencilWriteMask;
+            dssCI.front.reference = vdDssDesc.StencilReference;
+
+            dssCI.back.failOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilBack.Fail);
+            dssCI.back.passOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilBack.Pass);
+            dssCI.back.depthFailOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilBack.DepthFail);
+            dssCI.back.compareMask = vdDssDesc.StencilReadMask;
+            dssCI.back.writeMask = vdDssDesc.StencilWriteMask;
+            dssCI.back.reference = vdDssDesc.StencilReference;
 
             pipelineCI.pDepthStencilState = &dssCI;
 
@@ -232,12 +247,14 @@ namespace Veldrid.Vk
             VkAttachmentReference depthAttachmentRef = new VkAttachmentReference();
             if (outputDesc.DepthAttachment != null)
             {
+                PixelFormat depthFormat = outputDesc.DepthAttachment.Value.Format;
+                bool hasStencil = FormatHelpers.IsStencilFormat(depthFormat);
                 depthAttachmentDesc.format = VkFormats.VdToVkPixelFormat(outputDesc.DepthAttachment.Value.Format, toDepthFormat: true);
                 depthAttachmentDesc.samples = vkSampleCount;
                 depthAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
                 depthAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
-                depthAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
-                depthAttachmentDesc.stencilStoreOp = VkAttachmentStoreOp.DontCare;
+                depthAttachmentDesc.stencilLoadOp = hasStencil ? VkAttachmentLoadOp.Load : VkAttachmentLoadOp.DontCare;
+                depthAttachmentDesc.stencilStoreOp = hasStencil ? VkAttachmentStoreOp.Store : VkAttachmentStoreOp.DontCare;
                 depthAttachmentDesc.initialLayout = VkImageLayout.Undefined;
                 depthAttachmentDesc.finalLayout = VkImageLayout.DepthStencilAttachmentOptimal;
 

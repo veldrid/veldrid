@@ -62,25 +62,7 @@ namespace Veldrid.Vk
             Usage = description.Usage;
             SampleCount = description.SampleCount;
             VkSampleCount = VkFormats.VdToVkSampleCount(SampleCount);
-            if ((description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
-            {
-                if (Format != PixelFormat.R16_UNorm && Format != PixelFormat.R32_Float)
-                {
-                    throw new NotImplementedException("The only supported depth texture formats are R16_UInt and R32_Float.");
-                }
-                if (Format == PixelFormat.R16_UNorm)
-                {
-                    VkFormat = VkFormat.D16Unorm;
-                }
-                else
-                {
-                    VkFormat = VkFormat.D32Sfloat;
-                }
-            }
-            else
-            {
-                VkFormat = VkFormats.VdToVkPixelFormat(Format);
-            }
+            VkFormat = VkFormats.VdToVkPixelFormat(Format, (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
 
             VkImageCreateInfo imageCI = VkImageCreateInfo.New();
             imageCI.mipLevels = MipLevels;
@@ -223,7 +205,7 @@ namespace Veldrid.Vk
             bool staging = _stagingImages != null;
             Util.GetMipLevelAndArrayLayer(this, subresource, out uint mipLevel, out uint arrayLayer);
             VkImageAspectFlags aspect = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil
-                ? VkImageAspectFlags.Depth
+                ? (VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil)
                 : VkImageAspectFlags.Color;
             VkImageSubresource imageSubresource = new VkImageSubresource
             {

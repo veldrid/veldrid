@@ -86,5 +86,10 @@ namespace Veldrid
                     throw Illegal.Value<TextureSampleCount>();
             }
         }
+
+        internal static bool IsStencilFormat(PixelFormat format)
+        {
+            return format == PixelFormat.D24_UNorm_S8_UInt || format == PixelFormat.D32_Float_S8_UInt;
+        }
     }
 }

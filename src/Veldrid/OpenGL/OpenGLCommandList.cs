@@ -27,9 +27,9 @@ namespace Veldrid.OpenGL
             _commands.ClearColorTarget(index, clearColor);
         }
 
-        public override void ClearDepthTarget(float depth)
+        public override void ClearDepthStencil(float depth, byte stencil)
         {
-            _commands.ClearDepthTarget(depth);
+            _commands.ClearDepthTarget(depth, stencil);
         }
 
         public override void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)

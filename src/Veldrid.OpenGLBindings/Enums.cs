@@ -1865,4 +1865,28 @@ namespace Veldrid.OpenGLBinding
         Persistent = ((int)0x0040),
         Coherent = ((int)0x0080),
     }
+
+    public enum StencilFunction : int
+    {
+        Never = ((int)0x0200),
+        Less = ((int)0x0201),
+        Equal = ((int)0x0202),
+        Lequal = ((int)0x0203),
+        Greater = ((int)0x0204),
+        Notequal = ((int)0x0205),
+        Gequal = ((int)0x0206),
+        Always = ((int)0x0207),
+    }
+
+    public enum StencilOp : int
+    {
+        Zero = ((int)0),
+        Invert = ((int)0x150A),
+        Keep = ((int)0x1E00),
+        Replace = ((int)0x1E01),
+        Incr = ((int)0x1E02),
+        Decr = ((int)0x1E03),
+        IncrWrap = ((int)0x8507),
+        DecrWrap = ((int)0x8508),
+    }
 }

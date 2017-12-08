@@ -1,9 +1,9 @@
 ﻿namespace Veldrid
 {
     /// <summary>
-    /// Describes how new values are compared with existing values in a depth comparison.
+    /// Describes how new values are compared with existing values in a depth or stencil comparison.
     /// </summary>
-    public enum DepthComparisonKind : byte
+    public enum ComparisonKind : byte
     {
         /// <summary>
         /// The comparison never succeeds.

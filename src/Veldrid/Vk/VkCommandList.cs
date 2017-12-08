@@ -124,15 +124,15 @@ namespace Veldrid.Vk
             }
         }
 
-        public override void ClearDepthTarget(float depth)
+        public override void ClearDepthStencil(float depth, byte stencil)
         {
-            VkClearValue clearValue = new VkClearValue { depthStencil = new VkClearDepthStencilValue(depth, 0) };
+            VkClearValue clearValue = new VkClearValue { depthStencil = new VkClearDepthStencilValue(depth, stencil) };
 
             if (_activeRenderPass != VkRenderPass.Null)
             {
                 VkClearAttachment clearAttachment = new VkClearAttachment
                 {
-                    aspectMask = VkImageAspectFlags.Depth,
+                    aspectMask = VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil,
                     clearValue = clearValue
                 };
 
@@ -300,7 +300,7 @@ namespace Veldrid.Vk
             VkTexture vkSource = Util.AssertSubtype<Texture, VkTexture>(source);
             VkTexture vkDestination = Util.AssertSubtype<Texture, VkTexture>(destination);
             VkImageAspectFlags aspectFlags = ((source.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
-                ? VkImageAspectFlags.Depth
+                ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
                 : VkImageAspectFlags.Color;
             VkImageResolve region = new VkImageResolve
             {
@@ -429,7 +429,7 @@ namespace Veldrid.Vk
                 {
                     if (_depthClearValue.HasValue)
                     {
-                        ClearDepthTarget(_depthClearValue.Value.depthStencil.depth);
+                        ClearDepthStencil(_depthClearValue.Value.depthStencil.depth, (byte)_depthClearValue.Value.depthStencil.stencil);
                         _depthClearValue = null;
                     }
 

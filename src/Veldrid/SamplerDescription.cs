@@ -26,7 +26,7 @@ namespace Veldrid
         /// <summary>
         /// An optional value controlling the kind of comparison to use when sampling. If null, comparison sampling is not used.
         /// </summary>
-        public DepthComparisonKind? ComparisonKind;
+        public ComparisonKind? ComparisonKind;
         /// <summary>
         /// The maximum anisotropy of the filter, when <see cref="SamplerFilter.Anisotropic"/> is used, or otherwise ignored.
         /// </summary>
@@ -69,7 +69,7 @@ namespace Veldrid
             SamplerAddressMode addressModeV,
             SamplerAddressMode addressModeW,
             SamplerFilter filter,
-            DepthComparisonKind? comparisonKind,
+            ComparisonKind? comparisonKind,
             uint maximumAnisotropy,
             uint minimumLod,
             uint maximumLod,

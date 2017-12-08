@@ -121,6 +121,31 @@ namespace Veldrid.Vk
             }
         }
 
+        internal static VkStencilOp VdToVkStencilOp(StencilOperation op)
+        {
+            switch (op)
+            {
+                case StencilOperation.Keep:
+                    return VkStencilOp.Keep;
+                case StencilOperation.Zero:
+                    return VkStencilOp.Zero;
+                case StencilOperation.Replace:
+                    return VkStencilOp.Replace;
+                case StencilOperation.IncrementAndClamp:
+                    return VkStencilOp.IncrementAndClamp;
+                case StencilOperation.DecrementAndClamp:
+                    return VkStencilOp.DecrementAndClamp;
+                case StencilOperation.Invert:
+                    return VkStencilOp.Invert;
+                case StencilOperation.IncrementAndWrap:
+                    return VkStencilOp.IncrementAndWrap;
+                case StencilOperation.DecrementAndWrap:
+                    return VkStencilOp.DecrementAndWrap;
+                default:
+                    throw Illegal.Value<StencilOperation>();
+            }
+        }
+
         internal static VkPolygonMode VdToVkPolygonMode(PolygonFillMode fillMode)
         {
             switch (fillMode)
@@ -296,28 +321,28 @@ namespace Veldrid.Vk
             }
         }
 
-        internal static VkCompareOp VdToVkCompareOp(DepthComparisonKind comparisonKind)
+        internal static VkCompareOp VdToVkCompareOp(ComparisonKind comparisonKind)
         {
             switch (comparisonKind)
             {
-                case DepthComparisonKind.Never:
+                case ComparisonKind.Never:
                     return VkCompareOp.Never;
-                case DepthComparisonKind.Less:
+                case ComparisonKind.Less:
                     return VkCompareOp.Less;
-                case DepthComparisonKind.Equal:
+                case ComparisonKind.Equal:
                     return VkCompareOp.Equal;
-                case DepthComparisonKind.LessEqual:
+                case ComparisonKind.LessEqual:
                     return VkCompareOp.LessOrEqual;
-                case DepthComparisonKind.Greater:
+                case ComparisonKind.Greater:
                     return VkCompareOp.Greater;
-                case DepthComparisonKind.NotEqual:
+                case ComparisonKind.NotEqual:
                     return VkCompareOp.NotEqual;
-                case DepthComparisonKind.GreaterEqual:
+                case ComparisonKind.GreaterEqual:
                     return VkCompareOp.GreaterOrEqual;
-                case DepthComparisonKind.Always:
+                case ComparisonKind.Always:
                     return VkCompareOp.Always;
                 default:
-                    throw Illegal.Value<DepthComparisonKind>();
+                    throw Illegal.Value<ComparisonKind>();
             }
         }
 
@@ -339,6 +364,10 @@ namespace Veldrid.Vk
                     return toDepthFormat ? VkFormat.D32Sfloat : VkFormat.R32Sfloat;
                 case PixelFormat.BC3_UNorm:
                     return VkFormat.Bc3UnormBlock;
+                case PixelFormat.D32_Float_S8_UInt:
+                    return VkFormat.D32SfloatS8Uint;
+                case PixelFormat.D24_UNorm_S8_UInt:
+                    return VkFormat.D24UnormS8Uint;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }

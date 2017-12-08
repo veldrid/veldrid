@@ -37,5 +37,15 @@
         /// BC3 block compressed format.
         /// </summary>
         BC3_UNorm,
+        /// <summary>
+        /// A depth-stencil format where the depth is stored in a 24-bit unsigned normalized integer, and the stencil is stored
+        /// in an 8-bit unsigned integer.
+        /// </summary>
+        D24_UNorm_S8_UInt,
+        /// <summary>
+        /// A depth-stencil format where the depth is stored in a 32-bit signed floating-point value, and the stencil is stored
+        /// in an 8-bit unsigned integer.
+        /// </summary>
+        D32_Float_S8_UInt,
     }
 }

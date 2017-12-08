@@ -175,11 +175,23 @@ namespace Veldrid
         public abstract void ClearColorTarget(uint index, RgbaFloat clearColor);
 
         /// <summary>
-        /// Clears the depth target of the active <see cref="Framebuffer"/>.
+        /// Clears the depth-stencil target of the active <see cref="Framebuffer"/>.
+        /// The active <see cref="Framebuffer"/> must have a depth attachment.
+        /// With this overload, the stencil buffer is cleared to 0.
+        /// </summary>
+        /// <param name="depth">The value to clear the depth buffer to.</param>
+        public void ClearDepthStencil(float depth)
+        {
+            ClearDepthStencil(depth, 0);
+        }
+
+        /// <summary>
+        /// Clears the depth-stencil target of the active <see cref="Framebuffer"/>.
         /// The active <see cref="Framebuffer"/> must have a depth attachment.
         /// </summary>
-        /// <param name="depth">The value to clear the depth target to.</param>
-        public abstract void ClearDepthTarget(float depth);
+        /// <param name="depth">The value to clear the depth buffer to.</param>
+        /// <param name="stencil">The value to clear the stencil buffer to.</param>
+        public abstract void ClearDepthStencil(float depth, byte stencil);
 
         /// <summary>
         /// Sets all active viewports to cover the entire active <see cref="Framebuffer"/>.

@@ -68,6 +68,11 @@ namespace Veldrid
             {
                 throw new VeldridException("Width, Height, and Depth must be non-zero.");
             }
+            if ((description.Format == PixelFormat.D24_UNorm_S8_UInt || description.Format == PixelFormat.D32_Float_S8_UInt)
+                && (description.Usage & TextureUsage.DepthStencil) == 0)
+            {
+                throw new VeldridException("The givel PixelFormat can only be used in a Texture with DepthStencil usage.");
+            }
 #endif
             return CreateTextureCore(ref description);
         }

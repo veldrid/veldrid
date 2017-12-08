@@ -24,7 +24,7 @@ namespace Veldrid.NeoDemo.Objects
                     RgbaFloat.Black,
                     BlendAttachmentDescription.OverrideBlend,
                     BlendAttachmentDescription.OverrideBlend),
-                DepthStencilStateDescription.LessEqual,
+                DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(

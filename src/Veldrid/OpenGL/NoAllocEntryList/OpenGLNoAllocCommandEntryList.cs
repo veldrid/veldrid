@@ -202,7 +202,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case ClearDepthTargetID:
                         ref NoAllocClearDepthTargetEntry cdte = ref Unsafe.AsRef<NoAllocClearDepthTargetEntry>(entryBasePtr);
-                        executor.ClearDepthTarget(cdte.Depth);
+                        executor.ClearDepthStencil(cdte.Depth, cdte.Stencil);
                         currentOffset += ClearDepthTargetEntrySize;
                         break;
                     case DrawEntryID:
@@ -472,9 +472,9 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(ClearColorTargetID, ref entry);
         }
 
-        public void ClearDepthTarget(float depth)
+        public void ClearDepthTarget(float depth, byte stencil)
         {
-            NoAllocClearDepthTargetEntry entry = new NoAllocClearDepthTargetEntry(depth);
+            NoAllocClearDepthTargetEntry entry = new NoAllocClearDepthTargetEntry(depth, stencil);
             AddEntry(ClearDepthTargetID, ref entry);
         }
 

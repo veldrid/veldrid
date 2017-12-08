@@ -1079,12 +1079,41 @@ namespace Veldrid.OpenGLBinding
                 dstLevel, dstX, dstY, dstZ,
                 srcWidth, srcHeight, srcDepth);
 
+        private delegate void glStencilFuncSeparate_t(CullFaceMode face, StencilFunction func, int @ref, uint mask);
+        private static glStencilFuncSeparate_t p_glStencilFuncSeparate;
+        public static void glStencilFuncSeparate(CullFaceMode face, StencilFunction func, int @ref, uint mask)
+            => p_glStencilFuncSeparate(face, func, @ref, mask);
+
+        private delegate void glStencilOpSeparate_t(
+            CullFaceMode face,
+            StencilOp sfail,
+            StencilOp dpfail,
+            StencilOp dppass);
+        private static glStencilOpSeparate_t p_glStencilOpSeparate;
+        public static void glStencilOpSeparate(
+            CullFaceMode face,
+            StencilOp sfail,
+            StencilOp dpfail,
+            StencilOp dppass) => p_glStencilOpSeparate(face, sfail, dpfail, dppass);
+
+        private delegate void glStencilMask_t(uint mask);
+        private static glStencilMask_t p_glStencilMask;
+        public static void glStencilMask(uint mask) => p_glStencilMask(mask);
+
+        private delegate void glClearStencil_t(int s);
+        private static glClearStencil_t p_glClearStencil;
+        public static void glClearStencil(int s) => p_glClearStencil(s);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
 
             LoadFunction("glCompressedTexSubImage2D", out p_glCompressedTexSubImage2D);
             LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
+            LoadFunction("glStencilFuncSeparate", out p_glStencilFuncSeparate);
+            LoadFunction("glStencilOpSeparate", out p_glStencilOpSeparate);
+            LoadFunction("glStencilMask", out p_glStencilMask);
+            LoadFunction("glClearStencil", out p_glClearStencil);
 
 
             LoadFunction("glGenVertexArrays", out p_glGenVertexArrays);

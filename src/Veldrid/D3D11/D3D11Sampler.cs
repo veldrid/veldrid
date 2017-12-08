@@ -11,7 +11,7 @@ namespace Veldrid.D3D11
 
         public D3D11Sampler(Device device, ref SamplerDescription description)
         {
-            Comparison comparision = description.ComparisonKind == null ? Comparison.Never : D3D11Formats.VdToD3D11DepthComparison(description.ComparisonKind.Value);
+            Comparison comparision = description.ComparisonKind == null ? Comparison.Never : D3D11Formats.VdToD3D11Comparison(description.ComparisonKind.Value);
             SamplerStateDescription samplerStateDesc = new SamplerStateDescription
             {
                 AddressU = D3D11Formats.VdToD3D11AddressMode(description.AddressModeU),

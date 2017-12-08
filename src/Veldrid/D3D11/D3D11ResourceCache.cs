@@ -75,12 +75,28 @@ namespace Veldrid.D3D11
         {
             SharpDX.Direct3D11.DepthStencilStateDescription dssDesc = new SharpDX.Direct3D11.DepthStencilStateDescription
             {
-                DepthComparison = D3D11Formats.VdToD3D11DepthComparison(description.ComparisonKind),
+                DepthComparison = D3D11Formats.VdToD3D11Comparison(description.DepthComparison),
                 IsDepthEnabled = description.DepthTestEnabled,
-                DepthWriteMask = description.DepthWriteEnabled ? DepthWriteMask.All : DepthWriteMask.Zero
+                DepthWriteMask = description.DepthWriteEnabled ? DepthWriteMask.All : DepthWriteMask.Zero,
+                IsStencilEnabled = description.StencilTestEnabled,
+                FrontFace = ToD3D11StencilOpDesc(description.StencilFront),
+                BackFace = ToD3D11StencilOpDesc(description.StencilBack),
+                StencilReadMask = description.StencilReadMask,
+                StencilWriteMask = description.StencilWriteMask
             };
 
             return new DepthStencilState(_device, dssDesc);
+        }
+
+        private DepthStencilOperationDescription ToD3D11StencilOpDesc(StencilBehaviorDescription sbd)
+        {
+            return new DepthStencilOperationDescription
+            {
+                Comparison = D3D11Formats.VdToD3D11Comparison(sbd.Comparison),
+                PassOperation = D3D11Formats.VdToD3D11StencilOperation(sbd.Pass),
+                FailOperation = D3D11Formats.VdToD3D11StencilOperation(sbd.Fail),
+                DepthFailOperation = D3D11Formats.VdToD3D11StencilOperation(sbd.DepthFail)
+            };
         }
 
         internal RasterizerState GetRasterizerState(ref RasterizerStateDescription description, bool multisample)

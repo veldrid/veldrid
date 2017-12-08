@@ -82,7 +82,7 @@ namespace Veldrid.NeoDemo
 
             cl.UpdateBuffer(PointLightsBuffer, 0, pli.GetBlittable());
 
-            ShadowMapTexture = factory.CreateTexture(new TextureDescription(2048, 2048, 1, 1, 3, PixelFormat.R16_UNorm, TextureUsage.DepthStencil | TextureUsage.Sampled));
+            ShadowMapTexture = factory.CreateTexture(new TextureDescription(2048, 2048, 1, 1, 3, PixelFormat.D24_UNorm_S8_UInt, TextureUsage.DepthStencil | TextureUsage.Sampled));
             ShadowMapTexture.Name = "Shadow Map";
             NearShadowMapView = factory.CreateTextureView(new TextureViewDescription(ShadowMapTexture, 0, 1, 0, 1));
             NearShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(

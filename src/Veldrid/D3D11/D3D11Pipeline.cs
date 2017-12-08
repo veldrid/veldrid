@@ -10,6 +10,7 @@ namespace Veldrid.D3D11
 
         public BlendState BlendState { get; }
         public DepthStencilState DepthStencilState { get; }
+        public uint StencilReference { get; }
         public RasterizerState RasterizerState { get; }
         public SharpDX.Direct3D.PrimitiveTopology PrimitiveTopology { get; }
         public InputLayout InputLayout { get; }
@@ -28,6 +29,7 @@ namespace Veldrid.D3D11
         {
             BlendState = cache.GetBlendState(ref description.BlendState);
             DepthStencilState = cache.GetDepthStencilState(ref description.DepthStencilState);
+            StencilReference = description.DepthStencilState.StencilReference;
             RasterizerState = cache.GetRasterizerState(
                 ref description.RasterizerState,
                 description.Outputs.SampleCount != TextureSampleCount.Count1);

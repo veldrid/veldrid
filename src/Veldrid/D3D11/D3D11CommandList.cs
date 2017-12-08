@@ -30,6 +30,7 @@ namespace Veldrid.D3D11
         private Buffer _ib;
         private BlendState _blendState;
         private DepthStencilState _depthStencilState;
+        private uint _stencilReference;
         private RasterizerState _rasterizerState;
         private SharpDX.Direct3D.PrimitiveTopology _primitiveTopology;
         private InputLayout _inputLayout;
@@ -210,10 +211,12 @@ namespace Veldrid.D3D11
                 }
 
                 DepthStencilState depthStencilState = d3dPipeline.DepthStencilState;
-                if (_depthStencilState != depthStencilState)
+                uint stencilReference = d3dPipeline.StencilReference;
+                if (_depthStencilState != depthStencilState && _stencilReference != stencilReference)
                 {
                     _depthStencilState = depthStencilState;
-                    _context.OutputMerger.SetDepthStencilState(depthStencilState);
+                    _stencilReference = stencilReference;
+                    _context.OutputMerger.SetDepthStencilState(depthStencilState, (int)stencilReference);
                 }
 
                 RasterizerState rasterizerState = d3dPipeline.RasterizerState;

@@ -52,7 +52,7 @@ namespace Veldrid.Tests
 
             fixed (ushort* dataPtr = data)
             {
-                GD.UpdateTexture(texture, (IntPtr)dataPtr, 1024 * 1024 * 4, 0, 0, 0, 1024, 1024, 1, 0, 0);
+                GD.UpdateTexture(texture, (IntPtr)dataPtr, 1024 * 1024 * sizeof(ushort), 0, 0, 0, 1024, 1024, 1, 0, 0);
             }
 
             MappedResource map = GD.Map(texture, MapMode.Read, 0);

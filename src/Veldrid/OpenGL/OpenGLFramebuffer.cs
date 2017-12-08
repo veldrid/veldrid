@@ -108,11 +108,17 @@ namespace Veldrid.OpenGL
                 glBindTexture(depthTarget, glDepthTex.Texture);
                 CheckLastError();
 
+                GLFramebufferAttachment framebufferAttachment = GLFramebufferAttachment.DepthAttachment;
+                if (FormatHelpers.IsStencilFormat(glDepthTex.Format))
+                {
+                    framebufferAttachment = GLFramebufferAttachment.DepthStencilAttachment;
+                }
+
                 if (glDepthTex.ArrayLayers == 1)
                 {
                     glFramebufferTexture2D(
                         FramebufferTarget.Framebuffer,
-                        GLFramebufferAttachment.DepthAttachment,
+                        framebufferAttachment,
                         depthTarget,
                         depthTextureID,
                         0);
@@ -122,7 +128,7 @@ namespace Veldrid.OpenGL
                 {
                     glFramebufferTextureLayer(
                         FramebufferTarget.Framebuffer,
-                        GLFramebufferAttachment.DepthAttachment,
+                        framebufferAttachment,
                         glDepthTex.Texture,
                         0,
                         (int)DepthTarget.Value.ArrayLayer);

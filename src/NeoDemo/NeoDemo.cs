@@ -57,7 +57,7 @@ namespace Veldrid.NeoDemo
                 windowCI,
                 gdOptions,
                 //GraphicsBackend.Vulkan,
-                GraphicsBackend.OpenGL,
+                //GraphicsBackend.OpenGL,
                 out _window,
                 out _gd);
             _window.Resized += () => _windowResized = true;
@@ -117,6 +117,13 @@ namespace Veldrid.NeoDemo
 
                 foreach (ObjFile.MeshGroup group in atriumFile.MeshGroups)
                 {
+                    if (group.Name == "sponza_117")
+                    {
+                        Vector3 pos = atriumFile.Positions[group.Faces[0].Vertex0.PositionIndex];
+                        Vector3 normal = atriumFile.Normals[group.Faces[0].Vertex0.NormalIndex];
+                        MirrorMesh.Plane = new Plane(Vector3.UnitY, pos.Y);
+                    }
+
                     ConstructedMeshInfo mesh = atriumFile.GetMesh(group);
                     MaterialDefinition materialDef = atriumMtls.Definitions[mesh.MaterialName];
                     ImageSharpTexture overrideTextureData = null;
@@ -137,7 +144,7 @@ namespace Veldrid.NeoDemo
                         materialProps = CommonMaterials.Vase;
                     }
 
-                    AddTexturedMesh(mesh, overrideTextureData, alphaTexture, materialProps, Vector3.Zero, Quaternion.Identity, new Vector3(0.1f));
+                    AddTexturedMesh(mesh, overrideTextureData, alphaTexture, materialProps, Vector3.Zero, Quaternion.Identity, new Vector3(0.1f), group.Name);
                 }
             }
         }
@@ -160,9 +167,10 @@ namespace Veldrid.NeoDemo
             MaterialPropsAndBuffer materialProps,
             Vector3 position,
             Quaternion rotation,
-            Vector3 scale)
+            Vector3 scale,
+            string name)
         {
-            TexturedMesh mesh = new TexturedMesh(meshData, texData, alphaTexData, materialProps ?? CommonMaterials.Brick);
+            TexturedMesh mesh = new TexturedMesh(name, meshData, texData, alphaTexData, materialProps ?? CommonMaterials.Brick);
             mesh.Transform.Position = position;
             mesh.Transform.Rotation = rotation;
             mesh.Transform.Scale = scale;
@@ -378,7 +386,6 @@ namespace Veldrid.NeoDemo
             _frameCommands.Begin();
 
             CommonMaterials.FlushAll(_frameCommands);
-            _sc.UpdateCameraBuffers(_gd); // Meh
 
             _scene.RenderAllStages(_gd, _frameCommands, _sc);
             _gd.SwapBuffers();

@@ -13,6 +13,7 @@ namespace Veldrid.NeoDemo
         ShadowMapFar = 1 << 5,
         Duplicator = 1 << 6,
         SwapchainOutput = 1 << 7,
+        ReflectionMap = 1 << 8,
         AllShadowMap = ShadowMapNear | ShadowMapMid | ShadowMapFar,
     }
 }

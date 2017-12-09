@@ -10,6 +10,7 @@ namespace Veldrid.NeoDemo.Objects
 {
     public class TexturedMesh : CullRenderable
     {
+        private readonly string _name;
         private readonly MeshData _meshData;
         private readonly ImageSharpTexture _textureData;
         private readonly ImageSharpTexture _alphaTextureData;
@@ -44,8 +45,9 @@ namespace Veldrid.NeoDemo.Objects
 
         public Transform Transform => _transform;
 
-        public TexturedMesh(MeshData meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
+        public TexturedMesh(string name, MeshData meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
         {
+            _name = name;
             _meshData = meshData;
             _centeredBounds = meshData.GetBoundingBox();
             _textureData = textureData;
@@ -59,7 +61,9 @@ namespace Veldrid.NeoDemo.Objects
         {
             ResourceFactory disposeFactory = new DisposeCollectorResourceFactory(gd.ResourceFactory, _disposeCollector);
             _vb = _meshData.CreateVertexBuffer(disposeFactory, cl);
+            _vb.Name = _name + "_VB";
             _ib = _meshData.CreateIndexBuffer(disposeFactory, cl, out _indexCount);
+            _ib.Name = _name + "_IB";
 
             _worldBuffer = disposeFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             _inverseTransposeWorldBuffer = disposeFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));

@@ -65,7 +65,7 @@ namespace Veldrid.NeoDemo
             CameraInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             if (Camera != null)
             {
-                UpdateCameraBuffers(gd);
+                UpdateCameraBuffers(cl);
             }
 
             PointLightsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<PointLightsInfo.Blittable>(), BufferUsage.UniformBuffer));
@@ -141,17 +141,11 @@ namespace Veldrid.NeoDemo
             Camera = scene.Camera;
         }
 
-        public unsafe void UpdateCameraBuffers(GraphicsDevice gd)
+        public unsafe void UpdateCameraBuffers(CommandList cl)
         {
-            gd.UpdateBuffer(ProjectionMatrixBuffer, 0, Camera.ProjectionMatrix);
-
-            MappedResource mappedView = gd.Map(ViewMatrixBuffer, MapMode.Write);
-            Unsafe.Write(mappedView.Data.ToPointer(), Camera.ViewMatrix);
-            gd.Unmap(ViewMatrixBuffer);
-
-            MappedResource mappedCameraInfo = gd.Map(CameraInfoBuffer, MapMode.Write);
-            Unsafe.Write(mappedCameraInfo.Data.ToPointer(), Camera.GetCameraInfo());
-            gd.Unmap(CameraInfoBuffer);
+            cl.UpdateBuffer(ProjectionMatrixBuffer, 0, Camera.ProjectionMatrix);
+            cl.UpdateBuffer(ViewMatrixBuffer, 0, Camera.ViewMatrix);
+            cl.UpdateBuffer(CameraInfoBuffer, 0, Camera.GetCameraInfo());
         }
 
         internal void RecreateWindowSizedResources(GraphicsDevice gd, CommandList cl)

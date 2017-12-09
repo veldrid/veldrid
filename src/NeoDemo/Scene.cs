@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using Veldrid.NeoDemo.Objects;
 using Veldrid.Utilities;
 
 namespace Veldrid.NeoDemo
@@ -20,6 +21,8 @@ namespace Veldrid.NeoDemo
 
         private readonly ConcurrentDictionary<RenderPasses, Func<CullRenderable, bool>> _filters
             = new ConcurrentDictionary<RenderPasses, Func<CullRenderable, bool>>(new RenderPassesComparer());
+
+        internal MirrorMesh MirrorMesh { get; set; } = new MirrorMesh();
 
         private readonly Camera _camera;
 
@@ -140,15 +143,35 @@ namespace Veldrid.NeoDemo
             cl.ClearDepthStencil(1f);
             Render(gd, cl, sc, RenderPasses.ShadowMapFar, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
+            // Reflections
             cl.SetFramebuffer(sc.MainSceneFramebuffer);
+            cl.ClearColorTarget(0, RgbaFloat.Black);
             float fbWidth = sc.MainSceneFramebuffer.Width;
             float fbHeight = sc.MainSceneFramebuffer.Height;
             cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
             cl.SetFullViewports();
             cl.SetFullScissorRects();
             cl.ClearDepthStencil(1f);
-            BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
+
+            // Put mirror into stencil buffer
+            Matrix4x4 view = sc.Camera.ViewMatrix;
+            Matrix4x4 planeReflection = Matrix4x4.CreateReflection(MirrorMesh.Plane);
+            view = planeReflection * view;
+            gd.UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
+
+            CameraInfo camInfo = new CameraInfo();
+            camInfo.CameraLookDirection = Vector3.Reflect(_camera.LookDirection, MirrorMesh.Plane.Normal);
+            camInfo.CameraPosition_WorldSpace = Vector3.Transform(_camera.Position, planeReflection);
+            cl.UpdateBuffer(sc.CameraInfoBuffer, 0, ref camInfo);
+
+            BoundingFrustum cameraFrustum = new BoundingFrustum(view * _camera.ProjectionMatrix);
             Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+
+            // Main scene
+            sc.UpdateCameraBuffers(cl); // Re-set because reflection step changed it.
+            cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
+            Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+
             Render(gd, cl, sc, RenderPasses.AlphaBlend, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
             Render(gd, cl, sc, RenderPasses.Overlay, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 

@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Veldrid;
+using Veldrid.NeoDemo.Objects;
 
 namespace Veldrid.NeoDemo
 {
@@ -26,6 +27,12 @@ namespace Veldrid.NeoDemo
         public Framebuffer FarShadowMapFramebuffer => ShadowMaps.FarShadowMapFramebuffer;
         public Texture ShadowMapTexture => ShadowMaps.NearShadowMap; // Only used for size.
 
+        public Texture ReflectionColorTexture { get; private set; }
+        public Texture ReflectionDepthTexture { get; private set; }
+        public TextureView ReflectionColorView { get; private set; }
+        public Framebuffer ReflectionFramebuffer { get; private set; }
+        public Buffer ReflectionViewProjBuffer { get; private set; }
+
         // MainSceneView and Duplicator resource sets both use this.
         public ResourceLayout TextureSamplerResourceLayout { get; private set; }
 
@@ -47,6 +54,8 @@ namespace Veldrid.NeoDemo
         public Camera Camera { get; set; }
         public DirectionalLight DirectionalLight { get; } = new DirectionalLight();
         public TextureSampleCount MainSceneSampleCount { get; internal set; }
+        public Buffer MirrorClipPlaneBuffer { get; private set; }
+        public Buffer NoClipPlaneBuffer { get; private set; }
 
         public virtual void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
@@ -64,7 +73,7 @@ namespace Veldrid.NeoDemo
             CameraInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             if (Camera != null)
             {
-                UpdateCameraBuffers(gd);
+                UpdateCameraBuffers(cl);
             }
 
             PointLightsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<PointLightsInfo.Blittable>(), BufferUsage.UniformBuffer));
@@ -84,6 +93,19 @@ namespace Veldrid.NeoDemo
             TextureSamplerResourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("SourceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("SourceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
+
+            uint ReflectionMapSize = 2048;
+            ReflectionColorTexture = factory.CreateTexture(new TextureDescription(ReflectionMapSize, ReflectionMapSize, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.RenderTarget | TextureUsage.Sampled));
+            ReflectionDepthTexture = factory.CreateTexture(new TextureDescription(ReflectionMapSize, ReflectionMapSize, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil));
+            ReflectionColorView = factory.CreateTextureView(ReflectionColorTexture);
+            ReflectionFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(ReflectionDepthTexture, ReflectionColorTexture));
+            ReflectionViewProjBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+
+            MirrorClipPlaneBuffer = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer));
+            gd.UpdateBuffer(MirrorClipPlaneBuffer, 0, new ClipPlaneInfo(MirrorMesh.Plane, true));
+            NoClipPlaneBuffer = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer));
+            gd.UpdateBuffer(NoClipPlaneBuffer, 0, new ClipPlaneInfo());
+
             RecreateWindowSizedResources(gd, cl);
 
             ShadowMaps.CreateDeviceResources(gd);
@@ -114,6 +136,13 @@ namespace Veldrid.NeoDemo
             DuplicatorTargetSet1.Dispose();
             DuplicatorFramebuffer.Dispose();
             TextureSamplerResourceLayout.Dispose();
+            ReflectionColorTexture.Dispose();
+            ReflectionDepthTexture.Dispose();
+            ReflectionColorView.Dispose();
+            ReflectionFramebuffer.Dispose();
+            ReflectionViewProjBuffer.Dispose();
+            MirrorClipPlaneBuffer.Dispose();
+            NoClipPlaneBuffer.Dispose();
             ShadowMaps.DestroyDeviceObjects();
         }
 
@@ -122,17 +151,11 @@ namespace Veldrid.NeoDemo
             Camera = scene.Camera;
         }
 
-        public unsafe void UpdateCameraBuffers(GraphicsDevice gd)
+        public unsafe void UpdateCameraBuffers(CommandList cl)
         {
-            gd.UpdateBuffer(ProjectionMatrixBuffer, 0, Camera.ProjectionMatrix);
-
-            MappedResource mappedView = gd.Map(ViewMatrixBuffer, MapMode.Write);
-            Unsafe.Write(mappedView.Data.ToPointer(), Camera.ViewMatrix);
-            gd.Unmap(ViewMatrixBuffer);
-
-            MappedResource mappedCameraInfo = gd.Map(CameraInfoBuffer, MapMode.Write);
-            Unsafe.Write(mappedCameraInfo.Data.ToPointer(), Camera.GetCameraInfo());
-            gd.Unmap(CameraInfoBuffer);
+            cl.UpdateBuffer(ProjectionMatrixBuffer, 0, Camera.ProjectionMatrix);
+            cl.UpdateBuffer(ViewMatrixBuffer, 0, Camera.ViewMatrix);
+            cl.UpdateBuffer(CameraInfoBuffer, 0, Camera.GetCameraInfo());
         }
 
         internal void RecreateWindowSizedResources(GraphicsDevice gd, CommandList cl)

@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using Veldrid.NeoDemo.Objects;
 using Veldrid.Utilities;
 
 namespace Veldrid.NeoDemo
@@ -20,6 +21,8 @@ namespace Veldrid.NeoDemo
 
         private readonly ConcurrentDictionary<RenderPasses, Func<CullRenderable, bool>> _filters
             = new ConcurrentDictionary<RenderPasses, Func<CullRenderable, bool>>(new RenderPassesComparer());
+
+        internal MirrorMesh MirrorMesh { get; set; } = new MirrorMesh();
 
         private readonly Camera _camera;
 
@@ -140,14 +143,43 @@ namespace Veldrid.NeoDemo
             cl.ClearDepthStencil(1f);
             Render(gd, cl, sc, RenderPasses.ShadowMapFar, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
+            // Reflections
+            cl.SetFramebuffer(sc.ReflectionFramebuffer);
+            float fbWidth = sc.ReflectionFramebuffer.Width;
+            float fbHeight = sc.ReflectionFramebuffer.Height;
+            cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
+            cl.ClearColorTarget(0, RgbaFloat.Black);
+            cl.ClearDepthStencil(1f);
+
+            // Render reflected scene.
+            Matrix4x4 planeReflectionMatrix = Matrix4x4.CreateReflection(MirrorMesh.Plane);
+            CameraInfo camInfo = new CameraInfo();
+            camInfo.CameraLookDirection = Vector3.Normalize(Vector3.Reflect(_camera.LookDirection, MirrorMesh.Plane.Normal));
+            camInfo.CameraPosition_WorldSpace = Vector3.Transform(_camera.Position, planeReflectionMatrix);
+            cl.UpdateBuffer(sc.CameraInfoBuffer, 0, ref camInfo);
+
+            Matrix4x4 view = sc.Camera.ViewMatrix;
+            view = planeReflectionMatrix * view;
+            gd.UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
+
+            Matrix4x4 projection = _camera.ProjectionMatrix;
+            cl.UpdateBuffer(sc.ReflectionViewProjBuffer, 0, view * projection);
+
+            BoundingFrustum cameraFrustum = new BoundingFrustum(view * projection);
+            Render(gd, cl, sc, RenderPasses.ReflectionMap, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+
+            // Main scene
             cl.SetFramebuffer(sc.MainSceneFramebuffer);
-            float fbWidth = sc.MainSceneFramebuffer.Width;
-            float fbHeight = sc.MainSceneFramebuffer.Height;
+            fbWidth = sc.MainSceneFramebuffer.Width;
+            fbHeight = sc.MainSceneFramebuffer.Height;
             cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
             cl.SetFullViewports();
             cl.SetFullScissorRects();
             cl.ClearDepthStencil(1f);
-            BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
+            sc.UpdateCameraBuffers(cl); // Re-set because reflection step changed it.
+            cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
             Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
             Render(gd, cl, sc, RenderPasses.AlphaBlend, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
             Render(gd, cl, sc, RenderPasses.Overlay, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
@@ -259,14 +291,43 @@ namespace Veldrid.NeoDemo
 
             _tasks[3] = Task.Run(() =>
             {
+                // Reflections
+                cls[4].SetFramebuffer(sc.ReflectionFramebuffer);
+                float scWidth = sc.ReflectionFramebuffer.Width;
+                float scHeight = sc.ReflectionFramebuffer.Height;
+                cls[4].SetViewport(0, new Viewport(0, 0, scWidth, scHeight, 0, 1));
+                cls[4].SetFullViewports();
+                cls[4].SetFullScissorRects();
+                cls[4].ClearColorTarget(0, RgbaFloat.Black);
+                cls[4].ClearDepthStencil(1f);
+
+                // Render reflected scene.
+                Matrix4x4 planeReflectionMatrix = Matrix4x4.CreateReflection(MirrorMesh.Plane);
+                CameraInfo camInfo = new CameraInfo();
+                camInfo.CameraLookDirection = Vector3.Normalize(Vector3.Reflect(_camera.LookDirection, MirrorMesh.Plane.Normal));
+                camInfo.CameraPosition_WorldSpace = Vector3.Transform(_camera.Position, planeReflectionMatrix);
+                cls[4].UpdateBuffer(sc.CameraInfoBuffer, 0, ref camInfo);
+
+                Matrix4x4 view = sc.Camera.ViewMatrix;
+                view = planeReflectionMatrix * view;
+                gd.UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
+
+                Matrix4x4 projection = _camera.ProjectionMatrix;
+                cls[4].UpdateBuffer(sc.ReflectionViewProjBuffer, 0, view * projection);
+
+                BoundingFrustum cameraFrustum = new BoundingFrustum(view * projection);
+                Render(gd, cls[4], sc, RenderPasses.ReflectionMap, cameraFrustum, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
+
+                // Main scene
                 cls[4].SetFramebuffer(sc.MainSceneFramebuffer);
-                float scWidth = sc.MainSceneFramebuffer.Width;
-                float scHeight = sc.MainSceneFramebuffer.Height;
+                scWidth = sc.MainSceneFramebuffer.Width;
+                scHeight = sc.MainSceneFramebuffer.Height;
                 cls[4].SetViewport(0, new Viewport(0, 0, scWidth, scHeight, 0, 1));
                 cls[4].SetScissorRect(0, 0, 0, (uint)scWidth, (uint)scHeight);
                 cls[4].ClearColorTarget(0, RgbaFloat.Black);
                 cls[4].ClearDepthStencil(1f);
-                BoundingFrustum cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
+                sc.UpdateCameraBuffers(cls[4]);
+                cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
                 Render(gd, cls[4], sc, RenderPasses.Standard, cameraFrustum, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
                 Render(gd, cls[4], sc, RenderPasses.AlphaBlend, cameraFrustum, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
                 Render(gd, cls[4], sc, RenderPasses.Overlay, cameraFrustum, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);

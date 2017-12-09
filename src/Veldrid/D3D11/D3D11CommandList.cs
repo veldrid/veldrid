@@ -212,7 +212,7 @@ namespace Veldrid.D3D11
 
                 DepthStencilState depthStencilState = d3dPipeline.DepthStencilState;
                 uint stencilReference = d3dPipeline.StencilReference;
-                if (_depthStencilState != depthStencilState && _stencilReference != stencilReference)
+                if (_depthStencilState != depthStencilState || _stencilReference != stencilReference)
                 {
                     _depthStencilState = depthStencilState;
                     _stencilReference = stencilReference;

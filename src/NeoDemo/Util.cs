@@ -1,6 +1,9 @@
-﻿using System;
+﻿using ImGuiNET;
+using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Veldrid.Utilities;
 
 namespace Veldrid.NeoDemo
 {
@@ -62,6 +65,41 @@ namespace Veldrid.NeoDemo
                 q = Quaternion.Normalize(q);
             }
             return q;
+        }
+
+        // modifies projection matrix in place
+        // clipPlane is in camera space
+        public static void CalculateObliqueMatrixPerspective(ref Matrix4x4 projection, Matrix4x4 view, Plane clipPlane)
+        {
+            Matrix4x4 invTransposeView = VdUtilities.CalculateInverseTranspose(view);
+            Vector4 clipV4 = new Vector4(clipPlane.Normal, clipPlane.D);
+            clipV4 = Vector4.Transform(clipV4, invTransposeView);
+
+            Vector4 q = new Vector4(
+                (Math.Sign(clipV4.X) + projection.M13) / projection.M11,
+                (Math.Sign(clipV4.Y) + projection.M23) / projection.M22,
+                -1f,
+                (1 + projection.M33) / projection.M34);
+
+            Vector4 c = clipV4 * (1f / Vector4.Dot(clipV4, q));
+
+            projection.M31 = c.X;
+            projection.M32 = c.Y;
+            projection.M33 = c.Z;
+            projection.M34 = c.W;
+        }
+
+        private static float sgn(float x)
+        {
+            if (x > 0) return 1;
+            else if (x < 0) return -1;
+            else return 0;
+        }
+
+        public static Matrix4x4 Inverse(this Matrix4x4 src)
+        {
+            Matrix4x4.Invert(src, out Matrix4x4 result);
+            return result;
         }
     }
 }

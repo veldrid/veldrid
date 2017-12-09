@@ -55,6 +55,16 @@ namespace Shaders
         [ResourceSet(2)]
         public SamplerResource ShadowMapSampler;
 
+        [ResourceSet(3)]
+        public Texture2DResource ReflectionMap;
+        [ResourceSet(3)]
+        public SamplerResource ReflectionSampler;
+        [ResourceSet(3)]
+        public Matrix4x4 ReflectionViewProj;
+        [ResourceSet(3)]
+        public ClipPlaneInfo ClipPlaneInfo;
+
+
         public struct VertexInput
         {
             [PositionSemantic] public Vector3 Position;
@@ -72,6 +82,7 @@ namespace Shaders
             [NormalSemantic] public Vector3 Normal;
             [TextureCoordinateSemantic] public Vector2 TexCoord;
             [PositionSemantic] public float FragDepth;
+            [TextureCoordinateSemantic] public Vector4 ReflectionPosition;
         }
 
         [VertexShader]
@@ -99,12 +110,24 @@ namespace Shaders
             output.LightPosition3 = Mul(LightViewProjection3, output.LightPosition3);
 
             output.FragDepth = output.Position.Z;
+
+            output.ReflectionPosition = Mul(World, new Vector4(input.Position, 1));
+            output.ReflectionPosition = Mul(ReflectionViewProj, output.ReflectionPosition);
+
             return output;
         }
 
         [FragmentShader]
         public Vector4 FS(PixelInput input)
         {
+            if (ClipPlaneInfo.Enabled == 1)
+            {
+                if (Vector4.Dot(ClipPlaneInfo.ClipPlane, new Vector4(input.Position_WorldSpace, 1)) < 0)
+                {
+                    Discard();
+                }
+            }
+
             float alphaMapSample = Sample(AlphaMap, AlphaMapSampler, input.TexCoord).X;
             if (alphaMapSample == 0)
             {
@@ -112,6 +135,14 @@ namespace Shaders
             }
 
             Vector4 surfaceColor = Sample(SurfaceTexture, RegularSampler, input.TexCoord);
+
+            if (MaterialProperties.Reflectivity > 0)
+            {
+                Vector2 reflectionTexCoords = ClipToTextureCoordinates(input.ReflectionPosition);
+                Vector4 reflectionSample = Sample(ReflectionMap, ReflectionSampler, reflectionTexCoords);
+                surfaceColor = (surfaceColor * (1 - MaterialProperties.Reflectivity)) + (reflectionSample * MaterialProperties.Reflectivity);
+            }
+
             Vector4 ambientLight = new Vector4(0.3f, 0.3f, 0.3f, 1f);
             Vector3 lightDir = -LightInfo.Direction;
             Vector4 directionalColor = ambientLight * surfaceColor;

@@ -111,6 +111,12 @@ namespace Veldrid
                 throw new VeldridException(
                     "TextureView mip level and array layer range must be contained in the target Texture.");
             }
+            if ((description.Target.Usage & TextureUsage.Sampled) == 0
+                && (description.Target.Usage & TextureUsage.Storage) == 0)
+            {
+                throw new VeldridException(
+                    "To create a TextureView, the target texture must have either Sampled or Storage usage flags.");
+            }
 #endif
 
             return CreateTextureViewCore(ref description);

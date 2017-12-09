@@ -57,7 +57,7 @@ namespace Veldrid.NeoDemo
                 windowCI,
                 gdOptions,
                 //GraphicsBackend.Vulkan,
-                GraphicsBackend.OpenGL,
+                //GraphicsBackend.OpenGL,
                 out _window,
                 out _gd);
             _window.Resized += () => _windowResized = true;
@@ -94,6 +94,11 @@ namespace Veldrid.NeoDemo
             texDrawIndexeder3.Position = new Vector2(30 + (texDrawIndexeder3.Size.X * 2), 25);
             _scene.AddRenderable(texDrawIndexeder3);
 
+            ShadowmapDrawIndexeder reflectionTexDrawer = new ShadowmapDrawIndexeder(() => _window, () => _sc.ReflectionColorView);
+            _resizeHandled += (w, h) => reflectionTexDrawer.OnWindowResized();
+            reflectionTexDrawer.Position = new Vector2(40 + (reflectionTexDrawer.Size.X * 3), 25);
+            _scene.AddRenderable(reflectionTexDrawer);
+
             ScreenDuplicator duplicator = new ScreenDuplicator();
             _scene.AddRenderable(duplicator);
 
@@ -117,6 +122,7 @@ namespace Veldrid.NeoDemo
 
                 foreach (ObjFile.MeshGroup group in atriumFile.MeshGroups)
                 {
+                    Vector3 scale = new Vector3(0.1f);
                     ConstructedMeshInfo mesh = atriumFile.GetMesh(group);
                     MaterialDefinition materialDef = atriumMtls.Definitions[mesh.MaterialName];
                     ImageSharpTexture overrideTextureData = null;
@@ -136,8 +142,24 @@ namespace Veldrid.NeoDemo
                     {
                         materialProps = CommonMaterials.Vase;
                     }
+                    if (group.Name == "sponza_117")
+                    {
+                        MirrorMesh.Plane = Plane.CreateFromVertices(
+                            atriumFile.Positions[group.Faces[0].Vertex0.PositionIndex] * scale.X,
+                            atriumFile.Positions[group.Faces[0].Vertex1.PositionIndex] * scale.Y,
+                            atriumFile.Positions[group.Faces[0].Vertex2.PositionIndex] * scale.Z);
+                        materialProps = CommonMaterials.Reflective;
+                    }
 
-                    AddTexturedMesh(mesh, overrideTextureData, alphaTexture, materialProps, Vector3.Zero, Quaternion.Identity, new Vector3(0.1f));
+                    AddTexturedMesh(
+                        mesh,
+                        overrideTextureData,
+                        alphaTexture,
+                        materialProps,
+                        Vector3.Zero,
+                        Quaternion.Identity,
+                        scale,
+                        group.Name);
                 }
             }
         }
@@ -160,9 +182,10 @@ namespace Veldrid.NeoDemo
             MaterialPropsAndBuffer materialProps,
             Vector3 position,
             Quaternion rotation,
-            Vector3 scale)
+            Vector3 scale,
+            string name)
         {
-            TexturedMesh mesh = new TexturedMesh(meshData, texData, alphaTexData, materialProps ?? CommonMaterials.Brick);
+            TexturedMesh mesh = new TexturedMesh(name, meshData, texData, alphaTexData, materialProps ?? CommonMaterials.Brick);
             mesh.Transform.Position = position;
             mesh.Transform.Rotation = rotation;
             mesh.Transform.Scale = scale;
@@ -280,6 +303,11 @@ namespace Veldrid.NeoDemo
                         DrawIndexedMaterialMenu(CommonMaterials.Vase);
                         ImGui.EndMenu();
                     }
+                    if (ImGui.BeginMenu("Reflective"))
+                    {
+                        DrawIndexedMaterialMenu(CommonMaterials.Reflective);
+                        ImGui.EndMenu();
+                    }
 
                     ImGui.EndMenu();
                 }
@@ -329,15 +357,17 @@ namespace Veldrid.NeoDemo
             }
         }
 
-        private void DrawIndexedMaterialMenu(MaterialPropsAndBuffer brick)
+        private void DrawIndexedMaterialMenu(MaterialPropsAndBuffer propsAndBuffer)
         {
-            MaterialProperties props = brick.Properties;
+            MaterialProperties props = propsAndBuffer.Properties;
             float intensity = props.SpecularIntensity.X;
+            float reflectivity = props.Reflectivity;
             if (ImGui.SliderFloat("Intensity", ref intensity, 0f, 10f, intensity.ToString(), 1f)
-                | ImGui.SliderFloat("Power", ref props.SpecularPower, 0f, 1000f, props.SpecularPower.ToString(), 1f))
+                | ImGui.SliderFloat("Power", ref props.SpecularPower, 0f, 1000f, props.SpecularPower.ToString(), 1f)
+                | ImGui.SliderFloat("Reflectivity", ref props.Reflectivity, 0f, 1f, props.Reflectivity.ToString(), 1f))
             {
                 props.SpecularIntensity = new Vector3(intensity);
-                brick.Properties = props;
+                propsAndBuffer.Properties = props;
             }
         }
 
@@ -378,7 +408,6 @@ namespace Veldrid.NeoDemo
             _frameCommands.Begin();
 
             CommonMaterials.FlushAll(_frameCommands);
-            _sc.UpdateCameraBuffers(_gd); // Meh
 
             _scene.RenderAllStages(_gd, _frameCommands, _sc);
             _gd.SwapBuffers();

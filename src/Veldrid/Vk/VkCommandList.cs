@@ -23,6 +23,9 @@ namespace Veldrid.Vk
         private bool[] _validColorClearValues = Array.Empty<bool>();
         private VkClearValue? _depthClearValue;
 
+        private readonly List<VkBuffer> _availableStagingBuffers = new List<VkBuffer>();
+        private readonly List<VkBuffer> _usedStagingBuffers = new List<VkBuffer>();
+
         // Graphics State
         private VkFramebufferBase _currentFramebuffer;
         private bool _currentFramebufferEverActive;
@@ -88,6 +91,13 @@ namespace Veldrid.Vk
             Util.ClearArray(_currentComputeResourceSets);
 
             _referencedResources.Clear();
+
+            foreach (VkBuffer vkBuffer in _usedStagingBuffers)
+            {
+                _availableStagingBuffers.Add(vkBuffer);
+            }
+
+            _usedStagingBuffers.Clear();
         }
 
         public override void ClearColorTarget(uint index, RgbaFloat clearColor)
@@ -566,12 +576,10 @@ namespace Veldrid.Vk
 
         public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            // TODO: This should grab a pooled staging buffer, upload the data to that, and then queue a copy from it to the true
-            // destination buffer given. Then, it should queue up the buffer to be returned to the pool.
-            // Calling GraphicsDevice.UpdateBuffer will not work correctly -- it doesn't queue up the copies into this VkCommandBuffer,
-            // it just submits them immediately on a transient command buffer. Therefore, calling this function multiple times on
-            // the same CommandList will cause earlier copies to be overwritten.
-            _gd.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);
+            VkBuffer stagingBuffer = GetStagingBuffer(sizeInBytes);
+            _gd.UpdateBuffer(stagingBuffer, 0, source, sizeInBytes);
+            CopyBuffer(stagingBuffer, 0, buffer, bufferOffsetInBytes, sizeInBytes);
+
             _referencedResources.Add(Util.AssertSubtype<Buffer, VkBuffer>(buffer));
         }
 
@@ -692,6 +700,23 @@ namespace Veldrid.Vk
             }
         }
 
+        private VkBuffer GetStagingBuffer(uint size)
+        {
+            foreach (VkBuffer buffer in _availableStagingBuffers)
+            {
+                if (buffer.SizeInBytes > size)
+                {
+                    _availableStagingBuffers.Remove(buffer);
+                    _usedStagingBuffers.Add(buffer);
+                    return buffer;
+                }
+            }
+
+            VkBuffer newBuffer = (VkBuffer)_gd.ResourceFactory.CreateBuffer(new BufferDescription(size, BufferUsage.Staging));
+            _usedStagingBuffers.Add(newBuffer);
+            return newBuffer;
+        }
+
         public override void Dispose()
         {
             _gd.EnqueueDisposedCommandBuffer(this);
@@ -704,6 +729,15 @@ namespace Veldrid.Vk
             {
                 _destroyed = true;
                 vkDestroyCommandPool(_gd.Device, _pool, null);
+
+                foreach (VkBuffer buffer in _availableStagingBuffers)
+                {
+                    buffer.Dispose();
+                }
+                foreach (VkBuffer buffer in _usedStagingBuffers)
+                {
+                    buffer.Dispose();
+                }
             }
         }
     }

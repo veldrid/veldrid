@@ -117,12 +117,6 @@ namespace Veldrid.NeoDemo
 
                 foreach (ObjFile.MeshGroup group in atriumFile.MeshGroups)
                 {
-                    if (group.Name == "sponza_117")
-                    {
-                        Vector3 pos = atriumFile.Positions[group.Faces[0].Vertex0.PositionIndex];
-                        Vector3 normal = atriumFile.Normals[group.Faces[0].Vertex0.NormalIndex];
-                        MirrorMesh.Plane = new Plane(Vector3.UnitY, pos.Y);
-                    }
 
                     ConstructedMeshInfo mesh = atriumFile.GetMesh(group);
                     MaterialDefinition materialDef = atriumMtls.Definitions[mesh.MaterialName];
@@ -142,6 +136,13 @@ namespace Veldrid.NeoDemo
                     if (materialDef.Name.Contains("vase"))
                     {
                         materialProps = CommonMaterials.Vase;
+                    }
+                    if (group.Name == "sponza_117")
+                    {
+                        Vector3 pos = atriumFile.Positions[group.Faces[0].Vertex0.PositionIndex];
+                        Vector3 normal = atriumFile.Normals[group.Faces[0].Vertex0.NormalIndex];
+                        MirrorMesh.Plane = new Plane(Vector3.UnitY, pos.Y);
+                        materialProps = CommonMaterials.Reflective;
                     }
 
                     AddTexturedMesh(mesh, overrideTextureData, alphaTexture, materialProps, Vector3.Zero, Quaternion.Identity, new Vector3(0.1f), group.Name);
@@ -288,6 +289,11 @@ namespace Veldrid.NeoDemo
                         DrawIndexedMaterialMenu(CommonMaterials.Vase);
                         ImGui.EndMenu();
                     }
+                    if (ImGui.BeginMenu("Reflective"))
+                    {
+                        DrawIndexedMaterialMenu(CommonMaterials.Reflective);
+                        ImGui.EndMenu();
+                    }
 
                     ImGui.EndMenu();
                 }
@@ -337,15 +343,17 @@ namespace Veldrid.NeoDemo
             }
         }
 
-        private void DrawIndexedMaterialMenu(MaterialPropsAndBuffer brick)
+        private void DrawIndexedMaterialMenu(MaterialPropsAndBuffer propsAndBuffer)
         {
-            MaterialProperties props = brick.Properties;
+            MaterialProperties props = propsAndBuffer.Properties;
             float intensity = props.SpecularIntensity.X;
+            float reflectivity = props.Reflectivity;
             if (ImGui.SliderFloat("Intensity", ref intensity, 0f, 10f, intensity.ToString(), 1f)
-                | ImGui.SliderFloat("Power", ref props.SpecularPower, 0f, 1000f, props.SpecularPower.ToString(), 1f))
+                | ImGui.SliderFloat("Power", ref props.SpecularPower, 0f, 1000f, props.SpecularPower.ToString(), 1f)
+                | ImGui.SliderFloat("Reflectivity", ref props.Reflectivity, 0f, 1f, props.Reflectivity.ToString(), .1f))
             {
                 props.SpecularIntensity = new Vector3(intensity);
-                brick.Properties = props;
+                propsAndBuffer.Properties = props;
             }
         }
 

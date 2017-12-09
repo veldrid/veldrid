@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
@@ -62,6 +63,22 @@ namespace Veldrid.NeoDemo
                 q = Quaternion.Normalize(q);
             }
             return q;
+        }
+
+        // modifies projection matrix in place
+        // clipPlane is in camera space
+        public static void CalculateObliqueMatrixPerspective(ref Matrix4x4 projection, Vector4 clipPlane)
+        {
+            bool result = Matrix4x4.Invert(projection, out Matrix4x4 invProj);
+            Debug.Assert(result);
+            Vector4 q = Vector4.Transform(
+                new Vector4(Math.Sign(clipPlane.X), Math.Sign(clipPlane.Y), 1.0f, 1.0f),
+                invProj);
+            Vector4 c = clipPlane * (2.0F / (Vector4.Dot(clipPlane, q)));
+            projection.M13 = c.X;
+            projection.M23 = c.Y;
+            projection.M33 = c.Z;
+            projection.M43 = c.W - 1.0F;
         }
     }
 }

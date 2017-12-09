@@ -26,9 +26,12 @@ namespace Veldrid.NeoDemo.Objects
         private TextureView _alphaMapView;
 
         private Pipeline _pipeline;
+        private Pipeline _pipelineFrontCull;
         private ResourceSet _mainProjViewRS;
         private ResourceSet _mainSharedRS;
         private ResourceSet _mainPerObjectRS;
+        private ResourceSet _reflectionRS;
+        private ResourceSet _noReflectionRS;
         private Pipeline _shadowMapPipeline;
         private ResourceSet[] _shadowMapResourceSets;
 
@@ -87,7 +90,7 @@ namespace Veldrid.NeoDemo.Objects
 
             if (_alphaTextureData != null)
             {
-                _alphamapTexture = _alphaTextureData.CreateDeviceTexture(gd , disposeFactory);
+                _alphamapTexture = _alphaTextureData.CreateDeviceTexture(gd, disposeFactory);
             }
             else
             {
@@ -163,15 +166,22 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("ShadowMapFar", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("ShadowMapSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
+            ResourceLayout reflectionLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("ReflectionMap", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ReflectionSampler", ResourceKind.Sampler, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("ReflectionViewProj", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+
             GraphicsPipelineDescription mainPD = new GraphicsPipelineDescription(
                 _alphamapTexture != null ? BlendStateDescription.SingleAlphaBlend : BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(mainVertexLayouts, new[] { mainVS, mainFS }),
-                new ResourceLayout[] { projViewLayout, mainSharedLayout, mainPerObjectLayout },
+                new ResourceLayout[] { projViewLayout, mainSharedLayout, mainPerObjectLayout, reflectionLayout },
                 sc.MainSceneFramebuffer.OutputDescription);
             _pipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref mainPD);
+            mainPD.RasterizerState.CullMode = FaceCullMode.Front;
+            _pipelineFrontCull = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref mainPD);
 
             _mainProjViewRS = StaticResourceCache.GetResourceSet(gd.ResourceFactory, new ResourceSetDescription(projViewLayout,
                 sc.ProjectionMatrixBuffer,
@@ -198,6 +208,16 @@ namespace Veldrid.NeoDemo.Objects
                 sc.MidShadowMapView,
                 sc.FarShadowMapView,
                 gd.PointSampler));
+
+            _reflectionRS = StaticResourceCache.GetResourceSet(gd.ResourceFactory, new ResourceSetDescription(reflectionLayout,
+                _alphaMapView, // Doesn't really matter -- just don't bind the actual reflection map since it's being rendered to.
+                gd.PointSampler,
+                sc.ReflectionViewProjBuffer));
+
+            _noReflectionRS = StaticResourceCache.GetResourceSet(gd.ResourceFactory, new ResourceSetDescription(reflectionLayout,
+                sc.ReflectionColorView,
+                gd.PointSampler,
+                sc.ReflectionViewProjBuffer));
         }
 
         private ResourceSet[] CreateShadowMapResourceSets(
@@ -246,11 +266,11 @@ namespace Veldrid.NeoDemo.Objects
             {
                 if (_alphaTextureData != null)
                 {
-                    return RenderPasses.AllShadowMap | RenderPasses.AlphaBlend;
+                    return RenderPasses.AllShadowMap | RenderPasses.AlphaBlend | RenderPasses.ReflectionMap;
                 }
                 else
                 {
-                    return RenderPasses.AllShadowMap | RenderPasses.Standard;
+                    return RenderPasses.AllShadowMap | RenderPasses.Standard | RenderPasses.ReflectionMap;
                 }
             }
         }
@@ -269,7 +289,11 @@ namespace Veldrid.NeoDemo.Objects
             }
             else if (renderPass == RenderPasses.Standard || renderPass == RenderPasses.AlphaBlend)
             {
-                RenderStandard(cl, sc);
+                RenderStandard(cl, sc, false);
+            }
+            else if (renderPass == RenderPasses.ReflectionMap)
+            {
+                RenderStandard(cl, sc, true);
             }
         }
 
@@ -290,14 +314,15 @@ namespace Veldrid.NeoDemo.Objects
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }
 
-        private void RenderStandard(CommandList cl, SceneContext sc)
+        private void RenderStandard(CommandList cl, SceneContext sc, bool reflectionPass)
         {
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
-            cl.SetPipeline(_pipeline);
+            cl.SetPipeline(reflectionPass ? _pipelineFrontCull : _pipeline);
             cl.SetGraphicsResourceSet(0, _mainProjViewRS);
             cl.SetGraphicsResourceSet(1, _mainSharedRS);
             cl.SetGraphicsResourceSet(2, _mainPerObjectRS);
+            cl.SetGraphicsResourceSet(3, reflectionPass ? _reflectionRS : _noReflectionRS);
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }
     }

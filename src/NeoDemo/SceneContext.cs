@@ -27,6 +27,12 @@ namespace Veldrid.NeoDemo
         public TextureView FarShadowMapView { get; private set; }
         public Framebuffer FarShadowMapFramebuffer { get; private set; }
 
+        public Texture ReflectionColorTexture { get; private set; }
+        public Texture ReflectionDepthTexture { get; private set; }
+        public TextureView ReflectionColorView { get; private set; }
+        public Framebuffer ReflectionFramebuffer { get; private set; }
+        public Buffer ReflectionViewProjBuffer { get; private set; }
+
         // MainSceneView and Duplicator resource sets both use this.
         public ResourceLayout TextureSamplerResourceLayout { get; private set; }
 
@@ -99,6 +105,14 @@ namespace Veldrid.NeoDemo
             TextureSamplerResourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("SourceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("SourceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
+
+            uint ReflectionMapSize = 1024;
+            ReflectionColorTexture = factory.CreateTexture(new TextureDescription(ReflectionMapSize, ReflectionMapSize, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.RenderTarget | TextureUsage.Sampled));
+            ReflectionDepthTexture = factory.CreateTexture(new TextureDescription(ReflectionMapSize, ReflectionMapSize, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil));
+            ReflectionColorView = factory.CreateTextureView(ReflectionColorTexture);
+            ReflectionFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(ReflectionDepthTexture, ReflectionColorTexture));
+            ReflectionViewProjBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+
             RecreateWindowSizedResources(gd, cl);
         }
 
@@ -134,6 +148,11 @@ namespace Veldrid.NeoDemo
             DuplicatorTargetSet1.Dispose();
             DuplicatorFramebuffer.Dispose();
             TextureSamplerResourceLayout.Dispose();
+            ReflectionColorTexture.Dispose();
+            ReflectionDepthTexture.Dispose();
+            ReflectionColorView.Dispose();
+            ReflectionFramebuffer.Dispose();
+            ReflectionViewProjBuffer.Dispose();
         }
 
         public void SetCurrentScene(Scene scene)

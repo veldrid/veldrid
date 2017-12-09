@@ -144,34 +144,47 @@ namespace Veldrid.NeoDemo
             Render(gd, cl, sc, RenderPasses.ShadowMapFar, lightFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             // Reflections
-            cl.SetFramebuffer(sc.MainSceneFramebuffer);
+            cl.SetFramebuffer(sc.ReflectionFramebuffer);
+            float fbWidth = sc.ReflectionFramebuffer.Width;
+            float fbHeight = sc.ReflectionFramebuffer.Height;
+            cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
             cl.ClearColorTarget(0, RgbaFloat.Black);
-            float fbWidth = sc.MainSceneFramebuffer.Width;
-            float fbHeight = sc.MainSceneFramebuffer.Height;
+            cl.ClearDepthStencil(1f);
+
+            // Render reflected scene.
+            //Matrix4x4 view = sc.Camera.ViewMatrix;
+            //Matrix4x4 planeReflection = Matrix4x4.CreateReflection(MirrorMesh.Plane);
+            //view = planeReflection * view;
+            //gd.UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
+
+            //Plane reflectionPlane = Plane.Normalize(Plane.Transform(MirrorMesh.Plane, view));
+            //Matrix4x4 projection = _camera.ProjectionMatrix;
+            //Util.CalculateObliqueMatrixPerspective(ref projection, new Vector4(reflectionPlane.Normal, reflectionPlane.D));
+            //cl.UpdateBuffer(sc.ProjectionMatrixBuffer, 0, ref projection);
+
+            //cl.UpdateBuffer(sc.ReflectionViewProjBuffer, 0, view * projection);
+
+            //CameraInfo camInfo = new CameraInfo();
+            //camInfo.CameraLookDirection = Vector3.Reflect(_camera.LookDirection, MirrorMesh.Plane.Normal);
+            //camInfo.CameraPosition_WorldSpace = Vector3.Transform(_camera.Position, planeReflection);
+            //cl.UpdateBuffer(sc.CameraInfoBuffer, 0, ref camInfo);
+
+            //BoundingFrustum cameraFrustum = new BoundingFrustum(view * projection);
+            //Render(gd, cl, sc, RenderPasses.ReflectionMap, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+
+            // Main scene
+            cl.SetFramebuffer(sc.MainSceneFramebuffer);
+            fbWidth = sc.MainSceneFramebuffer.Width;
+            fbHeight = sc.MainSceneFramebuffer.Height;
             cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
             cl.SetFullViewports();
             cl.SetFullScissorRects();
             cl.ClearDepthStencil(1f);
-
-            // Put mirror into stencil buffer
-            Matrix4x4 view = sc.Camera.ViewMatrix;
-            Matrix4x4 planeReflection = Matrix4x4.CreateReflection(MirrorMesh.Plane);
-            view = planeReflection * view;
-            gd.UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
-
-            CameraInfo camInfo = new CameraInfo();
-            camInfo.CameraLookDirection = Vector3.Reflect(_camera.LookDirection, MirrorMesh.Plane.Normal);
-            camInfo.CameraPosition_WorldSpace = Vector3.Transform(_camera.Position, planeReflection);
-            cl.UpdateBuffer(sc.CameraInfoBuffer, 0, ref camInfo);
-
-            BoundingFrustum cameraFrustum = new BoundingFrustum(view * _camera.ProjectionMatrix);
-            Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
-
-            // Main scene
             sc.UpdateCameraBuffers(cl); // Re-set because reflection step changed it.
-            cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
+            var cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
             Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
-
             Render(gd, cl, sc, RenderPasses.AlphaBlend, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
             Render(gd, cl, sc, RenderPasses.Overlay, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 

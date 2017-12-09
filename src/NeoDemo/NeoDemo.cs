@@ -94,6 +94,11 @@ namespace Veldrid.NeoDemo
             texDrawIndexeder3.Position = new Vector2(30 + (texDrawIndexeder3.Size.X * 2), 25);
             _scene.AddRenderable(texDrawIndexeder3);
 
+            ShadowmapDrawIndexeder reflectionTexDrawer = new ShadowmapDrawIndexeder(() => _window, () => _sc.ReflectionColorView);
+            _resizeHandled += (w, h) => reflectionTexDrawer.OnWindowResized();
+            reflectionTexDrawer.Position = new Vector2(40 + (reflectionTexDrawer.Size.X * 3), 25);
+            _scene.AddRenderable(reflectionTexDrawer);
+
             ScreenDuplicator duplicator = new ScreenDuplicator();
             _scene.AddRenderable(duplicator);
 
@@ -350,7 +355,7 @@ namespace Veldrid.NeoDemo
             float reflectivity = props.Reflectivity;
             if (ImGui.SliderFloat("Intensity", ref intensity, 0f, 10f, intensity.ToString(), 1f)
                 | ImGui.SliderFloat("Power", ref props.SpecularPower, 0f, 1000f, props.SpecularPower.ToString(), 1f)
-                | ImGui.SliderFloat("Reflectivity", ref props.Reflectivity, 0f, 1f, props.Reflectivity.ToString(), .1f))
+                | ImGui.SliderFloat("Reflectivity", ref props.Reflectivity, 0f, 1f, props.Reflectivity.ToString(), 1f))
             {
                 props.SpecularIntensity = new Vector3(intensity);
                 propsAndBuffer.Properties = props;

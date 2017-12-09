@@ -27,8 +27,9 @@ namespace Shaders
         [FragmentShader]
         Vector4 FS(FragmentIn input)
         {
-            float r = Sample(Tex, TexSampler, input.TexCoord).X;
-            return new Vector4(r, r, r, r);
+            return Sample(Tex, TexSampler, input.TexCoord);
+            //float r = Sample(Tex, TexSampler, input.TexCoord).X;
+            //return new Vector4(r, r, r, r);
         }
 
         public struct VertexIn

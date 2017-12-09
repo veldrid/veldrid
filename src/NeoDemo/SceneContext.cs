@@ -106,7 +106,7 @@ namespace Veldrid.NeoDemo
                 new ResourceLayoutElementDescription("SourceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("SourceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            uint ReflectionMapSize = 1024;
+            uint ReflectionMapSize = 2048;
             ReflectionColorTexture = factory.CreateTexture(new TextureDescription(ReflectionMapSize, ReflectionMapSize, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.RenderTarget | TextureUsage.Sampled));
             ReflectionDepthTexture = factory.CreateTexture(new TextureDescription(ReflectionMapSize, ReflectionMapSize, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil));
             ReflectionColorView = factory.CreateTextureView(ReflectionColorTexture);

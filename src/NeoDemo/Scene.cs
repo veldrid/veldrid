@@ -154,22 +154,22 @@ namespace Veldrid.NeoDemo
             cl.ClearDepthStencil(1f);
 
             // Render reflected scene.
-            Matrix4x4 view = sc.Camera.ViewMatrix;
             Matrix4x4 planeReflectionMatrix = Matrix4x4.CreateReflection(MirrorMesh.Plane);
+            CameraInfo camInfo = new CameraInfo();
+            camInfo.CameraLookDirection = Vector3.Normalize(Vector3.Reflect(_camera.LookDirection, MirrorMesh.Plane.Normal));
+            camInfo.CameraPosition_WorldSpace = Vector3.Transform(_camera.Position, planeReflectionMatrix);
+            cl.UpdateBuffer(sc.CameraInfoBuffer, 0, ref camInfo);
+
+            Matrix4x4 view = sc.Camera.ViewMatrix;
             view = planeReflectionMatrix * view;
             gd.UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
 
             Plane reflectionPlane = Plane.Normalize(Plane.Transform(MirrorMesh.Plane, view));
             Matrix4x4 projection = _camera.ProjectionMatrix;
-            //Util.CalculateObliqueMatrixPerspective(ref projection, new Vector4(reflectionPlane.Normal, reflectionPlane.D));
+            Util.CalculateObliqueMatrixPerspective(ref projection, new Vector4(reflectionPlane.Normal, reflectionPlane.D));
             cl.UpdateBuffer(sc.ProjectionMatrixBuffer, 0, ref projection);
 
             cl.UpdateBuffer(sc.ReflectionViewProjBuffer, 0, view * projection);
-
-            CameraInfo camInfo = new CameraInfo();
-            camInfo.CameraLookDirection = Vector3.Normalize(Vector3.Reflect(_camera.LookDirection, MirrorMesh.Plane.Normal));
-            camInfo.CameraPosition_WorldSpace = Vector3.Transform(_camera.Position, planeReflectionMatrix);
-            cl.UpdateBuffer(sc.CameraInfoBuffer, 0, ref camInfo);
 
             BoundingFrustum cameraFrustum = new BoundingFrustum(view * projection);
             Render(gd, cl, sc, RenderPasses.ReflectionMap, cameraFrustum, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);

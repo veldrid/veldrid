@@ -122,7 +122,7 @@ namespace Veldrid.NeoDemo
 
                 foreach (ObjFile.MeshGroup group in atriumFile.MeshGroups)
                 {
-
+                    Vector3 scale = new Vector3(0.1f);
                     ConstructedMeshInfo mesh = atriumFile.GetMesh(group);
                     MaterialDefinition materialDef = atriumMtls.Definitions[mesh.MaterialName];
                     ImageSharpTexture overrideTextureData = null;
@@ -144,13 +144,22 @@ namespace Veldrid.NeoDemo
                     }
                     if (group.Name == "sponza_117")
                     {
-                        Vector3 pos = atriumFile.Positions[group.Faces[0].Vertex0.PositionIndex];
-                        Vector3 normal = atriumFile.Normals[group.Faces[0].Vertex0.NormalIndex];
-                        MirrorMesh.Plane = new Plane(Vector3.UnitY, pos.Y);
+                        MirrorMesh.Plane = Plane.CreateFromVertices(
+                            atriumFile.Positions[group.Faces[0].Vertex0.PositionIndex] * scale.X,
+                            atriumFile.Positions[group.Faces[0].Vertex1.PositionIndex] * scale.Y,
+                            atriumFile.Positions[group.Faces[0].Vertex2.PositionIndex] * scale.Z);
                         materialProps = CommonMaterials.Reflective;
                     }
 
-                    AddTexturedMesh(mesh, overrideTextureData, alphaTexture, materialProps, Vector3.Zero, Quaternion.Identity, new Vector3(0.1f), group.Name);
+                    AddTexturedMesh(
+                        mesh,
+                        overrideTextureData,
+                        alphaTexture,
+                        materialProps,
+                        Vector3.Zero,
+                        Quaternion.Identity,
+                        scale,
+                        group.Name);
                 }
             }
         }

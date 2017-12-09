@@ -91,6 +91,7 @@ namespace Veldrid.NeoDemo
                 Quaternion lookRotation = Quaternion.CreateFromYawPitchRoll(Yaw, Pitch, 0f);
                 motionDir = Vector3.Transform(motionDir, lookRotation);
                 _position += motionDir * _moveSpeed * sprintFactor * deltaSeconds;
+                Console.WriteLine($"New position: {_position}.");
                 UpdateViewMatrix();
             }
 

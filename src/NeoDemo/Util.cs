@@ -69,16 +69,18 @@ namespace Veldrid.NeoDemo
         // clipPlane is in camera space
         public static void CalculateObliqueMatrixPerspective(ref Matrix4x4 projection, Vector4 clipPlane)
         {
-            bool result = Matrix4x4.Invert(projection, out Matrix4x4 invProj);
-            Debug.Assert(result);
-            Vector4 q = Vector4.Transform(
-                new Vector4(Math.Sign(clipPlane.X), Math.Sign(clipPlane.Y), 1.0f, 1.0f),
-                invProj);
+            Vector4 q;
+            q.X = (MathF.Sign(clipPlane.X) + projection.M13) / projection.M11;
+            q.Y = (MathF.Sign(clipPlane.X) + projection.M23) / projection.M22;
+            q.Z = -1.0F;
+            q.W = (1.0F + projection.M33) / projection.M34;
+
             Vector4 c = clipPlane * (2.0F / (Vector4.Dot(clipPlane, q)));
-            projection.M13 = c.X;
-            projection.M23 = c.Y;
-            projection.M33 = c.Z;
-            projection.M43 = c.W - 1.0F;
+
+            projection.M31 = c.X;
+            projection.M32 = c.Y;
+            projection.M33 = c.Z + 1.0f;
+            projection.M34 = c.W;
         }
     }
 }

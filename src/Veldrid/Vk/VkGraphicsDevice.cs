@@ -36,6 +36,7 @@ namespace Veldrid.Vk
         private vkDebugMarkerSetObjectNameEXT_d _setObjectNameDelegate;
 
         private readonly object _disposablesLock = new object();
+        private readonly List<Vulkan.VkBuffer> _buffersToDestroy = new List<Vulkan.VkBuffer>();
         private readonly List<VkImage> _imagesToDestroy = new List<VkImage>();
         private readonly List<VkMemoryBlock> _memoriesToFree = new List<VkMemoryBlock>();
 
@@ -90,7 +91,7 @@ namespace Veldrid.Vk
 
             lock (_disposablesLock)
             {
-                vkCL.CollectDisposables(_imagesToDestroy, _memoriesToFree);
+                vkCL.CollectDisposables(_buffersToDestroy, _imagesToDestroy, _memoriesToFree);
             }
         }
 

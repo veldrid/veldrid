@@ -9,12 +9,15 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkBuffer _deviceBuffer;
         private readonly VkMemoryBlock _memory;
+        private readonly VkMemoryRequirements _bufferMemoryRequirements;
 
         public override ulong SizeInBytes { get; }
         public override BufferUsage Usage { get; }
 
         public Vulkan.VkBuffer DeviceBuffer => _deviceBuffer;
         public VkMemoryBlock Memory => _memory;
+
+        public VkMemoryRequirements BufferMemoryRequirements => _bufferMemoryRequirements;
 
         public VkBuffer(VkGraphicsDevice gd, ulong sizeInBytes, bool dynamic, BufferUsage usage)
         {
@@ -51,15 +54,20 @@ namespace Veldrid.Vk
             VkResult result = vkCreateBuffer(gd.Device, ref bufferCI, null, out _deviceBuffer);
             CheckResult(result);
 
-            vkGetBufferMemoryRequirements(gd.Device, _deviceBuffer, out VkMemoryRequirements bufferMemoryRequirements);
+            vkGetBufferMemoryRequirements(gd.Device, _deviceBuffer, out _bufferMemoryRequirements);
+
+            VkMemoryPropertyFlags memoryPropertyFlags =
+                dynamic
+                ? VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent
+                : VkMemoryPropertyFlags.DeviceLocal;
 
             VkMemoryBlock memoryToken = gd.MemoryManager.Allocate(
                 gd.PhysicalDeviceMemProperties,
-                bufferMemoryRequirements.memoryTypeBits,
-                VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
+                _bufferMemoryRequirements.memoryTypeBits,
+                memoryPropertyFlags,
                 dynamic,
-                bufferMemoryRequirements.size,
-                bufferMemoryRequirements.alignment);
+                _bufferMemoryRequirements.size,
+                _bufferMemoryRequirements.alignment);
             _memory = memoryToken;
             result = vkBindBufferMemory(gd.Device, _deviceBuffer, _memory.DeviceMemory, _memory.Offset);
             CheckResult(result);

@@ -15,6 +15,7 @@ namespace Veldrid.Vk
         private VkCommandBuffer _cb;
 
         private List<VkImage> _imagesToDestroy;
+        private List<Vulkan.VkBuffer> _buffersToDestroy;
         private List<VkMemoryBlock> _memoriesToFree;
 
         private bool _commandBufferBegun;
@@ -36,8 +37,17 @@ namespace Veldrid.Vk
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
 
-        internal void CollectDisposables(List<VkImage> images, List<VkMemoryBlock> memories)
+        internal void CollectDisposables(List<Vulkan.VkBuffer> buffers, List<VkImage> images, List<VkMemoryBlock> memories)
         {
+            if (_buffersToDestroy != null)
+            {
+                foreach (Vulkan.VkBuffer buffer in _buffersToDestroy)
+                {
+                    buffers.Add(buffer);
+                }
+                _buffersToDestroy.Clear();
+            }
+
             if (_imagesToDestroy != null)
             {
                 foreach (VkImage image in _imagesToDestroy)
@@ -53,7 +63,7 @@ namespace Veldrid.Vk
                 {
                     memories.Add(memory);
                 }
-                memories.Clear();
+                _memoriesToFree.Clear();
             }
         }
 
@@ -428,10 +438,59 @@ namespace Veldrid.Vk
         public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(buffer);
-            IntPtr mappedPtr = MapBuffer(vkBuffer, sizeInBytes);
+            VkMemoryBlock memoryBlock = null;
+            Vulkan.VkBuffer copySrcBuffer = Vulkan.VkBuffer.Null;
+            IntPtr mappedPtr;
+            bool isPersistentMapped = vkBuffer.Memory.IsPersistentMapped;
+            if (isPersistentMapped)
+            {
+                mappedPtr = (IntPtr)vkBuffer.Memory.BlockMappedPointer;
+            }
+            else
+            {
+                VkBufferCreateInfo bufferCI = VkBufferCreateInfo.New();
+                bufferCI.usage = VkBufferUsageFlags.TransferSrc;
+                bufferCI.size = vkBuffer.BufferMemoryRequirements.size;
+                VkResult result = vkCreateBuffer(_gd.Device, ref bufferCI, null, out copySrcBuffer);
+                CheckResult(result);
+
+                vkGetBufferMemoryRequirements(_gd.Device, copySrcBuffer, out VkMemoryRequirements memReqs);
+
+                memoryBlock = _gd.MemoryManager.Allocate(
+                    _gd.PhysicalDeviceMemProperties,
+                    memReqs.memoryTypeBits,
+                    VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
+                    true,
+                    memReqs.size,
+                    memReqs.alignment);
+
+                result = vkBindBufferMemory(_gd.Device, copySrcBuffer, memoryBlock.DeviceMemory, memoryBlock.Offset);
+                CheckResult(result);
+
+                mappedPtr = (IntPtr)memoryBlock.BlockMappedPointer;
+            }
+
             byte* destPtr = (byte*)mappedPtr + bufferOffsetInBytes;
             Unsafe.CopyBlock(destPtr, source.ToPointer(), sizeInBytes);
-            UnmapBuffer(vkBuffer);
+
+            if (!isPersistentMapped)
+            {
+                EnsureNoRenderPass();
+                VkBufferCopy copyRegion = new VkBufferCopy { size = vkBuffer.BufferMemoryRequirements.size };
+                vkCmdCopyBuffer(_cb, copySrcBuffer, vkBuffer.DeviceBuffer, 1, ref copyRegion);
+
+                if (_buffersToDestroy == null)
+                {
+                    _buffersToDestroy = new List<Vulkan.VkBuffer>();
+                }
+                _buffersToDestroy.Add(copySrcBuffer);
+
+                if (_memoriesToFree == null)
+                {
+                    _memoriesToFree = new List<VkMemoryBlock>();
+                }
+                _memoriesToFree.Add(memoryBlock);
+            }
         }
 
         private IntPtr MapBuffer(VkBuffer buffer, uint numBytes)

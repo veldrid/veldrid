@@ -38,8 +38,11 @@ namespace Veldrid.OpenGL
             if (_nameChanged)
             {
                 _nameChanged = false;
-                SetObjectLabel(ObjectLabelIdentifier.Sampler, _noMipmapState.Sampler, string.Format("{0}_WithoutMipmapping", _name));
-                SetObjectLabel(ObjectLabelIdentifier.Sampler, _mipmapState.Sampler, string.Format("{0}_WithMipmapping", _name));
+                if (_gd.Extensions.KHR_Debug)
+                {
+                    SetObjectLabel(ObjectLabelIdentifier.Sampler, _noMipmapState.Sampler, string.Format("{0}_WithoutMipmapping", _name));
+                    SetObjectLabel(ObjectLabelIdentifier.Sampler, _mipmapState.Sampler, string.Format("{0}_WithMipmapping", _name));
+                }
             }
         }
 

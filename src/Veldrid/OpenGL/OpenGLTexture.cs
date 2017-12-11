@@ -108,7 +108,10 @@ namespace Veldrid.OpenGL
             if (_nameChanged)
             {
                 _nameChanged = false;
-                SetObjectLabel(ObjectLabelIdentifier.Texture, _texture, _name);
+                if (_gd.Extensions.KHR_Debug)
+                {
+                    SetObjectLabel(ObjectLabelIdentifier.Texture, _texture, _name);
+                }
             }
         }
 

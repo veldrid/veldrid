@@ -40,7 +40,10 @@ namespace Veldrid.OpenGL
             if (_nameChanged)
             {
                 _nameChanged = false;
-                SetObjectLabel(ObjectLabelIdentifier.Buffer, _buffer, _name);
+                if (_gd.Extensions.KHR_Debug)
+                {
+                    SetObjectLabel(ObjectLabelIdentifier.Buffer, _buffer, _name);
+                }
             }
         }
 

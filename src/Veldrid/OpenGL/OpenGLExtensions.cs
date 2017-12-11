@@ -15,6 +15,8 @@ namespace Veldrid.OpenGL
             ARB_TextureStorage = IsExtensionSupported("GL_ARB_texture_storage"); // OpenGL 4.2 / 4.3 (multisampled)
             ARB_TextureView = IsExtensionSupported("GL_ARB_texture_view"); // OpenGL 4.3
             ARB_CopyImage = IsExtensionSupported("GL_ARB_copy_image");
+            ARB_DebugOutput = IsExtensionSupported("GL_ARB_debug_output");
+            KHR_Debug = IsExtensionSupported("GL_KHR_debug");
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -22,6 +24,8 @@ namespace Veldrid.OpenGL
         public readonly bool ARB_TextureStorage;
         public readonly bool ARB_TextureView;
         public readonly bool ARB_CopyImage;
+        public readonly bool ARB_DebugOutput;
+        public readonly bool KHR_Debug;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.

@@ -43,6 +43,8 @@ namespace Veldrid.OpenGL
         private readonly MapResultHolder _mapResultHolder = new MapResultHolder();
 
         private bool _syncToVBlank;
+        public int MajorVersion { get; }
+        public int MinorVersion { get; }
 
         public override GraphicsBackend BackendType => GraphicsBackend.OpenGL;
 
@@ -80,24 +82,14 @@ namespace Veldrid.OpenGL
             _setSyncToVBlank = platformInfo.SetSyncToVerticalBlank;
             LoadAllFunctions(_glContext, platformInfo.GetProcAddress);
 
-            ResourceFactory = new OpenGLResourceFactory(this);
-
-            glGenVertexArrays(1, out _vao);
+            int majorVersion, minorVersion;
+            glGetIntegerv(GetPName.MajorVersion, &majorVersion);
+            CheckLastError();
+            glGetIntegerv(GetPName.MinorVersion, &minorVersion);
             CheckLastError();
 
-            glBindVertexArray(_vao);
-            CheckLastError();
-
-            _swapchainFramebuffer = new OpenGLSwapchainFramebuffer(width, height, options.SwapchainDepthFormat);
-
-            if (options.Debug)
-            {
-                EnableDebugCallback();
-            }
-
-            // Set miscellaneous initial states.
-            glEnable(EnableCap.TextureCubeMapSeamless);
-            CheckLastError();
+            MajorVersion = majorVersion;
+            MinorVersion = majorVersion;
 
             int extensionCount;
             glGetIntegerv(GetPName.NumExtensions, &extensionCount);
@@ -116,6 +108,26 @@ namespace Veldrid.OpenGL
             }
 
             _extensions = new OpenGLExtensions(extensions);
+
+            ResourceFactory = new OpenGLResourceFactory(this);
+
+            glGenVertexArrays(1, out _vao);
+            CheckLastError();
+
+            glBindVertexArray(_vao);
+            CheckLastError();
+
+            _swapchainFramebuffer = new OpenGLSwapchainFramebuffer(width, height, options.SwapchainDepthFormat);
+
+            if (options.Debug && _extensions.ARB_DebugOutput)
+            {
+                EnableDebugCallback();
+            }
+
+            // Set miscellaneous initial states.
+            glEnable(EnableCap.TextureCubeMapSeamless);
+            CheckLastError();
+
             _commandExecutor = new OpenGLCommandExecutor(_extensions);
 
             int maxColorTextureSamples;

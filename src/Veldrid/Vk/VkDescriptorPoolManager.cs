@@ -164,7 +164,7 @@ namespace Veldrid.Vk
         }
     }
 
-    public struct DescriptorAllocationToken
+    internal struct DescriptorAllocationToken
     {
         public readonly VkDescriptorSet Set;
         public readonly VkDescriptorPool Pool;

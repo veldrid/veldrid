@@ -17,15 +17,14 @@ namespace Veldrid.NeoDemo
         public Buffer CameraInfoBuffer { get; private set; }
         public Buffer PointLightsBuffer { get; private set; }
 
-        public Texture ShadowMapTexture { get; private set; }
-        public TextureView NearShadowMapView { get; private set; }
-        public Framebuffer NearShadowMapFramebuffer { get; private set; }
-
-        public TextureView MidShadowMapView { get; private set; }
-        public Framebuffer MidShadowMapFramebuffer { get; private set; }
-
-        public TextureView FarShadowMapView { get; private set; }
-        public Framebuffer FarShadowMapFramebuffer { get; private set; }
+        public CascadedShadowMaps ShadowMaps { get; private set; } = new CascadedShadowMaps();
+        public TextureView NearShadowMapView => ShadowMaps.NearShadowMapView;
+        public TextureView MidShadowMapView => ShadowMaps.MidShadowMapView;
+        public TextureView FarShadowMapView => ShadowMaps.FarShadowMapView;
+        public Framebuffer NearShadowMapFramebuffer => ShadowMaps.NearShadowMapFramebuffer;
+        public Framebuffer MidShadowMapFramebuffer => ShadowMaps.MidShadowMapFramebuffer;
+        public Framebuffer FarShadowMapFramebuffer => ShadowMaps.FarShadowMapFramebuffer;
+        public Texture ShadowMapTexture => ShadowMaps.NearShadowMap; // Only used for size.
 
         // MainSceneView and Duplicator resource sets both use this.
         public ResourceLayout TextureSamplerResourceLayout { get; private set; }
@@ -82,24 +81,12 @@ namespace Veldrid.NeoDemo
 
             cl.UpdateBuffer(PointLightsBuffer, 0, pli.GetBlittable());
 
-            ShadowMapTexture = factory.CreateTexture(new TextureDescription(2048, 2048, 1, 1, 3, PixelFormat.D24_UNorm_S8_UInt, TextureUsage.DepthStencil | TextureUsage.Sampled));
-            ShadowMapTexture.Name = "Shadow Map";
-            NearShadowMapView = factory.CreateTextureView(new TextureViewDescription(ShadowMapTexture, 0, 1, 0, 1));
-            NearShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
-                new FramebufferAttachmentDescription(ShadowMapTexture, 0), Array.Empty<FramebufferAttachmentDescription>()));
-
-            MidShadowMapView = factory.CreateTextureView(new TextureViewDescription(ShadowMapTexture, 0, 1, 1, 1));
-            MidShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
-                new FramebufferAttachmentDescription(ShadowMapTexture, 1), Array.Empty<FramebufferAttachmentDescription>()));
-
-            FarShadowMapView = factory.CreateTextureView(new TextureViewDescription(ShadowMapTexture, 0, 1, 2, 1));
-            FarShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
-                new FramebufferAttachmentDescription(ShadowMapTexture, 2), Array.Empty<FramebufferAttachmentDescription>()));
-
             TextureSamplerResourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("SourceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("SourceSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
             RecreateWindowSizedResources(gd, cl);
+
+            ShadowMaps.CreateDeviceResources(gd);
         }
 
         public virtual void DestroyDeviceObjects()
@@ -110,13 +97,6 @@ namespace Veldrid.NeoDemo
             LightViewProjectionBuffer0.Dispose();
             LightViewProjectionBuffer1.Dispose();
             LightViewProjectionBuffer2.Dispose();
-            NearShadowMapView.Dispose();
-            NearShadowMapFramebuffer.Dispose();
-            ShadowMapTexture.Dispose();
-            MidShadowMapView.Dispose();
-            MidShadowMapFramebuffer.Dispose();
-            FarShadowMapView.Dispose();
-            FarShadowMapFramebuffer.Dispose();
             DepthLimitsBuffer.Dispose();
             CameraInfoBuffer.Dispose();
             PointLightsBuffer.Dispose();
@@ -134,6 +114,7 @@ namespace Veldrid.NeoDemo
             DuplicatorTargetSet1.Dispose();
             DuplicatorFramebuffer.Dispose();
             TextureSamplerResourceLayout.Dispose();
+            ShadowMaps.DestroyDeviceObjects();
         }
 
         public void SetCurrentScene(Scene scene)
@@ -226,6 +207,55 @@ namespace Veldrid.NeoDemo
 
             FramebufferDescription fbDesc = new FramebufferDescription(null, DuplicatorTarget0, DuplicatorTarget1);
             DuplicatorFramebuffer = factory.CreateFramebuffer(ref fbDesc);
+        }
+    }
+
+    public class CascadedShadowMaps
+    {
+        public Texture NearShadowMap { get; private set; }
+        public TextureView NearShadowMapView { get; private set; }
+        public Framebuffer NearShadowMapFramebuffer { get; private set; }
+
+        public Texture MidShadowMap { get; private set; }
+        public TextureView MidShadowMapView { get; private set; }
+        public Framebuffer MidShadowMapFramebuffer { get; private set; }
+
+        public Texture FarShadowMap { get; private set; }
+        public TextureView FarShadowMapView { get; private set; }
+        public Framebuffer FarShadowMapFramebuffer { get; private set; }
+
+        public void CreateDeviceResources(GraphicsDevice gd)
+        {
+            var factory = gd.ResourceFactory;
+            TextureDescription desc = new TextureDescription(2048, 2048, 1, 1, 1, PixelFormat.D24_UNorm_S8_UInt, TextureUsage.DepthStencil | TextureUsage.Sampled);
+            NearShadowMap = factory.CreateTexture(desc);
+            NearShadowMap.Name = "Near Shadow Map";
+            NearShadowMapView = factory.CreateTextureView(NearShadowMap);
+            NearShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
+                new FramebufferAttachmentDescription(NearShadowMap, 0), Array.Empty<FramebufferAttachmentDescription>()));
+
+            MidShadowMap = factory.CreateTexture(desc);
+            MidShadowMapView = factory.CreateTextureView(new TextureViewDescription(MidShadowMap, 0, 1, 0, 1));
+            MidShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
+                new FramebufferAttachmentDescription(MidShadowMap, 0), Array.Empty<FramebufferAttachmentDescription>()));
+
+            FarShadowMap = factory.CreateTexture(desc);
+            FarShadowMapView = factory.CreateTextureView(new TextureViewDescription(FarShadowMap, 0, 1, 0, 1));
+            FarShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
+                new FramebufferAttachmentDescription(FarShadowMap, 0), Array.Empty<FramebufferAttachmentDescription>()));
+        }
+
+        public void DestroyDeviceObjects()
+        {
+            NearShadowMap.Dispose();
+            MidShadowMap.Dispose();
+            FarShadowMap.Dispose();
+            NearShadowMapFramebuffer.Dispose();
+            MidShadowMapFramebuffer.Dispose();
+            FarShadowMapFramebuffer.Dispose();
+            NearShadowMapView.Dispose();
+            MidShadowMapView.Dispose();
+            FarShadowMapView.Dispose();
         }
     }
 }

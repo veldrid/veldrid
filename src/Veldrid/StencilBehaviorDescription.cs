@@ -2,6 +2,9 @@
 
 namespace Veldrid
 {
+    /// <summary>
+    /// Describes how stencil tests are performed in a <see cref="Pipeline"/>'s depth-stencil state.
+    /// </summary>
     public struct StencilBehaviorDescription : IEquatable<StencilBehaviorDescription>
     {
         /// <summary>

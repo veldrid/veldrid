@@ -11,12 +11,14 @@ namespace Veldrid.Vk
     {
         private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkFramebuffer _deviceFramebuffer;
-        private readonly VkRenderPass _renderPass;
+        private readonly VkRenderPass _renderPassNoClear;
+        private readonly VkRenderPass _renderPassClear;
         private readonly List<VkImageView> _attachmentViews = new List<VkImageView>();
         private bool _disposed;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _deviceFramebuffer;
-        public override VkRenderPass RenderPass => _renderPass;
+        public override VkRenderPass RenderPassNoClear => _renderPassNoClear;
+        public override VkRenderPass RenderPassClear => _renderPassClear;
 
         public override uint RenderableWidth => Width;
         public override uint RenderableHeight => Height;
@@ -103,7 +105,21 @@ namespace Veldrid.Vk
             renderPassCI.dependencyCount = 1;
             renderPassCI.pDependencies = &subpassDependency;
 
-            VkResult creationResult = vkCreateRenderPass(_gd.Device, ref renderPassCI, null, out _renderPass);
+            VkResult creationResult = vkCreateRenderPass(_gd.Device, ref renderPassCI, null, out _renderPassNoClear);
+            CheckResult(creationResult);
+
+            if (DepthTarget != null)
+            {
+                depthAttachmentDesc.loadOp = VkAttachmentLoadOp.Clear;
+                depthAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.Clear;
+            }
+
+            for (int i = 0; i < colorAttachmentCount; i++)
+            {
+                colorAttachmentDescriptions[i].loadOp = VkAttachmentLoadOp.Clear;
+            }
+
+            creationResult = vkCreateRenderPass(_gd.Device, ref renderPassCI, null, out _renderPassClear);
             CheckResult(creationResult);
 
             VkFramebufferCreateInfo fbCI = VkFramebufferCreateInfo.New();
@@ -167,7 +183,7 @@ namespace Veldrid.Vk
             fbCI.attachmentCount = fbAttachmentsCount;
             fbCI.pAttachments = fbAttachments;
             fbCI.layers = 1;
-            fbCI.renderPass = _renderPass;
+            fbCI.renderPass = _renderPassNoClear;
 
             creationResult = vkCreateFramebuffer(_gd.Device, ref fbCI, null, out _deviceFramebuffer);
             CheckResult(creationResult);
@@ -180,7 +196,7 @@ namespace Veldrid.Vk
                 _disposed = true;
 
                 vkDestroyFramebuffer(_gd.Device, _deviceFramebuffer, null);
-                vkDestroyRenderPass(_gd.Device, _renderPass, null);
+                vkDestroyRenderPass(_gd.Device, _renderPassNoClear, null);
                 foreach (VkImageView view in _attachmentViews)
                 {
                     vkDestroyImageView(_gd.Device, view, null);

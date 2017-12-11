@@ -22,17 +22,23 @@ namespace Veldrid.Vk
         private bool _commandBufferEnded;
         private VkRect2D[] _scissorRects = Array.Empty<VkRect2D>();
 
+        private VkClearValue[] _clearValues = Array.Empty<VkClearValue>();
+        private bool[] _validColorClearValues = Array.Empty<bool>();
+        private VkClearValue? _depthClearValue;
+
         // Graphics State
         private VkFramebufferBase _currentFramebuffer;
         private VkRenderPass _activeRenderPass;
         private VkPipeline _currentGraphicsPipeline;
         private VkResourceSet[] _currentGraphicsResourceSets = Array.Empty<VkResourceSet>();
         private bool[] _graphicsResourceSetsChanged;
+        private int _newGraphicsResourceSets;
 
         // Compute State
         private VkPipeline _currentComputePipeline;
         private VkResourceSet[] _currentComputeResourceSets = Array.Empty<VkResourceSet>();
         private bool[] _computeResourceSetsChanged;
+        private int _newComputeResourceSets;
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
@@ -113,47 +119,65 @@ namespace Veldrid.Vk
 
         public override void ClearColorTarget(uint index, RgbaFloat clearColor)
         {
-            EnsureRenderPassActive();
-
-            VkClearValue clearValue = new VkClearValue { color = new VkClearColorValue(clearColor.R, clearColor.G, clearColor.B, clearColor.A) };
-            VkClearAttachment clearAttachment = new VkClearAttachment
+            VkClearValue clearValue = new VkClearValue
             {
-                colorAttachment = index,
-                aspectMask = VkImageAspectFlags.Color,
-                clearValue = clearValue
+                color = new VkClearColorValue(clearColor.R, clearColor.G, clearColor.B, clearColor.A)
             };
 
-            Texture colorTex = _currentFramebuffer.ColorTargets[(int)index].Target;
-            VkClearRect clearRect = new VkClearRect
+            if (_activeRenderPass != VkRenderPass.Null)
             {
-                baseArrayLayer = 0,
-                layerCount = 1,
-                rect = new VkRect2D(0, 0, colorTex.Width, colorTex.Height)
-            };
+                VkClearAttachment clearAttachment = new VkClearAttachment
+                {
+                    colorAttachment = index,
+                    aspectMask = VkImageAspectFlags.Color,
+                    clearValue = clearValue
+                };
 
-            vkCmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
+                Texture colorTex = _currentFramebuffer.ColorTargets[(int)index].Target;
+                VkClearRect clearRect = new VkClearRect
+                {
+                    baseArrayLayer = 0,
+                    layerCount = 1,
+                    rect = new VkRect2D(0, 0, colorTex.Width, colorTex.Height)
+                };
+
+                vkCmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
+            }
+            else
+            {
+                // Queue up the clear value for the next RenderPass.
+                _clearValues[index] = clearValue;
+                _validColorClearValues[index] = true;
+            }
         }
 
         public override void ClearDepthTarget(float depth)
         {
-            EnsureRenderPassActive();
-
             VkClearValue clearValue = new VkClearValue { depthStencil = new VkClearDepthStencilValue(depth, 0) };
-            VkClearAttachment clearAttachment = new VkClearAttachment
-            {
-                aspectMask = VkImageAspectFlags.Depth,
-                clearValue = clearValue
-            };
 
-            Texture depthTex = _currentFramebuffer.DepthTarget.Value.Target;
-            VkClearRect clearRect = new VkClearRect
+            if (_activeRenderPass != VkRenderPass.Null)
             {
-                baseArrayLayer = 0,
-                layerCount = 1,
-                rect = new VkRect2D(0, 0, depthTex.Width, depthTex.Height)
-            };
+                VkClearAttachment clearAttachment = new VkClearAttachment
+                {
+                    aspectMask = VkImageAspectFlags.Depth,
+                    clearValue = clearValue
+                };
 
-            vkCmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
+                Texture depthTex = _currentFramebuffer.DepthTarget.Value.Target;
+                VkClearRect clearRect = new VkClearRect
+                {
+                    baseArrayLayer = 0,
+                    layerCount = 1,
+                    rect = new VkRect2D(0, 0, depthTex.Width, depthTex.Height)
+                };
+
+                vkCmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
+            }
+            else
+            {
+                // Queue up the clear value for the next RenderPass.
+                _depthClearValue = clearValue;
+            }
         }
 
         public override void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
@@ -186,24 +210,13 @@ namespace Veldrid.Vk
         {
             EnsureRenderPassActive();
 
-            // TODO: This should only call vkCmdBindDescriptorSets once, or rather, only the ones that changed.
-            for (int i = 0; i < _graphicsResourceSetsChanged.Length; i++)
-            {
-                if (_graphicsResourceSetsChanged[i])
-                {
-                    _graphicsResourceSetsChanged[i] = false;
-                    VkDescriptorSet ds = _currentGraphicsResourceSets[i].DescriptorSet;
-                    vkCmdBindDescriptorSets(
-                        _cb,
-                         VkPipelineBindPoint.Graphics,
-                         _currentGraphicsPipeline.PipelineLayout,
-                         (uint)i,
-                         1,
-                         ref ds,
-                         0,
-                         null);
-                }
-            }
+            FlushNewResourceSets(
+                _newGraphicsResourceSets,
+                _currentGraphicsResourceSets,
+                _graphicsResourceSetsChanged,
+                VkPipelineBindPoint.Graphics,
+                _currentGraphicsPipeline.PipelineLayout);
+            _newGraphicsResourceSets = 0;
 
             if (!_currentGraphicsPipeline.ScissorTestEnabled)
             {
@@ -211,35 +224,91 @@ namespace Veldrid.Vk
             }
         }
 
-        public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
+        private void FlushNewResourceSets(
+            int newResourceSetsCount,
+            VkResourceSet[] resourceSets,
+            bool[] resourceSetsChanged,
+            VkPipelineBindPoint bindPoint,
+            VkPipelineLayout pipelineLayout)
         {
-            EnsureNoRenderPass();
-
-            // TODO: This should only call vkCmdBindDescriptorSets once, or rather, only the ones that changed.
-            for (int i = 0; i < _computeResourceSetsChanged.Length; i++)
+            if (newResourceSetsCount > 0)
             {
-                if (_computeResourceSetsChanged[i])
+                int totalChanged = 0;
+                uint currentSlot = 0;
+                uint currentBatchIndex = 0;
+                uint currentBatchFirstSet = 0;
+                VkDescriptorSet* descriptorSets = stackalloc VkDescriptorSet[newResourceSetsCount];
+                while (totalChanged < newResourceSetsCount)
                 {
-                    _computeResourceSetsChanged[i] = false;
-                    VkDescriptorSet ds = _currentComputeResourceSets[i].DescriptorSet;
+                    if (resourceSetsChanged[currentSlot])
+                    {
+                        resourceSetsChanged[currentSlot] = false;
+                        descriptorSets[currentBatchIndex] = resourceSets[currentSlot].DescriptorSet;
+                        totalChanged += 1;
+                        currentBatchIndex += 1;
+                        currentSlot += 1;
+                    }
+                    else
+                    {
+                        if (currentBatchIndex != 0)
+                        {
+                            // Flush current batch.
+                            vkCmdBindDescriptorSets(
+                                _cb,
+                                bindPoint,
+                                pipelineLayout,
+                                currentBatchFirstSet,
+                                currentBatchIndex,
+                                descriptorSets,
+                                0,
+                                null);
+                            currentBatchIndex = 0;
+                        }
+
+                        currentSlot += 1;
+                        currentBatchFirstSet = currentSlot;
+                    }
+                }
+
+                if (currentBatchIndex != 0)
+                {
+                    // Flush current batch.
                     vkCmdBindDescriptorSets(
                         _cb,
-                         VkPipelineBindPoint.Compute,
-                         _currentComputePipeline.PipelineLayout,
-                         (uint)i,
-                         1,
-                         ref ds,
-                         0,
-                         null);
+                        bindPoint,
+                        pipelineLayout,
+                        currentBatchFirstSet,
+                        currentBatchIndex,
+                        descriptorSets,
+                        0,
+                        null);
                 }
             }
+        }
+
+        public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
+        {
+            PreDispatchCommand();
 
             vkCmdDispatch(_cb, groupCountX, groupCountY, groupCountZ);
         }
 
-        protected override void DispatchIndirectCore(Buffer indirectBuffer, uint offset)
+        private void PreDispatchCommand()
         {
             EnsureNoRenderPass();
+
+            FlushNewResourceSets(
+                _newComputeResourceSets,
+                _currentComputeResourceSets,
+                _computeResourceSetsChanged,
+                VkPipelineBindPoint.Compute,
+                _currentComputePipeline.PipelineLayout);
+            _newComputeResourceSets = 0;
+        }
+
+        protected override void DispatchIndirectCore(Buffer indirectBuffer, uint offset)
+        {
+            PreDispatchCommand();
 
             VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(indirectBuffer);
             vkCmdDispatchIndirect(_cb, vkBuffer.DeviceBuffer, offset);
@@ -315,8 +384,10 @@ namespace Veldrid.Vk
             VkFramebufferBase vkFB = Util.AssertSubtype<Framebuffer, VkFramebufferBase>(fb);
             _currentFramebuffer = vkFB;
             Util.EnsureArraySize(ref _scissorRects, Math.Max(1, (uint)vkFB.ColorTargets.Count));
-
-            BeginCurrentRenderPass();
+            uint clearValueCount = (uint)vkFB.ColorTargets.Count;
+            Util.EnsureArraySize(ref _clearValues, clearValueCount + 1); // Leave an extra space for the depth value (tracked separately).
+            Util.ClearArray(_validColorClearValues);
+            Util.EnsureArraySize(ref _validColorClearValues, clearValueCount);
         }
 
         private void EnsureRenderPassActive()
@@ -339,12 +410,65 @@ namespace Veldrid.Vk
         {
             Debug.Assert(_activeRenderPass == VkRenderPass.Null);
 
+            bool haveAnyAttachments = _framebuffer.ColorTargets.Count > 0 || _framebuffer.DepthTarget != null;
+            bool haveAllClearValues = _depthClearValue.HasValue || _framebuffer.DepthTarget == null;
+            bool haveAnyClearValues = _depthClearValue.HasValue;
+            for (int i = 0; i < _validColorClearValues.Length; i++)
+            {
+                if (!_validColorClearValues[i])
+                {
+                    haveAllClearValues = false;
+                    haveAnyClearValues = true;
+                }
+            }
+
             VkRenderPassBeginInfo renderPassBI = VkRenderPassBeginInfo.New();
-            renderPassBI.framebuffer = _currentFramebuffer.CurrentFramebuffer;
-            renderPassBI.renderPass = _currentFramebuffer.RenderPass;
             renderPassBI.renderArea = new VkRect2D(_currentFramebuffer.RenderableWidth, _currentFramebuffer.RenderableHeight);
-            vkCmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
-            _activeRenderPass = _currentFramebuffer.RenderPass;
+            renderPassBI.framebuffer = _currentFramebuffer.CurrentFramebuffer;
+
+            if (!haveAnyAttachments || !haveAllClearValues)
+            {
+                renderPassBI.renderPass = _currentFramebuffer.RenderPassNoClear;
+                vkCmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
+                _activeRenderPass = _currentFramebuffer.RenderPassNoClear;
+
+                if (haveAnyClearValues)
+                {
+                    if (_depthClearValue.HasValue)
+                    {
+                        ClearDepthTarget(_depthClearValue.Value.depthStencil.depth);
+                        _depthClearValue = null;
+                    }
+
+                    for (uint i = 0; i < _validColorClearValues.Length; i++)
+                    {
+                        if (_validColorClearValues[i])
+                        {
+                            _validColorClearValues[i] = false;
+                            VkClearValue vkClearValue = _clearValues[i];
+                            RgbaFloat clearColor = new RgbaFloat(
+                                vkClearValue.color.float32_0,
+                                vkClearValue.color.float32_1,
+                                vkClearValue.color.float32_2,
+                                vkClearValue.color.float32_3);
+                            ClearColorTarget(i, clearColor);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                renderPassBI.renderPass = _currentFramebuffer.RenderPassClear;
+                fixed (VkClearValue* clearValuesPtr = &_clearValues[0])
+                {
+                    renderPassBI.clearValueCount = (uint)_clearValues.Length;
+                    renderPassBI.pClearValues = clearValuesPtr;
+                    _clearValues[_clearValues.Length - 1] = _depthClearValue.Value;
+                    vkCmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
+                    _activeRenderPass = _currentFramebuffer.RenderPassClear;
+                    Util.ClearArray(_validColorClearValues);
+                }
+            }
         }
 
         private void EndCurrentRenderPass()
@@ -397,6 +521,7 @@ namespace Veldrid.Vk
                 VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
                 _currentGraphicsResourceSets[slot] = vkRS;
                 _graphicsResourceSetsChanged[slot] = true;
+                _newGraphicsResourceSets += 1;
             }
         }
 
@@ -407,6 +532,7 @@ namespace Veldrid.Vk
                 VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
                 _currentComputeResourceSets[slot] = vkRS;
                 _computeResourceSetsChanged[slot] = true;
+                _newComputeResourceSets += 1;
             }
         }
 

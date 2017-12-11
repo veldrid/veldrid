@@ -18,6 +18,7 @@ namespace Veldrid.Vk
         public VkFramebufferBase() { }
 
         public abstract Vulkan.VkFramebuffer CurrentFramebuffer { get; }
-        public abstract VkRenderPass RenderPass { get; }
+        public abstract VkRenderPass RenderPassNoClear { get; }
+        public abstract VkRenderPass RenderPassClear { get; }
     }
 }

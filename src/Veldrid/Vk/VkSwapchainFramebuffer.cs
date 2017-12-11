@@ -27,7 +27,8 @@ namespace Veldrid.Vk
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
 
-        public override VkRenderPass RenderPass => _scFramebuffers[0].RenderPass;
+        public override VkRenderPass RenderPassNoClear => _scFramebuffers[0].RenderPassNoClear;
+        public override VkRenderPass RenderPassClear => _scFramebuffers[0].RenderPassClear;
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _scColorTextures[(int)_currentImageIndex];
 

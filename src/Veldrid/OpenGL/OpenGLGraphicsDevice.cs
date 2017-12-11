@@ -520,7 +520,7 @@ namespace Veldrid.OpenGL
                             Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
 
                             uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
-                            uint sizeInBytes = texture.Width * texture.Height * pixelSize;
+                            uint sizeInBytes = width * height * pixelSize;
 
                             FixedStagingBlock block = _gd._stagingMemoryPool.GetFixedStagingBlock(sizeInBytes);
 
@@ -563,8 +563,8 @@ namespace Veldrid.OpenGL
                                 }
                             }
 
-                            uint rowPitch = texture.Width * pixelSize;
-                            uint depthPitch = pixelSize * texture.Width * texture.Height;
+                            uint rowPitch = width * pixelSize;
+                            uint depthPitch = rowPitch * height;
                             MappedResourceInfoWithStaging info = new MappedResourceInfoWithStaging();
                             info.MappedResource = new MappedResource(
                                 resource,

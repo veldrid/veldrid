@@ -94,8 +94,8 @@ namespace Veldrid.ImageSharp
                     gd.Unmap(staging, level);
 
                     cl.CopyTexture(
-                        staging, 0, 0, 0, (uint)level, 0,
-                        ret, 0, 0, 0, (uint)level, 0,
+                        staging, 0, 0, 0, level, 0,
+                        ret, 0, 0, 0, level, 0,
                         (uint)image.Width, (uint)image.Height, 1, 1);
 
                 }

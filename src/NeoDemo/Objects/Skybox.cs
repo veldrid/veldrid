@@ -19,7 +19,6 @@ namespace Veldrid.NeoDemo.Objects
         // Context objects
         private Buffer _vb;
         private Buffer _ib;
-        private Buffer _viewMatrixBuffer;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
@@ -45,9 +44,6 @@ namespace Veldrid.NeoDemo.Objects
 
             _ib = factory.CreateBuffer(new BufferDescription(s_indices.SizeInBytes(), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, s_indices);
-
-            _viewMatrixBuffer = factory.CreateBuffer(
-                new BufferDescription((uint)Unsafe.SizeOf<Matrix4x4>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
             Texture textureCube;
             TextureView textureView;
@@ -109,11 +105,15 @@ namespace Veldrid.NeoDemo.Objects
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _layout,
                 sc.ProjectionMatrixBuffer,
-                _viewMatrixBuffer,
+                sc.ViewMatrixBuffer,
                 textureView,
                 gd.PointSampler));
 
-            _disposeCollector.Add(_vb, _ib, _viewMatrixBuffer, textureCube, textureView, _layout, _pipeline, _resourceSet, vs, fs);
+            _disposeCollector.Add(_vb, _ib, textureCube, textureView, _layout, _pipeline, _resourceSet, vs, fs);
+        }
+
+        public override void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc)
+        {
         }
 
         public static Skybox LoadDefaultSkybox()
@@ -132,12 +132,6 @@ namespace Veldrid.NeoDemo.Objects
             _disposeCollector.DisposeAll();
         }
 
-        public override void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc)
-        {
-            Matrix4x4 viewMat = ConvertToMatrix3x3(sc.Camera.ViewMatrix);
-            cl.UpdateBuffer(_viewMatrixBuffer, 0, ref viewMat);
-        }
-
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
             cl.SetVertexBuffer(0, _vb);
@@ -145,15 +139,6 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetPipeline(_pipeline);
             cl.SetGraphicsResourceSet(0, _resourceSet);
             cl.DrawIndexed((uint)s_indices.Length, 1, 0, 0, 0);
-        }
-
-        private static Matrix4x4 ConvertToMatrix3x3(Matrix4x4 m)
-        {
-            return new Matrix4x4(
-                m.M11, m.M12, m.M13, 0,
-                m.M21, m.M22, m.M23, 0,
-                m.M31, m.M32, m.M33, 0,
-                0, 0, 0, 1);
         }
 
         public override RenderPasses RenderPasses => RenderPasses.Standard | RenderPasses.ReflectionMap;

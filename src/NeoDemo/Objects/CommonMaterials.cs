@@ -13,7 +13,7 @@ namespace Veldrid.NeoDemo.Objects
         {
             Brick = new MaterialPropsAndBuffer(new MaterialProperties { SpecularIntensity = new Vector3(0.2f), SpecularPower = 10f }) { Name = "Brick" };
             Vase = new MaterialPropsAndBuffer(new MaterialProperties { SpecularIntensity = new Vector3(1.0f), SpecularPower = 10f }) { Name = "Vase" };
-            Reflective = new MaterialPropsAndBuffer(new MaterialProperties { SpecularIntensity = new Vector3(0.2f), SpecularPower = 10f, Reflectivity = 0.9f }) { Name = "Reflective" };
+            Reflective = new MaterialPropsAndBuffer(new MaterialProperties { SpecularIntensity = new Vector3(0.2f), SpecularPower = 10f, Reflectivity = 0.3f }) { Name = "Reflective" };
         }
 
         public static void CreateAllDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)

@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Veldrid;
+using Veldrid.NeoDemo.Objects;
 
 namespace Veldrid.NeoDemo
 {
@@ -54,6 +55,8 @@ namespace Veldrid.NeoDemo
         public Camera Camera { get; set; }
         public DirectionalLight DirectionalLight { get; } = new DirectionalLight();
         public TextureSampleCount MainSceneSampleCount { get; internal set; }
+        public Buffer MirrorClipPlaneBuffer { get; private set; }
+        public Buffer NoClipPlaneBuffer { get; private set; }
 
         public virtual void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
@@ -113,6 +116,11 @@ namespace Veldrid.NeoDemo
             ReflectionFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(ReflectionDepthTexture, ReflectionColorTexture));
             ReflectionViewProjBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
+            MirrorClipPlaneBuffer = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer));
+            gd.UpdateBuffer(MirrorClipPlaneBuffer, 0, new ClipPlaneInfo(MirrorMesh.Plane, true));
+            NoClipPlaneBuffer = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer));
+            gd.UpdateBuffer(NoClipPlaneBuffer, 0, new ClipPlaneInfo());
+
             RecreateWindowSizedResources(gd, cl);
         }
 
@@ -153,6 +161,8 @@ namespace Veldrid.NeoDemo
             ReflectionColorView.Dispose();
             ReflectionFramebuffer.Dispose();
             ReflectionViewProjBuffer.Dispose();
+            MirrorClipPlaneBuffer.Dispose();
+            NoClipPlaneBuffer.Dispose();
         }
 
         public void SetCurrentScene(Scene scene)

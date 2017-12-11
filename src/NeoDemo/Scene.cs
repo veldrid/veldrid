@@ -164,15 +164,7 @@ namespace Veldrid.NeoDemo
             view = planeReflectionMatrix * view;
             gd.UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
 
-            ImGui.Checkbox("Use oblique projection matrix.", ref _useObliqueProjection);
-
             Matrix4x4 projection = _camera.ProjectionMatrix;
-            if (_useObliqueProjection)
-            {
-                Util.CalculateObliqueMatrixPerspective(ref projection, view, MirrorMesh.Plane);
-            }
-            cl.UpdateBuffer(sc.ProjectionMatrixBuffer, 0, ref projection);
-
             cl.UpdateBuffer(sc.ReflectionViewProjBuffer, 0, view * projection);
 
             BoundingFrustum cameraFrustum = new BoundingFrustum(view * projection);
@@ -491,7 +483,6 @@ namespace Veldrid.NeoDemo
 
         private static Func<RenderPasses, Func<CullRenderable, bool>> s_createFilterFunc = rp => CreateFilter(rp);
         private CommandList _resourceUpdateCL;
-        private bool _useObliqueProjection;
 
         private Func<CullRenderable, bool> GetFilter(RenderPasses passes)
         {

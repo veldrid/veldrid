@@ -150,10 +150,6 @@ namespace Veldrid.NeoDemo
                             atriumFile.Positions[group.Faces[0].Vertex2.PositionIndex] * scale.Z);
                         materialProps = CommonMaterials.Reflective;
                     }
-                    if (group.Name == "sponza_382" || group.Name == "sponza_379")
-                    {
-                        continue;
-                    }
 
                     AddTexturedMesh(
                         mesh,

@@ -27,8 +27,14 @@ namespace Shaders
         [VertexShader]
         public FSInput VS(VSInput input)
         {
+            Matrix4x4 view3x3 = new Matrix4x4(
+                View.M11, View.M12, View.M13, 0,
+                View.M21, View.M22, View.M23, 0,
+                View.M31, View.M32, View.M33, 0,
+                0, 0, 0, 1);
+
             FSInput output;
-            var pos = Mul(Projection, Mul(View, new Vector4(input.Position, 1.0f)));
+            var pos = Mul(Projection, Mul(view3x3, new Vector4(input.Position, 1.0f)));
             output.Position = new Vector4(pos.X, pos.Y, pos.W, pos.W);
             output.TexCoord = input.Position;
             return output;

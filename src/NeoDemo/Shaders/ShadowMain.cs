@@ -61,6 +61,9 @@ namespace Shaders
         public SamplerResource ReflectionSampler;
         [ResourceSet(3)]
         public Matrix4x4 ReflectionViewProj;
+        [ResourceSet(3)]
+        public ClipPlaneInfo ClipPlaneInfo;
+
 
         public struct VertexInput
         {
@@ -117,6 +120,14 @@ namespace Shaders
         [FragmentShader]
         public Vector4 FS(PixelInput input)
         {
+            if (ClipPlaneInfo.Enabled == 1)
+            {
+                if (Vector4.Dot(ClipPlaneInfo.ClipPlane, new Vector4(input.Position_WorldSpace, 1)) < 0)
+                {
+                    Discard();
+                }
+            }
+
             float alphaMapSample = Sample(AlphaMap, AlphaMapSampler, input.TexCoord).X;
             if (alphaMapSample == 0)
             {

@@ -169,7 +169,8 @@ namespace Veldrid.NeoDemo.Objects
             ResourceLayout reflectionLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("ReflectionMap", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("ReflectionSampler", ResourceKind.Sampler, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("ReflectionViewProj", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+                new ResourceLayoutElementDescription("ReflectionViewProj", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("ClipPlaneInfo", ResourceKind.UniformBuffer, ShaderStages.Fragment)));
 
             GraphicsPipelineDescription mainPD = new GraphicsPipelineDescription(
                 _alphamapTexture != null ? BlendStateDescription.SingleAlphaBlend : BlendStateDescription.SingleOverrideBlend,
@@ -212,12 +213,14 @@ namespace Veldrid.NeoDemo.Objects
             _reflectionRS = StaticResourceCache.GetResourceSet(gd.ResourceFactory, new ResourceSetDescription(reflectionLayout,
                 _alphaMapView, // Doesn't really matter -- just don't bind the actual reflection map since it's being rendered to.
                 gd.PointSampler,
-                sc.ReflectionViewProjBuffer));
+                sc.ReflectionViewProjBuffer,
+                sc.MirrorClipPlaneBuffer));
 
             _noReflectionRS = StaticResourceCache.GetResourceSet(gd.ResourceFactory, new ResourceSetDescription(reflectionLayout,
                 sc.ReflectionColorView,
                 gd.PointSampler,
-                sc.ReflectionViewProjBuffer));
+                sc.ReflectionViewProjBuffer,
+                sc.NoClipPlaneBuffer));
         }
 
         private ResourceSet[] CreateShadowMapResourceSets(

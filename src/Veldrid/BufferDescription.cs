@@ -11,17 +11,11 @@ namespace Veldrid
         /// <summary>
         /// The desired capacity, in bytes, of the <see cref="Buffer"/>.
         /// </summary>
-        public ulong SizeInBytes;
+        public uint SizeInBytes;
         /// <summary>
         /// Indicates how the <see cref="Buffer"/> will be used.
         /// </summary>
         public BufferUsage Usage;
-        /// <summary>
-        /// A value indicating whether the <see cref="Buffer"/> will be updated often.
-        /// "false" should be used for static or rarely-changing data, and "true" should be used for data which will change
-        /// continuously.
-        /// </summary>
-        public bool Dynamic;
         /// <summary>
         /// For structured buffers, this value indicates the size in bytes of a single structure element, and must be non-zero.
         /// For all other buffer types, this value must be zero.
@@ -33,25 +27,10 @@ namespace Veldrid
         /// </summary>
         /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
         /// <param name="usage">Indicates how the <see cref="Buffer"/> will be used.</param>
-        public BufferDescription(ulong sizeInBytes, BufferUsage usage)
+        public BufferDescription(uint sizeInBytes, BufferUsage usage)
         {
             SizeInBytes = sizeInBytes;
             Usage = usage;
-            Dynamic = false;
-            StructureByteStride = 0;
-        }
-
-        /// <summary>
-        /// Constructs a new <see cref="BufferDescription"/>.
-        /// </summary>
-        /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
-        /// <param name="usage">Indicates how the <see cref="Buffer"/> will be used.</param>
-        /// <param name="dynamic">Whether the <see cref="Buffer"/> should be specialized for continuous updates.</param>
-        public BufferDescription(ulong sizeInBytes, BufferUsage usage, bool dynamic)
-        {
-            SizeInBytes = sizeInBytes;
-            Usage = usage;
-            Dynamic = dynamic;
             StructureByteStride = 0;
         }
 
@@ -63,11 +42,10 @@ namespace Veldrid
         /// <param name="dynamic">Whether the <see cref="Buffer"/> should be specialized for continuous updates.</param>
         /// <param name="structureByteStride">For structured buffers, this value indicates the size in bytes of a single
         /// structure element, and must be non-zero. For all other buffer types, this value must be zero.</param>
-        public BufferDescription(ulong sizeInBytes, BufferUsage usage, bool dynamic, uint structureByteStride)
+        public BufferDescription(uint sizeInBytes, BufferUsage usage, uint structureByteStride)
         {
             SizeInBytes = sizeInBytes;
             Usage = usage;
-            Dynamic = dynamic;
             StructureByteStride = structureByteStride;
         }
 
@@ -78,7 +56,9 @@ namespace Veldrid
         /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(BufferDescription other)
         {
-            return SizeInBytes.Equals(other.SizeInBytes) && Dynamic.Equals(other.Dynamic);
+            return SizeInBytes.Equals(other.SizeInBytes)
+                && Usage == other.Usage
+                && StructureByteStride.Equals(other.StructureByteStride);
         }
 
         /// <summary>
@@ -87,7 +67,10 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(SizeInBytes.GetHashCode(), Dynamic.GetHashCode());
+            return HashHelper.Combine(
+                SizeInBytes.GetHashCode(),
+                Usage.GetHashCode(),
+                StructureByteStride.GetHashCode());
         }
     }
 }

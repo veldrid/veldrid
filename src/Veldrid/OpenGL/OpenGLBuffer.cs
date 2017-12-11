@@ -16,14 +16,14 @@ namespace Veldrid.OpenGL
         private bool _nameChanged;
         public string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
-        public override ulong SizeInBytes { get; }
+        public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }
 
         public uint Buffer => _buffer;
 
         public bool Created { get; private set; }
 
-        public OpenGLBuffer(OpenGLGraphicsDevice gd, ulong sizeInBytes, bool dynamic, BufferUsage usage)
+        public OpenGLBuffer(OpenGLGraphicsDevice gd, uint sizeInBytes, bool dynamic, BufferUsage usage)
         {
             _gd = gd;
             SizeInBytes = sizeInBytes;

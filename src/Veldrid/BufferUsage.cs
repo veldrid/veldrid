@@ -35,5 +35,10 @@
         /// This flag enables the use of a buffer in the DrawIndirect methods of <see cref="CommandList"/>.
         /// </summary>
         IndirectBuffer = 1 << 5,
+        Mappable = 1 << 6,
+        /// <summary>
+        /// A mappable Buffer which will be written to and read from continuously.
+        /// </summary>
+        Dynamic = 1 << 7,
     }
 }

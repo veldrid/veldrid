@@ -8,7 +8,7 @@ namespace Veldrid.D3D11
     {
         private readonly SharpDX.Direct3D11.Buffer _buffer;
 
-        public override ulong SizeInBytes { get; }
+        public override uint SizeInBytes { get; }
 
         public override BufferUsage Usage { get; }
 
@@ -18,7 +18,7 @@ namespace Veldrid.D3D11
 
         internal ShaderResourceView ShaderResourceView { get; }
 
-        public D3D11Buffer(Device device, ulong sizeInBytes, BufferUsage usage, uint structureByteStride)
+        public D3D11Buffer(Device device, uint sizeInBytes, BufferUsage usage, uint structureByteStride)
         {
             SizeInBytes = sizeInBytes;
             Usage = usage;

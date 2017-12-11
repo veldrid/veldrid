@@ -71,30 +71,37 @@ namespace Veldrid
         /// format can be created with.</returns>
         public abstract TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat);
 
-        public MappedResource Map(MappableResource resource, uint offsetInBytes, uint sizeInBytes)
+        public MappedResource Map(MappableResource resource, uint subresource)
         {
 #if VALIDATE_USAGE
             if (resource is Buffer buffer)
             {
-                if (sizeInBytes + offsetInBytes > buffer.SizeInBytes)
+                if ((buffer.Usage & BufferUsage.Mappable) != BufferUsage.Mappable)
                 {
-                    throw new VeldridException("The given resource range is not valid for the given Buffer.");
+                    throw new VeldridException("Buffers must have the Mappable usage flag to be mapped.");
                 }
-
-                if (!buffer.Dynamic)
+                if (subresource != 0)
                 {
-                    throw new VeldridException("Non-dynmic Buffers cannot be mapped.");
+                    throw new VeldridException("Subresource must be 0 for Buffer resources.");
                 }
             }
             else if (resource is Texture tex)
             {
+                throw new NotImplementedException();
             }
 #endif
 
-            return MapCore(resource, offsetInBytes, sizeInBytes);
+            return MapCore(resource, subresource);
         }
 
-        protected abstract MappedResource MapCore(MappableResource resource, uint offsetInBytes, uint sizeInBytes);
+        protected abstract MappedResource MapCore(MappableResource resource, uint subresource);
+
+        public void Unmap(MappableResource resource, uint subresource)
+        {
+            UnmapCore(resource, subresource);
+        }
+
+        protected abstract void UnmapCore(MappableResource resource, uint subresource);
 
         /// <summary>
         /// Updates a portion of a <see cref="Texture"/> resource with new data.

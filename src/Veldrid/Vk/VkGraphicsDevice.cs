@@ -82,9 +82,14 @@ namespace Veldrid.Vk
         public override void ExecuteCommands(CommandList cl)
         {
             VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
+            VkCommandBuffer vkCB = vkCL.CommandBuffer;
+            vkCL.CollectDisposables(_buffersToDestroy, _imagesToDestroy, _memoriesToFree);
+        }
+
+        private void SubmitCommandBuffer(VkCommandBuffer vkCB)
+        {
             VkSubmitInfo si = VkSubmitInfo.New();
             si.commandBufferCount = 1;
-            VkCommandBuffer vkCB = vkCL.CommandBuffer;
             si.pCommandBuffers = &vkCB;
             VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             si.pWaitDstStageMask = &waitDstStageMask;
@@ -93,7 +98,6 @@ namespace Veldrid.Vk
             {
                 vkQueueSubmit(_graphicsQueue, 1, ref si, VkFence.Null);
             }
-            vkCL.CollectDisposables(_buffersToDestroy, _imagesToDestroy, _memoriesToFree);
         }
 
         public void EnqueueDisposedCommandBuffer(VkCommandList vkCL)
@@ -558,8 +562,15 @@ namespace Veldrid.Vk
                 memoryBlock = ((VkTexture)resource).MemoryBlock;
             }
 
-            Debug.Assert(memoryBlock.IsPersistentMapped);
-            return new MappedResource(resource, (IntPtr)memoryBlock.BlockMappedPointer, (uint)memoryBlock.Size);
+            if (memoryBlock.IsPersistentMapped)
+            {
+                return new MappedResource(resource, (IntPtr)memoryBlock.BlockMappedPointer, (uint)memoryBlock.Size);
+            }
+            else
+            {
+                IntPtr mappedPtr = _memoryManager.Map(memoryBlock);
+                return new MappedResource(resource, mappedPtr, (uint)memoryBlock.Size);
+            }
         }
 
         protected override void PlatformDispose()
@@ -684,11 +695,31 @@ namespace Veldrid.Vk
                 _buffersToDestroy.Enqueue(copySrcBuffer);
                 _memoriesToFree.Enqueue(memoryBlock);
             }
+
+            vkEndCommandBuffer(cb);
+            SubmitCommandBuffer(cb);
         }
 
         private VkCommandBuffer GetFreeCommandBuffer()
         {
-            throw new NotImplementedException();
+            VkCommandBufferAllocateInfo cbAI = VkCommandBufferAllocateInfo.New();
+            cbAI.level = VkCommandBufferLevel.Primary;
+            cbAI.commandBufferCount = 1;
+            cbAI.commandPool = _graphicsCommandPool;
+            VkResult result = vkAllocateCommandBuffers(_device, ref cbAI, out VkCommandBuffer ret);
+            CheckResult(result);
+
+            VkCommandBufferBeginInfo cbBI = VkCommandBufferBeginInfo.New();
+            cbBI.flags = VkCommandBufferUsageFlags.OneTimeSubmit;
+            result = vkBeginCommandBuffer(ret, ref cbBI);
+            CheckResult(result);
+
+            return ret;
+        }
+
+        private void ReturnCommandBuffer(VkCommandBuffer cb)
+        {
+            vkFreeCommandBuffers(_device, _graphicsCommandPool, 1, ref cb);
         }
 
         private IntPtr MapBuffer(VkBuffer buffer, uint numBytes)
@@ -785,6 +816,9 @@ namespace Veldrid.Vk
             TransitionImageLayout(cb, tex.DeviceImage, mipLevel, 1, 0, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
             tex.ImageLayouts[mipLevel] = VkImageLayout.ShaderReadOnlyOptimal;
 
+            vkEndCommandBuffer(cb);
+            SubmitCommandBuffer(cb);
+
             _imagesToDestroy.Enqueue(stagingImage);
             _memoriesToFree.Enqueue(stagingMemory);
         }
@@ -861,6 +895,9 @@ namespace Veldrid.Vk
             CopyImage(cb, stagingImage, 0, vkTexCube.DeviceImage, mipLevel, width, height, cubeArrayLayer);
             TransitionImageLayout(cb, vkTexCube.DeviceImage, 0, 1, 0, 6, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal);
             vkTexCube.ImageLayouts[0] = VkImageLayout.ShaderReadOnlyOptimal;
+
+            vkEndCommandBuffer(cb);
+            SubmitCommandBuffer(cb);
 
             _imagesToDestroy.Enqueue(stagingImage);
             _memoriesToFree.Enqueue(stagingMemory);

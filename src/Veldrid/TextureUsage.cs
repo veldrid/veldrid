@@ -30,5 +30,6 @@ namespace Veldrid
         /// method.
         /// </summary>
         Cubemap = 1 << 4,
+        Mappable = 1 << 5,
     }
 }

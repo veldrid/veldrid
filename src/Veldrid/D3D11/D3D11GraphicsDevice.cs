@@ -1,4 +1,5 @@
-﻿using SharpDX.Direct3D11;
+﻿using SharpDX;
+using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
@@ -191,6 +192,148 @@ namespace Veldrid.D3D11
         private bool CheckFormat(Format format, int sampleCount)
         {
             return _device.CheckMultisampleQualityLevels(format, sampleCount) != 0;
+        }
+
+        protected override MappedResource MapCore(MappableResource resource, uint subresource)
+        {
+            if (resource is D3D11Buffer buffer)
+            {
+                DataBox db = _immediateContext.MapSubresource(
+                    buffer.Buffer,
+                    0,
+                    MapMode.ReadWrite,
+                    SharpDX.Direct3D11.MapFlags.None,
+                    out DataStream ds);
+
+                return new MappedResource(resource, db.DataPointer, buffer.SizeInBytes);
+            }
+            else throw new NotImplementedException();
+        }
+
+        protected override void UnmapCore(MappableResource resource, uint subresource)
+        {
+            lock (_immediateContextLock)
+            {
+                if (resource is D3D11Buffer buffer)
+                {
+                    _immediateContext.UnmapSubresource(buffer.Buffer, 0);
+                }
+            }
+        }
+
+        public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        {
+            D3D11Buffer d3dBuffer = Util.AssertSubtype<Buffer, D3D11Buffer>(buffer);
+            if (sizeInBytes == 0)
+            {
+                return;
+            }
+
+            ResourceRegion? subregion = null;
+            if ((d3dBuffer.Buffer.Description.BindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
+            {
+                // For a shader-constant buffer; set pDstBox to null. It is not possible to use
+                // this method to partially update a shader-constant buffer
+
+                subregion = new ResourceRegion()
+                {
+                    Left = (int)bufferOffsetInBytes,
+                    Right = (int)(sizeInBytes + bufferOffsetInBytes),
+                    Bottom = 1,
+                    Back = 1
+                };
+            }
+            lock (_immediateContextLock)
+            {
+                _immediateContext.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+            }
+        }
+
+        public override void UpdateTexture(
+            Texture texture,
+            IntPtr source,
+            uint sizeInBytes,
+            uint x,
+            uint y,
+            uint z,
+            uint width,
+            uint height,
+            uint depth,
+            uint mipLevel,
+            uint arrayLayer)
+        {
+            Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(texture).DeviceTexture;
+            ResourceRegion resourceRegion = new ResourceRegion(
+                left: (int)x,
+                top: (int)y,
+                front: (int)z,
+                right: (int)(x + width),
+                bottom: (int)(y + height),
+                back: (int)(z + depth));
+            uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture.Format) * width;
+            lock (_immediateContextLock)
+            {
+                _immediateContext.UpdateSubresource(deviceTexture, (int)mipLevel, resourceRegion, source, (int)srcRowPitch, 0);
+            }
+        }
+
+        public override void UpdateTextureCube(
+            Texture textureCube,
+            IntPtr source,
+            uint sizeInBytes,
+            CubeFace face,
+            uint x,
+            uint y,
+            uint width,
+            uint height,
+            uint mipLevel,
+            uint arrayLayer)
+        {
+            Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(textureCube).DeviceTexture;
+
+            ResourceRegion resourceRegion = new ResourceRegion(
+                left: (int)x,
+                right: (int)x + (int)width,
+                top: (int)y,
+                bottom: (int)y + (int)height,
+                front: 0,
+                back: 1);
+            uint srcRowPitch = FormatHelpers.GetSizeInBytes(textureCube.Format) * width;
+            int subresource = GetSubresource(face, mipLevel, textureCube.MipLevels);
+            lock (_immediateContextLock)
+            {
+                _immediateContext.UpdateSubresource(deviceTexture, subresource, resourceRegion, source, (int)srcRowPitch, 0);
+            }
+        }
+
+        private int GetSubresource(CubeFace face, uint level, uint totalLevels)
+        {
+            int faceOffset;
+            switch (face)
+            {
+                case CubeFace.NegativeX:
+                    faceOffset = 1;
+                    break;
+                case CubeFace.PositiveX:
+                    faceOffset = 0;
+                    break;
+                case CubeFace.NegativeY:
+                    faceOffset = 3;
+                    break;
+                case CubeFace.PositiveY:
+                    faceOffset = 2;
+                    break;
+                case CubeFace.NegativeZ:
+                    faceOffset = 4;
+                    break;
+                case CubeFace.PositiveZ:
+                    faceOffset = 5;
+                    break;
+                default:
+                    throw Illegal.Value<CubeFace>();
+            }
+
+            return faceOffset * (int)totalLevels + (int)level;
         }
 
         protected override void PlatformDispose()

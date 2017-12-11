@@ -11,7 +11,7 @@ namespace Veldrid.Vk
         private readonly VkMemoryBlock _memory;
         private readonly VkMemoryRequirements _bufferMemoryRequirements;
 
-        public override ulong SizeInBytes { get; }
+        public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }
 
         public Vulkan.VkBuffer DeviceBuffer => _deviceBuffer;
@@ -19,7 +19,7 @@ namespace Veldrid.Vk
 
         public VkMemoryRequirements BufferMemoryRequirements => _bufferMemoryRequirements;
 
-        public VkBuffer(VkGraphicsDevice gd, ulong sizeInBytes, bool dynamic, BufferUsage usage)
+        public VkBuffer(VkGraphicsDevice gd, uint sizeInBytes, bool dynamic, BufferUsage usage)
         {
             _gd = gd;
             SizeInBytes = sizeInBytes;

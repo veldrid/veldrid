@@ -21,6 +21,7 @@ namespace Veldrid.OpenGL
         private readonly OpenGLCommandExecutor _commandExecutor;
         private DebugProc _debugMessageCallback;
         private readonly OpenGLExtensions _extensions;
+        private readonly object _contextLock = new object();
 
         private readonly Action<IntPtr> _makeCurrent;
         private int _contextCurrentThreadID;
@@ -117,10 +118,13 @@ namespace Veldrid.OpenGL
 
         public override void ExecuteCommands(CommandList cl)
         {
-            EnsureCurrentContext();
-            OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
-            glCommandList.Commands.ExecuteAll(_commandExecutor);
-            glCommandList.Reset();
+            lock (_contextLock)
+            {
+                EnsureCurrentContext();
+                OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
+                glCommandList.Commands.ExecuteAll(_commandExecutor);
+                glCommandList.Reset();
+            }
         }
 
         private void EnsureCurrentContext()
@@ -174,6 +178,68 @@ namespace Veldrid.OpenGL
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
         {
             return _maxColorTextureSamples;
+        }
+
+        protected override MappedResource MapCore(MappableResource resource, uint subresource)
+        {
+            lock (_contextLock)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        protected override void UnmapCore(MappableResource resource, uint subresource)
+        {
+            lock (_contextLock)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        {
+            lock (_contextLock)
+            {
+                // _commandExecutor.UpdateBuffer(buffer, bufferOffsetInBytes, 
+            }
+        }
+
+        public override void UpdateTexture(
+            Texture texture,
+            IntPtr source,
+            uint sizeInBytes,
+            uint x,
+            uint y,
+            uint z,
+            uint width,
+            uint height,
+            uint depth,
+            uint mipLevel,
+            uint arrayLayer)
+        {
+            lock (_contextLock)
+            {
+                // _commandExecutor.UpdateTexture(texture, source, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
+                throw new NotImplementedException();
+            }
+        }
+
+        public override void UpdateTextureCube(
+            Texture texture,
+            IntPtr source,
+            uint sizeInBytes,
+            CubeFace face,
+            uint x,
+            uint y,
+            uint width,
+            uint height,
+            uint mipLevel,
+            uint arrayLayer)
+        {
+            lock (_contextLock)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         internal void EnqueueDisposal(OpenGLDeferredResource resource)

@@ -156,6 +156,8 @@ namespace Veldrid.NeoDemo.Objects
                 0, 0, 0, 1);
         }
 
+        public override RenderPasses RenderPasses => RenderPasses.Standard | RenderPasses.ReflectionMap;
+
         public override RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)
         {
             return new RenderOrderKey(ulong.MaxValue);

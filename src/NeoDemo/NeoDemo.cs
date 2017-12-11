@@ -57,7 +57,7 @@ namespace Veldrid.NeoDemo
                 windowCI,
                 gdOptions,
                 //GraphicsBackend.Vulkan,
-                //GraphicsBackend.OpenGL,
+                GraphicsBackend.OpenGL,
                 out _window,
                 out _gd);
             _window.Resized += () => _windowResized = true;

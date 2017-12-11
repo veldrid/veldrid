@@ -86,8 +86,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3))
             };
 
-            Shader vs = ShaderHelper.LoadShader(factory, "Skybox", ShaderStages.Vertex);
-            Shader fs = ShaderHelper.LoadShader(factory, "Skybox", ShaderStages.Fragment);
+            Shader vs = ShaderHelper.LoadShader(gd, factory, "Skybox", ShaderStages.Vertex);
+            Shader fs = ShaderHelper.LoadShader(gd, factory, "Skybox", ShaderStages.Fragment);
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
                 new ShaderStageDescription(ShaderStages.Vertex, vs, "VS"),

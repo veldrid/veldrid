@@ -393,19 +393,26 @@ namespace Veldrid.D3D11
         {
             Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(texture).DeviceTexture;
             bool useMap = (texture.Usage & TextureUsage.Staging) == TextureUsage.Staging;
+            uint blockSize = 1;
+            if (texture.Format == PixelFormat.BC3_UNorm)
+            {
+                blockSize = 4;
+            }
             if (useMap)
             {
                 uint subresource = texture.CalculateSubresource(mipLevel, arrayLayer);
                 MappedResourceCacheKey key = new MappedResourceCacheKey(texture, subresource);
                 MappedResource map = MapCore(texture, MapMode.Write, subresource);
 
-                if (map.RowPitch == width)
+                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
+                uint denseRowSize = width * pixelSizeInBytes * blockSize;
+
+                if (map.RowPitch == denseRowSize)
                 {
                     System.Buffer.MemoryCopy(source.ToPointer(), map.Data.ToPointer(), sizeInBytes, sizeInBytes);
                 }
                 else
                 {
-                    uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
                     for (uint yy = 0; yy < height; yy++)
                     {
                         byte* dstRowStart = ((byte*)map.Data) + (map.RowPitch * yy);

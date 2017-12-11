@@ -337,6 +337,8 @@ namespace Veldrid.Vk
                     return VkFormat.R32g32b32a32Sfloat;
                 case PixelFormat.R32_Float:
                     return toDepthFormat ? VkFormat.D32Sfloat : VkFormat.R32Sfloat;
+                case PixelFormat.BC3_UNorm:
+                    return VkFormat.Bc3UnormBlock;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -359,6 +361,8 @@ namespace Veldrid.Vk
                     return PixelFormat.R32_G32_B32_A32_Float;
                 case VkFormat.R32Sfloat:
                     return PixelFormat.R32_Float;
+                case VkFormat.Bc3UnormBlock:
+                    return PixelFormat.BC3_UNorm;
                 default:
                     throw Illegal.Value<VkFormat>();
             }

@@ -99,8 +99,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            Shader depthVS = StaticResourceCache.GetShader(gd.ResourceFactory, "ShadowDepth", ShaderStages.Vertex);
-            Shader depthFS = StaticResourceCache.GetShader(gd.ResourceFactory, "ShadowDepth", ShaderStages.Fragment);
+            Shader depthVS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowDepth", ShaderStages.Vertex);
+            Shader depthFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowDepth", ShaderStages.Fragment);
             ShaderStageDescription[] shadowDepthShaderStages = new ShaderStageDescription[]
             {
                 new ShaderStageDescription(ShaderStages.Vertex, depthVS, "VS"),
@@ -135,8 +135,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            Shader mainVS = StaticResourceCache.GetShader(gd.ResourceFactory, "ShadowMain", ShaderStages.Vertex);
-            Shader mainFS = StaticResourceCache.GetShader(gd.ResourceFactory, "ShadowMain", ShaderStages.Fragment);
+            Shader mainVS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Vertex);
+            Shader mainFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Fragment);
             ShaderStageDescription[] mainShaderStages = new ShaderStageDescription[]
             {
                 new ShaderStageDescription(ShaderStages.Vertex, mainVS, "VS"),

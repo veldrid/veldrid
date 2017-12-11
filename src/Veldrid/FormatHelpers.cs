@@ -18,6 +18,8 @@ namespace Veldrid
                     return 4;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return 16;
+                case PixelFormat.BC3_UNorm:
+                    return 1; // Not really
                 default: throw Illegal.Value<PixelFormat>();
             }
         }

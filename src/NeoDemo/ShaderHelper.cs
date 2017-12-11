@@ -5,9 +5,11 @@ namespace Veldrid.NeoDemo
 {
     public static class ShaderHelper
     {
-        public static Shader LoadShader(ResourceFactory factory, string setName, ShaderStages stage)
+        public static Shader LoadShader(GraphicsDevice gd, ResourceFactory factory, string setName, ShaderStages stage)
         {
-            return factory.CreateShader(new ShaderDescription(stage, LoadBytecode(factory, setName, stage)));
+            Shader shader = factory.CreateShader(new ShaderDescription(stage, LoadBytecode(factory, setName, stage)));
+            gd.SetResourceName(shader, $"{setName}-{stage.ToString()}");
+            return shader;
         }
 
         public static byte[] LoadBytecode(ResourceFactory factory, string setName, ShaderStages stage)

@@ -55,6 +55,8 @@ namespace Veldrid.OpenGL
                     return PixelInternalFormat.Rgba32f;
                 case PixelFormat.R32_Float:
                     return PixelInternalFormat.R32f;
+                case PixelFormat.BC3_UNorm:
+                    return PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -93,6 +95,8 @@ namespace Veldrid.OpenGL
                     return GLPixelFormat.Rgba;
                 case PixelFormat.R32_Float:
                     return GLPixelFormat.Red;
+                case PixelFormat.BC3_UNorm:
+                    return GLPixelFormat.Rgba;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -112,6 +116,8 @@ namespace Veldrid.OpenGL
                     return GLPixelType.Float;
                 case PixelFormat.R32_Float:
                     return GLPixelType.Float;
+                case PixelFormat.BC3_UNorm:
+                    return GLPixelType.UnsignedByte; // ?
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -132,6 +138,8 @@ namespace Veldrid.OpenGL
                     return SizedInternalFormat.Rgba32f;
                 case PixelFormat.R32_Float:
                     return depthFormat ? (SizedInternalFormat)PixelInternalFormat.DepthComponent32f : SizedInternalFormat.R32f;
+                case PixelFormat.BC3_UNorm:
+                    return (SizedInternalFormat)PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }

@@ -19,6 +19,7 @@ namespace Shaders
         {
             FragmentInput output;
             output.Position = Mul(ViewProjection, Mul(World, new Vector4(input.Position, 1)));
+            output.Position.Y += input.TexCoord.Y * .0001f;
             return output;
         }
 

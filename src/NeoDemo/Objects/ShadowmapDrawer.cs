@@ -61,8 +61,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate,  VertexElementFormat.Float2))
             };
 
-            Shader vs = ShaderHelper.LoadShader(factory, "ShadowmapPreviewShader", ShaderStages.Vertex);
-            Shader fs = ShaderHelper.LoadShader(factory, "ShadowmapPreviewShader", ShaderStages.Fragment);
+            Shader vs = ShaderHelper.LoadShader(gd, factory, "ShadowmapPreviewShader", ShaderStages.Vertex);
+            Shader fs = ShaderHelper.LoadShader(gd, factory, "ShadowmapPreviewShader", ShaderStages.Fragment);
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
                 new ShaderStageDescription(ShaderStages.Vertex, vs, "VS"),

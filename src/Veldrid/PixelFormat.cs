@@ -33,5 +33,9 @@
         /// Single-channel, 32-bit signed floating-point value. Can be used as a depth format.
         /// </summary>
         R32_Float,
+        /// <summary>
+        /// BC3 block compressed format.
+        /// </summary>
+        BC3_UNorm,
     }
 }

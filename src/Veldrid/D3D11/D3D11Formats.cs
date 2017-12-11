@@ -23,6 +23,8 @@ namespace Veldrid.D3D11
                     return Format.R32G32B32A32_Float;
                 case PixelFormat.R32_Float:
                     return depthFormat ? Format.D32_Float : Format.R32_Float;
+                case PixelFormat.BC3_UNorm:
+                    return Format.BC3_UNorm;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }

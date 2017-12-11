@@ -483,6 +483,7 @@ namespace Veldrid.Vk
             deviceFeatures.geometryShader = true;
             deviceFeatures.depthClamp = true;
             deviceFeatures.multiViewport = true;
+            deviceFeatures.textureCompressionBC = true;
 
             bool debugMarkerSupported = false;
 
@@ -930,13 +931,21 @@ namespace Veldrid.Vk
                 rowPitch = stagingLayout.rowPitch;
             }
 
-            if (rowPitch == width)
+            uint blockSize = 1;
+            if (texture.Format == PixelFormat.BC3_UNorm)
+            {
+                blockSize = 4;
+            }
+
+            uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
+            uint denseRowSize = width * pixelSizeInBytes * blockSize;
+
+            if (rowPitch == denseRowSize)
             {
                 System.Buffer.MemoryCopy(source.ToPointer(), mappedPtr, sizeInBytes, sizeInBytes);
             }
             else
             {
-                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
                 for (uint yy = 0; yy < height; yy++)
                 {
                     byte* dstRowStart = ((byte*)mappedPtr) + (rowPitch * yy);

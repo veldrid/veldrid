@@ -47,8 +47,8 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3))
             };
 
-            Shader gridVS = ShaderHelper.LoadShader(factory, "Grid", ShaderStages.Vertex);
-            Shader gridFS = ShaderHelper.LoadShader(factory, "Grid", ShaderStages.Fragment);
+            Shader gridVS = ShaderHelper.LoadShader(gd, factory, "Grid", ShaderStages.Vertex);
+            Shader gridFS = ShaderHelper.LoadShader(gd, factory, "Grid", ShaderStages.Fragment);
             ShaderStageDescription[] shaderStages = new ShaderStageDescription[]
             {
                 new ShaderStageDescription(ShaderStages.Vertex, gridVS, "VS"),

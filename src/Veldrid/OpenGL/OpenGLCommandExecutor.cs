@@ -678,6 +678,8 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
+            bool isCompressed = texture.Format == PixelFormat.BC3_UNorm;
+
             uint pixelSize = FormatHelpers.GetSizeInBytes(glTex.Format);
             if (pixelSize < 4)
             {
@@ -687,17 +689,34 @@ namespace Veldrid.OpenGL
 
             if (texTarget == TextureTarget.Texture2D)
             {
-                glTexSubImage2D(
-                    TextureTarget.Texture2D,
-                    (int)mipLevel,
-                    (int)x,
-                    (int)y,
-                    width,
-                    height,
-                    glTex.GLPixelFormat,
-                    glTex.GLPixelType,
-                    dataPtr.ToPointer());
-                CheckLastError();
+                if (isCompressed)
+                {
+                    glCompressedTexSubImage2D(
+                        TextureTarget.Texture2D,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        width,
+                        height,
+                        glTex.GLInternalFormat,
+                        pixelSize * width * height,
+                        dataPtr.ToPointer());
+                    CheckLastError();
+                }
+                else
+                {
+                    glTexSubImage2D(
+                        TextureTarget.Texture2D,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        width,
+                        height,
+                        glTex.GLPixelFormat,
+                        glTex.GLPixelType,
+                        dataPtr.ToPointer());
+                    CheckLastError();
+                }
             }
             else if (texTarget == TextureTarget.Texture2DArray)
             {
@@ -901,65 +920,76 @@ namespace Veldrid.OpenGL
 
             for (uint layer = 0; layer < layerCount; layer++)
             {
-                TextureTarget dstTarget = dstGLTexture.TextureTarget;
-                if (dstTarget == TextureTarget.Texture2D)
+                if (_extensions.ARB_CopyImage)
                 {
-                    glBindFramebuffer(
-                        FramebufferTarget.ReadFramebuffer,
-                        srcGLTexture.GetFramebuffer(srcMipLevel, srcBaseArrayLayer + layer));
-                    CheckLastError();
-
-                    glBindTexture(TextureTarget.Texture2D, dstGLTexture.Texture);
-                    CheckLastError();
-
-                    glCopyTexSubImage2D(
-                        TextureTarget.Texture2D,
-                        (int)dstMipLevel,
-                        (int)dstX, (int)dstY,
-                        (int)srcX, (int)srcY,
-                        width, height);
+                    glCopyImageSubData(
+                        srcGLTexture.Texture, srcGLTexture.TextureTarget, (int)srcMipLevel, (int)srcX, (int)srcY, (int)srcZ,
+                        dstGLTexture.Texture, dstGLTexture.TextureTarget, (int)dstMipLevel, (int)dstX, (int)dstY, (int)dstZ,
+                        width, height, depth);
                     CheckLastError();
                 }
-                else if (dstTarget == TextureTarget.Texture2DArray)
+                else
                 {
-                    glBindFramebuffer(
-                        FramebufferTarget.ReadFramebuffer,
-                        srcGLTexture.GetFramebuffer(srcMipLevel, srcBaseArrayLayer + layerCount));
-
-                    glBindTexture(TextureTarget.Texture2DArray, dstGLTexture.Texture);
-                    CheckLastError();
-
-                    glCopyTexSubImage3D(
-                        TextureTarget.Texture2DArray,
-                        (int)dstMipLevel,
-                        (int)dstX,
-                        (int)dstY,
-                        (int)(dstBaseArrayLayer + layer),
-                        (int)srcX,
-                        (int)srcY,
-                        width,
-                        height);
-                    CheckLastError();
-                }
-                else if (dstTarget == TextureTarget.Texture3D)
-                {
-                    glBindTexture(TextureTarget.Texture3D, dstGLTexture.Texture);
-                    CheckLastError();
-
-                    for (int i = 0; i < depth; i++)
+                    TextureTarget dstTarget = dstGLTexture.TextureTarget;
+                    if (dstTarget == TextureTarget.Texture2D)
                     {
+                        glBindFramebuffer(
+                            FramebufferTarget.ReadFramebuffer,
+                            srcGLTexture.GetFramebuffer(srcMipLevel, srcBaseArrayLayer + layer));
+                        CheckLastError();
+
+                        glBindTexture(TextureTarget.Texture2D, dstGLTexture.Texture);
+                        CheckLastError();
+
+                        glCopyTexSubImage2D(
+                            TextureTarget.Texture2D,
+                            (int)dstMipLevel,
+                            (int)dstX, (int)dstY,
+                            (int)srcX, (int)srcY,
+                            width, height);
+                        CheckLastError();
+                    }
+                    else if (dstTarget == TextureTarget.Texture2DArray)
+                    {
+                        glBindFramebuffer(
+                            FramebufferTarget.ReadFramebuffer,
+                            srcGLTexture.GetFramebuffer(srcMipLevel, srcBaseArrayLayer + layerCount));
+
+                        glBindTexture(TextureTarget.Texture2DArray, dstGLTexture.Texture);
+                        CheckLastError();
+
                         glCopyTexSubImage3D(
-                            TextureTarget.Texture3D,
+                            TextureTarget.Texture2DArray,
                             (int)dstMipLevel,
                             (int)dstX,
                             (int)dstY,
-                            (int)dstZ,
+                            (int)(dstBaseArrayLayer + layer),
                             (int)srcX,
                             (int)srcY,
                             width,
                             height);
+                        CheckLastError();
                     }
-                    CheckLastError();
+                    else if (dstTarget == TextureTarget.Texture3D)
+                    {
+                        glBindTexture(TextureTarget.Texture3D, dstGLTexture.Texture);
+                        CheckLastError();
+
+                        for (int i = 0; i < depth; i++)
+                        {
+                            glCopyTexSubImage3D(
+                                TextureTarget.Texture3D,
+                                (int)dstMipLevel,
+                                (int)dstX,
+                                (int)dstY,
+                                (int)dstZ,
+                                (int)srcX,
+                                (int)srcY,
+                                width,
+                                height);
+                        }
+                        CheckLastError();
+                    }
                 }
             }
         }

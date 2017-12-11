@@ -1018,9 +1018,74 @@ namespace Veldrid.OpenGLBinding
         public static void glCreateTextures(TextureTarget target, uint n, uint* textures)
             => p_glCreateTextures(target, n, textures);
 
+        private delegate void glCompressedTexSubImage2D_t(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            int yoffset,
+            uint width,
+            uint height,
+            PixelInternalFormat format,
+            uint imageSize,
+            void* data);
+        private static glCompressedTexSubImage2D_t p_glCompressedTexSubImage2D;
+        public static void glCompressedTexSubImage2D(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            int yoffset,
+            uint width,
+            uint height,
+            PixelInternalFormat format,
+            uint imageSize,
+            void* data) => p_glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
+
+        private delegate void glCopyImageSubData_t(
+            uint srcName,
+            TextureTarget srcTarget,
+            int srcLevel,
+            int srcX,
+            int srcY,
+            int srcZ,
+            uint dstName,
+            TextureTarget dstTarget,
+            int dstLevel,
+            int dstX,
+            int dstY,
+            int dstZ,
+            uint srcWidth,
+            uint srcHeight,
+            uint srcDepth);
+        private static glCopyImageSubData_t p_glCopyImageSubData;
+        public static void glCopyImageSubData(
+            uint srcName,
+            TextureTarget srcTarget,
+            int srcLevel,
+            int srcX,
+            int srcY,
+            int srcZ,
+            uint dstName,
+            TextureTarget dstTarget,
+            int dstLevel,
+            int dstX,
+            int dstY,
+            int dstZ,
+            uint srcWidth,
+            uint srcHeight,
+            uint srcDepth) => p_glCopyImageSubData(
+                srcName, srcTarget,
+                srcLevel, srcX, srcY, srcZ,
+                dstName, dstTarget,
+                dstLevel, dstX, dstY, dstZ,
+                srcWidth, srcHeight, srcDepth);
+
         public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
+
+            LoadFunction("glCompressedTexSubImage2D", out p_glCompressedTexSubImage2D);
+            LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
+
 
             LoadFunction("glGenVertexArrays", out p_glGenVertexArrays);
             LoadFunction("glGetError", out p_glGetError);

@@ -20,6 +20,7 @@ namespace Veldrid.NeoDemo.Objects
         private Buffer _vb;
         private Buffer _ib;
         private Pipeline _pipeline;
+        private Pipeline _reflectionPipeline;
         private ResourceSet _resourceSet;
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
 
@@ -101,6 +102,8 @@ namespace Veldrid.NeoDemo.Objects
                 sc.MainSceneFramebuffer.OutputDescription);
 
             _pipeline = factory.CreateGraphicsPipeline(ref pd);
+            pd.Outputs = sc.ReflectionFramebuffer.OutputDescription;
+            _reflectionPipeline = factory.CreateGraphicsPipeline(ref pd);
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _layout,
@@ -109,7 +112,7 @@ namespace Veldrid.NeoDemo.Objects
                 textureView,
                 gd.PointSampler));
 
-            _disposeCollector.Add(_vb, _ib, textureCube, textureView, _layout, _pipeline, _resourceSet, vs, fs);
+            _disposeCollector.Add(_vb, _ib, textureCube, textureView, _layout, _pipeline, _reflectionPipeline, _resourceSet, vs, fs);
         }
 
         public override void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc)
@@ -136,7 +139,7 @@ namespace Veldrid.NeoDemo.Objects
         {
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
-            cl.SetPipeline(_pipeline);
+            cl.SetPipeline(renderPass == RenderPasses.ReflectionMap ? _reflectionPipeline : _pipeline);
             cl.SetGraphicsResourceSet(0, _resourceSet);
             cl.DrawIndexed((uint)s_indices.Length, 1, 0, 0, 0);
         }

@@ -182,6 +182,7 @@ namespace Veldrid.NeoDemo.Objects
                 sc.MainSceneFramebuffer.OutputDescription);
             _pipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref mainPD);
             mainPD.RasterizerState.CullMode = FaceCullMode.Front;
+            mainPD.Outputs = sc.ReflectionFramebuffer.OutputDescription;
             _pipelineFrontCull = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref mainPD);
 
             _mainProjViewRS = StaticResourceCache.GetResourceSet(gd.ResourceFactory, new ResourceSetDescription(projViewLayout,

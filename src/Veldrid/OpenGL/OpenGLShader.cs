@@ -86,6 +86,7 @@ namespace Veldrid.OpenGL
             }
 
             _stagingBlock.Free();
+            Created = true;
         }
 
         public override void Dispose()

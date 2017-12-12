@@ -14,7 +14,7 @@ Supported backends:
 
 Pre-release versions of Veldrid are available from MyGet: https://www.myget.org/feed/mellinoe/package/nuget/Veldrid
 
-![Sponza](https://i.imgur.com/ccZVYol.jpg)
+![Sponza](https://i.imgur.com/QDaXwWL.jpg)
 
 ### Build instructions
 

@@ -1116,7 +1116,29 @@ namespace Veldrid.OpenGLBinding
             ActiveUniformBlockParameter pname,
             int* @params) => p_glGetActiveUniformBlockiv(program, uniformBlockIndex, pname, @params);
 
-    public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
+        private delegate void glGetCompressedTexImage_t(TextureTarget target, int level, void* pixels);
+        private static glGetCompressedTexImage_t p_glGetCompressedTexImage;
+        public static void glGetCompressedTexImage(TextureTarget target, int level, void* pixels)
+            => p_glGetCompressedTexImage(target, level, pixels);
+
+        private delegate void glGetCompressedTextureImage_t(uint texture, int level, uint bufSize, void* pixels);
+        private static glGetCompressedTextureImage_t p_glGetCompressedTextureImage;
+        public static void glGetCompressedTextureImage(uint texture, int level, uint bufSize, void* pixels)
+            => p_glGetCompressedTextureImage(texture, level, bufSize, pixels);
+
+        private delegate void glGetTexLevelParameteriv_t(
+            TextureTarget target,
+            int level,
+            GetTextureParameter pname,
+            int* @params);
+        private static glGetTexLevelParameteriv_t p_glGetTexLevelParameteriv;
+        public static void glGetTexLevelParameteriv(
+            TextureTarget target,
+            int level,
+            GetTextureParameter pname,
+            int* @params) => p_glGetTexLevelParameteriv(target, level, pname, @params);
+
+        public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
 
@@ -1127,6 +1149,9 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glStencilMask", out p_glStencilMask);
             LoadFunction("glClearStencil", out p_glClearStencil);
             LoadFunction("glGetActiveUniformBlockiv", out p_glGetActiveUniformBlockiv);
+            LoadFunction("glGetCompressedTexImage", out p_glGetCompressedTexImage);
+            LoadFunction("glGetCompressedTextureImage", out p_glGetCompressedTextureImage);
+            LoadFunction("glGetTexLevelParameteriv", out p_glGetTexLevelParameteriv);
 
 
             LoadFunction("glGenVertexArrays", out p_glGenVertexArrays);

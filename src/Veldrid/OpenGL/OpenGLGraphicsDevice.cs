@@ -128,7 +128,7 @@ namespace Veldrid.OpenGL
             glEnable(EnableCap.TextureCubeMapSeamless);
             CheckLastError();
 
-            _commandExecutor = new OpenGLCommandExecutor(_extensions);
+            _commandExecutor = new OpenGLCommandExecutor(_extensions, _stagingMemoryPool);
 
             int maxColorTextureSamples;
             glGetIntegerv(GetPName.MaxColorTextureSamples, &maxColorTextureSamples);
@@ -514,45 +514,100 @@ namespace Veldrid.OpenGL
                             uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
                             uint sizeInBytes = width * height * pixelSize;
 
+                            bool isCompressed = FormatHelpers.IsCompressedFormat(texture.Format);
+                            if (isCompressed)
+                            {
+                                int compressedSize;
+                                glGetTexLevelParameteriv(
+                                    texture.TextureTarget,
+                                    (int)mipLevel,
+                                    GetTextureParameter.TextureCompressedImageSize,
+                                    &compressedSize);
+                                CheckLastError();
+                                sizeInBytes = (uint)compressedSize;
+                            }
+
                             FixedStagingBlock block = _gd._stagingMemoryPool.GetFixedStagingBlock(sizeInBytes);
+
+                            if (pixelSize < 4)
+                            {
+                                glPixelStorei(PixelStoreParameter.PackAlignment, (int)pixelSize);
+                                CheckLastError();
+                            }
 
                             if (mode == MapMode.Read || mode == MapMode.ReadWrite)
                             {
-                                // Read data into buffer.
-                                if (_gd.Extensions.ARB_DirectStateAccess)
+                                if (!isCompressed)
                                 {
-                                    int zoffset = texture.ArrayLayers > 1 ? (int)arrayLayer : 0;
-                                    glGetTextureSubImage(
-                                        texture.Texture,
-                                        (int)mipLevel,
-                                        0, 0, zoffset,
-                                        width, height, depth,
-                                        texture.GLPixelFormat,
-                                        texture.GLPixelType,
-                                        sizeInBytes,
-                                        block.Data);
-                                    CheckLastError();
-                                }
-                                else
-                                {
-                                    if (texture.TextureTarget == TextureTarget.Texture2DArray
-                                        || texture.TextureTarget == TextureTarget.Texture2DMultisampleArray
-                                        || texture.TextureTarget == TextureTarget.TextureCubeMapArray)
+                                    // Read data into buffer.
+                                    if (_gd.Extensions.ARB_DirectStateAccess)
                                     {
-                                        throw new NotImplementedException();
+                                        int zoffset = texture.ArrayLayers > 1 ? (int)arrayLayer : 0;
+                                        glGetTextureSubImage(
+                                            texture.Texture,
+                                            (int)mipLevel,
+                                            0, 0, zoffset,
+                                            width, height, depth,
+                                            texture.GLPixelFormat,
+                                            texture.GLPixelType,
+                                            sizeInBytes,
+                                            block.Data);
+                                        CheckLastError();
                                     }
+                                    else
+                                    {
+                                        if (texture.TextureTarget == TextureTarget.Texture2DArray
+                                            || texture.TextureTarget == TextureTarget.Texture2DMultisampleArray
+                                            || texture.TextureTarget == TextureTarget.TextureCubeMapArray)
+                                        {
+                                            throw new NotImplementedException();
+                                        }
 
-                                    glBindTexture(texture.TextureTarget, texture.Texture);
-                                    CheckLastError();
+                                        glBindTexture(texture.TextureTarget, texture.Texture);
+                                        CheckLastError();
 
-                                    glGetTexImage(
-                                        texture.TextureTarget,
-                                        (int)mipLevel,
-                                        texture.GLPixelFormat,
-                                        texture.GLPixelType,
-                                        block.Data);
-                                    CheckLastError();
+                                        glGetTexImage(
+                                            texture.TextureTarget,
+                                            (int)mipLevel,
+                                            texture.GLPixelFormat,
+                                            texture.GLPixelType,
+                                            block.Data);
+                                        CheckLastError();
+                                    }
                                 }
+                                else // isCompressed
+                                {
+                                    if (_gd.Extensions.ARB_DirectStateAccess)
+                                    {
+                                        glGetCompressedTextureImage(
+                                            texture.Texture,
+                                            (int)mipLevel,
+                                            block.SizeInBytes,
+                                            block.Data);
+                                        CheckLastError();
+                                    }
+                                    else
+                                    {
+                                        if (texture.TextureTarget == TextureTarget.Texture2DArray
+                                            || texture.TextureTarget == TextureTarget.Texture2DMultisampleArray
+                                            || texture.TextureTarget == TextureTarget.TextureCubeMapArray)
+                                        {
+                                            throw new NotImplementedException();
+                                        }
+
+                                        glBindTexture(texture.TextureTarget, texture.Texture);
+                                        CheckLastError();
+
+                                        glGetCompressedTexImage(texture.TextureTarget, (int)mipLevel, block.Data);
+                                        CheckLastError();
+                                    }
+                                }
+                            }
+
+                            if (pixelSize < 4)
+                            {
+                                glPixelStorei(PixelStoreParameter.PackAlignment, 4);
+                                CheckLastError();
                             }
 
                             uint rowPitch = width * pixelSize;

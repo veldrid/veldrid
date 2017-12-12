@@ -67,6 +67,42 @@ namespace Veldrid.Tests
                 }
             }
         }
+
+        [Fact]
+        public unsafe void Copy_BC3_Unorm()
+        {
+            Texture copySrc = RF.CreateTexture(new TextureDescription(
+                64, 64, 1, 1, 1, PixelFormat.BC3_UNorm, TextureUsage.Staging));
+            Texture copyDst = RF.CreateTexture(new TextureDescription(
+                64, 64, 1, 1, 1, PixelFormat.BC3_UNorm, TextureUsage.Staging));
+
+            uint totalDataSize = copySrc.Width * copySrc.Height;
+            byte[] data = new byte[totalDataSize];
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i] = (byte)i;
+            }
+            fixed (byte* dataPtr = data)
+            {
+                GD.UpdateTexture(copySrc, (IntPtr)dataPtr, totalDataSize, 0, 0, 0, copySrc.Width, copySrc.Height, 1, 0, 0);
+            }
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyTexture(
+                copySrc, 0, 0, 0, 0, 0,
+                copyDst, 0, 0, 0, 0, 0,
+                copySrc.Width, copySrc.Height, 1, 1);
+            cl.End();
+            GD.ExecuteCommands(cl);
+            GD.WaitForIdle();
+            MappedResourceView<byte> view = GD.Map<byte>(copyDst, MapMode.Read);
+            for (int i = 0; i < data.Length; i++)
+            {
+                Assert.Equal(view[i], data[i]);
+            }
+        }
     }
 
 #if TEST_VULKAN

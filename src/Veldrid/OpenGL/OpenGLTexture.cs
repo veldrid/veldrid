@@ -450,6 +450,7 @@ namespace Veldrid.OpenGL
 
         public uint GetFramebuffer(uint mipLevel, uint arrayLayer)
         {
+            Debug.Assert(!FormatHelpers.IsCompressedFormat(Format));
             Debug.Assert(Created);
 
             uint subresource = CalculateSubresource(mipLevel, arrayLayer);

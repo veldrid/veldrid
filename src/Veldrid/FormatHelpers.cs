@@ -91,5 +91,10 @@ namespace Veldrid
         {
             return format == PixelFormat.D24_UNorm_S8_UInt || format == PixelFormat.D32_Float_S8_UInt;
         }
+
+        internal static bool IsCompressedFormat(PixelFormat format)
+        {
+            return format == PixelFormat.BC3_UNorm;
+        }
     }
 }

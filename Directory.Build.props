@@ -13,6 +13,12 @@
     <Authors>Eric Mellino</Authors>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
+    <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsMacOS>
+    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+  </PropertyGroup>
+
   <!-- Workaround for NuGet bug, see https://github.com/AArnott/Nerdbank.GitVersioning/issues/113 -->
   <PropertyGroup>
     <NerdbankGitVersioningVersion>2.0.41</NerdbankGitVersioningVersion>

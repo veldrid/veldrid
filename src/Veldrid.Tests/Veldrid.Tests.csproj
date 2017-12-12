@@ -4,7 +4,8 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>false</IsPackable>
-    <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);TEST_D3D11</DefineConstants>
+    <DefineConstants Condition="'$(IsWindows)' == 'true'">$(DefineConstants);TEST_D3D11;TEST_VULKAN</DefineConstants>
+    <DefineConstants Condition="'$(IsLinux)' == 'true'">$(DefineConstants);TEST_VULKAN</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

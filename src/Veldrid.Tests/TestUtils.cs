@@ -84,7 +84,7 @@ namespace Veldrid.Tests
             };
 
             GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, null, false);
-
+         
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGL, out window, out gd);
         }
 
@@ -118,7 +118,6 @@ namespace Veldrid.Tests
         public void Dispose()
         {
             _window.Close();
-            _window.PumpEvents();
             GD.WaitForIdle();
             _factory.DisposeCollector.DisposeAll();
             if (GD.BackendType != GraphicsBackend.OpenGL)

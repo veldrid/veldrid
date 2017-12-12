@@ -194,7 +194,10 @@ namespace Veldrid.OpenGL
                         CheckLastError();
                         if (blockIndex != GL_INVALID_INDEX)
                         {
-                            uniformBindings[i] = new OpenGLUniformBinding(_program, blockIndex);
+                            int blockSize;
+                            glGetActiveUniformBlockiv(_program, blockIndex, ActiveUniformBlockParameter.UniformBlockDataSize, &blockSize);
+                            CheckLastError();
+                            uniformBindings[i] = new OpenGLUniformBinding(_program, blockIndex, (uint)blockSize);
                         }
                         else
                         {
@@ -437,11 +440,13 @@ namespace Veldrid.OpenGL
     {
         public uint Program { get; }
         public uint BlockLocation { get; }
+        public uint BlockSize { get; }
 
-        public OpenGLUniformBinding(uint program, uint blockLocation)
+        public OpenGLUniformBinding(uint program, uint blockLocation, uint blockSize)
         {
             Program = program;
             BlockLocation = blockLocation;
+            BlockSize = blockSize;
         }
     }
 

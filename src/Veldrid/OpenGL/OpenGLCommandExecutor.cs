@@ -512,6 +512,11 @@ namespace Veldrid.OpenGL
                     case ResourceKind.UniformBuffer:
                         OpenGLBuffer glUB = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
                         OpenGLUniformBinding uniformBindingInfo = pipeline.GetUniformBindingForSlot(slot, element);
+                        if (glUB.SizeInBytes < uniformBindingInfo.BlockSize)
+                        {
+                            throw new VeldridException(
+                                $"Not enough data in uniform buffer. Shader expects at least {uniformBindingInfo.BlockSize}, but buffer only contains {glUB.SizeInBytes}");
+                        }
                         glUniformBlockBinding(pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + element);
                         CheckLastError();
 

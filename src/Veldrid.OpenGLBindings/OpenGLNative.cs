@@ -1104,7 +1104,19 @@ namespace Veldrid.OpenGLBinding
         private static glClearStencil_t p_glClearStencil;
         public static void glClearStencil(int s) => p_glClearStencil(s);
 
-        public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
+        private delegate void glGetActiveUniformBlockiv_t(
+            uint program,
+            uint uniformBlockIndex,
+            ActiveUniformBlockParameter pname,
+            int* @params);
+        private static glGetActiveUniformBlockiv_t p_glGetActiveUniformBlockiv;
+        public static void glGetActiveUniformBlockiv(
+            uint program,
+            uint uniformBlockIndex,
+            ActiveUniformBlockParameter pname,
+            int* @params) => p_glGetActiveUniformBlockiv(program, uniformBlockIndex, pname, @params);
+
+    public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
 
@@ -1114,6 +1126,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glStencilOpSeparate", out p_glStencilOpSeparate);
             LoadFunction("glStencilMask", out p_glStencilMask);
             LoadFunction("glClearStencil", out p_glClearStencil);
+            LoadFunction("glGetActiveUniformBlockiv", out p_glGetActiveUniformBlockiv);
 
 
             LoadFunction("glGenVertexArrays", out p_glGenVertexArrays);

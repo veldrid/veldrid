@@ -1889,4 +1889,19 @@ namespace Veldrid.OpenGLBinding
         IncrWrap = ((int)0x8507),
         DecrWrap = ((int)0x8508),
     }
+
+    public enum ActiveUniformBlockParameter : int
+    {
+        UniformBlockReferencedByTessControlShader = ((int)0x84F0),
+        UniformBlockReferencedByTessEvaluationShader = ((int)0x84F1),
+        UniformBlockBinding = ((int)0x8A3F),
+        UniformBlockDataSize = ((int)0x8A40),
+        UniformBlockNameLength = ((int)0x8A41),
+        UniformBlockActiveUniforms = ((int)0x8A42),
+        UniformBlockActiveUniformIndices = ((int)0x8A43),
+        UniformBlockReferencedByVertexShader = ((int)0x8A44),
+        UniformBlockReferencedByGeometryShader = ((int)0x8A45),
+        UniformBlockReferencedByFragmentShader = ((int)0x8A46),
+        UniformBlockReferencedByComputeShader = ((int)0x90EC),
+    }
 }

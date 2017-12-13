@@ -1,9 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/AArnott/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
-  "version": "4.0.0.0",
+  "version": "4.0.0-beta",
+  "publicReleaseRefSpec": [
+    "^refs/tags/v\\d+\\.\\d+" // we also release tags starting with vN.N
+  ],
   "cloudBuild": {
     "buildNumber": {
-      "enabled": true
+      "enabled": false
     }
   }
 }

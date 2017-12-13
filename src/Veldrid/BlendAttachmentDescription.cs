@@ -3,7 +3,7 @@
 namespace Veldrid
 {
     /// <summary>
-    /// A <see cref="Pipeline"/> component describing the blend behavior for an indiviaul color attachment.
+    /// A <see cref="Pipeline"/> component describing the blend behavior for an individual color attachment.
     /// </summary>
     public struct BlendAttachmentDescription : IEquatable<BlendAttachmentDescription>
     {

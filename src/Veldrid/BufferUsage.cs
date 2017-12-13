@@ -19,23 +19,23 @@ namespace Veldrid
         /// </summary>
         IndexBuffer = 1 << 1,
         /// <summary>
-        /// Indicates that a <see cref="Buffer"/> can be used as a uniform buffer.
+        /// Indicates that a <see cref="Buffer"/> can be used as a uniform Buffer.
         /// This flag enables the use of a Buffer in a <see cref="ResourceSet"/> as a uniform Buffer.
         /// </summary>
         UniformBuffer = 1 << 2,
         /// <summary>
-        /// Indicates that a <see cref="Buffer"/> can be used as a read-only structured buffer.
+        /// Indicates that a <see cref="Buffer"/> can be used as a read-only structured Buffer.
         /// This flag enables the use of a Buffer in a <see cref="ResourceSet"/> as a read-only structured Buffer.
         /// </summary>
         StructuredBufferReadOnly = 1 << 3,
         /// <summary>
-        /// Indicates that a <see cref="Buffer"/> can be used as a read-write structured buffer.
+        /// Indicates that a <see cref="Buffer"/> can be used as a read-write structured Buffer.
         /// This flag enables the use of a Buffer in a <see cref="ResourceSet"/> as a read-write structured Buffer.
         /// </summary>
         StructuredBufferReadWrite = 1 << 4,
         /// <summary>
         /// Indicates that a <see cref="Buffer"/> can be used as the source of indirect drawing information.
-        /// This flag enables the use of a buffer in the DrawIndirect methods of <see cref="CommandList"/>.
+        /// This flag enables the use of a Buffer in the *Indirect methods of <see cref="CommandList"/>.
         /// </summary>
         IndirectBuffer = 1 << 5,
         /// <summary>

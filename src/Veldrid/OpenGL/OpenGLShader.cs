@@ -80,7 +80,9 @@ namespace Veldrid.OpenGL
                 glGetShaderInfoLog(_shader, (uint)infoLogLength, &returnedInfoLength, infoLog);
                 CheckLastError();
 
-                string message = Encoding.UTF8.GetString(infoLog, (int)returnedInfoLength);
+                string message = infoLog != null 
+                    ? Encoding.UTF8.GetString(infoLog, (int)returnedInfoLength)
+                    : "<null>";
 
                 throw new VeldridException($"Unable to compile shader code for shader [{_name}] of type {_shaderType}: {message}");
             }

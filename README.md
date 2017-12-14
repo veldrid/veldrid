@@ -12,7 +12,11 @@ Supported backends:
 
 [Veldrid documentation site](https://mellinoe.github.io/veldrid-docs/)
 
-Pre-release versions of Veldrid are available from MyGet: https://www.myget.org/feed/mellinoe/package/nuget/Veldrid
+Veldrid is available on NuGet:
+
+[![NuGet](https://img.shields.io/nuget/v/Veldrid.svg)](https://www.nuget.org/packages/Veldrid)
+
+Pre-release versions of Veldrid are also available from MyGet: https://www.myget.org/feed/mellinoe/package/nuget/Veldrid
 
 ![Sponza](https://i.imgur.com/QDaXwWL.jpg)
 

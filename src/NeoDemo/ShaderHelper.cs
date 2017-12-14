@@ -44,7 +44,6 @@ namespace Veldrid.NeoDemo
                 case GraphicsBackend.Direct3D11: return ".hlsl.bytes";
                 case GraphicsBackend.Vulkan: return ".450.glsl.spv";
                 case GraphicsBackend.OpenGL:
-                case GraphicsBackend.OpenGLES:
                     throw new InvalidOperationException("OpenGL and OpenGLES do not support shader bytecode.");
                 default: throw new InvalidOperationException("Invalid Graphics backend: " + backend);
             }
@@ -57,7 +56,6 @@ namespace Veldrid.NeoDemo
                 case GraphicsBackend.Direct3D11: return ".hlsl";
                 case GraphicsBackend.Vulkan: return ".450.glsl";
                 case GraphicsBackend.OpenGL:
-                case GraphicsBackend.OpenGLES:
                     return ".330.glsl";
                 default: throw new InvalidOperationException("Invalid Graphics backend: " + backend);
             }

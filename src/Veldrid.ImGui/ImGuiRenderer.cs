@@ -190,7 +190,6 @@ namespace Veldrid
                         return GetEmbeddedResourceBytes(resourceName);
                     }
                 case GraphicsBackend.OpenGL:
-                case GraphicsBackend.OpenGLES:
                     {
                         string resourceName = name + ".glsl";
                         return GetEmbeddedResourceBytes(resourceName);

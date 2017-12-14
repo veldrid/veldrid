@@ -17,9 +17,5 @@
         /// OpenGL.
         /// </summary>
         OpenGL,
-        /// <summary>
-        /// OpenGL ES.
-        /// </summary>
-        OpenGLES,
     }
 }

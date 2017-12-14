@@ -11,4 +11,9 @@
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Description>Helper classes for creating and managing application windows and user input.</Description>
+    <PackageTags>Core Standard Game SDL2 Window Input</PackageTags>
+  </ItemGroup>
+
 </Project>

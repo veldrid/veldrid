@@ -5,4 +5,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Description>Raw OpenGL bindings for .NET. Used by Veldrid for OpenGL interop.</Description>
+    <PackageTags>3D Graphics OpenGL Core Standard Game</PackageTags>
+  </ItemGroup>
+
 </Project>

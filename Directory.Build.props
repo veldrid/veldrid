@@ -8,9 +8,11 @@
     <PackageOutputPath>$(BinDir)\Packages\$(Configuration)</PackageOutputPath>
   </PropertyGroup>
   <PropertyGroup>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/mellinoe/veldrid/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Copyright>Copyright 2017 (c) Eric Mellino. All rights reserved.</Copyright>
     <Authors>Eric Mellino</Authors>
+    <RepositoryUrl>https://github.com/mellinoe/veldrid</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup>

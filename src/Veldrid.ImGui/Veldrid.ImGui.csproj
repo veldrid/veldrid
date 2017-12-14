@@ -33,4 +33,9 @@
     <PackageReference Include="ImGui.NET" Version="0.3.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Description>ImGui integration for Veldrid. Provides a simple interface for rendering and interacting with ImGui.NET.</Description>
+    <PackageTags>3D Graphics Direct3D DirectX Vulkan OpenGL Metal Core Standard Game ImGui</PackageTags>
+  </ItemGroup>
+
 </Project>

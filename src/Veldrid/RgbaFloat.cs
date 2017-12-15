@@ -61,7 +61,7 @@ namespace Veldrid
         /// </summary>
         public static readonly RgbaFloat Blue = new RgbaFloat(0, 0, 1, 1);
         /// <summary>
-        /// Yellow (1, 1, 0, 0)
+        /// Yellow (1, 1, 0, 1)
         /// </summary>
         public static readonly RgbaFloat Yellow = new RgbaFloat(1, 1, 0, 1);
         /// <summary>

@@ -10,9 +10,9 @@
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+  <PropertyGroup>
     <Description>Miscellaneous utility functions useful for Veldrid.</Description>
     <PackageTags>Core Standard Game Graphics</PackageTags>
-  </ItemGroup>
+  </PropertyGroup>
 
 </Project>

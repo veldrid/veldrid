@@ -934,12 +934,12 @@ namespace Veldrid.D3D11
             _context.OutputMerger.SetRenderTargets(d3dFB.DepthStencilView, d3dFB.RenderTargetViews);
         }
 
-        public override void ClearColorTarget(uint index, RgbaFloat clearColor)
+        protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
         {
             _context.ClearRenderTargetView(D3D11Framebuffer.RenderTargetViews[index], new RawColor4(clearColor.R, clearColor.G, clearColor.B, clearColor.A));
         }
 
-        public override void ClearDepthStencil(float depth, byte stencil)
+        protected override void ClearDepthStencilCore(float depth, byte stencil)
         {
             _context.ClearDepthStencilView(D3D11Framebuffer.DepthStencilView, DepthStencilClearFlags.Depth, depth, stencil);
         }

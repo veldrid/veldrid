@@ -22,12 +22,12 @@ namespace Veldrid.OpenGL
             _commands.Begin();
         }
 
-        public override void ClearColorTarget(uint index, RgbaFloat clearColor)
+        protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
         {
             _commands.ClearColorTarget(index, clearColor);
         }
 
-        public override void ClearDepthStencil(float depth, byte stencil)
+        protected override void ClearDepthStencilCore(float depth, byte stencil)
         {
             _commands.ClearDepthTarget(depth, stencil);
         }

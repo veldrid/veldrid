@@ -100,7 +100,7 @@ namespace Veldrid.Vk
             _usedStagingBuffers.Clear();
         }
 
-        public override void ClearColorTarget(uint index, RgbaFloat clearColor)
+        protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
         {
             VkClearValue clearValue = new VkClearValue
             {
@@ -134,7 +134,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public override void ClearDepthStencil(float depth, byte stencil)
+        protected override void ClearDepthStencilCore(float depth, byte stencil)
         {
             VkClearValue clearValue = new VkClearValue { depthStencil = new VkClearDepthStencilValue(depth, stencil) };
 

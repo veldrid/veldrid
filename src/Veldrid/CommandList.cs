@@ -172,7 +172,18 @@ namespace Veldrid
         /// </summary>
         /// <param name="index">The color target index.</param>
         /// <param name="clearColor">The value to clear the target to.</param>
-        public abstract void ClearColorTarget(uint index, RgbaFloat clearColor);
+        public void ClearColorTarget(uint index, RgbaFloat clearColor)
+        {
+            if (_framebuffer.ColorTargets.Count <= index)
+            {
+                throw new VeldridException(
+                    "ClearColorTarget index must be less than the current Framebuffer's color target count.");
+            }
+
+            ClearColorTargetCore(index, clearColor);
+        }
+
+        protected abstract void ClearColorTargetCore(uint index, RgbaFloat clearColor);
 
         /// <summary>
         /// Clears the depth-stencil target of the active <see cref="Framebuffer"/>.
@@ -191,7 +202,18 @@ namespace Veldrid
         /// </summary>
         /// <param name="depth">The value to clear the depth buffer to.</param>
         /// <param name="stencil">The value to clear the stencil buffer to.</param>
-        public abstract void ClearDepthStencil(float depth, byte stencil);
+        public void ClearDepthStencil(float depth, byte stencil)
+        {
+            if (_framebuffer.DepthTarget == null)
+            {
+                throw new VeldridException(
+                    "The current Framebuffer has no depth target, so ClearDepthStencil cannot be used.");
+            }
+
+            ClearDepthStencilCore(depth, stencil);
+        }
+
+        protected abstract void ClearDepthStencilCore(float depth, byte stencil);
 
         /// <summary>
         /// Sets all active viewports to cover the entire active <see cref="Framebuffer"/>.

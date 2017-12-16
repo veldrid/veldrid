@@ -38,6 +38,32 @@ namespace Veldrid.Tests
             }
             GD.Unmap(staging);
         }
+
+        [Fact]
+        public void NoDepthTarget_ClearDepth_Fails()
+        {
+            Texture colorTarget = RF.CreateTexture(
+                new TextureDescription(1024, 1024, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            Framebuffer fb = RF.CreateFramebuffer(new FramebufferDescription(null, colorTarget));
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetFramebuffer(fb);
+            Assert.Throws<VeldridException>(() => cl.ClearDepthStencil(1f));
+        }
+
+        [Fact]
+        public void NoColorTarget_ClearColor_Fails()
+        {
+            Texture depthTarget = RF.CreateTexture(
+                new TextureDescription(1024, 1024, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil));
+            Framebuffer fb = RF.CreateFramebuffer(new FramebufferDescription(depthTarget));
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetFramebuffer(fb);
+            Assert.Throws<VeldridException>(() => cl.ClearColorTarget(0, RgbaFloat.Red));
+        }
     }
 
     public class OpenGLFramebufferTests : FramebufferTests<OpenGLDeviceCreator> { }

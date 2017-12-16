@@ -64,6 +64,24 @@ namespace Veldrid.Tests
             cl.SetFramebuffer(fb);
             Assert.Throws<VeldridException>(() => cl.ClearColorTarget(0, RgbaFloat.Red));
         }
+
+        [Fact]
+        public void ClearColorTarget_OutOfRange_Fails()
+        {
+            TextureDescription desc = new TextureDescription(
+                1024, 1024, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget);
+            Texture colorTarget0 = RF.CreateTexture(desc);
+            Texture colorTarget1 = RF.CreateTexture(desc);
+            Framebuffer fb = RF.CreateFramebuffer(new FramebufferDescription(null, colorTarget0, colorTarget1));
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetFramebuffer(fb);
+            cl.ClearColorTarget(0, RgbaFloat.Red);
+            cl.ClearColorTarget(1, RgbaFloat.Red);
+            Assert.Throws<VeldridException>(() => cl.ClearColorTarget(2, RgbaFloat.Red));
+            Assert.Throws<VeldridException>(() => cl.ClearColorTarget(3, RgbaFloat.Red));
+        }
     }
 
     public class OpenGLFramebufferTests : FramebufferTests<OpenGLDeviceCreator> { }

@@ -25,6 +25,7 @@ namespace Veldrid.D3D11
         private bool _syncToVBlank;
         private int _syncInterval;
         private readonly Format? _depthFormat;
+        private readonly float _pixelScale = 1f;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
@@ -89,6 +90,88 @@ namespace Veldrid.D3D11
             PostDeviceCreated();
         }
 
+        public D3D11GraphicsDevice(
+            GraphicsDeviceOptions options,
+            object swapChainPanel,
+            double renderWidth,
+            double renderHeight,
+            float logicalDpi)
+        {
+            SyncToVerticalBlank = options.SyncToVerticalBlank;
+            _depthFormat = options.SwapchainDepthFormat.HasValue
+                ? D3D11Formats.GetDepthFormat(options.SwapchainDepthFormat.Value)
+                : (Format?)null;
+
+#if DEBUG
+            DeviceCreationFlags creationFlags = DeviceCreationFlags.Debug;
+#else
+            DeviceCreationFlags creationFlags = options.Debug ? DeviceCreationFlags.Debug : DeviceCreationFlags.None;
+#endif 
+
+            using (SharpDX.Direct3D11.Device defaultDevice = new SharpDX.Direct3D11.Device(
+                SharpDX.Direct3D.DriverType.Hardware,
+                creationFlags))
+            {
+                _device = defaultDevice.QueryInterface<SharpDX.Direct3D11.Device2>();
+            }
+
+            _pixelScale = logicalDpi / 96.0f;
+
+            int width = (int)(renderWidth * _pixelScale);
+            int height = (int)(renderHeight * _pixelScale);
+
+            // Properties of the swap chain
+            SwapChainDescription1 swapChainDescription = new SwapChainDescription1()
+            {
+                AlphaMode = AlphaMode.Ignore,
+                BufferCount = 2,
+                Format = Format.B8G8R8A8_UNorm,
+                Height = width,
+                Width = height,
+                SampleDescription = new SampleDescription(1, 0),
+                SwapEffect = SwapEffect.FlipSequential,
+                Usage = Usage.BackBuffer | Usage.RenderTargetOutput,
+            };
+
+            // Retrive the SharpDX.DXGI device associated to the Direct3D device.
+            using (SharpDX.DXGI.Device3 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device3>())
+            {
+                // Get the SharpDX.DXGI factory automatically created when initializing the Direct3D device.
+                using (Factory2 dxgiFactory = dxgiDevice.Adapter.GetParent<Factory2>())
+                {
+                    // Create the swap chain and get the highest version available.
+                    using (SwapChain1 swapChain1 = new SwapChain1(dxgiFactory, _device, ref swapChainDescription))
+                    {
+                        _swapChain = swapChain1.QueryInterface<SwapChain2>();
+                    }
+                }
+            }
+
+            ComObject co = new ComObject(swapChainPanel);
+
+            ISwapChainPanelNative swapchainPanelNative = co.QueryInterfaceOrNull<ISwapChainPanelNative>();
+            if (swapchainPanelNative != null)
+            {
+                swapchainPanelNative.SwapChain = _swapChain;
+            }
+            else
+            {
+                ISwapChainBackgroundPanelNative bgPanelNative = co.QueryInterfaceOrNull<ISwapChainBackgroundPanelNative>();
+                if (bgPanelNative != null)
+                {
+                    bgPanelNative.SwapChain = _swapChain;
+                }
+            }
+
+            _immediateContext = _device.ImmediateContext;
+            _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
+
+            ResourceFactory = new D3D11ResourceFactory(this);
+            RecreateSwapchainFramebuffer(width, height);
+
+            PostDeviceCreated();
+        }
+
         public override void ResizeMainWindow(uint width, uint height)
         {
             RecreateSwapchainFramebuffer((int)width, (int)height);
@@ -105,7 +188,9 @@ namespace Veldrid.D3D11
 
             _swapChainFramebuffer?.Dispose();
 
-            _swapChain.ResizeBuffers(2, width, height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
+            int actualWidth = (int)(width * _pixelScale);
+            int actualHeight = (int)(height * _pixelScale);
+            _swapChain.ResizeBuffers(2, actualWidth, actualHeight, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
 
             // Get the backbuffer from the swapchain
             using (Texture2D backBufferTexture = _swapChain.GetBackBuffer<Texture2D>(0))

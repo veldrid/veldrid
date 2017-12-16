@@ -358,6 +358,27 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D11.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="swapChainPanel">A COM object which must implement the <see cref="SharpDX.DXGI.ISwapChainPanelNative"/>
+        /// or <see cref="SharpDX.DXGI.ISwapChainBackgroundPanelNative"/> interface. Generally, this should be a SwapChainPanel
+        /// or SwapChainBackgroundPanel contained in your application window.</param>
+        /// <param name="renderWidth">The renderable width of the swapchain panel.</param>
+        /// <param name="renderHeight">The renderable height of the swapchain panel.</param>
+        /// <param name="logicalDpi">The logical DPI of the swapchain panel.</param>
+        /// <returns></returns>
+        public static GraphicsDevice CreateD3D11(
+            GraphicsDeviceOptions options,
+            object swapChainPanel,
+            double renderWidth,
+            double renderHeight,
+            float logicalDpi)
+        {
+            return new D3D11.D3D11GraphicsDevice(options, swapChainPanel, renderWidth, renderHeight, logicalDpi);
+        }
+
+        /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Vulkan.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>

@@ -597,6 +597,65 @@ namespace Veldrid
         protected abstract void CopyBufferCore(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes);
 
         /// <summary>
+        /// Copies all subresources from one <see cref="Texture"/> to another.
+        /// </summary>
+        /// <param name="source">The source of Texture data.</param>
+        /// <param name="destination">The destination of Texture data.</param>
+        public void CopyTexture(Texture source, Texture destination)
+        {
+#if VALIDATE_USAGE
+            if (source.ArrayLayers != destination.ArrayLayers || source.MipLevels != destination.MipLevels
+                || source.SampleCount != destination.SampleCount || source.Width != destination.Width
+                || source.Height != destination.Height || source.Depth != destination.Depth
+                || source.Format != destination.Format)
+            {
+                throw new VeldridException("Source and destination Textures are not compatible to be copied.");
+            }
+#endif
+
+            for (uint level = 0; level < source.MipLevels; level++)
+            {
+                CopyTexture(
+                    source, 0, 0, 0, level, 0,
+                    destination, 0, 0, 0, level, 0,
+                    source.Width, source.Width, source.Depth,
+                    source.ArrayLayers);
+            }
+        }
+
+        /// <summary>
+        /// Copies all subresources from one <see cref="Texture"/> to another.
+        /// </summary>
+        /// <param name="source">The source of Texture data.</param>
+        /// <param name="destination">The destination of Texture data.</param>
+        /// <param name="mipLevel">The mip level to copy.</param>
+        /// <param name="arrayLayer">The array layer to copy.</param>
+        public void CopyTexture(Texture source, Texture destination, uint mipLevel, uint arrayLayer)
+        {
+#if VALIDATE_USAGE
+            if (source.ArrayLayers != destination.ArrayLayers || source.MipLevels != destination.MipLevels
+                || source.SampleCount != destination.SampleCount || source.Width != destination.Width
+                || source.Height != destination.Height || source.Depth != destination.Depth
+                || source.Format != destination.Format)
+            {
+                throw new VeldridException("Source and destination Textures are not compatible to be copied.");
+            }
+            if (mipLevel >= source.MipLevels || arrayLayer >= source.ArrayLayers)
+            {
+                throw new VeldridException(
+                    $"{nameof(mipLevel)} and {nameof(arrayLayer)} must be less than the given Textures' mip level count and array layer count.");
+            }
+#endif
+
+            Util.GetMipDimensions(source, mipLevel, out uint width, out uint height, out uint depth);
+            CopyTexture(
+                source, 0, 0, 0, mipLevel, arrayLayer,
+                destination, 0, 0, 0, mipLevel, arrayLayer,
+                width, height, depth,
+                1);
+        }
+
+        /// <summary>
         /// Copies a region from one <see cref="Texture"/> into another.
         /// </summary>
         /// <param name="source">The source <see cref="Texture"/> from which data is copied.</param>

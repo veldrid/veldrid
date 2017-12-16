@@ -174,6 +174,7 @@ namespace Veldrid
         /// <param name="clearColor">The value to clear the target to.</param>
         public void ClearColorTarget(uint index, RgbaFloat clearColor)
         {
+#if VALIDATE_USAGE
             if (_framebuffer.ColorTargets.Count <= index)
             {
                 throw new VeldridException(
@@ -182,6 +183,7 @@ namespace Veldrid
 
             ClearColorTargetCore(index, clearColor);
         }
+#endif
 
         protected abstract void ClearColorTargetCore(uint index, RgbaFloat clearColor);
 
@@ -204,11 +206,13 @@ namespace Veldrid
         /// <param name="stencil">The value to clear the stencil buffer to.</param>
         public void ClearDepthStencil(float depth, byte stencil)
         {
+#if VALIDATE_USAGE
             if (_framebuffer.DepthTarget == null)
             {
                 throw new VeldridException(
                     "The current Framebuffer has no depth target, so ClearDepthStencil cannot be used.");
             }
+#endif
 
             ClearDepthStencilCore(depth, stencil);
         }

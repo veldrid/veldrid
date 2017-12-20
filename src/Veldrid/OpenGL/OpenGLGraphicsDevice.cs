@@ -117,7 +117,11 @@ namespace Veldrid.OpenGL
             glBindVertexArray(_vao);
             CheckLastError();
 
-            _swapchainFramebuffer = new OpenGLSwapchainFramebuffer(width, height, options.SwapchainDepthFormat);
+            _swapchainFramebuffer = new OpenGLSwapchainFramebuffer(
+                width,
+                height,
+                PixelFormat.B8_G8_R8_A8_UNorm,
+                options.SwapchainDepthFormat);
 
             if (options.Debug && _extensions.ARB_DebugOutput)
             {
@@ -168,7 +172,10 @@ namespace Veldrid.OpenGL
         public override void ExecuteCommands(CommandList cl)
         {
             OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
-            _submittedCommandLists.Add(glCommandList);
+            lock (_commandListDisposalLock)
+            {
+                _submittedCommandLists.Add(glCommandList);
+            }
             _executionThread.ExecuteCommands(glCommandList);
         }
 

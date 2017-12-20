@@ -82,6 +82,15 @@ namespace Veldrid.Tests
             Assert.Throws<VeldridException>(() => cl.ClearColorTarget(2, RgbaFloat.Red));
             Assert.Throws<VeldridException>(() => cl.ClearColorTarget(3, RgbaFloat.Red));
         }
+
+        [Fact]
+        public void ClearSwapchainFramebuffer_Succeeds()
+        {
+            CommandList cl = RF.CreateCommandList();
+            cl.SetFramebuffer(GD.SwapchainFramebuffer);
+            cl.ClearColorTarget(0, RgbaFloat.Red);
+            cl.ClearDepthStencil(1f);
+        }
     }
 
     public class OpenGLFramebufferTests : FramebufferTests<OpenGLDeviceCreator> { }

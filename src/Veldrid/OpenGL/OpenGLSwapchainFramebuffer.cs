@@ -1,24 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Veldrid.OpenGL
 {
     internal class OpenGLSwapchainFramebuffer : Framebuffer
     {
-        private uint _width;
-        private uint _height;
         private readonly PixelFormat? _depthFormat;
 
-        public override uint Width => _width;
-        public override uint Height => _height;
+        public override uint Width => _colorTexture.Width;
+        public override uint Height => _colorTexture.Height;
 
         public override OutputDescription OutputDescription { get; }
         public override string Name { get; set; }
 
-        internal OpenGLSwapchainFramebuffer(uint width, uint height, PixelFormat? depthFormat)
-            : base(null, Array.Empty<FramebufferAttachment>())
+        private readonly OpenGLPlaceholderTexture _colorTexture;
+        private readonly OpenGLPlaceholderTexture _depthTexture;
+
+        private readonly FramebufferAttachment[] _colorTargets;
+        private readonly FramebufferAttachment? _depthTarget;
+
+        public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
+        public override FramebufferAttachment? DepthTarget => _depthTarget;
+
+        internal OpenGLSwapchainFramebuffer(uint width, uint height, PixelFormat colorFormat, PixelFormat? depthFormat)
         {
-            _width = width;
-            _height = height;
             _depthFormat = depthFormat;
             // This is wrong, but it's not really used.
             OutputAttachmentDescription? depthDesc = _depthFormat != null
@@ -27,12 +32,33 @@ namespace Veldrid.OpenGL
             OutputDescription = new OutputDescription(
                 depthDesc,
                 new OutputAttachmentDescription(PixelFormat.B8_G8_R8_A8_UNorm));
+
+            _colorTexture = new OpenGLPlaceholderTexture(
+                width,
+                height,
+                colorFormat,
+                TextureUsage.RenderTarget,
+                TextureSampleCount.Count1);
+            _colorTargets = new[] { new FramebufferAttachment(_colorTexture, 0) };
+
+            if (_depthFormat != null)
+            {
+                _depthTexture = new OpenGLPlaceholderTexture(
+                    width,
+                    height,
+                    depthFormat.Value,
+                    TextureUsage.DepthStencil,
+                    TextureSampleCount.Count1);
+                _depthTarget = new FramebufferAttachment(_depthTexture, 0);
+            }
+
+            OutputDescription = OutputDescription.CreateFromFramebuffer(this);
         }
 
         public void Resize(uint width, uint height)
         {
-            _width = width;
-            _height = height;
+            _colorTexture.Resize(width, height);
+            _depthTexture?.Resize(width, height);
         }
 
         public override void Dispose()

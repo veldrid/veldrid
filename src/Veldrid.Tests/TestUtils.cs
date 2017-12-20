@@ -41,7 +41,7 @@ namespace Veldrid.Tests
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, null, false);
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false);
 
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.Vulkan, out window, out gd);
         }
@@ -62,7 +62,7 @@ namespace Veldrid.Tests
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, null, false);
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false);
 
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.Direct3D11, out window, out gd);
         }
@@ -83,8 +83,8 @@ namespace Veldrid.Tests
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, null, false);
-         
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false);
+
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGL, out window, out gd);
         }
 

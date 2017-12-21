@@ -328,8 +328,7 @@ namespace Veldrid.D3D11
                                 db.DataPointer,
                                 (uint)ds.Length,
                                 subresource,
-                                (uint)db.RowPitch,
-                                (uint)db.SlicePitch);
+                                (uint)db.RowPitch);
                             info.RefCount = 1;
                             info.Mode = mode;
                             _mappedResources.Add(key, info);

@@ -635,8 +635,7 @@ namespace Veldrid.Vk
                 (IntPtr)dataPtr,
                 sizeInBytes,
                 subresource,
-                rowPitch,
-                depthPitch);
+                rowPitch);
         }
 
         protected override void UnmapCore(MappableResource resource, uint subresource)

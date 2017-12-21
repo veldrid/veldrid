@@ -2,10 +2,10 @@
 {
     internal struct NoAllocDispatchIndirectEntry
     {
-        public HandleTracked<Buffer> IndirectBuffer;
+        public HandleTracked<DeviceBuffer> IndirectBuffer;
         public uint Offset;
 
-        public NoAllocDispatchIndirectEntry(Buffer indirectBuffer, uint offset)
+        public NoAllocDispatchIndirectEntry(DeviceBuffer indirectBuffer, uint offset)
         {
             IndirectBuffer = indirectBuffer;
             Offset = offset;

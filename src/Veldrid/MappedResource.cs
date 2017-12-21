@@ -26,12 +26,12 @@ namespace Veldrid
         public readonly uint SizeInBytes;
         /// <summary>
         /// For mapped <see cref="Texture"/> resources, this is the subresource which is mapped.
-        /// For <see cref="Buffer"/> resources, this field has no meaning.
+        /// For <see cref="DeviceBuffer"/> resources, this field has no meaning.
         /// </summary>
         public readonly uint Subresource;
         /// <summary>
         /// For mapped <see cref="Texture"/> resources, this is the number of bytes between each row of texels.
-        /// For <see cref="Buffer"/> resources, this field has no meaning.
+        /// For <see cref="DeviceBuffer"/> resources, this field has no meaning.
         /// </summary>
         public readonly uint RowPitch;
 

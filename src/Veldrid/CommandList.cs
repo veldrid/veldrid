@@ -54,18 +54,18 @@ namespace Veldrid
         /// <summary>
         /// Sets the active <see cref="Pipeline"/> used for rendering.
         /// When drawing, the active <see cref="Pipeline"/> must be compatible with the bound <see cref="Framebuffer"/>,
-        /// <see cref="ResourceSet"/>, and <see cref="Buffer"/> objects.
+        /// <see cref="ResourceSet"/>, and <see cref="DeviceBuffer"/> objects.
         /// </summary>
         /// <param name="pipeline">The new <see cref="Pipeline"/> object.</param>
         public abstract void SetPipeline(Pipeline pipeline);
 
         /// <summary>
-        /// Sets the active <see cref="Buffer"/> for the given index.
-        /// When drawing, the bound <see cref="Buffer"/> objects must be compatible with the bound <see cref="Pipeline"/>.
+        /// Sets the active <see cref="DeviceBuffer"/> for the given index.
+        /// When drawing, the bound <see cref="DeviceBuffer"/> objects must be compatible with the bound <see cref="Pipeline"/>.
         /// </summary>
         /// <param name="index">The buffer slot.</param>
-        /// <param name="buffer">The new <see cref="Buffer"/>.</param>
-        public void SetVertexBuffer(uint index, Buffer buffer)
+        /// <param name="buffer">The new <see cref="DeviceBuffer"/>.</param>
+        public void SetVertexBuffer(uint index, DeviceBuffer buffer)
         {
 #if VALIDATE_USAGE
             if ((buffer.Usage & BufferUsage.VertexBuffer) == 0)
@@ -82,15 +82,15 @@ namespace Veldrid
         /// </summary>
         /// <param name="index"></param>
         /// <param name="buffer"></param>
-        protected abstract void SetVertexBufferCore(uint index, Buffer buffer);
+        protected abstract void SetVertexBufferCore(uint index, DeviceBuffer buffer);
 
         /// <summary>
-        /// Sets the active <see cref="Buffer"/>.
-        /// When drawing, an <see cref="Buffer"/> must be bound.
+        /// Sets the active <see cref="DeviceBuffer"/>.
+        /// When drawing, an <see cref="DeviceBuffer"/> must be bound.
         /// </summary>
-        /// <param name="buffer">The new <see cref="Buffer"/>.</param>
-        /// <param name="format">The format of data in the <see cref="Buffer"/>.</param>
-        public void SetIndexBuffer(Buffer buffer, IndexFormat format)
+        /// <param name="buffer">The new <see cref="DeviceBuffer"/>.</param>
+        /// <param name="format">The format of data in the <see cref="DeviceBuffer"/>.</param>
+        public void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format)
         {
 #if VALIDATE_USAGE
             if ((buffer.Usage & BufferUsage.IndexBuffer) == 0)
@@ -107,7 +107,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="format"></param>
-        protected abstract void SetIndexBufferCore(Buffer buffer, IndexFormat format);
+        protected abstract void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format);
 
         /// <summary>
         /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the graphics
@@ -322,7 +322,7 @@ namespace Veldrid
         public void DrawIndexed(uint indexCount) => DrawIndexed(indexCount, 1, 0, 0, 0);
 
         /// <summary>
-        /// Issues indirect draw commands based on the information contained in the given indirect <see cref="Buffer"/>.
+        /// Issues indirect draw commands based on the information contained in the given indirect <see cref="DeviceBuffer"/>.
         /// The information stored in the indirect Buffer should conform to the structure of <see cref="IndirectDrawArguments"/>.
         /// </summary>
         /// <param name="indirectBuffer">The indirect Buffer to read from. Must have been created with the
@@ -332,7 +332,7 @@ namespace Veldrid
         /// <param name="drawCount">The number of draw commands to read and issue from the indirect Buffer.</param>
         /// <param name="stride">The stride, in bytes, between consecutive draw commands in the indirect Buffer. This value must
         /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawArguments"/>.</param>
-        public void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
@@ -348,10 +348,10 @@ namespace Veldrid
         /// <param name="offset"></param>
         /// <param name="drawCount"></param>
         /// <param name="stride"></param>
-        protected abstract void DrawIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
+        protected abstract void DrawIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride);
 
         /// <summary>
-        /// Issues indirect, indexed draw commands based on the information contained in the given indirect <see cref="Buffer"/>.
+        /// Issues indirect, indexed draw commands based on the information contained in the given indirect <see cref="DeviceBuffer"/>.
         /// The information stored in the indirect Buffer should conform to the structure of
         /// <see cref="IndirectDrawIndexedArguments"/>.
         /// </summary>
@@ -362,7 +362,7 @@ namespace Veldrid
         /// <param name="drawCount">The number of draw commands to read and issue from the indirect Buffer.</param>
         /// <param name="stride">The stride, in bytes, between consecutive draw commands in the indirect Buffer. This value must
         /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawIndexedArguments"/>.</param>
-        public void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
@@ -378,7 +378,7 @@ namespace Veldrid
         /// <param name="offset"></param>
         /// <param name="drawCount"></param>
         /// <param name="stride"></param>
-        protected abstract void DrawIndexedIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
+        protected abstract void DrawIndexedIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride);
 
         [System.Diagnostics.Conditional("VALIDATE_USAGE")]
         private static void ValidateIndirectOffset(uint offset)
@@ -389,7 +389,7 @@ namespace Veldrid
             }
         }
 
-        private static void ValidateIndirectBuffer(Buffer indirectBuffer)
+        private static void ValidateIndirectBuffer(DeviceBuffer indirectBuffer)
         {
             if ((indirectBuffer.Usage & BufferUsage.IndirectBuffer) != BufferUsage.IndirectBuffer)
             {
@@ -418,14 +418,14 @@ namespace Veldrid
 
         /// <summary>
         /// Issues an indirect compute dispatch command based on the information contained in the given indirect
-        /// <see cref="Buffer"/>. The information stored in the indirect Buffer should conform to the structure of
+        /// <see cref="DeviceBuffer"/>. The information stored in the indirect Buffer should conform to the structure of
         /// <see cref="IndirectDispatchArguments"/>.
         /// </summary>
         /// <param name="indirectBuffer">The indirect Buffer to read from. Must have been created with the
         /// <see cref="BufferUsage.IndirectBuffer"/> flag.</param>
         /// <param name="offset">An offset, in bytes, from the start of the indirect buffer from which the draw commands will be
         /// read. This value must be a multiple of 4.</param>
-        public void DispatchIndirect(Buffer indirectBuffer, uint offset)
+        public void DispatchIndirect(DeviceBuffer indirectBuffer, uint offset)
         {
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
@@ -437,7 +437,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="indirectBuffer"></param>
         /// <param name="offset"></param>
-        protected abstract void DispatchIndirectCore(Buffer indirectBuffer, uint offset);
+        protected abstract void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset);
 
         /// <summary>
         /// Resolves a multisampled source <see cref="Texture"/> into a non-multisampled destination <see cref="Texture"/>.
@@ -474,16 +474,16 @@ namespace Veldrid
         protected abstract void ResolveTextureCore(Texture source, Texture destination);
 
         /// <summary>
-        /// Updates a <see cref="Buffer"/> region with new data.
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// This function must be used with a blittable value type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/> storage, at
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/> storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">The value to upload.</param>
         public unsafe void UpdateBuffer<T>(
-            Buffer buffer,
+            DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             T source) where T : struct
         {
@@ -495,16 +495,16 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Updates a <see cref="Buffer"/> region with new data.
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// This function must be used with a blittable value type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">A reference to the single value to upload.</param>
         public unsafe void UpdateBuffer<T>(
-            Buffer buffer,
+            DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             ref T source) where T : struct
         {
@@ -516,17 +516,17 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Updates a <see cref="Buffer"/> region with new data.
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// This function must be used with a blittable value type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">A reference to the first of a series of values to upload.</param>
         /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
         public unsafe void UpdateBuffer<T>(
-            Buffer buffer,
+            DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             ref T source,
             uint sizeInBytes) where T : struct
@@ -539,16 +539,16 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Updates a <see cref="Buffer"/> region with new data.
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// This function must be used with a blittable value type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">An array containing the data to upload.</param>
         public unsafe void UpdateBuffer<T>(
-            Buffer buffer,
+            DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             T[] source) where T : struct
         {
@@ -558,29 +558,29 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Updates a <see cref="Buffer"/> region with new data.
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// </summary>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">A pointer to the start of the data to upload.</param>
         /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
         public abstract void UpdateBuffer(
-            Buffer buffer,
+            DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             IntPtr source,
             uint sizeInBytes);
 
         /// <summary>
-        /// Copies a region from the source <see cref="Buffer"/> to another region in the destination <see cref="Buffer"/>.
+        /// Copies a region from the source <see cref="DeviceBuffer"/> to another region in the destination <see cref="DeviceBuffer"/>.
         /// </summary>
-        /// <param name="source">The source <see cref="Buffer"/> from which data will be copied.</param>
+        /// <param name="source">The source <see cref="DeviceBuffer"/> from which data will be copied.</param>
         /// <param name="sourceOffset">An offset into <paramref name="source"/> at which the copy region begins.</param>
-        /// <param name="destination">The destination <see cref="Buffer"/> into which data will be copied.</param>
+        /// <param name="destination">The destination <see cref="DeviceBuffer"/> into which data will be copied.</param>
         /// <param name="destinationOffset">An offset into <paramref name="destination"/> at which the data will be copied.
         /// </param>
         /// <param name="sizeInBytes">The number of bytes to copy.</param>
-        public void CopyBuffer(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
+        public void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
         {
 #if VALIDATE_USAGE
 #endif
@@ -594,7 +594,7 @@ namespace Veldrid
         /// <param name="destination"></param>
         /// <param name="destinationOffset"></param>
         /// <param name="sizeInBytes"></param>
-        protected abstract void CopyBufferCore(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes);
+        protected abstract void CopyBufferCore(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes);
 
         /// <summary>
         /// Copies all subresources from one <see cref="Texture"/> to another.

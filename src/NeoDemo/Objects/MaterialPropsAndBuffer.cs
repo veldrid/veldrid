@@ -8,7 +8,7 @@ namespace Veldrid.NeoDemo.Objects
         private bool _newProperties;
 
         public string Name { get; set; }
-        public Buffer UniformBuffer { get; private set; }
+        public DeviceBuffer UniformBuffer { get; private set; }
 
         public MaterialProperties Properties
         {

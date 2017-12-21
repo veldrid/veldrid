@@ -232,7 +232,7 @@ namespace Veldrid.OpenGL
             _executionThread.Unmap(resource, subresource);
         }
 
-        public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             lock (_mappedResourceLock)
             {
@@ -747,7 +747,7 @@ namespace Veldrid.OpenGL
                 _workItems.Add(new ExecutionThreadWorkItem(commandList));
             }
 
-            internal void UpdateBuffer(Buffer buffer, uint offsetInBytes, StagingBlock stagingBlock)
+            internal void UpdateBuffer(DeviceBuffer buffer, uint offsetInBytes, StagingBlock stagingBlock)
             {
                 CheckExceptions();
 
@@ -787,7 +787,7 @@ namespace Veldrid.OpenGL
 
             public readonly OpenGLCommandList CommandListToExecute;
 
-            public readonly Buffer UpdateBuffer;
+            public readonly DeviceBuffer UpdateBuffer;
             public readonly uint UpdateBufferOffsetInBytes;
             public readonly StagingBlock UpdateBufferStagedSource;
 
@@ -839,7 +839,7 @@ namespace Veldrid.OpenGL
                 TerminateAction = null;
             }
 
-            public ExecutionThreadWorkItem(Buffer updateBuffer, uint offsetInBytes, StagingBlock stagedSource)
+            public ExecutionThreadWorkItem(DeviceBuffer updateBuffer, uint offsetInBytes, StagingBlock stagedSource)
             {
                 UpdateBuffer = updateBuffer;
                 UpdateBufferOffsetInBytes = offsetInBytes;

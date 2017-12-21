@@ -27,7 +27,7 @@ namespace Veldrid.D3D11
         private int[] _vertexOffsets = new int[1];
 
         // Cached pipeline State
-        private Buffer _ib;
+        private DeviceBuffer _ib;
         private BlendState _blendState;
         private DepthStencilState _depthStencilState;
         private uint _stencilReference;
@@ -184,12 +184,12 @@ namespace Veldrid.D3D11
             ResetManagedState();
         }
 
-        protected override void SetIndexBufferCore(Buffer buffer, IndexFormat format)
+        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format)
         {
             if (_ib != buffer)
             {
                 _ib = buffer;
-                D3D11Buffer d3d11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(buffer);
+                D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
                 _context.InputAssembler.SetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(format), 0);
             }
         }
@@ -481,9 +481,9 @@ namespace Veldrid.D3D11
             return ret;
         }
 
-        protected override void SetVertexBufferCore(uint index, Buffer buffer)
+        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
         {
-            D3D11Buffer d3d11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(buffer);
+            D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
             _vertexBindings[index] = d3d11Buffer.Buffer;
             _numVertexBindings = Math.Max((index + 1), _numVertexBindings);
         }
@@ -519,11 +519,11 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void DrawIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        protected override void DrawIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             PreDrawCommand();
 
-            D3D11Buffer d3d11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(indirectBuffer);
+            D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(indirectBuffer);
             int currentOffset = (int)offset;
             for (uint i = 0; i < drawCount; i++)
             {
@@ -532,11 +532,11 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void DrawIndexedIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        protected override void DrawIndexedIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             PreDrawCommand();
 
-            D3D11Buffer d3d11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(indirectBuffer);
+            D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(indirectBuffer);
             int currentOffset = (int)offset;
             for (uint i = 0; i < drawCount; i++)
             {
@@ -571,10 +571,10 @@ namespace Veldrid.D3D11
             _context.Dispatch((int)groupCountX, (int)groupCountY, (int)groupCountZ);
         }
 
-        protected override void DispatchIndirectCore(Buffer indirectBuffer, uint offset)
+        protected override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
         {
             PreDispatchCommand();
-            D3D11Buffer d3d11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(indirectBuffer);
+            D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(indirectBuffer);
             _context.DispatchIndirect(d3d11Buffer.Buffer, (int)offset);
         }
 
@@ -944,9 +944,9 @@ namespace Veldrid.D3D11
             _context.ClearDepthStencilView(D3D11Framebuffer.DepthStencilView, DepthStencilClearFlags.Depth, depth, stencil);
         }
 
-        public unsafe override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        public unsafe override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            D3D11Buffer d3dBuffer = Util.AssertSubtype<Buffer, D3D11Buffer>(buffer);
+            D3D11Buffer d3dBuffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
             if (sizeInBytes == 0)
             {
                 return;
@@ -1003,10 +1003,10 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void CopyBufferCore(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
+        protected override void CopyBufferCore(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
         {
-            D3D11Buffer srcD3D11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(source);
-            D3D11Buffer dstD3D11Buffer = Util.AssertSubtype<Buffer, D3D11Buffer>(destination);
+            D3D11Buffer srcD3D11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(source);
+            D3D11Buffer dstD3D11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(destination);
 
             ResourceRegion region = new ResourceRegion((int)sourceOffset, 0, 0, (int)(sourceOffset + sizeInBytes), 1, 1);
 

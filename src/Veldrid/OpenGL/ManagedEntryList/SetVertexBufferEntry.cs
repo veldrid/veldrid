@@ -3,9 +3,9 @@
     internal class SetVertexBufferEntry : OpenGLCommandEntry
     {
         public uint Index;
-        public Buffer Buffer;
+        public DeviceBuffer Buffer;
 
-        public SetVertexBufferEntry(uint index, Buffer buffer)
+        public SetVertexBufferEntry(uint index, DeviceBuffer buffer)
         {
             Index = index;
             Buffer = buffer;
@@ -13,7 +13,7 @@
 
         public SetVertexBufferEntry() { }
 
-        public SetVertexBufferEntry Init(uint index, Buffer buffer)
+        public SetVertexBufferEntry Init(uint index, DeviceBuffer buffer)
         {
             Index = index;
             Buffer = buffer;

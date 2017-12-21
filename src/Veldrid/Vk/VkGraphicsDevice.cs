@@ -756,9 +756,9 @@ namespace Veldrid.Vk
             return TextureSampleCount.Count1;
         }
 
-        public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(buffer);
+            VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
             VkMemoryBlock memoryBlock = null;
             Vulkan.VkBuffer copySrcBuffer = Vulkan.VkBuffer.Null;
             IntPtr mappedPtr;

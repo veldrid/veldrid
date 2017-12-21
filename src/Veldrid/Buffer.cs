@@ -4,10 +4,10 @@ namespace Veldrid
 {
     /// <summary>
     /// A device resource used to store arbitrary graphics data in various formats.
-    /// The size of a <see cref="Buffer"/> is fixed upon creation, and resizing is not possible.
+    /// The size of a <see cref="DeviceBuffer"/> is fixed upon creation, and resizing is not possible.
     /// See <see cref="BufferDescription"/>.
     /// </summary>
-    public abstract class Buffer : DeviceResource, BindableResource, MappableResource, IDisposable
+    public abstract class DeviceBuffer : DeviceResource, BindableResource, MappableResource, IDisposable
     {
         /// <summary>
         /// The total capacity, in bytes, of the buffer. This value is fixed upon creation.

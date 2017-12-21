@@ -133,11 +133,11 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             PreDrawCommand();
 
-            OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(indirectBuffer);
+            OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(indirectBuffer);
             glBindBuffer(BufferTarget.DrawIndirectBuffer, glBuffer.Buffer);
             CheckLastError();
 
@@ -145,11 +145,11 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             PreDrawCommand();
 
-            OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(indirectBuffer);
+            OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(indirectBuffer);
             glBindBuffer(BufferTarget.DrawIndirectBuffer, glBuffer.Buffer);
             CheckLastError();
 
@@ -230,9 +230,9 @@ namespace Veldrid.OpenGL
             PostDispatchCommand();
         }
 
-        public void DispatchIndirect(Buffer indirectBuffer, uint offset)
+        public void DispatchIndirect(DeviceBuffer indirectBuffer, uint offset)
         {
-            OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(indirectBuffer);
+            OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(indirectBuffer);
             glBindBuffer(BufferTarget.DrawIndirectBuffer, glBuffer.Buffer);
             CheckLastError();
 
@@ -276,9 +276,9 @@ namespace Veldrid.OpenGL
             _fb = fb;
         }
 
-        public void SetIndexBuffer(Buffer ib, IndexFormat format)
+        public void SetIndexBuffer(DeviceBuffer ib, IndexFormat format)
         {
-            OpenGLBuffer glIB = Util.AssertSubtype<Buffer, OpenGLBuffer>(ib);
+            OpenGLBuffer glIB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(ib);
             glIB.EnsureResourcesCreated();
 
             glBindBuffer(BufferTarget.ElementArrayBuffer, glIB.Buffer);
@@ -644,9 +644,9 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void SetVertexBuffer(uint index, Buffer vb)
+        public void SetVertexBuffer(uint index, DeviceBuffer vb)
         {
-            OpenGLBuffer glVB = Util.AssertSubtype<Buffer, OpenGLBuffer>(vb);
+            OpenGLBuffer glVB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(vb);
             glVB.EnsureResourcesCreated();
 
             Util.EnsureArrayMinimumSize(ref _vertexBuffers, index + 1);
@@ -663,9 +663,9 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr dataPtr, uint sizeInBytes)
+        public void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr dataPtr, uint sizeInBytes)
         {
-            OpenGLBuffer glBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(buffer);
+            OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(buffer);
             glBuffer.EnsureResourcesCreated();
 
             if (_extensions.ARB_DirectStateAccess)
@@ -906,10 +906,10 @@ namespace Veldrid.OpenGL
         //    }
         //}
 
-        public void CopyBuffer(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
+        public void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
         {
-            OpenGLBuffer srcGLBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(source);
-            OpenGLBuffer dstGLBuffer = Util.AssertSubtype<Buffer, OpenGLBuffer>(destination);
+            OpenGLBuffer srcGLBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(source);
+            OpenGLBuffer dstGLBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(destination);
 
             srcGLBuffer.EnsureResourcesCreated();
             dstGLBuffer.EnsureResourcesCreated();

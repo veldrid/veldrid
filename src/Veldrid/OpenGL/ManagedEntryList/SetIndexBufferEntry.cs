@@ -2,10 +2,10 @@
 {
     internal class SetIndexBufferEntry : OpenGLCommandEntry
     {
-        public Buffer Buffer;
+        public DeviceBuffer Buffer;
         public IndexFormat Format;
 
-        public SetIndexBufferEntry(Buffer buffer, IndexFormat format)
+        public SetIndexBufferEntry(DeviceBuffer buffer, IndexFormat format)
         {
             Buffer = buffer;
             Format = format;
@@ -13,7 +13,7 @@
 
         public SetIndexBufferEntry() { }
 
-        public SetIndexBufferEntry Init(Buffer buffer, IndexFormat format)
+        public SetIndexBufferEntry Init(DeviceBuffer buffer, IndexFormat format)
         {
             Buffer = buffer;
             Format = format;

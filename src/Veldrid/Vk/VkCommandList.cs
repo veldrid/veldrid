@@ -175,18 +175,18 @@ namespace Veldrid.Vk
             vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
-        protected override void DrawIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        protected override void DrawIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             PreDrawCommand();
-            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(indirectBuffer);
+            VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             vkCmdDrawIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
             _referencedResources.Add(vkBuffer);
         }
 
-        protected override void DrawIndexedIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        protected override void DrawIndexedIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             PreDrawCommand();
-            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(indirectBuffer);
+            VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             vkCmdDrawIndexedIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
             _referencedResources.Add(vkBuffer);
         }
@@ -291,11 +291,11 @@ namespace Veldrid.Vk
             _newComputeResourceSets = 0;
         }
 
-        protected override void DispatchIndirectCore(Buffer indirectBuffer, uint offset)
+        protected override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
         {
             PreDispatchCommand();
 
-            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(indirectBuffer);
+            VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             vkCmdDispatchIndirect(_cb, vkBuffer.DeviceBuffer, offset);
             _referencedResources.Add(vkBuffer);
         }
@@ -485,18 +485,18 @@ namespace Veldrid.Vk
             _activeRenderPass = VkRenderPass.Null;
         }
 
-        protected override void SetVertexBufferCore(uint index, Buffer buffer)
+        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
         {
-            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(buffer);
+            VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
             Vulkan.VkBuffer deviceBuffer = vkBuffer.DeviceBuffer;
             ulong offset = 0;
             vkCmdBindVertexBuffers(_cb, index, 1, ref deviceBuffer, ref offset);
             _referencedResources.Add(vkBuffer);
         }
 
-        protected override void SetIndexBufferCore(Buffer buffer, IndexFormat format)
+        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format)
         {
-            VkBuffer vkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(buffer);
+            VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
             vkCmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, 0, VkFormats.VdToVkIndexFormat(format));
             _referencedResources.Add(vkBuffer);
         }
@@ -574,21 +574,21 @@ namespace Veldrid.Vk
             vkCmdSetViewport(_cb, index, 1, ref vkViewport);
         }
 
-        public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             VkBuffer stagingBuffer = GetStagingBuffer(sizeInBytes);
             _gd.UpdateBuffer(stagingBuffer, 0, source, sizeInBytes);
             CopyBuffer(stagingBuffer, 0, buffer, bufferOffsetInBytes, sizeInBytes);
 
-            _referencedResources.Add(Util.AssertSubtype<Buffer, VkBuffer>(buffer));
+            _referencedResources.Add(Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer));
         }
 
-        protected override void CopyBufferCore(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
+        protected override void CopyBufferCore(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
         {
             EnsureNoRenderPass();
 
-            VkBuffer srcVkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(source);
-            VkBuffer dstVkBuffer = Util.AssertSubtype<Buffer, VkBuffer>(destination);
+            VkBuffer srcVkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(source);
+            VkBuffer dstVkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(destination);
 
             VkBufferCopy region = new VkBufferCopy
             {

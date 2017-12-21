@@ -65,7 +65,7 @@ namespace Veldrid.Vk
             return new VkTextureView(_gd, ref description);
         }
 
-        protected override Buffer CreateBufferCore(ref BufferDescription description)
+        protected override DeviceBuffer CreateBufferCore(ref BufferDescription description)
         {
             return new VkBuffer(_gd, description.SizeInBytes, description.Usage);
         }

@@ -16,9 +16,9 @@ namespace Veldrid.Utilities
             Indices = indices;
         }
 
-        public Buffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
+        public DeviceBuffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
         {
-            Buffer vb = factory.CreateBuffer(
+            DeviceBuffer vb = factory.CreateBuffer(
                 new BufferDescription(
                     (uint)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes),
                     BufferUsage.VertexBuffer));
@@ -26,9 +26,9 @@ namespace Veldrid.Utilities
             return vb;
         }
 
-        public Buffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
+        public DeviceBuffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
         {
-            Buffer ib = factory.CreateBuffer(new BufferDescription((uint)(Indices.Length * sizeof(ushort)), BufferUsage.IndexBuffer));
+            DeviceBuffer ib = factory.CreateBuffer(new BufferDescription((uint)(Indices.Length * sizeof(ushort)), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(ib, 0, Indices);
             indexCount = Indices.Length;
             return ib;

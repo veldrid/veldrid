@@ -8,8 +8,8 @@ namespace Veldrid.NeoDemo.Objects
     {
         private readonly BoundingBox _boundingBox = new BoundingBox(new Vector3(-1000, -1, -1000), new Vector3(1000, 1, 1000));
 
-        private Buffer _vb;
-        private Buffer _ib;
+        private DeviceBuffer _vb;
+        private DeviceBuffer _ib;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
 

@@ -17,8 +17,8 @@ namespace Veldrid.NeoDemo.Objects
         private readonly Image<Rgba32> _bottom;
 
         // Context objects
-        private Buffer _vb;
-        private Buffer _ib;
+        private DeviceBuffer _vb;
+        private DeviceBuffer _ib;
         private Pipeline _pipeline;
         private Pipeline _reflectionPipeline;
         private ResourceSet _resourceSet;

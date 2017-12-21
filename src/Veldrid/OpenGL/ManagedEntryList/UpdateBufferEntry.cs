@@ -4,11 +4,11 @@ namespace Veldrid.OpenGL.ManagedEntryList
 {
     internal class UpdateBufferEntry : OpenGLCommandEntry
     {
-        public Buffer Buffer;
+        public DeviceBuffer Buffer;
         public uint BufferOffsetInBytes;
         public StagingBlock StagingBlock;
 
-        public UpdateBufferEntry(Buffer buffer, uint bufferOffsetInBytes, StagingBlock stagingBlock)
+        public UpdateBufferEntry(DeviceBuffer buffer, uint bufferOffsetInBytes, StagingBlock stagingBlock)
         {
             Buffer = buffer;
             BufferOffsetInBytes = bufferOffsetInBytes;
@@ -17,7 +17,7 @@ namespace Veldrid.OpenGL.ManagedEntryList
 
         public UpdateBufferEntry() { }
 
-        public UpdateBufferEntry Init(Buffer buffer, uint bufferOffsetInBytes, StagingBlock stagingBlock)
+        public UpdateBufferEntry Init(DeviceBuffer buffer, uint bufferOffsetInBytes, StagingBlock stagingBlock)
         {
             Buffer = buffer;
             BufferOffsetInBytes = bufferOffsetInBytes;

@@ -2,14 +2,14 @@
 {
     internal class DrawIndexedIndirectEntry : OpenGLCommandEntry
     {
-        public Buffer IndirectBuffer;
+        public DeviceBuffer IndirectBuffer;
         public uint Offset;
         public uint DrawCount;
         public uint Stride;
 
         public DrawIndexedIndirectEntry() { }
 
-        public DrawIndexedIndirectEntry(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public DrawIndexedIndirectEntry(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             IndirectBuffer = indirectBuffer;
             Offset = offset;
@@ -17,7 +17,7 @@
             Stride = stride;
         }
 
-        public DrawIndexedIndirectEntry Init(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public DrawIndexedIndirectEntry Init(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             IndirectBuffer = indirectBuffer;
             Offset = offset;

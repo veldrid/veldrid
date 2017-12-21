@@ -9,23 +9,23 @@ namespace Veldrid.OpenGL
         void ClearDepthTarget(float depth, byte stencil);
         void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
         void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
-        void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
-        void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride);
+        void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride);
+        void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride);
         void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ);
         void End();
         void SetFramebuffer(Framebuffer fb);
-        void SetIndexBuffer(Buffer buffer, IndexFormat format);
+        void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format);
         void SetPipeline(Pipeline pipeline);
         void SetGraphicsResourceSet(uint slot, ResourceSet rs);
         void SetComputeResourceSet(uint slot, ResourceSet rs);
         void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
-        void SetVertexBuffer(uint index, Buffer buffer);
+        void SetVertexBuffer(uint index, DeviceBuffer buffer);
         void SetViewport(uint index, ref Viewport viewport);
         void ResolveTexture(Texture source, Texture destination);
-        void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
+        void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
         void ExecuteAll(OpenGLCommandExecutor executor);
-        void DispatchIndirect(Buffer indirectBuffer, uint offset);
-        void CopyBuffer(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes);
+        void DispatchIndirect(DeviceBuffer indirectBuffer, uint offset);
+        void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes);
         void CopyTexture(
             Texture source,
             uint srcX, uint srcY, uint srcZ,

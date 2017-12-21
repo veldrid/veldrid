@@ -2,7 +2,7 @@
 {
     /// <summary>
     /// A structure describing the format expected by indirect, indexed draw commands contained in an indirect
-    /// <see cref="Buffer"/>.
+    /// <see cref="DeviceBuffer"/>.
     /// </summary>
     public struct IndirectDrawIndexedArguments
     {
@@ -19,7 +19,7 @@
         /// </summary>
         public uint FirstIndex;
         /// <summary>
-        /// An offset which is added to each vertex element referenced by the index <see cref="Buffer"/>.
+        /// An offset which is added to each vertex element referenced by the index <see cref="DeviceBuffer"/>.
         /// </summary>
         public int VertexOffset;
         /// <summary>

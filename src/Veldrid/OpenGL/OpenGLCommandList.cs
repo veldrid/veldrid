@@ -42,12 +42,12 @@ namespace Veldrid.OpenGL
             _commands.DrawIndexed(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
-        protected override void DrawIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        protected override void DrawIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             _commands.DrawIndirect(indirectBuffer, offset, drawCount, stride);
         }
 
-        protected override void DrawIndexedIndirectCore(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        protected override void DrawIndexedIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             _commands.DrawIndexedIndirect(indirectBuffer, offset, drawCount, stride);
         }
@@ -57,7 +57,7 @@ namespace Veldrid.OpenGL
             _commands.Dispatch(groupCountX, groupCountY, groupCountZ);
         }
 
-        protected override void DispatchIndirectCore(Buffer indirectBuffer, uint offset)
+        protected override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
         {
             _commands.DispatchIndirect(indirectBuffer, offset);
         }
@@ -77,7 +77,7 @@ namespace Veldrid.OpenGL
             _commands.SetFramebuffer(fb);
         }
 
-        protected override void SetIndexBufferCore(Buffer buffer, IndexFormat format)
+        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format)
         {
             _commands.SetIndexBuffer(buffer, format);
         }
@@ -102,7 +102,7 @@ namespace Veldrid.OpenGL
             _commands.SetScissorRect(index, x, y, width, height);
         }
 
-        protected override void SetVertexBufferCore(uint index, Buffer buffer)
+        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
         {
             _commands.SetVertexBuffer(index, buffer);
         }
@@ -117,15 +117,15 @@ namespace Veldrid.OpenGL
             _commands.Reset();
         }
 
-        public override void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             _commands.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }
 
         protected override void CopyBufferCore(
-            Buffer source,
+            DeviceBuffer source,
             uint sourceOffset,
-            Buffer destination,
+            DeviceBuffer destination,
             uint destinationOffset,
             uint sizeInBytes)
         {

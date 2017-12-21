@@ -3,17 +3,17 @@
 namespace Veldrid
 {
     /// <summary>
-    /// Describes a <see cref="Buffer"/>, used in the creation of <see cref="Buffer"/> objects by a
+    /// Describes a <see cref="DeviceBuffer"/>, used in the creation of <see cref="DeviceBuffer"/> objects by a
     /// <see cref="ResourceFactory"/>.
     /// </summary>
     public struct BufferDescription : IEquatable<BufferDescription>
     {
         /// <summary>
-        /// The desired capacity, in bytes, of the <see cref="Buffer"/>.
+        /// The desired capacity, in bytes, of the <see cref="DeviceBuffer"/>.
         /// </summary>
         public uint SizeInBytes;
         /// <summary>
-        /// Indicates how the <see cref="Buffer"/> will be used.
+        /// Indicates how the <see cref="DeviceBuffer"/> will be used.
         /// </summary>
         public BufferUsage Usage;
         /// <summary>
@@ -23,10 +23,10 @@ namespace Veldrid
         public uint StructureByteStride;
 
         /// <summary>
-        /// Constructs a new <see cref="BufferDescription"/> describing a non-dynamic <see cref="Buffer"/>.
+        /// Constructs a new <see cref="BufferDescription"/> describing a non-dynamic <see cref="DeviceBuffer"/>.
         /// </summary>
         /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
-        /// <param name="usage">Indicates how the <see cref="Buffer"/> will be used.</param>
+        /// <param name="usage">Indicates how the <see cref="DeviceBuffer"/> will be used.</param>
         public BufferDescription(uint sizeInBytes, BufferUsage usage)
         {
             SizeInBytes = sizeInBytes;
@@ -38,7 +38,7 @@ namespace Veldrid
         /// Constructs a new <see cref="BufferDescription"/>.
         /// </summary>
         /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
-        /// <param name="usage">Indicates how the <see cref="Buffer"/> will be used.</param>
+        /// <param name="usage">Indicates how the <see cref="DeviceBuffer"/> will be used.</param>
         /// <param name="structureByteStride">For structured buffers, this value indicates the size in bytes of a single
         /// structure element, and must be non-zero. For all other buffer types, this value must be zero.</param>
         public BufferDescription(uint sizeInBytes, BufferUsage usage, uint structureByteStride)

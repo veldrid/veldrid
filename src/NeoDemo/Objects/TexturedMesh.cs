@@ -17,8 +17,8 @@ namespace Veldrid.NeoDemo.Objects
         private readonly Transform _transform = new Transform();
 
         private BoundingBox _centeredBounds;
-        private Buffer _vb;
-        private Buffer _ib;
+        private DeviceBuffer _vb;
+        private DeviceBuffer _ib;
         private int _indexCount;
         private Texture _texture;
         private TextureView _textureView;
@@ -35,8 +35,8 @@ namespace Veldrid.NeoDemo.Objects
         private Pipeline _shadowMapPipeline;
         private ResourceSet[] _shadowMapResourceSets;
 
-        private Buffer _worldBuffer;
-        private Buffer _inverseTransposeWorldBuffer;
+        private DeviceBuffer _worldBuffer;
+        private DeviceBuffer _inverseTransposeWorldBuffer;
 
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
 
@@ -236,7 +236,7 @@ namespace Veldrid.NeoDemo.Objects
 
             for (int i = 0; i < 3; i++)
             {
-                Buffer viewProjBuffer = i == 0 ? sc.LightViewProjectionBuffer0 : i == 1 ? sc.LightViewProjectionBuffer1 : sc.LightViewProjectionBuffer2;
+                DeviceBuffer viewProjBuffer = i == 0 ? sc.LightViewProjectionBuffer0 : i == 1 ? sc.LightViewProjectionBuffer1 : sc.LightViewProjectionBuffer2;
                 ret[i * 2] = StaticResourceCache.GetResourceSet(sharedFactory, new ResourceSetDescription(
                     projViewLayout,
                     viewProjBuffer));

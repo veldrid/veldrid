@@ -7,8 +7,8 @@ namespace Veldrid.NeoDemo.Objects
     {
         private DisposeCollector _disposeCollector;
         private Pipeline _pipeline;
-        private Buffer _ib;
-        private Buffer _vb;
+        private DeviceBuffer _ib;
+        private DeviceBuffer _vb;
 
         public override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {

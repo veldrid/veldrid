@@ -130,17 +130,17 @@ namespace Veldrid
         protected abstract TextureView CreateTextureViewCore(ref TextureViewDescription description);
 
         /// <summary>
-        /// Creates a new <see cref="Buffer"/>.
+        /// Creates a new <see cref="DeviceBuffer"/>.
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
-        /// <returns>A new <see cref="Buffer"/>.</returns>
-        public Buffer CreateBuffer(BufferDescription description) => CreateBuffer(ref description);
+        /// <returns>A new <see cref="DeviceBuffer"/>.</returns>
+        public DeviceBuffer CreateBuffer(BufferDescription description) => CreateBuffer(ref description);
         /// <summary>
-        /// Creates a new <see cref="Buffer"/>.
+        /// Creates a new <see cref="DeviceBuffer"/>.
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
-        /// <returns>A new <see cref="Buffer"/>.</returns>
-        public Buffer CreateBuffer(ref BufferDescription description)
+        /// <returns>A new <see cref="DeviceBuffer"/>.</returns>
+        public DeviceBuffer CreateBuffer(ref BufferDescription description)
         {
 #if VALIDATE_USAGE
             if ((description.Usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
@@ -168,7 +168,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="description"></param>
         /// <returns></returns>
-        protected abstract Buffer CreateBufferCore(ref BufferDescription description);
+        protected abstract DeviceBuffer CreateBufferCore(ref BufferDescription description);
 
         /// <summary>
         /// Creates a new <see cref="Sampler"/>.

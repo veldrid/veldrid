@@ -4,7 +4,7 @@ using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkBuffer : Buffer, VkDeferredDisposal
+    internal unsafe class VkBuffer : DeviceBuffer, VkDeferredDisposal
     {
         private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkBuffer _deviceBuffer;

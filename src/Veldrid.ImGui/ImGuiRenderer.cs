@@ -19,9 +19,9 @@ namespace Veldrid
         private readonly Assembly _assembly;
 
         // Device objects
-        private Buffer _vertexBuffer;
-        private Buffer _indexBuffer;
-        private Buffer _projMatrixBuffer;
+        private DeviceBuffer _vertexBuffer;
+        private DeviceBuffer _indexBuffer;
+        private DeviceBuffer _projMatrixBuffer;
         private Texture _fontTexture;
         private TextureView _fontTextureView;
         private Shader _vertexShader;

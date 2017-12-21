@@ -10,7 +10,7 @@ namespace Veldrid.Tests
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("TV0", ResourceKind.TextureReadOnly, ShaderStages.Vertex)));
 
-            Buffer ub = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            DeviceBuffer ub = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
             Assert.Throws<VeldridException>(() =>
             {
@@ -40,7 +40,7 @@ namespace Veldrid.Tests
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("RWB0", ResourceKind.StructuredBufferReadWrite, ShaderStages.Vertex)));
 
-            Buffer readOnlyBuffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StructuredBufferReadOnly, 16));
+            DeviceBuffer readOnlyBuffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StructuredBufferReadOnly, 16));
 
             Assert.Throws<VeldridException>(() =>
             {
@@ -56,7 +56,7 @@ namespace Veldrid.Tests
                 new ResourceLayoutElementDescription("UB1", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("UB2", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
-            Buffer ub = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            DeviceBuffer ub = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
             Assert.Throws<VeldridException>(() =>
             {

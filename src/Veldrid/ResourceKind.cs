@@ -6,15 +6,15 @@
     public enum ResourceKind : byte
     {
         /// <summary>
-        /// A <see cref="Buffer"/> accessed as a uniform buffer.
+        /// A <see cref="DeviceBuffer"/> accessed as a uniform buffer.
         /// </summary>
         UniformBuffer,
         /// <summary>
-        /// A <see cref="Buffer"/> accessed as a read-only storage buffer.
+        /// A <see cref="DeviceBuffer"/> accessed as a read-only storage buffer.
         /// </summary>
         StructuredBufferReadOnly,
         /// <summary>
-        /// A <see cref="Buffer"/> accessed as a read-write storage buffer.
+        /// A <see cref="DeviceBuffer"/> accessed as a read-write storage buffer.
         /// </summary>
         StructuredBufferReadWrite,
         /// <summary>

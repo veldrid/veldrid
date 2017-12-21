@@ -32,9 +32,9 @@ namespace Veldrid.Utilities
             return fb;
         }
 
-        protected override Buffer CreateBufferCore(ref BufferDescription description)
+        protected override DeviceBuffer CreateBufferCore(ref BufferDescription description)
         {
-            Buffer buffer = Factory.CreateBuffer(ref description);
+            DeviceBuffer buffer = Factory.CreateBuffer(ref description);
             DisposeCollector.Add(buffer);
             return buffer;
         }

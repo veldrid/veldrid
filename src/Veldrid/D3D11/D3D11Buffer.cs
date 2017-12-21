@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Buffer : Buffer
+    internal class D3D11Buffer : DeviceBuffer
     {
         private readonly SharpDX.Direct3D11.Buffer _buffer;
         private string _name;

@@ -3,12 +3,12 @@
 namespace Veldrid
 {
     /// <summary>
-    /// Describes the layout of vertex data in a single <see cref="Buffer"/> used as a vertex buffer.
+    /// Describes the layout of vertex data in a single <see cref="DeviceBuffer"/> used as a vertex buffer.
     /// </summary>
     public struct VertexLayoutDescription : IEquatable<VertexLayoutDescription>
     {
         /// <summary>
-        /// The number of bytes in between successive elements in the <see cref="Buffer"/>.
+        /// The number of bytes in between successive elements in the <see cref="DeviceBuffer"/>.
         /// </summary>
         public uint Stride;
         /// <summary>
@@ -26,7 +26,7 @@ namespace Veldrid
         /// <summary>
         /// Constructs a new VertexLayoutDescription.
         /// </summary>
-        /// <param name="stride">The number of bytes in between successive elements in the <see cref="Buffer"/>.</param>
+        /// <param name="stride">The number of bytes in between successive elements in the <see cref="DeviceBuffer"/>.</param>
         /// <param name="elements">An array of <see cref="VertexElementDescription"/> objects, each describing a single element
         /// of vertex data.</param>
         public VertexLayoutDescription(uint stride, params VertexElementDescription[] elements)
@@ -39,7 +39,7 @@ namespace Veldrid
         /// <summary>
         /// Constructs a new VertexLayoutDescription.
         /// </summary>
-        /// <param name="stride">The number of bytes in between successive elements in the <see cref="Buffer"/>.</param>
+        /// <param name="stride">The number of bytes in between successive elements in the <see cref="DeviceBuffer"/>.</param>
         /// <param name="elements">An array of <see cref="VertexElementDescription"/> objects, each describing a single element
         /// of vertex data.</param>
         /// <param name="instanceStepRate">A value controlling how often data for instances is advanced for this element. For

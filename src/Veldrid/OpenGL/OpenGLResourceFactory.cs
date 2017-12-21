@@ -67,7 +67,7 @@ namespace Veldrid.OpenGL
             return new OpenGLTextureView(_gd, ref description);
         }
 
-        protected override Buffer CreateBufferCore(ref BufferDescription description)
+        protected override DeviceBuffer CreateBufferCore(ref BufferDescription description)
         {
             return new OpenGLBuffer(
                 _gd, 

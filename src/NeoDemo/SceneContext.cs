@@ -8,15 +8,15 @@ namespace Veldrid.NeoDemo
 {
     public class SceneContext
     {
-        public Buffer ProjectionMatrixBuffer { get; private set; }
-        public Buffer ViewMatrixBuffer { get; private set; }
-        public Buffer LightInfoBuffer { get; private set; }
-        public Buffer LightViewProjectionBuffer0 { get; internal set; }
-        public Buffer LightViewProjectionBuffer1 { get; internal set; }
-        public Buffer LightViewProjectionBuffer2 { get; internal set; }
-        public Buffer DepthLimitsBuffer { get; internal set; }
-        public Buffer CameraInfoBuffer { get; private set; }
-        public Buffer PointLightsBuffer { get; private set; }
+        public DeviceBuffer ProjectionMatrixBuffer { get; private set; }
+        public DeviceBuffer ViewMatrixBuffer { get; private set; }
+        public DeviceBuffer LightInfoBuffer { get; private set; }
+        public DeviceBuffer LightViewProjectionBuffer0 { get; internal set; }
+        public DeviceBuffer LightViewProjectionBuffer1 { get; internal set; }
+        public DeviceBuffer LightViewProjectionBuffer2 { get; internal set; }
+        public DeviceBuffer DepthLimitsBuffer { get; internal set; }
+        public DeviceBuffer CameraInfoBuffer { get; private set; }
+        public DeviceBuffer PointLightsBuffer { get; private set; }
 
         public CascadedShadowMaps ShadowMaps { get; private set; } = new CascadedShadowMaps();
         public TextureView NearShadowMapView => ShadowMaps.NearShadowMapView;
@@ -31,7 +31,7 @@ namespace Veldrid.NeoDemo
         public Texture ReflectionDepthTexture { get; private set; }
         public TextureView ReflectionColorView { get; private set; }
         public Framebuffer ReflectionFramebuffer { get; private set; }
-        public Buffer ReflectionViewProjBuffer { get; private set; }
+        public DeviceBuffer ReflectionViewProjBuffer { get; private set; }
 
         // MainSceneView and Duplicator resource sets both use this.
         public ResourceLayout TextureSamplerResourceLayout { get; private set; }
@@ -54,8 +54,8 @@ namespace Veldrid.NeoDemo
         public Camera Camera { get; set; }
         public DirectionalLight DirectionalLight { get; } = new DirectionalLight();
         public TextureSampleCount MainSceneSampleCount { get; internal set; }
-        public Buffer MirrorClipPlaneBuffer { get; private set; }
-        public Buffer NoClipPlaneBuffer { get; private set; }
+        public DeviceBuffer MirrorClipPlaneBuffer { get; private set; }
+        public DeviceBuffer NoClipPlaneBuffer { get; private set; }
 
         public virtual void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {

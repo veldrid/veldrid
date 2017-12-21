@@ -490,13 +490,13 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(DrawIndexedEntryID, ref entry);
         }
 
-        public void DrawIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             NoAllocDrawIndirectEntry entry = new NoAllocDrawIndirectEntry(indirectBuffer, offset, drawCount, stride);
             AddEntry(DrawIndirectEntryID, ref entry);
         }
 
-        public void DrawIndexedIndirect(Buffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             NoAllocDrawIndexedIndirectEntry entry = new NoAllocDrawIndexedIndirectEntry(indirectBuffer, offset, drawCount, stride);
         }
@@ -507,7 +507,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(DispatchEntryID, ref entry);
         }
 
-        public void DispatchIndirect(Buffer indirectBuffer, uint offset)
+        public void DispatchIndirect(DeviceBuffer indirectBuffer, uint offset)
         {
             NoAllocDispatchIndirectEntry entry = new NoAllocDispatchIndirectEntry(indirectBuffer, offset);
             AddEntry(DispatchIndirectEntryID, ref entry);
@@ -525,7 +525,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(SetFramebufferEntryID, ref entry);
         }
 
-        public void SetIndexBuffer(Buffer buffer, IndexFormat format)
+        public void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format)
         {
             NoAllocSetIndexBufferEntry entry = new NoAllocSetIndexBufferEntry(buffer, format);
             AddEntry(SetIndexBufferEntryID, ref entry);
@@ -555,7 +555,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(SetScissorRectEntryID, ref entry);
         }
 
-        public void SetVertexBuffer(uint index, Buffer buffer)
+        public void SetVertexBuffer(uint index, DeviceBuffer buffer)
         {
             NoAllocSetVertexBufferEntry entry = new NoAllocSetVertexBufferEntry(index, buffer);
             AddEntry(SetVertexBufferEntryID, ref entry);
@@ -573,14 +573,14 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(ResolveTextureEntryID, ref entry);
         }
 
-        public void UpdateBuffer(Buffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        public void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             StagingBlock stagingBlock = _memoryPool.Stage(source, sizeInBytes);
             NoAllocUpdateBufferEntry entry = new NoAllocUpdateBufferEntry(buffer, bufferOffsetInBytes, stagingBlock);
             AddEntry(UpdateBufferEntryID, ref entry);
         }
 
-        public void CopyBuffer(Buffer source, uint sourceOffset, Buffer destination, uint destinationOffset, uint sizeInBytes)
+        public void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
         {
             NoAllocCopyBufferEntry entry = new NoAllocCopyBufferEntry(
                 source,

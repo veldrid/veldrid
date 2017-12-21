@@ -67,7 +67,7 @@ namespace Veldrid.D3D11
             return new D3D11TextureView(_device, ref description);
         }
 
-        protected override Buffer CreateBufferCore(ref BufferDescription description)
+        protected override DeviceBuffer CreateBufferCore(ref BufferDescription description)
         {
             return new D3D11Buffer(_device, description.SizeInBytes, description.Usage, description.StructureByteStride);
         }

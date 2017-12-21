@@ -69,25 +69,25 @@ namespace Veldrid
         public abstract TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat);
 
         /// <summary>
-        /// Maps a <see cref="Buffer"/> or <see cref="Texture"/> into a CPU-accessible data region. For Texture resources, this
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region. For Texture resources, this
         /// overload maps the first subresource.
         /// </summary>
-        /// <param name="resource">The <see cref="Buffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
         public MappedResource Map(MappableResource resource, MapMode mode) => Map(resource, mode, 0);
         /// <summary>
-        /// Maps a <see cref="Buffer"/> or <see cref="Texture"/> into a CPU-accessible data region.
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region.
         /// </summary>
-        /// <param name="resource">The <see cref="Buffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
         /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.
-        /// For <see cref="Buffer"/> resources, this parameter must be 0.</param>
+        /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.</param>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
         public MappedResource Map(MappableResource resource, MapMode mode, uint subresource)
         {
 #if VALIDATE_USAGE
-            if (resource is Buffer buffer)
+            if (resource is DeviceBuffer buffer)
             {
                 if ((buffer.Usage & BufferUsage.Dynamic) != BufferUsage.Dynamic
                     && (buffer.Usage & BufferUsage.Staging) != BufferUsage.Staging)
@@ -125,20 +125,20 @@ namespace Veldrid
         protected abstract MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource);
 
         /// <summary>
-        /// Maps a <see cref="Buffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
         /// view over that region. For Texture resources, this overload maps the first subresource.
         /// </summary>
-        /// <param name="resource">The <see cref="Buffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
         /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
         public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode) where T : struct
             => Map<T>(resource, mode, 0);
         /// <summary>
-        /// Maps a <see cref="Buffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
         /// view over that region.
         /// </summary>
-        /// <param name="resource">The <see cref="Buffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
         /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.</param>
         /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
@@ -150,17 +150,17 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Invalidates a previously-mapped data region for the given <see cref="Buffer"/> or <see cref="Texture"/>.
+        /// Invalidates a previously-mapped data region for the given <see cref="DeviceBuffer"/> or <see cref="Texture"/>.
         /// For <see cref="Texture"/> resources, this unmaps the first subresource.
         /// </summary>
         /// <param name="resource">The resource to unmap.</param>
         public void Unmap(MappableResource resource) => Unmap(resource, 0);
         /// <summary>
-        /// Invalidates a previously-mapped data region for the given <see cref="Buffer"/> or <see cref="Texture"/>.
+        /// Invalidates a previously-mapped data region for the given <see cref="DeviceBuffer"/> or <see cref="Texture"/>.
         /// </summary>
         /// <param name="resource">The resource to unmap.</param>
         /// <param name="subresource">The subresource to unmap. Subresources are indexed first by mip slice, then by array layer.
-        /// For <see cref="Buffer"/> resources, this parameter must be 0.</param>
+        /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.</param>
         public void Unmap(MappableResource resource, uint subresource)
         {
             UnmapCore(resource, subresource);
@@ -202,16 +202,16 @@ namespace Veldrid
             uint arrayLayer);
 
         /// <summary>
-        /// Updates a <see cref="Buffer"/> region with new data.
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// This function must be used with a blittable value type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/> storage, at
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/> storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">The value to upload.</param>
         public unsafe void UpdateBuffer<T>(
-            Buffer buffer,
+            DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             T source) where T : struct
         {
@@ -223,16 +223,16 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Updates a <see cref="Buffer"/> region with new data.
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// This function must be used with a blittable value type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">A reference to the single value to upload.</param>
         public unsafe void UpdateBuffer<T>(
-            Buffer buffer,
+            DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             ref T source) where T : struct
         {
@@ -244,17 +244,17 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Updates a <see cref="Buffer"/> region with new data.
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// This function must be used with a blittable value type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">A reference to the first of a series of values to upload.</param>
         /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
         public unsafe void UpdateBuffer<T>(
-            Buffer buffer,
+            DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             ref T source,
             uint sizeInBytes) where T : struct
@@ -267,16 +267,16 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Updates a <see cref="Buffer"/> region with new data.
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// This function must be used with a blittable value type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">An array containing the data to upload.</param>
         public unsafe void UpdateBuffer<T>(
-            Buffer buffer,
+            DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             T[] source) where T : struct
         {
@@ -286,15 +286,15 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Updates a <see cref="Buffer"/> region with new data.
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// </summary>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="Buffer"/>'s storage, at
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">A pointer to the start of the data to upload.</param>
         /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
         public abstract void UpdateBuffer(
-            Buffer buffer,
+            DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             IntPtr source,
             uint sizeInBytes);

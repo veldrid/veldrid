@@ -2,18 +2,18 @@
 {
     internal class DispatchIndirectEntry : OpenGLCommandEntry
     {
-        public Buffer IndirectBuffer;
+        public DeviceBuffer IndirectBuffer;
         public uint Offset;
 
         public DispatchIndirectEntry() { }
 
-        public DispatchIndirectEntry(Buffer indirectBuffer, uint offset)
+        public DispatchIndirectEntry(DeviceBuffer indirectBuffer, uint offset)
         {
             IndirectBuffer = indirectBuffer;
             Offset = offset;
         }
 
-        public DispatchIndirectEntry Init(Buffer indirectBuffer, uint offset)
+        public DispatchIndirectEntry Init(DeviceBuffer indirectBuffer, uint offset)
         {
             IndirectBuffer = indirectBuffer;
             Offset = offset;

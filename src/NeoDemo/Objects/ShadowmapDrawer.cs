@@ -11,10 +11,10 @@ namespace Veldrid.NeoDemo.Objects
         private readonly Func<Sdl2Window> _windowGetter;
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
 
-        private Buffer _vb;
-        private Buffer _ib;
-        private Buffer _orthographicBuffer;
-        private Buffer _sizeInfoBuffer;
+        private DeviceBuffer _vb;
+        private DeviceBuffer _ib;
+        private DeviceBuffer _orthographicBuffer;
+        private DeviceBuffer _sizeInfoBuffer;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
 

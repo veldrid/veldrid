@@ -14,7 +14,7 @@ namespace Veldrid.Tests
             uint expectedSize = 64;
             BufferUsage expectedUsage = BufferUsage.Dynamic | BufferUsage.UniformBuffer;
 
-            Buffer buffer = RF.CreateBuffer(new BufferDescription(expectedSize, expectedUsage));
+            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(expectedSize, expectedUsage));
 
             Assert.Equal(expectedUsage, buffer.Usage);
             Assert.Equal(expectedSize, buffer.SizeInBytes);
@@ -23,7 +23,7 @@ namespace Veldrid.Tests
         [Fact]
         public void UpdateBuffer_NonDynamic_Succeeds()
         {
-            Buffer buffer = CreateBuffer(64, BufferUsage.VertexBuffer);
+            DeviceBuffer buffer = CreateBuffer(64, BufferUsage.VertexBuffer);
             GD.UpdateBuffer(buffer, 0, Matrix4x4.Identity);
             GD.WaitForIdle();
         }
@@ -31,7 +31,7 @@ namespace Veldrid.Tests
         [Fact]
         public void UpdateBuffer_ThenMapRead_Succeeds()
         {
-            Buffer buffer = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.Staging);
             int[] data = Enumerable.Range(0, 256).Select(i => 2 * i).ToArray();
             GD.UpdateBuffer(buffer, 0, data);
 
@@ -45,7 +45,7 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void Staging_Map_WriteThenRead()
         {
-            Buffer buffer = CreateBuffer(256, BufferUsage.Staging);
+            DeviceBuffer buffer = CreateBuffer(256, BufferUsage.Staging);
             MappedResource map = GD.Map(buffer, MapMode.Write);
             byte* dataPtr = (byte*)map.Data.ToPointer();
             for (int i = 0; i < map.SizeInBytes; i++)
@@ -65,7 +65,7 @@ namespace Veldrid.Tests
         [Fact]
         public void Staging_MapGeneric_WriteThenRead()
         {
-            Buffer buffer = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.Staging);
             MappedResourceView<int> view = GD.Map<int>(buffer, MapMode.Write);
             Assert.Equal(256, view.Count);
             for (int i = 0; i < view.Count; i++)
@@ -85,7 +85,7 @@ namespace Veldrid.Tests
         [Fact]
         public void MapGeneric_OutOfBounds_ThrowsIndexOutOfRange()
         {
-            Buffer buffer = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.Staging);
             MappedResourceView<byte> view = GD.Map<byte>(buffer, MapMode.ReadWrite);
             Assert.Throws<IndexOutOfRangeException>(() => view[1024]);
             Assert.Throws<IndexOutOfRangeException>(() => view[-1]);
@@ -94,7 +94,7 @@ namespace Veldrid.Tests
         [Fact]
         public void Map_WrongFlags_Throws()
         {
-            Buffer buffer = CreateBuffer(1024, BufferUsage.VertexBuffer);
+            DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.VertexBuffer);
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.Read));
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.Write));
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.ReadWrite));
@@ -103,11 +103,11 @@ namespace Veldrid.Tests
         [Fact]
         public void CopyBuffer_Succeeds()
         {
-            Buffer src = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer src = CreateBuffer(1024, BufferUsage.Staging);
             int[] data = Enumerable.Range(0, 256).Select(i => 2 * i).ToArray();
             GD.UpdateBuffer(src, 0, data);
 
-            Buffer dst = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer dst = CreateBuffer(1024, BufferUsage.Staging);
 
             CommandList copyCL = RF.CreateCommandList();
             copyCL.Begin();
@@ -127,15 +127,15 @@ namespace Veldrid.Tests
         [Fact]
         public void CopyBuffer_Chain_Succeeds()
         {
-            Buffer src = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer src = CreateBuffer(1024, BufferUsage.Staging);
             int[] data = Enumerable.Range(0, 256).Select(i => 2 * i).ToArray();
             GD.UpdateBuffer(src, 0, data);
 
-            Buffer finalDst = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer finalDst = CreateBuffer(1024, BufferUsage.Staging);
 
             for (int chainLength = 2; chainLength <= 10; chainLength += 4)
             {
-                Buffer[] dsts = Enumerable.Range(0, chainLength)
+                DeviceBuffer[] dsts = Enumerable.Range(0, chainLength)
                     .Select(i => RF.CreateBuffer(new BufferDescription(1024, BufferUsage.UniformBuffer)))
                     .ToArray();
 
@@ -168,7 +168,7 @@ namespace Veldrid.Tests
                 return; // TODO
             }
 
-            Buffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
+            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
             MappedResourceView<int> view = GD.Map<int>(buffer, MapMode.ReadWrite);
             int[] data = Enumerable.Range(0, 256).Select(i => 2 * i).ToArray();
             Assert.Throws<VeldridException>(() => GD.UpdateBuffer(buffer, 0, data));
@@ -177,7 +177,7 @@ namespace Veldrid.Tests
         [Fact]
         public void Map_MultipleTimes_Succeeds()
         {
-            Buffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
+            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
             MappedResource map = GD.Map(buffer, MapMode.ReadWrite);
             IntPtr dataPtr = map.Data;
             map = GD.Map(buffer, MapMode.ReadWrite);
@@ -197,12 +197,12 @@ namespace Veldrid.Tests
                 return; // TODO
             }
 
-            Buffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
+            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
             MappedResource map = GD.Map(buffer, MapMode.Read);
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.Write));
         }
 
-        private Buffer CreateBuffer(uint size, BufferUsage usage)
+        private DeviceBuffer CreateBuffer(uint size, BufferUsage usage)
         {
             return RF.CreateBuffer(new BufferDescription(size, usage));
         }

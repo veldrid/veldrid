@@ -204,7 +204,8 @@ namespace Veldrid.OpenGL
                         else
                         {
                             // TODO: Support raw uniform values, not wrapped in a uniform block.
-                            throw new System.NotImplementedException();
+                            throw new VeldridException(
+                                $"The expected GLSL uniform was not found in the shader program: \"{resourceName}\"");
                         }
                     }
                     else if (resource.Kind == ResourceKind.TextureReadOnly)

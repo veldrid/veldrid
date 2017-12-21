@@ -28,6 +28,7 @@ namespace Veldrid.Vk
         public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
 
         public VkPipeline(VkGraphicsDevice gd, ref GraphicsPipelineDescription description)
+            : base(ref description)
         {
             _gd = gd;
             IsComputePipeline = false;
@@ -306,6 +307,7 @@ namespace Veldrid.Vk
         }
 
         public VkPipeline(VkGraphicsDevice gd, ref ComputePipelineDescription description)
+            : base(ref description)
         {
             _gd = gd;
             IsComputePipeline = true;

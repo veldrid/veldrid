@@ -26,6 +26,7 @@ namespace Veldrid.D3D11
         public override bool IsComputePipeline { get; }
 
         public D3D11Pipeline(D3D11ResourceCache cache, ref GraphicsPipelineDescription description)
+            : base(ref description)
         {
             BlendState = cache.GetBlendState(ref description.BlendState);
             DepthStencilState = cache.GetDepthStencilState(ref description.DepthStencilState);
@@ -92,6 +93,7 @@ namespace Veldrid.D3D11
         }
 
         public D3D11Pipeline(D3D11ResourceCache cache, ref ComputePipelineDescription description)
+            : base(ref description)
         {
             IsComputePipeline = true;
             ComputeShader = (ComputeShader)((D3D11Shader)description.ComputeShader).DeviceShader;

@@ -9,6 +9,16 @@ namespace Veldrid
     /// </summary>
     public abstract class Pipeline : DeviceResource, IDisposable
     {
+        internal Pipeline(ref GraphicsPipelineDescription graphicsDescription)
+        {
+#if VALIDATE_USAGE
+            GraphicsOutputDescription = graphicsDescription.Outputs;
+#endif
+        }
+
+        internal Pipeline(ref ComputePipelineDescription computeDescription)
+        { }
+
         /// <summary>
         /// Gets a value indicating whether this instance represents a compute Pipeline.
         /// If false, this instance is a graphics pipeline.
@@ -25,5 +35,9 @@ namespace Veldrid
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
         public abstract void Dispose();
+
+#if VALIDATE_USAGE
+        public OutputDescription GraphicsOutputDescription { get; }
+#endif
     }
 }

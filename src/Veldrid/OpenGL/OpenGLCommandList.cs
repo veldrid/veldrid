@@ -32,12 +32,12 @@ namespace Veldrid.OpenGL
             _commands.ClearDepthTarget(depth, stencil);
         }
 
-        public override void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
+        protected override void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
             _commands.Draw(vertexCount, instanceCount, vertexStart, instanceStart);
         }
 
-        public override void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        protected override void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
             _commands.DrawIndexed(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
@@ -82,7 +82,7 @@ namespace Veldrid.OpenGL
             _commands.SetIndexBuffer(buffer, format);
         }
 
-        public override void SetPipeline(Pipeline pipeline)
+        protected override void SetPipelineCore(Pipeline pipeline)
         {
             _commands.SetPipeline(pipeline);
         }

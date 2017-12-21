@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -26,6 +27,8 @@ namespace Veldrid
         /// The active <see cref="Framebuffer"/>.
         /// </summary>
         protected Framebuffer _framebuffer;
+        protected Pipeline _graphicsPipeline;
+        protected Pipeline _computePipeline;
 
         internal CommandList(ref CommandListDescription description)
         {
@@ -34,6 +37,8 @@ namespace Veldrid
         internal void ClearCachedState()
         {
             _framebuffer = null;
+            _graphicsPipeline = null;
+            _computePipeline = null;
         }
 
         /// <summary>
@@ -57,7 +62,21 @@ namespace Veldrid
         /// <see cref="ResourceSet"/>, and <see cref="DeviceBuffer"/> objects.
         /// </summary>
         /// <param name="pipeline">The new <see cref="Pipeline"/> object.</param>
-        public abstract void SetPipeline(Pipeline pipeline);
+        public void SetPipeline(Pipeline pipeline)
+        {
+            if (pipeline.IsComputePipeline)
+            {
+                _computePipeline = pipeline;
+            }
+            else
+            {
+                _graphicsPipeline = pipeline;
+            }
+
+            SetPipelineCore(pipeline);
+        }
+
+        protected abstract void SetPipelineCore(Pipeline pipeline);
 
         /// <summary>
         /// Sets the active <see cref="DeviceBuffer"/> for the given index.
@@ -294,16 +313,28 @@ namespace Veldrid
         /// Draws primitives from the currently-bound state in this CommandList. An index Buffer is not used.
         /// </summary>
         /// <param name="vertexCount">The number of vertices.</param>
-        /// <param name="instanceCount">The number of instances.</param>
-        /// <param name="vertexStart">The first vertex to use when drawing.</param>
-        /// <param name="instanceStart">The starting instance value.</param>
-        public abstract void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
+        public void Draw(uint vertexCount) => Draw(vertexCount, 1, 0, 0);
 
         /// <summary>
         /// Draws primitives from the currently-bound state in this CommandList. An index Buffer is not used.
         /// </summary>
         /// <param name="vertexCount">The number of vertices.</param>
-        public void Draw(uint vertexCount) => Draw(vertexCount, 1, 0, 0);
+        /// <param name="instanceCount">The number of instances.</param>
+        /// <param name="vertexStart">The first vertex to use when drawing.</param>
+        /// <param name="instanceStart">The starting instance value.</param>
+        public void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
+        {
+            PreDrawValidation();
+            DrawCore(vertexCount, instanceCount, vertexStart, instanceStart);
+        }
+
+        protected abstract void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
+
+        /// <summary>
+        /// Draws indexed primitives from the currently-bound state in this <see cref="CommandList"/>.
+        /// </summary>
+        /// <param name="indexCount">The number of indices.</param>
+        public void DrawIndexed(uint indexCount) => DrawIndexed(indexCount, 1, 0, 0, 0);
 
         /// <summary>
         /// Draws indexed primitives from the currently-bound state in this <see cref="CommandList"/>.
@@ -313,13 +344,13 @@ namespace Veldrid
         /// <param name="indexStart">The number of indices to skip in the active index buffer.</param>
         /// <param name="vertexOffset">The base vertex value, which is added to each index value read from the index buffer.</param>
         /// <param name="instanceStart">The starting instance value.</param>
-        public abstract void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
+        public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        {
+            PreDrawValidation();
+            DrawIndexedCore(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
+        }
 
-        /// <summary>
-        /// Draws indexed primitives from the currently-bound state in this <see cref="CommandList"/>.
-        /// </summary>
-        /// <param name="indexCount">The number of indices.</param>
-        public void DrawIndexed(uint indexCount) => DrawIndexed(indexCount, 1, 0, 0, 0);
+        protected abstract void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
 
         /// <summary>
         /// Issues indirect draw commands based on the information contained in the given indirect <see cref="DeviceBuffer"/>.
@@ -337,6 +368,7 @@ namespace Veldrid
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
             ValidateIndirectStride(stride, Unsafe.SizeOf<IndirectDrawArguments>());
+            PreDrawValidation();
 
             DrawIndirectCore(indirectBuffer, offset, drawCount, stride);
         }
@@ -367,7 +399,8 @@ namespace Veldrid
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
             ValidateIndirectStride(stride, Unsafe.SizeOf<IndirectDrawIndexedArguments>());
-
+            PreDrawValidation();
+            
             DrawIndexedIndirectCore(indirectBuffer, offset, drawCount, stride);
         }
 
@@ -380,7 +413,7 @@ namespace Veldrid
         /// <param name="stride"></param>
         protected abstract void DrawIndexedIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride);
 
-        [System.Diagnostics.Conditional("VALIDATE_USAGE")]
+        [Conditional("VALIDATE_USAGE")]
         private static void ValidateIndirectOffset(uint offset)
         {
             if ((offset % 4) != 0)
@@ -389,6 +422,7 @@ namespace Veldrid
             }
         }
 
+        [Conditional("VALIDATE_USAGE")]
         private static void ValidateIndirectBuffer(DeviceBuffer indirectBuffer)
         {
             if ((indirectBuffer.Usage & BufferUsage.IndirectBuffer) != BufferUsage.IndirectBuffer)
@@ -398,7 +432,7 @@ namespace Veldrid
             }
         }
 
-        [System.Diagnostics.Conditional("VALIDATE_USAGE")]
+        [Conditional("VALIDATE_USAGE")]
         private static void ValidateIndirectStride(uint stride, int argumentSize)
         {
             if (stride < argumentSize || ((stride % 4) != 0))
@@ -741,5 +775,22 @@ namespace Veldrid
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
         public abstract void Dispose();
+
+        [Conditional("VALIDATE_USAGE")]
+        private void PreDrawValidation()
+        {
+            if (_graphicsPipeline == null)
+            {
+                throw new VeldridException($"A graphics {nameof(Pipeline)} must be set in order to issue draw commands.");
+            }
+            if (_framebuffer == null)
+            {
+                throw new VeldridException($"A {nameof(Framebuffer)} must be set in order to issue draw commands.");
+            }
+            if (!_graphicsPipeline.GraphicsOutputDescription.Equals(_framebuffer.OutputDescription))
+            {
+                throw new VeldridException($"The {nameof(OutputDescription)} of the current graphics {nameof(Pipeline)} is not compatible with the current {nameof(Framebuffer)}.");
+            }
+        }
     }
 }

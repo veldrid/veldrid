@@ -32,6 +32,7 @@ namespace Veldrid.OpenGL
         public override string Name { get; set; }
 
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref GraphicsPipelineDescription description)
+            : base(ref description)
         {
             _gd = gd;
             GraphicsDescription = description;
@@ -45,6 +46,7 @@ namespace Veldrid.OpenGL
         }
 
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref ComputePipelineDescription description)
+            : base(ref description)
         {
             _gd = gd;
             IsComputePipeline = true;

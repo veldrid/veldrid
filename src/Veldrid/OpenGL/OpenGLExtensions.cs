@@ -17,6 +17,7 @@ namespace Veldrid.OpenGL
             ARB_CopyImage = IsExtensionSupported("GL_ARB_copy_image");
             ARB_DebugOutput = IsExtensionSupported("GL_ARB_debug_output");
             KHR_Debug = IsExtensionSupported("GL_KHR_debug");
+            ARB_ComputeShader = IsExtensionSupported("GL_ARB_compute_shader");
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -26,6 +27,7 @@ namespace Veldrid.OpenGL
         public readonly bool ARB_CopyImage;
         public readonly bool ARB_DebugOutput;
         public readonly bool KHR_Debug;
+        public readonly bool ARB_ComputeShader;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.

@@ -24,6 +24,12 @@ namespace Veldrid.OpenGL
         public OpenGLShader(OpenGLGraphicsDevice gd, ShaderStages stage, StagingBlock stagingBlock)
             : base(stage)
         {
+#if VALIDATE_USAGE
+            if (stage == ShaderStages.Compute && !gd.Extensions.ARB_ComputeShader)
+            {
+                throw new VeldridException($"Compute shaders require OpenGL 4.3 or ARB_compute_shader.");
+            }
+#endif
             _gd = gd;
             _shaderType = OpenGLFormats.VdToGLShaderType(stage);
             _stagingBlock = stagingBlock;

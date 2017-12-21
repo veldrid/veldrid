@@ -18,6 +18,7 @@
     <PackageReference Include="SharpDX.DXGI" Version="4.0.1" />
     <PackageReference Include="Vk" Version="1.0.13" />
     <ProjectReference Include="..\Veldrid.OpenGLBindings\Veldrid.OpenGLBindings.csproj" />
+    <ProjectReference Include="..\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

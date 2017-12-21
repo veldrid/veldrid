@@ -17,5 +17,9 @@
         /// OpenGL.
         /// </summary>
         OpenGL,
+        /// <summary>
+        /// Metal.
+        /// </summary>
+        Metal,
     }
 }

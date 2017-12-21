@@ -46,6 +46,14 @@ namespace Veldrid.Sdl2
         public IntPtr Sdl2Window;
     }
 
+    public struct CocoaWindowInfo
+    {
+        /// <summary>
+        /// The NSWindow* Cocoa window.
+        /// </summary>
+        public IntPtr Window;
+    }
+
     public enum SysWMType
     {
         Unknown,

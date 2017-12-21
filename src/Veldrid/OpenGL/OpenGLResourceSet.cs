@@ -7,6 +7,7 @@
         public override string Name { get; set; }
 
         public OpenGLResourceSet(ref ResourceSetDescription description)
+            : base(ref description)
         {
             Layout = Util.AssertSubtype<ResourceLayout, OpenGLResourceLayout>(description.Layout);
             Resources = description.BoundResources;

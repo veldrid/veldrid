@@ -9,6 +9,22 @@ namespace Veldrid
     /// </summary>
     public abstract class ResourceLayout : DeviceResource, IDisposable
     {
+#if VALIDATE_USAGE
+        public readonly ResourceKind[] ResourceKinds;
+#endif
+
+        internal ResourceLayout(ref ResourceLayoutDescription description)
+        {
+#if VALIDATE_USAGE
+            ResourceLayoutElementDescription[] elements = description.Elements;
+            ResourceKinds = new ResourceKind[elements.Length];
+            for (int i = 0; i < elements.Length; i++)
+            {
+                ResourceKinds[i] = elements[i].Kind;
+            }
+#endif
+        }
+
         /// <summary>
         /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
         /// tools.

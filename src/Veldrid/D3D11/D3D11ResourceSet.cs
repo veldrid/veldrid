@@ -8,6 +8,7 @@
         public D3D11ResourceLayout Layout { get; }
 
         public D3D11ResourceSet(ref ResourceSetDescription description)
+            : base(ref description)
         {
             Resources = description.BoundResources;
             Layout = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(description.Layout);

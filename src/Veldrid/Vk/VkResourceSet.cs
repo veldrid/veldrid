@@ -17,6 +17,7 @@ namespace Veldrid.Vk
         public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
 
         public VkResourceSet(VkGraphicsDevice gd, ref ResourceSetDescription description)
+            : base(ref description)
         {
             _gd = gd;
             VkResourceLayout vkLayout = Util.AssertSubtype<ResourceLayout, VkResourceLayout>(description.Layout);

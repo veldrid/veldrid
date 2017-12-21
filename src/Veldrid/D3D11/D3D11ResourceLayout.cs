@@ -11,6 +11,7 @@
         public int SamplerCount { get; }
 
         public D3D11ResourceLayout(ref ResourceLayoutDescription description)
+            : base(ref description)
         {
             ResourceLayoutElementDescription[] elements = description.Elements;
             _bindingInfosByVdIndex = new ResourceBindingInfo[elements.Length];

@@ -17,6 +17,7 @@ namespace Veldrid.Vk
         public DescriptorResourceCounts DescriptorResourceCounts { get; }
 
         public VkResourceLayout(VkGraphicsDevice gd, ref ResourceLayoutDescription description)
+            : base(ref description)
         {
             _gd = gd;
             VkDescriptorSetLayoutCreateInfo dslCI = VkDescriptorSetLayoutCreateInfo.New();

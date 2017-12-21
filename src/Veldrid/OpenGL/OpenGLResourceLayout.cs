@@ -7,6 +7,7 @@
         public override string Name { get; set; }
 
         public OpenGLResourceLayout(ref ResourceLayoutDescription description)
+            : base(ref description)
         {
             Description = description;
         }

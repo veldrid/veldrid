@@ -28,8 +28,12 @@ namespace Veldrid
         {
             switch (format)
             {
+                case VertexElementFormat.Byte2_UNorm:
+                case VertexElementFormat.Byte2_UInt:
+                    return 2;
                 case VertexElementFormat.Float1:
-                case VertexElementFormat.Byte4:
+                case VertexElementFormat.Byte4_UNorm:
+                case VertexElementFormat.Byte4_UInt:
                     return 4;
                 case VertexElementFormat.Float2:
                     return 8;
@@ -37,10 +41,6 @@ namespace Veldrid
                     return 12;
                 case VertexElementFormat.Float4:
                     return 16;
-                case VertexElementFormat.Byte1:
-                    return 1;
-                case VertexElementFormat.Byte2:
-                    return 2;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }
@@ -51,15 +51,16 @@ namespace Veldrid
             switch (format)
             {
                 case VertexElementFormat.Float1:
-                case VertexElementFormat.Byte1:
                     return 1;
                 case VertexElementFormat.Float2:
-                case VertexElementFormat.Byte2:
+                case VertexElementFormat.Byte2_UNorm:
+                case VertexElementFormat.Byte2_UInt:
                     return 2;
                 case VertexElementFormat.Float3:
                     return 3;
                 case VertexElementFormat.Float4:
-                case VertexElementFormat.Byte4:
+                case VertexElementFormat.Byte4_UNorm:
+                case VertexElementFormat.Byte4_UInt:
                     return 4;
                 default:
                     throw Illegal.Value<VertexElementFormat>();

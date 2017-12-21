@@ -313,12 +313,14 @@ namespace Veldrid.D3D11
                     return Format.R32G32B32_Float;
                 case VertexElementFormat.Float4:
                     return Format.R32G32B32A32_Float;
-                case VertexElementFormat.Byte1:
-                    return Format.R8_UNorm;
-                case VertexElementFormat.Byte2:
+                case VertexElementFormat.Byte2_UNorm:
                     return Format.R8G8_UNorm;
-                case VertexElementFormat.Byte4:
+                case VertexElementFormat.Byte2_UInt:
+                    return Format.R8G8_UInt;
+                case VertexElementFormat.Byte4_UNorm:
                     return Format.R8G8B8A8_UNorm;
+                case VertexElementFormat.Byte4_UInt:
+                    return Format.R8G8B8A8_UInt;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }

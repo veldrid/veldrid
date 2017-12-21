@@ -22,16 +22,20 @@
         /// </summary>
         Float4,
         /// <summary>
-        /// One 8-bit unsigned integer.
+        /// Two 8-bit unsigned normalized integers.
         /// </summary>
-        Byte1,
+        Byte2_UNorm,
         /// <summary>
-        /// Two 8-bit unsigned integers.
+        /// Two 8-bit unisgned integers.
         /// </summary>
-        Byte2,
+        Byte2_UInt,
+        /// <summary>
+        /// Four 8-bit unsigned normalized integers.
+        /// </summary>
+        Byte4_UNorm,
         /// <summary>
         /// Four 8-bit unsigned integers.
         /// </summary>
-        Byte4,
+        Byte4_UInt,
     }
 }

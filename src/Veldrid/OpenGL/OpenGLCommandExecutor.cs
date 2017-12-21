@@ -185,11 +185,13 @@ namespace Veldrid.OpenGL
                     {
                         glEnableVertexAttribArray(actualSlot);
                     }
-                    bool normalized = true;
+                    VertexAttribPointerType type = OpenGLFormats.VdToGLVertexAttribPointerType(
+                        element.Format,
+                        out bool normalized);
                     glVertexAttribPointer(
                         actualSlot,
                         FormatHelpers.GetElementCount(element.Format),
-                        OpenGLFormats.VdToGLVertexAttribPointerType(element.Format),
+                        type,
                         normalized,
                         (uint)_graphicsPipeline.VertexStrides[i],
                         (void*)offset);

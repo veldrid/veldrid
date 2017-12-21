@@ -257,12 +257,14 @@ namespace Veldrid.Vk
                     return VkFormat.R32g32b32Sfloat;
                 case VertexElementFormat.Float4:
                     return VkFormat.R32g32b32a32Sfloat;
-                case VertexElementFormat.Byte1:
-                    return VkFormat.R8Uint;
-                case VertexElementFormat.Byte2:
+                case VertexElementFormat.Byte2_UNorm:
+                    return VkFormat.R8g8Unorm;
+                case VertexElementFormat.Byte2_UInt:
                     return VkFormat.R8g8Uint;
-                case VertexElementFormat.Byte4:
+                case VertexElementFormat.Byte4_UNorm:
                     return VkFormat.R8g8b8a8Unorm;
+                case VertexElementFormat.Byte4_UInt:
+                    return VkFormat.R8g8b8a8Uint;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }

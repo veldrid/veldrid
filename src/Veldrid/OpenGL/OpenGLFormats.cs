@@ -221,7 +221,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        internal static VertexAttribPointerType VdToGLVertexAttribPointerType(VertexElementFormat format)
+        internal static VertexAttribPointerType VdToGLVertexAttribPointerType(VertexElementFormat format, out bool normalized)
         {
             switch (format)
             {
@@ -229,10 +229,15 @@ namespace Veldrid.OpenGL
                 case VertexElementFormat.Float2:
                 case VertexElementFormat.Float3:
                 case VertexElementFormat.Float4:
+                    normalized = false; // N/A
                     return VertexAttribPointerType.Float;
-                case VertexElementFormat.Byte1:
-                case VertexElementFormat.Byte2:
-                case VertexElementFormat.Byte4:
+                case VertexElementFormat.Byte2_UNorm:
+                case VertexElementFormat.Byte4_UNorm:
+                    normalized = true;
+                    return VertexAttribPointerType.UnsignedByte;
+                case VertexElementFormat.Byte2_UInt:
+                case VertexElementFormat.Byte4_UInt:
+                    normalized = false;
                     return VertexAttribPointerType.UnsignedByte;
                 default:
                     throw Illegal.Value<VertexElementFormat>();

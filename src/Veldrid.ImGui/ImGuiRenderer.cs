@@ -100,7 +100,7 @@ namespace Veldrid
                 new VertexLayoutDescription(
                     new VertexElementDescription("in_position", VertexElementSemantic.Position, VertexElementFormat.Float2),
                     new VertexElementDescription("in_texCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
-                    new VertexElementDescription("in_color", VertexElementSemantic.Color, VertexElementFormat.Byte4))
+                    new VertexElementDescription("in_color", VertexElementSemantic.Color, VertexElementFormat.Byte4_UNorm))
             };
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(

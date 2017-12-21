@@ -3,9 +3,9 @@
     internal struct NoAllocSetComputeResourceSetEntry
     {
         public readonly uint Slot;
-        public readonly HandleTracked<ResourceSet> ResourceSet;
+        public readonly Tracked<ResourceSet> ResourceSet;
 
-        public NoAllocSetComputeResourceSetEntry(uint slot, ResourceSet rs)
+        public NoAllocSetComputeResourceSetEntry(uint slot, Tracked<ResourceSet> rs)
         {
             Slot = slot;
             ResourceSet = rs;

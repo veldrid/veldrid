@@ -99,19 +99,4 @@ namespace Veldrid.OpenGL
             Pool.Free(this);
         }
     }
-
-    internal unsafe struct HandleTrackedStagingBlock
-    {
-        public readonly GCHandle GCHandle;
-
-        public byte[] Array => (byte[])GCHandle.Target;
-
-        public uint SizeInBytes { get; }
-
-        public HandleTrackedStagingBlock(StagingBlock stagingBlock)
-        {
-            GCHandle = GCHandle.Alloc(stagingBlock.Array, GCHandleType.Pinned);
-            SizeInBytes = stagingBlock.SizeInBytes;
-        }
-    }
 }

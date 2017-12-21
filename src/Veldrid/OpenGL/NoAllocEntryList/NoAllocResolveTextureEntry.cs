@@ -2,13 +2,13 @@
 {
     internal struct NoAllocResolveTextureEntry
     {
-        public readonly HandleTracked<Texture> Source;
-        public readonly HandleTracked<Texture> Destination;
+        public readonly Tracked<Texture> Source;
+        public readonly Tracked<Texture> Destination;
 
-        public NoAllocResolveTextureEntry(Texture source, Texture destination)
+        public NoAllocResolveTextureEntry(Tracked<Texture> source, Tracked<Texture> destination)
         {
-            Source = new HandleTracked<Texture>(source);
-            Destination = new HandleTracked<Texture>(destination);
+            Source = source;
+            Destination = destination;
         }
     }
 }

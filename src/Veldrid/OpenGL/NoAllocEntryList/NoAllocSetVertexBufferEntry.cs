@@ -3,12 +3,12 @@
     internal struct NoAllocSetVertexBufferEntry
     {
         public readonly uint Index;
-        public readonly HandleTracked<DeviceBuffer> Buffer;
+        public readonly Tracked<DeviceBuffer> Buffer;
 
-        public NoAllocSetVertexBufferEntry(uint index, DeviceBuffer buffer)
+        public NoAllocSetVertexBufferEntry(uint index, Tracked<DeviceBuffer> buffer)
         {
             Index = index;
-            Buffer = new HandleTracked<DeviceBuffer>(buffer);
+            Buffer = buffer;
         }
     }
 }

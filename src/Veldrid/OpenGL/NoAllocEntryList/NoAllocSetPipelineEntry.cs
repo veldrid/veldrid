@@ -2,11 +2,11 @@
 {
     internal struct NoAllocSetPipelineEntry
     {
-        public readonly HandleTracked<Pipeline> Pipeline;
+        public readonly Tracked<Pipeline> Pipeline;
 
-        public NoAllocSetPipelineEntry(Pipeline pipeline)
+        public NoAllocSetPipelineEntry(Tracked<Pipeline> pipeline)
         {
-            Pipeline = new HandleTracked<Pipeline>(pipeline);
+            Pipeline = pipeline;
         }
     }
 }

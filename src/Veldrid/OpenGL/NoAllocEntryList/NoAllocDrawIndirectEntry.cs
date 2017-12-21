@@ -2,12 +2,12 @@
 {
     internal struct NoAllocDrawIndirectEntry
     {
-        public HandleTracked<DeviceBuffer> IndirectBuffer;
+        public Tracked<DeviceBuffer> IndirectBuffer;
         public uint Offset;
         public uint DrawCount;
         public uint Stride;
 
-        public NoAllocDrawIndirectEntry(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public NoAllocDrawIndirectEntry(Tracked<DeviceBuffer> indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             IndirectBuffer = indirectBuffer;
             Offset = offset;

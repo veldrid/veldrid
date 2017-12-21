@@ -2,11 +2,11 @@
 {
     internal struct NoAllocSetFramebufferEntry
     {
-        public readonly HandleTracked<Framebuffer> Framebuffer;
+        public readonly Tracked<Framebuffer> Framebuffer;
 
-        public NoAllocSetFramebufferEntry(Framebuffer fb)
+        public NoAllocSetFramebufferEntry(Tracked<Framebuffer> fb)
         {
-            Framebuffer = new HandleTracked<Framebuffer>(fb);
+            Framebuffer = fb;
         }
     }
 }

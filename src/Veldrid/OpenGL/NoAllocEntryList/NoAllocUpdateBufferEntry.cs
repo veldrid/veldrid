@@ -1,18 +1,18 @@
-﻿using System;
-
-namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.NoAllocEntryList
 {
     internal struct NoAllocUpdateBufferEntry
     {
-        public readonly HandleTracked<DeviceBuffer> Buffer;
+        public readonly Tracked<DeviceBuffer> Buffer;
         public readonly uint BufferOffsetInBytes;
-        public readonly HandleTrackedStagingBlock StagingBlock;
+        public readonly Tracked<byte[]> StagingBlock;
+        public readonly uint StagingBlockSize;
 
-        public NoAllocUpdateBufferEntry(DeviceBuffer buffer, uint bufferOffsetInBytes, StagingBlock stagingBlock)
+        public NoAllocUpdateBufferEntry(Tracked<DeviceBuffer> buffer, uint bufferOffsetInBytes, Tracked<byte[]> stagingBlock, uint stagingBlockSize)
         {
-            Buffer = new HandleTracked<DeviceBuffer>(buffer);
+            Buffer = buffer;
             BufferOffsetInBytes = bufferOffsetInBytes;
-            StagingBlock = new HandleTrackedStagingBlock(stagingBlock);
+            StagingBlock = stagingBlock;
+            StagingBlockSize = stagingBlockSize;
         }
     }
 }

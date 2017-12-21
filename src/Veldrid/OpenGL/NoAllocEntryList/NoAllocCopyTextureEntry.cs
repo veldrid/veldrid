@@ -2,13 +2,13 @@
 {
     internal struct NoAllocCopyTextureEntry
     {
-        public readonly HandleTracked<Texture> Source;
+        public readonly Tracked<Texture> Source;
         public readonly uint SrcX;
         public readonly uint SrcY;
         public readonly uint SrcZ;
         public readonly uint SrcMipLevel;
         public readonly uint SrcBaseArrayLayer;
-        public readonly HandleTracked<Texture> Destination;
+        public readonly Tracked<Texture> Destination;
         public readonly uint DstX;
         public readonly uint DstY;
         public readonly uint DstZ;
@@ -20,11 +20,11 @@
         public readonly uint LayerCount;
 
         public NoAllocCopyTextureEntry(
-            Texture source,
+            Tracked<Texture> source,
             uint srcX, uint srcY, uint srcZ,
             uint srcMipLevel,
             uint srcBaseArrayLayer,
-            Texture destination,
+            Tracked<Texture> destination,
             uint dstX, uint dstY, uint dstZ,
             uint dstMipLevel,
             uint dstBaseArrayLayer,

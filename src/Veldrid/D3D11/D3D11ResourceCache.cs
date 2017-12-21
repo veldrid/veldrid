@@ -153,6 +153,7 @@ namespace Veldrid.D3D11
             for (int slot = 0; slot < vertexLayouts.Length; slot++)
             {
                 VertexElementDescription[] elementDescs = vertexLayouts[slot].Elements;
+                uint stepRate = vertexLayouts[slot].InstanceStepRate;
                 int currentOffset = 0;
                 for (int i = 0; i < elementDescs.Length; i++)
                 {
@@ -163,8 +164,8 @@ namespace Veldrid.D3D11
                         D3D11Formats.ToDxgiFormat(desc.Format),
                         currentOffset,
                         slot,
-                        desc.InstanceStepRate == 0 ? InputClassification.PerVertexData : InputClassification.PerInstanceData,
-                        (int)desc.InstanceStepRate);
+                        stepRate == 0 ? InputClassification.PerVertexData : InputClassification.PerInstanceData,
+                        (int)stepRate);
 
                     currentOffset += (int)FormatHelpers.GetSizeInBytes(desc.Format);
                     element += 1;

@@ -149,7 +149,7 @@ namespace Veldrid.Vk
                 bindingDescs[targetIndex] = new VkVertexInputBindingDescription()
                 {
                     binding = (uint)binding,
-                    inputRate = (inputDesc.Elements[0].InstanceStepRate != 0) ? VkVertexInputRate.Instance : VkVertexInputRate.Vertex,
+                    inputRate = (inputDesc.InstanceStepRate != 0) ? VkVertexInputRate.Instance : VkVertexInputRate.Vertex,
                     stride = inputDesc.Stride
                 };
 

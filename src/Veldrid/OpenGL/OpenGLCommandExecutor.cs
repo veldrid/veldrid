@@ -194,7 +194,7 @@ namespace Veldrid.OpenGL
                         (uint)_graphicsPipeline.VertexStrides[i],
                         (void*)offset);
 
-                    uint stepRate = element.InstanceStepRate;
+                    uint stepRate = input.InstanceStepRate;
                     if (_vertexAttribDivisors[actualSlot] != stepRate)
                     {
                         glVertexAttribDivisor(actualSlot, stepRate);

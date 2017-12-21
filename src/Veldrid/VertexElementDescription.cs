@@ -19,13 +19,6 @@ namespace Veldrid
         /// The format of the element.
         /// </summary>
         public VertexElementFormat Format;
-        /// <summary>
-        /// A value controlling how often data for instances is advanced for this element. For per-vertex elements, this value
-        /// should be 0.
-        /// For example, an InstanceStepRate of 3 indicates that 3 instances will be drawn with the same value for this element. The
-        /// next 3 instances will be drawn with the next value for this element, and so on.
-        /// </summary>
-        public uint InstanceStepRate;
 
         /// <summary>
         /// Constructs a new VertexElementDescription describing a per-vertex element.
@@ -34,7 +27,7 @@ namespace Veldrid
         /// <param name="semantic">The semantic type of the element.</param>
         /// <param name="format">The format of the element.</param>
         public VertexElementDescription(string name, VertexElementSemantic semantic, VertexElementFormat format)
-            : this(name, format, semantic, 0)
+            : this(name, format, semantic)
         {
         }
 
@@ -44,20 +37,14 @@ namespace Veldrid
         /// <param name="name">The name of the element.</param>
         /// <param name="semantic">The semantic type of the element.</param>
         /// <param name="format">The format of the element.</param>
-        /// <param name="instanceStepRate">A value controlling how often data for instances is advanced for this element. For
-        /// per-vertex elements, this value should be 0.
-        /// For example, an InstanceStepRate of 3 indicates that 3 instances will be drawn with the same value for this element.
-        /// The next 3 instances will be drawn with the next value for this element, and so on.</param>
         public VertexElementDescription(
             string name,
             VertexElementFormat format,
-            VertexElementSemantic semantic,
-            uint instanceStepRate)
+            VertexElementSemantic semantic)
         {
             Name = name;
             Format = format;
             Semantic = semantic;
-            InstanceStepRate = instanceStepRate;
         }
 
         /// <summary>
@@ -69,8 +56,7 @@ namespace Veldrid
         {
             return Name.Equals(other.Name)
                 && Format == other.Format
-                && Semantic == other.Semantic
-                && InstanceStepRate == other.InstanceStepRate;
+                && Semantic == other.Semantic;
         }
 
         /// <summary>
@@ -82,8 +68,7 @@ namespace Veldrid
             return HashHelper.Combine(
                 Name.GetHashCode(),
                 Format.GetHashCode(),
-                Semantic.GetHashCode(),
-                InstanceStepRate.GetHashCode());
+                Semantic.GetHashCode());
         }
     }
 }

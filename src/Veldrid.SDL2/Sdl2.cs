@@ -37,10 +37,12 @@ namespace Veldrid.Sdl2
             return s_sdl2Lib.LoadFunction<T>(name);
         }
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate byte* SDL_GetError_t();
         private static SDL_GetError_t s_sdl_getError = LoadFunction<SDL_GetError_t>("SDL_GetError");
         public static byte* SDL_GetError() => s_sdl_getError();
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate byte* SDL_ClearError_t();
         private static SDL_ClearError_t s_sdl_clearError = LoadFunction<SDL_ClearError_t>("SDL_ClearError");
         public static byte* SDL_ClearError() => s_sdl_clearError();

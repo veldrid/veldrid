@@ -581,7 +581,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void WaitForIdle()
+        protected override void WaitForIdleCore()
         {
         }
     }

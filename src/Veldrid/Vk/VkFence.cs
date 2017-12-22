@@ -3,11 +3,12 @@ using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkFence : Fence, VkDeferredDisposal
+    internal unsafe class VkFence : Fence
     {
         private readonly VkGraphicsDevice _gd;
         private Vulkan.VkFence _fence;
         private string _name;
+        private bool _destroyed;
 
         public Vulkan.VkFence DeviceFence => _fence;
 
@@ -36,17 +37,13 @@ namespace Veldrid.Vk
             }
         }
 
-        public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
-
         public override void Dispose()
         {
-            _gd.DeferredDisposal(this);
+            if (!_destroyed)
+            {
+                vkDestroyFence(_gd.Device, _fence, null);
+                _destroyed = true;
+            }
         }
-
-        public void DestroyResources()
-        {
-            vkDestroyFence(_gd.Device, _fence, null);
-        }
-
     }
 }

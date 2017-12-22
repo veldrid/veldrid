@@ -380,14 +380,14 @@ namespace Veldrid
             uint totalVBSize = (uint)(draw_data->TotalVtxCount * sizeof(DrawVert));
             if (totalVBSize > _vertexBuffer.SizeInBytes)
             {
-                _vertexBuffer.Dispose();
+                gd.DisposeWhenIdle(_vertexBuffer);
                 _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.Dynamic));
             }
 
             uint totalIBSize = (uint)(draw_data->TotalIdxCount * sizeof(ushort));
             if (totalIBSize > _indexBuffer.SizeInBytes)
             {
-                _indexBuffer.Dispose();
+                gd.DisposeWhenIdle(_indexBuffer);
                 _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
             }
 
@@ -424,7 +424,7 @@ namespace Veldrid
                     -1.0f,
                     1.0f);
 
-                cl.UpdateBuffer(_projMatrixBuffer, 0, ref mvp);
+                _gd.UpdateBuffer(_projMatrixBuffer, 0, ref mvp);
             }
 
             cl.SetVertexBuffer(0, _vertexBuffer);

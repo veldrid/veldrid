@@ -412,7 +412,8 @@ namespace Veldrid.NeoDemo
             CommonMaterials.FlushAll(_frameCommands);
 
             _scene.RenderAllStages(_gd, _frameCommands, _sc);
-            _gd.SwapBuffers();
+            _gd.SwapBuffers(_sc.RenderCompletedSemaphore);
+            _gd.WaitForIdle();
         }
 
         private void ChangeBackend(GraphicsBackend backend)

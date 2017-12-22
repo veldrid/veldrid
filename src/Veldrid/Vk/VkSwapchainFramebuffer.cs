@@ -120,6 +120,10 @@ namespace Veldrid.Vk
 
         private void CreateSwapchain(uint width, uint height)
         {
+            if (_swapchain != VkSwapchainKHR.Null)
+            {
+                _gd.WaitForIdle();
+            }
             _desiredWidth = width;
             _desiredHeight = height;
             _currentImageIndex = 0;
@@ -281,7 +285,6 @@ namespace Veldrid.Vk
                     _scImages[i]);
                 FramebufferDescription desc = new FramebufferDescription(_depthAttachment?.Target, colorTex);
                 VkFramebuffer fb = new VkFramebuffer(_gd, ref desc, true);
-                fb.ReferenceTracker = ReferenceTracker;
                 _scFramebuffers[i] = fb;
                 _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
             }
@@ -298,11 +301,6 @@ namespace Veldrid.Vk
         }
 
         public override void Dispose()
-        {
-            _gd.DeferredDisposal(this);
-        }
-
-        public override void DestroyResources()
         {
             if (!_destroyed)
             {

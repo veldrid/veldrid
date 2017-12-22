@@ -48,12 +48,6 @@ namespace Veldrid.Vk
         private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
         private VkDescriptorPoolManager _descriptorPoolManager;
 
-        // Disposal tracking
-        private readonly object _deferredDisposalLock = new object();
-        private readonly HashSet<VkDeferredDisposal> _deferredDisposals = new HashSet<VkDeferredDisposal>();
-        private readonly object _commandListsLock = new object();
-        private readonly List<VkCommandList> _submittedCommandLists = new List<VkCommandList>();
-
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
         public VkDevice Device => _device;
@@ -65,6 +59,12 @@ namespace Veldrid.Vk
         public uint PresentQueueIndex => _presentQueueIndex;
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
         public VkDescriptorPoolManager DescriptorPoolManager => _descriptorPoolManager;
+
+        private readonly Queue<Vulkan.VkFence> _availableSubmissionFences = new Queue<Vulkan.VkFence>();
+        private readonly Dictionary<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)> _submittedFences
+            = new Dictionary<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)>();
+        private readonly List<KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)>> _completedFences
+            = new List<KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)>>();
 
         public VkGraphicsDevice(GraphicsDeviceOptions options, VkSurfaceSource surfaceSource, uint width, uint height)
         {
@@ -166,13 +166,13 @@ namespace Veldrid.Vk
             Fence fence)
         {
             VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
-            vkCL.OnSubmitted();
             VkCommandBuffer vkCB = vkCL.CommandBuffer;
 
-            SubmitCommandBuffer(vkCB, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
+            SubmitCommandBuffer(vkCL, vkCB, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
         }
 
         private void SubmitCommandBuffer(
+            VkCommandList vkCL,
             VkCommandBuffer vkCB,
             uint waitSemaphoreCount,
             Vulkan.VkSemaphore* waitSemaphoresPtr,
@@ -180,6 +180,9 @@ namespace Veldrid.Vk
             Vulkan.VkSemaphore* signalSemaphoresPtr,
             Fence fence)
         {
+            CheckSubmittedFences();
+
+            bool useExtraFence = fence != null;
             VkSubmitInfo si = VkSubmitInfo.New();
             si.commandBufferCount = 1;
             si.pCommandBuffers = &vkCB;
@@ -192,26 +195,69 @@ namespace Veldrid.Vk
             si.signalSemaphoreCount = signalSemaphoreCount;
 
             Vulkan.VkFence vkFence = Vulkan.VkFence.Null;
-            if (fence != null)
+            Vulkan.VkFence submissionFence = Vulkan.VkFence.Null;
+            if (useExtraFence)
             {
                 vkFence = Util.AssertSubtype<Fence, VkFence>(fence).DeviceFence;
+                submissionFence = GetFreeSubmissionFence();
+            }
+            else
+            {
+                vkFence = GetFreeSubmissionFence();
+                submissionFence = vkFence;
             }
 
             lock (_graphicsQueueLock)
             {
                 vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
             }
+
+            if (useExtraFence)
+            {
+                vkQueueSubmit(_graphicsQueue, 0, null, submissionFence);
+            }
+
+            _submittedFences.Add(vkFence, (vkCL, vkCB));
         }
 
-        internal void DeferredDisposal(VkDeferredDisposal vdd)
+        private void CheckSubmittedFences()
         {
-            if (vdd.ReferenceTracker.ReferenceCount == 0)
+            Debug.Assert(_completedFences.Count == 0);
+
+            foreach (KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)> kvp in _submittedFences)
             {
-                vdd.DestroyResources();
+                if (vkGetFenceStatus(_device, kvp.Key) == VkResult.Success)
+                {
+                    _completedFences.Add(kvp);
+                }
+            }
+
+            foreach (KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)> kvp in _completedFences)
+            {
+                Vulkan.VkFence fence = kvp.Key;
+                kvp.Value.Item1?.CommandBufferCompleted(kvp.Value.Item2);
+                bool result = _submittedFences.Remove(fence);
+                Debug.Assert(result);
+                VkResult resetResult = vkResetFences(_device, 1, ref fence);
+                CheckResult(resetResult);
+                _availableSubmissionFences.Enqueue(fence);
+            }
+
+            _completedFences.Clear();
+        }
+
+        private Vulkan.VkFence GetFreeSubmissionFence()
+        {
+            if (_availableSubmissionFences.Count > 0)
+            {
+                return _availableSubmissionFences.Dequeue();
             }
             else
             {
-                vdd.ReferenceTracker.DecrementedToZero += () => vdd.DestroyResources();
+                VkFenceCreateInfo fenceCI = VkFenceCreateInfo.New();
+                VkResult result = vkCreateFence(_device, ref fenceCI, null, out Vulkan.VkFence ret);
+                CheckResult(result);
+                return ret;
             }
         }
 
@@ -759,7 +805,13 @@ namespace Veldrid.Vk
         {
             WaitForIdle();
 
-            _scFB.DestroyResources();
+            Debug.Assert(_submittedFences.Count == 0);
+            foreach (Vulkan.VkFence fence in _availableSubmissionFences)
+            {
+                vkDestroyFence(_device, fence, null);
+            }
+
+            _scFB.Dispose();
             vkDestroySurfaceKHR(_instance, _surface, null);
             if (_debugCallbackFunc != null)
             {
@@ -789,9 +841,10 @@ namespace Veldrid.Vk
             vkDestroyInstance(_instance, null);
         }
 
-        public override void WaitForIdle()
+        protected override void WaitForIdleCore()
         {
             vkQueueWaitIdle(_graphicsQueue);
+            CheckSubmittedFences();
             FlushQueuedDisposables();
         }
 
@@ -1131,7 +1184,7 @@ namespace Veldrid.Vk
             {
                 VkResult result = vkEndCommandBuffer(cb);
                 CheckResult(result);
-                _gd.SubmitCommandBuffer(cb, 0, null, 0, null, null);
+                _gd.SubmitCommandBuffer(null, cb, 0, null, 0, null, null);
                 _gd._commandBuffersToFree.Enqueue(this);
             }
 

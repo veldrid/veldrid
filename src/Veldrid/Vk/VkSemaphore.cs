@@ -3,11 +3,12 @@ using Vulkan;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkSemaphore : Semaphore, VkDeferredDisposal
+    internal unsafe class VkSemaphore : Semaphore
     {
         private readonly VkGraphicsDevice _gd;
         private Vulkan.VkSemaphore _semaphore;
         private string _name;
+        private bool _destroyed;
 
         public Vulkan.VkSemaphore DeviceSemaphore => _semaphore;
 
@@ -28,16 +29,13 @@ namespace Veldrid.Vk
             }
         }
 
-        public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
-
         public override void Dispose()
         {
-            _gd.DeferredDisposal(this);
-        }
-
-        public void DestroyResources()
-        {
-            vkDestroySemaphore(_gd.Device, _semaphore, null);
+            if (!_destroyed)
+            {
+                vkDestroySemaphore(_gd.Device, _semaphore, null);
+                _destroyed = true;
+            }
         }
     }
 }

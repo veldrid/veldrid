@@ -3,7 +3,7 @@ using Vulkan;
 
 namespace Veldrid.Vk
 {
-    internal abstract class VkFramebufferBase : Framebuffer, VkDeferredDisposal
+    internal abstract class VkFramebufferBase : Framebuffer
     {
         public VkFramebufferBase(
             FramebufferAttachmentDescription? depthTexture,
@@ -11,8 +11,6 @@ namespace Veldrid.Vk
             : base(depthTexture, colorTextures)
         {
         }
-
-        public ReferenceTracker ReferenceTracker { get; internal set; } = new ReferenceTracker();
 
         public abstract uint RenderableWidth { get; }
         public abstract uint RenderableHeight { get; }
@@ -25,6 +23,5 @@ namespace Veldrid.Vk
         public abstract VkRenderPass RenderPassNoClear { get; }
         public abstract VkRenderPass RenderPassClear { get; }
         public abstract uint AttachmentCount { get; }
-        public abstract void DestroyResources();
     }
 }

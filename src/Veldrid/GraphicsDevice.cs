@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -13,6 +14,9 @@ namespace Veldrid
 #if VALIDATE_USAGE
         private readonly SemaphoreUsageValidator _semaphoreUsageValidator = new SemaphoreUsageValidator();
 #endif
+
+        private readonly object _deferredDisposalLock = new object();
+        private readonly List<IDisposable> _disposables = new List<IDisposable>();
 
         internal GraphicsDevice() { }
 
@@ -40,6 +44,9 @@ namespace Veldrid
         /// <param name="commandList">The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
         /// been previously called on this object.</param>
         public void SubmitCommands(CommandList commandList) => SubmitCommandsCore(commandList, (Semaphore)null, null, null);
+
+        public void SubmitCommands(CommandList commandList, Fence fence)
+            => SubmitCommandsCore(commandList, (Semaphore)null, null, fence);
 
         /// <summary>
         /// Submits the given <see cref="CommandList"/> for execution by this device.
@@ -146,7 +153,13 @@ namespace Veldrid
         /// <summary>
         /// A blocking method that returns when all submitted <see cref="CommandList"/> objects have fully completed.
         /// </summary>
-        public abstract void WaitForIdle();
+        public void WaitForIdle()
+        {
+            WaitForIdleCore();
+            FlushDeferredDisposals();
+        }
+
+        protected abstract void WaitForIdleCore();
 
         /// <summary>
         /// Gets the maximum sample count supported by the given <see cref="PixelFormat"/>.
@@ -387,6 +400,26 @@ namespace Veldrid
             uint bufferOffsetInBytes,
             IntPtr source,
             uint sizeInBytes);
+
+        public void DisposeWhenIdle(IDisposable disposable)
+        {
+            lock (_deferredDisposalLock)
+            {
+                _disposables.Add(disposable);
+            }
+        }
+
+        private void FlushDeferredDisposals()
+        {
+            lock (_deferredDisposalLock)
+            {
+                foreach (IDisposable disposable in _disposables)
+                {
+                    disposable.Dispose();
+                }
+                _disposables.Clear();
+            }
+        }
 
         /// <summary>
         /// Performs API-specific disposal of resources controlled by this instance.

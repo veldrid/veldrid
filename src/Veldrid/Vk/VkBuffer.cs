@@ -4,7 +4,7 @@ using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkBuffer : DeviceBuffer, VkDeferredDisposal
+    internal unsafe class VkBuffer : DeviceBuffer
     {
         private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkBuffer _deviceBuffer;
@@ -15,8 +15,6 @@ namespace Veldrid.Vk
 
         public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }
-
-        public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
 
         public Vulkan.VkBuffer DeviceBuffer => _deviceBuffer;
         public VkMemoryBlock Memory => _memory;
@@ -91,11 +89,6 @@ namespace Veldrid.Vk
         }
 
         public override void Dispose()
-        {
-            _gd.DeferredDisposal(this);
-        }
-
-        public void DestroyResources()
         {
             if (!_destroyed)
             {

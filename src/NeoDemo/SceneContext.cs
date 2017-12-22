@@ -57,6 +57,10 @@ namespace Veldrid.NeoDemo
         public DeviceBuffer MirrorClipPlaneBuffer { get; private set; }
         public DeviceBuffer NoClipPlaneBuffer { get; private set; }
 
+        public Semaphore MainSceneSemaphore { get; private set; }
+        public Semaphore ResourceUpdateSemaphore { get; private set; }
+        public Semaphore RenderCompletedSemaphore { get; internal set; }
+
         public virtual void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             ResourceFactory factory = gd.ResourceFactory;
@@ -109,6 +113,10 @@ namespace Veldrid.NeoDemo
             RecreateWindowSizedResources(gd, cl);
 
             ShadowMaps.CreateDeviceResources(gd);
+
+            MainSceneSemaphore = factory.CreateSemaphore();
+            ResourceUpdateSemaphore = factory.CreateSemaphore();
+            RenderCompletedSemaphore = factory.CreateSemaphore();
         }
 
         public virtual void DestroyDeviceObjects()
@@ -144,6 +152,9 @@ namespace Veldrid.NeoDemo
             MirrorClipPlaneBuffer.Dispose();
             NoClipPlaneBuffer.Dispose();
             ShadowMaps.DestroyDeviceObjects();
+            MainSceneSemaphore.Dispose();
+            ResourceUpdateSemaphore.Dispose();
+            RenderCompletedSemaphore.Dispose();
         }
 
         public void SetCurrentScene(Scene scene)

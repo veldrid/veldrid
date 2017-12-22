@@ -4,18 +4,15 @@ using static Veldrid.Vk.VulkanUtil;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkResourceSet : ResourceSet, VkDeferredDisposal
+    internal unsafe class VkResourceSet : ResourceSet
     {
         private readonly VkGraphicsDevice _gd;
         private readonly DescriptorResourceCounts _descriptorCounts;
         private readonly DescriptorAllocationToken _descriptorAllocationToken;
-        private readonly BindableResource[] _boundResources;
-        private bool _disposed;
+        private bool _destroyed;
         private string _name;
 
         public VkDescriptorSet DescriptorSet => _descriptorAllocationToken.Set;
-
-        public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
 
         public VkResourceSet(VkGraphicsDevice gd, ref ResourceSetDescription description)
             : base(ref description)
@@ -27,8 +24,8 @@ namespace Veldrid.Vk
             _descriptorCounts = vkLayout.DescriptorResourceCounts;
             _descriptorAllocationToken = _gd.DescriptorPoolManager.Allocate(_descriptorCounts, dsl);
 
-            _boundResources = description.BoundResources;
-            uint descriptorWriteCount = (uint)_boundResources.Length;
+            BindableResource[] boundResources = description.BoundResources;
+            uint descriptorWriteCount = (uint)boundResources.Length;
             VkWriteDescriptorSet* descriptorWrites = stackalloc VkWriteDescriptorSet[(int)descriptorWriteCount];
             VkDescriptorBufferInfo* bufferInfos = stackalloc VkDescriptorBufferInfo[(int)descriptorWriteCount];
             VkDescriptorImageInfo* imageInfos = stackalloc VkDescriptorImageInfo[(int)descriptorWriteCount];
@@ -45,35 +42,30 @@ namespace Veldrid.Vk
 
                 if (type == VkDescriptorType.UniformBuffer || type == VkDescriptorType.StorageBuffer)
                 {
-                    VkBuffer vkBuffer = Util.AssertSubtype<BindableResource, VkBuffer>(_boundResources[i]);
+                    VkBuffer vkBuffer = Util.AssertSubtype<BindableResource, VkBuffer>(boundResources[i]);
                     bufferInfos[i].buffer = vkBuffer.DeviceBuffer;
                     bufferInfos[i].range = vkBuffer.SizeInBytes;
                     descriptorWrites[i].pBufferInfo = &bufferInfos[i];
                 }
                 else if (type == VkDescriptorType.SampledImage)
                 {
-                    VkTextureView textureView = Util.AssertSubtype<BindableResource, VkTextureView>(_boundResources[i]);
+                    VkTextureView textureView = Util.AssertSubtype<BindableResource, VkTextureView>(boundResources[i]);
                     imageInfos[i].imageView = textureView.ImageView;
                     imageInfos[i].imageLayout = VkImageLayout.ShaderReadOnlyOptimal;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
                 }
                 else if (type == VkDescriptorType.StorageImage)
                 {
-                    VkTextureView textureView = Util.AssertSubtype<BindableResource, VkTextureView>(_boundResources[i]);
+                    VkTextureView textureView = Util.AssertSubtype<BindableResource, VkTextureView>(boundResources[i]);
                     imageInfos[i].imageView = textureView.ImageView;
                     imageInfos[i].imageLayout = VkImageLayout.General;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
                 }
                 else if (type == VkDescriptorType.Sampler)
                 {
-                    VkSampler sampler = Util.AssertSubtype<BindableResource, VkSampler>(_boundResources[i]);
+                    VkSampler sampler = Util.AssertSubtype<BindableResource, VkSampler>(boundResources[i]);
                     imageInfos[i].sampler = sampler.DeviceSampler;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
-                }
-
-                if (_boundResources[i] is VkDeferredDisposal vdd)
-                {
-                    vdd.ReferenceTracker.Increment();
                 }
             }
 
@@ -92,22 +84,10 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            _gd.DeferredDisposal(this);
-        }
-
-        public void DestroyResources()
-        {
-            if (!_disposed)
+            if (!_destroyed)
             {
-                _disposed = true;
+                _destroyed = true;
                 _gd.DescriptorPoolManager.Free(_descriptorAllocationToken, _descriptorCounts);
-                foreach (var resource in _boundResources)
-                {
-                    if (resource is VkDeferredDisposal vdd)
-                    {
-                        vdd.ReferenceTracker.Decrement();
-                    }
-                }
             }
         }
     }

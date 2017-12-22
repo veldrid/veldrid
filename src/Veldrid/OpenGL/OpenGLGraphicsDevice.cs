@@ -214,7 +214,7 @@ namespace Veldrid.OpenGL
             });
         }
 
-        public override void WaitForIdle()
+        protected override void WaitForIdleCore()
         {
             _executionThread.WaitForIdle();
         }

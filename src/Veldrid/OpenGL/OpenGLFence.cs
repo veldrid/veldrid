@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 
 namespace Veldrid.OpenGL
 {
@@ -25,7 +26,8 @@ namespace Veldrid.OpenGL
 
         internal bool Wait(ulong nanosecondTimeout)
         {
-            return _mre.WaitOne((int)(nanosecondTimeout / 1_000_000));
+            ulong timeout = Math.Min(int.MaxValue, nanosecondTimeout / 1_000_000);
+            return _mre.WaitOne((int)timeout);
         }
     }
 }

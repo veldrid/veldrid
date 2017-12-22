@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkTexture : Texture, VkDeferredDisposal
+    internal unsafe class VkTexture : Texture
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImage _optimalImage;
@@ -40,8 +40,6 @@ namespace Veldrid.Vk
 
         public VkFormat VkFormat { get; }
         public VkSampleCountFlags VkSampleCount { get; }
-
-        public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
 
         private VkImageLayout[] _imageLayouts;
         private string _name;
@@ -320,11 +318,6 @@ namespace Veldrid.Vk
         }
 
         public override void Dispose()
-        {
-            _gd.DeferredDisposal(this);
-        }
-
-        public void DestroyResources()
         {
             if (!_destroyed)
             {

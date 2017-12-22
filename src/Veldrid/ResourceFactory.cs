@@ -240,5 +240,8 @@ namespace Veldrid
         /// <returns>A new <see cref="ResourceSet"/>.</returns>
         public abstract ResourceSet CreateResourceSet(ref ResourceSetDescription description);
 
+        public abstract Semaphore CreateSemaphore();
+
+        public abstract Fence CreateFence(bool signaled);
     }
 }

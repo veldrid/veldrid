@@ -13,7 +13,6 @@ namespace Veldrid.Vk
         private VkCommandPool _pool;
         private VkCommandBuffer _cb;
         private bool _destroyed;
-        private readonly HashSet<VkDeferredDisposal> _referencedResources = new HashSet<VkDeferredDisposal>();
 
         private bool _commandBufferBegun;
         private bool _commandBufferEnded;
@@ -22,9 +21,6 @@ namespace Veldrid.Vk
         private VkClearValue[] _clearValues = Array.Empty<VkClearValue>();
         private bool[] _validColorClearValues = Array.Empty<bool>();
         private VkClearValue? _depthClearValue;
-
-        private readonly List<VkBuffer> _availableStagingBuffers = new List<VkBuffer>();
-        private readonly List<VkBuffer> _usedStagingBuffers = new List<VkBuffer>();
 
         // Graphics State
         private VkFramebufferBase _currentFramebuffer;
@@ -42,26 +38,68 @@ namespace Veldrid.Vk
         private int _newComputeResourceSets;
         private string _name;
 
+        private readonly object _commandBufferListLock = new object();
+        private readonly Queue<VkCommandBuffer> _availableCommandBuffers = new Queue<VkCommandBuffer>();
+        private readonly List<VkCommandBuffer> _submittedCommandBuffers = new List<VkCommandBuffer>();
+        private readonly List<VkCommandBuffer> _newlyCompletedCommandBuffers = new List<VkCommandBuffer>();
+
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
-
-        public HashSet<VkDeferredDisposal> ReferencedResources => _referencedResources;
 
         public VkCommandList(VkGraphicsDevice gd, ref CommandListDescription description)
             : base(ref description)
         {
             _gd = gd;
             VkCommandPoolCreateInfo poolCI = VkCommandPoolCreateInfo.New();
+            poolCI.flags = VkCommandPoolCreateFlags.ResetCommandBuffer;
             poolCI.queueFamilyIndex = gd.GraphicsQueueIndex;
             VkResult result = vkCreateCommandPool(_gd.Device, ref poolCI, null, out _pool);
             CheckResult(result);
+
+            _cb = GetNextCommandBuffer();
+        }
+
+        private VkCommandBuffer GetNextCommandBuffer()
+        {
+            lock (_commandBufferListLock)
+            {
+                if (_availableCommandBuffers.Count > 0)
+                {
+                    VkCommandBuffer cachedCB = _availableCommandBuffers.Dequeue();
+                    VkResult resetResult = vkResetCommandBuffer(cachedCB, VkCommandBufferResetFlags.None);
+                    CheckResult(resetResult);
+                    return cachedCB;
+                }
+            }
 
             VkCommandBufferAllocateInfo cbAI = VkCommandBufferAllocateInfo.New();
             cbAI.commandPool = _pool;
             cbAI.commandBufferCount = 1;
             cbAI.level = VkCommandBufferLevel.Primary;
-            result = vkAllocateCommandBuffers(gd.Device, ref cbAI, out _cb);
+            VkResult result = vkAllocateCommandBuffers(_gd.Device, ref cbAI, out VkCommandBuffer cb);
             CheckResult(result);
+            return cb;
+        }
+
+        public void CommandBufferCompleted(VkCommandBuffer completedCB)
+        {
+            lock (_commandBufferListLock)
+            {
+                _newlyCompletedCommandBuffers.Clear();
+                foreach (VkCommandBuffer submittedCB in _submittedCommandBuffers)
+                {
+                    if (submittedCB == completedCB)
+                    {
+                        _availableCommandBuffers.Enqueue(completedCB);
+                        _newlyCompletedCommandBuffers.Add(completedCB);
+                    }
+                }
+
+                foreach (VkCommandBuffer cb in _newlyCompletedCommandBuffers)
+                {
+                    _submittedCommandBuffers.Remove(cb);
+                }
+            }
         }
 
         public override void Begin()
@@ -74,10 +112,11 @@ namespace Veldrid.Vk
             if (_commandBufferEnded)
             {
                 _commandBufferEnded = false;
-                vkResetCommandPool(_gd.Device, _pool, VkCommandPoolResetFlags.None);
+                _cb = GetNextCommandBuffer();
             }
 
             VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
+            beginInfo.flags = VkCommandBufferUsageFlags.OneTimeSubmit;
             vkBeginCommandBuffer(_cb, ref beginInfo);
             _commandBufferBegun = true;
 
@@ -89,15 +128,6 @@ namespace Veldrid.Vk
 
             _currentComputePipeline = null;
             Util.ClearArray(_currentComputeResourceSets);
-
-            _referencedResources.Clear();
-
-            foreach (VkBuffer vkBuffer in _usedStagingBuffers)
-            {
-                _availableStagingBuffers.Add(vkBuffer);
-            }
-
-            _usedStagingBuffers.Clear();
         }
 
         protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
@@ -180,7 +210,6 @@ namespace Veldrid.Vk
             PreDrawCommand();
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             vkCmdDrawIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
-            _referencedResources.Add(vkBuffer);
         }
 
         protected override void DrawIndexedIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
@@ -188,7 +217,6 @@ namespace Veldrid.Vk
             PreDrawCommand();
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             vkCmdDrawIndexedIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
-            _referencedResources.Add(vkBuffer);
         }
 
         private void PreDrawCommand()
@@ -297,7 +325,6 @@ namespace Veldrid.Vk
 
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             vkCmdDispatchIndirect(_cb, vkBuffer.DeviceBuffer, offset);
-            _referencedResources.Add(vkBuffer);
         }
 
         protected override void ResolveTextureCore(Texture source, Texture destination)
@@ -327,9 +354,6 @@ namespace Veldrid.Vk
                 vkDestination.GetImageLayout(0, 0),
                 1,
                 ref region);
-
-            _referencedResources.Add(vkSource);
-            _referencedResources.Add(vkDestination);
         }
 
         public override void End()
@@ -353,6 +377,7 @@ namespace Veldrid.Vk
             }
 
             vkEndCommandBuffer(_cb);
+            _submittedCommandBuffers.Add(_cb);
         }
 
         protected override void SetFramebufferCore(Framebuffer fb)
@@ -360,19 +385,6 @@ namespace Veldrid.Vk
             if (_activeRenderPass.Handle != VkRenderPass.Null)
             {
                 EndCurrentRenderPass();
-                // Place a barrier between RenderPasses, so that color / depth outputs
-                // can be read in subsequent passes.
-                vkCmdPipelineBarrier(
-                    _cb,
-                    VkPipelineStageFlags.ColorAttachmentOutput,
-                    VkPipelineStageFlags.TopOfPipe,
-                    VkDependencyFlags.ByRegion,
-                    0,
-                    null,
-                    0,
-                    null,
-                    0,
-                    null);
             }
 
             VkFramebufferBase vkFB = Util.AssertSubtype<Framebuffer, VkFramebufferBase>(fb);
@@ -383,7 +395,6 @@ namespace Veldrid.Vk
             Util.EnsureArrayMinimumSize(ref _clearValues, clearValueCount + 1); // Leave an extra space for the depth value (tracked separately).
             Util.ClearArray(_validColorClearValues);
             Util.EnsureArrayMinimumSize(ref _validColorClearValues, clearValueCount);
-            _referencedResources.Add(vkFB);
         }
 
         private void EnsureRenderPassActive()
@@ -483,6 +494,20 @@ namespace Veldrid.Vk
             Debug.Assert(_activeRenderPass != VkRenderPass.Null);
             vkCmdEndRenderPass(_cb);
             _activeRenderPass = VkRenderPass.Null;
+
+            // Place a barrier between RenderPasses, so that color / depth outputs
+            // can be read in subsequent passes.
+            vkCmdPipelineBarrier(
+                _cb,
+                VkPipelineStageFlags.BottomOfPipe,
+                VkPipelineStageFlags.TopOfPipe,
+                VkDependencyFlags.None,
+                0,
+                null,
+                0,
+                null,
+                0,
+                null);
         }
 
         protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
@@ -491,14 +516,12 @@ namespace Veldrid.Vk
             Vulkan.VkBuffer deviceBuffer = vkBuffer.DeviceBuffer;
             ulong offset = 0;
             vkCmdBindVertexBuffers(_cb, index, 1, ref deviceBuffer, ref offset);
-            _referencedResources.Add(vkBuffer);
         }
 
         protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
             vkCmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, 0, VkFormats.VdToVkIndexFormat(format));
-            _referencedResources.Add(vkBuffer);
         }
 
         protected override void SetPipelineCore(Pipeline pipeline)
@@ -511,7 +534,6 @@ namespace Veldrid.Vk
                 Util.EnsureArrayMinimumSize(ref _graphicsResourceSetsChanged, vkPipeline.ResourceSetCount);
                 vkCmdBindPipeline(_cb, VkPipelineBindPoint.Graphics, vkPipeline.DevicePipeline);
                 _currentGraphicsPipeline = vkPipeline;
-                _referencedResources.Add(vkPipeline);
             }
             else if (pipeline.IsComputePipeline && _currentComputePipeline != pipeline)
             {
@@ -521,7 +543,6 @@ namespace Veldrid.Vk
                 Util.EnsureArrayMinimumSize(ref _computeResourceSetsChanged, vkPipeline.ResourceSetCount);
                 vkCmdBindPipeline(_cb, VkPipelineBindPoint.Compute, vkPipeline.DevicePipeline);
                 _currentComputePipeline = vkPipeline;
-                _referencedResources.Add(vkPipeline);
             }
         }
 
@@ -533,7 +554,6 @@ namespace Veldrid.Vk
                 _currentGraphicsResourceSets[slot] = vkRS;
                 _graphicsResourceSetsChanged[slot] = true;
                 _newGraphicsResourceSets += 1;
-                _referencedResources.Add(vkRS);
             }
         }
 
@@ -545,7 +565,6 @@ namespace Veldrid.Vk
                 _currentComputeResourceSets[slot] = vkRS;
                 _computeResourceSetsChanged[slot] = true;
                 _newComputeResourceSets += 1;
-                _referencedResources.Add(vkRS);
             }
         }
 
@@ -576,14 +595,18 @@ namespace Veldrid.Vk
 
         public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            VkBuffer stagingBuffer = GetStagingBuffer(sizeInBytes);
-            _gd.UpdateBuffer(stagingBuffer, 0, source, sizeInBytes);
-            CopyBuffer(stagingBuffer, 0, buffer, bufferOffsetInBytes, sizeInBytes);
-
-            _referencedResources.Add(Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer));
+            PooledStagingBufferInfo stagingBufferInfo = GetStagingBuffer(sizeInBytes);
+            _gd.UpdateBuffer(stagingBufferInfo.Buffer, 0, source, sizeInBytes);
+            CopyBuffer(stagingBufferInfo.Buffer, 0, buffer, bufferOffsetInBytes, sizeInBytes);
+            vkCmdSetEvent(_cb, stagingBufferInfo.AvailableEvent, VkPipelineStageFlags.Transfer);
         }
 
-        protected override void CopyBufferCore(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
+        protected override void CopyBufferCore(
+            DeviceBuffer source,
+            uint sourceOffset,
+            DeviceBuffer destination,
+            uint destinationOffset,
+            uint sizeInBytes)
         {
             EnsureNoRenderPass();
 
@@ -598,10 +621,6 @@ namespace Veldrid.Vk
             };
 
             vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, ref region);
-
-            _referencedResources.Add(srcVkBuffer);
-            _referencedResources.Add(dstVkBuffer);
-
         }
 
         protected override void CopyTextureCore(
@@ -685,9 +704,6 @@ namespace Veldrid.Vk
                 VkImageLayout.TransferDstOptimal,
                 1,
                 ref region);
-
-            _referencedResources.Add(srcVkTexture);
-            _referencedResources.Add(dstVkTexture);
         }
 
         public override string Name
@@ -700,21 +716,44 @@ namespace Veldrid.Vk
             }
         }
 
-        private VkBuffer GetStagingBuffer(uint size)
+        private PooledStagingBufferInfo GetStagingBuffer(uint size)
         {
-            foreach (VkBuffer buffer in _availableStagingBuffers)
+            CheckUsedStagingBuffers();
+
+            foreach (PooledStagingBufferInfo info in _availableStagingBuffers)
             {
-                if (buffer.SizeInBytes > size)
+                if (info.Buffer.SizeInBytes >= size)
                 {
-                    _availableStagingBuffers.Remove(buffer);
-                    _usedStagingBuffers.Add(buffer);
-                    return buffer;
+                    _availableStagingBuffers.Remove(info);
+                    _usedStagingBuffers.Add(info);
+                    return info;
                 }
             }
 
             VkBuffer newBuffer = (VkBuffer)_gd.ResourceFactory.CreateBuffer(new BufferDescription(size, BufferUsage.Staging));
-            _usedStagingBuffers.Add(newBuffer);
-            return newBuffer;
+            PooledStagingBufferInfo newInfo = new PooledStagingBufferInfo(_gd, newBuffer);
+            _usedStagingBuffers.Add(newInfo);
+            return newInfo;
+        }
+
+        private void CheckUsedStagingBuffers()
+        {
+            _infoRemovalList.Clear();
+            foreach (PooledStagingBufferInfo info in _usedStagingBuffers)
+            {
+                VkResult status = vkGetEventStatus(_gd.Device, info.AvailableEvent);
+                if (status == VkResult.EventSet)
+                {
+                    vkResetEvent(_gd.Device, info.AvailableEvent);
+                    _availableStagingBuffers.Add(info);
+                    _infoRemovalList.Add(info);
+                }
+            }
+
+            foreach (PooledStagingBufferInfo info in _infoRemovalList)
+            {
+                _usedStagingBuffers.Remove(info);
+            }
         }
 
         public override void Dispose()
@@ -730,14 +769,32 @@ namespace Veldrid.Vk
                 _destroyed = true;
                 vkDestroyCommandPool(_gd.Device, _pool, null);
 
-                foreach (VkBuffer buffer in _availableStagingBuffers)
+                CheckUsedStagingBuffers();
+                Debug.Assert(_usedStagingBuffers.Count == 0);
+                foreach (PooledStagingBufferInfo info in _availableStagingBuffers)
                 {
-                    buffer.Dispose();
+                    info.Buffer.Dispose();
+                    vkDestroyEvent(_gd.Device, info.AvailableEvent, null);
                 }
-                foreach (VkBuffer buffer in _usedStagingBuffers)
-                {
-                    buffer.Dispose();
-                }
+            }
+        }
+
+        private readonly List<PooledStagingBufferInfo> _infoRemovalList = new List<PooledStagingBufferInfo>();
+        private readonly List<PooledStagingBufferInfo> _usedStagingBuffers = new List<PooledStagingBufferInfo>();
+        private readonly List<PooledStagingBufferInfo> _availableStagingBuffers = new List<PooledStagingBufferInfo>();
+
+        private class PooledStagingBufferInfo
+        {
+            public readonly VkEvent AvailableEvent;
+            public readonly VkBuffer Buffer;
+
+            public PooledStagingBufferInfo(VkGraphicsDevice gd, VkBuffer buffer)
+            {
+                VkEventCreateInfo eventCI = VkEventCreateInfo.New();
+                VkResult result = vkCreateEvent(gd.Device, ref eventCI, null, out AvailableEvent);
+                CheckResult(result);
+
+                Buffer = buffer;
             }
         }
     }

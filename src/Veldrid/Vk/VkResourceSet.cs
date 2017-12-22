@@ -4,17 +4,15 @@ using static Veldrid.Vk.VulkanUtil;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkResourceSet : ResourceSet, VkDeferredDisposal
+    internal unsafe class VkResourceSet : ResourceSet
     {
         private readonly VkGraphicsDevice _gd;
         private readonly DescriptorResourceCounts _descriptorCounts;
         private readonly DescriptorAllocationToken _descriptorAllocationToken;
-        private bool _disposed;
+        private bool _destroyed;
         private string _name;
 
         public VkDescriptorSet DescriptorSet => _descriptorAllocationToken.Set;
-
-        public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
 
         public VkResourceSet(VkGraphicsDevice gd, ref ResourceSetDescription description)
             : base(ref description)
@@ -86,14 +84,9 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            _gd.DeferredDisposal(this);
-        }
-
-        public void DestroyResources()
-        {
-            if (!_disposed)
+            if (!_destroyed)
             {
-                _disposed = true;
+                _destroyed = true;
                 _gd.DescriptorPoolManager.Free(_descriptorAllocationToken, _descriptorCounts);
             }
         }

@@ -209,15 +209,8 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            _gd.DeferredDisposal(this);
-        }
-
-        public override void DestroyResources()
-        {
             if (!_destroyed)
             {
-                _destroyed = true;
-
                 vkDestroyFramebuffer(_gd.Device, _deviceFramebuffer, null);
                 vkDestroyRenderPass(_gd.Device, _renderPassNoClear, null);
                 vkDestroyRenderPass(_gd.Device, _renderPassClear, null);
@@ -225,6 +218,8 @@ namespace Veldrid.Vk
                 {
                     vkDestroyImageView(_gd.Device, view, null);
                 }
+
+                _destroyed = true;
             }
         }
     }

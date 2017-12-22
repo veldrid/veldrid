@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -9,6 +11,13 @@ namespace Veldrid
     /// </summary>
     public abstract class GraphicsDevice : IDisposable
     {
+#if VALIDATE_USAGE
+        private readonly SemaphoreUsageValidator _semaphoreUsageValidator = new SemaphoreUsageValidator();
+#endif
+
+        private readonly object _deferredDisposalLock = new object();
+        private readonly List<IDisposable> _disposables = new List<IDisposable>();
+
         internal GraphicsDevice() { }
 
         /// <summary>
@@ -34,12 +43,99 @@ namespace Veldrid
         /// </summary>
         /// <param name="commandList">The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
         /// been previously called on this object.</param>
-        public abstract void ExecuteCommands(CommandList commandList);
+        public void SubmitCommands(CommandList commandList) => SubmitCommandsCore(commandList, (Semaphore)null, null, null);
+
+        public void SubmitCommands(CommandList commandList, Fence fence)
+            => SubmitCommandsCore(commandList, (Semaphore)null, null, fence);
+
+        /// <summary>
+        /// Submits the given <see cref="CommandList"/> for execution by this device.
+        /// Commands submitted in this way may not be completed when this method returns.
+        /// Use <see cref="WaitForIdle"/> to wait for all submitted commands to complete.
+        /// <see cref="CommandList.End"/> must have been called on <paramref name="commandList"/> for this method to succeed.
+        /// </summary>
+        /// <param name="commandList">The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
+        /// been previously called on this object.</param>
+        public void SubmitCommands(CommandList commandList, Semaphore waitSemaphore, Semaphore signalSemaphore, Fence fence)
+        {
+#if VALIDATE_USAGE
+            if (waitSemaphore != null)
+            {
+                _semaphoreUsageValidator.Waited(waitSemaphore);
+            }
+            if (signalSemaphore != null)
+            {
+                _semaphoreUsageValidator.Signaled(signalSemaphore);
+            }
+#endif
+            SubmitCommandsCore(commandList, waitSemaphore, signalSemaphore, fence);
+        }
+
+        /// <summary>
+        /// Submits the given <see cref="CommandList"/> for execution by this device.
+        /// Commands submitted in this way may not be completed when this method returns.
+        /// Use <see cref="WaitForIdle"/> to wait for all submitted commands to complete.
+        /// <see cref="CommandList.End"/> must have been called on <paramref name="commandList"/> for this method to succeed.
+        /// </summary>
+        /// <param name="commandList">The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
+        /// been previously called on this object.</param>
+        public void SubmitCommands(CommandList commandList, Semaphore[] waitSemaphores, Semaphore[] signalSemaphores, Fence fence)
+        {
+#if VALIDATE_USAGE
+            _semaphoreUsageValidator.Waited(waitSemaphores);
+            _semaphoreUsageValidator.Signaled(signalSemaphores);
+#endif
+            SubmitCommandsCore(commandList, waitSemaphores, signalSemaphores, fence);
+        }
+
+        protected abstract void SubmitCommandsCore(
+            CommandList commandList,
+            Semaphore waitSemaphore,
+            Semaphore signalSemaphore,
+            Fence fence);
+
+        protected abstract void SubmitCommandsCore(
+            CommandList commandList,
+            Semaphore[] waitSemaphores,
+            Semaphore[] signalSemaphores,
+            Fence fence);
+
+        public bool WaitForFence(Fence fence) => WaitForFence(fence, ulong.MaxValue);
+        public bool WaitForFence(Fence fence, TimeSpan timeout)
+            => WaitForFence(fence, (ulong)timeout.TotalMilliseconds * 1_000_000);
+        public abstract bool WaitForFence(Fence fence, ulong nanosecondTimeout);
+
+        public bool WaitForFences(Fence[] fences, bool waitAll) => WaitForFences(fences, waitAll, ulong.MaxValue);
+        public bool WaitForFences(Fence[] fences, bool waitAll, TimeSpan timeout)
+            => WaitForFences(fences, waitAll, (ulong)timeout.TotalMilliseconds * 1_000_000);
+        public abstract bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout);
+
+        public abstract void ResetFence(Fence fence);
 
         /// <summary>
         /// Swaps the buffers of the swapchain and presents the rendered image to the screen.
         /// </summary>
-        public abstract void SwapBuffers();
+        public void SwapBuffers() => SwapBuffersCore((Semaphore)null);
+
+        public void SwapBuffers(Semaphore waitSemaphore)
+        {
+#if VALIDATE_USAGE
+            _semaphoreUsageValidator.Waited(waitSemaphore);
+#endif
+            SwapBuffersCore(waitSemaphore);
+        }
+
+        public void SwapBuffers(Semaphore[] waitSemaphores)
+        {
+
+#if VALIDATE_USAGE
+            _semaphoreUsageValidator.Waited(waitSemaphores);
+#endif
+            SwapBuffersCore(waitSemaphores);
+        }
+
+        protected abstract void SwapBuffersCore(Semaphore waitSemaphore);
+        protected abstract void SwapBuffersCore(Semaphore[] waitSemaphores);
 
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> object representing the render targets of the main swapchain.
@@ -57,7 +153,13 @@ namespace Veldrid
         /// <summary>
         /// A blocking method that returns when all submitted <see cref="CommandList"/> objects have fully completed.
         /// </summary>
-        public abstract void WaitForIdle();
+        public void WaitForIdle()
+        {
+            WaitForIdleCore();
+            FlushDeferredDisposals();
+        }
+
+        protected abstract void WaitForIdleCore();
 
         /// <summary>
         /// Gets the maximum sample count supported by the given <see cref="PixelFormat"/>.
@@ -298,6 +400,26 @@ namespace Veldrid
             uint bufferOffsetInBytes,
             IntPtr source,
             uint sizeInBytes);
+
+        public void DisposeWhenIdle(IDisposable disposable)
+        {
+            lock (_deferredDisposalLock)
+            {
+                _disposables.Add(disposable);
+            }
+        }
+
+        private void FlushDeferredDisposals()
+        {
+            lock (_deferredDisposalLock)
+            {
+                foreach (IDisposable disposable in _disposables)
+                {
+                    disposable.Dispose();
+                }
+                _disposables.Clear();
+            }
+        }
 
         /// <summary>
         /// Performs API-specific disposal of resources controlled by this instance.

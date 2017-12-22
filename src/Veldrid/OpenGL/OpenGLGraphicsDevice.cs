@@ -169,7 +169,18 @@ namespace Veldrid.OpenGL
             PostDeviceCreated();
         }
 
-        public override void ExecuteCommands(CommandList cl)
+        protected override void SubmitCommandsCore(
+            CommandList cl,
+            Semaphore waitSemaphore,
+            Semaphore signalSemaphore,
+            Fence fence)
+            => SubmitCommandsCore(cl, (Semaphore[])null, null, fence);
+
+        protected override void SubmitCommandsCore(
+            CommandList cl,
+            Semaphore[] waitSemaphores,
+            Semaphore[] signalSemaphores,
+            Fence fence)
         {
             OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
             lock (_commandListDisposalLock)
@@ -177,6 +188,11 @@ namespace Veldrid.OpenGL
                 _submittedCommandLists.Add(glCommandList);
             }
             _executionThread.ExecuteCommands(glCommandList);
+
+            if (fence is OpenGLFence glFence)
+            {
+                glFence.Set();
+            }
         }
 
         public override void ResizeMainWindow(uint width, uint height)
@@ -184,7 +200,10 @@ namespace Veldrid.OpenGL
             _swapchainFramebuffer.Resize(width, height);
         }
 
-        public override void SwapBuffers()
+        protected override void SwapBuffersCore(Semaphore waitSemaphore)
+            => SwapBuffersCore((Semaphore[])null);
+
+        protected override void SwapBuffersCore(Semaphore[] waitSemaphores)
         {
             WaitForIdle();
 
@@ -195,7 +214,7 @@ namespace Veldrid.OpenGL
             });
         }
 
-        public override void WaitForIdle()
+        protected override void WaitForIdleCore()
         {
             _executionThread.WaitForIdle();
         }
@@ -267,6 +286,70 @@ namespace Veldrid.OpenGL
                     sb.Free();
                 }
             });
+        }
+
+        public override bool WaitForFence(Fence fence, ulong nanosecondTimeout)
+        {
+            return Util.AssertSubtype<Fence, OpenGLFence>(fence).Wait(nanosecondTimeout);
+        }
+
+        public override bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout)
+        {
+            int msTimeout = (int)(nanosecondTimeout / 1_000_000);
+            ManualResetEvent[] events = GetResetEventArray(fences.Length);
+            for (int i = 0; i < fences.Length; i++)
+            {
+                events[i] = Util.AssertSubtype<Fence, OpenGLFence>(fences[i]).ResetEvent;
+            }
+            bool result;
+            if (waitAll)
+            {
+                result = WaitHandle.WaitAll(events, msTimeout);
+            }
+            else
+            {
+                int index = WaitHandle.WaitAny(events, msTimeout);
+                result = index != WaitHandle.WaitTimeout;
+            }
+
+            ReturnResetEventArray(events);
+
+            return result;
+        }
+
+        private readonly object _resetEventsLock = new object();
+        private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
+
+        private ManualResetEvent[] GetResetEventArray(int length)
+        {
+            lock (_resetEventsLock)
+            {
+                for (int i = _resetEvents.Count - 1; i > 0; i--)
+                {
+                    ManualResetEvent[] array = _resetEvents[i];
+                    if (array.Length == length)
+                    {
+                        _resetEvents.RemoveAt(i);
+                        return array;
+                    }
+                }
+            }
+
+            ManualResetEvent[] newArray = new ManualResetEvent[length];
+            return newArray;
+        }
+
+        private void ReturnResetEventArray(ManualResetEvent[] array)
+        {
+            lock (_resetEventsLock)
+            {
+                _resetEvents.Add(array);
+            }
+        }
+
+        public override void ResetFence(Fence fence)
+        {
+            Util.AssertSubtype<Fence, OpenGLFence>(fence).Reset();
         }
 
         internal void EnqueueDisposal(OpenGLDeferredResource resource)

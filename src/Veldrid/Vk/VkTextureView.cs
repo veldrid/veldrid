@@ -8,7 +8,7 @@ namespace Veldrid.Vk
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImageView _imageView;
-        private bool _disposed;
+        private bool _destroyed;
         private string _name;
 
         public VkImageView ImageView => _imageView;
@@ -70,9 +70,9 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            if (!_disposed)
+            if (!_destroyed)
             {
-                _disposed = true;
+                _destroyed = true;
                 vkDestroyImageView(_gd.Device, ImageView, null);
             }
         }

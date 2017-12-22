@@ -113,7 +113,7 @@ namespace Veldrid.Tests
             cl.Begin();
             cl.CopyTexture(src, dst, 2, 0);
             cl.End();
-            GD.ExecuteCommands(cl);
+            GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
             MappedResource map = GD.Map(dst, MapMode.Read, 2);
@@ -156,7 +156,7 @@ namespace Veldrid.Tests
                 copyDst, 0, 0, 0, 0, 0,
                 copySrc.Width, copySrc.Height, 1, 1);
             cl.End();
-            GD.ExecuteCommands(cl);
+            GD.SubmitCommands(cl);
             GD.WaitForIdle();
             MappedResourceView<byte> view = GD.Map<byte>(copyDst, MapMode.Read);
             for (int i = 0; i < data.Length; i++)

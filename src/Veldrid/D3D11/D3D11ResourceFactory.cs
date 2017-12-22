@@ -71,5 +71,15 @@ namespace Veldrid.D3D11
         {
             return new D3D11Buffer(_device, description.SizeInBytes, description.Usage, description.StructureByteStride);
         }
+
+        public override Semaphore CreateSemaphore()
+        {
+            return new D3D11Semaphore();
+        }
+
+        public override Fence CreateFence(bool signaled)
+        {
+            return new D3D11Fence(signaled);
+        }
     }
 }

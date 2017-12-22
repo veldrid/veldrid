@@ -6,13 +6,13 @@ using System.Diagnostics;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkPipeline : Pipeline, VkDeferredDisposal
+    internal unsafe class VkPipeline : Pipeline
     {
         private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkPipeline _devicePipeline;
         private readonly VkPipelineLayout _pipelineLayout;
         private readonly VkRenderPass _renderPass;
-        private bool _disposed;
+        private bool _destroyed;
         private string _name;
 
         public Vulkan.VkPipeline DevicePipeline => _devicePipeline;
@@ -24,8 +24,6 @@ namespace Veldrid.Vk
         public bool ScissorTestEnabled { get; }
 
         public override bool IsComputePipeline { get; }
-
-        public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
 
         public VkPipeline(VkGraphicsDevice gd, ref GraphicsPipelineDescription description)
             : base(ref description)
@@ -361,14 +359,9 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            _gd.DeferredDisposal(this);
-        }
-
-        public void DestroyResources()
-        {
-            if (!_disposed)
+            if (!_destroyed)
             {
-                _disposed = true;
+                _destroyed = true;
                 vkDestroyPipelineLayout(_gd.Device, _pipelineLayout, null);
                 vkDestroyPipeline(_gd.Device, _devicePipeline, null);
                 if (!IsComputePipeline)

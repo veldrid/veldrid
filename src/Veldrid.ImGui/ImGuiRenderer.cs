@@ -85,10 +85,13 @@ namespace Veldrid
             _gd = gd;
             ResourceFactory factory = gd.ResourceFactory;
             _vertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+            _vertexBuffer.Name = "ImGui.NET Vertex Buffer";
             _indexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer | BufferUsage.Dynamic));
+            _indexBuffer.Name = "ImGui.NET Index Buffer";
             RecreateFontDeviceTexture(gd);
 
             _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _projMatrixBuffer.Name = "ImGui.NET Projection Buffer";
 
             byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex);
             byte[] fragmentShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-frag", ShaderStages.Fragment);
@@ -242,6 +245,7 @@ namespace Veldrid
                 1,
                 PixelFormat.R8_G8_B8_A8_UNorm,
                 TextureUsage.Sampled));
+            _fontTexture.Name = "ImGui.NET Font Texture";
             gd.UpdateTexture(
                 _fontTexture,
                 (IntPtr)textureData.Pixels,
@@ -376,14 +380,14 @@ namespace Veldrid
             uint totalVBSize = (uint)(draw_data->TotalVtxCount * sizeof(DrawVert));
             if (totalVBSize > _vertexBuffer.SizeInBytes)
             {
-                _vertexBuffer.Dispose();
+                gd.DisposeWhenIdle(_vertexBuffer);
                 _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.Dynamic));
             }
 
             uint totalIBSize = (uint)(draw_data->TotalIdxCount * sizeof(ushort));
             if (totalIBSize > _indexBuffer.SizeInBytes)
             {
-                _indexBuffer.Dispose();
+                gd.DisposeWhenIdle(_indexBuffer);
                 _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
             }
 
@@ -420,7 +424,7 @@ namespace Veldrid
                     -1.0f,
                     1.0f);
 
-                cl.UpdateBuffer(_projMatrixBuffer, 0, ref mvp);
+                _gd.UpdateBuffer(_projMatrixBuffer, 0, ref mvp);
             }
 
             cl.SetVertexBuffer(0, _vertexBuffer);

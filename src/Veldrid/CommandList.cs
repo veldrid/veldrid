@@ -10,7 +10,7 @@ namespace Veldrid
     /// <see cref="GraphicsDevice"/>.
     /// Before graphics commands can be issued, the <see cref="Begin"/> method must be invoked.
     /// When the <see cref="CommandList"/> is ready to be executed, <see cref="End"/> must be invoked, and then
-    /// <see cref="GraphicsDevice.ExecuteCommands(CommandList)"/> should be used.
+    /// <see cref="GraphicsDevice.SubmitCommands(CommandList)"/> should be used.
     /// NOTE: The use of <see cref="CommandList"/> is not thread-safe. Access to the <see cref="CommandList"/> must be
     /// externally synchronized.
     /// There are some limitations dictating proper usage and ordering of graphics commands. For example, a
@@ -45,7 +45,7 @@ namespace Veldrid
         /// Puts this <see cref="CommandList"/> into the initial state.
         /// This function must be called before other graphics commands can be issued.
         /// Begin must only be called if it has not been previously called, if <see cref="End"/> has been called,
-        /// or if <see cref="GraphicsDevice.ExecuteCommands(CommandList)"/> has been called on this instance.
+        /// or if <see cref="GraphicsDevice.SubmitCommands(CommandList)"/> has been called on this instance.
         /// </summary>
         public abstract void Begin();
 
@@ -194,6 +194,10 @@ namespace Veldrid
         public void ClearColorTarget(uint index, RgbaFloat clearColor)
         {
 #if VALIDATE_USAGE
+            if (_framebuffer == null)
+            {
+                throw new VeldridException($"Cannot use ClearColorTarget. There is no Framebuffer bound.");
+            }
             if (_framebuffer.ColorTargets.Count <= index)
             {
                 throw new VeldridException(
@@ -226,6 +230,10 @@ namespace Veldrid
         public void ClearDepthStencil(float depth, byte stencil)
         {
 #if VALIDATE_USAGE
+            if (_framebuffer == null)
+            {
+                throw new VeldridException($"Cannot use ClearDepthStencil. There is no Framebuffer bound.");
+            }
             if (_framebuffer.DepthTarget == null)
             {
                 throw new VeldridException(

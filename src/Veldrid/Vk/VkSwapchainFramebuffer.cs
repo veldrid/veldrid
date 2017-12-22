@@ -83,7 +83,7 @@ namespace Veldrid.Vk
             AttachmentCount = depthFormat.HasValue ? 2u : 1u; // 1 Color + 1 Depth
         }
 
-        public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, VkFence fence)
+        public bool AcquireNextImage(VkDevice device, Vulkan.VkSemaphore semaphore, Vulkan.VkFence fence)
         {
             if (_newSyncToVBlank != null)
             {
@@ -120,6 +120,10 @@ namespace Veldrid.Vk
 
         private void CreateSwapchain(uint width, uint height)
         {
+            if (_swapchain != VkSwapchainKHR.Null)
+            {
+                _gd.WaitForIdle();
+            }
             _desiredWidth = width;
             _desiredHeight = height;
             _currentImageIndex = 0;
@@ -297,11 +301,6 @@ namespace Veldrid.Vk
         }
 
         public override void Dispose()
-        {
-            _gd.DeferredDisposal(this);
-        }
-
-        public override void DestroyResources()
         {
             if (!_destroyed)
             {

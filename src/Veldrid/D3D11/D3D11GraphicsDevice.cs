@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Veldrid.D3D11
 {
@@ -225,7 +226,10 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void ExecuteCommands(CommandList cl)
+        protected override void SubmitCommandsCore(CommandList cl, Semaphore waitSemaphore, Semaphore signalSemaphore, Fence fence)
+            => SubmitCommandsCore(cl, (Semaphore[])null, null, fence);
+
+        protected override void SubmitCommandsCore(CommandList cl, Semaphore[] waitSemaphores, Semaphore[] signalSemaphores, Fence fence)
         {
             D3D11CommandList d3d11CL = Util.AssertSubtype<CommandList, D3D11CommandList>(cl);
             lock (_immediateContextLock)
@@ -235,9 +239,17 @@ namespace Veldrid.D3D11
             d3d11CL.DeviceCommandList.Dispose();
             d3d11CL.DeviceCommandList = null;
             CommandListsReferencingSwapchain.Remove(d3d11CL);
+
+            if (fence is D3D11Fence d3d11Fence)
+            {
+                d3d11Fence.Set();
+            }
         }
 
-        public override void SwapBuffers()
+        protected override void SwapBuffersCore(Semaphore waitSemaphore)
+            => SwapBuffersCore((Semaphore[])null);
+
+        protected override void SwapBuffersCore(Semaphore[] waitSemaphores)
         {
             _swapChain.Present(_syncInterval, PresentFlags.None);
         }
@@ -488,6 +500,70 @@ namespace Veldrid.D3D11
                     _immediateContext.UpdateSubresource(deviceTexture, subresource, resourceRegion, source, (int)srcRowPitch, 0);
                 }
             }
+        }
+
+        public override bool WaitForFence(Fence fence, ulong nanosecondTimeout)
+        {
+            return Util.AssertSubtype<Fence, D3D11Fence>(fence).Wait(nanosecondTimeout);
+        }
+
+        public override bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout)
+        {
+            int msTimeout = (int)(nanosecondTimeout / 1_000_000);
+            ManualResetEvent[] events = GetResetEventArray(fences.Length);
+            for (int i = 0; i < fences.Length; i++)
+            {
+                events[i] = Util.AssertSubtype<Fence, D3D11Fence>(fences[i]).ResetEvent;
+            }
+            bool result;
+            if (waitAll)
+            {
+                result = WaitHandle.WaitAll(events, msTimeout);
+            }
+            else
+            {
+                int index = WaitHandle.WaitAny(events, msTimeout);
+                result = index != WaitHandle.WaitTimeout;
+            }
+
+            ReturnResetEventArray(events);
+
+            return result;
+        }
+
+        private readonly object _resetEventsLock = new object();
+        private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
+
+        private ManualResetEvent[] GetResetEventArray(int length)
+        {
+            lock (_resetEventsLock)
+            {
+                for (int i = _resetEvents.Count - 1; i > 0; i--)
+                {
+                    ManualResetEvent[] array = _resetEvents[i];
+                    if (array.Length == length)
+                    {
+                        _resetEvents.RemoveAt(i);
+                        return array;
+                    }
+                }
+            }
+
+            ManualResetEvent[] newArray = new ManualResetEvent[length];
+            return newArray;
+        }
+
+        private void ReturnResetEventArray(ManualResetEvent[] array)
+        {
+            lock (_resetEventsLock)
+            {
+                _resetEvents.Add(array);
+            }
+        }
+
+        public override void ResetFence(Fence fence)
+        {
+            Util.AssertSubtype<Fence, D3D11Fence>(fence).Reset();
         }
 
         private static int GetSyncInterval(bool syncToVBlank)

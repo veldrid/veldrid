@@ -209,9 +209,9 @@ namespace Veldrid.NeoDemo
                 renderable.UpdatePerFrameResources(gd, _resourceUpdateCL, sc);
             }
             _resourceUpdateCL.End();
-            gd.ExecuteCommands(_resourceUpdateCL);
+            gd.SubmitCommands(_resourceUpdateCL);
 
-            gd.ExecuteCommands(cl);
+            gd.SubmitCommands(cl);
         }
 
         private void RenderAllMultiThreaded(GraphicsDevice gd, CommandList cl, SceneContext sc)
@@ -340,9 +340,9 @@ namespace Veldrid.NeoDemo
                 renderable.UpdatePerFrameResources(gd, _resourceUpdateCL, sc);
             }
             _resourceUpdateCL.End();
-            gd.ExecuteCommands(_resourceUpdateCL);
+            gd.SubmitCommands(_resourceUpdateCL);
 
-            for (int i = 0; i < cls.Length; i++) { cls[i].End(); gd.ExecuteCommands(cls[i]); cls[i].Dispose(); }
+            for (int i = 0; i < cls.Length; i++) { cls[i].End(); gd.SubmitCommands(cls[i]); cls[i].Dispose(); }
 
             if (sc.MainSceneColorTexture.SampleCount != TextureSampleCount.Count1)
             {
@@ -365,7 +365,7 @@ namespace Veldrid.NeoDemo
             Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             cl.End();
-            gd.ExecuteCommands(cl);
+            gd.SubmitCommands(cl);
         }
 
         private Matrix4x4 UpdateDirectionalLightMatrices(

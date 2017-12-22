@@ -16,7 +16,7 @@ namespace Veldrid.Tests
             cl.SetFramebuffer(fb);
             cl.ClearColorTarget(0, RgbaFloat.Red);
             cl.End();
-            GD.ExecuteCommands(cl);
+            GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
             Texture staging = RF.CreateTexture(
@@ -28,7 +28,7 @@ namespace Veldrid.Tests
                 staging, 0, 0, 0, 0, 0,
                 1024, 1024, 1, 1);
             cl.End();
-            GD.ExecuteCommands(cl);
+            GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
             MappedResourceView<RgbaFloat> view = GD.Map<RgbaFloat>(staging, MapMode.Read);

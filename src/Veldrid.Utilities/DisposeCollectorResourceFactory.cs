@@ -94,5 +94,19 @@ namespace Veldrid.Utilities
             DisposeCollector.Add(texView);
             return texView;
         }
+
+        public override Semaphore CreateSemaphore()
+        {
+            Semaphore s = Factory.CreateSemaphore();
+            DisposeCollector.Add(s);
+            return s;
+        }
+
+        public override Fence CreateFence(bool signaled)
+        {
+            Fence f = Factory.CreateFence(signaled);
+            DisposeCollector.Add(f);
+            return f;
+        }
     }
 }

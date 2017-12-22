@@ -28,7 +28,7 @@ namespace Veldrid.Vk
         private uint _presentQueueIndex;
         private VkCommandPool _graphicsCommandPool;
         private readonly object _graphicsCommandPoolLock = new object();
-        private VkFence _imageAvailableFence;
+        private Vulkan.VkFence _imageAvailableFence;
         private VkQueue _graphicsQueue;
         private readonly object _graphicsQueueLock = new object();
         private VkQueue _presentQueue;
@@ -89,7 +89,7 @@ namespace Veldrid.Vk
             }
             CreateFences();
 
-            _scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence);
+            _scFB.AcquireNextImage(_device, Vulkan.VkSemaphore.Null, _imageAvailableFence);
             vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
             vkResetFences(_device, 1, ref _imageAvailableFence);
 
@@ -106,7 +106,64 @@ namespace Veldrid.Vk
             set => _scFB.SyncToVerticalBlank = value;
         }
 
-        public override void ExecuteCommands(CommandList cl)
+        protected override void SubmitCommandsCore(
+            CommandList cl,
+            Semaphore waitSemaphore,
+            Semaphore signalSemaphore,
+            Fence fence)
+        {
+            uint waitSemaphoreCount = 0;
+            Vulkan.VkSemaphore wait = Vulkan.VkSemaphore.Null;
+            if (waitSemaphore != null)
+            {
+                wait = Util.AssertSubtype<Semaphore, VkSemaphore>(waitSemaphore).DeviceSemaphore;
+                waitSemaphoreCount = 1;
+            }
+
+            uint signalSemaphoreCount = 0;
+            Vulkan.VkSemaphore signal = Vulkan.VkSemaphore.Null;
+            if (signalSemaphore != null)
+            {
+                signal = Util.AssertSubtype<Semaphore, VkSemaphore>(signalSemaphore).DeviceSemaphore;
+                signalSemaphoreCount = 1;
+            }
+
+            SubmitCommandList(cl, waitSemaphoreCount, &wait, signalSemaphoreCount, &signal, fence);
+        }
+
+        protected override void SubmitCommandsCore(
+            CommandList cl,
+            Semaphore[] waitSemaphores,
+            Semaphore[] signalSemaphores,
+            Fence fence)
+        {
+            Debug.Assert(waitSemaphores != null);
+            Debug.Assert(signalSemaphores != null);
+
+            uint waitSemaphoreCount = (uint)waitSemaphores.Length;
+            Vulkan.VkSemaphore* waitSemaphoresPtr = stackalloc Vulkan.VkSemaphore[(int)waitSemaphoreCount];
+            for (uint i = 0; i < waitSemaphoreCount; i++)
+            {
+                waitSemaphoresPtr[i] = Util.AssertSubtype<Semaphore, VkSemaphore>(waitSemaphores[i]).DeviceSemaphore;
+            }
+
+            uint signalSemaphoreCount = (uint)signalSemaphores.Length;
+            Vulkan.VkSemaphore* signalSemaphoresPtr = stackalloc Vulkan.VkSemaphore[(int)signalSemaphoreCount];
+            for (uint i = 0; i < signalSemaphoreCount; i++)
+            {
+                signalSemaphoresPtr[i] = Util.AssertSubtype<Semaphore, VkSemaphore>(signalSemaphores[i]).DeviceSemaphore;
+            }
+
+            SubmitCommandList(cl, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
+        }
+
+        private void SubmitCommandList(
+            CommandList cl,
+            uint waitSemaphoreCount,
+            Vulkan.VkSemaphore* waitSemaphoresPtr,
+            uint signalSemaphoreCount,
+            Vulkan.VkSemaphore* signalSemaphoresPtr,
+            Fence fence)
         {
             VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
             lock (_commandListsLock)
@@ -118,10 +175,17 @@ namespace Veldrid.Vk
                 }
             }
             VkCommandBuffer vkCB = vkCL.CommandBuffer;
-            SubmitCommandBuffer(vkCB);
+
+            SubmitCommandBuffer(vkCB, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
         }
 
-        private void SubmitCommandBuffer(VkCommandBuffer vkCB)
+        private void SubmitCommandBuffer(
+            VkCommandBuffer vkCB,
+            uint waitSemaphoreCount,
+            Vulkan.VkSemaphore* waitSemaphoresPtr,
+            uint signalSemaphoreCount,
+            Vulkan.VkSemaphore* signalSemaphoresPtr,
+            Fence fence)
         {
             VkSubmitInfo si = VkSubmitInfo.New();
             si.commandBufferCount = 1;
@@ -129,9 +193,20 @@ namespace Veldrid.Vk
             VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             si.pWaitDstStageMask = &waitDstStageMask;
 
+            si.pWaitSemaphores = waitSemaphoresPtr;
+            si.waitSemaphoreCount = waitSemaphoreCount;
+            si.pSignalSemaphores = signalSemaphoresPtr;
+            si.signalSemaphoreCount = signalSemaphoreCount;
+
+            Vulkan.VkFence vkFence = Vulkan.VkFence.Null;
+            if (fence != null)
+            {
+                vkFence = Util.AssertSubtype<Fence, VkFence>(fence).DeviceFence;
+            }
+
             lock (_graphicsQueueLock)
             {
-                vkQueueSubmit(_graphicsQueue, 1, ref si, VkFence.Null);
+                vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
             }
         }
 
@@ -161,17 +236,46 @@ namespace Veldrid.Vk
         public override void ResizeMainWindow(uint width, uint height)
         {
             _scFB.Resize(width, height);
-            _scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence);
+            _scFB.AcquireNextImage(_device, Vulkan.VkSemaphore.Null, _imageAvailableFence);
             vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
             vkResetFences(_device, 1, ref _imageAvailableFence);
         }
 
-        public override void SwapBuffers()
+        protected override void SwapBuffersCore(Semaphore waitSemaphore)
         {
             WaitForIdle();
 
+            uint waitSemaphoreCount = 0;
+            Vulkan.VkSemaphore wait = Vulkan.VkSemaphore.Null;
+            if (waitSemaphore != null)
+            {
+                wait = Util.AssertSubtype<Semaphore, VkSemaphore>(waitSemaphore).DeviceSemaphore;
+                waitSemaphoreCount = 1;
+            }
+            SubmitSwapBuffers(&wait, waitSemaphoreCount);
+        }
+
+        protected override void SwapBuffersCore(Semaphore[] waitSemaphores)
+        {
+            Debug.Assert(waitSemaphores != null);
+            WaitForIdle();
+
+            uint waitSemaphoreCount = (uint)waitSemaphores.Length;
+            Vulkan.VkSemaphore* waitSemaphoresPtr = stackalloc Vulkan.VkSemaphore[(int)waitSemaphoreCount];
+            for (uint i = 0; i < waitSemaphoreCount; i++)
+            {
+                waitSemaphoresPtr[i] = Util.AssertSubtype<Semaphore, VkSemaphore>(waitSemaphores[i]).DeviceSemaphore;
+            }
+
+            SubmitSwapBuffers(waitSemaphoresPtr, waitSemaphoreCount);
+        }
+
+        private void SubmitSwapBuffers(Vulkan.VkSemaphore* waitSemaphoresPtr, uint waitSemaphoreCount)
+        {
             // Then, present the swapchain.
             VkPresentInfoKHR presentInfo = VkPresentInfoKHR.New();
+            presentInfo.waitSemaphoreCount = waitSemaphoreCount;
+            presentInfo.pWaitSemaphores = waitSemaphoresPtr;
 
             VkSwapchainKHR swapchain = _scFB.Swapchain;
             presentInfo.swapchainCount = 1;
@@ -181,11 +285,12 @@ namespace Veldrid.Vk
 
             vkQueuePresentKHR(_presentQueue, ref presentInfo);
 
-            if (_scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence))
+            if (_scFB.AcquireNextImage(_device, Vulkan.VkSemaphore.Null, _imageAvailableFence))
             {
                 vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
                 vkResetFences(_device, 1, ref _imageAvailableFence);
             }
+
         }
 
         internal void SetResourceName(DeviceResource resource, string name)
@@ -237,6 +342,12 @@ namespace Veldrid.Vk
                         break;
                     case VkTextureView texView:
                         SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageViewEXT, texView.ImageView.Handle, name);
+                        break;
+                    case VkSemaphore semaphore:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.SemaphoreEXT, semaphore.DeviceSemaphore.Handle, name);
+                        break;
+                    case VkFence fence:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.FenceEXT, fence.DeviceFence.Handle, name);
                         break;
                     default:
                         break;
@@ -988,6 +1099,32 @@ namespace Veldrid.Vk
                 ref region);
         }
 
+        public override void ResetFence(Fence fence)
+        {
+            Vulkan.VkFence vkFence = Util.AssertSubtype<Fence, VkFence>(fence).DeviceFence;
+            vkResetFences(_device, 1, ref vkFence);
+        }
+
+        public override bool WaitForFence(Fence fence, ulong nanosecondTimeout)
+        {
+            Vulkan.VkFence vkFence = Util.AssertSubtype<Fence, VkFence>(fence).DeviceFence;
+            VkResult result = vkWaitForFences(_device, 1, ref vkFence, true, nanosecondTimeout);
+            return result == VkResult.Success;
+        }
+
+        public override bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout)
+        {
+            int fenceCount = fences.Length;
+            Vulkan.VkFence* fencesPtr = stackalloc Vulkan.VkFence[fenceCount];
+            for (int i = 0; i < fenceCount; i++)
+            {
+                fencesPtr[i] = Util.AssertSubtype<Fence, VkFence>(fences[i]).DeviceFence;
+            }
+
+            VkResult result = vkWaitForFences(_device, (uint)fenceCount, fencesPtr, waitAll, nanosecondTimeout);
+            return result == VkResult.Success;
+        }
+
         private class SharedCommandPool
         {
             private readonly VkGraphicsDevice _gd;
@@ -1027,7 +1164,7 @@ namespace Veldrid.Vk
             {
                 VkResult result = vkEndCommandBuffer(cb);
                 CheckResult(result);
-                _gd.SubmitCommandBuffer(cb);
+                _gd.SubmitCommandBuffer(cb, 0, null, 0, null, null);
                 _gd._commandBuffersToFree.Enqueue(this);
             }
 

@@ -393,7 +393,7 @@ namespace Veldrid.NeoDemo
                 cl.Begin();
                 _sc.RecreateWindowSizedResources(_gd, cl);
                 cl.End();
-                _gd.ExecuteCommands(cl);
+                _gd.SubmitCommands(cl);
                 cl.Dispose();
             }
 
@@ -469,7 +469,7 @@ namespace Veldrid.NeoDemo
             CommonMaterials.CreateAllDeviceObjects(_gd, initCL, _sc);
             _scene.CreateAllDeviceObjects(_gd, initCL, _sc);
             initCL.End();
-            _gd.ExecuteCommands(initCL);
+            _gd.SubmitCommands(initCL);
             initCL.Dispose();
         }
     }

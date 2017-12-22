@@ -83,7 +83,7 @@ namespace Veldrid.Vk
             AttachmentCount = depthFormat.HasValue ? 2u : 1u; // 1 Color + 1 Depth
         }
 
-        public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, VkFence fence)
+        public bool AcquireNextImage(VkDevice device, Vulkan.VkSemaphore semaphore, Vulkan.VkFence fence)
         {
             if (_newSyncToVBlank != null)
             {

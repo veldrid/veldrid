@@ -113,7 +113,7 @@ namespace Veldrid.Tests
             copyCL.Begin();
             copyCL.CopyBuffer(src, 0, dst, 0, src.SizeInBytes);
             copyCL.End();
-            GD.ExecuteCommands(copyCL);
+            GD.SubmitCommands(copyCL);
             src.Dispose();
             GD.WaitForIdle();
 
@@ -148,7 +148,7 @@ namespace Veldrid.Tests
                 }
                 copyCL.CopyBuffer(dsts[dsts.Length - 1], 0, finalDst, 0, src.SizeInBytes);
                 copyCL.End();
-                GD.ExecuteCommands(copyCL);
+                GD.SubmitCommands(copyCL);
                 GD.WaitForIdle();
 
                 MappedResourceView<int> view = GD.Map<int>(finalDst, MapMode.Read);

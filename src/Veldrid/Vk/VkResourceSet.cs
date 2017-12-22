@@ -9,6 +9,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly DescriptorResourceCounts _descriptorCounts;
         private readonly DescriptorAllocationToken _descriptorAllocationToken;
+        private readonly BindableResource[] _boundResources;
         private bool _disposed;
         private string _name;
 
@@ -26,8 +27,8 @@ namespace Veldrid.Vk
             _descriptorCounts = vkLayout.DescriptorResourceCounts;
             _descriptorAllocationToken = _gd.DescriptorPoolManager.Allocate(_descriptorCounts, dsl);
 
-            BindableResource[] boundResources = description.BoundResources;
-            uint descriptorWriteCount = (uint)boundResources.Length;
+            _boundResources = description.BoundResources;
+            uint descriptorWriteCount = (uint)_boundResources.Length;
             VkWriteDescriptorSet* descriptorWrites = stackalloc VkWriteDescriptorSet[(int)descriptorWriteCount];
             VkDescriptorBufferInfo* bufferInfos = stackalloc VkDescriptorBufferInfo[(int)descriptorWriteCount];
             VkDescriptorImageInfo* imageInfos = stackalloc VkDescriptorImageInfo[(int)descriptorWriteCount];
@@ -44,30 +45,35 @@ namespace Veldrid.Vk
 
                 if (type == VkDescriptorType.UniformBuffer || type == VkDescriptorType.StorageBuffer)
                 {
-                    VkBuffer vkBuffer = Util.AssertSubtype<BindableResource, VkBuffer>(boundResources[i]);
+                    VkBuffer vkBuffer = Util.AssertSubtype<BindableResource, VkBuffer>(_boundResources[i]);
                     bufferInfos[i].buffer = vkBuffer.DeviceBuffer;
                     bufferInfos[i].range = vkBuffer.SizeInBytes;
                     descriptorWrites[i].pBufferInfo = &bufferInfos[i];
                 }
                 else if (type == VkDescriptorType.SampledImage)
                 {
-                    VkTextureView textureView = Util.AssertSubtype<BindableResource, VkTextureView>(boundResources[i]);
+                    VkTextureView textureView = Util.AssertSubtype<BindableResource, VkTextureView>(_boundResources[i]);
                     imageInfos[i].imageView = textureView.ImageView;
                     imageInfos[i].imageLayout = VkImageLayout.ShaderReadOnlyOptimal;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
                 }
                 else if (type == VkDescriptorType.StorageImage)
                 {
-                    VkTextureView textureView = Util.AssertSubtype<BindableResource, VkTextureView>(boundResources[i]);
+                    VkTextureView textureView = Util.AssertSubtype<BindableResource, VkTextureView>(_boundResources[i]);
                     imageInfos[i].imageView = textureView.ImageView;
                     imageInfos[i].imageLayout = VkImageLayout.General;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
                 }
                 else if (type == VkDescriptorType.Sampler)
                 {
-                    VkSampler sampler = Util.AssertSubtype<BindableResource, VkSampler>(boundResources[i]);
+                    VkSampler sampler = Util.AssertSubtype<BindableResource, VkSampler>(_boundResources[i]);
                     imageInfos[i].sampler = sampler.DeviceSampler;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
+                }
+
+                if (_boundResources[i] is VkDeferredDisposal vdd)
+                {
+                    vdd.ReferenceTracker.Increment();
                 }
             }
 
@@ -95,6 +101,13 @@ namespace Veldrid.Vk
             {
                 _disposed = true;
                 _gd.DescriptorPoolManager.Free(_descriptorAllocationToken, _descriptorCounts);
+                foreach (var resource in _boundResources)
+                {
+                    if (resource is VkDeferredDisposal vdd)
+                    {
+                        vdd.ReferenceTracker.Decrement();
+                    }
+                }
             }
         }
     }

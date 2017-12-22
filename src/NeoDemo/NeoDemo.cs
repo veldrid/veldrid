@@ -56,7 +56,7 @@ namespace Veldrid.NeoDemo
             VeldridStartup.CreateWindowAndGraphicsDevice(
                 windowCI,
                 gdOptions,
-                //GraphicsBackend.Vulkan,
+                GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
                 out _window,
                 out _gd);
@@ -386,6 +386,8 @@ namespace Veldrid.NeoDemo
             if (_windowResized)
             {
                 _windowResized = false;
+
+                _gd.WaitForIdle();
                 _gd.ResizeMainWindow((uint)width, (uint)height);
                 _scene.Camera.WindowResized(width, height);
                 _resizeHandled?.Invoke(width, height);

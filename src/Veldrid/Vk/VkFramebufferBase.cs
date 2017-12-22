@@ -12,7 +12,7 @@ namespace Veldrid.Vk
         {
         }
 
-        public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
+        public ReferenceTracker ReferenceTracker { get; internal set; } = new ReferenceTracker();
 
         public abstract uint RenderableWidth { get; }
         public abstract uint RenderableHeight { get; }

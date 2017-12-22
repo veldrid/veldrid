@@ -166,14 +166,7 @@ namespace Veldrid.Vk
             Fence fence)
         {
             VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
-            lock (_commandListsLock)
-            {
-                _submittedCommandLists.Add(vkCL);
-                foreach (VkDeferredDisposal resource in vkCL.ReferencedResources)
-                {
-                    resource.ReferenceTracker.Increment();
-                }
-            }
+            vkCL.OnSubmitted();
             VkCommandBuffer vkCB = vkCL.CommandBuffer;
 
             SubmitCommandBuffer(vkCB, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
@@ -218,10 +211,7 @@ namespace Veldrid.Vk
             }
             else
             {
-                lock (_deferredDisposalLock)
-                {
-                    _deferredDisposals.Add(vdd);
-                }
+                vdd.ReferenceTracker.DecrementedToZero += () => vdd.DestroyResources();
             }
         }
 
@@ -243,8 +233,6 @@ namespace Veldrid.Vk
 
         protected override void SwapBuffersCore(Semaphore waitSemaphore)
         {
-            WaitForIdle();
-
             uint waitSemaphoreCount = 0;
             Vulkan.VkSemaphore wait = Vulkan.VkSemaphore.Null;
             if (waitSemaphore != null)
@@ -258,7 +246,6 @@ namespace Veldrid.Vk
         protected override void SwapBuffersCore(Semaphore[] waitSemaphores)
         {
             Debug.Assert(waitSemaphores != null);
-            WaitForIdle();
 
             uint waitSemaphoreCount = (uint)waitSemaphores.Length;
             Vulkan.VkSemaphore* waitSemaphoresPtr = stackalloc Vulkan.VkSemaphore[(int)waitSemaphoreCount];
@@ -772,7 +759,7 @@ namespace Veldrid.Vk
         {
             WaitForIdle();
 
-            _scFB.Dispose();
+            _scFB.DestroyResources();
             vkDestroySurfaceKHR(_instance, _surface, null);
             if (_debugCallbackFunc != null)
             {
@@ -805,26 +792,6 @@ namespace Veldrid.Vk
         public override void WaitForIdle()
         {
             vkQueueWaitIdle(_graphicsQueue);
-            lock (_commandListsLock)
-            {
-                lock (_deferredDisposalLock)
-                {
-                    foreach (VkCommandList vkCL in _submittedCommandLists)
-                    {
-                        foreach (VkDeferredDisposal vdd in vkCL.ReferencedResources)
-                        {
-                            if (vdd.ReferenceTracker.Decrement() == 0)
-                            {
-                                if (_deferredDisposals.Remove(vdd))
-                                {
-                                    vdd.DestroyResources();
-                                }
-                            }
-                        }
-                    }
-                    _submittedCommandLists.Clear();
-                }
-            }
             FlushQueuedDisposables();
         }
 

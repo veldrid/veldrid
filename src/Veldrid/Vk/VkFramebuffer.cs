@@ -40,6 +40,7 @@ namespace Veldrid.Vk
             for (int i = 0; i < colorAttachmentCount; i++)
             {
                 VkTexture vkColorTex = Util.AssertSubtype<Texture, VkTexture>(ColorTargets[i].Target);
+                vkColorTex.ReferenceTracker.Increment();
                 VkAttachmentDescription colorAttachmentDesc = new VkAttachmentDescription();
                 colorAttachmentDesc.format = vkColorTex.VkFormat;
                 colorAttachmentDesc.samples = vkColorTex.VkSampleCount;
@@ -62,6 +63,7 @@ namespace Veldrid.Vk
             if (DepthTarget != null)
             {
                 VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
+                vkDepthTex.ReferenceTracker.Increment();
                 bool hasStencil = FormatHelpers.IsStencilFormat(vkDepthTex.Format);
                 depthAttachmentDesc.format = vkDepthTex.VkFormat;
                 depthAttachmentDesc.samples = vkDepthTex.VkSampleCount;
@@ -216,8 +218,6 @@ namespace Veldrid.Vk
         {
             if (!_destroyed)
             {
-                _destroyed = true;
-
                 vkDestroyFramebuffer(_gd.Device, _deviceFramebuffer, null);
                 vkDestroyRenderPass(_gd.Device, _renderPassNoClear, null);
                 vkDestroyRenderPass(_gd.Device, _renderPassClear, null);
@@ -225,6 +225,17 @@ namespace Veldrid.Vk
                 {
                     vkDestroyImageView(_gd.Device, view, null);
                 }
+
+                foreach (FramebufferAttachment color in ColorTargets)
+                {
+                    Util.AssertSubtype<Texture, VkTexture>(color.Target).ReferenceTracker.Decrement();
+                }
+                if (DepthTarget != null)
+                {
+                    Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target).ReferenceTracker.Decrement();
+                }
+
+                _destroyed = true;
             }
         }
     }

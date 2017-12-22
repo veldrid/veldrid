@@ -4,11 +4,11 @@ using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkTextureView : TextureView
+    internal unsafe class VkTextureView : TextureView, VkDeferredDisposal
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImageView _imageView;
-        private bool _disposed;
+        private bool _destroyed;
         private string _name;
 
         public VkImageView ImageView => _imageView;
@@ -68,11 +68,18 @@ namespace Veldrid.Vk
             }
         }
 
+        public ReferenceTracker ReferenceTracker { get; } = new ReferenceTracker();
+
         public override void Dispose()
         {
-            if (!_disposed)
+            _gd.DeferredDisposal(this);
+        }
+
+        public void DestroyResources()
+        {
+            if (!_destroyed)
             {
-                _disposed = true;
+                _destroyed = true;
                 vkDestroyImageView(_gd.Device, ImageView, null);
             }
         }

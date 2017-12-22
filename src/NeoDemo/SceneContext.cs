@@ -271,14 +271,16 @@ namespace Veldrid.NeoDemo
         public void DestroyDeviceObjects()
         {
             NearShadowMap.Dispose();
-            MidShadowMap.Dispose();
-            FarShadowMap.Dispose();
-            NearShadowMapFramebuffer.Dispose();
-            MidShadowMapFramebuffer.Dispose();
-            FarShadowMapFramebuffer.Dispose();
             NearShadowMapView.Dispose();
+            NearShadowMapFramebuffer.Dispose();
+
+            MidShadowMap.Dispose();
             MidShadowMapView.Dispose();
+            MidShadowMapFramebuffer.Dispose();
+
+            FarShadowMap.Dispose();
             FarShadowMapView.Dispose();
+            FarShadowMapFramebuffer.Dispose();
         }
     }
 }

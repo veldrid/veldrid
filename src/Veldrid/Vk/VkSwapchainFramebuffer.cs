@@ -281,6 +281,7 @@ namespace Veldrid.Vk
                     _scImages[i]);
                 FramebufferDescription desc = new FramebufferDescription(_depthAttachment?.Target, colorTex);
                 VkFramebuffer fb = new VkFramebuffer(_gd, ref desc, true);
+                fb.ReferenceTracker = ReferenceTracker;
                 _scFramebuffers[i] = fb;
                 _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
             }

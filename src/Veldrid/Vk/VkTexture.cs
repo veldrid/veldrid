@@ -107,6 +107,10 @@ namespace Veldrid.Vk
             {
                 VkResult result = vkCreateImage(gd.Device, ref imageCI, null, out _optimalImage);
                 CheckResult(result);
+                if (_optimalImage.Handle == 0x5b)
+                {
+
+                }
 
                 vkGetImageMemoryRequirements(gd.Device, _optimalImage, out VkMemoryRequirements memoryRequirements);
 

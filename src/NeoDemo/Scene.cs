@@ -162,7 +162,7 @@ namespace Veldrid.NeoDemo
 
             Matrix4x4 view = sc.Camera.ViewMatrix;
             view = planeReflectionMatrix * view;
-            gd.UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
+            cl.UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
 
             Matrix4x4 projection = _camera.ProjectionMatrix;
             cl.UpdateBuffer(sc.ReflectionViewProjBuffer, 0, view * projection);
@@ -209,9 +209,9 @@ namespace Veldrid.NeoDemo
                 renderable.UpdatePerFrameResources(gd, _resourceUpdateCL, sc);
             }
             _resourceUpdateCL.End();
-            gd.SubmitCommands(_resourceUpdateCL, null, sc.ResourceUpdateSemaphore, null);
-            gd.WaitForIdle();
-            gd.SubmitCommands(cl, sc.ResourceUpdateSemaphore, sc.RenderCompletedSemaphore, null);
+
+            gd.SubmitCommands(_resourceUpdateCL);
+            gd.SubmitCommands(cl);
         }
 
         private void RenderAllMultiThreaded(GraphicsDevice gd, CommandList cl, SceneContext sc)
@@ -365,7 +365,7 @@ namespace Veldrid.NeoDemo
             Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             cl.End();
-            gd.SubmitCommands(cl, null, sc.RenderCompletedSemaphore, null);
+            gd.SubmitCommands(cl);
         }
 
         private Matrix4x4 UpdateDirectionalLightMatrices(

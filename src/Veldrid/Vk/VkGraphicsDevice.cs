@@ -210,14 +210,13 @@ namespace Veldrid.Vk
             lock (_graphicsQueueLock)
             {
                 vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
-            }
+                _submittedFences.Add(submissionFence, (vkCL, vkCB));
 
-            if (useExtraFence)
-            {
-                vkQueueSubmit(_graphicsQueue, 0, null, submissionFence);
+                if (useExtraFence)
+                {
+                    vkQueueSubmit(_graphicsQueue, 0, null, submissionFence);
+                }
             }
-
-            _submittedFences.Add(vkFence, (vkCL, vkCB));
         }
 
         private void CheckSubmittedFences()
@@ -286,6 +285,7 @@ namespace Veldrid.Vk
                 wait = Util.AssertSubtype<Semaphore, VkSemaphore>(waitSemaphore).DeviceSemaphore;
                 waitSemaphoreCount = 1;
             }
+
             SubmitSwapBuffers(&wait, waitSemaphoreCount);
         }
 
@@ -323,7 +323,6 @@ namespace Veldrid.Vk
                 vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
                 vkResetFences(_device, 1, ref _imageAvailableFence);
             }
-
         }
 
         internal void SetResourceName(DeviceResource resource, string name)

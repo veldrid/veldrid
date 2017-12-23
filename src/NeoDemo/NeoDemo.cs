@@ -387,7 +387,6 @@ namespace Veldrid.NeoDemo
             {
                 _windowResized = false;
 
-                _gd.WaitForIdle();
                 _gd.ResizeMainWindow((uint)width, (uint)height);
                 _scene.Camera.WindowResized(width, height);
                 _resizeHandled?.Invoke(width, height);
@@ -412,8 +411,7 @@ namespace Veldrid.NeoDemo
             CommonMaterials.FlushAll(_frameCommands);
 
             _scene.RenderAllStages(_gd, _frameCommands, _sc);
-            _gd.SwapBuffers(_sc.RenderCompletedSemaphore);
-            _gd.WaitForIdle();
+            _gd.SwapBuffers();
         }
 
         private void ChangeBackend(GraphicsBackend backend)

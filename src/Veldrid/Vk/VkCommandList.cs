@@ -12,7 +12,6 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private VkCommandPool _pool;
         private VkCommandBuffer _cb;
-        private Vulkan.VkFence _fence;
         private bool _destroyed;
 
         private bool _commandBufferBegun;
@@ -129,23 +128,6 @@ namespace Veldrid.Vk
 
             _currentComputePipeline = null;
             Util.ClearArray(_currentComputeResourceSets);
-
-            _infoRemovalList.Clear();
-            foreach (PooledStagingBufferInfo info in _usedStagingBuffers)
-            {
-                VkResult status = vkGetEventStatus(_gd.Device, info.AvailableEvent);
-                if (status == VkResult.EventSet)
-                {
-                    vkResetEvent(_gd.Device, info.AvailableEvent);
-                    _availableStagingBuffers.Add(info);
-                    _infoRemovalList.Add(info);
-                }
-            }
-
-            foreach (PooledStagingBufferInfo info in _infoRemovalList)
-            {
-                _usedStagingBuffers.Remove(info);
-            }
         }
 
         protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
@@ -403,19 +385,6 @@ namespace Veldrid.Vk
             if (_activeRenderPass.Handle != VkRenderPass.Null)
             {
                 EndCurrentRenderPass();
-                // Place a barrier between RenderPasses, so that color / depth outputs
-                // can be read in subsequent passes.
-                vkCmdPipelineBarrier(
-                    _cb,
-                    VkPipelineStageFlags.ColorAttachmentOutput,
-                    VkPipelineStageFlags.TopOfPipe,
-                    VkDependencyFlags.ByRegion,
-                    0,
-                    null,
-                    0,
-                    null,
-                    0,
-                    null);
             }
 
             VkFramebufferBase vkFB = Util.AssertSubtype<Framebuffer, VkFramebufferBase>(fb);
@@ -525,6 +494,20 @@ namespace Veldrid.Vk
             Debug.Assert(_activeRenderPass != VkRenderPass.Null);
             vkCmdEndRenderPass(_cb);
             _activeRenderPass = VkRenderPass.Null;
+
+            // Place a barrier between RenderPasses, so that color / depth outputs
+            // can be read in subsequent passes.
+            vkCmdPipelineBarrier(
+                _cb,
+                VkPipelineStageFlags.BottomOfPipe,
+                VkPipelineStageFlags.TopOfPipe,
+                VkDependencyFlags.None,
+                0,
+                null,
+                0,
+                null,
+                0,
+                null);
         }
 
         protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
@@ -735,20 +718,42 @@ namespace Veldrid.Vk
 
         private PooledStagingBufferInfo GetStagingBuffer(uint size)
         {
-            //foreach (PooledStagingBufferInfo info in _availableStagingBuffers)
-            //{
-            //    if (info.Buffer.SizeInBytes >= size)
-            //    {
-            //        _availableStagingBuffers.Remove(info);
-            //        _usedStagingBuffers.Add(info);
-            //        return info;
-            //    }
-            //}
+            CheckUsedStagingBuffers();
+
+            foreach (PooledStagingBufferInfo info in _availableStagingBuffers)
+            {
+                if (info.Buffer.SizeInBytes >= size)
+                {
+                    _availableStagingBuffers.Remove(info);
+                    _usedStagingBuffers.Add(info);
+                    return info;
+                }
+            }
 
             VkBuffer newBuffer = (VkBuffer)_gd.ResourceFactory.CreateBuffer(new BufferDescription(size, BufferUsage.Staging));
             PooledStagingBufferInfo newInfo = new PooledStagingBufferInfo(_gd, newBuffer);
             _usedStagingBuffers.Add(newInfo);
             return newInfo;
+        }
+
+        private void CheckUsedStagingBuffers()
+        {
+            _infoRemovalList.Clear();
+            foreach (PooledStagingBufferInfo info in _usedStagingBuffers)
+            {
+                VkResult status = vkGetEventStatus(_gd.Device, info.AvailableEvent);
+                if (status == VkResult.EventSet)
+                {
+                    vkResetEvent(_gd.Device, info.AvailableEvent);
+                    _availableStagingBuffers.Add(info);
+                    _infoRemovalList.Add(info);
+                }
+            }
+
+            foreach (PooledStagingBufferInfo info in _infoRemovalList)
+            {
+                _usedStagingBuffers.Remove(info);
+            }
         }
 
         public override void Dispose()
@@ -764,12 +769,9 @@ namespace Veldrid.Vk
                 _destroyed = true;
                 vkDestroyCommandPool(_gd.Device, _pool, null);
 
-                foreach (var info in _availableStagingBuffers)
-                {
-                    info.Buffer.Dispose();
-                    vkDestroyEvent(_gd.Device, info.AvailableEvent, null);
-                }
-                foreach (var info in _usedStagingBuffers)
+                CheckUsedStagingBuffers();
+                Debug.Assert(_usedStagingBuffers.Count == 0);
+                foreach (PooledStagingBufferInfo info in _availableStagingBuffers)
                 {
                     info.Buffer.Dispose();
                     vkDestroyEvent(_gd.Device, info.AvailableEvent, null);

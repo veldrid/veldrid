@@ -9,26 +9,34 @@ namespace Veldrid.Sdl2
         private static readonly NativeLibrary s_sdl2Lib = LoadSdl2();
         private static NativeLibrary LoadSdl2()
         {
-            string name;
+            string[] names;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                name = "SDL2.dll";
+                names = new[] { "SDL2.dll" };
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                name = "libSDL2-2.0.so";
+                names = new[]
+                {
+                    "libSDL2-2.0.so",
+                    "libSDL2-2.0.so.0",
+                    "libSDL2-2.0.so.1",
+                };
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                name = "libsdl2.dylib";
+                names = new[]
+                {
+                    "libsdl2.dylib"
+                };
             }
             else
             {
                 Debug.WriteLine("Unknown SDL platform. Attempting to load \"SDL2\"");
-                name = "SDL2";
+                names = new[] { "SDL2.dll" };
             }
 
-            NativeLibrary lib = new NativeLibrary(name);
+            NativeLibrary lib = new NativeLibrary(names);
             return lib;
         }
 

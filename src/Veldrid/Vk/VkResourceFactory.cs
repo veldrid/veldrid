@@ -70,11 +70,6 @@ namespace Veldrid.Vk
             return new VkBuffer(_gd, description.SizeInBytes, description.Usage);
         }
 
-        public override Semaphore CreateSemaphore()
-        {
-            return new VkSemaphore(_gd);
-        }
-
         public override Fence CreateFence(bool signaled)
         {
             return new VkFence(_gd, signaled);

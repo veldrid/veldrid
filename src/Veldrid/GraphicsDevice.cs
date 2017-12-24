@@ -11,10 +11,6 @@ namespace Veldrid
     /// </summary>
     public abstract class GraphicsDevice : IDisposable
     {
-#if VALIDATE_USAGE
-        private readonly SemaphoreUsageValidator _semaphoreUsageValidator = new SemaphoreUsageValidator();
-#endif
-
         private readonly object _deferredDisposalLock = new object();
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
 
@@ -43,10 +39,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="commandList">The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
         /// been previously called on this object.</param>
-        public void SubmitCommands(CommandList commandList) => SubmitCommandsCore(commandList, (Semaphore)null, null, null);
-
-        public void SubmitCommands(CommandList commandList, Fence fence)
-            => SubmitCommandsCore(commandList, (Semaphore)null, null, fence);
+        public void SubmitCommands(CommandList commandList) => SubmitCommandsCore(commandList, null);
 
         /// <summary>
         /// Submits the given <see cref="CommandList"/> for execution by this device.
@@ -56,48 +49,10 @@ namespace Veldrid
         /// </summary>
         /// <param name="commandList">The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
         /// been previously called on this object.</param>
-        public void SubmitCommands(CommandList commandList, Semaphore waitSemaphore, Semaphore signalSemaphore, Fence fence)
-        {
-#if VALIDATE_USAGE
-            if (waitSemaphore != null)
-            {
-                _semaphoreUsageValidator.Waited(waitSemaphore);
-            }
-            if (signalSemaphore != null)
-            {
-                _semaphoreUsageValidator.Signaled(signalSemaphore);
-            }
-#endif
-            SubmitCommandsCore(commandList, waitSemaphore, signalSemaphore, fence);
-        }
-
-        /// <summary>
-        /// Submits the given <see cref="CommandList"/> for execution by this device.
-        /// Commands submitted in this way may not be completed when this method returns.
-        /// Use <see cref="WaitForIdle"/> to wait for all submitted commands to complete.
-        /// <see cref="CommandList.End"/> must have been called on <paramref name="commandList"/> for this method to succeed.
-        /// </summary>
-        /// <param name="commandList">The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
-        /// been previously called on this object.</param>
-        public void SubmitCommands(CommandList commandList, Semaphore[] waitSemaphores, Semaphore[] signalSemaphores, Fence fence)
-        {
-#if VALIDATE_USAGE
-            _semaphoreUsageValidator.Waited(waitSemaphores);
-            _semaphoreUsageValidator.Signaled(signalSemaphores);
-#endif
-            SubmitCommandsCore(commandList, waitSemaphores, signalSemaphores, fence);
-        }
+        public void SubmitCommands(CommandList commandList, Fence fence) => SubmitCommandsCore(commandList, fence);
 
         protected abstract void SubmitCommandsCore(
             CommandList commandList,
-            Semaphore waitSemaphore,
-            Semaphore signalSemaphore,
-            Fence fence);
-
-        protected abstract void SubmitCommandsCore(
-            CommandList commandList,
-            Semaphore[] waitSemaphores,
-            Semaphore[] signalSemaphores,
             Fence fence);
 
         public bool WaitForFence(Fence fence) => WaitForFence(fence, ulong.MaxValue);
@@ -115,27 +70,9 @@ namespace Veldrid
         /// <summary>
         /// Swaps the buffers of the swapchain and presents the rendered image to the screen.
         /// </summary>
-        public void SwapBuffers() => SwapBuffersCore((Semaphore)null);
+        public void SwapBuffers() => SwapBuffersCore();
 
-        public void SwapBuffers(Semaphore waitSemaphore)
-        {
-#if VALIDATE_USAGE
-            _semaphoreUsageValidator.Waited(waitSemaphore);
-#endif
-            SwapBuffersCore(waitSemaphore);
-        }
-
-        public void SwapBuffers(Semaphore[] waitSemaphores)
-        {
-
-#if VALIDATE_USAGE
-            _semaphoreUsageValidator.Waited(waitSemaphores);
-#endif
-            SwapBuffersCore(waitSemaphores);
-        }
-
-        protected abstract void SwapBuffersCore(Semaphore waitSemaphore);
-        protected abstract void SwapBuffersCore(Semaphore[] waitSemaphores);
+        protected abstract void SwapBuffersCore();
 
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> object representing the render targets of the main swapchain.

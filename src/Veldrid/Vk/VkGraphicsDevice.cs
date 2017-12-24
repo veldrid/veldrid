@@ -108,53 +108,9 @@ namespace Veldrid.Vk
 
         protected override void SubmitCommandsCore(
             CommandList cl,
-            Semaphore waitSemaphore,
-            Semaphore signalSemaphore,
             Fence fence)
         {
-            uint waitSemaphoreCount = 0;
-            Vulkan.VkSemaphore wait = Vulkan.VkSemaphore.Null;
-            if (waitSemaphore != null)
-            {
-                wait = Util.AssertSubtype<Semaphore, VkSemaphore>(waitSemaphore).DeviceSemaphore;
-                waitSemaphoreCount = 1;
-            }
-
-            uint signalSemaphoreCount = 0;
-            Vulkan.VkSemaphore signal = Vulkan.VkSemaphore.Null;
-            if (signalSemaphore != null)
-            {
-                signal = Util.AssertSubtype<Semaphore, VkSemaphore>(signalSemaphore).DeviceSemaphore;
-                signalSemaphoreCount = 1;
-            }
-
-            SubmitCommandList(cl, waitSemaphoreCount, &wait, signalSemaphoreCount, &signal, fence);
-        }
-
-        protected override void SubmitCommandsCore(
-            CommandList cl,
-            Semaphore[] waitSemaphores,
-            Semaphore[] signalSemaphores,
-            Fence fence)
-        {
-            Debug.Assert(waitSemaphores != null);
-            Debug.Assert(signalSemaphores != null);
-
-            uint waitSemaphoreCount = (uint)waitSemaphores.Length;
-            Vulkan.VkSemaphore* waitSemaphoresPtr = stackalloc Vulkan.VkSemaphore[(int)waitSemaphoreCount];
-            for (uint i = 0; i < waitSemaphoreCount; i++)
-            {
-                waitSemaphoresPtr[i] = Util.AssertSubtype<Semaphore, VkSemaphore>(waitSemaphores[i]).DeviceSemaphore;
-            }
-
-            uint signalSemaphoreCount = (uint)signalSemaphores.Length;
-            Vulkan.VkSemaphore* signalSemaphoresPtr = stackalloc Vulkan.VkSemaphore[(int)signalSemaphoreCount];
-            for (uint i = 0; i < signalSemaphoreCount; i++)
-            {
-                signalSemaphoresPtr[i] = Util.AssertSubtype<Semaphore, VkSemaphore>(signalSemaphores[i]).DeviceSemaphore;
-            }
-
-            SubmitCommandList(cl, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
+            SubmitCommandList(cl, 0, null, 0, null, fence);
         }
 
         private void SubmitCommandList(
@@ -276,39 +232,10 @@ namespace Veldrid.Vk
             vkResetFences(_device, 1, ref _imageAvailableFence);
         }
 
-        protected override void SwapBuffersCore(Semaphore waitSemaphore)
-        {
-            uint waitSemaphoreCount = 0;
-            Vulkan.VkSemaphore wait = Vulkan.VkSemaphore.Null;
-            if (waitSemaphore != null)
-            {
-                wait = Util.AssertSubtype<Semaphore, VkSemaphore>(waitSemaphore).DeviceSemaphore;
-                waitSemaphoreCount = 1;
-            }
-
-            SubmitSwapBuffers(&wait, waitSemaphoreCount);
-        }
-
-        protected override void SwapBuffersCore(Semaphore[] waitSemaphores)
-        {
-            Debug.Assert(waitSemaphores != null);
-
-            uint waitSemaphoreCount = (uint)waitSemaphores.Length;
-            Vulkan.VkSemaphore* waitSemaphoresPtr = stackalloc Vulkan.VkSemaphore[(int)waitSemaphoreCount];
-            for (uint i = 0; i < waitSemaphoreCount; i++)
-            {
-                waitSemaphoresPtr[i] = Util.AssertSubtype<Semaphore, VkSemaphore>(waitSemaphores[i]).DeviceSemaphore;
-            }
-
-            SubmitSwapBuffers(waitSemaphoresPtr, waitSemaphoreCount);
-        }
-
-        private void SubmitSwapBuffers(Vulkan.VkSemaphore* waitSemaphoresPtr, uint waitSemaphoreCount)
+        protected override void SwapBuffersCore()
         {
             // Then, present the swapchain.
             VkPresentInfoKHR presentInfo = VkPresentInfoKHR.New();
-            presentInfo.waitSemaphoreCount = waitSemaphoreCount;
-            presentInfo.pWaitSemaphores = waitSemaphoresPtr;
 
             VkSwapchainKHR swapchain = _scFB.Swapchain;
             presentInfo.swapchainCount = 1;
@@ -318,7 +245,7 @@ namespace Veldrid.Vk
 
             vkQueuePresentKHR(_presentQueue, ref presentInfo);
 
-            if (_scFB.AcquireNextImage(_device, Vulkan.VkSemaphore.Null, _imageAvailableFence))
+            if (_scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence))
             {
                 vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
                 vkResetFences(_device, 1, ref _imageAvailableFence);
@@ -374,9 +301,6 @@ namespace Veldrid.Vk
                         break;
                     case VkTextureView texView:
                         SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageViewEXT, texView.ImageView.Handle, name);
-                        break;
-                    case VkSemaphore semaphore:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.SemaphoreEXT, semaphore.DeviceSemaphore.Handle, name);
                         break;
                     case VkFence fence:
                         SetDebugMarkerName(VkDebugReportObjectTypeEXT.FenceEXT, fence.DeviceFence.Handle, name);

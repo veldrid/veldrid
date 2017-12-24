@@ -226,10 +226,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void SubmitCommandsCore(CommandList cl, Semaphore waitSemaphore, Semaphore signalSemaphore, Fence fence)
-            => SubmitCommandsCore(cl, (Semaphore[])null, null, fence);
-
-        protected override void SubmitCommandsCore(CommandList cl, Semaphore[] waitSemaphores, Semaphore[] signalSemaphores, Fence fence)
+        protected override void SubmitCommandsCore(CommandList cl, Fence fence)
         {
             D3D11CommandList d3d11CL = Util.AssertSubtype<CommandList, D3D11CommandList>(cl);
             lock (_immediateContextLock)
@@ -246,10 +243,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void SwapBuffersCore(Semaphore waitSemaphore)
-            => SwapBuffersCore((Semaphore[])null);
-
-        protected override void SwapBuffersCore(Semaphore[] waitSemaphores)
+        protected override void SwapBuffersCore()
         {
             _swapChain.Present(_syncInterval, PresentFlags.None);
         }

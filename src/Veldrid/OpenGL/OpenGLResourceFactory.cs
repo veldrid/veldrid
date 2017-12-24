@@ -75,11 +75,6 @@ namespace Veldrid.OpenGL
                 description.Usage);
         }
 
-        public override Semaphore CreateSemaphore()
-        {
-            return new OpenGLSemaphore();
-        }
-
         public override Fence CreateFence(bool signaled)
         {
             return new OpenGLFence(signaled);

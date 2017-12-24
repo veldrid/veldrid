@@ -172,15 +172,6 @@ namespace Veldrid.OpenGL
 
         protected override void SubmitCommandsCore(
             CommandList cl,
-            Semaphore waitSemaphore,
-            Semaphore signalSemaphore,
-            Fence fence)
-            => SubmitCommandsCore(cl, (Semaphore[])null, null, fence);
-
-        protected override void SubmitCommandsCore(
-            CommandList cl,
-            Semaphore[] waitSemaphores,
-            Semaphore[] signalSemaphores,
             Fence fence)
         {
             lock (_commandListDisposalLock)
@@ -236,10 +227,7 @@ namespace Veldrid.OpenGL
             _swapchainFramebuffer.Resize(width, height);
         }
 
-        protected override void SwapBuffersCore(Semaphore waitSemaphore)
-            => SwapBuffersCore((Semaphore[])null);
-
-        protected override void SwapBuffersCore(Semaphore[] waitSemaphores)
+        protected override void SwapBuffersCore()
         {
             WaitForIdle();
 

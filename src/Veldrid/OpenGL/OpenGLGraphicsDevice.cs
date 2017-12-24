@@ -34,7 +34,8 @@ namespace Veldrid.OpenGL
         private readonly ExecutionThread _executionThread;
 
         private readonly object _commandListDisposalLock = new object();
-        private readonly HashSet<OpenGLCommandList> _submittedCommandLists = new HashSet<OpenGLCommandList>();
+        private readonly Dictionary<OpenGLCommandList, int> _submittedCommandListCounts
+            = new Dictionary<OpenGLCommandList, int>();
         private readonly HashSet<OpenGLCommandList> _commandListsToDispose = new HashSet<OpenGLCommandList>();
 
         private readonly object _mappedResourceLock = new object();
@@ -182,17 +183,52 @@ namespace Veldrid.OpenGL
             Semaphore[] signalSemaphores,
             Fence fence)
         {
-            OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
             lock (_commandListDisposalLock)
             {
-                _submittedCommandLists.Add(glCommandList);
+                OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
+                OpenGLCommandEntryList entryList = glCommandList.CurrentCommands;
+                IncrementCount(glCommandList);
+                _executionThread.ExecuteCommands(entryList);
+                if (fence is OpenGLFence glFence)
+                {
+                    glFence.Set();
+                }
             }
-            _executionThread.ExecuteCommands(glCommandList);
+        }
 
-            if (fence is OpenGLFence glFence)
+        private int IncrementCount(OpenGLCommandList glCommandList)
+        {
+            if (_submittedCommandListCounts.TryGetValue(glCommandList, out int count))
             {
-                glFence.Set();
+                count += 1;
             }
+            else
+            {
+                count = 1;
+            }
+
+            _submittedCommandListCounts[glCommandList] = count;
+            return count;
+        }
+
+        private int DecrementCount(OpenGLCommandList glCommandList)
+        {
+            if (_submittedCommandListCounts.TryGetValue(glCommandList, out int count))
+            {
+                count -= 1;
+            }
+            else
+            {
+                count = -1;
+            }
+
+            _submittedCommandListCounts[glCommandList] = count;
+            return count;
+        }
+
+        private int GetCount(OpenGLCommandList glCommandList)
+        {
+            return _submittedCommandListCounts.TryGetValue(glCommandList, out int count) ? count : 0;
         }
 
         public override void ResizeMainWindow(uint width, uint height)
@@ -361,7 +397,7 @@ namespace Veldrid.OpenGL
         {
             lock (_commandListDisposalLock)
             {
-                if (_submittedCommandLists.Contains(commandList))
+                if (GetCount(commandList) > 0)
                 {
                     _commandListsToDispose.Add(commandList);
                 }
@@ -374,14 +410,17 @@ namespace Veldrid.OpenGL
 
         internal bool CheckCommandListDisposal(OpenGLCommandList commandList)
         {
+
             lock (_commandListDisposalLock)
             {
-                bool result = _submittedCommandLists.Remove(commandList);
-                Debug.Assert(result);
-                if (_commandListsToDispose.Remove(commandList))
+                int count = DecrementCount(commandList);
+                if (count == 0)
                 {
-                    commandList.DestroyResources();
-                    return true;
+                    if (_commandListsToDispose.Remove(commandList))
+                    {
+                        commandList.DestroyResources();
+                        return true;
+                    }
                 }
 
                 return false;
@@ -482,17 +521,18 @@ namespace Veldrid.OpenGL
             {
                 try
                 {
-                    if (workItem.CommandListToExecute != null)
+                    if (workItem.EntryListToExecute != null)
                     {
                         try
                         {
-                            workItem.CommandListToExecute.Commands.ExecuteAll(_gd._commandExecutor);
+                            workItem.EntryListToExecute.ExecuteAll(_gd._commandExecutor);
+                            workItem.EntryListToExecute.Parent.OnCompleted(workItem.EntryListToExecute);
                         }
                         finally
                         {
-                            if (!_gd.CheckCommandListDisposal(workItem.CommandListToExecute))
+                            if (!_gd.CheckCommandListDisposal(workItem.EntryListToExecute.Parent))
                             {
-                                workItem.CommandListToExecute.Reset();
+                                workItem.EntryListToExecute.Reset();
                             }
                         }
                     }
@@ -823,11 +863,11 @@ namespace Veldrid.OpenGL
                 mre.Wait();
             }
 
-            public void ExecuteCommands(OpenGLCommandList commandList)
+            public void ExecuteCommands(OpenGLCommandEntryList entryList)
             {
                 CheckExceptions();
-
-                _workItems.Add(new ExecutionThreadWorkItem(commandList));
+                entryList.Parent.OnSubmitted(entryList);
+                _workItems.Add(new ExecutionThreadWorkItem(entryList));
             }
 
             internal void UpdateBuffer(DeviceBuffer buffer, uint offsetInBytes, StagingBlock stagingBlock)
@@ -868,7 +908,7 @@ namespace Veldrid.OpenGL
             public readonly uint MapSubresource;
             public readonly bool Map; // false == Unmap
 
-            public readonly OpenGLCommandList CommandListToExecute;
+            public readonly OpenGLCommandEntryList EntryListToExecute;
 
             public readonly DeviceBuffer UpdateBuffer;
             public readonly uint UpdateBufferOffsetInBytes;
@@ -891,7 +931,7 @@ namespace Veldrid.OpenGL
                 MapSubresource = subresource;
                 Map = map;
 
-                CommandListToExecute = null;
+                EntryListToExecute = null;
 
                 UpdateBuffer = null;
                 UpdateBufferOffsetInBytes = 0;
@@ -903,9 +943,9 @@ namespace Veldrid.OpenGL
                 TerminateAction = null;
             }
 
-            public ExecutionThreadWorkItem(OpenGLCommandList commandList)
+            public ExecutionThreadWorkItem(OpenGLCommandEntryList commandList)
             {
-                CommandListToExecute = commandList;
+                EntryListToExecute = commandList;
 
                 ResourceToMap = null;
                 MapMode = 0;
@@ -928,7 +968,7 @@ namespace Veldrid.OpenGL
                 UpdateBufferOffsetInBytes = offsetInBytes;
                 UpdateBufferStagedSource = stagedSource;
 
-                CommandListToExecute = null;
+                EntryListToExecute = null;
 
                 ResourceToMap = null;
                 MapMode = 0;
@@ -943,7 +983,7 @@ namespace Veldrid.OpenGL
 
             public ExecutionThreadWorkItem(Action a, bool isTermination = false)
             {
-                CommandListToExecute = null;
+                EntryListToExecute = null;
 
                 ResourceToMap = null;
                 MapMode = 0;
@@ -972,7 +1012,7 @@ namespace Veldrid.OpenGL
             {
                 ResetEvent = mre;
 
-                CommandListToExecute = null;
+                EntryListToExecute = null;
 
                 ResourceToMap = null;
                 MapMode = 0;

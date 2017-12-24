@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Veldrid.OpenGL.NoAllocEntryList;
 
 namespace Veldrid.OpenGL
@@ -6,9 +8,13 @@ namespace Veldrid.OpenGL
     internal class OpenGLCommandList : CommandList
     {
         private readonly OpenGLGraphicsDevice _gd;
-        private readonly OpenGLCommandEntryList _commands = new OpenGLNoAllocCommandEntryList();
+        private OpenGLCommandEntryList _currentCommands;
 
-        internal OpenGLCommandEntryList Commands => _commands;
+        internal OpenGLCommandEntryList CurrentCommands => _currentCommands;
+
+        private readonly object _lock = new object();
+        private readonly List<OpenGLCommandEntryList> _availableLists = new List<OpenGLCommandEntryList>();
+        private readonly List<OpenGLCommandEntryList> _submittedLists = new List<OpenGLCommandEntryList>();
 
         public override string Name { get; set; }
 
@@ -19,107 +25,130 @@ namespace Veldrid.OpenGL
 
         public override void Begin()
         {
-            _commands.Begin();
+            if (_currentCommands != null)
+            {
+                _currentCommands.Dispose();
+            }
+
+            _currentCommands = GetFreeCommandList();
+            _currentCommands.Begin();
+        }
+
+        private OpenGLCommandEntryList GetFreeCommandList()
+        {
+            lock (_lock)
+            {
+                if (_availableLists.Count > 0)
+                {
+                    OpenGLCommandEntryList ret = _availableLists[_availableLists.Count - 1];
+                    _availableLists.RemoveAt(_availableLists.Count - 1);
+                    return ret;
+                }
+                else
+                {
+                    return new OpenGLNoAllocCommandEntryList(this);
+                }
+            }
         }
 
         protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
         {
-            _commands.ClearColorTarget(index, clearColor);
+            _currentCommands.ClearColorTarget(index, clearColor);
         }
 
         protected override void ClearDepthStencilCore(float depth, byte stencil)
         {
-            _commands.ClearDepthTarget(depth, stencil);
+            _currentCommands.ClearDepthTarget(depth, stencil);
         }
 
         protected override void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
-            _commands.Draw(vertexCount, instanceCount, vertexStart, instanceStart);
+            _currentCommands.Draw(vertexCount, instanceCount, vertexStart, instanceStart);
         }
 
         protected override void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
-            _commands.DrawIndexed(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
+            _currentCommands.DrawIndexed(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
         protected override void DrawIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
-            _commands.DrawIndirect(indirectBuffer, offset, drawCount, stride);
+            _currentCommands.DrawIndirect(indirectBuffer, offset, drawCount, stride);
         }
 
         protected override void DrawIndexedIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
-            _commands.DrawIndexedIndirect(indirectBuffer, offset, drawCount, stride);
+            _currentCommands.DrawIndexedIndirect(indirectBuffer, offset, drawCount, stride);
         }
 
         public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
         {
-            _commands.Dispatch(groupCountX, groupCountY, groupCountZ);
+            _currentCommands.Dispatch(groupCountX, groupCountY, groupCountZ);
         }
 
         protected override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
         {
-            _commands.DispatchIndirect(indirectBuffer, offset);
+            _currentCommands.DispatchIndirect(indirectBuffer, offset);
         }
 
         protected override void ResolveTextureCore(Texture source, Texture destination)
         {
-            _commands.ResolveTexture(source, destination);
+            _currentCommands.ResolveTexture(source, destination);
         }
 
         public override void End()
         {
-            _commands.End();
+            _currentCommands.End();
         }
 
         protected override void SetFramebufferCore(Framebuffer fb)
         {
-            _commands.SetFramebuffer(fb);
+            _currentCommands.SetFramebuffer(fb);
         }
 
         protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format)
         {
-            _commands.SetIndexBuffer(buffer, format);
+            _currentCommands.SetIndexBuffer(buffer, format);
         }
 
         protected override void SetPipelineCore(Pipeline pipeline)
         {
-            _commands.SetPipeline(pipeline);
+            _currentCommands.SetPipeline(pipeline);
         }
 
         protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs)
         {
-            _commands.SetGraphicsResourceSet(slot, rs);
+            _currentCommands.SetGraphicsResourceSet(slot, rs);
         }
 
         protected override void SetComputeResourceSetCore(uint slot, ResourceSet rs)
         {
-            _commands.SetComputeResourceSet(slot, rs);
+            _currentCommands.SetComputeResourceSet(slot, rs);
         }
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
-            _commands.SetScissorRect(index, x, y, width, height);
+            _currentCommands.SetScissorRect(index, x, y, width, height);
         }
 
         protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
         {
-            _commands.SetVertexBuffer(index, buffer);
+            _currentCommands.SetVertexBuffer(index, buffer);
         }
 
         public override void SetViewport(uint index, ref Viewport viewport)
         {
-            _commands.SetViewport(index, ref viewport);
+            _currentCommands.SetViewport(index, ref viewport);
         }
 
         internal void Reset()
         {
-            _commands.Reset();
+            _currentCommands.Reset();
         }
 
         public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            _commands.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);
+            _currentCommands.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }
 
         protected override void CopyBufferCore(
@@ -129,7 +158,7 @@ namespace Veldrid.OpenGL
             uint destinationOffset,
             uint sizeInBytes)
         {
-            _commands.CopyBuffer(source, sourceOffset, destination, destinationOffset, sizeInBytes);
+            _currentCommands.CopyBuffer(source, sourceOffset, destination, destinationOffset, sizeInBytes);
         }
 
         protected override void CopyTextureCore(
@@ -144,7 +173,7 @@ namespace Veldrid.OpenGL
             uint width, uint height, uint depth,
             uint layerCount)
         {
-            _commands.CopyTexture(
+            _currentCommands.CopyTexture(
                 source,
                 srcX, srcY, srcZ,
                 srcMipLevel,
@@ -157,6 +186,30 @@ namespace Veldrid.OpenGL
                 layerCount);
         }
 
+        public void OnSubmitted(OpenGLCommandEntryList entryList)
+        {
+            _currentCommands = null;
+            lock (_lock)
+            {
+                Debug.Assert(!_submittedLists.Contains(entryList));
+                _submittedLists.Add(entryList);
+
+                Debug.Assert(!_availableLists.Contains(entryList));
+            }
+        }
+
+        public void OnCompleted(OpenGLCommandEntryList entryList)
+        {
+            lock (_lock)
+            {
+                Debug.Assert(!_availableLists.Contains(entryList));
+                _availableLists.Add(entryList);
+
+                Debug.Assert(_submittedLists.Contains(entryList));
+                _submittedLists.Remove(entryList);
+            }
+        }
+
         public override void Dispose()
         {
             _gd.EnqueueDisposal(this);
@@ -164,7 +217,18 @@ namespace Veldrid.OpenGL
 
         public void DestroyResources()
         {
-            _commands.Dispose();
+            lock (_lock)
+            {
+                _currentCommands?.Dispose();
+                foreach (OpenGLCommandEntryList list in _availableLists)
+                {
+                    list.Dispose();
+                }
+                foreach (OpenGLCommandEntryList list in _submittedLists)
+                {
+                    list.Dispose();
+                }
+            }
         }
     }
 }

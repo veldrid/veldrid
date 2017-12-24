@@ -4,6 +4,7 @@ namespace Veldrid.OpenGL
 {
     internal interface OpenGLCommandEntryList
     {
+        OpenGLCommandList Parent { get; }
         void Begin();
         void ClearColorTarget(uint index, RgbaFloat clearColor);
         void ClearDepthTarget(float depth, byte stencil);

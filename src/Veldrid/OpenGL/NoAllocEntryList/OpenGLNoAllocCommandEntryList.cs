@@ -82,8 +82,11 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte DispatchIndirectEntryID = 22;
         private static readonly uint DispatchIndirectEntrySize = Util.USizeOf<NoAllocDispatchIndirectEntry>();
 
-        public OpenGLNoAllocCommandEntryList()
+        public OpenGLCommandList Parent { get; }
+
+        public OpenGLNoAllocCommandEntryList(OpenGLCommandList cl)
         {
+            Parent = cl;
             _currentBlock = EntryStorageBlock.New();
             _blocks.Add(_currentBlock);
         }

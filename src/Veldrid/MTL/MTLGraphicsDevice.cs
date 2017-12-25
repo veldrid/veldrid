@@ -68,7 +68,7 @@ namespace Veldrid.MTL
 
         public override Framebuffer SwapchainFramebuffer => _swapchainFB;
 
-        public override void ExecuteCommands(CommandList commandList)
+        protected override void SubmitCommandsCore(CommandList commandList, Fence fence)
         {
             MTLCommandList mtlCL = Util.AssertSubtype<CommandList, MTLCommandList>(commandList);
             mtlCL.Commit();
@@ -86,7 +86,7 @@ namespace Veldrid.MTL
             _swapchainFB.GetNextDrawable();
         }
 
-        public override void SwapBuffers()
+        protected override void SwapBuffersCore()
         {
             IntPtr currentDrawablePtr = _swapchainFB.CurrentDrawable.NativePtr;
             if (currentDrawablePtr != IntPtr.Zero)
@@ -113,7 +113,7 @@ namespace Veldrid.MTL
             throw new NotImplementedException();
         }
 
-        public override void WaitForIdle()
+        protected override void WaitForIdleCore()
         {
             // TODO: Probably need to wait on the last-committed MTLCommandBuffer.
         }
@@ -162,6 +162,21 @@ namespace Veldrid.MTL
         protected override void UnmapCore(MappableResource resource, uint subresource)
         {
             // Flush changes ?
+        }
+
+        public override bool WaitForFence(Fence fence, ulong nanosecondTimeout)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void ResetFence(Fence fence)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -67,5 +67,10 @@ namespace Veldrid.MTL
         {
             return new MTLTextureView(ref description, _gd);
         }
+
+        public override Fence CreateFence(bool signaled)
+        {
+            return new MTLFence(signaled);
+        }
     }
 }

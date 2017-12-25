@@ -509,64 +509,82 @@ namespace Veldrid.OpenGL
             {
                 try
                 {
-                    if (workItem.EntryListToExecute != null)
+                    switch (workItem.Type)
                     {
-                        try
-                        {
-                            workItem.EntryListToExecute.ExecuteAll(_gd._commandExecutor);
-                            workItem.EntryListToExecute.Parent.OnCompleted(workItem.EntryListToExecute);
-                        }
-                        finally
-                        {
-                            if (!_gd.CheckCommandListDisposal(workItem.EntryListToExecute.Parent))
+                        case WorkItemType.ExecuteList:
                             {
-                                workItem.EntryListToExecute.Reset();
+                                OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
+                                try
+                                {
+                                    list.ExecuteAll(_gd._commandExecutor);
+                                    list.Parent.OnCompleted(list);
+                                }
+                                finally
+                                {
+                                    if (!_gd.CheckCommandListDisposal(list.Parent))
+                                    {
+                                        list.Reset();
+                                    }
+                                }
                             }
-                        }
-                    }
-                    else if (workItem.ResourceToMap != null)
-                    {
-                        if (workItem.Map)
-                        {
-                            ExecuteMapResource(
-                                workItem.ResourceToMap,
-                                workItem.MapMode,
-                                workItem.MapSubresource,
-                                workItem.ResetEvent);
-                        }
-                        else
-                        {
-                            ExecuteUnmapResource(workItem.ResourceToMap, workItem.MapSubresource, workItem.ResetEvent);
-                        }
-                    }
-                    else if (workItem.UpdateBuffer != null)
-                    {
-                        StagingBlock stagingBlock = workItem.UpdateBufferStagedSource;
-                        fixed (byte* dataPtr = &stagingBlock.Array[0])
-                        {
-                            _gd._commandExecutor.UpdateBuffer(
-                                workItem.UpdateBuffer,
-                                workItem.UpdateBufferOffsetInBytes,
-                                (IntPtr)dataPtr,
-                                stagingBlock.SizeInBytes);
-                        }
-                        stagingBlock.Free();
-                    }
-                    else if (workItem.Delegate != null)
-                    {
-                        workItem.Delegate();
-                    }
-                    else if (workItem.ResetEvent != null)
-                    {
-                        // Wait for idle.
-                        _gd.FlushDisposables();
-                        workItem.ResetEvent.Set();
-                    }
-                    else
-                    {
-                        Debug.Assert(workItem.TerminateAction != null);
-                        workItem.TerminateAction();
-                        _terminated = true;
+                            break;
+                        case WorkItemType.Map:
+                            {
+                                MappableResource resourceToMap = (MappableResource)workItem.Object0;
+                                ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
+                                MapMode mode = (MapMode)workItem.UInt0;
+                                uint subresource = workItem.UInt1;
+                                bool map = workItem.UInt2 == 1 ? true : false;
+                                if (map)
+                                {
+                                    ExecuteMapResource(
+                                        resourceToMap,
+                                        mode,
+                                        subresource,
+                                        mre);
+                                }
+                                else
+                                {
+                                    ExecuteUnmapResource(resourceToMap, subresource, mre);
+                                }
+                            }
+                            break;
+                        case WorkItemType.UpdateBuffer:
+                            {
+                                DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
+                                byte[] stagingArray = (byte[])workItem.Object1;
+                                StagingMemoryPool pool = (StagingMemoryPool)workItem.Object2;
+                                uint offsetInBytes = workItem.UInt0;
+                                uint sizeInBytes = workItem.UInt1;
+
+                                fixed (byte* dataPtr = &stagingArray[0])
+                                {
+                                    _gd._commandExecutor.UpdateBuffer(
+                                        updateBuffer,
+                                        offsetInBytes,
+                                        (IntPtr)dataPtr,
+                                        sizeInBytes);
+                                }
+                                pool.Free(stagingArray);
+                            }
+                            break;
+                        case WorkItemType.GenericAction:
+                            {
+                                ((Action)workItem.Object0)();
+                            }
+                            break;
+                        case WorkItemType.SignalResetEvent:
+                            {
+                                _gd.FlushDisposables();
+                                ((ManualResetEventSlim)workItem.Object0).Set();
+                            }
+                            break;
+                        case WorkItemType.TerminateAction:
+                            {
+                                ((Action)workItem.Object0)();
+                                _terminated = true;
+                            }
+                            break;
                     }
                 }
                 catch (Exception e)
@@ -889,23 +907,27 @@ namespace Veldrid.OpenGL
             }
         }
 
+        public enum WorkItemType : byte
+        {
+            Map,
+            Unmap,
+            ExecuteList,
+            UpdateBuffer,
+            UpdateTexture,
+            GenericAction,
+            TerminateAction,
+            SignalResetEvent,
+        }
+
         private unsafe struct ExecutionThreadWorkItem
         {
-            public readonly MappableResource ResourceToMap;
-            public readonly MapMode MapMode;
-            public readonly uint MapSubresource;
-            public readonly bool Map; // false == Unmap
-
-            public readonly OpenGLCommandEntryList EntryListToExecute;
-
-            public readonly DeviceBuffer UpdateBuffer;
-            public readonly uint UpdateBufferOffsetInBytes;
-            public readonly StagingBlock UpdateBufferStagedSource;
-
-            public readonly ManualResetEventSlim ResetEvent;
-
-            public readonly Action Delegate;
-            public readonly Action TerminateAction;
+            public readonly WorkItemType Type;
+            public readonly object Object0;
+            public readonly object Object1;
+            public readonly object Object2;
+            public readonly uint UInt0;
+            public readonly uint UInt1;
+            public readonly uint UInt2; // TODO: Technically, our max data size could fit into just two UInt32's.
 
             public ExecutionThreadWorkItem(
                 MappableResource resource,
@@ -914,106 +936,62 @@ namespace Veldrid.OpenGL
                 bool map,
                 ManualResetEventSlim resetEvent)
             {
-                ResourceToMap = resource;
-                MapMode = mapMode;
-                MapSubresource = subresource;
-                Map = map;
+                Type = WorkItemType.Map;
+                Object0 = resource;
+                Object1 = resetEvent;
+                Object2 = null;
 
-                EntryListToExecute = null;
-
-                UpdateBuffer = null;
-                UpdateBufferOffsetInBytes = 0;
-                UpdateBufferStagedSource = default(StagingBlock);
-
-                ResetEvent = resetEvent;
-
-                Delegate = null;
-                TerminateAction = null;
+                UInt0 = (uint)mapMode;
+                UInt1 = subresource;
+                UInt2 = map ? 1u : 0u;
             }
 
             public ExecutionThreadWorkItem(OpenGLCommandEntryList commandList)
             {
-                EntryListToExecute = commandList;
+                Type = WorkItemType.ExecuteList;
+                Object0 = commandList;
+                Object1 = null;
+                Object2 = null;
 
-                ResourceToMap = null;
-                MapMode = 0;
-                MapSubresource = 0;
-                Map = false;
-
-                UpdateBuffer = null;
-                UpdateBufferOffsetInBytes = 0;
-                UpdateBufferStagedSource = default(StagingBlock);
-
-                ResetEvent = null;
-
-                Delegate = null;
-                TerminateAction = null;
+                UInt0 = 0;
+                UInt1 = 0;
+                UInt2 = 0;
             }
 
             public ExecutionThreadWorkItem(DeviceBuffer updateBuffer, uint offsetInBytes, StagingBlock stagedSource)
             {
-                UpdateBuffer = updateBuffer;
-                UpdateBufferOffsetInBytes = offsetInBytes;
-                UpdateBufferStagedSource = stagedSource;
+                Type = WorkItemType.UpdateBuffer;
+                Object0 = updateBuffer;
+                Object1 = stagedSource.Array;
+                Object2 = stagedSource.Pool;
 
-                EntryListToExecute = null;
-
-                ResourceToMap = null;
-                MapMode = 0;
-                MapSubresource = 0;
-                Map = false;
-
-                ResetEvent = null;
-
-                Delegate = null;
-                TerminateAction = null;
+                UInt0 = offsetInBytes;
+                UInt1 = stagedSource.SizeInBytes;
+                UInt2 = 0;
             }
 
             public ExecutionThreadWorkItem(Action a, bool isTermination = false)
             {
-                EntryListToExecute = null;
+                Type = isTermination ? WorkItemType.TerminateAction : WorkItemType.GenericAction;
+                Object0 = a;
+                Object1 = null;
+                Object2 = null;
 
-                ResourceToMap = null;
-                MapMode = 0;
-                MapSubresource = 0;
-                Map = false;
-
-                UpdateBuffer = null;
-                UpdateBufferOffsetInBytes = 0;
-                UpdateBufferStagedSource = default(StagingBlock);
-
-                ResetEvent = null;
-
-                if (isTermination)
-                {
-                    TerminateAction = a;
-                    Delegate = null;
-                }
-                else
-                {
-                    Delegate = a;
-                    TerminateAction = null;
-                }
+                UInt0 = 0;
+                UInt1 = 0;
+                UInt2 = 0;
             }
 
             public ExecutionThreadWorkItem(ManualResetEventSlim mre)
             {
-                ResetEvent = mre;
+                Type = WorkItemType.SignalResetEvent;
+                Object0 = mre;
+                Object1 = null;
+                Object2 = null;
 
-                EntryListToExecute = null;
-
-                ResourceToMap = null;
-                MapMode = 0;
-                MapSubresource = 0;
-                Map = false;
-
-                UpdateBuffer = null;
-                UpdateBufferOffsetInBytes = 0;
-                UpdateBufferStagedSource = default(StagingBlock);
-
-                Delegate = null;
-
-                TerminateAction = null;
+                UInt0 = 0;
+                UInt1 = 0;
+                UInt2 = 0;
             }
         }
 

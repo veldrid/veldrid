@@ -63,7 +63,7 @@ namespace Veldrid.OpenGL
                 if (_syncToVBlank != value)
                 {
                     _syncToVBlank = value;
-                    _executionThread.Run(() => _setSyncToVBlank(value));
+                    _executionThread.SetSyncToVerticalBlank(value);
                 }
             }
         }
@@ -231,11 +231,7 @@ namespace Veldrid.OpenGL
         {
             WaitForIdle();
 
-            _executionThread.Run(() =>
-            {
-                _swapBuffers();
-                FlushDisposables();
-            });
+            _executionThread.SwapBuffers();
         }
 
         protected override void WaitForIdleCore()
@@ -457,19 +453,7 @@ namespace Veldrid.OpenGL
 
         protected override void PlatformDispose()
         {
-            _executionThread.Terminate(() =>
-            {
-                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
-                uint error = glGetError();
-                if (error == (uint)ErrorCode.InvalidOperation)
-                {
-                    return;
-                }
-                _makeCurrent(_glContext);
-
-                //FlushDisposables();
-                _deleteContext(_glContext);
-            });
+            _executionThread.Terminate();
         }
 
         private class ExecutionThread
@@ -581,10 +565,33 @@ namespace Veldrid.OpenGL
                             break;
                         case WorkItemType.TerminateAction:
                             {
-                                ((Action)workItem.Object0)();
+                                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
+                                uint error = glGetError();
+                                if (error == (uint)ErrorCode.InvalidOperation)
+                                {
+                                    return;
+                                }
+                                _makeCurrent(_gd._glContext);
+
+                                _gd.FlushDisposables();
+                                _gd._deleteContext(_gd._glContext);
                                 _terminated = true;
                             }
                             break;
+                        case WorkItemType.SetSyncToVerticalBlank:
+                            {
+                                bool value = workItem.UInt0 == 1 ? true : false;
+                                _gd._setSyncToVBlank(value);
+                            }
+                            break;
+                        case WorkItemType.SwapBuffers:
+                            {
+                                _gd._swapBuffers();
+                                _gd.FlushDisposables();
+                            }
+                            break;
+                        default:
+                            throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }
                 }
                 catch (Exception e)
@@ -890,11 +897,11 @@ namespace Veldrid.OpenGL
                 _workItems.Add(new ExecutionThreadWorkItem(a));
             }
 
-            internal void Terminate(Action a)
+            internal void Terminate()
             {
                 CheckExceptions();
 
-                _workItems.Add(new ExecutionThreadWorkItem(a, isTermination: true));
+                _workItems.Add(new ExecutionThreadWorkItem(WorkItemType.TerminateAction));
             }
 
             internal void WaitForIdle()
@@ -904,6 +911,16 @@ namespace Veldrid.OpenGL
                 mre.Wait();
 
                 CheckExceptions();
+            }
+
+            internal void SetSyncToVerticalBlank(bool value)
+            {
+                _workItems.Add(new ExecutionThreadWorkItem(value));
+            }
+
+            internal void SwapBuffers()
+            {
+                _workItems.Add(new ExecutionThreadWorkItem(WorkItemType.SwapBuffers));
             }
         }
 
@@ -917,6 +934,8 @@ namespace Veldrid.OpenGL
             GenericAction,
             TerminateAction,
             SignalResetEvent,
+            SetSyncToVerticalBlank,
+            SwapBuffers,
         }
 
         private unsafe struct ExecutionThreadWorkItem
@@ -992,6 +1011,31 @@ namespace Veldrid.OpenGL
                 UInt0 = 0;
                 UInt1 = 0;
                 UInt2 = 0;
+            }
+
+            public ExecutionThreadWorkItem(bool value)
+            {
+                Type = WorkItemType.SetSyncToVerticalBlank;
+                Object0 = null;
+                Object1 = null;
+                Object2 = null;
+
+                UInt0 = value ? 1u : 0u;
+                UInt1 = 0;
+                UInt2 = 0;
+            }
+
+            public ExecutionThreadWorkItem(WorkItemType type)
+            {
+                Type = type;
+                Object0 = null;
+                Object1 = null;
+                Object2 = null;
+
+                UInt0 = 0;
+                UInt1 = 0;
+                UInt2 = 0;
+
             }
         }
 

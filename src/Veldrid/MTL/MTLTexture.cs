@@ -69,7 +69,9 @@ namespace Veldrid.MTL
                     totalStorageSize += pixelSize * levelWidth * levelHeight * levelDepth * ArrayLayers;
                 }
 
-                StagingBuffer = _gd.Device.newBufferWithLengthOptions((UIntPtr)totalStorageSize, 0);
+                StagingBuffer = _gd.Device.newBufferWithLengthOptions(
+                    (UIntPtr)totalStorageSize,
+                    MTLResourceOptions.StorageModeManaged);
             }
         }
 

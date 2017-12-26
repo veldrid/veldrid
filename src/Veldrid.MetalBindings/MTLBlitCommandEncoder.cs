@@ -43,6 +43,11 @@ namespace Veldrid.MetalBindings
                 destinationLevel,
                 destinationOrigin);
 
+        public void synchronizeResource(IntPtr resource)
+        {
+            objc_msgSend(NativePtr, "synchronizeResource:", resource);
+        }
+
         public void endEncoding() => objc_msgSend(NativePtr, "endEncoding");
     }
 }

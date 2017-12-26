@@ -108,9 +108,50 @@ namespace Veldrid.MTL
             Unsafe.CopyBlock(destOffsetPtr, source.ToPointer(), sizeInBytes);
         }
 
-        public override void UpdateTexture(Texture texture, IntPtr source, uint sizeInBytes, uint x, uint y, uint z, uint width, uint height, uint depth, uint mipLevel, uint arrayLayer)
+        public override void UpdateTexture(
+            Texture texture,
+            IntPtr source,
+            uint sizeInBytes,
+            uint x,
+            uint y,
+            uint z,
+            uint width,
+            uint height,
+            uint depth,
+            uint mipLevel,
+            uint arrayLayer)
         {
-            throw new NotImplementedException();
+            if (texture.Depth != 1)
+            {
+                throw new NotImplementedException();
+            }
+
+            MTLTexture mtlTex = Util.AssertSubtype<Texture, MTLTexture>(texture);
+            if (mtlTex.StagingBuffer.IsNull)
+            {
+                MTLRegion region = new MTLRegion(new MTLOrigin(x, y, z), new MTLSize(width, height, depth));
+                UIntPtr bytesPerRow = (UIntPtr)(width * height * FormatHelpers.GetSizeInBytes(texture.Format));
+                mtlTex.DeviceTexture.replaceRegion(
+                    region,
+                    (UIntPtr)mipLevel,
+                    (UIntPtr)arrayLayer,
+                    source.ToPointer(),
+                    bytesPerRow,
+                    UIntPtr.Zero); // 0 for non-3D Textures.
+            }
+            else
+            {
+                if (x != 0 || y != 0 || z != 0)
+                {
+                    throw new NotImplementedException();
+                }
+
+                System.Buffer.MemoryCopy(
+                    source.ToPointer(),
+                    mtlTex.StagingBuffer.contents(),
+                    sizeInBytes,
+                    sizeInBytes);
+            }
         }
 
         protected override void WaitForIdleCore()

@@ -17,7 +17,7 @@ namespace Veldrid.MTL
         private (float depth, byte stencil)? _depthClear;
         private MTLBuffer _indexBuffer;
         private MTLIndexType _indexType;
-        private MTLPipeline _graphicsPipeline;
+        private new MTLPipeline _graphicsPipeline;
 
         private MTLViewport[] _viewports = Array.Empty<MTLViewport>();
         private bool _viewportsChanged;
@@ -189,7 +189,13 @@ namespace Veldrid.MTL
             uint destinationOffset,
             uint sizeInBytes)
         {
-            throw new NotImplementedException();
+            EnsureBlitEncoder();
+            MTLBuffer mtlSrc = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(source);
+            MTLBuffer mtlDst = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(destination);
+            _bce.copy(
+                mtlSrc.DeviceBuffer, (UIntPtr)sourceOffset,
+                mtlDst.DeviceBuffer, (UIntPtr)destinationOffset,
+                (UIntPtr)sizeInBytes);
         }
 
         protected override void CopyTextureCore(
@@ -207,31 +213,49 @@ namespace Veldrid.MTL
             }
 
             EnsureBlitEncoder();
-
             MTLTexture srcMTLTexture = Util.AssertSubtype<Texture, MTLTexture>(source);
             MTLTexture dstMTLTexture = Util.AssertSubtype<Texture, MTLTexture>(destination);
 
-            MetalBindings.MTLBuffer srcBuffer = srcMTLTexture.StagingBuffer;
-            MetalBindings.MTLTexture dstTexture = dstMTLTexture.DeviceTexture;
-
-            uint pixelSize = FormatHelpers.GetSizeInBytes(srcMTLTexture.Format);
-
-            for (uint layer = 0; layer < layerCount; layer++)
+            if ((source.Usage & TextureUsage.Staging) != 0
+                && (destination.Usage & TextureUsage.Staging) == 0)
             {
-                uint sourceOffset = srcMTLTexture.GetSubresourceOffset(srcMipLevel, layer + srcBaseArrayLayer);
-                uint sourceBytesPerRow = width * pixelSize;
-                uint sourceBytesPerImage = width * height * pixelSize;
-                MTLSize sourceSize = new MTLSize(width, height, depth);
-                _bce.copyFromBuffer(
-                    srcBuffer,
-                    (UIntPtr)sourceOffset,
-                    (UIntPtr)sourceBytesPerRow,
-                    (UIntPtr)sourceBytesPerImage,
-                    sourceSize,
-                    dstTexture,
-                    (UIntPtr)(dstBaseArrayLayer + layer),
-                    (UIntPtr)dstMipLevel,
-                    new MTLOrigin(0, 0, 0));
+                // Staging -> Normal
+                MetalBindings.MTLBuffer srcBuffer = srcMTLTexture.StagingBuffer;
+                MetalBindings.MTLTexture dstTexture = dstMTLTexture.DeviceTexture;
+
+                uint pixelSize = FormatHelpers.GetSizeInBytes(srcMTLTexture.Format);
+
+                for (uint layer = 0; layer < layerCount; layer++)
+                {
+                    uint sourceOffset = srcMTLTexture.GetSubresourceOffset(srcMipLevel, layer + srcBaseArrayLayer);
+                    uint sourceBytesPerRow = width * pixelSize;
+                    uint sourceBytesPerImage = width * height * pixelSize;
+                    MTLSize sourceSize = new MTLSize(width, height, depth);
+                    _bce.copyFromBuffer(
+                        srcBuffer,
+                        (UIntPtr)sourceOffset,
+                        (UIntPtr)sourceBytesPerRow,
+                        (UIntPtr)sourceBytesPerImage,
+                        sourceSize,
+                        dstTexture,
+                        (UIntPtr)(dstBaseArrayLayer + layer),
+                        (UIntPtr)dstMipLevel,
+                        new MTLOrigin(0, 0, 0));
+                }
+            }
+            else if ((source.Usage & TextureUsage.Staging) != 0
+                && (destination.Usage & TextureUsage.Staging) != 0)
+            {
+                // Staging -> Staging
+                uint srcOffset = srcMTLTexture.GetSubresourceOffset(srcMipLevel, srcBaseArrayLayer);
+                uint dstOffset = dstMTLTexture.GetSubresourceOffset(dstMipLevel, dstBaseArrayLayer);
+                uint copySize = width * height * depth * FormatHelpers.GetSizeInBytes(source.Format);
+                _bce.copy(
+                    srcMTLTexture.StagingBuffer,
+                    (UIntPtr)srcOffset,
+                    dstMTLTexture.StagingBuffer,
+                    (UIntPtr)dstOffset,
+                    (UIntPtr)copySize);
             }
         }
 

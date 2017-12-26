@@ -80,6 +80,17 @@ namespace Veldrid.MetalBindings
             MTLOrigin i);
 
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern void objc_msgSend(
+            IntPtr receiver,
+            Selector selector,
+            MTLRegion a,
+            UIntPtr b,
+            UIntPtr c,
+            IntPtr d,
+            UIntPtr e,
+            UIntPtr f);
+
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern byte* bytePtr_objc_msgSend(IntPtr receiver, Selector selector);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern CGSize CGSize_objc_msgSend(IntPtr receiver, Selector selector);

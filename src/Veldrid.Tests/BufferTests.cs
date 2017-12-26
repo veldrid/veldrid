@@ -114,8 +114,8 @@ namespace Veldrid.Tests
             copyCL.CopyBuffer(src, 0, dst, 0, src.SizeInBytes);
             copyCL.End();
             GD.SubmitCommands(copyCL);
-            src.Dispose();
             GD.WaitForIdle();
+            src.Dispose();
 
             MappedResourceView<int> view = GD.Map<int>(dst, MapMode.Read);
             for (int i = 0; i < view.Count; i++)
@@ -167,6 +167,10 @@ namespace Veldrid.Tests
             {
                 return; // TODO
             }
+            if (GD.BackendType == GraphicsBackend.Metal)
+            {
+                return; // TODO
+            }
 
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
             MappedResourceView<int> view = GD.Map<int>(buffer, MapMode.ReadWrite);
@@ -214,5 +218,8 @@ namespace Veldrid.Tests
 #endif
 #if TEST_D3D11
     public class D3D11BufferTests : BufferTestBase<D3D11DeviceCreator> { }
+#endif
+#if TEST_METAL
+    public class MetalBufferTests : BufferTestBase<MetalDeviceCreator> { }
 #endif
 }

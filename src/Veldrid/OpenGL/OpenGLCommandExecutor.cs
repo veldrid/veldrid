@@ -971,7 +971,7 @@ namespace Veldrid.OpenGL
                 }
                 else
                 {
-                    if (FormatHelpers.IsCompressedFormat(srcGLTexture.Format))
+                    if (true || FormatHelpers.IsCompressedFormat(srcGLTexture.Format))
                     {
                         CopyRoundabout(
                             srcGLTexture, dstGLTexture,
@@ -997,7 +997,8 @@ namespace Veldrid.OpenGL
             uint dstX, uint dstY, uint dstZ, uint dstMipLevel, uint dstBaseArrayLayer,
             uint width, uint height, uint depth, uint layerCount, uint layer)
         {
-            Debug.Assert(FormatHelpers.IsCompressedFormat(srcGLTexture.Format));
+            bool isCompressed = FormatHelpers.IsCompressedFormat(srcGLTexture.Format);
+            //Debug.Assert(FormatHelpers.IsCompressedFormat(srcGLTexture.Format));
             if (srcGLTexture.Format != dstGLTexture.Format)
             {
                 throw new VeldridException("Copying to/from Textures with different formats is not supported.");
@@ -1008,15 +1009,22 @@ namespace Veldrid.OpenGL
             }
 
             uint pixelSize = FormatHelpers.GetSizeInBytes(srcGLTexture.Format);
-
-            int compressedSize;
-            glGetTexLevelParameteriv(
-                srcGLTexture.TextureTarget,
-                (int)srcMipLevel,
-                GetTextureParameter.TextureCompressedImageSize,
-                &compressedSize);
-            CheckLastError();
-            uint sizeInBytes = (uint)compressedSize;
+            uint sizeInBytes;
+            if (isCompressed)
+            {
+                int compressedSize;
+                glGetTexLevelParameteriv(
+                    srcGLTexture.TextureTarget,
+                    (int)srcMipLevel,
+                    GetTextureParameter.TextureCompressedImageSize,
+                    &compressedSize);
+                CheckLastError();
+                sizeInBytes = (uint)compressedSize;
+            }
+            else
+            {
+                sizeInBytes = width * height * pixelSize;
+            }
 
             FixedStagingBlock block = _stagingMemoryPool.GetFixedStagingBlock(sizeInBytes);
 
@@ -1026,28 +1034,82 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
-            if (_extensions.ARB_DirectStateAccess)
+            if (isCompressed)
             {
-                glGetCompressedTextureImage(
-                    srcGLTexture.Texture,
-                    (int)srcMipLevel,
-                    block.SizeInBytes,
-                    block.Data);
+                if (_extensions.ARB_DirectStateAccess)
+                {
+                    glGetCompressedTextureImage(
+                        srcGLTexture.Texture,
+                        (int)srcMipLevel,
+                        block.SizeInBytes,
+                        block.Data);
+                    CheckLastError();
+                }
+                else
+                {
+                    if (srcGLTexture.TextureTarget == TextureTarget.Texture2DArray
+                        || srcGLTexture.TextureTarget == TextureTarget.Texture2DMultisampleArray
+                        || srcGLTexture.TextureTarget == TextureTarget.TextureCubeMapArray)
+                    {
+                        throw new NotImplementedException();
+                    }
+
+                    glBindTexture(srcGLTexture.TextureTarget, srcGLTexture.Texture);
+                    CheckLastError();
+
+                    glGetCompressedTexImage(srcGLTexture.TextureTarget, (int)srcMipLevel, block.Data);
+                    CheckLastError();
+                }
+
+                glBindTexture(TextureTarget.Texture2D, dstGLTexture.Texture);
+                CheckLastError();
+
+                glCompressedTexSubImage2D(
+                    TextureTarget.Texture2D,
+                    (int)dstMipLevel, (int)dstX, (int)dstY,
+                    width, height,
+                    dstGLTexture.GLInternalFormat, block.SizeInBytes, block.Data);
                 CheckLastError();
             }
             else
             {
-                if (srcGLTexture.TextureTarget == TextureTarget.Texture2DArray
-                    || srcGLTexture.TextureTarget == TextureTarget.Texture2DMultisampleArray
-                    || srcGLTexture.TextureTarget == TextureTarget.TextureCubeMapArray)
+                if (_extensions.ARB_DirectStateAccess)
                 {
-                    throw new NotImplementedException();
+                    glGetTextureSubImage(
+                        srcGLTexture.Texture, (int)srcMipLevel, (int)srcX, (int)srcY, (int)srcZ,
+                        width, height, depth,
+                        srcGLTexture.GLPixelFormat, srcGLTexture.GLPixelType, block.SizeInBytes, block.Data);
+                    CheckLastError();
+                }
+                else
+                {
+                    if (srcX != 0 || srcY != 0 || srcZ != 0)
+                    {
+                        throw new NotImplementedException();
+                    }
+
+                    glBindTexture(TextureTarget.Texture2D, srcGLTexture.Texture);
+                    CheckLastError();
+
+                    glGetTexImage(
+                        TextureTarget.Texture2D,
+                        (int)srcMipLevel,
+                        srcGLTexture.GLPixelFormat,
+                        srcGLTexture.GLPixelType,
+                        block.Data);
+                    CheckLastError();
                 }
 
-                glBindTexture(srcGLTexture.TextureTarget, srcGLTexture.Texture);
+                glBindTexture(TextureTarget.Texture2D, dstGLTexture.Texture);
                 CheckLastError();
 
-                glGetCompressedTexImage(srcGLTexture.TextureTarget, (int)srcMipLevel, block.Data);
+                glTexSubImage2D(
+                    TextureTarget.Texture2D,
+                    (int)dstMipLevel, (int)dstX, (int)dstY,
+                    width, height,
+                    dstGLTexture.GLPixelFormat,
+                    dstGLTexture.GLPixelType,
+                    block.Data);
                 CheckLastError();
             }
 
@@ -1057,15 +1119,7 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
-            glBindTexture(TextureTarget.Texture2D, dstGLTexture.Texture);
-            CheckLastError();
-
-            glCompressedTexSubImage2D(
-                TextureTarget.Texture2D,
-                (int)dstMipLevel, (int)dstX, (int)dstY,
-                width, height,
-                dstGLTexture.GLInternalFormat, block.SizeInBytes, block.Data);
-            CheckLastError();
+            block.Free();
         }
 
         private static void CopyWithFBO(

@@ -44,7 +44,9 @@ namespace Veldrid.OpenGL
 
             if ((Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
             {
-                GLPixelFormat = GLPixelFormat.DepthComponent;
+                GLPixelFormat = FormatHelpers.IsStencilFormat(Format)
+                    ? GLPixelFormat.DepthStencil
+                    : GLPixelFormat.DepthComponent;
                 if (Format == PixelFormat.R16_UNorm)
                 {
                     GLInternalFormat = PixelInternalFormat.DepthComponent16;

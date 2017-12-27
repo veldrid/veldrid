@@ -88,6 +88,33 @@ namespace Veldrid.Tests
             {
                 for (int x = 0; x < 256; x++)
                 {
+                    uint mapIndex = (uint)(y * (map.RowPitch / sizeof(ushort)) + x);
+                    ushort value = (ushort)(y * 256 + x);
+                    Assert.Equal(value, mappedFloatPtr[mapIndex]);
+                }
+            }
+        }
+
+        [Fact]
+        public unsafe void Update_ThenMapRead_Mip0_Succeeds_R16UNorm()
+        {
+            Texture texture = RF.CreateTexture(
+                new TextureDescription(256, 256, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
+
+            ushort[] data = Enumerable.Range(0, 256 * 256).Select(i => (ushort)i).ToArray();
+
+            fixed (ushort* dataPtr = data)
+            {
+                GD.UpdateTexture(texture, (IntPtr)dataPtr, 256 * 256 * sizeof(ushort), 0, 0, 0, 256, 256, 1, 0, 0);
+            }
+
+            MappedResource map = GD.Map(texture, MapMode.Read, 0);
+            ushort* mappedFloatPtr = (ushort*)map.Data;
+
+            for (int y = 0; y < 256; y++)
+            {
+                for (int x = 0; x < 256; x++)
+                {
                     ushort index = (ushort)(y * 256 + x);
                     Assert.Equal(index, mappedFloatPtr[index]);
                 }
@@ -123,8 +150,9 @@ namespace Veldrid.Tests
             {
                 for (int x = 0; x < 256; x++)
                 {
-                    ushort index = (ushort)(y * 256 + x);
-                    Assert.Equal(index, mappedFloatPtr[index]);
+                    uint mapIndex = (uint)(y * (map.RowPitch / sizeof(ushort)) + x);
+                    ushort value = (ushort)(y * 256 + x);
+                    Assert.Equal(value, mappedFloatPtr[mapIndex]);
                 }
             }
         }

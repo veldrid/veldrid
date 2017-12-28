@@ -240,6 +240,11 @@ namespace Veldrid
         /// <returns>A new <see cref="ResourceSet"/>.</returns>
         public abstract ResourceSet CreateResourceSet(ref ResourceSetDescription description);
 
+        /// <summary>
+        /// Creates a new <see cref="Fence"/> in the given state.
+        /// </summary>
+        /// <param name="signaled">A value indicating whether the Fence should be in the signaled state when created.</param>
+        /// <returns>A new <see cref="Fence"/>.</returns>
         public abstract Fence CreateFence(bool signaled);
     }
 }

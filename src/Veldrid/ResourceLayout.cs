@@ -10,7 +10,7 @@ namespace Veldrid
     public abstract class ResourceLayout : DeviceResource, IDisposable
     {
 #if VALIDATE_USAGE
-        public readonly ResourceKind[] ResourceKinds;
+        internal readonly ResourceKind[] ResourceKinds;
 #endif
 
         internal ResourceLayout(ref ResourceLayoutDescription description)

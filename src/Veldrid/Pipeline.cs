@@ -37,7 +37,7 @@ namespace Veldrid
         public abstract void Dispose();
 
 #if VALIDATE_USAGE
-        public OutputDescription GraphicsOutputDescription { get; }
+        internal OutputDescription GraphicsOutputDescription { get; }
 #endif
     }
 }

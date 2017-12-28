@@ -49,22 +49,85 @@ namespace Veldrid
         /// </summary>
         /// <param name="commandList">The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
         /// been previously called on this object.</param>
+        /// <param name="fence">A <see cref="Fence"/> which will become signaled after this submission fully completes
+        /// execution.</param>
         public void SubmitCommands(CommandList commandList, Fence fence) => SubmitCommandsCore(commandList, fence);
 
         protected abstract void SubmitCommandsCore(
             CommandList commandList,
             Fence fence);
 
-        public bool WaitForFence(Fence fence) => WaitForFence(fence, ulong.MaxValue);
+        /// <summary>
+        /// Blocks the calling thread until the given <see cref="Fence"/> becomes signaled.
+        /// </summary>
+        /// <param name="fence">The <see cref="Fence"/> instance to wait on.</param>
+        public void WaitForFence(Fence fence)
+        {
+            if (!WaitForFence(fence, ulong.MaxValue))
+            {
+                throw new VeldridException("The operation timed out before the Fence was signaled.");
+            }
+        }
+
+        /// <summary>
+        /// Blocks the calling thread until the given <see cref="Fence"/> becomes signaled, or until a time greater than the
+        /// given TimeSpan has elapsed.
+        /// </summary>
+        /// <param name="fence">The <see cref="Fence"/> instance to wait on.</param>
+        /// <param name="timeout">A TimeSpan indicating the maximum time to wait on the Fence.</param>
+        /// <returns>True if the Fence was signaled. False if the timeout was reached instead.</returns>
         public bool WaitForFence(Fence fence, TimeSpan timeout)
             => WaitForFence(fence, (ulong)timeout.TotalMilliseconds * 1_000_000);
+        /// <summary>
+        /// Blocks the calling thread until the given <see cref="Fence"/> becomes signaled, or until a time greater than the
+        /// given TimeSpan has elapsed.
+        /// </summary>
+        /// <param name="fence">The <see cref="Fence"/> instance to wait on.</param>
+        /// <param name="nanosecondTimeout">A value in nanoseconds, indicating the maximum time to wait on the Fence.</param>
+        /// <returns>True if the Fence was signaled. False if the timeout was reached instead.</returns>
         public abstract bool WaitForFence(Fence fence, ulong nanosecondTimeout);
 
-        public bool WaitForFences(Fence[] fences, bool waitAll) => WaitForFences(fences, waitAll, ulong.MaxValue);
+        /// <summary>
+        /// Blocks the calling thread until one or all of the given <see cref="Fence"/> instances have become signaled.
+        /// </summary>
+        /// <param name="fences">An array of <see cref="Fence"/> objects to wait on.</param>
+        /// <param name="waitAll">If true, then this method blocks until all of the given Fences become signaled.
+        /// If false, then this method only waits until one of the Fences become signaled.</param>
+        public void WaitForFences(Fence[] fences, bool waitAll)
+        {
+            if (!WaitForFences(fences, waitAll, ulong.MaxValue))
+            {
+                throw new VeldridException("The operation timed out before the Fence(s) were signaled.");
+            }
+        }
+
+        /// <summary>
+        /// Blocks the calling thread until one or all of the given <see cref="Fence"/> instances have become signaled,
+        /// or until the given timeout has been reached.
+        /// </summary>
+        /// <param name="fences">An array of <see cref="Fence"/> objects to wait on.</param>
+        /// <param name="waitAll">If true, then this method blocks until all of the given Fences become signaled.
+        /// If false, then this method only waits until one of the Fences become signaled.</param>
+        /// <param name="timeout">A TimeSpan indicating the maximum time to wait on the Fences.</param>
+        /// <returns>True if the Fence was signaled. False if the timeout was reached instead.</returns>
         public bool WaitForFences(Fence[] fences, bool waitAll, TimeSpan timeout)
             => WaitForFences(fences, waitAll, (ulong)timeout.TotalMilliseconds * 1_000_000);
+
+        /// <summary>
+        /// Blocks the calling thread until one or all of the given <see cref="Fence"/> instances have become signaled,
+        /// or until the given timeout has been reached.
+        /// </summary>
+        /// <param name="fences">An array of <see cref="Fence"/> objects to wait on.</param>
+        /// <param name="waitAll">If true, then this method blocks until all of the given Fences become signaled.
+        /// If false, then this method only waits until one of the Fences become signaled.</param>
+        /// <param name="nanosecondTimeout">A value in nanoseconds, indicating the maximum time to wait on the Fence.</param>
+        /// <returns>True if the Fence was signaled. False if the timeout was reached instead.</returns>
         public abstract bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout);
 
+        /// <summary>
+        /// Resets the given <see cref="Fence"/> to the unsignaled state.
+        /// </summary>
+        /// <param name="fence">The <see cref="Fence"/> instance to reset.</param>
         public abstract void ResetFence(Fence fence);
 
         /// <summary>
@@ -338,6 +401,12 @@ namespace Veldrid
             IntPtr source,
             uint sizeInBytes);
 
+        /// <summary>
+        /// Adds the given object to a deferred disposal list, which will be processed when this GraphicsDevice becomes idle.
+        /// This method can be used to safely dispose a device resource which may be in use at the time this method is called,
+        /// but which will no longer be in use when the device is idle.
+        /// </summary>
+        /// <param name="disposable">An object to dispose when this instance becomes idle.</param>
         public void DisposeWhenIdle(IDisposable disposable)
         {
             lock (_deferredDisposalLock)

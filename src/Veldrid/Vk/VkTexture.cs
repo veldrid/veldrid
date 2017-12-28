@@ -125,16 +125,21 @@ namespace Veldrid.Vk
             else
             {
                 // Linear images must have one array layer and mip level.
+                // Generally, they also cannot be 3-dimensional.
                 imageCI.arrayLayers = 1;
                 imageCI.mipLevels = 1;
+                imageCI.extent.depth = 1;
 
                 _stagingImages = new VkImage[subresourceCount];
                 _stagingMemories = new VkMemoryBlock[subresourceCount];
-                for (uint arrayLayer = 0; arrayLayer < ArrayLayers; arrayLayer++)
+
+                uint outer = Depth > 1 ? Depth : ArrayLayers;
+
+                for (uint zSlice = 0; zSlice < outer; zSlice++)
                 {
                     for (uint level = 0; level < MipLevels; level++)
                     {
-                        uint subresource = CalculateSubresource(level, arrayLayer);
+                        uint subresource = CalculateSubresource(level, zSlice);
                         Util.GetMipDimensions(
                             this,
                             level,

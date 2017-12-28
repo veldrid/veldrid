@@ -971,7 +971,7 @@ namespace Veldrid.OpenGL
                 }
                 else
                 {
-                    if (true || FormatHelpers.IsCompressedFormat(srcGLTexture.Format))
+                    if (FormatHelpers.IsCompressedFormat(srcGLTexture.Format))
                     {
                         CopyRoundabout(
                             srcGLTexture, dstGLTexture,

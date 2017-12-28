@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace Veldrid.Tests
@@ -191,6 +192,40 @@ namespace Veldrid.Tests
             {
                 Assert.Equal(view[i], data[i]);
             }
+        }
+
+        [Fact]
+        public unsafe void UpdateThenRead_3D()
+        {
+            Texture tex3D = RF.CreateTexture(new TextureDescription(
+                10, 10, 10, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            RgbaByte[] data = new RgbaByte[10 * 10 * 10];
+            for (int z = 0; z < tex3D.Depth; z++)
+                for (int y = 0; y < tex3D.Height; y++)
+                    for (int x = 0; x < tex3D.Width; x++)
+                    {
+                        int index = (int)(z * tex3D.Width * tex3D.Height + y * tex3D.Height + x);
+                        data[index] = new RgbaByte((byte)x, (byte)y, (byte)z, 1);
+                    }
+
+            fixed (RgbaByte* dataPtr = data)
+            {
+                GD.UpdateTexture(tex3D, (IntPtr)dataPtr, (uint)(data.Length * Unsafe.SizeOf<RgbaByte>()),
+                    0, 0, 0,
+                    tex3D.Width, tex3D.Height, tex3D.Depth,
+                    0, 0);
+            }
+
+            MappedResourceView<RgbaByte> view = GD.Map<RgbaByte>(tex3D, MapMode.Read, 0);
+            for (int z = 0; z < tex3D.Depth; z++)
+                for (int y = 0; y < tex3D.Height; y++)
+                    for (int x = 0; x < tex3D.Width; x++)
+                    {
+                        Assert.Equal(new RgbaByte((byte)x, (byte)y, (byte)z, 1), view[x, y, z]);
+                    }
+
+            GD.Unmap(tex3D);
         }
     }
 

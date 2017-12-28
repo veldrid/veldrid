@@ -762,7 +762,8 @@ namespace Veldrid.OpenGL
                                 (IntPtr)block.Data,
                                 sizeInBytes,
                                 subresource,
-                                rowPitch);
+                                rowPitch,
+                                depthPitch);
                             info.RefCount = 1;
                             info.Mode = mode;
                             info.StagingBlock = block;

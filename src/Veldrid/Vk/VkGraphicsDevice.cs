@@ -94,6 +94,20 @@ namespace Veldrid.Vk
             vkResetFences(_device, 1, ref _imageAvailableFence);
 
             PostDeviceCreated();
+
+            foreach (var format in Enum.GetValues(typeof(VkFormat)))
+            {
+                var f = (VkFormat)format;
+                var result = vkGetPhysicalDeviceImageFormatProperties(_physicalDevice, f, VkImageType.Image3D, VkImageTiling.Optimal, VkImageUsageFlags.TransferDst | VkImageUsageFlags.TransferSrc, VkImageCreateFlags.None, out var props);
+                if (result == VkResult.ErrorFormatNotSupported)
+                {
+                    Console.WriteLine($"Format {f} is not supported for 3D images.");
+                }
+                else
+                {
+                    Console.WriteLine($"Format {f} is supported. Dimensions: {props.maxExtent.width}, {props.maxExtent.height}, {props.maxExtent.depth}");
+                }
+            }
         }
 
         public override ResourceFactory ResourceFactory { get; }
@@ -678,6 +692,11 @@ namespace Veldrid.Vk
             else
             {
                 VkTexture texture = Util.AssertSubtype<MappableResource, VkTexture>(resource);
+                if (texture.Depth != 1)
+                {
+                    throw new NotImplementedException("Mapping 3D Vulkan Textures is not yet implemented.");
+                }
+
                 memoryBlock = texture.GetMemoryBlock(subresource);
                 VkSubresourceLayout layout = texture.GetSubresourceLayout(subresource);
                 offset = (uint)layout.offset;
@@ -702,7 +721,8 @@ namespace Veldrid.Vk
                 (IntPtr)dataPtr,
                 sizeInBytes,
                 subresource,
-                rowPitch);
+                rowPitch,
+                depthPitch);
         }
 
         protected override void UnmapCore(MappableResource resource, uint subresource)
@@ -923,6 +943,10 @@ namespace Veldrid.Vk
 
             if (createStaging)
             {
+                if (depth != 1)
+                {
+                    throw new NotImplementedException("Updating non-staging 3D Vulkan Textures is not yet implemented.");
+                }
                 // If the destination texture is not a staging texture, then create a temporary one.
                 CreateImage(
                     Device,
@@ -951,6 +975,7 @@ namespace Veldrid.Vk
             }
             else
             {
+                uint zSLice = depth == 1 ? arrayLayer : z;
                 uint subresource = tex.CalculateSubresource(mipLevel, arrayLayer);
                 mappedPtr = tex.GetStagingMemoryBlock(subresource).BlockMappedPointer;
 

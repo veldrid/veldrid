@@ -15,7 +15,7 @@ namespace Veldrid.D3D11
         {
             D3D11Texture d3dTex = Util.AssertSubtype<Texture, D3D11Texture>(description.Target);
             ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription();
-            srvDesc.Format = D3D11Formats.GetViewFormat(d3dTex.DeviceTexture.Description.Format);
+            srvDesc.Format = D3D11Formats.GetViewFormat(d3dTex.DxgiFormat);
 
             if ((d3dTex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
             {
@@ -63,7 +63,7 @@ namespace Veldrid.D3D11
             if ((d3dTex.Usage & TextureUsage.Storage) == TextureUsage.Storage)
             {
                 UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription();
-                uavDesc.Format = D3D11Formats.GetViewFormat(d3dTex.DeviceTexture.Description.Format);
+                uavDesc.Format = D3D11Formats.GetViewFormat(d3dTex.DxgiFormat);
 
                 if ((d3dTex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
                 {

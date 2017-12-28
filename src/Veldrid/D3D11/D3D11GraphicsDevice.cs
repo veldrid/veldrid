@@ -334,7 +334,8 @@ namespace Veldrid.D3D11
                                 db.DataPointer,
                                 (uint)ds.Length,
                                 subresource,
-                                (uint)db.RowPitch);
+                                (uint)db.RowPitch,
+                                (uint)db.SlicePitch);
                             info.RefCount = 1;
                             info.Mode = mode;
                             _mappedResources.Add(key, info);
@@ -446,7 +447,7 @@ namespace Veldrid.D3D11
             uint mipLevel,
             uint arrayLayer)
         {
-            Texture2D deviceTexture = Util.AssertSubtype<Texture, D3D11Texture>(texture).DeviceTexture;
+            D3D11Texture d3dTex = Util.AssertSubtype<Texture, D3D11Texture>(texture);
             bool useMap = (texture.Usage & TextureUsage.Staging) == TextureUsage.Staging;
             uint blockSize = 1;
             if (texture.Format == PixelFormat.BC3_UNorm)
@@ -461,19 +462,25 @@ namespace Veldrid.D3D11
 
                 uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
                 uint denseRowSize = width * pixelSizeInBytes * blockSize;
+                uint denseSliceSize = width * height * pixelSizeInBytes;
 
-                if (map.RowPitch == denseRowSize)
+                if (map.RowPitch == denseRowSize && map.DepthPitch == denseSliceSize)
                 {
                     System.Buffer.MemoryCopy(source.ToPointer(), map.Data.ToPointer(), sizeInBytes, sizeInBytes);
                 }
                 else
                 {
-                    for (uint yy = 0; yy < height; yy++)
-                    {
-                        byte* dstRowStart = ((byte*)map.Data) + (map.RowPitch * yy);
-                        byte* srcRowStart = ((byte*)source.ToPointer()) + (width * yy * pixelSizeInBytes);
-                        Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
-                    }
+                    for (uint zz = 0; zz < depth; zz++)
+                        for (uint yy = 0; yy < height; yy++)
+                        {
+                            byte* dstRowStart = ((byte*)map.Data)
+                                + (map.DepthPitch * zz)
+                                + (map.RowPitch * yy);
+                            byte* srcRowStart = ((byte*)source.ToPointer())
+                                + (height * width * zz * pixelSizeInBytes)
+                                + (width * yy * pixelSizeInBytes);
+                            Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
+                        }
                 }
 
                 UnmapCore(texture, subresource);
@@ -491,7 +498,13 @@ namespace Veldrid.D3D11
                 uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture.Format) * width;
                 lock (_immediateContextLock)
                 {
-                    _immediateContext.UpdateSubresource(deviceTexture, subresource, resourceRegion, source, (int)srcRowPitch, 0);
+                    _immediateContext.UpdateSubresource(
+                        d3dTex.DeviceTexture,
+                        subresource,
+                        resourceRegion,
+                        source,
+                        (int)srcRowPitch,
+                        0);
                 }
             }
         }

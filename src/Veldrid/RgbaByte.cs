@@ -53,5 +53,14 @@
             B = b;
             A = a;
         }
+
+        /// <summary>
+        /// Returns a string representation of this color.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.Format("R:{0}, G:{1}, B:{2}, A:{3}", R, G, B, A);
+        }
     }
 }

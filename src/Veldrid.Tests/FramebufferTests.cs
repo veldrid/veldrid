@@ -8,7 +8,7 @@ namespace Veldrid.Tests
         public void NoDepthTarget_ClearAllColors_Succeeds()
         {
             Texture colorTarget = RF.CreateTexture(
-                new TextureDescription(1024, 1024, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+                TextureDescription.Texture2D(1024, 1024, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
             Framebuffer fb = RF.CreateFramebuffer(new FramebufferDescription(null, colorTarget));
 
             CommandList cl = RF.CreateCommandList();
@@ -20,7 +20,7 @@ namespace Veldrid.Tests
             GD.WaitForIdle();
 
             Texture staging = RF.CreateTexture(
-                new TextureDescription(1024, 1024, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
+                TextureDescription.Texture2D(1024, 1024, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
 
             cl.Begin();
             cl.CopyTexture(
@@ -43,7 +43,7 @@ namespace Veldrid.Tests
         public void NoDepthTarget_ClearDepth_Fails()
         {
             Texture colorTarget = RF.CreateTexture(
-                new TextureDescription(1024, 1024, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+                TextureDescription.Texture2D(1024, 1024, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
             Framebuffer fb = RF.CreateFramebuffer(new FramebufferDescription(null, colorTarget));
 
             CommandList cl = RF.CreateCommandList();
@@ -56,7 +56,7 @@ namespace Veldrid.Tests
         public void NoColorTarget_ClearColor_Fails()
         {
             Texture depthTarget = RF.CreateTexture(
-                new TextureDescription(1024, 1024, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil));
+                TextureDescription.Texture2D(1024, 1024, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil));
             Framebuffer fb = RF.CreateFramebuffer(new FramebufferDescription(depthTarget));
 
             CommandList cl = RF.CreateCommandList();
@@ -68,8 +68,8 @@ namespace Veldrid.Tests
         [Fact]
         public void ClearColorTarget_OutOfRange_Fails()
         {
-            TextureDescription desc = new TextureDescription(
-                1024, 1024, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget);
+            TextureDescription desc = TextureDescription.Texture2D(
+                1024, 1024, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget);
             Texture colorTarget0 = RF.CreateTexture(desc);
             Texture colorTarget1 = RF.CreateTexture(desc);
             Framebuffer fb = RF.CreateFramebuffer(new FramebufferDescription(null, colorTarget0, colorTarget1));

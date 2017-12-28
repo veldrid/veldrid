@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using SharpDX.Direct3D11;
 
 namespace Veldrid.D3D11
@@ -14,9 +15,10 @@ namespace Veldrid.D3D11
         public override uint ArrayLayers { get; }
         public override PixelFormat Format { get; }
         public override TextureUsage Usage { get; }
+        public override TextureType Type { get; }
         public override TextureSampleCount SampleCount { get; }
 
-        public Texture2D DeviceTexture { get; }
+        public Resource DeviceTexture { get; }
         public SharpDX.DXGI.Format DxgiFormat { get; }
 
         public D3D11Texture(Device device, ref TextureDescription description)
@@ -28,6 +30,7 @@ namespace Veldrid.D3D11
             ArrayLayers = description.ArrayLayers;
             Format = description.Format;
             Usage = description.Usage;
+            Type = description.Type;
             SampleCount = description.SampleCount;
 
             DxgiFormat = D3D11Formats.ToDxgiFormat(
@@ -68,21 +71,58 @@ namespace Veldrid.D3D11
                 arraySize *= 6;
             }
 
-            Texture2DDescription deviceDescription = new Texture2DDescription()
+            if (Type == TextureType.Texture1D)
             {
-                Width = (int)description.Width,
-                Height = (int)description.Height,
-                MipLevels = (int)description.MipLevels,
-                ArraySize = arraySize,
-                Format = DxgiFormat,
-                BindFlags = bindFlags,
-                CpuAccessFlags = cpuFlags,
-                Usage = resourceUsage,
-                SampleDescription = new SharpDX.DXGI.SampleDescription((int)FormatHelpers.GetSampleCountUInt32(SampleCount), 0),
-                OptionFlags = optionFlags,
-            };
+                Texture1DDescription desc1D = new Texture1DDescription()
+                {
+                    Width = (int)description.Width,
+                    MipLevels = (int)description.MipLevels,
+                    ArraySize = arraySize,
+                    Format = DxgiFormat,
+                    BindFlags = bindFlags,
+                    CpuAccessFlags = cpuFlags,
+                    Usage = resourceUsage,
+                    OptionFlags = optionFlags,
+                };
 
-            DeviceTexture = new Texture2D(device, deviceDescription);
+                DeviceTexture = new Texture1D(device, desc1D);
+            }
+            else if (Type == TextureType.Texture2D)
+            {
+                Texture2DDescription deviceDescription = new Texture2DDescription()
+                {
+                    Width = (int)description.Width,
+                    Height = (int)description.Height,
+                    MipLevels = (int)description.MipLevels,
+                    ArraySize = arraySize,
+                    Format = DxgiFormat,
+                    BindFlags = bindFlags,
+                    CpuAccessFlags = cpuFlags,
+                    Usage = resourceUsage,
+                    SampleDescription = new SharpDX.DXGI.SampleDescription((int)FormatHelpers.GetSampleCountUInt32(SampleCount), 0),
+                    OptionFlags = optionFlags,
+                };
+
+                DeviceTexture = new Texture2D(device, deviceDescription);
+            }
+            else
+            {
+                Debug.Assert(Type == TextureType.Texture3D);
+                Texture3DDescription desc3D = new Texture3DDescription()
+                {
+                    Width = (int)description.Width,
+                    Height = (int)description.Height,
+                    Depth = (int)description.Depth,
+                    MipLevels = (int)description.MipLevels,
+                    Format = DxgiFormat,
+                    BindFlags = bindFlags,
+                    CpuAccessFlags = cpuFlags,
+                    Usage = resourceUsage,
+                    OptionFlags = optionFlags,
+                };
+
+                DeviceTexture = new Texture3D(device, desc3D);
+            }
         }
 
         public D3D11Texture(Texture2D existingTexture)

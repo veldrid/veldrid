@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Veldrid.OpenGL
+namespace Veldrid
 {
     internal unsafe class StagingMemoryPool
     {
@@ -37,17 +37,29 @@ namespace Veldrid.OpenGL
 
         public void Free(StagingBlock block)
         {
-            _arrayPool.Return(block.Array);
+            bool clearArray = false;
+#if DEBUG
+            clearArray = true;
+#endif
+            _arrayPool.Return(block.Array, clearArray);
         }
 
         public void Free(FixedStagingBlock block)
         {
-            _arrayPool.Return(block.Array);
+            bool clearArray = false;
+#if DEBUG
+            clearArray = true;
+#endif
+            _arrayPool.Return(block.Array, clearArray);
         }
 
         public void Free(byte[] array)
         {
-            _arrayPool.Return(array);
+            bool clearArray = false;
+#if DEBUG
+            clearArray = true;
+#endif
+            _arrayPool.Return(array, clearArray);
         }
     }
 

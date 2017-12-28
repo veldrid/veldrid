@@ -49,6 +49,10 @@ namespace Veldrid
         /// </summary>
         public abstract TextureUsage Usage { get; }
         /// <summary>
+        /// The <see cref="TextureType"/> of this instance.
+        /// </summary>
+        public abstract TextureType Type { get; }
+        /// <summary>
         /// The number of samples in this instance. If this returns any value other than <see cref="TextureSampleCount.Count1"/>,
         /// then this instance is a multipsample texture.
         /// </summary>

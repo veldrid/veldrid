@@ -210,6 +210,24 @@ namespace Veldrid.OpenGLBinding
         private static glPixelStorei_t p_glPixelStorei;
         public static void glPixelStorei(PixelStoreParameter pname, int param) => p_glPixelStorei(pname, param);
 
+        private delegate void glTexSubImage1D_t(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            uint width,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* pixels);
+        private static glTexSubImage1D_t p_glTexSubImage1D;
+        public static void glTexSubImage1D(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            uint width,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* pixels) => p_glTexSubImage1D(target, level, xoffset, width, format, type, pixels);
+
         private delegate void glTexSubImage2D_t(
             TextureTarget target,
             int level,
@@ -464,6 +482,26 @@ namespace Veldrid.OpenGLBinding
         private static glNamedBufferData_t p_glNamedBufferData;
         public static void glNamedBufferData(uint buffer, uint size, void* data, BufferUsageHint usage)
             => p_glNamedBufferData(buffer, size, data, usage);
+
+        private delegate void glTexImage1D_t(
+            TextureTarget target,
+            int level,
+            PixelInternalFormat internalFormat,
+            uint width,
+            int border,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* data);
+        private static glTexImage1D_t p_glTexImage1D;
+        public static void glTexImage1D(
+            TextureTarget target,
+            int level,
+            PixelInternalFormat internalFormat,
+            uint width,
+            int border,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* data) => p_glTexImage1D(target, level, internalFormat, width, border, format, type, data);
 
         private delegate void glTexImage2D_t(
             TextureTarget target,
@@ -1018,6 +1056,24 @@ namespace Veldrid.OpenGLBinding
         public static void glCreateTextures(TextureTarget target, uint n, uint* textures)
             => p_glCreateTextures(target, n, textures);
 
+        private delegate void glCompressedTexSubImage1D_t(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            uint width,
+            PixelInternalFormat internalformat,
+            uint imageSize,
+            void* data);
+        private static glCompressedTexSubImage1D_t p_glCompressedTexSubImage1D;
+        public static void glCompressedTexSubImage1D(
+            TextureTarget target,
+            int level,
+            int xoffset,
+            uint width,
+            PixelInternalFormat internalformat,
+            uint imageSize,
+            void* data) => p_glCompressedTexSubImage1D(target, level, xoffset, width, internalformat, imageSize, data);
+
         private delegate void glCompressedTexSubImage2D_t(
             TextureTarget target,
             int level,
@@ -1039,6 +1095,44 @@ namespace Veldrid.OpenGLBinding
             PixelInternalFormat format,
             uint imageSize,
             void* data) => p_glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
+
+        private delegate void glCompressedTexSubImage3D_t(
+            TextureTarget target,
+             int level,
+             int xoffset,
+             int yoffset,
+             int zoffset,
+             uint width,
+             uint height,
+             uint depth,
+             PixelInternalFormat format,
+             uint imageSize,
+             void* data);
+        private static glCompressedTexSubImage3D_t p_glCompressedTexSubImage3D;
+        public static void glCompressedTexSubImage3D(
+            TextureTarget target,
+             int level,
+             int xoffset,
+             int yoffset,
+             int zoffset,
+             uint width,
+             uint height,
+             uint depth,
+             PixelInternalFormat format,
+             uint imageSize,
+             void* data)
+            => p_glCompressedTexSubImage3D(
+                target,
+                level,
+                xoffset,
+                yoffset,
+                zoffset,
+                width,
+                height,
+                depth,
+                format,
+                imageSize,
+                data);
 
         private delegate void glCopyImageSubData_t(
             uint srcName,
@@ -1143,6 +1237,7 @@ namespace Veldrid.OpenGLBinding
             s_getProcAddress = getProcAddress;
 
             LoadFunction("glCompressedTexSubImage2D", out p_glCompressedTexSubImage2D);
+            LoadFunction("glCompressedTexSubImage3D", out p_glCompressedTexSubImage3D);
             LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
             LoadFunction("glStencilFuncSeparate", out p_glStencilFuncSeparate);
             LoadFunction("glStencilOpSeparate", out p_glStencilOpSeparate);
@@ -1152,7 +1247,8 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glGetCompressedTexImage", out p_glGetCompressedTexImage);
             LoadFunction("glGetCompressedTextureImage", out p_glGetCompressedTextureImage);
             LoadFunction("glGetTexLevelParameteriv", out p_glGetTexLevelParameteriv);
-
+            LoadFunction("glTexImage1D", out p_glTexImage1D);
+            LoadFunction("glCompressedTexImage1D", out p_glCompressedTexSubImage1D);
 
             LoadFunction("glGenVertexArrays", out p_glGenVertexArrays);
             LoadFunction("glGetError", out p_glGetError);
@@ -1187,6 +1283,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glBufferSubData", out p_glBufferSubData);
             LoadFunction("glNamedBufferSubData", out p_glNamedBufferSubData);
             LoadFunction("glScissorIndexed", out p_glScissorIndexed);
+            LoadFunction("glTexSubImage1D", out p_glTexSubImage1D);
             LoadFunction("glTexSubImage2D", out p_glTexSubImage2D);
             LoadFunction("glTexSubImage3D", out p_glTexSubImage3D);
             LoadFunction("glPixelStorei", out p_glPixelStorei);

@@ -64,10 +64,10 @@ namespace Veldrid.ImageSharp
         private unsafe Texture CreateTextureViaStaging(GraphicsDevice gd, ResourceFactory factory)
         {
             Texture staging = factory.CreateTexture(
-                new TextureDescription(Width, Height, 1, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+                TextureDescription.Texture2D(Width, Height, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
 
             Texture ret = factory.CreateTexture(
-                new TextureDescription(Width, Height, 1, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+                TextureDescription.Texture2D(Width, Height, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
 
             CommandList cl = gd.ResourceFactory.CreateCommandList();
             cl.Begin();
@@ -111,7 +111,8 @@ namespace Veldrid.ImageSharp
 
         private unsafe Texture CreateTextureViaUpdate(GraphicsDevice gd, ResourceFactory factory)
         {
-            Texture tex = factory.CreateTexture(new TextureDescription(Width, Height, 1, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+            Texture tex = factory.CreateTexture(TextureDescription.Texture2D(
+                Width, Height, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
             for (int level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];

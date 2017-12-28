@@ -40,6 +40,10 @@ namespace Veldrid
         /// </summary>
         public TextureUsage Usage;
         /// <summary>
+        /// The type of Texture to create.
+        /// </summary>
+        public TextureType Type;
+        /// <summary>
         /// The number of samples. If equal to <see cref="TextureSampleCount.Count1"/>, this instance does not describe a
         /// multisample <see cref="Texture"/>.
         /// </summary>
@@ -59,6 +63,7 @@ namespace Veldrid
         /// <see cref="Framebuffer"/>, then <see cref="TextureUsage.DepthStencil"/> must be included. If the Texture will be used
         /// as a color target in a <see cref="Framebuffer"/>, then <see cref="TextureUsage.RenderTarget"/> must be included.
         /// If the Texture will be used as a 2D cubemap, then <see cref="TextureUsage.Cubemap"/> must be included.</param>
+        /// <param name="type">The type of Texture to create.</param>
         public TextureDescription(
             uint width,
             uint height,
@@ -66,7 +71,8 @@ namespace Veldrid
             uint mipLevels,
             uint arrayLayers,
             PixelFormat format,
-            TextureUsage usage)
+            TextureUsage usage,
+            TextureType type)
         {
             Width = width;
             Height = height;
@@ -76,6 +82,7 @@ namespace Veldrid
             Format = format;
             Usage = usage;
             SampleCount = TextureSampleCount.Count1;
+            Type = type;
         }
 
         /// <summary>
@@ -92,6 +99,7 @@ namespace Veldrid
         /// <see cref="Framebuffer"/>, then <see cref="TextureUsage.DepthStencil"/> must be included. If the Texture will be used
         /// as a color target in a <see cref="Framebuffer"/>, then <see cref="TextureUsage.RenderTarget"/> must be included.
         /// If the Texture will be used as a 2D cubemap, then <see cref="TextureUsage.Cubemap"/> must be included.</param>
+        /// <param name="type">The type of Texture to create.</param>
         /// <param name="sampleCount">The number of samples. If any other value than <see cref="TextureSampleCount.Count1"/> is
         /// provided, then this describes a multisample texture.</param>
         public TextureDescription(
@@ -102,6 +110,7 @@ namespace Veldrid
             uint arrayLayers,
             PixelFormat format,
             TextureUsage usage,
+            TextureType type,
             TextureSampleCount sampleCount)
         {
             Width = width;
@@ -111,7 +120,129 @@ namespace Veldrid
             ArrayLayers = arrayLayers;
             Format = format;
             Usage = usage;
+            Type = type;
             SampleCount = sampleCount;
+        }
+
+        public static TextureDescription Texture1D(
+            uint width,
+            uint mipLevels,
+            uint arrayLayers,
+            PixelFormat format,
+            TextureUsage usage)
+        {
+            return new TextureDescription(
+                width,
+                1,
+                1,
+                mipLevels,
+                arrayLayers,
+                format,
+                usage,
+                TextureType.Texture1D,
+                TextureSampleCount.Count1);
+        }
+
+        public static TextureDescription Texture1D(
+            uint width,
+            uint mipLevels,
+            uint arrayLayers,
+            PixelFormat format,
+            TextureUsage usage,
+            TextureSampleCount sampleCount)
+        {
+            return new TextureDescription(
+                width,
+                1,
+                1,
+                mipLevels,
+                arrayLayers,
+                format,
+                usage,
+                TextureType.Texture1D,
+                sampleCount);
+        }
+
+        public static TextureDescription Texture2D(
+            uint width,
+            uint height,
+            uint mipLevels,
+            uint arrayLayers,
+            PixelFormat format,
+            TextureUsage usage)
+        {
+            return new TextureDescription(
+                width,
+                height,
+                1,
+                mipLevels,
+                arrayLayers,
+                format,
+                usage,
+                TextureType.Texture2D,
+                TextureSampleCount.Count1);
+        }
+
+        public static TextureDescription Texture2D(
+            uint width,
+            uint height,
+            uint mipLevels,
+            uint arrayLayers,
+            PixelFormat format,
+            TextureUsage usage,
+            TextureSampleCount sampleCount)
+        {
+            return new TextureDescription(
+                width,
+                height,
+                1,
+                mipLevels,
+                arrayLayers,
+                format,
+                usage,
+                TextureType.Texture2D,
+                sampleCount);
+        }
+
+        public static TextureDescription Texture3D(
+            uint width,
+            uint height,
+            uint depth,
+            uint mipLevels,
+            PixelFormat format,
+            TextureUsage usage)
+        {
+            return new TextureDescription(
+                width,
+                height,
+                depth,
+                mipLevels,
+                1,
+                format,
+                usage,
+                TextureType.Texture3D,
+                TextureSampleCount.Count1);
+        }
+
+        public static TextureDescription Texture3D(
+            uint width,
+            uint height,
+            uint depth,
+            uint mipLevels,
+            PixelFormat format,
+            TextureUsage usage,
+            TextureSampleCount sampleCount)
+        {
+            return new TextureDescription(
+                width,
+                height,
+                depth,
+                mipLevels,
+                1,
+                format,
+                usage,
+                TextureType.Texture3D,
+                sampleCount);
         }
 
         /// <summary>
@@ -127,7 +258,9 @@ namespace Veldrid
                 && MipLevels.Equals(other.MipLevels)
                 && ArrayLayers.Equals(other.ArrayLayers)
                 && Format == other.Format
-                && Usage == other.Usage;
+                && Usage == other.Usage
+                && Type == other.Type
+                && SampleCount == other.SampleCount;
         }
 
         /// <summary>
@@ -143,7 +276,9 @@ namespace Veldrid
                 MipLevels.GetHashCode(),
                 ArrayLayers.GetHashCode(),
                 Format.GetHashCode(),
-                Usage.GetHashCode());
+                Usage.GetHashCode(),
+                Type.GetHashCode(),
+                SampleCount.GetHashCode());
         }
     }
 }

@@ -80,6 +80,21 @@ namespace Veldrid.Vk
             }
         }
 
+        internal static VkImageType VdToVkTextureType(TextureType type)
+        {
+            switch (type)
+            {
+                case TextureType.Texture1D:
+                    return VkImageType.Image1D;
+                case TextureType.Texture2D:
+                    return VkImageType.Image2D;
+                case TextureType.Texture3D:
+                    return VkImageType.Image3D;
+                default:
+                    throw Illegal.Value<TextureType>();
+            }
+        }
+
         internal static VkDescriptorType VdToVkDescriptorType(ResourceKind kind)
         {
             switch (kind)

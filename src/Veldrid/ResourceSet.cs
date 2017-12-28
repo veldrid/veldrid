@@ -55,7 +55,8 @@ namespace Veldrid
                     }
                 case ResourceKind.StructuredBufferReadOnly:
                     {
-                        if (!(resource is DeviceBuffer b && (b.Usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly))
+                        if (!(resource is DeviceBuffer b
+                            && (b.Usage & (BufferUsage.StructuredBufferReadOnly | BufferUsage.StructuredBufferReadWrite)) != 0))
                         {
                             throw new VeldridException(
                                 $"Resource in slot {slot} does not match {nameof(ResourceKind)}.{kind} specified in the {nameof(ResourceLayout)}. It must be a {nameof(DeviceBuffer)} with {nameof(BufferUsage)}.{nameof(BufferUsage.StructuredBufferReadOnly)}.");

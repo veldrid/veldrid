@@ -949,7 +949,7 @@ namespace Veldrid.OpenGL
             }
             else
             {
-                throw new NotImplementedException("UpdateTexture for type: " + texture.Type + " is not implemented");
+                throw new VeldridException($"Invalid OpenGL TextureTarget encountered: {glTex.TextureTarget}.");
             }
 
             if (pixelSize < 4)
@@ -979,77 +979,6 @@ namespace Veldrid.OpenGL
                     throw new VeldridException("Unexpected array layer in UpdateTexture called on a cubemap texture.");
             }
         }
-
-        //public void UpdateTextureCube(
-        //    Texture textureCube,
-        //    IntPtr dataPtr,
-        //    CubeFace face,
-        //    uint x,
-        //    uint y,
-        //    uint width,
-        //    uint height,
-        //    uint mipLevel,
-        //    uint arrayLayer)
-        //{
-        //    OpenGLTexture glTexCube = Util.AssertSubtype<Texture, OpenGLTexture>(textureCube);
-        //    if (glTexCube.ArrayLayers != 1)
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-
-        //    glTexCube.EnsureResourcesCreated();
-
-        //    glBindTexture(TextureTarget.TextureCubeMap, glTexCube.Texture);
-        //    CheckLastError();
-
-        //    uint pixelSize = FormatHelpers.GetSizeInBytes(glTexCube.Format);
-        //    if (pixelSize < 4)
-        //    {
-        //        glPixelStorei(PixelStoreParameter.UnpackAlignment, (int)pixelSize);
-        //        CheckLastError();
-        //    }
-
-        //    TextureTarget target = GetCubeFaceTarget(face);
-
-        //    glTexSubImage2D(
-        //        target,
-        //        (int)mipLevel,
-        //        (int)x,
-        //        (int)y,
-        //        width,
-        //        height,
-        //        glTexCube.GLPixelFormat,
-        //        glTexCube.GLPixelType,
-        //        dataPtr.ToPointer());
-        //    CheckLastError();
-
-        //    if (pixelSize < 4)
-        //    {
-        //        glPixelStorei(PixelStoreParameter.UnpackAlignment, 4);
-        //        CheckLastError();
-        //    }
-        //}
-
-        //private TextureTarget GetCubeFaceTarget(CubeFace face)
-        //{
-        //    switch (face)
-        //    {
-        //        case CubeFace.NegativeX:
-        //            return TextureTarget.TextureCubeMapNegativeX;
-        //        case CubeFace.PositiveX:
-        //            return TextureTarget.TextureCubeMapPositiveX;
-        //        case CubeFace.NegativeY:
-        //            return TextureTarget.TextureCubeMapNegativeY;
-        //        case CubeFace.PositiveY:
-        //            return TextureTarget.TextureCubeMapPositiveY;
-        //        case CubeFace.NegativeZ:
-        //            return TextureTarget.TextureCubeMapPositiveZ;
-        //        case CubeFace.PositiveZ:
-        //            return TextureTarget.TextureCubeMapNegativeZ;
-        //        default:
-        //            throw Illegal.Value<CubeFace>();
-        //    }
-        //}
 
         public void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
         {

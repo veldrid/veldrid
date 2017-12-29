@@ -652,10 +652,10 @@ namespace Veldrid.OpenGL
                             texture.EnsureResourcesCreated();
 
                             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
-                            Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
+                            Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
 
                             uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
-                            uint sizeInBytes = width * height * depth * pixelSize;
+                            uint subresourceSize = mipWidth * mipHeight * mipDepth * pixelSize;
 
                             bool isCompressed = FormatHelpers.IsCompressedFormat(texture.Format);
                             if (isCompressed)
@@ -667,10 +667,10 @@ namespace Veldrid.OpenGL
                                     GetTextureParameter.TextureCompressedImageSize,
                                     &compressedSize);
                                 CheckLastError();
-                                sizeInBytes = (uint)compressedSize;
+                                subresourceSize = (uint)compressedSize;
                             }
 
-                            FixedStagingBlock block = _gd._stagingMemoryPool.GetFixedStagingBlock(sizeInBytes);
+                            FixedStagingBlock block = _gd._stagingMemoryPool.GetFixedStagingBlock(subresourceSize);
 
                             if (pixelSize < 4)
                             {
@@ -690,32 +690,51 @@ namespace Veldrid.OpenGL
                                             texture.Texture,
                                             (int)mipLevel,
                                             0, 0, zoffset,
-                                            width, height, depth,
+                                            mipWidth, mipHeight, mipDepth,
                                             texture.GLPixelFormat,
                                             texture.GLPixelType,
-                                            sizeInBytes,
+                                            subresourceSize,
                                             block.Data);
                                         CheckLastError();
                                     }
                                     else
                                     {
+                                        glBindTexture(texture.TextureTarget, texture.Texture);
+                                        CheckLastError();
+
                                         if (texture.TextureTarget == TextureTarget.Texture2DArray
                                             || texture.TextureTarget == TextureTarget.Texture2DMultisampleArray
                                             || texture.TextureTarget == TextureTarget.TextureCubeMapArray)
                                         {
-                                            throw new NotImplementedException();
+                                            // We only want a single subresource (array slice), so we need to copy
+                                            // a subsection of the downloaded data into our staging block.
+
+                                            uint fullDataSize = subresourceSize * texture.ArrayLayers;
+                                            FixedStagingBlock fullBlock
+                                                = _gd._stagingMemoryPool.GetFixedStagingBlock(fullDataSize);
+
+                                            glGetTexImage(
+                                                texture.TextureTarget,
+                                                (int)mipLevel,
+                                                texture.GLPixelFormat,
+                                                texture.GLPixelType,
+                                                fullBlock.Data);
+                                            CheckLastError();
+                                            byte* sliceStart = (byte*)fullBlock.Data + (arrayLayer * subresourceSize);
+                                            Buffer.MemoryCopy(sliceStart, block.Data, subresourceSize, subresourceSize);
+
+                                            fullBlock.Free();
                                         }
-
-                                        glBindTexture(texture.TextureTarget, texture.Texture);
-                                        CheckLastError();
-
-                                        glGetTexImage(
-                                            texture.TextureTarget,
-                                            (int)mipLevel,
-                                            texture.GLPixelFormat,
-                                            texture.GLPixelType,
-                                            block.Data);
-                                        CheckLastError();
+                                        else
+                                        {
+                                            glGetTexImage(
+                                                texture.TextureTarget,
+                                                (int)mipLevel,
+                                                texture.GLPixelFormat,
+                                                texture.GLPixelType,
+                                                block.Data);
+                                            CheckLastError();
+                                        }
                                     }
                                 }
                                 else // isCompressed
@@ -735,7 +754,8 @@ namespace Veldrid.OpenGL
                                             || texture.TextureTarget == TextureTarget.Texture2DMultisampleArray
                                             || texture.TextureTarget == TextureTarget.TextureCubeMapArray)
                                         {
-                                            throw new NotImplementedException();
+                                            throw new VeldridException(
+                                                $"Mapping an OpenGL compressed array Texture requires ARB_DirectStateAccess.");
                                         }
 
                                         glBindTexture(texture.TextureTarget, texture.Texture);
@@ -753,14 +773,14 @@ namespace Veldrid.OpenGL
                                 CheckLastError();
                             }
 
-                            uint rowPitch = width * pixelSize;
-                            uint depthPitch = rowPitch * height;
+                            uint rowPitch = mipWidth * pixelSize;
+                            uint depthPitch = rowPitch * mipHeight;
                             MappedResourceInfoWithStaging info = new MappedResourceInfoWithStaging();
                             info.MappedResource = new MappedResource(
                                 resource,
                                 mode,
                                 (IntPtr)block.Data,
-                                sizeInBytes,
+                                subresourceSize,
                                 subresource,
                                 rowPitch,
                                 depthPitch);
@@ -776,6 +796,7 @@ namespace Veldrid.OpenGL
                 catch
                 {
                     _gd._mapResultHolder.Succeeded = false;
+                    throw;
                 }
                 finally
                 {

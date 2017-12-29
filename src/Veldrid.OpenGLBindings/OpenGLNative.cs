@@ -1096,6 +1096,44 @@ namespace Veldrid.OpenGLBinding
             uint imageSize,
             void* data) => p_glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
 
+        private delegate void glCompressedTexSubImage3D_t(
+            TextureTarget target,
+             int level,
+             int xoffset,
+             int yoffset,
+             int zoffset,
+             uint width,
+             uint height,
+             uint depth,
+             PixelInternalFormat format,
+             uint imageSize,
+             void* data);
+        private static glCompressedTexSubImage3D_t p_glCompressedTexSubImage3D;
+        public static void glCompressedTexSubImage3D(
+            TextureTarget target,
+             int level,
+             int xoffset,
+             int yoffset,
+             int zoffset,
+             uint width,
+             uint height,
+             uint depth,
+             PixelInternalFormat format,
+             uint imageSize,
+             void* data)
+            => p_glCompressedTexSubImage3D(
+                target,
+                level,
+                xoffset,
+                yoffset,
+                zoffset,
+                width,
+                height,
+                depth,
+                format,
+                imageSize,
+                data);
+
         private delegate void glCopyImageSubData_t(
             uint srcName,
             TextureTarget srcTarget,
@@ -1199,6 +1237,7 @@ namespace Veldrid.OpenGLBinding
             s_getProcAddress = getProcAddress;
 
             LoadFunction("glCompressedTexSubImage2D", out p_glCompressedTexSubImage2D);
+            LoadFunction("glCompressedTexSubImage3D", out p_glCompressedTexSubImage3D);
             LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
             LoadFunction("glStencilFuncSeparate", out p_glStencilFuncSeparate);
             LoadFunction("glStencilOpSeparate", out p_glStencilOpSeparate);

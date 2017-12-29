@@ -425,8 +425,71 @@ namespace Veldrid.Tests
                 {
                     Assert.Equal(new RgbaByte((byte)(x + 40), (byte)(y + 40), 0, 1), readView[x, y]);
                 }
-
             GD.Unmap(dst);
+        }
+
+        [Fact]
+        public void Copy_ArrayToNonArray()
+        {
+            Texture src = RF.CreateTexture(TextureDescription.Texture2D(
+                10, 10, 1, 10, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+            Texture dst = RF.CreateTexture(TextureDescription.Texture2D(
+                10, 10, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            MappedResourceView<RgbaByte> writeView = GD.Map<RgbaByte>(src, MapMode.Write, 5);
+            for (int y = 0; y < src.Height; y++)
+                for (int x = 0; x < src.Width; x++)
+                {
+                    writeView[x, y] = new RgbaByte((byte)x, (byte)y, 0, 1);
+                }
+            GD.Unmap(src, 5);
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyTexture(
+                src, 0, 0, 0, 0, 5,
+                dst, 0, 0, 0, 0, 0,
+                10, 10, 1, 1);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(dst, MapMode.Read);
+            for (int y = 0; y < dst.Height; y++)
+                for (int x = 0; x < dst.Width; x++)
+                {
+                    Assert.Equal(new RgbaByte((byte)x, (byte)y, 0, 1), readView[x, y]);
+                }
+            GD.Unmap(dst);
+        }
+
+        [Fact]
+        public void Map_ThenRead_MultipleArrayLayers()
+        {
+            Texture src = RF.CreateTexture(TextureDescription.Texture2D(
+                10, 10, 1, 10, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            for (uint layer = 0; layer < src.ArrayLayers; layer++)
+            {
+                MappedResourceView<RgbaByte> writeView = GD.Map<RgbaByte>(src, MapMode.Write, layer);
+                for (int y = 0; y < src.Height; y++)
+                    for (int x = 0; x < src.Width; x++)
+                    {
+                        writeView[x, y] = new RgbaByte((byte)x, (byte)y, (byte)layer, 1);
+                    }
+                GD.Unmap(src, layer);
+            }
+
+            for (uint layer = 0; layer < src.ArrayLayers; layer++)
+            {
+                MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(src, MapMode.Read, layer);
+                for (int y = 0; y < src.Height; y++)
+                    for (int x = 0; x < src.Width; x++)
+                    {
+                        Assert.Equal(new RgbaByte((byte)x, (byte)y, (byte)layer, 1), readView[x, y]);
+                    }
+                GD.Unmap(src, layer);
+            }
         }
     }
 

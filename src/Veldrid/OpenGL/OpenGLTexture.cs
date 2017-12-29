@@ -32,6 +32,7 @@ namespace Veldrid.OpenGL
             MipLevels = description.MipLevels;
             ArrayLayers = description.ArrayLayers;
             Usage = description.Usage;
+            Type = description.Type;
             SampleCount = description.SampleCount;
 
             _framebuffers = new uint[MipLevels * ArrayLayers];
@@ -61,7 +62,11 @@ namespace Veldrid.OpenGL
             {
                 TextureTarget = ArrayLayers == 1 ? TextureTarget.TextureCubeMap : TextureTarget.TextureCubeMapArray;
             }
-            else if (Depth == 1)
+            else if (Type == TextureType.Texture1D)
+            {
+                TextureTarget = ArrayLayers == 1 ? TextureTarget.Texture1D : TextureTarget.ProxyTexture1DArray;
+            }
+            else if (Type == TextureType.Texture2D)
             {
                 if (ArrayLayers == 1)
                 {
@@ -74,6 +79,7 @@ namespace Veldrid.OpenGL
             }
             else
             {
+                Debug.Assert(Type == TextureType.Texture3D);
                 TextureTarget = TextureTarget.Texture3D;
             }
         }
@@ -91,6 +97,8 @@ namespace Veldrid.OpenGL
         public override uint ArrayLayers { get; }
 
         public override TextureUsage Usage { get; }
+
+        public override TextureType Type { get; }
 
         public override TextureSampleCount SampleCount { get; }
 
@@ -119,11 +127,6 @@ namespace Veldrid.OpenGL
 
         private void CreateGLResources()
         {
-            if (Depth != 1)
-            {
-                throw new NotImplementedException(); // TODO: Implement 3D textures.
-            }
-
             bool dsa = _gd.Extensions.ARB_DirectStateAccess;
             if (dsa)
             {

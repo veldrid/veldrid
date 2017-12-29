@@ -655,7 +655,7 @@ namespace Veldrid.OpenGL
                             Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
 
                             uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
-                            uint sizeInBytes = width * height * pixelSize;
+                            uint sizeInBytes = width * height * depth * pixelSize;
 
                             bool isCompressed = FormatHelpers.IsCompressedFormat(texture.Format);
                             if (isCompressed)

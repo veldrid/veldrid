@@ -30,6 +30,8 @@ namespace Veldrid.Vk
 
         public override TextureUsage Usage { get; }
 
+        public override TextureType Type { get; }
+
         public override TextureSampleCount SampleCount { get; }
 
         public VkImage OptimalDeviceImage => _optimalImage;
@@ -58,6 +60,7 @@ namespace Veldrid.Vk
                 : ArrayLayers;
             Format = description.Format;
             Usage = description.Usage;
+            Type = description.Type;
             SampleCount = description.SampleCount;
             VkSampleCount = VkFormats.VdToVkSampleCount(SampleCount);
             VkFormat = VkFormats.VdToVkPixelFormat(Format, (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
@@ -65,7 +68,7 @@ namespace Veldrid.Vk
             VkImageCreateInfo imageCI = VkImageCreateInfo.New();
             imageCI.mipLevels = MipLevels;
             imageCI.arrayLayers = _actualImageArrayLayers;
-            imageCI.imageType = Depth == 1 ? VkImageType.Image2D : VkImageType.Image3D;
+            imageCI.imageType = VkFormats.VdToVkTextureType(Type);
             imageCI.extent.width = Width;
             imageCI.extent.height = Height;
             imageCI.extent.depth = Depth;
@@ -100,7 +103,7 @@ namespace Veldrid.Vk
                 imageCI.flags = VkImageCreateFlags.CubeCompatible;
             }
 
-            uint subresourceCount = MipLevels * _actualImageArrayLayers;
+            uint subresourceCount = MipLevels * _actualImageArrayLayers * Depth;
             if (!isStaging)
             {
                 VkResult result = vkCreateImage(gd.Device, ref imageCI, null, out _optimalImage);
@@ -129,6 +132,10 @@ namespace Veldrid.Vk
                 imageCI.arrayLayers = 1;
                 imageCI.mipLevels = 1;
                 imageCI.extent.depth = 1;
+                if (imageCI.imageType == VkImageType.Image3D)
+                {
+                    imageCI.imageType = VkImageType.Image2D;
+                }
 
                 _stagingImages = new VkImage[subresourceCount];
                 _stagingMemories = new VkMemoryBlock[subresourceCount];
@@ -145,7 +152,7 @@ namespace Veldrid.Vk
                             level,
                             out imageCI.extent.width,
                             out imageCI.extent.height,
-                            out imageCI.extent.depth);
+                            out var _);
 
                         VkResult result = vkCreateImage(gd.Device, ref imageCI, null, out _stagingImages[subresource]);
                         CheckResult(result);

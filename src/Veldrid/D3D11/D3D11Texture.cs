@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using SharpDX.Direct3D11;
 
 namespace Veldrid.D3D11
@@ -14,6 +15,7 @@ namespace Veldrid.D3D11
         public override uint ArrayLayers { get; }
         public override PixelFormat Format { get; }
         public override TextureUsage Usage { get; }
+        public override TextureType Type { get; }
         public override TextureSampleCount SampleCount { get; }
 
         public Resource DeviceTexture { get; }
@@ -28,6 +30,7 @@ namespace Veldrid.D3D11
             ArrayLayers = description.ArrayLayers;
             Format = description.Format;
             Usage = description.Usage;
+            Type = description.Type;
             SampleCount = description.SampleCount;
 
             DxgiFormat = D3D11Formats.ToDxgiFormat(
@@ -68,7 +71,7 @@ namespace Veldrid.D3D11
                 arraySize *= 6;
             }
 
-            if (Depth == 1 && Height == 1)
+            if (Type == TextureType.Texture1D)
             {
                 Texture1DDescription desc1D = new Texture1DDescription()
                 {
@@ -84,7 +87,7 @@ namespace Veldrid.D3D11
 
                 DeviceTexture = new Texture1D(device, desc1D);
             }
-            else if (Depth == 1)
+            else if (Type == TextureType.Texture2D)
             {
                 Texture2DDescription deviceDescription = new Texture2DDescription()
                 {
@@ -104,6 +107,7 @@ namespace Veldrid.D3D11
             }
             else
             {
+                Debug.Assert(Type == TextureType.Texture3D);
                 Texture3DDescription desc3D = new Texture3DDescription()
                 {
                     Width = (int)description.Width,

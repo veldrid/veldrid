@@ -57,10 +57,9 @@ namespace Veldrid.NeoDemo.Objects
             {
                 uint width = (uint)_front.Width;
                 uint height = (uint)_front.Height;
-                textureCube = factory.CreateTexture(new TextureDescription(
+                textureCube = factory.CreateTexture(TextureDescription.Texture2D(
                     width,
                     height,
-                    1,
                     1,
                     1,
                     PixelFormat.R8_G8_B8_A8_UNorm,

@@ -708,16 +708,8 @@ namespace Veldrid.OpenGL
 
             TextureTarget texTarget = glTex.TextureTarget;
 
-            if (texTarget == TextureTarget.TextureCubeMap)
-            {
-                glBindTexture(texTarget, glTex.Texture);
-                CheckLastError();
-            }
-            else
-            {
-                glBindTexture(texTarget, glTex.Texture);
-                CheckLastError();
-            }
+            glBindTexture(texTarget, glTex.Texture);
+            CheckLastError();
 
             bool isCompressed = texture.Format == PixelFormat.BC3_UNorm;
 
@@ -805,6 +797,10 @@ namespace Veldrid.OpenGL
                     glTex.GLPixelType,
                     dataPtr.ToPointer());
                 CheckLastError();
+            }
+            else
+            {
+                throw new NotImplementedException("UpdateTexture for type: " + texture.Type + " is not implemented");
             }
 
             if (pixelSize < 4)

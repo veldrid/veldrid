@@ -237,10 +237,9 @@ namespace Veldrid
             // Store our identifier
             io.FontAtlas.SetTexID(_fontAtlasID);
 
-            _fontTexture = gd.ResourceFactory.CreateTexture(new TextureDescription(
+            _fontTexture = gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
                 (uint)textureData.Width,
                 (uint)textureData.Height,
-                1,
                 1,
                 1,
                 PixelFormat.R8_G8_B8_A8_UNorm,

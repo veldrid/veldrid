@@ -11,7 +11,7 @@ namespace Veldrid.Tests
         public void Map_Succeeds()
         {
             Texture texture = RF.CreateTexture(
-                new TextureDescription(1024, 1024, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
+                TextureDescription.Texture2D(1024, 1024, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
 
             MappedResource map = GD.Map(texture, MapMode.ReadWrite, 0);
             GD.Unmap(texture, 0);
@@ -21,7 +21,7 @@ namespace Veldrid.Tests
         public unsafe void Update_ThenMapRead_Succeeds_R32Float()
         {
             Texture texture = RF.CreateTexture(
-                new TextureDescription(1024, 1024, 1, 1, 1, PixelFormat.R32_Float, TextureUsage.Staging));
+                TextureDescription.Texture2D(1024, 1024, 1, 1, PixelFormat.R32_Float, TextureUsage.Staging));
 
             float[] data = Enumerable.Range(0, 1024 * 1024).Select(i => (float)i).ToArray();
 
@@ -47,7 +47,7 @@ namespace Veldrid.Tests
         public unsafe void Update_ThenMapRead_Succeeds_R16UNorm()
         {
             Texture texture = RF.CreateTexture(
-                new TextureDescription(1024, 1024, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
+                TextureDescription.Texture2D(1024, 1024, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
 
             ushort[] data = Enumerable.Range(0, 1024 * 1024).Select(i => (ushort)i).ToArray();
 
@@ -73,7 +73,7 @@ namespace Veldrid.Tests
         public unsafe void Update_ThenMapRead_SingleMip_Succeeds_R16UNorm()
         {
             Texture texture = RF.CreateTexture(
-                new TextureDescription(1024, 1024, 1, 3, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
+                TextureDescription.Texture2D(1024, 1024, 3, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
 
             ushort[] data = Enumerable.Range(0, 256 * 256).Select(i => (ushort)i).ToArray();
 
@@ -100,7 +100,7 @@ namespace Veldrid.Tests
         public unsafe void Update_ThenMapRead_Mip0_Succeeds_R16UNorm()
         {
             Texture texture = RF.CreateTexture(
-                new TextureDescription(256, 256, 1, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
+                TextureDescription.Texture2D(256, 256, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
 
             ushort[] data = Enumerable.Range(0, 256 * 256).Select(i => (ushort)i).ToArray();
 
@@ -125,8 +125,8 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void Update_ThenCopySingleMip_Succeeds_R16UNorm()
         {
-            TextureDescription desc = new TextureDescription(
-                1024, 1024, 1, 3, 1, PixelFormat.R16_UNorm, TextureUsage.Staging);
+            TextureDescription desc = TextureDescription.Texture2D(
+                1024, 1024, 3, 1, PixelFormat.R16_UNorm, TextureUsage.Staging);
             Texture src = RF.CreateTexture(desc);
             Texture dst = RF.CreateTexture(desc);
 
@@ -161,10 +161,10 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void Copy_BC3_Unorm()
         {
-            Texture copySrc = RF.CreateTexture(new TextureDescription(
-                64, 64, 1, 1, 1, PixelFormat.BC3_UNorm, TextureUsage.Staging));
-            Texture copyDst = RF.CreateTexture(new TextureDescription(
-                64, 64, 1, 1, 1, PixelFormat.BC3_UNorm, TextureUsage.Staging));
+            Texture copySrc = RF.CreateTexture(TextureDescription.Texture2D(
+                64, 64, 1, 1, PixelFormat.BC3_UNorm, TextureUsage.Staging));
+            Texture copyDst = RF.CreateTexture(TextureDescription.Texture2D(
+                64, 64, 1, 1, PixelFormat.BC3_UNorm, TextureUsage.Staging));
 
             uint totalDataSize = copySrc.Width * copySrc.Height;
             byte[] data = new byte[totalDataSize];
@@ -197,10 +197,10 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void UpdateThenRead_3D()
         {
-            Texture tex3D = RF.CreateTexture(new TextureDescription(
-                10, 10, 10, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+            Texture tex3D = RF.CreateTexture(TextureDescription.Texture3D(
+                10, 10, 10, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
 
-            RgbaByte[] data = new RgbaByte[10 * 10 * 10];
+            RgbaByte[] data = new RgbaByte[tex3D.Width * tex3D.Height * tex3D.Depth];
             for (int z = 0; z < tex3D.Depth; z++)
                 for (int y = 0; y < tex3D.Height; y++)
                     for (int x = 0; x < tex3D.Width; x++)
@@ -225,6 +225,31 @@ namespace Veldrid.Tests
                         Assert.Equal(new RgbaByte((byte)x, (byte)y, (byte)z, 1), view[x, y, z]);
                     }
 
+            GD.Unmap(tex3D);
+        }
+
+        [Fact]
+        public unsafe void MapWrite_ThenMapRead_3D()
+        {
+            Texture tex3D = RF.CreateTexture(TextureDescription.Texture3D(
+                10, 10, 10, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            MappedResourceView<RgbaByte> writeView = GD.Map<RgbaByte>(tex3D, MapMode.Write);
+            for (int z = 0; z < tex3D.Depth; z++)
+                for (int y = 0; y < tex3D.Height; y++)
+                    for (int x = 0; x < tex3D.Width; x++)
+                    {
+                        writeView[x, y, z] = new RgbaByte((byte)x, (byte)y, (byte)z, 1);
+                    }
+            GD.Unmap(tex3D);
+
+            MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(tex3D, MapMode.Read, 0);
+            for (int z = 0; z < tex3D.Depth; z++)
+                for (int y = 0; y < tex3D.Height; y++)
+                    for (int x = 0; x < tex3D.Width; x++)
+                    {
+                        Assert.Equal(new RgbaByte((byte)x, (byte)y, (byte)z, 1), readView[x, y, z]);
+                    }
             GD.Unmap(tex3D);
         }
     }

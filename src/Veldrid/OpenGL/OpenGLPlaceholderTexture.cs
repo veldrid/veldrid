@@ -41,6 +41,8 @@
 
         public override TextureSampleCount SampleCount { get; }
 
+        public override TextureType Type => TextureType.Texture2D;
+
         public override string Name { get; set; }
 
         public override void Dispose() { }

@@ -245,10 +245,9 @@ namespace Veldrid.Vk
             if (_depthFormat.HasValue)
             {
                 _depthAttachment?.Target.Dispose();
-                VkTexture depthTexture = (VkTexture)_gd.ResourceFactory.CreateTexture(new TextureDescription(
+                VkTexture depthTexture = (VkTexture)_gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
                     Math.Max(1, _scExtent.width),
                     Math.Max(1, _scExtent.height),
-                    1,
                     1,
                     1,
                     _depthFormat.Value,

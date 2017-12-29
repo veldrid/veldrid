@@ -146,7 +146,48 @@ namespace Veldrid.OpenGL
 
             bool isDepthTex = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
 
-            if (TextureTarget == TextureTarget.Texture2D)
+            if (TextureTarget == TextureTarget.Texture1D)
+            {
+                if (dsa)
+                {
+                    glTextureStorage1D(
+                        _texture,
+                        MipLevels,
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                        Width);
+                    CheckLastError();
+                }
+                else if (_gd.Extensions.ARB_TextureStorage)
+                {
+                    glTexStorage1D(
+                        TextureTarget.Texture1D,
+                        MipLevels,
+                        OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                        Width);
+                    CheckLastError();
+                }
+                else
+                {
+                    uint levelWidth = Width;
+                    for (int currentLevel = 0; currentLevel < MipLevels; currentLevel++)
+                    {
+                        // Set size, load empty data into texture
+                        glTexImage1D(
+                            TextureTarget.Texture2D,
+                            currentLevel,
+                            GLInternalFormat,
+                            levelWidth,
+                            0, // border
+                            GLPixelFormat,
+                            GLPixelType,
+                            null);
+                        CheckLastError();
+
+                        levelWidth = Math.Max(1, levelWidth / 2);
+                    }
+                }
+            }
+            else if (TextureTarget == TextureTarget.Texture2D)
             {
                 if (dsa)
                 {

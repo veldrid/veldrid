@@ -195,7 +195,7 @@ namespace Veldrid.Tests
         }
 
         [Fact]
-        public unsafe void UpdateThenRead_3D()
+        public unsafe void Update_ThenMapRead_3D()
         {
             Texture tex3D = RF.CreateTexture(TextureDescription.Texture3D(
                 10, 10, 10, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
@@ -251,6 +251,182 @@ namespace Veldrid.Tests
                         Assert.Equal(new RgbaByte((byte)x, (byte)y, (byte)z, 1), readView[x, y, z]);
                     }
             GD.Unmap(tex3D);
+        }
+
+        [Fact]
+        public unsafe void Update_ThenMapRead_1D()
+        {
+            Texture tex1D = RF.CreateTexture(
+                TextureDescription.Texture1D(100, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
+            ushort[] data = Enumerable.Range(0, (int)tex1D.Width).Select(i => (ushort)(i * 2)).ToArray();
+            fixed (ushort* dataPtr = &data[0])
+            {
+                GD.UpdateTexture(tex1D, (IntPtr)dataPtr, (uint)(data.Length * sizeof(ushort)), 0, 0, 0, tex1D.Width, 1, 1, 0, 0);
+            }
+
+            MappedResourceView<ushort> view = GD.Map<ushort>(tex1D, MapMode.Read);
+            for (int i = 0; i < view.Count; i++)
+            {
+                Assert.Equal((ushort)(i * 2), view[i]);
+            }
+            GD.Unmap(tex1D);
+        }
+
+        [Fact]
+        public unsafe void MapWrite_ThenMapRead_1D()
+        {
+            Texture tex1D = RF.CreateTexture(
+                TextureDescription.Texture1D(100, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
+
+            MappedResourceView<ushort> writeView = GD.Map<ushort>(tex1D, MapMode.Write);
+            Assert.Equal(tex1D.Width, (uint)writeView.Count);
+            for (int i = 0; i < writeView.Count; i++)
+            {
+                writeView[i] = (ushort)(i * 2);
+            }
+            GD.Unmap(tex1D);
+
+            MappedResourceView<ushort> view = GD.Map<ushort>(tex1D, MapMode.Read);
+            for (int i = 0; i < view.Count; i++)
+            {
+                Assert.Equal((ushort)(i * 2), view[i]);
+            }
+            GD.Unmap(tex1D);
+        }
+
+        [Fact]
+        public unsafe void Copy_1DTo2D()
+        {
+            Texture tex1D = RF.CreateTexture(
+                TextureDescription.Texture1D(100, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
+            Texture tex2D = RF.CreateTexture(
+                TextureDescription.Texture2D(100, 10, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
+
+            MappedResourceView<ushort> writeView = GD.Map<ushort>(tex1D, MapMode.Write);
+            Assert.Equal(tex1D.Width, (uint)writeView.Count);
+            for (int i = 0; i < writeView.Count; i++)
+            {
+                writeView[i] = (ushort)(i * 2);
+            }
+            GD.Unmap(tex1D);
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyTexture(
+                tex1D, 0, 0, 0, 0, 0,
+                tex2D, 0, 5, 0, 0, 0,
+                tex1D.Width, 1, 1, 1);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.DisposeWhenIdle(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<ushort> readView = GD.Map<ushort>(tex2D, MapMode.Read);
+            for (int i = 0; i < tex2D.Width; i++)
+            {
+                Assert.Equal((ushort)(i * 2), readView[i, 5]);
+            }
+            GD.Unmap(tex2D);
+        }
+
+        [Fact]
+        public void Update_MultipleMips_1D()
+        {
+            Texture tex1D = RF.CreateTexture(TextureDescription.Texture1D(
+                100, 5, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            for (uint level = 0; level < tex1D.MipLevels; level++)
+            {
+                MappedResourceView<RgbaByte> writeView = GD.Map<RgbaByte>(tex1D, MapMode.Write, level);
+                for (int i = 0; i < writeView.Count; i++)
+                {
+                    writeView[i] = new RgbaByte((byte)i, (byte)(i * 2), (byte)level, 1);
+                }
+                GD.Unmap(tex1D, level);
+            }
+
+            for (uint level = 0; level < tex1D.MipLevels; level++)
+            {
+                MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(tex1D, MapMode.Read, level);
+                for (int i = 0; i < readView.Count; i++)
+                {
+                    Assert.Equal(new RgbaByte((byte)i, (byte)(i * 2), (byte)level, 1), readView[i]);
+                }
+                GD.Unmap(tex1D, level);
+            }
+        }
+
+        [Fact]
+        public void Copy_DifferentMip_1DTo2D()
+        {
+            Texture tex1D = RF.CreateTexture(
+                TextureDescription.Texture1D(200, 2, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
+            Texture tex2D = RF.CreateTexture(
+                TextureDescription.Texture2D(100, 10, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
+
+            MappedResourceView<ushort> writeView = GD.Map<ushort>(tex1D, MapMode.Write, 1);
+            Assert.Equal(tex2D.Width, (uint)writeView.Count);
+            for (int i = 0; i < writeView.Count; i++)
+            {
+                writeView[i] = (ushort)(i * 2);
+            }
+            GD.Unmap(tex1D, 1);
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyTexture(
+                tex1D, 0, 0, 0, 1, 0,
+                tex2D, 0, 5, 0, 0, 0,
+                tex2D.Width, 1, 1, 1);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.DisposeWhenIdle(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<ushort> readView = GD.Map<ushort>(tex2D, MapMode.Read);
+            for (int i = 0; i < tex2D.Width; i++)
+            {
+                Assert.Equal((ushort)(i * 2), readView[i, 5]);
+            }
+            GD.Unmap(tex2D);
+        }
+
+        [Fact]
+        public void Copy_WitOffsets_2D()
+        {
+            Texture src = RF.CreateTexture(TextureDescription.Texture2D(
+                100, 100, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            Texture dst = RF.CreateTexture(TextureDescription.Texture2D(
+                100, 100, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            MappedResourceView<RgbaByte> writeView = GD.Map<RgbaByte>(src, MapMode.Write);
+            for (int y = 0; y < src.Height; y++)
+                for (int x = 0; x < src.Width; x++)
+                {
+                    writeView[x, y] = new RgbaByte((byte)x, (byte)y, 0, 1);
+                }
+            GD.Unmap(src);
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyTexture(
+                src,
+                50, 50, 0, 0, 0,
+                dst, 10, 10, 0, 0, 0,
+                50, 50, 1, 1);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(dst, MapMode.Read);
+            for (int y = 10; y < 60; y++)
+                for (int x = 10; x < 60; x++)
+                {
+                    Assert.Equal(new RgbaByte((byte)(x + 40), (byte)(y + 40), 0, 1), readView[x, y]);
+                }
+
+            GD.Unmap(dst);
         }
     }
 

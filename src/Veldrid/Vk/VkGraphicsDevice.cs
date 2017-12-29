@@ -743,6 +743,12 @@ namespace Veldrid.Vk
                     VkSubresourceLayout layout = texture.GetSubresourceLayout(subresource);
                     offset = (uint)layout.offset;
                     sizeInBytes = (uint)layout.size;
+                    if (texture.Type == TextureType.Texture1D)
+                    {
+                        Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
+                        Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                        sizeInBytes = mipWidth * FormatHelpers.GetSizeInBytes(texture.Format);
+                    }
                     rowPitch = (uint)layout.rowPitch;
                     depthPitch = (uint)layout.depthPitch;
                 }

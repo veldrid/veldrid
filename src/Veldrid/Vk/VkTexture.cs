@@ -128,14 +128,11 @@ namespace Veldrid.Vk
             else
             {
                 // Linear images must have one array layer and mip level.
-                // Generally, they also cannot be 3-dimensional.
+                // Also, they must be two-dimensional.
                 imageCI.arrayLayers = 1;
                 imageCI.mipLevels = 1;
                 imageCI.extent.depth = 1;
-                if (imageCI.imageType == VkImageType.Image3D)
-                {
-                    imageCI.imageType = VkImageType.Image2D;
-                }
+                imageCI.imageType = VkImageType.Image2D;
 
                 _stagingImages = new VkImage[subresourceCount];
                 _stagingMemories = new VkMemoryBlock[subresourceCount];

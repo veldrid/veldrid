@@ -720,7 +720,34 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
-            if (texTarget == TextureTarget.Texture2D)
+            if (texTarget == TextureTarget.Texture1D)
+            {
+                if (isCompressed)
+                {
+                    glCompressedTexSubImage1D(
+                        TextureTarget.Texture1D,
+                        (int)mipLevel,
+                        (int)x,
+                        width,
+                        glTex.GLInternalFormat,
+                        pixelSize * width,
+                        dataPtr.ToPointer());
+                    CheckLastError();
+                }
+                else
+                {
+                    glTexSubImage1D(
+                        TextureTarget.Texture1D,
+                        (int)mipLevel,
+                        (int)x,
+                        width,
+                        glTex.GLPixelFormat,
+                        glTex.GLPixelType,
+                        dataPtr.ToPointer());
+                    CheckLastError();
+                }
+            }
+            else if (texTarget == TextureTarget.Texture2D)
             {
                 if (isCompressed)
                 {

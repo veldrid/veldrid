@@ -310,7 +310,7 @@ namespace Veldrid.NeoDemo
 
                 Matrix4x4 view = sc.Camera.ViewMatrix;
                 view = planeReflectionMatrix * view;
-                gd.UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
+                cls[4].UpdateBuffer(sc.ViewMatrixBuffer, 0, view);
 
                 Matrix4x4 projection = _camera.ProjectionMatrix;
                 cls[4].UpdateBuffer(sc.ReflectionViewProjBuffer, 0, view * projection);

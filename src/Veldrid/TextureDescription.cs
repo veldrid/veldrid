@@ -124,6 +124,19 @@ namespace Veldrid
             SampleCount = sampleCount;
         }
 
+        /// <summary>
+        /// Creates a description for a non-multisampled 1D Texture.
+        /// </summary>
+        /// <param name="width">The total width, in texels.</param>
+        /// <param name="mipLevels">The number of mipmap levels.</param>
+        /// <param name="arrayLayers">The number of array layers.</param>
+        /// <param name="format">The format of individual texture elements.</param>
+        /// <param name="usage">Controls how the Texture is permitted to be used. If the Texture will be sampled from a shader,
+        /// then <see cref="TextureUsage.Sampled"/> must be included. If the Texture will be used as a depth target in a
+        /// <see cref="Framebuffer"/>, then <see cref="TextureUsage.DepthStencil"/> must be included. If the Texture will be used
+        /// as a color target in a <see cref="Framebuffer"/>, then <see cref="TextureUsage.RenderTarget"/> must be included.
+        /// </param>
+        /// <returns>A new TextureDescription for a non-multisampled 1D Texture.</returns>
         public static TextureDescription Texture1D(
             uint width,
             uint mipLevels,
@@ -143,26 +156,20 @@ namespace Veldrid
                 TextureSampleCount.Count1);
         }
 
-        public static TextureDescription Texture1D(
-            uint width,
-            uint mipLevels,
-            uint arrayLayers,
-            PixelFormat format,
-            TextureUsage usage,
-            TextureSampleCount sampleCount)
-        {
-            return new TextureDescription(
-                width,
-                1,
-                1,
-                mipLevels,
-                arrayLayers,
-                format,
-                usage,
-                TextureType.Texture1D,
-                sampleCount);
-        }
-
+        /// <summary>
+        /// Creates a description for a non-multisampled 2D Texture.
+        /// </summary>
+        /// <param name="width">The total width, in texels.</param>
+        /// <param name="height">The total height, in texels.</param>
+        /// <param name="mipLevels">The number of mipmap levels.</param>
+        /// <param name="arrayLayers">The number of array layers.</param>
+        /// <param name="format">The format of individual texture elements.</param>
+        /// <param name="usage">Controls how the Texture is permitted to be used. If the Texture will be sampled from a shader,
+        /// then <see cref="TextureUsage.Sampled"/> must be included. If the Texture will be used as a depth target in a
+        /// <see cref="Framebuffer"/>, then <see cref="TextureUsage.DepthStencil"/> must be included. If the Texture will be used
+        /// as a color target in a <see cref="Framebuffer"/>, then <see cref="TextureUsage.RenderTarget"/> must be included.
+        /// If the Texture will be used as a 2D cubemap, then <see cref="TextureUsage.Cubemap"/> must be included.</param>
+        /// <returns>A new TextureDescription for a non-multisampled 2D Texture.</returns>
         public static TextureDescription Texture2D(
             uint width,
             uint height,
@@ -183,6 +190,22 @@ namespace Veldrid
                 TextureSampleCount.Count1);
         }
 
+        /// <summary>
+        /// Creates a description for a 2D Texture.
+        /// </summary>
+        /// <param name="width">The total width, in texels.</param>
+        /// <param name="height">The total height, in texels.</param>
+        /// <param name="mipLevels">The number of mipmap levels.</param>
+        /// <param name="arrayLayers">The number of array layers.</param>
+        /// <param name="format">The format of individual texture elements.</param>
+        /// <param name="usage">Controls how the Texture is permitted to be used. If the Texture will be sampled from a shader,
+        /// then <see cref="TextureUsage.Sampled"/> must be included. If the Texture will be used as a depth target in a
+        /// <see cref="Framebuffer"/>, then <see cref="TextureUsage.DepthStencil"/> must be included. If the Texture will be used
+        /// as a color target in a <see cref="Framebuffer"/>, then <see cref="TextureUsage.RenderTarget"/> must be included.
+        /// If the Texture will be used as a 2D cubemap, then <see cref="TextureUsage.Cubemap"/> must be included.</param>
+        /// <param name="sampleCount">The number of samples. If any other value than <see cref="TextureSampleCount.Count1"/> is
+        /// provided, then this describes a multisample texture.</param>
+        /// <returns>A new TextureDescription for a 2D Texture.</returns>
         public static TextureDescription Texture2D(
             uint width,
             uint height,
@@ -204,6 +227,19 @@ namespace Veldrid
                 sampleCount);
         }
 
+        /// <summary>
+        /// Creates a description for a 3D Texture.
+        /// </summary>
+        /// <param name="width">The total width, in texels.</param>
+        /// <param name="height">The total height, in texels.</param>
+        /// <param name="depth">The total depth, in texels.</param>
+        /// <param name="mipLevels">The number of mipmap levels.</param>
+        /// <param name="format">The format of individual texture elements.</param>
+        /// <param name="usage">Controls how the Texture is permitted to be used. If the Texture will be sampled from a shader,
+        /// then <see cref="TextureUsage.Sampled"/> must be included. If the Texture will be used as a depth target in a
+        /// <see cref="Framebuffer"/>, then <see cref="TextureUsage.DepthStencil"/> must be included. If the Texture will be used
+        /// as a color target in a <see cref="Framebuffer"/>, then <see cref="TextureUsage.RenderTarget"/> must be included.</param>
+        /// <returns>A new TextureDescription for a 3D Texture.</returns>
         public static TextureDescription Texture3D(
             uint width,
             uint height,
@@ -222,27 +258,6 @@ namespace Veldrid
                 usage,
                 TextureType.Texture3D,
                 TextureSampleCount.Count1);
-        }
-
-        public static TextureDescription Texture3D(
-            uint width,
-            uint height,
-            uint depth,
-            uint mipLevels,
-            PixelFormat format,
-            TextureUsage usage,
-            TextureSampleCount sampleCount)
-        {
-            return new TextureDescription(
-                width,
-                height,
-                depth,
-                mipLevels,
-                1,
-                format,
-                usage,
-                TextureType.Texture3D,
-                sampleCount);
         }
 
         /// <summary>

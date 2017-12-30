@@ -464,7 +464,8 @@ namespace Veldrid.D3D11
                 uint denseRowSize = width * pixelSizeInBytes * blockSize;
                 uint denseSliceSize = width * height * pixelSizeInBytes;
 
-                if (map.RowPitch == denseRowSize)
+                if (x == 0 && y == 0 && z == 0
+                    && map.RowPitch == denseRowSize)
                 {
                     if (map.DepthPitch == denseSliceSize)
                     {
@@ -488,8 +489,9 @@ namespace Veldrid.D3D11
                         for (uint yy = 0; yy < height; yy++)
                         {
                             byte* dstRowStart = ((byte*)map.Data)
-                                + (map.DepthPitch * zz)
-                                + (map.RowPitch * yy);
+                                + (map.DepthPitch * (zz + z))
+                                + (map.RowPitch * (yy + y))
+                                + (pixelSizeInBytes * x);
                             byte* srcRowStart = ((byte*)source.ToPointer())
                                 + (width * height * pixelSizeInBytes * zz)
                                 + (width * pixelSizeInBytes * yy);

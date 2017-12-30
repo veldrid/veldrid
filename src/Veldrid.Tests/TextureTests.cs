@@ -491,6 +491,61 @@ namespace Veldrid.Tests
                 GD.Unmap(src, layer);
             }
         }
+
+        [Fact]
+        public unsafe void Update_WithOffset_2D()
+        {
+            Texture tex2D = RF.CreateTexture(TextureDescription.Texture2D(
+                100, 100, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            RgbaByte[] data = new RgbaByte[50 * 30];
+            for (uint y = 0; y < 30; y++)
+                for (uint x = 0; x < 50; x++)
+                {
+                    data[y * 50 + x] = new RgbaByte((byte)x, (byte)y, 0, 1);
+                }
+
+            fixed (RgbaByte* dataPtr = &data[0])
+            {
+                GD.UpdateTexture(
+                    tex2D, (IntPtr)dataPtr, (uint)(data.Length * sizeof(RgbaByte)),
+                    50, 70, 0,
+                    50, 30, 1,
+                    0, 0);
+            }
+
+            MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(tex2D, MapMode.Read);
+            for (int y = 0; y < 30; y++)
+                for (int x = 0; x < 50; x++)
+                {
+                    Assert.Equal(new RgbaByte((byte)x, (byte)y, 0, 1), readView[x + 50, y + 70]);
+                }
+        }
+
+        [Fact]
+        public unsafe void Map_NonZeroMip_3D()
+        {
+            Texture tex3D = RF.CreateTexture(TextureDescription.Texture3D(
+                40, 40, 40, 3, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            MappedResourceView<RgbaByte> writeView = GD.Map<RgbaByte>(tex3D, MapMode.Write, 2);
+            for (int z = 0; z < 10; z++)
+                for (int y = 0; y < 10; y++)
+                    for (int x = 0; x < 10; x++)
+                    {
+                        writeView[x, y, z] = new RgbaByte((byte)x, (byte)y, (byte)z, 1);
+                    }
+            GD.Unmap(tex3D, 2);
+
+            MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(tex3D, MapMode.Read, 2);
+            for (int z = 0; z < 10; z++)
+                for (int y = 0; y < 10; y++)
+                    for (int x = 0; x < 10; x++)
+                    {
+                        Assert.Equal(new RgbaByte((byte)x, (byte)y, (byte)z, 1), readView[x, y, z]);
+                    }
+            GD.Unmap(tex3D, 2);
+        }
     }
 
 #if TEST_VULKAN

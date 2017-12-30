@@ -683,11 +683,6 @@ namespace Veldrid.Vk
                 VkTexture texture = Util.AssertSubtype<MappableResource, VkTexture>(resource);
                 if (texture.Depth != 1)
                 {
-                    if (texture.MipLevels != 1)
-                    {
-                        throw new NotImplementedException();
-                    }
-
                     lock (_3DMapProxies)
                     {
                         if (_3DMapProxies.ContainsKey(texture))
@@ -708,16 +703,16 @@ namespace Veldrid.Vk
                         mappedPtr = (IntPtr)block.Data;
                         if (mode == MapMode.Read || mode == MapMode.ReadWrite)
                         {
-                            for (uint z = 0; z < texture.Depth; z++)
+                            for (uint zz = 0; zz < mipDepth; zz++)
                             {
-                                uint zSlice = texture.CalculateSubresource(0, z);
+                                uint zSlice = texture.CalculateSubresource(subresource, zz);
                                 VkMemoryBlock stagingSrc = texture.GetStagingMemoryBlock(zSlice);
                                 VkSubresourceLayout layout = texture.GetSubresourceLayout(zSlice);
                                 if (denseRowSize == layout.rowPitch)
                                 {
                                     Buffer.MemoryCopy(
                                         stagingSrc.BlockMappedPointer,
-                                        (byte*)mappedPtr + z * depthPitch,
+                                        (byte*)mappedPtr + zz * depthPitch,
                                         depthPitch,
                                         depthPitch);
                                 }
@@ -725,9 +720,9 @@ namespace Veldrid.Vk
                                 {
                                     for (uint yy = 0; yy < mipHeight; yy++)
                                     {
-                                        byte* dstRowStart = ((byte*)mappedPtr + z * depthPitch) + (yy * rowPitch);
+                                        byte* dstRowStart = ((byte*)mappedPtr + zz * depthPitch) + (rowPitch * yy);
                                         byte* srcRowStart = ((byte*)stagingSrc.BlockMappedPointer) + (layout.rowPitch * yy);
-                                        Unsafe.CopyBlock(dstRowStart, srcRowStart, mipWidth * pixelSize);
+                                        Unsafe.CopyBlock(dstRowStart, srcRowStart, rowPitch);
                                     }
                                 }
                             }
@@ -807,9 +802,10 @@ namespace Veldrid.Vk
                             uint sliceSize = denseRowSize * mipHeight;
                             for (uint zSlice = 0; zSlice < tex.Depth; zSlice++)
                             {
+                                uint stagingSubresource = tex.CalculateSubresource(subresource, zSlice);
                                 byte* sliceBasePtr = (byte*)proxy.StagingBlock.Data + zSlice * sliceSize;
-                                VkMemoryBlock destBlock = tex.GetStagingMemoryBlock(zSlice);
-                                VkSubresourceLayout layout = tex.GetSubresourceLayout(zSlice);
+                                VkMemoryBlock destBlock = tex.GetStagingMemoryBlock(stagingSubresource);
+                                VkSubresourceLayout layout = tex.GetSubresourceLayout(stagingSubresource);
                                 if (layout.rowPitch == denseRowSize)
                                 {
                                     Buffer.MemoryCopy(sliceBasePtr, destBlock.BlockMappedPointer, sliceSize, sliceSize);
@@ -1028,11 +1024,6 @@ namespace Veldrid.Vk
         {
             VkTexture tex = Util.AssertSubtype<Texture, VkTexture>(texture);
 
-            if (x != 0 || y != 0)
-            {
-                throw new NotImplementedException();
-            }
-
             bool createStaging = (texture.Usage & TextureUsage.Staging) == 0;
 
             for (uint curZ = 0; curZ < depth; curZ++)
@@ -1108,7 +1099,9 @@ namespace Veldrid.Vk
                 {
                     for (uint yy = 0; yy < height; yy++)
                     {
-                        byte* dstRowStart = ((byte*)mappedPtr) + (rowPitch * yy);
+                        byte* dstRowStart = (byte*)mappedPtr
+                            + (rowPitch * (yy + y))
+                            + (pixelSizeInBytes * x);
                         byte* srcRowStart = curZSourcePtr + (width * yy * pixelSizeInBytes);
                         Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
                     }

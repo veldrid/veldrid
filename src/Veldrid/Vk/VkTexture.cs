@@ -149,7 +149,7 @@ namespace Veldrid.Vk
                             level,
                             out imageCI.extent.width,
                             out imageCI.extent.height,
-                            out var _);
+                            out uint mipDepth);
 
                         VkResult result = vkCreateImage(gd.Device, ref imageCI, null, out _stagingImages[subresource]);
                         CheckResult(result);

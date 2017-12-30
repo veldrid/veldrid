@@ -464,9 +464,23 @@ namespace Veldrid.D3D11
                 uint denseRowSize = width * pixelSizeInBytes * blockSize;
                 uint denseSliceSize = width * height * pixelSizeInBytes;
 
-                if (map.RowPitch == denseRowSize && map.DepthPitch == denseSliceSize)
+                if (map.RowPitch == denseRowSize)
                 {
-                    System.Buffer.MemoryCopy(source.ToPointer(), map.Data.ToPointer(), sizeInBytes, sizeInBytes);
+                    if (map.DepthPitch == denseSliceSize)
+                    {
+                        System.Buffer.MemoryCopy(source.ToPointer(), map.Data.ToPointer(), sizeInBytes, sizeInBytes);
+                    }
+                    else
+                    {
+                        for (uint zz = 0; zz < depth; zz++)
+                        {
+                            byte* dstSliceStart = (byte*)map.Data
+                                + map.DepthPitch * zz;
+                            byte* srcSliceStart = (byte*)source
+                                + denseSliceSize * zz;
+                            System.Buffer.MemoryCopy(srcSliceStart, dstSliceStart, denseSliceSize, denseSliceSize);
+                        }
+                    }
                 }
                 else
                 {
@@ -477,8 +491,8 @@ namespace Veldrid.D3D11
                                 + (map.DepthPitch * zz)
                                 + (map.RowPitch * yy);
                             byte* srcRowStart = ((byte*)source.ToPointer())
-                                + (height * width * zz * pixelSizeInBytes)
-                                + (width * yy * pixelSizeInBytes);
+                                + (width * height * pixelSizeInBytes * zz)
+                                + (width * pixelSizeInBytes * yy);
                             Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
                         }
                 }

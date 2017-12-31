@@ -224,7 +224,6 @@ namespace Veldrid.Tests
                     {
                         Assert.Equal(new RgbaByte((byte)x, (byte)y, (byte)z, 1), view[x, y, z]);
                     }
-
             GD.Unmap(tex3D);
         }
 
@@ -545,6 +544,48 @@ namespace Veldrid.Tests
                         Assert.Equal(new RgbaByte((byte)x, (byte)y, (byte)z, 1), readView[x, y, z]);
                     }
             GD.Unmap(tex3D, 2);
+        }
+
+        [Fact]
+        public unsafe void Update_NonStaging_3D()
+        {
+            Texture tex3D = RF.CreateTexture(TextureDescription.Texture3D(
+                16, 16, 16, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+            RgbaByte[] data = new RgbaByte[16 * 16 * 16];
+            for (int z = 0; z < 16; z++)
+                for (int y = 0; y < 16; y++)
+                    for (int x = 0; x < 16; x++)
+                    {
+                        int index = (int)(z * tex3D.Width * tex3D.Height + y * tex3D.Height + x);
+                        data[index] = new RgbaByte((byte)x, (byte)y, (byte)z, 1);
+                    }
+
+            fixed (RgbaByte* dataPtr = data)
+            {
+                GD.UpdateTexture(tex3D, (IntPtr)dataPtr, (uint)(data.Length * Unsafe.SizeOf<RgbaByte>()),
+                    0, 0, 0,
+                    tex3D.Width, tex3D.Height, tex3D.Depth,
+                    0, 0);
+            }
+
+            Texture staging = RF.CreateTexture(TextureDescription.Texture3D(
+                16, 16, 16, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyTexture(tex3D, staging);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<RgbaByte> view = GD.Map<RgbaByte>(staging, MapMode.Read);
+            for (int z = 0; z < tex3D.Depth; z++)
+                for (int y = 0; y < tex3D.Height; y++)
+                    for (int x = 0; x < tex3D.Width; x++)
+                    {
+                        Assert.Equal(new RgbaByte((byte)x, (byte)y, (byte)z, 1), view[x, y, z]);
+                    }
+            GD.Unmap(staging);
         }
     }
 

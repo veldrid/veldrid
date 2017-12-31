@@ -636,74 +636,187 @@ namespace Veldrid.Vk
             uint layerCount)
         {
             EnsureNoRenderPass();
+            CopyTextureCore_VkCommandBuffer(
+                _cb,
+                source, srcX, srcY, srcZ, srcMipLevel, srcBaseArrayLayer,
+                destination, dstX, dstY, dstZ, dstMipLevel, dstBaseArrayLayer,
+                width, height, depth, layerCount);
+        }
 
-            bool sourceIsStaging = (source.Usage & TextureUsage.Staging) == TextureUsage.Staging;
-            bool destIsStaging = (destination.Usage & TextureUsage.Staging) == TextureUsage.Staging;
-            if ((destIsStaging || sourceIsStaging) && layerCount > 1)
-            {
-                // Need to issue one copy per array layer.
-                throw new NotImplementedException();
-            }
-
-            VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
-            {
-                aspectMask = VkImageAspectFlags.Color,
-                layerCount = layerCount,
-                mipLevel = sourceIsStaging ? 0 : srcMipLevel,
-                baseArrayLayer = sourceIsStaging ? 0 : srcBaseArrayLayer
-            };
-
-            VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
-            {
-                aspectMask = VkImageAspectFlags.Color,
-                layerCount = layerCount,
-                mipLevel = destIsStaging ? 0 : dstMipLevel,
-                baseArrayLayer = destIsStaging ? 0 : dstBaseArrayLayer
-            };
-
-            VkImageCopy region = new VkImageCopy
-            {
-                srcOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
-                dstOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY, z = (int)dstZ },
-                srcSubresource = srcSubresource,
-                dstSubresource = dstSubresource,
-                extent = new VkExtent3D { width = width, height = height, depth = depth }
-            };
-
+        internal static void CopyTextureCore_VkCommandBuffer(
+            VkCommandBuffer cb,
+            Texture source,
+            uint srcX, uint srcY, uint srcZ,
+            uint srcMipLevel,
+            uint srcBaseArrayLayer,
+            Texture destination,
+            uint dstX, uint dstY, uint dstZ,
+            uint dstMipLevel,
+            uint dstBaseArrayLayer,
+            uint width, uint height, uint depth,
+            uint layerCount)
+        {
             VkTexture srcVkTexture = Util.AssertSubtype<Texture, VkTexture>(source);
             VkTexture dstVkTexture = Util.AssertSubtype<Texture, VkTexture>(destination);
 
-            srcVkTexture.TransitionImageLayout(
-                _cb,
-                srcMipLevel,
-                1,
-                srcBaseArrayLayer,
-                layerCount,
-                VkImageLayout.TransferSrcOptimal);
+            bool sourceIsStaging = (source.Usage & TextureUsage.Staging) == TextureUsage.Staging;
+            bool destIsStaging = (destination.Usage & TextureUsage.Staging) == TextureUsage.Staging;
 
-            dstVkTexture.TransitionImageLayout(
-                _cb,
-                dstMipLevel,
-                1,
-                dstBaseArrayLayer,
-                layerCount,
-                VkImageLayout.TransferDstOptimal);
+            if (!sourceIsStaging && !destIsStaging)
+            {
+                VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
+                {
+                    aspectMask = VkImageAspectFlags.Color,
+                    layerCount = layerCount,
+                    mipLevel = srcMipLevel,
+                    baseArrayLayer = srcBaseArrayLayer
+                };
 
-            VkImage srcImage = sourceIsStaging
-                ? srcVkTexture.GetStagingImage(source.CalculateSubresource(srcMipLevel, srcBaseArrayLayer))
-                : srcVkTexture.OptimalDeviceImage;
-            VkImage dstImage = destIsStaging
-                ? dstVkTexture.GetStagingImage(destination.CalculateSubresource(dstMipLevel, dstBaseArrayLayer))
-                : dstVkTexture.OptimalDeviceImage;
+                VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
+                {
+                    aspectMask = VkImageAspectFlags.Color,
+                    layerCount = layerCount,
+                    mipLevel = dstMipLevel,
+                    baseArrayLayer = dstBaseArrayLayer
+                };
 
-            vkCmdCopyImage(
-                _cb,
-                srcImage,
-                VkImageLayout.TransferSrcOptimal,
-                dstImage,
-                VkImageLayout.TransferDstOptimal,
-                1,
-                ref region);
+                VkImageCopy region = new VkImageCopy
+                {
+                    srcOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
+                    dstOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY, z = (int)dstZ },
+                    srcSubresource = srcSubresource,
+                    dstSubresource = dstSubresource,
+                    extent = new VkExtent3D { width = width, height = height, depth = depth }
+                };
+
+                srcVkTexture.TransitionImageLayout(
+                    cb,
+                    srcMipLevel,
+                    1,
+                    srcBaseArrayLayer,
+                    layerCount,
+                    VkImageLayout.TransferSrcOptimal);
+
+                dstVkTexture.TransitionImageLayout(
+                    cb,
+                    dstMipLevel,
+                    1,
+                    dstBaseArrayLayer,
+                    layerCount,
+                    VkImageLayout.TransferDstOptimal);
+
+                vkCmdCopyImage(
+                    cb,
+                    srcVkTexture.OptimalDeviceImage,
+                    VkImageLayout.TransferSrcOptimal,
+                    dstVkTexture.OptimalDeviceImage,
+                    VkImageLayout.TransferDstOptimal,
+                    1,
+                    ref region);
+            }
+            else if (sourceIsStaging && !destIsStaging)
+            {
+                Vulkan.VkBuffer srcBuffer = srcVkTexture.StagingBuffer;
+                VkSubresourceLayout srcLayout = srcVkTexture.GetSubresourceLayout(
+                    srcVkTexture.CalculateSubresource(srcMipLevel, srcBaseArrayLayer));
+                VkImage dstImage = dstVkTexture.OptimalDeviceImage;
+                dstVkTexture.TransitionImageLayout(
+                    cb,
+                    dstMipLevel,
+                    1,
+                    dstBaseArrayLayer,
+                    layerCount,
+                    VkImageLayout.TransferDstOptimal);
+
+                VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
+                {
+                    aspectMask = VkImageAspectFlags.Color,
+                    layerCount = layerCount,
+                    mipLevel = dstMipLevel,
+                    baseArrayLayer = dstBaseArrayLayer
+                };
+
+                Util.GetMipDimensions(srcVkTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+
+                VkBufferImageCopy regions = new VkBufferImageCopy
+                {
+                    bufferOffset = srcLayout.offset + (srcX * FormatHelpers.GetSizeInBytes(srcVkTexture.Format)),
+                    bufferRowLength = mipWidth,
+                    bufferImageHeight = mipHeight,
+                    imageExtent = new VkExtent3D { width = width, height = height, depth = depth },
+                    imageOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY, z = (int)dstZ },
+                    imageSubresource = dstSubresource
+                };
+
+                vkCmdCopyBufferToImage(cb, srcBuffer, dstImage, VkImageLayout.TransferDstOptimal, 1, ref regions);
+            }
+            else if (!sourceIsStaging && destIsStaging)
+            {
+                VkImage srcImage = srcVkTexture.OptimalDeviceImage;
+                srcVkTexture.TransitionImageLayout(
+                    cb,
+                    srcMipLevel,
+                    1,
+                    srcBaseArrayLayer,
+                    layerCount,
+                    VkImageLayout.TransferSrcOptimal);
+
+                Vulkan.VkBuffer dstBuffer = dstVkTexture.StagingBuffer;
+                VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
+                    dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer));
+                VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
+                {
+                    aspectMask = VkImageAspectFlags.Color,
+                    layerCount = layerCount,
+                    mipLevel = srcMipLevel,
+                    baseArrayLayer = srcBaseArrayLayer
+                };
+
+                Util.GetMipDimensions(dstVkTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                VkBufferImageCopy region = new VkBufferImageCopy
+                {
+                    bufferRowLength = mipWidth,
+                    bufferImageHeight = mipHeight,
+                    bufferOffset = dstLayout.offset + (dstX * FormatHelpers.GetSizeInBytes(dstVkTexture.Format)),
+                    imageExtent = new VkExtent3D { width = width, height = height, depth = depth },
+                    imageOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY, z = (int)dstZ },
+                    imageSubresource = srcSubresource
+                };
+
+                vkCmdCopyImageToBuffer(cb, srcImage, VkImageLayout.TransferSrcOptimal, dstBuffer, 1, ref region);
+            }
+            else
+            {
+                Debug.Assert(sourceIsStaging && destIsStaging);
+                Vulkan.VkBuffer srcBuffer = srcVkTexture.StagingBuffer;
+                VkSubresourceLayout srcLayout = srcVkTexture.GetSubresourceLayout(
+                    srcVkTexture.CalculateSubresource(srcMipLevel, srcBaseArrayLayer));
+                Vulkan.VkBuffer dstBuffer = dstVkTexture.StagingBuffer;
+                VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
+                    dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer));
+                uint pixelSize = FormatHelpers.GetSizeInBytes(srcVkTexture.Format);
+                uint zLimit = Math.Max(depth, layerCount);
+                for (uint zz = 0; zz < zLimit; zz++)
+                {
+                    for (uint yy = 0; yy < height; yy++)
+                    {
+                        VkBufferCopy region = new VkBufferCopy
+                        {
+                            srcOffset = srcLayout.offset
+                                + srcLayout.depthPitch * (zz + srcZ)
+                                + srcLayout.rowPitch * (yy + srcY)
+                                + pixelSize * srcX,
+                            dstOffset = dstLayout.offset
+                                + dstLayout.depthPitch * (zz + dstZ)
+                                + dstLayout.rowPitch * (yy + dstY)
+                                + pixelSize * dstX,
+                            size = width * pixelSize,
+                        };
+
+                        vkCmdCopyBuffer(cb, srcBuffer, dstBuffer, 1, ref region);
+                    }
+                }
+            }
         }
 
         public override string Name

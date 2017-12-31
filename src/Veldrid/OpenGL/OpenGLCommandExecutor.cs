@@ -866,17 +866,17 @@ namespace Veldrid.OpenGL
                 else
                 {
                     glTexSubImage3D(
-                    TextureTarget.Texture3D,
-                    (int)mipLevel,
-                    (int)x,
-                    (int)y,
-                    (int)z,
-                    width,
-                    height,
-                    depth,
-                    glTex.GLPixelFormat,
-                    glTex.GLPixelType,
-                    dataPtr.ToPointer());
+                        TextureTarget.Texture3D,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)z,
+                        width,
+                        height,
+                        depth,
+                        glTex.GLPixelFormat,
+                        glTex.GLPixelType,
+                        dataPtr.ToPointer());
                     CheckLastError();
                 }
             }
@@ -1033,22 +1033,24 @@ namespace Veldrid.OpenGL
             srcGLTexture.EnsureResourcesCreated();
             dstGLTexture.EnsureResourcesCreated();
 
-            for (uint layer = 0; layer < layerCount; layer++)
+            if (_extensions.ARB_CopyImage && depth == 1)
             {
-                uint srcLayer = layer + srcBaseArrayLayer;
-                uint dstLayer = layer + dstBaseArrayLayer;
-                if (_extensions.ARB_CopyImage)
+                // glCopyImageSubData does not work properly when depth > 1, so use the awful roundabout copy.
+                uint srcZOrLayer = Math.Max(srcBaseArrayLayer, srcZ);
+                uint dstZOrLayer = Math.Max(dstBaseArrayLayer, dstZ);
+                uint depthOrLayerCount = Math.Max(depth, layerCount);
+                glCopyImageSubData(
+                    srcGLTexture.Texture, srcGLTexture.TextureTarget, (int)srcMipLevel, (int)srcX, (int)srcY, (int)srcZOrLayer,
+                    dstGLTexture.Texture, dstGLTexture.TextureTarget, (int)dstMipLevel, (int)dstX, (int)dstY, (int)dstZOrLayer,
+                    width, height, depthOrLayerCount);
+                CheckLastError();
+            }
+            else
+            {
+                for (uint layer = 0; layer < layerCount; layer++)
                 {
-                    uint srcZOrLayer = Math.Max(srcLayer, srcZ);
-                    uint dstZOrLayer = Math.Max(dstLayer, dstZ);
-                    glCopyImageSubData(
-                        srcGLTexture.Texture, srcGLTexture.TextureTarget, (int)srcMipLevel, (int)srcX, (int)srcY, (int)srcZOrLayer,
-                        dstGLTexture.Texture, dstGLTexture.TextureTarget, (int)dstMipLevel, (int)dstX, (int)dstY, (int)dstZOrLayer,
-                        width, height, depth);
-                    CheckLastError();
-                }
-                else
-                {
+                    uint srcLayer = layer + srcBaseArrayLayer;
+                    uint dstLayer = layer + dstBaseArrayLayer;
                     CopyRoundabout(
                         srcGLTexture, dstGLTexture,
                         srcX, srcY, srcZ, srcMipLevel, srcLayer,
@@ -1069,10 +1071,6 @@ namespace Veldrid.OpenGL
             {
                 throw new VeldridException("Copying to/from Textures with different formats is not supported.");
             }
-            if (srcGLTexture.Depth != 1)
-            {
-                throw new VeldridException("Copying to/from 3D compressed textures is not supported.");
-            }
 
             uint pixelSize = FormatHelpers.GetSizeInBytes(srcGLTexture.Format);
             uint sizeInBytes;
@@ -1090,7 +1088,7 @@ namespace Veldrid.OpenGL
             }
             else
             {
-                sizeInBytes = width * height * pixelSize;
+                sizeInBytes = width * height * depth * pixelSize;
             }
 
             FixedStagingBlock block = _stagingMemoryPool.GetFixedStagingBlock(sizeInBytes);
@@ -1209,10 +1207,10 @@ namespace Veldrid.OpenGL
         }
 
         private static void CopyWithFBO(
-                    OpenGLTexture srcGLTexture, OpenGLTexture dstGLTexture,
-                    uint srcX, uint srcY, uint srcZ, uint srcMipLevel, uint srcBaseArrayLayer,
-                    uint dstX, uint dstY, uint dstZ, uint dstMipLevel, uint dstBaseArrayLayer,
-                    uint width, uint height, uint depth, uint layerCount, uint layer)
+            OpenGLTexture srcGLTexture, OpenGLTexture dstGLTexture,
+            uint srcX, uint srcY, uint srcZ, uint srcMipLevel, uint srcBaseArrayLayer,
+            uint dstX, uint dstY, uint dstZ, uint dstMipLevel, uint dstBaseArrayLayer,
+            uint width, uint height, uint depth, uint layerCount, uint layer)
         {
             TextureTarget dstTarget = dstGLTexture.TextureTarget;
             if (dstTarget == TextureTarget.Texture2D)

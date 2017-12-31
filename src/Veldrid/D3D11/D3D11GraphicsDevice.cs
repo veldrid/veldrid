@@ -512,6 +512,7 @@ namespace Veldrid.D3D11
                     bottom: (int)(y + height),
                     back: (int)(z + depth));
                 uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture.Format) * width;
+                uint srcDepthPitch = srcRowPitch * depth;
                 lock (_immediateContextLock)
                 {
                     _immediateContext.UpdateSubresource(
@@ -520,7 +521,7 @@ namespace Veldrid.D3D11
                         resourceRegion,
                         source,
                         (int)srcRowPitch,
-                        0);
+                        (int)srcDepthPitch);
                 }
             }
         }

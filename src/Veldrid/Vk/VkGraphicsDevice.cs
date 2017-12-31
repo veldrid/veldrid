@@ -1026,6 +1026,24 @@ namespace Veldrid.Vk
 
             bool createStaging = (texture.Usage & TextureUsage.Staging) == 0;
 
+            if (createStaging)
+            {
+                Texture staging = ResourceFactory.CreateTexture(
+                    new TextureDescription(width, height, depth, 1, 1, texture.Format, TextureUsage.Staging, texture.Type));
+                UpdateTexture(staging,
+                    source, sizeInBytes, 0, 0, 0, width, height, depth, 0, 0);
+                CommandList cl = ResourceFactory.CreateCommandList();
+                cl.Begin();
+                cl.CopyTexture(
+                    staging, 0, 0, 0, 0, 0,
+                    texture, x, y, z, mipLevel, arrayLayer,
+                    width, height, depth, 1);
+                cl.End();
+                SubmitCommands(cl);
+                cl.Dispose();
+                return;
+            }
+
             for (uint curZ = 0; curZ < depth; curZ++)
             {
                 uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);

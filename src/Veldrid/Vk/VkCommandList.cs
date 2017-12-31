@@ -639,7 +639,7 @@ namespace Veldrid.Vk
 
             bool sourceIsStaging = (source.Usage & TextureUsage.Staging) == TextureUsage.Staging;
             bool destIsStaging = (destination.Usage & TextureUsage.Staging) == TextureUsage.Staging;
-            if ((destIsStaging || sourceIsStaging) && layerCount > 1)
+            if ((destIsStaging || sourceIsStaging) && (layerCount > 1 || depth > 1))
             {
                 // Need to issue one copy per array layer.
                 throw new NotImplementedException();

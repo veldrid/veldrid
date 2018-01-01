@@ -636,13 +636,19 @@ namespace Veldrid.Vk
             uint layerCount)
         {
             EnsureNoRenderPass();
+            VkTexture srcVkTexture = Util.AssertSubtype<Texture, VkTexture>(source);
+            VkTexture dstVkTexture = Util.AssertSubtype<Texture, VkTexture>(destination);
 
             bool sourceIsStaging = (source.Usage & TextureUsage.Staging) == TextureUsage.Staging;
             bool destIsStaging = (destination.Usage & TextureUsage.Staging) == TextureUsage.Staging;
+
             if ((destIsStaging || sourceIsStaging) && (layerCount > 1 || depth > 1))
             {
-                // Need to issue one copy per array layer.
-                throw new NotImplementedException();
+                CopyMultiStagingImage(
+                    sourceIsStaging, srcVkTexture, srcX, srcY, srcZ, srcMipLevel, srcBaseArrayLayer,
+                    destIsStaging, dstVkTexture, dstX, dstY, dstZ, dstMipLevel, dstBaseArrayLayer,
+                    width, height, depth, layerCount);
+                return;
             }
 
             VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
@@ -669,9 +675,6 @@ namespace Veldrid.Vk
                 dstSubresource = dstSubresource,
                 extent = new VkExtent3D { width = width, height = height, depth = depth }
             };
-
-            VkTexture srcVkTexture = Util.AssertSubtype<Texture, VkTexture>(source);
-            VkTexture dstVkTexture = Util.AssertSubtype<Texture, VkTexture>(destination);
 
             srcVkTexture.TransitionImageLayout(
                 _cb,
@@ -704,6 +707,96 @@ namespace Veldrid.Vk
                 VkImageLayout.TransferDstOptimal,
                 1,
                 ref region);
+        }
+
+        private void CopyMultiStagingImage(
+            bool srcIsStaging, VkTexture source, uint srcX, uint srcY, uint srcZ, uint srcMipLevel, uint srcBaseArrayLayer,
+            bool dstIsStaging, VkTexture destination, uint dstX, uint dstY, uint dstZ, uint dstMipLevel, uint dstBaseArrayLayer,
+            uint width, uint height, uint depth, uint layerCount)
+        {
+            source.TransitionImageLayout(
+                _cb, srcMipLevel, 1, srcBaseArrayLayer, layerCount, VkImageLayout.TransferSrcOptimal);
+            destination.TransitionImageLayout(
+                _cb, dstMipLevel, 1, dstBaseArrayLayer, layerCount, VkImageLayout.TransferDstOptimal);
+
+            uint srcZOrArray = Math.Max(srcZ, srcBaseArrayLayer);
+            uint dstZOrArray = Math.Max(dstZ, dstBaseArrayLayer);
+            uint zCount = Math.Max(depth, layerCount);
+
+            if (srcIsStaging)
+            {
+                if (dstIsStaging)
+                {
+                    for (uint z = 0; z < zCount; z++)
+                    {
+                        VkImage srcImage = source.GetStagingImage(srcMipLevel, srcZOrArray + z);
+                        VkImage dstImage = destination.GetStagingImage(dstMipLevel, dstZOrArray + z);
+
+                        VkImageCopy region = new VkImageCopy();
+                        region.srcSubresource = new VkImageSubresourceLayers
+                        {
+                            aspectMask = VkImageAspectFlags.Color,
+                            baseArrayLayer = 0,
+                            layerCount = 1,
+                            mipLevel = 0
+                        };
+                        region.dstSubresource = new VkImageSubresourceLayers
+                        {
+                            aspectMask = VkImageAspectFlags.Color,
+                            baseArrayLayer = 0,
+                            layerCount = 1,
+                            mipLevel = 0
+                        };
+                        region.srcOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY };
+                        region.dstOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY };
+                        region.extent = new VkExtent3D { width = width, height = height, depth = 1 };
+
+                        vkCmdCopyImage(_cb,
+                            srcImage, VkImageLayout.TransferSrcOptimal,
+                            dstImage, VkImageLayout.TransferDstOptimal,
+                            1,
+                            ref region);
+                    }
+                }
+                else
+                {
+                    for (uint z = 0; z < zCount; z++)
+                    {
+                        VkImage srcImage = source.GetStagingImage(srcMipLevel, srcZOrArray + z);
+                        VkImage dstImage = destination.OptimalDeviceImage;
+
+                        VkImageCopy region = new VkImageCopy();
+                        region.srcSubresource = new VkImageSubresourceLayers
+                        {
+                            aspectMask = VkImageAspectFlags.Color,
+                            baseArrayLayer = 0,
+                            layerCount = 1,
+                            mipLevel = 0
+                        };
+                        region.dstSubresource = new VkImageSubresourceLayers
+                        {
+                            aspectMask = VkImageAspectFlags.Color,
+                            baseArrayLayer = dstBaseArrayLayer,
+                            layerCount = 1,
+                            mipLevel = dstMipLevel
+                        };
+                        region.srcOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY };
+                        region.dstOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY };
+                        region.extent = new VkExtent3D { width = width, height = height, depth = 1 };
+
+                        vkCmdCopyImage(_cb,
+                            srcImage, VkImageLayout.TransferSrcOptimal,
+                            dstImage, VkImageLayout.TransferDstOptimal,
+                            1,
+                            ref region);
+                    }
+                }
+            }
+            else
+            {
+                Debug.Assert(dstIsStaging);
+                throw new VeldridException($"Non-Staging -> Staging 3D/Array copies are not implemented");
+            }
         }
 
         public override string Name

@@ -37,6 +37,8 @@ namespace Veldrid.Vk
         public VkImage OptimalDeviceImage => _optimalImage;
         public VkMemoryBlock OptimalMemoryBlock => _optimalMemory;
 
+        public VkImage GetStagingImage(uint mipLevel, uint arrayLayer)
+            => _stagingImages[CalculateSubresource(mipLevel, arrayLayer)];
         public VkImage GetStagingImage(uint subresource) => _stagingImages[subresource];
         public VkMemoryBlock GetStagingMemoryBlock(uint subresource) => _stagingMemories[subresource];
 

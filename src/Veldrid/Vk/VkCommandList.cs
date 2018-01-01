@@ -41,7 +41,6 @@ namespace Veldrid.Vk
         private readonly object _commandBufferListLock = new object();
         private readonly Queue<VkCommandBuffer> _availableCommandBuffers = new Queue<VkCommandBuffer>();
         private readonly List<VkCommandBuffer> _submittedCommandBuffers = new List<VkCommandBuffer>();
-        private readonly List<VkCommandBuffer> _newlyCompletedCommandBuffers = new List<VkCommandBuffer>();
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
@@ -85,19 +84,15 @@ namespace Veldrid.Vk
         {
             lock (_commandBufferListLock)
             {
-                _newlyCompletedCommandBuffers.Clear();
-                foreach (VkCommandBuffer submittedCB in _submittedCommandBuffers)
+                for (int i = 0; i < _submittedCommandBuffers.Count; i++)
                 {
+                    VkCommandBuffer submittedCB = _submittedCommandBuffers[i];
                     if (submittedCB == completedCB)
                     {
                         _availableCommandBuffers.Enqueue(completedCB);
-                        _newlyCompletedCommandBuffers.Add(completedCB);
+                        _submittedCommandBuffers.RemoveAt(i);
+                        i -= 1;
                     }
-                }
-
-                foreach (VkCommandBuffer cb in _newlyCompletedCommandBuffers)
-                {
-                    _submittedCommandBuffers.Remove(cb);
                 }
             }
         }

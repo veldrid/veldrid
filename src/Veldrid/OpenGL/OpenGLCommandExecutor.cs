@@ -1207,10 +1207,10 @@ namespace Veldrid.OpenGL
         }
 
         private static void CopyWithFBO(
-                    OpenGLTexture srcGLTexture, OpenGLTexture dstGLTexture,
-                    uint srcX, uint srcY, uint srcZ, uint srcMipLevel, uint srcBaseArrayLayer,
-                    uint dstX, uint dstY, uint dstZ, uint dstMipLevel, uint dstBaseArrayLayer,
-                    uint width, uint height, uint depth, uint layerCount, uint layer)
+            OpenGLTexture srcGLTexture, OpenGLTexture dstGLTexture,
+            uint srcX, uint srcY, uint srcZ, uint srcMipLevel, uint srcBaseArrayLayer,
+            uint dstX, uint dstY, uint dstZ, uint dstMipLevel, uint dstBaseArrayLayer,
+            uint width, uint height, uint depth, uint layerCount, uint layer)
         {
             TextureTarget dstTarget = dstGLTexture.TextureTarget;
             if (dstTarget == TextureTarget.Texture2D)

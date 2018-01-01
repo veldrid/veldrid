@@ -41,12 +41,14 @@ namespace Veldrid.Vk
         private vkDebugMarkerSetObjectNameEXT_d _setObjectNameDelegate;
 
         private readonly ConcurrentQueue<Vulkan.VkBuffer> _buffersToDestroy = new ConcurrentQueue<Vulkan.VkBuffer>();
-        private readonly ConcurrentQueue<VkImage> _imagesToDestroy = new ConcurrentQueue<VkImage>();
         private readonly ConcurrentQueue<VkMemoryBlock> _memoriesToFree = new ConcurrentQueue<VkMemoryBlock>();
 
         private const int SharedCommandPoolCount = 4;
         private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
         private VkDescriptorPoolManager _descriptorPoolManager;
+
+        private readonly Dictionary<VkCommandBuffer, VkTexture> _submittedStagingTextures
+            = new Dictionary<VkCommandBuffer, VkTexture>();
 
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
@@ -116,9 +118,9 @@ namespace Veldrid.Vk
         private void SubmitCommandList(
             CommandList cl,
             uint waitSemaphoreCount,
-            Vulkan.VkSemaphore* waitSemaphoresPtr,
+            VkSemaphore* waitSemaphoresPtr,
             uint signalSemaphoreCount,
-            Vulkan.VkSemaphore* signalSemaphoresPtr,
+            VkSemaphore* signalSemaphoresPtr,
             Fence fence)
         {
             VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
@@ -131,9 +133,9 @@ namespace Veldrid.Vk
             VkCommandList vkCL,
             VkCommandBuffer vkCB,
             uint waitSemaphoreCount,
-            Vulkan.VkSemaphore* waitSemaphoresPtr,
+            VkSemaphore* waitSemaphoresPtr,
             uint signalSemaphoreCount,
-            Vulkan.VkSemaphore* signalSemaphoresPtr,
+            VkSemaphore* signalSemaphoresPtr,
             Fence fence)
         {
             CheckSubmittedFences();
@@ -196,6 +198,14 @@ namespace Veldrid.Vk
                 VkResult resetResult = vkResetFences(_device, 1, ref fence);
                 CheckResult(resetResult);
                 _availableSubmissionFences.Enqueue(fence);
+                lock (_stagingTexturesLock)
+                {
+                    if (_submittedStagingTextures.TryGetValue(kvp.Value.Item2, out VkTexture stagingTex))
+                    {
+                        _submittedStagingTextures.Remove(kvp.Value.Item2);
+                        _availableStagingTextures.Add(stagingTex);
+                    }
+                }
             }
 
             _completedFences.Clear();
@@ -361,11 +371,6 @@ namespace Veldrid.Vk
             while (_buffersToDestroy.TryDequeue(out Vulkan.VkBuffer buffer))
             {
                 vkDestroyBuffer(_device, buffer, null);
-            }
-
-            while (_imagesToDestroy.TryDequeue(out VkImage image))
-            {
-                vkDestroyImage(_device, image, null);
             }
 
             while (_memoriesToFree.TryDequeue(out VkMemoryBlock memory))
@@ -681,72 +686,12 @@ namespace Veldrid.Vk
             else
             {
                 VkTexture texture = Util.AssertSubtype<MappableResource, VkTexture>(resource);
-                if (texture.Depth != 1)
-                {
-                    lock (_3DMapProxies)
-                    {
-                        if (_3DMapProxies.ContainsKey(texture))
-                        {
-                            throw new VeldridException($"Cannot map Texture which is already mapped.");
-                        }
-
-                        Util.GetMipDimensions(texture, subresource, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                        uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
-                        uint denseRowSize = mipWidth * pixelSize;
-                        rowPitch = denseRowSize;
-                        sizeInBytes = mipWidth
-                            * mipHeight
-                            * mipDepth
-                            * pixelSize;
-                        depthPitch = mipWidth * mipHeight * pixelSize;
-                        FixedStagingBlock block = _stagingPool.GetFixedStagingBlock(sizeInBytes);
-                        mappedPtr = (IntPtr)block.Data;
-                        if (mode == MapMode.Read || mode == MapMode.ReadWrite)
-                        {
-                            for (uint zz = 0; zz < mipDepth; zz++)
-                            {
-                                uint zSlice = texture.CalculateSubresource(subresource, zz);
-                                VkMemoryBlock stagingSrc = texture.GetStagingMemoryBlock(zSlice);
-                                VkSubresourceLayout layout = texture.GetSubresourceLayout(zSlice);
-                                if (denseRowSize == layout.rowPitch)
-                                {
-                                    Buffer.MemoryCopy(
-                                        stagingSrc.BlockMappedPointer,
-                                        (byte*)mappedPtr + zz * depthPitch,
-                                        depthPitch,
-                                        depthPitch);
-                                }
-                                else
-                                {
-                                    for (uint yy = 0; yy < mipHeight; yy++)
-                                    {
-                                        byte* dstRowStart = ((byte*)mappedPtr + zz * depthPitch) + (rowPitch * yy);
-                                        byte* srcRowStart = ((byte*)stagingSrc.BlockMappedPointer) + (layout.rowPitch * yy);
-                                        Unsafe.CopyBlock(dstRowStart, srcRowStart, rowPitch);
-                                    }
-                                }
-                            }
-                        }
-
-                        Vk3DMapProxy proxy = new Vk3DMapProxy(block, texture, mode, subresource, rowPitch, depthPitch);
-                        _3DMapProxies.Add(texture, proxy);
-                    }
-                }
-                else
-                {
-                    memoryBlock = texture.GetMemoryBlock(subresource);
-                    VkSubresourceLayout layout = texture.GetSubresourceLayout(subresource);
-                    offset = (uint)layout.offset;
-                    sizeInBytes = (uint)layout.size;
-                    if (texture.Type == TextureType.Texture1D)
-                    {
-                        Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
-                        Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                        sizeInBytes = mipWidth * FormatHelpers.GetSizeInBytes(texture.Format);
-                    }
-                    rowPitch = (uint)layout.rowPitch;
-                    depthPitch = (uint)layout.depthPitch;
-                }
+                VkSubresourceLayout layout = texture.GetSubresourceLayout(subresource);
+                memoryBlock = texture.Memory;
+                sizeInBytes = (uint)layout.size;
+                offset = (uint)layout.offset;
+                rowPitch = (uint)layout.rowPitch;
+                depthPitch = (uint)layout.depthPitch;
             }
 
             if (memoryBlock != null)
@@ -782,54 +727,7 @@ namespace Veldrid.Vk
             else
             {
                 VkTexture tex = Util.AssertSubtype<MappableResource, VkTexture>(resource);
-                if (tex.Depth != 1)
-                {
-                    Util.GetMipDimensions(tex, subresource, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                    lock (_3DMapProxies)
-                    {
-                        if (!_3DMapProxies.TryGetValue(tex, out Vk3DMapProxy proxy))
-                        {
-                            throw new VeldridException("Cannot unmap Texture which is not mapped.");
-                        }
-
-                        bool result = _3DMapProxies.Remove(tex);
-                        Debug.Assert(result);
-
-                        if (proxy.MappedResource.Mode == MapMode.Write || proxy.MappedResource.Mode == MapMode.ReadWrite)
-                        {
-                            uint pixelSize = FormatHelpers.GetSizeInBytes(tex.Format);
-                            uint denseRowSize = mipWidth * pixelSize;
-                            uint sliceSize = denseRowSize * mipHeight;
-                            for (uint zSlice = 0; zSlice < tex.Depth; zSlice++)
-                            {
-                                uint stagingSubresource = tex.CalculateSubresource(subresource, zSlice);
-                                byte* sliceBasePtr = (byte*)proxy.StagingBlock.Data + zSlice * sliceSize;
-                                VkMemoryBlock destBlock = tex.GetStagingMemoryBlock(stagingSubresource);
-                                VkSubresourceLayout layout = tex.GetSubresourceLayout(stagingSubresource);
-                                if (layout.rowPitch == denseRowSize)
-                                {
-                                    Buffer.MemoryCopy(sliceBasePtr, destBlock.BlockMappedPointer, sliceSize, sliceSize);
-                                }
-                                else
-                                {
-                                    for (uint yy = 0; yy < mipHeight; yy++)
-                                    {
-                                        Unsafe.CopyBlock(
-                                            (byte*)destBlock.BlockMappedPointer + yy * layout.rowPitch,
-                                            sliceBasePtr + yy * denseRowSize,
-                                            denseRowSize);
-                                    }
-                                }
-                            }
-                        }
-
-                        proxy.Free();
-                    }
-                }
-                else
-                {
-                    memoryBlock = ((VkTexture)resource).GetMemoryBlock(subresource);
-                }
+                memoryBlock = tex.Memory;
             }
 
             if (memoryBlock != null && !memoryBlock.IsPersistentMapped)
@@ -864,6 +762,12 @@ namespace Veldrid.Vk
             _descriptorPoolManager.DestroyAll();
             vkDestroyCommandPool(_device, _graphicsCommandPool, null);
             vkDestroyFence(_device, _imageAvailableFence, null);
+
+            Debug.Assert(_submittedStagingTextures.Count == 0);
+            foreach (VkTexture tex in _availableStagingTextures)
+            {
+                tex.Dispose();
+            }
 
             while (_sharedGraphicsCommandPools.TryPop(out SharedCommandPool sharedPool))
             {
@@ -1022,164 +926,75 @@ namespace Veldrid.Vk
             uint mipLevel,
             uint arrayLayer)
         {
-            VkTexture tex = Util.AssertSubtype<Texture, VkTexture>(texture);
-
-            bool createStaging = (texture.Usage & TextureUsage.Staging) == 0;
-
-            if (createStaging)
+            VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(texture);
+            bool isStaging = (vkTex.Usage & TextureUsage.Staging) != 0;
+            if (isStaging)
             {
-                Texture staging = ResourceFactory.CreateTexture(
-                    new TextureDescription(width, height, depth, 1, 1, texture.Format, TextureUsage.Staging, texture.Type));
-                UpdateTexture(staging,
-                    source, sizeInBytes, 0, 0, 0, width, height, depth, 0, 0);
-                CommandList cl = ResourceFactory.CreateCommandList();
-                cl.Begin();
-                cl.CopyTexture(
-                    staging, 0, 0, 0, 0, 0,
-                    texture, x, y, z, mipLevel, arrayLayer,
-                    width, height, depth, 1);
-                cl.End();
-                SubmitCommands(cl);
-                cl.Dispose();
-                return;
-            }
-
-            for (uint curZ = 0; curZ < depth; curZ++)
-            {
-                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
-                uint sliceSize = width * height * pixelSizeInBytes;
-                byte* curZSourcePtr = (byte*)source + sliceSize * curZ;
-                VkImage tempStagingImage = default(VkImage);
-                VkMemoryBlock tempStagingMemory = default(VkMemoryBlock);
-                void* mappedPtr;
-                ulong rowPitch;
-
-                if (createStaging)
-                {
-                    if (depth != 1)
-                    {
-                        throw new NotImplementedException("Updating non-staging 3D Vulkan Textures is not yet implemented.");
-                    }
-
-                    // If the destination texture is not a staging texture, then create a temporary one.
-                    CreateImage(
-                        Device,
-                        PhysicalDeviceMemProperties,
-                        MemoryManager,
-                        width,
-                        height,
-                        depth,
-                        1,
-                        VkFormats.VdToVkPixelFormat(tex.Format),
-                        VkImageTiling.Linear,
-                        VkImageUsageFlags.TransferSrc,
-                        VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
-                        out tempStagingImage,
-                        out tempStagingMemory);
-
-                    VkImageSubresource subresource = new VkImageSubresource();
-                    subresource.aspectMask = VkImageAspectFlags.Color;
-                    subresource.mipLevel = 0;
-                    subresource.arrayLayer = 0;
-                    vkGetImageSubresourceLayout(Device, tempStagingImage, ref subresource, out VkSubresourceLayout stagingLayout);
-                    rowPitch = stagingLayout.rowPitch;
-
-                    VkResult result = vkMapMemory(Device, tempStagingMemory.DeviceMemory, tempStagingMemory.Offset, stagingLayout.size, 0, &mappedPtr);
-                    CheckResult(result);
-                }
-                else
-                {
-                    uint zSLice = depth == 1 ? arrayLayer : (z + curZ);
-                    uint subresource = tex.CalculateSubresource(mipLevel, zSLice);
-                    mappedPtr = tex.GetStagingMemoryBlock(subresource).BlockMappedPointer;
-
-                    VkImageSubresource vkIS = new VkImageSubresource();
-                    vkIS.aspectMask = VkImageAspectFlags.Color;
-                    vkIS.mipLevel = 0;
-                    vkIS.arrayLayer = 0;
-                    VkImage actualStagingImage = tex.GetStagingImage(subresource);
-                    vkGetImageSubresourceLayout(Device, actualStagingImage, ref vkIS, out VkSubresourceLayout stagingLayout);
-                    rowPitch = stagingLayout.rowPitch;
-                }
-
-                uint blockSize = 1;
-                if (texture.Format == PixelFormat.BC3_UNorm)
-                {
-                    blockSize = 4;
-                }
-
-                uint denseRowSize = width * pixelSizeInBytes * blockSize;
-                if (rowPitch == denseRowSize)
-                {
-                    Buffer.MemoryCopy(curZSourcePtr, mappedPtr, sliceSize, sliceSize);
-                }
-                else
-                {
+                VkMemoryBlock memBlock = vkTex.Memory;
+                uint subresource = texture.CalculateSubresource(mipLevel, arrayLayer);
+                VkSubresourceLayout layout = vkTex.GetSubresourceLayout(subresource);
+                byte* imageBasePtr = (byte*)memBlock.BlockMappedPointer + layout.offset;
+                uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
+                for (uint zz = 0; zz < depth; zz++)
                     for (uint yy = 0; yy < height; yy++)
                     {
-                        byte* dstRowStart = (byte*)mappedPtr
-                            + (rowPitch * (yy + y))
-                            + (pixelSizeInBytes * x);
-                        byte* srcRowStart = curZSourcePtr + (width * yy * pixelSizeInBytes);
-                        Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
+                        byte* dstPtr = imageBasePtr
+                            + layout.depthPitch * (zz + z)
+                            + layout.rowPitch * (yy + y)
+                            + pixelSize * x;
+                        byte* srcPtr = (byte*)source
+                            + width * height * pixelSize * zz
+                            + width * pixelSize * yy;
+                        Unsafe.CopyBlock(dstPtr, srcPtr, width * pixelSize);
                     }
-                }
-
-                if (createStaging)
+            }
+            else
+            {
+                VkTexture stagingTex = GetFreeStagingTexture(width, height, depth, texture.Format);
+                UpdateTexture(stagingTex, source, sizeInBytes, 0, 0, 0, width, height, depth, 0, 0);
+                SharedCommandPool pool = GetFreeCommandPool();
+                VkCommandBuffer cb = pool.BeginNewCommandBuffer();
+                VkCommandList.CopyTextureCore_VkCommandBuffer(
+                    cb,
+                    stagingTex, 0, 0, 0, 0, 0,
+                    texture, x, y, z, mipLevel, arrayLayer,
+                    width, height, depth, 1);
+                pool.EndAndSubmit(cb);
+                lock (_stagingTexturesLock)
                 {
-                    vkUnmapMemory(Device, tempStagingMemory.DeviceMemory);
-                    SharedCommandPool pool = GetFreeCommandPool();
-                    VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-                    TransitionImageLayout(cb, tempStagingImage, 0, 1, 0, 1, VkImageLayout.Preinitialized, VkImageLayout.TransferSrcOptimal);
-                    tex.TransitionImageLayout(cb, mipLevel, 1, arrayLayer, 1, VkImageLayout.TransferDstOptimal);
-                    CopyFromStagingImage(cb, tempStagingImage, 0, tex.OptimalDeviceImage, mipLevel, width, height, arrayLayer);
-                    tex.TransitionImageLayout(cb, mipLevel, 1, arrayLayer, 1, VkImageLayout.ShaderReadOnlyOptimal);
-
-                    pool.EndAndSubmit(cb);
-
-                    _imagesToDestroy.Enqueue(tempStagingImage);
-                    _memoriesToFree.Enqueue(tempStagingMemory);
+                    _submittedStagingTextures.Add(cb, stagingTex);
                 }
             }
         }
 
-        protected void CopyFromStagingImage(
-            VkCommandBuffer cb,
-            VkImage srcImage,
-            uint srcMipLevel,
-            VkImage dstImage,
-            uint dstMipLevel,
-            uint width,
-            uint height,
-            uint baseArrayLayer = 0)
+        private readonly object _stagingTexturesLock = new object();
+        private readonly List<VkTexture> _availableStagingTextures = new List<VkTexture>();
+
+        private VkTexture GetFreeStagingTexture(uint width, uint height, uint depth, PixelFormat format)
         {
-            VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers();
-            srcSubresource.mipLevel = srcMipLevel;
-            srcSubresource.layerCount = 1;
-            srcSubresource.aspectMask = VkImageAspectFlags.Color;
-            srcSubresource.baseArrayLayer = 0;
+            uint pixelSize = FormatHelpers.GetSizeInBytes(format);
+            uint totalSize = width * height * depth * pixelSize;
+            lock (_stagingTexturesLock)
+            {
+                for (int i = 0; i < _availableStagingTextures.Count; i++)
+                {
+                    VkTexture tex = _availableStagingTextures[i];
+                    if (tex.Memory.Size >= totalSize)
+                    {
+                        _availableStagingTextures.RemoveAt(i);
+                        tex.SetStagingDimensions(width, height, depth);
+                        return tex;
+                    }
+                }
+            }
 
-            VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers();
-            dstSubresource.mipLevel = dstMipLevel;
-            dstSubresource.baseArrayLayer = baseArrayLayer;
-            dstSubresource.layerCount = 1;
-            dstSubresource.aspectMask = VkImageAspectFlags.Color;
+            uint texWidth = Math.Max(256, width);
+            uint texHeight = Math.Max(256, height);
+            VkTexture newTex = (VkTexture)ResourceFactory.CreateTexture(TextureDescription.Texture3D(
+                texWidth, texHeight, depth, 1, format, TextureUsage.Staging));
+            newTex.SetStagingDimensions(width, height, depth);
 
-            VkImageCopy region = new VkImageCopy();
-            region.dstSubresource = dstSubresource;
-            region.srcSubresource = srcSubresource;
-            region.extent.width = width;
-            region.extent.height = height;
-            region.extent.depth = 1;
-
-            vkCmdCopyImage(
-                cb,
-                srcImage,
-                VkImageLayout.TransferSrcOptimal,
-                dstImage,
-                VkImageLayout.TransferDstOptimal,
-                1,
-                ref region);
+            return newTex;
         }
 
         public override void ResetFence(Fence fence)

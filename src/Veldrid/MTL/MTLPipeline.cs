@@ -11,6 +11,8 @@ namespace Veldrid.MTL
         public uint VertexBufferCount { get; }
         public MTLCullMode CullMode { get; }
         public MTLWinding FrontFace { get; }
+        public MTLDepthStencilState DepthStencilState { get; }
+        public MTLDepthClipMode DepthClipMode { get; }
 
         public MTLPipeline(ref GraphicsPipelineDescription description, MTLGraphicsDevice gd)
             : base(ref description)
@@ -31,6 +33,7 @@ namespace Veldrid.MTL
 
             CullMode = MTLFormats.VdToMTLCullMode(description.RasterizerState.CullMode);
             FrontFace = MTLFormats.VdVoMTLFrontFace(description.RasterizerState.FrontFace);
+            ScissorTestEnabled = description.RasterizerState.ScissorTestEnabled;
 
             MTLRenderPipelineDescriptor mtlDesc = MTLRenderPipelineDescriptor.New();
             foreach (var shader in description.ShaderSet.Shaders)
@@ -91,19 +94,24 @@ namespace Veldrid.MTL
             }
             // TODO: Lots of blend state needs to be set above.
 
-            // TODO: Depth state
-            // MTLDepthStencilState dss;
-
             RenderPipelineState = gd.Device.newRenderPipelineStateWithDescriptor(mtlDesc);
+            ObjectiveCRuntime.release(mtlDesc.NativePtr);
+
+            MTLDepthStencilDescriptor depthDescriptor = MTLUtil.AllocInit<MTLDepthStencilDescriptor>();
+            depthDescriptor.depthCompareFunction = MTLFormats.VdToMTLCompareFunction(
+                description.DepthStencilState.DepthComparison);
+            depthDescriptor.depthWriteEnabled = description.DepthStencilState.DepthWriteEnabled;
+            DepthStencilState = gd.Device.newDepthStencilStateWithDescriptor(depthDescriptor);
+            ObjectiveCRuntime.release(depthDescriptor.NativePtr);
+
+            DepthClipMode = description.DepthStencilState.DepthTestEnabled ? MTLDepthClipMode.Clip : MTLDepthClipMode.Clamp;
         }
 
         public override bool IsComputePipeline { get; }
 
-        public override string Name
-        {
-            get => throw new System.NotImplementedException();
-            set => throw new System.NotImplementedException();
-        }
+        public bool ScissorTestEnabled { get; }
+
+        public override string Name { get; set; }
 
         public override void Dispose()
         {

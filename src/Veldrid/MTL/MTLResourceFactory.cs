@@ -25,7 +25,7 @@ namespace Veldrid.MTL
 
         public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)
         {
-            throw new System.NotImplementedException();
+            return new MTLFramebuffer(_gd, ref description);
         }
 
         public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)

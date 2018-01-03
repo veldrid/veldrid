@@ -6,6 +6,7 @@ namespace Veldrid.MTL
     internal class MTLShader : Shader
     {
         private readonly MTLGraphicsDevice _device;
+        private bool _disposed;
 
         public MTLLibrary Library { get; private set; }
         public MTLFunction Function { get; private set; }
@@ -26,8 +27,12 @@ namespace Veldrid.MTL
 
         public override void Dispose()
         {
-            ObjectiveCRuntime.release(Function.NativePtr);
-            ObjectiveCRuntime.release(Library.NativePtr);
+            if (!_disposed)
+            {
+                _disposed = true;
+                ObjectiveCRuntime.release(Function.NativePtr);
+                ObjectiveCRuntime.release(Library.NativePtr);
+            }
         }
     }
 }

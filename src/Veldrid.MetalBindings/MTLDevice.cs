@@ -11,7 +11,7 @@ namespace Veldrid.MetalBindings
         public MTLDevice(IntPtr nativePtr) => NativePtr = nativePtr;
         public string name => string_objc_msgSend(NativePtr, "name");
         public MTLSize maxThreadsPerThreadgroup => objc_msgSend_stret<MTLSize>(this, new Selector("maxThreadsPerThreadgroup"));
-        
+
         // TODO: This should have an "out NSError" parameter.
         public MTLLibrary newLibraryWithSource(string source, MTLCompileOptions options)
         {
@@ -22,7 +22,7 @@ namespace Veldrid.MetalBindings
                 options,
                 out NSError error);
 
-            if (error.NativePtr != IntPtr.Zero)
+            if (library == IntPtr.Zero)
             {
                 throw new Exception("Shader compilation failed: " + error.localizedDescription);
             }
@@ -67,8 +67,17 @@ namespace Veldrid.MetalBindings
         public MTLSamplerState newSamplerStateWithDescriptor(MTLSamplerDescriptor descriptor)
             => objc_msgSend<MTLSamplerState>(NativePtr, "newSamplerStateWithDescriptor:", descriptor.NativePtr);
 
+        public MTLDepthStencilState newDepthStencilStateWithDescriptor(MTLDepthStencilDescriptor descriptor)
+            => objc_msgSend<MTLDepthStencilState>(NativePtr, "newDepthStencilStateWithDescriptor:", descriptor.NativePtr);
+
         public Bool8 supportsTextureSampleCount(UIntPtr sampleCount)
             => bool8_objc_msgSend(NativePtr, "supportsTextureSampleCount:", sampleCount);
+
+        public Bool8 supportsFeatureSet(MTLFeatureSet featureSet)
+            => bool8_objc_msgSend(NativePtr, "supportsFeatureSet:", (uint)featureSet);
+
+        public Bool8 isDepth24Stencil8PixelFormatSupported
+            => bool8_objc_msgSend(NativePtr, "isDepth24Stencil8PixelFormatSupported");
 
         private const string MetalFramework = "/System/Library/Frameworks/Metal.framework/Metal";
         [DllImport(MetalFramework)]

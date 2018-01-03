@@ -7,10 +7,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="models\chinesedragon.dae">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\chinesedragon.dae</Link>
+    </Content>
+    <Content Include="models\plane2.dae">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\plane2.dae</Link>
+    </Content>
+    <Content Include="textures\darkmetal_bc3_unorm.ktx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>textures\darkmetal_bc3_unorm.ktx</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../Veldrid.StartupUtilities/Veldrid.StartupUtilities.csproj" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.Utilities\Veldrid.Utilities.csproj" />
     <ProjectReference Include="..\Veldrid.ImageSharp\Veldrid.ImageSharp.csproj" />
+    <PackageReference Include="AssimpNet-netstandard" Version="3.3.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -247,7 +247,7 @@ namespace Veldrid.NeoDemo
         public void CreateDeviceResources(GraphicsDevice gd)
         {
             var factory = gd.ResourceFactory;
-            TextureDescription desc = TextureDescription.Texture2D(2048, 2048, 1, 1, PixelFormat.D24_UNorm_S8_UInt, TextureUsage.DepthStencil | TextureUsage.Sampled);
+            TextureDescription desc = TextureDescription.Texture2D(2048, 2048, 1, 1, PixelFormat.D32_Float_S8_UInt, TextureUsage.DepthStencil | TextureUsage.Sampled);
             NearShadowMap = factory.CreateTexture(desc);
             NearShadowMap.Name = "Near Shadow Map";
             NearShadowMapView = factory.CreateTextureView(NearShadowMap);

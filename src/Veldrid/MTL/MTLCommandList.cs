@@ -18,11 +18,12 @@ namespace Veldrid.MTL
         private MTLBuffer _indexBuffer;
         private MTLIndexType _indexType;
         private new MTLPipeline _graphicsPipeline;
-
+        private bool _pipelineChanged;
         private MTLViewport[] _viewports = Array.Empty<MTLViewport>();
         private bool _viewportsChanged;
         private MTLScissorRect[] _scissorRects = Array.Empty<MTLScissorRect>();
         private bool _scissorRectsChanged;
+        private bool _disposed;
 
         public MTLCommandBuffer CommandBuffer => _cb;
 
@@ -33,11 +34,7 @@ namespace Veldrid.MTL
             _cb = _gd.CommandQueue.commandBuffer();
         }
 
-        public override string Name
-        {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-        }
+        public override string Name { get; set; }
 
         public void Commit()
         {
@@ -107,13 +104,22 @@ namespace Veldrid.MTL
                     }
                     _viewportsChanged = false;
                 }
-                if (_scissorRectsChanged)
+                if (_scissorRectsChanged && _graphicsPipeline.ScissorTestEnabled)
                 {
                     fixed (MTLScissorRect* scissorRectsPtr = &_scissorRects[0])
                     {
                         _rce.setScissorRects(scissorRectsPtr, (UIntPtr)_scissorRects.Length);
                     }
                     _scissorRectsChanged = false;
+                }
+                if (_pipelineChanged)
+                {
+                    Debug.Assert(_graphicsPipeline != null);
+                    _rce.setRenderPipelineState(_graphicsPipeline.RenderPipelineState);
+                    _rce.setCullMode(_graphicsPipeline.CullMode);
+                    _rce.setFrontFacing(_graphicsPipeline.FrontFace);
+                    _rce.setDepthStencilState(_graphicsPipeline.DepthStencilState);
+                    _rce.setDepthClipMode(_graphicsPipeline.DepthClipMode);
                 }
                 return true;
             }
@@ -142,9 +148,7 @@ namespace Veldrid.MTL
                 if (EnsureRenderPass())
                 {
                     _graphicsPipeline = Util.AssertSubtype<Pipeline, MTLPipeline>(pipeline);
-                    _rce.setRenderPipelineState(_graphicsPipeline.RenderPipelineState);
-                    _rce.setCullMode(_graphicsPipeline.CullMode);
-                    _rce.setFrontFacing(_graphicsPipeline.FrontFace);
+                    _pipelineChanged = true;
                 }
             }
         }
@@ -203,21 +207,18 @@ namespace Veldrid.MTL
             Texture destination, uint dstX, uint dstY, uint dstZ, uint dstMipLevel, uint dstBaseArrayLayer,
             uint width, uint height, uint depth, uint layerCount)
         {
-            if (srcX != 0 || srcY != 0 || srcZ != 0 || dstX != 0 || dstY != 0 || dstZ != 0)
-            {
-                throw new NotImplementedException();
-            }
             if ((source.Usage & TextureUsage.Staging) == 0)
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Copying from non-staging is not implemented.");
             }
 
             EnsureBlitEncoder();
             MTLTexture srcMTLTexture = Util.AssertSubtype<Texture, MTLTexture>(source);
             MTLTexture dstMTLTexture = Util.AssertSubtype<Texture, MTLTexture>(destination);
 
-            if ((source.Usage & TextureUsage.Staging) != 0
-                && (destination.Usage & TextureUsage.Staging) == 0)
+            bool srcIsStaging = (source.Usage & TextureUsage.Staging) != 0;
+            bool dstIsStaging = (destination.Usage & TextureUsage.Staging) != 0;
+            if (srcIsStaging && !dstIsStaging)
             {
                 // Staging -> Normal
                 MetalBindings.MTLBuffer srcBuffer = srcMTLTexture.StagingBuffer;
@@ -227,35 +228,85 @@ namespace Veldrid.MTL
 
                 for (uint layer = 0; layer < layerCount; layer++)
                 {
-                    uint sourceOffset = srcMTLTexture.GetSubresourceOffset(srcMipLevel, layer + srcBaseArrayLayer);
-                    uint sourceBytesPerRow = width * pixelSize;
-                    uint sourceBytesPerImage = width * height * pixelSize;
+                    ulong srcSubresourceBase = Util.ComputeSubresourceOffset(
+                        srcMTLTexture,
+                        srcMipLevel,
+                        layer + srcBaseArrayLayer);
+                    srcMTLTexture.GetSubresourceLayout(
+                        srcMipLevel,
+                        srcBaseArrayLayer + layer,
+                        out uint srcRowPitch,
+                        out uint srcDepthPitch);
+                    ulong sourceOffset = srcSubresourceBase
+                        + srcDepthPitch * srcZ
+                        + srcRowPitch * srcY
+                        + FormatHelpers.GetSizeInBytes(srcMTLTexture.Format) * srcX;
+
+                    uint blockSize = 1;
+                    if (FormatHelpers.IsCompressedFormat(srcMTLTexture.Format))
+                    {
+                        blockSize = 4;
+                    }
+
                     MTLSize sourceSize = new MTLSize(width, height, depth);
                     _bce.copyFromBuffer(
                         srcBuffer,
                         (UIntPtr)sourceOffset,
-                        (UIntPtr)sourceBytesPerRow,
-                        (UIntPtr)sourceBytesPerImage,
+                        (UIntPtr)(srcRowPitch * blockSize),
+                        (UIntPtr)srcDepthPitch,
                         sourceSize,
                         dstTexture,
                         (UIntPtr)(dstBaseArrayLayer + layer),
                         (UIntPtr)dstMipLevel,
-                        new MTLOrigin(0, 0, 0));
+                        new MTLOrigin(dstX, dstY, dstZ));
                 }
             }
-            else if ((source.Usage & TextureUsage.Staging) != 0
-                && (destination.Usage & TextureUsage.Staging) != 0)
+            else if (srcIsStaging && dstIsStaging)
             {
-                // Staging -> Staging
-                uint srcOffset = srcMTLTexture.GetSubresourceOffset(srcMipLevel, srcBaseArrayLayer);
-                uint dstOffset = dstMTLTexture.GetSubresourceOffset(dstMipLevel, dstBaseArrayLayer);
-                uint copySize = width * height * depth * FormatHelpers.GetSizeInBytes(source.Format);
-                _bce.copy(
-                    srcMTLTexture.StagingBuffer,
-                    (UIntPtr)srcOffset,
-                    dstMTLTexture.StagingBuffer,
-                    (UIntPtr)dstOffset,
-                    (UIntPtr)copySize);
+                for (uint layer = 0; layer < layerCount; layer++)
+                {
+                    // Staging -> Staging
+                    ulong srcSubresourceBase = Util.ComputeSubresourceOffset(
+                        srcMTLTexture,
+                        srcMipLevel,
+                        layer + srcBaseArrayLayer);
+                    srcMTLTexture.GetSubresourceLayout(
+                        srcMipLevel,
+                        srcBaseArrayLayer + layer,
+                        out uint srcRowPitch,
+                        out uint srcDepthPitch);
+
+                    ulong dstSubresourceBase = Util.ComputeSubresourceOffset(
+                        dstMTLTexture,
+                        dstMipLevel,
+                        layer + dstBaseArrayLayer);
+                    dstMTLTexture.GetSubresourceLayout(
+                        dstMipLevel,
+                        dstBaseArrayLayer + layer,
+                        out uint dstRowPitch,
+                        out uint dstDepthPitch);
+
+                    uint pixelSize = FormatHelpers.GetSizeInBytes(dstMTLTexture.Format);
+                    uint copySize = width * pixelSize;
+                    for (uint zz = 0; zz < depth; zz++)
+                        for (uint yy = 0; yy < height; yy++)
+                        {
+                            ulong srcRowOffset = srcSubresourceBase
+                                + srcDepthPitch * (zz + srcZ)
+                                + srcRowPitch * (yy + srcY)
+                                + pixelSize * srcX;
+                            ulong dstRowOffset = dstSubresourceBase
+                                + dstDepthPitch * (zz + dstZ)
+                                + dstRowPitch * (yy + dstY)
+                                + pixelSize * dstX;
+                            _bce.copy(
+                                srcMTLTexture.StagingBuffer,
+                                (UIntPtr)srcRowOffset,
+                                dstMTLTexture.StagingBuffer,
+                                (UIntPtr)dstRowOffset,
+                                (UIntPtr)copySize);
+                        }
+                }
             }
         }
 
@@ -423,6 +474,7 @@ namespace Veldrid.MTL
         private bool EnsureRenderPass()
         {
             Debug.Assert(_mtlFramebuffer != null);
+            EnsureNoBlitEncoder();
             return RenderEncoderActive || BeginCurrentRenderPass();
         }
 
@@ -445,13 +497,16 @@ namespace Veldrid.MTL
                     attachment.loadAction = MTLLoadAction.Clear;
                     RgbaFloat c = _clearColors[i].Value;
                     attachment.clearColor = new MTLClearColor(c.R, c.G, c.B, c.A);
+                    _clearColors[i] = null;
                 }
             }
 
             if (_depthClear != null)
             {
-                var depthAttachment = rpDesc.depthAttachment;
+                MTLRenderPassDepthAttachmentDescriptor depthAttachment = rpDesc.depthAttachment;
+                depthAttachment.loadAction = MTLLoadAction.Clear;
                 depthAttachment.clearDepth = _depthClear.Value.depth;
+                _depthClear = null;
             }
 
             _rce = _cb.renderCommandEncoderWithDescriptor(rpDesc);
@@ -463,11 +518,12 @@ namespace Veldrid.MTL
 
         private void EnsureNoRenderPass()
         {
-            EnsureNoBlitEncoder();
             if (RenderEncoderActive)
             {
                 EndCurrentRenderPass();
             }
+
+            Debug.Assert(!RenderEncoderActive);
         }
 
         private void EndCurrentRenderPass()
@@ -475,12 +531,21 @@ namespace Veldrid.MTL
             _rce.endEncoding();
             ObjectiveCRuntime.release(_rce.NativePtr);
             _rce = default(MTLRenderCommandEncoder);
+            _pipelineChanged = true;
+            _viewportsChanged = true;
+            _scissorRectsChanged = true;
         }
 
         private void EnsureBlitEncoder()
         {
-            EnsureNoRenderPass();
-            _bce = _cb.blitCommandEncoder();
+            if (!BlitEncoderActive)
+            {
+                EnsureNoRenderPass();
+                _bce = _cb.blitCommandEncoder();
+            }
+
+            Debug.Assert(BlitEncoderActive);
+            Debug.Assert(!RenderEncoderActive);
         }
 
         private void EnsureNoBlitEncoder()
@@ -491,6 +556,8 @@ namespace Veldrid.MTL
                 ObjectiveCRuntime.release(_bce.NativePtr);
                 _bce = default(MTLBlitCommandEncoder);
             }
+
+            Debug.Assert(!BlitEncoderActive);
         }
 
         protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format)
@@ -510,8 +577,12 @@ namespace Veldrid.MTL
 
         public override void Dispose()
         {
-            EnsureNoRenderPass();
-            ObjectiveCRuntime.release(_cb.NativePtr);
+            if (!_disposed)
+            {
+                _disposed = true;
+                EnsureNoRenderPass();
+                ObjectiveCRuntime.release(_cb.NativePtr);
+            }
         }
     }
 }

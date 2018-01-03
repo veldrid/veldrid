@@ -71,10 +71,16 @@ namespace Veldrid.MetalBindings
             => objc_msgSend(NativePtr, "setScissorRects:count:", scissorRects, count);
 
         public void setCullMode(MTLCullMode cullMode)
-            => objc_msgSend(NativePtr, "setCullMode:", cullMode);
+            => objc_msgSend(NativePtr, "setCullMode:", (uint)cullMode);
 
         public void setFrontFacing(MTLWinding frontFaceWinding)
-            => objc_msgSend(NativePtr, "setFrontFacingWinding:", frontFaceWinding);
+            => objc_msgSend(NativePtr, "setFrontFacingWinding:", (uint)frontFaceWinding);
+
+        public void setDepthStencilState(MTLDepthStencilState depthStencilState)
+            => objc_msgSend(NativePtr, "setDepthStencilState:", depthStencilState.NativePtr);
+
+        public void setDepthClipMode(MTLDepthClipMode depthClipMode)
+            => objc_msgSend(NativePtr, "setDepthClipMode:", (uint)depthClipMode);
 
         public void endEncoding() => objc_msgSend(NativePtr, "endEncoding");
     }

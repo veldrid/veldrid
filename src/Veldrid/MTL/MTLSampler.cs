@@ -5,6 +5,8 @@ namespace Veldrid.MTL
 {
     internal class MTLSampler : Sampler
     {
+        private bool _disposed;
+
         public MTLSamplerState DeviceSampler { get; }
 
         public MTLSampler(ref SamplerDescription description, MTLGraphicsDevice gd)
@@ -42,7 +44,11 @@ namespace Veldrid.MTL
 
         public override void Dispose()
         {
-            ObjectiveCRuntime.release(DeviceSampler.NativePtr);
+            if (!_disposed)
+            {
+                _disposed = true;
+                ObjectiveCRuntime.release(DeviceSampler.NativePtr);
+            }
         }
     }
 }

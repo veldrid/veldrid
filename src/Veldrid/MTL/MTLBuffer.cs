@@ -6,10 +6,11 @@ namespace Veldrid.MTL
     internal class MTLBuffer : DeviceBuffer
     {
         private string _name;
+        private bool _disposed;
 
         public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }
-        
+
         public override string Name
         {
             get => _name;
@@ -33,7 +34,11 @@ namespace Veldrid.MTL
 
         public override void Dispose()
         {
-            ObjectiveCRuntime.release(DeviceBuffer.NativePtr);
+            if (!_disposed)
+            {
+                _disposed = true;
+                ObjectiveCRuntime.release(DeviceBuffer.NativePtr);
+            }
         }
     }
 }

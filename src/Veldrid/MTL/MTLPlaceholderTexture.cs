@@ -20,6 +20,8 @@ namespace Veldrid.MTL
 
         public override TextureUsage Usage => TextureUsage.RenderTarget;
 
+        public override TextureType Type => TextureType.Texture2D;
+
         public override TextureSampleCount SampleCount => TextureSampleCount.Count1;
 
         public override string Name { get; set; }

@@ -94,6 +94,36 @@ namespace Veldrid.MTL
             }
         }
 
+        internal static MTLTextureType VdToMTLTextureType(
+            TextureType type,
+            uint arrayLayers,
+            bool multiSampled,
+            bool cube)
+        {
+            switch (type)
+            {
+                case TextureType.Texture1D:
+                    return arrayLayers > 1 ? MTLTextureType.Type1DArray : MTLTextureType.Type1D;
+                case TextureType.Texture2D:
+                    if (cube)
+                    {
+                        return arrayLayers > 1 ? MTLTextureType.TypeCubeArray : MTLTextureType.TypeCube;
+                    }
+                    else if (multiSampled)
+                    {
+                        return MTLTextureType.Type2DMultisample;
+                    }
+                    else
+                    {
+                        return arrayLayers > 1 ? MTLTextureType.Type2DArray : MTLTextureType.Type2D;
+                    }
+                case TextureType.Texture3D:
+                    return MTLTextureType.Type3D;
+                default:
+                    throw Illegal.Value<TextureType>();
+            }
+        }
+
         internal static MTLCompareFunction VdToMTLCompareFunction(ComparisonKind comparisonKind)
         {
             switch (comparisonKind)

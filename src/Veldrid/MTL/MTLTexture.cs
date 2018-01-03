@@ -5,6 +5,8 @@ namespace Veldrid.MTL
 {
     internal class MTLTexture : Texture
     {
+        private bool _disposed;
+
         /// <summary>
         /// The native MTLTexture object. This property is only valid for non-staging Textures.
         /// </summary>
@@ -28,6 +30,8 @@ namespace Veldrid.MTL
 
         public override TextureUsage Usage { get; }
 
+        public override TextureType Type { get; }
+
         public override TextureSampleCount SampleCount { get; }
 
         public MTLTexture(ref TextureDescription description, MTLGraphicsDevice _gd)
@@ -39,19 +43,24 @@ namespace Veldrid.MTL
             MipLevels = description.MipLevels;
             Format = description.Format;
             Usage = description.Usage;
+            Type = description.Type;
             SampleCount = description.SampleCount;
             bool isDepth = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
 
             if (Usage != TextureUsage.Staging)
             {
-                var texDescriptor = MTLUtil.AllocInit<MTLTextureDescriptor>();
+                MTLTextureDescriptor texDescriptor = MTLUtil.AllocInit<MTLTextureDescriptor>();
                 texDescriptor.width = (UIntPtr)Width;
                 texDescriptor.height = (UIntPtr)Height;
                 texDescriptor.depth = (UIntPtr)Depth;
                 texDescriptor.mipmapLevelCount = (UIntPtr)MipLevels;
                 texDescriptor.arrayLength = (UIntPtr)ArrayLayers;
                 texDescriptor.sampleCount = (UIntPtr)FormatHelpers.GetSampleCountUInt32(SampleCount);
-                texDescriptor.textureType = GetTextureType(Width, Height, Depth, ArrayLayers, Usage, SampleCount);
+                texDescriptor.textureType = MTLFormats.VdToMTLTextureType(
+                    Type,
+                    ArrayLayers,
+                    SampleCount != TextureSampleCount.Count1,
+                    (Usage & TextureUsage.Cubemap) != 0);
                 texDescriptor.pixelFormat = MTLFormats.VdToMTLPixelFormat(Format, isDepth);
                 texDescriptor.textureUsage = MTLFormats.VdToMTLTextureUsage(Usage);
                 texDescriptor.storageMode = MTLStorageMode.Private;
@@ -118,45 +127,37 @@ namespace Veldrid.MTL
             }
         }
 
-        public override string Name
-        {
-            get => throw new System.NotImplementedException();
-            set => throw new System.NotImplementedException();
-        }
-
-        public override void Dispose()
-        {
-            if (!StagingBuffer.IsNull)
-            {
-                ObjectiveCRuntime.release(StagingBuffer.NativePtr);
-            }
-            else
-            {
-                ObjectiveCRuntime.release(DeviceTexture.NativePtr);
-            }
-        }
-
-        internal uint GetSubresourceOffset(uint mipLevel, uint arrayLayer)
-        {
-            uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
-            uint offset = 0;
-            for (uint layer = 0; layer <= arrayLayer; layer++)
-            {
-                for (uint level = 0; level < mipLevel; level++)
-                {
-                    Util.GetMipDimensions(this, level, out uint width, out uint height, out uint depth);
-                    offset += width * height * depth * pixelSize;
-                }
-            }
-
-            return offset;
-        }
+        public override string Name { get; set; }
 
         internal uint GetSubresourceSize(uint mipLevel, uint arrayLayer)
         {
             uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
             Util.GetMipDimensions(this, mipLevel, out uint width, out uint height, out uint depth);
             return pixelSize * width * height * depth;
+        }
+
+        internal void GetSubresourceLayout(uint mipLevel, uint arrayLayer, out uint rowPitch, out uint depthPitch)
+        {
+            uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
+            Util.GetMipDimensions(this, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+            rowPitch = mipWidth * pixelSize;
+            depthPitch = rowPitch * Height;
+        }
+
+        public override void Dispose()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                if (!StagingBuffer.IsNull)
+                {
+                    ObjectiveCRuntime.release(StagingBuffer.NativePtr);
+                }
+                else
+                {
+                    ObjectiveCRuntime.release(DeviceTexture.NativePtr);
+                }
+            }
         }
     }
 }

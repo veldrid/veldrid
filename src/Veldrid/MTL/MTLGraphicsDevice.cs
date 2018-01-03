@@ -121,36 +121,48 @@ namespace Veldrid.MTL
             uint mipLevel,
             uint arrayLayer)
         {
-            if (texture.Depth != 1)
-            {
-                throw new NotImplementedException();
-            }
-
             MTLTexture mtlTex = Util.AssertSubtype<Texture, MTLTexture>(texture);
             if (mtlTex.StagingBuffer.IsNull)
             {
                 MTLRegion region = new MTLRegion(new MTLOrigin(x, y, z), new MTLSize(width, height, depth));
-                UIntPtr bytesPerRow = (UIntPtr)(width * height * FormatHelpers.GetSizeInBytes(texture.Format));
+                UIntPtr bytesPerRow = UIntPtr.Zero;
+                if (mtlTex.Type != TextureType.Texture1D)
+                {
+                    bytesPerRow = (UIntPtr)(width * FormatHelpers.GetSizeInBytes(texture.Format));
+                }
+                UIntPtr bytesPerImage = UIntPtr.Zero;
+                if (mtlTex.Type == TextureType.Texture3D)
+                {
+                    bytesPerImage = (UIntPtr)(width * height * FormatHelpers.GetSizeInBytes(texture.Format));
+                }
                 mtlTex.DeviceTexture.replaceRegion(
                     region,
                     (UIntPtr)mipLevel,
                     (UIntPtr)arrayLayer,
                     source.ToPointer(),
                     bytesPerRow,
-                    UIntPtr.Zero); // 0 for non-3D Textures.
+                    bytesPerImage); // 0 for non-3D Textures.
             }
             else
             {
-                if (x != 0 || y != 0 || z != 0)
-                {
-                    throw new NotImplementedException();
-                }
-
-                System.Buffer.MemoryCopy(
-                    source.ToPointer(),
-                    mtlTex.StagingBuffer.contents(),
-                    sizeInBytes,
-                    sizeInBytes);
+                uint pixelSize = FormatHelpers.GetSizeInBytes(mtlTex.Format);
+                mtlTex.GetSubresourceLayout(mipLevel, arrayLayer, out uint dstRowPitch, out uint dstDepthPitch);
+                ulong dstOffset = Util.ComputeSubresourceOffset(mtlTex, mipLevel, arrayLayer);
+                uint srcRowPitch = width * pixelSize;
+                uint srcDepthPitch = srcRowPitch * height;
+                for (uint zz = 0; zz < depth; zz++)
+                    for (uint yy = 0; yy < height; yy++)
+                    {
+                        byte* srcRowBase = (byte*)source.ToPointer()
+                            + srcDepthPitch * zz
+                            + srcRowPitch * yy;
+                        byte* dstRowBase = (byte*)mtlTex.StagingBuffer.contents()
+                            + dstOffset
+                            + dstDepthPitch * (zz + z)
+                            + dstRowPitch * (yy + y)
+                            + pixelSize * x;
+                        Unsafe.CopyBlock(dstRowBase, srcRowBase, width * pixelSize);
+                    }
             }
         }
 
@@ -175,7 +187,14 @@ namespace Veldrid.MTL
         private MappedResource MapBuffer(MTLBuffer buffer, MapMode mode)
         {
             void* data = buffer.DeviceBuffer.contents();
-            return new MappedResource(buffer, mode, (IntPtr)data, buffer.SizeInBytes, 0, buffer.SizeInBytes);
+            return new MappedResource(
+                buffer,
+                mode,
+                (IntPtr)data,
+                buffer.SizeInBytes,
+                0,
+                buffer.SizeInBytes,
+                buffer.SizeInBytes);
         }
 
         private MappedResource MapTexture(MTLTexture texture, MapMode mode, uint subresource)
@@ -187,9 +206,10 @@ namespace Veldrid.MTL
             uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
             uint subresourceSize = texture.GetSubresourceSize(mipLevel, arrayLayer);
             uint rowPitch = width * pixelSize;
-            uint offset = texture.GetSubresourceOffset(mipLevel, arrayLayer);
+            uint depthPitch = rowPitch * height;
+            ulong offset = Util.ComputeSubresourceOffset(texture, mipLevel, arrayLayer);
             byte* offsetPtr = (byte*)data + offset;
-            return new MappedResource(texture, mode, (IntPtr)offsetPtr, subresourceSize, subresource, rowPitch);
+            return new MappedResource(texture, mode, (IntPtr)offsetPtr, subresourceSize, subresource, rowPitch, depthPitch);
         }
 
         protected override void PlatformDispose()

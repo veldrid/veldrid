@@ -56,7 +56,8 @@ namespace Veldrid.NeoDemo
             VeldridStartup.CreateWindowAndGraphicsDevice(
                 windowCI,
                 gdOptions,
-                GraphicsBackend.Vulkan,
+                GraphicsBackend.Metal,
+                //GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
                 out _window,
                 out _gd);
@@ -71,10 +72,10 @@ namespace Veldrid.NeoDemo
             _scene.AddRenderable(_igRenderable);
             _scene.AddUpdateable(_igRenderable);
 
-            Skybox skybox = Skybox.LoadDefaultSkybox();
-            _scene.AddRenderable(skybox);
+            // Skybox skybox = Skybox.LoadDefaultSkybox();
+            // _scene.AddRenderable(skybox);
 
-            AddSponzaAtriumObjects();
+            // AddSponzaAtriumObjects();
             _sc.Camera.Position = new Vector3(-80, 25, -4.3f);
             _sc.Camera.Yaw = -MathF.PI / 2;
             _sc.Camera.Pitch = -MathF.PI / 9;

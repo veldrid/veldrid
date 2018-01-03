@@ -80,6 +80,7 @@ namespace Veldrid.Tests
             {
                 view[i] = 1 * 10;
             }
+            GD.Unmap(buffer);
         }
 
         [Fact]
@@ -197,6 +198,10 @@ namespace Veldrid.Tests
         public void Map_DifferentMode_Fails()
         {
             if (GD.BackendType == GraphicsBackend.Vulkan)
+            {
+                return; // TODO
+            }
+            if (GD.BackendType == GraphicsBackend.Metal)
             {
                 return; // TODO
             }

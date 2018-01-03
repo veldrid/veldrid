@@ -6,6 +6,7 @@ namespace Veldrid.MTL
     internal class MTLTextureView : TextureView
     {
         private readonly bool _hasTextureView;
+        private bool _disposed;
 
         public MTLTexture TargetMTLTexture { get; }
 
@@ -32,8 +33,9 @@ namespace Veldrid.MTL
 
         public override void Dispose()
         {
-            if (_hasTextureView)
+            if (_hasTextureView && !_disposed)
             {
+                _disposed = true;
                 ObjectiveCRuntime.release(TargetMTLTexture.DeviceTexture.NativePtr);
             }
         }

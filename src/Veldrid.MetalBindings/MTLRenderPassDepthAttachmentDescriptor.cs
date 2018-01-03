@@ -26,5 +26,11 @@ namespace Veldrid.MetalBindings
             get => double_objc_msgSend(NativePtr, "clearDepth");
             set => objc_msgSend(NativePtr, "setClearDepth:", value);
         }
+
+        public UIntPtr slice
+        {
+            get => UIntPtr_objc_msgSend(NativePtr, "slice");
+            set => objc_msgSend(NativePtr, "setSlice:", value);
+        }
     }
 }

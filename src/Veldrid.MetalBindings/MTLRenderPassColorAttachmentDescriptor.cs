@@ -26,5 +26,11 @@ namespace Veldrid.MetalBindings
             get => objc_msgSend_stret<MTLClearColor>(NativePtr, "clearColor");
             set => objc_msgSend(NativePtr, "setClearColor:", value);
         }
+
+        public UIntPtr slice
+        {
+            get => UIntPtr_objc_msgSend(NativePtr, "slice");
+            set => objc_msgSend(NativePtr, "setSlice:", value);
+        }
     }
 }

@@ -64,8 +64,8 @@ namespace Veldrid.MTL
             }
 
             _depthTexture = Util.AssertSubtype<Texture, MTLTexture>(
-                _gd.ResourceFactory.CreateTexture(new TextureDescription(
-                    width, height, 1, 1, 1, _depthFormat.Value, TextureUsage.DepthStencil)));
+                _gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
+                    width, height, 1, 1, _depthFormat.Value, TextureUsage.DepthStencil)));
         }
 
         public void Resize(uint width, uint height)

@@ -16,10 +16,6 @@ namespace Veldrid.MetalBindings
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, double a);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
-        public static extern void objc_msgSend(IntPtr receiver, Selector selector, MTLCullMode a);
-        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
-        public static extern void objc_msgSend(IntPtr receiver, Selector selector, MTLWinding a);
-        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, IntPtr a, uint b);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, IntPtr a, NSRange b);
@@ -103,6 +99,8 @@ namespace Veldrid.MetalBindings
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern Bool8 bool8_objc_msgSend(IntPtr receiver, Selector selector, UIntPtr a);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern Bool8 bool8_objc_msgSend(IntPtr receiver, Selector selector, uint a);
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern uint uint_objc_msgSend(IntPtr receiver, Selector selector);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern float float_objc_msgSend(IntPtr receiver, Selector selector);
@@ -116,6 +114,8 @@ namespace Veldrid.MetalBindings
         public static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, IntPtr a, out NSError error);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, uint a);
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, UIntPtr a);
 
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, IntPtr a, IntPtr b, out NSError error);

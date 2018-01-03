@@ -1,5 +1,8 @@
+using System;
+
 namespace Veldrid.MetalBindings
 {
+    [Flags]
     public enum MTLTextureUsage
     {
         Unknown = 0,

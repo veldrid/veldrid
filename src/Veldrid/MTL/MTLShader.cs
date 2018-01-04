@@ -10,11 +10,7 @@ namespace Veldrid.MTL
 
         public MTLLibrary Library { get; private set; }
         public MTLFunction Function { get; private set; }
-        public override string Name
-        {
-            get => throw new System.NotImplementedException();
-            set => throw new System.NotImplementedException();
-        }
+        public override string Name { get; set; }
 
         public MTLShader(ref ShaderDescription description, MTLGraphicsDevice gd)
             : base(description.Stage)

@@ -87,9 +87,6 @@ namespace Veldrid.MTL
                     (UIntPtr)instanceCount,
                     (IntPtr)vertexOffset,
                     (UIntPtr)instanceStart);
-
-                // REMOVE
-                _gd.CommandQueue.insertDebugCaptureBoundary();
             }
         }
         private bool PreDrawCommand()

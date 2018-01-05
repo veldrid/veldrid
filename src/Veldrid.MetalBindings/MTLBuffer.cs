@@ -14,7 +14,6 @@ namespace Veldrid.MetalBindings
 
         public UIntPtr length => ObjectiveCRuntime.UIntPtr_objc_msgSend(NativePtr, "length");
 
-
         public void didModifyRange(NSRange range)
             => ObjectiveCRuntime.objc_msgSend(NativePtr, "didModifyRange:", range);
 

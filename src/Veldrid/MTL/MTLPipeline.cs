@@ -82,28 +82,52 @@ namespace Veldrid.MTL
             VertexBufferCount = (uint)vdVertexLayouts.Length;
 
             // Outputs
-            var outputs = description.Outputs;
+            OutputDescription outputs = description.Outputs;
+            BlendStateDescription blendStateDesc = description.BlendState;
+
+            if (outputs.SampleCount != TextureSampleCount.Count1)
+            {
+                mtlDesc.sampleCount = (UIntPtr)FormatHelpers.GetSampleCountUInt32(outputs.SampleCount);
+            }
+
             if (outputs.DepthAttachment != null)
             {
-                mtlDesc.depthAttachmentPixelFormat = MTLFormats.VdToMTLPixelFormat(outputs.DepthAttachment.Value.Format, true);
+                PixelFormat depthFormat = outputs.DepthAttachment.Value.Format;
+                MTLPixelFormat mtlDepthFormat = MTLFormats.VdToMTLPixelFormat(depthFormat, true);
+                mtlDesc.depthAttachmentPixelFormat = mtlDepthFormat;
+                if ((FormatHelpers.IsStencilFormat(depthFormat)))
+                {
+                    mtlDesc.stencilAttachmentPixelFormat = mtlDepthFormat;
+                }
             }
             for (uint i = 0; i < outputs.ColorAttachments.Length; i++)
             {
-                var mtlElement = mtlDesc.colorAttachments[i];
-                mtlElement.pixelFormat = MTLFormats.VdToMTLPixelFormat(outputs.ColorAttachments[i].Format, false);
+                BlendAttachmentDescription attachmentBlendDesc = blendStateDesc.AttachmentStates[i];
+                MTLRenderPipelineColorAttachmentDescriptor colorDesc = mtlDesc.colorAttachments[i];
+                colorDesc.pixelFormat = MTLFormats.VdToMTLPixelFormat(outputs.ColorAttachments[i].Format, false);
+                colorDesc.blendingEnabled = attachmentBlendDesc.BlendEnabled;
+                colorDesc.alphaBlendOperation = MTLFormats.VdToMTLBlendOp(attachmentBlendDesc.AlphaFunction);
+                colorDesc.sourceAlphaBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.SourceAlphaFactor);
+                colorDesc.destinationAlphaBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.DestinationAlphaFactor);
+
+                colorDesc.rgbBlendOperation = MTLFormats.VdToMTLBlendOp(attachmentBlendDesc.ColorFunction);
+                colorDesc.sourceRGBBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.SourceColorFactor);
+                colorDesc.destinationRGBBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.DestinationColorFactor);
             }
-            // TODO: Lots of blend state needs to be set above.
 
             RenderPipelineState = gd.Device.newRenderPipelineStateWithDescriptor(mtlDesc);
             ObjectiveCRuntime.release(mtlDesc.NativePtr);
 
-            MTLDepthStencilDescriptor depthDescriptor = MTLUtil.AllocInit<MTLDepthStencilDescriptor>();
-            depthDescriptor.depthCompareFunction = MTLFormats.VdToMTLCompareFunction(
-                description.DepthStencilState.DepthComparison);
-            depthDescriptor.depthWriteEnabled = description.DepthStencilState.DepthWriteEnabled;
-            DepthStencilState = gd.Device.newDepthStencilStateWithDescriptor(depthDescriptor);
-            ObjectiveCRuntime.release(depthDescriptor.NativePtr);
-
+            if (outputs.DepthAttachment != null)
+            {
+                MTLDepthStencilDescriptor depthDescriptor = MTLUtil.AllocInit<MTLDepthStencilDescriptor>();
+                depthDescriptor.depthCompareFunction = MTLFormats.VdToMTLCompareFunction(
+                    description.DepthStencilState.DepthComparison);
+                depthDescriptor.depthWriteEnabled = description.DepthStencilState.DepthWriteEnabled;
+                DepthStencilState = gd.Device.newDepthStencilStateWithDescriptor(depthDescriptor);
+                ObjectiveCRuntime.release(depthDescriptor.NativePtr);
+            }
+            
             DepthClipMode = description.DepthStencilState.DepthTestEnabled ? MTLDepthClipMode.Clip : MTLDepthClipMode.Clamp;
         }
 

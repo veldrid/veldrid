@@ -124,6 +124,58 @@ namespace Veldrid.MTL
             }
         }
 
+        internal static MTLBlendFactor VdToMTLBlendFactor(BlendFactor vdFactor)
+        {
+            switch (vdFactor)
+            {
+                case BlendFactor.Zero:
+                    return MTLBlendFactor.Zero;
+                case BlendFactor.One:
+                    return MTLBlendFactor.One;
+                case BlendFactor.SourceAlpha:
+                    return MTLBlendFactor.SourceAlpha;
+                case BlendFactor.InverseSourceAlpha:
+                    return MTLBlendFactor.OneMinusSourceAlpha;
+                case BlendFactor.DestinationAlpha:
+                    return MTLBlendFactor.DestinationAlpha;
+                case BlendFactor.InverseDestinationAlpha:
+                    return MTLBlendFactor.OneMinusDestinationAlpha;
+                case BlendFactor.SourceColor:
+                    return MTLBlendFactor.SourceColor;
+                case BlendFactor.InverseSourceColor:
+                    return MTLBlendFactor.OneMinusSourceColor;
+                case BlendFactor.DestinationColor:
+                    return MTLBlendFactor.DestinationColor;
+                case BlendFactor.InverseDestinationColor:
+                    return MTLBlendFactor.OneMinusDestinationColor;
+                case BlendFactor.BlendFactor:
+                    return MTLBlendFactor.BlendColor;
+                case BlendFactor.InverseBlendFactor:
+                    return MTLBlendFactor.OneMinusBlendColor;
+                default:
+                    throw Illegal.Value<BlendFactor>();
+            }
+        }
+
+        internal static MTLBlendOperation VdToMTLBlendOp(BlendFunction vdFunction)
+        {
+            switch (vdFunction)
+            {
+                case BlendFunction.Add:
+                    return MTLBlendOperation.Add;
+                case BlendFunction.Maximum:
+                    return MTLBlendOperation.Max;
+                case BlendFunction.Minimum:
+                    return MTLBlendOperation.Min;
+                case BlendFunction.ReverseSubtract:
+                    return MTLBlendOperation.ReverseSubtract;
+                case BlendFunction.Subtract:
+                    return MTLBlendOperation.Subtract;
+                default:
+                    throw Illegal.Value<BlendFunction>();
+            }
+        }
+
         internal static MTLCompareFunction VdToMTLCompareFunction(ComparisonKind comparisonKind)
         {
             switch (comparisonKind)

@@ -30,6 +30,7 @@ namespace Veldrid.MTL
                 MTLTexture mtlDepthTarget = Util.AssertSubtype<Texture, MTLTexture>(DepthTarget.Value.Target);
                 MTLRenderPassDepthAttachmentDescriptor depthDescriptor = ret.depthAttachment;
                 depthDescriptor.loadAction = MTLLoadAction.Load;
+                depthDescriptor.storeAction = MTLStoreAction.Store;
                 depthDescriptor.texture = mtlDepthTarget.DeviceTexture;
                 depthDescriptor.slice = (UIntPtr)DepthTarget.Value.ArrayLayer;
             }

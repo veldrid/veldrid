@@ -3,11 +3,9 @@ using static Veldrid.MetalBindings.ObjectiveCRuntime;
 
 namespace Veldrid.MetalBindings
 {
-    public struct MTLRenderPassDepthAttachmentDescriptor
+    public struct MTLRenderPassStencilAttachmentDescriptor
     {
-        public readonly IntPtr NativePtr;
-
-        public MTLRenderPassDepthAttachmentDescriptor(IntPtr ptr) => NativePtr = ptr;
+        public IntPtr NativePtr;
 
         public MTLTexture texture
         {
@@ -27,10 +25,10 @@ namespace Veldrid.MetalBindings
             set => objc_msgSend(NativePtr, "setStoreAction:", (uint)value);
         }
 
-        public double clearDepth
+        public uint clearStencil
         {
-            get => double_objc_msgSend(NativePtr, "clearDepth");
-            set => objc_msgSend(NativePtr, "setClearDepth:", value);
+            get => uint_objc_msgSend(NativePtr, "clearStencil");
+            set => objc_msgSend(NativePtr, "setClearStencil:", value);
         }
 
         public UIntPtr slice

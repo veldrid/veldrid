@@ -11,6 +11,8 @@ namespace Veldrid.MTL
         public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }
 
+        public uint ActualCapacity { get; }
+
         public override string Name
         {
             get => _name;
@@ -28,8 +30,12 @@ namespace Veldrid.MTL
         public MTLBuffer(ref BufferDescription bd, MTLGraphicsDevice gd)
         {
             SizeInBytes = bd.SizeInBytes;
+            uint roundFactor = (4 - (SizeInBytes % 4)) % 4;
+            ActualCapacity = SizeInBytes + roundFactor;
             Usage = bd.Usage;
-            DeviceBuffer = gd.Device.newBufferWithLengthOptions((UIntPtr)SizeInBytes, 0);
+            DeviceBuffer = gd.Device.newBufferWithLengthOptions(
+                (UIntPtr)ActualCapacity,
+                0);
         }
 
         public override void Dispose()

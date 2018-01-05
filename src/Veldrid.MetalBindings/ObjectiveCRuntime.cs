@@ -26,11 +26,13 @@ namespace Veldrid.MetalBindings
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, IntPtr a, UIntPtr b, UIntPtr c);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
-        public static extern void objc_msgSend(IntPtr receiver, Selector selector, MTLPrimitiveType a, UIntPtr b, UIntPtr c);
+        public static extern void objc_msgSend(IntPtr receiver, Selector selector, MTLPrimitiveType a, UIntPtr b, UIntPtr c, UIntPtr d, UIntPtr e);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, NSRange a);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, UIntPtr a);
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern void objc_msgSend(IntPtr receiver, Selector selector, MTLCommandBufferHandler a);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, IntPtr a, UIntPtr b);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
@@ -39,6 +41,9 @@ namespace Veldrid.MetalBindings
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, void* a, UIntPtr b);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, MTLPrimitiveType a, UIntPtr b, MTLIndexType c, IntPtr d, UIntPtr e);
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern void objc_msgSend(IntPtr receiver, Selector selector, MTLPrimitiveType a, MTLBuffer b, UIntPtr c);
+
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(
             IntPtr receiver,
@@ -51,6 +56,18 @@ namespace Veldrid.MetalBindings
             UIntPtr f,
             IntPtr g,
             UIntPtr h);
+
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern void objc_msgSend(
+            IntPtr receiver,
+            Selector selector,
+            MTLPrimitiveType a,
+            MTLIndexType b,
+            MTLBuffer c,
+            UIntPtr d,
+            MTLBuffer e,
+            UIntPtr f);
+
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(
             IntPtr receiver,
@@ -85,6 +102,20 @@ namespace Veldrid.MetalBindings
             IntPtr d,
             UIntPtr e,
             UIntPtr f);
+
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern void objc_msgSend(
+            IntPtr receiver,
+            Selector selector,
+            MTLTexture a,
+            UIntPtr b,
+            UIntPtr c,
+            MTLOrigin d,
+            MTLSize e,
+            MTLBuffer f,
+            UIntPtr g,
+            UIntPtr h,
+            UIntPtr i);
 
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern byte* bytePtr_objc_msgSend(IntPtr receiver, Selector selector);

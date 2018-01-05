@@ -211,6 +211,30 @@ namespace Veldrid.Tests
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.Write));
         }
 
+        [Fact]
+        public unsafe void UnusualSize()
+        {
+            DeviceBuffer src = RF.CreateBuffer(
+                new BufferDescription(208, BufferUsage.UniformBuffer));
+            DeviceBuffer dst = RF.CreateBuffer(
+                new BufferDescription(208, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+
+            byte[] data = Enumerable.Range(0, 208).Select(i => (byte)(i * 150)).ToArray();
+            GD.UpdateBuffer(src, 0, data);
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyBuffer(src, 0, dst, 0, src.SizeInBytes);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+            MappedResource readMap = GD.Map(dst, MapMode.Read);
+            for (int i = 0; i < readMap.SizeInBytes; i++)
+            {
+                Assert.Equal((byte)(i * 150), ((byte*)readMap.Data)[i]);
+            }
+        }
+
         private DeviceBuffer CreateBuffer(uint size, BufferUsage usage)
         {
             return RF.CreateBuffer(new BufferDescription(size, usage));

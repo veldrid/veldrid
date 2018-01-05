@@ -11,6 +11,9 @@ namespace Veldrid.MTL
         private CAMetalLayer _metalLayer;
         private readonly MTLCommandQueue _commandQueue;
         private readonly TextureSampleCount _maxSampleCount;
+        private readonly MTLSwapchainFramebuffer _swapchainFB;
+        private readonly object _submittedCommandsLock = new object();
+        private MTLCommandBuffer _latestCB;
 
         public MTLDevice Device => _device;
         public MTLCommandQueue CommandQueue => _commandQueue;
@@ -62,8 +65,6 @@ namespace Veldrid.MTL
 
         public override ResourceFactory ResourceFactory { get; }
 
-        private readonly MTLSwapchainFramebuffer _swapchainFB;
-
         public override bool SyncToVerticalBlank { get; set; }
 
         public override Framebuffer SwapchainFramebuffer => _swapchainFB;
@@ -71,7 +72,17 @@ namespace Veldrid.MTL
         protected override void SubmitCommandsCore(CommandList commandList, Fence fence)
         {
             MTLCommandList mtlCL = Util.AssertSubtype<CommandList, MTLCommandList>(commandList);
-            mtlCL.Commit();
+            MTLCommandBuffer cb = mtlCL.Commit();
+            lock (_submittedCommandsLock)
+            {
+                if (_latestCB.NativePtr != IntPtr.Zero)
+                {
+                    ObjectiveCRuntime.release(_latestCB.NativePtr);
+                }
+
+                _latestCB = cb;
+                ObjectiveCRuntime.retain(_latestCB.NativePtr);
+            }
         }
 
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
@@ -124,24 +135,20 @@ namespace Veldrid.MTL
             MTLTexture mtlTex = Util.AssertSubtype<Texture, MTLTexture>(texture);
             if (mtlTex.StagingBuffer.IsNull)
             {
-                MTLRegion region = new MTLRegion(new MTLOrigin(x, y, z), new MTLSize(width, height, depth));
-                UIntPtr bytesPerRow = UIntPtr.Zero;
-                if (mtlTex.Type != TextureType.Texture1D)
-                {
-                    bytesPerRow = (UIntPtr)(width * FormatHelpers.GetSizeInBytes(texture.Format));
-                }
-                UIntPtr bytesPerImage = UIntPtr.Zero;
-                if (mtlTex.Type == TextureType.Texture3D)
-                {
-                    bytesPerImage = (UIntPtr)(width * height * FormatHelpers.GetSizeInBytes(texture.Format));
-                }
-                mtlTex.DeviceTexture.replaceRegion(
-                    region,
-                    (UIntPtr)mipLevel,
-                    (UIntPtr)arrayLayer,
-                    source.ToPointer(),
-                    bytesPerRow,
-                    bytesPerImage); // 0 for non-3D Textures.
+                Texture stagingTex = ResourceFactory.CreateTexture(new TextureDescription(
+                    width, height, depth, 1, 1, texture.Format, TextureUsage.Staging, texture.Type));
+                UpdateTexture(stagingTex, source, sizeInBytes, 0, 0, 0, width, height, depth, 0, 0);
+                CommandList cl = ResourceFactory.CreateCommandList();
+                cl.Begin();
+                cl.CopyTexture(
+                    stagingTex, 0, 0, 0, 0, 0,
+                    texture, x, y, z, mipLevel, arrayLayer,
+                    width, height, depth, 1);
+                cl.End();
+                SubmitCommands(cl);
+
+                cl.Dispose();
+                stagingTex.Dispose();
             }
             else
             {
@@ -168,7 +175,12 @@ namespace Veldrid.MTL
 
         protected override void WaitForIdleCore()
         {
-            // TODO: Probably need to wait on the last-committed MTLCommandBuffer.
+            lock (_submittedCommandsLock)
+            {
+                _latestCB.waitUntilCompleted();
+                ObjectiveCRuntime.release(_latestCB.NativePtr);
+                _latestCB = default(MTLCommandBuffer);
+            }
         }
 
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
@@ -214,6 +226,10 @@ namespace Veldrid.MTL
 
         protected override void PlatformDispose()
         {
+            if (_latestCB.NativePtr != IntPtr.Zero)
+            {
+                ObjectiveCRuntime.release(_latestCB.NativePtr);
+            }
             _swapchainFB.Dispose();
             ObjectiveCRuntime.release(_commandQueue.NativePtr);
             ObjectiveCRuntime.release(_metalLayer.NativePtr);

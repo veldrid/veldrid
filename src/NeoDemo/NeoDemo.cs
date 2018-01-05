@@ -72,10 +72,10 @@ namespace Veldrid.NeoDemo
             _scene.AddRenderable(_igRenderable);
             _scene.AddUpdateable(_igRenderable);
 
-            // Skybox skybox = Skybox.LoadDefaultSkybox();
-            // _scene.AddRenderable(skybox);
+            Skybox skybox = Skybox.LoadDefaultSkybox();
+            _scene.AddRenderable(skybox);
 
-            // AddSponzaAtriumObjects();
+            AddSponzaAtriumObjects();
             _sc.Camera.Position = new Vector3(-80, 25, -4.3f);
             _sc.Camera.Yaw = -MathF.PI / 2;
             _sc.Camera.Pitch = -MathF.PI / 9;
@@ -248,6 +248,10 @@ namespace Veldrid.NeoDemo
                         if (ImGui.MenuItem("Direct3D 11"))
                         {
                             ChangeBackend(GraphicsBackend.Direct3D11);
+                        }
+                        if (ImGui.MenuItem("Metal"))
+                        {
+                            ChangeBackend(GraphicsBackend.Metal);
                         }
                         ImGui.EndMenu();
                     }

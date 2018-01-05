@@ -43,6 +43,27 @@ namespace Veldrid.MetalBindings
                 destinationLevel,
                 destinationOrigin);
 
+        public void copyTextureToBuffer(
+            MTLTexture sourceTexture,
+            UIntPtr sourceSlice,
+            UIntPtr sourceLevel,
+            MTLOrigin sourceOrigin,
+            MTLSize sourceSize,
+            MTLBuffer destinationBuffer,
+            UIntPtr destinationOffset,
+            UIntPtr destinationBytesPerRow,
+            UIntPtr destinationBytesPerImage)
+            => objc_msgSend(NativePtr, "copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toBuffer:destinationOffset:destinationBytesPerRow:destinationBytesPerImage:",
+                sourceTexture,
+                sourceSlice,
+                sourceLevel,
+                sourceOrigin,
+                sourceSize,
+                destinationBuffer,
+                destinationOffset,
+                destinationBytesPerRow,
+                destinationBytesPerImage);
+
         public void synchronizeResource(IntPtr resource)
         {
             objc_msgSend(NativePtr, "synchronizeResource:", resource);

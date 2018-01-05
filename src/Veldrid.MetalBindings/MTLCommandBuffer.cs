@@ -21,5 +21,12 @@ namespace Veldrid.MetalBindings
 
         public MTLBlitCommandEncoder blitCommandEncoder()
             => objc_msgSend<MTLBlitCommandEncoder>(NativePtr, "blitCommandEncoder");
+
+        public void waitUntilCompleted() => objc_msgSend(NativePtr, "waitUntilCompleted");
+
+        public void addCompletedHandler(MTLCommandBufferHandler block)
+            => objc_msgSend(NativePtr, "addCompletedHandler:", block);
+        public void addCompletedHandler(IntPtr block)
+            => objc_msgSend(NativePtr, "addCompletedHandler:", block);
     }
 }

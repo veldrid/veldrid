@@ -37,9 +37,18 @@ namespace Veldrid.MetalBindings
         public void setFragmentSamplerState(MTLSamplerState sampler, UIntPtr index)
             => objc_msgSend(NativePtr, "setFragmentSamplerState:atIndex:", sampler.NativePtr, index);
 
-        public void drawPrimitives(MTLPrimitiveType primitiveType, UIntPtr vertexStart, UIntPtr vertexCount)
-            => objc_msgSend(NativePtr, "drawPrimitives:vertexStart:vertexCount:",
-                primitiveType, vertexStart, vertexCount);
+        public void drawPrimitives(
+            MTLPrimitiveType primitiveType,
+            UIntPtr vertexStart,
+            UIntPtr vertexCount,
+            UIntPtr instanceCount,
+            UIntPtr baseInstance)
+            => objc_msgSend(NativePtr, "drawPrimitives:vertexStart:vertexCount:instanceCount:baseInstance:",
+                primitiveType, vertexStart, vertexCount, instanceCount, baseInstance);
+
+        public void drawPrimitives(MTLPrimitiveType primitiveType, MTLBuffer indirectBuffer, UIntPtr indirectBufferOffset)
+            => objc_msgSend(NativePtr, "drawPrimitives:indirectBuffer:indirectBufferOffset:",
+                primitiveType, indirectBuffer, indirectBufferOffset);
 
         public void drawIndexedPrimitives(
             MTLPrimitiveType primitiveType,
@@ -63,6 +72,21 @@ namespace Veldrid.MetalBindings
                 NativePtr,
                 "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:",
                 primitiveType, indexCount, indexType, indexBuffer.NativePtr, indexBufferOffset, instanceCount, baseVertex, baseInstance);
+
+        public void drawIndexedPrimitives(
+            MTLPrimitiveType primitiveType,
+            MTLIndexType indexType,
+            MTLBuffer indexBuffer,
+            UIntPtr indexBufferOffset,
+            MTLBuffer indirectBuffer,
+            UIntPtr indirectBufferOffset)
+            => objc_msgSend(NativePtr, "drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:",
+                primitiveType,
+                indexType,
+                indexBuffer,
+                indexBufferOffset,
+                indirectBuffer,
+                indirectBufferOffset);
 
         public unsafe void setViewports(MTLViewport* viewports, UIntPtr count)
             => objc_msgSend(NativePtr, "setViewports:count:", viewports, count);

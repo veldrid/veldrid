@@ -202,6 +202,11 @@ namespace Veldrid
                         string resourceName = name + ".spv";
                         return GetEmbeddedResourceBytes(resourceName);
                     }
+                case GraphicsBackend.Metal:
+                    {
+                        string resourceName = name + ".metal";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 default:
                     throw new NotImplementedException();
             }

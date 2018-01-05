@@ -38,6 +38,18 @@ namespace Veldrid.MetalBindings
             set => objc_msgSend(NativePtr, "setDepthAttachmentPixelFormat:", (uint)value);
         }
 
+        public MTLPixelFormat stencilAttachmentPixelFormat
+        {
+            get => (MTLPixelFormat)uint_objc_msgSend(NativePtr, "stencilAttachmentPixelFormat");
+            set => objc_msgSend(NativePtr, "setStencilAttachmentPixelFormat:", (uint)value);
+        }
+
+        public UIntPtr sampleCount
+        {
+            get => UIntPtr_objc_msgSend(NativePtr, "sampleCount");
+            set => objc_msgSend(NativePtr, "setSampleCount:", value);
+        }
+
         public MTLVertexDescriptor vertexDescriptor => objc_msgSend<MTLVertexDescriptor>(NativePtr, "vertexDescriptor");
     }
 }

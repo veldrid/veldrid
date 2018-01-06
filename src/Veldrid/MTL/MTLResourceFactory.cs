@@ -20,7 +20,7 @@ namespace Veldrid.MTL
 
         public override Pipeline CreateComputePipeline(ref ComputePipelineDescription description)
         {
-            throw new System.NotImplementedException();
+            return new MTLPipeline(ref description, _gd);
         }
 
         public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)

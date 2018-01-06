@@ -1,11 +1,15 @@
 using System;
+using System.Diagnostics;
 using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
     internal class MTLPipeline : Pipeline
     {
-        public MetalBindings.MTLRenderPipelineState RenderPipelineState { get; }
+        private bool _disposed;
+
+        public MTLRenderPipelineState RenderPipelineState { get; }
+        public MTLComputePipelineState ComputePipelineState { get; }
         public MTLPrimitiveType PrimitiveType { get; }
         public MTLResourceLayout[] ResourceLayouts { get; }
         public uint VertexBufferCount { get; }
@@ -127,8 +131,48 @@ namespace Veldrid.MTL
                 DepthStencilState = gd.Device.newDepthStencilStateWithDescriptor(depthDescriptor);
                 ObjectiveCRuntime.release(depthDescriptor.NativePtr);
             }
-            
+
             DepthClipMode = description.DepthStencilState.DepthTestEnabled ? MTLDepthClipMode.Clip : MTLDepthClipMode.Clamp;
+        }
+
+        public MTLPipeline(ref ComputePipelineDescription description, MTLGraphicsDevice gd)
+            : base(ref description)
+        {
+            IsComputePipeline = true;
+            ResourceLayouts = new MTLResourceLayout[description.ResourceLayouts.Length];
+            for (int i = 0; i < ResourceLayouts.Length; i++)
+            {
+                ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, MTLResourceLayout>(description.ResourceLayouts[i]);
+            }
+
+            MTLComputePipelineDescriptor mtlDesc = MTLUtil.AllocInit<MTLComputePipelineDescriptor>();
+            MTLShader mtlShader = Util.AssertSubtype<Shader, MTLShader>(description.ComputeShader);
+            mtlDesc.computeFunction = mtlShader.Function;
+            MTLPipelineBufferDescriptorArray buffers = mtlDesc.buffers;
+            uint bufferIndex = 0;
+            foreach (MTLResourceLayout layout in ResourceLayouts)
+            {
+                foreach (ResourceKind kind in layout.ResourceKinds)
+                {
+                    if (kind == ResourceKind.UniformBuffer
+                        || kind == ResourceKind.StructuredBufferReadOnly)
+                    {
+                        MTLPipelineBufferDescriptor bufferDesc = buffers[bufferIndex];
+                        bufferDesc.mutability = MTLMutability.Immutable;
+                        bufferIndex += 1;
+                    }
+                    else if (kind == ResourceKind.StructuredBufferReadWrite)
+                    {
+                        MTLPipelineBufferDescriptor bufferDesc = buffers[bufferIndex];
+                        bufferDesc.mutability = MTLMutability.Mutable;
+                        bufferIndex += 1;
+                    }
+                }
+            }
+
+            ComputePipelineState = gd.Device.newComputePipelineStateWithDescriptor(mtlDesc);
+
+            ObjectiveCRuntime.release(mtlDesc.NativePtr);
         }
 
         public override bool IsComputePipeline { get; }
@@ -136,9 +180,23 @@ namespace Veldrid.MTL
         public bool ScissorTestEnabled { get; }
 
         public override string Name { get; set; }
+        public MTLSize ThreadsPerThreadgroup { get; } = new MTLSize(1, 1, 1);
 
         public override void Dispose()
         {
+            if (!_disposed)
+            {
+                if (RenderPipelineState.NativePtr != IntPtr.Zero)
+                {
+                    ObjectiveCRuntime.release(RenderPipelineState.NativePtr);
+                }
+                else
+                {
+                    Debug.Assert(ComputePipelineState.NativePtr != IntPtr.Zero);
+                    ObjectiveCRuntime.release(ComputePipelineState.NativePtr);
+                }
+                _disposed = true;
+            }
         }
     }
 }

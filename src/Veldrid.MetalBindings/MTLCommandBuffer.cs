@@ -14,7 +14,7 @@ namespace Veldrid.MetalBindings
             return new MTLRenderCommandEncoder(
                 IntPtr_objc_msgSend(NativePtr, "renderCommandEncoderWithDescriptor:", desc.NativePtr));
         }
-        
+
         public void presentDrawable(IntPtr drawable) => objc_msgSend(NativePtr, "presentDrawable:", drawable);
 
         public void commit() => objc_msgSend(NativePtr, "commit");
@@ -22,11 +22,15 @@ namespace Veldrid.MetalBindings
         public MTLBlitCommandEncoder blitCommandEncoder()
             => objc_msgSend<MTLBlitCommandEncoder>(NativePtr, "blitCommandEncoder");
 
+        public MTLComputeCommandEncoder computeCommandEncoder()
+            => objc_msgSend<MTLComputeCommandEncoder>(NativePtr, "computeCommandEncoder");
+
         public void waitUntilCompleted() => objc_msgSend(NativePtr, "waitUntilCompleted");
 
         public void addCompletedHandler(MTLCommandBufferHandler block)
             => objc_msgSend(NativePtr, "addCompletedHandler:", block);
         public void addCompletedHandler(IntPtr block)
             => objc_msgSend(NativePtr, "addCompletedHandler:", block);
+
     }
 }

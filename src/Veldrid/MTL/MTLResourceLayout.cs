@@ -28,7 +28,7 @@ namespace Veldrid.MTL
                         slot = bufferIndex++;
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
-                        slot = texIndex++;
+                        slot = bufferIndex++;
                         break;
                     case ResourceKind.StructuredBufferReadWrite:
                         slot = bufferIndex++;

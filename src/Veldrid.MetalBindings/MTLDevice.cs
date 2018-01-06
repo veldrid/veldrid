@@ -44,6 +44,23 @@ namespace Veldrid.MetalBindings
             return new MTLRenderPipelineState(ret);
         }
 
+        public MTLComputePipelineState newComputePipelineStateWithDescriptor(
+            MTLComputePipelineDescriptor descriptor)
+        {
+            IntPtr ret = IntPtr_objc_msgSend(NativePtr, "newComputePipelineStateWithDescriptor:options:reflection:error:",
+                descriptor,
+                0,
+                IntPtr.Zero,
+                out NSError error);
+
+            if (error.NativePtr != IntPtr.Zero)
+            {
+                throw new Exception("Failed to create new MTLRenderPipelineState: " + error.localizedDescription);
+            }
+
+            return new MTLComputePipelineState(ret);
+        }
+
         public MTLCommandQueue newCommandQueue() => objc_msgSend<MTLCommandQueue>(NativePtr, "newCommandQueue");
 
         public MTLBuffer newBuffer(void* pointer, UIntPtr length, MTLResourceOptions options)

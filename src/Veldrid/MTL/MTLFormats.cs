@@ -260,6 +260,8 @@ namespace Veldrid.MTL
                     return MTLPrimitiveType.Triangle;
                 case PrimitiveTopology.TriangleStrip:
                     return MTLPrimitiveType.TriangleStrip;
+                case PrimitiveTopology.PointList:
+                    return MTLPrimitiveType.Point;
                 default:
                     throw Illegal.Value<PrimitiveTopology>();
             }

@@ -317,5 +317,31 @@ namespace Veldrid.MTL
         {
             return format == IndexFormat.UInt16 ? MTLIndexType.UInt16 : MTLIndexType.UInt32;
         }
+
+        internal static MTLStencilOperation VdToMTLStencilOperation(StencilOperation op)
+        {
+            switch (op)
+            {
+                case StencilOperation.Keep:
+                    return MTLStencilOperation.Keep;
+                case StencilOperation.Zero:
+                    return MTLStencilOperation.Zero;
+                case StencilOperation.Replace:
+                    return MTLStencilOperation.Replace;
+                case StencilOperation.IncrementAndClamp:
+                    return MTLStencilOperation.IncrementClamp;
+                case StencilOperation.DecrementAndClamp:
+                    return MTLStencilOperation.DecrementClamp;
+                case StencilOperation.Invert:
+                    return MTLStencilOperation.Invert;
+                case StencilOperation.IncrementAndWrap:
+                    return MTLStencilOperation.IncrementWrap;
+                case StencilOperation.DecrementAndWrap:
+                    return MTLStencilOperation.DecrementWrap;
+                default:
+                    throw Illegal.Value<StencilOperation>();
+
+            }
+        }
     }
 }

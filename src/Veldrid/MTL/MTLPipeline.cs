@@ -17,6 +17,13 @@ namespace Veldrid.MTL
         public MTLWinding FrontFace { get; }
         public MTLDepthStencilState DepthStencilState { get; }
         public MTLDepthClipMode DepthClipMode { get; }
+        public override bool IsComputePipeline { get; }
+        public bool ScissorTestEnabled { get; }
+        public MTLSize ThreadsPerThreadgroup { get; } = new MTLSize(1, 1, 1);
+        public bool HasStencil { get; }
+        public override string Name { get; set; }
+        public uint StencilReference { get; }
+        public RgbaFloat BlendColor { get; }
 
         public MTLPipeline(ref GraphicsPipelineDescription description, MTLGraphicsDevice gd)
             : base(ref description)
@@ -88,6 +95,7 @@ namespace Veldrid.MTL
             // Outputs
             OutputDescription outputs = description.Outputs;
             BlendStateDescription blendStateDesc = description.BlendState;
+            BlendColor = blendStateDesc.BlendFactor;
 
             if (outputs.SampleCount != TextureSampleCount.Count1)
             {
@@ -101,6 +109,7 @@ namespace Veldrid.MTL
                 mtlDesc.depthAttachmentPixelFormat = mtlDepthFormat;
                 if ((FormatHelpers.IsStencilFormat(depthFormat)))
                 {
+                    HasStencil = true;
                     mtlDesc.stencilAttachmentPixelFormat = mtlDepthFormat;
                 }
             }
@@ -128,6 +137,36 @@ namespace Veldrid.MTL
                 depthDescriptor.depthCompareFunction = MTLFormats.VdToMTLCompareFunction(
                     description.DepthStencilState.DepthComparison);
                 depthDescriptor.depthWriteEnabled = description.DepthStencilState.DepthWriteEnabled;
+
+                bool stencilEnabled = description.DepthStencilState.StencilTestEnabled;
+                if (stencilEnabled)
+                {
+                    StencilReference = description.DepthStencilState.StencilReference;
+
+                    StencilBehaviorDescription vdFrontDesc = description.DepthStencilState.StencilFront;
+                    MTLStencilDescriptor front = MTLUtil.AllocInit<MTLStencilDescriptor>();
+                    front.readMask = stencilEnabled ? description.DepthStencilState.StencilReadMask : 0u;
+                    front.writeMask = stencilEnabled ? description.DepthStencilState.StencilWriteMask : 0u;
+                    front.depthFailureOperation = MTLFormats.VdToMTLStencilOperation(vdFrontDesc.DepthFail);
+                    front.stencilFailureOperation = MTLFormats.VdToMTLStencilOperation(vdFrontDesc.Fail);
+                    front.depthStencilPassOperation = MTLFormats.VdToMTLStencilOperation(vdFrontDesc.Pass);
+                    front.stencilCompareFunction = MTLFormats.VdToMTLCompareFunction(vdFrontDesc.Comparison);
+                    depthDescriptor.frontFaceStencil = front;
+
+                    StencilBehaviorDescription vdBackDesc = description.DepthStencilState.StencilBack;
+                    MTLStencilDescriptor back = MTLUtil.AllocInit<MTLStencilDescriptor>();
+                    back.readMask = stencilEnabled ? description.DepthStencilState.StencilReadMask : 0u;
+                    back.writeMask = stencilEnabled ? description.DepthStencilState.StencilWriteMask : 0u;
+                    back.depthFailureOperation = MTLFormats.VdToMTLStencilOperation(vdBackDesc.DepthFail);
+                    back.stencilFailureOperation = MTLFormats.VdToMTLStencilOperation(vdBackDesc.Fail);
+                    back.depthStencilPassOperation = MTLFormats.VdToMTLStencilOperation(vdBackDesc.Pass);
+                    back.stencilCompareFunction = MTLFormats.VdToMTLCompareFunction(vdBackDesc.Comparison);
+                    depthDescriptor.backFaceStencil = back;
+
+                    ObjectiveCRuntime.release(front.NativePtr);
+                    ObjectiveCRuntime.release(back.NativePtr);
+                }
+
                 DepthStencilState = gd.Device.newDepthStencilStateWithDescriptor(depthDescriptor);
                 ObjectiveCRuntime.release(depthDescriptor.NativePtr);
             }
@@ -174,13 +213,6 @@ namespace Veldrid.MTL
 
             ObjectiveCRuntime.release(mtlDesc.NativePtr);
         }
-
-        public override bool IsComputePipeline { get; }
-
-        public bool ScissorTestEnabled { get; }
-
-        public override string Name { get; set; }
-        public MTLSize ThreadsPerThreadgroup { get; } = new MTLSize(1, 1, 1);
 
         public override void Dispose()
         {

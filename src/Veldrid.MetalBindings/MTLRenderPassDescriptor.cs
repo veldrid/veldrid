@@ -14,5 +14,8 @@ namespace Veldrid.MetalBindings
 
         public MTLRenderPassDepthAttachmentDescriptor depthAttachment
             => objc_msgSend<MTLRenderPassDepthAttachmentDescriptor>(NativePtr, "depthAttachment");
+
+        public MTLRenderPassStencilAttachmentDescriptor stencilAttachment
+            => objc_msgSend<MTLRenderPassStencilAttachmentDescriptor>(NativePtr, "stencilAttachment");
     }
 }

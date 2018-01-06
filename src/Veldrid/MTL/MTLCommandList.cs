@@ -137,10 +137,13 @@ namespace Veldrid.MTL
                     _rce.setRenderPipelineState(_graphicsPipeline.RenderPipelineState);
                     _rce.setCullMode(_graphicsPipeline.CullMode);
                     _rce.setFrontFacing(_graphicsPipeline.FrontFace);
+                    RgbaFloat blendColor = _graphicsPipeline.BlendColor;
+                    _rce.setBlendColor(blendColor.R, blendColor.G, blendColor.B, blendColor.A);
                     if (_framebuffer.DepthTarget != null)
                     {
                         _rce.setDepthStencilState(_graphicsPipeline.DepthStencilState);
                         _rce.setDepthClipMode(_graphicsPipeline.DepthClipMode);
+                        // _rce.setStencilReferenceValue(_graphicsPipeline.StencilReference);
                     }
                 }
 
@@ -622,11 +625,11 @@ namespace Veldrid.MTL
             }
             else
             {
-                //if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
+                if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
                 {
                     _rce.setVertexTexture(mtlTexView.TargetMTLTexture.DeviceTexture, (UIntPtr)(slot + baseTexture));
                 }
-                //if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
+                if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
                 {
                     _rce.setFragmentTexture(mtlTexView.TargetMTLTexture.DeviceTexture, (UIntPtr)(slot + baseTexture));
                 }
@@ -642,11 +645,11 @@ namespace Veldrid.MTL
             }
             else
             {
-                //if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
+                if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
                 {
                     _rce.setVertexSamplerState(mtlSampler.DeviceSampler, (UIntPtr)(slot + baseSampler));
                 }
-                //if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
+                if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
                 {
                     _rce.setFragmentSamplerState(mtlSampler.DeviceSampler, (UIntPtr)(slot + baseSampler));
                 }
@@ -729,6 +732,14 @@ namespace Veldrid.MTL
                 MTLRenderPassDepthAttachmentDescriptor depthAttachment = rpDesc.depthAttachment;
                 depthAttachment.loadAction = MTLLoadAction.Clear;
                 depthAttachment.clearDepth = _clearDepth.Value.depth;
+
+                if (FormatHelpers.IsStencilFormat(_mtlFramebuffer.DepthTarget.Value.Target.Format))
+                {
+                    MTLRenderPassStencilAttachmentDescriptor stencilAttachment = rpDesc.stencilAttachment;
+                    stencilAttachment.loadAction = MTLLoadAction.Clear;
+                    stencilAttachment.clearStencil = _clearDepth.Value.stencil;
+                }
+
                 _clearDepth = null;
             }
 

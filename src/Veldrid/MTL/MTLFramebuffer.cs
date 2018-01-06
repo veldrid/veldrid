@@ -33,6 +33,15 @@ namespace Veldrid.MTL
                 depthDescriptor.storeAction = MTLStoreAction.Store;
                 depthDescriptor.texture = mtlDepthTarget.DeviceTexture;
                 depthDescriptor.slice = (UIntPtr)DepthTarget.Value.ArrayLayer;
+
+                if (FormatHelpers.IsStencilFormat(mtlDepthTarget.Format))
+                {
+                    MTLRenderPassStencilAttachmentDescriptor stencilDescriptor = ret.stencilAttachment;
+                    stencilDescriptor.loadAction = MTLLoadAction.Load;
+                    stencilDescriptor.storeAction = MTLStoreAction.Store;
+                    stencilDescriptor.texture = mtlDepthTarget.DeviceTexture;
+                    stencilDescriptor.slice = (UIntPtr)DepthTarget.Value.ArrayLayer;
+                }
             }
 
             return ret;

@@ -107,5 +107,11 @@ namespace Veldrid.MetalBindings
             => objc_msgSend(NativePtr, "setDepthClipMode:", (uint)depthClipMode);
 
         public void endEncoding() => objc_msgSend(NativePtr, "endEncoding");
+
+        public void setStencilReferenceValue(uint stencilReference)
+            => objc_msgSend(NativePtr, "setStencilReferenceValue:", stencilReference);
+
+        public void setBlendColor(float red, float green, float blue, float alpha)
+            => objc_msgSend(NativePtr, "setBlendColorRed:green:blue:alpha:", red, green, blue, alpha);
     }
 }

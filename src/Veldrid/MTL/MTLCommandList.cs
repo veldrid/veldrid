@@ -143,7 +143,7 @@ namespace Veldrid.MTL
                     {
                         _rce.setDepthStencilState(_graphicsPipeline.DepthStencilState);
                         _rce.setDepthClipMode(_graphicsPipeline.DepthClipMode);
-                        // _rce.setStencilReferenceValue(_graphicsPipeline.StencilReference);
+                        _rce.setStencilReferenceValue(_graphicsPipeline.StencilReference);
                     }
                 }
 
@@ -621,18 +621,15 @@ namespace Veldrid.MTL
             uint baseTexture = GetTextureBase(set, stages != ShaderStages.Compute);
             if (stages == ShaderStages.Compute)
             {
-                throw new NotImplementedException();
+                _cce.setTexture(mtlTexView.TargetMTLTexture.DeviceTexture, (UIntPtr)(slot + baseTexture));
             }
-            else
+            if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
-                if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
-                {
-                    _rce.setVertexTexture(mtlTexView.TargetMTLTexture.DeviceTexture, (UIntPtr)(slot + baseTexture));
-                }
-                if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
-                {
-                    _rce.setFragmentTexture(mtlTexView.TargetMTLTexture.DeviceTexture, (UIntPtr)(slot + baseTexture));
-                }
+                _rce.setVertexTexture(mtlTexView.TargetMTLTexture.DeviceTexture, (UIntPtr)(slot + baseTexture));
+            }
+            if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
+            {
+                _rce.setFragmentTexture(mtlTexView.TargetMTLTexture.DeviceTexture, (UIntPtr)(slot + baseTexture));
             }
         }
 
@@ -641,18 +638,15 @@ namespace Veldrid.MTL
             uint baseSampler = GetSamplerBase(set, stages != ShaderStages.Compute);
             if (stages == ShaderStages.Compute)
             {
-                throw new NotImplementedException();
+                _cce.setSamplerState(mtlSampler.DeviceSampler, (UIntPtr)(slot + baseSampler));
             }
-            else
+            if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
-                if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
-                {
-                    _rce.setVertexSamplerState(mtlSampler.DeviceSampler, (UIntPtr)(slot + baseSampler));
-                }
-                if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
-                {
-                    _rce.setFragmentSamplerState(mtlSampler.DeviceSampler, (UIntPtr)(slot + baseSampler));
-                }
+                _rce.setVertexSamplerState(mtlSampler.DeviceSampler, (UIntPtr)(slot + baseSampler));
+            }
+            if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
+            {
+                _rce.setFragmentSamplerState(mtlSampler.DeviceSampler, (UIntPtr)(slot + baseSampler));
             }
         }
 

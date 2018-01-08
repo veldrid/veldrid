@@ -33,9 +33,9 @@ namespace Veldrid.MetalBindings
         public void endEncoding() => objc_msgSend(NativePtr, "endEncoding");
 
         public void setTexture(MTLTexture texture, UIntPtr index)
-            => objc_msgSend(NativePtr, "setTexture:", texture.NativePtr, index);
+            => objc_msgSend(NativePtr, "setTexture:atIndex:", texture.NativePtr, index);
 
         public void setSamplerState(MTLSamplerState sampler, UIntPtr index)
-            => objc_msgSend(NativePtr, "setSamplerState:", sampler.NativePtr, index);
+            => objc_msgSend(NativePtr, "setSamplerState:atIndex:", sampler.NativePtr, index);
     }
 }

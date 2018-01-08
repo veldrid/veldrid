@@ -184,6 +184,11 @@ namespace Veldrid.MTL
                 ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, MTLResourceLayout>(description.ResourceLayouts[i]);
             }
 
+            ThreadsPerThreadgroup = new MTLSize(
+                description.ThreadGroupSizeX,
+                description.ThreadGroupSizeY,
+                description.ThreadGroupSizeZ);
+
             MTLComputePipelineDescriptor mtlDesc = MTLUtil.AllocInit<MTLComputePipelineDescriptor>();
             MTLShader mtlShader = Util.AssertSubtype<Shader, MTLShader>(description.ComputeShader);
             mtlDesc.computeFunction = mtlShader.Function;

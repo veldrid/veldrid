@@ -126,12 +126,47 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// Gets a reference to the structure value at the given index.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <returns>A reference to the value at the given index.</returns>
+        public ref T this[uint index]
+        {
+            get
+            {
+                if (index >= Count)
+                {
+                    throw new IndexOutOfRangeException(
+                        $"Given index ({index}) must be less than Count ({Count}).");
+                }
+
+                byte* ptr = (byte*)MappedResource.Data + (index * s_sizeofT);
+                return ref Unsafe.AsRef<T>(ptr);
+            }
+        }
+
+        /// <summary>
         /// Gets a reference to the structure at the given 2-dimensional texture coordinates.
         /// </summary>
         /// <param name="x">The X coordinate.</param>
         /// <param name="y">The Y coordinate.</param>
         /// <returns>A reference to the value at the given coordinates.</returns>
         public ref T this[int x, int y]
+        {
+            get
+            {
+                byte* ptr = (byte*)MappedResource.Data + (y * MappedResource.RowPitch) + (x * s_sizeofT);
+                return ref Unsafe.AsRef<T>(ptr);
+            }
+        }
+
+        /// <summary>
+        /// Gets a reference to the structure at the given 2-dimensional texture coordinates.
+        /// </summary>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <returns>A reference to the value at the given coordinates.</returns>
+        public ref T this[uint x, uint y]
         {
             get
             {
@@ -148,6 +183,25 @@ namespace Veldrid
         /// <param name="z">The Z coordinate.</param>
         /// <returns>A reference to the value at the given coordinates.</returns>
         public ref T this[int x, int y, int z]
+        {
+            get
+            {
+                byte* ptr = (byte*)MappedResource.Data
+                    + (z * MappedResource.DepthPitch)
+                    + (y * MappedResource.RowPitch)
+                    + (x * s_sizeofT);
+                return ref Unsafe.AsRef<T>(ptr);
+            }
+        }
+
+        /// <summary>
+        /// Gets a reference to the structure at the given 3-dimensional texture coordinates.
+        /// </summary>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="z">The Z coordinate.</param>
+        /// <returns>A reference to the value at the given coordinates.</returns>
+        public ref T this[uint x, uint y, uint z]
         {
             get
             {

@@ -1,34 +1,33 @@
+using System;
+using System.Threading;
+
 namespace Veldrid.MTL
 {
     internal class MTLFence : Fence
     {
-        private bool _signaled;
+        private readonly ManualResetEvent _mre;
 
         public MTLFence(bool signaled)
         {
-            _signaled = signaled;
+            _mre = new ManualResetEvent(signaled);
         }
 
-        public override bool Signaled => _signaled;
+        public override string Name { get; set; }
+        public ManualResetEvent ResetEvent => _mre;
 
-        internal void SetSignaled(bool value)
-        {
-            _signaled = value;
-        }
-
-        public override string Name
-        {
-            get => throw new System.NotImplementedException();
-            set => throw new System.NotImplementedException();
-        }
-
-        public override void Reset()
-        {
-            _signaled = false;
-        }
+        public void Set() => _mre.Set();
+        public override void Reset() => _mre.Reset();
+        public override bool Signaled => _mre.WaitOne(0);
 
         public override void Dispose()
         {
+            _mre.Dispose();
+        }
+
+        internal bool Wait(ulong nanosecondTimeout)
+        {
+            ulong timeout = Math.Min(int.MaxValue, nanosecondTimeout / 1_000_000);
+            return _mre.WaitOne((int)timeout);
         }
     }
 }

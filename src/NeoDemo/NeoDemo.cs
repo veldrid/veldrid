@@ -56,7 +56,8 @@ namespace Veldrid.NeoDemo
             VeldridStartup.CreateWindowAndGraphicsDevice(
                 windowCI,
                 gdOptions,
-                GraphicsBackend.Vulkan,
+                GraphicsBackend.Metal,
+                //GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
                 out _window,
                 out _gd);
@@ -247,6 +248,10 @@ namespace Veldrid.NeoDemo
                         if (ImGui.MenuItem("Direct3D 11"))
                         {
                             ChangeBackend(GraphicsBackend.Direct3D11);
+                        }
+                        if (ImGui.MenuItem("Metal"))
+                        {
+                            ChangeBackend(GraphicsBackend.Metal);
                         }
                         ImGui.EndMenu();
                     }

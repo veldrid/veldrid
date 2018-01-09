@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.OpenGLBindings", "V
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.Tests", "Veldrid.Tests\Veldrid.Tests.csproj", "{63CBCF9E-E4B6-4932-90FA-4671F7351685}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.MetalBindings", "Veldrid.MetalBindings\Veldrid.MetalBindings.csproj", "{6647F17C-02E9-4EF2-B882-40E22A187744}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +64,10 @@ Global
 		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63CBCF9E-E4B6-4932-90FA-4671F7351685}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6647F17C-02E9-4EF2-B882-40E22A187744}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6647F17C-02E9-4EF2-B882-40E22A187744}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6647F17C-02E9-4EF2-B882-40E22A187744}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6647F17C-02E9-4EF2-B882-40E22A187744}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

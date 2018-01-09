@@ -80,6 +80,7 @@ namespace Veldrid.Tests
             {
                 view[i] = 1 * 10;
             }
+            GD.Unmap(buffer);
         }
 
         [Fact]
@@ -114,8 +115,8 @@ namespace Veldrid.Tests
             copyCL.CopyBuffer(src, 0, dst, 0, src.SizeInBytes);
             copyCL.End();
             GD.SubmitCommands(copyCL);
-            src.Dispose();
             GD.WaitForIdle();
+            src.Dispose();
 
             MappedResourceView<int> view = GD.Map<int>(dst, MapMode.Read);
             for (int i = 0; i < view.Count; i++)
@@ -167,6 +168,10 @@ namespace Veldrid.Tests
             {
                 return; // TODO
             }
+            if (GD.BackendType == GraphicsBackend.Metal)
+            {
+                return; // TODO
+            }
 
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
             MappedResourceView<int> view = GD.Map<int>(buffer, MapMode.ReadWrite);
@@ -196,10 +201,38 @@ namespace Veldrid.Tests
             {
                 return; // TODO
             }
+            if (GD.BackendType == GraphicsBackend.Metal)
+            {
+                return; // TODO
+            }
 
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
             MappedResource map = GD.Map(buffer, MapMode.Read);
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.Write));
+        }
+
+        [Fact]
+        public unsafe void UnusualSize()
+        {
+            DeviceBuffer src = RF.CreateBuffer(
+                new BufferDescription(208, BufferUsage.UniformBuffer));
+            DeviceBuffer dst = RF.CreateBuffer(
+                new BufferDescription(208, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+
+            byte[] data = Enumerable.Range(0, 208).Select(i => (byte)(i * 150)).ToArray();
+            GD.UpdateBuffer(src, 0, data);
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyBuffer(src, 0, dst, 0, src.SizeInBytes);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+            MappedResource readMap = GD.Map(dst, MapMode.Read);
+            for (int i = 0; i < readMap.SizeInBytes; i++)
+            {
+                Assert.Equal((byte)(i * 150), ((byte*)readMap.Data)[i]);
+            }
         }
 
         private DeviceBuffer CreateBuffer(uint size, BufferUsage usage)
@@ -214,5 +247,8 @@ namespace Veldrid.Tests
 #endif
 #if TEST_D3D11
     public class D3D11BufferTests : BufferTestBase<D3D11DeviceCreator> { }
+#endif
+#if TEST_METAL
+    public class MetalBufferTests : BufferTestBase<MetalDeviceCreator> { }
 #endif
 }

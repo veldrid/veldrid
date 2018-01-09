@@ -61,7 +61,7 @@ namespace Veldrid.StartupUtilities
 
         public static bool IsSupported(GraphicsBackend backend)
         {
-            return true; // TODO
+            return !RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         }
 
         private static SDL_WindowFlags GetWindowFlags(WindowState state)
@@ -104,11 +104,24 @@ namespace Veldrid.StartupUtilities
                     return CreateVulkanGraphicsDevice(options, window);
                 case GraphicsBackend.OpenGL:
                     return CreateDefaultOpenGLGraphicsDevice(options, window);
+                case GraphicsBackend.Metal:
+                    return CreateMetalGraphicsDevice(options, window);
                 //case GraphicsBackend.OpenGLES:
                 //    return CreateDefaultOpenGLESRenderContext(ref contextCI, window);
                 default:
                     throw new VeldridException("Invalid GraphicsBackend: " + preferredBackend);
             }
+        }
+
+        private static unsafe GraphicsDevice CreateMetalGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
+        {
+            IntPtr sdlHandle = window.SdlWindowHandle;
+            SDL_SysWMinfo sysWmInfo;
+            Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
+            Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
+            ref CocoaWindowInfo cocoaInfo = ref Unsafe.AsRef<CocoaWindowInfo>(&sysWmInfo.info);
+            IntPtr nsWindow = cocoaInfo.Window;
+            return GraphicsDevice.CreateMetal(options, nsWindow, (uint)window.Width, (uint)window.Height);
         }
 
         private static GraphicsBackend GetPlatformDefaultBackend()
@@ -119,7 +132,7 @@ namespace Veldrid.StartupUtilities
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return GraphicsBackend.OpenGL;
+                return GraphicsBackend.Metal;
             }
             else
             {
@@ -156,9 +169,14 @@ namespace Veldrid.StartupUtilities
             }
         }
 
-        public static GraphicsDevice CreateDefaultOpenGLGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
+        public static unsafe GraphicsDevice CreateDefaultOpenGLGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;
+
+            SDL_SysWMinfo sysWmInfo;
+            Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
+            Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
+
             if (options.Debug)
             {
                 Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)SDL_GLContextFlag.Debug);

@@ -57,6 +57,8 @@ namespace Veldrid.NeoDemo
                 case GraphicsBackend.Vulkan: return ".450.glsl";
                 case GraphicsBackend.OpenGL:
                     return ".330.glsl";
+                case GraphicsBackend.Metal:
+                    return ".metallib";
                 default: throw new InvalidOperationException("Invalid Graphics backend: " + backend);
             }
         }

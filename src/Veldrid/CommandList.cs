@@ -176,6 +176,8 @@ namespace Veldrid
             {
                 _framebuffer = fb;
                 SetFramebufferCore(fb);
+                SetFullViewports();
+                SetFullScissorRects();
             }
         }
 

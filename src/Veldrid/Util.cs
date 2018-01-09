@@ -138,5 +138,40 @@ namespace Veldrid
 
             return Math.Max(1, ret);
         }
+
+        internal static ulong ComputeSubresourceOffset(Texture tex, uint mipLevel, uint arrayLayer)
+        {
+            Debug.Assert((tex.Usage & TextureUsage.Staging) == TextureUsage.Staging);
+            return ComputeArrayLayerOffset(tex, arrayLayer) + ComputeMipOffset(tex, mipLevel);
+        }
+
+        internal static uint ComputeMipOffset(Texture tex, uint mipLevel)
+        {
+            uint offset = 0;
+            for (uint level = 0; level < mipLevel; level++)
+            {
+                Util.GetMipDimensions(tex, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                offset += mipWidth * mipHeight * mipDepth * FormatHelpers.GetSizeInBytes(tex.Format);
+            }
+
+            return offset;
+        }
+
+        internal static uint ComputeArrayLayerOffset(Texture tex, uint arrayLayer)
+        {
+            if (arrayLayer == 0)
+            {
+                return 0;
+            }
+
+            uint layerPitch = 0;
+            for (uint level = 0; level < tex.MipLevels; level++)
+            {
+                Util.GetMipDimensions(tex, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                layerPitch += mipWidth * mipHeight * mipDepth * FormatHelpers.GetSizeInBytes(tex.Format);
+            }
+
+            return layerPitch * arrayLayer;
+        }
     }
 }

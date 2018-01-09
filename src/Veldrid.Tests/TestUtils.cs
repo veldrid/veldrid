@@ -88,6 +88,27 @@ namespace Veldrid.Tests
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGL, out window, out gd);
         }
 
+        internal static void CreateMetalDevice(out Sdl2Window window, out GraphicsDevice gd)
+        {
+            if (!InitializedSdl2)
+            {
+                window = null;
+                gd = null;
+                return;
+            }
+
+            WindowCreateInfo wci = new WindowCreateInfo
+            {
+                WindowWidth = 200,
+                WindowHeight = 200,
+                WindowInitialState = WindowState.Hidden,
+            };
+
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false);
+
+            VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.Metal, out window, out gd);
+        }
+
         internal static unsafe string GetString(byte* stringStart)
         {
             int characters = 0;
@@ -153,6 +174,14 @@ namespace Veldrid.Tests
         public unsafe void CreateGrapicsDevice(out Sdl2Window window, out GraphicsDevice gd)
         {
             TestUtils.CreateOpenGLDevice(out window, out gd);
+        }
+    }
+
+    public class MetalDeviceCreator : GraphicsDeviceCreator
+    {
+        public unsafe void CreateGrapicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        {
+            TestUtils.CreateMetalDevice(out window, out gd);
         }
     }
 }

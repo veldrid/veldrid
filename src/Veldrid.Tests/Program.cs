@@ -9,7 +9,10 @@ class Program
         newArgs.Insert(0, typeof(Program).Assembly.Location);
         int returnCode = Xunit.ConsoleClient.Program.Main(newArgs.ToArray());
         Console.WriteLine("Tests finished. Press any key to exit.");
-        Console.ReadKey(true);
+        if (!Console.IsInputRedirected)
+        {
+            Console.ReadKey(true);
+        }
         return returnCode;
     }
 }

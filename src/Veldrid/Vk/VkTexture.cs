@@ -220,45 +220,10 @@ namespace Veldrid.Vk
                     arrayPitch = mipWidth * mipHeight * pixelSize,
                     size = mipWidth * mipHeight * mipDepth * pixelSize
                 };
-                layout.offset = ComputeSubresourceOffset(mipLevel, arrayLayer);
+                layout.offset = Util.ComputeSubresourceOffset(this, mipLevel, arrayLayer);
 
                 return layout;
             }
-        }
-
-        private ulong ComputeSubresourceOffset(uint mipLevel, uint arrayLayer)
-        {
-            Debug.Assert((Usage & TextureUsage.Staging) == TextureUsage.Staging);
-            return ComputeArrayLayerOffset(arrayLayer) + ComputeMipOffset(mipLevel);
-        }
-
-        private uint ComputeMipOffset(uint mipLevel)
-        {
-            uint offset = 0;
-            for (uint level = 0; level < mipLevel; level++)
-            {
-                Util.GetMipDimensions(this, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                offset += mipWidth * mipHeight * mipDepth * FormatHelpers.GetSizeInBytes(Format);
-            }
-
-            return offset;
-        }
-
-        private uint ComputeArrayLayerOffset(uint arrayLayer)
-        {
-            if (arrayLayer == 0)
-            {
-                return 0;
-            }
-
-            uint layerPitch = 0;
-            for (uint level = 0; level < MipLevels; level++)
-            {
-                Util.GetMipDimensions(this, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                layerPitch += mipWidth * mipHeight * mipDepth * FormatHelpers.GetSizeInBytes(Format);
-            }
-
-            return layerPitch * arrayLayer;
         }
 
         internal void TransitionImageLayout(

@@ -202,6 +202,11 @@ namespace Veldrid
                         string resourceName = name + ".spv";
                         return GetEmbeddedResourceBytes(resourceName);
                     }
+                case GraphicsBackend.Metal:
+                    {
+                        string resourceName = name + ".metallib";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 default:
                     throw new NotImplementedException();
             }
@@ -464,8 +469,8 @@ namespace Veldrid
                             0,
                             (uint)pcmd->ClipRect.X,
                             (uint)pcmd->ClipRect.Y,
-                            (uint)pcmd->ClipRect.Z,
-                            (uint)pcmd->ClipRect.W);
+                            (uint)(pcmd->ClipRect.Z - pcmd->ClipRect.X),
+                            (uint)(pcmd->ClipRect.W - pcmd->ClipRect.Y));
 
                         cl.DrawIndexed(pcmd->ElemCount, 1, (uint)idx_offset, vtx_offset, 0);
                     }

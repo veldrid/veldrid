@@ -536,5 +536,14 @@ namespace Veldrid
         {
             return new OpenGL.OpenGLGraphicsDevice(options, platformInfo, width, height);
         }
+
+        public static GraphicsDevice CreateMetal(
+            GraphicsDeviceOptions options,
+            IntPtr nsWindow,
+            uint width,
+            uint height)
+        {
+            return new MTL.MTLGraphicsDevice(options, nsWindow, width, height);
+        }
     }
 }

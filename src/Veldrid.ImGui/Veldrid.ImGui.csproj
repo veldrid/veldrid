@@ -25,6 +25,12 @@
     <EmbeddedResource Include="Assets/SPIR-V/imgui-frag.spv">
       <LogicalName>imgui-frag.spv</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Assets/Metal/imgui-vertex.metallib">
+      <LogicalName>imgui-vertex.metallib</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets/Metal/imgui-frag.metallib">
+      <LogicalName>imgui-frag.metallib</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

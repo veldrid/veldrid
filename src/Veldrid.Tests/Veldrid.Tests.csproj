@@ -7,6 +7,7 @@
     <OutputType>exe</OutputType>
     <DefineConstants Condition="'$(IsWindows)' == 'true'">$(DefineConstants);TEST_D3D11;TEST_VULKAN</DefineConstants>
     <DefineConstants Condition="'$(IsLinux)' == 'true'">$(DefineConstants);TEST_VULKAN</DefineConstants>
+    <DefineConstants Condition="'$(IsMacOS)' == 'true'">$(DefineConstants);TEST_METAL</DefineConstants>
     <StartupObject>Program</StartupObject>
   </PropertyGroup>
 

@@ -200,6 +200,11 @@ namespace Veldrid
                 {
                     throw new VeldridException("Subresource must be 0 for Buffer resources.");
                 }
+                if ((mode == MapMode.Read || mode == MapMode.Write) && (buffer.Usage & BufferUsage.Staging) == 0)
+                {
+                    throw new VeldridException(
+                        $"{nameof(MapMode)}.{nameof(MapMode.Read)} and {nameof(MapMode)}.{nameof(MapMode.Write)} can only be used on buffers created with {nameof(BufferUsage)}.{nameof(BufferUsage.Staging)}.");
+                }
             }
             else if (resource is Texture tex)
             {

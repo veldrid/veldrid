@@ -217,7 +217,7 @@ namespace Veldrid.Tests
             DeviceBuffer src = RF.CreateBuffer(
                 new BufferDescription(208, BufferUsage.UniformBuffer));
             DeviceBuffer dst = RF.CreateBuffer(
-                new BufferDescription(208, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+                new BufferDescription(208, BufferUsage.Staging));
 
             byte[] data = Enumerable.Range(0, 208).Select(i => (byte)(i * 150)).ToArray();
             GD.UpdateBuffer(src, 0, data);
@@ -233,6 +233,15 @@ namespace Veldrid.Tests
             {
                 Assert.Equal((byte)(i * 150), ((byte*)readMap.Data)[i]);
             }
+        }
+
+
+        [Fact]
+        public void Dynamic_MapRead_Fails()
+        {
+            DeviceBuffer dynamic = RF.CreateBuffer(
+                new BufferDescription(1024, BufferUsage.Dynamic | BufferUsage.UniformBuffer));
+            Assert.Throws<VeldridException>(() => GD.Map(dynamic, MapMode.Read));
         }
 
         private DeviceBuffer CreateBuffer(uint size, BufferUsage usage)

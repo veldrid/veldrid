@@ -199,9 +199,12 @@ namespace Veldrid.MTL
             lock (_submittedCommandsLock)
             {
                 int lastIndex = _submittedCBs.Count - 1;
-                (MTLCommandBuffer, MTLFence) lastPair = _submittedCBs[lastIndex];
-                lastPair.Item1.waitUntilCompleted();
-                CheckSubmittedCommands(assumeCompletion: true);
+                if (lastIndex >= 0)
+                {
+                    (MTLCommandBuffer, MTLFence) lastPair = _submittedCBs[lastIndex];
+                    lastPair.Item1.waitUntilCompleted();
+                    CheckSubmittedCommands(assumeCompletion: true);
+                }
             }
         }
 

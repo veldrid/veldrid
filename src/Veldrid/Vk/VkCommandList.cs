@@ -482,6 +482,26 @@ namespace Veldrid.Vk
                     Util.ClearArray(_validColorClearValues);
                 }
             }
+
+            // Set new image layouts
+            foreach (FramebufferAttachment colorTarget in _currentFramebuffer.ColorTargets)
+            {
+                VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(colorTarget.Target);
+                VkImageLayout layout = (vkTex.Usage & TextureUsage.Sampled) != 0
+                    ? VkImageLayout.ShaderReadOnlyOptimal
+                    : VkImageLayout.ColorAttachmentOptimal;
+                vkTex.SetImageLayout(colorTarget.ArrayLayer, layout);
+            }
+
+            if (_currentFramebuffer.DepthTarget != null)
+            {
+                VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(_currentFramebuffer.DepthTarget.Value.Target);
+                VkImageLayout layout = (vkDepthTex.Usage & TextureUsage.Sampled) != 0
+                    ? VkImageLayout.ShaderReadOnlyOptimal
+                    : VkImageLayout.DepthStencilAttachmentOptimal;
+
+                vkDepthTex.SetImageLayout(_currentFramebuffer.DepthTarget.Value.ArrayLayer, layout);
+            }
         }
 
         private void EndCurrentRenderPass()

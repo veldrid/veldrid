@@ -48,7 +48,11 @@ namespace Veldrid.Vk
                 colorAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
                 colorAttachmentDesc.stencilStoreOp = VkAttachmentStoreOp.DontCare;
                 colorAttachmentDesc.initialLayout = VkImageLayout.Undefined;
-                colorAttachmentDesc.finalLayout = isPresented ? VkImageLayout.PresentSrcKHR : VkImageLayout.ShaderReadOnlyOptimal;
+                colorAttachmentDesc.finalLayout = isPresented
+                    ? VkImageLayout.PresentSrcKHR
+                    : (vkColorTex.Usage & TextureUsage.Sampled) != 0
+                        ? VkImageLayout.ShaderReadOnlyOptimal
+                        : VkImageLayout.ColorAttachmentOptimal;
                 attachments.Add(colorAttachmentDesc);
 
                 VkAttachmentReference colorAttachmentRef = new VkAttachmentReference();
@@ -70,7 +74,9 @@ namespace Veldrid.Vk
                 depthAttachmentDesc.stencilLoadOp = hasStencil ? VkAttachmentLoadOp.Load : VkAttachmentLoadOp.DontCare;
                 depthAttachmentDesc.stencilStoreOp = hasStencil ? VkAttachmentStoreOp.Store : VkAttachmentStoreOp.DontCare;
                 depthAttachmentDesc.initialLayout = VkImageLayout.Undefined;
-                depthAttachmentDesc.finalLayout = VkImageLayout.ShaderReadOnlyOptimal;
+                depthAttachmentDesc.finalLayout = (vkDepthTex.Usage & TextureUsage.Sampled) != 0
+                    ? VkImageLayout.ShaderReadOnlyOptimal
+                    : VkImageLayout.DepthStencilAttachmentOptimal;
 
                 depthAttachmentRef.attachment = (uint)description.ColorTargets.Length;
                 depthAttachmentRef.layout = VkImageLayout.DepthStencilAttachmentOptimal;

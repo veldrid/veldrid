@@ -164,6 +164,7 @@ namespace Veldrid.Vk
             }
         }
 
+        // Used to construct Swapchain textures.
         internal VkTexture(
             VkGraphicsDevice gd,
             uint width,
@@ -188,6 +189,7 @@ namespace Veldrid.Vk
             SampleCount = sampleCount;
             VkSampleCount = VkFormats.VdToVkSampleCount(sampleCount);
             _optimalImage = existingImage;
+            _imageLayouts = new[] { VkImageLayout.Preinitialized };
         }
 
         internal VkSubresourceLayout GetSubresourceLayout(uint subresource)
@@ -319,6 +321,11 @@ namespace Veldrid.Vk
                     _gd.MemoryManager.Free(_memoryBlock);
                 }
             }
+        }
+
+        internal void SetImageLayout(uint arrayLayer, VkImageLayout layout)
+        {
+            _imageLayouts[CalculateSubresource(0, arrayLayer)] = layout;
         }
     }
 }

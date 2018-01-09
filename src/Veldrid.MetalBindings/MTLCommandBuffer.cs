@@ -32,5 +32,6 @@ namespace Veldrid.MetalBindings
         public void addCompletedHandler(IntPtr block)
             => objc_msgSend(NativePtr, "addCompletedHandler:", block);
 
+        public MTLCommandBufferStatus status => (MTLCommandBufferStatus)uint_objc_msgSend(NativePtr, "status");
     }
 }

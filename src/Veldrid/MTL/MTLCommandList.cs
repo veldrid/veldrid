@@ -621,15 +621,15 @@ namespace Veldrid.MTL
             uint baseTexture = GetTextureBase(set, stages != ShaderStages.Compute);
             if (stages == ShaderStages.Compute)
             {
-                _cce.setTexture(mtlTexView.TargetMTLTexture.DeviceTexture, (UIntPtr)(slot + baseTexture));
+                _cce.setTexture(mtlTexView.TargetDeviceTexture, (UIntPtr)(slot + baseTexture));
             }
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
-                _rce.setVertexTexture(mtlTexView.TargetMTLTexture.DeviceTexture, (UIntPtr)(slot + baseTexture));
+                _rce.setVertexTexture(mtlTexView.TargetDeviceTexture, (UIntPtr)(slot + baseTexture));
             }
             if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
             {
-                _rce.setFragmentTexture(mtlTexView.TargetMTLTexture.DeviceTexture, (UIntPtr)(slot + baseTexture));
+                _rce.setFragmentTexture(mtlTexView.TargetDeviceTexture, (UIntPtr)(slot + baseTexture));
             }
         }
 

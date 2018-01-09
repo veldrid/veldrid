@@ -7,11 +7,7 @@ namespace Veldrid.MTL
         public abstract MTLRenderPassDescriptor CreateRenderPassDescriptor();
         public abstract bool IsRenderable { get; }
 
-        public override string Name
-        {
-            get => throw new System.NotImplementedException();
-            set => throw new System.NotImplementedException();
-        }
+        public override string Name { get; set; }
 
         public MTLFramebufferBase(MTLGraphicsDevice gd, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)

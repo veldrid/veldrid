@@ -36,11 +36,7 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(mtlDesc.NativePtr);
         }
 
-        public override string Name
-        {
-            get => throw new System.NotImplementedException();
-            set => throw new System.NotImplementedException();
-        }
+        public override string Name { get; set; }
 
         public override void Dispose()
         {

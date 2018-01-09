@@ -33,6 +33,9 @@ namespace Veldrid.MTL
         public override TextureType Type { get; }
 
         public override TextureSampleCount SampleCount { get; }
+        public override string Name { get; set; }
+        public MTLPixelFormat MTLPixelFormat { get; }
+        public MTLTextureType MTLTextureType { get; }
 
         public MTLTexture(ref TextureDescription description, MTLGraphicsDevice _gd)
         {
@@ -47,6 +50,12 @@ namespace Veldrid.MTL
             SampleCount = description.SampleCount;
             bool isDepth = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
 
+            MTLPixelFormat = MTLFormats.VdToMTLPixelFormat(Format, isDepth);
+            MTLTextureType = MTLFormats.VdToMTLTextureType(
+                    Type,
+                    ArrayLayers,
+                    SampleCount != TextureSampleCount.Count1,
+                    (Usage & TextureUsage.Cubemap) != 0);
             if (Usage != TextureUsage.Staging)
             {
                 MTLTextureDescriptor texDescriptor = MTLUtil.AllocInit<MTLTextureDescriptor>();
@@ -56,12 +65,8 @@ namespace Veldrid.MTL
                 texDescriptor.mipmapLevelCount = (UIntPtr)MipLevels;
                 texDescriptor.arrayLength = (UIntPtr)ArrayLayers;
                 texDescriptor.sampleCount = (UIntPtr)FormatHelpers.GetSampleCountUInt32(SampleCount);
-                texDescriptor.textureType = MTLFormats.VdToMTLTextureType(
-                    Type,
-                    ArrayLayers,
-                    SampleCount != TextureSampleCount.Count1,
-                    (Usage & TextureUsage.Cubemap) != 0);
-                texDescriptor.pixelFormat = MTLFormats.VdToMTLPixelFormat(Format, isDepth);
+                texDescriptor.textureType = MTLTextureType;
+                texDescriptor.pixelFormat = MTLPixelFormat;
                 texDescriptor.textureUsage = MTLFormats.VdToMTLTextureUsage(Usage);
                 texDescriptor.storageMode = MTLStorageMode.Private;
 
@@ -126,8 +131,6 @@ namespace Veldrid.MTL
                 return MTLTextureType.Type3D;
             }
         }
-
-        public override string Name { get; set; }
 
         internal uint GetSubresourceSize(uint mipLevel, uint arrayLayer)
         {

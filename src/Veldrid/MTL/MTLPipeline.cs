@@ -28,13 +28,6 @@ namespace Veldrid.MTL
         public MTLPipeline(ref GraphicsPipelineDescription description, MTLGraphicsDevice gd)
             : base(ref description)
         {
-            IsComputePipeline = description.ShaderSet.Shaders.Length == 1
-                && description.ShaderSet.Shaders[0].Stage == ShaderStages.Compute;
-            if (IsComputePipeline)
-            {
-                throw new NotImplementedException();
-            }
-
             PrimitiveType = MTLFormats.VdToMTLPrimitiveTopology(description.PrimitiveTopology);
             ResourceLayouts = new MTLResourceLayout[description.ResourceLayouts.Length];
             for (int i = 0; i < ResourceLayouts.Length; i++)

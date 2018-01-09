@@ -8,6 +8,7 @@ namespace Veldrid.MetalBindings
     public unsafe struct MTLTexture
     {
         public readonly IntPtr NativePtr;
+        public MTLTexture(IntPtr ptr) => NativePtr = ptr;
         public bool IsNull => NativePtr == IntPtr.Zero;
 
         public void replaceRegion(
@@ -25,6 +26,17 @@ namespace Veldrid.MetalBindings
                 (IntPtr)pixelBytes,
                 bytesPerRow,
                 bytesPerImage);
+        }
+
+        public MTLTexture newTextureView(
+            MTLPixelFormat pixelFormat,
+            MTLTextureType textureType,
+            NSRange levelRange,
+            NSRange sliceRange)
+        {
+            IntPtr ret = IntPtr_objc_msgSend(NativePtr, "newTextureViewWithPixelFormat:textureType:levels:slices:",
+                (uint)pixelFormat, (uint)textureType, levelRange, sliceRange);
+            return new MTLTexture(ret);
         }
     }
 }

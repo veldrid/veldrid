@@ -12,11 +12,7 @@ namespace Veldrid.MTL
             Layout = Util.AssertSubtype<ResourceLayout, MTLResourceLayout>(description.Layout);
         }
 
-        public override string Name
-        {
-            get => throw new System.NotImplementedException();
-            set => throw new System.NotImplementedException();
-        }
+        public override string Name { get; set; }
 
         public override void Dispose()
         {

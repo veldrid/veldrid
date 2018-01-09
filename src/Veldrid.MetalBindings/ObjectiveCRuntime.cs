@@ -148,6 +148,8 @@ namespace Veldrid.MetalBindings
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, IntPtr a, out NSError error);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, uint a, uint b, NSRange c, NSRange d);
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, MTLComputePipelineDescriptor a, uint b, IntPtr c, out NSError error);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, uint a);

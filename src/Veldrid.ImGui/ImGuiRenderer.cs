@@ -204,7 +204,7 @@ namespace Veldrid
                     }
                 case GraphicsBackend.Metal:
                     {
-                        string resourceName = name + ".metal";
+                        string resourceName = name + ".metallib";
                         return GetEmbeddedResourceBytes(resourceName);
                     }
                 default:

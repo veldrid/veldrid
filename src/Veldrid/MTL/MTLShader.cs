@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using Veldrid.MetalBindings;
 
@@ -12,13 +13,23 @@ namespace Veldrid.MTL
         public MTLFunction Function { get; private set; }
         public override string Name { get; set; }
 
-        public MTLShader(ref ShaderDescription description, MTLGraphicsDevice gd)
+        public unsafe MTLShader(ref ShaderDescription description, MTLGraphicsDevice gd)
             : base(description.Stage)
         {
             _device = gd;
-            string shaderString = Encoding.UTF8.GetString(description.ShaderBytes);
-            Library = gd.Device.newLibraryWithSource(shaderString, MTLCompileOptions.New());
-            Function = Library.newFunctionWithName(description.EntryPoint);
+            DispatchQueue queue = Dispatch.dispatch_get_global_queue(QualityOfServiceLevel.QOS_CLASS_USER_INTERACTIVE, 0);
+            fixed (byte* shaderBytesPtr = description.ShaderBytes)
+            {
+                DispatchData dispatchData = Dispatch.dispatch_data_create(
+                    shaderBytesPtr,
+                    (UIntPtr)description.ShaderBytes.Length,
+                    queue,
+                    IntPtr.Zero);
+
+                Library = gd.Device.newLibraryWithData(dispatchData);
+                Function = Library.newFunctionWithName(description.EntryPoint);
+                Dispatch.dispatch_release(dispatchData.NativePtr);
+            }
         }
 
         public override void Dispose()

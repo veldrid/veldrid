@@ -238,7 +238,6 @@ namespace Veldrid.MTL
 
         protected override void UnmapCore(MappableResource resource, uint subresource)
         {
-            // Flush changes ?
         }
 
         public override bool WaitForFence(Fence fence, ulong nanosecondTimeout)

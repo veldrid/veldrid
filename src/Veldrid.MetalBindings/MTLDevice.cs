@@ -30,6 +30,18 @@ namespace Veldrid.MetalBindings
             return new MTLLibrary(library);
         }
 
+        public MTLLibrary newLibraryWithData(DispatchData data)
+        {
+            IntPtr library = IntPtr_objc_msgSend(NativePtr, "newLibraryWithData:error:", data.NativePtr, out NSError error);
+
+            if (library == IntPtr.Zero)
+            {
+                throw new Exception("Unable to load Metal library: " + error.localizedDescription);
+            }
+
+            return new MTLLibrary(library);
+        }
+
         public MTLRenderPipelineState newRenderPipelineStateWithDescriptor(MTLRenderPipelineDescriptor desc)
         {
             IntPtr ret = IntPtr_objc_msgSend(NativePtr, "newRenderPipelineStateWithDescriptor:error:",

@@ -164,7 +164,18 @@ namespace Veldrid.Sdl2
 
         public Rectangle Bounds => new Rectangle(_cachedPosition, GetWindowSize());
 
-        public bool CursorVisible { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool CursorVisible
+        {
+            get
+            {
+                return SDL_ShowCursor(SDL_QUERY) == 1;
+            }
+            set
+            {
+                int toggle = value ? SDL_ENABLE : SDL_DISABLE;
+                SDL_ShowCursor(toggle);
+            }
+        }
 
         public bool Focused => (SDL_GetWindowFlags(_window) & SDL_WindowFlags.InputFocus) != 0;
 

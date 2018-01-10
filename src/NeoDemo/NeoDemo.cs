@@ -237,19 +237,20 @@ namespace Veldrid.NeoDemo
                 {
                     if (ImGui.BeginMenu("Graphics Backend"))
                     {
-                        if (ImGui.MenuItem("Vulkan"))
+
+                        if (ImGui.MenuItem("Vulkan", GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)))
                         {
                             ChangeBackend(GraphicsBackend.Vulkan);
                         }
-                        if (ImGui.MenuItem("OpenGL"))
+                        if (ImGui.MenuItem("OpenGL", GraphicsDevice.IsBackendSupported(GraphicsBackend.OpenGL)))
                         {
                             ChangeBackend(GraphicsBackend.OpenGL);
                         }
-                        if (ImGui.MenuItem("Direct3D 11"))
+                        if (ImGui.MenuItem("Direct3D 11", GraphicsDevice.IsBackendSupported(GraphicsBackend.Direct3D11)))
                         {
                             ChangeBackend(GraphicsBackend.Direct3D11);
                         }
-                        if (ImGui.MenuItem("Metal"))
+                        if (ImGui.MenuItem("Metal", GraphicsDevice.IsBackendSupported(GraphicsBackend.Metal)))
                         {
                             ChangeBackend(GraphicsBackend.Metal);
                         }

@@ -477,6 +477,11 @@ namespace Veldrid
             PlatformDispose();
         }
 
+        /// <summary>
+        /// Checks whether the given <see cref="GraphicsBackend"/> is supported on this system.
+        /// </summary>
+        /// <param name="backend">The GraphicsBackend to check.</param>
+        /// <returns>True if the GraphicsBackend is supported; false otherwise.</returns>
         public static bool IsBackendSupported(GraphicsBackend backend)
         {
             switch (backend)
@@ -508,7 +513,7 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D11.
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="swapChainPanel">A COM object which must implement the <see cref="SharpDX.DXGI.ISwapChainPanelNative"/>
@@ -559,6 +564,13 @@ namespace Veldrid
             return new OpenGL.OpenGLGraphicsDevice(options, platformInfo, width, height);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Metal.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="nsWindow">A pointer to an NSWindow object, which will be used to create the Metal device's swapchain.
+        /// </param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
         public static GraphicsDevice CreateMetal(
             GraphicsDeviceOptions options,
             IntPtr nsWindow)

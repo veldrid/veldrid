@@ -96,7 +96,10 @@ namespace Veldrid
 
         internal static void ClearArray<T>(T[] array)
         {
-            Array.Clear(array, 0, array.Length);
+            if (array != null)
+            {
+                Array.Clear(array, 0, array.Length);
+            }
         }
 
         public static uint Clamp(uint value, uint min, uint max)

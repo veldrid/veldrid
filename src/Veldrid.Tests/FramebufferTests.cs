@@ -102,4 +102,7 @@ namespace Veldrid.Tests
 #if TEST_D3D11
     public class D3D11FramebufferTests : FramebufferTests<D3D11DeviceCreator> { }
 #endif
+#if TEST_METAL
+    public class MetalFramebufferTests : FramebufferTests<MetalDeviceCreator> { }
+#endif
 }

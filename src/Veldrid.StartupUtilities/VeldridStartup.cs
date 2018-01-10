@@ -59,11 +59,6 @@ namespace Veldrid.StartupUtilities
             return window;
         }
 
-        public static bool IsSupported(GraphicsBackend backend)
-        {
-            return !RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-        }
-
         private static SDL_WindowFlags GetWindowFlags(WindowState state)
         {
             switch (state)
@@ -136,7 +131,9 @@ namespace Veldrid.StartupUtilities
             }
             else
             {
-                return IsSupported(GraphicsBackend.Vulkan) ? GraphicsBackend.Vulkan : GraphicsBackend.OpenGL;
+                return GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)
+                    ? GraphicsBackend.Vulkan
+                    : GraphicsBackend.OpenGL;
             }
         }
 

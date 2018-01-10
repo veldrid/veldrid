@@ -7,6 +7,8 @@ namespace Veldrid.Vk
 {
     internal unsafe static class VulkanUtil
     {
+        private static readonly Lazy<string[]> s_instanceExtensions = new Lazy<string[]>(EnumerateInstanceExtensions);
+
         [Conditional("DEBUG")]
         public static void CheckResult(VkResult result)
         {
@@ -100,8 +102,15 @@ namespace Veldrid.Vk
             return ret;
         }
 
-        public static string[] EnumerateInstanceExtensions()
+        public static string[] GetInstanceExtensions() => s_instanceExtensions.Value;
+
+        private static string[] EnumerateInstanceExtensions()
         {
+            if (!IsVulkanLoaded())
+            {
+                return Array.Empty<string>();
+            }
+
             uint propCount = 0;
             VkResult result = vkEnumerateInstanceExtensionProperties((byte*)null, ref propCount, null);
             CheckResult(result);
@@ -123,6 +132,17 @@ namespace Veldrid.Vk
             }
 
             return ret;
+        }
+
+        public static bool IsVulkanLoaded()
+        {
+            try
+            {
+                uint propCount;
+                vkEnumerateInstanceExtensionProperties((byte*)null, &propCount, null);
+                return true;
+            }
+            catch { return false; }
         }
 
         public static void TransitionImageLayout(

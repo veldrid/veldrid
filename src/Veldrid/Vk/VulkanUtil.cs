@@ -106,6 +106,11 @@ namespace Veldrid.Vk
 
         private static string[] EnumerateInstanceExtensions()
         {
+            if (!IsVulkanLoaded())
+            {
+                return Array.Empty<string>();
+            }
+
             uint propCount = 0;
             VkResult result = vkEnumerateInstanceExtensionProperties((byte*)null, ref propCount, null);
             CheckResult(result);
@@ -127,6 +132,16 @@ namespace Veldrid.Vk
             }
 
             return ret;
+        }
+
+        public static bool IsVulkanLoaded()
+        {
+            try
+            {
+                vkEnumerateInstanceExtensionProperties((byte*)null, null, null);
+                return true;
+            }
+            catch { return false; }
         }
 
         public static void TransitionImageLayout(

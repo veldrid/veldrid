@@ -1032,6 +1032,11 @@ namespace Veldrid.Vk
 
         internal static bool IsSupported()
         {
+            if (!VulkanUtil.IsVulkanLoaded())
+            {
+                return false;
+            }
+            
             HashSet<string> instanceExtensions = new HashSet<string>(GetInstanceExtensions());
             if (!instanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
             {

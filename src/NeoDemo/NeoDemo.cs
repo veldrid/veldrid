@@ -56,7 +56,7 @@ namespace Veldrid.NeoDemo
             VeldridStartup.CreateWindowAndGraphicsDevice(
                 windowCI,
                 gdOptions,
-                GraphicsBackend.Metal,
+                //GraphicsBackend.Metal,
                 //GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
                 out _window,

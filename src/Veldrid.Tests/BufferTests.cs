@@ -235,6 +235,43 @@ namespace Veldrid.Tests
             }
         }
 
+        [Fact]
+        public void Update_Dynamic_NonZeroOffset()
+        {
+            DeviceBuffer dynamic = RF.CreateBuffer(
+                new BufferDescription(1024, BufferUsage.Dynamic | BufferUsage.UniformBuffer));
+
+            byte[] initialData = Enumerable.Range(0, 1024).Select(i => (byte)i).ToArray();
+            GD.UpdateBuffer(dynamic, 0, initialData);
+
+            byte[] replacementData = Enumerable.Repeat((byte)255, 512).ToArray();
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.UpdateBuffer(dynamic, 512, replacementData);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            DeviceBuffer dst = RF.CreateBuffer(
+                new BufferDescription(1024, BufferUsage.Staging));
+
+            cl.Begin();
+            cl.CopyBuffer(dynamic, 0, dst, 0, dynamic.SizeInBytes);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<byte> readView = GD.Map<byte>(dst, MapMode.Read);
+            for (uint i = 0; i < 512; i++)
+            {
+                Assert.Equal((byte)i, readView[i]);
+            }
+
+            for (uint i = 512; i < 1024; i++)
+            {
+                Assert.Equal((byte)255, readView[i]);
+            }
+        }
 
         [Fact]
         public void Dynamic_MapRead_Fails()
@@ -242,6 +279,27 @@ namespace Veldrid.Tests
             DeviceBuffer dynamic = RF.CreateBuffer(
                 new BufferDescription(1024, BufferUsage.Dynamic | BufferUsage.UniformBuffer));
             Assert.Throws<VeldridException>(() => GD.Map(dynamic, MapMode.Read));
+        }
+
+        [Fact]
+        public void CommandList_Update_Staging()
+        {
+            DeviceBuffer staging = RF.CreateBuffer(
+                new BufferDescription(1024, BufferUsage.Staging));
+            byte[] data = Enumerable.Range(0, 1024).Select(i => (byte)i).ToArray();
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.UpdateBuffer(staging, 0, data);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<byte> readView = GD.Map<byte>(staging, MapMode.Read);
+            for (uint i = 0; i < staging.SizeInBytes; i++)
+            {
+                Assert.Equal((byte)i, readView[i]);
+            }
         }
 
         private DeviceBuffer CreateBuffer(uint size, BufferUsage usage)

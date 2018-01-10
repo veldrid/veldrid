@@ -67,6 +67,9 @@ namespace Veldrid.D3D11
         private readonly List<List<BoundTextureInfo>> _boundTextureInfoPool = new List<List<BoundTextureInfo>>(MaxCachedTextureInfoLists);
         private const int MaxCachedTextureInfoLists = 20;
 
+        private readonly List<D3D11Buffer> _availableStagingBuffers = new List<D3D11Buffer>();
+        private readonly List<D3D11Buffer> _submittedStagingBuffers = new List<D3D11Buffer>();
+
         public D3D11CommandList(D3D11GraphicsDevice gd, ref CommandListDescription description)
             : base(ref description)
         {
@@ -952,30 +955,10 @@ namespace Veldrid.D3D11
                 return;
             }
 
-            bool useMap = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
-
-            if (useMap)
-            {
-                if (bufferOffsetInBytes != 0)
-                {
-                    throw new NotImplementedException("bufferOffsetInBytes must be 0 for Dynamic Buffers.");
-                }
-                SharpDX.DataBox db = _context.MapSubresource(
-                    d3dBuffer.Buffer,
-                    0,
-                    SharpDX.Direct3D11.MapMode.WriteDiscard,
-                    MapFlags.None);
-                if (sizeInBytes < 1024)
-                {
-                    Unsafe.CopyBlock(db.DataPointer.ToPointer(), source.ToPointer(), sizeInBytes);
-                }
-                else
-                {
-                    System.Buffer.MemoryCopy(source.ToPointer(), db.DataPointer.ToPointer(), buffer.SizeInBytes, sizeInBytes);
-                }
-                _context.UnmapSubresource(d3dBuffer.Buffer, 0);
-            }
-            else
+            bool isDynamic = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
+            bool isStaging = (buffer.Usage & BufferUsage.Staging) == BufferUsage.Staging;
+            bool useMap = isDynamic || isStaging;
+            if (!useMap)
             {
                 ResourceRegion? subregion = null;
                 if ((d3dBuffer.Buffer.Description.BindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
@@ -1001,6 +984,51 @@ namespace Veldrid.D3D11
                     _context1.UpdateSubresource1(d3dBuffer.Buffer, 0, subregion, source, 0, 0, 0);
                 }
             }
+            else
+            {
+                bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
+                if (updateFullBuffer && isDynamic)
+                {
+                    SharpDX.DataBox db = _context.MapSubresource(
+                        d3dBuffer.Buffer,
+                        0,
+                        SharpDX.Direct3D11.MapMode.WriteDiscard,
+                        MapFlags.None);
+                    if (sizeInBytes < 1024)
+                    {
+                        Unsafe.CopyBlock(db.DataPointer.ToPointer(), source.ToPointer(), sizeInBytes);
+                    }
+                    else
+                    {
+                        System.Buffer.MemoryCopy(source.ToPointer(), db.DataPointer.ToPointer(), buffer.SizeInBytes, sizeInBytes);
+                    }
+                    _context.UnmapSubresource(d3dBuffer.Buffer, 0);
+                }
+                else
+                {
+                    D3D11Buffer staging = GetFreeStagingBuffer(sizeInBytes);
+                    _gd.UpdateBuffer(staging, 0, source, sizeInBytes);
+                    CopyBuffer(staging, 0, buffer, bufferOffsetInBytes, sizeInBytes);
+                    _submittedStagingBuffers.Add(staging);
+                }
+            }
+        }
+
+        private D3D11Buffer GetFreeStagingBuffer(uint sizeInBytes)
+        {
+            foreach (D3D11Buffer buffer in _availableStagingBuffers)
+            {
+                if (buffer.SizeInBytes >= sizeInBytes)
+                {
+                    _availableStagingBuffers.Remove(buffer);
+                    return buffer;
+                }
+            }
+
+            DeviceBuffer staging = _gd.ResourceFactory.CreateBuffer(
+                new BufferDescription(sizeInBytes, BufferUsage.Staging));
+
+            return Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(staging);
         }
 
         protected override void CopyBufferCore(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
@@ -1061,6 +1089,16 @@ namespace Veldrid.D3D11
                 _name = value;
                 _context.DebugName = value;
             }
+        }
+
+        internal void OnCompleted()
+        {
+            foreach (D3D11Buffer buffer in _submittedStagingBuffers)
+            {
+                _availableStagingBuffers.Add(buffer);
+            }
+
+            _submittedStagingBuffers.Clear();
         }
 
         public override void Dispose()

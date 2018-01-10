@@ -8,6 +8,7 @@ Supported backends:
 
 * Direct3D 11
 * Vulkan
+* Metal
 * OpenGL 3
 
 [Veldrid documentation site](https://mellinoe.github.io/veldrid-docs/)

@@ -382,7 +382,7 @@ namespace Veldrid.Vk
         private void CreateInstance(bool debug)
         {
             HashSet<string> availableInstanceLayers = new HashSet<string>(EnumerateInstanceLayers());
-            HashSet<string> availableInstanceExtensions = new HashSet<string>(EnumerateInstanceExtensions());
+            HashSet<string> availableInstanceExtensions = new HashSet<string>(GetInstanceExtensions());
 
             VkInstanceCreateInfo instanceCI = VkInstanceCreateInfo.New();
             VkApplicationInfo applicationInfo = new VkApplicationInfo();
@@ -1028,6 +1028,25 @@ namespace Veldrid.Vk
 
             VkResult result = vkWaitForFences(_device, (uint)fenceCount, fencesPtr, waitAll, nanosecondTimeout);
             return result == VkResult.Success;
+        }
+
+        internal static bool IsSupported()
+        {
+            HashSet<string> instanceExtensions = new HashSet<string>(GetInstanceExtensions());
+            if (!instanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
+            {
+                return false;
+            }
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return instanceExtensions.Contains(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return instanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+            }
+
+            return false;
         }
 
         private class SharedCommandPool

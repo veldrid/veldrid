@@ -477,6 +477,23 @@ namespace Veldrid
             PlatformDispose();
         }
 
+        public static bool IsBackendSupported(GraphicsBackend backend)
+        {
+            switch (backend)
+            {
+                case GraphicsBackend.Direct3D11:
+                    return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                case GraphicsBackend.Vulkan:
+                    return Vk.VkGraphicsDevice.IsSupported();
+                case GraphicsBackend.OpenGL:
+                    return true;
+                case GraphicsBackend.Metal:
+                    return RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                default:
+                    throw Illegal.Value<GraphicsBackend>();
+            }
+        }
+
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
         /// </summary>

@@ -7,6 +7,8 @@ namespace Veldrid.Vk
 {
     internal unsafe static class VulkanUtil
     {
+        private static readonly Lazy<string[]> s_instanceExtensions = new Lazy<string[]>(EnumerateInstanceExtensions);
+
         [Conditional("DEBUG")]
         public static void CheckResult(VkResult result)
         {
@@ -100,7 +102,9 @@ namespace Veldrid.Vk
             return ret;
         }
 
-        public static string[] EnumerateInstanceExtensions()
+        public static string[] GetInstanceExtensions() => s_instanceExtensions.Value;
+
+        private static string[] EnumerateInstanceExtensions()
         {
             uint propCount = 0;
             VkResult result = vkEnumerateInstanceExtensionProperties((byte*)null, ref propCount, null);

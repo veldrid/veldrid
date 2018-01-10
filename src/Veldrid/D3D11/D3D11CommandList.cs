@@ -509,8 +509,6 @@ namespace Veldrid.D3D11
         {
             PreDrawCommand();
 
-            ShaderResourceView[] srvs = _context.PixelShader.GetShaderResources(0, 10);
-
             Debug.Assert(_ib != null);
             if (instanceCount == 1)
             {
@@ -568,8 +566,6 @@ namespace Veldrid.D3D11
         public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
         {
             PreDispatchCommand();
-
-            ShaderResourceView[] srvs = _context.PixelShader.GetShaderResources(0, 10);
 
             _context.Dispatch((int)groupCountX, (int)groupCountY, (int)groupCountZ);
         }

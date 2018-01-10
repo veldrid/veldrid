@@ -279,6 +279,7 @@ namespace Veldrid.Tests
             DeviceBuffer dynamic = RF.CreateBuffer(
                 new BufferDescription(1024, BufferUsage.Dynamic | BufferUsage.UniformBuffer));
             Assert.Throws<VeldridException>(() => GD.Map(dynamic, MapMode.Read));
+            Assert.Throws<VeldridException>(() => GD.Map(dynamic, MapMode.ReadWrite));
         }
 
         [Fact]

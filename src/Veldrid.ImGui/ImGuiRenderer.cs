@@ -274,6 +274,7 @@ namespace Veldrid
         {
             ImGui.Render();
             RenderImDrawData(ImGui.GetDrawData(), gd, cl);
+            ImGui.NewFrame();
         }
 
         /// <summary>
@@ -283,7 +284,6 @@ namespace Veldrid
         {
             SetPerFrameImGuiData(deltaSeconds);
             UpdateImGuiInput(snapshot);
-            ImGui.NewFrame();
         }
 
         /// <summary>

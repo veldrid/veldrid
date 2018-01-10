@@ -116,7 +116,7 @@ namespace Veldrid.StartupUtilities
             Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
             ref CocoaWindowInfo cocoaInfo = ref Unsafe.AsRef<CocoaWindowInfo>(&sysWmInfo.info);
             IntPtr nsWindow = cocoaInfo.Window;
-            return GraphicsDevice.CreateMetal(options, nsWindow, (uint)window.Width, (uint)window.Height);
+            return GraphicsDevice.CreateMetal(options, nsWindow);
         }
 
         private static GraphicsBackend GetPlatformDefaultBackend()

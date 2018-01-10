@@ -34,7 +34,6 @@ namespace Veldrid.MetalBindings
 
         public CGSize drawableSize
         {
-            //get => objc_msgSend_stret<CGSize>(NativePtr, "drawableSize");
             get => CGSize_objc_msgSend(NativePtr, "drawableSize");
             set => objc_msgSend(NativePtr, "setDrawableSize:", value);
         }

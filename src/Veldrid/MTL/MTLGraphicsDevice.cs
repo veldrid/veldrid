@@ -23,19 +23,20 @@ namespace Veldrid.MTL
 
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
-            IntPtr nsWindow,
-            uint width,
-            uint height)
+            IntPtr nsWindow)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
 
             NSWindow nswindow = new NSWindow(nsWindow);
+            CGSize windowContentSize = nswindow.contentView.frame.size;
+            uint width = (uint)windowContentSize.width;
+            uint height = (uint)windowContentSize.height;
 
             var contentView = nswindow.contentView;
-            contentView.WantsLayer = true;
+            contentView.wantsLayer = true;
 
             _metalLayer = CAMetalLayer.New();
-            contentView.Layer = _metalLayer.NativePtr;
+            contentView.layer = _metalLayer.NativePtr;
             _metalLayer.device = _device;
             _metalLayer.pixelFormat = MTLPixelFormat.BGRA8Unorm;
             _metalLayer.framebufferOnly = true;

@@ -561,11 +561,9 @@ namespace Veldrid
 
         public static GraphicsDevice CreateMetal(
             GraphicsDeviceOptions options,
-            IntPtr nsWindow,
-            uint width,
-            uint height)
+            IntPtr nsWindow)
         {
-            return new MTL.MTLGraphicsDevice(options, nsWindow, width, height);
+            return new MTL.MTLGraphicsDevice(options, nsWindow);
         }
     }
 }

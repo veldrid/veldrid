@@ -273,15 +273,15 @@ namespace Veldrid.NeoDemo
                     {
                         _recreateWindow = !_recreateWindow;
                     }
+                    if (ImGui.IsItemHovered(HoveredFlags.Default))
+                    {
+                        ImGui.SetTooltip(
+                            "Causes a new OS window to be created whenever the graphics backend is switched. This is much safer, and is the default.");
+                    }
                     bool threadedRendering = _scene.ThreadedRendering;
                     if (ImGui.MenuItem("Render with multiple threads", string.Empty, threadedRendering, true))
                     {
                         _scene.ThreadedRendering = !_scene.ThreadedRendering;
-                    }
-                    if (ImGui.IsLastItemHovered())
-                    {
-                        ImGui.SetTooltip(
-                            "Causes a new OS Sdl2Window to be created whenever the graphics backend is switched. This is much safer, and is the default.");
                     }
                     bool tinted = _fsq.UseTintedTexture;
                     if (ImGui.MenuItem("Tinted output", string.Empty, tinted, true))

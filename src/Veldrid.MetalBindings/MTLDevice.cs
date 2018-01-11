@@ -6,18 +6,21 @@ namespace Veldrid.MetalBindings
 {
     public unsafe struct MTLDevice
     {
+        private const string MetalFramework = "/System/Library/Frameworks/Metal.framework/Metal";
+
         public readonly IntPtr NativePtr;
         public static implicit operator IntPtr(MTLDevice device) => device.NativePtr;
         public MTLDevice(IntPtr nativePtr) => NativePtr = nativePtr;
-        public string name => string_objc_msgSend(NativePtr, "name");
-        public MTLSize maxThreadsPerThreadgroup => objc_msgSend_stret<MTLSize>(this, new Selector("maxThreadsPerThreadgroup"));
+
+        public string name => string_objc_msgSend(NativePtr, sel_name);
+        public MTLSize maxThreadsPerThreadgroup => objc_msgSend_stret<MTLSize>(this, sel_maxThreadsPerThreadgroup);
 
         // TODO: This should have an "out NSError" parameter.
         public MTLLibrary newLibraryWithSource(string source, MTLCompileOptions options)
         {
             NSString sourceNSS = NSString.New(source);
 
-            IntPtr library = IntPtr_objc_msgSend(NativePtr, "newLibraryWithSource:options:error:",
+            IntPtr library = IntPtr_objc_msgSend(NativePtr, sel_newLibraryWithSource,
                 sourceNSS,
                 options,
                 out NSError error);
@@ -32,7 +35,7 @@ namespace Veldrid.MetalBindings
 
         public MTLLibrary newLibraryWithData(DispatchData data)
         {
-            IntPtr library = IntPtr_objc_msgSend(NativePtr, "newLibraryWithData:error:", data.NativePtr, out NSError error);
+            IntPtr library = IntPtr_objc_msgSend(NativePtr, sel_newLibraryWithData, data.NativePtr, out NSError error);
 
             if (library == IntPtr.Zero)
             {
@@ -44,7 +47,7 @@ namespace Veldrid.MetalBindings
 
         public MTLRenderPipelineState newRenderPipelineStateWithDescriptor(MTLRenderPipelineDescriptor desc)
         {
-            IntPtr ret = IntPtr_objc_msgSend(NativePtr, "newRenderPipelineStateWithDescriptor:error:",
+            IntPtr ret = IntPtr_objc_msgSend(NativePtr, sel_newRenderPipelineStateWithDescriptor,
                 desc.NativePtr,
                 out NSError error);
 
@@ -59,7 +62,7 @@ namespace Veldrid.MetalBindings
         public MTLComputePipelineState newComputePipelineStateWithDescriptor(
             MTLComputePipelineDescriptor descriptor)
         {
-            IntPtr ret = IntPtr_objc_msgSend(NativePtr, "newComputePipelineStateWithDescriptor:options:reflection:error:",
+            IntPtr ret = IntPtr_objc_msgSend(NativePtr, sel_newComputePipelineStateWithDescriptor,
                 descriptor,
                 0,
                 IntPtr.Zero,
@@ -73,11 +76,11 @@ namespace Veldrid.MetalBindings
             return new MTLComputePipelineState(ret);
         }
 
-        public MTLCommandQueue newCommandQueue() => objc_msgSend<MTLCommandQueue>(NativePtr, "newCommandQueue");
+        public MTLCommandQueue newCommandQueue() => objc_msgSend<MTLCommandQueue>(NativePtr, sel_newCommandQueue);
 
         public MTLBuffer newBuffer(void* pointer, UIntPtr length, MTLResourceOptions options)
         {
-            IntPtr buffer = IntPtr_objc_msgSend(NativePtr, "newBufferWithBytes:length:options:",
+            IntPtr buffer = IntPtr_objc_msgSend(NativePtr, sel_newBufferWithBytes,
                 pointer,
                 length,
                 options);
@@ -86,30 +89,45 @@ namespace Veldrid.MetalBindings
 
         public MTLBuffer newBufferWithLengthOptions(UIntPtr length, MTLResourceOptions options)
         {
-            IntPtr buffer = IntPtr_objc_msgSend(NativePtr, "newBufferWithLength:options:", length, options);
+            IntPtr buffer = IntPtr_objc_msgSend(NativePtr, sel_newBufferWithLength, length, options);
             return new MTLBuffer(buffer);
         }
 
         public MTLTexture newTextureWithDescriptor(MTLTextureDescriptor descriptor)
-            => objc_msgSend<MTLTexture>(NativePtr, "newTextureWithDescriptor:", descriptor.NativePtr);
+            => objc_msgSend<MTLTexture>(NativePtr, sel_newTextureWithDescriptor, descriptor.NativePtr);
 
         public MTLSamplerState newSamplerStateWithDescriptor(MTLSamplerDescriptor descriptor)
-            => objc_msgSend<MTLSamplerState>(NativePtr, "newSamplerStateWithDescriptor:", descriptor.NativePtr);
+            => objc_msgSend<MTLSamplerState>(NativePtr, sel_newSamplerStateWithDescriptor, descriptor.NativePtr);
 
         public MTLDepthStencilState newDepthStencilStateWithDescriptor(MTLDepthStencilDescriptor descriptor)
-            => objc_msgSend<MTLDepthStencilState>(NativePtr, "newDepthStencilStateWithDescriptor:", descriptor.NativePtr);
+            => objc_msgSend<MTLDepthStencilState>(NativePtr, sel_newDepthStencilStateWithDescriptor, descriptor.NativePtr);
 
         public Bool8 supportsTextureSampleCount(UIntPtr sampleCount)
-            => bool8_objc_msgSend(NativePtr, "supportsTextureSampleCount:", sampleCount);
+            => bool8_objc_msgSend(NativePtr, sel_supportsTextureSampleCount, sampleCount);
 
         public Bool8 supportsFeatureSet(MTLFeatureSet featureSet)
-            => bool8_objc_msgSend(NativePtr, "supportsFeatureSet:", (uint)featureSet);
+            => bool8_objc_msgSend(NativePtr, sel_supportsFeatureSet, (uint)featureSet);
 
         public Bool8 isDepth24Stencil8PixelFormatSupported
-            => bool8_objc_msgSend(NativePtr, "isDepth24Stencil8PixelFormatSupported");
+            => bool8_objc_msgSend(NativePtr, sel_isDepth24Stencil8PixelFormatSupported);
 
-        private const string MetalFramework = "/System/Library/Frameworks/Metal.framework/Metal";
         [DllImport(MetalFramework)]
         public static extern MTLDevice MTLCreateSystemDefaultDevice();
+
+        private static readonly Selector sel_name = "name";
+        private static readonly Selector sel_maxThreadsPerThreadgroup = "maxThreadsPerThreadgroup";
+        private static readonly Selector sel_newLibraryWithSource = "newLibraryWithSource:options:error:";
+        private static readonly Selector sel_newLibraryWithData = "newLibraryWithData:error:";
+        private static readonly Selector sel_newRenderPipelineStateWithDescriptor = "newRenderPipelineStateWithDescriptor:error:";
+        private static readonly Selector sel_newComputePipelineStateWithDescriptor = "newComputePipelineStateWithDescriptor:options:reflection:error:";
+        private static readonly Selector sel_newCommandQueue = "newCommandQueue";
+        private static readonly Selector sel_newBufferWithBytes = "newBufferWithBytes:length:options:";
+        private static readonly Selector sel_newBufferWithLength = "newBufferWithLength:options:";
+        private static readonly Selector sel_newTextureWithDescriptor = "newTextureWithDescriptor:";
+        private static readonly Selector sel_newSamplerStateWithDescriptor = "newSamplerStateWithDescriptor:";
+        private static readonly Selector sel_newDepthStencilStateWithDescriptor = "newDepthStencilStateWithDescriptor:";
+        private static readonly Selector sel_supportsTextureSampleCount = "supportsTextureSampleCount:";
+        private static readonly Selector sel_supportsFeatureSet = "supportsFeatureSet:";
+        private static readonly Selector sel_isDepth24Stencil8PixelFormatSupported = "isDepth24Stencil8PixelFormatSupported";
     }
 }

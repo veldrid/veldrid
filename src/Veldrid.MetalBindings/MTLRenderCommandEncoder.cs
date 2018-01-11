@@ -12,30 +12,30 @@ namespace Veldrid.MetalBindings
         public bool IsNull => NativePtr == IntPtr.Zero;
 
         public void setRenderPipelineState(MTLRenderPipelineState pipelineState)
-            => objc_msgSend(NativePtr, "setRenderPipelineState:", pipelineState.NativePtr);
+            => objc_msgSend(NativePtr, sel_setRenderPipelineState, pipelineState.NativePtr);
 
         public void setVertexBuffer(MTLBuffer buffer, UIntPtr offset, UIntPtr index)
-            => objc_msgSend(NativePtr, "setVertexBuffer:offset:atIndex:",
+            => objc_msgSend(NativePtr, sel_setVertexBuffer,
                 buffer.NativePtr,
                 offset,
                 index);
 
         public void setFragmentBuffer(MTLBuffer buffer, UIntPtr offset, UIntPtr index)
-            => objc_msgSend(NativePtr, "setFragmentBuffer:offset:atIndex:",
+            => objc_msgSend(NativePtr, sel_setFragmentBuffer,
                 buffer.NativePtr,
                 offset,
                 index);
 
         public void setVertexTexture(MTLTexture texture, UIntPtr index)
-            => objc_msgSend(NativePtr, "setVertexTexture:atIndex:", texture.NativePtr, index);
+            => objc_msgSend(NativePtr, sel_setVertexTexture, texture.NativePtr, index);
         public void setFragmentTexture(MTLTexture texture, UIntPtr index)
-            => objc_msgSend(NativePtr, "setFragmentTexture:atIndex:", texture.NativePtr, index);
+            => objc_msgSend(NativePtr, sel_setFragmentTexture, texture.NativePtr, index);
 
         public void setVertexSamplerState(MTLSamplerState sampler, UIntPtr index)
-            => objc_msgSend(NativePtr, "setVertexSamplerState:atIndex:", sampler.NativePtr, index);
+            => objc_msgSend(NativePtr, sel_setVertexSamplerState, sampler.NativePtr, index);
 
         public void setFragmentSamplerState(MTLSamplerState sampler, UIntPtr index)
-            => objc_msgSend(NativePtr, "setFragmentSamplerState:atIndex:", sampler.NativePtr, index);
+            => objc_msgSend(NativePtr, sel_setFragmentSamplerState, sampler.NativePtr, index);
 
         public void drawPrimitives(
             MTLPrimitiveType primitiveType,
@@ -43,11 +43,11 @@ namespace Veldrid.MetalBindings
             UIntPtr vertexCount,
             UIntPtr instanceCount,
             UIntPtr baseInstance)
-            => objc_msgSend(NativePtr, "drawPrimitives:vertexStart:vertexCount:instanceCount:baseInstance:",
+            => objc_msgSend(NativePtr, sel_drawPrimitives0,
                 primitiveType, vertexStart, vertexCount, instanceCount, baseInstance);
 
         public void drawPrimitives(MTLPrimitiveType primitiveType, MTLBuffer indirectBuffer, UIntPtr indirectBufferOffset)
-            => objc_msgSend(NativePtr, "drawPrimitives:indirectBuffer:indirectBufferOffset:",
+            => objc_msgSend(NativePtr, sel_drawPrimitives1,
                 primitiveType, indirectBuffer, indirectBufferOffset);
 
         public void drawIndexedPrimitives(
@@ -56,7 +56,7 @@ namespace Veldrid.MetalBindings
             MTLIndexType indexType,
             MTLBuffer indexBuffer,
             UIntPtr indexBufferOffset)
-            => objc_msgSend(NativePtr, "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:",
+            => objc_msgSend(NativePtr, sel_drawIndexedPrimitives0,
                 primitiveType, indexCount, indexType, indexBuffer.NativePtr, indexBufferOffset);
 
         public void drawIndexedPrimitives(
@@ -70,7 +70,7 @@ namespace Veldrid.MetalBindings
             UIntPtr baseInstance)
             => objc_msgSend(
                 NativePtr,
-                "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:",
+                sel_drawIndexedPrimitives1,
                 primitiveType, indexCount, indexType, indexBuffer.NativePtr, indexBufferOffset, instanceCount, baseVertex, baseInstance);
 
         public void drawIndexedPrimitives(
@@ -80,7 +80,7 @@ namespace Veldrid.MetalBindings
             UIntPtr indexBufferOffset,
             MTLBuffer indirectBuffer,
             UIntPtr indirectBufferOffset)
-            => objc_msgSend(NativePtr, "drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:",
+            => objc_msgSend(NativePtr, sel_drawIndexedPrimitives2,
                 primitiveType,
                 indexType,
                 indexBuffer,
@@ -89,29 +89,51 @@ namespace Veldrid.MetalBindings
                 indirectBufferOffset);
 
         public unsafe void setViewports(MTLViewport* viewports, UIntPtr count)
-            => objc_msgSend(NativePtr, "setViewports:count:", viewports, count);
+            => objc_msgSend(NativePtr, sel_setViewports, viewports, count);
 
         public unsafe void setScissorRects(MTLScissorRect* scissorRects, UIntPtr count)
-            => objc_msgSend(NativePtr, "setScissorRects:count:", scissorRects, count);
+            => objc_msgSend(NativePtr, sel_setScissorRects, scissorRects, count);
 
         public void setCullMode(MTLCullMode cullMode)
-            => objc_msgSend(NativePtr, "setCullMode:", (uint)cullMode);
+            => objc_msgSend(NativePtr, sel_setCullMode, (uint)cullMode);
 
         public void setFrontFacing(MTLWinding frontFaceWinding)
-            => objc_msgSend(NativePtr, "setFrontFacingWinding:", (uint)frontFaceWinding);
+            => objc_msgSend(NativePtr, sel_setFrontFacingWinding, (uint)frontFaceWinding);
 
         public void setDepthStencilState(MTLDepthStencilState depthStencilState)
-            => objc_msgSend(NativePtr, "setDepthStencilState:", depthStencilState.NativePtr);
+            => objc_msgSend(NativePtr, sel_setDepthStencilState, depthStencilState.NativePtr);
 
         public void setDepthClipMode(MTLDepthClipMode depthClipMode)
-            => objc_msgSend(NativePtr, "setDepthClipMode:", (uint)depthClipMode);
+            => objc_msgSend(NativePtr, sel_setDepthClipMode, (uint)depthClipMode);
 
-        public void endEncoding() => objc_msgSend(NativePtr, "endEncoding");
+        public void endEncoding() => objc_msgSend(NativePtr, sel_endEncoding);
 
         public void setStencilReferenceValue(uint stencilReference)
-            => objc_msgSend(NativePtr, "setStencilReferenceValue:", stencilReference);
+            => objc_msgSend(NativePtr, sel_setStencilReferenceValue, stencilReference);
 
         public void setBlendColor(float red, float green, float blue, float alpha)
-            => objc_msgSend(NativePtr, "setBlendColorRed:green:blue:alpha:", red, green, blue, alpha);
+            => objc_msgSend(NativePtr, sel_setBlendColor, red, green, blue, alpha);
+
+        private static readonly Selector sel_setRenderPipelineState = "setRenderPipelineState:";
+        private static readonly Selector sel_setVertexBuffer = "setVertexBuffer:offset:atIndex:";
+        private static readonly Selector sel_setFragmentBuffer = "setFragmentBuffer:offset:atIndex:";
+        private static readonly Selector sel_setVertexTexture = "setVertexTexture:atIndex:";
+        private static readonly Selector sel_setFragmentTexture = "setFragmentTexture:atIndex:";
+        private static readonly Selector sel_setVertexSamplerState = "setVertexSamplerState:atIndex:";
+        private static readonly Selector sel_setFragmentSamplerState = "setFragmentSamplerState:atIndex:";
+        private static readonly Selector sel_drawPrimitives0 = "drawPrimitives:vertexStart:vertexCount:instanceCount:baseInstance:";
+        private static readonly Selector sel_drawPrimitives1 = "drawPrimitives:indirectBuffer:indirectBufferOffset:";
+        private static readonly Selector sel_drawIndexedPrimitives0 = "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:";
+        private static readonly Selector sel_drawIndexedPrimitives1 = "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:";
+        private static readonly Selector sel_drawIndexedPrimitives2 = "drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:";
+        private static readonly Selector sel_setViewports = "setViewports:count:";
+        private static readonly Selector sel_setScissorRects = "setScissorRects:count:";
+        private static readonly Selector sel_setCullMode = "setCullMode:";
+        private static readonly Selector sel_setFrontFacingWinding = "setFrontFacingWinding:";
+        private static readonly Selector sel_setDepthStencilState = "setDepthStencilState:";
+        private static readonly Selector sel_setDepthClipMode = "setDepthClipMode:";
+        private static readonly Selector sel_endEncoding = "endEncoding";
+        private static readonly Selector sel_setStencilReferenceValue = "setStencilReferenceValue:";
+        private static readonly Selector sel_setBlendColor = "setBlendColorRed:green:blue:alpha:";
     }
 }

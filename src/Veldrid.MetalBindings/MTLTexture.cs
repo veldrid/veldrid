@@ -8,6 +8,7 @@ namespace Veldrid.MetalBindings
     public unsafe struct MTLTexture
     {
         public readonly IntPtr NativePtr;
+
         public MTLTexture(IntPtr ptr) => NativePtr = ptr;
         public bool IsNull => NativePtr == IntPtr.Zero;
 
@@ -19,7 +20,7 @@ namespace Veldrid.MetalBindings
             UIntPtr bytesPerRow,
             UIntPtr bytesPerImage)
         {
-            objc_msgSend(NativePtr, "replaceRegion:mipmapLevel:slice:withBytes:bytesPerRow:bytesPerImage:",
+            objc_msgSend(NativePtr, sel_replaceRegion,
                 region,
                 mipmapLevel,
                 slice,
@@ -34,9 +35,12 @@ namespace Veldrid.MetalBindings
             NSRange levelRange,
             NSRange sliceRange)
         {
-            IntPtr ret = IntPtr_objc_msgSend(NativePtr, "newTextureViewWithPixelFormat:textureType:levels:slices:",
+            IntPtr ret = IntPtr_objc_msgSend(NativePtr, sel_newTextureView,
                 (uint)pixelFormat, (uint)textureType, levelRange, sliceRange);
             return new MTLTexture(ret);
         }
+
+        private static readonly Selector sel_replaceRegion = "replaceRegion:mipmapLevel:slice:withBytes:bytesPerRow:bytesPerImage:";
+        private static readonly Selector sel_newTextureView = "newTextureViewWithPixelFormat:textureType:levels:slices:";
     }
 }

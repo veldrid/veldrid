@@ -11,32 +11,35 @@ namespace Veldrid.MetalBindings
 
         public MTLTexture texture
         {
-            get => objc_msgSend<MTLTexture>(NativePtr, "texture");
-            set => objc_msgSend(NativePtr, "setTexture:", value.NativePtr);
+            get => objc_msgSend<MTLTexture>(NativePtr, Selectors.texture);
+            set => objc_msgSend(NativePtr, Selectors.setTexture, value.NativePtr);
         }
 
         public MTLLoadAction loadAction
         {
-            get => (MTLLoadAction)uint_objc_msgSend(NativePtr, "loadAction");
-            set => objc_msgSend(NativePtr, "setLoadAction:", (uint)value);
+            get => (MTLLoadAction)uint_objc_msgSend(NativePtr, Selectors.loadAction);
+            set => objc_msgSend(NativePtr, Selectors.setLoadAction, (uint)value);
         }
 
         public MTLStoreAction storeAction
         {
-            get => (MTLStoreAction)uint_objc_msgSend(NativePtr, "storeAction");
-            set => objc_msgSend(NativePtr, "setStoreAction:", (uint)value);
+            get => (MTLStoreAction)uint_objc_msgSend(NativePtr, Selectors.storeAction);
+            set => objc_msgSend(NativePtr, Selectors.setStoreAction, (uint)value);
         }
 
         public double clearDepth
         {
-            get => double_objc_msgSend(NativePtr, "clearDepth");
-            set => objc_msgSend(NativePtr, "setClearDepth:", value);
+            get => double_objc_msgSend(NativePtr, sel_clearDepth);
+            set => objc_msgSend(NativePtr, sel_setClearDepth, value);
         }
 
         public UIntPtr slice
         {
-            get => UIntPtr_objc_msgSend(NativePtr, "slice");
-            set => objc_msgSend(NativePtr, "setSlice:", value);
+            get => UIntPtr_objc_msgSend(NativePtr, Selectors.slice);
+            set => objc_msgSend(NativePtr, Selectors.setSlice, value);
         }
+
+        private static readonly Selector sel_clearDepth = "clearDepth";
+        private static readonly Selector sel_setClearDepth = "setClearDepth:";
     }
 }

@@ -11,10 +11,10 @@ namespace Veldrid.MetalBindings
         {
             get
             {
-                IntPtr value = IntPtr_objc_msgSend(NativePtr, "objectAtIndexedSubscript:", index);
+                IntPtr value = IntPtr_objc_msgSend(NativePtr, Selectors.objectAtIndexedSubscript, index);
                 return new MTLVertexBufferLayoutDescriptor(value);
             }
-            set => objc_msgSend(NativePtr, "setObject:atIndexedSubscript:", value.NativePtr, index);
+            set => objc_msgSend(NativePtr, Selectors.setObjectAtIndexedSubscript, value.NativePtr, index);
         }
     }
 }

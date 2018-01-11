@@ -6,7 +6,6 @@ namespace Veldrid.MetalBindings
     public struct MTLBlitCommandEncoder
     {
         public readonly IntPtr NativePtr;
-
         public bool IsNull => NativePtr == IntPtr.Zero;
 
         public void copy(
@@ -17,7 +16,7 @@ namespace Veldrid.MetalBindings
             UIntPtr size)
             => objc_msgSend(
                 NativePtr,
-                "copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:",
+                sel_copyFromBuffer0,
                 sourceBuffer, sourceOffset, destinationBuffer, destinationOffset, size);
 
         public void copyFromBuffer(
@@ -32,7 +31,7 @@ namespace Veldrid.MetalBindings
             MTLOrigin destinationOrigin)
             => objc_msgSend(
                 NativePtr,
-                "copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:",
+                sel_copyFromBuffer1,
                 sourceBuffer.NativePtr,
                 sourceOffset,
                 sourceBytesPerRow,
@@ -53,7 +52,7 @@ namespace Veldrid.MetalBindings
             UIntPtr destinationOffset,
             UIntPtr destinationBytesPerRow,
             UIntPtr destinationBytesPerImage)
-            => objc_msgSend(NativePtr, "copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toBuffer:destinationOffset:destinationBytesPerRow:destinationBytesPerImage:",
+            => objc_msgSend(NativePtr, sel_copyFromTexture,
                 sourceTexture,
                 sourceSlice,
                 sourceLevel,
@@ -66,9 +65,15 @@ namespace Veldrid.MetalBindings
 
         public void synchronizeResource(IntPtr resource)
         {
-            objc_msgSend(NativePtr, "synchronizeResource:", resource);
+            objc_msgSend(NativePtr, sel_synchronizeResource, resource);
         }
 
-        public void endEncoding() => objc_msgSend(NativePtr, "endEncoding");
+        public void endEncoding() => objc_msgSend(NativePtr, sel_endEncoding);
+
+        private static readonly Selector sel_copyFromBuffer0 = "copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:";
+        private static readonly Selector sel_copyFromBuffer1 = "copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:";
+        private static readonly Selector sel_copyFromTexture = "copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toBuffer:destinationOffset:destinationBytesPerRow:destinationBytesPerImage:";
+        private static readonly Selector sel_synchronizeResource = "synchronizeResource:";
+        private static readonly Selector sel_endEncoding = "endEncoding";
     }
 }

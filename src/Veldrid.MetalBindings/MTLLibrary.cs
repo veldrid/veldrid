@@ -13,8 +13,10 @@ namespace Veldrid.MetalBindings
         public MTLFunction newFunctionWithName(string name)
         {
             NSString nameNSS = NSString.New(name);
-            IntPtr function = IntPtr_objc_msgSend(NativePtr, "newFunctionWithName:", nameNSS);
+            IntPtr function = IntPtr_objc_msgSend(NativePtr, sel_newFunctionWithName, nameNSS);
             return new MTLFunction(function);
         }
+
+        private static readonly Selector sel_newFunctionWithName = "newFunctionWithName:";
     }
 }

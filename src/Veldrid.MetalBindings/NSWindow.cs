@@ -11,12 +11,6 @@ namespace Veldrid.MetalBindings
             NativePtr = ptr;
         }
 
-        public NSView contentView
-        {
-            get
-            {
-                return objc_msgSend<NSView>(NativePtr, new Selector("contentView"));
-            }
-        }
+        public NSView contentView => objc_msgSend<NSView>(NativePtr, "contentView");
     }
 }

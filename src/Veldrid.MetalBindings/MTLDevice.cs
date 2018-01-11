@@ -15,7 +15,6 @@ namespace Veldrid.MetalBindings
         public string name => string_objc_msgSend(NativePtr, sel_name);
         public MTLSize maxThreadsPerThreadgroup => objc_msgSend_stret<MTLSize>(this, sel_maxThreadsPerThreadgroup);
 
-        // TODO: This should have an "out NSError" parameter.
         public MTLLibrary newLibraryWithSource(string source, MTLCompileOptions options)
         {
             NSString sourceNSS = NSString.New(source);

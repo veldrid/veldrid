@@ -587,6 +587,48 @@ namespace Veldrid.Tests
                     }
             GD.Unmap(staging);
         }
+
+        [Fact]
+        public unsafe void Copy_NonSquareTexture()
+        {
+            Texture src = RF.CreateTexture(
+                TextureDescription.Texture2D(512, 128, 1, 1, PixelFormat.R8_UNorm, TextureUsage.Staging));
+            byte[] data = Enumerable.Repeat((byte)255, (int)(src.Width * src.Height)).ToArray();
+            fixed (byte* dataPtr = data)
+            {
+                GD.UpdateTexture(src, (IntPtr)dataPtr, (uint)data.Length,
+                    0, 0, 0,
+                    src.Width, src.Height, 1,
+                    0, 0);
+            }
+
+            Texture dst = RF.CreateTexture(
+                TextureDescription.Texture2D(512, 128, 1, 1, PixelFormat.R8_UNorm, TextureUsage.Staging));
+            byte[] data2 = Enumerable.Repeat((byte)100, (int)(dst.Width * dst.Height)).ToArray();
+            fixed (byte* dataPtr2 = data2)
+            {
+                GD.UpdateTexture(dst, (IntPtr)dataPtr2, (uint)data2.Length,
+                    0, 0, 0,
+                    dst.Width, dst.Height, 1,
+                    0, 0);
+            }
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyTexture(src, dst);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<byte> readView = GD.Map<byte>(dst, MapMode.Read);
+            for (uint y = 0; y < dst.Height; y++)
+                for (uint x = 0; x < dst.Width; x++)
+                {
+                    Assert.Equal(255, readView[x, y]);
+                }
+
+            GD.Unmap(dst);
+        }
     }
 
 #if TEST_VULKAN

@@ -662,7 +662,7 @@ namespace Veldrid
                 CopyTexture(
                     source, 0, 0, 0, level, 0,
                     destination, 0, 0, 0, level, 0,
-                    source.Width, source.Width, source.Depth,
+                    source.Width, source.Height, source.Depth,
                     source.ArrayLayers);
             }
         }

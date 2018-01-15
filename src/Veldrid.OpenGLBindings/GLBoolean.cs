@@ -3,7 +3,7 @@
 namespace Veldrid.OpenGLBinding
 {
     /// <summary>
-    /// A boolean value stored in a 4-byte unsigned integer.
+    /// A boolean value stored in an unsigned byte.
     /// </summary>
     public struct GLboolean : IEquatable<GLboolean>
     {

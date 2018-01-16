@@ -133,7 +133,7 @@ namespace Veldrid.MTL
             _swapchainFB.GetNextDrawable();
         }
 
-        public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             var mtlBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
             void* destPtr = mtlBuffer.DeviceBuffer.contents();

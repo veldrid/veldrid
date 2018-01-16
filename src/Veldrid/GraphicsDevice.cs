@@ -400,11 +400,21 @@ namespace Veldrid
         /// which new data will be uploaded.</param>
         /// <param name="source">A pointer to the start of the data to upload.</param>
         /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
-        public abstract void UpdateBuffer(
+        public void UpdateBuffer(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             IntPtr source,
-            uint sizeInBytes);
+            uint sizeInBytes)
+        {
+            if (bufferOffsetInBytes + sizeInBytes > buffer.SizeInBytes)
+            {
+                throw new VeldridException(
+                    $"The data size given to UpdateBuffer is too large. The given buffer can only hold {buffer.SizeInBytes} total bytes. The requested update would require {bufferOffsetInBytes + sizeInBytes} bytes.");
+            }
+            UpdateBufferCore(buffer, bufferOffsetInBytes, source, sizeInBytes);
+        }
+
+        protected abstract void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
 
         /// <summary>
         /// Adds the given object to a deferred disposal list, which will be processed when this GraphicsDevice becomes idle.

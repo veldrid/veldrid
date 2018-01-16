@@ -9,9 +9,14 @@
     <DefineConstants Condition="'$(IsLinux)' == 'true'">$(DefineConstants);TEST_VULKAN</DefineConstants>
     <DefineConstants Condition="'$(IsMacOS)' == 'true'">$(DefineConstants);TEST_METAL</DefineConstants>
     <StartupObject>Program</StartupObject>
+    <ShaderOutputPath>$(BaseIntermediateOutputPath)Shaders</ShaderOutputPath>
+    <ShaderContentIncludePath>Shaders</ShaderContentIncludePath>
+    <ListAllShaderPaths>true</ListAllShaderPaths>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ShaderGen.Primitives" Version="$(ShaderGenVersion)" />
+    <PackageReference Include="ShaderGen.Build" Version="$(ShaderGenVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0-preview-20170628-02" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.console" Version="2.3.1" />

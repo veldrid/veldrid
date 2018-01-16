@@ -121,6 +121,15 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+        public override int GetHashCode()
+        {
+            return HashHelper.Combine(R.GetHashCode(), G.GetHashCode(), B.GetHashCode(), A.GetHashCode());
+        }
+
+        /// <summary>
         /// Returns a string representation of this color.
         /// </summary>
         /// <returns></returns>

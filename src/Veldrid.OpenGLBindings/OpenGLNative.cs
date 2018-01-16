@@ -577,7 +577,6 @@ namespace Veldrid.OpenGLBinding
             uint index,
             int size,
             VertexAttribPointerType type,
-            GLboolean normalized,
             uint stride,
             void* pointer);
         private static glVertexAttribIPointer_t p_glVertexAttribIPointer;
@@ -585,9 +584,8 @@ namespace Veldrid.OpenGLBinding
             uint index,
             int size,
             VertexAttribPointerType type,
-            GLboolean normalized,
             uint stride,
-            void* pointer) => p_glVertexAttribIPointer(index, size, type, normalized, stride, pointer);
+            void* pointer) => p_glVertexAttribIPointer(index, size, type, stride, pointer);
 
         private delegate void glVertexAttribDivisor_t(uint index, uint divisor);
         private static glVertexAttribDivisor_t p_glVertexAttribDivisor;

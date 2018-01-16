@@ -127,7 +127,6 @@ namespace Veldrid.Tests
             cl.CopyTexture(target, staging);
             cl.End();
             GD.SubmitCommands(cl);
-            GD.SwapBuffers();
             GD.WaitForIdle();
 
             MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read);
@@ -136,6 +135,11 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
+                if (GD.BackendType == GraphicsBackend.OpenGL)
+                {
+                    y = framebuffer.Height - y - 1;
+                }
+
                 RgbaFloat expectedColor = new RgbaFloat(
                     vertex.Color_Int.X / (float)colorNormalizationFactor,
                     vertex.Color_Int.Y / (float)colorNormalizationFactor,

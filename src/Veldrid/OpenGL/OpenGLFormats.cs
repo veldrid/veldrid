@@ -221,7 +221,10 @@ namespace Veldrid.OpenGL
             }
         }
 
-        internal static VertexAttribPointerType VdToGLVertexAttribPointerType(VertexElementFormat format, out bool normalized)
+        internal static VertexAttribPointerType VdToGLVertexAttribPointerType(
+            VertexElementFormat format,
+            out bool normalized,
+            out bool isInteger)
         {
             switch (format)
             {
@@ -229,16 +232,63 @@ namespace Veldrid.OpenGL
                 case VertexElementFormat.Float2:
                 case VertexElementFormat.Float3:
                 case VertexElementFormat.Float4:
-                    normalized = false; // N/A
-                    return VertexAttribPointerType.Float;
-                case VertexElementFormat.Byte2_UNorm:
-                case VertexElementFormat.Byte4_UNorm:
-                    normalized = true;
-                    return VertexAttribPointerType.UnsignedByte;
-                case VertexElementFormat.Byte2_UInt:
-                case VertexElementFormat.Byte4_UInt:
                     normalized = false;
+                    isInteger = false;
+                    return VertexAttribPointerType.Float;
+                case VertexElementFormat.Byte2_Norm:
+                case VertexElementFormat.Byte4_Norm:
+                    normalized = true;
+                    isInteger = true;
                     return VertexAttribPointerType.UnsignedByte;
+                case VertexElementFormat.Byte2:
+                case VertexElementFormat.Byte4:
+                    normalized = false;
+                    isInteger = true;
+                    return VertexAttribPointerType.UnsignedByte;
+                case VertexElementFormat.SByte2_Norm:
+                case VertexElementFormat.SByte4_Norm:
+                    normalized = true;
+                    isInteger = true;
+                    return VertexAttribPointerType.Byte;
+                case VertexElementFormat.SByte2:
+                case VertexElementFormat.SByte4:
+                    normalized = false;
+                    isInteger = true;
+                    return VertexAttribPointerType.Byte;
+                case VertexElementFormat.UShort2_Norm:
+                case VertexElementFormat.UShort4_Norm:
+                    normalized = true;
+                    isInteger = true;
+                    return VertexAttribPointerType.UnsignedShort;
+                case VertexElementFormat.UShort2:
+                case VertexElementFormat.UShort4:
+                    normalized = false;
+                    isInteger = true;
+                    return VertexAttribPointerType.UnsignedShort;
+                case VertexElementFormat.Short2_Norm:
+                case VertexElementFormat.Short4_Norm:
+                    normalized = true;
+                    isInteger = true;
+                    return VertexAttribPointerType.Short;
+                case VertexElementFormat.Short2:
+                case VertexElementFormat.Short4:
+                    normalized = false;
+                    isInteger = true;
+                    return VertexAttribPointerType.Short;
+                case VertexElementFormat.UInt1:
+                case VertexElementFormat.UInt2:
+                case VertexElementFormat.UInt3:
+                case VertexElementFormat.UInt4:
+                    normalized = false;
+                    isInteger = true;
+                    return VertexAttribPointerType.UnsignedInt;
+                case VertexElementFormat.Int1:
+                case VertexElementFormat.Int2:
+                case VertexElementFormat.Int3:
+                case VertexElementFormat.Int4:
+                    normalized = false;
+                    isInteger = true;
+                    return VertexAttribPointerType.Int;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }

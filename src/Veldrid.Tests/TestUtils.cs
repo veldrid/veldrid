@@ -129,6 +129,7 @@ namespace Veldrid.Tests
 
         public GraphicsDevice GD => _gd;
         public ResourceFactory RF => _factory;
+        public Sdl2Window Window => _window;
 
         public GraphicsDeviceTestBase()
         {

@@ -188,14 +188,29 @@ namespace Veldrid.OpenGL
                     }
                     VertexAttribPointerType type = OpenGLFormats.VdToGLVertexAttribPointerType(
                         element.Format,
-                        out bool normalized);
-                    glVertexAttribPointer(
-                        actualSlot,
-                        FormatHelpers.GetElementCount(element.Format),
-                        type,
-                        normalized,
-                        (uint)_graphicsPipeline.VertexStrides[i],
-                        (void*)offset);
+                        out bool normalized,
+                        out bool isInteger);
+                    if (isInteger && !normalized)
+                    {
+                        glVertexAttribIPointer(
+                            actualSlot,
+                            FormatHelpers.GetElementCount(element.Format),
+                            type,
+                            (uint)_graphicsPipeline.VertexStrides[i],
+                            (void*)offset);
+                        CheckLastError();
+                    }
+                    else
+                    {
+                        glVertexAttribPointer(
+                            actualSlot,
+                            FormatHelpers.GetElementCount(element.Format),
+                            type,
+                            normalized,
+                            (uint)_graphicsPipeline.VertexStrides[i],
+                            (void*)offset);
+                        CheckLastError();
+                    }
 
                     uint stepRate = input.InstanceStepRate;
                     if (_vertexAttribDivisors[actualSlot] != stepRate)

@@ -271,7 +271,7 @@ namespace Veldrid.OpenGL
             _executionThread.Unmap(resource, subresource);
         }
 
-        public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             lock (_mappedResourceLock)
             {

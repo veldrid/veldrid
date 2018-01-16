@@ -292,14 +292,54 @@ namespace Veldrid.MTL
         {
             switch (format)
             {
-                case VertexElementFormat.Byte2_UNorm:
+                case VertexElementFormat.Byte2_Norm:
                     return MTLVertexFormat.uchar2Normalized;
-                case VertexElementFormat.Byte2_UInt:
+                case VertexElementFormat.Byte2:
                     return MTLVertexFormat.uchar2;
-                case VertexElementFormat.Byte4_UNorm:
+                case VertexElementFormat.Byte4_Norm:
                     return MTLVertexFormat.uchar4Normalized;
-                case VertexElementFormat.Byte4_UInt:
+                case VertexElementFormat.Byte4:
                     return MTLVertexFormat.uchar4;
+                case VertexElementFormat.SByte2_Norm:
+                    return MTLVertexFormat.char2Normalized;
+                case VertexElementFormat.SByte2:
+                    return MTLVertexFormat.char2;
+                case VertexElementFormat.SByte4_Norm:
+                    return MTLVertexFormat.char4Normalized;
+                case VertexElementFormat.SByte4:
+                    return MTLVertexFormat.char4;
+                case VertexElementFormat.UShort2_Norm:
+                    return MTLVertexFormat.ushort2Normalized;
+                case VertexElementFormat.UShort2:
+                    return MTLVertexFormat.ushort2;
+                case VertexElementFormat.Short2_Norm:
+                    return MTLVertexFormat.short2Normalized;
+                case VertexElementFormat.Short2:
+                    return MTLVertexFormat.short2;
+                case VertexElementFormat.UShort4_Norm:
+                    return MTLVertexFormat.ushort4Normalized;
+                case VertexElementFormat.UShort4:
+                    return MTLVertexFormat.ushort4;
+                case VertexElementFormat.Short4_Norm:
+                    return MTLVertexFormat.short4Normalized;
+                case VertexElementFormat.Short4:
+                    return MTLVertexFormat.short4;
+                case VertexElementFormat.UInt1:
+                    return MTLVertexFormat.@uint;
+                case VertexElementFormat.UInt2:
+                    return MTLVertexFormat.uint2;
+                case VertexElementFormat.UInt3:
+                    return MTLVertexFormat.uint3;
+                case VertexElementFormat.UInt4:
+                    return MTLVertexFormat.uint4;
+                case VertexElementFormat.Int1:
+                    return MTLVertexFormat.@int;
+                case VertexElementFormat.Int2:
+                    return MTLVertexFormat.int2;
+                case VertexElementFormat.Int3:
+                    return MTLVertexFormat.int3;
+                case VertexElementFormat.Int4:
+                    return MTLVertexFormat.int4;
                 case VertexElementFormat.Float1:
                     return MTLVertexFormat.@float;
                 case VertexElementFormat.Float2:

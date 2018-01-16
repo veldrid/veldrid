@@ -272,14 +272,54 @@ namespace Veldrid.Vk
                     return VkFormat.R32g32b32Sfloat;
                 case VertexElementFormat.Float4:
                     return VkFormat.R32g32b32a32Sfloat;
-                case VertexElementFormat.Byte2_UNorm:
+                case VertexElementFormat.Byte2_Norm:
                     return VkFormat.R8g8Unorm;
-                case VertexElementFormat.Byte2_UInt:
+                case VertexElementFormat.Byte2:
                     return VkFormat.R8g8Uint;
-                case VertexElementFormat.Byte4_UNorm:
+                case VertexElementFormat.Byte4_Norm:
                     return VkFormat.R8g8b8a8Unorm;
-                case VertexElementFormat.Byte4_UInt:
+                case VertexElementFormat.Byte4:
                     return VkFormat.R8g8b8a8Uint;
+                case VertexElementFormat.SByte2_Norm:
+                    return VkFormat.R8g8Snorm;
+                case VertexElementFormat.SByte2:
+                    return VkFormat.R8g8Sint;
+                case VertexElementFormat.SByte4_Norm:
+                    return VkFormat.R8g8b8a8Snorm;
+                case VertexElementFormat.SByte4:
+                    return VkFormat.R8g8b8a8Sint;
+                case VertexElementFormat.UShort2_Norm:
+                    return VkFormat.R16g16Unorm;
+                case VertexElementFormat.UShort2:
+                    return VkFormat.R16g16Uint;
+                case VertexElementFormat.UShort4_Norm:
+                    return VkFormat.R16g16b16a16Unorm;
+                case VertexElementFormat.UShort4:
+                    return VkFormat.R16g16b16a16Uint;
+                case VertexElementFormat.Short2_Norm:
+                    return VkFormat.R16g16Snorm;
+                case VertexElementFormat.Short2:
+                    return VkFormat.R16g16Sint;
+                case VertexElementFormat.Short4_Norm:
+                    return VkFormat.R16g16b16a16Snorm;
+                case VertexElementFormat.Short4:
+                    return VkFormat.R16g16b16a16Sint;
+                case VertexElementFormat.UInt1:
+                    return VkFormat.R32Uint;
+                case VertexElementFormat.UInt2:
+                    return VkFormat.R32g32Uint;
+                case VertexElementFormat.UInt3:
+                    return VkFormat.R32g32b32Uint;
+                case VertexElementFormat.UInt4:
+                    return VkFormat.R32g32b32a32Uint;
+                case VertexElementFormat.Int1:
+                    return VkFormat.R32Sint;
+                case VertexElementFormat.Int2:
+                    return VkFormat.R32g32Sint;
+                case VertexElementFormat.Int3:
+                    return VkFormat.R32g32b32Sint;
+                case VertexElementFormat.Int4:
+                    return VkFormat.R32g32b32a32Sint;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }

@@ -843,7 +843,7 @@ namespace Veldrid.Sdl2
 
         private void SetWindowPosition(int x, int y)
         {
-            throw new NotImplementedException();
+            SDL_SetWindowPosition(_window, x, y);
         }
 
         private Point GetWindowSize()

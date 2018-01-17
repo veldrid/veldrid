@@ -49,7 +49,6 @@ namespace Veldrid.Tests.Shaders
         [FragmentShader]
         public Vector4 FS(FragmentInput input)
         {
-            //return new Vector4(0.25f, 0.66f, 0.125f, 1f);
             return input.Color;
         }
     }

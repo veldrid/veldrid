@@ -130,12 +130,17 @@ namespace Veldrid.Vk
             else
             {
                 uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
+                uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
                 // MAKE A BUFFER
                 uint stagingSize = Width * Height * Depth * pixelSize;
                 for (uint level = 1; level < MipLevels; level++)
                 {
                     Util.GetMipDimensions(this, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                    stagingSize += mipWidth * mipHeight * mipDepth * pixelSize;
+
+                    uint storageWidth = Math.Max(mipWidth, blockSize);
+                    uint storageHeight = Math.Max(mipHeight, blockSize);
+
+                    stagingSize += storageWidth * storageHeight * mipDepth * pixelSize;
                 }
                 stagingSize *= ArrayLayers;
 
@@ -214,13 +219,17 @@ namespace Veldrid.Vk
             else
             {
                 uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
+                uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
                 Util.GetMipDimensions(this, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                uint storageWidth = Math.Max(mipWidth, blockSize);
+                uint storageHeight = Math.Max(mipHeight, blockSize);
+
                 VkSubresourceLayout layout = new VkSubresourceLayout()
                 {
-                    rowPitch = mipWidth * pixelSize,
-                    depthPitch = mipWidth * mipHeight * pixelSize,
-                    arrayPitch = mipWidth * mipHeight * pixelSize,
-                    size = mipWidth * mipHeight * mipDepth * pixelSize
+                    rowPitch = storageWidth * blockSize * pixelSize,
+                    depthPitch = storageWidth * storageHeight * pixelSize,
+                    arrayPitch = storageWidth * storageHeight * pixelSize,
+                    size = storageWidth * storageHeight * mipDepth * pixelSize
                 };
                 layout.offset = Util.ComputeSubresourceOffset(this, mipLevel, arrayLayer);
 

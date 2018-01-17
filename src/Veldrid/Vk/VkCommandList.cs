@@ -752,12 +752,15 @@ namespace Veldrid.Vk
                 };
 
                 Util.GetMipDimensions(srcVkTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
+                uint bufferRowLength = Math.Max(mipWidth, blockSize);
+                uint bufferImageHeight = Math.Max(mipHeight, blockSize);
 
                 VkBufferImageCopy regions = new VkBufferImageCopy
                 {
                     bufferOffset = srcLayout.offset + (srcX * FormatHelpers.GetSizeInBytes(srcVkTexture.Format)),
-                    bufferRowLength = mipWidth,
-                    bufferImageHeight = mipHeight,
+                    bufferRowLength = bufferRowLength,
+                    bufferImageHeight = bufferImageHeight,
                     imageExtent = new VkExtent3D { width = width, height = height, depth = depth },
                     imageOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY, z = (int)dstZ },
                     imageSubresource = dstSubresource
@@ -810,26 +813,56 @@ namespace Veldrid.Vk
                 VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
                     dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer));
                 uint pixelSize = FormatHelpers.GetSizeInBytes(srcVkTexture.Format);
+                uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
                 uint zLimit = Math.Max(depth, layerCount);
-                for (uint zz = 0; zz < zLimit; zz++)
+                if (blockSize == 1)
                 {
-                    for (uint yy = 0; yy < height; yy++)
+                    for (uint zz = 0; zz < zLimit; zz++)
                     {
-                        VkBufferCopy region = new VkBufferCopy
+                        for (uint yy = 0; yy < height; yy++)
                         {
-                            srcOffset = srcLayout.offset
-                                + srcLayout.depthPitch * (zz + srcZ)
-                                + srcLayout.rowPitch * (yy + srcY)
-                                + pixelSize * srcX,
-                            dstOffset = dstLayout.offset
-                                + dstLayout.depthPitch * (zz + dstZ)
-                                + dstLayout.rowPitch * (yy + dstY)
-                                + pixelSize * dstX,
-                            size = width * pixelSize,
-                        };
+                            VkBufferCopy region = new VkBufferCopy
+                            {
+                                srcOffset = srcLayout.offset
+                                    + srcLayout.depthPitch * (zz + srcZ)
+                                    + srcLayout.rowPitch * (yy + srcY)
+                                    + pixelSize * srcX,
+                                dstOffset = dstLayout.offset
+                                    + dstLayout.depthPitch * (zz + dstZ)
+                                    + dstLayout.rowPitch * (yy + dstY)
+                                    + pixelSize * dstX,
+                                size = width * pixelSize,
+                            };
 
-                        vkCmdCopyBuffer(cb, srcBuffer, dstBuffer, 1, ref region);
+                            vkCmdCopyBuffer(cb, srcBuffer, dstBuffer, 1, ref region);
+                        }
                     }
+                }
+                else // blockSize != 1
+                {
+                    uint numRows = Math.Max(1, height / blockSize);
+
+                    for (uint zz = 0; zz < zLimit; zz++)
+                    {
+                        for (uint row = 0; row < numRows; row++)
+                        {
+                            VkBufferCopy region = new VkBufferCopy
+                            {
+                                srcOffset = srcLayout.offset
+                                    + srcLayout.depthPitch * (zz + srcZ)
+                                    + srcLayout.rowPitch * (row + srcY)
+                                    + pixelSize * srcX,
+                                dstOffset = dstLayout.offset
+                                    + dstLayout.depthPitch * (zz + dstZ)
+                                    + dstLayout.rowPitch * (row + dstY)
+                                    + pixelSize * dstX,
+                                size = width * blockSize * pixelSize,
+                            };
+
+                            vkCmdCopyBuffer(cb, srcBuffer, dstBuffer, 1, ref region);
+                        }
+                    }
+
                 }
             }
         }

@@ -1052,12 +1052,16 @@ namespace Veldrid.D3D11
             D3D11Texture srcD3D11Texture = Util.AssertSubtype<Texture, D3D11Texture>(source);
             D3D11Texture dstD3D11Texture = Util.AssertSubtype<Texture, D3D11Texture>(destination);
 
+            uint blockSize = FormatHelpers.IsCompressedFormat(source.Format) ? 4u : 1u;
+            uint clampedWidth = Math.Max(blockSize, width);
+            uint clampedHeight = Math.Max(blockSize, height);
+
             ResourceRegion region = new ResourceRegion(
                 (int)srcX,
                 (int)srcY,
                 (int)srcZ,
-                (int)(srcX + width),
-                (int)(srcY + height),
+                (int)(srcX + clampedWidth),
+                (int)(srcY + clampedHeight),
                 (int)(srcZ + depth));
 
             for (uint i = 0; i < layerCount; i++)

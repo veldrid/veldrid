@@ -942,18 +942,48 @@ namespace Veldrid.Vk
                 VkSubresourceLayout layout = vkTex.GetSubresourceLayout(subresource);
                 byte* imageBasePtr = (byte*)memBlock.BlockMappedPointer + layout.offset;
                 uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
-                for (uint zz = 0; zz < depth; zz++)
-                    for (uint yy = 0; yy < height; yy++)
+                uint blockSize = FormatHelpers.IsCompressedFormat(texture.Format) ? 4u : 1u;
+                if (blockSize == 1)
+                {
+                    for (uint zz = 0; zz < depth; zz++)
+                        for (uint yy = 0; yy < height; yy++)
+                        {
+                            byte* dstPtr = imageBasePtr
+                                + layout.depthPitch * (zz + z)
+                                + layout.rowPitch * (yy + y)
+                                + pixelSize * x;
+                            byte* srcPtr = (byte*)source
+                                + width * height * pixelSize * zz
+                                + width * pixelSize * yy;
+                            Unsafe.CopyBlock(dstPtr, srcPtr, width * pixelSize);
+                        }
+                }
+                else
+                {
+                    uint denseRowSize = Math.Max(width, blockSize) * pixelSize * blockSize;
+                    uint denseSliceSize = Math.Max(width, blockSize) * Math.Max(height, blockSize) * pixelSize;
+                    if (height % 4 != 0 || width % 4 != 0)
                     {
-                        byte* dstPtr = imageBasePtr
-                            + layout.depthPitch * (zz + z)
-                            + layout.rowPitch * (yy + y)
-                            + pixelSize * x;
-                        byte* srcPtr = (byte*)source
-                            + width * height * pixelSize * zz
-                            + width * pixelSize * yy;
-                        Unsafe.CopyBlock(dstPtr, srcPtr, width * pixelSize);
+                        Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out uint _);
+                        if (width != mipWidth && height != mipHeight)
+                        {
+                            throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
+                        }
                     }
+                    uint numRows = Math.Max(1, height / blockSize);
+                    for (uint zz = 0; zz < depth; zz++)
+                        for (uint row = 0; row < numRows; row++)
+                        {
+                            byte* dstRowStart = imageBasePtr
+                                + (layout.depthPitch * (zz + z))
+                                + (layout.rowPitch * (row + y))
+                                + (pixelSize * x);
+                            byte* srcRowStart = ((byte*)source.ToPointer())
+                                + (denseSliceSize * zz)
+                                + (denseRowSize * row);
+                            Unsafe.CopyBlock(dstRowStart, srcRowStart, denseRowSize);
+                        }
+                }
             }
             else
             {

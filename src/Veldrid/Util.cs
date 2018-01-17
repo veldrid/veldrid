@@ -150,11 +150,14 @@ namespace Veldrid
 
         internal static uint ComputeMipOffset(Texture tex, uint mipLevel)
         {
+            uint blockSize = FormatHelpers.IsCompressedFormat(tex.Format) ? 4u : 1u;
             uint offset = 0;
             for (uint level = 0; level < mipLevel; level++)
             {
-                Util.GetMipDimensions(tex, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                offset += mipWidth * mipHeight * mipDepth * FormatHelpers.GetSizeInBytes(tex.Format);
+                GetMipDimensions(tex, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                uint storageWidth = Math.Max(mipWidth, blockSize);
+                uint storageHeight = Math.Max(mipHeight, blockSize);
+                offset += storageWidth * storageHeight * mipDepth * FormatHelpers.GetSizeInBytes(tex.Format);
             }
 
             return offset;
@@ -167,11 +170,14 @@ namespace Veldrid
                 return 0;
             }
 
+            uint blockSize = FormatHelpers.IsCompressedFormat(tex.Format) ? 4u : 1u;
             uint layerPitch = 0;
             for (uint level = 0; level < tex.MipLevels; level++)
             {
                 Util.GetMipDimensions(tex, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                layerPitch += mipWidth * mipHeight * mipDepth * FormatHelpers.GetSizeInBytes(tex.Format);
+                uint storageWidth = Math.Max(mipWidth, blockSize);
+                uint storageHeight = Math.Max(mipHeight, blockSize);
+                layerPitch += storageWidth * storageHeight * mipDepth * FormatHelpers.GetSizeInBytes(tex.Format);
             }
 
             return layerPitch * arrayLayer;

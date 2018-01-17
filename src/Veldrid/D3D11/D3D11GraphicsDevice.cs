@@ -485,18 +485,47 @@ namespace Veldrid.D3D11
                 }
                 else
                 {
-                    for (uint zz = 0; zz < depth; zz++)
-                        for (uint yy = 0; yy < height; yy++)
+                    if (blockSize == 1)
+                    {
+                        for (uint zz = 0; zz < depth; zz++)
+                            for (uint yy = 0; yy < height; yy += 1)
+                            {
+                                byte* dstRowStart = ((byte*)map.Data)
+                                    + (map.DepthPitch * (zz + z))
+                                    + (map.RowPitch * (yy + y))
+                                    + (pixelSizeInBytes * x);
+                                byte* srcRowStart = ((byte*)source.ToPointer())
+                                    + (width * height * pixelSizeInBytes * zz)
+                                    + (width * pixelSizeInBytes * yy);
+                                Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
+                            }
+                    }
+                    else
+                    {
+                        denseRowSize = Math.Max(denseRowSize, Math.Max(width, blockSize) * pixelSizeInBytes * blockSize);
+                        denseSliceSize = Math.Max(denseSliceSize, Math.Max(width, blockSize) * Math.Max(height, blockSize) * pixelSizeInBytes);
+                        if (height % 4 != 0 || width % 4 != 0)
                         {
-                            byte* dstRowStart = ((byte*)map.Data)
-                                + (map.DepthPitch * (zz + z))
-                                + (map.RowPitch * (yy + y))
-                                + (pixelSizeInBytes * x);
-                            byte* srcRowStart = ((byte*)source.ToPointer())
-                                + (width * height * pixelSizeInBytes * zz)
-                                + (width * pixelSizeInBytes * yy);
-                            Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
+                            Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out uint _);
+                            if (width != mipWidth && height != mipHeight)
+                            {
+                                throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
+                            }
                         }
+                        uint numRows = Math.Max(1, height / blockSize);
+                        for (uint zz = 0; zz < depth; zz++)
+                            for (uint row = 0; row < numRows; row++)
+                            {
+                                byte* dstRowStart = ((byte*)map.Data)
+                                    + (map.DepthPitch * (zz + z))
+                                    + (map.RowPitch * (row + y))
+                                    + (pixelSizeInBytes * x);
+                                byte* srcRowStart = ((byte*)source.ToPointer())
+                                    + (denseSliceSize * zz)
+                                    + (denseRowSize * row);
+                                Unsafe.CopyBlock(dstRowStart, srcRowStart, denseRowSize);
+                            }
+                    }
                 }
 
                 UnmapCore(texture, subresource);

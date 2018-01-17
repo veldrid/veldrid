@@ -728,6 +728,7 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
             bool isCompressed = texture.Format == PixelFormat.BC3_UNorm;
+            uint blockSize = isCompressed ? 4u : 1u;
 
             uint pixelSize = FormatHelpers.GetSizeInBytes(glTex.Format);
             if (pixelSize < 4)
@@ -746,7 +747,7 @@ namespace Veldrid.OpenGL
                         (int)x,
                         width,
                         glTex.GLInternalFormat,
-                        pixelSize * width,
+                        pixelSize * Math.Max(width, blockSize),
                         dataPtr.ToPointer());
                     CheckLastError();
                 }
@@ -775,7 +776,7 @@ namespace Veldrid.OpenGL
                         width,
                         1,
                         glTex.GLInternalFormat,
-                        pixelSize * width,
+                        pixelSize * Math.Max(width, blockSize),
                         dataPtr.ToPointer());
                     CheckLastError();
                 }
@@ -806,7 +807,7 @@ namespace Veldrid.OpenGL
                         width,
                         height,
                         glTex.GLInternalFormat,
-                        pixelSize * width * height,
+                        pixelSize * Math.Max(width, blockSize) * Math.Max(height, blockSize),
                         dataPtr.ToPointer());
                     CheckLastError();
                 }
@@ -839,7 +840,7 @@ namespace Veldrid.OpenGL
                         height,
                         1,
                         glTex.GLInternalFormat,
-                        pixelSize * width * height,
+                        pixelSize * Math.Max(width, blockSize) * Math.Max(height, blockSize),
                         dataPtr.ToPointer());
                     CheckLastError();
                 }
@@ -874,7 +875,7 @@ namespace Veldrid.OpenGL
                         height,
                         depth,
                         glTex.GLInternalFormat,
-                        pixelSize * width * height * depth,
+                        pixelSize * Math.Max(width, blockSize) * Math.Max(height, blockSize) * depth,
                         dataPtr.ToPointer());
                     CheckLastError();
                 }
@@ -908,7 +909,7 @@ namespace Veldrid.OpenGL
                         width,
                         height,
                         glTex.GLInternalFormat,
-                        pixelSize * width * height,
+                        pixelSize * Math.Max(width, blockSize) * Math.Max(height, blockSize),
                         dataPtr.ToPointer());
                     CheckLastError();
                 }
@@ -941,7 +942,7 @@ namespace Veldrid.OpenGL
                         height,
                         1,
                         glTex.GLInternalFormat,
-                        pixelSize * width * height,
+                        pixelSize * Math.Max(width, blockSize) * Math.Max(height, blockSize),
                         dataPtr.ToPointer());
                     CheckLastError();
                 }

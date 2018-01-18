@@ -10,7 +10,7 @@ namespace Veldrid.Tests
             string path = Path.Combine(
                 AppContext.BaseDirectory,
                 "Shaders",
-                $"{setName}-{stage}.{GetShaderExtension(factory.BackendType)}");
+                $"{setName}-{stage.ToString().ToLowerInvariant()}.{GetShaderExtension(factory.BackendType)}");
             byte[] shaderBytes = File.ReadAllBytes(path);
             return factory.CreateShader(new ShaderDescription(stage, shaderBytes, entryPoint));
         }

@@ -175,23 +175,49 @@ namespace Veldrid.MTL
             else
             {
                 uint pixelSize = FormatHelpers.GetSizeInBytes(mtlTex.Format);
+                uint blockSize = FormatHelpers.IsCompressedFormat(mtlTex.Format) ? 4u : 1u;
                 mtlTex.GetSubresourceLayout(mipLevel, arrayLayer, out uint dstRowPitch, out uint dstDepthPitch);
                 ulong dstOffset = Util.ComputeSubresourceOffset(mtlTex, mipLevel, arrayLayer);
-                uint srcRowPitch = width * pixelSize;
-                uint srcDepthPitch = srcRowPitch * height;
-                for (uint zz = 0; zz < depth; zz++)
-                    for (uint yy = 0; yy < height; yy++)
-                    {
-                        byte* srcRowBase = (byte*)source.ToPointer()
-                            + srcDepthPitch * zz
-                            + srcRowPitch * yy;
-                        byte* dstRowBase = (byte*)mtlTex.StagingBuffer.contents()
-                            + dstOffset
-                            + dstDepthPitch * (zz + z)
-                            + dstRowPitch * (yy + y)
-                            + pixelSize * x;
-                        Unsafe.CopyBlock(dstRowBase, srcRowBase, width * pixelSize);
-                    }
+                if (blockSize == 1)
+                {
+                    uint srcRowPitch = width * pixelSize;
+                    uint srcDepthPitch = srcRowPitch * height;
+                    for (uint zz = 0; zz < depth; zz++)
+                        for (uint yy = 0; yy < height; yy++)
+                        {
+                            byte* srcRowBase = (byte*)source.ToPointer()
+                                + srcDepthPitch * zz
+                                + srcRowPitch * yy;
+                            byte* dstRowBase = (byte*)mtlTex.StagingBuffer.contents()
+                                + dstOffset
+                                + dstDepthPitch * (zz + z)
+                                + dstRowPitch * (yy + y)
+                                + pixelSize * x;
+                            Unsafe.CopyBlock(dstRowBase, srcRowBase, width * pixelSize);
+                        }
+                }
+                else
+                {
+                    uint numRows = Math.Max(1, height / blockSize);
+                    uint paddedWidth = Math.Max(blockSize, width);
+                    uint paddedHeight = Math.Max(blockSize, height);
+
+                    uint denseRowSize = paddedWidth * blockSize * pixelSize;
+                    uint denseSliceSize = paddedWidth * paddedHeight * pixelSize;
+                    for (uint zz = 0; zz < depth; zz++)
+                        for (uint row = 0; row < numRows; row++)
+                        {
+                            byte* srcRowBase = (byte*)source.ToPointer()
+                                + denseSliceSize * zz
+                                + denseRowSize * row;
+                            byte* dstRowBase = (byte*)mtlTex.StagingBuffer.contents()
+                                + dstOffset
+                                + dstDepthPitch * (zz + z)
+                                + dstRowPitch * (row + y)
+                                + pixelSize * x;
+                            Unsafe.CopyBlock(dstRowBase, srcRowBase, denseRowSize);
+                        }
+                }
             }
         }
 

@@ -76,11 +76,14 @@ namespace Veldrid.MTL
             else
             {
                 uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
+                uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
                 uint totalStorageSize = 0;
                 for (uint level = 0; level < MipLevels; level++)
                 {
                     Util.GetMipDimensions(this, level, out uint levelWidth, out uint levelHeight, out uint levelDepth);
-                    totalStorageSize += pixelSize * levelWidth * levelHeight * levelDepth * ArrayLayers;
+                    uint storageWidth = Math.Max(levelWidth, blockSize);
+                    uint storageHeight = Math.Max(levelHeight, blockSize);
+                    totalStorageSize += pixelSize * storageWidth * storageHeight * levelDepth * ArrayLayers;
                 }
 
                 StagingBuffer = _gd.Device.newBufferWithLengthOptions(
@@ -135,16 +138,22 @@ namespace Veldrid.MTL
         internal uint GetSubresourceSize(uint mipLevel, uint arrayLayer)
         {
             uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
+            uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
             Util.GetMipDimensions(this, mipLevel, out uint width, out uint height, out uint depth);
-            return pixelSize * width * height * depth;
+            uint storageWidth = Math.Max(blockSize, width);
+            uint storageHeight = Math.Max(blockSize, height);
+            return pixelSize * storageWidth * storageHeight * depth;
         }
 
         internal void GetSubresourceLayout(uint mipLevel, uint arrayLayer, out uint rowPitch, out uint depthPitch)
         {
             uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
+            uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
             Util.GetMipDimensions(this, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-            rowPitch = mipWidth * pixelSize;
-            depthPitch = rowPitch * Height;
+            uint storageWidth = Math.Max(blockSize, mipWidth);
+            uint storageHeight = Math.Max(blockSize, mipHeight);
+            rowPitch = storageWidth * blockSize * pixelSize;
+            depthPitch = storageWidth * storageHeight * pixelSize;
         }
 
         public override void Dispose()

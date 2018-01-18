@@ -316,12 +316,6 @@ namespace Veldrid.MTL
                         + srcRowPitch * srcY
                         + FormatHelpers.GetSizeInBytes(srcMTLTexture.Format) * srcX;
 
-                    uint blockSize = 1;
-                    if (FormatHelpers.IsCompressedFormat(srcMTLTexture.Format))
-                    {
-                        blockSize = 4;
-                    }
-
                     MTLSize sourceSize = new MTLSize(width, height, depth);
                     if (dstMTLTexture.Type != TextureType.Texture3D)
                     {
@@ -330,7 +324,7 @@ namespace Veldrid.MTL
                     _bce.copyFromBuffer(
                         srcBuffer,
                         (UIntPtr)sourceOffset,
-                        (UIntPtr)(srcRowPitch * blockSize),
+                        (UIntPtr)srcRowPitch,
                         (UIntPtr)srcDepthPitch,
                         sourceSize,
                         dstTexture,
@@ -365,25 +359,54 @@ namespace Veldrid.MTL
                         out uint dstDepthPitch);
 
                     uint pixelSize = FormatHelpers.GetSizeInBytes(dstMTLTexture.Format);
-                    uint copySize = width * pixelSize;
-                    for (uint zz = 0; zz < depth; zz++)
-                        for (uint yy = 0; yy < height; yy++)
-                        {
-                            ulong srcRowOffset = srcSubresourceBase
-                                + srcDepthPitch * (zz + srcZ)
-                                + srcRowPitch * (yy + srcY)
-                                + pixelSize * srcX;
-                            ulong dstRowOffset = dstSubresourceBase
-                                + dstDepthPitch * (zz + dstZ)
-                                + dstRowPitch * (yy + dstY)
-                                + pixelSize * dstX;
-                            _bce.copy(
-                                srcMTLTexture.StagingBuffer,
-                                (UIntPtr)srcRowOffset,
-                                dstMTLTexture.StagingBuffer,
-                                (UIntPtr)dstRowOffset,
-                                (UIntPtr)copySize);
-                        }
+                    uint blockSize = FormatHelpers.IsCompressedFormat(dstMTLTexture.Format) ? 4u : 1u;
+                    if (blockSize == 1)
+                    {
+                        uint copySize = width * pixelSize;
+                        for (uint zz = 0; zz < depth; zz++)
+                            for (uint yy = 0; yy < height; yy++)
+                            {
+                                ulong srcRowOffset = srcSubresourceBase
+                                    + srcDepthPitch * (zz + srcZ)
+                                    + srcRowPitch * (yy + srcY)
+                                    + pixelSize * srcX;
+                                ulong dstRowOffset = dstSubresourceBase
+                                    + dstDepthPitch * (zz + dstZ)
+                                    + dstRowPitch * (yy + dstY)
+                                    + pixelSize * dstX;
+                                _bce.copy(
+                                    srcMTLTexture.StagingBuffer,
+                                    (UIntPtr)srcRowOffset,
+                                    dstMTLTexture.StagingBuffer,
+                                    (UIntPtr)dstRowOffset,
+                                    (UIntPtr)copySize);
+                            }
+                    }
+                    else // blockSize != 1
+                    {
+                        uint numRows = Math.Max(1, height / blockSize);
+                        uint paddedWidth = Math.Max(blockSize, width);
+                        uint paddedHeight = Math.Max(blockSize, height);
+                        uint copySize = paddedWidth * blockSize * pixelSize;
+                        for (uint zz = 0; zz < depth; zz++)
+                            for (uint row = 0; row < numRows; row++)
+                            {
+                                ulong srcRowOffset = srcSubresourceBase
+                                    + srcDepthPitch * (zz + srcZ)
+                                    + srcRowPitch * (row + srcY)
+                                    + pixelSize * srcX;
+                                ulong dstRowOffset = dstSubresourceBase
+                                    + dstDepthPitch * (zz + dstZ)
+                                    + dstRowPitch * (row + dstY)
+                                    + pixelSize * dstX;
+                                _bce.copy(
+                                    srcMTLTexture.StagingBuffer,
+                                    (UIntPtr)srcRowOffset,
+                                    dstMTLTexture.StagingBuffer,
+                                    (UIntPtr)dstRowOffset,
+                                    (UIntPtr)copySize);
+                            }
+                    }
                 }
             }
             else if (!srcIsStaging && dstIsStaging)

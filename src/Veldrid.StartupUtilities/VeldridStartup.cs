@@ -39,6 +39,8 @@ namespace Veldrid.StartupUtilities
             gd = CreateGraphicsDevice(window, deviceOptions, preferredBackend);
         }
 
+        public static Sdl2Window CreateWindow(WindowCreateInfo windowCI) => CreateWindow(ref windowCI);
+
         public static Sdl2Window CreateWindow(ref WindowCreateInfo windowCI)
         {
             SDL_WindowFlags flags = SDL_WindowFlags.OpenGL | SDL_WindowFlags.Resizable

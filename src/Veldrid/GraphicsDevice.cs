@@ -481,6 +481,7 @@ namespace Veldrid
         /// </summary>
         public void Dispose()
         {
+            WaitForIdle();
             PointSampler.Dispose();
             LinearSampler.Dispose();
             Aniso4xSampler.Dispose();

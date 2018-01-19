@@ -745,8 +745,6 @@ namespace Veldrid.Vk
 
         protected override void PlatformDispose()
         {
-            WaitForIdle();
-
             Debug.Assert(_submittedFences.Count == 0);
             foreach (Vulkan.VkFence fence in _availableSubmissionFences)
             {

@@ -887,6 +887,8 @@ namespace Veldrid.OpenGL
                 {
                     throw new VeldridException("Failed to map OpenGL resource.");
                 }
+
+                mre.Dispose();
             }
 
             internal void Unmap(MappableResource resource, uint subresource)
@@ -896,6 +898,7 @@ namespace Veldrid.OpenGL
                 ManualResetEventSlim mre = new ManualResetEventSlim(false);
                 _workItems.Add(new ExecutionThreadWorkItem(resource, 0, subresource, false, mre));
                 mre.Wait();
+                mre.Dispose();
             }
 
             public void ExecuteCommands(OpenGLCommandEntryList entryList)
@@ -931,6 +934,7 @@ namespace Veldrid.OpenGL
                 ManualResetEventSlim mre = new ManualResetEventSlim();
                 _workItems.Add(new ExecutionThreadWorkItem(mre));
                 mre.Wait();
+                mre.Dispose();
 
                 CheckExceptions();
             }

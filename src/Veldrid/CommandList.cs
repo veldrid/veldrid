@@ -668,7 +668,7 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Copies all subresources from one <see cref="Texture"/> to another.
+        /// Copies one subresource from one <see cref="Texture"/> to another.
         /// </summary>
         /// <param name="source">The source of Texture data.</param>
         /// <param name="destination">The destination of Texture data.</param>
@@ -716,7 +716,7 @@ namespace Veldrid
         /// <param name="dstBaseArrayLayer">The starting array layer to copy data into.</param>
         /// <param name="width">The width in texels of the copy region.</param>
         /// <param name="height">The height in texels of the copy region.</param>
-        /// <param name="depth">The depth in texels, of the copy region.</param>
+        /// <param name="depth">The depth in texels of the copy region.</param>
         /// <param name="layerCount">The number of array layers to copy.</param>
         public void CopyTexture(
             Texture source,

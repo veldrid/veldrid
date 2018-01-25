@@ -17,6 +17,7 @@ namespace Veldrid
         /// For Direct3D11 shaders, this array must contain HLSL bytecode.
         /// For Vulkan shaders, this array must contain SPIR-V bytecode.
         /// For OpenGL and OpenGL ES shaders, this array must contain the ASCII-encoded text of the shader code.
+        /// For Metal shaders, this array must contain Metal bitcode (a "metallib" file).
         /// </summary>
         public byte[] ShaderBytes;
 

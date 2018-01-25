@@ -674,9 +674,6 @@ namespace Veldrid.Vk
             vkCreateFence(_device, ref fenceCI, null, out _imageAvailableFence);
         }
 
-        private readonly Dictionary<VkTexture, Vk3DMapProxy> _3DMapProxies = new Dictionary<VkTexture, Vk3DMapProxy>();
-        private readonly StagingMemoryPool _stagingPool = new StagingMemoryPool();
-
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
         {
             VkMemoryBlock memoryBlock = null;

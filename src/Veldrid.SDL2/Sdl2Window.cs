@@ -36,7 +36,6 @@ namespace Veldrid.Sdl2
         // Cached Sdl2Window state (for threaded processing)
         private BufferedValue<Point> _cachedPosition = new BufferedValue<Point>();
         private BufferedValue<Point> _cachedSize = new BufferedValue<Point>();
-        private bool _continuousResizeReceived;
         private string _cachedWindowTitle;
         private bool _newWindowTitleReceived;
 
@@ -287,19 +286,14 @@ namespace Veldrid.Sdl2
             return _publicSnapshot;
         }
 
+        public void PumpEvents(Action<SDL_Event> eventHandler)
+        {
+            ProcessEvents(eventHandler);
+        }
+
         private void ProcessEvents()
         {
-            if (_continuousResizeReceived)
-            {
-                _continuousResizeReceived = false;
-                RefreshCachedSize();
-            }
-
-            if (_newWindowTitleReceived)
-            {
-                _newWindowTitleReceived = false;
-                SDL_SetWindowTitle(_window, _cachedWindowTitle);
-            }
+            CheckNewWindowTitle();
 
             SDL_Event ev;
             while (SDL_PollEvent(&ev) != 0)
@@ -406,6 +400,26 @@ namespace Veldrid.Sdl2
                         // Ignore
                         break;
                 }
+            }
+        }
+
+        private void ProcessEvents(Action<SDL_Event> eventHandler)
+        {
+            CheckNewWindowTitle();
+
+            SDL_Event ev;
+            while (SDL_PollEvent(&ev) != 0)
+            {
+                eventHandler(ev);
+            }
+        }
+
+        private void CheckNewWindowTitle()
+        {
+            if (_newWindowTitleReceived)
+            {
+                _newWindowTitleReceived = false;
+                SDL_SetWindowTitle(_window, _cachedWindowTitle);
             }
         }
 

@@ -48,6 +48,7 @@ namespace Veldrid
         private readonly Dictionary<IntPtr, ResourceSetInfo> _viewsById = new Dictionary<IntPtr, ResourceSetInfo>();
         private readonly List<IDisposable> _ownedResources = new List<IDisposable>();
         private int _lastAssignedID = 100;
+        private bool _frameBegun;
 
         /// <summary>
         /// Constructs a new ImGuiRenderer.
@@ -67,6 +68,7 @@ namespace Veldrid
             SetPerFrameImGuiData(1f / 60f);
 
             ImGui.NewFrame();
+            _frameBegun = true;
         }
 
         public void WindowResized(int width, int height)
@@ -272,9 +274,12 @@ namespace Veldrid
         /// </summary>
         public unsafe void Render(GraphicsDevice gd, CommandList cl)
         {
-            ImGui.Render();
-            RenderImDrawData(ImGui.GetDrawData(), gd, cl);
-            ImGui.NewFrame();
+            if (_frameBegun)
+            {
+                _frameBegun = false;
+                ImGui.Render();
+                RenderImDrawData(ImGui.GetDrawData(), gd, cl);
+            }
         }
 
         /// <summary>
@@ -282,8 +287,16 @@ namespace Veldrid
         /// </summary>
         public void Update(float deltaSeconds, InputSnapshot snapshot)
         {
+            if (_frameBegun)
+            {
+                ImGui.Render();
+            }
+
             SetPerFrameImGuiData(deltaSeconds);
             UpdateImGuiInput(snapshot);
+
+            _frameBegun = true;
+            ImGui.NewFrame();
         }
 
         /// <summary>

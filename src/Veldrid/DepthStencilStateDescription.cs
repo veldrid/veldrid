@@ -118,6 +118,21 @@ namespace Veldrid
         };
 
         /// <summary>
+        /// Describes a depth-only depth stencil state which uses a <see cref="ComparisonKind.LessEqual"/> comparison, and disables writing to the depth buffer.
+        /// The stencil test is disabled.
+        /// Settings:
+        ///     DepthTestEnabled = true
+        ///     DepthWriteEnabled = false
+        ///     ComparisonKind = DepthComparisonKind.LessEqual
+        /// </summary>
+        public static readonly DepthStencilStateDescription DepthOnlyLessEqualRead = new DepthStencilStateDescription
+        {
+            DepthTestEnabled = true,
+            DepthWriteEnabled = false,
+            DepthComparison = ComparisonKind.LessEqual
+        };
+
+        /// <summary>
         /// Describes a depth-only depth stencil state in which depth testing and writing is disabled.
         /// The stencil test is disabled.
         /// Settings:

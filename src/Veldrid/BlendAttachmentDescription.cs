@@ -131,6 +131,28 @@ namespace Veldrid
         };
 
         /// <summary>
+        /// Describes a blend attachment state in which blending is disabled.
+        /// Settings:
+        ///     BlendEnabled = false
+        ///     SourceColorFactor = BlendFactor.One
+        ///     DestinationColorFactor = BlendFactor.Zero
+        ///     ColorFunction = BlendFunction.Add
+        ///     SourceAlphaFactor = BlendFactor.One
+        ///     DestinationAlphaFactor = BlendFactor.Zero
+        ///     AlphaFunction = BlendFunction.Add
+        /// </summary>
+        public static readonly BlendAttachmentDescription Disabled = new BlendAttachmentDescription
+        {
+            BlendEnabled = false,
+            SourceColorFactor = BlendFactor.One,
+            DestinationColorFactor = BlendFactor.Zero,
+            ColorFunction = BlendFunction.Add,
+            SourceAlphaFactor = BlendFactor.One,
+            DestinationAlphaFactor = BlendFactor.Zero,
+            AlphaFunction = BlendFunction.Add,
+        };
+
+        /// <summary>
         /// Element-wise equality.
         /// </summary>
         /// <param name="other">The instance to compare to.</param>

@@ -46,6 +46,22 @@ namespace Veldrid
         };
 
         /// <summary>
+        /// Describes a blend state in which a single color target is blended with <see cref="BlendAttachmentDescription.AdditiveBlend"/>.
+        /// </summary>
+        public static readonly BlendStateDescription SingleAdditiveBlend = new BlendStateDescription
+        {
+            AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.AdditiveBlend }
+        };
+
+        /// <summary>
+        /// Describes a blend state in which a single color target is blended with <see cref="BlendAttachmentDescription.Disabled"/>.
+        /// </summary>
+        public static readonly BlendStateDescription SingleDisabled = new BlendStateDescription
+        {
+            AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.Disabled }
+        };
+
+        /// <summary>
         /// Describes an empty blend state in which no color targets are used.
         /// </summary>
         public static readonly BlendStateDescription Empty = new BlendStateDescription

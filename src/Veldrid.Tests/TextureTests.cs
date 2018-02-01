@@ -18,6 +18,16 @@ namespace Veldrid.Tests
         }
 
         [Fact]
+        public void Map_Succeeds_R32_G32_B32_A32_UInt()
+        {
+            Texture texture = RF.CreateTexture(
+                TextureDescription.Texture2D(1024, 1024, 1, 1, PixelFormat.R32_G32_B32_A32_UInt, TextureUsage.Staging));
+
+            MappedResource map = GD.Map(texture, MapMode.ReadWrite, 0);
+            GD.Unmap(texture, 0);
+        }
+
+        [Fact]
         public unsafe void Update_ThenMapRead_Succeeds_R32Float()
         {
             Texture texture = RF.CreateTexture(
@@ -65,6 +75,37 @@ namespace Veldrid.Tests
                 {
                     ushort index = (ushort)(y * 1024 + x);
                     Assert.Equal(index, mappedFloatPtr[index]);
+                }
+            }
+        }
+
+        [Fact]
+        public unsafe void Update_ThenMapRead_Succeeds_R8_G8_SNorm()
+        {
+            Texture texture = RF.CreateTexture(
+                TextureDescription.Texture2D(8, 8, 1, 1, PixelFormat.R8_G8_SNorm, TextureUsage.Staging));
+
+            byte[] data = Enumerable.Range(0, 8 * 8 * 2).Select(i => (byte)i).ToArray();
+
+            fixed (byte* dataPtr = data)
+            {
+                GD.UpdateTexture(texture, (IntPtr)dataPtr, 8 * 8 * sizeof(byte) * 2, 0, 0, 0, 8, 8, 1, 0, 0);
+            }
+
+            MappedResource map = GD.Map(texture, MapMode.Read, 0);
+            byte* mappedFloatPtr = (byte*)map.Data;
+
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    uint index0 = (uint)(y * map.RowPitch + x * 2);
+                    byte value0 = (byte)(y * 8 * 2 + x * 2);
+                    Assert.Equal(value0, mappedFloatPtr[index0]);
+
+                    uint index1 = (uint)(index0 + 1);
+                    byte value1 = (byte)(value0 + 1);
+                    Assert.Equal(value1, mappedFloatPtr[index1]);
                 }
             }
         }

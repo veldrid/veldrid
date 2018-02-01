@@ -11,6 +11,11 @@ namespace Veldrid.Sdl2
         public static SDL_Window SDL_CreateWindow(string title, int x, int y, int w, int h, SDL_WindowFlags flags) => s_sdl_createWindow(title, x, y, w, h, flags);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate SDL_Window SDL_CreateWindowFrom_t(IntPtr data);
+        private static SDL_CreateWindowFrom_t s_sdl_createWindowFrom = LoadFunction<SDL_CreateWindowFrom_t>("SDL_CreateWindowFrom");
+        public static SDL_Window SDL_CreateWindowFrom(IntPtr data) => s_sdl_createWindowFrom(data);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void SDL_DestroyWindow_t(SDL_Window SDL2Window);
         private static SDL_DestroyWindow_t s_sdl_destroyWindow = LoadFunction<SDL_DestroyWindow_t>("SDL_DestroyWindow");
         public static void SDL_DestroyWindow(SDL_Window Sdl2Window) => s_sdl_destroyWindow(Sdl2Window);

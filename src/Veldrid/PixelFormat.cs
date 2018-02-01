@@ -22,6 +22,10 @@
         /// </summary>
         R8_UNorm,
         /// <summary>
+        /// RG component order. Each component is an 8-bit signed normalized integer.
+        /// </summary>
+        R8_G8_SNorm,
+        /// <summary>
         /// Single-channel, 16-bit unsigned integer. Can be used as a depth format.
         /// </summary>
         R16_UNorm,
@@ -29,6 +33,10 @@
         /// RGBA component order. Each component is a 32-bit signed floating-point value.
         /// </summary>
         R32_G32_B32_A32_Float,
+        /// <summary>
+        /// RGBA component order. Each component is a 32-bit unsigned integer.
+        /// </summary>
+        R32_G32_B32_A32_UInt,
         /// <summary>
         /// Single-channel, 32-bit signed floating-point value. Can be used as a depth format.
         /// </summary>

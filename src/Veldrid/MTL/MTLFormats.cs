@@ -23,10 +23,14 @@ namespace Veldrid.MTL
                     return depthFormat ? MTLPixelFormat.Depth32Float : MTLPixelFormat.R32Float;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return MTLPixelFormat.RGBA32Float;
+                case PixelFormat.R32_G32_B32_A32_UInt:
+                    return MTLPixelFormat.RGBA32Uint;
                 case PixelFormat.R8_G8_B8_A8_UNorm:
                     return MTLPixelFormat.RGBA8Unorm;
                 case PixelFormat.R8_UNorm:
                     return MTLPixelFormat.R8Unorm;
+                case PixelFormat.R8_G8_SNorm:
+                    return MTLPixelFormat.RG8Snorm;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }

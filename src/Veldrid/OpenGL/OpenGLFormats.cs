@@ -50,10 +50,14 @@ namespace Veldrid.OpenGL
                     return PixelInternalFormat.Rgba;
                 case PixelFormat.R8_UNorm:
                     return PixelInternalFormat.R8ui;
+                case PixelFormat.R8_G8_SNorm:
+                    return PixelInternalFormat.Rg8Snorm;
                 case PixelFormat.R16_UNorm:
                     return PixelInternalFormat.R16ui;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return PixelInternalFormat.Rgba32f;
+                case PixelFormat.R32_G32_B32_A32_UInt:
+                    return PixelInternalFormat.Rgba32ui;
                 case PixelFormat.R32_Float:
                     return PixelInternalFormat.R32f;
                 case PixelFormat.BC3_UNorm:
@@ -94,10 +98,14 @@ namespace Veldrid.OpenGL
                     return GLPixelFormat.Bgra;
                 case PixelFormat.R8_UNorm:
                     return GLPixelFormat.Red;
+                case PixelFormat.R8_G8_SNorm:
+                    return GLPixelFormat.RgInteger;
                 case PixelFormat.R16_UNorm:
                     return GLPixelFormat.Red;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return GLPixelFormat.Rgba;
+                case PixelFormat.R32_G32_B32_A32_UInt:
+                    return GLPixelFormat.RgbaInteger;
                 case PixelFormat.R32_Float:
                     return GLPixelFormat.Red;
                 case PixelFormat.BC3_UNorm:
@@ -119,10 +127,14 @@ namespace Veldrid.OpenGL
                 case PixelFormat.B8_G8_R8_A8_UNorm:
                 case PixelFormat.R8_UNorm:
                     return GLPixelType.UnsignedByte;
+                case PixelFormat.R8_G8_SNorm:
+                    return GLPixelType.Byte;
                 case PixelFormat.R16_UNorm:
                     return GLPixelType.UnsignedShort;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return GLPixelType.Float;
+                case PixelFormat.R32_G32_B32_A32_UInt:
+                    return GLPixelType.UnsignedInt;
                 case PixelFormat.R32_Float:
                     return GLPixelType.Float;
                 case PixelFormat.BC3_UNorm:
@@ -145,10 +157,14 @@ namespace Veldrid.OpenGL
                     return SizedInternalFormat.Rgba8;
                 case PixelFormat.R8_UNorm:
                     return SizedInternalFormat.R8;
+                case PixelFormat.R8_G8_SNorm:
+                    return SizedInternalFormat.Rg8i;
                 case PixelFormat.R16_UNorm:
                     return depthFormat ? (SizedInternalFormat)PixelInternalFormat.DepthComponent16 : SizedInternalFormat.R16;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return SizedInternalFormat.Rgba32f;
+                case PixelFormat.R32_G32_B32_A32_UInt:
+                    return SizedInternalFormat.Rgba32ui;
                 case PixelFormat.R32_Float:
                     return depthFormat ? (SizedInternalFormat)PixelInternalFormat.DepthComponent32f : SizedInternalFormat.R32f;
                 case PixelFormat.BC3_UNorm:

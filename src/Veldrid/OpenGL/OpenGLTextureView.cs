@@ -66,10 +66,14 @@ namespace Veldrid.OpenGL
                     return SizedInternalFormat.Rgba8ui;
                 case PixelFormat.R8_UNorm:
                     return SizedInternalFormat.R8ui;
+                case PixelFormat.R8_G8_SNorm:
+                    return SizedInternalFormat.Rg8i;
                 case PixelFormat.R16_UNorm:
                     return SizedInternalFormat.R16ui;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return SizedInternalFormat.Rgba32f;
+                case PixelFormat.R32_G32_B32_A32_UInt:
+                    return SizedInternalFormat.Rgba32ui;
                 case PixelFormat.R32_Float:
                     return SizedInternalFormat.R32f;
                 default:
@@ -170,10 +174,14 @@ namespace Veldrid.OpenGL
                     return PixelInternalFormat.Rgba8ui;
                 case PixelFormat.R8_UNorm:
                     return PixelInternalFormat.R8ui;
+                case PixelFormat.R8_G8_SNorm:
+                    return PixelInternalFormat.Rg8Snorm;
                 case PixelFormat.R16_UNorm:
                     return depthFormat ? PixelInternalFormat.DepthComponent16 : PixelInternalFormat.R16ui;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return PixelInternalFormat.Rgba32f;
+                case PixelFormat.R32_G32_B32_A32_UInt:
+                    return PixelInternalFormat.Rgba32ui;
                 case PixelFormat.R32_Float:
                     return depthFormat ? PixelInternalFormat.DepthComponent32f : PixelInternalFormat.R32f;
                 case PixelFormat.D32_Float_S8_UInt:

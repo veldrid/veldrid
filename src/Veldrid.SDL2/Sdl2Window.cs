@@ -69,6 +69,31 @@ namespace Veldrid.Sdl2
             }
         }
 
+        public Sdl2Window(IntPtr windowHandle, bool threadedProcessing)
+        {
+            _threadedProcessing = threadedProcessing;
+            if (threadedProcessing)
+            {
+                using (ManualResetEvent mre = new ManualResetEvent(false))
+                {
+                    WindowParams wp = new WindowParams()
+                    {
+                        WindowHandle = windowHandle,
+                        WindowFlags = 0,
+                        ResetEvent = mre
+                    };
+
+                    Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
+                    mre.WaitOne();
+                }
+            }
+            else
+            {
+                _window = SDL_CreateWindowFrom(windowHandle);
+                PostWindowCreated(0);
+            }
+        }
+
         public int X { get => _cachedPosition.Value.X; set => SetWindowPosition(value, Y); }
         public int Y { get => _cachedPosition.Value.Y; set => SetWindowPosition(X, value); }
 
@@ -228,7 +253,7 @@ namespace Veldrid.Sdl2
         private void WindowOwnerRoutine(object state)
         {
             WindowParams wp = (WindowParams)state;
-            _window = SDL_CreateWindow(wp.Title, wp.X, wp.Y, wp.Width, wp.Height, wp.WindowFlags);
+            _window = wp.Create();
             PostWindowCreated(wp.WindowFlags);
             wp.ResetEvent.Set();
 
@@ -931,7 +956,22 @@ namespace Veldrid.Sdl2
             public int Height { get; set; }
             public string Title { get; set; }
             public SDL_WindowFlags WindowFlags { get; set; }
+
+            public IntPtr WindowHandle { get; set; }
+
             public ManualResetEvent ResetEvent { get; set; }
+
+            public SDL_Window Create()
+            {
+                if (WindowHandle != IntPtr.Zero)
+                {
+                    return SDL_CreateWindowFrom(WindowHandle);
+                }
+                else
+                {
+                    return SDL_CreateWindow(Title, X, Y, Width, Height, WindowFlags);
+                }
+            }
         }
     }
 

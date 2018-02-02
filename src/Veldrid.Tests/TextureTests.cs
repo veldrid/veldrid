@@ -67,14 +67,14 @@ namespace Veldrid.Tests
             }
 
             MappedResource map = GD.Map(texture, MapMode.Read, 0);
-            ushort* mappedFloatPtr = (ushort*)map.Data;
+            ushort* mappedUShortPtr = (ushort*)map.Data;
 
             for (int y = 0; y < 1024; y++)
             {
                 for (int x = 0; x < 1024; x++)
                 {
                     ushort index = (ushort)(y * 1024 + x);
-                    Assert.Equal(index, mappedFloatPtr[index]);
+                    Assert.Equal(index, mappedUShortPtr[index]);
                 }
             }
         }
@@ -93,7 +93,7 @@ namespace Veldrid.Tests
             }
 
             MappedResource map = GD.Map(texture, MapMode.Read, 0);
-            byte* mappedFloatPtr = (byte*)map.Data;
+            byte* mappedBytePtr = (byte*)map.Data;
 
             for (int y = 0; y < 8; y++)
             {
@@ -101,11 +101,11 @@ namespace Veldrid.Tests
                 {
                     uint index0 = (uint)(y * map.RowPitch + x * 2);
                     byte value0 = (byte)(y * 8 * 2 + x * 2);
-                    Assert.Equal(value0, mappedFloatPtr[index0]);
+                    Assert.Equal(value0, mappedBytePtr[index0]);
 
                     uint index1 = (uint)(index0 + 1);
                     byte value1 = (byte)(value0 + 1);
-                    Assert.Equal(value1, mappedFloatPtr[index1]);
+                    Assert.Equal(value1, mappedBytePtr[index1]);
                 }
             }
         }
@@ -124,7 +124,7 @@ namespace Veldrid.Tests
             }
 
             MappedResource map = GD.Map(texture, MapMode.Read, 2);
-            ushort* mappedFloatPtr = (ushort*)map.Data;
+            ushort* mappedUShortPtr = (ushort*)map.Data;
 
             for (int y = 0; y < 256; y++)
             {
@@ -132,7 +132,7 @@ namespace Veldrid.Tests
                 {
                     uint mapIndex = (uint)(y * (map.RowPitch / sizeof(ushort)) + x);
                     ushort value = (ushort)(y * 256 + x);
-                    Assert.Equal(value, mappedFloatPtr[mapIndex]);
+                    Assert.Equal(value, mappedUShortPtr[mapIndex]);
                 }
             }
         }

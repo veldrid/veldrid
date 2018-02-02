@@ -18,10 +18,14 @@ namespace Veldrid.D3D11
                     return Format.B8G8R8A8_UNorm;
                 case PixelFormat.R8_UNorm:
                     return Format.R8_UNorm;
+                case PixelFormat.R8_G8_SNorm:
+                    return Format.R8G8_SNorm;
                 case PixelFormat.R16_UNorm:
                     return depthFormat ? Format.R16_Typeless : Format.R16_UNorm;
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return Format.R32G32B32A32_Float;
+                case PixelFormat.R32_G32_B32_A32_UInt:
+                    return Format.R32G32B32A32_UInt;
                 case PixelFormat.R32_Float:
                     return depthFormat ? Format.R32_Typeless : Format.R32_Float;
                 case PixelFormat.BC3_UNorm:
@@ -163,11 +167,15 @@ namespace Veldrid.D3D11
                     return PixelFormat.B8_G8_R8_A8_UNorm;
                 case Format.R8_UNorm:
                     return PixelFormat.R8_UNorm;
+                case Format.R8G8_SNorm:
+                    return PixelFormat.R8_G8_SNorm;
                 case Format.R16_UNorm:
                 case Format.D16_UNorm:
                     return PixelFormat.R16_UNorm;
                 case Format.R32G32B32A32_Float:
                     return PixelFormat.R32_G32_B32_A32_Float;
+                case Format.R32G32B32A32_UInt:
+                    return PixelFormat.R32_G32_B32_A32_UInt;
                 case Format.R32_Float:
                     return PixelFormat.R32_Float;
                 case Format.D24_UNorm_S8_UInt:

@@ -10,6 +10,7 @@ namespace Veldrid
             {
                 case PixelFormat.R8_UNorm:
                     return 1;
+                case PixelFormat.R8_G8_SNorm:
                 case PixelFormat.R16_UNorm:
                     return 2;
                 case PixelFormat.R8_G8_B8_A8_UNorm:
@@ -17,6 +18,7 @@ namespace Veldrid
                 case PixelFormat.R32_Float:
                     return 4;
                 case PixelFormat.R32_G32_B32_A32_Float:
+                case PixelFormat.R32_G32_B32_A32_UInt:
                     return 16;
                 case PixelFormat.BC3_UNorm:
                     return 1; // Not really

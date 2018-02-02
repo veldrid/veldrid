@@ -35,6 +35,9 @@ namespace Veldrid.MTL
         private uint _computeResourceSetCount;
         private ResourceSet[] _computeResourceSets;
         private bool[] _computeResourceSetsActive;
+        private uint _vertexBufferCount;
+        private MTLBuffer[] _vertexBuffers;
+        private bool[] _vertexBuffersActive;
         private bool _disposed;
 
         public MTLCommandBuffer CommandBuffer => _cb;
@@ -155,6 +158,14 @@ namespace Veldrid.MTL
                         _graphicsResourceSetsActive[i] = true;
                     }
                 }
+
+                for (uint i = 0; i < _vertexBufferCount; i++)
+                {
+                    if (!_vertexBuffersActive[i])
+                    {
+                        _rce.setVertexBuffer(_vertexBuffers[i].DeviceBuffer, UIntPtr.Zero, (UIntPtr)i);
+                    }
+                }
                 return true;
             }
             return false;
@@ -210,6 +221,12 @@ namespace Veldrid.MTL
                 Util.EnsureArrayMinimumSize(ref _graphicsResourceSetsActive, _graphicsResourceSetCount);
                 Util.ClearArray(_graphicsResourceSets);
                 Util.ClearArray(_graphicsResourceSetsActive);
+
+                _vertexBufferCount = _graphicsPipeline.VertexBufferCount;
+                Util.EnsureArrayMinimumSize(ref _vertexBuffers, _vertexBufferCount);
+                Util.EnsureArrayMinimumSize(ref _vertexBuffersActive, _vertexBufferCount);
+                Util.ClearArray(_vertexBuffersActive);
+
                 _graphicsPipelineChanged = true;
             }
         }
@@ -864,10 +881,13 @@ namespace Veldrid.MTL
 
         protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
         {
-            if (EnsureRenderPass())
+            Util.EnsureArrayMinimumSize(ref _vertexBuffers, index + 1);
+            Util.EnsureArrayMinimumSize(ref _vertexBuffersActive, index + 1);
+            if (_vertexBuffers[index] != buffer)
             {
                 var mtlBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
-                _rce.setVertexBuffer(mtlBuffer.DeviceBuffer, UIntPtr.Zero, (UIntPtr)index);
+                _vertexBuffers[index] = mtlBuffer;
+                _vertexBuffersActive[index] = false;
             }
         }
 

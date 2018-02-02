@@ -174,6 +174,8 @@ namespace Veldrid.D3D11
                     return PixelFormat.D24_UNorm_S8_UInt;
                 case Format.D32_Float_S8X24_UInt:
                     return PixelFormat.D32_Float_S8_UInt;
+                case Format.D32_Float:
+                    return PixelFormat.R32_Float;
                 default:
                     throw Illegal.Value<PixelFormat>();
             }

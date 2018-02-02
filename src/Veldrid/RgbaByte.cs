@@ -38,6 +38,15 @@
         /// Pink (255, 155, 191, 255)
         /// </summary>
         public static readonly RgbaByte Pink = new RgbaByte(255, 155, 191, 255);
+        /// <summary>
+        /// Grey (64, 64, 64, 255)
+        /// </summary>
+        public static readonly RgbaByte Grey = new RgbaByte(64, 64, 64, 255);
+        /// <summary>
+        /// Light Grey (166, 166, 166, 255)
+        /// </summary>
+        public static readonly RgbaByte LightGrey = new RgbaByte(166, 166, 166, 255);
+
 
         /// <summary>
         /// Constructs a new RgbaByte from the given components.

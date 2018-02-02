@@ -284,7 +284,7 @@ namespace Veldrid.OpenGL
             _executionThread.UpdateBuffer(buffer, bufferOffsetInBytes, sb);
         }
 
-        public override void UpdateTexture(
+        protected override void UpdateTextureCore(
             Texture texture,
             IntPtr source,
             uint sizeInBytes,
@@ -655,7 +655,10 @@ namespace Veldrid.OpenGL
                             Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
 
                             uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
-                            uint subresourceSize = mipWidth * mipHeight * mipDepth * pixelSize;
+                            uint subresourceSize = FormatHelpers.GetDepthPitch(
+                                FormatHelpers.GetRowPitch(mipWidth, texture.Format), 
+                                mipHeight, 
+                                texture.Format);
 
                             bool isCompressed = FormatHelpers.IsCompressedFormat(texture.Format);
                             if (isCompressed)
@@ -773,8 +776,8 @@ namespace Veldrid.OpenGL
                                 CheckLastError();
                             }
 
-                            uint rowPitch = mipWidth * pixelSize;
-                            uint depthPitch = rowPitch * mipHeight;
+                            uint rowPitch = FormatHelpers.GetRowPitch(mipWidth, texture.Format);
+                            uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, mipHeight, texture.Format);
                             MappedResourceInfoWithStaging info = new MappedResourceInfoWithStaging();
                             info.MappedResource = new MappedResource(
                                 resource,

@@ -42,6 +42,18 @@
         /// </summary>
         R32_Float,
         /// <summary>
+        /// BC1 block compressed format with no alpha.
+        /// </summary>
+        BC1_Rgb_UNorm,
+        /// <summary>
+        /// BC1 block compressed format with a single-bit alpha channel.
+        /// </summary>
+        BC1_Rgba_UNorm,
+        /// <summary>
+        /// BC2 block compressed format.
+        /// </summary>
+        BC2_UNorm,
+        /// <summary>
         /// BC3 block compressed format.
         /// </summary>
         BC3_UNorm,

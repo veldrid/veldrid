@@ -434,7 +434,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public unsafe override void UpdateTexture(
+        protected unsafe override void UpdateTextureCore(
             Texture texture,
             IntPtr source,
             uint sizeInBytes,
@@ -449,11 +449,6 @@ namespace Veldrid.D3D11
         {
             D3D11Texture d3dTex = Util.AssertSubtype<Texture, D3D11Texture>(texture);
             bool useMap = (texture.Usage & TextureUsage.Staging) == TextureUsage.Staging;
-            uint blockSize = 1;
-            if (texture.Format == PixelFormat.BC3_UNorm)
-            {
-                blockSize = 4;
-            }
             if (useMap)
             {
                 uint subresource = texture.CalculateSubresource(mipLevel, arrayLayer);
@@ -461,8 +456,8 @@ namespace Veldrid.D3D11
                 MappedResource map = MapCore(texture, MapMode.Write, subresource);
 
                 uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
-                uint denseRowSize = width * pixelSizeInBytes * blockSize;
-                uint denseSliceSize = width * height * pixelSizeInBytes;
+                uint denseRowSize = FormatHelpers.GetRowPitch(width, texture.Format);
+                uint denseSliceSize = FormatHelpers.GetDepthPitch(denseRowSize, height, texture.Format);
 
                 if (x == 0 && y == 0 && z == 0
                     && map.RowPitch == denseRowSize)
@@ -485,7 +480,7 @@ namespace Veldrid.D3D11
                 }
                 else
                 {
-                    if (blockSize == 1)
+                    if (!FormatHelpers.IsCompressedFormat(texture.Format))
                     {
                         for (uint zz = 0; zz < depth; zz++)
                             for (uint yy = 0; yy < height; yy += 1)
@@ -502,24 +497,18 @@ namespace Veldrid.D3D11
                     }
                     else
                     {
-                        denseRowSize = Math.Max(denseRowSize, Math.Max(width, blockSize) * pixelSizeInBytes * blockSize);
-                        denseSliceSize = Math.Max(denseSliceSize, Math.Max(width, blockSize) * Math.Max(height, blockSize) * pixelSizeInBytes);
-                        if (height % 4 != 0 || width % 4 != 0)
-                        {
-                            Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out uint _);
-                            if (width != mipWidth && height != mipHeight)
-                            {
-                                throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
-                            }
-                        }
-                        uint numRows = Math.Max(1, height / blockSize);
+                        uint numRows = FormatHelpers.GetNumRows(height, texture.Format);
+                        uint compressedX = x / 4;
+                        uint compressedY = y / 4;
+                        uint blockSizeInBytes = FormatHelpers.GetBlockSizeInBytes(texture.Format);
+
                         for (uint zz = 0; zz < depth; zz++)
                             for (uint row = 0; row < numRows; row++)
                             {
                                 byte* dstRowStart = ((byte*)map.Data)
                                     + (map.DepthPitch * (zz + z))
-                                    + (map.RowPitch * (row + y))
-                                    + (pixelSizeInBytes * x);
+                                    + (map.RowPitch * (row + compressedY))
+                                    + (blockSizeInBytes * compressedX);
                                 byte* srcRowStart = ((byte*)source.ToPointer())
                                     + (denseSliceSize * zz)
                                     + (denseRowSize * row);

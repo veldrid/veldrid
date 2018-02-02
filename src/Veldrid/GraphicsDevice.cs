@@ -295,7 +295,32 @@ namespace Veldrid
         /// <see cref="Texture"/>.</param>
         /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
         /// <see cref="Texture"/>.</param>
-        public abstract void UpdateTexture(
+        public void UpdateTexture(
+            Texture texture,
+            IntPtr source,
+            uint sizeInBytes,
+            uint x,
+            uint y,
+            uint z,
+            uint width,
+            uint height,
+            uint depth,
+            uint mipLevel,
+            uint arrayLayer)
+        {
+#if VALIDATE_USAGE
+            if (FormatHelpers.IsCompressedFormat(texture.Format))
+            {
+                if (x % 4 != 0 || y % 4 != 0 || height % 4 != 0 || width % 4 != 0)
+                {
+                    throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
+                }
+            }
+#endif
+            UpdateTextureCore(texture, source, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
+        }
+
+        protected abstract void UpdateTextureCore(
             Texture texture,
             IntPtr source,
             uint sizeInBytes,

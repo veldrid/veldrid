@@ -199,15 +199,26 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
-        public unsafe void Copy_BC3_Unorm()
+        [Theory]
+        [InlineData(PixelFormat.BC1_Rgb_UNorm, 8, 0, 0, 64, 64)]
+        [InlineData(PixelFormat.BC1_Rgb_UNorm, 8, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC1_Rgba_UNorm, 8, 0, 0, 64, 64)]
+        [InlineData(PixelFormat.BC1_Rgba_UNorm, 8, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC2_UNorm, 16, 0, 0, 64, 64)]
+        [InlineData(PixelFormat.BC2_UNorm, 16, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC3_UNorm, 16, 0, 0, 64, 64)]
+        [InlineData(PixelFormat.BC3_UNorm, 16, 8, 4, 16, 16)]
+        public unsafe void Copy_Compressed_Texture(PixelFormat format, uint blockSizeInBytes, uint srcX, uint srcY, uint copyWidth, uint copyHeight)
         {
             Texture copySrc = RF.CreateTexture(TextureDescription.Texture2D(
-                64, 64, 1, 1, PixelFormat.BC3_UNorm, TextureUsage.Staging));
+                64, 64, 1, 1, format, TextureUsage.Staging));
             Texture copyDst = RF.CreateTexture(TextureDescription.Texture2D(
-                64, 64, 1, 1, PixelFormat.BC3_UNorm, TextureUsage.Staging));
+                copyWidth, copyHeight, 1, 1, format, TextureUsage.Staging));
 
-            uint totalDataSize = copySrc.Width * copySrc.Height;
+            const int numPixelsInBlockSide = 4;
+            const int numPixelsInBlock = 16;
+
+            uint totalDataSize = copyWidth * copyHeight / numPixelsInBlock * blockSizeInBytes;
             byte[] data = new byte[totalDataSize];
 
             for (int i = 0; i < data.Length; i++)
@@ -216,23 +227,28 @@ namespace Veldrid.Tests
             }
             fixed (byte* dataPtr = data)
             {
-                GD.UpdateTexture(copySrc, (IntPtr)dataPtr, totalDataSize, 0, 0, 0, copySrc.Width, copySrc.Height, 1, 0, 0);
+                GD.UpdateTexture(copySrc, (IntPtr)dataPtr, totalDataSize, srcX, srcY, 0, copyWidth, copyHeight, 1, 0, 0);
             }
 
             CommandList cl = RF.CreateCommandList();
             cl.Begin();
             cl.CopyTexture(
-                copySrc, 0, 0, 0, 0, 0,
+                copySrc, srcX, srcY, 0, 0, 0,
                 copyDst, 0, 0, 0, 0, 0,
-                copySrc.Width, copySrc.Height, 1, 1);
+                copyWidth, copyHeight, 1, 1);
             cl.End();
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
+
+            uint numBytesPerRow = copyWidth / numPixelsInBlockSide * blockSizeInBytes;
             MappedResourceView<byte> view = GD.Map<byte>(copyDst, MapMode.Read);
-            for (int i = 0; i < data.Length; i++)
+            for (uint i = 0; i < data.Length; i++)
             {
-                Assert.Equal(view[i], data[i]);
+                uint viewRow = i / numBytesPerRow;
+                uint viewIndex = (view.MappedResource.RowPitch * viewRow) + (i % numBytesPerRow);
+                Assert.Equal(data[i], view[viewIndex]);
             }
+            GD.Unmap(copyDst);
         }
 
         [Fact]

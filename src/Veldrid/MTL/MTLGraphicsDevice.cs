@@ -141,7 +141,7 @@ namespace Veldrid.MTL
             Unsafe.CopyBlock(destOffsetPtr, source.ToPointer(), sizeInBytes);
         }
 
-        public override void UpdateTexture(
+        protected override void UpdateTextureCore(
             Texture texture,
             IntPtr source,
             uint sizeInBytes,

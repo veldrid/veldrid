@@ -20,6 +20,9 @@ namespace Veldrid
                 case PixelFormat.R32_G32_B32_A32_Float:
                 case PixelFormat.R32_G32_B32_A32_UInt:
                     return 16;
+                case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC1_Rgba_UNorm:
+                case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
                     return 1; // Not really
                 default: throw Illegal.Value<PixelFormat>();
@@ -137,7 +140,62 @@ namespace Veldrid
 
         internal static bool IsCompressedFormat(PixelFormat format)
         {
-            return format == PixelFormat.BC3_UNorm;
+            return format == PixelFormat.BC1_Rgb_UNorm
+                || format == PixelFormat.BC1_Rgba_UNorm
+                || format == PixelFormat.BC2_UNorm
+                || format == PixelFormat.BC3_UNorm;
+        }
+
+        internal static uint GetRowPitch(uint width, PixelFormat format)
+        {
+            switch (format)
+            {
+                case PixelFormat.BC1_Rgba_UNorm:
+                case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC2_UNorm:
+                case PixelFormat.BC3_UNorm:
+                    var blocksPerRow = (width + 3) / 4;
+                    var blockSizeInBytes = GetBlockSizeInBytes(format);
+                    return blocksPerRow * blockSizeInBytes;
+
+                default:
+                    return width * GetSizeInBytes(format);
+            }
+        }
+
+        public static uint GetBlockSizeInBytes(PixelFormat format)
+        {
+            switch (format)
+            {
+                case PixelFormat.BC1_Rgba_UNorm:
+                case PixelFormat.BC1_Rgb_UNorm:
+                    return 8;
+                case PixelFormat.BC2_UNorm:
+                case PixelFormat.BC3_UNorm:
+                    return 16;
+                default:
+                    throw Illegal.Value<PixelFormat>();
+            }
+        }
+
+        internal static uint GetNumRows(uint height, PixelFormat format)
+        {
+            switch (format)
+            {
+                case PixelFormat.BC1_Rgba_UNorm:
+                case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC2_UNorm:
+                case PixelFormat.BC3_UNorm:
+                    return (height + 3) / 4;
+
+                default:
+                    return height;
+            }
+        }
+
+        internal static uint GetDepthPitch(uint rowPitch, uint height, PixelFormat format)
+        {
+            return rowPitch * GetNumRows(height, format);
         }
     }
 }

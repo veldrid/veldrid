@@ -174,12 +174,12 @@ namespace Veldrid.MTL
             }
             else
             {
-                uint pixelSize = FormatHelpers.GetSizeInBytes(mtlTex.Format);
                 uint blockSize = FormatHelpers.IsCompressedFormat(mtlTex.Format) ? 4u : 1u;
                 mtlTex.GetSubresourceLayout(mipLevel, arrayLayer, out uint dstRowPitch, out uint dstDepthPitch);
                 ulong dstOffset = Util.ComputeSubresourceOffset(mtlTex, mipLevel, arrayLayer);
                 if (blockSize == 1)
                 {
+                    uint pixelSize = FormatHelpers.GetSizeInBytes(mtlTex.Format);
                     uint srcRowPitch = width * pixelSize;
                     uint srcDepthPitch = srcRowPitch * height;
                     for (uint zz = 0; zz < depth; zz++)
@@ -198,12 +198,15 @@ namespace Veldrid.MTL
                 }
                 else
                 {
-                    uint numRows = Math.Max(1, height / blockSize);
                     uint paddedWidth = Math.Max(blockSize, width);
                     uint paddedHeight = Math.Max(blockSize, height);
+                    uint numRows = FormatHelpers.GetNumRows(paddedHeight, texture.Format);
+                    uint compressedX = x / 4;
+                    uint compressedY = y / 4;
+                    uint blockSizeInbytes = FormatHelpers.GetBlockSizeInBytes(texture.Format);
 
-                    uint denseRowSize = paddedWidth * blockSize * pixelSize;
-                    uint denseSliceSize = paddedWidth * paddedHeight * pixelSize;
+                    uint denseRowSize = FormatHelpers.GetRowPitch(paddedWidth, texture.Format);
+                    uint denseSliceSize = FormatHelpers.GetDepthPitch(denseRowSize, paddedHeight, texture.Format);
                     for (uint zz = 0; zz < depth; zz++)
                         for (uint row = 0; row < numRows; row++)
                         {
@@ -213,8 +216,8 @@ namespace Veldrid.MTL
                             byte* dstRowBase = (byte*)mtlTex.StagingBuffer.contents()
                                 + dstOffset
                                 + dstDepthPitch * (zz + z)
-                                + dstRowPitch * (row + y)
-                                + pixelSize * x;
+                                + dstRowPitch * (row + compressedY)
+                                + blockSizeInbytes * compressedX;
                             Unsafe.CopyBlock(dstRowBase, srcRowBase, denseRowSize);
                         }
                 }
@@ -267,10 +270,8 @@ namespace Veldrid.MTL
             void* data = texture.StagingBuffer.contents();
             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
             Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
-            uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
             uint subresourceSize = texture.GetSubresourceSize(mipLevel, arrayLayer);
-            uint rowPitch = width * pixelSize;
-            uint depthPitch = rowPitch * height;
+            texture.GetSubresourceLayout(mipLevel, arrayLayer, out uint rowPitch, out uint depthPitch);
             ulong offset = Util.ComputeSubresourceOffset(texture, mipLevel, arrayLayer);
             byte* offsetPtr = (byte*)data + offset;
             return new MappedResource(texture, mode, (IntPtr)offsetPtr, subresourceSize, subresource, rowPitch, depthPitch);

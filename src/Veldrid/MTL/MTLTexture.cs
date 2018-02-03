@@ -75,7 +75,6 @@ namespace Veldrid.MTL
             }
             else
             {
-                uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
                 uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
                 uint totalStorageSize = 0;
                 for (uint level = 0; level < MipLevels; level++)
@@ -83,8 +82,12 @@ namespace Veldrid.MTL
                     Util.GetMipDimensions(this, level, out uint levelWidth, out uint levelHeight, out uint levelDepth);
                     uint storageWidth = Math.Max(levelWidth, blockSize);
                     uint storageHeight = Math.Max(levelHeight, blockSize);
-                    totalStorageSize += pixelSize * storageWidth * storageHeight * levelDepth * ArrayLayers;
+                    totalStorageSize += levelDepth * FormatHelpers.GetDepthPitch(
+                        FormatHelpers.GetRowPitch(levelWidth, Format),
+                        levelHeight,
+                        Format);
                 }
+                totalStorageSize *= ArrayLayers;
 
                 StagingBuffer = _gd.Device.newBufferWithLengthOptions(
                     (UIntPtr)totalStorageSize,
@@ -137,23 +140,24 @@ namespace Veldrid.MTL
 
         internal uint GetSubresourceSize(uint mipLevel, uint arrayLayer)
         {
-            uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
             uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
             Util.GetMipDimensions(this, mipLevel, out uint width, out uint height, out uint depth);
             uint storageWidth = Math.Max(blockSize, width);
             uint storageHeight = Math.Max(blockSize, height);
-            return pixelSize * storageWidth * storageHeight * depth;
+            return depth * FormatHelpers.GetDepthPitch(
+                FormatHelpers.GetRowPitch(storageWidth, Format),
+                storageHeight,
+                Format);
         }
 
         internal void GetSubresourceLayout(uint mipLevel, uint arrayLayer, out uint rowPitch, out uint depthPitch)
         {
-            uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
             uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
             Util.GetMipDimensions(this, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
             uint storageWidth = Math.Max(blockSize, mipWidth);
             uint storageHeight = Math.Max(blockSize, mipHeight);
-            rowPitch = storageWidth * blockSize * pixelSize;
-            depthPitch = storageWidth * storageHeight * pixelSize;
+            rowPitch = FormatHelpers.GetRowPitch(storageWidth, Format);
+            depthPitch = FormatHelpers.GetDepthPitch(rowPitch, storageHeight, Format);
         }
 
         public override void Dispose()

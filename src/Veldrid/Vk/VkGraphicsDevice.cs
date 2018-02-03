@@ -935,10 +935,9 @@ namespace Veldrid.Vk
                 uint subresource = texture.CalculateSubresource(mipLevel, arrayLayer);
                 VkSubresourceLayout layout = vkTex.GetSubresourceLayout(subresource);
                 byte* imageBasePtr = (byte*)memBlock.BlockMappedPointer + layout.offset;
-                uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
-                uint blockSize = FormatHelpers.IsCompressedFormat(texture.Format) ? 4u : 1u;
-                if (blockSize == 1)
+                if (!FormatHelpers.IsCompressedFormat(vkTex.Format))
                 {
+                    uint pixelSize = FormatHelpers.GetSizeInBytes(vkTex.Format);
                     for (uint zz = 0; zz < depth; zz++)
                         for (uint yy = 0; yy < height; yy++)
                         {
@@ -954,24 +953,21 @@ namespace Veldrid.Vk
                 }
                 else
                 {
-                    uint denseRowSize = Math.Max(width, blockSize) * pixelSize * blockSize;
-                    uint denseSliceSize = Math.Max(width, blockSize) * Math.Max(height, blockSize) * pixelSize;
-                    if (height % 4 != 0 || width % 4 != 0)
-                    {
-                        Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out uint _);
-                        if (width != mipWidth && height != mipHeight)
-                        {
-                            throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
-                        }
-                    }
-                    uint numRows = Math.Max(1, height / blockSize);
+                    uint denseRowSize = FormatHelpers.GetRowPitch(width, texture.Format);
+                    uint denseSliceSize = FormatHelpers.GetDepthPitch(denseRowSize, height, texture.Format);
+
+                    uint numRows = FormatHelpers.GetNumRows(height, texture.Format);
+                    uint compressedX = x / 4;
+                    uint compressedY = y / 4;
+                    uint blockSizeInBytes = FormatHelpers.GetBlockSizeInBytes(texture.Format);
+
                     for (uint zz = 0; zz < depth; zz++)
                         for (uint row = 0; row < numRows; row++)
                         {
                             byte* dstRowStart = imageBasePtr
                                 + (layout.depthPitch * (zz + z))
-                                + (layout.rowPitch * (row + y))
-                                + (pixelSize * x);
+                                + (layout.rowPitch * (row + compressedY))
+                                + (blockSizeInBytes * compressedX);
                             byte* srcRowStart = ((byte*)source.ToPointer())
                                 + (denseSliceSize * zz)
                                 + (denseRowSize * row);

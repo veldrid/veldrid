@@ -736,10 +736,14 @@ namespace Veldrid.OpenGL
             uint rowPitch = FormatHelpers.GetRowPitch(blockAlignedWidth, texture.Format);
             uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, blockAlignedHeight, texture.Format);
 
-            uint pixelSize = FormatHelpers.GetSizeInBytes(glTex.Format);
-            if (pixelSize < 4)
+            uint unpackAlignment = 4;
+            if (!isCompressed)
             {
-                glPixelStorei(PixelStoreParameter.UnpackAlignment, (int)pixelSize);
+                unpackAlignment = FormatHelpers.GetSizeInBytes(glTex.Format);
+            }
+            if (unpackAlignment < 4)
+            {
+                glPixelStorei(PixelStoreParameter.UnpackAlignment, (int)unpackAlignment);
                 CheckLastError();
             }
 
@@ -974,7 +978,7 @@ namespace Veldrid.OpenGL
                 throw new VeldridException($"Invalid OpenGL TextureTarget encountered: {glTex.TextureTarget}.");
             }
 
-            if (pixelSize < 4)
+            if (unpackAlignment < 4)
             {
                 glPixelStorei(PixelStoreParameter.UnpackAlignment, 4);
                 CheckLastError();
@@ -1094,11 +1098,14 @@ namespace Veldrid.OpenGL
                 throw new VeldridException("Copying to/from Textures with different formats is not supported.");
             }
 
-            uint pixelSize = FormatHelpers.GetSizeInBytes(srcGLTexture.Format);
+            uint packAlignment = 4;
             uint sizeInBytes;
             TextureTarget srcTarget = srcGLTexture.TextureTarget;
             if (isCompressed)
             {
+                glBindTexture(srcTarget, srcGLTexture.Texture);
+                CheckLastError();
+
                 int compressedSize;
                 glGetTexLevelParameteriv(
                     srcTarget,
@@ -1110,14 +1117,16 @@ namespace Veldrid.OpenGL
             }
             else
             {
+                uint pixelSize = FormatHelpers.GetSizeInBytes(srcGLTexture.Format);
+                packAlignment = pixelSize;
                 sizeInBytes = width * height * depth * pixelSize;
             }
 
             FixedStagingBlock block = _stagingMemoryPool.GetFixedStagingBlock(sizeInBytes);
 
-            if (pixelSize < 4)
+            if (packAlignment < 4)
             {
-                glPixelStorei(PixelStoreParameter.PackAlignment, (int)pixelSize);
+                glPixelStorei(PixelStoreParameter.PackAlignment, (int)packAlignment);
                 CheckLastError();
             }
 
@@ -1152,14 +1161,47 @@ namespace Veldrid.OpenGL
                 glBindTexture(TextureTarget.Texture2D, dstGLTexture.Texture);
                 CheckLastError();
 
-                glCompressedTexSubImage2D(
-                    TextureTarget.Texture2D,
-                    (int)dstMipLevel, (int)dstX, (int)dstY,
-                    width, height,
-                    dstGLTexture.GLInternalFormat, block.SizeInBytes, block.Data);
-                CheckLastError();
+                Util.GetMipDimensions(srcGLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                uint fullRowPitch = FormatHelpers.GetRowPitch(mipWidth, srcGLTexture.Format);
+                uint fullDepthPitch = FormatHelpers.GetDepthPitch(
+                    fullRowPitch,
+                    mipHeight,
+                    srcGLTexture.Format);
+
+                uint denseRowPitch = FormatHelpers.GetRowPitch(width, srcGLTexture.Format);
+                uint denseDepthPitch = FormatHelpers.GetDepthPitch(denseRowPitch, height, srcGLTexture.Format);
+                uint numRows = FormatHelpers.GetNumRows(height, srcGLTexture.Format);
+                uint trueCopySize = denseRowPitch * numRows;
+
+                uint compressedSrcX = srcX / 4;
+                uint compressedSrcY = srcY / 4;
+                uint blockSizeInBytes = FormatHelpers.GetBlockSizeInBytes(srcGLTexture.Format);
+
+                FixedStagingBlock trueCopySrc = _stagingMemoryPool.GetFixedStagingBlock(trueCopySize);
+                for (uint zz = 0; zz < depth; zz++)
+                    for (uint row = 0; row < numRows; row++)
+                    {
+                        Unsafe.CopyBlock(
+                            (byte*)trueCopySrc.Data
+                                + denseDepthPitch * zz
+                                + denseRowPitch * row,
+                            (byte*)block.Data
+                                + fullDepthPitch * (zz + srcZ)
+                                + fullRowPitch * (row + compressedSrcY)
+                                + blockSizeInBytes * compressedSrcX,
+                            denseRowPitch);
+                    }
+
+                UpdateTexture(
+                    dstGLTexture,
+                    (IntPtr)trueCopySrc.Data,
+                    dstX, dstY, dstZ,
+                    width, height, 1,
+                    dstMipLevel, dstLayer);
+
+                trueCopySrc.Free();
             }
-            else
+            else // !isCompressed
             {
                 if (_extensions.ARB_DirectStateAccess)
                 {
@@ -1173,6 +1215,7 @@ namespace Veldrid.OpenGL
                 {
                     // We need to download the entire mip and then move the single copy region into
                     // the staging block we have.
+                    uint pixelSize = FormatHelpers.GetSizeInBytes(srcGLTexture.Format);
                     Util.GetMipDimensions(srcGLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                     uint fullMipSize = mipWidth * mipHeight * mipDepth * srcGLTexture.ArrayLayers * pixelSize;
 
@@ -1219,7 +1262,7 @@ namespace Veldrid.OpenGL
                     width, height, depth, dstMipLevel, dstLayer);
             }
 
-            if (pixelSize < 4)
+            if (packAlignment < 4)
             {
                 glPixelStorei(PixelStoreParameter.PackAlignment, 4);
                 CheckLastError();

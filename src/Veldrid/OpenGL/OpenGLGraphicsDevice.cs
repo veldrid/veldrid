@@ -654,11 +654,11 @@ namespace Veldrid.OpenGL
                             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
                             Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
 
-                            uint pixelSize = FormatHelpers.GetSizeInBytes(texture.Format);
                             uint subresourceSize = FormatHelpers.GetDepthPitch(
-                                FormatHelpers.GetRowPitch(mipWidth, texture.Format), 
-                                mipHeight, 
-                                texture.Format);
+                                FormatHelpers.GetRowPitch(mipWidth, texture.Format),
+                                mipHeight,
+                                texture.Format)
+                                * mipDepth;
 
                             bool isCompressed = FormatHelpers.IsCompressedFormat(texture.Format);
                             if (isCompressed)
@@ -675,9 +675,15 @@ namespace Veldrid.OpenGL
 
                             FixedStagingBlock block = _gd._stagingMemoryPool.GetFixedStagingBlock(subresourceSize);
 
-                            if (pixelSize < 4)
+                            uint packAlignment = 4;
+                            if (!isCompressed)
                             {
-                                glPixelStorei(PixelStoreParameter.PackAlignment, (int)pixelSize);
+                                packAlignment = FormatHelpers.GetSizeInBytes(texture.Format);
+                            }
+
+                            if (packAlignment < 4)
+                            {
+                                glPixelStorei(PixelStoreParameter.PackAlignment, (int)packAlignment);
                                 CheckLastError();
                             }
 
@@ -770,7 +776,7 @@ namespace Veldrid.OpenGL
                                 }
                             }
 
-                            if (pixelSize < 4)
+                            if (packAlignment < 4)
                             {
                                 glPixelStorei(PixelStoreParameter.PackAlignment, 4);
                                 CheckLastError();

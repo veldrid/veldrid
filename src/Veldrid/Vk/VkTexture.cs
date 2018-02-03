@@ -67,47 +67,47 @@ namespace Veldrid.Vk
             VkSampleCount = VkFormats.VdToVkSampleCount(SampleCount);
             VkFormat = VkFormats.VdToVkPixelFormat(Format, (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
 
-            VkImageCreateInfo imageCI = VkImageCreateInfo.New();
-            imageCI.mipLevels = MipLevels;
-            imageCI.arrayLayers = _actualImageArrayLayers;
-            imageCI.imageType = VkFormats.VdToVkTextureType(Type);
-            imageCI.extent.width = Width;
-            imageCI.extent.height = Height;
-            imageCI.extent.depth = Depth;
-            imageCI.initialLayout = VkImageLayout.Preinitialized;
-            imageCI.usage = VkImageUsageFlags.TransferDst | VkImageUsageFlags.TransferSrc;
-            bool isDepthStencil = (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
-            if ((description.Usage & TextureUsage.Sampled) == TextureUsage.Sampled)
-            {
-                imageCI.usage |= VkImageUsageFlags.Sampled;
-            }
-            if (isDepthStencil)
-            {
-                imageCI.usage |= VkImageUsageFlags.DepthStencilAttachment;
-            }
-            if ((description.Usage & TextureUsage.RenderTarget) == TextureUsage.RenderTarget)
-            {
-                imageCI.usage |= VkImageUsageFlags.ColorAttachment;
-            }
-            if ((description.Usage & TextureUsage.Storage) == TextureUsage.Storage)
-            {
-                imageCI.usage |= VkImageUsageFlags.Storage;
-            }
-
             bool isStaging = (Usage & TextureUsage.Staging) == TextureUsage.Staging;
 
-            imageCI.tiling = isStaging ? VkImageTiling.Linear : VkImageTiling.Optimal;
-            imageCI.format = VkFormat;
-
-            imageCI.samples = VkSampleCount;
-            if (isCubemap)
-            {
-                imageCI.flags = VkImageCreateFlags.CubeCompatible;
-            }
-
-            uint subresourceCount = MipLevels * _actualImageArrayLayers * Depth;
             if (!isStaging)
             {
+                VkImageCreateInfo imageCI = VkImageCreateInfo.New();
+                imageCI.mipLevels = MipLevels;
+                imageCI.arrayLayers = _actualImageArrayLayers;
+                imageCI.imageType = VkFormats.VdToVkTextureType(Type);
+                imageCI.extent.width = Width;
+                imageCI.extent.height = Height;
+                imageCI.extent.depth = Depth;
+                imageCI.initialLayout = VkImageLayout.Preinitialized;
+                imageCI.usage = VkImageUsageFlags.TransferDst | VkImageUsageFlags.TransferSrc;
+                bool isDepthStencil = (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
+                if ((description.Usage & TextureUsage.Sampled) == TextureUsage.Sampled)
+                {
+                    imageCI.usage |= VkImageUsageFlags.Sampled;
+                }
+                if (isDepthStencil)
+                {
+                    imageCI.usage |= VkImageUsageFlags.DepthStencilAttachment;
+                }
+                if ((description.Usage & TextureUsage.RenderTarget) == TextureUsage.RenderTarget)
+                {
+                    imageCI.usage |= VkImageUsageFlags.ColorAttachment;
+                }
+                if ((description.Usage & TextureUsage.Storage) == TextureUsage.Storage)
+                {
+                    imageCI.usage |= VkImageUsageFlags.Storage;
+                }
+
+                imageCI.tiling = isStaging ? VkImageTiling.Linear : VkImageTiling.Optimal;
+                imageCI.format = VkFormat;
+
+                imageCI.samples = VkSampleCount;
+                if (isCubemap)
+                {
+                    imageCI.flags = VkImageCreateFlags.CubeCompatible;
+                }
+
+                uint subresourceCount = MipLevels * _actualImageArrayLayers * Depth;
                 VkResult result = vkCreateImage(gd.Device, ref imageCI, null, out _optimalImage);
                 CheckResult(result);
                 if (_optimalImage.Handle == 0x5b)
@@ -126,21 +126,30 @@ namespace Veldrid.Vk
                     memoryRequirements.alignment);
                 _memoryBlock = memoryToken;
                 vkBindImageMemory(gd.Device, _optimalImage, _memoryBlock.DeviceMemory, _memoryBlock.Offset);
+
+                _imageLayouts = new VkImageLayout[subresourceCount];
+                for (int i = 0; i < _imageLayouts.Length; i++)
+                {
+                    _imageLayouts[i] = VkImageLayout.Preinitialized;
+                }
             }
-            else
+            else // isStaging
             {
-                uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
-                uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
-                // MAKE A BUFFER
-                uint stagingSize = Width * Height * Depth * pixelSize;
+                uint depthPitch = FormatHelpers.GetDepthPitch(
+                    FormatHelpers.GetRowPitch(Width, Format),
+                    Height,
+                    Format);
+                uint stagingSize = depthPitch * Depth;
                 for (uint level = 1; level < MipLevels; level++)
                 {
                     Util.GetMipDimensions(this, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
 
-                    uint storageWidth = Math.Max(mipWidth, blockSize);
-                    uint storageHeight = Math.Max(mipHeight, blockSize);
+                    depthPitch = FormatHelpers.GetDepthPitch(
+                        FormatHelpers.GetRowPitch(mipWidth, Format),
+                        mipHeight,
+                        Format);
 
-                    stagingSize += storageWidth * storageHeight * mipDepth * pixelSize;
+                    stagingSize += depthPitch * mipDepth;
                 }
                 stagingSize *= ArrayLayers;
 
@@ -160,12 +169,6 @@ namespace Veldrid.Vk
 
                 result = vkBindBufferMemory(_gd.Device, _stagingBuffer, _memoryBlock.DeviceMemory, _memoryBlock.Offset);
                 CheckResult(result);
-            }
-
-            _imageLayouts = new VkImageLayout[subresourceCount];
-            for (int i = 0; i < _imageLayouts.Length; i++)
-            {
-                _imageLayouts[i] = VkImageLayout.Preinitialized;
             }
         }
 
@@ -218,18 +221,17 @@ namespace Veldrid.Vk
             }
             else
             {
-                uint pixelSize = FormatHelpers.GetSizeInBytes(Format);
                 uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
                 Util.GetMipDimensions(this, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                uint storageWidth = Math.Max(mipWidth, blockSize);
-                uint storageHeight = Math.Max(mipHeight, blockSize);
+                uint rowPitch = FormatHelpers.GetRowPitch(mipWidth, Format);
+                uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, mipHeight, Format);
 
                 VkSubresourceLayout layout = new VkSubresourceLayout()
                 {
-                    rowPitch = storageWidth * blockSize * pixelSize,
-                    depthPitch = storageWidth * storageHeight * pixelSize,
-                    arrayPitch = storageWidth * storageHeight * pixelSize,
-                    size = storageWidth * storageHeight * mipDepth * pixelSize
+                    rowPitch = rowPitch,
+                    depthPitch = depthPitch,
+                    arrayPitch = depthPitch,
+                    size = depthPitch,
                 };
                 layout.offset = Util.ComputeSubresourceOffset(this, mipLevel, arrayLayer);
 

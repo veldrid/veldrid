@@ -760,10 +760,20 @@ namespace Veldrid.Vk
                 uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
                 uint bufferRowLength = Math.Max(mipWidth, blockSize);
                 uint bufferImageHeight = Math.Max(mipHeight, blockSize);
+                uint compressedX = srcX / blockSize;
+                uint compressedY = srcY / blockSize;
+                uint blockSizeInBytes = blockSize == 1
+                    ? FormatHelpers.GetSizeInBytes(srcVkTexture.Format)
+                    : FormatHelpers.GetBlockSizeInBytes(srcVkTexture.Format);
+                uint rowPitch = FormatHelpers.GetRowPitch(bufferRowLength, srcVkTexture.Format);
+                uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, srcVkTexture.Format);
 
                 VkBufferImageCopy regions = new VkBufferImageCopy
                 {
-                    bufferOffset = srcLayout.offset + (srcX * FormatHelpers.GetSizeInBytes(srcVkTexture.Format)),
+                    bufferOffset = srcLayout.offset
+                        + (srcZ * depthPitch)
+                        + (compressedY * rowPitch)
+                        + (compressedX * blockSizeInBytes),
                     bufferRowLength = bufferRowLength,
                     bufferImageHeight = bufferImageHeight,
                     imageExtent = new VkExtent3D { width = width, height = height, depth = depth },
@@ -817,11 +827,11 @@ namespace Veldrid.Vk
                 Vulkan.VkBuffer dstBuffer = dstVkTexture.StagingBuffer;
                 VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
                     dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer));
-                uint pixelSize = FormatHelpers.GetSizeInBytes(srcVkTexture.Format);
-                uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
+
                 uint zLimit = Math.Max(depth, layerCount);
-                if (blockSize == 1)
+                if (!FormatHelpers.IsCompressedFormat(source.Format))
                 {
+                    uint pixelSize = FormatHelpers.GetSizeInBytes(srcVkTexture.Format);
                     for (uint zz = 0; zz < zLimit; zz++)
                     {
                         for (uint yy = 0; yy < height; yy++)
@@ -843,9 +853,15 @@ namespace Veldrid.Vk
                         }
                     }
                 }
-                else // blockSize != 1
+                else // IsCompressedFormat
                 {
-                    uint numRows = Math.Max(1, height / blockSize);
+                    uint denseRowSize = FormatHelpers.GetRowPitch(width, source.Format);
+                    uint numRows = FormatHelpers.GetNumRows(height, source.Format);
+                    uint compressedSrcX = srcX / 4;
+                    uint compressedSrcY = srcY / 4;
+                    uint compressedDstX = dstX / 4;
+                    uint compressedDstY = dstY / 4;
+                    uint blockSizeInBytes = FormatHelpers.GetBlockSizeInBytes(source.Format);
 
                     for (uint zz = 0; zz < zLimit; zz++)
                     {
@@ -855,13 +871,13 @@ namespace Veldrid.Vk
                             {
                                 srcOffset = srcLayout.offset
                                     + srcLayout.depthPitch * (zz + srcZ)
-                                    + srcLayout.rowPitch * (row + srcY)
-                                    + pixelSize * srcX,
+                                    + srcLayout.rowPitch * (row + compressedSrcY)
+                                    + blockSizeInBytes * compressedSrcX,
                                 dstOffset = dstLayout.offset
                                     + dstLayout.depthPitch * (zz + dstZ)
-                                    + dstLayout.rowPitch * (row + dstY)
-                                    + pixelSize * dstX,
-                                size = width * blockSize * pixelSize,
+                                    + dstLayout.rowPitch * (row + compressedDstY)
+                                    + blockSizeInBytes * compressedDstX,
+                                size = denseRowSize,
                             };
 
                             vkCmdCopyBuffer(cb, srcBuffer, dstBuffer, 1, ref region);

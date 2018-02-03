@@ -298,10 +298,16 @@ namespace Veldrid.MTL
                 MetalBindings.MTLBuffer srcBuffer = srcMTLTexture.StagingBuffer;
                 MetalBindings.MTLTexture dstTexture = dstMTLTexture.DeviceTexture;
 
-                uint pixelSize = FormatHelpers.GetSizeInBytes(srcMTLTexture.Format);
-
                 for (uint layer = 0; layer < layerCount; layer++)
                 {
+                    Util.GetMipDimensions(srcMTLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                    uint blockSize = FormatHelpers.IsCompressedFormat(srcMTLTexture.Format) ? 4u : 1u;
+                    uint compressedSrcX = srcX / blockSize;
+                    uint compressedSrcY = srcY / blockSize;
+                    uint blockSizeInBytes = blockSize == 1
+                        ? FormatHelpers.GetSizeInBytes(srcMTLTexture.Format)
+                        : FormatHelpers.GetBlockSizeInBytes(srcMTLTexture.Format);
+
                     ulong srcSubresourceBase = Util.ComputeSubresourceOffset(
                         srcMTLTexture,
                         srcMipLevel,
@@ -313,8 +319,8 @@ namespace Veldrid.MTL
                         out uint srcDepthPitch);
                     ulong sourceOffset = srcSubresourceBase
                         + srcDepthPitch * srcZ
-                        + srcRowPitch * srcY
-                        + FormatHelpers.GetSizeInBytes(srcMTLTexture.Format) * srcX;
+                        + srcRowPitch * compressedSrcY
+                        + blockSizeInBytes * compressedSrcX;
 
                     MTLSize sourceSize = new MTLSize(width, height, depth);
                     if (dstMTLTexture.Type != TextureType.Texture3D)
@@ -358,10 +364,10 @@ namespace Veldrid.MTL
                         out uint dstRowPitch,
                         out uint dstDepthPitch);
 
-                    uint pixelSize = FormatHelpers.GetSizeInBytes(dstMTLTexture.Format);
                     uint blockSize = FormatHelpers.IsCompressedFormat(dstMTLTexture.Format) ? 4u : 1u;
                     if (blockSize == 1)
                     {
+                        uint pixelSize = FormatHelpers.GetSizeInBytes(dstMTLTexture.Format);
                         uint copySize = width * pixelSize;
                         for (uint zz = 0; zz < depth; zz++)
                             for (uint yy = 0; yy < height; yy++)
@@ -384,27 +390,34 @@ namespace Veldrid.MTL
                     }
                     else // blockSize != 1
                     {
-                        uint numRows = Math.Max(1, height / blockSize);
                         uint paddedWidth = Math.Max(blockSize, width);
                         uint paddedHeight = Math.Max(blockSize, height);
-                        uint copySize = paddedWidth * blockSize * pixelSize;
+                        uint numRows = FormatHelpers.GetNumRows(paddedHeight, srcMTLTexture.Format);
+                        uint rowPitch = FormatHelpers.GetRowPitch(paddedWidth, srcMTLTexture.Format);
+
+                        uint compressedSrcX = srcX / 4;
+                        uint compressedSrcY = srcY / 4;
+                        uint compressedDstX = dstX / 4;
+                        uint compressedDstY = dstY / 4;
+                        uint blockSizeInBytes = FormatHelpers.GetBlockSizeInBytes(srcMTLTexture.Format);
+
                         for (uint zz = 0; zz < depth; zz++)
                             for (uint row = 0; row < numRows; row++)
                             {
                                 ulong srcRowOffset = srcSubresourceBase
                                     + srcDepthPitch * (zz + srcZ)
-                                    + srcRowPitch * (row + srcY)
-                                    + pixelSize * srcX;
+                                    + srcRowPitch * (row + compressedSrcY)
+                                    + blockSizeInBytes * compressedSrcX;
                                 ulong dstRowOffset = dstSubresourceBase
                                     + dstDepthPitch * (zz + dstZ)
-                                    + dstRowPitch * (row + dstY)
-                                    + pixelSize * dstX;
+                                    + dstRowPitch * (row + compressedDstY)
+                                    + blockSizeInBytes * compressedDstX;
                                 _bce.copy(
                                     srcMTLTexture.StagingBuffer,
                                     (UIntPtr)srcRowOffset,
                                     dstMTLTexture.StagingBuffer,
                                     (UIntPtr)dstRowOffset,
-                                    (UIntPtr)copySize);
+                                    (UIntPtr)rowPitch);
                             }
                     }
                 }

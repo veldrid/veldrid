@@ -157,7 +157,7 @@ namespace Veldrid
                 GetMipDimensions(tex, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                 uint storageWidth = Math.Max(mipWidth, blockSize);
                 uint storageHeight = Math.Max(mipHeight, blockSize);
-                offset += storageWidth * storageHeight * mipDepth * FormatHelpers.GetSizeInBytes(tex.Format);
+                offset += FormatHelpers.GetRegionSize(storageWidth, storageHeight, mipDepth, tex.Format);
             }
 
             return offset;
@@ -174,10 +174,10 @@ namespace Veldrid
             uint layerPitch = 0;
             for (uint level = 0; level < tex.MipLevels; level++)
             {
-                Util.GetMipDimensions(tex, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                GetMipDimensions(tex, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                 uint storageWidth = Math.Max(mipWidth, blockSize);
                 uint storageHeight = Math.Max(mipHeight, blockSize);
-                layerPitch += storageWidth * storageHeight * mipDepth * FormatHelpers.GetSizeInBytes(tex.Format);
+                layerPitch += FormatHelpers.GetRegionSize(storageWidth, storageHeight, mipDepth, tex.Format);
             }
 
             return layerPitch * arrayLayer;

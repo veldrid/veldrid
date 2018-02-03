@@ -313,7 +313,11 @@ namespace Veldrid
             {
                 if (x % 4 != 0 || y % 4 != 0 || height % 4 != 0 || width % 4 != 0)
                 {
-                    throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
+                    Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out _);
+                    if (width != mipWidth && height != mipHeight)
+                    {
+                        throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
+                    }
                 }
             }
 #endif

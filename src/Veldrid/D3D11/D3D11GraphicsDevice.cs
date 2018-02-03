@@ -455,7 +455,6 @@ namespace Veldrid.D3D11
                 MappedResourceCacheKey key = new MappedResourceCacheKey(texture, subresource);
                 MappedResource map = MapCore(texture, MapMode.Write, subresource);
 
-                uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
                 uint denseRowSize = FormatHelpers.GetRowPitch(width, texture.Format);
                 uint denseSliceSize = FormatHelpers.GetDepthPitch(denseRowSize, height, texture.Format);
 
@@ -482,6 +481,7 @@ namespace Veldrid.D3D11
                 {
                     if (!FormatHelpers.IsCompressedFormat(texture.Format))
                     {
+                        uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
                         for (uint zz = 0; zz < depth; zz++)
                             for (uint yy = 0; yy < height; yy += 1)
                             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Veldrid
 {
@@ -24,7 +25,8 @@ namespace Veldrid
                 case PixelFormat.BC1_Rgba_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
-                    return 1; // Not really
+                    Debug.Fail("GetSizeInBytes should not be used on a compressed format.");
+                    throw Illegal.Value<PixelFormat>();
                 default: throw Illegal.Value<PixelFormat>();
             }
         }
@@ -196,6 +198,24 @@ namespace Veldrid
         internal static uint GetDepthPitch(uint rowPitch, uint height, PixelFormat format)
         {
             return rowPitch * GetNumRows(height, format);
+        }
+
+        internal static uint GetRegionSize(uint width, uint height, uint depth, PixelFormat format)
+        {
+            uint blockSizeInBytes;
+            if (IsCompressedFormat(format))
+            {
+                Debug.Assert(width % 4 == 0 && height % 4 == 0);
+                blockSizeInBytes = GetBlockSizeInBytes(format);
+                width /= 4;
+                height /= 4;
+            }
+            else
+            {
+                blockSizeInBytes = GetSizeInBytes(format);
+            }
+
+            return width * height * depth * blockSizeInBytes;
         }
     }
 }

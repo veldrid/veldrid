@@ -172,14 +172,19 @@ namespace Veldrid.Vk
                 };
 
                 Texture depthTex = _currentFramebuffer.DepthTarget.Value.Target;
-                VkClearRect clearRect = new VkClearRect
+                uint renderableWidth = _currentFramebuffer.RenderableWidth;
+                uint renderableHeight = _currentFramebuffer.RenderableHeight;
+                if (renderableWidth > 0 && renderableHeight > 0)
                 {
-                    baseArrayLayer = 0,
-                    layerCount = 1,
-                    rect = new VkRect2D(0, 0, depthTex.Width, depthTex.Height)
-                };
+                    VkClearRect clearRect = new VkClearRect
+                    {
+                        baseArrayLayer = 0,
+                        layerCount = 1,
+                        rect = new VkRect2D(0, 0, renderableWidth, renderableHeight)
+                    };
 
-                vkCmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
+                    vkCmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
+                }
             }
             else
             {

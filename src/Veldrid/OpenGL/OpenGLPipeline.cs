@@ -201,12 +201,6 @@ namespace Veldrid.OpenGL
                             CheckLastError();
                             uniformBindings[i] = new OpenGLUniformBinding(_program, blockIndex, (uint)blockSize);
                         }
-                        else
-                        {
-                            // TODO: Support raw uniform values, not wrapped in a uniform block.
-                            throw new VeldridException(
-                                $"The expected GLSL uniform was not found in the shader program: \"{resourceName}\"");
-                        }
                     }
                     else if (resource.Kind == ResourceKind.TextureReadOnly)
                     {
@@ -307,32 +301,32 @@ namespace Veldrid.OpenGL
             ProcessResourceSetLayouts(ComputeDescription.ResourceLayouts);
         }
 
-        public OpenGLUniformBinding GetUniformBindingForSlot(uint set, uint slot)
+        public bool GetUniformBindingForSlot(uint set, uint slot, out OpenGLUniformBinding binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
-            return setInfo.GetUniformBindingForSlot(slot);
+            return setInfo.GetUniformBindingForSlot(slot, out binding);
         }
 
-        public OpenGLTextureBindingSlotInfo GetTextureBindingInfo(uint set, uint slot)
+        public bool GetTextureBindingInfo(uint set, uint slot, out OpenGLTextureBindingSlotInfo binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
-            return setInfo.GetTextureBindingInfo(slot);
+            return setInfo.GetTextureBindingInfo(slot, out binding);
         }
 
-        public OpenGLSamplerBindingSlotInfo GetSamplerBindingInfo(uint set, uint slot)
+        public bool GetSamplerBindingInfo(uint set, uint slot, out OpenGLSamplerBindingSlotInfo binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
-            return setInfo.GetSamplerBindingInfo(slot);
+            return setInfo.GetSamplerBindingInfo(slot, out binding);
         }
 
-        public OpenGLShaderStorageBinding GetStorageBufferBindingForSlot(uint set, uint slot)
+        public bool GetStorageBufferBindingForSlot(uint set, uint slot, out OpenGLShaderStorageBinding binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
-            return setInfo.GetStorageBufferBindingForSlot(slot);
+            return setInfo.GetStorageBufferBindingForSlot(slot, out binding);
 
         }
 
@@ -376,44 +370,24 @@ namespace Veldrid.OpenGL
             ShaderStorageBufferCount = (uint)storageBufferBindings.Count;
         }
 
-        public OpenGLTextureBindingSlotInfo GetTextureBindingInfo(uint slot)
+        public bool GetTextureBindingInfo(uint slot, out OpenGLTextureBindingSlotInfo binding)
         {
-            if (!_textureBindings.TryGetValue(slot, out OpenGLTextureBindingSlotInfo binding))
-            {
-                throw new VeldridException("There is no texture in slot " + slot);
-            }
-
-            return binding;
+            return _textureBindings.TryGetValue(slot, out binding);
         }
 
-        public OpenGLSamplerBindingSlotInfo GetSamplerBindingInfo(uint slot)
+        public bool GetSamplerBindingInfo(uint slot, out OpenGLSamplerBindingSlotInfo binding)
         {
-            if (!_samplerBindings.TryGetValue(slot, out OpenGLSamplerBindingSlotInfo binding))
-            {
-                throw new VeldridException("There is no sampler in slot " + slot);
-            }
-
-            return binding;
+            return _samplerBindings.TryGetValue(slot, out binding);
         }
 
-        public OpenGLUniformBinding GetUniformBindingForSlot(uint slot)
+        public bool GetUniformBindingForSlot(uint slot, out OpenGLUniformBinding binding)
         {
-            if (!_uniformBindings.TryGetValue(slot, out OpenGLUniformBinding binding))
-            {
-                throw new VeldridException("There is no uniform buffer in slot " + slot);
-            }
-
-            return binding;
+            return _uniformBindings.TryGetValue(slot, out binding);
         }
 
-        public OpenGLShaderStorageBinding GetStorageBufferBindingForSlot(uint slot)
+        public bool GetStorageBufferBindingForSlot(uint slot, out OpenGLShaderStorageBinding binding)
         {
-            if (!_storageBufferBindings.TryGetValue(slot, out OpenGLShaderStorageBinding binding))
-            {
-                throw new VeldridException("There is no storage buffer in slot " + slot);
-            }
-
-            return binding;
+            return _storageBufferBindings.TryGetValue(slot, out binding);
         }
     }
 

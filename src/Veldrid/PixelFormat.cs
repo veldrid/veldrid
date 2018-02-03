@@ -22,10 +22,6 @@
         /// </summary>
         R8_UNorm,
         /// <summary>
-        /// RG component order. Each component is an 8-bit signed normalized integer.
-        /// </summary>
-        R8_G8_SNorm,
-        /// <summary>
         /// Single-channel, 16-bit unsigned integer. Can be used as a depth format.
         /// </summary>
         R16_UNorm,
@@ -34,25 +30,9 @@
         /// </summary>
         R32_G32_B32_A32_Float,
         /// <summary>
-        /// RGBA component order. Each component is a 32-bit unsigned integer.
-        /// </summary>
-        R32_G32_B32_A32_UInt,
-        /// <summary>
         /// Single-channel, 32-bit signed floating-point value. Can be used as a depth format.
         /// </summary>
         R32_Float,
-        /// <summary>
-        /// BC1 block compressed format with no alpha.
-        /// </summary>
-        BC1_Rgb_UNorm,
-        /// <summary>
-        /// BC1 block compressed format with a single-bit alpha channel.
-        /// </summary>
-        BC1_Rgba_UNorm,
-        /// <summary>
-        /// BC2 block compressed format.
-        /// </summary>
-        BC2_UNorm,
         /// <summary>
         /// BC3 block compressed format.
         /// </summary>
@@ -67,5 +47,25 @@
         /// in an 8-bit unsigned integer.
         /// </summary>
         D32_Float_S8_UInt,
+        /// <summary>
+        /// RGBA component order. Each component is a 32-bit unsigned integer.
+        /// </summary>
+        R32_G32_B32_A32_UInt,
+        /// <summary>
+        /// RG component order. Each component is an 8-bit signed normalized integer.
+        /// </summary>
+        R8_G8_SNorm,
+        /// <summary>
+        /// BC1 block compressed format with no alpha.
+        /// </summary>
+        BC1_Rgb_UNorm,
+        /// <summary>
+        /// BC1 block compressed format with a single-bit alpha channel.
+        /// </summary>
+        BC1_Rgba_UNorm,
+        /// <summary>
+        /// BC2 block compressed format.
+        /// </summary>
+        BC2_UNorm,
     }
 }

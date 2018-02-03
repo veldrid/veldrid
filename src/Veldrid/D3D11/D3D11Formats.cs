@@ -28,6 +28,11 @@ namespace Veldrid.D3D11
                     return Format.R32G32B32A32_UInt;
                 case PixelFormat.R32_Float:
                     return depthFormat ? Format.R32_Typeless : Format.R32_Float;
+                case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC1_Rgba_UNorm:
+                    return Format.BC1_UNorm;
+                case PixelFormat.BC2_UNorm:
+                    return Format.BC2_UNorm;
                 case PixelFormat.BC3_UNorm:
                     return Format.BC3_UNorm;
                 case PixelFormat.D24_UNorm_S8_UInt:

@@ -914,7 +914,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public override void UpdateTexture(
+        protected override void UpdateTextureCore(
             Texture texture,
             IntPtr source,
             uint sizeInBytes,

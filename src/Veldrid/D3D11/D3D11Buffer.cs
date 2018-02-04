@@ -56,9 +56,9 @@ namespace Veldrid.D3D11
             {
                 ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
                 {
-                    Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.ExtendedBuffer
+                    Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Buffer
                 };
-                srvDesc.BufferEx.ElementCount = (int)(SizeInBytes / structureByteStride);
+                srvDesc.Buffer.ElementCount = (int)(SizeInBytes / structureByteStride);
                 ShaderResourceView = new ShaderResourceView(device, _buffer, srvDesc);
             }
 

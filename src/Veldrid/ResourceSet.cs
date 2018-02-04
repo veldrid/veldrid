@@ -42,6 +42,11 @@ namespace Veldrid
 #if VALIDATE_USAGE
         private void ValidateResourceKind(ResourceKind kind, BindableResource resource, uint slot)
         {
+            if (resource == null)
+            {
+                return;
+            }
+
             switch (kind)
             {
                 case ResourceKind.UniformBuffer:

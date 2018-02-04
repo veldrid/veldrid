@@ -347,7 +347,9 @@ namespace Veldrid.D3D11
                         BindUniformBuffer(uniformBuffer, cbBase + rbi.Slot, rbi.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
-                        D3D11Buffer storageBufferRO = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
+                        D3D11Buffer storageBufferRO = resource != null
+                            ? Util.AssertSubtype<BindableResource, D3D11Buffer>(resource)
+                            : null;
                         BindStorageBufferView(storageBufferRO, textureBase + rbi.Slot, rbi.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadWrite:
@@ -355,8 +357,13 @@ namespace Veldrid.D3D11
                         BindUnorderedAccessView(null, storageBuffer.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.TextureReadOnly:
-                        D3D11TextureView texView = Util.AssertSubtype<BindableResource, D3D11TextureView>(resource);
-                        UnbindUAVTexture(texView.Target);
+                        D3D11TextureView texView = resource != null
+                            ? Util.AssertSubtype<BindableResource, D3D11TextureView>(resource)
+                            : null;
+                        if (texView != null)
+                        {
+                            UnbindUAVTexture(texView.Target);
+                        }
                         BindTextureView(texView, textureBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.TextureReadWrite:
@@ -711,7 +718,7 @@ namespace Veldrid.D3D11
                 bool bind = false;
                 if (slot < MaxCachedUniformBuffers)
                 {
-                    if (_fragmentBoundTextureViews[slot] != texView)
+                    if (texView == null || _fragmentBoundTextureViews[slot] != texView)
                     {
                         _fragmentBoundTextureViews[slot] = texView;
                         bind = true;
@@ -749,7 +756,7 @@ namespace Veldrid.D3D11
         {
             _context.ComputeShader.SetUnorderedAccessView(0, null);
 
-            ShaderResourceView srv = storageBufferRO.ShaderResourceView;
+            ShaderResourceView srv = storageBufferRO?.ShaderResourceView;
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
                 _context.VertexShader.SetShaderResource(slot, srv);

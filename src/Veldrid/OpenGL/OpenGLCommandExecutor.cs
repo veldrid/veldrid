@@ -1182,25 +1182,18 @@ namespace Veldrid.OpenGL
                 uint denseDepthPitch = FormatHelpers.GetDepthPitch(denseRowPitch, height, srcGLTexture.Format);
                 uint numRows = FormatHelpers.GetNumRows(height, srcGLTexture.Format);
                 uint trueCopySize = denseRowPitch * numRows;
-
-                uint compressedSrcX = srcX / 4;
-                uint compressedSrcY = srcY / 4;
-                uint blockSizeInBytes = FormatHelpers.GetBlockSizeInBytes(srcGLTexture.Format);
-
                 FixedStagingBlock trueCopySrc = _stagingMemoryPool.GetFixedStagingBlock(trueCopySize);
-                for (uint zz = 0; zz < depth; zz++)
-                    for (uint row = 0; row < numRows; row++)
-                    {
-                        Unsafe.CopyBlock(
-                            (byte*)trueCopySrc.Data
-                                + denseDepthPitch * zz
-                                + denseRowPitch * row,
-                            (byte*)block.Data
-                                + fullDepthPitch * (zz + srcZ)
-                                + fullRowPitch * (row + compressedSrcY)
-                                + blockSizeInBytes * compressedSrcX,
-                            denseRowPitch);
-                    }
+
+                Util.CopyTextureRegion(
+                    block.Data,
+                    srcX, srcY, srcZ,
+                    fullRowPitch, fullDepthPitch,
+                    trueCopySrc.Data,
+                    0, 0, 0,
+                    denseRowPitch,
+                    denseDepthPitch,
+                    width, height, depth,
+                    srcGLTexture.Format);
 
                 UpdateTexture(
                     dstGLTexture,
@@ -1248,19 +1241,17 @@ namespace Veldrid.OpenGL
                     uint denseZSliceSize = denseRowSize * height; // Dst depth pitch
                     byte* fullBlockSliceStart = (byte*)fullBlock.Data + fullZSliceSize * srcLayer;
 
-                    for (uint zz = 0; zz < depth; zz++)
-                        for (uint yy = 0; yy < height; yy++)
-                        {
-                            byte* srcRowStart = fullBlockSliceStart
-                                + fullZSliceSize * (zz + srcZ)
-                                + fullRowSize * (yy + srcY)
-                                + (srcX * pixelSize);
-                            byte* dstRowStart = (byte*)block.Data
-                                + denseZSliceSize * zz
-                                + denseRowSize * yy;
-
-                            Unsafe.CopyBlock(dstRowStart, srcRowStart, denseRowSize);
-                        }
+                    Util.CopyTextureRegion(
+                        fullBlockSliceStart,
+                        srcX, srcY, srcZ,
+                        fullRowSize,
+                        fullZSliceSize,
+                        block.Data,
+                        0, 0, 0,
+                        denseRowSize,
+                        denseZSliceSize,
+                        width, height, depth,
+                        srcGLTexture.Format);
 
                     fullBlock.Free();
                 }

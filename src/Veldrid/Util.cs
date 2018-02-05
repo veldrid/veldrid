@@ -182,5 +182,57 @@ namespace Veldrid
 
             return layerPitch * arrayLayer;
         }
+
+        public static unsafe void CopyTextureRegion(
+            void* src,
+            uint srcX, uint srcY, uint srcZ,
+            uint srcRowPitch,
+            uint srcDepthPitch,
+            void* dst,
+            uint dstX, uint dstY, uint dstZ,
+            uint dstRowPitch,
+            uint dstDepthPitch,
+            uint width,
+            uint height,
+            uint depth,
+            PixelFormat format)
+        {
+            uint blockSize = FormatHelpers.IsCompressedFormat(format) ? 4u : 1u;
+            uint blockSizeInBytes = blockSize > 1 ? FormatHelpers.GetBlockSizeInBytes(format) : FormatHelpers.GetSizeInBytes(format);
+            uint compressedSrcX = srcX / blockSize;
+            uint compressedSrcY = srcY / blockSize;
+            uint compressedDstX = dstX / blockSize;
+            uint compressedDstY = dstY / blockSize;
+            uint numRows = FormatHelpers.GetNumRows(height, format);
+            uint rowSize = width / blockSize * blockSizeInBytes;
+
+            if (srcRowPitch == dstRowPitch && srcDepthPitch == dstDepthPitch)
+            {
+                uint totalCopySize = depth * srcDepthPitch;
+                Buffer.MemoryCopy(
+                    src,
+                    dst,
+                    totalCopySize,
+                    totalCopySize);
+            }
+            else
+            {
+                for (uint zz = 0; zz < depth; zz++)
+                    for (uint yy = 0; yy < numRows; yy++)
+                    {
+                        byte* rowCopyDst = (byte*)dst
+                            + dstDepthPitch * (zz + dstZ)
+                            + dstRowPitch * (yy + compressedDstY)
+                            + blockSizeInBytes * compressedDstX;
+
+                        byte* rowCopySrc = (byte*)src
+                            + srcDepthPitch * (zz + srcZ)
+                            + srcRowPitch * (yy + compressedSrcY)
+                            + blockSizeInBytes * compressedSrcX;
+
+                        Unsafe.CopyBlock(rowCopyDst, rowCopySrc, rowSize);
+                    }
+            }
+        }
     }
 }

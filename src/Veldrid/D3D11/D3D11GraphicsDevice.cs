@@ -458,64 +458,15 @@ namespace Veldrid.D3D11
                 uint denseRowSize = FormatHelpers.GetRowPitch(width, texture.Format);
                 uint denseSliceSize = FormatHelpers.GetDepthPitch(denseRowSize, height, texture.Format);
 
-                if (x == 0 && y == 0 && z == 0
-                    && map.RowPitch == denseRowSize)
-                {
-                    if (map.DepthPitch == denseSliceSize)
-                    {
-                        System.Buffer.MemoryCopy(source.ToPointer(), map.Data.ToPointer(), sizeInBytes, sizeInBytes);
-                    }
-                    else
-                    {
-                        for (uint zz = 0; zz < depth; zz++)
-                        {
-                            byte* dstSliceStart = (byte*)map.Data
-                                + map.DepthPitch * zz;
-                            byte* srcSliceStart = (byte*)source
-                                + denseSliceSize * zz;
-                            System.Buffer.MemoryCopy(srcSliceStart, dstSliceStart, denseSliceSize, denseSliceSize);
-                        }
-                    }
-                }
-                else
-                {
-                    if (!FormatHelpers.IsCompressedFormat(texture.Format))
-                    {
-                        uint pixelSizeInBytes = FormatHelpers.GetSizeInBytes(texture.Format);
-                        for (uint zz = 0; zz < depth; zz++)
-                            for (uint yy = 0; yy < height; yy += 1)
-                            {
-                                byte* dstRowStart = ((byte*)map.Data)
-                                    + (map.DepthPitch * (zz + z))
-                                    + (map.RowPitch * (yy + y))
-                                    + (pixelSizeInBytes * x);
-                                byte* srcRowStart = ((byte*)source.ToPointer())
-                                    + (width * height * pixelSizeInBytes * zz)
-                                    + (width * pixelSizeInBytes * yy);
-                                Unsafe.CopyBlock(dstRowStart, srcRowStart, width * pixelSizeInBytes);
-                            }
-                    }
-                    else
-                    {
-                        uint numRows = FormatHelpers.GetNumRows(height, texture.Format);
-                        uint compressedX = x / 4;
-                        uint compressedY = y / 4;
-                        uint blockSizeInBytes = FormatHelpers.GetBlockSizeInBytes(texture.Format);
-
-                        for (uint zz = 0; zz < depth; zz++)
-                            for (uint row = 0; row < numRows; row++)
-                            {
-                                byte* dstRowStart = ((byte*)map.Data)
-                                    + (map.DepthPitch * (zz + z))
-                                    + (map.RowPitch * (row + compressedY))
-                                    + (blockSizeInBytes * compressedX);
-                                byte* srcRowStart = ((byte*)source.ToPointer())
-                                    + (denseSliceSize * zz)
-                                    + (denseRowSize * row);
-                                Unsafe.CopyBlock(dstRowStart, srcRowStart, denseRowSize);
-                            }
-                    }
-                }
+                Util.CopyTextureRegion(
+                    source.ToPointer(),
+                    0, 0, 0,
+                    denseRowSize, denseSliceSize,
+                    map.Data.ToPointer(),
+                    x, y, z,
+                    map.RowPitch, map.DepthPitch,
+                    width, height, depth,
+                    texture.Format);
 
                 UnmapCore(texture, subresource);
             }

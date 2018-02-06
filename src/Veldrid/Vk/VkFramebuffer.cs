@@ -43,7 +43,7 @@ namespace Veldrid.Vk
                 VkAttachmentDescription colorAttachmentDesc = new VkAttachmentDescription();
                 colorAttachmentDesc.format = vkColorTex.VkFormat;
                 colorAttachmentDesc.samples = vkColorTex.VkSampleCount;
-                colorAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
+                colorAttachmentDesc.loadOp = VkAttachmentLoadOp.Load;
                 colorAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
                 colorAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
                 colorAttachmentDesc.stencilStoreOp = VkAttachmentStoreOp.DontCare;
@@ -69,7 +69,7 @@ namespace Veldrid.Vk
                 bool hasStencil = FormatHelpers.IsStencilFormat(vkDepthTex.Format);
                 depthAttachmentDesc.format = vkDepthTex.VkFormat;
                 depthAttachmentDesc.samples = vkDepthTex.VkSampleCount;
-                depthAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
+                depthAttachmentDesc.loadOp = VkAttachmentLoadOp.Load;
                 depthAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
                 depthAttachmentDesc.stencilLoadOp = hasStencil ? VkAttachmentLoadOp.Load : VkAttachmentLoadOp.DontCare;
                 depthAttachmentDesc.stencilStoreOp = hasStencil ? VkAttachmentStoreOp.Store : VkAttachmentStoreOp.DontCare;

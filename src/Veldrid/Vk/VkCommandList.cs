@@ -386,6 +386,12 @@ namespace Veldrid.Vk
             {
                 EndCurrentRenderPass();
             }
+            else if (!_currentFramebufferEverActive && _currentFramebuffer != null)
+            {
+                // This forces any queued up texture clears to be emitted.
+                BeginCurrentRenderPass();
+                EndCurrentRenderPass();
+            }
 
             VkFramebufferBase vkFB = Util.AssertSubtype<Framebuffer, VkFramebufferBase>(fb);
             _currentFramebuffer = vkFB;

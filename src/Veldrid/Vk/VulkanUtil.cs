@@ -152,6 +152,7 @@ namespace Veldrid.Vk
             uint levelCount,
             uint baseArrayLayer,
             uint layerCount,
+            VkImageAspectFlags aspectMask,
             VkImageLayout oldLayout,
             VkImageLayout newLayout)
         {
@@ -162,7 +163,7 @@ namespace Veldrid.Vk
             barrier.srcQueueFamilyIndex = QueueFamilyIgnored;
             barrier.dstQueueFamilyIndex = QueueFamilyIgnored;
             barrier.image = image;
-            barrier.subresourceRange.aspectMask = VkImageAspectFlags.Color;
+            barrier.subresourceRange.aspectMask = aspectMask;
             barrier.subresourceRange.baseMipLevel = baseMipLevel;
             barrier.subresourceRange.levelCount = levelCount;
             barrier.subresourceRange.baseArrayLayer = baseArrayLayer;

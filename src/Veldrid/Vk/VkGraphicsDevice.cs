@@ -1065,6 +1065,42 @@ namespace Veldrid.Vk
             return false;
         }
 
+        internal void ClearColorTexture(VkTexture texture, VkClearColorValue color)
+        {
+            VkImageSubresourceRange range = new VkImageSubresourceRange(
+                 VkImageAspectFlags.Color,
+                 0,
+                 texture.MipLevels,
+                 0,
+                 texture.ArrayLayers);
+            SharedCommandPool pool = GetFreeCommandPool();
+            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.TransferDstOptimal);
+            vkCmdClearColorImage(cb, texture.OptimalDeviceImage, VkImageLayout.TransferDstOptimal, &color, 1, &range);
+            pool.EndAndSubmit(cb);
+        }
+
+        internal void ClearDepthTexture(VkTexture texture, VkClearDepthStencilValue clearValue)
+        {
+            VkImageSubresourceRange range = new VkImageSubresourceRange(
+                 VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil,
+                 0,
+                 texture.MipLevels,
+                 0,
+                 texture.ArrayLayers);
+            SharedCommandPool pool = GetFreeCommandPool();
+            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.TransferDstOptimal);
+            vkCmdClearDepthStencilImage(
+                cb,
+                texture.OptimalDeviceImage,
+                VkImageLayout.TransferDstOptimal,
+                &clearValue,
+                1,
+                &range);
+            pool.EndAndSubmit(cb);
+        }
+
         private class SharedCommandPool
         {
             private readonly VkGraphicsDevice _gd;

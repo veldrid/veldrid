@@ -170,6 +170,8 @@ namespace Veldrid.Vk
                 result = vkBindBufferMemory(_gd.Device, _stagingBuffer, _memoryBlock.DeviceMemory, _memoryBlock.Offset);
                 CheckResult(result);
             }
+
+            ClearIfRenderTarget();
         }
 
         // Used to construct Swapchain textures.
@@ -197,7 +199,22 @@ namespace Veldrid.Vk
             SampleCount = sampleCount;
             VkSampleCount = VkFormats.VdToVkSampleCount(sampleCount);
             _optimalImage = existingImage;
-            _imageLayouts = new[] { VkImageLayout.Preinitialized };
+            _imageLayouts = new[] { VkImageLayout.Undefined };
+
+            ClearIfRenderTarget();
+        }
+
+        private void ClearIfRenderTarget()
+        {
+            // If the image is going to be used as a render target, we need to clear the data before its first use.
+            if ((Usage & TextureUsage.RenderTarget) != 0)
+            {
+                _gd.ClearColorTexture(this, new VkClearColorValue(0, 0, 0, 0));
+            }
+            else if ((Usage & TextureUsage.DepthStencil) != 0)
+            {
+                _gd.ClearDepthTexture(this, new VkClearDepthStencilValue(0, 0));
+            }
         }
 
         internal VkSubresourceLayout GetSubresourceLayout(uint subresource)
@@ -267,6 +284,17 @@ namespace Veldrid.Vk
 #endif
             if (oldLayout != newLayout)
             {
+                VkImageAspectFlags aspectMask;
+                if ((Usage & TextureUsage.DepthStencil) != 0)
+                {
+                    aspectMask = FormatHelpers.IsStencilFormat(Format)
+                        ? aspectMask = VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
+                        : aspectMask = VkImageAspectFlags.Depth;
+                }
+                else
+                {
+                    aspectMask = VkImageAspectFlags.Color;
+                }
                 VulkanUtil.TransitionImageLayout(
                     cb,
                     OptimalDeviceImage,
@@ -274,6 +302,7 @@ namespace Veldrid.Vk
                     levelCount,
                     baseArrayLayer,
                     layerCount,
+                    aspectMask,
                     _imageLayouts[CalculateSubresource(baseMipLevel, baseArrayLayer)],
                     newLayout);
 

@@ -682,7 +682,11 @@ namespace Veldrid.OpenGL
         public void SetViewport(uint index, ref Viewport viewport)
         {
             _viewports[(int)index] = viewport;
-            glViewportIndexed(index, viewport.X, viewport.Y, viewport.Width, viewport.Height);
+
+            float left = viewport.X;
+            float bottom = _fb.Height - (viewport.Y + viewport.Height);
+
+            glViewportIndexed(index, left, bottom, viewport.Width, viewport.Height);
             CheckLastError();
 
             glDepthRangeIndexed(index, viewport.MinDepth, viewport.MaxDepth);

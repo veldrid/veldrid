@@ -524,6 +524,8 @@ namespace Veldrid.OpenGL
             uint ubBaseIndex = GetUniformBaseIndex(slot, graphics);
             uint ssboBaseIndex = GetShaderStorageBaseIndex(slot, graphics);
 
+            uint ubOffset = 0;
+            uint ssboOffset = 0;
             for (uint element = 0; element < glResourceSet.Resources.Length; element++)
             {
                 ResourceKind kind = layoutElements[element].Kind;
@@ -532,6 +534,7 @@ namespace Veldrid.OpenGL
                 {
                     case ResourceKind.UniformBuffer:
                         OpenGLBuffer glUB = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
+                        glUB.EnsureResourcesCreated();
                         if (pipeline.GetUniformBindingForSlot(slot, element, out OpenGLUniformBinding uniformBindingInfo))
                         {
                             if (glUB.SizeInBytes < uniformBindingInfo.BlockSize)
@@ -539,11 +542,13 @@ namespace Veldrid.OpenGL
                                 throw new VeldridException(
                                     $"Not enough data in uniform buffer. Shader expects at least {uniformBindingInfo.BlockSize}, but buffer only contains {glUB.SizeInBytes}");
                             }
-                            glUniformBlockBinding(pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + element);
+                            glUniformBlockBinding(pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + ubOffset);
                             CheckLastError();
 
-                            glBindBufferRange(BufferRangeTarget.UniformBuffer, ubBaseIndex + element, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
+                            glBindBufferRange(BufferRangeTarget.UniformBuffer, ubBaseIndex + ubOffset, glUB.Buffer, IntPtr.Zero, (UIntPtr)glUB.SizeInBytes);
                             CheckLastError();
+
+                            ubOffset += 1;
                         }
                         break;
                     case ResourceKind.StructuredBufferReadWrite:
@@ -551,11 +556,13 @@ namespace Veldrid.OpenGL
                         OpenGLBuffer glBuffer = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
                         if (pipeline.GetStorageBufferBindingForSlot(slot, element, out OpenGLShaderStorageBinding shaderStorageBinding))
                         {
-                            glShaderStorageBlockBinding(pipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + element);
+                            glShaderStorageBlockBinding(pipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + ssboOffset);
                             CheckLastError();
 
-                            glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, ssboBaseIndex + element, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
+                            glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, ssboBaseIndex + ssboOffset, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
                             CheckLastError();
+
+                            ssboOffset += 1;
                         }
                         break;
                     case ResourceKind.TextureReadOnly:

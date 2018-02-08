@@ -116,6 +116,7 @@ namespace Veldrid.D3D11
         public override void Dispose()
         {
             ShaderResourceView.Dispose();
+            UnorderedAccessView?.Dispose();
         }
     }
 }

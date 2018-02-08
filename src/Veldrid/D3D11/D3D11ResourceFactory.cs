@@ -1,8 +1,9 @@
 ﻿using SharpDX.Direct3D11;
+using System;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11ResourceFactory : ResourceFactory
+    internal class D3D11ResourceFactory : ResourceFactory, IDisposable
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly Device _device;
@@ -75,6 +76,11 @@ namespace Veldrid.D3D11
         public override Fence CreateFence(bool signaled)
         {
             return new D3D11Fence(signaled);
+        }
+
+        public void Dispose()
+        {
+            _cache.Dispose();
         }
     }
 }

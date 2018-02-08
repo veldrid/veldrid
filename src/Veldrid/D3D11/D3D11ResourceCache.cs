@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11ResourceCache
+    internal class D3D11ResourceCache : IDisposable
     {
         private readonly Device _device;
 
@@ -189,6 +189,26 @@ namespace Veldrid.D3D11
                     return "COLOR";
                 default:
                     throw Illegal.Value<VertexElementSemantic>();
+            }
+        }
+
+        public void Dispose()
+        {
+            foreach (KeyValuePair<BlendStateDescription, BlendState> kvp in _blendStates)
+            {
+                kvp.Value.Dispose();
+            }
+            foreach (KeyValuePair<DepthStencilStateDescription, DepthStencilState> kvp in _depthStencilStates)
+            {
+                kvp.Value.Dispose();
+            }
+            foreach (KeyValuePair<D3D11RasterizerStateCacheKey, RasterizerState> kvp in _rasterizerStates)
+            {
+                kvp.Value.Dispose();
+            }
+            foreach (KeyValuePair<InputLayoutCacheKey, InputLayout> kvp in _inputLayouts)
+            {
+                kvp.Value.Dispose();
             }
         }
 

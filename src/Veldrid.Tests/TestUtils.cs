@@ -139,13 +139,10 @@ namespace Veldrid.Tests
 
         public void Dispose()
         {
-            _window.Close();
             GD.WaitForIdle();
             _factory.DisposeCollector.DisposeAll();
-            if (GD.BackendType != GraphicsBackend.OpenGL)
-            {
-                GD.Dispose();
-            }
+            GD.Dispose();
+            _window.Close();
         }
     }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Xunit;
@@ -685,6 +686,175 @@ namespace Veldrid.Tests
                 }
 
             GD.Unmap(dst);
+        }
+
+        [Theory]
+        [MemberData(nameof(FormatCoverageData))]
+        public unsafe void FormatCoverage_CopyThenRead(
+            PixelFormat format, int rBits, int gBits, int bBits, int aBits,
+            TextureType srcType,
+            uint srcWidth, uint srcHeight, uint srcDepth, uint srcMipLevels, uint srcArrayLayers,
+            TextureType dstType,
+            uint dstWidth, uint dstHeight, uint dstDepth, uint dstMipLevels, uint dstArrayLayers,
+            uint copyWidth, uint copyHeight, uint copyDepth,
+            uint srcX, uint srcY, uint srcZ,
+            uint srcMipLevel, uint srcArrayLayer,
+            uint dstX, uint dstY, uint dstZ,
+            uint dstMipLevel, uint dstArrayLayer)
+        {
+            Texture srcTex = RF.CreateTexture(new TextureDescription(
+                srcWidth, srcHeight, srcDepth, srcMipLevels, srcArrayLayers,
+                format, TextureUsage.Staging, srcType));
+
+            TextureDataReaderWriter tdrw = new TextureDataReaderWriter(rBits, gBits, bBits, aBits);
+            byte[] dataArray = tdrw.GetDataArray(srcWidth, srcHeight, srcDepth);
+            long rowPitch = srcWidth * tdrw.PixelBytes;
+            long depthPitch = rowPitch * srcHeight;
+            fixed (byte* dataPtr = dataArray)
+            {
+                for (uint z = 0; z < srcDepth; z++)
+                {
+                    for (uint y = 0; y < srcHeight; y++)
+                    {
+                        for (uint x = 0; x < srcWidth; x++)
+                        {
+                            long offset = z * depthPitch + y * rowPitch + x * tdrw.PixelBytes;
+                            WidePixel pixel = tdrw.GetTestPixel(x, y, z);
+                            tdrw.WritePixel(dataPtr + offset, pixel);
+                        }
+                    }
+                }
+
+                GD.UpdateTexture(
+                    srcTex, (IntPtr)dataPtr, (uint)dataArray.Length,
+                    0, 0, 0, srcWidth, srcHeight, srcDepth, 0, 0);
+            }
+
+            Texture dstTex = RF.CreateTexture(new TextureDescription(
+                dstWidth, dstHeight, dstDepth, dstMipLevels, dstArrayLayers,
+                format, TextureUsage.Staging, dstType));
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+
+            cl.CopyTexture(
+                srcTex, srcX, srcY, srcZ, srcMipLevel, srcArrayLayer,
+                dstTex, dstX, dstY, dstZ, dstMipLevel, dstArrayLayer,
+                copyWidth, copyHeight, copyDepth, 1);
+
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResource map = GD.Map(dstTex, MapMode.Read);
+            for (uint z = 0; z < copyDepth; z++)
+            {
+                for (uint y = 0; y < copyHeight; y++)
+                {
+                    for (uint x = 0; x < copyWidth; x++)
+                    {
+                        long offset = (z + dstZ) * map.DepthPitch
+                            + (y + dstY) * map.RowPitch
+                            + (x + dstX) * tdrw.PixelBytes;
+                        WidePixel expected = tdrw.GetTestPixel(x, y, z);
+                        WidePixel actual = tdrw.ReadPixel((byte*)map.Data + offset);
+                        Assert.Equal(expected, actual);
+                    }
+                }
+            }
+
+            GD.Unmap(dstTex);
+        }
+
+        public static IEnumerable<object[]> FormatCoverageData()
+        {
+            foreach (FormatProps props in s_allFormatProps)
+            {
+                yield return new object[]
+                {
+                    props.Format, props.RedBits, props.GreenBits, props.BlueBits, props.AlphaBits,
+                    TextureType.Texture2D,
+                    64, 64, 1, 1, 1,
+                    TextureType.Texture2D,
+                    64, 64, 1, 1, 1,
+                    64, 64, 1,
+                    0, 0, 0,
+                    0, 0,
+                    0, 0, 0,
+                    0, 0
+                };
+            }
+        }
+
+        private static readonly FormatProps[] s_allFormatProps =
+        {
+            new FormatProps(PixelFormat.R8_UNorm, 8, 0, 0, 0),
+            new FormatProps(PixelFormat.R8_SNorm, 8, 0, 0, 0),
+            new FormatProps(PixelFormat.R8_UInt, 8, 0, 0, 0),
+            new FormatProps(PixelFormat.R8_SInt, 8, 0, 0, 0),
+
+            new FormatProps(PixelFormat.R16_UNorm, 16, 0, 0, 0),
+            new FormatProps(PixelFormat.R16_SNorm, 16, 0, 0, 0),
+            new FormatProps(PixelFormat.R16_UInt, 16, 0, 0, 0),
+            new FormatProps(PixelFormat.R16_SInt, 16, 0, 0, 0),
+            new FormatProps(PixelFormat.R16_Float, 16, 0, 0, 0),
+
+            new FormatProps(PixelFormat.R32_UInt, 32, 0, 0, 0),
+            new FormatProps(PixelFormat.R32_SInt, 32, 0, 0, 0),
+            new FormatProps(PixelFormat.R32_Float, 32, 0, 0, 0),
+
+            new FormatProps(PixelFormat.R8_G8_UNorm, 8, 8, 0, 0),
+            new FormatProps(PixelFormat.R8_G8_SNorm, 8, 8, 0, 0),
+            new FormatProps(PixelFormat.R8_G8_UInt, 8, 8, 0, 0),
+            new FormatProps(PixelFormat.R8_G8_SInt, 8, 8, 0, 0),
+
+            new FormatProps(PixelFormat.R16_G16_UNorm, 16, 16, 0, 0),
+            new FormatProps(PixelFormat.R16_G16_SNorm, 16, 16, 0, 0),
+            new FormatProps(PixelFormat.R16_G16_UInt, 16, 16, 0, 0),
+            new FormatProps(PixelFormat.R16_G16_SInt, 16, 16, 0, 0),
+            new FormatProps(PixelFormat.R16_G16_Float, 16, 16, 0, 0),
+
+            new FormatProps(PixelFormat.R32_G32_UInt, 32, 32, 0, 0),
+            new FormatProps(PixelFormat.R32_G32_SInt, 32, 32, 0, 0),
+            new FormatProps(PixelFormat.R32_G32_Float, 32, 32, 0, 0),
+
+            new FormatProps(PixelFormat.B8_G8_R8_A8_UNorm, 8, 8, 8, 8),
+            new FormatProps(PixelFormat.R8_G8_B8_A8_UNorm, 8, 8, 8, 8),
+            new FormatProps(PixelFormat.R8_G8_B8_A8_SNorm, 8, 8, 8, 8),
+            new FormatProps(PixelFormat.R8_G8_B8_A8_UInt, 8, 8, 8, 8),
+            new FormatProps(PixelFormat.R8_G8_B8_A8_SInt, 8, 8, 8, 8),
+
+            new FormatProps(PixelFormat.R16_G16_B16_A16_UNorm, 16, 16, 16, 16),
+            new FormatProps(PixelFormat.R16_G16_B16_A16_SNorm, 16, 16, 16, 16),
+            new FormatProps(PixelFormat.R16_G16_B16_A16_UInt, 16, 16, 16, 16),
+            new FormatProps(PixelFormat.R16_G16_B16_A16_SInt, 16, 16, 16, 16),
+            new FormatProps(PixelFormat.R16_G16_B16_A16_Float, 16, 16, 16, 16),
+
+            new FormatProps(PixelFormat.R32_G32_B32_A32_UInt, 32, 32, 32, 32),
+            new FormatProps(PixelFormat.R32_G32_B32_A32_SInt, 32, 32, 32, 32),
+            new FormatProps(PixelFormat.R32_G32_B32_A32_Float, 32, 32, 32, 32),
+
+            new FormatProps(PixelFormat.R10_G10_B10_A2_UInt, 10, 10, 10, 2),
+            new FormatProps(PixelFormat.R10_G10_B10_A2_UNorm, 10, 10, 10, 2),
+            new FormatProps(PixelFormat.R11_G11_B10_Float, 11, 11, 10, 0)
+        };
+
+        struct FormatProps
+        {
+            public readonly PixelFormat Format;
+            public readonly int RedBits;
+            public readonly int BlueBits;
+            public readonly int GreenBits;
+            public readonly int AlphaBits;
+
+            public FormatProps(PixelFormat format, int redBits, int blueBits, int greenBits, int alphaBits)
+            {
+                Format = format;
+                RedBits = redBits;
+                BlueBits = blueBits;
+                GreenBits = greenBits;
+                AlphaBits = alphaBits;
+            }
         }
     }
 

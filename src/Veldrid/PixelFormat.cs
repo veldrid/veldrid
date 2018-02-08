@@ -67,5 +67,52 @@
         /// BC2 block compressed format.
         /// </summary>
         BC2_UNorm,
+        /// <summary>
+        /// A 32-bit packed format. The 10-bit R component occupies bits 0..9, the 10-bit G component occupies bits 10..19,
+        /// the 10-bit A component occupies 20..29, and the 2-bit A component occupies bits 30..31. Each value is an unsigned,
+        /// normalized integer.
+        /// </summary>
+        R10_G10_B10_A2_UNorm,
+        /// <summary>
+        /// A 32-bit packed format. The 10-bit R component occupies bits 0..9, the 10-bit G component occupies bits 10..19,
+        /// the 10-bit A component occupies 20..29, and the 2-bit A component occupies bits 30..31. Each value is an unsigned
+        /// integer.
+        /// </summary>
+        R10_G10_B10_A2_UInt,
+        /// <summary>
+        /// A 32-bit packed format. The 11-bit R componnent occupies bits 0..10, the 11-bit G component occupies bits 11..21,
+        /// and the 10-bit B component occupies bits 22..31. Each value is an unsigned floating point value.
+        /// </summary>
+        R11_G11_B10_Float,
+        R8_SNorm,
+        R8_UInt,
+        R8_SInt,
+        R16_SNorm,
+        R16_UInt,
+        R16_SInt,
+        R16_Float,
+        R32_UInt,
+        R32_SInt,
+        R8_G8_UNorm,
+        R8_G8_UInt,
+        R8_G8_SInt,
+        R16_G16_UNorm,
+        R16_G16_SNorm,
+        R16_G16_UInt,
+        R16_G16_SInt,
+        R16_G16_Float,
+        R32_G32_UInt,
+        R32_G32_SInt,
+        R32_G32_Float,
+
+        R8_G8_B8_A8_SNorm,
+        R8_G8_B8_A8_UInt,
+        R8_G8_B8_A8_SInt,
+        R16_G16_B16_A16_UNorm,
+        R16_G16_B16_A16_SNorm,
+        R16_G16_B16_A16_UInt,
+        R16_G16_B16_A16_SInt,
+        R16_G16_B16_A16_Float,
+        R32_G32_B32_A32_SInt,
     }
 }

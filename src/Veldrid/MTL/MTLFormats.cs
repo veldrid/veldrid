@@ -9,8 +9,89 @@ namespace Veldrid.MTL
         {
             switch (format)
             {
+                case PixelFormat.R8_UNorm:
+                    return MTLPixelFormat.R8Unorm;
+                case PixelFormat.R8_SNorm:
+                    return MTLPixelFormat.R8Snorm;
+                case PixelFormat.R8_UInt:
+                    return MTLPixelFormat.R8Uint;
+                case PixelFormat.R8_SInt:
+                    return MTLPixelFormat.R8Sint;
+
+                case PixelFormat.R16_UNorm:
+                    return depthFormat ? MTLPixelFormat.Depth16Unorm : MTLPixelFormat.R16Unorm;
+                case PixelFormat.R16_SNorm:
+                    return MTLPixelFormat.R16Snorm;
+                case PixelFormat.R16_UInt:
+                    return MTLPixelFormat.R16Uint;
+                case PixelFormat.R16_SInt:
+                    return MTLPixelFormat.R16Sint;
+                case PixelFormat.R16_Float:
+                    return MTLPixelFormat.R16Float;
+
+                case PixelFormat.R32_UInt:
+                    return MTLPixelFormat.R32Uint;
+                case PixelFormat.R32_SInt:
+                    return MTLPixelFormat.R32Sint;
+                case PixelFormat.R32_Float:
+                    return depthFormat ? MTLPixelFormat.Depth32Float : MTLPixelFormat.R32Float;
+
+                case PixelFormat.R8_G8_UNorm:
+                    return MTLPixelFormat.RG8Unorm;
+                case PixelFormat.R8_G8_SNorm:
+                    return MTLPixelFormat.RG8Snorm;
+                case PixelFormat.R8_G8_UInt:
+                    return MTLPixelFormat.RG8Uint;
+                case PixelFormat.R8_G8_SInt:
+                    return MTLPixelFormat.RG8Sint;
+
+                case PixelFormat.R16_G16_UNorm:
+                    return MTLPixelFormat.RG16Unorm;
+                case PixelFormat.R16_G16_SNorm:
+                    return MTLPixelFormat.RG16Snorm;
+                case PixelFormat.R16_G16_UInt:
+                    return MTLPixelFormat.RG16Uint;
+                case PixelFormat.R16_G16_SInt:
+                    return MTLPixelFormat.RG16Sint;
+                case PixelFormat.R16_G16_Float:
+                    return MTLPixelFormat.RG16Float;
+
+                case PixelFormat.R32_G32_UInt:
+                    return MTLPixelFormat.RG32Uint;
+                case PixelFormat.R32_G32_SInt:
+                    return MTLPixelFormat.RG32Sint;
+                case PixelFormat.R32_G32_Float:
+                    return MTLPixelFormat.RG32Float;
+
+                case PixelFormat.R8_G8_B8_A8_UNorm:
+                    return MTLPixelFormat.RGBA8Unorm;
                 case PixelFormat.B8_G8_R8_A8_UNorm:
                     return MTLPixelFormat.BGRA8Unorm;
+                case PixelFormat.R8_G8_B8_A8_SNorm:
+                    return MTLPixelFormat.RGBA8Snorm;
+                case PixelFormat.R8_G8_B8_A8_UInt:
+                    return MTLPixelFormat.RGBA8Uint;
+                case PixelFormat.R8_G8_B8_A8_SInt:
+                    return MTLPixelFormat.RGBA8Sint;
+
+                case PixelFormat.R16_G16_B16_A16_UNorm:
+                    return MTLPixelFormat.RGBA16Unorm;
+                case PixelFormat.R16_G16_B16_A16_SNorm:
+                    return MTLPixelFormat.RGBA16Snorm;
+                case PixelFormat.R16_G16_B16_A16_UInt:
+                    return MTLPixelFormat.RGBA16Uint;
+                case PixelFormat.R16_G16_B16_A16_SInt:
+                    return MTLPixelFormat.RGBA16Sint;
+                case PixelFormat.R16_G16_B16_A16_Float:
+                    return MTLPixelFormat.RGBA16Float;
+
+                case PixelFormat.R32_G32_B32_A32_UInt:
+                    return MTLPixelFormat.RGBA32Uint;
+                case PixelFormat.R32_G32_B32_A32_SInt:
+                    return MTLPixelFormat.RGBA32Sint;
+                case PixelFormat.R32_G32_B32_A32_Float:
+                    return MTLPixelFormat.RGBA32Float;
+
                 case PixelFormat.BC1_Rgb_UNorm:
                 case PixelFormat.BC1_Rgba_UNorm:
                     return MTLPixelFormat.BC1_RGBA;
@@ -18,24 +99,19 @@ namespace Veldrid.MTL
                     return MTLPixelFormat.BC2_RGBA;
                 case PixelFormat.BC3_UNorm:
                     return MTLPixelFormat.BC3_RGBA;
+
                 case PixelFormat.D24_UNorm_S8_UInt:
                     return MTLPixelFormat.Depth24Unorm_Stencil8;
                 case PixelFormat.D32_Float_S8_UInt:
                     return MTLPixelFormat.Depth32Float_Stencil8;
-                case PixelFormat.R16_UNorm:
-                    return depthFormat ? MTLPixelFormat.Depth16Unorm : MTLPixelFormat.R16Unorm;
-                case PixelFormat.R32_Float:
-                    return depthFormat ? MTLPixelFormat.Depth32Float : MTLPixelFormat.R32Float;
-                case PixelFormat.R32_G32_B32_A32_Float:
-                    return MTLPixelFormat.RGBA32Float;
-                case PixelFormat.R32_G32_B32_A32_UInt:
-                    return MTLPixelFormat.RGBA32Uint;
-                case PixelFormat.R8_G8_B8_A8_UNorm:
-                    return MTLPixelFormat.RGBA8Unorm;
-                case PixelFormat.R8_UNorm:
-                    return MTLPixelFormat.R8Unorm;
-                case PixelFormat.R8_G8_SNorm:
-                    return MTLPixelFormat.RG8Snorm;
+
+                case PixelFormat.R10_G10_B10_A2_UNorm:
+                    return MTLPixelFormat.RGB10A2Unorm;
+                case PixelFormat.R10_G10_B10_A2_UInt:
+                    return MTLPixelFormat.RGB10A2Uint;
+                case PixelFormat.R11_G11_B10_Float:
+                    return MTLPixelFormat.RG11B10Float;
+
                 default:
                     throw Illegal.Value<PixelFormat>();
             }

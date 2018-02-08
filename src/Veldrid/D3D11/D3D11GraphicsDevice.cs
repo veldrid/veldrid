@@ -13,6 +13,7 @@ namespace Veldrid.D3D11
     {
         private readonly SharpDX.Direct3D11.Device _device;
         private readonly DeviceContext _immediateContext;
+        private readonly D3D11ResourceFactory _d3d11ResourceFactory;
         private readonly SwapChain _swapChain;
         private D3D11Framebuffer _swapChainFramebuffer;
         private readonly bool _supportsConcurrentResources;
@@ -30,7 +31,7 @@ namespace Veldrid.D3D11
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
-        public override ResourceFactory ResourceFactory { get; }
+        public override ResourceFactory ResourceFactory => _d3d11ResourceFactory;
 
         public override Framebuffer SwapchainFramebuffer => _swapChainFramebuffer;
 
@@ -84,8 +85,9 @@ namespace Veldrid.D3D11
 
             Factory factory = _swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(hwnd, WindowAssociationFlags.IgnoreAll);
+            factory.Dispose();
 
-            ResourceFactory = new D3D11ResourceFactory(this);
+            _d3d11ResourceFactory = new D3D11ResourceFactory(this);
             RecreateSwapchainFramebuffer(width, height);
 
             PostDeviceCreated();
@@ -167,7 +169,7 @@ namespace Veldrid.D3D11
             _immediateContext = _device.ImmediateContext;
             _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
 
-            ResourceFactory = new D3D11ResourceFactory(this);
+            _d3d11ResourceFactory = new D3D11ResourceFactory(this);
             RecreateSwapchainFramebuffer(width, height);
 
             PostDeviceCreated();
@@ -187,7 +189,15 @@ namespace Veldrid.D3D11
                 d3dCL.Reset();
             }
 
-            _swapChainFramebuffer?.Dispose();
+            if (_swapChainFramebuffer != null)
+            {
+                if (_swapChainFramebuffer.DepthTarget.HasValue)
+                {
+                    _swapChainFramebuffer.DepthTarget.Value.Target.Dispose();
+                }
+                _swapChainFramebuffer.Dispose();
+            }
+
 
             int actualWidth = (int)(width * _pixelScale);
             int actualHeight = (int)(height * _pixelScale);
@@ -566,11 +576,24 @@ namespace Veldrid.D3D11
 
         protected override void PlatformDispose()
         {
+            _d3d11ResourceFactory.Dispose();
+            if (_swapChainFramebuffer.DepthTarget.HasValue)
+            {
+                _swapChainFramebuffer.DepthTarget.Value.Target.Dispose();
+            }
+            _swapChainFramebuffer.Dispose();
+            _swapChain.Dispose();
+            _immediateContext.Dispose();
+
             DeviceDebug deviceDebug = _device.QueryInterfaceOrNull<DeviceDebug>();
+
+            _device.Dispose();
+
             if (deviceDebug != null)
             {
                 deviceDebug.ReportLiveDeviceObjects(ReportingLevel.Summary);
                 deviceDebug.ReportLiveDeviceObjects(ReportingLevel.Detail);
+                deviceDebug.Dispose();
             }
         }
 

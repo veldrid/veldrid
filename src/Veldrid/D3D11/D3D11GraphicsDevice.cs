@@ -587,14 +587,15 @@ namespace Veldrid.D3D11
             _immediateContext.Dispose();
 
             DeviceDebug deviceDebug = _device.QueryInterfaceOrNull<DeviceDebug>();
+
+            _device.Dispose();
+
             if (deviceDebug != null)
             {
                 deviceDebug.ReportLiveDeviceObjects(ReportingLevel.Summary);
                 deviceDebug.ReportLiveDeviceObjects(ReportingLevel.Detail);
+                deviceDebug.Dispose();
             }
-            deviceDebug.Dispose();
-
-            _device.Dispose();
         }
 
         protected override void WaitForIdleCore()

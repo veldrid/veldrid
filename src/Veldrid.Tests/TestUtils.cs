@@ -25,7 +25,12 @@ namespace Veldrid.Tests
             }
         }
 
-        public static void CreateVulkanDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public static GraphicsDevice CreateVulkanDevice()
+        {
+            return GraphicsDevice.CreateVulkan(new GraphicsDeviceOptions(true));
+        }
+
+        public static void CreateVulkanDeviceWithSwapchain(out Sdl2Window window, out GraphicsDevice gd)
         {
             if (!InitializedSdl2)
             {
@@ -46,7 +51,12 @@ namespace Veldrid.Tests
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.Vulkan, out window, out gd);
         }
 
-        internal static void CreateD3D11Device(out Sdl2Window window, out GraphicsDevice gd)
+        public static GraphicsDevice CreateD3D11Device()
+        {
+            return GraphicsDevice.CreateD3D11(new GraphicsDeviceOptions(true));
+        }
+
+        public static void CreateD3D11DeviceWithSwapchain(out Sdl2Window window, out GraphicsDevice gd)
         {
             if (!InitializedSdl2)
             {
@@ -88,7 +98,12 @@ namespace Veldrid.Tests
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGL, out window, out gd);
         }
 
-        internal static void CreateMetalDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public static GraphicsDevice CreateMetalDevice()
+        {
+            return GraphicsDevice.CreateMetal(new GraphicsDeviceOptions(true));
+        }
+
+        public static void CreateMetalDeviceWithSwapchain(out Sdl2Window window, out GraphicsDevice gd)
         {
             if (!InitializedSdl2)
             {
@@ -133,7 +148,7 @@ namespace Veldrid.Tests
 
         public GraphicsDeviceTestBase()
         {
-            Activator.CreateInstance<T>().CreateGrapicsDevice(out _window, out _gd);
+            Activator.CreateInstance<T>().CreateGraphicsDevice(out _window, out _gd);
             _factory = new DisposeCollectorResourceFactory(_gd.ResourceFactory);
         }
 
@@ -142,34 +157,52 @@ namespace Veldrid.Tests
             GD.WaitForIdle();
             _factory.DisposeCollector.DisposeAll();
             GD.Dispose();
-            _window.Close();
+            _window?.Close();
         }
     }
 
     public interface GraphicsDeviceCreator
     {
-        void CreateGrapicsDevice(out Sdl2Window window, out GraphicsDevice gd);
+        void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd);
     }
 
     public class VulkanDeviceCreator : GraphicsDeviceCreator
     {
-        public unsafe void CreateGrapicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
         {
-            TestUtils.CreateVulkanDevice(out window, out gd);
+            window = null;
+            gd = TestUtils.CreateVulkanDevice();
+        }
+    }
+
+    public class VulkanDeviceCreatorWithMainSwapchain : GraphicsDeviceCreator
+    {
+        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        {
+            TestUtils.CreateVulkanDeviceWithSwapchain(out window, out gd);
         }
     }
 
     public class D3D11DeviceCreator : GraphicsDeviceCreator
     {
-        public unsafe void CreateGrapicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
         {
-            TestUtils.CreateD3D11Device(out window, out gd);
+            window = null;
+            gd = TestUtils.CreateD3D11Device();
+        }
+    }
+
+    public class D3D11DeviceCreatorWithMainSwapchain : GraphicsDeviceCreator
+    {
+        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        {
+            TestUtils.CreateD3D11DeviceWithSwapchain(out window, out gd);
         }
     }
 
     public class OpenGLDeviceCreator : GraphicsDeviceCreator
     {
-        public unsafe void CreateGrapicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
         {
             TestUtils.CreateOpenGLDevice(out window, out gd);
         }
@@ -177,9 +210,18 @@ namespace Veldrid.Tests
 
     public class MetalDeviceCreator : GraphicsDeviceCreator
     {
-        public unsafe void CreateGrapicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
         {
-            TestUtils.CreateMetalDevice(out window, out gd);
+            window = null;
+            gd = TestUtils.CreateMetalDevice();
+        }
+    }
+
+    public class MetalDeviceCreatorWithMainSwapchain : GraphicsDeviceCreator
+    {
+        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        {
+            TestUtils.CreateMetalDeviceWithSwapchain(out window, out gd);
         }
     }
 }

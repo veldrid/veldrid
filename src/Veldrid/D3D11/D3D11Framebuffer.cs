@@ -10,7 +10,8 @@ namespace Veldrid.D3D11
         public RenderTargetView[] RenderTargetViews { get; }
         public DepthStencilView DepthStencilView { get; }
 
-        internal bool IsSwapchainFramebuffer { get; set; }
+        // Only non-null if this is the Framebuffer for a Swapchain.
+        internal D3D11Swapchain Swapchain { get; set; }
 
         public D3D11Framebuffer(Device device, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)

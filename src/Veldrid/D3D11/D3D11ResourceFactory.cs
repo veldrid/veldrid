@@ -78,6 +78,11 @@ namespace Veldrid.D3D11
             return new D3D11Fence(signaled);
         }
 
+        public override Swapchain CreateSwapchain(ref SwapchainDescription description)
+        {
+            return new D3D11Swapchain(_device, ref description);
+        }
+
         public void Dispose()
         {
             _cache.Dispose();

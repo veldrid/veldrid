@@ -10,56 +10,41 @@ namespace Veldrid.MTL
     internal unsafe class MTLGraphicsDevice : GraphicsDevice
     {
         private readonly MTLDevice _device;
-        private CAMetalLayer _metalLayer;
         private readonly MTLCommandQueue _commandQueue;
+        private readonly MTLSwapchain _mainSwapchain;
         private readonly TextureSampleCount _maxSampleCount;
-        private readonly MTLSwapchainFramebuffer _swapchainFB;
 
         private readonly object _submittedCommandsLock = new object();
         private readonly List<(MTLCommandBuffer, MTLFence)> _submittedCBs = new List<(MTLCommandBuffer, MTLFence)>();
+
+        private readonly object _resetEventsLock = new object();
+        private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
+
 
         public MTLDevice Device => _device;
         public MTLCommandQueue CommandQueue => _commandQueue;
 
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
-            IntPtr nsWindow)
+            SwapchainDescription? swapchainDesc)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
-
-            NSWindow nswindow = new NSWindow(nsWindow);
-            CGSize windowContentSize = nswindow.contentView.frame.size;
-            uint width = (uint)windowContentSize.width;
-            uint height = (uint)windowContentSize.height;
-
-            var contentView = nswindow.contentView;
-            contentView.wantsLayer = true;
-
-            _metalLayer = CAMetalLayer.New();
-            contentView.layer = _metalLayer.NativePtr;
-            _metalLayer.device = _device;
-            _metalLayer.pixelFormat = MTLPixelFormat.BGRA8Unorm;
-            _metalLayer.framebufferOnly = true;
-
             ResourceFactory = new MTLResourceFactory(this);
-            _swapchainFB = new MTLSwapchainFramebuffer(
-                this,
-                _metalLayer,
-                width,
-                height,
-                options.SwapchainDepthFormat,
-                PixelFormat.B8_G8_R8_A8_UNorm);
-
             _commandQueue = _device.newCommandQueue();
-            _swapchainFB.GetNextDrawable();
 
-            foreach (var count in (TextureSampleCount[])Enum.GetValues(typeof(TextureSampleCount)))
+            foreach (TextureSampleCount count in (TextureSampleCount[])Enum.GetValues(typeof(TextureSampleCount)))
             {
                 uint uintValue = FormatHelpers.GetSampleCountUInt32(count);
                 if (_device.supportsTextureSampleCount((UIntPtr)uintValue))
                 {
                     _maxSampleCount = count;
                 }
+            }
+
+            if (swapchainDesc != null)
+            {
+                SwapchainDescription desc = swapchainDesc.Value;
+                _mainSwapchain = new MTLSwapchain(this, ref desc);
             }
 
             PostDeviceCreated();
@@ -69,9 +54,7 @@ namespace Veldrid.MTL
 
         public override ResourceFactory ResourceFactory { get; }
 
-        public override bool SyncToVerticalBlank { get; set; }
-
-        public override Framebuffer SwapchainFramebuffer => _swapchainFB;
+        public override Swapchain MainSwapchain => _mainSwapchain;
 
         protected override void SubmitCommandsCore(CommandList commandList, Fence fence)
         {
@@ -112,25 +95,19 @@ namespace Veldrid.MTL
             return _maxSampleCount;
         }
 
-        public override void ResizeMainWindow(uint width, uint height)
+        protected override void SwapBuffersCore(Swapchain swapchain)
         {
-            _swapchainFB.Resize(width, height);
-            _metalLayer.drawableSize = new CGSize(width, height);
-            _swapchainFB.GetNextDrawable();
-        }
-
-        protected override void SwapBuffersCore()
-        {
-            IntPtr currentDrawablePtr = _swapchainFB.CurrentDrawable.NativePtr;
+            MTLSwapchain mtlSC = Util.AssertSubtype<Swapchain, MTLSwapchain>(swapchain);
+            IntPtr currentDrawablePtr = mtlSC.CurrentDrawable.NativePtr;
             if (currentDrawablePtr != IntPtr.Zero)
             {
-                var submitCB = _commandQueue.commandBuffer();
+                MTLCommandBuffer submitCB = _commandQueue.commandBuffer();
                 submitCB.presentDrawable(currentDrawablePtr);
                 submitCB.commit();
                 ObjectiveCRuntime.release(submitCB.NativePtr);
             }
 
-            _swapchainFB.GetNextDrawable();
+            mtlSC.GetNextDrawable();
         }
 
         protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
@@ -246,9 +223,8 @@ namespace Veldrid.MTL
         protected override void PlatformDispose()
         {
             WaitForIdle();
-            _swapchainFB.Dispose();
+            _mainSwapchain?.Dispose();
             ObjectiveCRuntime.release(_commandQueue.NativePtr);
-            ObjectiveCRuntime.release(_metalLayer.NativePtr);
             ObjectiveCRuntime.release(_device.NativePtr);
         }
 
@@ -285,8 +261,6 @@ namespace Veldrid.MTL
             return result;
         }
 
-        private readonly object _resetEventsLock = new object();
-        private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
 
         private ManualResetEvent[] GetResetEventArray(int length)
         {

@@ -11,6 +11,8 @@ namespace Veldrid.Vk
     /// </summary>
     public abstract class VkSurfaceSource
     {
+        internal VkSurfaceSource() { }
+
         /// <summary>
         /// Creates a new VkSurfaceKHR attached to this source.
         /// </summary>
@@ -32,6 +34,24 @@ namespace Veldrid.Vk
         /// <param name="window">An Xlib window.</param>
         /// <returns>A new VkSurfaceSource.</returns>
         public unsafe static VkSurfaceSource CreateXlib(Display* display, Window window) => new XlibVkSurfaceInfo(display, window);
+
+        internal abstract SwapchainSource GetSurfaceSource();
+
+        internal static unsafe VkSurfaceSource CreateFromSwapchainSource(SwapchainSource source)
+        {
+            if (source is Win32SwapchainSource win32Source)
+            {
+                return new Win32VkSurfaceInfo(win32Source.Hinstance, win32Source.Hwnd);
+            }
+            else if (source is XlibSwapchainSource xlibSource)
+            {
+                return new XlibVkSurfaceInfo((Display*)xlibSource.Display, new Window { Value = xlibSource.Window });
+            }
+            else
+            {
+                throw new VeldridException("Unsupported Vulkan SwapchainSource.");
+            }
+        }
     }
 
     internal class Win32VkSurfaceInfo : VkSurfaceSource
@@ -54,6 +74,11 @@ namespace Veldrid.Vk
             CheckResult(result);
             return surface;
         }
+
+        internal override SwapchainSource GetSurfaceSource()
+        {
+            return new Win32SwapchainSource(_hwnd, _hinstance);
+        }
     }
 
     internal class XlibVkSurfaceInfo : VkSurfaceSource
@@ -75,6 +100,11 @@ namespace Veldrid.Vk
             VkResult result = vkCreateXlibSurfaceKHR(instance, ref xsci, null, out VkSurfaceKHR surface);
             CheckResult(result);
             return surface;
+        }
+
+        internal unsafe override SwapchainSource GetSurfaceSource()
+        {
+            return new XlibSwapchainSource((IntPtr)_display, _window.Value);
         }
     }
 }

@@ -8,17 +8,14 @@ namespace Veldrid.MTL
     internal class MTLSwapchainFramebuffer : MTLFramebufferBase
     {
         private readonly MTLGraphicsDevice _gd;
-        private readonly CAMetalLayer _layer;
         private readonly MTLPlaceholderTexture _placeholderTexture;
-        private CAMetalDrawable _drawable;
         private MTLTexture _depthTexture;
+        private readonly MTLSwapchain _parentSwapchain;
 
         public override uint Width => _placeholderTexture.Width;
         public override uint Height => _placeholderTexture.Height;
 
         public override OutputDescription OutputDescription { get; }
-
-        public CAMetalDrawable CurrentDrawable => _drawable;
 
         private readonly FramebufferAttachment[] _colorTargets;
         private readonly FramebufferAttachment? _depthTarget;
@@ -29,7 +26,7 @@ namespace Veldrid.MTL
 
         public MTLSwapchainFramebuffer(
             MTLGraphicsDevice gd,
-            CAMetalLayer layer,
+            MTLSwapchain parent,
             uint width,
             uint height,
             PixelFormat? depthFormat,
@@ -37,7 +34,7 @@ namespace Veldrid.MTL
             : base()
         {
             _gd = gd;
-            _layer = layer;
+            _parentSwapchain = parent;
 
             OutputAttachmentDescription? depthAttachment = null;
             if (depthFormat != null)
@@ -78,27 +75,14 @@ namespace Veldrid.MTL
             }
         }
 
-        public void GetNextDrawable()
-        {
-            if (_drawable.NativePtr != IntPtr.Zero)
-            {
-                ObjectiveCRuntime.objc_msgSend(_drawable.NativePtr, "release");
-            }
 
-            _drawable = _layer.nextDrawable();
-            if (_drawable.NativePtr == IntPtr.Zero)
-            {
-                Console.WriteLine("Got a null drawable.");
-            }
-        }
-
-        public override bool IsRenderable => !_drawable.IsNull;
+        public override bool IsRenderable => !_parentSwapchain.CurrentDrawable.IsNull;
 
         public override MTLRenderPassDescriptor CreateRenderPassDescriptor()
         {
             var ret = MTLUtil.AllocInit<MTLRenderPassDescriptor>();
             var color0 = ret.colorAttachments[0];
-            color0.texture = _drawable.texture;
+            color0.texture = _parentSwapchain.CurrentDrawable.texture;
             color0.loadAction = MTLLoadAction.Load;
 
             if (_depthTarget != null)

@@ -5,7 +5,6 @@ using Veldrid.OpenGLBinding;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
 using System.Threading;
 
@@ -51,9 +50,9 @@ namespace Veldrid.OpenGL
 
         public override ResourceFactory ResourceFactory { get; }
 
-        public override Framebuffer SwapchainFramebuffer => _swapchainFramebuffer;
-
         public OpenGLExtensions Extensions => _extensions;
+
+        public override Swapchain MainSwapchain => _mainSwapchain;
 
         public override bool SyncToVerticalBlank
         {
@@ -163,6 +162,8 @@ namespace Veldrid.OpenGL
                 _maxColorTextureSamples = TextureSampleCount.Count1;
             }
 
+            _mainSwapchain = new OpenGLSwapchain(this, width, height, options.SwapchainDepthFormat);
+
             _workItems = new BlockingCollection<ExecutionThreadWorkItem>(new ConcurrentQueue<ExecutionThreadWorkItem>());
             platformInfo.ClearCurrentContext();
             _executionThread = new ExecutionThread(this, _workItems, _makeCurrent, _glContext);
@@ -222,12 +223,7 @@ namespace Veldrid.OpenGL
             return _submittedCommandListCounts.TryGetValue(glCommandList, out int count) ? count : 0;
         }
 
-        public override void ResizeMainWindow(uint width, uint height)
-        {
-            _swapchainFramebuffer.Resize(width, height);
-        }
-
-        protected override void SwapBuffersCore()
+        protected override void SwapBuffersCore(Swapchain swapchain)
         {
             WaitForIdle();
 
@@ -339,6 +335,7 @@ namespace Veldrid.OpenGL
 
         private readonly object _resetEventsLock = new object();
         private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
+        private readonly Swapchain _mainSwapchain;
 
         private ManualResetEvent[] GetResetEventArray(int length)
         {

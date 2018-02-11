@@ -252,5 +252,8 @@ namespace Veldrid
         /// <param name="signaled">A value indicating whether the Fence should be in the signaled state when created.</param>
         /// <returns>A new <see cref="Fence"/>.</returns>
         public abstract Fence CreateFence(bool signaled);
+
+        public Swapchain CreateSwapchain(SwapchainDescription description) => CreateSwapchain(ref description);
+        public abstract Swapchain CreateSwapchain(ref SwapchainDescription description);
     }
 }

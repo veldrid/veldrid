@@ -101,5 +101,12 @@ namespace Veldrid.Utilities
             DisposeCollector.Add(f);
             return f;
         }
+
+        public override Swapchain CreateSwapchain(ref SwapchainDescription description)
+        {
+            Swapchain sc = Factory.CreateSwapchain(ref description);
+            DisposeCollector.Add(sc);
+            return sc;
+        }
     }
 }

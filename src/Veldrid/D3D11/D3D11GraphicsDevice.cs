@@ -14,8 +14,7 @@ namespace Veldrid.D3D11
         private readonly SharpDX.Direct3D11.Device _device;
         private readonly DeviceContext _immediateContext;
         private readonly D3D11ResourceFactory _d3d11ResourceFactory;
-        private readonly SwapChain _swapChain;
-        private D3D11Framebuffer _swapChainFramebuffer;
+        private readonly D3D11Swapchain _mainSwapchain;
         private readonly bool _supportsConcurrentResources;
         private readonly bool _supportsCommandLists;
         private readonly object _immediateContextLock = new object();
@@ -24,16 +23,9 @@ namespace Veldrid.D3D11
         private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
             = new Dictionary<MappedResourceCacheKey, MappedResourceInfo>();
 
-        private bool _syncToVBlank;
-        private int _syncInterval;
-        private readonly Format? _depthFormat;
-        private readonly float _pixelScale = 1f;
-
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
         public override ResourceFactory ResourceFactory => _d3d11ResourceFactory;
-
-        public override Framebuffer SwapchainFramebuffer => _swapChainFramebuffer;
 
         public SharpDX.Direct3D11.Device Device => _device;
 
@@ -41,199 +33,26 @@ namespace Veldrid.D3D11
 
         public bool SupportsCommandLists => _supportsCommandLists;
 
-        public List<D3D11CommandList> CommandListsReferencingSwapchain { get; internal set; } = new List<D3D11CommandList>();
+        public override Swapchain MainSwapchain => _mainSwapchain;
 
-        public override bool SyncToVerticalBlank
+        public D3D11GraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDesc)
         {
-            get => _syncToVBlank;
-            set
-            {
-                _syncToVBlank = value;
-                _syncInterval = GetSyncInterval(_syncToVBlank);
-            }
-        }
-
-        public D3D11GraphicsDevice(GraphicsDeviceOptions options, IntPtr hwnd, int width, int height)
-        {
-            SyncToVerticalBlank = options.SyncToVerticalBlank;
-            _depthFormat = options.SwapchainDepthFormat.HasValue
-                ? D3D11Formats.GetDepthFormat(options.SwapchainDepthFormat.Value)
-                : (Format?)null;
-            SwapChainDescription swapChainDescription = new SwapChainDescription()
-            {
-                BufferCount = 1,
-                IsWindowed = true,
-                ModeDescription = new ModeDescription(width, height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
-                OutputHandle = hwnd,
-                SampleDescription = new SampleDescription(1, 0),
-                SwapEffect = SwapEffect.Discard,
-                Usage = Usage.RenderTargetOutput
-            };
 #if DEBUG
             DeviceCreationFlags creationFlags = DeviceCreationFlags.Debug;
 #else
             DeviceCreationFlags creationFlags = options.Debug ? DeviceCreationFlags.Debug : DeviceCreationFlags.None;
 #endif 
-            SharpDX.Direct3D11.Device.CreateWithSwapChain(
-                SharpDX.Direct3D.DriverType.Hardware,
-                creationFlags,
-                swapChainDescription,
-                out _device,
-                out _swapChain);
-            _immediateContext = _device.ImmediateContext;
-            _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
-
-            Factory factory = _swapChain.GetParent<Factory>();
-            factory.MakeWindowAssociation(hwnd, WindowAssociationFlags.IgnoreAll);
-            factory.Dispose();
-
-            _d3d11ResourceFactory = new D3D11ResourceFactory(this);
-            RecreateSwapchainFramebuffer(width, height);
-
-            PostDeviceCreated();
-        }
-
-        public D3D11GraphicsDevice(
-            GraphicsDeviceOptions options,
-            object swapChainPanel,
-            double renderWidth,
-            double renderHeight,
-            float logicalDpi)
-        {
-            SyncToVerticalBlank = options.SyncToVerticalBlank;
-            _depthFormat = options.SwapchainDepthFormat.HasValue
-                ? D3D11Formats.GetDepthFormat(options.SwapchainDepthFormat.Value)
-                : (Format?)null;
-
-#if DEBUG
-            DeviceCreationFlags creationFlags = DeviceCreationFlags.Debug;
-#else
-            DeviceCreationFlags creationFlags = options.Debug ? DeviceCreationFlags.Debug : DeviceCreationFlags.None;
-#endif 
-
-            using (SharpDX.Direct3D11.Device defaultDevice = new SharpDX.Direct3D11.Device(
-                SharpDX.Direct3D.DriverType.Hardware,
-                creationFlags))
+            _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, creationFlags);
+            if (swapchainDesc != null)
             {
-                _device = defaultDevice.QueryInterface<SharpDX.Direct3D11.Device2>();
+                SwapchainDescription desc = swapchainDesc.Value;
+                _mainSwapchain = new D3D11Swapchain(_device, ref desc);
             }
-
-            _pixelScale = logicalDpi / 96.0f;
-
-            int width = (int)(renderWidth * _pixelScale);
-            int height = (int)(renderHeight * _pixelScale);
-
-            // Properties of the swap chain
-            SwapChainDescription1 swapChainDescription = new SwapChainDescription1()
-            {
-                AlphaMode = AlphaMode.Ignore,
-                BufferCount = 2,
-                Format = Format.B8G8R8A8_UNorm,
-                Height = width,
-                Width = height,
-                SampleDescription = new SampleDescription(1, 0),
-                SwapEffect = SwapEffect.FlipSequential,
-                Usage = Usage.BackBuffer | Usage.RenderTargetOutput,
-            };
-
-            // Retrive the SharpDX.DXGI device associated to the Direct3D device.
-            using (SharpDX.DXGI.Device3 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device3>())
-            {
-                // Get the SharpDX.DXGI factory automatically created when initializing the Direct3D device.
-                using (Factory2 dxgiFactory = dxgiDevice.Adapter.GetParent<Factory2>())
-                {
-                    // Create the swap chain and get the highest version available.
-                    using (SwapChain1 swapChain1 = new SwapChain1(dxgiFactory, _device, ref swapChainDescription))
-                    {
-                        _swapChain = swapChain1.QueryInterface<SwapChain2>();
-                    }
-                }
-            }
-
-            ComObject co = new ComObject(swapChainPanel);
-
-            ISwapChainPanelNative swapchainPanelNative = co.QueryInterfaceOrNull<ISwapChainPanelNative>();
-            if (swapchainPanelNative != null)
-            {
-                swapchainPanelNative.SwapChain = _swapChain;
-            }
-            else
-            {
-                ISwapChainBackgroundPanelNative bgPanelNative = co.QueryInterfaceOrNull<ISwapChainBackgroundPanelNative>();
-                if (bgPanelNative != null)
-                {
-                    bgPanelNative.SwapChain = _swapChain;
-                }
-            }
-
             _immediateContext = _device.ImmediateContext;
             _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
 
             _d3d11ResourceFactory = new D3D11ResourceFactory(this);
-            RecreateSwapchainFramebuffer(width, height);
-
             PostDeviceCreated();
-        }
-
-        public override void ResizeMainWindow(uint width, uint height)
-        {
-            RecreateSwapchainFramebuffer((int)width, (int)height);
-        }
-
-        private void RecreateSwapchainFramebuffer(int width, int height)
-        {
-            // NOTE: Perhaps this should be deferred until all CommandLists naturally remove their references to the swapchain.
-            // The actual resize could be done in ExecuteCommands() when it is found that this list is empty.
-            foreach (D3D11CommandList d3dCL in CommandListsReferencingSwapchain)
-            {
-                d3dCL.Reset();
-            }
-
-            if (_swapChainFramebuffer != null)
-            {
-                if (_swapChainFramebuffer.DepthTarget.HasValue)
-                {
-                    _swapChainFramebuffer.DepthTarget.Value.Target.Dispose();
-                }
-                _swapChainFramebuffer.Dispose();
-            }
-
-
-            int actualWidth = (int)(width * _pixelScale);
-            int actualHeight = (int)(height * _pixelScale);
-            _swapChain.ResizeBuffers(2, actualWidth, actualHeight, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
-
-            // Get the backbuffer from the swapchain
-            using (Texture2D backBufferTexture = _swapChain.GetBackBuffer<Texture2D>(0))
-            {
-                Texture2D depthBufferTexture = null;
-                if (_depthFormat != null)
-                {
-                    depthBufferTexture = new Texture2D(
-                        _device,
-                        new Texture2DDescription()
-                        {
-                            Format = _depthFormat.Value,
-                            ArraySize = 1,
-                            MipLevels = 1,
-                            Width = backBufferTexture.Description.Width,
-                            Height = backBufferTexture.Description.Height,
-                            SampleDescription = new SampleDescription(1, 0),
-                            Usage = ResourceUsage.Default,
-                            BindFlags = BindFlags.DepthStencil,
-                            CpuAccessFlags = CpuAccessFlags.None,
-                            OptionFlags = ResourceOptionFlags.None
-                        });
-                }
-
-                D3D11Texture backBufferVdTexture = new D3D11Texture(backBufferTexture);
-                D3D11Texture depthVdTexture = depthBufferTexture != null
-                    ? new D3D11Texture(depthBufferTexture)
-                    : null;
-                FramebufferDescription desc = new FramebufferDescription(depthVdTexture, backBufferVdTexture);
-                _swapChainFramebuffer = new D3D11Framebuffer(_device, ref desc);
-                _swapChainFramebuffer.IsSwapchainFramebuffer = true;
-            }
         }
 
         protected override void SubmitCommandsCore(CommandList cl, Fence fence)
@@ -241,11 +60,12 @@ namespace Veldrid.D3D11
             D3D11CommandList d3d11CL = Util.AssertSubtype<CommandList, D3D11CommandList>(cl);
             lock (_immediateContextLock)
             {
-                _immediateContext.ExecuteCommandList(d3d11CL.DeviceCommandList, false);
+                if (d3d11CL.DeviceCommandList != null) // CommandList may have been reset in the meantime (resized swapchain).
+                {
+                    _immediateContext.ExecuteCommandList(d3d11CL.DeviceCommandList, false);
+                    d3d11CL.OnCompleted();
+                }
             }
-            d3d11CL.DeviceCommandList.Dispose();
-            d3d11CL.DeviceCommandList = null;
-            CommandListsReferencingSwapchain.Remove(d3d11CL);
 
             if (fence is D3D11Fence d3d11Fence)
             {
@@ -253,9 +73,10 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void SwapBuffersCore()
+        protected override void SwapBuffersCore(Swapchain swapchain)
         {
-            _swapChain.Present(_syncInterval, PresentFlags.None);
+            D3D11Swapchain d3d11SC = Util.AssertSubtype<Swapchain, D3D11Swapchain>(swapchain);
+            d3d11SC.DxgiSwapChain.Present(d3d11SC.SyncInterval, PresentFlags.None);
         }
 
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
@@ -576,12 +397,7 @@ namespace Veldrid.D3D11
         protected override void PlatformDispose()
         {
             _d3d11ResourceFactory.Dispose();
-            if (_swapChainFramebuffer.DepthTarget.HasValue)
-            {
-                _swapChainFramebuffer.DepthTarget.Value.Target.Dispose();
-            }
-            _swapChainFramebuffer.Dispose();
-            _swapChain.Dispose();
+            _mainSwapchain?.Dispose();
             _immediateContext.Dispose();
 
             DeviceDebug deviceDebug = _device.QueryInterfaceOrNull<DeviceDebug>();

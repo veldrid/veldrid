@@ -31,7 +31,7 @@ namespace Veldrid.OpenGL
                 : (OutputAttachmentDescription?)null;
             OutputDescription = new OutputDescription(
                 depthDesc,
-                new OutputAttachmentDescription(PixelFormat.B8_G8_R8_A8_UNorm));
+                new OutputAttachmentDescription(colorFormat));
 
             _colorTexture = new OpenGLPlaceholderTexture(
                 width,

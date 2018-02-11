@@ -70,6 +70,8 @@ namespace Veldrid.D3D11
         private readonly List<D3D11Buffer> _availableStagingBuffers = new List<D3D11Buffer>();
         private readonly List<D3D11Buffer> _submittedStagingBuffers = new List<D3D11Buffer>();
 
+        private readonly List<D3D11Swapchain> _referencedSwapchains = new List<D3D11Swapchain>();
+
         public D3D11CommandList(D3D11GraphicsDevice gd, ref CommandListDescription description)
             : base(ref description)
         {
@@ -82,7 +84,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public SharpDX.Direct3D11.CommandList DeviceCommandList { get; set; }
+        public SharpDX.Direct3D11.CommandList DeviceCommandList { get; private set; }
 
         internal DeviceContext DeviceContext => _context;
 
@@ -185,6 +187,7 @@ namespace Veldrid.D3D11
             }
 
             ResetManagedState();
+            _begun = false;
         }
 
         protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format)
@@ -925,9 +928,10 @@ namespace Veldrid.D3D11
         protected override void SetFramebufferCore(Framebuffer fb)
         {
             D3D11Framebuffer d3dFB = Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(fb);
-            if (d3dFB.IsSwapchainFramebuffer)
+            if (d3dFB.Swapchain != null)
             {
-                _gd.CommandListsReferencingSwapchain.Add(this);
+                d3dFB.Swapchain.AddCommandListReference(this);
+                _referencedSwapchains.Add(d3dFB.Swapchain);
             }
 
             _context.OutputMerger.SetRenderTargets(d3dFB.DepthStencilView, d3dFB.RenderTargetViews);
@@ -1093,6 +1097,15 @@ namespace Veldrid.D3D11
 
         internal void OnCompleted()
         {
+            DeviceCommandList.Dispose();
+            DeviceCommandList = null;
+
+            foreach (D3D11Swapchain sc in _referencedSwapchains)
+            {
+                sc.RemoveCommandListReference(this);
+            }
+            _referencedSwapchains.Clear();
+
             foreach (D3D11Buffer buffer in _submittedStagingBuffers)
             {
                 _availableStagingBuffers.Add(buffer);

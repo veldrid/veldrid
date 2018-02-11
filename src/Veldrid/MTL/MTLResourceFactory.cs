@@ -72,5 +72,10 @@ namespace Veldrid.MTL
         {
             return new MTLFence(signaled);
         }
+
+        public override Swapchain CreateSwapchain(ref SwapchainDescription description)
+        {
+            return new MTLSwapchain(_gd, ref description);
+        }
     }
 }

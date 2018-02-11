@@ -9,8 +9,8 @@ namespace Veldrid.MTL
     {
         private readonly MTLGraphicsDevice _gd;
         private readonly CAMetalLayer _layer;
-        private readonly MTLPlaceholderTexture _placeholderTexture;
         private CAMetalDrawable _drawable;
+        private readonly MTLPlaceholderTexture _placeholderTexture;
         private MTLTexture _depthTexture;
 
         public override uint Width => _placeholderTexture.Width;
@@ -78,19 +78,6 @@ namespace Veldrid.MTL
             }
         }
 
-        public void GetNextDrawable()
-        {
-            if (_drawable.NativePtr != IntPtr.Zero)
-            {
-                ObjectiveCRuntime.objc_msgSend(_drawable.NativePtr, "release");
-            }
-
-            _drawable = _layer.nextDrawable();
-            if (_drawable.NativePtr == IntPtr.Zero)
-            {
-                Console.WriteLine("Got a null drawable.");
-            }
-        }
 
         public override bool IsRenderable => !_drawable.IsNull;
 

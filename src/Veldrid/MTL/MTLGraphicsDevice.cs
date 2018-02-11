@@ -10,13 +10,16 @@ namespace Veldrid.MTL
     internal unsafe class MTLGraphicsDevice : GraphicsDevice
     {
         private readonly MTLDevice _device;
-        private CAMetalLayer _metalLayer;
         private readonly MTLCommandQueue _commandQueue;
+        private readonly MTLSwapchain _mainSwapchain;
         private readonly TextureSampleCount _maxSampleCount;
-        private readonly MTLSwapchainFramebuffer _swapchainFB;
 
         private readonly object _submittedCommandsLock = new object();
         private readonly List<(MTLCommandBuffer, MTLFence)> _submittedCBs = new List<(MTLCommandBuffer, MTLFence)>();
+
+        private readonly object _resetEventsLock = new object();
+        private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
+
 
         public MTLDevice Device => _device;
         public MTLCommandQueue CommandQueue => _commandQueue;
@@ -26,34 +29,10 @@ namespace Veldrid.MTL
             IntPtr nsWindow)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
-
-            NSWindow nswindow = new NSWindow(nsWindow);
-            CGSize windowContentSize = nswindow.contentView.frame.size;
-            uint width = (uint)windowContentSize.width;
-            uint height = (uint)windowContentSize.height;
-
-            var contentView = nswindow.contentView;
-            contentView.wantsLayer = true;
-
-            _metalLayer = CAMetalLayer.New();
-            contentView.layer = _metalLayer.NativePtr;
-            _metalLayer.device = _device;
-            _metalLayer.pixelFormat = MTLPixelFormat.BGRA8Unorm;
-            _metalLayer.framebufferOnly = true;
-
             ResourceFactory = new MTLResourceFactory(this);
-            _swapchainFB = new MTLSwapchainFramebuffer(
-                this,
-                _metalLayer,
-                width,
-                height,
-                options.SwapchainDepthFormat,
-                PixelFormat.B8_G8_R8_A8_UNorm);
-
             _commandQueue = _device.newCommandQueue();
-            _swapchainFB.GetNextDrawable();
 
-            foreach (var count in (TextureSampleCount[])Enum.GetValues(typeof(TextureSampleCount)))
+            foreach (TextureSampleCount count in (TextureSampleCount[])Enum.GetValues(typeof(TextureSampleCount)))
             {
                 uint uintValue = FormatHelpers.GetSampleCountUInt32(count);
                 if (_device.supportsTextureSampleCount((UIntPtr)uintValue))
@@ -61,6 +40,11 @@ namespace Veldrid.MTL
                     _maxSampleCount = count;
                 }
             }
+
+            SwapchainDescription swapchainDesc = new SwapchainDescription(
+                new NSWindowSwapchainSource(nsWindow),
+                0, 0, options.SwapchainDepthFormat, options.SyncToVerticalBlank);
+            _mainSwapchain = new MTLSwapchain(this, ref swapchainDesc);
 
             PostDeviceCreated();
         }
@@ -112,16 +96,17 @@ namespace Veldrid.MTL
 
         protected override void SwapBuffersCore(Swapchain swapchain)
         {
-            IntPtr currentDrawablePtr = _swapchainFB.CurrentDrawable.NativePtr;
+            MTLSwapchain mtlSC = Util.AssertSubtype<Swapchain, MTLSwapchain>(swapchain);
+            IntPtr currentDrawablePtr = mtlSC.CurrentDrawable;
             if (currentDrawablePtr != IntPtr.Zero)
             {
-                var submitCB = _commandQueue.commandBuffer();
+                MTLCommandBuffer submitCB = _commandQueue.commandBuffer();
                 submitCB.presentDrawable(currentDrawablePtr);
                 submitCB.commit();
                 ObjectiveCRuntime.release(submitCB.NativePtr);
             }
 
-            _swapchainFB.GetNextDrawable();
+            mtlSC.GetNextDrawable();
         }
 
         protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
@@ -237,9 +222,8 @@ namespace Veldrid.MTL
         protected override void PlatformDispose()
         {
             WaitForIdle();
-            _swapchainFB.Dispose();
+            _mainSwapchain.Dispose();
             ObjectiveCRuntime.release(_commandQueue.NativePtr);
-            ObjectiveCRuntime.release(_metalLayer.NativePtr);
             ObjectiveCRuntime.release(_device.NativePtr);
         }
 
@@ -276,8 +260,6 @@ namespace Veldrid.MTL
             return result;
         }
 
-        private readonly object _resetEventsLock = new object();
-        private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
 
         private ManualResetEvent[] GetResetEventArray(int length)
         {

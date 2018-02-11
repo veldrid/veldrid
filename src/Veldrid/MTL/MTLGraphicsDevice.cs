@@ -53,7 +53,7 @@ namespace Veldrid.MTL
 
         public override ResourceFactory ResourceFactory { get; }
 
-        public override Swapchain MainSwapchain => throw new NotImplementedException();
+        public override Swapchain MainSwapchain => _mainSwapchain;
 
         protected override void SubmitCommandsCore(CommandList commandList, Fence fence)
         {
@@ -97,7 +97,7 @@ namespace Veldrid.MTL
         protected override void SwapBuffersCore(Swapchain swapchain)
         {
             MTLSwapchain mtlSC = Util.AssertSubtype<Swapchain, MTLSwapchain>(swapchain);
-            IntPtr currentDrawablePtr = mtlSC.CurrentDrawable;
+            IntPtr currentDrawablePtr = mtlSC.CurrentDrawable.NativePtr;
             if (currentDrawablePtr != IntPtr.Zero)
             {
                 MTLCommandBuffer submitCB = _commandQueue.commandBuffer();

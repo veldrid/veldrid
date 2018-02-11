@@ -8,7 +8,6 @@ namespace Veldrid.MTL
         private readonly MTLSwapchainFramebuffer _framebuffer;
         private readonly CAMetalLayer _metalLayer;
         private readonly MTLGraphicsDevice _gd;
-        private readonly CAMetalLayer _layer;
 
         private CAMetalDrawable _drawable;
 
@@ -16,7 +15,7 @@ namespace Veldrid.MTL
         public override bool SyncToVerticalBlank { get; set; }
         public override string Name { get; set; }
 
-        public IntPtr CurrentDrawable => _drawable.NativePtr;
+        public CAMetalDrawable CurrentDrawable => _drawable;
 
         public MTLSwapchain(MTLGraphicsDevice gd, ref SwapchainDescription description)
         {
@@ -43,7 +42,13 @@ namespace Veldrid.MTL
             _metalLayer.framebufferOnly = true;
             GetNextDrawable();
 
-            _framebuffer = new MTLSwapchainFramebuffer(gd, _layer, width, height, description.DepthFormat, PixelFormat.B8_G8_R8_A8_UNorm);
+            _framebuffer = new MTLSwapchainFramebuffer(
+                gd,
+                this,
+                width,
+                height,
+                description.DepthFormat,
+                PixelFormat.B8_G8_R8_A8_UNorm);
         }
 
         public void GetNextDrawable()
@@ -53,7 +58,7 @@ namespace Veldrid.MTL
                 ObjectiveCRuntime.objc_msgSend(_drawable.NativePtr, "release");
             }
 
-            _drawable = _layer.nextDrawable();
+            _drawable = _metalLayer.nextDrawable();
         }
 
         public override void Resize(uint width, uint height)

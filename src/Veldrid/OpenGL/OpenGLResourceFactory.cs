@@ -1,6 +1,7 @@
 ﻿using static Veldrid.OpenGLBinding.OpenGLNative;
 using Veldrid.OpenGL;
 using Veldrid.OpenGLBinding;
+using System;
 
 namespace Veldrid.OpenGL
 {
@@ -78,6 +79,11 @@ namespace Veldrid.OpenGL
         public override Fence CreateFence(bool signaled)
         {
             return new OpenGLFence(signaled);
+        }
+
+        public override Swapchain CreateSwapchain(ref SwapchainDescription description)
+        {
+            throw new NotSupportedException("OpenGL does not support creating Swapchain objects.");
         }
     }
 }

@@ -18,20 +18,16 @@ namespace Veldrid.Vk
         private VkInstance _instance;
         private VkPhysicalDevice _physicalDevice;
         private VkDeviceMemoryManager _memoryManager;
-        private VkSurfaceKHR _surface;
         private VkPhysicalDeviceProperties _physicalDeviceProperties;
         private VkPhysicalDeviceFeatures _physicalDeviceFeatures;
         private VkPhysicalDeviceMemoryProperties _physicalDeviceMemProperties;
         private VkDevice _device;
-        private readonly VkSwapchainFramebuffer _scFB;
         private uint _graphicsQueueIndex;
         private uint _presentQueueIndex;
         private VkCommandPool _graphicsCommandPool;
         private readonly object _graphicsCommandPoolLock = new object();
-        private Vulkan.VkFence _imageAvailableFence;
         private VkQueue _graphicsQueue;
         private readonly object _graphicsQueueLock = new object();
-        private VkQueue _presentQueue;
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private PFN_vkDebugReportCallbackEXT _debugCallbackFunc;
         private readonly List<VkCommandList> _commandListsToDispose = new List<VkCommandList>();
@@ -59,12 +55,14 @@ namespace Veldrid.Vk
 
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
+        public override Swapchain MainSwapchain => _mainSwapchain;
+
+        public VkInstance Instance => _instance;
         public VkDevice Device => _device;
         public VkPhysicalDevice PhysicalDevice => _physicalDevice;
         public VkPhysicalDeviceMemoryProperties PhysicalDeviceMemProperties => _physicalDeviceMemProperties;
         public VkQueue GraphicsQueue => _graphicsQueue;
         public uint GraphicsQueueIndex => _graphicsQueueIndex;
-        public VkQueue PresentQueue => _presentQueue;
         public uint PresentQueueIndex => _presentQueueIndex;
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
         public VkDescriptorPoolManager DescriptorPoolManager => _descriptorPoolManager;
@@ -74,46 +72,32 @@ namespace Veldrid.Vk
             = new Dictionary<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)>();
         private readonly List<KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)>> _completedFences
             = new List<KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)>>();
+        private readonly VkSwapchain _mainSwapchain;
 
         public VkGraphicsDevice(GraphicsDeviceOptions options, VkSurfaceSource surfaceSource, uint width, uint height)
         {
             CreateInstance(options.Debug);
-            CreateSurface(surfaceSource);
             CreatePhysicalDevice();
             CreateLogicalDevice();
             _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
             ResourceFactory = new VkResourceFactory(this);
-            _scFB = new VkSwapchainFramebuffer(
-                this,
-                _surface,
-                width,
-                height,
-                options.SyncToVerticalBlank,
-                options.SwapchainDepthFormat);
+            SwapchainDescription scDesc = new SwapchainDescription(
+                surfaceSource.GetSurfaceSource(),
+                width, height,
+                options.SwapchainDepthFormat,
+                options.SyncToVerticalBlank);
+            _mainSwapchain = new VkSwapchain(this, ref scDesc, surfaceSource);
             CreateDescriptorPool();
             CreateGraphicsCommandPool();
             for (int i = 0; i < SharedCommandPoolCount; i++)
             {
                 _sharedGraphicsCommandPools.Push(new SharedCommandPool(this, true));
             }
-            CreateFences();
-
-            _scFB.AcquireNextImage(_device, Vulkan.VkSemaphore.Null, _imageAvailableFence);
-            vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-            vkResetFences(_device, 1, ref _imageAvailableFence);
 
             PostDeviceCreated();
         }
 
         public override ResourceFactory ResourceFactory { get; }
-
-        public override Framebuffer SwapchainFramebuffer => _scFB;
-
-        public override bool SyncToVerticalBlank
-        {
-            get => _scFB.SyncToVerticalBlank;
-            set => _scFB.SyncToVerticalBlank = value;
-        }
 
         protected override void SubmitCommandsCore(
             CommandList cl,
@@ -270,31 +254,25 @@ namespace Veldrid.Vk
             }
         }
 
-        public override void ResizeMainWindow(uint width, uint height)
+        protected override void SwapBuffersCore(Swapchain swapchain)
         {
-            _scFB.Resize(width, height);
-            _scFB.AcquireNextImage(_device, Vulkan.VkSemaphore.Null, _imageAvailableFence);
-            vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-            vkResetFences(_device, 1, ref _imageAvailableFence);
-        }
+            VkSwapchain vkSC = Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain);
 
-        protected override void SwapBuffersCore()
-        {
-            // Then, present the swapchain.
             VkPresentInfoKHR presentInfo = VkPresentInfoKHR.New();
-
-            VkSwapchainKHR swapchain = _scFB.Swapchain;
+            VkSwapchainKHR deviceSwapchain = vkSC.DeviceSwapchain;
             presentInfo.swapchainCount = 1;
-            presentInfo.pSwapchains = &swapchain;
-            uint imageIndex = _scFB.ImageIndex;
+            presentInfo.pSwapchains = &deviceSwapchain;
+            uint imageIndex = vkSC.ImageIndex;
             presentInfo.pImageIndices = &imageIndex;
 
-            vkQueuePresentKHR(_presentQueue, ref presentInfo);
+            VkResult result = vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
+            //CheckResult(result);
 
-            if (_scFB.AcquireNextImage(_device, VkSemaphore.Null, _imageAvailableFence))
+            if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, vkSC.ImageAvailableFence))
             {
-                vkWaitForFences(_device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-                vkResetFences(_device, 1, ref _imageAvailableFence);
+                Vulkan.VkFence fence = vkSC.ImageAvailableFence;
+                vkWaitForFences(_device, 1, ref fence, true, ulong.MaxValue);
+                vkResetFences(_device, 1, ref fence);
             }
         }
 
@@ -350,6 +328,9 @@ namespace Veldrid.Vk
                         break;
                     case VkFence fence:
                         SetDebugMarkerName(VkDebugReportObjectTypeEXT.FenceEXT, fence.DeviceFence.Handle, name);
+                        break;
+                    case VkSwapchain sc:
+                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.SwapchainKHREXT, sc.DeviceSwapchain.Handle, name);
                         break;
                     default:
                         break;
@@ -515,11 +496,6 @@ namespace Veldrid.Vk
             return 0;
         }
 
-        private void CreateSurface(VkSurfaceSource surfaceSource)
-        {
-            _surface = surfaceSource.CreateSurface(_instance);
-        }
-
         private void CreatePhysicalDevice()
         {
             uint deviceCount = 0;
@@ -617,7 +593,6 @@ namespace Veldrid.Vk
             CheckResult(result);
 
             vkGetDeviceQueue(_device, _graphicsQueueIndex, 0, out _graphicsQueue);
-            vkGetDeviceQueue(_device, _presentQueueIndex, 0, out _presentQueue);
 
             if (debugMarkerSupported)
             {
@@ -638,27 +613,12 @@ namespace Veldrid.Vk
             VkQueueFamilyProperties[] qfp = new VkQueueFamilyProperties[queueFamilyCount];
             vkGetPhysicalDeviceQueueFamilyProperties(_physicalDevice, ref queueFamilyCount, out qfp[0]);
 
-            bool foundGraphics = false;
-            bool foundPresent = false;
-
             for (uint i = 0; i < qfp.Length; i++)
             {
                 if ((qfp[i].queueFlags & VkQueueFlags.Graphics) != 0)
                 {
                     _graphicsQueueIndex = i;
-                    foundGraphics = true;
-                }
-
-                vkGetPhysicalDeviceSurfaceSupportKHR(_physicalDevice, i, _surface, out VkBool32 presentSupported);
-                if (presentSupported)
-                {
-                    _presentQueueIndex = i;
-                    foundPresent = true;
-                }
-
-                if (foundGraphics && foundPresent)
-                {
-                    break;
+                    return;
                 }
             }
         }
@@ -675,13 +635,6 @@ namespace Veldrid.Vk
             commandPoolCI.queueFamilyIndex = _graphicsQueueIndex;
             VkResult result = vkCreateCommandPool(_device, ref commandPoolCI, null, out _graphicsCommandPool);
             CheckResult(result);
-        }
-
-        private void CreateFences()
-        {
-            VkFenceCreateInfo fenceCI = VkFenceCreateInfo.New();
-            fenceCI.flags = VkFenceCreateFlags.None;
-            vkCreateFence(_device, ref fenceCI, null, out _imageAvailableFence);
         }
 
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
@@ -758,8 +711,7 @@ namespace Veldrid.Vk
                 vkDestroyFence(_device, fence, null);
             }
 
-            _scFB.Dispose();
-            vkDestroySurfaceKHR(_instance, _surface, null);
+            _mainSwapchain.Dispose();
             if (_debugCallbackFunc != null)
             {
                 _debugCallbackFunc = null;
@@ -773,7 +725,6 @@ namespace Veldrid.Vk
 
             _descriptorPoolManager.DestroyAll();
             vkDestroyCommandPool(_device, _graphicsCommandPool, null);
-            vkDestroyFence(_device, _imageAvailableFence, null);
 
             Debug.Assert(_submittedStagingTextures.Count == 0);
             foreach (VkTexture tex in _availableStagingTextures)

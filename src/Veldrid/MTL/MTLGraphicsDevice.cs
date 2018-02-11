@@ -69,9 +69,7 @@ namespace Veldrid.MTL
 
         public override ResourceFactory ResourceFactory { get; }
 
-        public override bool SyncToVerticalBlank { get; set; }
-
-        public override Framebuffer SwapchainFramebuffer => _swapchainFB;
+        public override Swapchain MainSwapchain => throw new NotImplementedException();
 
         protected override void SubmitCommandsCore(CommandList commandList, Fence fence)
         {
@@ -112,14 +110,7 @@ namespace Veldrid.MTL
             return _maxSampleCount;
         }
 
-        public override void ResizeMainWindow(uint width, uint height)
-        {
-            _swapchainFB.Resize(width, height);
-            _metalLayer.drawableSize = new CGSize(width, height);
-            _swapchainFB.GetNextDrawable();
-        }
-
-        protected override void SwapBuffersCore()
+        protected override void SwapBuffersCore(Swapchain swapchain)
         {
             IntPtr currentDrawablePtr = _swapchainFB.CurrentDrawable.NativePtr;
             if (currentDrawablePtr != IntPtr.Zero)

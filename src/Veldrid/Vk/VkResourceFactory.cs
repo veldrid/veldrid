@@ -74,5 +74,10 @@ namespace Veldrid.Vk
         {
             return new VkFence(_gd, signaled);
         }
+
+        public override Swapchain CreateSwapchain(ref SwapchainDescription description)
+        {
+            return new VkSwapchain(_gd, ref description, VkSurfaceSource.CreateFromSwapchainSource(description.Source));
+        }
     }
 }

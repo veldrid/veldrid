@@ -26,10 +26,14 @@ namespace Veldrid
         /// </summary>
         public abstract ResourceFactory ResourceFactory { get; }
 
+        public abstract Swapchain MainSwapchain { get; }
+
         /// <summary>
-        /// Gets or sets whether <see cref="SwapBuffers"/> should be synchronized to the window system's vertical refresh rate.
+        /// Gets or sets whether the main Swapchain's <see cref="SwapBuffers()"/> should be synchronized to the window system's
+        /// vertical refresh rate.
+        /// This is equivalent to <see cref="MainSwapchain"/>.<see cref="Swapchain.SyncToVerticalBlank"/>.
         /// </summary>
-        public abstract bool SyncToVerticalBlank { get; set; }
+        public virtual bool SyncToVerticalBlank { get => MainSwapchain.SyncToVerticalBlank; set => MainSwapchain.SyncToVerticalBlank = value; }
 
         /// <summary>
         /// Submits the given <see cref="CommandList"/> for execution by this device.
@@ -131,24 +135,33 @@ namespace Veldrid
         public abstract void ResetFence(Fence fence);
 
         /// <summary>
-        /// Swaps the buffers of the swapchain and presents the rendered image to the screen.
+        /// Swaps the buffers of the main swapchain and presents the rendered image to the screen.
+        /// This is equivalent to passing <see cref="MainSwapchain"/> to <see cref="SwapBuffers(Swapchain)"/>.
         /// </summary>
-        public void SwapBuffers() => SwapBuffersCore();
+        public void SwapBuffers() => SwapBuffers(MainSwapchain);
 
-        protected abstract void SwapBuffersCore();
+        /// <summary>
+        /// Swaps the buffers of the given swapchain.
+        /// </summary>
+        /// <param name="swapchain">The <see cref="Swapchain"/> to swap and present.</param>
+        public void SwapBuffers(Swapchain swapchain) => SwapBuffersCore(swapchain);
+
+        protected abstract void SwapBuffersCore(Swapchain swapchain);
 
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> object representing the render targets of the main swapchain.
+        /// This is equivalent to <see cref="MainSwapchain"/>.<see cref="Swapchain.Framebuffer"/>.
         /// </summary>
-        public abstract Framebuffer SwapchainFramebuffer { get; }
+        public Framebuffer SwapchainFramebuffer => MainSwapchain.Framebuffer;
 
         /// <summary>
         /// Notifies this instance that the main window has been resized. This causes the <see cref="SwapchainFramebuffer"/> to
         /// be appropriately resized and recreated.
+        /// This is equivalent to calling <see cref="MainSwapchain"/>.<see cref="Swapchain.Resize(uint, uint)"/>.
         /// </summary>
         /// <param name="width">The new width of the main window.</param>
         /// <param name="height">The new height of the main window.</param>
-        public abstract void ResizeMainWindow(uint width, uint height);
+        public void ResizeMainWindow(uint width, uint height) => MainSwapchain.Resize(width, height);
 
         /// <summary>
         /// A blocking method that returns when all submitted <see cref="CommandList"/> objects have fully completed.

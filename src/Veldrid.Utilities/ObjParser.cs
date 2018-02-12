@@ -12,7 +12,7 @@ namespace Veldrid.Utilities
     /// </summary>
     public class ObjParser
     {
-        private static readonly string[] s_newline = new string[] { Environment.NewLine };
+        private static readonly string[] s_newline = new string[] { "\n" };
         private static readonly char[] s_whitespaceChars = new char[] { ' ' };
         private static readonly char[] s_slashChar = new char[] { '/' };
 

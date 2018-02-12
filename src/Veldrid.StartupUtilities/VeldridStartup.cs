@@ -110,6 +110,32 @@ namespace Veldrid.StartupUtilities
             }
         }
 
+        public static unsafe SwapchainSource GetSwapchainSource(Sdl2Window window)
+        {
+            IntPtr sdlHandle = window.SdlWindowHandle;
+            SDL_SysWMinfo sysWmInfo;
+            Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
+            Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
+
+            switch (sysWmInfo.subsystem)
+            {
+                case SysWMType.Windows:
+                    Win32WindowInfo w32Info = Unsafe.Read<Win32WindowInfo>(&sysWmInfo.info);
+                    return SwapchainSource.CreateWin32(w32Info.Sdl2Window, w32Info.hinstance);
+                case SysWMType.X11:
+                    X11WindowInfo x11Info = Unsafe.Read<X11WindowInfo>(&sysWmInfo.info);
+                    return SwapchainSource.CreateXlib(
+                        x11Info.display,
+                        x11Info.Sdl2Window);
+                case SysWMType.Cocoa:
+                    CocoaWindowInfo cocoaInfo = Unsafe.Read<CocoaWindowInfo>(&sysWmInfo.info);
+                    IntPtr nsWindow = cocoaInfo.Window;
+                    return SwapchainSource.CreateNSWindow(nsWindow);
+                default:
+                    throw new PlatformNotSupportedException("Cannot create a SwapchainSource for " + sysWmInfo.subsystem + ".");
+            }
+        }
+
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;

@@ -205,10 +205,9 @@ namespace Veldrid
                 throw new VeldridException(
                     "ClearColorTarget index must be less than the current Framebuffer's color target count.");
             }
-
+#endif
             ClearColorTargetCore(index, clearColor);
         }
-#endif
 
         protected abstract void ClearColorTargetCore(uint index, RgbaFloat clearColor);
 
@@ -410,7 +409,7 @@ namespace Veldrid
             ValidateIndirectOffset(offset);
             ValidateIndirectStride(stride, Unsafe.SizeOf<IndirectDrawIndexedArguments>());
             PreDrawValidation();
-            
+
             DrawIndexedIndirectCore(indirectBuffer, offset, drawCount, stride);
         }
 

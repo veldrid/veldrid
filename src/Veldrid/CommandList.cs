@@ -788,6 +788,8 @@ namespace Veldrid
         [Conditional("VALIDATE_USAGE")]
         private void PreDrawValidation()
         {
+#if VALIDATE_USAGE
+
             if (_graphicsPipeline == null)
             {
                 throw new VeldridException($"A graphics {nameof(Pipeline)} must be set in order to issue draw commands.");
@@ -800,6 +802,7 @@ namespace Veldrid
             {
                 throw new VeldridException($"The {nameof(OutputDescription)} of the current graphics {nameof(Pipeline)} is not compatible with the current {nameof(Framebuffer)}.");
             }
+#endif
         }
     }
 }

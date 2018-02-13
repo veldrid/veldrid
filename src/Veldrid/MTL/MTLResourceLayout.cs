@@ -6,13 +6,23 @@ namespace Veldrid.MTL
         public uint BufferCount { get; }
         public uint TextureCount { get; }
         public uint SamplerCount { get; }
-
+#if !VALIDATE_USAGE
+        public ResourceKind[] ResourceKinds { get; }
+#endif
         public ResourceBindingInfo GetBindingInfo(int index) => _bindingInfosByVdIndex[index];
 
         public MTLResourceLayout(ref ResourceLayoutDescription description, MTLGraphicsDevice gd)
             : base(ref description)
         {
             ResourceLayoutElementDescription[] elements = description.Elements;
+#if !VALIDATE_USAGE
+            ResourceKinds = new ResourceKind[elements.Length];
+            for (int i = 0; i < elements.Length; i++)
+            {
+                ResourceKinds[i] = elements[i].Kind;
+            }
+#endif
+
             _bindingInfosByVdIndex = new ResourceBindingInfo[elements.Length];
 
             uint bufferIndex = 0;

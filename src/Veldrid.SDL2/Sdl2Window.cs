@@ -229,6 +229,14 @@ namespace Veldrid.Sdl2
             return new Point(p.X + position.X, p.Y + position.Y);
         }
 
+        public void SetMousePosition(int x, int y)
+        {
+            if (_exists)
+            {
+                SDL_WarpMouseInWindow(_window, x, y);
+            }
+        }
+
         public void Close()
         {
             if (_threadedProcessing)

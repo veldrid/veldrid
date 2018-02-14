@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using Veldrid.Vk;
 using Veldrid.Sdl2;
 using Veldrid.OpenGL;
 
@@ -98,7 +97,11 @@ namespace Veldrid.StartupUtilities
                 case GraphicsBackend.Direct3D11:
                     return CreateDefaultD3D11GraphicsDevice(options, window);
                 case GraphicsBackend.Vulkan:
+#if FEATURE_VULKAN_BACKEND
                     return CreateVulkanGraphicsDevice(options, window);
+#else
+                    throw new VeldridException("Vulkan support has not been included in this configuration of Veldrid");
+#endif
                 case GraphicsBackend.OpenGL:
                     return CreateDefaultOpenGLGraphicsDevice(options, window);
                 case GraphicsBackend.Metal:
@@ -139,34 +142,36 @@ namespace Veldrid.StartupUtilities
             }
         }
 
+#if FEATURE_VULKAN_BACKEND
         public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;
             SDL_SysWMinfo sysWmInfo;
             Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
             Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
-            VkSurfaceSource surfaceSource = GetSurfaceSource(sysWmInfo);
+            Vk.VkSurfaceSource surfaceSource = GetSurfaceSource(sysWmInfo);
             GraphicsDevice gd = GraphicsDevice.CreateVulkan(options, surfaceSource, (uint)window.Width, (uint)window.Height);
 
             return gd;
         }
 
-        private static unsafe VkSurfaceSource GetSurfaceSource(SDL_SysWMinfo sysWmInfo)
+        private static unsafe Veldrid.Vk.VkSurfaceSource GetSurfaceSource(SDL_SysWMinfo sysWmInfo)
         {
             switch (sysWmInfo.subsystem)
             {
                 case SysWMType.Windows:
                     Win32WindowInfo w32Info = Unsafe.Read<Win32WindowInfo>(&sysWmInfo.info);
-                    return VkSurfaceSource.CreateWin32(w32Info.hinstance, w32Info.Sdl2Window);
+                    return Vk.VkSurfaceSource.CreateWin32(w32Info.hinstance, w32Info.Sdl2Window);
                 case SysWMType.X11:
                     X11WindowInfo x11Info = Unsafe.Read<X11WindowInfo>(&sysWmInfo.info);
-                    return VkSurfaceSource.CreateXlib(
+                    return Vk.VkSurfaceSource.CreateXlib(
                         (Vulkan.Xlib.Display*)x11Info.display,
                         new Vulkan.Xlib.Window() { Value = x11Info.Sdl2Window });
                 default:
                     throw new PlatformNotSupportedException("Cannot create a Vulkan surface for " + sysWmInfo.subsystem + ".");
             }
         }
+#endif
 
         public static unsafe GraphicsDevice CreateDefaultOpenGLGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {

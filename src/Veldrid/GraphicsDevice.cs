@@ -529,7 +529,11 @@ namespace Veldrid
                 case GraphicsBackend.Direct3D11:
                     return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
                 case GraphicsBackend.Vulkan:
+#if FEATURE_VULKAN_BACKEND
                     return Vk.VkGraphicsDevice.IsSupported();
+#else
+                    return false;
+#endif
                 case GraphicsBackend.OpenGL:
                     return true;
                 case GraphicsBackend.Metal:
@@ -573,6 +577,7 @@ namespace Veldrid
             return new D3D11.D3D11GraphicsDevice(options, swapChainPanel, renderWidth, renderHeight, logicalDpi);
         }
 
+#if FEATURE_VULKAN_BACKEND
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Vulkan.
         /// </summary>
@@ -585,6 +590,7 @@ namespace Veldrid
         {
             return new Vk.VkGraphicsDevice(options, surfaceSource, width, height);
         }
+#endif
 
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using OpenGL.

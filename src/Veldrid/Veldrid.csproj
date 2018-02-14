@@ -5,7 +5,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>$(BinDir)\$(AssemblyName).xml</DocumentationFile>
     <NoWarn Condition="'$(Configuration)' == 'Debug'">1591</NoWarn>
-    <DefineConstants>$(DefineConstants);VALIDATE_USAGE</DefineConstants>
+    <DefineConstants>$(DefineConstants);VALIDATE_USAGE;FEATURE_VULKAN_BACKEND</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,9 +16,13 @@
     <PackageReference Include="SharpDX.D3DCompiler" Version="4.0.1" />
     <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" />
     <PackageReference Include="SharpDX.DXGI" Version="4.0.1" />
-    <PackageReference Include="Vk" Version="1.0.14" />
+    <PackageReference Include="Vk" Version="1.0.14" Condition="$(DefineConstants.Contains('FEATURE_VULKAN_BACKEND')) == 'true'" />
     <ProjectReference Include="..\Veldrid.OpenGLBindings\Veldrid.OpenGLBindings.csproj" />
     <ProjectReference Include="..\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Vk/*" Condition="$(DefineConstants.Contains('FEATURE_VULKAN_BACKEND')) == 'false'" />
   </ItemGroup>
 
   <PropertyGroup>

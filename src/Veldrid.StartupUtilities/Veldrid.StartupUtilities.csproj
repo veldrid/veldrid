@@ -4,6 +4,7 @@
     <PackageVersion>$(AssemblyVersion)</PackageVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);FEATURE_VULKAN_BACKEND</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

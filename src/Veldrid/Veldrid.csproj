@@ -5,23 +5,27 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>$(BinDir)\$(AssemblyName).xml</DocumentationFile>
     <NoWarn Condition="'$(Configuration)' == 'Debug'">1591</NoWarn>
-    <DefineConstants>$(DefineConstants);VALIDATE_USAGE;FEATURE_VULKAN_BACKEND</DefineConstants>
+    <DefineConstants>$(DefineConstants);VALIDATE_USAGE;FEATURE_VULKAN_BACKEND;FEATURE_D3D11_BACKEND;FEATURE_OPENGL_BACKEND;FEATURE_METAL_BACKEND</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Buffers" Version="4.4.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0" />
-    <PackageReference Include="SharpDX" Version="4.0.1" />
-    <PackageReference Include="SharpDX.D3DCompiler" Version="4.0.1" />
-    <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" />
-    <PackageReference Include="SharpDX.DXGI" Version="4.0.1" />
+    <PackageReference Include="SharpDX" Version="4.0.1" Condition="$(DefineConstants.Contains('FEATURE_D3D11_BACKEND')) == 'true'" />
+    <PackageReference Include="SharpDX.D3DCompiler" Version="4.0.1" Condition="$(DefineConstants.Contains('FEATURE_D3D11_BACKEND')) == 'true'" />
+    <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" Condition="$(DefineConstants.Contains('FEATURE_D3D11_BACKEND')) == 'true'" />
+    <PackageReference Include="SharpDX.DXGI" Version="4.0.1" Condition="$(DefineConstants.Contains('FEATURE_D3D11_BACKEND')) == 'true'" />
     <PackageReference Include="Vk" Version="1.0.14" Condition="$(DefineConstants.Contains('FEATURE_VULKAN_BACKEND')) == 'true'" />
-    <ProjectReference Include="..\Veldrid.OpenGLBindings\Veldrid.OpenGLBindings.csproj" />
-    <ProjectReference Include="..\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj" />
+    <ProjectReference Include="..\Veldrid.OpenGLBindings\Veldrid.OpenGLBindings.csproj" Condition="$(DefineConstants.Contains('FEATURE_OPENGL_BACKEND')) == 'true'" />
+    <ProjectReference Include="..\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj" Condition="$(DefineConstants.Contains('FEATURE_METAL_BACKEND')) == 'true'" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="D3D11/*" Condition="$(DefineConstants.Contains('FEATURE_D3D11_BACKEND')) == 'false'" />
+    <Compile Remove="MTL/*" Condition="$(DefineConstants.Contains('FEATURE_METAL_BACKEND')) == 'false'" />
+    <Compile Remove="OpenGL/*/**" Condition="$(DefineConstants.Contains('FEATURE_OPENGL_BACKEND')) == 'false'" />
+    <Compile Remove="OpenGL/*" Condition="$(DefineConstants.Contains('FEATURE_OPENGL_BACKEND')) == 'false'" />
     <Compile Remove="Vk/*" Condition="$(DefineConstants.Contains('FEATURE_VULKAN_BACKEND')) == 'false'" />
   </ItemGroup>
 

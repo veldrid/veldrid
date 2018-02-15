@@ -11,6 +11,8 @@ Supported backends:
 
 [Veldrid documentation site](https://mellinoe.github.io/veldrid-docs/)
 
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/veldrid/Lobby)
+
 Veldrid is available on NuGet:
 
 [![NuGet](https://img.shields.io/nuget/v/Veldrid.svg)](https://www.nuget.org/packages/Veldrid)

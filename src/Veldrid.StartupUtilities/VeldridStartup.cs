@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Veldrid.Sdl2;
-using Veldrid.OpenGL;
 
 namespace Veldrid.StartupUtilities
 {
@@ -95,7 +94,11 @@ namespace Veldrid.StartupUtilities
             switch (preferredBackend)
             {
                 case GraphicsBackend.Direct3D11:
+#if FEATURE_D3D11_BACKEND
                     return CreateDefaultD3D11GraphicsDevice(options, window);
+#else
+                    throw new VeldridException("D3D11 support has not been included in this configuration of Veldrid");
+#endif
                 case GraphicsBackend.Vulkan:
 #if FEATURE_VULKAN_BACKEND
                     return CreateVulkanGraphicsDevice(options, window);
@@ -103,9 +106,17 @@ namespace Veldrid.StartupUtilities
                     throw new VeldridException("Vulkan support has not been included in this configuration of Veldrid");
 #endif
                 case GraphicsBackend.OpenGL:
+#if FEATURE_OPENGL_BACKEND
                     return CreateDefaultOpenGLGraphicsDevice(options, window);
+#else
+                    throw new VeldridException("OpenGL support has not been included in this configuration of Veldrid");
+#endif
                 case GraphicsBackend.Metal:
+#if FEATURE_METAL_BACKEND
                     return CreateMetalGraphicsDevice(options, window);
+#else
+                    throw new VeldridException("Metal support has not been included in this configuration of Veldrid");
+#endif
                 //case GraphicsBackend.OpenGLES:
                 //    return CreateDefaultOpenGLESRenderContext(ref contextCI, window);
                 default:
@@ -113,6 +124,7 @@ namespace Veldrid.StartupUtilities
             }
         }
 
+#if FEATURE_METAL_BACKEND
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;
@@ -123,6 +135,7 @@ namespace Veldrid.StartupUtilities
             IntPtr nsWindow = cocoaInfo.Window;
             return GraphicsDevice.CreateMetal(options, nsWindow);
         }
+#endif
 
         private static GraphicsBackend GetPlatformDefaultBackend()
         {
@@ -173,6 +186,7 @@ namespace Veldrid.StartupUtilities
         }
 #endif
 
+#if FEATURE_OPENGL_BACKEND
         public static unsafe GraphicsDevice CreateDefaultOpenGLGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;
@@ -221,7 +235,7 @@ namespace Veldrid.StartupUtilities
 
             int result = Sdl2Native.SDL_GL_SetSwapInterval(options.SyncToVerticalBlank ? 1 : 0);
 
-            OpenGLPlatformInfo platformInfo = new OpenGLPlatformInfo(
+            OpenGL.OpenGLPlatformInfo platformInfo = new OpenGL.OpenGLPlatformInfo(
                 contextHandle,
                 Sdl2Native.SDL_GL_GetProcAddress,
                 context => Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, context),
@@ -237,11 +251,14 @@ namespace Veldrid.StartupUtilities
                 (uint)window.Width,
                 (uint)window.Height);
         }
+#endif
 
+#if FEATURE_D3D11_BACKEND
         public static GraphicsDevice CreateDefaultD3D11GraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
             return GraphicsDevice.CreateD3D11(options, window.Handle, (uint)window.Width, (uint)window.Height);
         }
+#endif
 
         private static unsafe string GetString(byte* stringStart)
         {

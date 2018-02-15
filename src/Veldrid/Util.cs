@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Veldrid.D3D11;
 
 namespace Veldrid
 {

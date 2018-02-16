@@ -386,7 +386,7 @@ namespace Veldrid.D3D11
                         }
 
                         bool result = _mappedResources.Remove(key);
-                        Debug.Assert(result);
+                        System.Diagnostics.Debug.Assert(result);
                     }
                 }
             }

@@ -104,10 +104,10 @@ namespace Veldrid.D3D11
                     return Format.BC3_UNorm;
 
                 case PixelFormat.D24_UNorm_S8_UInt:
-                    Debug.Assert(depthFormat);
+                    System.Diagnostics.Debug.Assert(depthFormat);
                     return Format.R24G8_Typeless;
                 case PixelFormat.D32_Float_S8_UInt:
-                    Debug.Assert(depthFormat);
+                    System.Diagnostics.Debug.Assert(depthFormat);
                     return Format.R32G8X24_Typeless;
 
                 case PixelFormat.R10_G10_B10_A2_UNorm:

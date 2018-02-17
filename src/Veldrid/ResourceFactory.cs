@@ -73,7 +73,7 @@ namespace Veldrid
             {
                 throw new VeldridException("The givel PixelFormat can only be used in a Texture with DepthStencil usage.");
             }
-            if (((description.Height == 1 && description.Depth == 1) || (description.Depth != 1))
+            if ((description.Type == TextureType.Texture1D || description.Type == TextureType.Texture3D)
                 && description.SampleCount != TextureSampleCount.Count1)
             {
                 throw new VeldridException(

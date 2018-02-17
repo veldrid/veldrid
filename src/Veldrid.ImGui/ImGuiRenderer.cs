@@ -185,6 +185,20 @@ namespace Veldrid
             return tvi.ResourceSet;
         }
 
+        public void ClearCachedImageResources()
+        {
+            foreach (IDisposable resource in _ownedResources)
+            {
+                resource.Dispose();
+            }
+
+            _ownedResources.Clear();
+            _setsByView.Clear();
+            _viewsById.Clear();
+            _autoViewsByTexture.Clear();
+            _lastAssignedID = 100;
+        }
+
         private byte[] LoadEmbeddedShaderCode(ResourceFactory factory, string name, ShaderStages stage)
         {
             switch (factory.BackendType)

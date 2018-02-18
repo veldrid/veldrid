@@ -62,12 +62,12 @@ namespace Veldrid.MTL
         {
             foreach (var colorTarget in ColorTargets)
             {
-                ObjectiveCRuntime.retain(
+                ObjectiveCRuntime.release(
                     Util.AssertSubtype<Texture, MTLTexture>(colorTarget.Target).DeviceTexture.NativePtr);
             }
             if (DepthTarget != null)
             {
-                ObjectiveCRuntime.retain(
+                ObjectiveCRuntime.release(
                     Util.AssertSubtype<Texture, MTLTexture>(DepthTarget.Value.Target)
                         .DeviceTexture.NativePtr);
             }

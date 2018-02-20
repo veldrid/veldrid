@@ -41,12 +41,33 @@ namespace Veldrid.Utilities
         /// <returns>A new <see cref="ObjFile"/>.</returns>
         public ObjFile Parse(Stream s)
         {
-            using (var sr = new StreamReader(s))
+            string text;
+            using (StreamReader sr = new StreamReader(s))
             {
-                string allText = sr.ReadToEnd();
-                string[] lines = allText.Split(s_newline, StringSplitOptions.None);
-                return Parse(lines);
+                text = sr.ReadToEnd();
             }
+
+            int lineStart = 0;
+            int lineEnd = -1;
+            while ((lineEnd = text.IndexOf('\n', lineStart)) != -1)
+            {
+                string line;
+
+                if (lineEnd != 0 && text[lineEnd - 1] == '\r')
+                {
+                    line = text.Substring(lineStart, lineEnd - lineStart - 1);
+                }
+                else
+                {
+                    line = text.Substring(lineStart, lineEnd - lineStart);
+                }
+
+                _pc.Process(line);
+                lineStart = lineEnd + 1;
+            }
+
+            _pc.EndOfFileReached();
+            return _pc.FinalizeFile();
         }
 
         private class ParseContext

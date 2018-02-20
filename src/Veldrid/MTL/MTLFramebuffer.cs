@@ -10,17 +10,6 @@ namespace Veldrid.MTL
         public MTLFramebuffer(MTLGraphicsDevice gd, ref FramebufferDescription description)
             : base(gd, ref description)
         {
-            foreach (var colorTarget in ColorTargets)
-            {
-                ObjectiveCRuntime.retain(
-                    Util.AssertSubtype<Texture, MTLTexture>(colorTarget.Target).DeviceTexture.NativePtr);
-            }
-            if (DepthTarget != null)
-            {
-                ObjectiveCRuntime.retain(
-                    Util.AssertSubtype<Texture, MTLTexture>(DepthTarget.Value.Target)
-                        .DeviceTexture.NativePtr);
-            }
         }
 
         public override MTLRenderPassDescriptor CreateRenderPassDescriptor()
@@ -60,17 +49,6 @@ namespace Veldrid.MTL
 
         public override void Dispose()
         {
-            foreach (var colorTarget in ColorTargets)
-            {
-                ObjectiveCRuntime.release(
-                    Util.AssertSubtype<Texture, MTLTexture>(colorTarget.Target).DeviceTexture.NativePtr);
-            }
-            if (DepthTarget != null)
-            {
-                ObjectiveCRuntime.release(
-                    Util.AssertSubtype<Texture, MTLTexture>(DepthTarget.Value.Target)
-                        .DeviceTexture.NativePtr);
-            }
         }
     }
 }

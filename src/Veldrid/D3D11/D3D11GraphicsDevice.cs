@@ -317,8 +317,7 @@ namespace Veldrid.D3D11
                                 buffer.Buffer,
                                 0,
                                 D3D11Formats.VdToD3D11MapMode((buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic, mode),
-                                SharpDX.Direct3D11.MapFlags.None,
-                                out DataStream ds);
+                                SharpDX.Direct3D11.MapFlags.None);
 
                             info.MappedResource = new MappedResource(resource, mode, db.DataPointer, buffer.SizeInBytes);
                             info.RefCount = 1;

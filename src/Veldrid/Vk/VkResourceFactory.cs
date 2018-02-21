@@ -77,7 +77,7 @@ namespace Veldrid.Vk
 
         public override Swapchain CreateSwapchain(ref SwapchainDescription description)
         {
-            return new VkSwapchain(_gd, ref description, VkSurfaceSource.CreateFromSwapchainSource(description.Source));
+            return new VkSwapchain(_gd, ref description);
         }
     }
 }

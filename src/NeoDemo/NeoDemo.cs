@@ -60,7 +60,7 @@ namespace Veldrid.NeoDemo
                 windowCI,
                 gdOptions,
                 //GraphicsBackend.Metal,
-//                GraphicsBackend.Vulkan,
+                //GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
                 out _window,
                 out _gd);

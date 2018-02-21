@@ -2,6 +2,7 @@
 using Vulkan;
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
+using System;
 
 namespace Veldrid.Vk
 {
@@ -40,11 +41,22 @@ namespace Veldrid.Vk
         public VkSurfaceKHR Surface => _surface;
         public VkQueue PresentQueue => _presentQueue;
 
-        public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description, VkSurfaceSource surfaceSource)
+        public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description) : this(gd, ref description, VkSurfaceKHR.Null) { }
+
+        public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description, VkSurfaceKHR existingSurface)
         {
             _gd = gd;
 
-            _surface = surfaceSource.CreateSurface(gd.Instance);
+            if (existingSurface == VkSurfaceKHR.Null)
+            {
+                VkSurfaceSource surfaceSource = VkSurfaceSource.CreateFromSwapchainSource(description.Source);
+                _surface = surfaceSource.CreateSurface(gd.Instance);
+            }
+            else
+            {
+                _surface = existingSurface;
+            }
+
             if (!GetPresentQueueIndex(out _presentQueueIndex))
             {
                 throw new VeldridException($"The system does not support presenting the given Vulkan surface.");
@@ -209,25 +221,35 @@ namespace Veldrid.Vk
             _framebuffer.SetNewSwapchain(_deviceSwapchain, width, height, surfaceFormat, swapchainCI.imageExtent);
         }
 
-        private bool GetPresentQueueIndex(out uint queueIndex)
+        private bool GetPresentQueueIndex(out uint queueFamilyIndex)
         {
-            uint queueFamilyCount = 0;
-            vkGetPhysicalDeviceQueueFamilyProperties(_gd.PhysicalDevice, ref queueFamilyCount, null);
-            VkQueueFamilyProperties[] qfp = new VkQueueFamilyProperties[queueFamilyCount];
-            vkGetPhysicalDeviceQueueFamilyProperties(_gd.PhysicalDevice, ref queueFamilyCount, out qfp[0]);
+            uint graphicsQueueIndex = _gd.GraphicsQueueIndex;
+            uint presentQueueIndex = _gd.PresentQueueIndex;
 
-            for (uint i = 0; i < qfp.Length; i++)
+            if (QueueSupportsPresent(graphicsQueueIndex, _surface))
             {
-                vkGetPhysicalDeviceSurfaceSupportKHR(_gd.PhysicalDevice, i, _surface, out VkBool32 presentSupported);
-                if (presentSupported)
-                {
-                    queueIndex = i;
-                    return true;
-                }
+                queueFamilyIndex = graphicsQueueIndex;
+                return true;
+            }
+            else if (graphicsQueueIndex != presentQueueIndex && QueueSupportsPresent(presentQueueIndex, _surface))
+            {
+                queueFamilyIndex = presentQueueIndex;
+                return true;
             }
 
-            queueIndex = 0;
+            queueFamilyIndex = 0;
             return false;
+        }
+
+        private bool QueueSupportsPresent(uint queueFamilyIndex, VkSurfaceKHR surface)
+        {
+            VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(
+                _gd.PhysicalDevice,
+                queueFamilyIndex,
+                surface,
+                out VkBool32 supported);
+            CheckResult(result);
+            return supported;
         }
 
         public override void Dispose()

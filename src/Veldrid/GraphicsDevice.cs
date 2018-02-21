@@ -26,14 +26,31 @@ namespace Veldrid
         /// </summary>
         public abstract ResourceFactory ResourceFactory { get; }
 
+        /// <summary>
+        /// Retrieves the main Swapchain for this device. This property is only valid if the device was created with a main
+        /// Swapchain, and will return null otherwise.
+        /// </summary>
         public abstract Swapchain MainSwapchain { get; }
 
         /// <summary>
         /// Gets or sets whether the main Swapchain's <see cref="SwapBuffers()"/> should be synchronized to the window system's
         /// vertical refresh rate.
         /// This is equivalent to <see cref="MainSwapchain"/>.<see cref="Swapchain.SyncToVerticalBlank"/>.
+        /// This property cannot be set if this GraphicsDevice was created without a main Swapchain.
         /// </summary>
-        public virtual bool SyncToVerticalBlank { get => MainSwapchain.SyncToVerticalBlank; set => MainSwapchain.SyncToVerticalBlank = value; }
+        public virtual bool SyncToVerticalBlank
+        {
+            get => MainSwapchain?.SyncToVerticalBlank ?? false;
+            set
+            {
+                if (MainSwapchain == null)
+                {
+                    throw new VeldridException($"This GraphicsDevice was created without a main Swapchain. This property cannot be set.");
+                }
+
+                MainSwapchain.SyncToVerticalBlank = value;
+            }
+        }
 
         /// <summary>
         /// Submits the given <see cref="CommandList"/> for execution by this device.
@@ -137,8 +154,17 @@ namespace Veldrid
         /// <summary>
         /// Swaps the buffers of the main swapchain and presents the rendered image to the screen.
         /// This is equivalent to passing <see cref="MainSwapchain"/> to <see cref="SwapBuffers(Swapchain)"/>.
+        /// This method can only be called if this GraphicsDevice was created with a main Swapchain.
         /// </summary>
-        public void SwapBuffers() => SwapBuffers(MainSwapchain);
+        public void SwapBuffers()
+        {
+            if (MainSwapchain == null)
+            {
+                throw new VeldridException("This GraphicsDevice was created without a main Swapchain, so the requested operation cannot be performed.");
+            }
+
+            SwapBuffers(MainSwapchain);
+        }
 
         /// <summary>
         /// Swaps the buffers of the given swapchain.
@@ -151,17 +177,27 @@ namespace Veldrid
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> object representing the render targets of the main swapchain.
         /// This is equivalent to <see cref="MainSwapchain"/>.<see cref="Swapchain.Framebuffer"/>.
+        /// If this GraphicsDevice was created without a main Swapchain, then this returns null.
         /// </summary>
-        public Framebuffer SwapchainFramebuffer => MainSwapchain.Framebuffer;
+        public Framebuffer SwapchainFramebuffer => MainSwapchain?.Framebuffer;
 
         /// <summary>
         /// Notifies this instance that the main window has been resized. This causes the <see cref="SwapchainFramebuffer"/> to
         /// be appropriately resized and recreated.
         /// This is equivalent to calling <see cref="MainSwapchain"/>.<see cref="Swapchain.Resize(uint, uint)"/>.
+        /// This method can only be called if this GraphicsDevice was created with a main Swapchain.
         /// </summary>
         /// <param name="width">The new width of the main window.</param>
         /// <param name="height">The new height of the main window.</param>
-        public void ResizeMainWindow(uint width, uint height) => MainSwapchain.Resize(width, height);
+        public void ResizeMainWindow(uint width, uint height)
+        {
+            if (MainSwapchain == null)
+            {
+                throw new VeldridException("This GraphicsDevice was created without a main Swapchain, so the requested operation cannot be performed.");
+            }
+
+            MainSwapchain.Resize(width, height);
+        }
 
         /// <summary>
         /// A blocking method that returns when all submitted <see cref="CommandList"/> objects have fully completed.
@@ -556,17 +592,44 @@ namespace Veldrid
         /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
+        public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options)
+        {
+            return new D3D11.D3D11GraphicsDevice(options, null);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
+        public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
+        {
+            return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="hwnd">The Win32 window handle to render into.</param>
         /// <param name="width">The initial width of the window.</param>
         /// <param name="height">The initial height of the window.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, IntPtr hwnd, uint width, uint height)
         {
-            return new D3D11.D3D11GraphicsDevice(options, hwnd, (int)width, (int)height);
+            SwapchainDescription swapchainDescription = new SwapchainDescription(
+                SwapchainSource.CreateWin32(hwnd, IntPtr.Zero),
+                width, height,
+                options.SwapchainDepthFormat,
+                options.SyncToVerticalBlank);
+
+            return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="swapChainPanel">A COM object which must implement the <see cref="SharpDX.DXGI.ISwapChainPanelNative"/>
@@ -583,11 +646,39 @@ namespace Veldrid
             double renderHeight,
             float logicalDpi)
         {
-            return new D3D11.D3D11GraphicsDevice(options, swapChainPanel, renderWidth, renderHeight, logicalDpi);
+            SwapchainDescription swapchainDescription = new SwapchainDescription(
+                SwapchainSource.CreateUwp(swapChainPanel, logicalDpi),
+                (uint)renderWidth,
+                (uint)renderHeight,
+                options.SwapchainDepthFormat,
+                options.SyncToVerticalBlank);
+
+            return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
         }
 
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Vulkan.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
+        public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options)
+        {
+            return new Vk.VkGraphicsDevice(options, null);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Vulkan, with a main Swapchain.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
+        public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
+        {
+            return new Vk.VkGraphicsDevice(options, swapchainDescription);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Vulkan, with a main Swapchain.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="surfaceSource">The source from which a Vulkan surface can be created.</param>
@@ -596,11 +687,17 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
         public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, Vk.VkSurfaceSource surfaceSource, uint width, uint height)
         {
-            return new Vk.VkGraphicsDevice(options, surfaceSource, width, height);
+            SwapchainDescription scDesc = new SwapchainDescription(
+                surfaceSource.GetSurfaceSource(),
+                width, height,
+                options.SwapchainDepthFormat,
+                options.SyncToVerticalBlank);
+
+            return new Vk.VkGraphicsDevice(options, scDesc);
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL.
+        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL, with a main Swapchain.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="platformInfo">An <see cref="OpenGL.OpenGLPlatformInfo"/> object encapsulating necessary OpenGL context
@@ -621,14 +718,37 @@ namespace Veldrid
         /// Creates a new <see cref="GraphicsDevice"/> using Metal.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
+        public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options)
+        {
+            return new MTL.MTLGraphicsDevice(options, null);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Metal, with a main Swapchain.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
+        public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
+        {
+            return new MTL.MTLGraphicsDevice(options, swapchainDescription);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Metal, with a main Swapchain.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="nsWindow">A pointer to an NSWindow object, which will be used to create the Metal device's swapchain.
         /// </param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
-        public static GraphicsDevice CreateMetal(
-            GraphicsDeviceOptions options,
-            IntPtr nsWindow)
+        public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options, IntPtr nsWindow)
         {
-            return new MTL.MTLGraphicsDevice(options, nsWindow);
+            SwapchainDescription swapchainDesc = new SwapchainDescription(
+                new NSWindowSwapchainSource(nsWindow),
+                0, 0, options.SwapchainDepthFormat, options.SyncToVerticalBlank);
+
+            return new MTL.MTLGraphicsDevice(options, swapchainDesc);
         }
     }
 }

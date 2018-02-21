@@ -74,19 +74,27 @@ namespace Veldrid.Vk
             = new List<KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)>>();
         private readonly VkSwapchain _mainSwapchain;
 
-        public VkGraphicsDevice(GraphicsDeviceOptions options, VkSurfaceSource surfaceSource, uint width, uint height)
+        public VkGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? scDesc)
         {
             CreateInstance(options.Debug);
+
+            VkSurfaceKHR surface = VkSurfaceKHR.Null;
+            if (scDesc != null)
+            {
+                surface = VkSurfaceSource.CreateFromSwapchainSource(scDesc.Value.Source).CreateSurface(_instance);
+            }
+
             CreatePhysicalDevice();
-            CreateLogicalDevice();
+            CreateLogicalDevice(surface);
+
+            if (scDesc != null)
+            {
+                SwapchainDescription desc = scDesc.Value;
+                _mainSwapchain = new VkSwapchain(this, ref desc, surface);
+            }
+
             _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
             ResourceFactory = new VkResourceFactory(this);
-            SwapchainDescription scDesc = new SwapchainDescription(
-                surfaceSource.GetSurfaceSource(),
-                width, height,
-                options.SwapchainDepthFormat,
-                options.SyncToVerticalBlank);
-            _mainSwapchain = new VkSwapchain(this, ref scDesc, surfaceSource);
             CreateDescriptorPool();
             CreateGraphicsCommandPool();
             for (int i = 0; i < SharedCommandPoolCount; i++)
@@ -266,7 +274,7 @@ namespace Veldrid.Vk
             presentInfo.pImageIndices = &imageIndex;
 
             VkResult result = vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
-            //CheckResult(result);
+            CheckResult(result);
 
             if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, vkSC.ImageAvailableFence))
             {
@@ -522,9 +530,9 @@ namespace Veldrid.Vk
             vkGetPhysicalDeviceMemoryProperties(_physicalDevice, out _physicalDeviceMemProperties);
         }
 
-        private void CreateLogicalDevice()
+        private void CreateLogicalDevice(VkSurfaceKHR surface)
         {
-            GetQueueFamilyIndices();
+            GetQueueFamilyIndices(surface);
 
             HashSet<uint> familyIndices = new HashSet<uint> { _graphicsQueueIndex, _presentQueueIndex };
             VkDeviceQueueCreateInfo* queueCreateInfos = stackalloc VkDeviceQueueCreateInfo[familyIndices.Count];
@@ -606,18 +614,35 @@ namespace Veldrid.Vk
             }
         }
 
-        private void GetQueueFamilyIndices()
+        private void GetQueueFamilyIndices(VkSurfaceKHR surface)
         {
             uint queueFamilyCount = 0;
             vkGetPhysicalDeviceQueueFamilyProperties(_physicalDevice, ref queueFamilyCount, null);
             VkQueueFamilyProperties[] qfp = new VkQueueFamilyProperties[queueFamilyCount];
             vkGetPhysicalDeviceQueueFamilyProperties(_physicalDevice, ref queueFamilyCount, out qfp[0]);
 
+            bool foundGraphics = false;
+            bool foundPresent = surface == VkSurfaceKHR.Null;
+
             for (uint i = 0; i < qfp.Length; i++)
             {
                 if ((qfp[i].queueFlags & VkQueueFlags.Graphics) != 0)
                 {
                     _graphicsQueueIndex = i;
+                }
+
+                if (!foundPresent)
+                {
+                    vkGetPhysicalDeviceSurfaceSupportKHR(_physicalDevice, i, surface, out VkBool32 presentSupported);
+                    if (presentSupported)
+                    {
+                        _presentQueueIndex = i;
+                        foundPresent = true;
+                    }
+                }
+
+                if (foundGraphics && foundPresent)
+                {
                     return;
                 }
             }
@@ -711,7 +736,7 @@ namespace Veldrid.Vk
                 vkDestroyFence(_device, fence, null);
             }
 
-            _mainSwapchain.Dispose();
+            _mainSwapchain?.Dispose();
             if (_debugCallbackFunc != null)
             {
                 _debugCallbackFunc = null;

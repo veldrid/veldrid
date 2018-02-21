@@ -1,4 +1,5 @@
-﻿using SharpDX.Direct3D11;
+﻿using SharpDX;
+using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace Veldrid.D3D11
         private int _syncInterval;
         private D3D11Framebuffer _framebuffer;
         private D3D11Texture _depthTexture;
-        private int _pixelScale = 1;
+        private float _pixelScale = 1f;
 
         private readonly object _referencedCLsLock = new object();
         private HashSet<D3D11CommandList> _referencedCLs = new HashSet<D3D11CommandList>();
@@ -62,10 +63,52 @@ namespace Veldrid.D3D11
                     }
                 }
             }
-            else
+            else if (description.Source is UwpSwapchainSource uwpSource)
             {
-                // TODO-SWAPCHAIN: Implement UWP swapchains.
-                throw new NotImplementedException();
+                _pixelScale = uwpSource.LogicalDpi / 96.0f;
+
+                // Properties of the swap chain
+                SwapChainDescription1 swapChainDescription = new SwapChainDescription1()
+                {
+                    AlphaMode = AlphaMode.Ignore,
+                    BufferCount = 2,
+                    Format = Format.B8G8R8A8_UNorm,
+                    Height = (int)(description.Width * _pixelScale),
+                    Width = (int)(description.Width * _pixelScale),
+                    SampleDescription = new SampleDescription(1, 0),
+                    SwapEffect = SwapEffect.FlipSequential,
+                    Usage = Usage.BackBuffer | Usage.RenderTargetOutput,
+                };
+
+                // Retrive the SharpDX.DXGI device associated to the Direct3D device.
+                using (SharpDX.DXGI.Device3 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device3>())
+                {
+                    // Get the SharpDX.DXGI factory automatically created when initializing the Direct3D device.
+                    using (Factory2 dxgiFactory = dxgiDevice.Adapter.GetParent<Factory2>())
+                    {
+                        // Create the swap chain and get the highest version available.
+                        using (SwapChain1 swapChain1 = new SwapChain1(dxgiFactory, _device, ref swapChainDescription))
+                        {
+                            _dxgiSwapChain = swapChain1.QueryInterface<SwapChain2>();
+                        }
+                    }
+                }
+
+                ComObject co = new ComObject(uwpSource.SwapChainPanelNative);
+
+                ISwapChainPanelNative swapchainPanelNative = co.QueryInterfaceOrNull<ISwapChainPanelNative>();
+                if (swapchainPanelNative != null)
+                {
+                    swapchainPanelNative.SwapChain = _dxgiSwapChain;
+                }
+                else
+                {
+                    ISwapChainBackgroundPanelNative bgPanelNative = co.QueryInterfaceOrNull<ISwapChainBackgroundPanelNative>();
+                    if (bgPanelNative != null)
+                    {
+                        bgPanelNative.SwapChain = _dxgiSwapChain;
+                    }
+                }
             }
 
             Resize(description.Width, description.Height);
@@ -100,7 +143,6 @@ namespace Veldrid.D3D11
             // Get the backbuffer from the swapchain
             using (Texture2D backBufferTexture = _dxgiSwapChain.GetBackBuffer<Texture2D>(0))
             {
-                Texture2D depthBufferTexture = null;
                 if (_depthFormat != null)
                 {
                     TextureDescription depthDesc = new TextureDescription(
@@ -112,10 +154,7 @@ namespace Veldrid.D3D11
                 }
 
                 D3D11Texture backBufferVdTexture = new D3D11Texture(backBufferTexture);
-                D3D11Texture depthVdTexture = depthBufferTexture != null
-                    ? new D3D11Texture(depthBufferTexture)
-                    : null;
-                FramebufferDescription desc = new FramebufferDescription(depthVdTexture, backBufferVdTexture);
+                FramebufferDescription desc = new FramebufferDescription(_depthTexture, backBufferVdTexture);
                 _framebuffer = new D3D11Framebuffer(_device, ref desc);
                 _framebuffer.Swapchain = this;
             }

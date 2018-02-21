@@ -82,7 +82,10 @@ namespace Veldrid.Tests
             Assert.Throws<VeldridException>(() => cl.ClearColorTarget(2, RgbaFloat.Red));
             Assert.Throws<VeldridException>(() => cl.ClearColorTarget(3, RgbaFloat.Red));
         }
+    }
 
+    public abstract class SwapchainFramebufferTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    {
         [Fact]
         public void ClearSwapchainFramebuffer_Succeeds()
         {
@@ -96,13 +99,17 @@ namespace Veldrid.Tests
     }
 
     public class OpenGLFramebufferTests : FramebufferTests<OpenGLDeviceCreator> { }
+    public class OpenGLSwapchainFramebufferTests : SwapchainFramebufferTests<OpenGLDeviceCreator> { }
 #if TEST_VULKAN
     public class VulkanFramebufferTests : FramebufferTests<VulkanDeviceCreator> { }
+    public class VulkanSwapchainFramebufferTests : SwapchainFramebufferTests<VulkanDeviceCreatorWithMainSwapchain> { }
 #endif
 #if TEST_D3D11
     public class D3D11FramebufferTests : FramebufferTests<D3D11DeviceCreator> { }
+    public class D3D11SwapchainFramebufferTests : SwapchainFramebufferTests<D3D11DeviceCreatorWithMainSwapchain> { }
 #endif
 #if TEST_METAL
     public class MetalFramebufferTests : FramebufferTests<MetalDeviceCreator> { }
+    public class MetalSwapchainFramebufferTests : SwapchainFramebufferTests<MetalDeviceCreatorWithMainSwapchain> { }
 #endif
 }

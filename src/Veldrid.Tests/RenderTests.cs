@@ -121,8 +121,6 @@ namespace Veldrid.Tests
             cl.SetVertexBuffer(0, vb);
             cl.SetGraphicsResourceSet(0, set);
             cl.Draw((uint)vertices.Length);
-            cl.SetFramebuffer(GD.SwapchainFramebuffer);
-            cl.ClearColorTarget(0, RgbaFloat.Red);
             cl.CopyTexture(target, staging);
             cl.End();
             GD.SubmitCommands(cl);
@@ -245,8 +243,6 @@ namespace Veldrid.Tests
             cl.SetVertexBuffer(0, vb);
             cl.SetGraphicsResourceSet(0, set);
             cl.Draw((uint)vertices.Length);
-            cl.SetFramebuffer(GD.SwapchainFramebuffer);
-            cl.ClearColorTarget(0, RgbaFloat.Red);
             cl.CopyTexture(target, staging);
             cl.End();
             GD.SubmitCommands(cl);
@@ -398,8 +394,6 @@ namespace Veldrid.Tests
             cl.SetVertexBuffer(0, vb);
             cl.SetGraphicsResourceSet(0, set);
             cl.Draw((uint)vertices.Length);
-            cl.SetFramebuffer(GD.SwapchainFramebuffer);
-            cl.ClearColorTarget(0, RgbaFloat.Red);
             cl.CopyTexture(target, staging);
             cl.End();
             GD.SubmitCommands(cl);

@@ -26,7 +26,7 @@ namespace Veldrid.MTL
 
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
-            IntPtr nsWindow)
+            SwapchainDescription? swapchainDesc)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
             ResourceFactory = new MTLResourceFactory(this);
@@ -41,10 +41,11 @@ namespace Veldrid.MTL
                 }
             }
 
-            SwapchainDescription swapchainDesc = new SwapchainDescription(
-                new NSWindowSwapchainSource(nsWindow),
-                0, 0, options.SwapchainDepthFormat, options.SyncToVerticalBlank);
-            _mainSwapchain = new MTLSwapchain(this, ref swapchainDesc);
+            if (swapchainDesc != null)
+            {
+                SwapchainDescription desc = swapchainDesc.Value;
+                _mainSwapchain = new MTLSwapchain(this, ref desc);
+            }
 
             PostDeviceCreated();
         }

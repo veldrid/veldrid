@@ -94,25 +94,25 @@ namespace Veldrid.StartupUtilities
             switch (preferredBackend)
             {
                 case GraphicsBackend.Direct3D11:
-#if FEATURE_D3D11_BACKEND
+#if !EXCLUDE_D3D11_BACKEND
                     return CreateDefaultD3D11GraphicsDevice(options, window);
 #else
                     throw new VeldridException("D3D11 support has not been included in this configuration of Veldrid");
 #endif
                 case GraphicsBackend.Vulkan:
-#if FEATURE_VULKAN_BACKEND
+#if !EXCLUDE_VULKAN_BACKEND
                     return CreateVulkanGraphicsDevice(options, window);
 #else
                     throw new VeldridException("Vulkan support has not been included in this configuration of Veldrid");
 #endif
                 case GraphicsBackend.OpenGL:
-#if FEATURE_OPENGL_BACKEND
+#if !EXCLUDE_OPENGL_BACKEND
                     return CreateDefaultOpenGLGraphicsDevice(options, window);
 #else
                     throw new VeldridException("OpenGL support has not been included in this configuration of Veldrid");
 #endif
                 case GraphicsBackend.Metal:
-#if FEATURE_METAL_BACKEND
+#if !EXCLUDE_METAL_BACKEND
                     return CreateMetalGraphicsDevice(options, window);
 #else
                     throw new VeldridException("Metal support has not been included in this configuration of Veldrid");
@@ -148,7 +148,8 @@ namespace Veldrid.StartupUtilities
                     throw new PlatformNotSupportedException("Cannot create a SwapchainSource for " + sysWmInfo.subsystem + ".");
             }
         }
-#if FEATURE_METAL_BACKEND
+
+#if !EXCLUDE_METAL_BACKEND
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;
@@ -179,7 +180,7 @@ namespace Veldrid.StartupUtilities
             }
         }
 
-#if FEATURE_VULKAN_BACKEND
+#if !EXCLUDE_VULKAN_BACKEND
         public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;
@@ -210,7 +211,7 @@ namespace Veldrid.StartupUtilities
         }
 #endif
 
-#if FEATURE_OPENGL_BACKEND
+#if !EXCLUDE_OPENGL_BACKEND
         public static unsafe GraphicsDevice CreateDefaultOpenGLGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;
@@ -277,7 +278,7 @@ namespace Veldrid.StartupUtilities
         }
 #endif
 
-#if FEATURE_D3D11_BACKEND
+#if !EXCLUDE_D3D11_BACKEND
         public static GraphicsDevice CreateDefaultD3D11GraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
             return GraphicsDevice.CreateD3D11(options, window.Handle, (uint)window.Width, (uint)window.Height);

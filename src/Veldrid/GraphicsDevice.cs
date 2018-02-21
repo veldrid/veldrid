@@ -576,25 +576,25 @@ namespace Veldrid
             switch (backend)
             {
                 case GraphicsBackend.Direct3D11:
-#if FEATURE_D3D11_BACKEND
+#if !EXCLUDE_D3D11_BACKEND
                     return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #else
                     return false;
 #endif
                 case GraphicsBackend.Vulkan:
-#if FEATURE_VULKAN_BACKEND
+#if !EXCLUDE_VULKAN_BACKEND
                     return Vk.VkGraphicsDevice.IsSupported();
 #else
                     return false;
 #endif
                 case GraphicsBackend.OpenGL:
-#if FEATURE_OPENGL_BACKEND
+#if !EXCLUDE_OPENGL_BACKEND
                     return true;
 #else
                     return false;
 #endif
                 case GraphicsBackend.Metal:
-#if FEATURE_METAL_BACKEND
+#if !EXCLUDE_METAL_BACKEND
                     return RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 #else
                     return false;
@@ -604,7 +604,7 @@ namespace Veldrid
             }
         }
 
-#if FEATURE_D3D11_BACKEND
+#if !EXCLUDE_D3D11_BACKEND
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
         /// </summary>
@@ -674,7 +674,7 @@ namespace Veldrid
         }
 #endif
 
-#if FEATURE_VULKAN_BACKEND
+#if !EXCLUDE_VULKAN_BACKEND
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Vulkan.
         /// </summary>
@@ -716,7 +716,7 @@ namespace Veldrid
         }
 #endif
 
-#if FEATURE_OPENGL_BACKEND
+#if !EXCLUDE_OPENGL_BACKEND
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using OpenGL, with a main Swapchain.
         /// </summary>
@@ -736,7 +736,7 @@ namespace Veldrid
         }
 #endif
 
-#if FEATURE_METAL_BACKEND
+#if !EXCLUDE_METAL_BACKEND
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Metal.
         /// </summary>

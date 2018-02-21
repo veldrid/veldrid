@@ -223,7 +223,7 @@ namespace Veldrid.MTL
         protected override void PlatformDispose()
         {
             WaitForIdle();
-            _mainSwapchain.Dispose();
+            _mainSwapchain?.Dispose();
             ObjectiveCRuntime.release(_commandQueue.NativePtr);
             ObjectiveCRuntime.release(_device.NativePtr);
         }

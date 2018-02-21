@@ -6,7 +6,7 @@ namespace Veldrid.MTL
     internal class MTLSwapchain : Swapchain
     {
         private readonly MTLSwapchainFramebuffer _framebuffer;
-        private readonly CAMetalLayer _metalLayer;
+        private CAMetalLayer _metalLayer;
         private readonly MTLGraphicsDevice _gd;
 
         private CAMetalDrawable _drawable;
@@ -64,6 +64,8 @@ namespace Veldrid.MTL
         public override void Resize(uint width, uint height)
         {
             _framebuffer.Resize(width, height);
+            _metalLayer.drawableSize = new CGSize(width, height);
+            GetNextDrawable();
         }
 
         public override void Dispose()

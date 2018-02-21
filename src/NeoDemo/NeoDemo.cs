@@ -60,13 +60,13 @@ namespace Veldrid.NeoDemo
                 windowCI,
                 gdOptions,
                 //GraphicsBackend.Metal,
-                GraphicsBackend.Vulkan,
+//                GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
                 out _window,
                 out _gd);
             _window.Resized += () => _windowResized = true;
 
-            for (int i = 0; i < 1; i++)
+            for (int i = 0; i < 3; i++)
             {
                 Sdl2Window extraWindow = VeldridStartup.CreateWindow(
                     new WindowCreateInfo(100 + i * 300, 100 + i * 200, 290, 190, WindowState.Normal, "Window " + i.ToString()));

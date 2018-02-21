@@ -75,7 +75,7 @@ namespace Veldrid.MTL
 
         public override Swapchain CreateSwapchain(ref SwapchainDescription description)
         {
-            throw new System.NotImplementedException();
+            return new MTLSwapchain(_gd, ref description);
         }
     }
 }

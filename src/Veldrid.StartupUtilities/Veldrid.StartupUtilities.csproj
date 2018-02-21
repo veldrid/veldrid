@@ -4,6 +4,7 @@
     <PackageVersion>$(AssemblyVersion)</PackageVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);FEATURE_VULKAN_BACKEND;FEATURE_D3D11_BACKEND;FEATURE_OPENGL_BACKEND;FEATURE_METAL_BACKEND</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

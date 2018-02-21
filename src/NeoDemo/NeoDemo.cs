@@ -60,16 +60,16 @@ namespace Veldrid.NeoDemo
                 windowCI,
                 gdOptions,
                 //GraphicsBackend.Metal,
-                //GraphicsBackend.Vulkan,
+                GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
                 out _window,
                 out _gd);
             _window.Resized += () => _windowResized = true;
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 1; i++)
             {
                 Sdl2Window extraWindow = VeldridStartup.CreateWindow(
-                    new WindowCreateInfo(i * 300, i * 200, 290, 190, WindowState.Normal, "Window " + i.ToString()));
+                    new WindowCreateInfo(100 + i * 300, 100 + i * 200, 290, 190, WindowState.Normal, "Window " + i.ToString()));
                 var extraSwapchain = _gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(
                     VeldridStartup.GetSwapchainSource(extraWindow),
                     290, 190, null, false));
@@ -226,7 +226,8 @@ namespace Veldrid.NeoDemo
 
                 previousFrameTicks = currentFrameTicks;
 
-                InputSnapshot snapshot = _window.PumpEvents();
+                InputSnapshot snapshot = null;
+                snapshot = _window.PumpEvents();
                 foreach (Sdl2Window extraWindow in Windows) { extraWindow.PumpEvents(); }
                 InputTracker.UpdateFrameInput(snapshot);
                 Update((float)deltaSeconds);
@@ -434,6 +435,10 @@ namespace Veldrid.NeoDemo
 
             _scene.RenderAllStages(_gd, _frameCommands, _sc);
             _gd.SwapBuffers();
+            foreach (Swapchain sc in ExtraSwapchains)
+            {
+                _gd.SwapBuffers(sc);
+            }
         }
 
         private void ChangeBackend(GraphicsBackend backend)

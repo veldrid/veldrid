@@ -201,6 +201,14 @@ namespace Veldrid.NeoDemo
             cl.SetFullViewports();
             Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
+            foreach (Swapchain swapchain in NeoDemo.ExtraSwapchains)
+            {
+                cl.SetFramebuffer(swapchain.Framebuffer);
+                fbWidth = swapchain.Framebuffer.Width;
+                fbHeight = swapchain.Framebuffer.Height;
+                Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            }
+
             cl.End();
 
             _resourceUpdateCL.Begin();

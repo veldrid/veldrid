@@ -84,6 +84,11 @@ namespace Veldrid.Sdl2
         private delegate void SDL_HideWindow_t(SDL_Window SDL2Window);
         private static SDL_HideWindow_t s_hideWindow = LoadFunction<SDL_HideWindow_t>("SDL_HideWindow");
         public static void SDL_HideWindow(SDL_Window Sdl2Window) => s_hideWindow(Sdl2Window);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate uint SDL_GetWindowID_t(SDL_Window SDL2Window);
+        private static SDL_GetWindowID_t s_getWindowID = LoadFunction<SDL_GetWindowID_t>("SDL_GetWindowID");
+        public static uint SDL_GetWindowID(SDL_Window Sdl2Window) => s_getWindowID(Sdl2Window);
     }
 
     [Flags]

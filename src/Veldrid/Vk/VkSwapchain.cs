@@ -2,7 +2,6 @@
 using Vulkan;
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
-using System;
 
 namespace Veldrid.Vk
 {
@@ -13,7 +12,6 @@ namespace Veldrid.Vk
         private VkSwapchainKHR _deviceSwapchain;
         private readonly VkSwapchainFramebuffer _framebuffer;
         private Vulkan.VkFence _imageAvailableFence;
-        private readonly PixelFormat? _depthFormat;
         private readonly uint _presentQueueIndex;
         private readonly VkQueue _presentQueue;
         private bool _syncToVBlank;

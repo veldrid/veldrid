@@ -87,14 +87,15 @@ namespace Veldrid.Vk
             CreatePhysicalDevice();
             CreateLogicalDevice(surface);
 
+            _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
+            ResourceFactory = new VkResourceFactory(this);
+
             if (scDesc != null)
             {
                 SwapchainDescription desc = scDesc.Value;
                 _mainSwapchain = new VkSwapchain(this, ref desc, surface);
             }
 
-            _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
-            ResourceFactory = new VkResourceFactory(this);
             CreateDescriptorPool();
             CreateGraphicsCommandPool();
             for (int i = 0; i < SharedCommandPoolCount; i++)

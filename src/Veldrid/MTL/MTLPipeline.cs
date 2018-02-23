@@ -126,7 +126,8 @@ namespace Veldrid.MTL
 
             if (outputs.DepthAttachment != null)
             {
-                MTLDepthStencilDescriptor depthDescriptor = MTLUtil.AllocInit<MTLDepthStencilDescriptor>();
+                MTLDepthStencilDescriptor depthDescriptor = MTLUtil.AllocInit<MTLDepthStencilDescriptor>(
+                    nameof(MTLDepthStencilDescriptor));
                 depthDescriptor.depthCompareFunction = MTLFormats.VdToMTLCompareFunction(
                     description.DepthStencilState.DepthComparison);
                 depthDescriptor.depthWriteEnabled = description.DepthStencilState.DepthWriteEnabled;
@@ -137,7 +138,7 @@ namespace Veldrid.MTL
                     StencilReference = description.DepthStencilState.StencilReference;
 
                     StencilBehaviorDescription vdFrontDesc = description.DepthStencilState.StencilFront;
-                    MTLStencilDescriptor front = MTLUtil.AllocInit<MTLStencilDescriptor>();
+                    MTLStencilDescriptor front = MTLUtil.AllocInit<MTLStencilDescriptor>(nameof(MTLStencilDescriptor));
                     front.readMask = stencilEnabled ? description.DepthStencilState.StencilReadMask : 0u;
                     front.writeMask = stencilEnabled ? description.DepthStencilState.StencilWriteMask : 0u;
                     front.depthFailureOperation = MTLFormats.VdToMTLStencilOperation(vdFrontDesc.DepthFail);
@@ -147,7 +148,7 @@ namespace Veldrid.MTL
                     depthDescriptor.frontFaceStencil = front;
 
                     StencilBehaviorDescription vdBackDesc = description.DepthStencilState.StencilBack;
-                    MTLStencilDescriptor back = MTLUtil.AllocInit<MTLStencilDescriptor>();
+                    MTLStencilDescriptor back = MTLUtil.AllocInit<MTLStencilDescriptor>(nameof(MTLStencilDescriptor));
                     back.readMask = stencilEnabled ? description.DepthStencilState.StencilReadMask : 0u;
                     back.writeMask = stencilEnabled ? description.DepthStencilState.StencilWriteMask : 0u;
                     back.depthFailureOperation = MTLFormats.VdToMTLStencilOperation(vdBackDesc.DepthFail);
@@ -182,7 +183,8 @@ namespace Veldrid.MTL
                 description.ThreadGroupSizeY,
                 description.ThreadGroupSizeZ);
 
-            MTLComputePipelineDescriptor mtlDesc = MTLUtil.AllocInit<MTLComputePipelineDescriptor>();
+            MTLComputePipelineDescriptor mtlDesc = MTLUtil.AllocInit<MTLComputePipelineDescriptor>(
+                nameof(MTLComputePipelineDescriptor));
             MTLShader mtlShader = Util.AssertSubtype<Shader, MTLShader>(description.ComputeShader);
             mtlDesc.computeFunction = mtlShader.Function;
             MTLPipelineBufferDescriptorArray buffers = mtlDesc.buffers;

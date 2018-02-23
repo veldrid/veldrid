@@ -46,7 +46,6 @@ namespace Veldrid.MTL
             : base(ref description)
         {
             _gd = gd;
-            _cb = _gd.CommandQueue.commandBuffer();
         }
 
         public override string Name { get; set; }
@@ -54,13 +53,24 @@ namespace Veldrid.MTL
         public MTLCommandBuffer Commit()
         {
             _cb.commit();
-            return _cb;
+            MTLCommandBuffer ret = _cb;
+            _cb = default(MTLCommandBuffer);
+            return ret;
         }
 
         public override void Begin()
         {
-            ObjectiveCRuntime.release(_cb.NativePtr);
-            _cb = _gd.CommandQueue.commandBuffer();
+            if (_cb.NativePtr != IntPtr.Zero)
+            {
+                ObjectiveCRuntime.release(_cb.NativePtr);
+            }
+
+            using (NSAutoreleasePool.Begin())
+            {
+                _cb = _gd.CommandQueue.commandBuffer();
+                ObjectiveCRuntime.retain(_cb.NativePtr);
+            }
+
             ClearCachedState();
         }
 
@@ -103,15 +113,33 @@ namespace Veldrid.MTL
             {
                 uint indexSize = _indexType == MTLIndexType.UInt16 ? 2u : 4u;
                 uint indexBufferOffset = indexSize * indexStart;
-                _rce.drawIndexedPrimitives(
-                    _graphicsPipeline.PrimitiveType,
-                    (UIntPtr)indexCount,
-                    _indexType,
-                    _indexBuffer.DeviceBuffer,
-                    (UIntPtr)indexBufferOffset,
-                    (UIntPtr)instanceCount,
-                    (IntPtr)vertexOffset,
-                    (UIntPtr)instanceStart);
+
+                if (vertexOffset == 0 && instanceStart == 0)
+                {
+                    _rce.drawIndexedPrimitives(
+                        _graphicsPipeline.PrimitiveType,
+                        (UIntPtr)indexCount,
+                        _indexType,
+                        _indexBuffer.DeviceBuffer,
+                        (UIntPtr)indexBufferOffset,
+                        (UIntPtr)instanceCount);
+                }
+                else
+                {
+                    if (!_gd.Features.IsDrawBaseVertexInstanceSupported())
+                    {
+                        throw new VeldridException("Drawing with a base instance or vertex is not supported on this device.");
+                    }
+                    _rce.drawIndexedPrimitives(
+                        _graphicsPipeline.PrimitiveType,
+                        (UIntPtr)indexCount,
+                        _indexType,
+                        _indexBuffer.DeviceBuffer,
+                        (UIntPtr)indexBufferOffset,
+                        (UIntPtr)instanceCount,
+                        (IntPtr)vertexOffset,
+                        (UIntPtr)instanceStart);
+                }
             }
         }
         private bool PreDrawCommand()
@@ -517,16 +545,20 @@ namespace Veldrid.MTL
             MTLTexture mtlSrc = Util.AssertSubtype<Texture, MTLTexture>(source);
             MTLTexture mtlDst = Util.AssertSubtype<Texture, MTLTexture>(destination);
 
-            MTLRenderPassDescriptor rpDesc = MTLUtil.AllocInit<MTLRenderPassDescriptor>();
+            MTLRenderPassDescriptor rpDesc = MTLRenderPassDescriptor.New();
             var colorAttachment = rpDesc.colorAttachments[0];
             colorAttachment.texture = mtlSrc.DeviceTexture;
             colorAttachment.loadAction = MTLLoadAction.Load;
             colorAttachment.storeAction = MTLStoreAction.MultisampleResolve;
             colorAttachment.resolveTexture = mtlDst.DeviceTexture;
 
-            MTLRenderCommandEncoder encoder = _cb.renderCommandEncoderWithDescriptor(rpDesc);
-            encoder.endEncoding();
-            ObjectiveCRuntime.release(encoder.NativePtr);
+            using (NSAutoreleasePool.Begin())
+            {
+                MTLRenderCommandEncoder encoder = _cb.renderCommandEncoderWithDescriptor(rpDesc);
+                encoder.endEncoding();
+            }
+
+            ObjectiveCRuntime.release(rpDesc.NativePtr);
         }
 
         protected override void SetComputeResourceSetCore(uint slot, ResourceSet set)
@@ -761,7 +793,7 @@ namespace Veldrid.MTL
                 return false;
             }
 
-            var rpDesc = _mtlFramebuffer.CreateRenderPassDescriptor();
+            MTLRenderPassDescriptor rpDesc = _mtlFramebuffer.CreateRenderPassDescriptor();
             for (uint i = 0; i < _clearColors.Length; i++)
             {
                 if (_clearColors[i] != null)
@@ -790,7 +822,12 @@ namespace Veldrid.MTL
                 _clearDepth = null;
             }
 
-            _rce = _cb.renderCommandEncoderWithDescriptor(rpDesc);
+            using (NSAutoreleasePool.Begin())
+            {
+                _rce = _cb.renderCommandEncoderWithDescriptor(rpDesc);
+                ObjectiveCRuntime.retain(_rce.NativePtr);
+            }
+
             ObjectiveCRuntime.release(rpDesc.NativePtr);
             _currentFramebufferEverActive = true;
 
@@ -824,7 +861,11 @@ namespace Veldrid.MTL
             {
                 EnsureNoRenderPass();
                 EnsureNoComputeEncoder();
-                _bce = _cb.blitCommandEncoder();
+                using (NSAutoreleasePool.Begin())
+                {
+                    _bce = _cb.blitCommandEncoder();
+                    ObjectiveCRuntime.retain(_bce.NativePtr);
+                }
             }
 
             Debug.Assert(BlitEncoderActive);
@@ -851,7 +892,11 @@ namespace Veldrid.MTL
                 EnsureNoBlitEncoder();
                 EnsureNoRenderPass();
 
-                _cce = _cb.computeCommandEncoder();
+                using (NSAutoreleasePool.Begin())
+                {
+                    _cce = _cb.computeCommandEncoder();
+                    ObjectiveCRuntime.retain(_cce.NativePtr);
+                }
             }
 
             Debug.Assert(ComputeEncoderActive);
@@ -897,7 +942,10 @@ namespace Veldrid.MTL
             {
                 _disposed = true;
                 EnsureNoRenderPass();
-                ObjectiveCRuntime.release(_cb.NativePtr);
+                if (_cb.NativePtr != IntPtr.Zero)
+                {
+                    ObjectiveCRuntime.release(_cb.NativePtr);
+                }
             }
         }
     }

@@ -15,9 +15,8 @@ namespace Veldrid.MetalBindings
             return Encoding.UTF8.GetString(stringStart, characters);
         }
 
-        public static T AllocInit<T>() where T : struct
+        public static T AllocInit<T>(string typeName) where T : struct
         {
-            string typeName = typeof(T).Name;
             var cls = new ObjCClass(typeName);
             return cls.AllocInit<T>();
         }

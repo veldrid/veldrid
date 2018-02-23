@@ -16,5 +16,7 @@ namespace Veldrid.MetalBindings
         internal static readonly Selector setObjectAtIndexedSubscript = "setObject:atIndexedSubscript:";
         internal static readonly Selector pixelFormat = "pixelFormat";
         internal static readonly Selector setPixelFormat = "setPixelFormat:";
+        internal static readonly Selector alloc = "alloc";
+        internal static readonly Selector init = "init";
     }
 }

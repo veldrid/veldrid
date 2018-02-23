@@ -58,7 +58,7 @@ namespace Veldrid.MTL
                     (Usage & TextureUsage.Cubemap) != 0);
             if (Usage != TextureUsage.Staging)
             {
-                MTLTextureDescriptor texDescriptor = MTLUtil.AllocInit<MTLTextureDescriptor>();
+                MTLTextureDescriptor texDescriptor = MTLTextureDescriptor.New();
                 texDescriptor.width = (UIntPtr)Width;
                 texDescriptor.height = (UIntPtr)Height;
                 texDescriptor.depth = (UIntPtr)Depth;
@@ -91,50 +91,7 @@ namespace Veldrid.MTL
 
                 StagingBuffer = _gd.Device.newBufferWithLengthOptions(
                     (UIntPtr)totalStorageSize,
-                    MTLResourceOptions.StorageModeManaged);
-            }
-        }
-
-        private static MTLTextureType GetTextureType(
-            uint width,
-            uint height,
-            uint depth,
-            uint arrayLayers,
-            TextureUsage usage,
-            TextureSampleCount sampleCount)
-        {
-            bool isCube = (usage & TextureUsage.Cubemap) != 0;
-            if (depth == 1)
-            {
-                if (height == 1)
-                {
-                    // 1D
-                    return arrayLayers == 1 ? MTLTextureType.Type1D : MTLTextureType.Type1DArray;
-                }
-                else
-                {
-                    // 2D
-                    if (isCube)
-                    {
-                        return arrayLayers == 1 ? MTLTextureType.TypeCube : MTLTextureType.TypeCubeArray;
-                    }
-                    else
-                    {
-                        if (sampleCount == TextureSampleCount.Count1)
-                        {
-
-                            return arrayLayers == 1 ? MTLTextureType.Type2D : MTLTextureType.Type2DArray;
-                        }
-                        else
-                        {
-                            return MTLTextureType.Type2DMultisample;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                return MTLTextureType.Type3D;
+                    MTLResourceOptions.StorageModeShared);
             }
         }
 

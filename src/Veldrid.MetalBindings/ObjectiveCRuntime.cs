@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Veldrid.MetalBindings
 {
@@ -15,6 +14,8 @@ namespace Veldrid.MetalBindings
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, float a);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, double a);
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern void objc_msgSend(IntPtr receiver, Selector selector, CGRect a);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, IntPtr a, uint b);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
@@ -44,7 +45,7 @@ namespace Veldrid.MetalBindings
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, void* a, UIntPtr b);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
-        public static extern void objc_msgSend(IntPtr receiver, Selector selector, MTLPrimitiveType a, UIntPtr b, MTLIndexType c, IntPtr d, UIntPtr e);
+        public static extern void objc_msgSend(IntPtr receiver, Selector selector, MTLPrimitiveType a, UIntPtr b, MTLIndexType c, IntPtr d, UIntPtr e, UIntPtr f);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, MTLPrimitiveType a, MTLBuffer b, UIntPtr c);
 
@@ -202,6 +203,20 @@ namespace Veldrid.MetalBindings
             return ret;
         }
 
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern MTLClearColor MTLClearColor_objc_msgSend(IntPtr receiver, Selector selector);
+
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern MTLSize MTLSize_objc_msgSend(IntPtr receiver, Selector selector);
+
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern CGRect CGRect_objc_msgSend(IntPtr receiver, Selector selector);
+
+        // TODO: This should check the current processor type, struct size, etc.
+        // At the moment there is no need because all existing occurences of
+        // this can safely use the non-stret versions everywhere.
+        public static bool UseStret<T>() => false;
+
         [DllImport(ObjCLibrary)]
         public static extern IntPtr sel_registerName(byte* namePtr);
 
@@ -218,6 +233,9 @@ namespace Veldrid.MetalBindings
         public static extern IntPtr class_getProperty(ObjCClass cls, byte* namePtr);
 
         [DllImport(ObjCLibrary)]
+        public static extern byte* class_getName(ObjCClass cls);
+
+        [DllImport(ObjCLibrary)]
         public static extern byte* property_copyAttributeValue(IntPtr property, byte* attributeNamePtr);
 
         [DllImport(ObjCLibrary)]
@@ -231,53 +249,5 @@ namespace Veldrid.MetalBindings
         public static void retain(IntPtr receiver) => objc_msgSend(receiver, "retain");
         public static void release(IntPtr receiver) => objc_msgSend(receiver, "release");
         public static ulong GetRetainCount(IntPtr receiver) => (ulong)UIntPtr_objc_msgSend(receiver, "retainCount");
-    }
-
-    public unsafe struct ObjCClass
-    {
-        public readonly IntPtr NativePtr;
-        public static implicit operator IntPtr(ObjCClass c) => c.NativePtr;
-
-        public ObjCClass(string name)
-        {
-            int byteCount = Encoding.UTF8.GetMaxByteCount(name.Length);
-            byte* utf8BytesPtr = stackalloc byte[byteCount];
-            fixed (char* namePtr = name)
-            {
-                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8BytesPtr, byteCount);
-            }
-
-            NativePtr = ObjectiveCRuntime.objc_getClass(utf8BytesPtr);
-        }
-
-        public IntPtr GetProperty(string propertyName)
-        {
-            int byteCount = Encoding.UTF8.GetMaxByteCount(propertyName.Length);
-            byte* utf8BytesPtr = stackalloc byte[byteCount];
-            fixed (char* namePtr = propertyName)
-            {
-                Encoding.UTF8.GetBytes(namePtr, propertyName.Length, utf8BytesPtr, byteCount);
-            }
-
-            return ObjectiveCRuntime.class_getProperty(this, utf8BytesPtr);
-        }
-
-        public T Alloc<T>() where T : struct
-        {
-            IntPtr value = ObjectiveCRuntime.IntPtr_objc_msgSend(NativePtr, "alloc");
-            return Unsafe.AsRef<T>(&value);
-        }
-
-        public T AllocInit<T>() where T : struct
-        {
-            IntPtr value = ObjectiveCRuntime.IntPtr_objc_msgSend(NativePtr, "alloc");
-            ObjectiveCRuntime.objc_msgSend(value, "init");
-            return Unsafe.AsRef<T>(&value);
-        }
-
-        public ObjectiveCMethod* class_copyMethodList(out uint count)
-        {
-            return ObjectiveCRuntime.class_copyMethodList(this, out count);
-        }
     }
 }

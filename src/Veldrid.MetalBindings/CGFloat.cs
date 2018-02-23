@@ -3,40 +3,20 @@ using System.Runtime.CompilerServices;
 
 namespace Veldrid.MetalBindings
 {
+    // TODO: Technically this should be "pointer-sized",
+    // but there are no non-64-bit platforms that anyone cares about.
     public unsafe struct CGFloat
     {
-        private readonly IntPtr _value;
+        private readonly double _value;
 
         public CGFloat(double value)
         {
-            IntPtr ptrValue;
-
-            if (IntPtr.Size == 4)
-            {
-                Unsafe.Write(&ptrValue, (float)value);
-            }
-            else
-            {
-                Unsafe.Write(&ptrValue, value);
-            }
-
-            _value = ptrValue;
+            _value = value;
         }
 
         public double Value
         {
-            get
-            {
-                IntPtr value = _value;
-                if (IntPtr.Size == 4)
-                {
-                    return Unsafe.Read<float>(&value);
-                }
-                else
-                {
-                    return Unsafe.Read<double>(&value);
-                }
-            }
+            get => _value;
         }
 
         public static implicit operator CGFloat(double value) => new CGFloat(value);

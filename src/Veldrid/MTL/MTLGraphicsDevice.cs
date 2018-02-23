@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Veldrid.MetalBindings;
 
@@ -20,9 +21,9 @@ namespace Veldrid.MTL
         private readonly object _resetEventsLock = new object();
         private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
 
-
         public MTLDevice Device => _device;
         public MTLCommandQueue CommandQueue => _commandQueue;
+        public MTLFeatureSupport Features { get; }
 
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
@@ -31,6 +32,7 @@ namespace Veldrid.MTL
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
             ResourceFactory = new MTLResourceFactory(this);
             _commandQueue = _device.newCommandQueue();
+            Features = new MTLFeatureSupport(_device);
 
             foreach (TextureSampleCount count in (TextureSampleCount[])Enum.GetValues(typeof(TextureSampleCount)))
             {
@@ -58,7 +60,6 @@ namespace Veldrid.MTL
 
         protected override void SubmitCommandsCore(CommandList commandList, Fence fence)
         {
-
             MTLCommandList mtlCL = Util.AssertSubtype<CommandList, MTLCommandList>(commandList);
             MTLCommandBuffer cb = mtlCL.Commit();
             lock (_submittedCommandsLock)
@@ -67,7 +68,6 @@ namespace Veldrid.MTL
 
                 MTLFence mtlFence = fence as MTLFence;
                 _submittedCBs.Add((cb, mtlFence));
-                ObjectiveCRuntime.retain(cb.NativePtr);
             }
         }
 
@@ -101,10 +101,12 @@ namespace Veldrid.MTL
             IntPtr currentDrawablePtr = mtlSC.CurrentDrawable.NativePtr;
             if (currentDrawablePtr != IntPtr.Zero)
             {
-                MTLCommandBuffer submitCB = _commandQueue.commandBuffer();
-                submitCB.presentDrawable(currentDrawablePtr);
-                submitCB.commit();
-                ObjectiveCRuntime.release(submitCB.NativePtr);
+                using (NSAutoreleasePool.Begin())
+                {
+                    MTLCommandBuffer submitCB = _commandQueue.commandBuffer();
+                    submitCB.presentDrawable(currentDrawablePtr);
+                    submitCB.commit();
+                }
             }
 
             mtlSC.GetNextDrawable();
@@ -260,7 +262,6 @@ namespace Veldrid.MTL
 
             return result;
         }
-
 
         private ManualResetEvent[] GetResetEventArray(int length)
         {

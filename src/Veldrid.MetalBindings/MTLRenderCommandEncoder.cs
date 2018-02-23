@@ -55,9 +55,10 @@ namespace Veldrid.MetalBindings
             UIntPtr indexCount,
             MTLIndexType indexType,
             MTLBuffer indexBuffer,
-            UIntPtr indexBufferOffset)
+            UIntPtr indexBufferOffset,
+            UIntPtr instanceCount)
             => objc_msgSend(NativePtr, sel_drawIndexedPrimitives0,
-                primitiveType, indexCount, indexType, indexBuffer.NativePtr, indexBufferOffset);
+                primitiveType, indexCount, indexType, indexBuffer.NativePtr, indexBufferOffset, instanceCount);
 
         public void drawIndexedPrimitives(
             MTLPrimitiveType primitiveType,
@@ -123,7 +124,7 @@ namespace Veldrid.MetalBindings
         private static readonly Selector sel_setFragmentSamplerState = "setFragmentSamplerState:atIndex:";
         private static readonly Selector sel_drawPrimitives0 = "drawPrimitives:vertexStart:vertexCount:instanceCount:baseInstance:";
         private static readonly Selector sel_drawPrimitives1 = "drawPrimitives:indirectBuffer:indirectBufferOffset:";
-        private static readonly Selector sel_drawIndexedPrimitives0 = "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:";
+        private static readonly Selector sel_drawIndexedPrimitives0 = "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:";
         private static readonly Selector sel_drawIndexedPrimitives1 = "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:";
         private static readonly Selector sel_drawIndexedPrimitives2 = "drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:";
         private static readonly Selector sel_setViewports = "setViewports:count:";

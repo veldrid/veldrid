@@ -5,7 +5,9 @@ namespace Veldrid.MetalBindings
 {
     public struct MTLTextureDescriptor
     {
+        private static readonly ObjCClass s_class = new ObjCClass(nameof(MTLTextureDescriptor));
         public readonly IntPtr NativePtr;
+        public static MTLTextureDescriptor New() => s_class.AllocInit<MTLTextureDescriptor>();
 
         public MTLTextureType textureType
         {

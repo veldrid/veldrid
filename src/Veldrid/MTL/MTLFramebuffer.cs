@@ -14,7 +14,7 @@ namespace Veldrid.MTL
 
         public override MTLRenderPassDescriptor CreateRenderPassDescriptor()
         {
-            MTLRenderPassDescriptor ret = MTLUtil.AllocInit<MTLRenderPassDescriptor>();
+            MTLRenderPassDescriptor ret = MTLRenderPassDescriptor.New();
             for (int i = 0; i < ColorTargets.Count; i++)
             {
                 FramebufferAttachment colorTarget = ColorTargets[i];

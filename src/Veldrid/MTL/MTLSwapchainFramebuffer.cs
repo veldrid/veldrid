@@ -75,12 +75,11 @@ namespace Veldrid.MTL
             }
         }
 
-
         public override bool IsRenderable => !_parentSwapchain.CurrentDrawable.IsNull;
 
         public override MTLRenderPassDescriptor CreateRenderPassDescriptor()
         {
-            var ret = MTLUtil.AllocInit<MTLRenderPassDescriptor>();
+            MTLRenderPassDescriptor ret = MTLRenderPassDescriptor.New();
             var color0 = ret.colorAttachments[0];
             color0.texture = _parentSwapchain.CurrentDrawable.texture;
             color0.loadAction = MTLLoadAction.Load;

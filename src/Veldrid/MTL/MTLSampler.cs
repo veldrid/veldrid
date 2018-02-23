@@ -17,14 +17,17 @@ namespace Veldrid.MTL
                 out MTLSamplerMinMagFilter mag,
                 out MTLSamplerMipFilter mip);
 
-            MTLSamplerDescriptor mtlDesc = MTLUtil.AllocInit<MTLSamplerDescriptor>();
+            MTLSamplerDescriptor mtlDesc = MTLSamplerDescriptor.New();
             mtlDesc.rAddressMode = MTLFormats.VdToMTLAddressMode(description.AddressModeU);
             mtlDesc.sAddressMode = MTLFormats.VdToMTLAddressMode(description.AddressModeV);
             mtlDesc.tAddressMode = MTLFormats.VdToMTLAddressMode(description.AddressModeW);
             mtlDesc.minFilter = min;
             mtlDesc.magFilter = mag;
             mtlDesc.mipFilter = mip;
-            mtlDesc.borderColor = MTLFormats.VdToMTLBorderColor(description.BorderColor);
+            if (gd.Features.IsMacOS)
+            {
+                mtlDesc.borderColor = MTLFormats.VdToMTLBorderColor(description.BorderColor);
+            }
             if (description.ComparisonKind != null)
             {
                 mtlDesc.compareFunction = MTLFormats.VdToMTLCompareFunction(description.ComparisonKind.Value);

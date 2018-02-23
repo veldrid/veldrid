@@ -13,7 +13,20 @@ namespace Veldrid.MetalBindings
         public MTLDevice(IntPtr nativePtr) => NativePtr = nativePtr;
 
         public string name => string_objc_msgSend(NativePtr, sel_name);
-        public MTLSize maxThreadsPerThreadgroup => objc_msgSend_stret<MTLSize>(this, sel_maxThreadsPerThreadgroup);
+        public MTLSize maxThreadsPerThreadgroup
+        {
+            get
+            {
+                if (UseStret<MTLSize>())
+                {
+                    return objc_msgSend_stret<MTLSize>(this, sel_maxThreadsPerThreadgroup);
+                }
+                else
+                {
+                    return MTLSize_objc_msgSend(this, sel_maxThreadsPerThreadgroup);
+                }
+            }
+        }
 
         public MTLLibrary newLibraryWithSource(string source, MTLCompileOptions options)
         {

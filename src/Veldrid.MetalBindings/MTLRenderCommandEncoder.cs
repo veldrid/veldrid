@@ -115,6 +115,9 @@ namespace Veldrid.MetalBindings
         public void setBlendColor(float red, float green, float blue, float alpha)
             => objc_msgSend(NativePtr, sel_setBlendColor, red, green, blue, alpha);
 
+        public void setTriangleFillMode(MTLTriangleFillMode fillMode)
+            => objc_msgSend(NativePtr, sel_setTriangleFillMode, (uint)fillMode);
+
         private static readonly Selector sel_setRenderPipelineState = "setRenderPipelineState:";
         private static readonly Selector sel_setVertexBuffer = "setVertexBuffer:offset:atIndex:";
         private static readonly Selector sel_setFragmentBuffer = "setFragmentBuffer:offset:atIndex:";
@@ -136,5 +139,6 @@ namespace Veldrid.MetalBindings
         private static readonly Selector sel_endEncoding = "endEncoding";
         private static readonly Selector sel_setStencilReferenceValue = "setStencilReferenceValue:";
         private static readonly Selector sel_setBlendColor = "setBlendColorRed:green:blue:alpha:";
+        private static readonly Selector sel_setTriangleFillMode = "setTriangleFillMode:";
     }
 }

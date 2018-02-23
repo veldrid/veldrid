@@ -117,6 +117,19 @@ namespace Veldrid.MTL
             }
         }
 
+        internal static MTLTriangleFillMode VdToMTLFillMode(PolygonFillMode fillMode)
+        {
+            switch (fillMode)
+            {
+                case PolygonFillMode.Solid:
+                    return MTLTriangleFillMode.Fill;
+                case PolygonFillMode.Wireframe:
+                    return MTLTriangleFillMode.Lines;
+                default:
+                    throw Illegal.Value<PolygonFillMode>();
+            }
+        }
+
         internal static MTLWinding VdVoMTLFrontFace(FrontFace frontFace)
         {
             return frontFace == FrontFace.CounterClockwise ? MTLWinding.CounterClockwise : MTLWinding.Clockwise;

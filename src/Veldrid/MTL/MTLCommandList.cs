@@ -168,6 +168,7 @@ namespace Veldrid.MTL
                     _rce.setRenderPipelineState(_graphicsPipeline.RenderPipelineState);
                     _rce.setCullMode(_graphicsPipeline.CullMode);
                     _rce.setFrontFacing(_graphicsPipeline.FrontFace);
+                    _rce.setTriangleFillMode(_graphicsPipeline.FillMode);
                     RgbaFloat blendColor = _graphicsPipeline.BlendColor;
                     _rce.setBlendColor(blendColor.R, blendColor.G, blendColor.B, blendColor.A);
                     if (_framebuffer.DepthTarget != null)

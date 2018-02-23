@@ -15,6 +15,7 @@ namespace Veldrid.MTL
         public uint VertexBufferCount { get; }
         public MTLCullMode CullMode { get; }
         public MTLWinding FrontFace { get; }
+        public MTLTriangleFillMode FillMode { get; }
         public MTLDepthStencilState DepthStencilState { get; }
         public MTLDepthClipMode DepthClipMode { get; }
         public override bool IsComputePipeline { get; }
@@ -37,6 +38,7 @@ namespace Veldrid.MTL
 
             CullMode = MTLFormats.VdToMTLCullMode(description.RasterizerState.CullMode);
             FrontFace = MTLFormats.VdVoMTLFrontFace(description.RasterizerState.FrontFace);
+            FillMode = MTLFormats.VdToMTLFillMode(description.RasterizerState.FillMode);
             ScissorTestEnabled = description.RasterizerState.ScissorTestEnabled;
 
             MTLRenderPipelineDescriptor mtlDesc = MTLRenderPipelineDescriptor.New();

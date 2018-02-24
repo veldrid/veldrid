@@ -19,7 +19,7 @@ Veldrid is available on NuGet:
 
 Pre-release versions of Veldrid are also available from MyGet: https://www.myget.org/feed/mellinoe/package/nuget/Veldrid
 
-![Sponza](https://i.imgur.com/QDaXwWL.jpg)
+![Sponza](https://i.imgur.com/p6juqm9.jpg)
 
 ### Build instructions
 

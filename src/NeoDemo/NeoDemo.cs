@@ -37,9 +37,6 @@ namespace Veldrid.NeoDemo
         private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
         private FullScreenQuad _fsq;
 
-        public static List<Swapchain> ExtraSwapchains = new List<Swapchain>();
-        public static List<Sdl2Window> Windows = new List<Sdl2Window>();
-
         public NeoDemo()
         {
             WindowCreateInfo windowCI = new WindowCreateInfo
@@ -65,18 +62,6 @@ namespace Veldrid.NeoDemo
                 out _window,
                 out _gd);
             _window.Resized += () => _windowResized = true;
-
-            for (int i = 0; i < 3; i++)
-            {
-                Sdl2Window extraWindow = VeldridStartup.CreateWindow(
-                    new WindowCreateInfo(100 + i * 300, 100 + i * 200, 290, 190, WindowState.Normal, "Window " + i.ToString()));
-                var extraSwapchain = _gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(
-                    VeldridStartup.GetSwapchainSource(extraWindow),
-                    290, 190, null, false));
-                Windows.Add(extraWindow);
-                ExtraSwapchains.Add(extraSwapchain);
-                extraWindow.Resized += () => extraSwapchain.Resize((uint)extraWindow.Width, (uint)extraWindow.Height);
-            }
 
             _scene = new Scene(_window.Width, _window.Height);
 
@@ -228,7 +213,6 @@ namespace Veldrid.NeoDemo
 
                 InputSnapshot snapshot = null;
                 snapshot = _window.PumpEvents();
-                foreach (Sdl2Window extraWindow in Windows) { extraWindow.PumpEvents(); }
                 InputTracker.UpdateFrameInput(snapshot);
                 Update((float)deltaSeconds);
                 if (!_window.Exists)
@@ -435,10 +419,6 @@ namespace Veldrid.NeoDemo
 
             _scene.RenderAllStages(_gd, _frameCommands, _sc);
             _gd.SwapBuffers();
-            foreach (Swapchain sc in ExtraSwapchains)
-            {
-                _gd.SwapBuffers(sc);
-            }
         }
 
         private void ChangeBackend(GraphicsBackend backend)

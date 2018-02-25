@@ -201,14 +201,6 @@ namespace Veldrid.NeoDemo
             cl.SetFullViewports();
             Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
-            foreach (Swapchain swapchain in NeoDemo.ExtraSwapchains)
-            {
-                cl.SetFramebuffer(swapchain.Framebuffer);
-                fbWidth = swapchain.Framebuffer.Width;
-                fbHeight = swapchain.Framebuffer.Height;
-                Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
-            }
-
             cl.End();
 
             _resourceUpdateCL.Begin();
@@ -372,15 +364,6 @@ namespace Veldrid.NeoDemo
             cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
             cl.SetScissorRect(0, 0, 0, fbWidth, fbHeight);
             Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
-
-            foreach (Swapchain swapchain in NeoDemo.ExtraSwapchains)
-            {
-                cl.SetFramebuffer(swapchain.Framebuffer);
-                fbWidth = swapchain.Framebuffer.Width;
-                fbHeight = swapchain.Framebuffer.Height;
-                Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
-                gd.SwapBuffers(swapchain);
-            }
 
             cl.End();
             gd.SubmitCommands(cl);

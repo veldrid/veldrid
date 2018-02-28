@@ -30,6 +30,11 @@ namespace Veldrid
         protected Pipeline _graphicsPipeline;
         protected Pipeline _computePipeline;
 
+#if VALIDATE_USAGE
+        private DeviceBuffer _indexBuffer;
+        private IndexFormat _indexFormat;
+#endif
+
         internal CommandList(ref CommandListDescription description)
         {
         }
@@ -39,6 +44,9 @@ namespace Veldrid
             _framebuffer = null;
             _graphicsPipeline = null;
             _computePipeline = null;
+#if VALIDATE_USAGE
+            _indexBuffer = null;
+#endif
         }
 
         /// <summary>
@@ -117,6 +125,8 @@ namespace Veldrid
                 throw new VeldridException(
                     $"Buffer cannot be bound as an index buffer because it was not created with BufferUsage.IndexBuffer.");
             }
+            _indexBuffer = buffer;
+            _indexFormat = format;
 #endif
             SetIndexBufferCore(buffer, format);
         }
@@ -355,6 +365,7 @@ namespace Veldrid
         /// <param name="instanceStart">The starting instance value.</param>
         public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
+            ValidateIndexBuffer(indexCount);
             PreDrawValidation();
             DrawIndexedCore(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
@@ -784,6 +795,26 @@ namespace Veldrid
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
         public abstract void Dispose();
+
+        [Conditional("VALIDATE_USAGE")]
+
+        private void ValidateIndexBuffer(uint indexCount)
+        {
+#if VALIDATE_USAGE
+            if (_indexBuffer == null)
+            {
+                throw new VeldridException($"An index buffer must be bound before {nameof(CommandList)}.{nameof(DrawIndexed)} can be called.");
+            }
+
+            uint indexFormatSize = _indexFormat == IndexFormat.UInt16 ? 2u : 4u;
+            uint bytesNeeded = indexCount * indexFormatSize;
+            if (_indexBuffer.SizeInBytes < bytesNeeded)
+            {
+                throw new VeldridException(
+                    $"The active index buffer does not contain enough data to satisfy the given draw command. {bytesNeeded} bytes are needed, but the buffer only contains {_indexBuffer.SizeInBytes}.");
+            }
+#endif
+        }
 
         [Conditional("VALIDATE_USAGE")]
         private void PreDrawValidation()

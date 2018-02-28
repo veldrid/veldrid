@@ -100,6 +100,7 @@ namespace Veldrid.D3D11
 
         private void ClearState()
         {
+            ClearCachedState();
             _context.ClearState();
             ResetManagedState();
         }

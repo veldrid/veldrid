@@ -25,6 +25,7 @@ namespace Veldrid.OpenGL
 
         public override void Begin()
         {
+            ClearCachedState();
             if (_currentCommands != null)
             {
                 _currentCommands.Dispose();

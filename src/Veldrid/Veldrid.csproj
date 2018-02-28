@@ -22,7 +22,7 @@
     <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" Condition="'$(ExcludeD3D11)' != 'true'" />
     <PackageReference Include="SharpDX.DXGI" Version="4.0.1" Condition="'$(ExcludeD3D11)' != 'true'" />
 
-    <PackageReference Include="Vk" Version="1.0.14" Condition="'$(ExcludeVulkan)' != 'true'" />
+    <PackageReference Include="Vk" Version="1.0.15" Condition="'$(ExcludeVulkan)' != 'true'" />
 
     <ProjectReference Include="..\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj" Condition="'$(ExcludeMetal)' != 'true'" />
 

@@ -53,14 +53,22 @@ namespace Veldrid.NeoDemo
             gdOptions.Debug = true;
 #endif
 
-            VeldridStartup.CreateWindowAndGraphicsDevice(
-                windowCI,
-                gdOptions,
-                //GraphicsBackend.Metal,
-                //GraphicsBackend.Vulkan,
-                //GraphicsBackend.OpenGL,
-                out _window,
-                out _gd);
+            _window = VeldridStartup.CreateWindow(windowCI);
+            _gd = GraphicsDevice.CreateVulkan(gdOptions, new SwapchainDescription(
+                VeldridStartup.GetSwapchainSource(_window),
+                (uint)_window.Width,
+                (uint)_window.Height,
+                null,
+                true));
+
+            // VeldridStartup.CreateWindowAndGraphicsDevice(
+            //     windowCI,
+            //     gdOptions,
+            //     //GraphicsBackend.Metal,
+            //     //GraphicsBackend.Vulkan,
+            //     //GraphicsBackend.OpenGL,
+            //     out _window,
+            //     out _gd);
             _window.Resized += () => _windowResized = true;
 
             _scene = new Scene(_window.Width, _window.Height);

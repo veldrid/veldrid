@@ -187,8 +187,13 @@ namespace Veldrid.StartupUtilities
             SDL_SysWMinfo sysWmInfo;
             Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
             Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
-            Vk.VkSurfaceSource surfaceSource = GetSurfaceSource(sysWmInfo);
-            GraphicsDevice gd = GraphicsDevice.CreateVulkan(options, surfaceSource, (uint)window.Width, (uint)window.Height);
+            SwapchainSource swapchainSource = GetSwapchainSource(window);
+            SwapchainDescription swapchainDesc = new SwapchainDescription(
+                swapchainSource,
+                (uint)window.Width, (uint)window.Height,
+                options.SwapchainDepthFormat,
+                options.SyncToVerticalBlank);
+            GraphicsDevice gd = GraphicsDevice.CreateVulkan(options, swapchainDesc);
 
             return gd;
         }

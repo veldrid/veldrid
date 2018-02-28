@@ -1,4 +1,5 @@
 ﻿using System;
+using Veldrid.MetalBindings;
 using Vulkan;
 using Vulkan.Xlib;
 using static Veldrid.Vk.VulkanUtil;
@@ -46,6 +47,10 @@ namespace Veldrid.Vk
             else if (source is XlibSwapchainSource xlibSource)
             {
                 return new XlibVkSurfaceInfo((Display*)xlibSource.Display, new Window { Value = xlibSource.Window });
+            }
+            else if (source is NSWindowSwapchainSource nsWindowSource)
+            {
+                return new NSWindowSurfaceSource(nsWindowSource.NSWindow);
             }
             else
             {
@@ -105,6 +110,37 @@ namespace Veldrid.Vk
         internal unsafe override SwapchainSource GetSurfaceSource()
         {
             return new XlibSwapchainSource((IntPtr)_display, _window.Value);
+        }
+    }
+
+    public class NSWindowSurfaceSource : VkSurfaceSource
+    {
+        private readonly IntPtr _nsWindow;
+
+        public unsafe NSWindowSurfaceSource(IntPtr nsWindow)
+        {
+            _nsWindow = nsWindow;
+        }
+
+        public unsafe override VkSurfaceKHR CreateSurface(VkInstance instance)
+        {
+            CAMetalLayer metalLayer = CAMetalLayer.New();
+            NSWindow nswindow = new NSWindow(_nsWindow);
+            NSView contentView = nswindow.contentView;
+            contentView.wantsLayer = true;
+            contentView.layer = metalLayer.NativePtr;
+
+            VkMacOSSurfaceCreateInfoMVK surfaceCI = VkMacOSSurfaceCreateInfoMVK.New();
+            surfaceCI.pView = contentView.NativePtr.ToPointer();
+            VkResult result = vkCreateMacOSSurfaceMVK(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
+            CheckResult(result);
+
+            return surface;
+        }
+
+        internal unsafe override SwapchainSource GetSurfaceSource()
+        {
+            return new NSWindowSwapchainSource(_nsWindow);
         }
     }
 }

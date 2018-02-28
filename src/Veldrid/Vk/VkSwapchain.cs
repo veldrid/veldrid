@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Vulkan;
+using Veldrid.MetalBindings;
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 
@@ -175,7 +177,7 @@ namespace Veldrid.Vk
             }
 
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_gd.PhysicalDevice, _surface, out VkSurfaceCapabilitiesKHR surfaceCapabilities);
-            uint imageCount = surfaceCapabilities.minImageCount + 1;
+            uint imageCount = Math.Min(surfaceCapabilities.minImageCount + 1, surfaceCapabilities.maxImageCount);
 
             VkSwapchainCreateInfoKHR swapchainCI = VkSwapchainCreateInfoKHR.New();
             swapchainCI.surface = _surface;

@@ -605,11 +605,14 @@ namespace Veldrid.Vk
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
-            VkRect2D scissor = new VkRect2D((int)x, (int)y, (int)width, (int)height);
-            if (_scissorRects[index] != scissor)
+            if (index == 0)
             {
-                _scissorRects[index] = scissor;
-                vkCmdSetScissor(_cb, index, 1, ref scissor);
+                VkRect2D scissor = new VkRect2D((int)x, (int)y, (int)width, (int)height);
+                if (_scissorRects[index] != scissor)
+                {
+                    _scissorRects[index] = scissor;
+                    vkCmdSetScissor(_cb, index, 1, ref scissor);
+                }
             }
         }
 
@@ -625,15 +628,26 @@ namespace Veldrid.Vk
                 maxDepth = viewport.MaxDepth
             };
 
-            vkCmdSetViewport(_cb, index, 1, ref vkViewport);
+            if (index == 0)
+            {
+                vkCmdSetViewport(_cb, index, 1, ref vkViewport);
+            }
         }
 
         public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
+            if (sizeInBytes == 30)
+            {
+
+            }
+
+            uint sizeRoundFactor = (4 - (sizeInBytes % 4)) % 4;
+            sizeInBytes += sizeRoundFactor;
+
             PooledStagingBufferInfo stagingBufferInfo = GetStagingBuffer(sizeInBytes);
             _gd.UpdateBuffer(stagingBufferInfo.Buffer, 0, source, sizeInBytes);
             CopyBuffer(stagingBufferInfo.Buffer, 0, buffer, bufferOffsetInBytes, sizeInBytes);
-            vkCmdSetEvent(_cb, stagingBufferInfo.AvailableEvent, VkPipelineStageFlags.Transfer);
+            // vkCmdSetEvent(_cb, stagingBufferInfo.AvailableEvent, VkPipelineStageFlags.Transfer);
         }
 
         protected override void CopyBufferCore(
@@ -935,6 +949,7 @@ namespace Veldrid.Vk
 
         private void CheckUsedStagingBuffers()
         {
+            return;
             for (int i = 0; i < _usedStagingBuffers.Count; i++)
             {
                 PooledStagingBufferInfo info = _usedStagingBuffers[i];
@@ -963,7 +978,8 @@ namespace Veldrid.Vk
                 vkDestroyCommandPool(_gd.Device, _pool, null);
 
                 CheckUsedStagingBuffers();
-                Debug.Assert(_usedStagingBuffers.Count == 0);
+                // TODO MVK
+                // Debug.Assert(_usedStagingBuffers.Count == 0);
                 foreach (PooledStagingBufferInfo info in _availableStagingBuffers)
                 {
                     info.Buffer.Dispose();
@@ -983,8 +999,8 @@ namespace Veldrid.Vk
             public PooledStagingBufferInfo(VkGraphicsDevice gd, VkBuffer buffer)
             {
                 VkEventCreateInfo eventCI = VkEventCreateInfo.New();
-                VkResult result = vkCreateEvent(gd.Device, ref eventCI, null, out AvailableEvent);
-                CheckResult(result);
+                // VkResult result = vkCreateEvent(gd.Device, ref eventCI, null, out AvailableEvent);
+                // CheckResult(result);
 
                 Buffer = buffer;
             }

@@ -34,7 +34,7 @@ namespace Veldrid.Vk
         private bool _debugMarkerEnabled;
         private vkDebugMarkerSetObjectNameEXT_d _setObjectNameDelegate;
 
-        private const int SharedCommandPoolCount = 4;
+        private const int SharedCommandPoolCount = 0;
         private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
         private VkDescriptorPoolManager _descriptorPoolManager;
 
@@ -441,6 +441,15 @@ namespace Veldrid.Vk
 
                 instanceExtensions.Add(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
             }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                if (!availableInstanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
+                {
+                    throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME}");
+                }
+
+                instanceExtensions.Add(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+            }
             else
             {
                 throw new NotSupportedException("This platform does not support Vulkan.");
@@ -573,9 +582,9 @@ namespace Veldrid.Vk
             VkPhysicalDeviceFeatures deviceFeatures = new VkPhysicalDeviceFeatures();
             deviceFeatures.samplerAnisotropy = true;
             deviceFeatures.fillModeNonSolid = true;
-            deviceFeatures.geometryShader = true;
+            // deviceFeatures.geometryShader = true;
             deviceFeatures.depthClamp = true;
-            deviceFeatures.multiViewport = true;
+            // deviceFeatures.multiViewport = true;
             deviceFeatures.textureCompressionBC = true;
 
             bool debugMarkerSupported = false;

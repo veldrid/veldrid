@@ -89,6 +89,8 @@ namespace Veldrid
         /// <summary>
         /// Sets the active <see cref="DeviceBuffer"/> for the given index.
         /// When drawing, the bound <see cref="DeviceBuffer"/> objects must be compatible with the bound <see cref="Pipeline"/>.
+        /// The given buffer must be non-null. It is not necessary to un-bind vertex buffers for Pipelines which will not
+        /// use them. All extra vertex buffers are simply ignored.
         /// </summary>
         /// <param name="index">The buffer slot.</param>
         /// <param name="buffer">The new <see cref="DeviceBuffer"/>.</param>

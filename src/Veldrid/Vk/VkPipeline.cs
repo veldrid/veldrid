@@ -156,6 +156,10 @@ namespace Veldrid.Vk
                 for (int location = 0; location < inputDesc.Elements.Length; location++)
                 {
                     VertexElementDescription inputElement = inputDesc.Elements[location];
+                    if (inputElement.Offset != 0)
+                    {
+                        currentOffset = inputElement.Offset;
+                    }
 
                     attributeDescs[targetIndex] = new VkVertexInputAttributeDescription()
                     {
@@ -166,7 +170,11 @@ namespace Veldrid.Vk
                     };
 
                     targetIndex += 1;
-                    currentOffset += FormatHelpers.GetSizeInBytes(inputElement.Format);
+
+                    if (inputElement.Offset == 0)
+                    {
+                        currentOffset += FormatHelpers.GetSizeInBytes(inputElement.Format);
+                    }
                 }
 
                 targetLocation += inputDesc.Elements.Length;

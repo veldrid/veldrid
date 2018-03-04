@@ -158,6 +158,12 @@ namespace Veldrid.D3D11
                 for (int i = 0; i < elementDescs.Length; i++)
                 {
                     VertexElementDescription desc = elementDescs[i];
+
+                    if (desc.Offset != 0)
+                    {
+                        currentOffset = (int)desc.Offset;
+                    }
+
                     elements[element] = new InputElement(
                         GetSemanticString(desc.Semantic),
                         SemanticIndices.GetAndIncrement(ref si, desc.Semantic),
@@ -167,7 +173,11 @@ namespace Veldrid.D3D11
                         stepRate == 0 ? InputClassification.PerVertexData : InputClassification.PerInstanceData,
                         (int)stepRate);
 
-                    currentOffset += (int)FormatHelpers.GetSizeInBytes(desc.Format);
+                    if (desc.Offset == 0)
+                    {
+                        currentOffset += (int)FormatHelpers.GetSizeInBytes(desc.Format);
+                    }
+
                     element += 1;
                 }
             }

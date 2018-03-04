@@ -39,7 +39,7 @@ namespace Veldrid.Utilities
             return buffer;
         }
 
-        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
         {
             Pipeline pipeline = Factory.CreateGraphicsPipeline(ref description);
             DisposeCollector.Add(pipeline);

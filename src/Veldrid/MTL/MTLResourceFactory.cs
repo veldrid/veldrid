@@ -28,7 +28,7 @@ namespace Veldrid.MTL
             return new MTLFramebuffer(_gd, ref description);
         }
 
-        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
         {
             return new MTLPipeline(ref description, _gd);
         }

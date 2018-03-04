@@ -28,7 +28,7 @@ namespace Veldrid.D3D11
             return new D3D11Framebuffer(_device, ref description);
         }
 
-        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
         {
             return new D3D11Pipeline(_cache, ref description);
         }

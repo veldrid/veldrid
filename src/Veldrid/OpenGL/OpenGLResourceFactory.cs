@@ -27,7 +27,7 @@ namespace Veldrid.OpenGL
             return new OpenGLFramebuffer(_gd, ref description);
         }
 
-        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
         {
             return new OpenGLPipeline(_gd, ref description);
         }

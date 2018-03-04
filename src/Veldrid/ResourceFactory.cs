@@ -21,7 +21,33 @@ namespace Veldrid
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="Pipeline"/> which, when bound to a CommandList, is used to dispatch draw commands.</returns>
-        public abstract Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description);
+        public Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        {
+#if VALIDATE_USAGE
+            foreach (VertexLayoutDescription vertexLayoutDesc in description.ShaderSet.VertexLayouts)
+            {
+                bool usesExplicitOffset = false;
+                foreach (VertexElementDescription element in vertexLayoutDesc.Elements)
+                {
+                    if (element.Offset == 0 && usesExplicitOffset)
+                    {
+                        throw new VeldridException(
+                            $"If any element in {nameof(VertexLayoutDescription)}.{nameof(VertexLayoutDescription.Elements)} uses a non-zero offset, then all elements must.");
+                    }
+
+                    if (element.Offset != 0)
+                    {
+                        usesExplicitOffset = true;
+                    }
+                }
+            }
+#endif
+
+            return CreateGraphicsPipelineCore(ref description);
+        }
+
+        // TODO: private protected
+        protected abstract Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description);
 
         /// <summary>
         /// Creates a new compute <see cref="Pipeline"/> object.

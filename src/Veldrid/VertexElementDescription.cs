@@ -19,6 +19,13 @@ namespace Veldrid
         /// The format of the element.
         /// </summary>
         public VertexElementFormat Format;
+        /// <summary>
+        /// The offset in bytes, from the start of the vertex that this element appears.
+        /// If 0, this vertex element is assumed to be tightly-packed with respect to the other vertex elements that appear in
+        /// the <see cref="VertexLayoutDescription"/> with it. It's offset will effectively be the sum of the sizes of all
+        /// of the elements that occur before it in the layout description.
+        /// </summary>
+        public uint Offset;
 
         /// <summary>
         /// Constructs a new VertexElementDescription describing a per-vertex element.
@@ -26,8 +33,17 @@ namespace Veldrid
         /// <param name="name">The name of the element.</param>
         /// <param name="semantic">The semantic type of the element.</param>
         /// <param name="format">The format of the element.</param>
+        /// <param name="offset">The offset in bytes, from the start of the vertex that this element appears.</param>
+        public VertexElementDescription(string name, VertexElementSemantic semantic, VertexElementFormat format, uint offset)
+        {
+            Name = name;
+            Format = format;
+            Semantic = semantic;
+            Offset = offset;
+        }
+
         public VertexElementDescription(string name, VertexElementSemantic semantic, VertexElementFormat format)
-            : this(name, format, semantic)
+            : this(name, semantic, format, 0)
         {
         }
 
@@ -41,10 +57,8 @@ namespace Veldrid
             string name,
             VertexElementFormat format,
             VertexElementSemantic semantic)
+            : this(name, semantic, format)
         {
-            Name = name;
-            Format = format;
-            Semantic = semantic;
         }
 
         /// <summary>

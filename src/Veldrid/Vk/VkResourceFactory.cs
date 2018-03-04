@@ -25,7 +25,7 @@ namespace Veldrid.Vk
             return new VkFramebuffer(_gd, ref description, false);
         }
 
-        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
         {
             return new VkPipeline(_gd, ref description);
         }

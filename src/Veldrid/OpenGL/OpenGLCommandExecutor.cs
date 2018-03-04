@@ -181,6 +181,11 @@ namespace Veldrid.OpenGL
                 for (uint slot = 0; slot < input.Elements.Length; slot++)
                 {
                     ref VertexElementDescription element = ref input.Elements[slot]; // Large structure -- use by reference.
+                    if (element.Offset != 0)
+                    {
+                        offset = element.Offset;
+                    }
+
                     uint actualSlot = totalSlotsBound + slot;
                     if (actualSlot >= _vertexAttributesBound)
                     {
@@ -219,7 +224,10 @@ namespace Veldrid.OpenGL
                         _vertexAttribDivisors[actualSlot] = stepRate;
                     }
 
-                    offset += FormatHelpers.GetSizeInBytes(element.Format);
+                    if (element.Offset == 0)
+                    {
+                        offset += FormatHelpers.GetSizeInBytes(element.Format);
+                    }
                 }
 
                 totalSlotsBound += (uint)input.Elements.Length;

@@ -76,12 +76,20 @@ namespace Veldrid.MTL
                 for (uint j = 0; j < vdDesc.Elements.Length; j++)
                 {
                     VertexElementDescription elementDesc = vdDesc.Elements[j];
+                    if (elementDesc.Offset != 0)
+                    {
+                        offset = elementDesc.Offset;
+                    }
+
                     MTLVertexAttributeDescriptor mtlAttribute = vertexDescriptor.attributes[element];
                     mtlAttribute.bufferIndex = (UIntPtr)i;
                     mtlAttribute.format = MTLFormats.VdToMTLVertexFormat(elementDesc.Format);
                     mtlAttribute.offset = (UIntPtr)offset;
-                    offset += FormatHelpers.GetSizeInBytes(elementDesc.Format);
                     element += 1;
+                    if (elementDesc.Offset == 0)
+                    {
+                        offset += FormatHelpers.GetSizeInBytes(elementDesc.Format);
+                    }
                 }
             }
 

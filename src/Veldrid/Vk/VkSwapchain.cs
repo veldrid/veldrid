@@ -89,7 +89,7 @@ namespace Veldrid.Vk
             {
                 _syncToVBlank = _newSyncToVBlank.Value;
                 _newSyncToVBlank = null;
-                CreateSwapchain(_framebuffer.Width, _framebuffer.Width);
+                CreateSwapchain(_framebuffer.Width, _framebuffer.Height);
             }
 
             VkResult result = vkAcquireNextImageKHR(
@@ -102,7 +102,7 @@ namespace Veldrid.Vk
             _framebuffer.SetImageIndex(_currentImageIndex);
             if (result == VkResult.ErrorOutOfDateKHR || result == VkResult.SuboptimalKHR)
             {
-                CreateSwapchain(_framebuffer.Width, _framebuffer.Width);
+                CreateSwapchain(_framebuffer.Width, _framebuffer.Height);
 
                 return false;
             }

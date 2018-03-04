@@ -41,6 +41,7 @@ namespace Veldrid.D3D11
         {
             _device = device;
             _depthFormat = description.DepthFormat;
+            SyncToVerticalBlank = description.SyncToVerticalBlank;
             if (description.Source is Win32SwapchainSource win32Source)
             {
                 SwapChainDescription dxgiSCDesc = new SwapChainDescription

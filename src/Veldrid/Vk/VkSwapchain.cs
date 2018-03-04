@@ -44,6 +44,7 @@ namespace Veldrid.Vk
         public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description, VkSurfaceKHR existingSurface)
         {
             _gd = gd;
+            SyncToVerticalBlank = description.SyncToVerticalBlank;
 
             if (existingSurface == VkSurfaceKHR.Null)
             {

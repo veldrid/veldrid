@@ -22,6 +22,7 @@ namespace Veldrid.MTL
         public MTLSwapchain(MTLGraphicsDevice gd, ref SwapchainDescription description)
         {
             _gd = gd;
+            SyncToVerticalBlank = description.SyncToVerticalBlank;
 
             _metalLayer = CAMetalLayer.New();
 

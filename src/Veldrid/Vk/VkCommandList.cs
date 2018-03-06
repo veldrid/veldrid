@@ -487,6 +487,7 @@ namespace Veldrid.Vk
                     if (_depthClearValue.HasValue)
                     {
                         _clearValues[_currentFramebuffer.ColorTargets.Count] = _depthClearValue.Value;
+                        _depthClearValue = null;
                     }
                     vkCmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
                     _activeRenderPass = _currentFramebuffer.RenderPassClear;

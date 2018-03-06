@@ -3,7 +3,7 @@
     internal class OpenGLResourceSet : ResourceSet
     {
         public OpenGLResourceLayout Layout { get; }
-        public BindableResource[] Resources { get; }
+        public IBindableResource[] Resources { get; }
         public override string Name { get; set; }
 
         public OpenGLResourceSet(ref ResourceSetDescription description)

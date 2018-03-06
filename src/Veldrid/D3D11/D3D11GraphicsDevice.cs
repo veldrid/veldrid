@@ -111,7 +111,7 @@ namespace Veldrid.D3D11
             return _device.CheckMultisampleQualityLevels(format, sampleCount) != 0;
         }
 
-        protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
+        protected override MappedResource MapCore(IMappableResource resource, MapMode mode, uint subresource)
         {
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
             lock (_mappedResourceLock)
@@ -148,7 +148,7 @@ namespace Veldrid.D3D11
                     }
                     else
                     {
-                        D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
+                        D3D11Texture texture = Util.AssertSubtype<IMappableResource, D3D11Texture>(resource);
                         lock (_immediateContextLock)
                         {
                             DataBox db = _immediateContext.MapSubresource(
@@ -177,7 +177,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void UnmapCore(MappableResource resource, uint subresource)
+        protected override void UnmapCore(IMappableResource resource, uint subresource)
         {
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
             bool commitUnmap;
@@ -201,7 +201,7 @@ namespace Veldrid.D3D11
                         }
                         else
                         {
-                            D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
+                            D3D11Texture texture = Util.AssertSubtype<IMappableResource, D3D11Texture>(resource);
                             _immediateContext.UnmapSubresource(texture.DeviceTexture, (int)subresource);
                         }
 

@@ -43,7 +43,6 @@ namespace Veldrid.MTL
         public MTLCommandBuffer CommandBuffer => _cb;
 
         public MTLCommandList(ref CommandListDescription description, MTLGraphicsDevice gd)
-            : base(ref description)
         {
             _gd = gd;
         }
@@ -360,7 +359,6 @@ namespace Veldrid.MTL
                         layer + srcBaseArrayLayer);
                     srcMTLTexture.GetSubresourceLayout(
                         srcMipLevel,
-                        srcBaseArrayLayer + layer,
                         out uint srcRowPitch,
                         out uint srcDepthPitch);
                     ulong sourceOffset = srcSubresourceBase
@@ -396,7 +394,6 @@ namespace Veldrid.MTL
                         layer + srcBaseArrayLayer);
                     srcMTLTexture.GetSubresourceLayout(
                         srcMipLevel,
-                        srcBaseArrayLayer + layer,
                         out uint srcRowPitch,
                         out uint srcDepthPitch);
 
@@ -406,7 +403,6 @@ namespace Veldrid.MTL
                         layer + dstBaseArrayLayer);
                     dstMTLTexture.GetSubresourceLayout(
                         dstMipLevel,
-                        dstBaseArrayLayer + layer,
                         out uint dstRowPitch,
                         out uint dstDepthPitch);
 
@@ -476,7 +472,6 @@ namespace Veldrid.MTL
                 {
                     dstMTLTexture.GetSubresourceLayout(
                         dstMipLevel,
-                        dstBaseArrayLayer + layer,
                         out uint dstBytesPerRow,
                         out uint dstBytesPerImage);
                     ulong dstOffset = Util.ComputeSubresourceOffset(dstMTLTexture, dstMipLevel, dstBaseArrayLayer + layer);
@@ -610,27 +605,27 @@ namespace Veldrid.MTL
                 switch (bindingInfo.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                        MTLBuffer mtlBuffer = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
+                        MTLBuffer mtlBuffer = Util.AssertSubtype<IBindableResource, MTLBuffer>(resource);
                         BindBuffer(mtlBuffer, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.TextureReadOnly:
-                        MTLTextureView mtlTexView = Util.AssertSubtype<BindableResource, MTLTextureView>(resource);
+                        MTLTextureView mtlTexView = Util.AssertSubtype<IBindableResource, MTLTextureView>(resource);
                         BindTexture(mtlTexView, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.TextureReadWrite:
-                        MTLTextureView mtlTexViewRW = Util.AssertSubtype<BindableResource, MTLTextureView>(resource);
+                        MTLTextureView mtlTexViewRW = Util.AssertSubtype<IBindableResource, MTLTextureView>(resource);
                         BindTexture(mtlTexViewRW, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.Sampler:
-                        MTLSampler mtlSampler = Util.AssertSubtype<BindableResource, MTLSampler>(resource);
+                        MTLSampler mtlSampler = Util.AssertSubtype<IBindableResource, MTLSampler>(resource);
                         BindSampler(mtlSampler, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
-                        MTLBuffer mtlStructuredBuff = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
+                        MTLBuffer mtlStructuredBuff = Util.AssertSubtype<IBindableResource, MTLBuffer>(resource);
                         BindBuffer(mtlStructuredBuff, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadWrite:
-                        MTLBuffer mtlStructuredBuffRW = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
+                        MTLBuffer mtlStructuredBuffRW = Util.AssertSubtype<IBindableResource, MTLBuffer>(resource);
                         BindBuffer(mtlStructuredBuffRW, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     default:
@@ -652,27 +647,27 @@ namespace Veldrid.MTL
                 switch (bindingInfo.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                        MTLBuffer mtlBuffer = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
+                        MTLBuffer mtlBuffer = Util.AssertSubtype<IBindableResource, MTLBuffer>(resource);
                         BindBuffer(mtlBuffer, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.TextureReadOnly:
-                        MTLTextureView mtlTexView = Util.AssertSubtype<BindableResource, MTLTextureView>(resource);
+                        MTLTextureView mtlTexView = Util.AssertSubtype<IBindableResource, MTLTextureView>(resource);
                         BindTexture(mtlTexView, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.TextureReadWrite:
-                        MTLTextureView mtlTexViewRW = Util.AssertSubtype<BindableResource, MTLTextureView>(resource);
+                        MTLTextureView mtlTexViewRW = Util.AssertSubtype<IBindableResource, MTLTextureView>(resource);
                         BindTexture(mtlTexViewRW, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.Sampler:
-                        MTLSampler mtlSampler = Util.AssertSubtype<BindableResource, MTLSampler>(resource);
+                        MTLSampler mtlSampler = Util.AssertSubtype<IBindableResource, MTLSampler>(resource);
                         BindSampler(mtlSampler, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
-                        MTLBuffer mtlStructuredBuff = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
+                        MTLBuffer mtlStructuredBuff = Util.AssertSubtype<IBindableResource, MTLBuffer>(resource);
                         BindBuffer(mtlStructuredBuff, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadWrite:
-                        MTLBuffer mtlStructuredBuffRW = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
+                        MTLBuffer mtlStructuredBuffRW = Util.AssertSubtype<IBindableResource, MTLBuffer>(resource);
                         BindBuffer(mtlStructuredBuffRW, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     default:

@@ -100,7 +100,7 @@ namespace Veldrid.Tests
 
         public static GraphicsDevice CreateMetalDevice()
         {
-            return GraphicsDevice.CreateMetal(new GraphicsDeviceOptions(true));
+            return GraphicsDevice.CreateMetal();
         }
 
         public static void CreateMetalDeviceWithSwapchain(out Sdl2Window window, out GraphicsDevice gd)

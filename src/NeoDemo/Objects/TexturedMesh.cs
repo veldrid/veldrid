@@ -11,7 +11,7 @@ namespace Veldrid.NeoDemo.Objects
     public class TexturedMesh : CullRenderable
     {
         private readonly string _name;
-        private readonly MeshData _meshData;
+        private readonly IMeshData _meshData;
         private readonly ImageSharpTexture _textureData;
         private readonly ImageSharpTexture _alphaTextureData;
         private readonly Transform _transform = new Transform();
@@ -48,7 +48,7 @@ namespace Veldrid.NeoDemo.Objects
 
         public Transform Transform => _transform;
 
-        public TexturedMesh(string name, MeshData meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
+        public TexturedMesh(string name, IMeshData meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
         {
             _name = name;
             _meshData = meshData;

@@ -7,7 +7,7 @@ namespace Veldrid
     /// The size of a <see cref="DeviceBuffer"/> is fixed upon creation, and resizing is not possible.
     /// See <see cref="BufferDescription"/>.
     /// </summary>
-    public abstract class DeviceBuffer : DeviceResource, BindableResource, MappableResource, IDisposable
+    public abstract class DeviceBuffer : IDeviceResource, IBindableResource, IMappableResource, IDisposable
     {
         /// <summary>
         /// The total capacity, in bytes, of the buffer. This value is fixed upon creation.

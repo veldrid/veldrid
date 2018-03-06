@@ -33,6 +33,7 @@
     <Compile Remove="D3D11/**/*" Condition="'$(ExcludeD3D11)' == 'true'" />
     <Compile Remove="Vk/**/*" Condition="'$(ExcludeVulkan)' == 'true'" />
     <Compile Remove="MTL/**/*" Condition="'$(ExcludeMetal)' == 'true'" />
+    <Compile Remove="StagingMemoryPool.cs" Condition="'$(ExcludeOpenGL)' == 'true'" />
     <Compile Remove="OpenGL/**/*" Condition="'$(ExcludeOpenGL)' == 'true'" />
   </ItemGroup>
 

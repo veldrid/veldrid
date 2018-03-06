@@ -51,10 +51,7 @@ namespace Veldrid.Vk
         public VkSwapchainFramebuffer(
             VkGraphicsDevice gd,
             VkSurfaceKHR surface,
-            uint width,
-            uint height,
             PixelFormat? depthFormat)
-            : base()
         {
             _gd = gd;
             _surface = surface;

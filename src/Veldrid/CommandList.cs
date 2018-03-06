@@ -21,7 +21,7 @@ namespace Veldrid
     /// <see cref="GraphicsDevice"/>, they must be reset and commands must be issued again.
     /// See <see cref="CommandListDescription"/>.
     /// </summary>
-    public abstract class CommandList : DeviceResource, IDisposable
+    public abstract class CommandList : IDeviceResource, IDisposable
     {
         /// <summary>
         /// The active <see cref="Framebuffer"/>.
@@ -35,7 +35,7 @@ namespace Veldrid
         private IndexFormat _indexFormat;
 #endif
 
-        internal CommandList(ref CommandListDescription description)
+        internal CommandList()
         {
         }
 

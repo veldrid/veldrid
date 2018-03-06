@@ -6,7 +6,7 @@ namespace Veldrid
     /// <summary>
     /// A synchronization primitive which allows the GPU to communicate when submitted work items have finished executing.
     /// </summary>
-    public abstract class Fence : DeviceResource, IDisposable
+    public abstract class Fence : IDeviceResource, IDisposable
     {
         /// <summary>
         /// Gets a value indicating whether the Fence is currently signaled. A Fence is signaled after a CommandList finishes

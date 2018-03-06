@@ -7,7 +7,7 @@ namespace Veldrid
     /// A device resource used to control which color and depth textures are rendered to.
     /// See <see cref="FramebufferDescription"/>.
     /// </summary>
-    public abstract class Framebuffer : DeviceResource, IDisposable
+    public abstract class Framebuffer : IDeviceResource, IDisposable
     {
         /// <summary>
         /// Gets the depth attachment associated with this instance. May be null if no depth texture is used.

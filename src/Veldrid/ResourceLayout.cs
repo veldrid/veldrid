@@ -7,7 +7,7 @@ namespace Veldrid
     /// to a shader set.
     /// See <see cref="ResourceLayoutDescription"/>.
     /// </summary>
-    public abstract class ResourceLayout : DeviceResource, IDisposable
+    public abstract class ResourceLayout : IDeviceResource, IDisposable
     {
 #if VALIDATE_USAGE
         internal readonly ResourceKind[] ResourceKinds;

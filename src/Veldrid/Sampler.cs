@@ -6,7 +6,7 @@ namespace Veldrid
     /// A bindable device resource which controls how texture values are sampled within a shader.
     /// See <see cref="SamplerDescription"/>.
     /// </summary>
-    public abstract class Sampler : DeviceResource, BindableResource, IDisposable
+    public abstract class Sampler : IDeviceResource, IBindableResource, IDisposable
     {
         /// <summary>
         /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other

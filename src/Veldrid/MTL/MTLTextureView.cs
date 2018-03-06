@@ -12,7 +12,7 @@ namespace Veldrid.MTL
 
         public override string Name { get; set; }
 
-        public MTLTextureView(ref TextureViewDescription description, MTLGraphicsDevice gd)
+        public MTLTextureView(ref TextureViewDescription description)
             : base(ref description)
         {
             MTLTexture targetMTLTexture = Util.AssertSubtype<Texture, MTLTexture>(description.Target);

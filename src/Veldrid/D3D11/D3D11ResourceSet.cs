@@ -4,7 +4,7 @@
     {
         private string _name;
 
-        public BindableResource[] Resources { get; }
+        public IBindableResource[] Resources { get; }
         public D3D11ResourceLayout Layout { get; }
 
         public D3D11ResourceSet(ref ResourceSetDescription description)
@@ -13,7 +13,7 @@
             Resources = description.BoundResources;
             Layout = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(description.Layout);
 
-            foreach (BindableResource resource in description.BoundResources)
+            foreach (IBindableResource resource in description.BoundResources)
             {
                 if (!(resource is D3D11Buffer || resource is D3D11TextureView || resource is D3D11Sampler))
                 {

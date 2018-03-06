@@ -12,8 +12,6 @@ namespace Veldrid.Utilities
     /// </summary>
     public class MtlParser
     {
-        private static readonly string[] s_newline = new string[] { "\n" };
-
         private readonly ParseContext _pc = new ParseContext();
 
         /// <summary>

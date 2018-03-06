@@ -93,7 +93,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset)
         {
             PreDrawCommand();
 
@@ -529,11 +529,11 @@ namespace Veldrid.OpenGL
             for (uint element = 0; element < glResourceSet.Resources.Length; element++)
             {
                 ResourceKind kind = layoutElements[element].Kind;
-                BindableResource resource = glResourceSet.Resources[(int)element];
+                IBindableResource resource = glResourceSet.Resources[(int)element];
                 switch (kind)
                 {
                     case ResourceKind.UniformBuffer:
-                        OpenGLBuffer glUB = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
+                        OpenGLBuffer glUB = Util.AssertSubtype<IBindableResource, OpenGLBuffer>(resource);
                         glUB.EnsureResourcesCreated();
                         if (pipeline.GetUniformBindingForSlot(slot, element, out OpenGLUniformBinding uniformBindingInfo))
                         {
@@ -553,7 +553,7 @@ namespace Veldrid.OpenGL
                         break;
                     case ResourceKind.StructuredBufferReadWrite:
                     case ResourceKind.StructuredBufferReadOnly:
-                        OpenGLBuffer glBuffer = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
+                        OpenGLBuffer glBuffer = Util.AssertSubtype<IBindableResource, OpenGLBuffer>(resource);
                         if (pipeline.GetStorageBufferBindingForSlot(slot, element, out OpenGLShaderStorageBinding shaderStorageBinding))
                         {
                             glShaderStorageBlockBinding(pipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + ssboOffset);
@@ -566,7 +566,7 @@ namespace Veldrid.OpenGL
                         }
                         break;
                     case ResourceKind.TextureReadOnly:
-                        OpenGLTextureView glTexView = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
+                        OpenGLTextureView glTexView = Util.AssertSubtype<IBindableResource, OpenGLTextureView>(resource);
                         glTexView.EnsureResourcesCreated();
                         if (pipeline.GetTextureBindingInfo(slot, element, out OpenGLTextureBindingSlotInfo textureBindingInfo))
                         {
@@ -576,7 +576,7 @@ namespace Veldrid.OpenGL
                         }
                         break;
                     case ResourceKind.TextureReadWrite:
-                        OpenGLTextureView glTexViewRW = Util.AssertSubtype<BindableResource, OpenGLTextureView>(resource);
+                        OpenGLTextureView glTexViewRW = Util.AssertSubtype<IBindableResource, OpenGLTextureView>(resource);
                         glTexViewRW.EnsureResourcesCreated();
                         if (pipeline.GetTextureBindingInfo(slot, element, out OpenGLTextureBindingSlotInfo imageBindingInfo))
                         {
@@ -594,7 +594,7 @@ namespace Veldrid.OpenGL
                         }
                         break;
                     case ResourceKind.Sampler:
-                        OpenGLSampler glSampler = Util.AssertSubtype<BindableResource, OpenGLSampler>(resource);
+                        OpenGLSampler glSampler = Util.AssertSubtype<IBindableResource, OpenGLSampler>(resource);
                         glSampler.EnsureResourcesCreated();
                         if (pipeline.GetSamplerBindingInfo(slot, element, out OpenGLSamplerBindingSlotInfo samplerBindingInfo))
                         {

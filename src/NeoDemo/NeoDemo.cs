@@ -177,7 +177,7 @@ namespace Veldrid.NeoDemo
         }
 
         private void AddTexturedMesh(
-            MeshData meshData,
+            IMeshData meshData,
             ImageSharpTexture texData,
             ImageSharpTexture alphaTexData,
             MaterialPropsAndBuffer materialProps,

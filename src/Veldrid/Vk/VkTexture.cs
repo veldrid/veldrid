@@ -215,7 +215,7 @@ namespace Veldrid.Vk
 
         internal VkSubresourceLayout GetSubresourceLayout(uint subresource)
         {
-            bool staging = _stagingBuffer != null;
+            bool staging = _stagingBuffer.Handle != 0;
             Util.GetMipLevelAndArrayLayer(this, subresource, out uint mipLevel, out uint arrayLayer);
             if (!staging)
             {

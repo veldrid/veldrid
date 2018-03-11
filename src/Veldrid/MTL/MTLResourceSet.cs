@@ -8,7 +8,7 @@ namespace Veldrid.MTL
         public MTLResourceSet(ref ResourceSetDescription description, MTLGraphicsDevice gd)
             : base(ref description)
         {
-            Resources = description.BoundResources;
+            Resources = Util.ShallowClone(description.BoundResources);
             Layout = Util.AssertSubtype<ResourceLayout, MTLResourceLayout>(description.Layout);
         }
 

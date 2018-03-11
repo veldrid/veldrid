@@ -10,7 +10,7 @@
             : base(ref description)
         {
             Layout = Util.AssertSubtype<ResourceLayout, OpenGLResourceLayout>(description.Layout);
-            Resources = description.BoundResources;
+            Resources = Util.ShallowClone(description.BoundResources);
         }
 
         public override void Dispose()

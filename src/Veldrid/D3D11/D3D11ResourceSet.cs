@@ -10,7 +10,7 @@
         public D3D11ResourceSet(ref ResourceSetDescription description)
             : base(ref description)
         {
-            Resources = description.BoundResources;
+            Resources = Util.ShallowClone(description.BoundResources);
             Layout = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(description.Layout);
 
             foreach (BindableResource resource in description.BoundResources)

@@ -233,5 +233,10 @@ namespace Veldrid
                     }
             }
         }
+
+        internal static T[] ShallowClone<T>(T[] array)
+        {
+            return (T[])array.Clone();
+        }
     }
 }

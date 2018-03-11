@@ -12,13 +12,25 @@ namespace Veldrid.OpenGL
     {
         private const uint GL_INVALID_INDEX = 0xFFFFFFFF;
         private readonly OpenGLGraphicsDevice _gd;
+
+        public ResourceLayout[] ResourceLayouts { get; }
+
+        // Graphics Pipeline
+        public Shader[] GraphicsShaders { get; }
+        public VertexLayoutDescription[] VertexLayouts { get; }
+        public BlendStateDescription BlendState { get; }
+        public DepthStencilStateDescription DepthStencilState { get; }
+        public RasterizerStateDescription RasterizerState { get; }
+        public PrimitiveTopology PrimitiveTopology { get; }
+
+        // Compute Pipeline
+        public override bool IsComputePipeline { get; }
+        public Shader ComputeShader { get; }
+
         private uint _program;
         private bool _disposed;
 
         private SetBindingsInfo[] _setInfos;
-
-        public GraphicsPipelineDescription GraphicsDescription { get; }
-        public ComputePipelineDescription ComputeDescription { get; }
 
         public int[] VertexStrides { get; }
 
@@ -27,15 +39,18 @@ namespace Veldrid.OpenGL
         public uint GetUniformBufferCount(uint setSlot) => _setInfos[setSlot].UniformBufferCount;
         public uint GetShaderStorageBufferCount(uint setSlot) => _setInfos[setSlot].ShaderStorageBufferCount;
 
-        public override bool IsComputePipeline { get; }
-
         public override string Name { get; set; }
 
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref GraphicsPipelineDescription description)
             : base(ref description)
         {
             _gd = gd;
-            GraphicsDescription = description;
+            GraphicsShaders = Util.ShallowClone(description.ShaderSet.Shaders);
+            VertexLayouts = Util.ShallowClone(description.ShaderSet.VertexLayouts);
+            BlendState = description.BlendState.ShallowClone();
+            DepthStencilState = description.DepthStencilState;
+            RasterizerState = description.RasterizerState;
+            PrimitiveTopology = description.PrimitiveTopology;
 
             int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
             VertexStrides = new int[numVertexBuffers];
@@ -43,6 +58,8 @@ namespace Veldrid.OpenGL
             {
                 VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
             }
+
+            ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
         }
 
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref ComputePipelineDescription description)
@@ -50,8 +67,9 @@ namespace Veldrid.OpenGL
         {
             _gd = gd;
             IsComputePipeline = true;
-            ComputeDescription = description;
+            ComputeShader = description.ComputeShader;
             VertexStrides = Array.Empty<int>();
+            ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
         }
 
         public bool Created { get; private set; }
@@ -80,10 +98,9 @@ namespace Veldrid.OpenGL
 
         private void CreateGraphicsGLResources()
         {
-            ShaderSetDescription shaderSet = GraphicsDescription.ShaderSet;
             _program = glCreateProgram();
             CheckLastError();
-            foreach (Shader stage in shaderSet.Shaders)
+            foreach (Shader stage in GraphicsShaders)
             {
                 OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(stage);
                 glShader.EnsureResourcesCreated();
@@ -92,7 +109,7 @@ namespace Veldrid.OpenGL
             }
 
             uint slot = 0;
-            foreach (VertexLayoutDescription layoutDesc in shaderSet.VertexLayouts)
+            foreach (VertexLayoutDescription layoutDesc in VertexLayouts)
             {
                 for (int i = 0; i < layoutDesc.Elements.Length; i++)
                 {
@@ -118,7 +135,7 @@ namespace Veldrid.OpenGL
 
 #if DEBUG && GL_VALIDATE_VERTEX_INPUT_ELEMENTS
             slot = 0;
-            foreach (VertexLayoutDescription layoutDesc in shaderSet.VertexLayouts)
+            foreach (VertexLayoutDescription layoutDesc in VertexLayouts)
             {
                 for (int i = 0; i < layoutDesc.Elements.Length; i++)
                 {
@@ -155,7 +172,7 @@ namespace Veldrid.OpenGL
                 throw new VeldridException($"Error linking GL program: {log}");
             }
 
-            ProcessResourceSetLayouts(GraphicsDescription.ResourceLayouts);
+            ProcessResourceSetLayouts(ResourceLayouts);
         }
 
         private void ProcessResourceSetLayouts(ResourceLayout[] layouts)
@@ -169,7 +186,7 @@ namespace Veldrid.OpenGL
             {
                 ResourceLayout setLayout = layouts[setSlot];
                 OpenGLResourceLayout glSetLayout = Util.AssertSubtype<ResourceLayout, OpenGLResourceLayout>(setLayout);
-                ResourceLayoutElementDescription[] resources = glSetLayout.Description.Elements;
+                ResourceLayoutElementDescription[] resources = glSetLayout.Elements;
 
                 Dictionary<uint, OpenGLUniformBinding> uniformBindings = new Dictionary<uint, OpenGLUniformBinding>();
                 Dictionary<uint, OpenGLTextureBindingSlotInfo> textureBindings = new Dictionary<uint, OpenGLTextureBindingSlotInfo>();
@@ -277,7 +294,7 @@ namespace Veldrid.OpenGL
         {
             _program = glCreateProgram();
             CheckLastError();
-            OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(ComputeDescription.ComputeShader);
+            OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(ComputeShader);
             glShader.EnsureResourcesCreated();
             glAttachShader(_program, glShader.Shader);
             CheckLastError();
@@ -298,7 +315,7 @@ namespace Veldrid.OpenGL
                 throw new VeldridException($"Error linking GL program: {log}");
             }
 
-            ProcessResourceSetLayouts(ComputeDescription.ResourceLayouts);
+            ProcessResourceSetLayouts(ResourceLayouts);
         }
 
         public bool GetUniformBindingForSlot(uint set, uint slot, out OpenGLUniformBinding binding)

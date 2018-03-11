@@ -1,5 +1,4 @@
-﻿using SharpDX.D3DCompiler;
-using SharpDX.Direct3D11;
+﻿using SharpDX.Direct3D11;
 
 namespace Veldrid.D3D11
 {
@@ -37,7 +36,7 @@ namespace Veldrid.D3D11
                     throw Illegal.Value<ShaderStages>();
             }
 
-            Bytecode = description.ShaderBytes;
+            Bytecode = Util.ShallowClone(description.ShaderBytes);
         }
 
         public override string Name

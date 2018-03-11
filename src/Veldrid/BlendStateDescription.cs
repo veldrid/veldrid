@@ -88,5 +88,12 @@ namespace Veldrid
         {
             return HashHelper.Combine(BlendFactor.GetHashCode(), HashHelper.Array(AttachmentStates));
         }
+
+        internal BlendStateDescription ShallowClone()
+        {
+            BlendStateDescription result = this;
+            result.AttachmentStates = Util.ShallowClone(result.AttachmentStates);
+            return result;
+        }
     }
 }

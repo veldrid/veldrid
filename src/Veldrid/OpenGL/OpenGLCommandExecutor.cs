@@ -171,7 +171,7 @@ namespace Veldrid.OpenGL
         private void FlushVertexLayouts()
         {
             uint totalSlotsBound = 0;
-            VertexLayoutDescription[] layouts = _graphicsPipeline.GraphicsDescription.ShaderSet.VertexLayouts;
+            VertexLayoutDescription[] layouts = _graphicsPipeline.VertexLayouts;
             for (int i = 0; i < layouts.Length; i++)
             {
                 VertexLayoutDescription input = layouts[i];
@@ -321,12 +321,11 @@ namespace Veldrid.OpenGL
         {
             _graphicsPipelineActive = true;
             _graphicsPipeline.EnsureResourcesCreated();
-            GraphicsPipelineDescription desc = _graphicsPipeline.GraphicsDescription;
             Util.ClearArray(_graphicsResourceSets); // Invalidate resource set bindings -- they may be invalid.
 
             // Blend State
 
-            BlendStateDescription blendState = desc.BlendState;
+            BlendStateDescription blendState = _graphicsPipeline.BlendState;
             glBlendColor(blendState.BlendFactor.R, blendState.BlendFactor.G, blendState.BlendFactor.B, blendState.BlendFactor.A);
             CheckLastError();
 
@@ -361,7 +360,7 @@ namespace Veldrid.OpenGL
 
             // Depth Stencil State
 
-            DepthStencilStateDescription dss = desc.DepthStencilState;
+            DepthStencilStateDescription dss = _graphicsPipeline.DepthStencilState;
             if (!dss.DepthTestEnabled)
             {
                 glDisable(EnableCap.DepthTest);
@@ -409,7 +408,7 @@ namespace Veldrid.OpenGL
 
             // Rasterizer State
 
-            RasterizerStateDescription rs = desc.RasterizerState;
+            RasterizerStateDescription rs = _graphicsPipeline.RasterizerState;
             if (rs.CullMode == FaceCullMode.None)
             {
                 glDisable(EnableCap.CullFace);
@@ -453,7 +452,7 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
             // Primitive Topology
-            _primitiveType = OpenGLFormats.VdToGLPrimitiveType(desc.PrimitiveTopology);
+            _primitiveType = OpenGLFormats.VdToGLPrimitiveType(_graphicsPipeline.PrimitiveTopology);
 
             // Shader Set
             glUseProgram(_graphicsPipeline.Program);
@@ -463,13 +462,13 @@ namespace Veldrid.OpenGL
             Util.EnsureArrayMinimumSize(ref _vertexBuffers, (uint)vertexStridesCount);
 
             uint totalVertexElements = 0;
-            for (int i = 0; i < desc.ShaderSet.VertexLayouts.Length; i++)
+            for (int i = 0; i < _graphicsPipeline.VertexLayouts.Length; i++)
             {
-                totalVertexElements += (uint)desc.ShaderSet.VertexLayouts[i].Elements.Length;
+                totalVertexElements += (uint)_graphicsPipeline.VertexLayouts[i].Elements.Length;
             }
             Util.EnsureArrayMinimumSize(ref _vertexAttribDivisors, totalVertexElements);
 
-            Util.EnsureArrayMinimumSize(ref _graphicsResourceSets, (uint)desc.ResourceLayouts.Length);
+            Util.EnsureArrayMinimumSize(ref _graphicsResourceSets, (uint)_graphicsPipeline.ResourceLayouts.Length);
         }
 
         private void ActivateComputePipeline()
@@ -477,7 +476,7 @@ namespace Veldrid.OpenGL
             _graphicsPipelineActive = false;
             _computePipeline.EnsureResourcesCreated();
             Util.ClearArray(_computeResourceSets); // Invalidate resource set bindings -- they may be invalid.
-            Util.EnsureArrayMinimumSize(ref _computeResourceSets, (uint)_computePipeline.ComputeDescription.ResourceLayouts.Length);
+            Util.EnsureArrayMinimumSize(ref _computeResourceSets, (uint)_computePipeline.ResourceLayouts.Length);
 
             // Shader Set
             glUseProgram(_computePipeline.Program);
@@ -493,7 +492,7 @@ namespace Veldrid.OpenGL
 
             OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(rs);
             OpenGLResourceLayout glLayout = glResourceSet.Layout;
-            ResourceLayoutElementDescription[] layoutElements = glLayout.Description.Elements;
+            ResourceLayoutElementDescription[] layoutElements = glLayout.Elements;
             _graphicsResourceSets[slot] = glResourceSet;
 
             ActivateResourceSet(slot, true, glResourceSet, layoutElements);
@@ -508,7 +507,7 @@ namespace Veldrid.OpenGL
 
             OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(rs);
             OpenGLResourceLayout glLayout = glResourceSet.Layout;
-            ResourceLayoutElementDescription[] layoutElements = glLayout.Description.Elements;
+            ResourceLayoutElementDescription[] layoutElements = glLayout.Elements;
             _computeResourceSets[slot] = glResourceSet;
 
             ActivateResourceSet(slot, false, glResourceSet, layoutElements);

@@ -165,6 +165,10 @@ namespace Veldrid
             {
                 throw new VeldridException("Buffers with Staging Usage must not specify any other Usage flags.");
             }
+            if ((description.Usage & BufferUsage.UniformBuffer) != 0 && (description.SizeInBytes % 16) != 0)
+            {
+                throw new VeldridException($"Uniform buffer size must be a multiple of 16 bytes.");
+            }
 #endif
             return CreateBufferCore(ref description);
         }

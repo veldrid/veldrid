@@ -222,6 +222,7 @@ namespace Veldrid.MTL
         public override void End()
         {
             EnsureNoBlitEncoder();
+            EnsureNoComputeEncoder();
 
             if (!_currentFramebufferEverActive && _mtlFramebuffer != null)
             {
@@ -280,29 +281,30 @@ namespace Veldrid.MTL
 
         public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            if (bufferOffsetInBytes % 4 != 0)
-            {
-                throw new VeldridException("Metal needs 4-byte-multiple buffer copy size and offset.");
-            }
-            if (sizeInBytes % 4 != 0 && bufferOffsetInBytes != 0 && sizeInBytes != buffer.SizeInBytes)
-            {
-                throw new VeldridException("Metal needs 4-byte-multiple buffer copy size and offset.");
-            }
-
-            Debug.Assert(bufferOffsetInBytes % 4 == 0);
-
-            uint sizeRoundFactor = (4 - (sizeInBytes % 4)) % 4;
+            bool useComputeCopy = (bufferOffsetInBytes % 4 != 0)
+                || (sizeInBytes % 4 != 0 && bufferOffsetInBytes != 0 && sizeInBytes != buffer.SizeInBytes);
 
             MTLBuffer dstMTLBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
             // TODO: Cache these, and rely on the command buffer's completion callback to add them back to a shared pool.
             MTLBuffer copySrc = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(
                 _gd.ResourceFactory.CreateBuffer(new BufferDescription(sizeInBytes, BufferUsage.Staging)));
             _gd.UpdateBuffer(copySrc, 0, source, sizeInBytes);
-            EnsureBlitEncoder();
-            _bce.copy(
-                copySrc.DeviceBuffer, UIntPtr.Zero,
-                dstMTLBuffer.DeviceBuffer, (UIntPtr)bufferOffsetInBytes,
-                (UIntPtr)(sizeInBytes + sizeRoundFactor));
+
+            if (useComputeCopy)
+            {
+                CopyBufferCore(copySrc, 0, buffer, bufferOffsetInBytes, sizeInBytes);
+            }
+            else
+            {
+                Debug.Assert(bufferOffsetInBytes % 4 == 0);
+                uint sizeRoundFactor = (4 - (sizeInBytes % 4)) % 4;
+                EnsureBlitEncoder();
+                _bce.copy(
+                    copySrc.DeviceBuffer, UIntPtr.Zero,
+                    dstMTLBuffer.DeviceBuffer, (UIntPtr)bufferOffsetInBytes,
+                    (UIntPtr)(sizeInBytes + sizeRoundFactor));
+            }
+
             copySrc.Dispose();
         }
 
@@ -313,18 +315,33 @@ namespace Veldrid.MTL
             uint destinationOffset,
             uint sizeInBytes)
         {
-            if (sourceOffset % 4 != 0 || sizeInBytes % 4 != 0)
-            {
-                throw new NotImplementedException("Metal needs 4-byte-multiple buffer copy size and offset.");
-            }
-
-            EnsureBlitEncoder();
             MTLBuffer mtlSrc = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(source);
             MTLBuffer mtlDst = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(destination);
-            _bce.copy(
-                mtlSrc.DeviceBuffer, (UIntPtr)sourceOffset,
-                mtlDst.DeviceBuffer, (UIntPtr)destinationOffset,
-                (UIntPtr)sizeInBytes);
+
+            if (sourceOffset % 4 != 0 || sizeInBytes % 4 != 0)
+            {
+                // Unaligned copy -- use special compute shader.
+                EnsureComputeEncoder();
+                _cce.setComputePipelineState(_gd.GetUnalignedBufferCopyPipeline());
+                _cce.setBuffer(mtlSrc.DeviceBuffer, UIntPtr.Zero, (UIntPtr)0);
+                _cce.setBuffer(mtlDst.DeviceBuffer, UIntPtr.Zero, (UIntPtr)1);
+
+                MTLUnalignedBufferCopyInfo copyInfo;
+                copyInfo.SourceOffset = sourceOffset;
+                copyInfo.DestinationOffset = destinationOffset;
+                copyInfo.CopySize = sizeInBytes;
+
+                _cce.setBytes(&copyInfo, (UIntPtr)sizeof(MTLUnalignedBufferCopyInfo), (UIntPtr)2);
+                _cce.dispatchThreadGroups(new MTLSize(1, 1, 1), new MTLSize(1, 1, 1));
+            }
+            else
+            {
+                EnsureBlitEncoder();
+                _bce.copy(
+                    mtlSrc.DeviceBuffer, (UIntPtr)sourceOffset,
+                    mtlDst.DeviceBuffer, (UIntPtr)destinationOffset,
+                    (UIntPtr)sizeInBytes);
+            }
         }
 
         protected override void CopyTextureCore(

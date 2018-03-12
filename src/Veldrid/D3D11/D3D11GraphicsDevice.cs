@@ -75,8 +75,11 @@ namespace Veldrid.D3D11
 
         protected override void SwapBuffersCore(Swapchain swapchain)
         {
-            D3D11Swapchain d3d11SC = Util.AssertSubtype<Swapchain, D3D11Swapchain>(swapchain);
-            d3d11SC.DxgiSwapChain.Present(d3d11SC.SyncInterval, PresentFlags.None);
+            lock (_immediateContextLock)
+            {
+                D3D11Swapchain d3d11SC = Util.AssertSubtype<Swapchain, D3D11Swapchain>(swapchain);
+                d3d11SC.DxgiSwapChain.Present(d3d11SC.SyncInterval, PresentFlags.None);
+            }
         }
 
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)

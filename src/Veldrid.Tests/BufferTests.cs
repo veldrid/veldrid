@@ -305,15 +305,15 @@ namespace Veldrid.Tests
 
         [Theory]
         [InlineData(
-            60, BufferUsage.UniformBuffer, 1,
-            70, BufferUsage.UniformBuffer, 13,
+            60, BufferUsage.VertexBuffer, 1,
+            70, BufferUsage.VertexBuffer, 13,
             11)]
         [InlineData(
             60, BufferUsage.Staging, 1,
-            70, BufferUsage.UniformBuffer, 13,
+            70, BufferUsage.VertexBuffer, 13,
             11)]
         [InlineData(
-            60, BufferUsage.UniformBuffer, 1,
+            60, BufferUsage.VertexBuffer, 1,
             70, BufferUsage.Staging, 13,
             11)]
         [InlineData(
@@ -321,8 +321,8 @@ namespace Veldrid.Tests
             70, BufferUsage.Staging, 13,
             11)]
         [InlineData(
-            5, BufferUsage.UniformBuffer, 3,
-            10, BufferUsage.UniformBuffer, 7,
+            5, BufferUsage.VertexBuffer, 3,
+            10, BufferUsage.VertexBuffer, 7,
             2)]
         public void Copy_UnalignedRegion(
             uint srcBufferSize, BufferUsage srcUsage, uint srcCopyOffset,

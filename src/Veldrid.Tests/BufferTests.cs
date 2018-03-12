@@ -303,6 +303,71 @@ namespace Veldrid.Tests
             }
         }
 
+        [Theory]
+        [InlineData(
+            60, BufferUsage.UniformBuffer, 1,
+            70, BufferUsage.UniformBuffer, 13,
+            11)]
+        [InlineData(
+            60, BufferUsage.Staging, 1,
+            70, BufferUsage.UniformBuffer, 13,
+            11)]
+        [InlineData(
+            60, BufferUsage.UniformBuffer, 1,
+            70, BufferUsage.Staging, 13,
+            11)]
+        [InlineData(
+            60, BufferUsage.Staging, 1,
+            70, BufferUsage.Staging, 13,
+            11)]
+        [InlineData(
+            5, BufferUsage.UniformBuffer, 3,
+            10, BufferUsage.UniformBuffer, 7,
+            2)]
+        public void Copy_UnalignedRegion(
+            uint srcBufferSize, BufferUsage srcUsage, uint srcCopyOffset,
+            uint dstBufferSize, BufferUsage dstUsage, uint dstCopyOffset,
+            uint copySize)
+        {
+            DeviceBuffer src = CreateBuffer(srcBufferSize, srcUsage);
+            DeviceBuffer dst = CreateBuffer(dstBufferSize, dstUsage);
+
+            byte[] data = Enumerable.Range(0, (int)srcBufferSize).Select(i => (byte)i).ToArray();
+            GD.UpdateBuffer(src, 0, data);
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyBuffer(src, srcCopyOffset, dst, dstCopyOffset, copySize);
+            cl.End();
+
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            DeviceBuffer readback;
+            if ((dstUsage & BufferUsage.Staging) != 0)
+            {
+                readback = dst;
+            }
+            else
+            {
+                readback = CreateBuffer(dstBufferSize, BufferUsage.Staging);
+                cl.Begin();
+                cl.CopyBuffer(dst, 0, readback, 0, dstBufferSize);
+                cl.End();
+                GD.SubmitCommands(cl);
+                GD.WaitForIdle();
+            }
+
+            MappedResourceView<byte> readView = GD.Map<byte>(readback, MapMode.Read);
+            for (uint i = 0; i < copySize; i++)
+            {
+                byte expected = data[i + srcCopyOffset];
+                byte actual = readView[i + dstCopyOffset];
+                Assert.Equal(expected, actual);
+            }
+            GD.Unmap(readback);
+        }
+
         private DeviceBuffer CreateBuffer(uint size, BufferUsage usage)
         {
             return RF.CreateBuffer(new BufferDescription(size, usage));

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -20,6 +21,12 @@ namespace Veldrid.MTL
 
         private readonly object _resetEventsLock = new object();
         private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
+
+        private const string UnalignedBufferCopyPipelineMacOSName = "MTL_UnalignedBufferCopy_macOS";
+        private const string UnalignedBufferCopyPipelineiOSName = "MTL_UnalignedBufferCopy_iOS";
+        private readonly object _unalignedBufferCopyPipelineLock = new object();
+        private MTLShader _unalignedBufferCopyShader;
+        private MTLComputePipelineState _unalignedBufferCopyPipeline;
 
         public MTLDevice Device => _device;
         public MTLCommandQueue CommandQueue => _commandQueue;
@@ -225,6 +232,11 @@ namespace Veldrid.MTL
         protected override void PlatformDispose()
         {
             WaitForIdle();
+            if (!_unalignedBufferCopyPipeline.IsNull)
+            {
+                _unalignedBufferCopyShader.Dispose();
+                ObjectiveCRuntime.release(_unalignedBufferCopyPipeline.NativePtr);
+            }
             _mainSwapchain?.Dispose();
             ObjectiveCRuntime.release(_commandQueue.NativePtr);
             ObjectiveCRuntime.release(_device.NativePtr);
@@ -293,6 +305,41 @@ namespace Veldrid.MTL
         public override void ResetFence(Fence fence)
         {
             Util.AssertSubtype<Fence, MTLFence>(fence).Reset();
+        }
+
+        internal MTLComputePipelineState GetUnalignedBufferCopyPipeline()
+        {
+            lock (_unalignedBufferCopyPipelineLock)
+            {
+                if (_unalignedBufferCopyPipeline.IsNull)
+                {
+                    MTLComputePipelineDescriptor descriptor = MTLUtil.AllocInit<MTLComputePipelineDescriptor>(
+                       nameof(MTLComputePipelineDescriptor));
+                    MTLPipelineBufferDescriptor buffer0 = descriptor.buffers[0];
+                    buffer0.mutability = MTLMutability.Mutable;
+                    MTLPipelineBufferDescriptor buffer1 = descriptor.buffers[1];
+                    buffer0.mutability = MTLMutability.Mutable;
+
+                    Debug.Assert(_unalignedBufferCopyShader == null);
+                    string name = Features.IsMacOS ? UnalignedBufferCopyPipelineMacOSName : UnalignedBufferCopyPipelineiOSName;
+                    using (Stream resourceStream = typeof(MTLGraphicsDevice).Assembly.GetManifestResourceStream(name))
+                    {
+                        byte[] data = new byte[resourceStream.Length];
+                        using (MemoryStream ms = new MemoryStream(data))
+                        {
+                            resourceStream.CopyTo(ms);
+                            ShaderDescription shaderDesc = new ShaderDescription(ShaderStages.Compute, data, "copy_bytes");
+                            _unalignedBufferCopyShader = new MTLShader(ref shaderDesc, this);
+                        }
+                    }
+
+                    descriptor.computeFunction = _unalignedBufferCopyShader.Function;
+                    _unalignedBufferCopyPipeline = _device.newComputePipelineStateWithDescriptor(descriptor);
+                    ObjectiveCRuntime.release(descriptor.NativePtr);
+                }
+
+                return _unalignedBufferCopyPipeline;
+            }
         }
     }
 }

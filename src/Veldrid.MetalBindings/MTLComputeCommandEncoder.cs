@@ -15,6 +15,7 @@ namespace Veldrid.MetalBindings
         private static readonly Selector sel_endEncoding = "endEncoding";
         private static readonly Selector sel_setTexture = "setTexture:atIndex:";
         private static readonly Selector sel_setSamplerState = "setSamplerState:atIndex:";
+        private static readonly Selector sel_setBytes = "setBytes:length:atIndex:";
 
         public void setComputePipelineState(MTLComputePipelineState state)
             => objc_msgSend(NativePtr, sel_setComputePipelineState, state.NativePtr);
@@ -24,6 +25,9 @@ namespace Veldrid.MetalBindings
                 buffer.NativePtr,
                 offset,
                 index);
+
+        public unsafe void setBytes(void* bytes, UIntPtr length, UIntPtr index)
+            => objc_msgSend(NativePtr, sel_setBytes, bytes, length, index);
 
         public void dispatchThreadGroups(MTLSize threadgroupsPerGrid, MTLSize threadsPerThreadgroup)
             => objc_msgSend(NativePtr, sel_dispatchThreadgroups0, threadgroupsPerGrid, threadsPerThreadgroup);

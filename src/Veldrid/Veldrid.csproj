@@ -36,6 +36,15 @@
     <Compile Remove="OpenGL/**/*" Condition="'$(ExcludeOpenGL)' == 'true'" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(ExcludeMetal)' != 'true'">
+    <EmbeddedResource Include="MTL/EmbeddedShaders/MTL_UnalignedBufferCopy_macOS.metallib">
+      <LogicalName>MTL_UnalignedBufferCopy_macOS</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MTL/EmbeddedShaders/MTL_UnalignedBufferCopy_iOS.metallib">
+      <LogicalName>MTL_UnalignedBufferCopy_iOS</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
   <PropertyGroup>
     <Description>A low-level, hardware-accelerated graphics and compute library for .NET, with backends for Direct3D 11, Vulkan, and OpenGL. Veldrid can be used to create high-performance 2D and 3D games, simulations, tools, and other graphical applications.</Description>
     <PackageTags>3D Graphics Direct3D DirectX Vulkan OpenGL Metal Core Standard Game</PackageTags>

@@ -44,6 +44,7 @@ namespace Veldrid.Vk
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
+        public uint SubmittedCommandBufferCount { get; private set; }
 
         public VkCommandList(VkGraphicsDevice gd, ref CommandListDescription description)
             : base(ref description)
@@ -80,8 +81,15 @@ namespace Veldrid.Vk
             return cb;
         }
 
+        public void CommandBufferSubmitted()
+        {
+            SubmittedCommandBufferCount += 1;
+        }
+
         public void CommandBufferCompleted(VkCommandBuffer completedCB)
         {
+            SubmittedCommandBufferCount -= 1;
+
             lock (_commandBufferListLock)
             {
                 for (int i = 0; i < _submittedCommandBuffers.Count; i++)
@@ -927,21 +935,17 @@ namespace Veldrid.Vk
 
         private void CheckUsedStagingBuffers()
         {
-            _infoRemovalList.Clear();
-            foreach (PooledStagingBufferInfo info in _usedStagingBuffers)
+            for (int i = 0; i < _usedStagingBuffers.Count; i++)
             {
+                PooledStagingBufferInfo info = _usedStagingBuffers[i];
                 VkResult status = vkGetEventStatus(_gd.Device, info.AvailableEvent);
                 if (status == VkResult.EventSet)
                 {
                     vkResetEvent(_gd.Device, info.AvailableEvent);
                     _availableStagingBuffers.Add(info);
-                    _infoRemovalList.Add(info);
+                    _usedStagingBuffers.RemoveAt(i);
+                    i -= 1;
                 }
-            }
-
-            foreach (PooledStagingBufferInfo info in _infoRemovalList)
-            {
-                _usedStagingBuffers.Remove(info);
             }
         }
 
@@ -968,7 +972,6 @@ namespace Veldrid.Vk
             }
         }
 
-        private readonly List<PooledStagingBufferInfo> _infoRemovalList = new List<PooledStagingBufferInfo>();
         private readonly List<PooledStagingBufferInfo> _usedStagingBuffers = new List<PooledStagingBufferInfo>();
         private readonly List<PooledStagingBufferInfo> _availableStagingBuffers = new List<PooledStagingBufferInfo>();
 

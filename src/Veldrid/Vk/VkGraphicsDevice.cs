@@ -67,6 +67,7 @@ namespace Veldrid.Vk
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
         public VkDescriptorPoolManager DescriptorPoolManager => _descriptorPoolManager;
 
+        private readonly object _submittedFencesLock = new object();
         private readonly Queue<Vulkan.VkFence> _availableSubmissionFences = new Queue<Vulkan.VkFence>();
         private readonly Dictionary<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)> _submittedFences
             = new Dictionary<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)>();
@@ -127,6 +128,7 @@ namespace Veldrid.Vk
             VkCommandBuffer vkCB = vkCL.CommandBuffer;
 
             SubmitCommandBuffer(vkCL, vkCB, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
+            vkCL.CommandBufferSubmitted();
         }
 
         private void SubmitCommandBuffer(
@@ -179,65 +181,83 @@ namespace Veldrid.Vk
 
         private void CheckSubmittedFences()
         {
-            Debug.Assert(_completedFences.Count == 0);
-
-            foreach (KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)> kvp in _submittedFences)
+            lock (_submittedFencesLock)
             {
-                if (vkGetFenceStatus(_device, kvp.Key) == VkResult.Success)
+                Debug.Assert(_completedFences.Count == 0);
+                foreach (KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)> kvp in _submittedFences)
                 {
-                    _completedFences.Add(kvp);
+                    if (vkGetFenceStatus(_device, kvp.Key) == VkResult.Success)
+                    {
+                        _completedFences.Add(kvp);
+                    }
                 }
-            }
 
-            foreach (KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)> kvp in _completedFences)
-            {
-                Vulkan.VkFence fence = kvp.Key;
-                VkCommandBuffer completedCB = kvp.Value.Item2;
-                kvp.Value.Item1?.CommandBufferCompleted(completedCB);
-                bool result = _submittedFences.Remove(fence);
-                Debug.Assert(result);
-                VkResult resetResult = vkResetFences(_device, 1, ref fence);
-                CheckResult(resetResult);
-                _availableSubmissionFences.Enqueue(fence);
-                lock (_stagingResourcesLock)
+                foreach (KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)> kvp in _completedFences)
                 {
-                    if (_submittedStagingTextures.TryGetValue(completedCB, out VkTexture stagingTex))
+                    Vulkan.VkFence fence = kvp.Key;
+                    VkCommandBuffer completedCB = kvp.Value.Item2;
+                    kvp.Value.Item1?.CommandBufferCompleted(completedCB);
+                    bool result = _submittedFences.Remove(fence);
+                    Debug.Assert(result);
+                    VkResult resetResult = vkResetFences(_device, 1, ref fence);
+                    CheckResult(resetResult);
+                    _availableSubmissionFences.Enqueue(fence);
+                    lock (_stagingResourcesLock)
                     {
-                        _submittedStagingTextures.Remove(completedCB);
-                        _availableStagingTextures.Add(stagingTex);
-                    }
-                    if (_submittedStagingBuffers.TryGetValue(completedCB, out VkBuffer stagingBuffer))
-                    {
-                        _submittedStagingBuffers.Remove(completedCB);
-                        if (stagingBuffer.SizeInBytes <= MaxStagingBufferSize)
+                        if (_submittedStagingTextures.TryGetValue(completedCB, out VkTexture stagingTex))
                         {
-                            _availableStagingBuffers.Add(stagingBuffer);
+                            _submittedStagingTextures.Remove(completedCB);
+                            _availableStagingTextures.Add(stagingTex);
                         }
-                        else
+                        if (_submittedStagingBuffers.TryGetValue(completedCB, out VkBuffer stagingBuffer))
                         {
-                            stagingBuffer.Dispose();
-                        }
-                    }
-                    if (_submittedSharedCommandPools.TryGetValue(completedCB, out SharedCommandPool sharedPool))
-                    {
-                        _submittedSharedCommandPools.Remove(completedCB);
-                        lock (_graphicsCommandPoolLock)
-                        {
-                            if (sharedPool.IsCached)
+                            _submittedStagingBuffers.Remove(completedCB);
+                            if (stagingBuffer.SizeInBytes <= MaxStagingBufferSize)
                             {
-                                sharedPool.Reset();
-                                _sharedGraphicsCommandPools.Push(sharedPool);
+                                _availableStagingBuffers.Add(stagingBuffer);
                             }
                             else
                             {
-                                sharedPool.Destroy();
+                                stagingBuffer.Dispose();
+                            }
+                        }
+                        if (_submittedSharedCommandPools.TryGetValue(completedCB, out SharedCommandPool sharedPool))
+                        {
+                            _submittedSharedCommandPools.Remove(completedCB);
+                            lock (_graphicsCommandPoolLock)
+                            {
+                                if (sharedPool.IsCached)
+                                {
+                                    sharedPool.Reset();
+                                    _sharedGraphicsCommandPools.Push(sharedPool);
+                                }
+                                else
+                                {
+                                    sharedPool.Destroy();
+                                }
+                            }
+                        }
+                    }
+
+
+                    VkCommandList cl = kvp.Value.Item1;
+                    if (cl != null)
+                    {
+                        lock (_commandListsToDispose)
+                        {
+                            if (cl.SubmittedCommandBufferCount == 0)
+                            {
+                                if (_commandListsToDispose.Remove(cl))
+                                {
+                                    cl.DestroyCommandPool();
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            _completedFences.Clear();
+                _completedFences.Clear();
+            }
         }
 
         private Vulkan.VkFence GetFreeSubmissionFence()
@@ -274,8 +294,7 @@ namespace Veldrid.Vk
             uint imageIndex = vkSC.ImageIndex;
             presentInfo.pImageIndices = &imageIndex;
 
-            VkResult result = vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
-            CheckResult(result);
+            vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
 
             if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, vkSC.ImageAvailableFence))
             {
@@ -779,7 +798,11 @@ namespace Veldrid.Vk
 
         protected override void WaitForIdleCore()
         {
-            vkQueueWaitIdle(_graphicsQueue);
+            lock (_graphicsQueueLock)
+            {
+                vkQueueWaitIdle(_graphicsQueue);
+            }
+
             CheckSubmittedFences();
             FlushQueuedDisposables();
         }

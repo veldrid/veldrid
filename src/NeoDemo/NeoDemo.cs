@@ -69,6 +69,7 @@ namespace Veldrid.NeoDemo
             //     //GraphicsBackend.OpenGL,
             //     out _window,
             //     out _gd);
+
             _window.Resized += () => _windowResized = true;
 
             _scene = new Scene(_window.Width, _window.Height);

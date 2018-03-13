@@ -29,7 +29,8 @@ namespace Veldrid.Vk
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
 
-        public override VkRenderPass RenderPassNoClear => _scFramebuffers[0].RenderPassNoClear;
+        public override VkRenderPass RenderPassNoClear_Init => _scFramebuffers[0].RenderPassNoClear_Init;
+        public override VkRenderPass RenderPassNoClear_Load => _scFramebuffers[0].RenderPassNoClear_Load;
         public override VkRenderPass RenderPassClear => _scFramebuffers[0].RenderPassClear;
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _scColorTextures[(int)_currentImageIndex];
@@ -144,6 +145,16 @@ namespace Veldrid.Vk
                 VkFramebuffer fb = new VkFramebuffer(_gd, ref desc, true);
                 _scFramebuffers[i] = fb;
                 _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
+            }
+        }
+
+        public override void TransitionToFinalLayout(VkCommandBuffer cb)
+        {
+            foreach (FramebufferAttachment ca in ColorTargets)
+            {
+                VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
+                vkTex.SetImageLayout(ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
+                vkTex.TransitionImageLayout(cb, 0, 1, ca.ArrayLayer, 1, VkImageLayout.PresentSrcKHR);
             }
         }
 

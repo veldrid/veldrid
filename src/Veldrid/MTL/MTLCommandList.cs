@@ -281,29 +281,30 @@ namespace Veldrid.MTL
 
         public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            if (bufferOffsetInBytes % 4 != 0)
-            {
-                throw new VeldridException("Metal needs 4-byte-multiple buffer copy size and offset.");
-            }
-            if (sizeInBytes % 4 != 0 && bufferOffsetInBytes != 0 && sizeInBytes != buffer.SizeInBytes)
-            {
-                throw new VeldridException("Metal needs 4-byte-multiple buffer copy size and offset.");
-            }
-
-            Debug.Assert(bufferOffsetInBytes % 4 == 0);
-
-            uint sizeRoundFactor = (4 - (sizeInBytes % 4)) % 4;
+            bool useComputeCopy = (bufferOffsetInBytes % 4 != 0)
+                || (sizeInBytes % 4 != 0 && bufferOffsetInBytes != 0 && sizeInBytes != buffer.SizeInBytes);
 
             MTLBuffer dstMTLBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
             // TODO: Cache these, and rely on the command buffer's completion callback to add them back to a shared pool.
             MTLBuffer copySrc = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(
                 _gd.ResourceFactory.CreateBuffer(new BufferDescription(sizeInBytes, BufferUsage.Staging)));
             _gd.UpdateBuffer(copySrc, 0, source, sizeInBytes);
-            EnsureBlitEncoder();
-            _bce.copy(
-                copySrc.DeviceBuffer, UIntPtr.Zero,
-                dstMTLBuffer.DeviceBuffer, (UIntPtr)bufferOffsetInBytes,
-                (UIntPtr)(sizeInBytes + sizeRoundFactor));
+
+            if (useComputeCopy)
+            {
+                CopyBufferCore(copySrc, 0, buffer, bufferOffsetInBytes, sizeInBytes);
+            }
+            else
+            {
+                Debug.Assert(bufferOffsetInBytes % 4 == 0);
+                uint sizeRoundFactor = (4 - (sizeInBytes % 4)) % 4;
+                EnsureBlitEncoder();
+                _bce.copy(
+                    copySrc.DeviceBuffer, UIntPtr.Zero,
+                    dstMTLBuffer.DeviceBuffer, (UIntPtr)bufferOffsetInBytes,
+                    (UIntPtr)(sizeInBytes + sizeRoundFactor));
+            }
+
             copySrc.Dispose();
         }
 

@@ -343,26 +343,59 @@ namespace Veldrid.Tests
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
-            DeviceBuffer readback;
-            if ((dstUsage & BufferUsage.Staging) != 0)
-            {
-                readback = dst;
-            }
-            else
-            {
-                readback = CreateBuffer(dstBufferSize, BufferUsage.Staging);
-                cl.Begin();
-                cl.CopyBuffer(dst, 0, readback, 0, dstBufferSize);
-                cl.End();
-                GD.SubmitCommands(cl);
-                GD.WaitForIdle();
-            }
+            DeviceBuffer readback = GetReadback(dst);
 
             MappedResourceView<byte> readView = GD.Map<byte>(readback, MapMode.Read);
             for (uint i = 0; i < copySize; i++)
             {
                 byte expected = data[i + srcCopyOffset];
                 byte actual = readView[i + dstCopyOffset];
+                Assert.Equal(expected, actual);
+            }
+            GD.Unmap(readback);
+        }
+
+        private DeviceBuffer GetReadback(DeviceBuffer buffer)
+        {
+            DeviceBuffer readback;
+            if ((buffer.Usage & BufferUsage.Staging) != 0)
+            {
+                readback = buffer;
+            }
+            else
+            {
+                readback = CreateBuffer(buffer.SizeInBytes, BufferUsage.Staging);
+                CommandList cl = RF.CreateCommandList();
+                cl.Begin();
+                cl.CopyBuffer(buffer, 0, readback, 0, buffer.SizeInBytes);
+                cl.End();
+                GD.SubmitCommands(cl);
+                GD.WaitForIdle();
+            }
+
+            return readback;
+        }
+
+        [Theory]
+        [InlineData(BufferUsage.VertexBuffer, 13, 5, 1)]
+        [InlineData(BufferUsage.Staging, 13, 5, 1)]
+        public void CommandList_UpdateNonStaging_Unaligned(BufferUsage usage, uint bufferSize, uint dataSize, uint offset)
+        {
+            DeviceBuffer buffer = CreateBuffer(bufferSize, usage);
+            byte[] data = Enumerable.Range(0, (int)dataSize).Select(i => (byte)i).ToArray();
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.UpdateBuffer(buffer, offset, data);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            DeviceBuffer readback = GetReadback(buffer);
+            MappedResourceView<byte> readView = GD.Map<byte>(readback, MapMode.Read);
+            for (uint i = 0; i < dataSize; i++)
+            {
+                byte expected = data[i];
+                byte actual = readView[i + offset];
                 Assert.Equal(expected, actual);
             }
             GD.Unmap(readback);

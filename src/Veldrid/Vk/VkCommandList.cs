@@ -173,9 +173,14 @@ namespace Veldrid.Vk
 
             if (_activeRenderPass != VkRenderPass.Null)
             {
+                VkImageAspectFlags aspectMask = VkImageAspectFlags.Depth;
+                if (FormatHelpers.IsStencilFormat(_currentFramebuffer.DepthTarget.Value.Target.Format))
+                {
+                    aspectMask |= VkImageAspectFlags.Stencil;
+                }
                 VkClearAttachment clearAttachment = new VkClearAttachment
                 {
-                    aspectMask = VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil,
+                    aspectMask = aspectMask,
                     clearValue = clearValue
                 };
 

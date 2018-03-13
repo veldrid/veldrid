@@ -318,7 +318,7 @@ namespace Veldrid.MTL
             MTLBuffer mtlSrc = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(source);
             MTLBuffer mtlDst = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(destination);
 
-            if (sourceOffset % 4 != 0 || sizeInBytes % 4 != 0)
+            if (sourceOffset % 4 != 0 || destinationOffset % 4 != 0 || sizeInBytes % 4 != 0)
             {
                 // Unaligned copy -- use special compute shader.
                 EnsureComputeEncoder();

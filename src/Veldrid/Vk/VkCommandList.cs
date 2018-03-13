@@ -636,14 +636,6 @@ namespace Veldrid.Vk
 
         public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            if (sizeInBytes == 30)
-            {
-
-            }
-
-            uint sizeRoundFactor = (4 - (sizeInBytes % 4)) % 4;
-            sizeInBytes += sizeRoundFactor;
-
             PooledStagingBufferInfo stagingBufferInfo = GetStagingBuffer(sizeInBytes);
             _gd.UpdateBuffer(stagingBufferInfo.Buffer, 0, source, sizeInBytes);
             CopyBuffer(stagingBufferInfo.Buffer, 0, buffer, bufferOffsetInBytes, sizeInBytes);

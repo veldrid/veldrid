@@ -42,6 +42,9 @@ namespace Veldrid.Vk
         private readonly Queue<VkCommandBuffer> _availableCommandBuffers = new Queue<VkCommandBuffer>();
         private readonly List<VkCommandBuffer> _submittedCommandBuffers = new List<VkCommandBuffer>();
 
+        // Render pass cycle state
+        private bool _newFramebuffer;
+
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
         public uint SubmittedCommandBufferCount { get; private set; }
@@ -377,11 +380,13 @@ namespace Veldrid.Vk
             if (_activeRenderPass != VkRenderPass.Null)
             {
                 EndCurrentRenderPass();
+                _currentFramebuffer.TransitionToFinalLayout(_cb);
             }
             else if (!_currentFramebufferEverActive && _currentFramebuffer != null)
             {
                 BeginCurrentRenderPass();
                 EndCurrentRenderPass();
+                _currentFramebuffer.TransitionToFinalLayout(_cb);
             }
 
             vkEndCommandBuffer(_cb);
@@ -390,6 +395,7 @@ namespace Veldrid.Vk
 
         protected override void SetFramebufferCore(Framebuffer fb)
         {
+            _newFramebuffer = true;
             if (_activeRenderPass.Handle != VkRenderPass.Null)
             {
                 EndCurrentRenderPass();
@@ -399,6 +405,11 @@ namespace Veldrid.Vk
                 // This forces any queued up texture clears to be emitted.
                 BeginCurrentRenderPass();
                 EndCurrentRenderPass();
+            }
+
+            if (_currentFramebuffer != null)
+            {
+                _currentFramebuffer.TransitionToFinalLayout(_cb);
             }
 
             VkFramebufferBase vkFB = Util.AssertSubtype<Framebuffer, VkFramebufferBase>(fb);
@@ -456,9 +467,11 @@ namespace Veldrid.Vk
 
             if (!haveAnyAttachments || !haveAllClearValues)
             {
-                renderPassBI.renderPass = _currentFramebuffer.RenderPassNoClear;
+                renderPassBI.renderPass = _newFramebuffer
+                    ? _currentFramebuffer.RenderPassNoClear_Init
+                    : _currentFramebuffer.RenderPassNoClear_Load;
                 vkCmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
-                _activeRenderPass = _currentFramebuffer.RenderPassNoClear;
+                _activeRenderPass = renderPassBI.renderPass;
 
                 if (haveAnyClearValues)
                 {
@@ -503,25 +516,7 @@ namespace Veldrid.Vk
                 }
             }
 
-            // Set new image layouts
-            foreach (FramebufferAttachment colorTarget in _currentFramebuffer.ColorTargets)
-            {
-                VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(colorTarget.Target);
-                VkImageLayout layout = (vkTex.Usage & TextureUsage.Sampled) != 0
-                    ? VkImageLayout.ShaderReadOnlyOptimal
-                    : VkImageLayout.ColorAttachmentOptimal;
-                vkTex.SetImageLayout(colorTarget.ArrayLayer, layout);
-            }
-
-            if (_currentFramebuffer.DepthTarget != null)
-            {
-                VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(_currentFramebuffer.DepthTarget.Value.Target);
-                VkImageLayout layout = (vkDepthTex.Usage & TextureUsage.Sampled) != 0
-                    ? VkImageLayout.ShaderReadOnlyOptimal
-                    : VkImageLayout.DepthStencilAttachmentOptimal;
-
-                vkDepthTex.SetImageLayout(_currentFramebuffer.DepthTarget.Value.ArrayLayer, layout);
-            }
+            _newFramebuffer = false;
         }
 
         private void EndCurrentRenderPass()

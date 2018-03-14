@@ -107,7 +107,7 @@ namespace Veldrid.StartupUtilities
 #endif
                 case GraphicsBackend.OpenGL:
 #if !EXCLUDE_OPENGL_BACKEND
-                    return CreateDefaultOpenGLGraphicsDevice(options, window);
+                    return CreateDefaultOpenGLGraphicsDevice(options, window, preferredBackend);
 #else
                     throw new VeldridException("OpenGL support has not been included in this configuration of Veldrid");
 #endif
@@ -117,8 +117,12 @@ namespace Veldrid.StartupUtilities
 #else
                     throw new VeldridException("Metal support has not been included in this configuration of Veldrid");
 #endif
-                //case GraphicsBackend.OpenGLES:
-                //    return CreateDefaultOpenGLESRenderContext(ref contextCI, window);
+                case GraphicsBackend.OpenGLES:
+#if !EXCLUDE_OPENGL_BACKEND
+                    return CreateDefaultOpenGLGraphicsDevice(options, window, preferredBackend);
+#else
+                    throw new VeldridException("OpenGL support has not been included in this configuration of Veldrid");
+#endif
                 default:
                     throw new VeldridException("Invalid GraphicsBackend: " + preferredBackend);
             }
@@ -212,7 +216,7 @@ namespace Veldrid.StartupUtilities
 #endif
 
 #if !EXCLUDE_OPENGL_BACKEND
-        public static unsafe GraphicsDevice CreateDefaultOpenGLGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
+        public static unsafe GraphicsDevice CreateDefaultOpenGLGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window, GraphicsBackend backend)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;
 
@@ -225,9 +229,18 @@ namespace Veldrid.StartupUtilities
                 Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)SDL_GLContextFlag.Debug);
             }
 
-            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.Core);
-            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 4);
-            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 0);
+            if (backend == GraphicsBackend.OpenGL)
+            {
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.Core);
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 4);
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 0);
+            }
+            else
+            {
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.ES);
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 3);
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 1);
+            }
 
             int depthBits = 0;
             if (options.SwapchainDepthFormat.HasValue)

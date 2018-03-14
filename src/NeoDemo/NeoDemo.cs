@@ -59,6 +59,7 @@ namespace Veldrid.NeoDemo
                 //GraphicsBackend.Metal,
                 //GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
+                GraphicsBackend.OpenGLES,
                 out _window,
                 out _gd);
             _window.Resized += () => _windowResized = true;
@@ -246,6 +247,10 @@ namespace Veldrid.NeoDemo
                         if (ImGui.MenuItem("OpenGL", GraphicsDevice.IsBackendSupported(GraphicsBackend.OpenGL)))
                         {
                             ChangeBackend(GraphicsBackend.OpenGL);
+                        }
+                        if (ImGui.MenuItem("OpenGL ES", GraphicsDevice.IsBackendSupported(GraphicsBackend.OpenGLES)))
+                        {
+                            ChangeBackend(GraphicsBackend.OpenGLES);
                         }
                         if (ImGui.MenuItem("Direct3D 11", GraphicsDevice.IsBackendSupported(GraphicsBackend.Direct3D11)))
                         {

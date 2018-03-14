@@ -599,6 +599,12 @@ namespace Veldrid
 #else
                     return false;
 #endif
+                case GraphicsBackend.OpenGLES:
+#if !EXCLUDE_OPENGL_BACKEND
+                    return true;
+#else
+                    return false;
+#endif
                 default:
                     throw Illegal.Value<GraphicsBackend>();
             }
@@ -718,7 +724,7 @@ namespace Veldrid
 
 #if !EXCLUDE_OPENGL_BACKEND
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL or OpenGL ES, with a main Swapchain.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="platformInfo">An <see cref="OpenGL.OpenGLPlatformInfo"/> object encapsulating necessary OpenGL context

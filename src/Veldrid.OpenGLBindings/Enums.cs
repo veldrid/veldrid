@@ -1714,6 +1714,13 @@ namespace Veldrid.OpenGLBinding
         TextureSwizzleRgba = 36422
     }
 
+    public enum StringName
+    {
+        Vendor = 0x1F00,
+        Renderer = 0x1F01,
+        Version = 0x1F02,
+    }
+
     public enum StringNameIndexed
     {
         Extensions = 7939,

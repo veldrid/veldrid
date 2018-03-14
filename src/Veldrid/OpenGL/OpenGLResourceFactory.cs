@@ -10,7 +10,7 @@ namespace Veldrid.OpenGL
         private readonly OpenGLGraphicsDevice _gd;
         private readonly StagingMemoryPool _pool = new StagingMemoryPool();
 
-        public override GraphicsBackend BackendType => GraphicsBackend.OpenGL;
+        public override GraphicsBackend BackendType => _gd.BackendType;
 
         public unsafe OpenGLResourceFactory(OpenGLGraphicsDevice gd)
         {

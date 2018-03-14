@@ -56,6 +56,7 @@ namespace Veldrid.NeoDemo
                 case GraphicsBackend.Direct3D11: return ".hlsl";
                 case GraphicsBackend.Vulkan: return ".450.glsl";
                 case GraphicsBackend.OpenGL:
+                case GraphicsBackend.OpenGLES:
                     return ".330.glsl";
                 case GraphicsBackend.Metal:
                     return ".metallib";

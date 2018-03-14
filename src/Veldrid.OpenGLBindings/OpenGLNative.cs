@@ -49,6 +49,9 @@ namespace Veldrid.OpenGLBinding
         private static glClearDepthf_t p_glClearDepthf;
         public static void glClearDepthf(float depth) => p_glClearDepthf(depth);
 
+        private static glClearDepthf_t p_glClearDepthf_Compat;
+        public static void glClearDepth_Compat(float depth) => p_glClearDepthf_Compat(depth);
+
         private delegate void glDrawElements_t(PrimitiveType mode, uint count, DrawElementsType type, void* indices);
         private static glDrawElements_t p_glDrawElements;
         public static void glDrawElements(PrimitiveType mode, uint count, DrawElementsType type, void* indices)
@@ -607,6 +610,10 @@ namespace Veldrid.OpenGLBinding
         private static glTexParameteri_t p_glTexParameteri;
         public static void glTexParameteri(TextureTarget target, TextureParameterName pname, int param)
             => p_glTexParameteri(target, pname, param);
+
+        private delegate byte* glGetString_t(StringName name);
+        private static glGetString_t p_glGetString;
+        public static byte* glGetString(StringName name) => p_glGetString(name);
 
         private delegate byte* glGetStringi_t(StringNameIndexed name, uint index);
         private static glGetStringi_t p_glGetStringi;
@@ -1257,6 +1264,9 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glClear", out p_glClear);
             LoadFunction("glClearDepth", out p_glClearDepth);
             LoadFunction("glClearDepthf", out p_glClearDepthf);
+            if (p_glClearDepthf != null) { p_glClearDepthf_Compat = p_glClearDepthf; }
+            else { p_glClearDepthf_Compat = depth => p_glClearDepth(depth); }
+
             LoadFunction("glDrawElements", out p_glDrawElements);
             LoadFunction("glDrawElementsBaseVertex", out p_glDrawElementsBaseVertex);
             LoadFunction("glDrawElementsInstanced", out p_glDrawElementsInstanced);
@@ -1337,6 +1347,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glBindTextureUnit", out p_glBindTextureUnit);
             LoadFunction("glTexParameteri", out p_glTexParameteri);
             LoadFunction("glGetStringi", out p_glGetStringi);
+            LoadFunction("glGetString", out p_glGetString);
             LoadFunction("glObjectLabel", out p_glObjectLabel);
             LoadFunction("glTexImage2DMultisample", out p_glTexImage2DMultisample);
             LoadFunction("glTexImage3DMultisample", out p_glTexImage3DMultisample);

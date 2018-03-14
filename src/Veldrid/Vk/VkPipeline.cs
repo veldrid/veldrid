@@ -305,7 +305,6 @@ namespace Veldrid.Vk
         }
 
         public VkPipeline(VkGraphicsDevice gd, ref ComputePipelineDescription description)
-            : base(ref description)
         {
             _gd = gd;
             IsComputePipeline = true;

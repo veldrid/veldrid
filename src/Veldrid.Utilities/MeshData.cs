@@ -7,7 +7,7 @@ namespace Veldrid.Utilities
     /// An object describing generic mesh data. This can be used to construct a <see cref="VertexBuffer"/> and
     /// <see cref="IndexBuffer"/>, and also exposes functionality for bounding box and sphere computation.
     /// </summary>
-    public interface MeshData
+    public interface IMeshData
     {
         /// <summary>
         /// Constructs a <see cref="VertexBuffer"/> from this <see cref="MeshData"/>.

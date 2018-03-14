@@ -226,7 +226,7 @@ namespace Veldrid
         /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
-        public MappedResource Map(MappableResource resource, MapMode mode) => Map(resource, mode, 0);
+        public MappedResource Map(IMappableResource resource, MapMode mode) => Map(resource, mode, 0);
         /// <summary>
         /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region.
         /// </summary>
@@ -235,7 +235,7 @@ namespace Veldrid
         /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.
         /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.</param>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
-        public MappedResource Map(MappableResource resource, MapMode mode, uint subresource)
+        public MappedResource Map(IMappableResource resource, MapMode mode, uint subresource)
         {
 #if VALIDATE_USAGE
             if (resource is DeviceBuffer buffer)
@@ -278,7 +278,7 @@ namespace Veldrid
         /// <param name="mode"></param>
         /// <param name="subresource"></param>
         /// <returns></returns>
-        protected abstract MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource);
+        protected abstract MappedResource MapCore(IMappableResource resource, MapMode mode, uint subresource);
 
         /// <summary>
         /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
@@ -288,7 +288,7 @@ namespace Veldrid
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
         /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
-        public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode) where T : struct
+        public MappedResourceView<T> Map<T>(IMappableResource resource, MapMode mode) where T : struct
             => Map<T>(resource, mode, 0);
         /// <summary>
         /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
@@ -299,7 +299,7 @@ namespace Veldrid
         /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.</param>
         /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
-        public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode, uint subresource) where T : struct
+        public MappedResourceView<T> Map<T>(IMappableResource resource, MapMode mode, uint subresource) where T : struct
         {
             MappedResource mappedResource = Map(resource, mode, subresource);
             return new MappedResourceView<T>(mappedResource);
@@ -310,14 +310,14 @@ namespace Veldrid
         /// For <see cref="Texture"/> resources, this unmaps the first subresource.
         /// </summary>
         /// <param name="resource">The resource to unmap.</param>
-        public void Unmap(MappableResource resource) => Unmap(resource, 0);
+        public void Unmap(IMappableResource resource) => Unmap(resource, 0);
         /// <summary>
         /// Invalidates a previously-mapped data region for the given <see cref="DeviceBuffer"/> or <see cref="Texture"/>.
         /// </summary>
         /// <param name="resource">The resource to unmap.</param>
         /// <param name="subresource">The subresource to unmap. Subresources are indexed first by mip slice, then by array layer.
         /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.</param>
-        public void Unmap(MappableResource resource, uint subresource)
+        public void Unmap(IMappableResource resource, uint subresource)
         {
             UnmapCore(resource, subresource);
         }
@@ -326,7 +326,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="resource"></param>
         /// <param name="subresource"></param>
-        protected abstract void UnmapCore(MappableResource resource, uint subresource);
+        protected abstract void UnmapCore(IMappableResource resource, uint subresource);
 
         /// <summary>
         /// Updates a portion of a <see cref="Texture"/> resource with new data.
@@ -742,9 +742,9 @@ namespace Veldrid
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
-        public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options)
+        public static GraphicsDevice CreateMetal()
         {
-            return new MTL.MTLGraphicsDevice(options, null);
+            return new MTL.MTLGraphicsDevice(null);
         }
 
         /// <summary>
@@ -753,9 +753,9 @@ namespace Veldrid
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
-        public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
+        public static GraphicsDevice CreateMetal(SwapchainDescription swapchainDescription)
         {
-            return new MTL.MTLGraphicsDevice(options, swapchainDescription);
+            return new MTL.MTLGraphicsDevice(swapchainDescription);
         }
 
         /// <summary>
@@ -771,7 +771,7 @@ namespace Veldrid
                 new NSWindowSwapchainSource(nsWindow),
                 0, 0, options.SwapchainDepthFormat, options.SyncToVerticalBlank);
 
-            return new MTL.MTLGraphicsDevice(options, swapchainDesc);
+            return new MTL.MTLGraphicsDevice(swapchainDesc);
         }
 #endif
     }

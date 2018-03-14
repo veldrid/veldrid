@@ -9,7 +9,7 @@ namespace Veldrid.NeoDemo
 {
     public static partial class PrimitiveShapes
     {
-        public static MeshData Plane(int width, int height, int uvUnit)
+        public static IMeshData Plane(int width, int height, int uvUnit)
         {
             float halfWidth = width / 2;
             float halfHeight = height / 2;
@@ -29,7 +29,7 @@ namespace Veldrid.NeoDemo
             return new SimpleMeshDataProvider(vertices, indices);
         }
 
-        internal static MeshData Box(float width, float height, float depth, float uvUnit)
+        internal static IMeshData Box(float width, float height, float depth, float uvUnit)
         {
             float halfWidth = width / 2;
             float halfHeight = height / 2;

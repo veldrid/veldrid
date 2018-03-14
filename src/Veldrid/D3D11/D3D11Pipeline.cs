@@ -92,8 +92,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public D3D11Pipeline(D3D11ResourceCache cache, ref ComputePipelineDescription description)
-            : base(ref description)
+        public D3D11Pipeline(ref ComputePipelineDescription description)
         {
             IsComputePipeline = true;
             ComputeShader = (ComputeShader)((D3D11Shader)description.ComputeShader).DeviceShader;

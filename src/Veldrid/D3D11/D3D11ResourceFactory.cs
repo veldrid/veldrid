@@ -20,7 +20,7 @@ namespace Veldrid.D3D11
 
         public override CommandList CreateCommandList(ref CommandListDescription description)
         {
-            return new D3D11CommandList(_gd, ref description);
+            return new D3D11CommandList(_gd);
         }
 
         public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)
@@ -35,7 +35,7 @@ namespace Veldrid.D3D11
 
         public override Pipeline CreateComputePipeline(ref ComputePipelineDescription description)
         {
-            return new D3D11Pipeline(_cache, ref description);
+            return new D3D11Pipeline(ref description);
         }
 
         public override ResourceLayout CreateResourceLayout(ref ResourceLayoutDescription description)

@@ -16,8 +16,8 @@ namespace Veldrid.D3D11
         private bool _begun;
         private bool _disposed;
 
-        private RawViewportF[] _viewports = new RawViewportF[0];
-        private RawRectangle[] _scissors = new RawRectangle[0];
+        private RawViewportF[] _viewports = Array.Empty<RawViewportF>();
+        private RawRectangle[] _scissors = Array.Empty<RawRectangle>();
         private bool _viewportsChanged;
         private bool _scissorRectsChanged;
 
@@ -72,8 +72,7 @@ namespace Veldrid.D3D11
 
         private readonly List<D3D11Swapchain> _referencedSwapchains = new List<D3D11Swapchain>();
 
-        public D3D11CommandList(D3D11GraphicsDevice gd, ref CommandListDescription description)
-            : base(ref description)
+        public D3D11CommandList(D3D11GraphicsDevice gd)
         {
             _gd = gd;
             _context = new DeviceContext(gd.Device);
@@ -339,37 +338,37 @@ namespace Veldrid.D3D11
             int samplerBase = GetSamplerBase(slot, graphics);
 
             D3D11ResourceLayout layout = d3d11RS.Layout;
-            BindableResource[] resources = d3d11RS.Resources;
+            IBindableResource[] resources = d3d11RS.Resources;
             for (int i = 0; i < resources.Length; i++)
             {
-                BindableResource resource = resources[i];
+                IBindableResource resource = resources[i];
                 D3D11ResourceLayout.ResourceBindingInfo rbi = layout.GetDeviceSlotIndex(i);
                 switch (rbi.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                        D3D11Buffer uniformBuffer = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
+                        D3D11Buffer uniformBuffer = Util.AssertSubtype<IBindableResource, D3D11Buffer>(resource);
                         BindUniformBuffer(uniformBuffer, cbBase + rbi.Slot, rbi.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
-                        D3D11Buffer storageBufferRO = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
+                        D3D11Buffer storageBufferRO = Util.AssertSubtype<IBindableResource, D3D11Buffer>(resource);
                         BindStorageBufferView(storageBufferRO, textureBase + rbi.Slot, rbi.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadWrite:
-                        D3D11Buffer storageBuffer = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
+                        D3D11Buffer storageBuffer = Util.AssertSubtype<IBindableResource, D3D11Buffer>(resource);
                         BindUnorderedAccessView(null, storageBuffer.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.TextureReadOnly:
-                        D3D11TextureView texView = Util.AssertSubtype<BindableResource, D3D11TextureView>(resource);
+                        D3D11TextureView texView = Util.AssertSubtype<IBindableResource, D3D11TextureView>(resource);
                         UnbindUAVTexture(texView.Target);
                         BindTextureView(texView, textureBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.TextureReadWrite:
-                        D3D11TextureView rwTexView = Util.AssertSubtype<BindableResource, D3D11TextureView>(resource);
+                        D3D11TextureView rwTexView = Util.AssertSubtype<IBindableResource, D3D11TextureView>(resource);
                         UnbindSRVTexture(rwTexView.Target);
                         BindUnorderedAccessView(rwTexView.Target, rwTexView.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.Sampler:
-                        D3D11Sampler sampler = Util.AssertSubtype<BindableResource, D3D11Sampler>(resource);
+                        D3D11Sampler sampler = Util.AssertSubtype<IBindableResource, D3D11Sampler>(resource);
                         BindSampler(sampler, samplerBase + rbi.Slot, rbi.Stages);
                         break;
                     default: throw Illegal.Value<ResourceKind>();

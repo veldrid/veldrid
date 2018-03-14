@@ -171,7 +171,6 @@ namespace Veldrid.MTL
         }
 
         public MTLPipeline(ref ComputePipelineDescription description, MTLGraphicsDevice gd)
-            : base(ref description)
         {
             IsComputePipeline = true;
             ResourceLayouts = new MTLResourceLayout[description.ResourceLayouts.Length];

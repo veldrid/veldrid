@@ -4,11 +4,12 @@ using System.Numerics;
 
 namespace Veldrid.Utilities
 {
-    public class SimpleMeshDataProvider : MeshData
+    public class SimpleMeshDataProvider : IMeshData
     {
         public VertexPositionNormalTexture[] Vertices { get; }
-        public ushort[] Indices { get; }
         public string MaterialName { get; }
+
+        private ushort[] Indices { get; }
 
         public SimpleMeshDataProvider(VertexPositionNormalTexture[] vertices, ushort[] indices)
         {

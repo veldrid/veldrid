@@ -304,7 +304,7 @@ namespace Veldrid.Vk
             }
         }
 
-        internal void SetResourceName(DeviceResource resource, string name)
+        internal void SetResourceName(IDeviceResource resource, string name)
         {
             if (_debugMarkerEnabled)
             {
@@ -682,7 +682,7 @@ namespace Veldrid.Vk
             CheckResult(result);
         }
 
-        protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
+        protected override MappedResource MapCore(IMappableResource resource, MapMode mode, uint subresource)
         {
             VkMemoryBlock memoryBlock = null;
             IntPtr mappedPtr = IntPtr.Zero;
@@ -697,7 +697,7 @@ namespace Veldrid.Vk
             }
             else
             {
-                VkTexture texture = Util.AssertSubtype<MappableResource, VkTexture>(resource);
+                VkTexture texture = Util.AssertSubtype<IMappableResource, VkTexture>(resource);
                 VkSubresourceLayout layout = texture.GetSubresourceLayout(subresource);
                 memoryBlock = texture.Memory;
                 sizeInBytes = (uint)layout.size;
@@ -729,7 +729,7 @@ namespace Veldrid.Vk
                 depthPitch);
         }
 
-        protected override void UnmapCore(MappableResource resource, uint subresource)
+        protected override void UnmapCore(IMappableResource resource, uint subresource)
         {
             VkMemoryBlock memoryBlock = null;
             if (resource is VkBuffer buffer)
@@ -738,7 +738,7 @@ namespace Veldrid.Vk
             }
             else
             {
-                VkTexture tex = Util.AssertSubtype<MappableResource, VkTexture>(resource);
+                VkTexture tex = Util.AssertSubtype<IMappableResource, VkTexture>(resource);
                 memoryBlock = tex.Memory;
             }
 

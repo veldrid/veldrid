@@ -17,7 +17,7 @@ namespace Veldrid.Vk
 
         public override CommandList CreateCommandList(ref CommandListDescription description)
         {
-            return new VkCommandList(_gd, ref description);
+            return new VkCommandList(_gd);
         }
 
         public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)

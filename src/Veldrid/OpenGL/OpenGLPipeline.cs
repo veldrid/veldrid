@@ -63,7 +63,6 @@ namespace Veldrid.OpenGL
         }
 
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref ComputePipelineDescription description)
-            : base(ref description)
         {
             _gd = gd;
             IsComputePipeline = true;

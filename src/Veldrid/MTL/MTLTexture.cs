@@ -95,7 +95,7 @@ namespace Veldrid.MTL
             }
         }
 
-        internal uint GetSubresourceSize(uint mipLevel, uint arrayLayer)
+        internal uint GetSubresourceSize(uint mipLevel)
         {
             uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
             Util.GetMipDimensions(this, mipLevel, out uint width, out uint height, out uint depth);
@@ -107,7 +107,7 @@ namespace Veldrid.MTL
                 Format);
         }
 
-        internal void GetSubresourceLayout(uint mipLevel, uint arrayLayer, out uint rowPitch, out uint depthPitch)
+        internal void GetSubresourceLayout(uint mipLevel, out uint rowPitch, out uint depthPitch)
         {
             uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
             Util.GetMipDimensions(this, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);

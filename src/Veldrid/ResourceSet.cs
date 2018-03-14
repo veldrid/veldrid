@@ -7,13 +7,13 @@ namespace Veldrid
     /// A device resource used to bind a particular set of <see cref="BindableResource"/> objects to a <see cref="CommandList"/>.
     /// See <see cref="ResourceSetDescription"/>.
     /// </summary>
-    public abstract class ResourceSet : DeviceResource, IDisposable
+    public abstract class ResourceSet : IDeviceResource, IDisposable
     {
         internal ResourceSet(ref ResourceSetDescription description)
         {
 #if VALIDATE_USAGE
             ResourceKind[] kinds = description.Layout.ResourceKinds;
-            BindableResource[] resources = description.BoundResources;
+            IBindableResource[] resources = description.BoundResources;
 
             if (kinds.Length != resources.Length)
             {
@@ -40,7 +40,7 @@ namespace Veldrid
         public abstract void Dispose();
 
 #if VALIDATE_USAGE
-        private void ValidateResourceKind(ResourceKind kind, BindableResource resource, uint slot)
+        private void ValidateResourceKind(ResourceKind kind, IBindableResource resource, uint slot)
         {
             switch (kind)
             {

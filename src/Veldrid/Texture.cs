@@ -6,7 +6,7 @@ namespace Veldrid
     /// A device resource used to store arbitrary image data in a specific format.
     /// See <see cref="TextureDescription"/>.
     /// </summary>
-    public abstract class Texture : DeviceResource, MappableResource, IDisposable
+    public abstract class Texture : IDeviceResource, IMappableResource, IDisposable
     {
         /// <summary>
         /// Calculates the subresource index, given a mipmap level and array layer.

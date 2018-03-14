@@ -32,9 +32,7 @@ namespace Veldrid.MTL
         public MTLCommandQueue CommandQueue => _commandQueue;
         public MTLFeatureSupport Features { get; }
 
-        public MTLGraphicsDevice(
-            GraphicsDeviceOptions options,
-            SwapchainDescription? swapchainDesc)
+        public MTLGraphicsDevice(SwapchainDescription? swapchainDesc)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
             ResourceFactory = new MTLResourceFactory(this);
@@ -71,14 +69,14 @@ namespace Veldrid.MTL
             MTLCommandBuffer cb = mtlCL.Commit();
             lock (_submittedCommandsLock)
             {
-                CheckSubmittedCommands(assumeCompletion: false);
+                CheckSubmittedCommands();
 
                 MTLFence mtlFence = fence as MTLFence;
                 _submittedCBs.Add((cb, mtlFence));
             }
         }
 
-        private void CheckSubmittedCommands(bool assumeCompletion)
+        private void CheckSubmittedCommands()
         {
             for (int i = 0; i < _submittedCBs.Count; i++)
             {
@@ -160,7 +158,7 @@ namespace Veldrid.MTL
             }
             else
             {
-                mtlTex.GetSubresourceLayout(mipLevel, arrayLayer, out uint dstRowPitch, out uint dstDepthPitch);
+                mtlTex.GetSubresourceLayout(mipLevel, out uint dstRowPitch, out uint dstDepthPitch);
                 ulong dstOffset = Util.ComputeSubresourceOffset(mtlTex, mipLevel, arrayLayer);
                 uint srcRowPitch = FormatHelpers.GetRowPitch(width, texture.Format);
                 uint srcDepthPitch = FormatHelpers.GetDepthPitch(srcRowPitch, height, texture.Format);
@@ -185,12 +183,12 @@ namespace Veldrid.MTL
                 {
                     (MTLCommandBuffer, MTLFence) lastPair = _submittedCBs[lastIndex];
                     lastPair.Item1.waitUntilCompleted();
-                    CheckSubmittedCommands(assumeCompletion: true);
+                    CheckSubmittedCommands();
                 }
             }
         }
 
-        protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
+        protected override MappedResource MapCore(IMappableResource resource, MapMode mode, uint subresource)
         {
             if (resource is MTLBuffer buffer)
             {
@@ -198,7 +196,7 @@ namespace Veldrid.MTL
             }
             else
             {
-                MTLTexture texture = Util.AssertSubtype<MappableResource, MTLTexture>(resource);
+                MTLTexture texture = Util.AssertSubtype<IMappableResource, MTLTexture>(resource);
                 return MapTexture(texture, mode, subresource);
             }
         }
@@ -222,8 +220,8 @@ namespace Veldrid.MTL
             void* data = texture.StagingBuffer.contents();
             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
             Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
-            uint subresourceSize = texture.GetSubresourceSize(mipLevel, arrayLayer);
-            texture.GetSubresourceLayout(mipLevel, arrayLayer, out uint rowPitch, out uint depthPitch);
+            uint subresourceSize = texture.GetSubresourceSize(mipLevel);
+            texture.GetSubresourceLayout(mipLevel, out uint rowPitch, out uint depthPitch);
             ulong offset = Util.ComputeSubresourceOffset(texture, mipLevel, arrayLayer);
             byte* offsetPtr = (byte*)data + offset;
             return new MappedResource(texture, mode, (IntPtr)offsetPtr, subresourceSize, subresource, rowPitch, depthPitch);
@@ -242,7 +240,7 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(_device.NativePtr);
         }
 
-        protected override void UnmapCore(MappableResource resource, uint subresource)
+        protected override void UnmapCore(IMappableResource resource, uint subresource)
         {
         }
 

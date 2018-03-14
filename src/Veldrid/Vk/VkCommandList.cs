@@ -46,8 +46,7 @@ namespace Veldrid.Vk
         public VkCommandBuffer CommandBuffer => _cb;
         public uint SubmittedCommandBufferCount { get; private set; }
 
-        public VkCommandList(VkGraphicsDevice gd, ref CommandListDescription description)
-            : base(ref description)
+        public VkCommandList(VkGraphicsDevice gd)
         {
             _gd = gd;
             VkCommandPoolCreateInfo poolCI = VkCommandPoolCreateInfo.New();

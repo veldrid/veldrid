@@ -240,7 +240,7 @@ namespace Veldrid.OpenGL
             return _maxColorTextureSamples;
         }
 
-        protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
+        protected override MappedResource MapCore(IMappableResource resource, MapMode mode, uint subresource)
         {
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
             lock (_mappedResourceLock)
@@ -262,7 +262,7 @@ namespace Veldrid.OpenGL
             return _mapResultHolder.Resource;
         }
 
-        protected override void UnmapCore(MappableResource resource, uint subresource)
+        protected override void UnmapCore(IMappableResource resource, uint subresource)
         {
             _executionThread.Unmap(resource, subresource);
         }
@@ -511,7 +511,7 @@ namespace Veldrid.OpenGL
                             break;
                         case WorkItemType.Map:
                             {
-                                MappableResource resourceToMap = (MappableResource)workItem.Object0;
+                                IMappableResource resourceToMap = (IMappableResource)workItem.Object0;
                                 ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
                                 MapMode mode = (MapMode)workItem.UInt0;
                                 uint subresource = workItem.UInt1;
@@ -601,7 +601,7 @@ namespace Veldrid.OpenGL
             }
 
             private void ExecuteMapResource(
-                MappableResource resource,
+                IMappableResource resource,
                 MapMode mode,
                 uint subresource,
                 ManualResetEventSlim mre)
@@ -645,7 +645,7 @@ namespace Veldrid.OpenGL
                         }
                         else
                         {
-                            OpenGLTexture texture = Util.AssertSubtype<MappableResource, OpenGLTexture>(resource);
+                            OpenGLTexture texture = Util.AssertSubtype<IMappableResource, OpenGLTexture>(resource);
                             texture.EnsureResourcesCreated();
 
                             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
@@ -810,7 +810,7 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            private void ExecuteUnmapResource(MappableResource resource, uint subresource, ManualResetEventSlim mre)
+            private void ExecuteUnmapResource(IMappableResource resource, uint subresource, ManualResetEventSlim mre)
             {
                 MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
                 lock (_gd._mappedResourceLock)
@@ -836,7 +836,7 @@ namespace Veldrid.OpenGL
                         }
                         else
                         {
-                            OpenGLTexture texture = Util.AssertSubtype<MappableResource, OpenGLTexture>(resource);
+                            OpenGLTexture texture = Util.AssertSubtype<IMappableResource, OpenGLTexture>(resource);
 
                             if (info.Mode == MapMode.Write || info.Mode == MapMode.ReadWrite)
                             {
@@ -882,7 +882,7 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            public void Map(MappableResource resource, MapMode mode, uint subresource)
+            public void Map(IMappableResource resource, MapMode mode, uint subresource)
             {
                 CheckExceptions();
 
@@ -897,7 +897,7 @@ namespace Veldrid.OpenGL
                 mre.Dispose();
             }
 
-            internal void Unmap(MappableResource resource, uint subresource)
+            internal void Unmap(IMappableResource resource, uint subresource)
             {
                 CheckExceptions();
 
@@ -981,7 +981,7 @@ namespace Veldrid.OpenGL
             public readonly uint UInt2; // TODO: Technically, our max data size could fit into just two UInt32's.
 
             public ExecutionThreadWorkItem(
-                MappableResource resource,
+                IMappableResource resource,
                 MapMode mapMode,
                 uint subresource,
                 bool map,

@@ -62,7 +62,7 @@ namespace Veldrid.Vk
             }
             vkGetDeviceQueue(_gd.Device, _presentQueueIndex, 0, out _presentQueue);
 
-            _framebuffer = new VkSwapchainFramebuffer(gd, _surface, description.Width, description.Height, description.DepthFormat);
+            _framebuffer = new VkSwapchainFramebuffer(gd, _surface, description.DepthFormat);
 
             CreateSwapchain(description.Width, description.Height);
 

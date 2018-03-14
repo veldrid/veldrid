@@ -6,7 +6,7 @@ namespace Veldrid
     /// A device resource providing the ability to present rendered images to a visible surface.
     /// See <see cref="SwapchainDescription"/>.
     /// </summary>
-    public abstract class Swapchain : DeviceResource, IDisposable
+    public abstract class Swapchain : IDeviceResource, IDisposable
     {
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> representing the render targets of this instance.

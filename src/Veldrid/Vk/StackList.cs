@@ -13,7 +13,6 @@ namespace Veldrid.Vk
         public const int CapacityInBytes = 256;
         private static readonly int s_sizeofT = Unsafe.SizeOf<T>();
 
-        private fixed byte _storage[CapacityInBytes];
         private uint _count;
 
         public uint Count => _count;

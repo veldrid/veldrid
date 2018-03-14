@@ -25,7 +25,7 @@ namespace Veldrid.MTL
 
         public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)
         {
-            return new MTLFramebuffer(_gd, ref description);
+            return new MTLFramebuffer(ref description);
         }
 
         public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
@@ -35,12 +35,12 @@ namespace Veldrid.MTL
 
         public override ResourceLayout CreateResourceLayout(ref ResourceLayoutDescription description)
         {
-            return new MTLResourceLayout(ref description, _gd);
+            return new MTLResourceLayout(ref description);
         }
 
         public override ResourceSet CreateResourceSet(ref ResourceSetDescription description)
         {
-            return new MTLResourceSet(ref description, _gd);
+            return new MTLResourceSet(ref description);
         }
 
         public override Sampler CreateSampler(ref SamplerDescription description)
@@ -65,7 +65,7 @@ namespace Veldrid.MTL
 
         protected override TextureView CreateTextureViewCore(ref TextureViewDescription description)
         {
-            return new MTLTextureView(ref description, _gd);
+            return new MTLTextureView(ref description);
         }
 
         public override Fence CreateFence(bool signaled)

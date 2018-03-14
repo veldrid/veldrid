@@ -12,7 +12,6 @@ namespace Veldrid.Utilities
     /// </summary>
     public class ObjParser
     {
-        private static readonly string[] s_newline = new string[] { "\n" };
         private static readonly char[] s_whitespaceChars = new char[] { ' ' };
         private static readonly char[] s_slashChar = new char[] { '/' };
 
@@ -561,7 +560,7 @@ namespace Veldrid.Utilities
     /// <summary>
     /// A standalone <see cref="MeshData"/> created from information from an <see cref="ObjFile"/>.
     /// </summary>
-    public class ConstructedMeshInfo : MeshData
+    public class ConstructedMeshInfo : IMeshData
     {
         /// <summary>
         /// The vertices of the mesh.
@@ -569,14 +568,14 @@ namespace Veldrid.Utilities
         public VertexPositionNormalTexture[] Vertices { get; }
 
         /// <summary>
-        /// The indices of the mesh.
-        /// </summary>
-        public ushort[] Indices { get; }
-
-        /// <summary>
         /// The name of the <see cref="MaterialDefinition"/> associated with this mesh.
         /// </summary>
         public string MaterialName { get; }
+
+        /// <summary>
+        /// The indices of the mesh.
+        /// </summary>
+        private ushort[] Indices { get; }
 
         /// <summary>
         /// Constructs a new <see cref="ConstructedMeshInfo"/>.

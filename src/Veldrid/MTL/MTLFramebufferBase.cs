@@ -9,7 +9,7 @@ namespace Veldrid.MTL
 
         public override string Name { get; set; }
 
-        public MTLFramebufferBase(MTLGraphicsDevice gd, ref FramebufferDescription description)
+        public MTLFramebufferBase(ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)
         {
         }

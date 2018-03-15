@@ -6,10 +6,10 @@ namespace Veldrid.NeoDemo
     public static class ShaderHelper
     {
         public static Shader LoadShader(
-            GraphicsDevice gd, 
-            ResourceFactory factory, 
-            string setName, 
-            ShaderStages stage, 
+            GraphicsDevice gd,
+            ResourceFactory factory,
+            string setName,
+            ShaderStages stage,
             string entryPoint)
         {
             Shader shader = factory.CreateShader(new ShaderDescription(stage, LoadBytecode(factory, setName, stage), entryPoint));
@@ -56,8 +56,9 @@ namespace Veldrid.NeoDemo
                 case GraphicsBackend.Direct3D11: return ".hlsl";
                 case GraphicsBackend.Vulkan: return ".450.glsl";
                 case GraphicsBackend.OpenGL:
-                case GraphicsBackend.OpenGLES:
                     return ".330.glsl";
+                case GraphicsBackend.OpenGLES:
+                    return ".300.glsles";
                 case GraphicsBackend.Metal:
                     return ".metallib";
                 default: throw new InvalidOperationException("Invalid Graphics backend: " + backend);

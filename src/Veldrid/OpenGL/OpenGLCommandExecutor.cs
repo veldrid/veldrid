@@ -2,13 +2,12 @@
 using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 namespace Veldrid.OpenGL
 {
     internal unsafe class OpenGLCommandExecutor
     {
+        private readonly GraphicsBackend _backend;
         private readonly OpenGLTextureSamplerManager _textureSamplerManager;
         private readonly StagingMemoryPool _stagingMemoryPool;
         private OpenGLExtensions _extensions;
@@ -32,10 +31,12 @@ namespace Veldrid.OpenGL
         private bool _graphicsPipelineActive;
 
         public OpenGLCommandExecutor(
+            GraphicsBackend backend,
             OpenGLTextureSamplerManager textureSamplerManager,
             OpenGLExtensions extensions,
             StagingMemoryPool stagingMemoryPool)
         {
+            _backend = backend;
             _extensions = extensions;
             _textureSamplerManager = textureSamplerManager;
             _stagingMemoryPool = stagingMemoryPool;
@@ -49,7 +50,6 @@ namespace Veldrid.OpenGL
         {
             if (!_isSwapchainFB)
             {
-                //glDrawBuffer((DrawBufferMode)((uint)DrawBufferMode.ColorAttachment0 + index));
                 DrawBuffersEnum bufs = (DrawBuffersEnum)((uint)DrawBuffersEnum.ColorAttachment0 + index);
                 glDrawBuffers(1, &bufs);
                 CheckLastError();
@@ -693,13 +693,28 @@ namespace Veldrid.OpenGL
 
         public void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
-            glScissorIndexed(
-                index,
-                (int)x,
-                (int)(_viewports[(int)index].Height - (int)height - y),
-                width,
-                height);
-            CheckLastError();
+            if (_backend == GraphicsBackend.OpenGL)
+            {
+                glScissorIndexed(
+                    index,
+                    (int)x,
+                    (int)(_viewports[(int)index].Height - (int)height - y),
+                    width,
+                    height);
+                CheckLastError();
+            }
+            else
+            {
+                if (index == 0)
+                {
+                    glScissor(
+                        (int)x,
+                        (int)(_viewports[(int)index].Height - (int)height - y),
+                        width,
+                        height);
+                    CheckLastError();
+                }
+            }
         }
 
         public void SetVertexBuffer(uint index, DeviceBuffer vb)
@@ -715,14 +730,29 @@ namespace Veldrid.OpenGL
         {
             _viewports[(int)index] = viewport;
 
-            float left = viewport.X;
-            float bottom = _fb.Height - (viewport.Y + viewport.Height);
+            if (_backend == GraphicsBackend.OpenGL)
+            {
+                float left = viewport.X;
+                float bottom = _fb.Height - (viewport.Y + viewport.Height);
 
-            glViewportIndexed(index, left, bottom, viewport.Width, viewport.Height);
-            CheckLastError();
+                glViewportIndexed(index, left, bottom, viewport.Width, viewport.Height);
+                CheckLastError();
 
-            glDepthRangeIndexed(index, viewport.MinDepth, viewport.MaxDepth);
-            CheckLastError();
+                glDepthRangeIndexed(index, viewport.MinDepth, viewport.MaxDepth);
+                CheckLastError();
+            }
+            else
+            {
+                // TODO CAPABILITY
+                if (index == 0)
+                {
+                    glViewport((int)viewport.X, (int)viewport.Y, (uint)viewport.Width, (uint)viewport.Height);
+                    CheckLastError();
+
+                    glDepthRangef(viewport.MinDepth, viewport.MaxDepth);
+                    CheckLastError();
+                }
+            }
         }
 
         public void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr dataPtr, uint sizeInBytes)
@@ -1105,7 +1135,7 @@ namespace Veldrid.OpenGL
             srcGLTexture.EnsureResourcesCreated();
             dstGLTexture.EnsureResourcesCreated();
 
-            if (_extensions.ARB_CopyImage && depth == 1)
+            if (_extensions.CopyImage && depth == 1)
             {
                 // glCopyImageSubData does not work properly when depth > 1, so use the awful roundabout copy.
                 uint srcZOrLayer = Math.Max(srcBaseArrayLayer, srcZ);

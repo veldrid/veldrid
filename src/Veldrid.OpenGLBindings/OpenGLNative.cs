@@ -1335,7 +1335,6 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glDepthFunc", out p_glDepthFunc);
             LoadFunction("glDepthMask", out p_glDepthMask);
             LoadFunction("glCullFace", out p_glCullFace);
-            LoadFunction("glPolygonMode", out p_glPolygonMode);
             LoadFunction("glCreateProgram", out p_glCreateProgram);
             LoadFunction("glAttachShader", out p_glAttachShader);
             LoadFunction("glBindAttribLocation", out p_glBindAttribLocation);
@@ -1404,6 +1403,7 @@ namespace Veldrid.OpenGLBinding
 
             if (!gles)
             {
+                LoadFunction("glPolygonMode", out p_glPolygonMode);
                 LoadFunction("glViewportIndexedf", out p_glViewportIndexedf);
                 LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
             }

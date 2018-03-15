@@ -454,8 +454,11 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
-            glPolygonMode(MaterialFace.FrontAndBack, OpenGLFormats.VdToGLPolygonMode(rs.FillMode));
-            CheckLastError();
+            if (_backend == GraphicsBackend.OpenGL)
+            {
+                glPolygonMode(MaterialFace.FrontAndBack, OpenGLFormats.VdToGLPolygonMode(rs.FillMode));
+                CheckLastError();
+            }
 
             if (!rs.ScissorTestEnabled)
             {
@@ -468,15 +471,23 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
-            if (!rs.DepthClipEnabled)
+            if (_backend == GraphicsBackend.OpenGL)
             {
-                glEnable(EnableCap.DepthClamp);
-                CheckLastError();
+                if (!rs.DepthClipEnabled)
+                {
+                    glEnable(EnableCap.DepthClamp);
+                    CheckLastError();
+                }
+                else
+                {
+                    glDisable(EnableCap.DepthClamp);
+                    CheckLastError();
+                }
             }
-            else
+            else if (!rs.DepthClipEnabled)
             {
-                glDisable(EnableCap.DepthClamp);
-                CheckLastError();
+                // TODO CAPABILITY
+                throw new VeldridException($"Rasterizer depth clip is not supported on OpenGL ES");
             }
 
             glFrontFace(OpenGLFormats.VdToGLFrontFaceDirection(rs.FrontFace));

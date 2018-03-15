@@ -25,9 +25,16 @@ namespace Veldrid.OpenGL
             : base(stage)
         {
 #if VALIDATE_USAGE
-            if (stage == ShaderStages.Compute && !gd.Extensions.ARB_ComputeShader)
+            if (stage == ShaderStages.Compute && !gd.Extensions.ComputeShaders)
             {
-                throw new VeldridException($"Compute shaders require OpenGL 4.3 or ARB_compute_shader.");
+                if (_gd.BackendType == GraphicsBackend.OpenGLES)
+                {
+                    throw new VeldridException("Compute shaders require OpenGL ES 3.1.");
+                }
+                else
+                {
+                    throw new VeldridException($"Compute shaders require OpenGL 4.3 or ARB_compute_shader.");
+                }
             }
 #endif
             _gd = gd;
@@ -86,7 +93,7 @@ namespace Veldrid.OpenGL
                 glGetShaderInfoLog(_shader, (uint)infoLogLength, &returnedInfoLength, infoLog);
                 CheckLastError();
 
-                string message = infoLog != null 
+                string message = infoLog != null
                     ? Encoding.UTF8.GetString(infoLog, (int)returnedInfoLength)
                     : "<null>";
 

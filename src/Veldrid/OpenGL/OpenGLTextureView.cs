@@ -2,7 +2,6 @@
 using Veldrid.OpenGLBinding;
 using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
-using System;
 
 namespace Veldrid.OpenGL
 {
@@ -48,10 +47,18 @@ namespace Veldrid.OpenGL
             if (BaseMipLevel != 0 || MipLevels != Target.MipLevels
                 || BaseArrayLayer != 0 || ArrayLayers != Target.ArrayLayers)
             {
-                if (!_gd.Extensions.ARB_TextureView)
+                if (_gd.BackendType == GraphicsBackend.OpenGL)
+                {
+                    if (!_gd.Extensions.ARB_TextureView)
+                    {
+                        throw new VeldridException(
+                            "TextureView objects covering a subset of a Texture's dimensions require OpenGL 4.3, or ARB_texture_view.");
+                    }
+                }
+                else
                 {
                     throw new VeldridException(
-                        "TextureView objects covering a subset of a Texture's dimensions require OpenGL 4.3, or ARB_texture_view.");
+                        "TextureView objects covering a subset of a Texture's dimensions are not supported on OpenGL ES.");
                 }
                 _needsTextureView = true;
             }

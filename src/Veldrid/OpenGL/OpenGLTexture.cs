@@ -157,7 +157,7 @@ namespace Veldrid.OpenGL
                         Width);
                     CheckLastError();
                 }
-                else if (_gd.Extensions.ARB_TextureStorage)
+                else if (_gd.Extensions.TextureStorage)
                 {
                     glTexStorage1D(
                         TextureTarget.Texture1D,
@@ -199,7 +199,7 @@ namespace Veldrid.OpenGL
                         Height);
                     CheckLastError();
                 }
-                else if (_gd.Extensions.ARB_TextureStorage)
+                else if (_gd.Extensions.TextureStorage)
                 {
                     glTexStorage2D(
                         TextureTarget.Texture2D,
@@ -246,7 +246,7 @@ namespace Veldrid.OpenGL
                         ArrayLayers);
                     CheckLastError();
                 }
-                else if (_gd.Extensions.ARB_TextureStorage)
+                else if (_gd.Extensions.TextureStorage)
                 {
                     glTexStorage3D(
                         TextureTarget.Texture2DArray,
@@ -343,7 +343,7 @@ namespace Veldrid.OpenGL
                         Height);
                     CheckLastError();
                 }
-                else if (_gd.Extensions.ARB_TextureStorage)
+                else if (_gd.Extensions.TextureStorage)
                 {
                     glTexStorage2D(
                         TextureTarget.TextureCubeMap,
@@ -393,7 +393,7 @@ namespace Veldrid.OpenGL
                         ArrayLayers);
                     CheckLastError();
                 }
-                else if (_gd.Extensions.ARB_TextureStorage)
+                else if (_gd.Extensions.TextureStorage)
                 {
                     glTexStorage3D(
                         TextureTarget.TextureCubeMapArray,
@@ -445,7 +445,7 @@ namespace Veldrid.OpenGL
                         Depth);
                     CheckLastError();
                 }
-                else if (_gd.Extensions.ARB_TextureStorage)
+                else if (_gd.Extensions.TextureStorage)
                 {
                     glTexStorage3D(
                         TextureTarget.Texture3D,

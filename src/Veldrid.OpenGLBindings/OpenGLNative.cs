@@ -189,10 +189,18 @@ namespace Veldrid.OpenGLBinding
         public static void glViewportIndexed(uint index, float x, float y, float w, float h)
             => p_glViewportIndexedf(index, x, y, w, h);
 
+        private delegate void glViewport_t(int x, int y, uint width, uint height);
+        private static glViewport_t p_glViewport;
+        public static void glViewport(int x, int y, uint width, uint height) => p_glViewport(x, y, width, height);
+
         private delegate void glDepthRangeIndexed_t(uint index, double nearVal, double farVal);
         private static glDepthRangeIndexed_t p_glDepthRangeIndexed;
         public static void glDepthRangeIndexed(uint index, double nearVal, double farVal)
             => p_glDepthRangeIndexed(index, nearVal, farVal);
+
+        private delegate void glDepthRangef_t(float n, float f);
+        private static glDepthRangef_t p_glDepthRangef;
+        public static void glDepthRangef(float n, float f) => p_glDepthRangef(n, f);
 
         private delegate void glBufferSubData_t(BufferTarget target, IntPtr offset, UIntPtr size, void* data);
         private static glBufferSubData_t p_glBufferSubData;
@@ -208,6 +216,10 @@ namespace Veldrid.OpenGLBinding
         private static glScissorIndexed_t p_glScissorIndexed;
         public static void glScissorIndexed(uint index, int left, int bottom, uint width, uint height)
             => p_glScissorIndexed(index, left, bottom, width, height);
+
+        private delegate void glScissor_t(int x, int y, uint width, uint height);
+        private static glScissor_t p_glScissor;
+        public static void glScissor(int x, int y, uint width, uint height) => p_glScissor(x, y, width, height);
 
         private delegate void glPixelStorei_t(PixelStoreParameter pname, int param);
         private static glPixelStorei_t p_glPixelStorei;
@@ -1237,13 +1249,20 @@ namespace Veldrid.OpenGLBinding
             GetTextureParameter pname,
             int* @params) => p_glGetTexLevelParameteriv(target, level, pname, @params);
 
-        public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress)
+        public static void LoadGetString(IntPtr glContext, Func<string, IntPtr> getProcAddress)
+        {
+            s_getProcAddress = getProcAddress;
+            LoadFunction("glGetString", out p_glGetString);
+        }
+
+        public static void LoadAllFunctions(IntPtr glContext, Func<string, IntPtr> getProcAddress, bool gles)
         {
             s_getProcAddress = getProcAddress;
 
+            // Common functions
+
             LoadFunction("glCompressedTexSubImage2D", out p_glCompressedTexSubImage2D);
             LoadFunction("glCompressedTexSubImage3D", out p_glCompressedTexSubImage3D);
-            LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
             LoadFunction("glStencilFuncSeparate", out p_glStencilFuncSeparate);
             LoadFunction("glStencilOpSeparate", out p_glStencilOpSeparate);
             LoadFunction("glStencilMask", out p_glStencilMask);
@@ -1286,7 +1305,6 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glDeleteTextures", out p_glDeleteTextures);
             LoadFunction("glCheckFramebufferStatus", out p_glCheckFramebufferStatus);
             LoadFunction("glBindBuffer", out p_glBindBuffer);
-            LoadFunction("glViewportIndexedf", out p_glViewportIndexedf);
             LoadFunction("glDepthRangeIndexed", out p_glDepthRangeIndexed);
             LoadFunction("glBufferSubData", out p_glBufferSubData);
             LoadFunction("glNamedBufferSubData", out p_glNamedBufferSubData);
@@ -1347,7 +1365,6 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glBindTextureUnit", out p_glBindTextureUnit);
             LoadFunction("glTexParameteri", out p_glTexParameteri);
             LoadFunction("glGetStringi", out p_glGetStringi);
-            LoadFunction("glGetString", out p_glGetString);
             LoadFunction("glObjectLabel", out p_glObjectLabel);
             LoadFunction("glTexImage2DMultisample", out p_glTexImage2DMultisample);
             LoadFunction("glTexImage3DMultisample", out p_glTexImage3DMultisample);
@@ -1384,6 +1401,27 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glCopyNamedBufferSubData", out p_glCopyNamedBufferSubData);
             LoadFunction("glCreateBuffers", out p_glCreateBuffers);
             LoadFunction("glCreateTextures", out p_glCreateTextures);
+
+            if (!gles)
+            {
+                LoadFunction("glViewportIndexedf", out p_glViewportIndexedf);
+                LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
+            }
+            else
+            {
+                LoadFunction("glViewport", out p_glViewport);
+                LoadFunction("glDepthRangef", out p_glDepthRangef);
+                LoadFunction("glScissor", out p_glScissor);
+                LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
+                if (p_glCopyImageSubData == null)
+                {
+                    LoadFunction("glCopyImageSubDataOES", out p_glCopyImageSubData);
+                }
+                if (p_glCopyImageSubData == null)
+                {
+                    LoadFunction("glCopyImageSubDataEXT", out p_glCopyImageSubData);
+                }
+            }
         }
 
         private static void LoadFunction<T>(string name, out T field)

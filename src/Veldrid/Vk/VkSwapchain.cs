@@ -123,8 +123,6 @@ namespace Veldrid.Vk
                 _gd.WaitForIdle();
             }
 
-            _framebuffer.DestroyOldSwapchain();
-
             vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
             _deviceSwapchain = VkSwapchainKHR.Null;
 

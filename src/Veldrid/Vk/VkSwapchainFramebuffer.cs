@@ -69,6 +69,22 @@ namespace Veldrid.Vk
             _currentImageIndex = index;
         }
 
+        internal void DestroyOldSwapchain()
+        {
+            _depthAttachment?.Target.Dispose();
+            _depthAttachment = null;
+
+            if (_scFramebuffers != null)
+            {
+                for (int i = 0; i < _scFramebuffers.Length; i++)
+                {
+                    _scFramebuffers[i]?.Dispose();
+                    _scFramebuffers[i] = null;
+                }
+                Array.Clear(_scFramebuffers, 0, _scFramebuffers.Length);
+            }
+        }
+
         internal void SetNewSwapchain(
             VkSwapchainKHR deviceSwapchain,
             uint width,
@@ -176,7 +192,7 @@ namespace Veldrid.Vk
                 _depthAttachment?.Target.Dispose();
                 for (int i = 0; i < _scFramebuffers.Length; i++)
                 {
-                    _scFramebuffers[i].Dispose();
+                    _scFramebuffers[i]?.Dispose();
                 }
             }
         }

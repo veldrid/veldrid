@@ -121,7 +121,8 @@ namespace Veldrid.Vk
                     memoryRequirements.size,
                     memoryRequirements.alignment);
                 _memoryBlock = memoryToken;
-                vkBindImageMemory(gd.Device, _optimalImage, _memoryBlock.DeviceMemory, _memoryBlock.Offset);
+                result = vkBindImageMemory(gd.Device, _optimalImage, _memoryBlock.DeviceMemory, _memoryBlock.Offset);
+                CheckResult(result);
 
                 _imageLayouts = new VkImageLayout[subresourceCount];
                 for (int i = 0; i < _imageLayouts.Length; i++)

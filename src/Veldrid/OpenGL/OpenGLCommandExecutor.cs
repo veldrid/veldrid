@@ -492,11 +492,6 @@ namespace Veldrid.OpenGL
                     CheckLastError();
                 }
             }
-            else if (!rs.DepthClipEnabled)
-            {
-                // TODO CAPABILITY
-                throw new VeldridException($"Rasterizer depth clip is not supported on OpenGL ES");
-            }
 
             glFrontFace(OpenGLFormats.VdToGLFrontFaceDirection(rs.FrontFace));
             CheckLastError();
@@ -602,12 +597,19 @@ namespace Veldrid.OpenGL
                         OpenGLBuffer glBuffer = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
                         if (pipeline.GetStorageBufferBindingForSlot(slot, element, out OpenGLShaderStorageBinding shaderStorageBinding))
                         {
-                            glShaderStorageBlockBinding(pipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + ssboOffset);
-                            CheckLastError();
+                            if (_backend == GraphicsBackend.OpenGL)
+                            {
+                                glShaderStorageBlockBinding(pipeline.Program, shaderStorageBinding.StorageBlockBinding, ssboBaseIndex + ssboOffset);
+                                CheckLastError();
 
-                            glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, ssboBaseIndex + ssboOffset, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
-                            CheckLastError();
-
+                                glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, ssboBaseIndex + ssboOffset, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
+                                CheckLastError();
+                            }
+                            else
+                            {
+                                glBindBufferRange(BufferRangeTarget.ShaderStorageBuffer, shaderStorageBinding.StorageBlockBinding, glBuffer.Buffer, IntPtr.Zero, (UIntPtr)glBuffer.SizeInBytes);
+                                CheckLastError();
+                            }
                             ssboOffset += 1;
                         }
                         break;
@@ -626,17 +628,32 @@ namespace Veldrid.OpenGL
                         glTexViewRW.EnsureResourcesCreated();
                         if (pipeline.GetTextureBindingInfo(slot, element, out OpenGLTextureBindingSlotInfo imageBindingInfo))
                         {
-                            glBindImageTexture(
-                                (uint)imageBindingInfo.RelativeIndex,
-                                glTexViewRW.Target.Texture,
-                                0,
-                                false,
-                                0,
-                                TextureAccess.ReadWrite,
-                                glTexViewRW.GetReadWriteSizedInternalFormat());
-                            CheckLastError();
-                            glUniform1i(imageBindingInfo.UniformLocation, imageBindingInfo.RelativeIndex);
-                            CheckLastError();
+                            if (_backend == GraphicsBackend.OpenGL)
+                            {
+                                glBindImageTexture(
+                                    (uint)imageBindingInfo.RelativeIndex,
+                                    glTexViewRW.Target.Texture,
+                                    0,
+                                    false,
+                                    0,
+                                    TextureAccess.ReadWrite,
+                                    glTexViewRW.GetReadWriteSizedInternalFormat());
+                                CheckLastError();
+                                glUniform1i(imageBindingInfo.UniformLocation, imageBindingInfo.RelativeIndex);
+                                CheckLastError();
+                            }
+                            else
+                            {
+                                glBindImageTexture(
+                                    (uint)imageBindingInfo.UniformLocation,
+                                    glTexViewRW.Target.Texture,
+                                    0,
+                                    false,
+                                    0,
+                                    TextureAccess.ReadWrite,
+                                    glTexViewRW.GetReadWriteSizedInternalFormat());
+                                CheckLastError();
+                            }
                         }
                         break;
                     case ResourceKind.Sampler:

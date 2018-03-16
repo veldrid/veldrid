@@ -56,6 +56,8 @@ namespace Veldrid
         /// <returns>A new SwapchainSource which can be used to create a Metal <see cref="Swapchain"/> for the given UIView.
         /// </returns>
         public static SwapchainSource CreateUIView(IntPtr uiView) => new UIViewSwapchainSource(uiView);
+
+        public static SwapchainSource CreateANativeWindow(IntPtr aNativeWindow) => new ANativeWindowSwapchainSource(aNativeWindow);
     }
 
     internal class Win32SwapchainSource : SwapchainSource
@@ -111,6 +113,16 @@ namespace Veldrid
         public UIViewSwapchainSource(IntPtr uiView)
         {
             UIView = uiView;
+        }
+    }
+
+    internal class ANativeWindowSwapchainSource : SwapchainSource
+    {
+        public IntPtr ANativeWindow { get; }
+
+        public ANativeWindowSwapchainSource(IntPtr aNativeWindow)
+        {
+            ANativeWindow = aNativeWindow;
         }
     }
 }

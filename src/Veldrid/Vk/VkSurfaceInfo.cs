@@ -47,6 +47,10 @@ namespace Veldrid.Vk
             {
                 return new XlibVkSurfaceInfo((Display*)xlibSource.Display, new Window { Value = xlibSource.Window });
             }
+            else if (source is ANativeWindowSwapchainSource anwSource)
+            {
+                return new ANativeWindowSurfaceSource(anwSource.ANativeWindow);
+            }
             else
             {
                 throw new VeldridException("Unsupported Vulkan SwapchainSource.");
@@ -105,6 +109,30 @@ namespace Veldrid.Vk
         internal unsafe override SwapchainSource GetSurfaceSource()
         {
             return new XlibSwapchainSource((IntPtr)_display, _window.Value);
+        }
+    }
+
+    internal class ANativeWindowSurfaceSource : VkSurfaceSource
+    {
+        private readonly IntPtr _aNativeWindow;
+
+        public ANativeWindowSurfaceSource(IntPtr aNativeWindow)
+        {
+            _aNativeWindow = aNativeWindow;
+        }
+
+        public unsafe override VkSurfaceKHR CreateSurface(VkInstance instance)
+        {
+            VkAndroidSurfaceCreateInfoKHR androidSurfaceCI = VkAndroidSurfaceCreateInfoKHR.New();
+            androidSurfaceCI.window = (Vulkan.Android.ANativeWindow*)_aNativeWindow;
+            VkResult result = vkCreateAndroidSurfaceKHR(instance, ref androidSurfaceCI, null, out VkSurfaceKHR surface);
+            CheckResult(result);
+            return surface;
+        }
+
+        internal override SwapchainSource GetSurfaceSource()
+        {
+            return SwapchainSource.CreateANativeWindow(_aNativeWindow);
         }
     }
 }

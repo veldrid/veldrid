@@ -2,6 +2,7 @@
 using Vulkan;
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
+using System;
 
 namespace Veldrid.Vk
 {
@@ -38,13 +39,14 @@ namespace Veldrid.Vk
         public Vulkan.VkFence ImageAvailableFence => _imageAvailableFence;
         public VkSurfaceKHR Surface => _surface;
         public VkQueue PresentQueue => _presentQueue;
+        public uint PresentQueueIndex => _presentQueueIndex;
 
         public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description) : this(gd, ref description, VkSurfaceKHR.Null) { }
 
         public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description, VkSurfaceKHR existingSurface)
         {
             _gd = gd;
-            SyncToVerticalBlank = description.SyncToVerticalBlank;
+            _syncToVBlank = description.SyncToVerticalBlank;
 
             if (existingSurface == VkSurfaceKHR.Null)
             {
@@ -121,6 +123,11 @@ namespace Veldrid.Vk
                 _gd.WaitForIdle();
             }
 
+            _framebuffer.DestroyOldSwapchain();
+
+            vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
+            _deviceSwapchain = VkSwapchainKHR.Null;
+
             _currentImageIndex = 0;
             uint surfaceFormatCount = 0;
             vkGetPhysicalDeviceSurfaceFormatsKHR(_gd.PhysicalDevice, _surface, ref surfaceFormatCount, null);
@@ -175,7 +182,7 @@ namespace Veldrid.Vk
             }
 
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_gd.PhysicalDevice, _surface, out VkSurfaceCapabilitiesKHR surfaceCapabilities);
-            uint imageCount = surfaceCapabilities.minImageCount + 1;
+            uint imageCount = Math.Min(surfaceCapabilities.maxImageCount, surfaceCapabilities.minImageCount + 1);
 
             VkSwapchainCreateInfoKHR swapchainCI = VkSwapchainCreateInfoKHR.New();
             swapchainCI.surface = _surface;
@@ -203,7 +210,7 @@ namespace Veldrid.Vk
                 swapchainCI.queueFamilyIndexCount = 0;
             }
 
-            swapchainCI.preTransform = surfaceCapabilities.currentTransform;
+            swapchainCI.preTransform = VkSurfaceTransformFlagsKHR.IdentityKHR;
             swapchainCI.compositeAlpha = VkCompositeAlphaFlagsKHR.OpaqueKHR;
             swapchainCI.clipped = true;
 

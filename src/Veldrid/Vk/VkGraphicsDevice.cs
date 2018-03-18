@@ -1077,6 +1077,7 @@ namespace Veldrid.Vk
             VkCommandBuffer cb = pool.BeginNewCommandBuffer();
             texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.TransferDstOptimal);
             vkCmdClearColorImage(cb, texture.OptimalDeviceImage, VkImageLayout.TransferDstOptimal, &color, 1, &range);
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.ColorAttachmentOptimal);
             pool.EndAndSubmit(cb);
         }
 
@@ -1098,6 +1099,7 @@ namespace Veldrid.Vk
                 &clearValue,
                 1,
                 &range);
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.DepthStencilAttachmentOptimal);
             pool.EndAndSubmit(cb);
         }
 

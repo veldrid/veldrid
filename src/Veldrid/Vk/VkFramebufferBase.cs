@@ -20,8 +20,10 @@ namespace Veldrid.Vk
         }
 
         public abstract Vulkan.VkFramebuffer CurrentFramebuffer { get; }
-        public abstract VkRenderPass RenderPassNoClear { get; }
+        public abstract VkRenderPass RenderPassNoClear_Init { get; }
+        public abstract VkRenderPass RenderPassNoClear_Load { get; }
         public abstract VkRenderPass RenderPassClear { get; }
         public abstract uint AttachmentCount { get; }
+        public abstract void TransitionToFinalLayout(VkCommandBuffer cb);
     }
 }

@@ -173,7 +173,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("ClipPlaneInfo", ResourceKind.UniformBuffer, ShaderStages.Fragment)));
 
             GraphicsPipelineDescription mainPD = new GraphicsPipelineDescription(
-                _alphamapTexture != null ? BlendStateDescription.SingleAlphaBlend : BlendStateDescription.SingleOverrideBlend,
+                _alphaTextureData != null ? BlendStateDescription.SingleAlphaBlend : BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,

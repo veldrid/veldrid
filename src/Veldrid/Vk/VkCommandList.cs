@@ -176,9 +176,12 @@ namespace Veldrid.Vk
 
             if (_activeRenderPass != VkRenderPass.Null)
             {
+                VkImageAspectFlags aspect = FormatHelpers.IsStencilFormat(_currentFramebuffer.DepthTarget.Value.Target.Format)
+                    ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
+                    : VkImageAspectFlags.Depth;
                 VkClearAttachment clearAttachment = new VkClearAttachment
                 {
-                    aspectMask = VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil,
+                    aspectMask = aspect,
                     clearValue = clearValue
                 };
 
@@ -377,14 +380,12 @@ namespace Veldrid.Vk
             _commandBufferBegun = false;
             _commandBufferEnded = true;
 
-            if (_activeRenderPass != VkRenderPass.Null)
-            {
-                EndCurrentRenderPass();
-                _currentFramebuffer.TransitionToFinalLayout(_cb);
-            }
-            else if (!_currentFramebufferEverActive && _currentFramebuffer != null)
+            if (!_currentFramebufferEverActive && _currentFramebuffer != null)
             {
                 BeginCurrentRenderPass();
+            }
+            if (_activeRenderPass != VkRenderPass.Null)
+            {
                 EndCurrentRenderPass();
                 _currentFramebuffer.TransitionToFinalLayout(_cb);
             }

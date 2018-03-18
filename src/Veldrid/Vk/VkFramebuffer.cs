@@ -69,7 +69,7 @@ namespace Veldrid.Vk
                 depthAttachmentDesc.samples = vkDepthTex.VkSampleCount;
                 depthAttachmentDesc.loadOp = VkAttachmentLoadOp.DontCare;
                 depthAttachmentDesc.storeOp = VkAttachmentStoreOp.Store;
-                depthAttachmentDesc.stencilLoadOp = hasStencil ? VkAttachmentLoadOp.Load : VkAttachmentLoadOp.DontCare;
+                depthAttachmentDesc.stencilLoadOp = VkAttachmentLoadOp.DontCare;
                 depthAttachmentDesc.stencilStoreOp = hasStencil ? VkAttachmentStoreOp.Store : VkAttachmentStoreOp.DontCare;
                 depthAttachmentDesc.initialLayout = VkImageLayout.Undefined;
                 depthAttachmentDesc.finalLayout = VkImageLayout.DepthStencilAttachmentOptimal;
@@ -119,8 +119,14 @@ namespace Veldrid.Vk
             }
             if (DepthTarget != null)
             {
-                depthAttachmentDesc.loadOp = VkAttachmentLoadOp.Load;
-                depthAttachmentDesc.initialLayout = VkImageLayout.DepthStencilAttachmentOptimal;
+                attachments[attachments.Count - 1].loadOp = VkAttachmentLoadOp.Load;
+                attachments[attachments.Count - 1].initialLayout = VkImageLayout.DepthStencilAttachmentOptimal;
+                bool hasStencil = FormatHelpers.IsStencilFormat(DepthTarget.Value.Target.Format);
+                if (hasStencil)
+                {
+                    attachments[attachments.Count - 1].stencilLoadOp = VkAttachmentLoadOp.Load;
+                }
+
             }
             creationResult = vkCreateRenderPass(_gd.Device, ref renderPassCI, null, out _renderPassNoClearLoad);
             CheckResult(creationResult);
@@ -131,11 +137,18 @@ namespace Veldrid.Vk
             if (DepthTarget != null)
             {
                 attachments[attachments.Count - 1].loadOp = VkAttachmentLoadOp.Clear;
+                attachments[attachments.Count - 1].initialLayout = VkImageLayout.Undefined;
+                bool hasStencil = FormatHelpers.IsStencilFormat(DepthTarget.Value.Target.Format);
+                if (hasStencil)
+                {
+                    attachments[attachments.Count - 1].stencilLoadOp = VkAttachmentLoadOp.Load;
+                }
             }
 
             for (int i = 0; i < colorAttachmentCount; i++)
             {
                 attachments[i].loadOp = VkAttachmentLoadOp.Clear;
+                attachments[i].initialLayout = VkImageLayout.Undefined;
             }
 
             creationResult = vkCreateRenderPass(_gd.Device, ref renderPassCI, null, out _renderPassClear);

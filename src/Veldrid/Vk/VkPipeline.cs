@@ -145,7 +145,7 @@ namespace Veldrid.Vk
             for (int binding = 0; binding < inputDescriptions.Length; binding++)
             {
                 VertexLayoutDescription inputDesc = inputDescriptions[binding];
-                bindingDescs[targetIndex] = new VkVertexInputBindingDescription()
+                bindingDescs[binding] = new VkVertexInputBindingDescription()
                 {
                     binding = (uint)binding,
                     inputRate = (inputDesc.InstanceStepRate != 0) ? VkVertexInputRate.Instance : VkVertexInputRate.Vertex,

@@ -1,7 +1,6 @@
 ﻿using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
-using System.Diagnostics;
 
 namespace Veldrid.OpenGL
 {
@@ -60,10 +59,7 @@ namespace Veldrid.OpenGL
                     OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(colorAttachment.Target);
                     glTex.EnsureResourcesCreated();
 
-                    glActiveTexture(TextureUnit.Texture0);
-                    CheckLastError();
-
-                    glBindTexture(glTex.TextureTarget, glTex.Texture);
+                    _gd.TextureSamplerManager.SetTextureTransient(glTex.TextureTarget, glTex.Texture);
                     CheckLastError();
 
                     if (glTex.ArrayLayers == 1)
@@ -105,10 +101,8 @@ namespace Veldrid.OpenGL
                 depthTarget = glDepthTex.TextureTarget;
 
                 depthTextureID = glDepthTex.Texture;
-                glActiveTexture(TextureUnit.Texture0);
-                CheckLastError();
 
-                glBindTexture(depthTarget, glDepthTex.Texture);
+                _gd.TextureSamplerManager.SetTextureTransient(depthTarget, glDepthTex.Texture);
                 CheckLastError();
 
                 GLFramebufferAttachment framebufferAttachment = GLFramebufferAttachment.DepthAttachment;

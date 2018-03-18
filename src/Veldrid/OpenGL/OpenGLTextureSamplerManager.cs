@@ -12,8 +12,10 @@ namespace Veldrid.OpenGL
     {
         private readonly bool _dsaAvailable;
         private readonly int _maxTextureUnits;
+        private readonly uint _lastTextureUnit;
         private readonly OpenGLTextureView[] _textureUnitTextures;
         private readonly BoundSamplerStateInfo[] _textureUnitSamplers;
+        private uint _currentActiveUnit = 0;
 
         public OpenGLTextureSamplerManager(OpenGLExtensions extensions)
         {
@@ -24,6 +26,8 @@ namespace Veldrid.OpenGL
             _maxTextureUnits = Math.Max(maxTextureUnits, 8); // OpenGL spec indicates that implementations must support at least 8.
             _textureUnitTextures = new OpenGLTextureView[_maxTextureUnits];
             _textureUnitSamplers = new BoundSamplerStateInfo[_maxTextureUnits];
+
+            _lastTextureUnit = (uint)(_maxTextureUnits - 1);
         }
 
         public void SetTexture(uint textureUnit, OpenGLTextureView textureView)
@@ -39,8 +43,7 @@ namespace Veldrid.OpenGL
                 }
                 else
                 {
-                    glActiveTexture(TextureUnit.Texture0 + (int)textureUnit);
-                    CheckLastError();
+                    SetActiveTextureUnit(textureUnit);
                     glBindTexture(textureView.TextureTarget, textureID);
                     CheckLastError();
                 }
@@ -48,6 +51,14 @@ namespace Veldrid.OpenGL
                 EnsureSamplerMipmapState(textureUnit, textureView.MipLevels > 1);
                 _textureUnitTextures[textureUnit] = textureView;
             }
+        }
+
+        public void SetTextureTransient(TextureTarget target, uint texture)
+        {
+            _textureUnitTextures[_lastTextureUnit] = null;
+            SetActiveTextureUnit(_lastTextureUnit);
+            glBindTexture(target, texture);
+            CheckLastError();
         }
 
         public void SetSampler(uint textureUnit, OpenGLSampler sampler)
@@ -70,6 +81,16 @@ namespace Veldrid.OpenGL
             else if (_textureUnitTextures[textureUnit] != null)
             {
                 EnsureSamplerMipmapState(textureUnit, _textureUnitTextures[textureUnit].MipLevels > 1);
+            }
+        }
+
+        private void SetActiveTextureUnit(uint textureUnit)
+        {
+            if (_currentActiveUnit != textureUnit)
+            {
+                glActiveTexture(TextureUnit.Texture0 + (int)textureUnit);
+                CheckLastError();
+                _currentActiveUnit = textureUnit;
             }
         }
 

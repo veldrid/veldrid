@@ -140,7 +140,7 @@ namespace Veldrid.OpenGL
                 glGenTextures(1, out _texture);
                 CheckLastError();
 
-                glBindTexture(TextureTarget, _texture);
+                _gd.TextureSamplerManager.SetTextureTransient(TextureTarget, _texture);
                 CheckLastError();
             }
 
@@ -512,11 +512,7 @@ namespace Veldrid.OpenGL
                 glBindFramebuffer(framebufferTarget, _framebuffers[subresource]);
                 CheckLastError();
 
-                glActiveTexture(TextureUnit.Texture0);
-                CheckLastError();
-
-                glBindTexture(TextureTarget, Texture);
-                CheckLastError();
+                _gd.TextureSamplerManager.SetTextureTransient(TextureTarget, Texture);
 
                 if (TextureTarget == TextureTarget.Texture2D || TextureTarget == TextureTarget.Texture2DMultisample)
                 {

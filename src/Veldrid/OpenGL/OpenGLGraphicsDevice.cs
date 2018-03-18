@@ -22,6 +22,7 @@ namespace Veldrid.OpenGL
         private readonly Action _swapBuffers;
         private readonly Action<bool> _setSyncToVBlank;
         private readonly OpenGLSwapchainFramebuffer _swapchainFramebuffer;
+        private readonly OpenGLTextureSamplerManager _textureSamplerManager;
         private readonly OpenGLCommandExecutor _commandExecutor;
         private DebugProc _debugMessageCallback;
         private readonly OpenGLExtensions _extensions;
@@ -66,6 +67,8 @@ namespace Veldrid.OpenGL
                 }
             }
         }
+
+        public OpenGLTextureSamplerManager TextureSamplerManager => _textureSamplerManager;
 
         public OpenGLGraphicsDevice(
             GraphicsDeviceOptions options,
@@ -132,7 +135,8 @@ namespace Veldrid.OpenGL
             glEnable(EnableCap.TextureCubeMapSeamless);
             CheckLastError();
 
-            _commandExecutor = new OpenGLCommandExecutor(_extensions, _stagingMemoryPool);
+            _textureSamplerManager = new OpenGLTextureSamplerManager(_extensions);
+            _commandExecutor = new OpenGLCommandExecutor(_textureSamplerManager, _extensions, _stagingMemoryPool);
 
             int maxColorTextureSamples;
             glGetIntegerv(GetPName.MaxColorTextureSamples, &maxColorTextureSamples);
@@ -705,7 +709,7 @@ namespace Veldrid.OpenGL
                                     }
                                     else
                                     {
-                                        glBindTexture(texture.TextureTarget, texture.Texture);
+                                        _gd.TextureSamplerManager.SetTextureTransient(texture.TextureTarget, texture.Texture);
                                         CheckLastError();
 
                                         if (texture.TextureTarget == TextureTarget.Texture2DArray
@@ -764,7 +768,7 @@ namespace Veldrid.OpenGL
                                                 $"Mapping an OpenGL compressed array Texture requires ARB_DirectStateAccess.");
                                         }
 
-                                        glBindTexture(texture.TextureTarget, texture.Texture);
+                                        _gd.TextureSamplerManager.SetTextureTransient(texture.TextureTarget, texture.Texture);
                                         CheckLastError();
 
                                         glGetCompressedTexImage(texture.TextureTarget, (int)mipLevel, block.Data);

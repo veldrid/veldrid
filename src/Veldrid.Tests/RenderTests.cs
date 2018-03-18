@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Veldrid.Tests.Shaders;
@@ -411,11 +412,135 @@ namespace Veldrid.Tests
                 }
 
                 RgbaFloat expectedColor = new RgbaFloat(
-                    vertex.R/ (float)colorNormalizationFactor,
+                    vertex.R / (float)colorNormalizationFactor,
                     vertex.G / (float)colorNormalizationFactor,
                     vertex.B / (float)colorNormalizationFactor,
                     1);
                 Assert.Equal(expectedColor, readView[x, y], RgbaFloatFuzzyComparer.Instance);
+            }
+            GD.Unmap(staging);
+        }
+
+        [Fact]
+        public unsafe void Points_WithTexture_UpdateUnrelated()
+        {
+            // This is a regression test for the case where a user modifies an unrelated texture
+            // at a time after a ResourceSet containing a texture has been bound. The OpenGL
+            // backend was caching texture state improperly, resulting in wrong textures being sampled.
+
+            Texture target = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            Texture staging = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
+
+            Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, target));
+
+            DeviceBuffer orthoBuffer = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            Matrix4x4 orthoMatrix = Matrix4x4.CreateOrthographicOffCenter(
+                0,
+                framebuffer.Width,
+                framebuffer.Height,
+                0,
+                -1,
+                1);
+            GD.UpdateBuffer(orthoBuffer, 0, ref orthoMatrix);
+
+            Texture sampledTexture = RF.CreateTexture(
+                TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
+            TextureView view = RF.CreateTextureView(sampledTexture);
+            RgbaFloat white = RgbaFloat.White;
+            GD.UpdateTexture(sampledTexture, (IntPtr)(&white), (uint)Unsafe.SizeOf<RgbaFloat>(), 0, 0, 0, 1, 1, 1, 0, 0);
+
+            Texture shouldntBeSampledTexture = RF.CreateTexture(
+                TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
+
+            ShaderSetDescription shaderSet = new ShaderSetDescription(
+                new VertexLayoutDescription[]
+                {
+                    new VertexLayoutDescription(
+                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2))
+                },
+                new Shader[]
+                {
+                    TestShaders.Load(RF, "TexturedPoints", ShaderStages.Vertex, "VS"),
+                    TestShaders.Load(RF, "TexturedPoints", ShaderStages.Fragment, "FS")
+                });
+
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("Ortho", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("Smp", ResourceKind.Sampler, ShaderStages.Fragment)));
+
+            ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, orthoBuffer, view, GD.PointSampler));
+
+            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.Default,
+                PrimitiveTopology.PointList,
+                shaderSet,
+                layout,
+                framebuffer.OutputDescription);
+
+            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+
+
+            Vector2[] vertices = new Vector2[]
+            {
+                new Vector2(0.5f, 0.5f),
+                new Vector2(15.5f, 15.5f),
+                new Vector2(25.5f, 26.5f),
+                new Vector2(3.5f, 25.5f),
+            };
+
+            DeviceBuffer vb = RF.CreateBuffer(
+                new BufferDescription((uint)(Unsafe.SizeOf<Vector2>() * vertices.Length), BufferUsage.VertexBuffer));
+            GD.UpdateBuffer(vb, 0, vertices);
+
+            CommandList cl = RF.CreateCommandList();
+
+            for (int i = 0; i < 2; i++)
+            {
+                cl.Begin();
+                cl.SetFramebuffer(framebuffer);
+                cl.ClearColorTarget(0, RgbaFloat.Black);
+                cl.SetPipeline(pipeline);
+                cl.SetVertexBuffer(0, vb);
+                cl.SetGraphicsResourceSet(0, set);
+
+                // Modify an unrelated texture.
+                // This must have no observable effect on the next draw call.
+                RgbaFloat pink = RgbaFloat.Pink;
+                GD.UpdateTexture(shouldntBeSampledTexture,
+                    (IntPtr)(&pink), (uint)Unsafe.SizeOf<RgbaFloat>(),
+                    0, 0, 0,
+                    1, 1, 1,
+                    0, 0);
+
+                cl.Draw((uint)vertices.Length);
+                cl.End();
+                GD.SubmitCommands(cl);
+                GD.WaitForIdle();
+            }
+
+            cl.Begin();
+            cl.CopyTexture(target, staging);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read);
+
+            foreach (Vector2 vertex in vertices)
+            {
+                uint x = (uint)vertex.X;
+                uint y = (uint)vertex.Y;
+                if (GD.BackendType == GraphicsBackend.OpenGL)
+                {
+                    y = framebuffer.Height - y - 1;
+                }
+
+                Assert.Equal(white, readView[x, y], RgbaFloatFuzzyComparer.Instance);
             }
             GD.Unmap(staging);
         }

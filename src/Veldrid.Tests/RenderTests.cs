@@ -133,7 +133,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (GD.BackendType == GraphicsBackend.OpenGL)
+                if (HasInvertedY(GD.BackendType))
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -255,7 +255,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (GD.BackendType == GraphicsBackend.OpenGL)
+                if (HasInvertedY(GD.BackendType))
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -406,7 +406,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (GD.BackendType == GraphicsBackend.OpenGL)
+                if (HasInvertedY(GD.BackendType))
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -535,7 +535,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.X;
                 uint y = (uint)vertex.Y;
-                if (GD.BackendType == GraphicsBackend.OpenGL)
+                if (HasInvertedY(GD.BackendType))
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -544,9 +544,19 @@ namespace Veldrid.Tests
             }
             GD.Unmap(staging);
         }
+
+        private bool HasInvertedY(GraphicsBackend backendType)
+        {
+            return backendType == GraphicsBackend.OpenGL || backendType == GraphicsBackend.OpenGLES;
+        }
     }
 
+#if TEST_OPENGL
     public class OpenGLRenderTests : RenderTests<OpenGLDeviceCreator> { }
+#endif
+#if TEST_OPENGLES
+    public class OpenGLESRenderTests : RenderTests<OpenGLESDeviceCreator> { }
+#endif
 #if TEST_VULKAN
     public class VulkanRenderTests : RenderTests<VulkanDeviceCreator> { }
 #endif

@@ -22,6 +22,7 @@ namespace Veldrid.Tests
                 case GraphicsBackend.Direct3D11: return "hlsl.bytes";
                 case GraphicsBackend.Vulkan: return "450.glsl.spv";
                 case GraphicsBackend.OpenGL: return "330.glsl";
+                case GraphicsBackend.OpenGLES: return "300.glsles";
                 case GraphicsBackend.Metal: return "metallib";
                 default: throw new InvalidOperationException();
             }

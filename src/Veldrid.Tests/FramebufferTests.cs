@@ -98,8 +98,14 @@ namespace Veldrid.Tests
         }
     }
 
+#if TEST_OPENGL
     public class OpenGLFramebufferTests : FramebufferTests<OpenGLDeviceCreator> { }
     public class OpenGLSwapchainFramebufferTests : SwapchainFramebufferTests<OpenGLDeviceCreator> { }
+#endif
+#if TEST_OPENGLES
+    public class OpenGLESFramebufferTests : FramebufferTests<OpenGLESDeviceCreator> { }
+    public class OpenGLESSwapchainFramebufferTests : SwapchainFramebufferTests<OpenGLESDeviceCreator> { }
+#endif
 #if TEST_VULKAN
     public class VulkanFramebufferTests : FramebufferTests<VulkanDeviceCreator> { }
     public class VulkanSwapchainFramebufferTests : SwapchainFramebufferTests<VulkanDeviceCreatorWithMainSwapchain> { }

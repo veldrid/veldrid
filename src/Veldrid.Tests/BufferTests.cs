@@ -407,7 +407,12 @@ namespace Veldrid.Tests
         }
     }
 
+#if TEST_OPENGL
     public class OpenGLBufferTests : BufferTestBase<OpenGLDeviceCreator> { }
+#endif
+#if TEST_OPENGLES
+    public class OpenGLESBufferTests : BufferTestBase<OpenGLESDeviceCreator> { }
+#endif
 #if TEST_VULKAN
     public class VulkanBufferTests : BufferTestBase<VulkanDeviceCreator> { }
 #endif

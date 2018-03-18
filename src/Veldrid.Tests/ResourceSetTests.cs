@@ -80,7 +80,12 @@ namespace Veldrid.Tests
         }
     }
 
+#if TEST_OPENGL
     public class OpenGLResourceSetTests : ResourceSetTests<OpenGLDeviceCreator> { }
+#endif
+#if TEST_OPENGLES
+    public class OpenGLESResourceSetTests : ResourceSetTests<OpenGLESDeviceCreator> { }
+#endif
 #if TEST_VULKAN
     public class VulkanResourceSetTests : ResourceSetTests<VulkanDeviceCreator> { }
 #endif

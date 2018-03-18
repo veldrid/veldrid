@@ -13,7 +13,7 @@
     <Copyright>Copyright 2017 (c) Eric Mellino. All rights reserved.</Copyright>
     <Authors>Eric Mellino</Authors>
     <RepositoryUrl>https://github.com/mellinoe/veldrid</RepositoryUrl>
-    <ShaderGenVersion>1.1.0-gbcbafe732a</ShaderGenVersion>
+    <ShaderGenVersion>1.2.0-ge02b1917b3</ShaderGenVersion>
   </PropertyGroup>
 
   <PropertyGroup>

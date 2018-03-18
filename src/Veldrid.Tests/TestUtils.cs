@@ -98,6 +98,27 @@ namespace Veldrid.Tests
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGL, out window, out gd);
         }
 
+        internal static void CreateOpenGLESDevice(out Sdl2Window window, out GraphicsDevice gd)
+        {
+            if (!InitializedSdl2)
+            {
+                window = null;
+                gd = null;
+                return;
+            }
+
+            WindowCreateInfo wci = new WindowCreateInfo
+            {
+                WindowWidth = 200,
+                WindowHeight = 200,
+                WindowInitialState = WindowState.Hidden,
+            };
+
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false);
+
+            VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGLES, out window, out gd);
+        }
+
         public static GraphicsDevice CreateMetalDevice()
         {
             return GraphicsDevice.CreateMetal(new GraphicsDeviceOptions(true));
@@ -205,6 +226,14 @@ namespace Veldrid.Tests
         public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
         {
             TestUtils.CreateOpenGLDevice(out window, out gd);
+        }
+    }
+
+    public class OpenGLESDeviceCreator : GraphicsDeviceCreator
+    {
+        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        {
+            TestUtils.CreateOpenGLESDevice(out window, out gd);
         }
     }
 

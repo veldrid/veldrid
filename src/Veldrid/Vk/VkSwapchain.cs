@@ -3,6 +3,7 @@ using Vulkan;
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Vk
 {
@@ -16,6 +17,7 @@ namespace Veldrid.Vk
         private readonly uint _presentQueueIndex;
         private readonly VkQueue _presentQueue;
         private bool _syncToVBlank;
+        private readonly SwapchainSource _swapchainSource;
         private bool? _newSyncToVBlank;
         private uint _currentImageIndex;
         private string _name;
@@ -47,10 +49,11 @@ namespace Veldrid.Vk
         {
             _gd = gd;
             _syncToVBlank = description.SyncToVerticalBlank;
+            _swapchainSource = description.Source;
 
             if (existingSurface == VkSurfaceKHR.Null)
             {
-                VkSurfaceSource surfaceSource = VkSurfaceSource.CreateFromSwapchainSource(description.Source);
+                VkSurfaceSource surfaceSource = VkSurfaceSource.CreateFromSwapchainSource(_swapchainSource);
                 _surface = surfaceSource.CreateSurface(gd.Instance);
             }
             else
@@ -261,6 +264,15 @@ namespace Veldrid.Vk
             vkDestroyFence(_gd.Device, _imageAvailableFence, null);
             _framebuffer.Dispose();
             vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
+
+            if (_swapchainSource is ANativeWindowSwapchainSource aNativeWindowSource)
+            {
+                ANativeWindow_release(aNativeWindowSource.ANativeWindow);
+            }
         }
+
+        // TODO: Move this somewhere else.
+        [DllImport("android.so")]
+        public static extern void ANativeWindow_release(IntPtr aNativeWindow);
     }
 }

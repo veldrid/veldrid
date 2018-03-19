@@ -380,6 +380,43 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
+        [Fact]
+        public void UpdateUniform_Offset_NonStaging_GraphicsDevice()
+        {
+            DeviceBuffer buffer = CreateBuffer(128, BufferUsage.UniformBuffer);
+            Matrix4x4 mat1 = new Matrix4x4(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+            GD.UpdateBuffer(buffer, 0, ref mat1);
+            Matrix4x4 mat2 = new Matrix4x4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+            GD.UpdateBuffer(buffer, 64, ref mat2);
+
+            DeviceBuffer readback = GetReadback(buffer);
+            MappedResourceView<Matrix4x4> readView = GD.Map<Matrix4x4>(readback, MapMode.Read);
+            Assert.Equal(mat1, readView[0]);
+            Assert.Equal(mat2, readView[1]);
+            GD.Unmap(readback);
+        }
+
+        [Fact]
+        public void UpdateUniform_Offset_NonStaging_CommandList()
+        {
+            DeviceBuffer buffer = CreateBuffer(128, BufferUsage.UniformBuffer);
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            Matrix4x4 mat1 = new Matrix4x4(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+            cl.UpdateBuffer(buffer, 0, ref mat1);
+            Matrix4x4 mat2 = new Matrix4x4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+            cl.UpdateBuffer(buffer, 64, ref mat2);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            DeviceBuffer readback = GetReadback(buffer);
+            MappedResourceView<Matrix4x4> readView = GD.Map<Matrix4x4>(readback, MapMode.Read);
+            Assert.Equal(mat1, readView[0]);
+            Assert.Equal(mat2, readView[1]);
+            GD.Unmap(readback);
+        }
+
         private DeviceBuffer CreateBuffer(uint size, BufferUsage usage)
         {
             return RF.CreateBuffer(new BufferDescription(size, usage));

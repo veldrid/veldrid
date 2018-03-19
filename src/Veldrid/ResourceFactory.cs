@@ -257,7 +257,17 @@ namespace Veldrid
         /// <returns>A new <see cref="Fence"/>.</returns>
         public abstract Fence CreateFence(bool signaled);
 
+        /// <summary>
+        /// Creates a new <see cref="Swapchain"/>.
+        /// </summary>
+        /// <param name="description">The desired properties of the created object.</param>
+        /// <returns>A new <see cref="Swapchain"/>.</returns>
         public Swapchain CreateSwapchain(SwapchainDescription description) => CreateSwapchain(ref description);
+        /// <summary>
+        /// Creates a new <see cref="Swapchain"/>.
+        /// </summary>
+        /// <param name="description">The desired properties of the created object.</param>
+        /// <returns>A new <see cref="Swapchain"/>.</returns>
         public abstract Swapchain CreateSwapchain(ref SwapchainDescription description);
     }
 }

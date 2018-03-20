@@ -220,56 +220,6 @@ namespace Veldrid.D3D11
 
         protected unsafe override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            //D3D11Buffer d3dBuffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
-            //if (sizeInBytes == 0)
-            //{
-            //    return;
-            //}
-
-            //bool updateWholeBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
-            //bool isDynamic = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
-            //bool isStaging = (buffer.Usage & BufferUsage.Staging) == BufferUsage.Staging;
-            //bool useMap = (isDynamic && updateWholeBuffer) || isStaging;
-
-            //if (useMap)
-            //{
-            //    MappedResource mr = MapCore(buffer, MapMode.Write, 0);
-            //    if (sizeInBytes < 1024)
-            //    {
-            //        Unsafe.CopyBlock((byte*)mr.Data.ToPointer() + bufferOffsetInBytes, source.ToPointer(), sizeInBytes);
-            //    }
-            //    else
-            //    {
-            //        System.Buffer.MemoryCopy(
-            //            source.ToPointer(),
-            //            (byte*)mr.Data.ToPointer() + bufferOffsetInBytes,
-            //            buffer.SizeInBytes,
-            //            sizeInBytes);
-            //    }
-            //    UnmapCore(buffer, 0);
-            //}
-            //else if (!isDynamic)
-            //{
-            //    ResourceRegion? subregion = null;
-            //    if ((d3dBuffer.Buffer.Description.BindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
-            //    {
-            //        // For a shader-constant buffer; set pDstBox to null. It is not possible to use
-            //        // this method to partially update a shader-constant buffer
-
-            //        subregion = new ResourceRegion()
-            //        {
-            //            Left = (int)bufferOffsetInBytes,
-            //            Right = (int)(sizeInBytes + bufferOffsetInBytes),
-            //            Bottom = 1,
-            //            Back = 1
-            //        };
-            //    }
-            //    lock (_immediateContextLock)
-            //    {
-            //        _immediateContext.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
-            //    }
-            //}
-
             D3D11Buffer d3dBuffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
             if (sizeInBytes == 0)
             {

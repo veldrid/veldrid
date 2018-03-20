@@ -23,6 +23,9 @@ namespace Veldrid.D3D11
         private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
             = new Dictionary<MappedResourceCacheKey, MappedResourceInfo>();
 
+        private readonly List<D3D11Buffer> _availableStagingBuffers = new List<D3D11Buffer>();
+        private readonly List<D3D11Buffer> _submittedStagingBuffers = new List<D3D11Buffer>();
+
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
         public override ResourceFactory ResourceFactory => _d3d11ResourceFactory;
@@ -217,54 +220,131 @@ namespace Veldrid.D3D11
 
         protected unsafe override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
+            //D3D11Buffer d3dBuffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
+            //if (sizeInBytes == 0)
+            //{
+            //    return;
+            //}
+
+            //bool updateWholeBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
+            //bool isDynamic = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
+            //bool isStaging = (buffer.Usage & BufferUsage.Staging) == BufferUsage.Staging;
+            //bool useMap = (isDynamic && updateWholeBuffer) || isStaging;
+
+            //if (useMap)
+            //{
+            //    MappedResource mr = MapCore(buffer, MapMode.Write, 0);
+            //    if (sizeInBytes < 1024)
+            //    {
+            //        Unsafe.CopyBlock((byte*)mr.Data.ToPointer() + bufferOffsetInBytes, source.ToPointer(), sizeInBytes);
+            //    }
+            //    else
+            //    {
+            //        System.Buffer.MemoryCopy(
+            //            source.ToPointer(),
+            //            (byte*)mr.Data.ToPointer() + bufferOffsetInBytes,
+            //            buffer.SizeInBytes,
+            //            sizeInBytes);
+            //    }
+            //    UnmapCore(buffer, 0);
+            //}
+            //else if (!isDynamic)
+            //{
+            //    ResourceRegion? subregion = null;
+            //    if ((d3dBuffer.Buffer.Description.BindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
+            //    {
+            //        // For a shader-constant buffer; set pDstBox to null. It is not possible to use
+            //        // this method to partially update a shader-constant buffer
+
+            //        subregion = new ResourceRegion()
+            //        {
+            //            Left = (int)bufferOffsetInBytes,
+            //            Right = (int)(sizeInBytes + bufferOffsetInBytes),
+            //            Bottom = 1,
+            //            Back = 1
+            //        };
+            //    }
+            //    lock (_immediateContextLock)
+            //    {
+            //        _immediateContext.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+            //    }
+            //}
+
             D3D11Buffer d3dBuffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
             if (sizeInBytes == 0)
             {
                 return;
             }
 
-            bool useMap = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic
-                || (buffer.Usage & BufferUsage.Staging) == BufferUsage.Staging;
+            bool isDynamic = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
+            bool isStaging = (buffer.Usage & BufferUsage.Staging) == BufferUsage.Staging;
+            bool isUniformBuffer = (buffer.Usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer;
+            bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
+            bool useUpdateSubresource = (!isDynamic && !isStaging) && (!isUniformBuffer || updateFullBuffer);
+            bool useMap = (isDynamic && updateFullBuffer) || isStaging;
 
-            if (useMap)
+            if (useUpdateSubresource)
             {
-                if (bufferOffsetInBytes != 0)
+                ResourceRegion? subregion = new ResourceRegion()
                 {
-                    throw new NotImplementedException("bufferOffsetInBytes must be 0 for Dynamic Buffers.");
+                    Left = (int)bufferOffsetInBytes,
+                    Right = (int)(sizeInBytes + bufferOffsetInBytes),
+                    Bottom = 1,
+                    Back = 1
+                };
+
+                if (isUniformBuffer)
+                {
+                    subregion = null;
                 }
 
+                _immediateContext.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+            }
+            else if (useMap)
+            {
                 MappedResource mr = MapCore(buffer, MapMode.Write, 0);
                 if (sizeInBytes < 1024)
                 {
-                    Unsafe.CopyBlock(mr.Data.ToPointer(), source.ToPointer(), sizeInBytes);
+                    Unsafe.CopyBlock((byte*)mr.Data + bufferOffsetInBytes, source.ToPointer(), sizeInBytes);
                 }
                 else
                 {
-                    System.Buffer.MemoryCopy(source.ToPointer(), mr.Data.ToPointer(), buffer.SizeInBytes, sizeInBytes);
+                    System.Buffer.MemoryCopy(
+                        source.ToPointer(),
+                        (byte*)mr.Data + bufferOffsetInBytes,
+                        buffer.SizeInBytes,
+                        sizeInBytes);
                 }
                 UnmapCore(buffer, 0);
             }
             else
             {
-                ResourceRegion? subregion = null;
-                if ((d3dBuffer.Buffer.Description.BindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
-                {
-                    // For a shader-constant buffer; set pDstBox to null. It is not possible to use
-                    // this method to partially update a shader-constant buffer
+                D3D11Buffer staging = GetFreeStagingBuffer(sizeInBytes);
+                UpdateBuffer(staging, 0, source, sizeInBytes);
+                ResourceRegion sourceRegion = new ResourceRegion(0, 0, 0, (int)sizeInBytes, 1, 1);
+                _immediateContext.CopySubresourceRegion(
+                    staging.Buffer, 0, sourceRegion,
+                    d3dBuffer.Buffer, 0,
+                    (int)bufferOffsetInBytes, 0, 0);
+                _availableStagingBuffers.Add(staging);
+            }
+        }
 
-                    subregion = new ResourceRegion()
-                    {
-                        Left = (int)bufferOffsetInBytes,
-                        Right = (int)(sizeInBytes + bufferOffsetInBytes),
-                        Bottom = 1,
-                        Back = 1
-                    };
-                }
-                lock (_immediateContextLock)
+        private D3D11Buffer GetFreeStagingBuffer(uint sizeInBytes)
+        {
+            foreach (D3D11Buffer buffer in _availableStagingBuffers)
+            {
+                if (buffer.SizeInBytes >= sizeInBytes)
                 {
-                    _immediateContext.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+                    _availableStagingBuffers.Remove(buffer);
+                    return buffer;
                 }
             }
+
+            DeviceBuffer staging = ResourceFactory.CreateBuffer(
+                new BufferDescription(sizeInBytes, BufferUsage.Staging));
+
+            return Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(staging);
         }
 
         protected unsafe override void UpdateTextureCore(

@@ -958,22 +958,23 @@ namespace Veldrid.D3D11
 
             bool isDynamic = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
             bool isStaging = (buffer.Usage & BufferUsage.Staging) == BufferUsage.Staging;
-            bool useMap = isDynamic || isStaging;
-            if (!useMap)
-            {
-                ResourceRegion? subregion = null;
-                if ((d3dBuffer.Buffer.Description.BindFlags & BindFlags.ConstantBuffer) != BindFlags.ConstantBuffer)
-                {
-                    // For a shader-constant buffer; set pDstBox to null. It is not possible to use
-                    // this method to partially update a shader-constant buffer
+            bool isUniformBuffer = (buffer.Usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer;
+            bool useMap = isDynamic;
+            bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
+            bool useUpdateSubresource = !isDynamic &&!isStaging && (!isUniformBuffer || updateFullBuffer);
 
-                    subregion = new ResourceRegion()
-                    {
-                        Left = (int)bufferOffsetInBytes,
-                        Right = (int)(sizeInBytes + bufferOffsetInBytes),
-                        Bottom = 1,
-                        Back = 1
-                    };
+            if (useUpdateSubresource)
+            {
+                ResourceRegion? subregion = new ResourceRegion()
+                {
+                    Left = (int)bufferOffsetInBytes,
+                    Right = (int)(sizeInBytes + bufferOffsetInBytes),
+                    Bottom = 1,
+                    Back = 1
+                };
+                if (isUniformBuffer)
+                {
+                    subregion = null;
                 }
 
                 if (bufferOffsetInBytes == 0)
@@ -985,33 +986,29 @@ namespace Veldrid.D3D11
                     _context1.UpdateSubresource1(d3dBuffer.Buffer, 0, subregion, source, 0, 0, 0);
                 }
             }
-            else
+            else if (useMap && updateFullBuffer) // Can only update full buffer with WriteDiscard.
             {
-                bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
-                if (updateFullBuffer && isDynamic)
+                SharpDX.DataBox db = _context.MapSubresource(
+                    d3dBuffer.Buffer,
+                    0,
+                    D3D11Formats.VdToD3D11MapMode(isDynamic, MapMode.Write),
+                    MapFlags.None);
+                if (sizeInBytes < 1024)
                 {
-                    SharpDX.DataBox db = _context.MapSubresource(
-                        d3dBuffer.Buffer,
-                        0,
-                        SharpDX.Direct3D11.MapMode.WriteDiscard,
-                        MapFlags.None);
-                    if (sizeInBytes < 1024)
-                    {
-                        Unsafe.CopyBlock(db.DataPointer.ToPointer(), source.ToPointer(), sizeInBytes);
-                    }
-                    else
-                    {
-                        System.Buffer.MemoryCopy(source.ToPointer(), db.DataPointer.ToPointer(), buffer.SizeInBytes, sizeInBytes);
-                    }
-                    _context.UnmapSubresource(d3dBuffer.Buffer, 0);
+                    Unsafe.CopyBlock(db.DataPointer.ToPointer(), source.ToPointer(), sizeInBytes);
                 }
                 else
                 {
-                    D3D11Buffer staging = GetFreeStagingBuffer(sizeInBytes);
-                    _gd.UpdateBuffer(staging, 0, source, sizeInBytes);
-                    CopyBuffer(staging, 0, buffer, bufferOffsetInBytes, sizeInBytes);
-                    _submittedStagingBuffers.Add(staging);
+                    System.Buffer.MemoryCopy(source.ToPointer(), db.DataPointer.ToPointer(), buffer.SizeInBytes, sizeInBytes);
                 }
+                _context.UnmapSubresource(d3dBuffer.Buffer, 0);
+            }
+            else
+            {
+                D3D11Buffer staging = GetFreeStagingBuffer(sizeInBytes);
+                _gd.UpdateBuffer(staging, 0, source, sizeInBytes);
+                CopyBuffer(staging, 0, buffer, bufferOffsetInBytes, sizeInBytes);
+                _submittedStagingBuffers.Add(staging);
             }
         }
 

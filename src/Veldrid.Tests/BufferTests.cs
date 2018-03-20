@@ -380,10 +380,13 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
-        [Fact]
-        public void UpdateUniform_Offset_NonStaging_GraphicsDevice()
+        [Theory]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.UniformBuffer)]
+        [InlineData(BufferUsage.Staging)]
+        public void UpdateUniform_Offset_GraphicsDevice(BufferUsage usage)
         {
-            DeviceBuffer buffer = CreateBuffer(128, BufferUsage.UniformBuffer);
+            DeviceBuffer buffer = CreateBuffer(128, usage);
             Matrix4x4 mat1 = new Matrix4x4(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
             GD.UpdateBuffer(buffer, 0, ref mat1);
             Matrix4x4 mat2 = new Matrix4x4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
@@ -396,10 +399,13 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
-        [Fact]
-        public void UpdateUniform_Offset_NonStaging_CommandList()
+        [Theory]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.UniformBuffer)]
+        [InlineData(BufferUsage.Staging)]
+        public void UpdateUniform_Offset_CommandList(BufferUsage usage)
         {
-            DeviceBuffer buffer = CreateBuffer(128, BufferUsage.UniformBuffer);
+            DeviceBuffer buffer = CreateBuffer(128, usage);
             CommandList cl = RF.CreateCommandList();
             cl.Begin();
             Matrix4x4 mat1 = new Matrix4x4(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);

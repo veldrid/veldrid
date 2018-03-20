@@ -7,6 +7,7 @@ namespace Veldrid.Vk
 {
     internal unsafe static class VulkanUtil
     {
+        private static Lazy<bool> s_isVulkanLoaded = new Lazy<bool>(TryLoadVulkan);
         private static readonly Lazy<string[]> s_instanceExtensions = new Lazy<string[]>(EnumerateInstanceExtensions);
 
         [Conditional("DEBUG")]
@@ -134,7 +135,8 @@ namespace Veldrid.Vk
             return ret;
         }
 
-        public static bool IsVulkanLoaded()
+        public static bool IsVulkanLoaded() => s_isVulkanLoaded.Value;
+        private static bool TryLoadVulkan()
         {
             try
             {

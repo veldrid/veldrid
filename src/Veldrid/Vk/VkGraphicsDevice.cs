@@ -851,18 +851,20 @@ namespace Veldrid.Vk
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
             VkBuffer copySrcVkBuffer = null;
             IntPtr mappedPtr;
+            byte* destPtr;
             bool isPersistentMapped = vkBuffer.Memory.IsPersistentMapped;
             if (isPersistentMapped)
             {
                 mappedPtr = (IntPtr)vkBuffer.Memory.BlockMappedPointer;
+                destPtr = (byte*)mappedPtr + bufferOffsetInBytes;
             }
             else
             {
                 copySrcVkBuffer = GetFreeStagingBuffer(sizeInBytes);
                 mappedPtr = (IntPtr)copySrcVkBuffer.Memory.BlockMappedPointer;
+                destPtr = (byte*)mappedPtr;
             }
 
-            byte* destPtr = (byte*)mappedPtr + bufferOffsetInBytes;
             Unsafe.CopyBlock(destPtr, source.ToPointer(), sizeInBytes);
 
             if (!isPersistentMapped)
@@ -870,7 +872,11 @@ namespace Veldrid.Vk
                 SharedCommandPool pool = GetFreeCommandPool();
                 VkCommandBuffer cb = pool.BeginNewCommandBuffer();
 
-                VkBufferCopy copyRegion = new VkBufferCopy { size = vkBuffer.BufferMemoryRequirements.size };
+                VkBufferCopy copyRegion = new VkBufferCopy
+                {
+                    dstOffset = bufferOffsetInBytes,
+                    size = sizeInBytes
+                };
                 vkCmdCopyBuffer(cb, copySrcVkBuffer.DeviceBuffer, vkBuffer.DeviceBuffer, 1, ref copyRegion);
 
                 pool.EndAndSubmit(cb);

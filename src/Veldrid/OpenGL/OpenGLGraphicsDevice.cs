@@ -92,7 +92,7 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
             MajorVersion = majorVersion;
-            MinorVersion = majorVersion;
+            MinorVersion = minorVersion;
 
             int extensionCount;
             glGetIntegerv(GetPName.NumExtensions, &extensionCount);

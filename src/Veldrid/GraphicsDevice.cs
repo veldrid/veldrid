@@ -595,7 +595,7 @@ namespace Veldrid
 #endif
                 case GraphicsBackend.Metal:
 #if !EXCLUDE_METAL_BACKEND
-                    return RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                    return MTL.MTLGraphicsDevice.IsSupported();
 #else
                     return false;
 #endif

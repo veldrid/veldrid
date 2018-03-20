@@ -126,6 +126,9 @@ namespace Veldrid.MetalBindings
         [DllImport(MetalFramework)]
         public static extern MTLDevice MTLCreateSystemDefaultDevice();
 
+        [DllImport(MetalFramework)]
+        public static extern NSArray MTLCopyAllDevices();
+
         private static readonly Selector sel_name = "name";
         private static readonly Selector sel_maxThreadsPerThreadgroup = "maxThreadsPerThreadgroup";
         private static readonly Selector sel_newLibraryWithSource = "newLibraryWithSource:options:error:";

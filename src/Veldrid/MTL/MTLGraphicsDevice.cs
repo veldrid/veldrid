@@ -11,6 +11,8 @@ namespace Veldrid.MTL
 {
     internal unsafe class MTLGraphicsDevice : GraphicsDevice
     {
+        private static readonly Lazy<bool> s_isSupported = new Lazy<bool>(GetIsSupported);
+
         private readonly MTLDevice _device;
         private readonly MTLCommandQueue _commandQueue;
         private readonly MTLSwapchain _mainSwapchain;
@@ -305,6 +307,40 @@ namespace Veldrid.MTL
         public override void ResetFence(Fence fence)
         {
             Util.AssertSubtype<Fence, MTLFence>(fence).Reset();
+        }
+
+        internal static bool IsSupported() => s_isSupported.Value;
+
+        private static bool GetIsSupported()
+        {
+            bool result = false;
+            try
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    if (RuntimeInformation.OSDescription.Contains("Darwin"))
+                    {
+                        NSArray allDevices = MTLDevice.MTLCopyAllDevices();
+                        result |= (ulong)allDevices.count > 0;
+                        ObjectiveCRuntime.release(allDevices.NativePtr);
+                    }
+                    else
+                    {
+                        MTLDevice defaultDevice = MTLDevice.MTLCreateSystemDefaultDevice();
+                        if (defaultDevice.NativePtr != IntPtr.Zero)
+                        {
+                            result = true;
+                            ObjectiveCRuntime.release(defaultDevice.NativePtr);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                result = false;
+            }
+
+            return result;
         }
 
         internal MTLComputePipelineState GetUnalignedBufferCopyPipeline()

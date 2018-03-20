@@ -248,7 +248,10 @@ namespace Veldrid.D3D11
                     subregion = null;
                 }
 
-                _immediateContext.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+                lock (_immediateContextLock)
+                {
+                    _immediateContext.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
+                }
             }
             else if (useMap)
             {
@@ -272,10 +275,13 @@ namespace Veldrid.D3D11
                 D3D11Buffer staging = GetFreeStagingBuffer(sizeInBytes);
                 UpdateBuffer(staging, 0, source, sizeInBytes);
                 ResourceRegion sourceRegion = new ResourceRegion(0, 0, 0, (int)sizeInBytes, 1, 1);
-                _immediateContext.CopySubresourceRegion(
-                    staging.Buffer, 0, sourceRegion,
-                    d3dBuffer.Buffer, 0,
-                    (int)bufferOffsetInBytes, 0, 0);
+                lock (_immediateContextLock)
+                {
+                    _immediateContext.CopySubresourceRegion(
+                        staging.Buffer, 0, sourceRegion,
+                        d3dBuffer.Buffer, 0,
+                        (int)bufferOffsetInBytes, 0, 0);
+                }
                 _availableStagingBuffers.Add(staging);
             }
         }

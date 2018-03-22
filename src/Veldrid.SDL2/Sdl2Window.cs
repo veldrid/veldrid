@@ -915,6 +915,7 @@ namespace Veldrid.Sdl2
         private void SetWindowSize(int width, int height)
         {
             SDL_SetWindowSize(_window, width, height);
+            _cachedSize.Value = new Point(width, height);
         }
 
         private IntPtr GetUnderlyingWindowHandle()

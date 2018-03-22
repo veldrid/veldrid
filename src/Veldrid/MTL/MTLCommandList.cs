@@ -148,18 +148,12 @@ namespace Veldrid.MTL
             {
                 if (_viewportsChanged)
                 {
-                    fixed (MTLViewport* viewportsPtr = &_viewports[0])
-                    {
-                        _rce.setViewports(viewportsPtr, (UIntPtr)_viewportCount);
-                    }
+                    FlushViewports();
                     _viewportsChanged = false;
                 }
                 if (_scissorRectsChanged && _graphicsPipeline.ScissorTestEnabled)
                 {
-                    fixed (MTLScissorRect* scissorRectsPtr = &_scissorRects[0])
-                    {
-                        _rce.setScissorRects(scissorRectsPtr, (UIntPtr)_viewportCount);
-                    }
+                    FlushScissorRects();
                     _scissorRectsChanged = false;
                 }
                 if (_graphicsPipelineChanged)
@@ -200,6 +194,36 @@ namespace Veldrid.MTL
             return false;
         }
 
+
+        private void FlushViewports()
+        {
+            if (_gd.Features.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3))
+            {
+                fixed (MTLViewport* viewportsPtr = &_viewports[0])
+                {
+                    _rce.setViewports(viewportsPtr, (UIntPtr)_viewportCount);
+                }
+            }
+            else
+            {
+                _rce.setViewport(_viewports[0]);
+            }
+        }
+
+        private void FlushScissorRects()
+        {
+            if (_gd.Features.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3))
+            {
+                fixed (MTLScissorRect* scissorRectsPtr = &_scissorRects[0])
+                {
+                    _rce.setScissorRects(scissorRectsPtr, (UIntPtr)_viewportCount);
+                }
+            }
+            else
+            {
+                _rce.setScissorRect(_scissorRects[0]);
+            }
+        }
 
         private void PreComputeCommand()
         {

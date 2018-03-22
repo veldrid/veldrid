@@ -89,8 +89,14 @@ namespace Veldrid.MetalBindings
                 indirectBuffer,
                 indirectBufferOffset);
 
+        public unsafe void setViewport(MTLViewport viewport)
+            => objc_msgSend(NativePtr, sel_setViewport, viewport);
+
         public unsafe void setViewports(MTLViewport* viewports, UIntPtr count)
             => objc_msgSend(NativePtr, sel_setViewports, viewports, count);
+
+        public unsafe void setScissorRect(MTLScissorRect scissorRect)
+            => objc_msgSend(NativePtr, sel_setScissorRect, scissorRect);
 
         public unsafe void setScissorRects(MTLScissorRect* scissorRects, UIntPtr count)
             => objc_msgSend(NativePtr, sel_setScissorRects, scissorRects, count);
@@ -130,7 +136,9 @@ namespace Veldrid.MetalBindings
         private static readonly Selector sel_drawIndexedPrimitives0 = "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:";
         private static readonly Selector sel_drawIndexedPrimitives1 = "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:";
         private static readonly Selector sel_drawIndexedPrimitives2 = "drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:";
+        private static readonly Selector sel_setViewport = "setViewport:";
         private static readonly Selector sel_setViewports = "setViewports:count:";
+        private static readonly Selector sel_setScissorRect = "setScissorRect:";
         private static readonly Selector sel_setScissorRects = "setScissorRects:count:";
         private static readonly Selector sel_setCullMode = "setCullMode:";
         private static readonly Selector sel_setFrontFacingWinding = "setFrontFacingWinding:";

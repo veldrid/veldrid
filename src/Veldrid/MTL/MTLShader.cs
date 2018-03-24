@@ -27,8 +27,19 @@ namespace Veldrid.MTL
                     IntPtr.Zero);
 
                 Library = gd.Device.newLibraryWithData(dispatchData);
-                Function = Library.newFunctionWithName(description.EntryPoint);
-                Dispatch.dispatch_release(dispatchData.NativePtr);
+                try
+                {
+                    Function = Library.newFunctionWithName(description.EntryPoint);
+                    if (Function.NativePtr == IntPtr.Zero)
+                    {
+                        throw new VeldridException(
+                            $"Failed to create Metal {description.Stage} Shader. The given entry point \"{description.EntryPoint}\" was not found.");
+                    }
+                }
+                finally
+                {
+                    Dispatch.dispatch_release(dispatchData.NativePtr);
+                }
             }
         }
 

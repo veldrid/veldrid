@@ -350,7 +350,15 @@ namespace Veldrid.OpenGL
         {
             _graphicsPipelineActive = true;
             _graphicsPipeline.EnsureResourcesCreated();
-            Util.ClearArray(_graphicsResourceSets); // Invalidate resource set bindings -- they may be invalid.
+
+            Util.EnsureArrayMinimumSize(ref _graphicsResourceSets, (uint)_graphicsPipeline.ResourceLayouts.Length);
+            Util.EnsureArrayMinimumSize(ref _newGraphicsResourceSets, (uint)_graphicsPipeline.ResourceLayouts.Length);
+
+            // Force ResourceSets to be re-bound.
+            for (int i = 0; i < _graphicsPipeline.ResourceLayouts.Length; i++)
+            {
+                _newGraphicsResourceSets[i] = true;
+            }
 
             // Blend State
 
@@ -496,18 +504,20 @@ namespace Veldrid.OpenGL
                 totalVertexElements += (uint)_graphicsPipeline.VertexLayouts[i].Elements.Length;
             }
             Util.EnsureArrayMinimumSize(ref _vertexAttribDivisors, totalVertexElements);
-
-            Util.EnsureArrayMinimumSize(ref _graphicsResourceSets, (uint)_graphicsPipeline.ResourceLayouts.Length);
-            Util.EnsureArrayMinimumSize(ref _newGraphicsResourceSets, (uint)_graphicsPipeline.ResourceLayouts.Length);
         }
 
         private void ActivateComputePipeline()
         {
             _graphicsPipelineActive = false;
             _computePipeline.EnsureResourcesCreated();
-            Util.ClearArray(_computeResourceSets); // Invalidate resource set bindings -- they may be invalid.
             Util.EnsureArrayMinimumSize(ref _computeResourceSets, (uint)_computePipeline.ResourceLayouts.Length);
             Util.EnsureArrayMinimumSize(ref _newComputeResourceSets, (uint)_computePipeline.ResourceLayouts.Length);
+
+            // Force ResourceSets to be re-bound.
+            for (int i = 0; i < _computePipeline.ResourceLayouts.Length; i++)
+            {
+                _newComputeResourceSets[i] = true;
+            }
 
             // Shader Set
             glUseProgram(_computePipeline.Program);

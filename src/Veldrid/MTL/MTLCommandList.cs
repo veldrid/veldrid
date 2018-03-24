@@ -263,7 +263,6 @@ namespace Veldrid.MTL
                 _computeResourceSetCount = (uint)_computePipeline.ResourceLayouts.Length;
                 Util.EnsureArrayMinimumSize(ref _computeResourceSets, _computeResourceSetCount);
                 Util.EnsureArrayMinimumSize(ref _computeResourceSetsActive, _computeResourceSetCount);
-                Util.ClearArray(_computeResourceSets);
                 Util.ClearArray(_computeResourceSetsActive);
                 _computePipelineChanged = true;
             }
@@ -273,7 +272,6 @@ namespace Veldrid.MTL
                 _graphicsResourceSetCount = (uint)_graphicsPipeline.ResourceLayouts.Length;
                 Util.EnsureArrayMinimumSize(ref _graphicsResourceSets, _graphicsResourceSetCount);
                 Util.EnsureArrayMinimumSize(ref _graphicsResourceSetsActive, _graphicsResourceSetCount);
-                Util.ClearArray(_graphicsResourceSets);
                 Util.ClearArray(_graphicsResourceSetsActive);
 
                 _vertexBufferCount = _graphicsPipeline.VertexBufferCount;

@@ -313,9 +313,7 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void Update_ThenMapRead_1D()
         {
-            // 1D textures not supported in OpenGLES.
-            // TODO: Capability API for this.
-            if (GD.BackendType == GraphicsBackend.OpenGLES) { return; }
+            if (!GD.Features.Texture1D) { return; }
 
             Texture tex1D = RF.CreateTexture(
                 TextureDescription.Texture1D(100, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
@@ -336,9 +334,7 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void MapWrite_ThenMapRead_1D()
         {
-            // 1D textures not supported in OpenGLES.
-            // TODO: Capability API for this.
-            if (GD.BackendType == GraphicsBackend.OpenGLES) { return; }
+            if (!GD.Features.Texture1D) { return; }
 
             Texture tex1D = RF.CreateTexture(
                 TextureDescription.Texture1D(100, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
@@ -362,9 +358,7 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void Copy_1DTo2D()
         {
-            // 1D textures not supported in OpenGLES.
-            // TODO: Capability API for this.
-            if (GD.BackendType == GraphicsBackend.OpenGLES) { return; }
+            if (!GD.Features.Texture1D) { return; }
 
             Texture tex1D = RF.CreateTexture(
                 TextureDescription.Texture1D(100, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
@@ -401,9 +395,7 @@ namespace Veldrid.Tests
         [Fact]
         public void Update_MultipleMips_1D()
         {
-            // 1D textures not supported in OpenGLES.
-            // TODO: Capability API for this.
-            if (GD.BackendType == GraphicsBackend.OpenGLES) { return; }
+            if (!GD.Features.Texture1D) { return; }
 
             Texture tex1D = RF.CreateTexture(TextureDescription.Texture1D(
                 100, 5, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
@@ -432,9 +424,7 @@ namespace Veldrid.Tests
         [Fact]
         public void Copy_DifferentMip_1DTo2D()
         {
-            // 1D textures not supported in OpenGLES.
-            // TODO: Capability API for this.
-            if (GD.BackendType == GraphicsBackend.OpenGLES) { return; }
+            if (!GD.Features.Texture1D) { return; }
 
             Texture tex1D = RF.CreateTexture(
                 TextureDescription.Texture1D(200, 2, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));

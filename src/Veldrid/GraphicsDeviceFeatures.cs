@@ -12,6 +12,7 @@
         public bool FillModeWireframe { get; }
         public bool SamplerAnisotropy { get; }
         public bool DepthClipDisable { get; }
+        public bool Texture1D { get; }
 
         public GraphicsDeviceFeatures(
             bool computeShader, 
@@ -23,7 +24,8 @@
             bool drawBaseInstance, 
             bool fillModeWireframe, 
             bool samplerAnisotropy, 
-            bool depthClipDisable)
+            bool depthClipDisable,
+            bool texture1D)
         {
             ComputeShader = computeShader;
             GeometryShader = geometryShader;
@@ -35,6 +37,7 @@
             FillModeWireframe = fillModeWireframe;
             SamplerAnisotropy = samplerAnisotropy;
             DepthClipDisable = depthClipDisable;
+            Texture1D = texture1D;
         }
     }
 }

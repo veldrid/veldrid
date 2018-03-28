@@ -133,7 +133,8 @@ namespace Veldrid.OpenGL
                 drawBaseInstance: _extensions.GLVersion(4, 2),
                 fillModeWireframe: _backendType == GraphicsBackend.OpenGL,
                 samplerAnisotropy: true,
-                depthClipDisable: _backendType == GraphicsBackend.OpenGL);
+                depthClipDisable: _backendType == GraphicsBackend.OpenGL,
+                texture1D: _backendType == GraphicsBackend.OpenGL);
 
             ResourceFactory = new OpenGLResourceFactory(this);
 

@@ -371,7 +371,7 @@ namespace Veldrid
                     }
                 }
             }
-            uint expectedSize = width * height * depth * FormatHelpers.GetSizeInBytes(texture.Format);
+            uint expectedSize = FormatHelpers.GetRegionSize(width, height, depth, texture.Format);
             if (sizeInBytes < expectedSize)
             {
                 throw new VeldridException(

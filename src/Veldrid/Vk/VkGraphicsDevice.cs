@@ -104,7 +104,8 @@ namespace Veldrid.Vk
                 drawBaseInstance: true,
                 fillModeWireframe: _physicalDeviceFeatures.fillModeNonSolid,
                 samplerAnisotropy: _physicalDeviceFeatures.samplerAnisotropy,
-                depthClipDisable: _physicalDeviceFeatures.depthClamp);
+                depthClipDisable: _physicalDeviceFeatures.depthClamp,
+                texture1D: true);
 
             ResourceFactory = new VkResourceFactory(this);
 

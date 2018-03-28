@@ -106,6 +106,10 @@ namespace Veldrid
                 throw new VeldridException(
                     $"1D and 3D Textures must use {nameof(TextureSampleCount)}.{nameof(TextureSampleCount.Count1)}.");
             }
+            if (description.Type == TextureType.Texture1D && !Features.Texture1D)
+            {
+                throw new VeldridException($"1D Textures are not supported by this device.");
+            }
 #endif
             return CreateTextureCore(ref description);
         }

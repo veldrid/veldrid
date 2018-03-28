@@ -50,7 +50,8 @@ namespace Veldrid.MTL
                 drawBaseInstance: true,
                 fillModeWireframe: true,
                 samplerAnisotropy: true,
-                depthClipDisable: true); // TODO: Should be macOS 10.11+ and iOS 11.0+.
+                depthClipDisable: true,
+                texture1D: true); // TODO: Should be macOS 10.11+ and iOS 11.0+.
 
             ResourceFactory = new MTLResourceFactory(this);
             _commandQueue = _device.newCommandQueue();

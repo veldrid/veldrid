@@ -33,10 +33,12 @@ namespace Veldrid
 #if VALIDATE_USAGE
         private DeviceBuffer _indexBuffer;
         private IndexFormat _indexFormat;
+        private readonly GraphicsDeviceFeatures _features;
 #endif
 
-        internal CommandList(ref CommandListDescription description)
+        internal CommandList(ref CommandListDescription description, GraphicsDeviceFeatures features)
         {
+            _features = features;
         }
 
         internal void ClearCachedState()
@@ -369,6 +371,19 @@ namespace Veldrid
         {
             ValidateIndexBuffer(indexCount);
             PreDrawValidation();
+
+#if VALIDATE_USAGE
+            if (!_features.DrawBaseVertex && vertexOffset != 0)
+            {
+                throw new VeldridException("Drawing with a non-zero base vertex is not supported on this device.");
+            }
+            if (!_features.DrawBaseInstance && instanceStart != 0)
+            {
+                throw new VeldridException("Drawing with a non-zero base instance is not supported on this device.");
+            }
+#endif
+
+
             DrawIndexedCore(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
@@ -799,7 +814,6 @@ namespace Veldrid
         public abstract void Dispose();
 
         [Conditional("VALIDATE_USAGE")]
-
         private void ValidateIndexBuffer(uint indexCount)
         {
 #if VALIDATE_USAGE

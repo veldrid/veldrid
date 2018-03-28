@@ -32,16 +32,28 @@ namespace Veldrid.MTL
 
         public MTLDevice Device => _device;
         public MTLCommandQueue CommandQueue => _commandQueue;
-        public MTLFeatureSupport Features { get; }
+        public MTLFeatureSupport MetalFeatures { get; }
 
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
             SwapchainDescription? swapchainDesc)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
+            MetalFeatures = new MTLFeatureSupport(_device);
+            Features = new GraphicsDeviceFeatures(
+                computeShader: true,
+                geometryShader: false,
+                tessellationShaders: false,
+                multipleViewports: MetalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3),
+                samplerLodBias: false,
+                drawBaseVertex: true,
+                drawBaseInstance: true,
+                fillModeWireframe: true,
+                samplerAnisotropy: true,
+                depthClipDisable: true); // TODO: Should be macOS 10.11+ and iOS 11.0+.
+
             ResourceFactory = new MTLResourceFactory(this);
             _commandQueue = _device.newCommandQueue();
-            Features = new MTLFeatureSupport(_device);
 
             foreach (TextureSampleCount count in (TextureSampleCount[])Enum.GetValues(typeof(TextureSampleCount)))
             {
@@ -66,6 +78,8 @@ namespace Veldrid.MTL
         public override ResourceFactory ResourceFactory { get; }
 
         public override Swapchain MainSwapchain => _mainSwapchain;
+
+        public override GraphicsDeviceFeatures Features { get; }
 
         protected override void SubmitCommandsCore(CommandList commandList, Fence fence)
         {
@@ -357,7 +371,7 @@ namespace Veldrid.MTL
                     buffer0.mutability = MTLMutability.Mutable;
 
                     Debug.Assert(_unalignedBufferCopyShader == null);
-                    string name = Features.IsMacOS ? UnalignedBufferCopyPipelineMacOSName : UnalignedBufferCopyPipelineiOSName;
+                    string name = MetalFeatures.IsMacOS ? UnalignedBufferCopyPipelineMacOSName : UnalignedBufferCopyPipelineiOSName;
                     using (Stream resourceStream = typeof(MTLGraphicsDevice).Assembly.GetManifestResourceStream(name))
                     {
                         byte[] data = new byte[resourceStream.Length];

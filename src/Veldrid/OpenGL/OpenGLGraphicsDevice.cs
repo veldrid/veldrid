@@ -75,6 +75,8 @@ namespace Veldrid.OpenGL
 
         public OpenGLTextureSamplerManager TextureSamplerManager => _textureSamplerManager;
 
+        public override GraphicsDeviceFeatures Features { get; }
+
         public OpenGLGraphicsDevice(
             GraphicsDeviceOptions options,
             OpenGLPlatformInfo platformInfo,
@@ -120,6 +122,18 @@ namespace Veldrid.OpenGL
             }
 
             _extensions = new OpenGLExtensions(extensions, _backendType, MajorVersion, MinorVersion);
+
+            Features = new GraphicsDeviceFeatures(
+                computeShader: _extensions.ComputeShaders,
+                geometryShader: _extensions.GeometryShader,
+                tessellationShaders: _extensions.TessellationShader,
+                multipleViewports: _extensions.ARB_ViewportArray,
+                samplerLodBias: _backendType == GraphicsBackend.OpenGL,
+                drawBaseVertex: _extensions.DrawElementsBaseVertex,
+                drawBaseInstance: _extensions.GLVersion(4, 2),
+                fillModeWireframe: _backendType == GraphicsBackend.OpenGL,
+                samplerAnisotropy: true,
+                depthClipDisable: _backendType == GraphicsBackend.OpenGL);
 
             ResourceFactory = new OpenGLResourceFactory(this);
 

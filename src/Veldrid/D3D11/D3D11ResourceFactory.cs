@@ -12,6 +12,7 @@ namespace Veldrid.D3D11
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
         public D3D11ResourceFactory(D3D11GraphicsDevice gd)
+            : base(gd.Features)
         {
             _gd = gd;
             _device = gd.Device;
@@ -28,7 +29,7 @@ namespace Veldrid.D3D11
             return new D3D11Framebuffer(_device, ref description);
         }
 
-        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
         {
             return new D3D11Pipeline(_cache, ref description);
         }
@@ -48,12 +49,12 @@ namespace Veldrid.D3D11
             return new D3D11ResourceSet(ref description);
         }
 
-        public override Sampler CreateSampler(ref SamplerDescription description)
+        protected override Sampler CreateSamplerCore(ref SamplerDescription description)
         {
             return new D3D11Sampler(_device, ref description);
         }
 
-        public override Shader CreateShader(ref ShaderDescription description)
+        protected override Shader CreateShaderCore(ref ShaderDescription description)
         {
             return new D3D11Shader(_device, description);
         }

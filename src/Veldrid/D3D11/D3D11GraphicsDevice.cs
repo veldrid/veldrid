@@ -38,6 +38,8 @@ namespace Veldrid.D3D11
 
         public override Swapchain MainSwapchain => _mainSwapchain;
 
+        public override GraphicsDeviceFeatures Features { get; }
+
         public D3D11GraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDesc)
         {
 #if DEBUG
@@ -54,7 +56,20 @@ namespace Veldrid.D3D11
             _immediateContext = _device.ImmediateContext;
             _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
 
+            Features = new GraphicsDeviceFeatures(
+                computeShader: true,
+                geometryShader: true,
+                tessellationShaders: true,
+                multipleViewports: true,
+                samplerLodBias: true,
+                drawBaseVertex: true,
+                drawBaseInstance: true,
+                fillModeWireframe: true,
+                samplerAnisotropy: true,
+                depthClipDisable: true);
+
             _d3d11ResourceFactory = new D3D11ResourceFactory(this);
+
             PostDeviceCreated();
         }
 

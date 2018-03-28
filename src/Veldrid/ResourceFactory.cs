@@ -5,10 +5,20 @@ namespace Veldrid
     /// </summary>
     public abstract class ResourceFactory
     {
+        public ResourceFactory(GraphicsDeviceFeatures features)
+        {
+            Features = features;
+        }
+
         /// <summary>
         /// Gets the <see cref="GraphicsBackend"/> of this instance.
         /// </summary>
         public abstract GraphicsBackend BackendType { get; }
+
+        /// <summary>
+        /// Gets the <see cref="GraphicsDeviceFeatures"/> this instance was created with.
+        /// </summary>
+        public GraphicsDeviceFeatures Features { get; }
 
         /// <summary>
         /// Creates a new <see cref="Pipeline"/>.
@@ -21,7 +31,24 @@ namespace Veldrid
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="Pipeline"/> which, when bound to a CommandList, is used to dispatch draw commands.</returns>
-        public abstract Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description);
+        public Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        {
+#if VALIDATE_USAGE
+            if (!description.RasterizerState.DepthClipEnabled && !Features.DepthClipDisable)
+            {
+                throw new VeldridException(
+                    "RasterizerState.DepthClipEnabled must be true if GraphicsDeviceFeatures.DepthClipDisable is not supported.");
+            }
+            if (description.RasterizerState.FillMode == PolygonFillMode.Wireframe && !Features.FillModeWireframe)
+            {
+                throw new VeldridException(
+                    "PolygonFillMode.Wireframe requires GraphicsDeviceFeatures.FillModeWireframe.");
+            }
+#endif
+            return CreateGraphicsPipelineCore(ref description);
+        }
+
+        protected abstract Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description);
 
         /// <summary>
         /// Creates a new compute <see cref="Pipeline"/> object.
@@ -191,7 +218,25 @@ namespace Veldrid
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="Sampler"/>.</returns>
-        public abstract Sampler CreateSampler(ref SamplerDescription description);
+        public Sampler CreateSampler(ref SamplerDescription description)
+        {
+#if VALIDATE_USAGE
+            if (!Features.SamplerLodBias && description.LodBias != 0)
+            {
+                throw new VeldridException(
+                    "GraphicsDevice does not support Sampler LOD bias. SamplerDescription.LodBias must be 0.");
+            }
+            if (!Features.SamplerAnisotropy && description.Filter == SamplerFilter.Anisotropic)
+            {
+                throw new VeldridException(
+                    "SamplerFilter.Anisotropic cannot be used unless GraphicsDeviceFeatures.SamplerAnisotropy is supported.");
+            }
+#endif
+
+            return CreateSamplerCore(ref description);
+        }
+
+        protected abstract Sampler CreateSamplerCore(ref SamplerDescription description);
 
         /// <summary>
         /// Creates a new <see cref="Shader"/>.
@@ -204,7 +249,28 @@ namespace Veldrid
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="Shader"/>.</returns>
-        public abstract Shader CreateShader(ref ShaderDescription description);
+        public Shader CreateShader(ref ShaderDescription description)
+        {
+#if VALIDATE_USAGE
+            if (!Features.ComputeShader && description.Stage == ShaderStages.Compute)
+            {
+                throw new VeldridException("GraphicsDevice does not support Compute Shaders.");
+            }
+            if (!Features.GeometryShader && description.Stage == ShaderStages.Geometry)
+            {
+                throw new VeldridException("GraphicsDevice does not support Compute Shaders.");
+            }
+            if (!Features.TessellationShaders
+                && (description.Stage == ShaderStages.TessellationControl
+                    || description.Stage == ShaderStages.TessellationEvaluation))
+            {
+                throw new VeldridException("GraphicsDevice does not support Tessellation Shaders.");
+            }
+#endif
+            return CreateShaderCore(ref description);
+        }
+
+        protected abstract Shader CreateShaderCore(ref ShaderDescription description);
 
         /// <summary>
         /// Creates a new <see cref="CommandList"/>.

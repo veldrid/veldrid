@@ -24,7 +24,7 @@ namespace Veldrid.MTL
             mtlDesc.minFilter = min;
             mtlDesc.magFilter = mag;
             mtlDesc.mipFilter = mip;
-            if (gd.Features.IsMacOS)
+            if (gd.MetalFeatures.IsMacOS)
             {
                 mtlDesc.borderColor = MTLFormats.VdToMTLBorderColor(description.BorderColor);
             }

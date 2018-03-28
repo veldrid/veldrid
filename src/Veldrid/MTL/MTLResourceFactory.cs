@@ -7,6 +7,7 @@ namespace Veldrid.MTL
         private readonly MTLGraphicsDevice _gd;
 
         public MTLResourceFactory(MTLGraphicsDevice gd)
+            : base(gd.Features)
         {
             _gd = gd;
         }
@@ -28,7 +29,7 @@ namespace Veldrid.MTL
             return new MTLFramebuffer(_gd, ref description);
         }
 
-        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
         {
             return new MTLPipeline(ref description, _gd);
         }
@@ -43,12 +44,12 @@ namespace Veldrid.MTL
             return new MTLResourceSet(ref description, _gd);
         }
 
-        public override Sampler CreateSampler(ref SamplerDescription description)
+        protected override Sampler CreateSamplerCore(ref SamplerDescription description)
         {
             return new MTLSampler(ref description, _gd);
         }
 
-        public override Shader CreateShader(ref ShaderDescription description)
+        protected override Shader CreateShaderCore(ref ShaderDescription description)
         {
             return new MTLShader(ref description, _gd);
         }

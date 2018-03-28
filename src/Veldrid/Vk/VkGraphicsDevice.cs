@@ -59,6 +59,8 @@ namespace Veldrid.Vk
 
         public override Swapchain MainSwapchain => _mainSwapchain;
 
+        public override GraphicsDeviceFeatures Features { get; }
+
         public VkInstance Instance => _instance;
         public VkDevice Device => _device;
         public VkPhysicalDevice PhysicalDevice => _physicalDevice;
@@ -91,6 +93,19 @@ namespace Veldrid.Vk
             CreateLogicalDevice(surface);
 
             _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
+
+            Features = new GraphicsDeviceFeatures(
+                computeShader: true,
+                geometryShader: _physicalDeviceFeatures.geometryShader,
+                tessellationShaders: _physicalDeviceFeatures.tessellationShader,
+                multipleViewports: _physicalDeviceFeatures.multiViewport,
+                samplerLodBias: true,
+                drawBaseVertex: true,
+                drawBaseInstance: true,
+                fillModeWireframe: _physicalDeviceFeatures.fillModeNonSolid,
+                samplerAnisotropy: _physicalDeviceFeatures.samplerAnisotropy,
+                depthClipDisable: _physicalDeviceFeatures.depthClamp);
+
             ResourceFactory = new VkResourceFactory(this);
 
             if (scDesc != null)

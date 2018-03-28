@@ -32,6 +32,8 @@ namespace Veldrid
         /// </summary>
         public abstract Swapchain MainSwapchain { get; }
 
+        public abstract GraphicsDeviceFeatures Features { get; }
+
         /// <summary>
         /// Gets or sets whether the main Swapchain's <see cref="SwapBuffers()"/> should be synchronized to the window system's
         /// vertical refresh rate.
@@ -368,6 +370,12 @@ namespace Veldrid
                         throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
                     }
                 }
+            }
+            uint expectedSize = width * height * depth * FormatHelpers.GetSizeInBytes(texture.Format);
+            if (sizeInBytes < expectedSize)
+            {
+                throw new VeldridException(
+                    $"The data size is less than expected for the given update region. At least {expectedSize} bytes must be provided, but only {sizeInBytes} were.");
             }
 #endif
             UpdateTextureCore(texture, source, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);

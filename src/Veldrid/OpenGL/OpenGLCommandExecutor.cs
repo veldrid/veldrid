@@ -781,7 +781,6 @@ namespace Veldrid.OpenGL
             }
             else
             {
-                // TODO CAPABILITY
                 if (index == 0)
                 {
                     glViewport((int)viewport.X, (int)viewport.Y, (uint)viewport.Width, (uint)viewport.Height);

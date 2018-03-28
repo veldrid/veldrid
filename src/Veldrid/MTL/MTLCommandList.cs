@@ -43,7 +43,7 @@ namespace Veldrid.MTL
         public MTLCommandBuffer CommandBuffer => _cb;
 
         public MTLCommandList(ref CommandListDescription description, MTLGraphicsDevice gd)
-            : base(ref description)
+            : base(ref description, gd.Features)
         {
             _gd = gd;
         }
@@ -126,10 +126,6 @@ namespace Veldrid.MTL
                 }
                 else
                 {
-                    if (!_gd.Features.IsDrawBaseVertexInstanceSupported())
-                    {
-                        throw new VeldridException("Drawing with a base instance or vertex is not supported on this device.");
-                    }
                     _rce.drawIndexedPrimitives(
                         _graphicsPipeline.PrimitiveType,
                         (UIntPtr)indexCount,
@@ -197,7 +193,7 @@ namespace Veldrid.MTL
 
         private void FlushViewports()
         {
-            if (_gd.Features.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3))
+            if (_gd.MetalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3))
             {
                 fixed (MTLViewport* viewportsPtr = &_viewports[0])
                 {
@@ -212,7 +208,7 @@ namespace Veldrid.MTL
 
         private void FlushScissorRects()
         {
-            if (_gd.Features.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3))
+            if (_gd.MetalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3))
             {
                 fixed (MTLScissorRect* scissorRectsPtr = &_scissorRects[0])
                 {

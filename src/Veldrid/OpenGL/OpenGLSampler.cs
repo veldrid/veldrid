@@ -96,18 +96,10 @@ namespace Veldrid.OpenGL
                 CheckLastError();
                 glSamplerParameterf(_sampler, SamplerParameterName.TextureMaxLod, description.MaximumAnisotropy);
                 CheckLastError();
-                if (backend == GraphicsBackend.OpenGL)
+                if (backend == GraphicsBackend.OpenGL && description.LodBias != 0)
                 {
                     glSamplerParameterf(_sampler, SamplerParameterName.TextureLodBias, description.LodBias);
                     CheckLastError();
-                }
-                else
-                {
-                    if (description.LodBias != 0)
-                    {
-                        // TODO CAPABILITY
-                        throw new VeldridException("Sampler LOD bias is not supported on OpenGL ES.");
-                    }
                 }
 
                 if (description.Filter == SamplerFilter.Anisotropic)

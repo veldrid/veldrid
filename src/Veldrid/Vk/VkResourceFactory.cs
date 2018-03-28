@@ -8,6 +8,7 @@ namespace Veldrid.Vk
         private readonly VkDevice _device;
 
         public VkResourceFactory(VkGraphicsDevice vkGraphicsDevice)
+            : base (vkGraphicsDevice.Features)
         {
             _gd = vkGraphicsDevice;
             _device = vkGraphicsDevice.Device;
@@ -25,7 +26,7 @@ namespace Veldrid.Vk
             return new VkFramebuffer(_gd, ref description, false);
         }
 
-        public override Pipeline CreateGraphicsPipeline(ref GraphicsPipelineDescription description)
+        protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
         {
             return new VkPipeline(_gd, ref description);
         }
@@ -45,12 +46,12 @@ namespace Veldrid.Vk
             return new VkResourceSet(_gd, ref description);
         }
 
-        public override Sampler CreateSampler(ref SamplerDescription description)
+        protected override Sampler CreateSamplerCore(ref SamplerDescription description)
         {
             return new VkSampler(_gd, ref description);
         }
 
-        public override Shader CreateShader(ref ShaderDescription description)
+        protected override Shader CreateShaderCore(ref ShaderDescription description)
         {
             return new VkShader(_gd, ref description);
         }

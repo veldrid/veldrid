@@ -292,16 +292,31 @@ namespace Veldrid.OpenGL
                         Width,
                         Height,
                         false);
+                    CheckLastError();
                 }
                 else
                 {
-                    glTexImage2DMultiSample(
-                        TextureTarget.Texture2DMultisample,
-                        FormatHelpers.GetSampleCountUInt32(SampleCount),
-                        GLInternalFormat,
-                        Width,
-                        Height,
-                        false);
+                    if (_gd.Extensions.TextureStorage)
+                    {
+                        glTexStorage2DMultisample(
+                            TextureTarget.Texture2DMultisample,
+                            FormatHelpers.GetSampleCountUInt32(SampleCount),
+                            OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                            Width,
+                            Height,
+                            false);
+                        CheckLastError();
+                    }
+                    else
+                    {
+                        glTexImage2DMultiSample(
+                            TextureTarget.Texture2DMultisample,
+                            FormatHelpers.GetSampleCountUInt32(SampleCount),
+                            GLInternalFormat,
+                            Width,
+                            Height,
+                            false);
+                    }
                     CheckLastError();
                 }
             }
@@ -315,20 +330,35 @@ namespace Veldrid.OpenGL
                         OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
                         Height,
-                        Depth,
-                        false);
-                }
-                else
-                {
-                    glTexImage3DMultisample(
-                        TextureTarget.Texture2DMultisampleArray,
-                        FormatHelpers.GetSampleCountUInt32(SampleCount),
-                        GLInternalFormat,
-                        Width,
-                        Height,
                         ArrayLayers,
                         false);
                     CheckLastError();
+                }
+                else
+                {
+                    if (_gd.Extensions.TextureStorage)
+                    {
+                        glTexStorage3DMultisample(
+                            TextureTarget.Texture2DMultisampleArray,
+                            FormatHelpers.GetSampleCountUInt32(SampleCount),
+                            OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
+                            Width,
+                            Height,
+                            ArrayLayers,
+                            false);
+                    }
+                    else
+                    {
+                        glTexImage3DMultisample(
+                            TextureTarget.Texture2DMultisampleArray,
+                            FormatHelpers.GetSampleCountUInt32(SampleCount),
+                            GLInternalFormat,
+                            Width,
+                            Height,
+                            ArrayLayers,
+                            false);
+                        CheckLastError();
+                    }
                 }
             }
             else if (TextureTarget == TextureTarget.TextureCubeMap)

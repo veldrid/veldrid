@@ -896,6 +896,42 @@ namespace Veldrid.OpenGLBinding
             GLboolean fixedsamplelocations)
             => p_glTextureStorage3DMultisample(texture, samples, internalformat, width, height, depth, fixedsamplelocations);
 
+        private delegate void glTexStorage2DMultisample_t(
+            TextureTarget target,
+            uint samples,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            GLboolean fixedsamplelocations);
+        private static glTexStorage2DMultisample_t p_glTexStorage2DMultisample;
+        public static void glTexStorage2DMultisample(
+            TextureTarget target,
+            uint samples,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            GLboolean fixedsamplelocations)
+            => p_glTexStorage2DMultisample(target, samples, internalformat, width, height, fixedsamplelocations);
+
+        private delegate void glTexStorage3DMultisample_t(
+            TextureTarget target,
+            uint samples,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            uint depth,
+            GLboolean fixedsamplelocations);
+        private static glTexStorage3DMultisample_t p_glTexStorage3DMultisample;
+        public static void glTexStorage3DMultisample(
+            TextureTarget target,
+            uint samples,
+            SizedInternalFormat internalformat,
+            uint width,
+            uint height,
+            uint depth,
+            GLboolean fixedsamplelocations)
+            => p_glTexStorage3DMultisample(target, samples, internalformat, width, height, depth, fixedsamplelocations);
+
         private delegate void glTextureView_t(
             uint texture,
             TextureTarget target,
@@ -1385,6 +1421,8 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTextureStorage3D", out p_glTextureStorage3D);
             LoadFunction("glTextureStorage2DMultisample", out p_glTextureStorage2DMultisample);
             LoadFunction("glTextureStorage3DMultisample", out p_glTextureStorage3DMultisample);
+            LoadFunction("glTexStorage2DMultisample", out p_glTexStorage2DMultisample);
+            LoadFunction("glTexStorage3DMultisample", out p_glTexStorage3DMultisample);
             LoadFunction("glTextureView", out p_glTextureView);
             LoadFunction("glMapBuffer", out p_glMapBuffer);
             LoadFunction("glMapNamedBuffer", out p_glMapNamedBuffer);

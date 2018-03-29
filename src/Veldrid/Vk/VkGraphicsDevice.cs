@@ -316,7 +316,6 @@ namespace Veldrid.Vk
             lock (presentLock)
             {
                 vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
-
                 if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, vkSC.ImageAvailableFence))
                 {
                     Vulkan.VkFence fence = vkSC.ImageAvailableFence;
@@ -457,7 +456,7 @@ namespace Veldrid.Vk
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                if (RuntimeInformation.OSDescription.Contains("Unix"))
+                if (RuntimeInformation.OSDescription.Contains("Unix")) // Android
                 {
                     if (!availableInstanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME))
                     {
@@ -1102,7 +1101,14 @@ namespace Veldrid.Vk
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                return instanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+                if (RuntimeInformation.OSDescription.Contains("Unix")) // Android
+                {
+                    return instanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+                }
+                else
+                {
+                    return instanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+                }
             }
 
             return false;

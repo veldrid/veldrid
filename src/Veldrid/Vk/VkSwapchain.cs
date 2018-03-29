@@ -125,9 +125,6 @@ namespace Veldrid.Vk
                 _gd.WaitForIdle();
             }
 
-            vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
-            _deviceSwapchain = VkSwapchainKHR.Null;
-
             _currentImageIndex = 0;
             uint surfaceFormatCount = 0;
             vkGetPhysicalDeviceSurfaceFormatsKHR(_gd.PhysicalDevice, _surface, ref surfaceFormatCount, null);

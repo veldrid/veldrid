@@ -12,3 +12,4 @@ dotnet pack -c Release src\Veldrid.ImGui\Veldrid.ImGui.csproj
 dotnet pack -c Release src\Veldrid.ImageSharp\Veldrid.ImageSharp.csproj
 dotnet pack -c Release src\Veldrid.SDL2\Veldrid.SDL2.csproj
 dotnet pack -c Release src\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj
+dotnet pack -c Release src\Veldrid.Android\Veldrid.Android.csproj

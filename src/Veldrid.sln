@@ -22,6 +22,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.Tests", "Veldrid.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.MetalBindings", "Veldrid.MetalBindings\Veldrid.MetalBindings.csproj", "{6647F17C-02E9-4EF2-B882-40E22A187744}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.Android", "Veldrid.Android\Veldrid.Android.csproj", "{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -194,6 +196,22 @@ Global
 		{6647F17C-02E9-4EF2-B882-40E22A187744}.Release|x64.Build.0 = Release|Any CPU
 		{6647F17C-02E9-4EF2-B882-40E22A187744}.Release|x86.ActiveCfg = Release|Any CPU
 		{6647F17C-02E9-4EF2-B882-40E22A187744}.Release|x86.Build.0 = Release|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Debug|ARM.Build.0 = Debug|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Debug|x64.Build.0 = Debug|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Debug|x86.Build.0 = Debug|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Release|ARM.ActiveCfg = Release|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Release|ARM.Build.0 = Release|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Release|x64.ActiveCfg = Release|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Release|x64.Build.0 = Release|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Release|x86.ActiveCfg = Release|Any CPU
+		{B966DEEB-3DE4-4697-8863-4E1AE222A2DA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -36,26 +36,6 @@ namespace Veldrid.Vk
         public unsafe static VkSurfaceSource CreateXlib(Display* display, Window window) => new XlibVkSurfaceInfo(display, window);
 
         internal abstract SwapchainSource GetSurfaceSource();
-
-        internal static unsafe VkSurfaceSource CreateFromSwapchainSource(SwapchainSource source)
-        {
-            if (source is Win32SwapchainSource win32Source)
-            {
-                return new Win32VkSurfaceInfo(win32Source.Hinstance, win32Source.Hwnd);
-            }
-            else if (source is XlibSwapchainSource xlibSource)
-            {
-                return new XlibVkSurfaceInfo((Display*)xlibSource.Display, new Window { Value = xlibSource.Window });
-            }
-            else if (source is ANativeWindowSwapchainSource anwSource)
-            {
-                return new ANativeWindowSurfaceSource(anwSource.ANativeWindow);
-            }
-            else
-            {
-                throw new VeldridException("Unsupported Vulkan SwapchainSource.");
-            }
-        }
     }
 
     internal class Win32VkSurfaceInfo : VkSurfaceSource
@@ -71,12 +51,7 @@ namespace Veldrid.Vk
 
         public unsafe override VkSurfaceKHR CreateSurface(VkInstance instance)
         {
-            VkWin32SurfaceCreateInfoKHR surfaceCI = VkWin32SurfaceCreateInfoKHR.New();
-            surfaceCI.hwnd = _hwnd;
-            surfaceCI.hinstance = _hinstance;
-            VkResult result = vkCreateWin32SurfaceKHR(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
-            CheckResult(result);
-            return surface;
+            return VkSurfaceUtil.CreateSurface(instance, GetSurfaceSource());
         }
 
         internal override SwapchainSource GetSurfaceSource()
@@ -98,12 +73,7 @@ namespace Veldrid.Vk
 
         public unsafe override VkSurfaceKHR CreateSurface(VkInstance instance)
         {
-            VkXlibSurfaceCreateInfoKHR xsci = VkXlibSurfaceCreateInfoKHR.New();
-            xsci.dpy = _display;
-            xsci.window = _window;
-            VkResult result = vkCreateXlibSurfaceKHR(instance, ref xsci, null, out VkSurfaceKHR surface);
-            CheckResult(result);
-            return surface;
+            return VkSurfaceUtil.CreateSurface(instance, GetSurfaceSource());
         }
 
         internal unsafe override SwapchainSource GetSurfaceSource()
@@ -123,11 +93,7 @@ namespace Veldrid.Vk
 
         public unsafe override VkSurfaceKHR CreateSurface(VkInstance instance)
         {
-            VkAndroidSurfaceCreateInfoKHR androidSurfaceCI = VkAndroidSurfaceCreateInfoKHR.New();
-            androidSurfaceCI.window = (Vulkan.Android.ANativeWindow*)_aNativeWindow;
-            VkResult result = vkCreateAndroidSurfaceKHR(instance, ref androidSurfaceCI, null, out VkSurfaceKHR surface);
-            CheckResult(result);
-            return surface;
+            return VkSurfaceUtil.CreateSurface(instance, GetSurfaceSource());
         }
 
         internal override SwapchainSource GetSurfaceSource()

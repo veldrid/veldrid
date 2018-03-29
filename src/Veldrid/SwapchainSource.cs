@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Veldrid
 {
@@ -124,5 +125,8 @@ namespace Veldrid
         {
             ANativeWindow = aNativeWindow;
         }
+
+        [DllImport("android.so")]
+        public static extern void ANativeWindow_release(IntPtr aNativeWindow);
     }
 }

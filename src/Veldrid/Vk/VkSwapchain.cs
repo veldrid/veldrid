@@ -53,8 +53,7 @@ namespace Veldrid.Vk
 
             if (existingSurface == VkSurfaceKHR.Null)
             {
-                VkSurfaceSource surfaceSource = VkSurfaceSource.CreateFromSwapchainSource(_swapchainSource);
-                _surface = surfaceSource.CreateSurface(gd.Instance);
+                _surface = VkSurfaceUtil.CreateSurface(gd.Instance, _swapchainSource);
             }
             else
             {
@@ -267,12 +266,8 @@ namespace Veldrid.Vk
 
             if (_swapchainSource is ANativeWindowSwapchainSource aNativeWindowSource)
             {
-                ANativeWindow_release(aNativeWindowSource.ANativeWindow);
+                ANativeWindowSwapchainSource.ANativeWindow_release(aNativeWindowSource.ANativeWindow);
             }
         }
-
-        // TODO: Move this somewhere else.
-        [DllImport("android.so")]
-        public static extern void ANativeWindow_release(IntPtr aNativeWindow);
     }
 }

@@ -86,7 +86,7 @@ namespace Veldrid.Vk
             VkSurfaceKHR surface = VkSurfaceKHR.Null;
             if (scDesc != null)
             {
-                surface = VkSurfaceSource.CreateFromSwapchainSource(scDesc.Value.Source).CreateSurface(_instance);
+                surface = VkSurfaceUtil.CreateSurface(_instance, scDesc.Value.Source);
             }
 
             CreatePhysicalDevice();

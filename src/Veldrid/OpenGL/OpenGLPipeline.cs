@@ -182,6 +182,7 @@ namespace Veldrid.OpenGL
             int lastTextureLocation = -1;
             int relativeTextureIndex = -1;
             int relativeImageIndex = -1;
+            uint storageBlockIndex = 0; // Tracks OpenGL ES storage buffers.
             for (uint setSlot = 0; setSlot < resourceLayoutCount; setSlot++)
             {
                 ResourceLayout setLayout = layouts[setSlot];
@@ -256,20 +257,29 @@ namespace Veldrid.OpenGL
                     else if (resource.Kind == ResourceKind.StructuredBufferReadOnly
                         || resource.Kind == ResourceKind.StructuredBufferReadWrite)
                     {
-                        string resourceName = resource.Name;
-                        int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;
-                        byte* resourceNamePtr = stackalloc byte[byteCount];
-                        fixed (char* charPtr = resourceName)
+                        uint storageBlockBinding;
+                        if (_gd.BackendType == GraphicsBackend.OpenGL)
                         {
-                            int bytesWritten = Encoding.UTF8.GetBytes(charPtr, resourceName.Length, resourceNamePtr, byteCount);
-                            Debug.Assert(bytesWritten == byteCount - 1);
+                            string resourceName = resource.Name;
+                            int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;
+                            byte* resourceNamePtr = stackalloc byte[byteCount];
+                            fixed (char* charPtr = resourceName)
+                            {
+                                int bytesWritten = Encoding.UTF8.GetBytes(charPtr, resourceName.Length, resourceNamePtr, byteCount);
+                                Debug.Assert(bytesWritten == byteCount - 1);
+                            }
+                            resourceNamePtr[byteCount - 1] = 0; // Add null terminator.
+                            storageBlockBinding = glGetProgramResourceIndex(
+                                _program,
+                                ProgramInterface.ShaderStorageBlock,
+                                resourceNamePtr);
+                            CheckLastError();
                         }
-                        resourceNamePtr[byteCount - 1] = 0; // Add null terminator.
-                        uint storageBlockBinding = glGetProgramResourceIndex(
-                            _program,
-                            ProgramInterface.ShaderStorageBlock,
-                            resourceNamePtr);
-                        CheckLastError();
+                        else
+                        {
+                            storageBlockBinding = storageBlockIndex;
+                            storageBlockIndex += 1;
+                        }
 
                         storageBufferBindings[i] = new OpenGLShaderStorageBinding(storageBlockBinding);
                     }

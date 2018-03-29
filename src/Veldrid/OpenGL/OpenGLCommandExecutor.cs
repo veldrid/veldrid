@@ -178,7 +178,9 @@ namespace Veldrid.OpenGL
 
         private void FlushResourceSets(bool graphics)
         {
-            uint sets = graphics ? (uint)_graphicsResourceSets.Length : (uint)_computeResourceSets.Length;
+            uint sets = graphics
+                ? (uint)_graphicsPipeline.ResourceLayouts.Length
+                : (uint)_computePipeline.ResourceLayouts.Length;
             for (uint slot = 0; slot < sets; slot++)
             {
                 OpenGLResourceSet glSet = graphics ? _graphicsResourceSets[slot] : _computeResourceSets[slot];

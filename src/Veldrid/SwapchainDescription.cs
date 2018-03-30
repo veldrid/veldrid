@@ -60,6 +60,8 @@ namespace Veldrid
         public bool Equals(SwapchainDescription other)
         {
             return Source.Equals(other.Source)
+                && Width.Equals(other.Width)
+                && Height.Equals(other.Height)
                 && DepthFormat == other.DepthFormat
                 && SyncToVerticalBlank.Equals(other.SyncToVerticalBlank);
         }

@@ -46,7 +46,7 @@ namespace Veldrid
         /// <returns>True if all elements and if array instances are equal; false otherswise.</returns>
         public bool Equals(ShaderDescription other)
         {
-            return Stage == other.Stage && ShaderBytes == other.ShaderBytes;
+            return Stage == other.Stage && ShaderBytes == other.ShaderBytes && EntryPoint.Equals(other.EntryPoint);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(Stage.GetHashCode(), ShaderBytes.GetHashCode());
+            return HashHelper.Combine(Stage.GetHashCode(), ShaderBytes.GetHashCode(), EntryPoint.GetHashCode());
         }
     }
 }

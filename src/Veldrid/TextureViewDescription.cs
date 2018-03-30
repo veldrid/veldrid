@@ -66,7 +66,11 @@ namespace Veldrid
         /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(TextureViewDescription other)
         {
-            return Target.Equals(other.Target);
+            return Target.Equals(other.Target)
+                && BaseMipLevel.Equals(other.BaseMipLevel)
+                && MipLevels.Equals(other.MipLevels)
+                && BaseArrayLayer.Equals(other.BaseArrayLayer)
+                && ArrayLayers.Equals(other.ArrayLayers);
         }
 
         /// <summary>
@@ -75,7 +79,12 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return Target.GetHashCode();
+            return HashHelper.Combine(
+                Target.GetHashCode(),
+                BaseMipLevel.GetHashCode(),
+                MipLevels.GetHashCode(),
+                BaseArrayLayer.GetHashCode(),
+                ArrayLayers.GetHashCode());
         }
     }
 }

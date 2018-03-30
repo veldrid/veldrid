@@ -76,7 +76,8 @@ namespace Veldrid
         public bool Equals(OutputDescription other)
         {
             return DepthAttachment.GetValueOrDefault().Equals(other.DepthAttachment.GetValueOrDefault())
-                && Util.ArrayEqualsEquatable(ColorAttachments, other.ColorAttachments);
+                && Util.ArrayEqualsEquatable(ColorAttachments, other.ColorAttachments)
+                && SampleCount == other.SampleCount;
         }
 
         /// <summary>
@@ -85,7 +86,10 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(DepthAttachment.GetHashCode(), HashHelper.Array(ColorAttachments));
+            return HashHelper.Combine(
+                DepthAttachment.GetHashCode(),
+                HashHelper.Array(ColorAttachments),
+                SampleCount.GetHashCode());
         }
     }
 }

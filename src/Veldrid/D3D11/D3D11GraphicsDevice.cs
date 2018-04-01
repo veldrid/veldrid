@@ -23,8 +23,8 @@ namespace Veldrid.D3D11
         private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
             = new Dictionary<MappedResourceCacheKey, MappedResourceInfo>();
 
+        private readonly object _stagingResourcesLock = new object();
         private readonly List<D3D11Buffer> _availableStagingBuffers = new List<D3D11Buffer>();
-        private readonly List<D3D11Buffer> _submittedStagingBuffers = new List<D3D11Buffer>();
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
@@ -282,18 +282,25 @@ namespace Veldrid.D3D11
                         d3dBuffer.Buffer, 0,
                         (int)bufferOffsetInBytes, 0, 0);
                 }
-                _availableStagingBuffers.Add(staging);
+
+                lock (_stagingResourcesLock)
+                {
+                    _availableStagingBuffers.Add(staging);
+                }
             }
         }
 
         private D3D11Buffer GetFreeStagingBuffer(uint sizeInBytes)
         {
-            foreach (D3D11Buffer buffer in _availableStagingBuffers)
+            lock (_stagingResourcesLock)
             {
-                if (buffer.SizeInBytes >= sizeInBytes)
+                foreach (D3D11Buffer buffer in _availableStagingBuffers)
                 {
-                    _availableStagingBuffers.Remove(buffer);
-                    return buffer;
+                    if (buffer.SizeInBytes >= sizeInBytes)
+                    {
+                        _availableStagingBuffers.Remove(buffer);
+                        return buffer;
+                    }
                 }
             }
 

@@ -13,6 +13,7 @@
         public bool SamplerAnisotropy { get; }
         public bool DepthClipDisable { get; }
         public bool Texture1D { get; }
+        public bool IndependentBlend { get; }
 
         public GraphicsDeviceFeatures(
             bool computeShader, 
@@ -25,7 +26,8 @@
             bool fillModeWireframe, 
             bool samplerAnisotropy, 
             bool depthClipDisable,
-            bool texture1D)
+            bool texture1D,
+            bool independentBlend)
         {
             ComputeShader = computeShader;
             GeometryShader = geometryShader;
@@ -38,6 +40,7 @@
             SamplerAnisotropy = samplerAnisotropy;
             DepthClipDisable = depthClipDisable;
             Texture1D = texture1D;
+            IndependentBlend = independentBlend;
         }
     }
 }

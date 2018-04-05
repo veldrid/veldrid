@@ -414,6 +414,19 @@ namespace Veldrid.OpenGLBinding
             BlendingFactorDest dstAlpha) => p_glBlendFuncSeparatei(buf, srcRGB, dstRGB, srcAlpha, dstAlpha);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glBlendFuncSeparate_t(
+            BlendingFactorSrc srcRGB,
+            BlendingFactorDest dstRGB,
+            BlendingFactorSrc srcAlpha,
+            BlendingFactorDest dstAlpha);
+        private static glBlendFuncSeparate_t p_glBlendFuncSeparate;
+        public static void glBlendFuncSeparate(
+            BlendingFactorSrc srcRGB,
+            BlendingFactorDest dstRGB,
+            BlendingFactorSrc srcAlpha,
+            BlendingFactorDest dstAlpha) => p_glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void glEnable_t(EnableCap cap);
         private static glEnable_t p_glEnable;
         public static void glEnable(EnableCap cap) => p_glEnable(cap);
@@ -438,6 +451,12 @@ namespace Veldrid.OpenGLBinding
         private static glBlendEquationSeparatei_t p_glBlendEquationSeparatei;
         public static void glBlendEquationSeparatei(uint buf, BlendEquationMode modeRGB, BlendEquationMode modeAlpha)
             => p_glBlendEquationSeparatei(buf, modeRGB, modeAlpha);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glBlendEquationSeparate_t(BlendEquationMode modeRGB, BlendEquationMode modeAlpha);
+        private static glBlendEquationSeparate_t p_glBlendEquationSeparate;
+        public static void glBlendEquationSeparate(BlendEquationMode modeRGB, BlendEquationMode modeAlpha)
+            => p_glBlendEquationSeparate(modeRGB, modeAlpha);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void glBlendColor_t(float red, float green, float blue, float alpha);
@@ -1506,11 +1525,13 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glBindSampler", out p_glBindSampler);
             LoadFunction("glDeleteSamplers", out p_glDeleteSamplers);
             LoadFunction("glBlendFuncSeparatei", out p_glBlendFuncSeparatei);
+            LoadFunction("glBlendFuncSeparate", out p_glBlendFuncSeparate);
             LoadFunction("glEnable", out p_glEnable);
             LoadFunction("glEnablei", out p_glEnablei);
             LoadFunction("glDisable", out p_glDisable);
             LoadFunction("glDisablei", out p_glDisablei);
             LoadFunction("glBlendEquationSeparatei", out p_glBlendEquationSeparatei);
+            LoadFunction("glBlendEquationSeparate", out p_glBlendEquationSeparate);
             LoadFunction("glBlendColor", out p_glBlendColor);
             LoadFunction("glDepthFunc", out p_glDepthFunc);
             LoadFunction("glDepthMask", out p_glDepthMask);

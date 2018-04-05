@@ -11,7 +11,8 @@ namespace Veldrid.OpenGL
         private readonly OpenGLTextureSamplerManager _textureSamplerManager;
         private readonly StagingMemoryPool _stagingMemoryPool;
         private readonly OpenGLExtensions _extensions;
-        private Action _setSwapchainFramebuffer;
+        private readonly Action _setSwapchainFramebuffer;
+        private readonly GraphicsDeviceFeatures _features;
 
         private Framebuffer _fb;
         private bool _isSwapchainFB;
@@ -36,13 +37,15 @@ namespace Veldrid.OpenGL
             OpenGLTextureSamplerManager textureSamplerManager,
             OpenGLExtensions extensions,
             StagingMemoryPool stagingMemoryPool,
-            Action setSwapchainFramebuffer)
+            Action setSwapchainFramebuffer,
+            GraphicsDeviceFeatures features)
         {
             _backend = backend;
             _extensions = extensions;
             _textureSamplerManager = textureSamplerManager;
             _stagingMemoryPool = stagingMemoryPool;
             _setSwapchainFramebuffer = setSwapchainFramebuffer;
+            _features = features;
         }
 
         public void Begin()
@@ -382,29 +385,58 @@ namespace Veldrid.OpenGL
             glBlendColor(blendState.BlendFactor.R, blendState.BlendFactor.G, blendState.BlendFactor.B, blendState.BlendFactor.A);
             CheckLastError();
 
-            for (uint i = 0; i < blendState.AttachmentStates.Length; i++)
+            if (_features.IndependentBlend)
             {
-                BlendAttachmentDescription attachment = blendState.AttachmentStates[i];
+                for (uint i = 0; i < blendState.AttachmentStates.Length; i++)
+                {
+                    BlendAttachmentDescription attachment = blendState.AttachmentStates[i];
+                    if (!attachment.BlendEnabled)
+                    {
+                        glDisablei(EnableCap.Blend, i);
+                        CheckLastError();
+                    }
+                    else
+                    {
+                        glEnablei(EnableCap.Blend, i);
+                        CheckLastError();
+
+                        glBlendFuncSeparatei(
+                            i,
+                            OpenGLFormats.VdToGLBlendFactorSrc(attachment.SourceColorFactor),
+                            OpenGLFormats.VdToGLBlendFactorDest(attachment.DestinationColorFactor),
+                            OpenGLFormats.VdToGLBlendFactorSrc(attachment.SourceAlphaFactor),
+                            OpenGLFormats.VdToGLBlendFactorDest(attachment.DestinationAlphaFactor));
+                        CheckLastError();
+
+                        glBlendEquationSeparatei(
+                            i,
+                            OpenGLFormats.VdToGLBlendEquationMode(attachment.ColorFunction),
+                            OpenGLFormats.VdToGLBlendEquationMode(attachment.AlphaFunction));
+                        CheckLastError();
+                    }
+                }
+            }
+            else if (blendState.AttachmentStates.Length > 0)
+            {
+                BlendAttachmentDescription attachment = blendState.AttachmentStates[0];
                 if (!attachment.BlendEnabled)
                 {
-                    glDisablei(EnableCap.Blend, i);
+                    glDisable(EnableCap.Blend);
                     CheckLastError();
                 }
                 else
                 {
-                    glEnablei(EnableCap.Blend, i);
+                    glEnable(EnableCap.Blend);
                     CheckLastError();
 
-                    glBlendFuncSeparatei(
-                        i,
+                    glBlendFuncSeparate(
                         OpenGLFormats.VdToGLBlendFactorSrc(attachment.SourceColorFactor),
                         OpenGLFormats.VdToGLBlendFactorDest(attachment.DestinationColorFactor),
                         OpenGLFormats.VdToGLBlendFactorSrc(attachment.SourceAlphaFactor),
                         OpenGLFormats.VdToGLBlendFactorDest(attachment.DestinationAlphaFactor));
                     CheckLastError();
 
-                    glBlendEquationSeparatei(
-                        i,
+                    glBlendEquationSeparate(
                         OpenGLFormats.VdToGLBlendEquationMode(attachment.ColorFunction),
                         OpenGLFormats.VdToGLBlendEquationMode(attachment.AlphaFunction));
                     CheckLastError();

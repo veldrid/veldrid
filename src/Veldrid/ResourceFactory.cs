@@ -44,6 +44,21 @@ namespace Veldrid
                 throw new VeldridException(
                     "PolygonFillMode.Wireframe requires GraphicsDeviceFeatures.FillModeWireframe.");
             }
+            if (!Features.IndependentBlend)
+            {
+                if (description.BlendState.AttachmentStates.Length > 0)
+                {
+                    BlendAttachmentDescription attachmentState = description.BlendState.AttachmentStates[0];
+                    for (int i = 1; i < description.BlendState.AttachmentStates.Length; i++)
+                    {
+                        if (!attachmentState.Equals(description.BlendState.AttachmentStates[i]))
+                        {
+                            throw new VeldridException(
+                                $"If GraphcsDeviceFeatures.IndependentBlend is false, then all members of BlendState.AttachmentStates must be equal.");
+                        }
+                    }
+                }
+            }
 #endif
             return CreateGraphicsPipelineCore(ref description);
         }

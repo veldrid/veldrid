@@ -67,7 +67,8 @@ namespace Veldrid.D3D11
                 fillModeWireframe: true,
                 samplerAnisotropy: true,
                 depthClipDisable: true,
-                texture1D: true);
+                texture1D: true,
+                independentBlend: true);
 
             _d3d11ResourceFactory = new D3D11ResourceFactory(this);
 

@@ -134,7 +134,8 @@ namespace Veldrid.OpenGL
                 fillModeWireframe: _backendType == GraphicsBackend.OpenGL,
                 samplerAnisotropy: true,
                 depthClipDisable: _backendType == GraphicsBackend.OpenGL,
-                texture1D: _backendType == GraphicsBackend.OpenGL);
+                texture1D: _backendType == GraphicsBackend.OpenGL,
+                independentBlend: _extensions.IndependentBlend);
 
             ResourceFactory = new OpenGLResourceFactory(this);
 
@@ -168,7 +169,8 @@ namespace Veldrid.OpenGL
                 _textureSamplerManager,
                 _extensions,
                 _stagingMemoryPool,
-                platformInfo.SetSwapchainFramebuffer);
+                platformInfo.SetSwapchainFramebuffer,
+                Features);
 
             int maxColorTextureSamples;
             glGetIntegerv(GetPName.MaxColorTextureSamples, &maxColorTextureSamples);

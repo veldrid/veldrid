@@ -37,6 +37,7 @@ namespace Veldrid.OpenGL
             GeometryShader = IsExtensionSupported("GL_ARB_geometry_shader4") || GLVersion(3, 2)
                 || IsExtensionSupported("OES_geometry_shader");
             DrawElementsBaseVertex = GLVersion(3, 2) || IsExtensionSupported("GL_OES_draw_elements_base_vertex");
+            IndependentBlend = GLVersion(4, 0) || GLESVersion(3, 2);
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -53,6 +54,7 @@ namespace Veldrid.OpenGL
         public readonly bool TessellationShader;
         public readonly bool GeometryShader;
         public readonly bool DrawElementsBaseVertex;
+        public readonly bool IndependentBlend;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.

@@ -51,7 +51,8 @@ namespace Veldrid.MTL
                 fillModeWireframe: true,
                 samplerAnisotropy: true,
                 depthClipDisable: true,
-                texture1D: true); // TODO: Should be macOS 10.11+ and iOS 11.0+.
+                texture1D: true, // TODO: Should be macOS 10.11+ and iOS 11.0+.
+                independentBlend: true);
 
             ResourceFactory = new MTLResourceFactory(this);
             _commandQueue = _device.newCommandQueue();

@@ -40,6 +40,11 @@ namespace Veldrid.OpenGL
         /// A delegate which can be used to set the synchronization behavior of the OpenGL context.
         /// </summary>
         public Action<bool> SetSyncToVerticalBlank { get; }
+        /// <summary>
+        /// A delegate which can be used to set the framebuffer used to render to the application Swapchain.
+        /// If this is null, the default FBO (0) will be bound.
+        /// </summary>
+        public Action SetSwapchainFramebuffer { get; }
 
         /// <summary>
         /// Constructs a new OpenGLPlatformInfo.
@@ -73,6 +78,44 @@ namespace Veldrid.OpenGL
             DeleteContext = deleteContext;
             SwapBuffers = swapBuffers;
             SetSyncToVerticalBlank = setSyncToVerticalBlank;
+        }
+
+        /// <summary>
+        /// Constructs a new OpenGLPlatformInfo.
+        /// </summary>
+        /// <param name="openGLContextHandle">The OpenGL context handle.</param>
+        /// <param name="getProcAddress">A delegate which can be used to retrieve OpenGL function pointers by name.</param>
+        /// <param name="makeCurrent">A delegate which can be used to make the given OpenGL context current on the calling
+        /// thread.</param>
+        /// <param name="getCurrentContext">A delegate which can be used to retrieve the calling thread's active OpenGL context.</param>
+        /// <param name="clearCurrentContext">A delegate which can be used to clear the calling thread's GL context.</param>
+        /// <param name="deleteContext">A delegate which can be used to delete the given context.</param>
+        /// <param name="swapBuffers">A delegate which can be used to swap the main back buffer associated with the OpenGL
+        /// context.</param>
+        /// <param name="setSyncToVerticalBlank">A delegate which can be used to set the synchronization behavior of the OpenGL
+        /// context.</param>
+        /// <param name="setSwapchainFramebuffer">A delegate which can be used to set the framebuffer used to render to the
+        /// application Swapchain.</param>
+        public OpenGLPlatformInfo(
+            IntPtr openGLContextHandle,
+            Func<string, IntPtr> getProcAddress,
+            Action<IntPtr> makeCurrent,
+            Func<IntPtr> getCurrentContext,
+            Action clearCurrentContext,
+            Action<IntPtr> deleteContext,
+            Action swapBuffers,
+            Action<bool> setSyncToVerticalBlank,
+            Action setSwapchainFramebuffer)
+        {
+            OpenGLContextHandle = openGLContextHandle;
+            GetProcAddress = getProcAddress;
+            MakeCurrent = makeCurrent;
+            GetCurrentContext = getCurrentContext;
+            ClearCurrentContext = clearCurrentContext;
+            DeleteContext = deleteContext;
+            SwapBuffers = swapBuffers;
+            SetSyncToVerticalBlank = setSyncToVerticalBlank;
+            SetSwapchainFramebuffer = setSwapchainFramebuffer;
         }
     }
 }

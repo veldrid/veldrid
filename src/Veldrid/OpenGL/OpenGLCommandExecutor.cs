@@ -10,7 +10,8 @@ namespace Veldrid.OpenGL
         private readonly GraphicsBackend _backend;
         private readonly OpenGLTextureSamplerManager _textureSamplerManager;
         private readonly StagingMemoryPool _stagingMemoryPool;
-        private OpenGLExtensions _extensions;
+        private readonly OpenGLExtensions _extensions;
+        private Action _setSwapchainFramebuffer;
 
         private Framebuffer _fb;
         private bool _isSwapchainFB;
@@ -34,12 +35,14 @@ namespace Veldrid.OpenGL
             GraphicsBackend backend,
             OpenGLTextureSamplerManager textureSamplerManager,
             OpenGLExtensions extensions,
-            StagingMemoryPool stagingMemoryPool)
+            StagingMemoryPool stagingMemoryPool,
+            Action setSwapchainFramebuffer)
         {
             _backend = backend;
             _extensions = extensions;
             _textureSamplerManager = textureSamplerManager;
             _stagingMemoryPool = stagingMemoryPool;
+            _setSwapchainFramebuffer = setSwapchainFramebuffer;
         }
 
         public void Begin()
@@ -314,8 +317,16 @@ namespace Veldrid.OpenGL
             }
             else if (fb is OpenGLSwapchainFramebuffer)
             {
-                glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                CheckLastError();
+                if (_setSwapchainFramebuffer != null)
+                {
+                    _setSwapchainFramebuffer();
+                }
+                else
+                {
+                    glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                    CheckLastError();
+                }
+
                 _isSwapchainFB = true;
             }
             else

@@ -6,7 +6,7 @@ namespace Veldrid.Android
     /// <summary>
     /// Function imports from the Android runtime library (android.so).
     /// </summary>
-    public static class AndroidRuntime
+    internal static class AndroidRuntime
     {
         private const string LibName = "android.so";
 

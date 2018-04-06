@@ -81,24 +81,4 @@ namespace Veldrid.Vk
             return new XlibSwapchainSource((IntPtr)_display, _window.Value);
         }
     }
-
-    internal class ANativeWindowSurfaceSource : VkSurfaceSource
-    {
-        private readonly IntPtr _aNativeWindow;
-
-        public ANativeWindowSurfaceSource(IntPtr aNativeWindow)
-        {
-            _aNativeWindow = aNativeWindow;
-        }
-
-        public unsafe override VkSurfaceKHR CreateSurface(VkInstance instance)
-        {
-            return VkSurfaceUtil.CreateSurface(instance, GetSurfaceSource());
-        }
-
-        internal override SwapchainSource GetSurfaceSource()
-        {
-            return SwapchainSource.CreateANativeWindow(_aNativeWindow);
-        }
-    }
 }

@@ -58,7 +58,8 @@ namespace Veldrid
         /// </returns>
         public static SwapchainSource CreateUIView(IntPtr uiView) => new UIViewSwapchainSource(uiView);
 
-        public static SwapchainSource CreateANativeWindow(IntPtr aNativeWindow) => new ANativeWindowSwapchainSource(aNativeWindow);
+        public static SwapchainSource CreateAndroidSurface(IntPtr surfaceHandle, IntPtr jniEnv)
+            => new AndroidSurfaceSwapchainSource(surfaceHandle, jniEnv);
     }
 
     internal class Win32SwapchainSource : SwapchainSource
@@ -117,16 +118,15 @@ namespace Veldrid
         }
     }
 
-    internal class ANativeWindowSwapchainSource : SwapchainSource
+    internal class AndroidSurfaceSwapchainSource : SwapchainSource
     {
-        public IntPtr ANativeWindow { get; }
+        public IntPtr Surface { get; }
+        public IntPtr JniEnv { get; }
 
-        public ANativeWindowSwapchainSource(IntPtr aNativeWindow)
+        public AndroidSurfaceSwapchainSource(IntPtr surfaceHandle, IntPtr jniEnv)
         {
-            ANativeWindow = aNativeWindow;
+            Surface = surfaceHandle;
+            JniEnv = jniEnv;
         }
-
-        [DllImport("android.so")]
-        public static extern void ANativeWindow_release(IntPtr aNativeWindow);
     }
 }

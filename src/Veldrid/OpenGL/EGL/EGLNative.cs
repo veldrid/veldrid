@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Veldrid.Android
+namespace Veldrid.OpenGL.EGL
 {
     internal static unsafe class EGLNative
     {
@@ -63,7 +63,7 @@ namespace Veldrid.Android
         public static extern int eglGetConfigAttrib(IntPtr display, IntPtr config, int attribute, int* value);
     }
 
-    public enum EGLError
+    internal enum EGLError
     {
         Success = 0x3000,
         NotInitialized = 0x3001,

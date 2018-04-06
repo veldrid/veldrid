@@ -2,6 +2,8 @@
 using Vulkan.Xlib;
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
+using Veldrid.Android;
+using System;
 
 namespace Veldrid.Vk
 {
@@ -15,8 +17,8 @@ namespace Veldrid.Vk
                     return CreateXlib(instance, xlibSource);
                 case Win32SwapchainSource win32Source:
                     return CreateWin32(instance, win32Source);
-                case ANativeWindowSwapchainSource anwSource:
-                    return CreateANativeWindow(instance, anwSource);
+                case AndroidSurfaceSwapchainSource androidSource:
+                    return CreateAndroidSurface(instance, androidSource);
                 default:
                     throw new VeldridException($"The provided SwapchainSource cannot be used to create a Vulkan surface.");
             }
@@ -42,10 +44,12 @@ namespace Veldrid.Vk
             return surface;
         }
 
-        private static VkSurfaceKHR CreateANativeWindow(VkInstance instance, ANativeWindowSwapchainSource anwSource)
+        private static VkSurfaceKHR CreateAndroidSurface(VkInstance instance, AndroidSurfaceSwapchainSource androidSource)
         {
+            IntPtr aNativeWindow = AndroidRuntime.ANativeWindow_fromSurface(androidSource.JniEnv, androidSource.Surface);
+
             VkAndroidSurfaceCreateInfoKHR androidSurfaceCI = VkAndroidSurfaceCreateInfoKHR.New();
-            androidSurfaceCI.window = (Vulkan.Android.ANativeWindow*)anwSource.ANativeWindow;
+            androidSurfaceCI.window = (Vulkan.Android.ANativeWindow*)aNativeWindow;
             VkResult result = vkCreateAndroidSurfaceKHR(instance, ref androidSurfaceCI, null, out VkSurfaceKHR surface);
             CheckResult(result);
             return surface;

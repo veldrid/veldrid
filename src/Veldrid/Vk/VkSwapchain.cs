@@ -260,11 +260,6 @@ namespace Veldrid.Vk
             vkDestroyFence(_gd.Device, _imageAvailableFence, null);
             _framebuffer.Dispose();
             vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
-
-            if (_swapchainSource is ANativeWindowSwapchainSource aNativeWindowSource)
-            {
-                ANativeWindowSwapchainSource.ANativeWindow_release(aNativeWindowSource.ANativeWindow);
-            }
         }
     }
 }

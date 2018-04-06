@@ -1,9 +1,11 @@
 using System;
+using System.Runtime.InteropServices;
 using Veldrid.MetalBindings;
 using static Veldrid.MetalBindings.ObjectiveCRuntime;
 
 namespace Veldrid.OpenGL.EAGL
 {
+    [StructLayout(LayoutKind.Sequential)]
     internal struct EAGLContext
     {
         private static ObjCClass s_class = new ObjCClass("EAGLContext");

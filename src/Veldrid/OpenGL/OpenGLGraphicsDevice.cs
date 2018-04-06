@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using Veldrid.OpenGL.EAGL;
+using static Veldrid.OpenGL.EGL.EGLNative;
+using NativeLibraryLoader;
 
 namespace Veldrid.OpenGL
 {
@@ -52,6 +54,7 @@ namespace Veldrid.OpenGL
         private Swapchain _mainSwapchain;
 
         private bool _syncToVBlank;
+
         public int MajorVersion { get; private set; }
         public int MinorVersion { get; private set; }
 
@@ -237,13 +240,23 @@ namespace Veldrid.OpenGL
 
         public OpenGLGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
-            if (!(swapchainDescription.Source is UIViewSwapchainSource uiViewSource))
+            SwapchainSource source = swapchainDescription.Source;
+            if (source is UIViewSwapchainSource uiViewSource)
+            {
+                InitializeUIView(options, uiViewSource.UIView);
+            }
+            else if (source is AndroidSurfaceSwapchainSource androidSource)
+            {
+                IntPtr aNativeWindow = Android.AndroidRuntime.ANativeWindow_fromSurface(
+                    androidSource.JniEnv,
+                    androidSource.Surface);
+                InitializeANativeWindow(options, aNativeWindow, swapchainDescription);
+            }
+            else
             {
                 throw new VeldridException(
-                    $"This function only supports creating an OpenGLES GraphicsDevice from a UIView SwapchainSource.");
+                    "This function does not support creating an OpenGLES GraphicsDevice with the given SwapchainSource.");
             }
-
-            InitializeUIView(options, uiViewSource.UIView);
         }
 
         private void InitializeUIView(GraphicsDeviceOptions options, IntPtr uIViewPtr)
@@ -261,15 +274,11 @@ namespace Veldrid.OpenGL
             eaglLayer.frame = uiView.frame;
             uiView.layer.addSublayer(eaglLayer.NativePtr);
 
-            const int RTLD_NOW = 2;
-            IntPtr libGL = dlopen("/System/Library/Frameworks/OpenGLES.framework/OpenGLES", RTLD_NOW);
+            NativeLibrary glesLibrary = new NativeLibrary("/System/Library/Frameworks/OpenGLES.framework/OpenGLES");
 
-            Func<string, IntPtr> getProcAddress = name =>
-            {
-                return dlsym(libGL, name);
-            };
+            Func<string, IntPtr> getProcAddress = name => glesLibrary.LoadFunction(name);
 
-            OpenGLNative.LoadAllFunctions(eaglContext.NativePtr, getProcAddress, true);
+            LoadAllFunctions(eaglContext.NativePtr, getProcAddress, true);
 
             glGenFramebuffers(1, out uint fb);
             CheckLastError();
@@ -332,22 +341,21 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
-            FramebufferErrorCode status = OpenGLNative.glCheckFramebufferStatus(FramebufferTarget.Framebuffer);
+            FramebufferErrorCode status = glCheckFramebufferStatus(FramebufferTarget.Framebuffer);
             CheckLastError();
             if (status != FramebufferErrorCode.FramebufferComplete)
             {
-                throw new VeldridException($"OpenGLES main swapchain framebuffer was incomplete after initialization.");
+                throw new VeldridException($"The OpenGLES main Swapchain Framebuffer was incomplete after initialization.");
             }
 
             glBindFramebuffer(FramebufferTarget.Framebuffer, fb);
             CheckLastError();
 
-            // TODO: Xamarin's API doesn't let me do this the corect way
             Action<IntPtr> setCurrentContext = ctx =>
             {
                 if (!EAGLContext.setCurrentContext(ctx))
                 {
-                    throw new VeldridException($"Unable to set the GL context.");
+                    throw new VeldridException($"Unable to set the thread's current GL context.");
                 }
             };
 
@@ -366,7 +374,7 @@ namespace Veldrid.OpenGL
 
             Action setSwapchainFramebuffer = () =>
             {
-                OpenGLNative.glBindFramebuffer(FramebufferTarget.Framebuffer, fb);
+                glBindFramebuffer(FramebufferTarget.Framebuffer, fb);
                 CheckLastError();
             };
 
@@ -420,9 +428,10 @@ namespace Veldrid.OpenGL
                 eaglLayer.removeFromSuperlayer();
                 eaglLayer.Release();
                 eaglContext.Release();
+                glesLibrary.Dispose();
             };
 
-            Veldrid.OpenGL.OpenGLPlatformInfo platformInfo = new Veldrid.OpenGL.OpenGLPlatformInfo(
+            OpenGLPlatformInfo platformInfo = new OpenGLPlatformInfo(
                 eaglContext.NativePtr,
                 getProcAddress,
                 setCurrentContext,
@@ -437,10 +446,146 @@ namespace Veldrid.OpenGL
             Init(options, platformInfo, (uint)fbWidth, (uint)fbHeight, false);
         }
 
-        [DllImport("libdl")]
-        private static extern IntPtr dlsym(IntPtr module, string name); // TODO: Use NativeLibraryLoader
-        [DllImport("libdl")]
-        private static extern IntPtr dlopen(string name, int flags); // TODO: Use NativeLibraryLoader
+        private void InitializeANativeWindow(
+            GraphicsDeviceOptions options,
+            IntPtr aNativeWindow,
+            SwapchainDescription swapchainDescription)
+        {
+            IntPtr display = eglGetDisplay(0);
+            if (display == IntPtr.Zero)
+            {
+                throw new VeldridException($"Failed to get the default Android EGLDisplay: {eglGetError()}");
+            }
+
+            int major, minor;
+            if (eglInitialize(display, &major, &minor) == 0)
+            {
+                throw new VeldridException($"Failed to initialize EGL: {eglGetError()}");
+            }
+
+            int[] attribs =
+            {
+                EGL_RED_SIZE, 8,
+                EGL_GREEN_SIZE, 8,
+                EGL_BLUE_SIZE, 8,
+                EGL_ALPHA_SIZE, 8,
+                EGL_DEPTH_SIZE,
+                swapchainDescription.DepthFormat != null
+                    ? GetDepthBits(swapchainDescription.DepthFormat.Value)
+                    : 0,
+                EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+                EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+                EGL_NONE,
+            };
+
+            IntPtr* configs = stackalloc IntPtr[50];
+
+            fixed (int* attribsPtr = attribs)
+            {
+                int num_config;
+                if (eglChooseConfig(display, attribsPtr, configs, 50, &num_config) == 0)
+                {
+                    throw new VeldridException($"Failed to select a valid EGLConfig: {eglGetError()}");
+                }
+            }
+
+            IntPtr bestConfig = configs[0];
+
+            int format;
+            if (eglGetConfigAttrib(display, bestConfig, EGL_NATIVE_VISUAL_ID, &format) == 0)
+            {
+                throw new VeldridException($"Failed to get the EGLConfig's format: {eglGetError()}");
+            }
+
+            Android.AndroidRuntime.ANativeWindow_setBuffersGeometry(aNativeWindow, 0, 0, format);
+
+            IntPtr eglWindowSurface = eglCreateWindowSurface(display, bestConfig, aNativeWindow, null);
+            if (eglWindowSurface == IntPtr.Zero)
+            {
+                throw new VeldridException(
+                    $"Failed to create an EGL surface from the Android native window: {eglGetError()}");
+            }
+
+            int* contextAttribs = stackalloc int[3];
+            contextAttribs[0] = EGL_CONTEXT_CLIENT_VERSION;
+            contextAttribs[1] = 2;
+            contextAttribs[2] = EGL_NONE;
+            IntPtr context = eglCreateContext(display, bestConfig, IntPtr.Zero, contextAttribs);
+            if (context == IntPtr.Zero)
+            {
+                throw new VeldridException($"Failed to create an EGLContext: " + eglGetError());
+            }
+
+            Action<IntPtr> makeCurrent = ctx =>
+            {
+                if (eglMakeCurrent(display, eglWindowSurface, eglWindowSurface, ctx) == 0)
+                {
+                    throw new VeldridException($"Failed to make the EGLContext {ctx} current: {eglGetError()}");
+                }
+            };
+
+            makeCurrent(context);
+
+            Action clearContext = () =>
+            {
+                if (eglMakeCurrent(display, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero) == 0)
+                {
+                    throw new VeldridException("Failed to clear the current EGLContext: " + eglGetError());
+                }
+            };
+
+            Action swapBuffers = () =>
+            {
+                if (eglSwapBuffers(display, eglWindowSurface) == 0)
+                {
+                    throw new VeldridException("Failed to swap buffers: " + eglGetError());
+                }
+            };
+
+            Action<bool> setSync = vsync =>
+            {
+                if (eglSwapInterval(display, vsync ? 1 : 0) == 0)
+                {
+                    throw new VeldridException($"Failed to set the swap interval: " + eglGetError());
+                }
+            };
+
+            // Set the desired initial state.
+            setSync(swapchainDescription.SyncToVerticalBlank);
+
+            Action<IntPtr> destroyContext = ctx =>
+            {
+                if (eglDestroyContext(display, ctx) == 0)
+                {
+                    throw new VeldridException($"Failed to destroy EGLContext {ctx}: {eglGetError()}");
+                }
+            };
+
+            OpenGLPlatformInfo platformInfo = new OpenGLPlatformInfo(
+                context,
+                eglGetProcAddress,
+                makeCurrent,
+                eglGetCurrentContext,
+                clearContext,
+                destroyContext,
+                swapBuffers,
+                setSync);
+
+            Init(options, platformInfo, swapchainDescription.Width, swapchainDescription.Height, true);
+        }
+
+        private static int GetDepthBits(PixelFormat value)
+        {
+            switch (value)
+            {
+                case PixelFormat.R16_UNorm:
+                    return 16;
+                case PixelFormat.R32_Float:
+                    return 32;
+                default:
+                    throw new VeldridException($"Unsupported depth format: {value}");
+            }
+        }
 
         protected override void SubmitCommandsCore(
             CommandList cl,

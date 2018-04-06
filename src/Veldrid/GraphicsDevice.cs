@@ -749,7 +749,9 @@ namespace Veldrid
             return new OpenGL.OpenGLGraphicsDevice(options, platformInfo, width, height);
         }
 
-        public static GraphicsDevice CreateOpenGLES(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
+        public static GraphicsDevice CreateOpenGLES(
+            GraphicsDeviceOptions options,
+            SwapchainDescription swapchainDescription)
         {
             return new OpenGL.OpenGLGraphicsDevice(options, swapchainDescription);
         }

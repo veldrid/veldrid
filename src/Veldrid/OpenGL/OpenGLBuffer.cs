@@ -70,17 +70,15 @@ namespace Veldrid.OpenGL
                 glGenBuffers(1, out _buffer);
                 CheckLastError();
 
-                // Bind to a target not used anywhere else
-                glBindBuffer(BufferTarget.TextureBuffer, _buffer);
+                glBindBuffer(BufferTarget.CopyReadBuffer, _buffer);
                 CheckLastError();
 
                 glBufferData(
-                    BufferTarget.TextureBuffer,
+                    BufferTarget.CopyReadBuffer,
                     (UIntPtr)SizeInBytes,
                     null,
                     _dynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.StaticDraw);
                 CheckLastError();
-
             }
 
             Created = true;

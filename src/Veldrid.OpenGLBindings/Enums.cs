@@ -128,6 +128,11 @@ namespace Veldrid.OpenGLBinding
         FramebufferExt = 36160
     }
 
+    public enum RenderbufferTarget
+    {
+        Renderbuffer = 36161
+    }
+
     public enum GLFramebufferAttachment
     {
         FrontLeft = 1024,
@@ -2005,5 +2010,11 @@ namespace Veldrid.OpenGLBinding
         TextureSamples = ((int)0x9106),
         TextureFixedSampleLocations = ((int)0x9107),
         TextureImmutableFormat = ((int)0x912F),
+    }
+
+    public enum RenderbufferPname
+    {
+        RenderbufferWidth = 0x8D42,
+        RenderbufferHeight = 0x8D43,
     }
 }

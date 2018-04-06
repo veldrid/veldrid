@@ -7,32 +7,35 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using Veldrid.OpenGL.EAGL;
 
 namespace Veldrid.OpenGL
 {
     internal unsafe class OpenGLGraphicsDevice : GraphicsDevice
     {
-        private readonly GraphicsBackend _backendType;
-        private readonly uint _vao;
+        private ResourceFactory _resourceFactory;
+        private GraphicsBackend _backendType;
+        private GraphicsDeviceFeatures _features;
+        private uint _vao;
         private readonly ConcurrentQueue<OpenGLDeferredResource> _resourcesToDispose
             = new ConcurrentQueue<OpenGLDeferredResource>();
-        private readonly IntPtr _glContext;
-        private readonly Action<IntPtr> _makeCurrent;
-        private readonly Func<IntPtr> _getCurrentContext;
-        private readonly Action<IntPtr> _deleteContext;
-        private readonly Action _swapBuffers;
-        private readonly Action<bool> _setSyncToVBlank;
-        private readonly OpenGLSwapchainFramebuffer _swapchainFramebuffer;
-        private readonly OpenGLTextureSamplerManager _textureSamplerManager;
-        private readonly OpenGLCommandExecutor _commandExecutor;
+        private IntPtr _glContext;
+        private Action<IntPtr> _makeCurrent;
+        private Func<IntPtr> _getCurrentContext;
+        private Action<IntPtr> _deleteContext;
+        private Action _swapBuffers;
+        private Action<bool> _setSyncToVBlank;
+        private OpenGLSwapchainFramebuffer _swapchainFramebuffer;
+        private OpenGLTextureSamplerManager _textureSamplerManager;
+        private OpenGLCommandExecutor _commandExecutor;
         private DebugProc _debugMessageCallback;
-        private readonly OpenGLExtensions _extensions;
+        private OpenGLExtensions _extensions;
 
-        private readonly TextureSampleCount _maxColorTextureSamples;
+        private TextureSampleCount _maxColorTextureSamples;
 
         private readonly StagingMemoryPool _stagingMemoryPool = new StagingMemoryPool();
-        private readonly BlockingCollection<ExecutionThreadWorkItem> _workItems;
-        private readonly ExecutionThread _executionThread;
+        private BlockingCollection<ExecutionThreadWorkItem> _workItems;
+        private ExecutionThread _executionThread;
 
         private readonly object _commandListDisposalLock = new object();
         private readonly Dictionary<OpenGLCommandList, int> _submittedCommandListCounts
@@ -46,15 +49,15 @@ namespace Veldrid.OpenGL
 
         private readonly object _resetEventsLock = new object();
         private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
-        private readonly Swapchain _mainSwapchain;
+        private Swapchain _mainSwapchain;
 
         private bool _syncToVBlank;
-        public int MajorVersion { get; }
-        public int MinorVersion { get; }
+        public int MajorVersion { get; private set; }
+        public int MinorVersion { get; private set; }
 
         public override GraphicsBackend BackendType => _backendType;
 
-        public override ResourceFactory ResourceFactory { get; }
+        public override ResourceFactory ResourceFactory => _resourceFactory;
 
         public OpenGLExtensions Extensions => _extensions;
 
@@ -75,13 +78,23 @@ namespace Veldrid.OpenGL
 
         public OpenGLTextureSamplerManager TextureSamplerManager => _textureSamplerManager;
 
-        public override GraphicsDeviceFeatures Features { get; }
+        public override GraphicsDeviceFeatures Features => _features;
 
         public OpenGLGraphicsDevice(
             GraphicsDeviceOptions options,
             OpenGLPlatformInfo platformInfo,
             uint width,
             uint height)
+        {
+            Init(options, platformInfo, width, height, true);
+        }
+
+        private void Init(
+            GraphicsDeviceOptions options,
+            OpenGLPlatformInfo platformInfo,
+            uint width,
+            uint height,
+            bool loadFunctions)
         {
             _syncToVBlank = options.SyncToVerticalBlank;
             _glContext = platformInfo.OpenGLContextHandle;
@@ -123,7 +136,7 @@ namespace Veldrid.OpenGL
 
             _extensions = new OpenGLExtensions(extensions, _backendType, MajorVersion, MinorVersion);
 
-            Features = new GraphicsDeviceFeatures(
+            _features = new GraphicsDeviceFeatures(
                 computeShader: _extensions.ComputeShaders,
                 geometryShader: _extensions.GeometryShader,
                 tessellationShaders: _extensions.TessellationShader,
@@ -137,7 +150,7 @@ namespace Veldrid.OpenGL
                 texture1D: _backendType == GraphicsBackend.OpenGL,
                 independentBlend: _extensions.IndependentBlend);
 
-            ResourceFactory = new OpenGLResourceFactory(this);
+            _resourceFactory = new OpenGLResourceFactory(this);
 
             glGenVertexArrays(1, out _vao);
             CheckLastError();
@@ -169,12 +182,20 @@ namespace Veldrid.OpenGL
                 _textureSamplerManager,
                 _extensions,
                 _stagingMemoryPool,
-                platformInfo.SetSwapchainFramebuffer,
+                platformInfo,
                 Features);
 
             int maxColorTextureSamples;
-            glGetIntegerv(GetPName.MaxColorTextureSamples, &maxColorTextureSamples);
-            CheckLastError();
+            if (_backendType == GraphicsBackend.OpenGL)
+            {
+                glGetIntegerv(GetPName.MaxColorTextureSamples, &maxColorTextureSamples);
+                CheckLastError();
+            }
+            else
+            {
+                glGetIntegerv(GetPName.MaxSamples, &maxColorTextureSamples);
+                CheckLastError();
+            }
             if (maxColorTextureSamples >= 32)
             {
                 _maxColorTextureSamples = TextureSampleCount.Count32;
@@ -200,7 +221,12 @@ namespace Veldrid.OpenGL
                 _maxColorTextureSamples = TextureSampleCount.Count1;
             }
 
-            _mainSwapchain = new OpenGLSwapchain(this, width, height, options.SwapchainDepthFormat);
+            _mainSwapchain = new OpenGLSwapchain(
+                this,
+                width,
+                height,
+                options.SwapchainDepthFormat,
+                platformInfo.ResizeSwapchain);
 
             _workItems = new BlockingCollection<ExecutionThreadWorkItem>(new ConcurrentQueue<ExecutionThreadWorkItem>());
             platformInfo.ClearCurrentContext();
@@ -208,6 +234,213 @@ namespace Veldrid.OpenGL
 
             PostDeviceCreated();
         }
+
+        public OpenGLGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
+        {
+            if (!(swapchainDescription.Source is UIViewSwapchainSource uiViewSource))
+            {
+                throw new VeldridException(
+                    $"This function only supports creating an OpenGLES GraphicsDevice from a UIView SwapchainSource.");
+            }
+
+            InitializeUIView(options, uiViewSource.UIView);
+        }
+
+        private void InitializeUIView(GraphicsDeviceOptions options, IntPtr uIViewPtr)
+        {
+            EAGLContext eaglContext = EAGLContext.Create(EAGLRenderingAPI.OpenGLES3);
+            if (!EAGLContext.setCurrentContext(eaglContext.NativePtr))
+            {
+                throw new VeldridException("Unable to make newly-created EAGLContext current.");
+            }
+
+            MetalBindings.UIView uiView = new MetalBindings.UIView(uIViewPtr);
+
+            CAEAGLLayer eaglLayer = CAEAGLLayer.New();
+            eaglLayer.opaque = true;
+            eaglLayer.frame = uiView.frame;
+            uiView.layer.addSublayer(eaglLayer.NativePtr);
+
+            const int RTLD_NOW = 2;
+            IntPtr libGL = dlopen("/System/Library/Frameworks/OpenGLES.framework/OpenGLES", RTLD_NOW);
+
+            Func<string, IntPtr> getProcAddress = name =>
+            {
+                return dlsym(libGL, name);
+            };
+
+            OpenGLNative.LoadAllFunctions(eaglContext.NativePtr, getProcAddress, true);
+
+            glGenFramebuffers(1, out uint fb);
+            CheckLastError();
+            glBindFramebuffer(FramebufferTarget.Framebuffer, fb);
+            CheckLastError();
+
+            glGenRenderbuffers(1, out uint colorRB);
+            CheckLastError();
+
+            glBindRenderbuffer(RenderbufferTarget.Renderbuffer, colorRB);
+            CheckLastError();
+
+            bool result = eaglContext.renderBufferStorage((UIntPtr)RenderbufferTarget.Renderbuffer, eaglLayer.NativePtr);
+            if (!result)
+            {
+                throw new VeldridException($"Failed to associate OpenGLES Renderbuffer with CAEAGLLayer.");
+            }
+
+            glGetRenderbufferParameteriv(
+                RenderbufferTarget.Renderbuffer,
+                RenderbufferPname.RenderbufferWidth,
+                out int fbWidth);
+            CheckLastError();
+
+            glGetRenderbufferParameteriv(
+                RenderbufferTarget.Renderbuffer,
+                RenderbufferPname.RenderbufferHeight,
+                out int fbHeight);
+            CheckLastError();
+
+            glFramebufferRenderbuffer(
+                FramebufferTarget.Framebuffer,
+                GLFramebufferAttachment.ColorAttachment0,
+                RenderbufferTarget.Renderbuffer,
+                colorRB);
+            CheckLastError();
+
+            uint depthRB = 0;
+            bool hasDepth = options.SwapchainDepthFormat != null;
+            if (hasDepth)
+            {
+                glGenRenderbuffers(1, out depthRB);
+                CheckLastError();
+
+                glBindRenderbuffer(RenderbufferTarget.Renderbuffer, depthRB);
+                CheckLastError();
+
+                glRenderbufferStorage(
+                    RenderbufferTarget.Renderbuffer,
+                    (uint)OpenGLFormats.VdToGLSizedInternalFormat(options.SwapchainDepthFormat.Value, true),
+                    (uint)fbWidth,
+                    (uint)fbHeight);
+                CheckLastError();
+
+                glFramebufferRenderbuffer(
+                    FramebufferTarget.Framebuffer,
+                    GLFramebufferAttachment.DepthAttachment,
+                    RenderbufferTarget.Renderbuffer,
+                    depthRB);
+                CheckLastError();
+            }
+
+            FramebufferErrorCode status = OpenGLNative.glCheckFramebufferStatus(FramebufferTarget.Framebuffer);
+            CheckLastError();
+            if (status != FramebufferErrorCode.FramebufferComplete)
+            {
+                throw new VeldridException($"OpenGLES main swapchain framebuffer was incomplete after initialization.");
+            }
+
+            glBindFramebuffer(FramebufferTarget.Framebuffer, fb);
+            CheckLastError();
+
+            // TODO: Xamarin's API doesn't let me do this the corect way
+            Action<IntPtr> setCurrentContext = ctx =>
+            {
+                if (!EAGLContext.setCurrentContext(ctx))
+                {
+                    throw new VeldridException($"Unable to set the GL context.");
+                }
+            };
+
+            Action swapBuffers = () =>
+            {
+                glBindRenderbuffer(RenderbufferTarget.Renderbuffer, colorRB);
+                CheckLastError();
+
+                bool presentResult = eaglContext.presentRenderBuffer((UIntPtr)RenderbufferTarget.Renderbuffer);
+                CheckLastError();
+                if (!presentResult)
+                {
+                    throw new VeldridException($"Failed to present the EAGL RenderBuffer.");
+                }
+            };
+
+            Action setSwapchainFramebuffer = () =>
+            {
+                OpenGLNative.glBindFramebuffer(FramebufferTarget.Framebuffer, fb);
+                CheckLastError();
+            };
+
+            Action<uint, uint> resizeSwapchain = (w, h) =>
+            {
+                eaglLayer.frame = uiView.frame;
+
+                _executionThread.Run(() =>
+                {
+                    glBindRenderbuffer(RenderbufferTarget.Renderbuffer, colorRB);
+                    CheckLastError();
+
+                    bool rbStorageResult = eaglContext.renderBufferStorage(
+                        (UIntPtr)RenderbufferTarget.Renderbuffer,
+                        eaglLayer.NativePtr);
+                    if (!rbStorageResult)
+                    {
+                        throw new VeldridException($"Failed to associate OpenGLES Renderbuffer with CAEAGLLayer.");
+                    }
+
+                    glGetRenderbufferParameteriv(
+                        RenderbufferTarget.Renderbuffer,
+                        RenderbufferPname.RenderbufferWidth,
+                        out int newWidth);
+                    CheckLastError();
+
+                    glGetRenderbufferParameteriv(
+                        RenderbufferTarget.Renderbuffer,
+                        RenderbufferPname.RenderbufferHeight,
+                        out int newHeight);
+                    CheckLastError();
+
+                    if (hasDepth)
+                    {
+                        Debug.Assert(depthRB != 0);
+                        glBindRenderbuffer(RenderbufferTarget.Renderbuffer, depthRB);
+                        CheckLastError();
+
+                        glRenderbufferStorage(
+                            RenderbufferTarget.Renderbuffer,
+                            (uint)OpenGLFormats.VdToGLSizedInternalFormat(options.SwapchainDepthFormat.Value, true),
+                            (uint)newWidth,
+                            (uint)newHeight);
+                        CheckLastError();
+                    }
+                });
+            };
+
+            Action<IntPtr> destroyContext = ctx =>
+            {
+                eaglLayer.removeFromSuperlayer();
+                eaglLayer.Release();
+                eaglContext.Release();
+            };
+
+            Veldrid.OpenGL.OpenGLPlatformInfo platformInfo = new Veldrid.OpenGL.OpenGLPlatformInfo(
+                eaglContext.NativePtr,
+                getProcAddress,
+                setCurrentContext,
+                () => EAGLContext.currentContext.NativePtr,
+                () => setCurrentContext(IntPtr.Zero),
+                destroyContext,
+                swapBuffers,
+                syncInterval => { },
+                setSwapchainFramebuffer,
+                resizeSwapchain);
+
+            Init(options, platformInfo, (uint)fbWidth, (uint)fbHeight, false);
+        }
+
+        [DllImport("libdl")]
+        private static extern IntPtr dlsym(IntPtr module, string name); // TODO: Use NativeLibraryLoader
+        [DllImport("libdl")]
+        private static extern IntPtr dlopen(string name, int flags); // TODO: Use NativeLibraryLoader
 
         protected override void SubmitCommandsCore(
             CommandList cl,

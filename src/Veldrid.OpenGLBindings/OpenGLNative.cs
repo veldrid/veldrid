@@ -1448,6 +1448,56 @@ namespace Veldrid.OpenGLBinding
             GetTextureParameter pname,
             int* @params) => p_glGetTexLevelParameteriv(target, level, pname, @params);
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glFramebufferRenderbuffer_t(
+            FramebufferTarget target,
+            GLFramebufferAttachment attachment,
+            RenderbufferTarget renderbuffertarget,
+            uint renderbuffer);
+        private static glFramebufferRenderbuffer_t p_glFramebufferRenderbuffer;
+        public static void glFramebufferRenderbuffer(
+            FramebufferTarget target,
+            GLFramebufferAttachment attachment,
+            RenderbufferTarget renderbuffertarget,
+            uint renderbuffer)
+            => p_glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glRenderbufferStorage_t(
+            RenderbufferTarget target,
+            uint internalformat,
+            uint width,
+            uint height);
+        private static glRenderbufferStorage_t p_glRenderbufferStorage;
+        public static void glRenderbufferStorage(
+            RenderbufferTarget target,
+            uint internalFormat,
+            uint width,
+            uint height) => p_glRenderbufferStorage(target, internalFormat, width, height);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glGetRenderbufferParameteriv_t(
+            RenderbufferTarget target,
+            RenderbufferPname pname,
+            out int parameters);
+        private static glGetRenderbufferParameteriv_t p_glGetRenderbufferParameteriv;
+        public static void glGetRenderbufferParameteriv(
+            RenderbufferTarget target,
+            RenderbufferPname pname,
+            out int parameters) => p_glGetRenderbufferParameteriv(target, pname, out parameters);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glGenRenderbuffers_t(uint count, out uint names);
+        private static glGenRenderbuffers_t p_glGenRenderbuffers;
+        public static void glGenRenderbuffers(uint count, out uint names)
+            => p_glGenRenderbuffers(count, out names);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glBindRenderbuffer_t(RenderbufferTarget bindPoint, uint name);
+        private static glBindRenderbuffer_t p_glBindRenderbuffer;
+        public static void glBindRenderbuffer(RenderbufferTarget bindPoint, uint name)
+            => p_glBindRenderbuffer(bindPoint, name);
+
         public static void LoadGetString(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -1624,6 +1674,12 @@ namespace Veldrid.OpenGLBinding
                 {
                     LoadFunction("glCopyImageSubDataEXT", out p_glCopyImageSubData);
                 }
+
+                LoadFunction("glRenderbufferStorage", out p_glRenderbufferStorage);
+                LoadFunction("glFramebufferRenderbuffer", out p_glFramebufferRenderbuffer);
+                LoadFunction("glGetRenderbufferParameteriv", out p_glGetRenderbufferParameteriv);
+                LoadFunction("glGenRenderbuffers", out p_glGenRenderbuffers);
+                LoadFunction("glBindRenderbuffer", out p_glBindRenderbuffer);
             }
         }
 

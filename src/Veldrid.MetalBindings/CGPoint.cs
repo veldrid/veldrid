@@ -10,5 +10,7 @@ namespace Veldrid.MetalBindings
             this.x = x;
             this.y = y;
         }
+
+        public override string ToString() => string.Format("({0},{1})", x, y);
     }
 }

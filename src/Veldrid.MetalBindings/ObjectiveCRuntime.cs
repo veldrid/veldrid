@@ -139,6 +139,10 @@ namespace Veldrid.MetalBindings
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern Bool8 bool8_objc_msgSend(IntPtr receiver, Selector selector, UIntPtr a);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern Bool8 bool8_objc_msgSend(IntPtr receiver, Selector selector, IntPtr a);
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern Bool8 bool8_objc_msgSend(IntPtr receiver, Selector selector, UIntPtr a, IntPtr b);
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern Bool8 bool8_objc_msgSend(IntPtr receiver, Selector selector, uint a);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern uint uint_objc_msgSend(IntPtr receiver, Selector selector);

@@ -13,5 +13,7 @@ namespace Veldrid.MetalBindings
             this.width = width;
             this.height = height;
         }
+
+        public override string ToString() => string.Format("{0} x {1}", width, height);
     }
 }

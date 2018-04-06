@@ -11,7 +11,7 @@ namespace Veldrid.OpenGL
         private readonly OpenGLTextureSamplerManager _textureSamplerManager;
         private readonly StagingMemoryPool _stagingMemoryPool;
         private readonly OpenGLExtensions _extensions;
-        private readonly Action _setSwapchainFramebuffer;
+        private readonly OpenGLPlatformInfo _platformInfo;
         private readonly GraphicsDeviceFeatures _features;
 
         private Framebuffer _fb;
@@ -37,14 +37,14 @@ namespace Veldrid.OpenGL
             OpenGLTextureSamplerManager textureSamplerManager,
             OpenGLExtensions extensions,
             StagingMemoryPool stagingMemoryPool,
-            Action setSwapchainFramebuffer,
+            OpenGLPlatformInfo platformInfo,
             GraphicsDeviceFeatures features)
         {
             _backend = backend;
             _extensions = extensions;
             _textureSamplerManager = textureSamplerManager;
             _stagingMemoryPool = stagingMemoryPool;
-            _setSwapchainFramebuffer = setSwapchainFramebuffer;
+            _platformInfo = platformInfo;
             _features = features;
         }
 
@@ -320,9 +320,9 @@ namespace Veldrid.OpenGL
             }
             else if (fb is OpenGLSwapchainFramebuffer)
             {
-                if (_setSwapchainFramebuffer != null)
+                if (_platformInfo.SetSwapchainFramebuffer != null)
                 {
-                    _setSwapchainFramebuffer();
+                    _platformInfo.SetSwapchainFramebuffer();
                 }
                 else
                 {

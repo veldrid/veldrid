@@ -23,12 +23,6 @@ namespace Veldrid.OpenGL
 
         public OpenGLTexture(OpenGLGraphicsDevice gd, ref TextureDescription description)
         {
-            // TODO CAPABILITY
-            if (description.Type == TextureType.Texture1D && gd.BackendType == GraphicsBackend.OpenGLES)
-            {
-                throw new VeldridException($"1D Textures are not supported by OpenGL ES.");
-            }
-
             _gd = gd;
 
             Width = description.Width;

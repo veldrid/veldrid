@@ -5,7 +5,7 @@ namespace Veldrid
     /// </summary>
     public abstract class ResourceFactory
     {
-        public ResourceFactory(GraphicsDeviceFeatures features)
+        protected ResourceFactory(GraphicsDeviceFeatures features)
         {
             Features = features;
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -32,6 +31,9 @@ namespace Veldrid
         /// </summary>
         public abstract Swapchain MainSwapchain { get; }
 
+        /// <summary>
+        /// Gets a <see cref="GraphicsDeviceFeatures"/> which enumerates the optional features supported by this instance.
+        /// </summary>
         public abstract GraphicsDeviceFeatures Features { get; }
 
         /// <summary>
@@ -739,7 +741,7 @@ namespace Veldrid
         /// information.</param>
         /// <param name="width">The initial width of the window.</param>
         /// <param name="height">The initial height of the window.</param>
-        /// <returns>A new <see cref="GraphicsDevice"/> using the OpenGL API.</returns>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the OpenGL or OpenGL ES API.</returns>
         public static GraphicsDevice CreateOpenGL(
             GraphicsDeviceOptions options,
             OpenGL.OpenGLPlatformInfo platformInfo,
@@ -749,6 +751,14 @@ namespace Veldrid
             return new OpenGL.OpenGLGraphicsDevice(options, platformInfo, width, height);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL ES, with a main Swapchain.
+        /// This overload can only be used on iOS or Android to create a GraphicsDevice for an Android Surface or an iOS UIView.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="swapchainDescription">A description of the main Swapchain to create.
+        /// The SwapchainSource must have been created from an Android Surface or an iOS UIView.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the OpenGL or OpenGL ES API.</returns>
         public static GraphicsDevice CreateOpenGLES(
             GraphicsDeviceOptions options,
             SwapchainDescription swapchainDescription)

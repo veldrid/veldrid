@@ -141,7 +141,7 @@ namespace Veldrid.Vk
                 bool hasStencil = FormatHelpers.IsStencilFormat(DepthTarget.Value.Target.Format);
                 if (hasStencil)
                 {
-                    attachments[attachments.Count - 1].stencilLoadOp = VkAttachmentLoadOp.Load;
+                    attachments[attachments.Count - 1].stencilLoadOp = VkAttachmentLoadOp.Clear;
                 }
             }
 
@@ -266,6 +266,7 @@ namespace Veldrid.Vk
             {
                 vkDestroyFramebuffer(_gd.Device, _deviceFramebuffer, null);
                 vkDestroyRenderPass(_gd.Device, _renderPassNoClear, null);
+                vkDestroyRenderPass(_gd.Device, _renderPassNoClearLoad, null);
                 vkDestroyRenderPass(_gd.Device, _renderPassClear, null);
                 foreach (VkImageView view in _attachmentViews)
                 {

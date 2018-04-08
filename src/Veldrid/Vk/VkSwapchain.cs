@@ -179,7 +179,8 @@ namespace Veldrid.Vk
             }
 
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_gd.PhysicalDevice, _surface, out VkSurfaceCapabilitiesKHR surfaceCapabilities);
-            uint imageCount = Math.Min(surfaceCapabilities.maxImageCount, surfaceCapabilities.minImageCount + 1);
+            uint maxImageCount = surfaceCapabilities.maxImageCount == 0 ? uint.MaxValue : surfaceCapabilities.maxImageCount;
+            uint imageCount = Math.Min(maxImageCount, surfaceCapabilities.minImageCount + 1);
 
             VkSwapchainCreateInfoKHR swapchainCI = VkSwapchainCreateInfoKHR.New();
             swapchainCI.surface = _surface;

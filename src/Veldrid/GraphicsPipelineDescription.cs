@@ -33,6 +33,10 @@ namespace Veldrid
         /// </summary>
         public ResourceLayout[] ResourceLayouts;
         /// <summary>
+        /// Specifies which model the rendering backend should use for binding resources.
+        /// </summary>
+        public ResourceBindingModel ResourceBindingModel;
+        /// <summary>
         /// A description of the output attachments used by the <see cref="Pipeline"/>.
         /// </summary>
         public OutputDescription Outputs;
@@ -67,6 +71,7 @@ namespace Veldrid
             PrimitiveTopology = primitiveTopology;
             ShaderSet = shaderSet;
             ResourceLayouts = resourceLayouts;
+            ResourceBindingModel = ResourceBindingModel.Default;
             Outputs = outputs;
         }
 
@@ -100,6 +105,7 @@ namespace Veldrid
             PrimitiveTopology = primitiveTopology;
             ShaderSet = shaderSet;
             ResourceLayouts = new[] { resourceLayout };
+            ResourceBindingModel = ResourceBindingModel.Default;
             Outputs = outputs;
         }
 
@@ -116,6 +122,7 @@ namespace Veldrid
                 && PrimitiveTopology == other.PrimitiveTopology
                 && ShaderSet.Equals(other.ShaderSet)
                 && Util.ArrayEquals(ResourceLayouts, other.ResourceLayouts)
+                && ResourceBindingModel.Equals(other.ResourceBindingModel)
                 && Outputs.Equals(other.Outputs);
         }
 
@@ -132,6 +139,7 @@ namespace Veldrid
                 PrimitiveTopology.GetHashCode(),
                 ShaderSet.GetHashCode(),
                 HashHelper.Array(ResourceLayouts),
+                ResourceBindingModel.GetHashCode(),
                 Outputs.GetHashCode());
         }
     }

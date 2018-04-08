@@ -23,12 +23,6 @@
         /// Indicates whether the main Swapchain will be synchronized to the window system's vertical refresh rate.
         /// </summary>
         public bool SyncToVerticalBlank;
-        /// <summary>
-        /// If this value is true, vertex buffers will be bound in slot(s) after any other buffers (uniform, structured, etc.)
-        /// bound to the vertex stage. Default is false, which means vertex buffers will be bound in slot(s) starting from 0,
-        /// followed by any other buffers.
-        /// </summary>
-        public bool BindMetalVertexBuffersAfterOtherBuffers;
 
         /// <summary>
         /// Constructs a new GraphicsDeviceOptions for a device with no main Swapchain.
@@ -41,7 +35,6 @@
             HasMainSwapchain = false;
             SwapchainDepthFormat = null;
             SyncToVerticalBlank = false;
-            BindMetalVertexBuffersAfterOtherBuffers = false;
         }
 
         /// <summary>
@@ -59,7 +52,6 @@
             HasMainSwapchain = true;
             SwapchainDepthFormat = swapchainDepthFormat;
             SyncToVerticalBlank = syncToVerticalBlank;
-            BindMetalVertexBuffersAfterOtherBuffers = false;
         }
     }
 }

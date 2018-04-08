@@ -183,7 +183,7 @@ namespace Veldrid.MTL
                 {
                     if (!_vertexBuffersActive[i])
                     {
-                        UIntPtr index = (UIntPtr)(_gd.BindMetalVertexBuffersAfterOtherBuffers
+                        UIntPtr index = (UIntPtr)(_graphicsPipeline.ResourceBindingModel == ResourceBindingModel.Improved
                             ? _nonVertexBufferCount + i
                             : i);
                         _rce.setVertexBuffer(
@@ -736,7 +736,7 @@ namespace Veldrid.MTL
             {
                 if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
                 {
-                    UIntPtr index = (UIntPtr)(_gd.BindMetalVertexBuffersAfterOtherBuffers
+                    UIntPtr index = (UIntPtr)(_graphicsPipeline.ResourceBindingModel == ResourceBindingModel.Improved
                         ? slot + baseBuffer
                         : slot + _vertexBufferCount + baseBuffer);
                     _rce.setVertexBuffer(mtlBuffer.DeviceBuffer, UIntPtr.Zero, index);

@@ -722,7 +722,7 @@ namespace Veldrid.Vk
 
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
         {
-            VkMemoryBlock memoryBlock = null;
+            VkMemoryBlock memoryBlock = default(VkMemoryBlock);
             IntPtr mappedPtr = IntPtr.Zero;
             uint sizeInBytes;
             uint offset = 0;
@@ -744,7 +744,7 @@ namespace Veldrid.Vk
                 depthPitch = (uint)layout.depthPitch;
             }
 
-            if (memoryBlock != null)
+            if (memoryBlock.DeviceMemory.Handle != 0)
             {
                 if (memoryBlock.IsPersistentMapped)
                 {
@@ -769,7 +769,7 @@ namespace Veldrid.Vk
 
         protected override void UnmapCore(MappableResource resource, uint subresource)
         {
-            VkMemoryBlock memoryBlock = null;
+            VkMemoryBlock memoryBlock = default(VkMemoryBlock);
             if (resource is VkBuffer buffer)
             {
                 memoryBlock = buffer.Memory;
@@ -780,7 +780,7 @@ namespace Veldrid.Vk
                 memoryBlock = tex.Memory;
             }
 
-            if (memoryBlock != null && !memoryBlock.IsPersistentMapped)
+            if (memoryBlock.DeviceMemory.Handle != 0 && !memoryBlock.IsPersistentMapped)
             {
                 vkUnmapMemory(_device, memoryBlock.DeviceMemory);
             }

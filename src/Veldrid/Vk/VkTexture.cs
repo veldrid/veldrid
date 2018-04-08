@@ -353,7 +353,7 @@ namespace Veldrid.Vk
                     vkDestroyImage(_gd.Device, _optimalImage, null);
                 }
 
-                if (_memoryBlock != null)
+                if (_memoryBlock.DeviceMemory.Handle != 0)
                 {
                     _gd.MemoryManager.Free(_memoryBlock);
                 }

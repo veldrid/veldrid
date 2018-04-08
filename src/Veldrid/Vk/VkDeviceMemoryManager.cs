@@ -214,7 +214,7 @@ namespace Veldrid.Vk
                         }
                     }
 
-                    block = null;
+                    block = default(VkMemoryBlock);
                     return false;
                 }
             }
@@ -288,7 +288,7 @@ namespace Veldrid.Vk
     }
 
     [DebuggerDisplay("[Mem:{DeviceMemory.Handle}] Off:{Offset}, Size:{Size}")]
-    internal unsafe class VkMemoryBlock
+    internal unsafe struct VkMemoryBlock : IEquatable<VkMemoryBlock>
     {
         public readonly uint MemoryTypeIndex;
         public readonly VkDeviceMemory DeviceMemory;
@@ -307,6 +307,13 @@ namespace Veldrid.Vk
             Size = size;
             MemoryTypeIndex = memoryTypeIndex;
             BaseMappedPointer = mappedPtr;
+        }
+
+        public bool Equals(VkMemoryBlock other)
+        {
+            return DeviceMemory.Equals(other.DeviceMemory)
+                && Offset.Equals(other.Offset)
+                && Size.Equals(other.Size);
         }
     }
 }

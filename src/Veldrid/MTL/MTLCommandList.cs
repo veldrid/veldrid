@@ -36,6 +36,7 @@ namespace Veldrid.MTL
         private ResourceSet[] _computeResourceSets;
         private bool[] _computeResourceSetsActive;
         private uint _vertexBufferCount;
+        private uint _nonVertexBufferCount;
         private MTLBuffer[] _vertexBuffers;
         private bool[] _vertexBuffersActive;
         private bool _disposed;
@@ -182,7 +183,13 @@ namespace Veldrid.MTL
                 {
                     if (!_vertexBuffersActive[i])
                     {
-                        _rce.setVertexBuffer(_vertexBuffers[i].DeviceBuffer, UIntPtr.Zero, (UIntPtr)i);
+                        UIntPtr index = (UIntPtr)(_gd.BindMetalVertexBuffersAfterOtherBuffers
+                            ? _nonVertexBufferCount + i
+                            : i);
+                        _rce.setVertexBuffer(
+                            _vertexBuffers[i].DeviceBuffer, 
+                            UIntPtr.Zero, 
+                            index);
                     }
                 }
                 return true;
@@ -269,6 +276,8 @@ namespace Veldrid.MTL
                 Util.EnsureArrayMinimumSize(ref _graphicsResourceSets, _graphicsResourceSetCount);
                 Util.EnsureArrayMinimumSize(ref _graphicsResourceSetsActive, _graphicsResourceSetCount);
                 Util.ClearArray(_graphicsResourceSetsActive);
+
+                _nonVertexBufferCount = _graphicsPipeline.NonVertexBufferCount;
 
                 _vertexBufferCount = _graphicsPipeline.VertexBufferCount;
                 Util.EnsureArrayMinimumSize(ref _vertexBuffers, _vertexBufferCount);
@@ -727,8 +736,10 @@ namespace Veldrid.MTL
             {
                 if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
                 {
-                    uint vertexBufferCount = _graphicsPipeline.VertexBufferCount;
-                    _rce.setVertexBuffer(mtlBuffer.DeviceBuffer, UIntPtr.Zero, (UIntPtr)(slot + vertexBufferCount + baseBuffer));
+                    UIntPtr index = (UIntPtr)(_gd.BindMetalVertexBuffersAfterOtherBuffers
+                        ? slot + baseBuffer
+                        : slot + _vertexBufferCount + baseBuffer);
+                    _rce.setVertexBuffer(mtlBuffer.DeviceBuffer, UIntPtr.Zero, index);
                 }
                 if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
                 {

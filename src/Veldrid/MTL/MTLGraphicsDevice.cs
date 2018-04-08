@@ -34,6 +34,8 @@ namespace Veldrid.MTL
         public MTLCommandQueue CommandQueue => _commandQueue;
         public MTLFeatureSupport MetalFeatures { get; }
 
+        public bool BindMetalVertexBuffersAfterOtherBuffers { get; }
+
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
             SwapchainDescription? swapchainDesc)
@@ -71,6 +73,8 @@ namespace Veldrid.MTL
                 SwapchainDescription desc = swapchainDesc.Value;
                 _mainSwapchain = new MTLSwapchain(this, ref desc);
             }
+
+            BindMetalVertexBuffersAfterOtherBuffers = options.BindMetalVertexBuffersAfterOtherBuffers;
 
             PostDeviceCreated();
         }

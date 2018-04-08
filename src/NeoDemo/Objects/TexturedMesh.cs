@@ -35,8 +35,7 @@ namespace Veldrid.NeoDemo.Objects
         private Pipeline _shadowMapPipeline;
         private ResourceSet[] _shadowMapResourceSets;
 
-        private DeviceBuffer _worldBuffer;
-        private DeviceBuffer _inverseTransposeWorldBuffer;
+        private DeviceBuffer _worldAndInverseBuffer;
 
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
 
@@ -68,8 +67,7 @@ namespace Veldrid.NeoDemo.Objects
             _ib = _meshData.CreateIndexBuffer(disposeFactory, cl, out _indexCount);
             _ib.Name = _name + "_IB";
 
-            _worldBuffer = disposeFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            _inverseTransposeWorldBuffer = disposeFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(64 * 2, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             if (_materialPropsOwned)
             {
                 _materialProps.CreateDeviceObjects(gd, cl, sc);
@@ -115,7 +113,7 @@ namespace Veldrid.NeoDemo.Objects
                     new ResourceLayoutElementDescription("ViewProjection", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
             ResourceLayout worldLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("World", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+                new ResourceLayoutElementDescription("WorldAndInverse", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
             GraphicsPipelineDescription depthPD = new GraphicsPipelineDescription(
                 BlendStateDescription.Empty,
@@ -154,8 +152,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("PointLights", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment)));
 
             ResourceLayout mainPerObjectLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("World", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("InverseTransposeWorld", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("WorldAndInverse", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("MaterialProperties", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("RegularSampler", ResourceKind.Sampler, ShaderStages.Fragment),
@@ -199,8 +196,7 @@ namespace Veldrid.NeoDemo.Objects
                 sc.PointLightsBuffer));
 
             _mainPerObjectRS = disposeFactory.CreateResourceSet(new ResourceSetDescription(mainPerObjectLayout,
-                _worldBuffer,
-                _inverseTransposeWorldBuffer,
+                _worldAndInverseBuffer,
                 _materialProps.UniformBuffer,
                 _textureView,
                 gd.Aniso4xSampler,
@@ -242,7 +238,7 @@ namespace Veldrid.NeoDemo.Objects
                     viewProjBuffer));
                 ResourceSet worldRS = disposeFactory.CreateResourceSet(new ResourceSetDescription(
                     worldLayout,
-                    _worldBuffer));
+                    _worldAndInverseBuffer));
                 ret[i * 2 + 1] = worldRS;
             }
 
@@ -303,9 +299,10 @@ namespace Veldrid.NeoDemo.Objects
 
         public override void UpdatePerFrameResources(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
-            Matrix4x4 world = _transform.GetTransformMatrix();
-            gd.UpdateBuffer(_worldBuffer, 0, ref world);
-            gd.UpdateBuffer(_inverseTransposeWorldBuffer, 0, VdUtilities.CalculateInverseTranspose(ref world));
+            WorldAndInverse wai;
+            wai.World = _transform.GetTransformMatrix();
+            wai.InverseWorld = VdUtilities.CalculateInverseTranspose(ref wai.World);
+            gd.UpdateBuffer(_worldAndInverseBuffer, 0, ref wai);
         }
 
         private void RenderShadowMap(CommandList cl, SceneContext sc, int shadowMapIndex)
@@ -329,5 +326,11 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetGraphicsResourceSet(3, reflectionPass ? _reflectionRS : _noReflectionRS);
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }
+    }
+
+    public struct WorldAndInverse
+    {
+        public Matrix4x4 World;
+        public Matrix4x4 InverseWorld;
     }
 }

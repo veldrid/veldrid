@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using ShaderGen;
+using Veldrid.NeoDemo.Objects;
 using static ShaderGen.ShaderBuiltins;
 
 [assembly: ShaderSet("ShadowDepth", "Shaders.ShadowDepth.VS", "Shaders.ShadowDepth.FS")]
@@ -12,13 +13,13 @@ namespace Shaders
         public Matrix4x4 ViewProjection;
 
         [ResourceSet(1)]
-        public Matrix4x4 World;
+        public WorldAndInverse WorldAndInverse;
 
         [VertexShader]
         public FragmentInput VS(VertexInput input)
         {
             FragmentInput output;
-            output.Position = Mul(ViewProjection, Mul(World, new Vector4(input.Position, 1)));
+            output.Position = Mul(ViewProjection, Mul(WorldAndInverse.World, new Vector4(input.Position, 1)));
             output.Position.Y += input.TexCoord.Y * .0001f;
             return output;
         }

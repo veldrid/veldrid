@@ -3,6 +3,7 @@ using ShaderGen;
 using static ShaderGen.ShaderBuiltins;
 using Veldrid.NeoDemo;
 using System;
+using Veldrid.NeoDemo.Objects;
 
 [assembly: ShaderSet("ShadowMain", "Shaders.ShadowMain.VS", "Shaders.ShadowMain.FS")]
 
@@ -33,9 +34,7 @@ namespace Shaders
 
         // Per-Object resources
         [ResourceSet(2)]
-        public Matrix4x4 World;
-        [ResourceSet(2)]
-        public Matrix4x4 InverseTransposeWorld;
+        public WorldAndInverse WorldAndInverse;
         [ResourceSet(2)]
         public MaterialProperties MaterialProperties;
         [ResourceSet(2)]
@@ -89,29 +88,29 @@ namespace Shaders
         public PixelInput VS(VertexInput input)
         {
             PixelInput output;
-            Vector4 worldPosition = Mul(World, new Vector4(input.Position, 1));
+            Vector4 worldPosition = Mul(WorldAndInverse.World, new Vector4(input.Position, 1));
             Vector4 viewPosition = Mul(View, worldPosition);
             output.Position = Mul(Projection, viewPosition);
 
             output.Position_WorldSpace = worldPosition.XYZ();
 
-            Vector4 outNormal = Mul(InverseTransposeWorld, new Vector4(input.Normal, 1));
+            Vector4 outNormal = Mul(WorldAndInverse.InverseWorld, new Vector4(input.Normal, 1));
             output.Normal = Vector3.Normalize(outNormal.XYZ());
 
             output.TexCoord = input.TexCoord;
 
-            output.LightPosition1 = Mul(World, new Vector4(input.Position, 1));
+            output.LightPosition1 = Mul(WorldAndInverse.World, new Vector4(input.Position, 1));
             output.LightPosition1 = Mul(LightViewProjection1, output.LightPosition1);
 
-            output.LightPosition2 = Mul(World, new Vector4(input.Position, 1));
+            output.LightPosition2 = Mul(WorldAndInverse.World, new Vector4(input.Position, 1));
             output.LightPosition2 = Mul(LightViewProjection2, output.LightPosition2);
 
-            output.LightPosition3 = Mul(World, new Vector4(input.Position, 1));
+            output.LightPosition3 = Mul(WorldAndInverse.World, new Vector4(input.Position, 1));
             output.LightPosition3 = Mul(LightViewProjection3, output.LightPosition3);
 
             output.FragDepth = output.Position.Z;
 
-            output.ReflectionPosition = Mul(World, new Vector4(input.Position, 1));
+            output.ReflectionPosition = Mul(WorldAndInverse.World, new Vector4(input.Position, 1));
             output.ReflectionPosition = Mul(ReflectionViewProj, output.ReflectionPosition);
 
             return output;

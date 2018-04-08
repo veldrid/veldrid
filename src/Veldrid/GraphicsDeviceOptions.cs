@@ -23,6 +23,11 @@
         /// Indicates whether the main Swapchain will be synchronized to the window system's vertical refresh rate.
         /// </summary>
         public bool SyncToVerticalBlank;
+        /// <summary>
+        /// Specifies which model the rendering backend should use for binding resources. This can be overridden per-pipeline
+        /// by specifying a value in <see cref="GraphicsPipelineDescription.ResourceBindingModel"/>.
+        /// </summary>
+        public ResourceBindingModel ResourceBindingModel;
 
         /// <summary>
         /// Constructs a new GraphicsDeviceOptions for a device with no main Swapchain.
@@ -35,6 +40,7 @@
             HasMainSwapchain = false;
             SwapchainDepthFormat = null;
             SyncToVerticalBlank = false;
+            ResourceBindingModel = ResourceBindingModel.Default;
         }
 
         /// <summary>
@@ -52,6 +58,7 @@
             HasMainSwapchain = true;
             SwapchainDepthFormat = swapchainDepthFormat;
             SyncToVerticalBlank = syncToVerticalBlank;
+            ResourceBindingModel = ResourceBindingModel.Default;
         }
     }
 }

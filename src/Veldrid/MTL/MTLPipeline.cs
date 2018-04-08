@@ -39,7 +39,7 @@ namespace Veldrid.MTL
                 ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, MTLResourceLayout>(description.ResourceLayouts[i]);
                 NonVertexBufferCount += ResourceLayouts[i].BufferCount;
             }
-            ResourceBindingModel = description.ResourceBindingModel;
+            ResourceBindingModel = description.ResourceBindingModel ?? gd.ResourceBindingModel;
 
             CullMode = MTLFormats.VdToMTLCullMode(description.RasterizerState.CullMode);
             FrontFace = MTLFormats.VdVoMTLFrontFace(description.RasterizerState.FrontFace);
@@ -82,7 +82,7 @@ namespace Veldrid.MTL
                 {
                     VertexElementDescription elementDesc = vdDesc.Elements[j];
                     MTLVertexAttributeDescriptor mtlAttribute = vertexDescriptor.attributes[element];
-                    mtlAttribute.bufferIndex = (UIntPtr)(description.ResourceBindingModel == ResourceBindingModel.Improved
+                    mtlAttribute.bufferIndex = (UIntPtr)(ResourceBindingModel == ResourceBindingModel.Improved
                         ? NonVertexBufferCount + i
                         : i);
                     mtlAttribute.format = MTLFormats.VdToMTLVertexFormat(elementDesc.Format);

@@ -232,7 +232,7 @@ namespace Veldrid.StartupUtilities
             if (backend == GraphicsBackend.OpenGL)
             {
                 Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.Core);
-            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 3);
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 3);
                 Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 0);
             }
             else
@@ -246,10 +246,14 @@ namespace Veldrid.StartupUtilities
             if (options.SwapchainDepthFormat.HasValue)
             {
                 switch (options.SwapchainDepthFormat)
-                {
+                { 
                     case PixelFormat.R16_UNorm:
                         depthBits = 16;
                         break;
+                    case PixelFormat.D24_UNorm_S8_UInt:
+                        depthBits = 24;
+                    break;
+                    case PixelFormat.D32_Float_S8_UInt:
                     case PixelFormat.R32_Float:
                         depthBits = 32;
                         break;

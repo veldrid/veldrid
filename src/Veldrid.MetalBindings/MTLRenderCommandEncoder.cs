@@ -46,6 +46,14 @@ namespace Veldrid.MetalBindings
             => objc_msgSend(NativePtr, sel_drawPrimitives0,
                 primitiveType, vertexStart, vertexCount, instanceCount, baseInstance);
 
+        public void drawPrimitives(
+            MTLPrimitiveType primitiveType,
+            UIntPtr vertexStart,
+            UIntPtr vertexCount,
+            UIntPtr instanceCount)
+            => objc_msgSend(NativePtr, sel_drawPrimitives2,
+                primitiveType, vertexStart, vertexCount, instanceCount);
+
         public void drawPrimitives(MTLPrimitiveType primitiveType, MTLBuffer indirectBuffer, UIntPtr indirectBufferOffset)
             => objc_msgSend(NativePtr, sel_drawPrimitives1,
                 primitiveType, indirectBuffer, indirectBufferOffset);
@@ -133,6 +141,7 @@ namespace Veldrid.MetalBindings
         private static readonly Selector sel_setFragmentSamplerState = "setFragmentSamplerState:atIndex:";
         private static readonly Selector sel_drawPrimitives0 = "drawPrimitives:vertexStart:vertexCount:instanceCount:baseInstance:";
         private static readonly Selector sel_drawPrimitives1 = "drawPrimitives:indirectBuffer:indirectBufferOffset:";
+        private static readonly Selector sel_drawPrimitives2 = "drawPrimitives:vertexStart:vertexCount:instanceCount:";
         private static readonly Selector sel_drawIndexedPrimitives0 = "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:";
         private static readonly Selector sel_drawIndexedPrimitives1 = "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:";
         private static readonly Selector sel_drawIndexedPrimitives2 = "drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:";

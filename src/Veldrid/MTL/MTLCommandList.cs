@@ -98,12 +98,24 @@ namespace Veldrid.MTL
         {
             if (PreDrawCommand())
             {
-                _rce.drawPrimitives(
-                    _graphicsPipeline.PrimitiveType,
-                    (UIntPtr)vertexStart,
-                    (UIntPtr)vertexCount,
-                    (UIntPtr)instanceCount,
-                    (UIntPtr)instanceStart);
+                if (instanceStart == 0)
+                {
+                    _rce.drawPrimitives(
+                        _graphicsPipeline.PrimitiveType,
+                        (UIntPtr)vertexStart,
+                        (UIntPtr)vertexCount,
+                        (UIntPtr)instanceCount);
+                }
+                else
+                {
+                    _rce.drawPrimitives(
+                        _graphicsPipeline.PrimitiveType,
+                        (UIntPtr)vertexStart,
+                        (UIntPtr)vertexCount,
+                        (UIntPtr)instanceCount,
+                        (UIntPtr)instanceStart);
+
+                }
             }
         }
 

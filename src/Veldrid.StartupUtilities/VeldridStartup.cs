@@ -232,7 +232,7 @@ namespace Veldrid.StartupUtilities
             if (backend == GraphicsBackend.OpenGL)
             {
                 Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextProfileMask, (int)SDL_GLProfile.Core);
-            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 3);
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMajorVersion, 3);
                 Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextMinorVersion, 0);
             }
             else
@@ -243,6 +243,7 @@ namespace Veldrid.StartupUtilities
             }
 
             int depthBits = 0;
+            int stencilBits = 0;
             if (options.SwapchainDepthFormat.HasValue)
             {
                 switch (options.SwapchainDepthFormat)
@@ -250,8 +251,16 @@ namespace Veldrid.StartupUtilities
                     case PixelFormat.R16_UNorm:
                         depthBits = 16;
                         break;
+                    case PixelFormat.D24_UNorm_S8_UInt:
+                        depthBits = 24;
+                        stencilBits = 8;
+                    break;           
                     case PixelFormat.R32_Float:
                         depthBits = 32;
+                        break;
+                    case PixelFormat.D32_Float_S8_UInt:
+                        depthBits = 32;
+                        stencilBits = 8;
                         break;
                     default:
                         throw new VeldridException("Invalid depth format: " + options.SwapchainDepthFormat.Value);
@@ -259,6 +268,7 @@ namespace Veldrid.StartupUtilities
             }
 
             Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.DepthSize, depthBits);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.StencilSize, stencilBits);
 
             IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
             if (contextHandle == IntPtr.Zero)

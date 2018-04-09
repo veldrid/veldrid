@@ -247,7 +247,7 @@ namespace Veldrid.StartupUtilities
             if (options.SwapchainDepthFormat.HasValue)
             {
                 switch (options.SwapchainDepthFormat)
-                { 
+                {
                     case PixelFormat.R16_UNorm:
                         depthBits = 16;
                         break;
@@ -267,8 +267,8 @@ namespace Veldrid.StartupUtilities
                 }
             }
 
-            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.StencilSize, stencilBits);
             Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.DepthSize, depthBits);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.StencilSize, stencilBits);
 
             IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
             if (contextHandle == IntPtr.Zero)

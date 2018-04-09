@@ -33,6 +33,12 @@ namespace Veldrid.StartupUtilities
             out Sdl2Window window,
             out GraphicsDevice gd)
         {
+            Sdl2Native.SDL_Init(SDLInitFlags.Video);
+            if (preferredBackend == GraphicsBackend.OpenGL || preferredBackend == GraphicsBackend.OpenGLES)
+            {
+                SetSDLGLContextAttributes(deviceOptions, preferredBackend);
+            }
+
             window = CreateWindow(ref windowCI);
             gd = CreateGraphicsDevice(window, deviceOptions, preferredBackend);
         }
@@ -224,6 +230,46 @@ namespace Veldrid.StartupUtilities
             Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
             Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
 
+            SetSDLGLContextAttributes(options, backend);
+
+            IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
+            byte* error = Sdl2Native.SDL_GetError();
+            if (error != null)
+            {
+                string errorString = GetString(error);
+                if (!string.IsNullOrEmpty(errorString))
+                {
+                    throw new VeldridException(
+                        $"Unable to create OpenGL Context: \"{errorString}\". This may indicate that the system does not support the requested OpenGL profile, version, or Swapchain format.");
+                }
+            }
+
+            int actualDepthSize;
+            int result = Sdl2Native.SDL_GL_GetAttribute(SDL_GLAttribute.DepthSize, &actualDepthSize);
+            int actualStencilSize;
+            result = Sdl2Native.SDL_GL_GetAttribute(SDL_GLAttribute.StencilSize, &actualStencilSize);
+
+            result = Sdl2Native.SDL_GL_SetSwapInterval(options.SyncToVerticalBlank ? 1 : 0);
+
+            OpenGL.OpenGLPlatformInfo platformInfo = new OpenGL.OpenGLPlatformInfo(
+                contextHandle,
+                Sdl2Native.SDL_GL_GetProcAddress,
+                context => Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, context),
+                () => Sdl2Native.SDL_GL_GetCurrentContext(),
+                () => Sdl2Native.SDL_GL_MakeCurrent(new SDL_Window(IntPtr.Zero), IntPtr.Zero),
+                Sdl2Native.SDL_GL_DeleteContext,
+                () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle),
+                sync => Sdl2Native.SDL_GL_SetSwapInterval(sync ? 1 : 0));
+
+            return GraphicsDevice.CreateOpenGL(
+                options,
+                platformInfo,
+                (uint)window.Width,
+                (uint)window.Height);
+        }
+
+        private static unsafe void SetSDLGLContextAttributes(GraphicsDeviceOptions options, GraphicsBackend backend)
+        {
             if (options.Debug)
             {
                 Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)SDL_GLContextFlag.Debug);
@@ -254,7 +300,7 @@ namespace Veldrid.StartupUtilities
                     case PixelFormat.D24_UNorm_S8_UInt:
                         depthBits = 24;
                         stencilBits = 8;
-                    break;           
+                        break;
                     case PixelFormat.R32_Float:
                         depthBits = 32;
                         break;
@@ -267,37 +313,8 @@ namespace Veldrid.StartupUtilities
                 }
             }
 
-            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.DepthSize, depthBits);
-            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.StencilSize, stencilBits);
-
-            IntPtr contextHandle = Sdl2Native.SDL_GL_CreateContext(sdlHandle);
-            if (contextHandle == IntPtr.Zero)
-            {
-                unsafe
-                {
-                    byte* error = Sdl2Native.SDL_GetError();
-                    string errorString = GetString(error);
-                    throw new VeldridException("Unable to create GL Context: " + errorString);
-                }
-            }
-
-            int result = Sdl2Native.SDL_GL_SetSwapInterval(options.SyncToVerticalBlank ? 1 : 0);
-
-            OpenGL.OpenGLPlatformInfo platformInfo = new OpenGL.OpenGLPlatformInfo(
-                contextHandle,
-                Sdl2Native.SDL_GL_GetProcAddress,
-                context => Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, context),
-                () => Sdl2Native.SDL_GL_GetCurrentContext(),
-                () => Sdl2Native.SDL_GL_MakeCurrent(new SDL_Window(IntPtr.Zero), IntPtr.Zero),
-                Sdl2Native.SDL_GL_DeleteContext,
-                () => Sdl2Native.SDL_GL_SwapWindow(sdlHandle),
-                sync => Sdl2Native.SDL_GL_SetSwapInterval(sync ? 1 : 0));
-
-            return GraphicsDevice.CreateOpenGL(
-                options,
-                platformInfo,
-                (uint)window.Width,
-                (uint)window.Height);
+            int result = Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.DepthSize, depthBits);
+            result = Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.StencilSize, stencilBits);
         }
 #endif
 

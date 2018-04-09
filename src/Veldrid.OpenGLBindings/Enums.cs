@@ -550,7 +550,10 @@ namespace Veldrid.OpenGLBinding
         Rg16Snorm = 36761,
         Rgb16Snorm = 36762,
         Rgba16Snorm = 36763,
-        Rgb10A2ui = 36975
+        Rgb10A2ui = 36975,
+        CompressedRgb8Etc2 = 0x9274,
+        CompressedRgb8PunchthroughAlpha1Etc2 = 0x9276,
+        CompressedRgba8Etc2Eac = 0x9278,
     }
 
     public enum PixelStoreParameter

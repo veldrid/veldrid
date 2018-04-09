@@ -499,6 +499,13 @@ namespace Veldrid.Vk
                 case PixelFormat.BC3_UNorm:
                     return VkFormat.Bc3UnormBlock;
 
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                    return VkFormat.Etc2R8g8b8UnormBlock;
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                    return VkFormat.Etc2R8g8b8a1UnormBlock;
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
+                    return VkFormat.Etc2R8g8b8a8UnormBlock;
+
                 case PixelFormat.D32_Float_S8_UInt:
                     return VkFormat.D32SfloatS8Uint;
                 case PixelFormat.D24_UNorm_S8_UInt:

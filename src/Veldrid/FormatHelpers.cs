@@ -67,6 +67,9 @@ namespace Veldrid
                 case PixelFormat.BC1_Rgba_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
                     Debug.Fail("GetSizeInBytes should not be used on a compressed format.");
                     throw Illegal.Value<PixelFormat>();
                 default: throw Illegal.Value<PixelFormat>();
@@ -187,7 +190,10 @@ namespace Veldrid
             return format == PixelFormat.BC1_Rgb_UNorm
                 || format == PixelFormat.BC1_Rgba_UNorm
                 || format == PixelFormat.BC2_UNorm
-                || format == PixelFormat.BC3_UNorm;
+                || format == PixelFormat.BC3_UNorm
+                || format == PixelFormat.ETC2_R8_G8_B8_UNorm
+                || format == PixelFormat.ETC2_R8_G8_B8_A1_UNorm
+                || format == PixelFormat.ETC2_R8_G8_B8_A8_UNorm;
         }
 
         internal static uint GetRowPitch(uint width, PixelFormat format)
@@ -198,6 +204,9 @@ namespace Veldrid
                 case PixelFormat.BC1_Rgb_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
                     var blocksPerRow = (width + 3) / 4;
                     var blockSizeInBytes = GetBlockSizeInBytes(format);
                     return blocksPerRow * blockSizeInBytes;
@@ -213,9 +222,12 @@ namespace Veldrid
             {
                 case PixelFormat.BC1_Rgba_UNorm:
                 case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
                     return 8;
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
                     return 16;
                 default:
                     throw Illegal.Value<PixelFormat>();
@@ -230,6 +242,9 @@ namespace Veldrid
                 case PixelFormat.BC1_Rgb_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
                     return (height + 3) / 4;
 
                 default:
@@ -247,7 +262,7 @@ namespace Veldrid
             uint blockSizeInBytes;
             if (IsCompressedFormat(format))
             {
-                Debug.Assert(width % 4 == 0 && height % 4 == 0);
+                Debug.Assert((width % 4 == 0 || width < 4) && (height % 4 == 0 || height < 4));
                 blockSizeInBytes = GetBlockSizeInBytes(format);
                 width /= 4;
                 height /= 4;

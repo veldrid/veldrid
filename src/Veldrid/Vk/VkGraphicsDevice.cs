@@ -502,7 +502,10 @@ namespace Veldrid.Vk
             instanceCI.ppEnabledExtensionNames = (byte**)instanceExtensions.Data;
 
             instanceCI.enabledLayerCount = instanceLayers.Count;
-            instanceCI.ppEnabledLayerNames = (byte**)instanceLayers.Data;
+            if (instanceLayers.Count > 0)
+            {
+                instanceCI.ppEnabledLayerNames = (byte**)instanceLayers.Data;
+            }
 
             VkResult result = vkCreateInstance(ref instanceCI, null, out _instance);
             CheckResult(result);
@@ -526,6 +529,11 @@ namespace Veldrid.Vk
             {
                 createFnPtr = vkGetInstanceProcAddr(_instance, debugExtFnName);
             }
+            if (createFnPtr == IntPtr.Zero)
+            {
+                return;
+            }
+
             vkCreateDebugReportCallbackEXT_d createDelegate = Marshal.GetDelegateForFunctionPointer<vkCreateDebugReportCallbackEXT_d>(createFnPtr);
             VkResult result = createDelegate(_instance, &debugCallbackCI, IntPtr.Zero, out _debugCallbackHandle);
             CheckResult(result);
@@ -615,6 +623,7 @@ namespace Veldrid.Vk
             deviceFeatures.depthClamp = _physicalDeviceFeatures.depthClamp;
             deviceFeatures.multiViewport = _physicalDeviceFeatures.multiViewport;
             deviceFeatures.textureCompressionBC = _physicalDeviceFeatures.textureCompressionBC;
+            deviceFeatures.textureCompressionETC2 = _physicalDeviceFeatures.textureCompressionETC2;
 
             uint propertyCount = 0;
             VkResult result = vkEnumerateDeviceExtensionProperties(_physicalDevice, (byte*)null, &propertyCount, null);

@@ -200,5 +200,9 @@
         /// RGBA component order. Each component is a 32-bit signed integer.
         /// </summary>
         R32_G32_B32_A32_SInt,
+
+        ETC2_R8_G8_B8_UNorm,
+        ETC2_R8_G8_B8_A1_UNorm,
+        ETC2_R8_G8_B8_A8_UNorm,
     }
 }

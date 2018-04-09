@@ -686,10 +686,11 @@ namespace Veldrid
 
             for (uint level = 0; level < source.MipLevels; level++)
             {
+                Util.GetMipDimensions(source, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                 CopyTexture(
                     source, 0, 0, 0, level, 0,
                     destination, 0, 0, 0, level, 0,
-                    source.Width, source.Height, source.Depth,
+                    mipWidth, mipHeight, mipDepth,
                     source.ArrayLayers);
             }
         }

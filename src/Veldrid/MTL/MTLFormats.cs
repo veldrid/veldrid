@@ -100,6 +100,13 @@ namespace Veldrid.MTL
                 case PixelFormat.BC3_UNorm:
                     return MTLPixelFormat.BC3_RGBA;
 
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                    return MTLPixelFormat.ETC2_RGB8;
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                    return MTLPixelFormat.ETC2_RGB8A1;
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
+                    return MTLPixelFormat.EAC_RGBA8;
+
                 case PixelFormat.D24_UNorm_S8_UInt:
                     return MTLPixelFormat.Depth24Unorm_Stencil8;
                 case PixelFormat.D32_Float_S8_UInt:

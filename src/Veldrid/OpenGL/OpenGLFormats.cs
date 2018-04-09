@@ -136,6 +136,13 @@ namespace Veldrid.OpenGL
                 case PixelFormat.BC3_UNorm:
                     return PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
 
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                    return PixelInternalFormat.CompressedRgb8Etc2;
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                    return PixelInternalFormat.CompressedRgb8PunchthroughAlpha1Etc2;
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
+                    return PixelInternalFormat.CompressedRgba8Etc2Eac;
+
                 case PixelFormat.D32_Float_S8_UInt:
                     return PixelInternalFormat.Depth32fStencil8;
                 case PixelFormat.D24_UNorm_S8_UInt:
@@ -224,10 +231,13 @@ namespace Veldrid.OpenGL
                     return GLPixelFormat.RgbaInteger;
 
                 case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
                     return GLPixelFormat.Rgb;
                 case PixelFormat.BC1_Rgba_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
                     return GLPixelFormat.Rgba;
 
                 case PixelFormat.D24_UNorm_S8_UInt:
@@ -300,7 +310,11 @@ namespace Veldrid.OpenGL
                 case PixelFormat.BC1_Rgba_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
                     return GLPixelType.UnsignedByte; // ?
+
 
                 case PixelFormat.D32_Float_S8_UInt:
                     return GLPixelType.Float32UnsignedInt248Rev;
@@ -413,6 +427,13 @@ namespace Veldrid.OpenGL
                     return (SizedInternalFormat)PixelInternalFormat.CompressedRgbaS3tcDxt3Ext;
                 case PixelFormat.BC3_UNorm:
                     return (SizedInternalFormat)PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
+
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                    return (SizedInternalFormat)PixelInternalFormat.CompressedRgb8Etc2;
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                    return (SizedInternalFormat)PixelInternalFormat.CompressedRgb8PunchthroughAlpha1Etc2;
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
+                    return (SizedInternalFormat)PixelInternalFormat.CompressedRgba8Etc2Eac;
 
                 case PixelFormat.D32_Float_S8_UInt:
                     Debug.Assert(depthFormat);

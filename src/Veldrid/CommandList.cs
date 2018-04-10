@@ -23,6 +23,8 @@ namespace Veldrid
     /// </summary>
     public abstract class CommandList : DeviceResource, IDisposable
     {
+        private readonly GraphicsDeviceFeatures _features;
+
         /// <summary>
         /// The active <see cref="Framebuffer"/>.
         /// </summary>
@@ -33,7 +35,6 @@ namespace Veldrid
 #if VALIDATE_USAGE
         private DeviceBuffer _indexBuffer;
         private IndexFormat _indexFormat;
-        private readonly GraphicsDeviceFeatures _features;
 #endif
 
         internal CommandList(ref CommandListDescription description, GraphicsDeviceFeatures features)

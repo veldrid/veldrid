@@ -105,23 +105,23 @@ namespace Veldrid.D3D11
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
         {
             Format dxgiFormat = D3D11Formats.ToDxgiFormat(format, depthFormat);
-            if (CheckFormat(dxgiFormat, 32))
+            if (CheckFormatMultisample(dxgiFormat, 32))
             {
                 return TextureSampleCount.Count32;
             }
-            else if (CheckFormat(dxgiFormat, 16))
+            else if (CheckFormatMultisample(dxgiFormat, 16))
             {
                 return TextureSampleCount.Count16;
             }
-            else if (CheckFormat(dxgiFormat, 8))
+            else if (CheckFormatMultisample(dxgiFormat, 8))
             {
                 return TextureSampleCount.Count8;
             }
-            else if (CheckFormat(dxgiFormat, 4))
+            else if (CheckFormatMultisample(dxgiFormat, 4))
             {
                 return TextureSampleCount.Count4;
             }
-            else if (CheckFormat(dxgiFormat, 2))
+            else if (CheckFormatMultisample(dxgiFormat, 2))
             {
                 return TextureSampleCount.Count2;
             }
@@ -129,9 +129,55 @@ namespace Veldrid.D3D11
             return TextureSampleCount.Count1;
         }
 
-        private bool CheckFormat(Format format, int sampleCount)
+        private bool CheckFormatMultisample(Format format, int sampleCount)
         {
             return _device.CheckMultisampleQualityLevels(format, sampleCount) != 0;
+        }
+
+        protected override bool GetPixelFormatSupportCore(
+            PixelFormat format,
+            TextureType type,
+            TextureUsage usage,
+            out PixelFormatProperties properties)
+        {
+            if (D3D11Formats.IsUnsupportedFormat(format))
+            {
+                properties = default(PixelFormatProperties);
+                return false;
+            }
+
+            Format dxgiFormat = D3D11Formats.ToDxgiFormat(format, (usage & TextureUsage.DepthStencil) != 0);
+            FormatSupport fs = _device.CheckFormatSupport(dxgiFormat);
+
+            if ((usage & TextureUsage.RenderTarget) != 0 && (fs & FormatSupport.RenderTarget) == 0
+                || (usage & TextureUsage.DepthStencil) != 0 && (fs & FormatSupport.DepthStencil) == 0
+                || (usage & TextureUsage.Sampled) != 0 && (fs & FormatSupport.ShaderSample) == 0
+                || (usage & TextureUsage.Cubemap) != 0 && (fs & FormatSupport.TextureCube) == 0
+                || (usage & TextureUsage.Storage) != 0 && (fs & FormatSupport.TypedUnorderedAccessView) == 0)
+            {
+                properties = default(PixelFormatProperties);
+                return false;
+            }
+
+            const uint MaxTextureDimension = 16384;
+            const uint MaxVolumeExtent = 2048;
+
+            uint sampleCounts = 0;
+            if (CheckFormatMultisample(dxgiFormat, 1)) { sampleCounts |= (1 << 0); }
+            if (CheckFormatMultisample(dxgiFormat, 2)) { sampleCounts |= (1 << 1); }
+            if (CheckFormatMultisample(dxgiFormat, 4)) { sampleCounts |= (1 << 2); }
+            if (CheckFormatMultisample(dxgiFormat, 8)) { sampleCounts |= (1 << 3); }
+            if (CheckFormatMultisample(dxgiFormat, 16)) { sampleCounts |= (1 << 4); }
+            if (CheckFormatMultisample(dxgiFormat, 32)) { sampleCounts |= (1 << 5); }
+
+            properties = new PixelFormatProperties(
+                MaxTextureDimension,
+                type == TextureType.Texture1D ? 1 : MaxTextureDimension,
+                type != TextureType.Texture3D ? 1 : MaxVolumeExtent,
+                uint.MaxValue,
+                type == TextureType.Texture3D ? 1 : MaxVolumeExtent,
+                sampleCounts);
+            return true;
         }
 
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)

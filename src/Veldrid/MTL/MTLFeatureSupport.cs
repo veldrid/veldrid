@@ -10,6 +10,8 @@ namespace Veldrid.MTL
 
         public bool IsMacOS { get; }
 
+        public MTLFeatureSet MaxFeatureSet { get; }
+
         public MTLFeatureSupport(MTLDevice device)
         {
             foreach (MTLFeatureSet set in Enum.GetValues(typeof(MTLFeatureSet)))
@@ -17,6 +19,7 @@ namespace Veldrid.MTL
                 if (device.supportsFeatureSet(set))
                 {
                     _supportedFeatureSets.Add(set);
+                    MaxFeatureSet = set;
                 }
             }
 

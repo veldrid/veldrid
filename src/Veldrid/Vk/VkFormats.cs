@@ -80,6 +80,32 @@ namespace Veldrid.Vk
             }
         }
 
+        internal static VkImageUsageFlags VdToVkTextureUsage(TextureUsage vdUsage)
+        {
+            VkImageUsageFlags vkUsage = VkImageUsageFlags.None;
+
+            vkUsage = VkImageUsageFlags.TransferDst | VkImageUsageFlags.TransferSrc;
+            bool isDepthStencil = (vdUsage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
+            if ((vdUsage & TextureUsage.Sampled) == TextureUsage.Sampled)
+            {
+                vkUsage |= VkImageUsageFlags.Sampled;
+            }
+            if (isDepthStencil)
+            {
+                vkUsage |= VkImageUsageFlags.DepthStencilAttachment;
+            }
+            if ((vdUsage & TextureUsage.RenderTarget) == TextureUsage.RenderTarget)
+            {
+                vkUsage |= VkImageUsageFlags.ColorAttachment;
+            }
+            if ((vdUsage & TextureUsage.Storage) == TextureUsage.Storage)
+            {
+                vkUsage |= VkImageUsageFlags.Storage;
+            }
+
+            return vkUsage;
+        }
+
         internal static VkImageType VdToVkTextureType(TextureType type)
         {
             switch (type)

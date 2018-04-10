@@ -79,25 +79,7 @@ namespace Veldrid.Vk
                 imageCI.extent.height = Height;
                 imageCI.extent.depth = Depth;
                 imageCI.initialLayout = VkImageLayout.Preinitialized;
-                imageCI.usage = VkImageUsageFlags.TransferDst | VkImageUsageFlags.TransferSrc;
-                bool isDepthStencil = (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
-                if ((description.Usage & TextureUsage.Sampled) == TextureUsage.Sampled)
-                {
-                    imageCI.usage |= VkImageUsageFlags.Sampled;
-                }
-                if (isDepthStencil)
-                {
-                    imageCI.usage |= VkImageUsageFlags.DepthStencilAttachment;
-                }
-                if ((description.Usage & TextureUsage.RenderTarget) == TextureUsage.RenderTarget)
-                {
-                    imageCI.usage |= VkImageUsageFlags.ColorAttachment;
-                }
-                if ((description.Usage & TextureUsage.Storage) == TextureUsage.Storage)
-                {
-                    imageCI.usage |= VkImageUsageFlags.Storage;
-                }
-
+                imageCI.usage = VkFormats.VdToVkTextureUsage(Usage);
                 imageCI.tiling = isStaging ? VkImageTiling.Linear : VkImageTiling.Optimal;
                 imageCI.format = VkFormat;
 

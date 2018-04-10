@@ -122,6 +122,74 @@ namespace Veldrid.MTL
             return _maxSampleCount;
         }
 
+        protected override bool GetPixelFormatSupportCore(
+            PixelFormat format,
+            TextureType type,
+            TextureUsage usage,
+            out PixelFormatProperties properties)
+        {
+            if (!MTLFormats.IsFormatSupported(format, usage, MetalFeatures))
+            {
+                properties = default(PixelFormatProperties);
+                return false;
+            }
+
+            uint sampleCounts = 0;
+            int max = (int)_maxSampleCount + 1;
+            for (int i = 0; i < max; i++)
+            {
+                sampleCounts |= (uint)(1 << i);
+            }
+
+            MTLFeatureSet maxFeatureSet = MetalFeatures.MaxFeatureSet;
+            uint maxArrayLayer = MTLFormats.GetMaxTextureVolume(maxFeatureSet);
+            uint maxWidth;
+            uint maxHeight;
+            uint maxDepth;
+            if (type == TextureType.Texture1D)
+            {
+                maxWidth = MTLFormats.GetMaxTexture1DWidth(maxFeatureSet);
+                maxHeight = 1;
+                maxDepth = 1;
+            }
+            else if (type == TextureType.Texture2D)
+            {
+                uint maxDimensions;
+                if ((usage & TextureUsage.Cubemap) != 0)
+                {
+                    maxDimensions = MTLFormats.GetMaxTextureCubeDimensions(maxFeatureSet);
+                }
+                else
+                {
+                    maxDimensions = MTLFormats.GetMaxTexture2DDimensions(maxFeatureSet);
+                }
+
+                maxWidth = maxDimensions;
+                maxHeight = maxDimensions;
+                maxDepth = 1;
+            }
+            else if (type == TextureType.Texture3D)
+            {
+                maxWidth = maxArrayLayer;
+                maxHeight = maxArrayLayer;
+                maxDepth = maxArrayLayer;
+                maxArrayLayer = 1;
+            }
+            else
+            {
+                throw Illegal.Value<TextureType>();
+            }
+
+            properties = new PixelFormatProperties(
+                maxWidth,
+                maxHeight,
+                maxDepth,
+                uint.MaxValue,
+                maxArrayLayer,
+                sampleCounts);
+            return true;
+        }
+
         protected override void SwapBuffersCore(Swapchain swapchain)
         {
             MTLSwapchain mtlSC = Util.AssertSubtype<Swapchain, MTLSwapchain>(swapchain);

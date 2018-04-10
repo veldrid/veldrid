@@ -34,6 +34,9 @@ namespace Veldrid.OpenGL
         private OpenGLExtensions _extensions;
 
         private TextureSampleCount _maxColorTextureSamples;
+        private uint _maxTextureSize;
+        private uint _maxTexDepth;
+        private uint _maxTexArrayLayers;
 
         private readonly StagingMemoryPool _stagingMemoryPool = new StagingMemoryPool();
         private BlockingCollection<ExecutionThreadWorkItem> _workItems;
@@ -223,6 +226,23 @@ namespace Veldrid.OpenGL
             {
                 _maxColorTextureSamples = TextureSampleCount.Count1;
             }
+
+            int maxTexSize;
+
+            glGetIntegerv(GetPName.MaxTextureSize, &maxTexSize);
+            CheckLastError();
+
+            int maxTexDepth;
+            glGetIntegerv(GetPName.Max3DTextureSize, &maxTexDepth);
+            CheckLastError();
+
+            int maxTexArrayLayers;
+            glGetIntegerv(GetPName.MaxArrayTextureLayers, &maxTexArrayLayers);
+            CheckLastError();
+
+            _maxTextureSize = (uint)maxTexSize;
+            _maxTexDepth = (uint)maxTexDepth;
+            _maxTexArrayLayers = (uint)maxTexArrayLayers;
 
             _mainSwapchain = new OpenGLSwapchain(
                 this,
@@ -654,6 +674,36 @@ namespace Veldrid.OpenGL
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
         {
             return _maxColorTextureSamples;
+        }
+
+        protected override bool GetPixelFormatSupportCore(
+            PixelFormat format,
+            TextureType type,
+            TextureUsage usage,
+            out PixelFormatProperties properties)
+        {
+            if (type == TextureType.Texture1D && !_features.Texture1D
+                || !OpenGLFormats.IsFormatSupported(_extensions, format))
+            {
+                properties = default(PixelFormatProperties);
+                return false;
+            }
+
+            uint sampleCounts = 0;
+            int max = (int)_maxColorTextureSamples + 1;
+            for (int i = 0; i < max; i++)
+            {
+                sampleCounts |= (uint)(1 << i);
+            }
+
+            properties = new PixelFormatProperties(
+                _maxTextureSize,
+                type == TextureType.Texture1D ? 1 : _maxTextureSize,
+                type != TextureType.Texture3D ? 1 : _maxTexDepth,
+                uint.MaxValue,
+                type == TextureType.Texture3D ? 1 : _maxTexArrayLayers,
+                sampleCounts);
+            return true;
         }
 
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)

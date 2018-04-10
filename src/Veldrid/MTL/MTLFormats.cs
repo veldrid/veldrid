@@ -124,6 +124,36 @@ namespace Veldrid.MTL
             }
         }
 
+        internal static bool IsFormatSupported(PixelFormat format, TextureUsage usage, MTLFeatureSupport metalFeatures)
+        {
+            switch (format)
+            {
+                case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC1_Rgba_UNorm:
+                case PixelFormat.BC2_UNorm:
+                case PixelFormat.BC3_UNorm:
+                    return metalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v1)
+                        || metalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v2)
+                        || metalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3);
+
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
+                    return metalFeatures.IsSupported(MTLFeatureSet.iOS_GPUFamily1_v1)
+                        || metalFeatures.IsSupported(MTLFeatureSet.iOS_GPUFamily2_v1)
+                        || metalFeatures.IsSupported(MTLFeatureSet.iOS_GPUFamily3_v1)
+                        || metalFeatures.IsSupported(MTLFeatureSet.iOS_GPUFamily4_v1);
+
+                case PixelFormat.R16_UNorm:
+                    return ((usage & TextureUsage.DepthStencil) == 0)
+                        || metalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v2)
+                        || metalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3);
+
+                default:
+                    return true;
+            }
+        }
+
         internal static MTLTriangleFillMode VdToMTLFillMode(PolygonFillMode fillMode)
         {
             switch (fillMode)
@@ -487,6 +517,104 @@ namespace Veldrid.MTL
                     throw Illegal.Value<StencilOperation>();
 
             }
+        }
+
+        internal static uint GetMaxTexture1DWidth(MTLFeatureSet fs)
+        {
+            switch (fs)
+            {
+                case MTLFeatureSet.iOS_GPUFamily1_v1:
+                case MTLFeatureSet.iOS_GPUFamily2_v1:
+                    return 4096;
+                case MTLFeatureSet.iOS_GPUFamily1_v2:
+                case MTLFeatureSet.iOS_GPUFamily2_v2:
+                case MTLFeatureSet.iOS_GPUFamily1_v3:
+                case MTLFeatureSet.iOS_GPUFamily2_v3:
+                case MTLFeatureSet.iOS_GPUFamily1_v4:
+                case MTLFeatureSet.iOS_GPUFamily2_v4:
+                case MTLFeatureSet.tvOS_GPUFamily1_v1:
+                case MTLFeatureSet.tvOS_GPUFamily1_v2:
+                case MTLFeatureSet.tvOS_GPUFamily1_v3:
+                    return 8192;
+                case MTLFeatureSet.iOS_GPUFamily3_v1:
+                case MTLFeatureSet.iOS_GPUFamily3_v2:
+                case MTLFeatureSet.iOS_GPUFamily3_v3:
+                case MTLFeatureSet.iOS_GPUFamily4_v1:
+                case MTLFeatureSet.tvOS_GPUFamily2_v1:
+                case MTLFeatureSet.macOS_GPUFamily1_v1:
+                case MTLFeatureSet.macOS_GPUFamily1_v2:
+                case MTLFeatureSet.macOS_GPUFamily1_v3:
+                    return 16384;
+                default:
+                    return 4096;
+            }
+        }
+
+        internal static uint GetMaxTexture2DDimensions(MTLFeatureSet fs)
+        {
+            switch (fs)
+            {
+                case MTLFeatureSet.iOS_GPUFamily1_v1:
+                case MTLFeatureSet.iOS_GPUFamily2_v1:
+                    return 4096;
+                case MTLFeatureSet.iOS_GPUFamily1_v2:
+                case MTLFeatureSet.iOS_GPUFamily2_v2:
+                case MTLFeatureSet.iOS_GPUFamily1_v3:
+                case MTLFeatureSet.iOS_GPUFamily2_v3:
+                case MTLFeatureSet.iOS_GPUFamily1_v4:
+                case MTLFeatureSet.iOS_GPUFamily2_v4:
+                case MTLFeatureSet.tvOS_GPUFamily1_v1:
+                case MTLFeatureSet.tvOS_GPUFamily1_v2:
+                case MTLFeatureSet.tvOS_GPUFamily1_v3:
+                    return 8192;
+                case MTLFeatureSet.iOS_GPUFamily3_v1:
+                case MTLFeatureSet.iOS_GPUFamily3_v2:
+                case MTLFeatureSet.iOS_GPUFamily3_v3:
+                case MTLFeatureSet.iOS_GPUFamily4_v1:
+                case MTLFeatureSet.tvOS_GPUFamily2_v1:
+                case MTLFeatureSet.macOS_GPUFamily1_v1:
+                case MTLFeatureSet.macOS_GPUFamily1_v2:
+                case MTLFeatureSet.macOS_GPUFamily1_v3:
+                    return 16384;
+                default:
+                    return 4096;
+            }
+        }
+
+        internal static uint GetMaxTextureCubeDimensions(MTLFeatureSet fs)
+        {
+            switch (fs)
+            {
+                case MTLFeatureSet.iOS_GPUFamily1_v1:
+                case MTLFeatureSet.iOS_GPUFamily2_v1:
+                    return 4096;
+                case MTLFeatureSet.iOS_GPUFamily1_v2:
+                case MTLFeatureSet.iOS_GPUFamily2_v2:
+                case MTLFeatureSet.iOS_GPUFamily1_v3:
+                case MTLFeatureSet.iOS_GPUFamily2_v3:
+                case MTLFeatureSet.iOS_GPUFamily1_v4:
+                case MTLFeatureSet.iOS_GPUFamily2_v4:
+                case MTLFeatureSet.tvOS_GPUFamily1_v1:
+                case MTLFeatureSet.tvOS_GPUFamily1_v2:
+                case MTLFeatureSet.tvOS_GPUFamily1_v3:
+                    return 8192;
+                case MTLFeatureSet.iOS_GPUFamily3_v1:
+                case MTLFeatureSet.iOS_GPUFamily3_v2:
+                case MTLFeatureSet.iOS_GPUFamily3_v3:
+                case MTLFeatureSet.iOS_GPUFamily4_v1:
+                case MTLFeatureSet.tvOS_GPUFamily2_v1:
+                case MTLFeatureSet.macOS_GPUFamily1_v1:
+                case MTLFeatureSet.macOS_GPUFamily1_v2:
+                case MTLFeatureSet.macOS_GPUFamily1_v3:
+                    return 16384;
+                default:
+                    return 4096;
+            }
+        }
+
+        internal static uint GetMaxTextureVolume(MTLFeatureSet fs)
+        {
+            return 2048;
         }
     }
 }

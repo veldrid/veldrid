@@ -584,6 +584,26 @@ namespace Veldrid.OpenGL
             }
         }
 
+        internal static bool IsFormatSupported(OpenGLExtensions extensions, PixelFormat format)
+        {
+            switch (format)
+            {
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
+                    return extensions.GLESVersion(3, 0) || extensions.GLVersion(4, 3);
+
+                case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC1_Rgba_UNorm:
+                case PixelFormat.BC2_UNorm:
+                case PixelFormat.BC3_UNorm:
+                    return extensions.IsExtensionSupported("GL_EXT_texture_compression_s3tc");
+
+                default:
+                    return true;
+            }
+        }
+
         internal static DepthFunction VdToGLDepthFunction(ComparisonKind value)
         {
             switch (value)

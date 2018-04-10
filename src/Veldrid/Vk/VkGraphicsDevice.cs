@@ -892,6 +892,43 @@ namespace Veldrid.Vk
             return TextureSampleCount.Count1;
         }
 
+        protected override bool GetPixelFormatSupportCore(
+            PixelFormat format,
+            TextureType type,
+            TextureUsage usage,
+            out PixelFormatProperties properties)
+        {
+            VkFormat vkFormat = VkFormats.VdToVkPixelFormat(format, (usage & TextureUsage.DepthStencil) != 0);
+            VkImageType vkType = VkFormats.VdToVkTextureType(type);
+            VkImageTiling tiling = usage == TextureUsage.Staging ? VkImageTiling.Linear : VkImageTiling.Optimal;
+            VkImageUsageFlags vkUsage = VkFormats.VdToVkTextureUsage(usage);
+
+            VkResult result = vkGetPhysicalDeviceImageFormatProperties(
+                _physicalDevice,
+                vkFormat,
+                vkType,
+                tiling,
+                vkUsage,
+                VkImageCreateFlags.None,
+                out VkImageFormatProperties vkProps);
+
+            if (result == VkResult.ErrorFormatNotSupported)
+            {
+                properties = default(PixelFormatProperties);
+                return false;
+            }
+            CheckResult(result);
+
+            properties = new PixelFormatProperties(
+               vkProps.maxExtent.width,
+               vkProps.maxExtent.height,
+               vkProps.maxExtent.depth,
+               vkProps.maxMipLevels,
+               vkProps.maxArrayLayers,
+               (uint)vkProps.sampleCounts);
+            return true;
+        }
+
         protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);

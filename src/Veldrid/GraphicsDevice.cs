@@ -504,6 +504,29 @@ namespace Veldrid
 
         protected abstract void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
 
+        public bool GetPixelFormatSupport(
+            PixelFormat format,
+            TextureType type,
+            TextureUsage usage)
+        {
+            return GetPixelFormatSupportCore(format, type, usage, out _);
+        }
+
+        public bool GetPixelFormatSupport(
+            PixelFormat format,
+            TextureType type,
+            TextureUsage usage,
+            out PixelFormatProperties properties)
+        {
+            return GetPixelFormatSupportCore(format, type, usage, out properties);
+        }
+
+        protected abstract bool GetPixelFormatSupportCore(
+            PixelFormat format,
+            TextureType type,
+            TextureUsage usage,
+            out PixelFormatProperties properties);
+
         /// <summary>
         /// Adds the given object to a deferred disposal list, which will be processed when this GraphicsDevice becomes idle.
         /// This method can be used to safely dispose a device resource which may be in use at the time this method is called,

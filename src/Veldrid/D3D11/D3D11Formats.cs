@@ -116,6 +116,12 @@ namespace Veldrid.D3D11
                     return Format.R10G10B10A2_UInt;
                 case PixelFormat.R11_G11_B10_Float:
                     return Format.R11G11B10_Float;
+
+                case PixelFormat.ETC2_R8_G8_B8_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
+                case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
+                    throw new VeldridException("ETC2 formats are not supported on Direct3D 11.");
+
                 default:
                     throw Illegal.Value<PixelFormat>();
             }
@@ -147,6 +153,13 @@ namespace Veldrid.D3D11
             }
 
             return flags;
+        }
+
+        internal static bool IsUnsupportedFormat(PixelFormat format)
+        {
+            return format == PixelFormat.ETC2_R8_G8_B8_UNorm
+                || format == PixelFormat.ETC2_R8_G8_B8_A1_UNorm
+                || format == PixelFormat.ETC2_R8_G8_B8_A8_UNorm;
         }
 
         internal static Format GetViewFormat(Format format)

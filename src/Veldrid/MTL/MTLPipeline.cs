@@ -12,7 +12,9 @@ namespace Veldrid.MTL
         public MTLComputePipelineState ComputePipelineState { get; }
         public MTLPrimitiveType PrimitiveType { get; }
         public MTLResourceLayout[] ResourceLayouts { get; }
+        public ResourceBindingModel ResourceBindingModel { get; }
         public uint VertexBufferCount { get; }
+        public uint NonVertexBufferCount { get; }
         public MTLCullMode CullMode { get; }
         public MTLWinding FrontFace { get; }
         public MTLTriangleFillMode FillMode { get; }
@@ -31,10 +33,13 @@ namespace Veldrid.MTL
         {
             PrimitiveType = MTLFormats.VdToMTLPrimitiveTopology(description.PrimitiveTopology);
             ResourceLayouts = new MTLResourceLayout[description.ResourceLayouts.Length];
+            NonVertexBufferCount = 0;
             for (int i = 0; i < ResourceLayouts.Length; i++)
             {
                 ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, MTLResourceLayout>(description.ResourceLayouts[i]);
+                NonVertexBufferCount += ResourceLayouts[i].BufferCount;
             }
+            ResourceBindingModel = description.ResourceBindingModel ?? gd.ResourceBindingModel;
 
             CullMode = MTLFormats.VdToMTLCullMode(description.RasterizerState.CullMode);
             FrontFace = MTLFormats.VdVoMTLFrontFace(description.RasterizerState.FrontFace);
@@ -77,7 +82,9 @@ namespace Veldrid.MTL
                 {
                     VertexElementDescription elementDesc = vdDesc.Elements[j];
                     MTLVertexAttributeDescriptor mtlAttribute = vertexDescriptor.attributes[element];
-                    mtlAttribute.bufferIndex = (UIntPtr)i;
+                    mtlAttribute.bufferIndex = (UIntPtr)(ResourceBindingModel == ResourceBindingModel.Improved
+                        ? NonVertexBufferCount + i
+                        : i);
                     mtlAttribute.format = MTLFormats.VdToMTLVertexFormat(elementDesc.Format);
                     mtlAttribute.offset = (UIntPtr)offset;
                     offset += FormatHelpers.GetSizeInBytes(elementDesc.Format);

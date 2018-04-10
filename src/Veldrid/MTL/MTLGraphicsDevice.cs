@@ -33,6 +33,7 @@ namespace Veldrid.MTL
         public MTLDevice Device => _device;
         public MTLCommandQueue CommandQueue => _commandQueue;
         public MTLFeatureSupport MetalFeatures { get; }
+        public ResourceBindingModel ResourceBindingModel { get; }
 
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
@@ -53,6 +54,7 @@ namespace Veldrid.MTL
                 depthClipDisable: true,
                 texture1D: true, // TODO: Should be macOS 10.11+ and iOS 11.0+.
                 independentBlend: true);
+            ResourceBindingModel = options.ResourceBindingModel;
 
             ResourceFactory = new MTLResourceFactory(this);
             _commandQueue = _device.newCommandQueue();

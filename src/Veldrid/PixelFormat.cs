@@ -200,9 +200,18 @@
         /// RGBA component order. Each component is a 32-bit signed integer.
         /// </summary>
         R32_G32_B32_A32_SInt,
-
+        /// <summary>
+        /// A 64-bit, 4x4 block-compressed format storing unsigned normalized RGB data.
+        /// </summary>
         ETC2_R8_G8_B8_UNorm,
+        /// <summary>
+        /// A 64-bit, 4x4 block-compressed format storing unsigned normalized RGB data, as well as 1 bit of alpha data.
+        /// </summary>
         ETC2_R8_G8_B8_A1_UNorm,
+        /// <summary>
+        /// A 128-bit, 4x4 block-compressed format storing 64 bits of unsigned normalized RGB data, as well as 64 bits of alpha
+        /// data.
+        /// </summary>
         ETC2_R8_G8_B8_A8_UNorm,
     }
 }

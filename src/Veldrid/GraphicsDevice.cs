@@ -504,6 +504,14 @@ namespace Veldrid
 
         protected abstract void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
 
+        /// <summary>
+        /// Gets whether or not the given <see cref="PixelFormat"/>, <see cref="TextureType"/>, and <see cref="TextureUsage"/>
+        /// combination is supported by this instance.
+        /// </summary>
+        /// <param name="format">The PixelFormat to query.</param>
+        /// <param name="type">The TextureType to query.</param>
+        /// <param name="usage">The TextureUsage to query.</param>
+        /// <returns>True if the given combination is supported; false otherwise.</returns>
         public bool GetPixelFormatSupport(
             PixelFormat format,
             TextureType type,
@@ -512,6 +520,17 @@ namespace Veldrid
             return GetPixelFormatSupportCore(format, type, usage, out _);
         }
 
+        /// <summary>
+        /// Gets whether or not the given <see cref="PixelFormat"/>, <see cref="TextureType"/>, and <see cref="TextureUsage"/>
+        /// combination is supported by this instance, and also gets the device-specific properties supported by this instance.
+        /// </summary>
+        /// <param name="format">The PixelFormat to query.</param>
+        /// <param name="type">The TextureType to query.</param>
+        /// <param name="usage">The TextureUsage to query.</param>
+        /// <param name="properties">If the combination is supported, then this parameter describes the limits of a Texture
+        /// created using the given combination of attributes.</param>
+        /// <returns>True if the given combination is supported; false otherwise. If the combination is supported,
+        /// then <paramref name="properties"/> contains the limits supported by this instance.</returns>
         public bool GetPixelFormatSupport(
             PixelFormat format,
             TextureType type,

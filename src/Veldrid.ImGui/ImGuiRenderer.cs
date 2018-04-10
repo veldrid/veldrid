@@ -121,7 +121,8 @@ namespace Veldrid
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, new[] { _vertexShader, _fragmentShader }),
                 new ResourceLayout[] { _layout, _textureLayout },
-                outputDescription);
+                outputDescription,
+                ResourceBindingModel.Default);
             _pipeline = factory.CreateGraphicsPipeline(ref pd);
 
             _mainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,

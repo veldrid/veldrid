@@ -33,14 +33,14 @@ namespace Veldrid
         /// </summary>
         public ResourceLayout[] ResourceLayouts;
         /// <summary>
+        /// A description of the output attachments used by the <see cref="Pipeline"/>.
+        /// </summary>
+        public OutputDescription Outputs;
+        /// <summary>
         /// Specifies which model the rendering backend should use for binding resources.
         /// If <code>null</code>, the pipeline will use the value specified in <see cref="GraphicsDeviceOptions"/>.
         /// </summary>
         public ResourceBindingModel? ResourceBindingModel;
-        /// <summary>
-        /// A description of the output attachments used by the <see cref="Pipeline"/>.
-        /// </summary>
-        public OutputDescription Outputs;
 
         /// <summary>
         /// Constructs a new <see cref="GraphicsPipelineDescription"/>.
@@ -72,8 +72,8 @@ namespace Veldrid
             PrimitiveTopology = primitiveTopology;
             ShaderSet = shaderSet;
             ResourceLayouts = resourceLayouts;
-            ResourceBindingModel = null;
             Outputs = outputs;
+            ResourceBindingModel = null;
         }
 
         /// <summary>
@@ -106,8 +106,8 @@ namespace Veldrid
             PrimitiveTopology = primitiveTopology;
             ShaderSet = shaderSet;
             ResourceLayouts = new[] { resourceLayout };
-            ResourceBindingModel = null;
             Outputs = outputs;
+            ResourceBindingModel = null;
         }
 
         /// <summary>
@@ -124,9 +124,9 @@ namespace Veldrid
         /// <param name="shaderSet">A description of the shader set to be used.</param>
         /// <param name="resourceLayouts">An array of <see cref="ResourceLayout"/>, which controls the layout of shader resoruces
         /// in the <see cref="Pipeline"/>.</param>
+        /// <param name="outputs">A description of the output attachments used by the <see cref="Pipeline"/>.</param>
         /// <param name="resourceBindingModel">The <see cref="ResourceBindingModel"/> to use for this pipeline. Overrides
         /// the value specified in <see cref="GraphicsDeviceOptions"/>.</param>
-        /// <param name="outputs">A description of the output attachments used by the <see cref="Pipeline"/>.</param>
         public GraphicsPipelineDescription(
             BlendStateDescription blendState,
             DepthStencilStateDescription depthStencilStateDescription,
@@ -134,8 +134,8 @@ namespace Veldrid
             PrimitiveTopology primitiveTopology,
             ShaderSetDescription shaderSet,
             ResourceLayout[] resourceLayouts,
-            ResourceBindingModel resourceBindingModel,
-            OutputDescription outputs)
+            OutputDescription outputs,
+            ResourceBindingModel resourceBindingModel)
         {
             BlendState = blendState;
             DepthStencilState = depthStencilStateDescription;
@@ -143,8 +143,8 @@ namespace Veldrid
             PrimitiveTopology = primitiveTopology;
             ShaderSet = shaderSet;
             ResourceLayouts = resourceLayouts;
-            ResourceBindingModel = resourceBindingModel;
             Outputs = outputs;
+            ResourceBindingModel = resourceBindingModel;
         }
 
         /// <summary>

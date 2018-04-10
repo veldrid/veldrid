@@ -66,7 +66,10 @@ namespace Veldrid.MTL
 
             for (uint i = 0; i < vdVertexLayouts.Length; i++)
             {
-                MTLVertexBufferLayoutDescriptor mtlLayout = vertexDescriptor.layouts[i];
+                uint layoutIndex = ResourceBindingModel == ResourceBindingModel.Improved
+                    ? NonVertexBufferCount + i
+                    : i;
+                MTLVertexBufferLayoutDescriptor mtlLayout = vertexDescriptor.layouts[layoutIndex];
                 mtlLayout.stride = (UIntPtr)vdVertexLayouts[i].Stride;
                 uint stepRate = vdVertexLayouts[i].InstanceStepRate;
                 mtlLayout.stepFunction = stepRate == 0 ? MTLVertexStepFunction.PerVertex : MTLVertexStepFunction.PerInstance;

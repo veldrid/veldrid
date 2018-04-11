@@ -94,7 +94,7 @@ namespace Veldrid.OpenGL
 
                 glSamplerParameterf(_sampler, SamplerParameterName.TextureMinLod, description.MinimumLod);
                 CheckLastError();
-                glSamplerParameterf(_sampler, SamplerParameterName.TextureMaxLod, description.MaximumAnisotropy);
+                glSamplerParameterf(_sampler, SamplerParameterName.TextureMaxLod, description.MaximumLod);
                 CheckLastError();
                 if (backend == GraphicsBackend.OpenGL && description.LodBias != 0)
                 {

@@ -1068,7 +1068,7 @@ namespace Veldrid.Vk
                     if (tex.Memory.Size >= totalSize)
                     {
                         _availableStagingTextures.RemoveAt(i);
-                        tex.SetStagingDimensions(width, height, depth);
+                        tex.SetStagingDimensions(width, height, depth, format);
                         return tex;
                     }
                 }
@@ -1078,7 +1078,7 @@ namespace Veldrid.Vk
             uint texHeight = Math.Max(256, height);
             VkTexture newTex = (VkTexture)ResourceFactory.CreateTexture(TextureDescription.Texture3D(
                 texWidth, texHeight, depth, 1, format, TextureUsage.Staging));
-            newTex.SetStagingDimensions(width, height, depth);
+            newTex.SetStagingDimensions(width, height, depth, format);
 
             return newTex;
         }

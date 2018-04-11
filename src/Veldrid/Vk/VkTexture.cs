@@ -12,6 +12,7 @@ namespace Veldrid.Vk
         private readonly VkImage _optimalImage;
         private readonly VkMemoryBlock _memoryBlock;
         private readonly Vulkan.VkBuffer _stagingBuffer;
+        private PixelFormat _format; // Static for regular images -- may change for shared staging images
         private readonly uint _actualImageArrayLayers;
         private bool _destroyed;
 
@@ -26,7 +27,7 @@ namespace Veldrid.Vk
 
         public override uint Depth => _depth;
 
-        public override PixelFormat Format { get; }
+        public override PixelFormat Format => _format;
 
         public override uint MipLevels { get; }
 
@@ -60,7 +61,7 @@ namespace Veldrid.Vk
             _actualImageArrayLayers = isCubemap
                 ? 6 * ArrayLayers
                 : ArrayLayers;
-            Format = description.Format;
+            _format = description.Format;
             Usage = description.Usage;
             Type = description.Type;
             SampleCount = description.SampleCount;
@@ -172,7 +173,7 @@ namespace Veldrid.Vk
             _height = height;
             _depth = 1;
             VkFormat = vkFormat;
-            Format = VkFormats.VkToVdPixelFormat(VkFormat);
+            _format = VkFormats.VkToVdPixelFormat(VkFormat);
             ArrayLayers = arrayLayers;
             Usage = usage;
             SampleCount = sampleCount;
@@ -310,13 +311,14 @@ namespace Veldrid.Vk
             }
         }
 
-        internal void SetStagingDimensions(uint width, uint height, uint depth)
+        internal void SetStagingDimensions(uint width, uint height, uint depth, PixelFormat format)
         {
             Debug.Assert(_stagingBuffer != Vulkan.VkBuffer.Null);
             Debug.Assert(Usage == TextureUsage.Staging);
             _width = width;
             _height = height;
             _depth = depth;
+            _format = format;
         }
 
         public override void Dispose()

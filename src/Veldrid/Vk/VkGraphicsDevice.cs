@@ -247,7 +247,6 @@ namespace Veldrid.Vk
                             {
                                 if (sharedPool.IsCached)
                                 {
-                                    sharedPool.Reset();
                                     _sharedGraphicsCommandPools.Push(sharedPool);
                                 }
                                 else
@@ -1203,6 +1202,8 @@ namespace Veldrid.Vk
         {
             private readonly VkGraphicsDevice _gd;
             private readonly VkCommandPool _pool;
+            private readonly VkCommandBuffer _cb;
+
             public bool IsCached { get; }
 
             public SharedCommandPool(VkGraphicsDevice gd, bool isCached)
@@ -1211,27 +1212,27 @@ namespace Veldrid.Vk
                 IsCached = isCached;
 
                 VkCommandPoolCreateInfo commandPoolCI = VkCommandPoolCreateInfo.New();
-                commandPoolCI.flags = VkCommandPoolCreateFlags.Transient;
+                commandPoolCI.flags = VkCommandPoolCreateFlags.Transient | VkCommandPoolCreateFlags.ResetCommandBuffer;
                 commandPoolCI.queueFamilyIndex = _gd.GraphicsQueueIndex;
                 VkResult result = vkCreateCommandPool(_gd.Device, ref commandPoolCI, null, out _pool);
+                CheckResult(result);
+
+                VkCommandBufferAllocateInfo allocateInfo = VkCommandBufferAllocateInfo.New();
+                allocateInfo.commandBufferCount = 1;
+                allocateInfo.level = VkCommandBufferLevel.Primary;
+                allocateInfo.commandPool = _pool;
+                result = vkAllocateCommandBuffers(_gd.Device, ref allocateInfo, out _cb);
                 CheckResult(result);
             }
 
             public VkCommandBuffer BeginNewCommandBuffer()
             {
-                VkCommandBufferAllocateInfo allocateInfo = VkCommandBufferAllocateInfo.New();
-                allocateInfo.commandBufferCount = 1;
-                allocateInfo.level = VkCommandBufferLevel.Primary;
-                allocateInfo.commandPool = _pool;
-                VkResult result = vkAllocateCommandBuffers(_gd.Device, ref allocateInfo, out VkCommandBuffer cb);
-                CheckResult(result);
-
                 VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
                 beginInfo.flags = VkCommandBufferUsageFlags.OneTimeSubmit;
-                result = vkBeginCommandBuffer(cb, ref beginInfo);
+                VkResult result = vkBeginCommandBuffer(_cb, ref beginInfo);
                 CheckResult(result);
 
-                return cb;
+                return _cb;
             }
 
             public void EndAndSubmit(VkCommandBuffer cb)
@@ -1243,12 +1244,6 @@ namespace Veldrid.Vk
                 {
                     _gd._submittedSharedCommandPools.Add(cb, this);
                 }
-            }
-
-            public void Reset()
-            {
-                VkResult result = vkResetCommandPool(_gd.Device, _pool, VkCommandPoolResetFlags.None);
-                CheckResult(result);
             }
 
             internal void Destroy()

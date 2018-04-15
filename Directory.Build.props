@@ -10,7 +10,7 @@
   <PropertyGroup>
     <PackageLicenseUrl>https://raw.githubusercontent.com/mellinoe/veldrid/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Copyright>Copyright 2017 (c) Eric Mellino. All rights reserved.</Copyright>
+    <Copyright>Copyright 2018 (c) Eric Mellino. All rights reserved.</Copyright>
     <Authors>Eric Mellino</Authors>
     <RepositoryUrl>https://github.com/mellinoe/veldrid</RepositoryUrl>
     <ShaderGenVersion>1.2.0-g54cf9ed144</ShaderGenVersion>

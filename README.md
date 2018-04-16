@@ -8,6 +8,7 @@ Supported backends:
 * Vulkan
 * Metal
 * OpenGL 3
+* OpenGL ES 3
 
 [Veldrid documentation site](https://mellinoe.github.io/veldrid-docs/)
 
@@ -25,4 +26,4 @@ Pre-release versions of Veldrid are also available from MyGet: https://www.myget
 
 Veldrid  uses the standard .NET Core tooling. [Install the tools](https://www.microsoft.com/net/download/core) and build normally (`dotnet build`).
 
-Run the RenderDemo program to see a quick demonstration of the rendering capabilities of the library.
+Run the NeoDemo program to see a quick demonstration of the rendering capabilities of the library.

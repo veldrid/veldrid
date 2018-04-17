@@ -236,7 +236,7 @@ namespace Veldrid.OpenGL
                 throw new VeldridException("The given TextureView parameters are not supported with the OpenGL backend.");
             }
 
-            PixelInternalFormat internalFormat = GetCompatibleInternalFormat(
+            PixelInternalFormat internalFormat = (PixelInternalFormat)OpenGLFormats.VdToGLSizedInternalFormat(
                 Target.Format,
                 (Target.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
             Debug.Assert(Target.Created);
@@ -250,37 +250,6 @@ namespace Veldrid.OpenGL
                 BaseArrayLayer,
                 ArrayLayers);
             CheckLastError();
-        }
-
-        private PixelInternalFormat GetCompatibleInternalFormat(PixelFormat vdFormat, bool depthFormat)
-        {
-            switch (vdFormat)
-            {
-                case PixelFormat.R8_G8_B8_A8_UNorm:
-                case PixelFormat.B8_G8_R8_A8_UNorm:
-                    return PixelInternalFormat.Rgba8ui;
-                case PixelFormat.R8_UNorm:
-                    return PixelInternalFormat.R8ui;
-                case PixelFormat.R8_G8_SNorm:
-                    return PixelInternalFormat.Rg8Snorm;
-                case PixelFormat.R16_UNorm:
-                    return depthFormat ? PixelInternalFormat.DepthComponent16 : PixelInternalFormat.R16ui;
-                case PixelFormat.R32_G32_B32_A32_Float:
-                    return PixelInternalFormat.Rgba32f;
-                case PixelFormat.R32_G32_B32_A32_UInt:
-                    return PixelInternalFormat.Rgba32ui;
-                case PixelFormat.R32_Float:
-                    return depthFormat ? PixelInternalFormat.DepthComponent32f : PixelInternalFormat.R32f;
-                case PixelFormat.D32_Float_S8_UInt:
-                    Debug.Assert(depthFormat);
-                    return PixelInternalFormat.Depth32fStencil8;
-                case PixelFormat.D24_UNorm_S8_UInt:
-                    Debug.Assert(depthFormat);
-                    return PixelInternalFormat.Depth24Stencil8;
-                default:
-                    Debug.Fail("Invalid format.");
-                    throw Illegal.Value<PixelInternalFormat>();
-            }
         }
 
         public override void Dispose()

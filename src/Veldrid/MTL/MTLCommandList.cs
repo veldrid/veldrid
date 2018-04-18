@@ -199,8 +199,8 @@ namespace Veldrid.MTL
                             ? _nonVertexBufferCount + i
                             : i);
                         _rce.setVertexBuffer(
-                            _vertexBuffers[i].DeviceBuffer, 
-                            UIntPtr.Zero, 
+                            _vertexBuffers[i].DeviceBuffer,
+                            UIntPtr.Zero,
                             index);
                     }
                 }
@@ -400,9 +400,9 @@ namespace Veldrid.MTL
                 MetalBindings.MTLBuffer srcBuffer = srcMTLTexture.StagingBuffer;
                 MetalBindings.MTLTexture dstTexture = dstMTLTexture.DeviceTexture;
 
+                Util.GetMipDimensions(srcMTLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                 for (uint layer = 0; layer < layerCount; layer++)
                 {
-                    Util.GetMipDimensions(srcMTLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                     uint blockSize = FormatHelpers.IsCompressedFormat(srcMTLTexture.Format) ? 4u : 1u;
                     uint compressedSrcX = srcX / blockSize;
                     uint compressedSrcY = srcY / blockSize;

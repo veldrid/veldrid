@@ -296,7 +296,7 @@ namespace Veldrid.OpenGL
                 }
                 else
                 {
-                    if (_gd.Extensions.TextureStorage)
+                    if (_gd.Extensions.TextureStorageMultisample)
                     {
                         glTexStorage2DMultisample(
                             TextureTarget.Texture2DMultisample,
@@ -336,7 +336,7 @@ namespace Veldrid.OpenGL
                 }
                 else
                 {
-                    if (_gd.Extensions.TextureStorage)
+                    if (_gd.Extensions.TextureStorageMultisample)
                     {
                         glTexStorage3DMultisample(
                             TextureTarget.Texture2DMultisampleArray,

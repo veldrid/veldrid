@@ -19,6 +19,8 @@ namespace Veldrid.OpenGL
 
             TextureStorage = IsExtensionSupported("GL_ARB_texture_storage") // OpenGL 4.2 / 4.3 (multisampled)
                 || GLESVersion(3, 0);
+            TextureStorageMultisample = IsExtensionSupported("GL_ARB_texture_storage_multisample")
+                || GLESVersion(3, 1);
             ARB_DirectStateAccess = IsExtensionSupported("GL_ARB_direct_state_access");
             ARB_MultiBind = IsExtensionSupported("GL_ARB_multi_bind");
             ARB_TextureView = IsExtensionSupported("GL_ARB_texture_view"); // OpenGL 4.3
@@ -49,6 +51,8 @@ namespace Veldrid.OpenGL
 
         // Differs between GL / GLES
         public readonly bool TextureStorage;
+        public readonly bool TextureStorageMultisample;
+
         public readonly bool CopyImage;
         public readonly bool ComputeShaders;
         public readonly bool TessellationShader;

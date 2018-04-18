@@ -452,7 +452,7 @@ namespace Veldrid.NeoDemo
                 _window.Resized += () => _windowResized = true;
             }
 
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, syncToVBlank);
+            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, syncToVBlank, ResourceBindingModel.Improved);
 #if DEBUG
             gdOptions.Debug = true;
 #endif

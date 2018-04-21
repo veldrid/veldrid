@@ -34,11 +34,13 @@ namespace Veldrid.OpenGL
             ComputeShaders = IsExtensionSupported("GL_ARB_compute_shader") || GLESVersion(3, 1);
 
             ARB_ViewportArray = IsExtensionSupported("GL_ARB_viewport_array") || GLVersion(4, 1);
-            TessellationShader = IsExtensionSupported("GL_ARB_tessellation_shader") || GLVersion( 4, 0)
+            TessellationShader = IsExtensionSupported("GL_ARB_tessellation_shader") || GLVersion(4, 0)
                 || IsExtensionSupported("GL_OES_tessellation_shader");
             GeometryShader = IsExtensionSupported("GL_ARB_geometry_shader4") || GLVersion(3, 2)
                 || IsExtensionSupported("OES_geometry_shader");
-            DrawElementsBaseVertex = GLVersion(3, 2) || IsExtensionSupported("GL_OES_draw_elements_base_vertex");
+            DrawElementsBaseVertex = GLVersion(3, 2)
+                || IsExtensionSupported("GL_ARB_draw_elements_base_vertex")
+                || IsExtensionSupported("GL_OES_draw_elements_base_vertex");
             IndependentBlend = GLVersion(4, 0) || GLESVersion(3, 2);
         }
 

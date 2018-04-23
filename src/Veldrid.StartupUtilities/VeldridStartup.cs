@@ -172,7 +172,7 @@ namespace Veldrid.StartupUtilities
         }
 #endif
 
-        private static GraphicsBackend GetPlatformDefaultBackend()
+        public static GraphicsBackend GetPlatformDefaultBackend()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

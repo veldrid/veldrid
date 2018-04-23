@@ -142,6 +142,7 @@ namespace Veldrid.OpenGL
 
             _extensions = new OpenGLExtensions(extensions, _backendType, MajorVersion, MinorVersion);
 
+            bool drawIndirect = _extensions.DrawIndirect || _extensions.MultiDrawIndirect;
             _features = new GraphicsDeviceFeatures(
                 computeShader: _extensions.ComputeShaders,
                 geometryShader: _extensions.GeometryShader,
@@ -150,6 +151,8 @@ namespace Veldrid.OpenGL
                 samplerLodBias: _backendType == GraphicsBackend.OpenGL,
                 drawBaseVertex: _extensions.DrawElementsBaseVertex,
                 drawBaseInstance: _extensions.GLVersion(4, 2),
+                drawIndirect: drawIndirect,
+                drawIndirectBaseInstance: drawIndirect,
                 fillModeWireframe: _backendType == GraphicsBackend.OpenGL,
                 samplerAnisotropy: true,
                 depthClipDisable: _backendType == GraphicsBackend.OpenGL,

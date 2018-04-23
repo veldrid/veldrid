@@ -403,6 +403,7 @@ namespace Veldrid
         /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawArguments"/>.</param>
         public void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
+            ValidateDrawIndirectSupport();
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
             ValidateIndirectStride(stride, Unsafe.SizeOf<IndirectDrawArguments>());
@@ -434,6 +435,7 @@ namespace Veldrid
         /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawIndexedArguments"/>.</param>
         public void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
+            ValidateDrawIndirectSupport();
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
             ValidateIndirectStride(stride, Unsafe.SizeOf<IndirectDrawIndexedArguments>());
@@ -457,6 +459,15 @@ namespace Veldrid
             if ((offset % 4) != 0)
             {
                 throw new VeldridException($"{nameof(offset)} must be a multiple of 4.");
+            }
+        }
+
+        [Conditional("VALIDATE_USAGE")]
+        private void ValidateDrawIndirectSupport()
+        {
+            if (!_features.DrawIndirect)
+            {
+                throw new VeldridException($"Indirect drawing is not supported by this device.");
             }
         }
 

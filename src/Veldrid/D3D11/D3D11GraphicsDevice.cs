@@ -64,6 +64,8 @@ namespace Veldrid.D3D11
                 samplerLodBias: true,
                 drawBaseVertex: true,
                 drawBaseInstance: true,
+                drawIndirect: true,
+                drawIndirectBaseInstance: true,
                 fillModeWireframe: true,
                 samplerAnisotropy: true,
                 depthClipDisable: true,

@@ -40,6 +40,15 @@
         /// </summary>
         public bool DrawBaseInstance { get; }
         /// <summary>
+        /// Indicates whether indirect draw commands can be issued.
+        /// </summary>
+        public bool DrawIndirect { get; }
+        /// <summary>
+        /// Indicates whether indirect draw structures stored in an Indirect DeviceBuffer can contain
+        /// a non-zero FirstInstance value.
+        /// </summary>
+        public bool DrawIndirectBaseInstance { get; }
+        /// <summary>
         /// Indicates whether <see cref="PolygonFillMode.Wireframe"/> is supported.
         /// </summary>
         public bool FillModeWireframe { get; }
@@ -70,6 +79,8 @@
             bool samplerLodBias,
             bool drawBaseVertex,
             bool drawBaseInstance,
+            bool drawIndirect,
+            bool drawIndirectBaseInstance,
             bool fillModeWireframe,
             bool samplerAnisotropy,
             bool depthClipDisable,
@@ -83,6 +94,8 @@
             SamplerLodBias = samplerLodBias;
             DrawBaseVertex = drawBaseVertex;
             DrawBaseInstance = drawBaseInstance;
+            DrawIndirect = drawIndirect;
+            DrawIndirectBaseInstance = drawIndirectBaseInstance;
             FillModeWireframe = fillModeWireframe;
             SamplerAnisotropy = samplerAnisotropy;
             DepthClipDisable = depthClipDisable;

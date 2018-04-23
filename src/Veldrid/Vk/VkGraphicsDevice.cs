@@ -102,6 +102,8 @@ namespace Veldrid.Vk
                 samplerLodBias: true,
                 drawBaseVertex: true,
                 drawBaseInstance: true,
+                drawIndirect: true,
+                drawIndirectBaseInstance: _physicalDeviceFeatures.drawIndirectFirstInstance,
                 fillModeWireframe: _physicalDeviceFeatures.fillModeNonSolid,
                 samplerAnisotropy: _physicalDeviceFeatures.samplerAnisotropy,
                 depthClipDisable: _physicalDeviceFeatures.depthClamp,
@@ -623,6 +625,8 @@ namespace Veldrid.Vk
             deviceFeatures.multiViewport = _physicalDeviceFeatures.multiViewport;
             deviceFeatures.textureCompressionBC = _physicalDeviceFeatures.textureCompressionBC;
             deviceFeatures.textureCompressionETC2 = _physicalDeviceFeatures.textureCompressionETC2;
+            deviceFeatures.multiDrawIndirect = _physicalDeviceFeatures.multiDrawIndirect;
+            deviceFeatures.drawIndirectFirstInstance = _physicalDeviceFeatures.drawIndirectFirstInstance;
 
             uint propertyCount = 0;
             VkResult result = vkEnumerateDeviceExtensionProperties(_physicalDevice, (byte*)null, &propertyCount, null);

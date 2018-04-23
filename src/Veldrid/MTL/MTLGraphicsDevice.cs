@@ -49,6 +49,8 @@ namespace Veldrid.MTL
                 samplerLodBias: false,
                 drawBaseVertex: true,
                 drawBaseInstance: true,
+                drawIndirect: true,
+                drawIndirectBaseInstance: true,
                 fillModeWireframe: true,
                 samplerAnisotropy: true,
                 depthClipDisable: true,

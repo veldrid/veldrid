@@ -155,8 +155,22 @@ namespace Veldrid.OpenGL
             glBindBuffer(BufferTarget.DrawIndirectBuffer, glBuffer.Buffer);
             CheckLastError();
 
-            glMultiDrawArraysIndirect(_primitiveType, (IntPtr)offset, drawCount, stride);
-            CheckLastError();
+            if (_extensions.MultiDrawIndirect)
+            {
+                glMultiDrawArraysIndirect(_primitiveType, (IntPtr)offset, drawCount, stride);
+                CheckLastError();
+            }
+            else
+            {
+                uint indirect = offset;
+                for (uint i = 0; i < drawCount; i++)
+                {
+                    glDrawArraysIndirect(_primitiveType, (IntPtr)indirect);
+                    CheckLastError();
+
+                    indirect += stride;
+                }
+            }
         }
 
         public void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
@@ -167,8 +181,22 @@ namespace Veldrid.OpenGL
             glBindBuffer(BufferTarget.DrawIndirectBuffer, glBuffer.Buffer);
             CheckLastError();
 
-            glMultiDrawElementsIndirect(_primitiveType, _drawElementsType, (IntPtr)offset, drawCount, stride);
-            CheckLastError();
+            if (_extensions.MultiDrawIndirect)
+            {
+                glMultiDrawElementsIndirect(_primitiveType, _drawElementsType, (IntPtr)offset, drawCount, stride);
+                CheckLastError();
+            }
+            else
+            {
+                uint indirect = offset;
+                for (uint i = 0; i < drawCount; i++)
+                {
+                    glDrawElementsIndirect(_primitiveType, _drawElementsType, (IntPtr)indirect);
+                    CheckLastError();
+
+                    indirect += stride;
+                }
+            }
         }
 
         private void PreDrawCommand()

@@ -42,6 +42,11 @@ namespace Veldrid.OpenGL
                 || IsExtensionSupported("GL_ARB_draw_elements_base_vertex")
                 || IsExtensionSupported("GL_OES_draw_elements_base_vertex");
             IndependentBlend = GLVersion(4, 0) || GLESVersion(3, 2);
+
+            DrawIndirect = GLVersion(4, 0) || IsExtensionSupported("GL_ARB_draw_indirect")
+                || GLESVersion(3, 1);
+            MultiDrawIndirect = GLVersion(4, 3) || IsExtensionSupported("GL_ARB_multi_draw_indirect")
+                || IsExtensionSupported("GL_EXT_multi_draw_indirect");
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -61,6 +66,8 @@ namespace Veldrid.OpenGL
         public readonly bool GeometryShader;
         public readonly bool DrawElementsBaseVertex;
         public readonly bool IndependentBlend;
+        public readonly bool DrawIndirect;
+        public readonly bool MultiDrawIndirect;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.

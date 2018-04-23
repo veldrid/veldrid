@@ -121,7 +121,7 @@ namespace Veldrid.Tests
 
         public static GraphicsDevice CreateMetalDevice()
         {
-            return GraphicsDevice.CreateMetal(new GraphicsDeviceOptions(true));
+            return GraphicsDevice.CreateMetal(new GraphicsDeviceOptions(true, null, false, ResourceBindingModel.Improved));
         }
 
         public static void CreateMetalDeviceWithSwapchain(out Sdl2Window window, out GraphicsDevice gd)
@@ -140,7 +140,7 @@ namespace Veldrid.Tests
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false);
+            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false, ResourceBindingModel.Improved);
 
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.Metal, out window, out gd);
         }

@@ -12,6 +12,8 @@ namespace Veldrid.MetalBindings
         internal static readonly Selector setResolveTexture = "setResolveTexture:";
         internal static readonly Selector slice = "slice";
         internal static readonly Selector setSlice = "setSlice:";
+        internal static readonly Selector level = "level";
+        internal static readonly Selector setLevel = "setLevel:";
         internal static readonly Selector objectAtIndexedSubscript = "objectAtIndexedSubscript:";
         internal static readonly Selector setObjectAtIndexedSubscript = "setObject:atIndexedSubscript:";
         internal static readonly Selector pixelFormat = "pixelFormat";

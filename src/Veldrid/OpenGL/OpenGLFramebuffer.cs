@@ -69,7 +69,7 @@ namespace Veldrid.OpenGL
                             GLFramebufferAttachment.ColorAttachment0 + i,
                             glTex.TextureTarget,
                             glTex.Texture,
-                            0);
+                            (int)colorAttachment.MipLevel);
                         CheckLastError();
                     }
                     else
@@ -78,7 +78,7 @@ namespace Veldrid.OpenGL
                             FramebufferTarget.Framebuffer,
                             GLFramebufferAttachment.ColorAttachment0 + i,
                             glTex.Texture,
-                            0,
+                            (int)colorAttachment.MipLevel,
                             (int)colorAttachment.ArrayLayer);
                     }
                 }
@@ -118,7 +118,7 @@ namespace Veldrid.OpenGL
                         framebufferAttachment,
                         depthTarget,
                         depthTextureID,
-                        0);
+                        (int)DepthTarget.Value.MipLevel);
                     CheckLastError();
                 }
                 else
@@ -127,7 +127,7 @@ namespace Veldrid.OpenGL
                         FramebufferTarget.Framebuffer,
                         framebufferAttachment,
                         glDepthTex.Texture,
-                        0,
+                        (int)DepthTarget.Value.MipLevel,
                         (int)DepthTarget.Value.ArrayLayer);
                     CheckLastError();
                 }

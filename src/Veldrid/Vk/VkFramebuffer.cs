@@ -171,7 +171,7 @@ namespace Veldrid.Vk
                 imageViewCI.viewType = VkImageViewType.Image2D;
                 imageViewCI.subresourceRange = new VkImageSubresourceRange(
                     VkImageAspectFlags.Color,
-                    0,
+                    description.ColorTargets[i].MipLevel,
                     1,
                     description.ColorTargets[i].ArrayLayer,
                     1);
@@ -192,7 +192,7 @@ namespace Veldrid.Vk
                 depthViewCI.viewType = description.DepthTarget.Value.Target.ArrayLayers == 1 ? VkImageViewType.Image2D : VkImageViewType.Image2DArray;
                 depthViewCI.subresourceRange = new VkImageSubresourceRange(
                     hasStencil ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil : VkImageAspectFlags.Depth,
-                    0,
+                    description.DepthTarget.Value.MipLevel,
                     1,
                     description.DepthTarget.Value.ArrayLayer,
                     1);
@@ -202,16 +202,29 @@ namespace Veldrid.Vk
                 _attachmentViews.Add(*dest);
             }
 
+            Texture dimTex;
+            uint mipLevel;
             if (ColorTargets.Count > 0)
             {
-                fbCI.width = ColorTargets[0].Target.Width;
-                fbCI.height = ColorTargets[0].Target.Height;
+                dimTex = ColorTargets[0].Target;
+                mipLevel = ColorTargets[0].MipLevel;
             }
-            else if (DepthTarget != null)
+            else
             {
-                fbCI.width = DepthTarget.Value.Target.Width;
-                fbCI.height = DepthTarget.Value.Target.Height;
+                Debug.Assert(DepthTarget != null);
+                dimTex = DepthTarget.Value.Target;
+                mipLevel = DepthTarget.Value.MipLevel;
             }
+
+            Util.GetMipDimensions(
+                dimTex,
+                mipLevel,
+                out uint mipWidth,
+                out uint mipHeight,
+                out _);
+
+            fbCI.width = mipWidth;
+            fbCI.height = mipHeight;
 
             fbCI.attachmentCount = fbAttachmentsCount;
             fbCI.pAttachments = fbAttachments;
@@ -233,19 +246,30 @@ namespace Veldrid.Vk
             foreach (FramebufferAttachment ca in ColorTargets)
             {
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
-                vkTex.SetImageLayout(ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
+                vkTex.SetImageLayout(ca.MipLevel, ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
                 if ((vkTex.Usage & TextureUsage.Sampled) != 0)
                 {
-                    vkTex.TransitionImageLayout(cb, 0, 1, ca.ArrayLayer, 1, VkImageLayout.ShaderReadOnlyOptimal);
+                    vkTex.TransitionImageLayout(
+                        cb,
+                        ca.MipLevel, 1,
+                        ca.ArrayLayer, 1,
+                        VkImageLayout.ShaderReadOnlyOptimal);
                 }
             }
             if (DepthTarget != null)
             {
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
-                vkTex.SetImageLayout(DepthTarget.Value.ArrayLayer, VkImageLayout.DepthStencilAttachmentOptimal);
+                vkTex.SetImageLayout(
+                    DepthTarget.Value.MipLevel,
+                    DepthTarget.Value.ArrayLayer,
+                    VkImageLayout.DepthStencilAttachmentOptimal);
                 if ((vkTex.Usage & TextureUsage.Sampled) != 0)
                 {
-                    vkTex.TransitionImageLayout(cb, 0, 1, DepthTarget.Value.ArrayLayer, 1, VkImageLayout.ShaderReadOnlyOptimal);
+                    vkTex.TransitionImageLayout(
+                        cb,
+                        DepthTarget.Value.MipLevel, 1,
+                        DepthTarget.Value.ArrayLayer, 1,
+                        VkImageLayout.ShaderReadOnlyOptimal);
                 }
             }
         }

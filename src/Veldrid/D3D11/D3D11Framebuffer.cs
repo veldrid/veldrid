@@ -28,6 +28,7 @@ namespace Veldrid.D3D11
                     if (d3dDepthTarget.SampleCount == TextureSampleCount.Count1)
                     {
                         dsvDesc.Dimension = DepthStencilViewDimension.Texture2D;
+                        dsvDesc.Texture2D.MipSlice = (int)description.DepthTarget.Value.MipLevel;
                     }
                     else
                     {
@@ -41,6 +42,7 @@ namespace Veldrid.D3D11
                         dsvDesc.Dimension = DepthStencilViewDimension.Texture2DArray;
                         dsvDesc.Texture2DArray.FirstArraySlice = (int)description.DepthTarget.Value.ArrayLayer;
                         dsvDesc.Texture2DArray.ArraySize = 1;
+                        dsvDesc.Texture2DArray.MipSlice = (int)description.DepthTarget.Value.MipLevel;
                     }
                     else
                     {
@@ -68,6 +70,7 @@ namespace Veldrid.D3D11
                         if (d3dColorTarget.SampleCount == TextureSampleCount.Count1)
                         {
                             rtvDesc.Dimension = RenderTargetViewDimension.Texture2D;
+                            rtvDesc.Texture2D.MipSlice = (int)description.ColorTargets[i].MipLevel;
                         }
                         else
                         {
@@ -82,7 +85,8 @@ namespace Veldrid.D3D11
                             rtvDesc.Texture2DArray = new RenderTargetViewDescription.Texture2DArrayResource
                             {
                                 ArraySize = 1,
-                                FirstArraySlice = (int)description.ColorTargets[i].ArrayLayer
+                                FirstArraySlice = (int)description.ColorTargets[i].ArrayLayer,
+                                MipSlice = (int)description.ColorTargets[i].MipLevel
                             };
                         }
                         else

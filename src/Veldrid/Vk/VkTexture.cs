@@ -344,9 +344,9 @@ namespace Veldrid.Vk
             }
         }
 
-        internal void SetImageLayout(uint arrayLayer, VkImageLayout layout)
+        internal void SetImageLayout(uint mipLevel, uint arrayLayer, VkImageLayout layout)
         {
-            _imageLayouts[CalculateSubresource(0, arrayLayer)] = layout;
+            _imageLayouts[CalculateSubresource(mipLevel, arrayLayer)] = layout;
         }
     }
 }

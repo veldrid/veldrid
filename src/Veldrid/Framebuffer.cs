@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Veldrid
 {
@@ -34,25 +35,6 @@ namespace Veldrid
         /// </summary>
         public virtual uint Height { get; }
 
-        internal Framebuffer(FramebufferAttachment? depthTexture, IReadOnlyList<FramebufferAttachment> colorTextures)
-        {
-            ColorTargets = colorTextures;
-            DepthTarget = depthTexture;
-
-            if (colorTextures.Count > 0)
-            {
-                Width = colorTextures[0].Target.Width;
-                Height = colorTextures[0].Target.Height;
-            }
-            else if (depthTexture != null)
-            {
-                Width = depthTexture.Value.Target.Width;
-                Height = depthTexture.Value.Target.Height;
-            }
-
-            OutputDescription = OutputDescription.CreateFromFramebuffer(this);
-        }
-
         internal Framebuffer() { }
 
         internal Framebuffer(
@@ -62,26 +44,40 @@ namespace Veldrid
             if (depthTargetDesc != null)
             {
                 FramebufferAttachmentDescription depthAttachment = depthTargetDesc.Value;
-                DepthTarget = new FramebufferAttachment(depthAttachment.Target, depthAttachment.ArrayLayer);
+                DepthTarget = new FramebufferAttachment(
+                    depthAttachment.Target,
+                    depthAttachment.ArrayLayer,
+                    depthAttachment.MipLevel);
             }
             FramebufferAttachment[] colorTargets = new FramebufferAttachment[colorTargetDescs.Count];
             for (int i = 0; i < colorTargets.Length; i++)
             {
-                colorTargets[i] = new FramebufferAttachment(colorTargetDescs[i].Target, colorTargetDescs[i].ArrayLayer);
+                colorTargets[i] = new FramebufferAttachment(
+                    colorTargetDescs[i].Target,
+                    colorTargetDescs[i].ArrayLayer,
+                    colorTargetDescs[i].MipLevel);
             }
 
             ColorTargets = colorTargets;
 
+            Texture dimTex;
+            uint mipLevel;
             if (ColorTargets.Count > 0)
             {
-                Width = ColorTargets[0].Target.Width;
-                Height = ColorTargets[0].Target.Height;
+                dimTex = ColorTargets[0].Target;
+                mipLevel = ColorTargets[0].MipLevel;
             }
-            else if (DepthTarget != null)
+            else
             {
-                Width = DepthTarget.Value.Target.Width;
-                Height = DepthTarget.Value.Target.Height;
+                Debug.Assert(DepthTarget != null);
+                dimTex = DepthTarget.Value.Target;
+                mipLevel = DepthTarget.Value.MipLevel;
             }
+
+            Util.GetMipDimensions(dimTex, mipLevel, out uint mipWidth, out uint mipHeight, out _);
+            Width = mipWidth;
+            Height = mipHeight;
+
 
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
         }

@@ -153,7 +153,7 @@ namespace Veldrid.Vk
             foreach (FramebufferAttachment ca in ColorTargets)
             {
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
-                vkTex.SetImageLayout(ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
+                vkTex.SetImageLayout(0, ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
                 vkTex.TransitionImageLayout(cb, 0, 1, ca.ArrayLayer, 1, VkImageLayout.PresentSrcKHR);
             }
         }

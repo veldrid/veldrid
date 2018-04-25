@@ -23,6 +23,7 @@ namespace Veldrid.MTL
                 colorDescriptor.texture = mtlTarget.DeviceTexture;
                 colorDescriptor.loadAction = MTLLoadAction.Load;
                 colorDescriptor.slice = (UIntPtr)colorTarget.ArrayLayer;
+                colorDescriptor.level = (UIntPtr)colorTarget.MipLevel;
             }
 
             if (DepthTarget != null)
@@ -33,6 +34,7 @@ namespace Veldrid.MTL
                 depthDescriptor.storeAction = MTLStoreAction.Store;
                 depthDescriptor.texture = mtlDepthTarget.DeviceTexture;
                 depthDescriptor.slice = (UIntPtr)DepthTarget.Value.ArrayLayer;
+                depthDescriptor.level = (UIntPtr)DepthTarget.Value.MipLevel;
 
                 if (FormatHelpers.IsStencilFormat(mtlDepthTarget.Format))
                 {

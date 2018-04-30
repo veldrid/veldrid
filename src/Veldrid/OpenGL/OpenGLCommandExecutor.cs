@@ -653,8 +653,9 @@ namespace Veldrid.OpenGL
                         {
                             if (glUB.SizeInBytes < uniformBindingInfo.BlockSize)
                             {
+                                string name = glResourceSet.Layout.Elements[element].Name;
                                 throw new VeldridException(
-                                    $"Not enough data in uniform buffer in slot {slot}, element {element}. Shader expects at least {uniformBindingInfo.BlockSize}, but buffer only contains {glUB.SizeInBytes}");
+                                    $"Not enough data in uniform buffer \"{name}\" (slot {slot}, element {element}). Shader expects at least {uniformBindingInfo.BlockSize} bytes, but buffer only contains {glUB.SizeInBytes} bytes");
                             }
                             glUniformBlockBinding(pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + ubOffset);
                             CheckLastError();

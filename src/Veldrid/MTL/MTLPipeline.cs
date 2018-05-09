@@ -11,7 +11,7 @@ namespace Veldrid.MTL
         public MTLRenderPipelineState RenderPipelineState { get; }
         public MTLComputePipelineState ComputePipelineState { get; }
         public MTLPrimitiveType PrimitiveType { get; }
-        public MTLResourceLayout[] ResourceLayouts { get; }
+        public new MTLResourceLayout[] ResourceLayouts { get; }
         public ResourceBindingModel ResourceBindingModel { get; }
         public uint VertexBufferCount { get; }
         public uint NonVertexBufferCount { get; }

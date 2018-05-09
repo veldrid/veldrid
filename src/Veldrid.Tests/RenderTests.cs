@@ -484,7 +484,6 @@ namespace Veldrid.Tests
 
             Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
 
-
             Vector2[] vertices = new Vector2[]
             {
                 new Vector2(0.5f, 0.5f),

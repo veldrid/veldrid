@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Numerics;
+using Xunit;
 
 namespace Veldrid.Tests
 {
@@ -77,6 +78,121 @@ namespace Veldrid.Tests
             {
                 RF.CreateResourceSet(new ResourceSetDescription(layout, ub, ub, ub, ub, ub));
             });
+        }
+
+        [Fact]
+        public void ResourceSet_NoPipelineBound_Fails()
+        {
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("UB0", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+            DeviceBuffer ub = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+
+
+            ResourceSet rs = RF.CreateResourceSet(new ResourceSetDescription(layout, ub));
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(0, rs));
+        }
+
+        [Fact]
+        public void ResourceSet_InvalidSlot_Fails()
+        {
+            DeviceBuffer infoBuffer = RF.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
+            DeviceBuffer orthoBuffer = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+
+            ShaderSetDescription shaderSet = new ShaderSetDescription(
+                new VertexLayoutDescription[]
+                {
+                    new VertexLayoutDescription(
+                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
+                        new VertexElementDescription("Color_UInt", VertexElementSemantic.Color, VertexElementFormat.UInt4))
+                },
+                new Shader[]
+                {
+                    TestShaders.Load(RF, "UIntVertexAttribs", ShaderStages.Vertex, "VS"),
+                    TestShaders.Load(RF, "UIntVertexAttribs", ShaderStages.Fragment, "FS")
+                });
+
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("Ortho", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+
+            ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, infoBuffer, orthoBuffer));
+
+            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.Default,
+                PrimitiveTopology.PointList,
+                shaderSet,
+                layout,
+                new OutputDescription(null, new OutputAttachmentDescription(PixelFormat.B8_G8_R8_A8_UNorm)));
+
+            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetPipeline(pipeline);
+            Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(1, set));
+            Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(2, set));
+            Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(3, set));
+        }
+
+        [Fact]
+        public void ResourceSet_IncompatibleSet_Fails()
+        {
+            DeviceBuffer infoBuffer = RF.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
+            DeviceBuffer orthoBuffer = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+
+            ShaderSetDescription shaderSet = new ShaderSetDescription(
+                new VertexLayoutDescription[]
+                {
+                    new VertexLayoutDescription(
+                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
+                        new VertexElementDescription("Color_UInt", VertexElementSemantic.Color, VertexElementFormat.UInt4))
+                },
+                new Shader[]
+                {
+                    TestShaders.Load(RF, "UIntVertexAttribs", ShaderStages.Vertex, "VS"),
+                    TestShaders.Load(RF, "UIntVertexAttribs", ShaderStages.Fragment, "FS")
+                });
+
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("Ortho", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+
+            ResourceLayout layout2 = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment)));
+
+            ResourceLayout layout3 = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+
+            Texture tex = RF.CreateTexture(TextureDescription.Texture2D(16, 16, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
+            TextureView texView = RF.CreateTextureView(tex);
+
+            ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, infoBuffer, orthoBuffer));
+            ResourceSet set2 = RF.CreateResourceSet(new ResourceSetDescription(layout2, infoBuffer, texView));
+            ResourceSet set3 = RF.CreateResourceSet(new ResourceSetDescription(layout3, infoBuffer));
+
+            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.Default,
+                PrimitiveTopology.PointList,
+                shaderSet,
+                layout,
+                new OutputDescription(null, new OutputAttachmentDescription(PixelFormat.B8_G8_R8_A8_UNorm)));
+
+            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetPipeline(pipeline);
+            cl.SetGraphicsResourceSet(0, set);
+            Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(0, set2)); // Wrong type
+            Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(0, set3)); // Wrong count
         }
     }
 

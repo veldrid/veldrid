@@ -71,6 +71,8 @@ namespace Veldrid
         /// Sets the active <see cref="Pipeline"/> used for rendering.
         /// When drawing, the active <see cref="Pipeline"/> must be compatible with the bound <see cref="Framebuffer"/>,
         /// <see cref="ResourceSet"/>, and <see cref="DeviceBuffer"/> objects.
+        /// When a new Pipeline is set, the previously-bound ResourceSets on this CommandList become invalidated and must be
+        /// re-bound.
         /// </summary>
         /// <param name="pipeline">The new <see cref="Pipeline"/> object.</param>
         public void SetPipeline(Pipeline pipeline)
@@ -151,6 +153,38 @@ namespace Veldrid
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
         public void SetGraphicsResourceSet(uint slot, ResourceSet rs)
         {
+#if VALIDATE_USAGE
+            if (_graphicsPipeline == null)
+            {
+                throw new VeldridException($"A graphics Pipeline must be active before {nameof(SetGraphicsResourceSet)} can be called.");
+            }
+
+            int layoutsCount = _graphicsPipeline.ResourceLayouts.Length;
+            if (layoutsCount <= slot)
+            {
+                throw new VeldridException(
+                    $"Failed to bind ResourceSet to slot {slot}. The active graphics Pipeline only contains {layoutsCount} ResourceLayouts.");
+            }
+
+            ResourceLayout layout = _graphicsPipeline.ResourceLayouts[slot];
+            int pipelineLength = layout.ResourceKinds.Length;
+            int setLength = rs.Layout.ResourceKinds.Length;
+            if (pipelineLength != setLength)
+            {
+                throw new VeldridException($"Failed to bind ResourceSet to slot {slot}. The number of resources in the ResourceSet ({setLength}) does not match the number expected by the active Pipeline ({pipelineLength}).");
+            }
+
+            for (int i = 0; i < pipelineLength; i++)
+            {
+                ResourceKind pipelineKind = layout.ResourceKinds[i];
+                ResourceKind setKind = rs.Layout.ResourceKinds[i];
+                if (pipelineKind != setKind)
+                {
+                    throw new VeldridException(
+                        $"Failed to bind ResourceSet to slot {slot}. Resource element {i} was of the incorrect type. The bound Pipeline expects {pipelineKind}, but the ResourceSet contained {setKind}.");
+                }
+            }
+#endif
             SetGraphicsResourceSetCore(slot, rs);
         }
 
@@ -169,6 +203,19 @@ namespace Veldrid
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
         public void SetComputeResourceSet(uint slot, ResourceSet rs)
         {
+#if VALIDATE_USAGE
+            if (_computePipeline == null)
+            {
+                throw new VeldridException($"A compute Pipeline must be active before {nameof(SetComputeResourceSet)} can be called.");
+            }
+
+            int layoutsCount = _computePipeline.ResourceLayouts.Length;
+            if (layoutsCount <= slot)
+            {
+                throw new VeldridException(
+                    $"The currently-bound compute Pipeline only contains {layoutsCount} ResourceLayouts, so a ResourceSet cannot be bound to slot {slot}.");
+            }
+#endif
             SetComputeResourceSetCore(slot, rs);
         }
 

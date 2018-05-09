@@ -5,7 +5,7 @@
         private string _name;
 
         public BindableResource[] Resources { get; }
-        public D3D11ResourceLayout Layout { get; }
+        public new D3D11ResourceLayout Layout { get; }
 
         public D3D11ResourceSet(ref ResourceSetDescription description)
             : base(ref description)

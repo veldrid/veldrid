@@ -12,6 +12,8 @@ namespace Veldrid
         internal ResourceSet(ref ResourceSetDescription description)
         {
 #if VALIDATE_USAGE
+            Layout = description.Layout;
+
             ResourceKind[] kinds = description.Layout.ResourceKinds;
             BindableResource[] resources = description.BoundResources;
 
@@ -40,6 +42,8 @@ namespace Veldrid
         public abstract void Dispose();
 
 #if VALIDATE_USAGE
+        internal ResourceLayout Layout { get; }
+
         private void ValidateResourceKind(ResourceKind kind, BindableResource resource, uint slot)
         {
             switch (kind)

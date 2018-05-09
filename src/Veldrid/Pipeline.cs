@@ -10,6 +10,7 @@ namespace Veldrid
     public abstract class Pipeline : DeviceResource, IDisposable
     {
         internal Pipeline(ref GraphicsPipelineDescription graphicsDescription)
+            : this(graphicsDescription.ResourceLayouts)
         {
 #if VALIDATE_USAGE
             GraphicsOutputDescription = graphicsDescription.Outputs;
@@ -17,7 +18,15 @@ namespace Veldrid
         }
 
         internal Pipeline(ref ComputePipelineDescription computeDescription)
+            : this(computeDescription.ResourceLayouts)
         { }
+
+        internal Pipeline(ResourceLayout[] resourceLayouts)
+        {
+#if VALIDATE_USAGE
+            ResourceLayouts = Util.ShallowClone(resourceLayouts);
+#endif
+        }
 
         /// <summary>
         /// Gets a value indicating whether this instance represents a compute Pipeline.
@@ -38,6 +47,7 @@ namespace Veldrid
 
 #if VALIDATE_USAGE
         internal OutputDescription GraphicsOutputDescription { get; }
+        internal ResourceLayout[] ResourceLayouts { get; }
 #endif
     }
 }

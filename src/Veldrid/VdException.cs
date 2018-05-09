@@ -21,6 +21,7 @@ namespace Veldrid
         public VeldridException(string message) : base(message)
         {
         }
+
         /// <summary>
         /// Constructs a new Veldridexception with the given message and inner exception.
         /// </summary>

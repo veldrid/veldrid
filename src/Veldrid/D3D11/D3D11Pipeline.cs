@@ -20,7 +20,7 @@ namespace Veldrid.D3D11
         public DomainShader DomainShader { get; } // May be null.
         public PixelShader PixelShader { get; }
         public ComputeShader ComputeShader { get; }
-        public D3D11ResourceLayout[] ResourceLayouts { get; }
+        public new D3D11ResourceLayout[] ResourceLayouts { get; }
         public int[] VertexStrides { get; }
 
         public override bool IsComputePipeline { get; }

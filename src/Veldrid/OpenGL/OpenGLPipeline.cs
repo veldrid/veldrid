@@ -13,7 +13,9 @@ namespace Veldrid.OpenGL
         private const uint GL_INVALID_INDEX = 0xFFFFFFFF;
         private readonly OpenGLGraphicsDevice _gd;
 
+#if !VALIDATE_USAGE
         public ResourceLayout[] ResourceLayouts { get; }
+#endif
 
         // Graphics Pipeline
         public Shader[] GraphicsShaders { get; }
@@ -59,7 +61,9 @@ namespace Veldrid.OpenGL
                 VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
             }
 
+#if !VALIDATE_USAGE
             ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
+#endif
         }
 
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref ComputePipelineDescription description)
@@ -69,7 +73,9 @@ namespace Veldrid.OpenGL
             IsComputePipeline = true;
             ComputeShader = description.ComputeShader;
             VertexStrides = Array.Empty<int>();
+#if !VALIDATE_USAGE
             ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
+#endif
         }
 
         public bool Created { get; private set; }

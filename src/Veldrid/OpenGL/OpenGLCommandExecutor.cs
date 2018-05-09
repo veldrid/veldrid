@@ -17,18 +17,18 @@ namespace Veldrid.OpenGL
         private Framebuffer _fb;
         private bool _isSwapchainFB;
         private OpenGLPipeline _graphicsPipeline;
-        private OpenGLResourceSet[] _graphicsResourceSets = new OpenGLResourceSet[1];
-        private bool[] _newGraphicsResourceSets = new bool[1];
-        private OpenGLBuffer[] _vertexBuffers = new OpenGLBuffer[1];
-        private uint[] _vertexAttribDivisors = new uint[1];
+        private OpenGLResourceSet[] _graphicsResourceSets = Array.Empty<OpenGLResourceSet>();
+        private bool[] _newGraphicsResourceSets = Array.Empty<bool>();
+        private OpenGLBuffer[] _vertexBuffers = Array.Empty<OpenGLBuffer>();
+        private uint[] _vertexAttribDivisors = Array.Empty<uint>();
         private uint _vertexAttributesBound;
         private readonly Viewport[] _viewports = new Viewport[20];
         private DrawElementsType _drawElementsType;
         private PrimitiveType _primitiveType;
 
         private OpenGLPipeline _computePipeline;
-        private OpenGLResourceSet[] _computeResourceSets = new OpenGLResourceSet[1];
-        private bool[] _newComputeResourceSets = new bool[1];
+        private OpenGLResourceSet[] _computeResourceSets = Array.Empty<OpenGLResourceSet>();
+        private bool[] _newComputeResourceSets = Array.Empty<bool>();
 
         private bool _graphicsPipelineActive;
 

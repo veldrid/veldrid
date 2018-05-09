@@ -213,7 +213,26 @@ namespace Veldrid
             if (layoutsCount <= slot)
             {
                 throw new VeldridException(
-                    $"The currently-bound compute Pipeline only contains {layoutsCount} ResourceLayouts, so a ResourceSet cannot be bound to slot {slot}.");
+                    $"Failed to bind ResourceSet to slot {slot}. The active compute Pipeline only contains {layoutsCount} ResourceLayouts.");
+            }
+
+            ResourceLayout layout = _computePipeline.ResourceLayouts[slot];
+            int pipelineLength = layout.ResourceKinds.Length;
+            int setLength = rs.Layout.ResourceKinds.Length;
+            if (pipelineLength != setLength)
+            {
+                throw new VeldridException($"Failed to bind ResourceSet to slot {slot}. The number of resources in the ResourceSet ({setLength}) does not match the number expected by the active Pipeline ({pipelineLength}).");
+            }
+
+            for (int i = 0; i < pipelineLength; i++)
+            {
+                ResourceKind pipelineKind = layout.ResourceKinds[i];
+                ResourceKind setKind = rs.Layout.ResourceKinds[i];
+                if (pipelineKind != setKind)
+                {
+                    throw new VeldridException(
+                        $"Failed to bind ResourceSet to slot {slot}. Resource element {i} was of the incorrect type. The bound Pipeline expects {pipelineKind}, but the ResourceSet contained {setKind}.");
+                }
             }
 #endif
             SetComputeResourceSetCore(slot, rs);

@@ -21,7 +21,8 @@ namespace Veldrid
         public virtual IReadOnlyList<FramebufferAttachment> ColorTargets { get; }
 
         /// <summary>
-        /// Gets an <see cref="Veldrid.OutputDescription"/> which describes the number and formats of the color targets in this instance.
+        /// Gets an <see cref="Veldrid.OutputDescription"/> which describes the number and formats of the depth and color targets
+        /// in this instance.
         /// </summary>
         public virtual OutputDescription OutputDescription { get; }
 

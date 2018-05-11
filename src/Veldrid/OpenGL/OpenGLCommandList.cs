@@ -8,9 +8,11 @@ namespace Veldrid.OpenGL
     internal class OpenGLCommandList : CommandList
     {
         private readonly OpenGLGraphicsDevice _gd;
+        internal bool IsImmediate { get; }
         private OpenGLCommandEntryList _currentCommands;
 
         internal OpenGLCommandEntryList CurrentCommands => _currentCommands;
+
 
         private readonly object _lock = new object();
         private readonly List<OpenGLCommandEntryList> _availableLists = new List<OpenGLCommandEntryList>();
@@ -22,17 +24,31 @@ namespace Veldrid.OpenGL
             : base(ref description, gd.Features)
         {
             _gd = gd;
+            IsImmediate = false;
+        }
+
+        public OpenGLCommandList(OpenGLGraphicsDevice gd, ref CommandListDescription description, OpenGLCommandExecutor executor)
+            : base(ref description, gd.Features)
+        {
+            _gd = gd;
+            IsImmediate = true;
+            _currentCommands = new OpenGLImmediateEntryList(this, executor);
         }
 
         public override void Begin()
         {
             ClearCachedState();
-            if (_currentCommands != null)
+
+            if (!IsImmediate)
             {
-                _currentCommands.Dispose();
+                if (_currentCommands != null)
+                {
+                    _currentCommands.Dispose();
+                }
+
+                _currentCommands = GetFreeCommandList();
             }
 
-            _currentCommands = GetFreeCommandList();
             _currentCommands.Begin();
         }
 
@@ -145,6 +161,7 @@ namespace Veldrid.OpenGL
 
         internal void Reset()
         {
+            ClearCachedState();
             _currentCommands.Reset();
         }
 

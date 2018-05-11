@@ -17,16 +17,17 @@ namespace Veldrid.MTL
         private readonly MTLCommandQueue _commandQueue;
         private readonly MTLSwapchain _mainSwapchain;
         private readonly TextureSampleCount _maxSampleCount;
-
-        private readonly object _submittedCommandsLock = new object();
+        private readonly bool _multiThreaded;
+        private readonly MTLCommandList _immediateCL;
+        private readonly ConditionalLock _submittedCommandsLock = new ConditionalLock();
         private readonly List<(MTLCommandBuffer, MTLFence)> _submittedCBs = new List<(MTLCommandBuffer, MTLFence)>();
 
-        private readonly object _resetEventsLock = new object();
+        private readonly ConditionalLock _resetEventsLock = new ConditionalLock();
         private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
 
         private const string UnalignedBufferCopyPipelineMacOSName = "MTL_UnalignedBufferCopy_macOS";
         private const string UnalignedBufferCopyPipelineiOSName = "MTL_UnalignedBufferCopy_iOS";
-        private readonly object _unalignedBufferCopyPipelineLock = new object();
+        private readonly ConditionalLock _unalignedBufferCopyPipelineLock = new ConditionalLock();
         private MTLShader _unalignedBufferCopyShader;
         private MTLComputePipelineState _unalignedBufferCopyPipeline;
 
@@ -37,7 +38,7 @@ namespace Veldrid.MTL
 
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
-            SwapchainDescription? swapchainDesc)
+            SwapchainDescription? swapchainDesc) : base(options)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
             MetalFeatures = new MTLFeatureSupport(_device);
@@ -76,6 +77,12 @@ namespace Veldrid.MTL
                 _mainSwapchain = new MTLSwapchain(this, ref desc);
             }
 
+            _multiThreaded = !options.SingleThreaded;
+            if (!_multiThreaded)
+            {
+                _immediateCL = Util.AssertSubtype<CommandList, MTLCommandList>(ResourceFactory.CreateCommandList());
+            }
+
             PostDeviceCreated();
         }
 
@@ -89,16 +96,23 @@ namespace Veldrid.MTL
 
         public override GraphicsDeviceFeatures Features { get; }
 
+        protected override CommandList GetImmediateCommandListCore() { return _immediateCL; }
+
         protected override void SubmitCommandsCore(CommandList commandList, Fence fence)
         {
             MTLCommandList mtlCL = Util.AssertSubtype<CommandList, MTLCommandList>(commandList);
             MTLCommandBuffer cb = mtlCL.Commit();
-            lock (_submittedCommandsLock)
+            using (_submittedCommandsLock.Lock(_multiThreaded))
             {
                 CheckSubmittedCommands(assumeCompletion: false);
 
                 MTLFence mtlFence = fence as MTLFence;
                 _submittedCBs.Add((cb, mtlFence));
+            }
+
+            if (commandList != _immediateCL)
+            {
+                _immediateCL.Reset();
             }
         }
 
@@ -270,7 +284,7 @@ namespace Veldrid.MTL
 
         protected override void WaitForIdleCore()
         {
-            lock (_submittedCommandsLock)
+            using (_submittedCommandsLock.Lock(_multiThreaded))
             {
                 int lastIndex = _submittedCBs.Count - 1;
                 if (lastIndex >= 0)
@@ -330,6 +344,7 @@ namespace Veldrid.MTL
                 ObjectiveCRuntime.release(_unalignedBufferCopyPipeline.NativePtr);
             }
             _mainSwapchain?.Dispose();
+            _immediateCL?.Dispose();
             ObjectiveCRuntime.release(_commandQueue.NativePtr);
             ObjectiveCRuntime.release(_device.NativePtr);
         }
@@ -369,7 +384,7 @@ namespace Veldrid.MTL
 
         private ManualResetEvent[] GetResetEventArray(int length)
         {
-            lock (_resetEventsLock)
+            using (_resetEventsLock.Lock(_multiThreaded))
             {
                 for (int i = _resetEvents.Count - 1; i > 0; i--)
                 {
@@ -388,7 +403,7 @@ namespace Veldrid.MTL
 
         private void ReturnResetEventArray(ManualResetEvent[] array)
         {
-            lock (_resetEventsLock)
+            using (_resetEventsLock.Lock(_multiThreaded))
             {
                 _resetEvents.Add(array);
             }
@@ -435,7 +450,7 @@ namespace Veldrid.MTL
 
         internal MTLComputePipelineState GetUnalignedBufferCopyPipeline()
         {
-            lock (_unalignedBufferCopyPipelineLock)
+            using (_unalignedBufferCopyPipelineLock.Lock(_multiThreaded))
             {
                 if (_unalignedBufferCopyPipeline.IsNull)
                 {

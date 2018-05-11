@@ -40,6 +40,11 @@ namespace Veldrid.OpenGL
             _gd = gd;
             _shaderType = OpenGLFormats.VdToGLShaderType(stage);
             _stagingBlock = stagingBlock;
+
+            if (!gd.MultiThreaded)
+            {
+                EnsureResourcesCreated();
+            }
         }
 
         public bool Created { get; private set; }

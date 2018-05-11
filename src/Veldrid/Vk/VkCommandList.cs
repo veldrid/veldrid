@@ -14,6 +14,7 @@ namespace Veldrid.Vk
         private VkCommandPool _pool;
         private VkCommandBuffer _cb;
         private bool _destroyed;
+        private readonly bool _multiThreaded;
 
         private bool _commandBufferBegun;
         private bool _commandBufferEnded;
@@ -41,7 +42,7 @@ namespace Veldrid.Vk
         private int _newComputeResourceSets;
         private string _name;
 
-        private readonly object _commandBufferListLock = new object();
+        private readonly ConditionalLock _commandBufferListLock = new ConditionalLock();
         private readonly Queue<VkCommandBuffer> _availableCommandBuffers = new Queue<VkCommandBuffer>();
         private readonly List<VkCommandBuffer> _submittedCommandBuffers = new List<VkCommandBuffer>();
 
@@ -59,18 +60,21 @@ namespace Veldrid.Vk
             : base(ref description, gd.Features)
         {
             _gd = gd;
+            _multiThreaded = !gd.SingleThreaded;
+
             VkCommandPoolCreateInfo poolCI = VkCommandPoolCreateInfo.New();
             poolCI.flags = VkCommandPoolCreateFlags.ResetCommandBuffer;
             poolCI.queueFamilyIndex = gd.GraphicsQueueIndex;
             VkResult result = vkCreateCommandPool(_gd.Device, ref poolCI, null, out _pool);
             CheckResult(result);
 
+
             _cb = GetNextCommandBuffer();
         }
 
         private VkCommandBuffer GetNextCommandBuffer()
         {
-            lock (_commandBufferListLock)
+            using (_commandBufferListLock.Lock(_multiThreaded))
             {
                 if (_availableCommandBuffers.Count > 0)
                 {
@@ -101,7 +105,7 @@ namespace Veldrid.Vk
         {
             SubmittedCommandBufferCount -= 1;
 
-            lock (_commandBufferListLock)
+            using (_commandBufferListLock.Lock(_multiThreaded))
             {
                 for (int i = 0; i < _submittedCommandBuffers.Count; i++)
                 {
@@ -157,6 +161,19 @@ namespace Veldrid.Vk
 
             _currentComputePipeline = null;
             Util.ClearArray(_currentComputeResourceSets);
+        }
+
+        internal void Reset()
+        {
+            if (_commandBufferBegun)
+            {
+                _commandBufferBegun = false;
+
+                VkResult result = vkResetCommandBuffer(_cb, VkCommandBufferResetFlags.None);
+                CheckResult(result);
+            }
+
+            _commandBufferEnded = false;
         }
 
         protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)

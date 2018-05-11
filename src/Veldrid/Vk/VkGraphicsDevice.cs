@@ -25,15 +25,18 @@ namespace Veldrid.Vk
         private uint _graphicsQueueIndex;
         private uint _presentQueueIndex;
         private VkCommandPool _graphicsCommandPool;
-        private readonly object _graphicsCommandPoolLock = new object();
+        private readonly ConditionalLock _graphicsCommandPoolLock = new ConditionalLock();
         private VkQueue _graphicsQueue;
-        private readonly object _graphicsQueueLock = new object();
+        private readonly ConditionalLock _graphicsQueueLock = new ConditionalLock();
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private PFN_vkDebugReportCallbackEXT _debugCallbackFunc;
+        private readonly ConditionalLock _commandListsToDisposeLock = new ConditionalLock();
         private readonly List<VkCommandList> _commandListsToDispose = new List<VkCommandList>();
         private bool _debugMarkerEnabled;
         private vkDebugMarkerSetObjectNameEXT_d _setObjectNameDelegate;
         private readonly ConcurrentDictionary<VkFormat, VkFilter> _filters = new ConcurrentDictionary<VkFormat, VkFilter>();
+        private bool _multiThreaded;
+        private CommandList _immediateCL;
 
         private const int SharedCommandPoolCount = 4;
         private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
@@ -45,7 +48,7 @@ namespace Veldrid.Vk
         private const uint MinStagingBufferSize = 64;
         private const uint MaxStagingBufferSize = 512;
 
-        private readonly object _stagingResourcesLock = new object();
+        private readonly ConditionalLock _stagingResourcesLock = new ConditionalLock();
         private readonly List<VkTexture> _availableStagingTextures = new List<VkTexture>();
         private readonly List<VkBuffer> _availableStagingBuffers = new List<VkBuffer>();
 
@@ -74,7 +77,7 @@ namespace Veldrid.Vk
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
         public VkDescriptorPoolManager DescriptorPoolManager => _descriptorPoolManager;
 
-        private readonly object _submittedFencesLock = new object();
+        private readonly ConditionalLock _submittedFencesLock = new ConditionalLock();
         private readonly Queue<Vulkan.VkFence> _availableSubmissionFences = new Queue<Vulkan.VkFence>();
         private readonly Dictionary<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)> _submittedFences
             = new Dictionary<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)>();
@@ -83,7 +86,9 @@ namespace Veldrid.Vk
         private readonly VkSwapchain _mainSwapchain;
 
         public VkGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? scDesc)
+            : base(options)
         {
+            _multiThreaded = !options.SingleThreaded;
             CreateInstance(options.Debug);
 
             VkSurfaceKHR surface = VkSurfaceKHR.Null;
@@ -95,7 +100,7 @@ namespace Veldrid.Vk
             CreatePhysicalDevice();
             CreateLogicalDevice(surface);
 
-            _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
+            _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice, _multiThreaded);
 
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
@@ -128,10 +133,17 @@ namespace Veldrid.Vk
                 _sharedGraphicsCommandPools.Push(new SharedCommandPool(this, true));
             }
 
+            if (!_multiThreaded)
+            {
+                _immediateCL = ResourceFactory.CreateCommandList();
+            }
+
             PostDeviceCreated();
         }
 
         public override ResourceFactory ResourceFactory { get; }
+
+        protected override CommandList GetImmediateCommandListCore() => _immediateCL;
 
         protected override void SubmitCommandsCore(
             CommandList cl,
@@ -191,7 +203,7 @@ namespace Veldrid.Vk
                 submissionFence = vkFence;
             }
 
-            lock (_graphicsQueueLock)
+            using (_graphicsQueueLock.Lock(_multiThreaded))
             {
                 vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
                 _submittedFences.Add(submissionFence, (vkCL, vkCB));
@@ -205,7 +217,7 @@ namespace Veldrid.Vk
 
         private void CheckSubmittedFences()
         {
-            lock (_submittedFencesLock)
+            using (_submittedFencesLock.Lock(_multiThreaded))
             {
                 Debug.Assert(_completedFences.Count == 0);
                 foreach (KeyValuePair<Vulkan.VkFence, (VkCommandList, VkCommandBuffer)> kvp in _submittedFences)
@@ -226,7 +238,7 @@ namespace Veldrid.Vk
                     VkResult resetResult = vkResetFences(_device, 1, ref fence);
                     CheckResult(resetResult);
                     _availableSubmissionFences.Enqueue(fence);
-                    lock (_stagingResourcesLock)
+                    using (_stagingResourcesLock.Lock(_multiThreaded))
                     {
                         if (_submittedStagingTextures.TryGetValue(completedCB, out VkTexture stagingTex))
                         {
@@ -248,7 +260,7 @@ namespace Veldrid.Vk
                         if (_submittedSharedCommandPools.TryGetValue(completedCB, out SharedCommandPool sharedPool))
                         {
                             _submittedSharedCommandPools.Remove(completedCB);
-                            lock (_graphicsCommandPoolLock)
+                            using (_graphicsCommandPoolLock.Lock(_multiThreaded))
                             {
                                 if (sharedPool.IsCached)
                                 {
@@ -266,7 +278,7 @@ namespace Veldrid.Vk
                     VkCommandList cl = kvp.Value.Item1;
                     if (cl != null)
                     {
-                        lock (_commandListsToDispose)
+                        using (_commandListsToDisposeLock.Lock(_multiThreaded))
                         {
                             if (cl.SubmittedCommandBufferCount == 0)
                             {
@@ -300,7 +312,7 @@ namespace Veldrid.Vk
 
         public void EnqueueDisposedCommandBuffer(VkCommandList vkCL)
         {
-            lock (_commandListsToDispose)
+            using (_commandListsToDisposeLock.Lock(_multiThreaded))
             {
                 _commandListsToDispose.Add(vkCL);
             }
@@ -317,8 +329,8 @@ namespace Veldrid.Vk
             uint imageIndex = vkSC.ImageIndex;
             presentInfo.pImageIndices = &imageIndex;
 
-            object presentLock = vkSC.PresentQueueIndex == _graphicsQueueIndex ? _graphicsQueueLock : vkSC;
-            lock (presentLock)
+            ConditionalLock presentLock = vkSC.PresentQueueIndex == _graphicsQueueIndex ? _graphicsQueueLock : vkSC.Lock;
+            using (presentLock.Lock(_multiThreaded))
             {
                 vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
                 if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, vkSC.ImageAvailableFence))
@@ -413,7 +425,7 @@ namespace Veldrid.Vk
 
         private void FlushQueuedDisposables()
         {
-            lock (_commandListsToDispose)
+            using (_commandListsToDisposeLock.Lock(_multiThreaded))
             {
                 foreach (VkCommandList vkCB in _commandListsToDispose)
                 {
@@ -861,6 +873,8 @@ namespace Veldrid.Vk
                 sharedPool.Destroy();
             }
 
+            ImmediateCommandList?.Dispose();
+
             _memoryManager.Dispose();
 
             VkResult result = vkDeviceWaitIdle(_device);
@@ -871,7 +885,7 @@ namespace Veldrid.Vk
 
         protected override void WaitForIdleCore()
         {
-            lock (_graphicsQueueLock)
+            using (_graphicsQueueLock.Lock(_multiThreaded))
             {
                 vkQueueWaitIdle(_graphicsQueue);
             }
@@ -1004,7 +1018,7 @@ namespace Veldrid.Vk
                 vkCmdCopyBuffer(cb, copySrcVkBuffer.DeviceBuffer, vkBuffer.DeviceBuffer, 1, ref copyRegion);
 
                 pool.EndAndSubmit(cb);
-                lock (_stagingResourcesLock)
+                using (_stagingResourcesLock.Lock(_multiThreaded))
                 {
                     _submittedStagingBuffers.Add(cb, copySrcVkBuffer);
                 }
@@ -1090,7 +1104,7 @@ namespace Veldrid.Vk
                     texture, x, y, z, mipLevel, arrayLayer,
                     width, height, depth, 1);
                 pool.EndAndSubmit(cb);
-                lock (_stagingResourcesLock)
+                using (_stagingResourcesLock.Lock(_multiThreaded))
                 {
                     _submittedStagingTextures.Add(cb, stagingTex);
                 }
@@ -1101,7 +1115,7 @@ namespace Veldrid.Vk
         {
             uint pixelSize = FormatHelpers.GetSizeInBytes(format);
             uint totalSize = width * height * depth * pixelSize;
-            lock (_stagingResourcesLock)
+            using (_stagingResourcesLock.Lock(_multiThreaded))
             {
                 for (int i = 0; i < _availableStagingTextures.Count; i++)
                 {
@@ -1126,7 +1140,7 @@ namespace Veldrid.Vk
 
         private VkBuffer GetFreeStagingBuffer(uint size)
         {
-            lock (_stagingResourcesLock)
+            using (_stagingResourcesLock.Lock(_multiThreaded))
             {
                 for (int i = 0; i < _availableStagingBuffers.Count; i++)
                 {
@@ -1293,7 +1307,7 @@ namespace Veldrid.Vk
                 VkResult result = vkEndCommandBuffer(cb);
                 CheckResult(result);
                 _gd.SubmitCommandBuffer(null, cb, 0, null, 0, null, null);
-                lock (_gd._stagingResourcesLock)
+                using (_gd._stagingResourcesLock.Lock(_gd._multiThreaded))
                 {
                     _gd._submittedSharedCommandPools.Add(cb, this);
                 }

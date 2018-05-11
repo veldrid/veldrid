@@ -64,6 +64,11 @@ namespace Veldrid.OpenGL
 #if !VALIDATE_USAGE
             ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
 #endif
+
+            if (!gd.MultiThreaded)
+            {
+                EnsureResourcesCreated();
+            }
         }
 
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref ComputePipelineDescription description)

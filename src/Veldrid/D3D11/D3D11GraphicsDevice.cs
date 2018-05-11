@@ -17,14 +17,19 @@ namespace Veldrid.D3D11
         private readonly D3D11Swapchain _mainSwapchain;
         private readonly bool _supportsConcurrentResources;
         private readonly bool _supportsCommandLists;
-        private readonly object _immediateContextLock = new object();
+        private readonly ConditionalLock _immediateContextLock = new ConditionalLock();
+        private readonly bool _multiThreaded;
 
-        private readonly object _mappedResourceLock = new object();
+        private readonly ConditionalLock _mappedResourceLock = new ConditionalLock();
         private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
             = new Dictionary<MappedResourceCacheKey, MappedResourceInfo>();
 
-        private readonly object _stagingResourcesLock = new object();
+        private readonly ConditionalLock _stagingResourcesLock = new ConditionalLock();
         private readonly List<D3D11Buffer> _availableStagingBuffers = new List<D3D11Buffer>();
+
+        private readonly ConditionalLock _resetEventsLock = new ConditionalLock();
+        private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
+        private readonly D3D11CommandList _immediateCL;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
@@ -42,8 +47,12 @@ namespace Veldrid.D3D11
 
         public override GraphicsDeviceFeatures Features { get; }
 
+        protected override CommandList GetImmediateCommandListCore() => _immediateCL;
+
         public D3D11GraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDesc)
+            : base(options)
         {
+            _multiThreaded = !options.SingleThreaded;
 #if DEBUG
             DeviceCreationFlags creationFlags = DeviceCreationFlags.Debug;
 #else
@@ -76,19 +85,31 @@ namespace Veldrid.D3D11
 
             _d3d11ResourceFactory = new D3D11ResourceFactory(this);
 
+            if (!_multiThreaded)
+            {
+                CommandListDescription clDesc;
+                _immediateCL = new D3D11CommandList(this, ref clDesc, _immediateContext);
+            }
+
             PostDeviceCreated();
         }
 
         protected override void SubmitCommandsCore(CommandList cl, Fence fence)
         {
             D3D11CommandList d3d11CL = Util.AssertSubtype<CommandList, D3D11CommandList>(cl);
-            lock (_immediateContextLock)
+
+            if (!d3d11CL.IsImmediate)
             {
-                if (d3d11CL.DeviceCommandList != null) // CommandList may have been reset in the meantime (resized swapchain).
+                using (_immediateContextLock.Lock(_multiThreaded))
                 {
-                    _immediateContext.ExecuteCommandList(d3d11CL.DeviceCommandList, false);
-                    d3d11CL.OnCompleted();
+                    if (d3d11CL.DeviceCommandList != null) // CommandList may have been reset in the meantime (resized swapchain).
+                    {
+                        _immediateContext.ExecuteCommandList(d3d11CL.DeviceCommandList, false);
+                        d3d11CL.OnCompleted();
+                    }
                 }
+
+                _immediateCL.Reset();
             }
 
             if (fence is D3D11Fence d3d11Fence)
@@ -99,7 +120,7 @@ namespace Veldrid.D3D11
 
         protected override void SwapBuffersCore(Swapchain swapchain)
         {
-            lock (_immediateContextLock)
+            using (_immediateContextLock.Lock(_multiThreaded))
             {
                 D3D11Swapchain d3d11SC = Util.AssertSubtype<Swapchain, D3D11Swapchain>(swapchain);
                 d3d11SC.DxgiSwapChain.Present(d3d11SC.SyncInterval, PresentFlags.None);
@@ -187,7 +208,7 @@ namespace Veldrid.D3D11
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
         {
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
-            lock (_mappedResourceLock)
+            using (_mappedResourceLock.Lock(_multiThreaded))
             {
                 if (_mappedResources.TryGetValue(key, out MappedResourceInfo info))
                 {
@@ -205,7 +226,7 @@ namespace Veldrid.D3D11
 
                     if (resource is D3D11Buffer buffer)
                     {
-                        lock (_immediateContextLock)
+                        using (_immediateContextLock.Lock(_multiThreaded))
                         {
                             DataBox db = _immediateContext.MapSubresource(
                                 buffer.Buffer,
@@ -222,7 +243,7 @@ namespace Veldrid.D3D11
                     else
                     {
                         D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
-                        lock (_immediateContextLock)
+                        using (_immediateContextLock.Lock(_multiThreaded))
                         {
                             DataBox db = _immediateContext.MapSubresource(
                                 texture.DeviceTexture,
@@ -255,7 +276,7 @@ namespace Veldrid.D3D11
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
             bool commitUnmap;
 
-            lock (_mappedResourceLock)
+            using (_mappedResourceLock.Lock(_multiThreaded))
             {
                 if (!_mappedResources.TryGetValue(key, out MappedResourceInfo info))
                 {
@@ -266,7 +287,7 @@ namespace Veldrid.D3D11
                 commitUnmap = info.RefCount == 0;
                 if (commitUnmap)
                 {
-                    lock (_immediateContextLock)
+                    using (_immediateContextLock.Lock(_multiThreaded))
                     {
                         if (resource is D3D11Buffer buffer)
                         {
@@ -315,7 +336,7 @@ namespace Veldrid.D3D11
                     subregion = null;
                 }
 
-                lock (_immediateContextLock)
+                using (_immediateContextLock.Lock(_multiThreaded))
                 {
                     _immediateContext.UpdateSubresource(d3dBuffer.Buffer, 0, subregion, source, 0, 0);
                 }
@@ -342,7 +363,7 @@ namespace Veldrid.D3D11
                 D3D11Buffer staging = GetFreeStagingBuffer(sizeInBytes);
                 UpdateBuffer(staging, 0, source, sizeInBytes);
                 ResourceRegion sourceRegion = new ResourceRegion(0, 0, 0, (int)sizeInBytes, 1, 1);
-                lock (_immediateContextLock)
+                using (_immediateContextLock.Lock(_multiThreaded))
                 {
                     _immediateContext.CopySubresourceRegion(
                         staging.Buffer, 0, sourceRegion,
@@ -350,7 +371,7 @@ namespace Veldrid.D3D11
                         (int)bufferOffsetInBytes, 0, 0);
                 }
 
-                lock (_stagingResourcesLock)
+                using (_stagingResourcesLock.Lock(_multiThreaded))
                 {
                     _availableStagingBuffers.Add(staging);
                 }
@@ -359,7 +380,7 @@ namespace Veldrid.D3D11
 
         private D3D11Buffer GetFreeStagingBuffer(uint sizeInBytes)
         {
-            lock (_stagingResourcesLock)
+            using (_stagingResourcesLock.Lock(_multiThreaded))
             {
                 foreach (D3D11Buffer buffer in _availableStagingBuffers)
                 {
@@ -425,7 +446,7 @@ namespace Veldrid.D3D11
                     back: (int)(z + depth));
                 uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture.Format) * width;
                 uint srcDepthPitch = srcRowPitch * depth;
-                lock (_immediateContextLock)
+                using (_immediateContextLock.Lock(_multiThreaded))
                 {
                     _immediateContext.UpdateSubresource(
                         d3dTex.DeviceTexture,
@@ -467,12 +488,9 @@ namespace Veldrid.D3D11
             return result;
         }
 
-        private readonly object _resetEventsLock = new object();
-        private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
-
         private ManualResetEvent[] GetResetEventArray(int length)
         {
-            lock (_resetEventsLock)
+            using (_resetEventsLock.Lock(_multiThreaded))
             {
                 for (int i = _resetEvents.Count - 1; i > 0; i--)
                 {
@@ -491,7 +509,7 @@ namespace Veldrid.D3D11
 
         private void ReturnResetEventArray(ManualResetEvent[] array)
         {
-            lock (_resetEventsLock)
+            using (_resetEventsLock.Lock(_multiThreaded))
             {
                 _resetEvents.Add(array);
             }
@@ -509,6 +527,7 @@ namespace Veldrid.D3D11
 
         protected override void PlatformDispose()
         {
+            _immediateCL?.Dispose();
             _d3d11ResourceFactory.Dispose();
             _mainSwapchain?.Dispose();
             _immediateContext.Dispose();

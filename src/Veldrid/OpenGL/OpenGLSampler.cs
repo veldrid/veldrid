@@ -25,6 +25,11 @@ namespace Veldrid.OpenGL
 
             _mipmapState = new InternalSamplerState();
             _noMipmapState = new InternalSamplerState();
+
+            if (!gd.MultiThreaded)
+            {
+                EnsureResourcesCreated();
+            }
         }
 
         public bool Created { get; private set; }

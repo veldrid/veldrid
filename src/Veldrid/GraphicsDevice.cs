@@ -10,10 +10,13 @@ namespace Veldrid
     /// </summary>
     public abstract class GraphicsDevice : IDisposable
     {
-        private readonly object _deferredDisposalLock = new object();
+        private readonly ConditionalLock _deferredDisposalLock = new ConditionalLock();
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
 
-        internal GraphicsDevice() { }
+        internal GraphicsDevice(GraphicsDeviceOptions options)
+        {
+            SingleThreaded = options.SingleThreaded;
+        }
 
         /// <summary>
         /// Gets a value identifying the specific graphics API used by this instance.
@@ -62,6 +65,37 @@ namespace Veldrid
                 MainSwapchain.SyncToVerticalBlank = value;
             }
         }
+
+        /// <summary>
+        /// Gets a value indicating whether this instance was created in single-threaded mode. If true, then access to this
+        /// instance and all its child objects must be externally synchronized. If this value is true, and this is an OpenGL
+        /// or OpenGL ES GraphicsDevice, then access to this device must be restricted to the same thread which created it. By
+        /// default, a GraphicsDevice is not single-threaded, and can be safely accessed by multiple threads at once.
+        /// If this value true, the <see cref="ImmediateCommandList"/> can be used.
+        /// </summary>
+        public bool SingleThreaded { get; }
+
+        /// <summary>
+        /// Gets a special <see cref="CommandList"/> which can be used to execute immediate, low-overhead commands on the device,
+        /// without buffering or synchronization. When other commands are submitted with the
+        /// <see cref="SubmitCommands(CommandList)"/> method, the ImmediateCommandList is reset to its default state.
+        /// This CommandList can only be used on single-threaded GraphicsDevice instances ( when <see cref="SingleThreaded"/> is
+        /// true).
+        /// </summary>
+        public CommandList ImmediateCommandList
+        {
+            get
+            {
+                if (!SingleThreaded)
+                {
+                    throw new VeldridException($"{nameof(ImmediateCommandList)} can only be used on single-threaded GraphicsDevice instances.");
+                }
+
+                return GetImmediateCommandListCore();
+            }
+        }
+
+        protected abstract CommandList GetImmediateCommandListCore();
 
         /// <summary>
         /// Submits the given <see cref="CommandList"/> for execution by this device.
@@ -561,7 +595,7 @@ namespace Veldrid
         /// <param name="disposable">An object to dispose when this instance becomes idle.</param>
         public void DisposeWhenIdle(IDisposable disposable)
         {
-            lock (_deferredDisposalLock)
+            using (_deferredDisposalLock.Lock(!SingleThreaded))
             {
                 _disposables.Add(disposable);
             }
@@ -569,7 +603,7 @@ namespace Veldrid
 
         private void FlushDeferredDisposals()
         {
-            lock (_deferredDisposalLock)
+            using (_deferredDisposalLock.Lock(!SingleThreaded))
             {
                 foreach (IDisposable disposable in _disposables)
                 {

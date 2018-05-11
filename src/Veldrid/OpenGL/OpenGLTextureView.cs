@@ -62,6 +62,11 @@ namespace Veldrid.OpenGL
                 }
                 _needsTextureView = true;
             }
+
+            if (!gd.MultiThreaded)
+            {
+                EnsureResourcesCreated();
+            }
         }
 
         public SizedInternalFormat GetReadWriteSizedInternalFormat()

@@ -75,6 +75,14 @@ namespace Veldrid.MTL
             ClearCachedState();
         }
 
+        internal void Reset()
+        {
+            if (_cb.NativePtr != IntPtr.Zero)
+            {
+                ObjectiveCRuntime.release(_cb.NativePtr);
+            }
+        }
+
         protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
         {
             EnsureNoRenderPass();
@@ -151,6 +159,7 @@ namespace Veldrid.MTL
                 }
             }
         }
+
         private bool PreDrawCommand()
         {
             if (EnsureRenderPass())

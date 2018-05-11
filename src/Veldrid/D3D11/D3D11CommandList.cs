@@ -88,16 +88,35 @@ namespace Veldrid.D3D11
             }
         }
 
+        public D3D11CommandList(D3D11GraphicsDevice gd, ref CommandListDescription description, DeviceContext context)
+            : base(ref description, gd.Features)
+        {
+            IsImmediate = true;
+            _gd = gd;
+            _context = context;
+            _context1 = _context.QueryInterfaceOrNull<DeviceContext1>();
+            if (_context1 == null)
+            {
+                throw new VeldridException("Direct3D 11.1 is required.");
+            }
+        }
+
         public SharpDX.Direct3D11.CommandList DeviceCommandList { get; private set; }
 
         internal DeviceContext DeviceContext => _context;
 
         private D3D11Framebuffer D3D11Framebuffer => Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(_framebuffer);
 
+        public bool IsImmediate { get; }
+
         public override void Begin()
         {
-            DeviceCommandList?.Dispose();
-            DeviceCommandList = null;
+            if (!IsImmediate)
+            {
+                DeviceCommandList?.Dispose();
+                DeviceCommandList = null;
+            }
+
             ClearState();
             _begun = true;
         }
@@ -172,7 +191,11 @@ namespace Veldrid.D3D11
                 throw new VeldridException("Invalid use of End().");
             }
 
-            DeviceCommandList = _context.FinishCommandList(false);
+            if (!IsImmediate)
+            {
+                DeviceCommandList = _context.FinishCommandList(false);
+            }
+
             ResetManagedState();
             _begun = false;
         }
@@ -187,11 +210,14 @@ namespace Veldrid.D3D11
             else if (_begun)
             {
                 _context.ClearState();
-                SharpDX.Direct3D11.CommandList cl = _context.FinishCommandList(false);
-                cl.Dispose();
+                if (!IsImmediate)
+                {
+                    SharpDX.Direct3D11.CommandList cl = _context.FinishCommandList(false);
+                    cl.Dispose();
+                }
+                ResetManagedState();
             }
 
-            ResetManagedState();
             _begun = false;
         }
 
@@ -1181,7 +1207,10 @@ namespace Veldrid.D3D11
             if (!_disposed)
             {
                 DeviceCommandList?.Dispose();
-                _context.Dispose();
+                if (!IsImmediate)
+                {
+                    _context.Dispose();
+                }
                 _context1.Dispose();
                 _disposed = true;
             }

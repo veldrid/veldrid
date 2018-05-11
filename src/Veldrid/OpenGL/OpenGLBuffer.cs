@@ -29,6 +29,11 @@ namespace Veldrid.OpenGL
             SizeInBytes = sizeInBytes;
             _dynamic = (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
             Usage = usage;
+
+            if (!gd.MultiThreaded)
+            {
+                EnsureResourcesCreated();
+            }
         }
 
         public void EnsureResourcesCreated()

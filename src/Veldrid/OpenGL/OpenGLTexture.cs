@@ -82,6 +82,11 @@ namespace Veldrid.OpenGL
                 Debug.Assert(Type == TextureType.Texture3D);
                 TextureTarget = TextureTarget.Texture3D;
             }
+
+            if (!gd.MultiThreaded)
+            {
+                EnsureResourcesCreated();
+            }
         }
 
         public override uint Width { get; }

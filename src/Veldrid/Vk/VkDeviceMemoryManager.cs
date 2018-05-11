@@ -11,15 +11,17 @@ namespace Veldrid.Vk
     {
         private readonly VkDevice _device;
         private readonly VkPhysicalDevice _physicalDevice;
-        private readonly object _lock = new object();
+        private readonly bool _multiThreaded;
+        private readonly ConditionalLock _lock = new ConditionalLock();
 
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryTypeUnmapped = new Dictionary<uint, ChunkAllocatorSet>();
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryType = new Dictionary<uint, ChunkAllocatorSet>();
 
-        public VkDeviceMemoryManager(VkDevice device, VkPhysicalDevice physicalDevice)
+        public VkDeviceMemoryManager(VkDevice device, VkPhysicalDevice physicalDevice, bool multiThreaded)
         {
             _device = device;
             _physicalDevice = physicalDevice;
+            _multiThreaded = multiThreaded;
         }
 
         public VkMemoryBlock Allocate(
@@ -30,7 +32,7 @@ namespace Veldrid.Vk
             ulong size,
             ulong alignment)
         {
-            lock (_lock)
+            using (_lock.Lock(_multiThreaded))
             {
                 uint memoryTypeIndex = FindMemoryType(memProperties, memoryTypeBits, flags);
                 ChunkAllocatorSet allocator = GetAllocator(memoryTypeIndex, persistentMapped);
@@ -46,7 +48,7 @@ namespace Veldrid.Vk
 
         public void Free(VkMemoryBlock block)
         {
-            lock (_lock)
+            using (_lock.Lock(_multiThreaded))
             {
                 GetAllocator(block.MemoryTypeIndex, block.IsPersistentMapped).Free(block);
             }

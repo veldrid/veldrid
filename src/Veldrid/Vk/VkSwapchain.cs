@@ -36,6 +36,8 @@ namespace Veldrid.Vk
             }
         }
 
+        public ConditionalLock Lock { get; } = new ConditionalLock();
+
         public VkSwapchainKHR DeviceSwapchain => _deviceSwapchain;
         public uint ImageIndex => _currentImageIndex;
         public Vulkan.VkFence ImageAvailableFence => _imageAvailableFence;

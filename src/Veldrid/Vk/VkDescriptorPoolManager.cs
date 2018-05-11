@@ -9,12 +9,14 @@ namespace Veldrid.Vk
     internal class VkDescriptorPoolManager
     {
         private readonly VkGraphicsDevice _gd;
+        private readonly bool _multiThreaded;
         private readonly List<PoolInfo> _pools = new List<PoolInfo>();
-        private readonly object _lock = new object();
+        private readonly ConditionalLock _lock = new ConditionalLock();
 
         public VkDescriptorPoolManager(VkGraphicsDevice gd)
         {
             _gd = gd;
+            _multiThreaded = !_gd.SingleThreaded;
             _pools.Add(CreateNewPool());
         }
 
@@ -33,7 +35,7 @@ namespace Veldrid.Vk
 
         public void Free(DescriptorAllocationToken token, DescriptorResourceCounts counts)
         {
-            lock (_lock)
+            using (_lock.Lock(_multiThreaded))
             {
                 foreach (PoolInfo poolInfo in _pools)
                 {
@@ -47,7 +49,7 @@ namespace Veldrid.Vk
 
         private VkDescriptorPool GetPool(DescriptorResourceCounts counts)
         {
-            lock (_lock)
+            using (_lock.Lock(_multiThreaded))
             {
                 foreach (PoolInfo poolInfo in _pools)
                 {

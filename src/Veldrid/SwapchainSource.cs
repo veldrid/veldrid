@@ -53,7 +53,7 @@ namespace Veldrid
         /// <summary>
         /// Creates a new SwapchainSource for the given UIView.
         /// </summary>
-        /// <param name="uiView">THe UIView's native handle.</param>
+        /// <param name="uiView">The UIView's native handle.</param>
         /// <returns>A new SwapchainSource which can be used to create a Metal <see cref="Swapchain"/> or an OpenGLES
         /// <see cref="GraphicsDevice"/> for the given UIView.
         /// </returns>

@@ -751,8 +751,6 @@ namespace Veldrid.D3D11
 
         private void BindStorageBufferView(D3D11Buffer storageBufferRO, int slot, ShaderStages stages)
         {
-            _context.ComputeShader.SetUnorderedAccessView(0, null);
-
             ShaderResourceView srv = storageBufferRO.ShaderResourceView;
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {

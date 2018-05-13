@@ -427,27 +427,6 @@ namespace Veldrid.Tests
         {
             return RF.CreateBuffer(new BufferDescription(size, usage));
         }
-
-        private DeviceBuffer GetReadback(DeviceBuffer buffer)
-        {
-            DeviceBuffer readback;
-            if ((buffer.Usage & BufferUsage.Staging) != 0)
-            {
-                readback = buffer;
-            }
-            else
-            {
-                readback = CreateBuffer(buffer.SizeInBytes, BufferUsage.Staging);
-                CommandList cl = RF.CreateCommandList();
-                cl.Begin();
-                cl.CopyBuffer(buffer, 0, readback, 0, buffer.SizeInBytes);
-                cl.End();
-                GD.SubmitCommands(cl);
-                GD.WaitForIdle();
-            }
-
-            return readback;
-        }
     }
 
 #if TEST_OPENGL

@@ -670,6 +670,7 @@ namespace Veldrid.OpenGL
                     case ResourceKind.StructuredBufferReadOnly:
                         if (!isNew) { continue; }
                         OpenGLBuffer glBuffer = Util.AssertSubtype<BindableResource, OpenGLBuffer>(resource);
+                        glBuffer.EnsureResourcesCreated();
                         if (pipeline.GetStorageBufferBindingForSlot(slot, element, out OpenGLShaderStorageBinding shaderStorageBinding))
                         {
                             if (_backend == GraphicsBackend.OpenGL)

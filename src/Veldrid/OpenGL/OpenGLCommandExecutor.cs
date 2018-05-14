@@ -588,6 +588,24 @@ namespace Veldrid.OpenGL
             Util.EnsureArrayMinimumSize(ref _vertexAttribDivisors, totalVertexElements);
         }
 
+        public void GenerateMipmaps(Texture texture)
+        {
+            OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(texture);
+            glTex.EnsureResourcesCreated();
+            if (_extensions.ARB_DirectStateAccess)
+            {
+                glGenerateTextureMipmap(glTex.Texture);
+                CheckLastError();
+            }
+            else
+            {
+                TextureTarget target = glTex.TextureTarget;
+                _textureSamplerManager.SetTextureTransient(target, glTex.Texture);
+                glGenerateMipmap(target);
+                CheckLastError();
+            }
+        }
+
         private void ActivateComputePipeline()
         {
             _graphicsPipelineActive = false;

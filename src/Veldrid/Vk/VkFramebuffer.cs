@@ -241,12 +241,28 @@ namespace Veldrid.Vk
             AttachmentCount += (uint)ColorTargets.Count;
         }
 
-        public override void TransitionToFinalLayout(VkCommandBuffer cb)
+        public override void TransitionToIntermediateLayout(VkCommandBuffer cb)
         {
             foreach (FramebufferAttachment ca in ColorTargets)
             {
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
                 vkTex.SetImageLayout(ca.MipLevel, ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
+            }
+            if (DepthTarget != null)
+            {
+                VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
+                vkTex.SetImageLayout(
+                    DepthTarget.Value.MipLevel,
+                    DepthTarget.Value.ArrayLayer,
+                    VkImageLayout.DepthStencilAttachmentOptimal);
+            }
+        }
+
+        public override void TransitionToFinalLayout(VkCommandBuffer cb)
+        {
+            foreach (FramebufferAttachment ca in ColorTargets)
+            {
+                VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
                 if ((vkTex.Usage & TextureUsage.Sampled) != 0)
                 {
                     vkTex.TransitionImageLayout(
@@ -259,10 +275,6 @@ namespace Veldrid.Vk
             if (DepthTarget != null)
             {
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
-                vkTex.SetImageLayout(
-                    DepthTarget.Value.MipLevel,
-                    DepthTarget.Value.ArrayLayer,
-                    VkImageLayout.DepthStencilAttachmentOptimal);
                 if ((vkTex.Usage & TextureUsage.Sampled) != 0)
                 {
                     vkTex.TransitionImageLayout(

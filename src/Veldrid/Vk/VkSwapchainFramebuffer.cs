@@ -148,12 +148,20 @@ namespace Veldrid.Vk
             }
         }
 
-        public override void TransitionToFinalLayout(VkCommandBuffer cb)
+        public override void TransitionToIntermediateLayout(VkCommandBuffer cb)
         {
             foreach (FramebufferAttachment ca in ColorTargets)
             {
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
                 vkTex.SetImageLayout(0, ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
+            }
+        }
+
+        public override void TransitionToFinalLayout(VkCommandBuffer cb)
+        {
+            foreach (FramebufferAttachment ca in ColorTargets)
+            {
+                VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
                 vkTex.TransitionImageLayout(cb, 0, 1, ca.ArrayLayer, 1, VkImageLayout.PresentSrcKHR);
             }
         }

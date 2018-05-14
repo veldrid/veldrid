@@ -551,6 +551,14 @@ namespace Veldrid.MTL
             }
         }
 
+        protected override void GenerateMipmapsCore(Texture texture)
+        {
+            Debug.Assert(texture.MipLevels > 1);
+            EnsureBlitEncoder();
+            MTLTexture mtlTex = Util.AssertSubtype<Texture, MTLTexture>(texture);
+            _bce.generateMipmapsForTexture(mtlTex.DeviceTexture);
+        }
+
         protected override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
         {
             MTLBuffer mtlBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(indirectBuffer);

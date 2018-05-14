@@ -82,6 +82,9 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte DispatchIndirectEntryID = 22;
         private static readonly uint DispatchIndirectEntrySize = Util.USizeOf<NoAllocDispatchIndirectEntry>();
 
+        private const byte GenerateMipmapsEntryID = 23;
+        private static readonly uint GenerateMipmapsEntrySize = Util.USizeOf<NoAllocGenerateMipmapsEntry>();
+
         public OpenGLCommandList Parent { get; }
 
         public OpenGLNoAllocCommandEntryList(OpenGLCommandList cl)
@@ -341,6 +344,11 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         executor.ResolveTexture(rte.Source.Get(_resourceList), rte.Destination.Get(_resourceList));
                         currentOffset += ResolveTextureEntrySize;
                         break;
+                    case GenerateMipmapsEntryID:
+                        ref NoAllocGenerateMipmapsEntry gme = ref Unsafe.AsRef<NoAllocGenerateMipmapsEntry>(entryBasePtr);
+                        executor.GenerateMipmaps(gme.Texture.Get(_resourceList));
+                        currentOffset += GenerateMipmapsEntrySize;
+                        break;
                     default:
                         throw new InvalidOperationException("Invalid entry ID: " + id);
                 }
@@ -503,6 +511,12 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                 width, height, depth,
                 layerCount);
             AddEntry(CopyTextureEntryID, ref entry);
+        }
+
+        public void GenerateMipmaps(Texture texture)
+        {
+            NoAllocGenerateMipmapsEntry entry = new NoAllocGenerateMipmapsEntry(Track(texture));
+            AddEntry(GenerateMipmapsEntryID, ref entry);
         }
 
         private Tracked<T> Track<T>(T item) where T : class

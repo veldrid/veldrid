@@ -24,6 +24,7 @@ namespace Veldrid.Vk
         public abstract VkRenderPass RenderPassNoClear_Load { get; }
         public abstract VkRenderPass RenderPassClear { get; }
         public abstract uint AttachmentCount { get; }
+        public abstract void TransitionToIntermediateLayout(VkCommandBuffer cb);
         public abstract void TransitionToFinalLayout(VkCommandBuffer cb);
     }
 }

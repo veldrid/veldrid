@@ -881,6 +881,23 @@ namespace Veldrid
             uint width, uint height, uint depth,
             uint layerCount);
 
+        public void GenerateMipmaps(Texture texture)
+        {
+            if ((texture.Usage & TextureUsage.RenderTarget) == 0
+                || (texture.Usage & TextureUsage.Sampled) == 0)
+            {
+                throw new VeldridException(
+                    $"{nameof(GenerateMipmaps)} requires a target Texture with {nameof(TextureUsage)}.{nameof(TextureUsage.RenderTarget)} and {nameof(TextureUsage)}.{nameof(TextureUsage.Sampled)}");
+            }
+
+            if (texture.MipLevels > 1)
+            {
+                GenerateMipmapsCore(texture);
+            }
+        }
+
+        protected abstract void GenerateMipmapsCore(Texture texture);
+
         /// <summary>
         /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
         /// tools.

@@ -524,6 +524,7 @@ namespace Veldrid.Vk
         {
             Debug.Assert(_activeRenderPass != VkRenderPass.Null);
             vkCmdEndRenderPass(_cb);
+            _currentFramebuffer.TransitionToIntermediateLayout(_cb);
             _activeRenderPass = VkRenderPass.Null;
 
             // Place a barrier between RenderPasses, so that color / depth outputs
@@ -897,6 +898,57 @@ namespace Veldrid.Vk
 
                 }
             }
+        }
+
+        protected override void GenerateMipmapsCore(Texture texture)
+        {
+            EnsureNoRenderPass();
+            VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(texture);
+            vkTex.TransitionImageLayout(_cb, 0, 1, 0, vkTex.ArrayLayers, VkImageLayout.TransferSrcOptimal);
+            vkTex.TransitionImageLayout(_cb, 1, vkTex.MipLevels - 1, 0, vkTex.ArrayLayers, VkImageLayout.TransferDstOptimal);
+
+            VkImage deviceImage = vkTex.OptimalDeviceImage;
+
+            uint blitCount = vkTex.MipLevels - 1;
+            VkImageBlit* regions = stackalloc VkImageBlit[(int)blitCount];
+
+            for (uint level = 1; level < vkTex.MipLevels; level++)
+            {
+                uint blitIndex = level - 1;
+
+                regions[blitIndex].srcSubresource = new VkImageSubresourceLayers
+                {
+                    aspectMask = VkImageAspectFlags.Color,
+                    baseArrayLayer = 0,
+                    layerCount = vkTex.ArrayLayers,
+                    mipLevel = 0
+                };
+                regions[blitIndex].srcOffsets_0 = new VkOffset3D();
+                regions[blitIndex].srcOffsets_1 = new VkOffset3D { x = (int)vkTex.Width, y = (int)vkTex.Height, z = (int)vkTex.Depth };
+                regions[blitIndex].dstOffsets_0 = new VkOffset3D();
+
+                regions[blitIndex].dstSubresource = new VkImageSubresourceLayers
+                {
+                    aspectMask = VkImageAspectFlags.Color,
+                    baseArrayLayer = 0,
+                    layerCount = vkTex.ArrayLayers,
+                    mipLevel = level
+                };
+
+                Util.GetMipDimensions(vkTex, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                regions[blitIndex].dstOffsets_1 = new VkOffset3D { x = (int)mipWidth, y = (int)mipHeight, z = (int)mipDepth };
+            }
+
+            vkCmdBlitImage(
+                _cb,
+                deviceImage, VkImageLayout.TransferSrcOptimal,
+                deviceImage, VkImageLayout.TransferDstOptimal,
+                blitCount, regions,
+                VkFilter.Linear);
+
+            // This is somewhat ugly -- the transition logic does not handle different source layouts, so we do two batches.
+            vkTex.TransitionImageLayout(_cb, 0, 1, 0, vkTex.ArrayLayers, VkImageLayout.ShaderReadOnlyOptimal);
+            vkTex.TransitionImageLayout(_cb, 1, vkTex.MipLevels - 1, 0, vkTex.ArrayLayers, VkImageLayout.ShaderReadOnlyOptimal);
         }
 
         public override string Name

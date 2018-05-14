@@ -188,6 +188,11 @@ namespace Veldrid.OpenGL
                 layerCount);
         }
 
+        protected override void GenerateMipmapsCore(Texture texture)
+        {
+            _currentCommands.GenerateMipmaps(texture);
+        }
+
         public void OnSubmitted(OpenGLCommandEntryList entryList)
         {
             _currentCommands = null;

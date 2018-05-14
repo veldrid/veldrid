@@ -1510,6 +1510,16 @@ namespace Veldrid.OpenGLBinding
         public static void glBindRenderbuffer(RenderbufferTarget bindPoint, uint name)
             => p_glBindRenderbuffer(bindPoint, name);
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glGenerateMipmap_t(TextureTarget target);
+        private static glGenerateMipmap_t p_glGenerateMipmap;
+        public static void glGenerateMipmap(TextureTarget target) => p_glGenerateMipmap(target);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glGenerateTextureMipmap_t(uint texture);
+        private static glGenerateTextureMipmap_t p_glGenerateTextureMipmap;
+        public static void glGenerateTextureMipmap(uint texture) => p_glGenerateTextureMipmap(texture);
+
         public static void LoadGetString(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -1667,12 +1677,14 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glCopyNamedBufferSubData", out p_glCopyNamedBufferSubData);
             LoadFunction("glCreateBuffers", out p_glCreateBuffers);
             LoadFunction("glCreateTextures", out p_glCreateTextures);
+            LoadFunction("glGenerateMipmap", out p_glGenerateMipmap);
 
             if (!gles)
             {
                 LoadFunction("glPolygonMode", out p_glPolygonMode);
                 LoadFunction("glViewportIndexedf", out p_glViewportIndexedf);
                 LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
+                LoadFunction("glGenerateTextureMipmap", out p_glGenerateTextureMipmap);
             }
             else
             {

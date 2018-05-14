@@ -40,6 +40,7 @@ namespace Veldrid.D3D11
             CpuAccessFlags cpuFlags = CpuAccessFlags.None;
             ResourceUsage resourceUsage = ResourceUsage.Default;
             BindFlags bindFlags = BindFlags.None;
+            ResourceOptionFlags optionFlags = ResourceOptionFlags.None;
 
             if ((description.Usage & TextureUsage.RenderTarget) == TextureUsage.RenderTarget)
             {
@@ -63,7 +64,11 @@ namespace Veldrid.D3D11
                 resourceUsage = ResourceUsage.Staging;
             }
 
-            ResourceOptionFlags optionFlags = ResourceOptionFlags.None;
+            if ((description.Usage & TextureUsage.RenderTarget) != 0 && (description.Usage & TextureUsage.Sampled) != 0)
+            {
+                optionFlags |= ResourceOptionFlags.GenerateMipMaps;
+            }
+
             int arraySize = (int)description.ArrayLayers;
             if ((description.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
             {

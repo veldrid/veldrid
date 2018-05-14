@@ -39,6 +39,8 @@ namespace Veldrid.OpenGL
             uint width, uint height, uint depth,
             uint layerCount);
 
+        void GenerateMipmaps(Texture texture);
+
         void Reset();
         void Dispose();
     }

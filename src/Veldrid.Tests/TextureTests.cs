@@ -714,7 +714,7 @@ namespace Veldrid.Tests
         {
 
             // TODO: There should be a capability API that describes the support level for a PixelFormat.
-            if (GD.BackendType == GraphicsBackend.OpenGLES 
+            if (GD.BackendType == GraphicsBackend.OpenGLES
                 && (format == PixelFormat.R10_G10_B10_A2_UInt || format == PixelFormat.R10_G10_B10_A2_UNorm))
             {
                 return;
@@ -801,6 +801,42 @@ namespace Veldrid.Tests
                     0, 0, 0,
                     0, 0
                 };
+            }
+        }
+
+        [Fact]
+        public unsafe void GenerateMipmaps()
+        {
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                1024, 1024, 11, 1,
+                PixelFormat.R32_G32_B32_A32_Float,
+                TextureUsage.Sampled | TextureUsage.RenderTarget);
+            Texture tex = RF.CreateTexture(texDesc);
+
+            texDesc.Usage = TextureUsage.Staging;
+            Texture readback = RF.CreateTexture(texDesc);
+
+            RgbaFloat[] pixelData = Enumerable.Repeat(RgbaFloat.Red, 1024 * 1024).ToArray();
+            fixed (RgbaFloat* pixelDataPtr = pixelData)
+            {
+                GD.UpdateTexture(tex, (IntPtr)pixelDataPtr, 1024 * 1024 * 16, 0, 0, 0, 1024, 1024, 1, 0, 0);
+            }
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.GenerateMipmaps(tex);
+            cl.CopyTexture(tex, readback);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            for (uint level = 1; level < 11; level++)
+            {
+                MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(readback, MapMode.Read, level);
+                uint mipWidth = Math.Max(1, (uint)(tex.Width / Math.Pow(2, level)));
+                uint mipHeight = Math.Max(1, (uint)(tex.Width / Math.Pow(2, level)));
+                Assert.Equal(RgbaFloat.Red, readView[mipWidth - 1, mipHeight - 1]);
+                GD.Unmap(readback, level);
             }
         }
 

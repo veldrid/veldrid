@@ -959,7 +959,7 @@ namespace Veldrid.D3D11
             bool isUniformBuffer = (buffer.Usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer;
             bool useMap = isDynamic;
             bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
-            bool useUpdateSubresource = !isDynamic &&!isStaging && (!isUniformBuffer || updateFullBuffer);
+            bool useUpdateSubresource = !isDynamic && !isStaging && (!isUniformBuffer || updateFullBuffer);
 
             if (useUpdateSubresource)
             {
@@ -1079,6 +1079,15 @@ namespace Veldrid.D3D11
                     (int)dstY,
                     (int)dstZ);
             }
+        }
+
+        protected override void GenerateMipmapsCore(Texture texture)
+        {
+            D3D11Texture d3d11Texture = Util.AssertSubtype<Texture, D3D11Texture>(texture);
+            TextureViewDescription texViewDesc = new TextureViewDescription(texture, 0, texture.MipLevels, 0, texture.ArrayLayers);
+            D3D11TextureView d3d11TexView = new D3D11TextureView(_gd.Device, ref texViewDesc);
+            _context.GenerateMips(d3d11TexView.ShaderResourceView);
+            d3d11TexView.Dispose();
         }
 
         public override string Name

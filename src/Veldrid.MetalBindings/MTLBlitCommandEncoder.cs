@@ -63,16 +63,17 @@ namespace Veldrid.MetalBindings
                 destinationBytesPerRow,
                 destinationBytesPerImage);
 
-        public void synchronizeResource(IntPtr resource)
-        {
-            objc_msgSend(NativePtr, sel_synchronizeResource, resource);
-        }
+        public void generateMipmapsForTexture(MTLTexture texture)
+            => objc_msgSend(NativePtr, sel_generateMipmapsForTexture, texture.NativePtr);
+
+        public void synchronizeResource(IntPtr resource) => objc_msgSend(NativePtr, sel_synchronizeResource, resource);
 
         public void endEncoding() => objc_msgSend(NativePtr, sel_endEncoding);
 
         private static readonly Selector sel_copyFromBuffer0 = "copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:";
         private static readonly Selector sel_copyFromBuffer1 = "copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:";
         private static readonly Selector sel_copyFromTexture = "copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toBuffer:destinationOffset:destinationBytesPerRow:destinationBytesPerImage:";
+        private static readonly Selector sel_generateMipmapsForTexture = "generateMipmapsForTexture:";
         private static readonly Selector sel_synchronizeResource = "synchronizeResource:";
         private static readonly Selector sel_endEncoding = "endEncoding";
     }

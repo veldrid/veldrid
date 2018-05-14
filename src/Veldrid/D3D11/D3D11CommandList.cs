@@ -67,6 +67,10 @@ namespace Veldrid.D3D11
         private readonly List<List<BoundTextureInfo>> _boundTextureInfoPool = new List<List<BoundTextureInfo>>(MaxCachedTextureInfoLists);
         private const int MaxCachedTextureInfoLists = 20;
 
+        private const int MaxUAVs = 8;
+        private readonly List<(DeviceBuffer, int)> _boundComputeUAVBuffers = new List<(DeviceBuffer, int)>(MaxUAVs);
+        private readonly List<(DeviceBuffer, int)> _boundOMUAVBuffers = new List<(DeviceBuffer, int)>(MaxUAVs);
+
         private readonly List<D3D11Buffer> _availableStagingBuffers = new List<D3D11Buffer>();
         private readonly List<D3D11Buffer> _submittedStagingBuffers = new List<D3D11Buffer>();
 
@@ -197,6 +201,7 @@ namespace Veldrid.D3D11
             {
                 _ib = buffer;
                 D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
+                UnbindUAVBuffer(buffer);
                 _context.InputAssembler.SetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(format), 0);
             }
         }
@@ -356,7 +361,7 @@ namespace Veldrid.D3D11
                         break;
                     case ResourceKind.StructuredBufferReadWrite:
                         D3D11Buffer storageBuffer = Util.AssertSubtype<BindableResource, D3D11Buffer>(resource);
-                        BindUnorderedAccessView(null, storageBuffer.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
+                        BindUnorderedAccessView(null, storageBuffer, storageBuffer.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.TextureReadOnly:
                         D3D11TextureView texView = Util.AssertSubtype<BindableResource, D3D11TextureView>(resource);
@@ -366,7 +371,7 @@ namespace Veldrid.D3D11
                     case ResourceKind.TextureReadWrite:
                         D3D11TextureView rwTexView = Util.AssertSubtype<BindableResource, D3D11TextureView>(resource);
                         UnbindSRVTexture(rwTexView.Target);
-                        BindUnorderedAccessView(rwTexView.Target, rwTexView.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
+                        BindUnorderedAccessView(rwTexView.Target, null, rwTexView.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.Sampler:
                         D3D11Sampler sampler = Util.AssertSubtype<BindableResource, D3D11Sampler>(resource);
@@ -417,7 +422,7 @@ namespace Veldrid.D3D11
             {
                 foreach (BoundTextureInfo bti in btis)
                 {
-                    BindUnorderedAccessView(null, null, bti.Slot, bti.Stages, bti.ResourceSet);
+                    BindUnorderedAccessView(null, null, null, bti.Slot, bti.Stages, bti.ResourceSet);
                     if ((bti.Stages & ShaderStages.Compute) == ShaderStages.Compute)
                     {
                         _invalidatedComputeResourceSets[bti.ResourceSet] = true;
@@ -491,6 +496,7 @@ namespace Veldrid.D3D11
         protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
         {
             D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
+            UnbindUAVBuffer(buffer);
             _vertexBindings[index] = d3d11Buffer.Buffer;
             _numVertexBindings = Math.Max((index + 1), _numVertexBindings);
         }
@@ -751,6 +757,9 @@ namespace Veldrid.D3D11
 
         private void BindStorageBufferView(D3D11Buffer storageBufferRO, int slot, ShaderStages stages)
         {
+            bool compute = (stages & ShaderStages.Compute) != 0;
+            UnbindUAVBuffer(storageBufferRO);
+
             ShaderResourceView srv = storageBufferRO.ShaderResourceView;
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
@@ -772,7 +781,7 @@ namespace Veldrid.D3D11
             {
                 _context.PixelShader.SetShaderResource(slot, srv);
             }
-            if ((stages & ShaderStages.Compute) == ShaderStages.Compute)
+            if (compute)
             {
                 _context.ComputeShader.SetShaderResource(slot, srv);
             }
@@ -838,33 +847,83 @@ namespace Veldrid.D3D11
             }
         }
 
-        private void BindUnorderedAccessView(Texture target, UnorderedAccessView uav, int slot, ShaderStages stages, uint resourceSet)
+        private void BindUnorderedAccessView(
+            Texture texture,
+            DeviceBuffer buffer,
+            UnorderedAccessView uav,
+            int slot,
+            ShaderStages stages,
+            uint resourceSet)
         {
-            Debug.Assert(stages == ShaderStages.Compute || ((stages & ShaderStages.Compute) == 0));
+            bool compute = stages == ShaderStages.Compute;
+            Debug.Assert(compute || ((stages & ShaderStages.Compute) == 0));
+            Debug.Assert(texture == null || buffer == null);
 
-            if (target != null && uav != null)
+            if (texture != null && uav != null)
             {
-                if (!_boundUAVs.TryGetValue(target, out List<BoundTextureInfo> list))
+                if (!_boundUAVs.TryGetValue(texture, out List<BoundTextureInfo> list))
                 {
                     list = GetNewOrCachedBoundTextureInfoList();
-                    _boundUAVs.Add(target, list);
+                    _boundUAVs.Add(texture, list);
                 }
                 list.Add(new BoundTextureInfo { Slot = slot, Stages = stages, ResourceSet = resourceSet });
             }
 
+
             int baseSlot = 0;
-            if (stages != ShaderStages.Compute && _framebuffer != null)
+            if (!compute && _fragmentBoundSamplers != null)
             {
                 baseSlot = _framebuffer.ColorTargets.Count;
             }
+            int actualSlot = baseSlot + slot;
 
-            if (stages == ShaderStages.Compute)
+            if (buffer != null)
             {
-                _context.ComputeShader.SetUnorderedAccessView(baseSlot + slot, uav);
+                TrackBoundUAVBuffer(buffer, actualSlot, compute);
+            }
+
+            if (compute)
+            {
+                _context.ComputeShader.SetUnorderedAccessView(actualSlot, uav);
             }
             else
             {
-                _context.OutputMerger.SetUnorderedAccessView(baseSlot + slot, uav);
+                _context.OutputMerger.SetUnorderedAccessView(actualSlot, uav);
+            }
+        }
+
+        private void TrackBoundUAVBuffer(DeviceBuffer buffer, int slot, bool compute)
+        {
+            List<(DeviceBuffer, int)> list = compute ? _boundComputeUAVBuffers : _boundOMUAVBuffers;
+            list.Add((buffer, slot));
+        }
+
+        private void UnbindUAVBuffer(DeviceBuffer buffer)
+        {
+            UnbindUAVBufferIndividual(buffer, false);
+            UnbindUAVBufferIndividual(buffer, true);
+        }
+
+        private void UnbindUAVBufferIndividual(DeviceBuffer buffer, bool compute)
+        {
+            List<(DeviceBuffer, int)> list = compute ? _boundComputeUAVBuffers : _boundOMUAVBuffers;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i].Item1 == buffer)
+                {
+                    int slot = list[i].Item2;
+                    if (compute)
+                    {
+                        _context.ComputeShader.SetUnorderedAccessView(slot, null);
+                    }
+                    else
+                    {
+                        _context.OutputMerger.SetUnorderedAccessView(slot, null);
+                    }
+
+                    list.RemoveAt(i);
+                    i -= 1;
+                }
             }
         }
 

@@ -194,6 +194,30 @@ namespace Veldrid.Tests
             return readback;
         }
 
+        protected Texture GetReadback(Texture texture)
+        {
+            if ((texture.Usage & TextureUsage.Staging) != 0)
+            {
+                return texture;
+            }
+            else
+            {
+                TextureDescription desc = new TextureDescription(
+                    texture.Width, texture.Height, texture.Depth,
+                    texture.MipLevels, texture.ArrayLayers,
+                    texture.Format,
+                    TextureUsage.Staging, texture.Type);
+                Texture readback = RF.CreateTexture(ref desc);
+                CommandList cl = RF.CreateCommandList();
+                cl.Begin();
+                cl.CopyTexture(texture, readback);
+                cl.End();
+                GD.SubmitCommands(cl);
+                GD.WaitForIdle();
+                return readback;
+            }
+        }
+
         public void Dispose()
         {
             GD.WaitForIdle();

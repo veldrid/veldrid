@@ -211,6 +211,11 @@ namespace Veldrid
                 {
                     throw new VeldridException("Structured Buffer objects must have a non-zero StructureByteStride.");
                 }
+                if ((description.Usage & BufferUsage.VertexBuffer) != 0)
+                {
+                    throw new VeldridException(
+                        $"Structured Buffer objects cannot specify {nameof(BufferUsage)}.{nameof(BufferUsage.VertexBuffer)}.");
+                }
             }
             else if (description.StructureByteStride != 0)
             {

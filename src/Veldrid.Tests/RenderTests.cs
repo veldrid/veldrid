@@ -544,6 +544,73 @@ namespace Veldrid.Tests
             GD.Unmap(staging);
         }
 
+        [Fact]
+        public void ComputeGeneratedVertices()
+        {
+            uint width = 512;
+            uint height = 512;
+            Texture output = RF.CreateTexture(
+                TextureDescription.Texture2D(width, height, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, output));
+
+            uint vertexSize = (uint)Unsafe.SizeOf<ColoredVertex>();
+            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(
+                vertexSize * 4,
+                BufferUsage.StructuredBufferReadWrite,
+                vertexSize));
+
+            ResourceLayout computeLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("OutputVertices", ResourceKind.StructuredBufferReadWrite, ShaderStages.Compute)));
+            ResourceSet computeSet = RF.CreateResourceSet(new ResourceSetDescription(computeLayout, buffer));
+
+            Pipeline computePipeline = RF.CreateComputePipeline(new ComputePipelineDescription(
+                TestShaders.Load(RF, "ComputeColoredQuadGenerator", ShaderStages.Compute, "CS"),
+                computeLayout,
+                1, 1, 1));
+
+            ResourceLayout graphicsLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("InputVertices", ResourceKind.StructuredBufferReadOnly, ShaderStages.Vertex)));
+            ResourceSet graphicsSet = RF.CreateResourceSet(new ResourceSetDescription(graphicsLayout, buffer));
+
+            Pipeline graphicsPipeline = RF.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.Default,
+                PrimitiveTopology.TriangleStrip,
+                new ShaderSetDescription(
+                    Array.Empty<VertexLayoutDescription>(),
+                    new[]
+                    {
+                        TestShaders.Load(RF, "ColoredQuadRenderer", ShaderStages.Vertex, "VS"),
+                        TestShaders.Load(RF, "ColoredQuadRenderer", ShaderStages.Fragment, "FS"),
+                    }),
+                graphicsLayout,
+                framebuffer.OutputDescription));
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetPipeline(computePipeline);
+            cl.SetComputeResourceSet(0, computeSet);
+            cl.Dispatch(1, 1, 1);
+            cl.SetFramebuffer(framebuffer);
+            cl.ClearColorTarget(0, new RgbaFloat());
+            cl.SetPipeline(graphicsPipeline);
+            cl.SetGraphicsResourceSet(0, graphicsSet);
+            cl.Draw(4);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            Texture readback = GetReadback(output);
+            MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
+            for (uint y = 0; y < height; y++)
+                for (uint x = 0; x < width; x++)
+                {
+                    Assert.Equal(RgbaFloat.Red, readView[x, y]);
+                }
+            GD.Unmap(readback);
+        }
+
         private bool HasInvertedY(GraphicsBackend backendType)
         {
             return backendType == GraphicsBackend.OpenGL || backendType == GraphicsBackend.OpenGLES;

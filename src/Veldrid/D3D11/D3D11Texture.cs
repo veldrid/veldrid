@@ -64,8 +64,9 @@ namespace Veldrid.D3D11
                 resourceUsage = ResourceUsage.Staging;
             }
 
-            if ((description.Usage & TextureUsage.RenderTarget) != 0 && (description.Usage & TextureUsage.Sampled) != 0)
+            if ((description.Usage & TextureUsage.GenerateMipmaps) != 0)
             {
+                bindFlags |= BindFlags.RenderTarget | BindFlags.ShaderResource;
                 optionFlags |= ResourceOptionFlags.GenerateMipMaps;
             }
 

@@ -125,6 +125,15 @@ namespace Veldrid
             {
                 throw new VeldridException($"1D Textures are not supported by this device.");
             }
+            if ((description.Usage & TextureUsage.Staging) != 0 && description.Usage != TextureUsage.Staging)
+            {
+                throw new VeldridException($"{nameof(TextureUsage)}.{nameof(TextureUsage.Staging)} cannot be combined with any other flags.");
+            }
+            if ((description.Usage & TextureUsage.DepthStencil) != 0 && (description.Usage & TextureUsage.GenerateMipmaps) != 0)
+            {
+                throw new VeldridException(
+                    $"{nameof(TextureUsage)}.{nameof(TextureUsage.DepthStencil)} and {nameof(TextureUsage)}.{nameof(TextureUsage.GenerateMipmaps)} cannot be combined.");
+            }
 #endif
             return CreateTextureCore(ref description);
         }

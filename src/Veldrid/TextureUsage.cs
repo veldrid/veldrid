@@ -34,5 +34,9 @@ namespace Veldrid
         /// method.
         /// </summary>
         Staging = 1 << 5,
+        /// <summary>
+        /// The Texture supports automatic generation of mipmaps through <see cref="CommandList.GenerateMipmaps(Texture)"/>.
+        /// </summary>
+        GenerateMipmaps = 1 << 6,
     }
 }

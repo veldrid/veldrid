@@ -946,9 +946,12 @@ namespace Veldrid.Vk
                 blitCount, regions,
                 VkFilter.Linear);
 
-            // This is somewhat ugly -- the transition logic does not handle different source layouts, so we do two batches.
-            vkTex.TransitionImageLayout(_cb, 0, 1, 0, vkTex.ArrayLayers, VkImageLayout.ShaderReadOnlyOptimal);
-            vkTex.TransitionImageLayout(_cb, 1, vkTex.MipLevels - 1, 0, vkTex.ArrayLayers, VkImageLayout.ShaderReadOnlyOptimal);
+            if ((vkTex.Usage & TextureUsage.Sampled) != 0)
+            {
+                // This is somewhat ugly -- the transition logic does not handle different source layouts, so we do two batches.
+                vkTex.TransitionImageLayout(_cb, 0, 1, 0, vkTex.ArrayLayers, VkImageLayout.ShaderReadOnlyOptimal);
+                vkTex.TransitionImageLayout(_cb, 1, vkTex.MipLevels - 1, 0, vkTex.ArrayLayers, VkImageLayout.ShaderReadOnlyOptimal);
+            }
         }
 
         public override string Name

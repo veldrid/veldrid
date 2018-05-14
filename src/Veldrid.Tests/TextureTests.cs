@@ -804,13 +804,17 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
-        public unsafe void GenerateMipmaps()
+        [Theory]
+        [InlineData(TextureUsage.Sampled | TextureUsage.GenerateMipmaps)]
+        [InlineData(TextureUsage.RenderTarget | TextureUsage.GenerateMipmaps)]
+        [InlineData(TextureUsage.Storage | TextureUsage.GenerateMipmaps)]
+        [InlineData(TextureUsage.Sampled | TextureUsage.RenderTarget | TextureUsage.GenerateMipmaps)]
+        public unsafe void GenerateMipmaps(TextureUsage usage)
         {
             TextureDescription texDesc = TextureDescription.Texture2D(
                 1024, 1024, 11, 1,
                 PixelFormat.R32_G32_B32_A32_Float,
-                TextureUsage.Sampled | TextureUsage.RenderTarget);
+                usage);
             Texture tex = RF.CreateTexture(texDesc);
 
             texDesc.Usage = TextureUsage.Staging;

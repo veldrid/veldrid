@@ -883,11 +883,10 @@ namespace Veldrid
 
         public void GenerateMipmaps(Texture texture)
         {
-            if ((texture.Usage & TextureUsage.RenderTarget) == 0
-                || (texture.Usage & TextureUsage.Sampled) == 0)
+            if ((texture.Usage & TextureUsage.GenerateMipmaps) == 0)
             {
                 throw new VeldridException(
-                    $"{nameof(GenerateMipmaps)} requires a target Texture with {nameof(TextureUsage)}.{nameof(TextureUsage.RenderTarget)} and {nameof(TextureUsage)}.{nameof(TextureUsage.Sampled)}");
+                    $"{nameof(GenerateMipmaps)} requires a target Texture with {nameof(TextureUsage)}.{nameof(TextureUsage.GenerateMipmaps)}");
             }
 
             if (texture.MipLevels > 1)

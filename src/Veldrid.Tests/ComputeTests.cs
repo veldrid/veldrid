@@ -10,6 +10,11 @@ namespace Veldrid.Tests
         [Fact]
         public void BasicCompute()
         {
+            if (!GD.Features.ComputeShader)
+            {
+                return;
+            }
+            
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Params", ResourceKind.UniformBuffer, ShaderStages.Compute),
                 new ResourceLayoutElementDescription("Source", ResourceKind.StructuredBufferReadWrite, ShaderStages.Compute),

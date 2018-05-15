@@ -21,9 +21,11 @@ namespace Veldrid
         public abstract GraphicsBackend BackendType { get; }
 
         /// <summary>
-        /// Gets a value identifying wether or not the uv coordinates start top-left or bottom-left.
+        /// Gets a value identifying whether texture coordinates begin in the top left corner of a Texture.
+        /// If true, (0, 0) refers to the top-left texel of a Texture. If false, (0, 0) refers to the bottom-left 
+        /// texel of a Texture. This property is useful when determining how the output of a Framebuffer should be sampled.
         /// </summary>
-        public abstract bool UvStartsTop { get; }
+        public abstract bool UvOriginTopLeft { get; }
 
         /// <summary>
         /// Gets the <see cref="ResourceFactory"/> controlled by this instance.

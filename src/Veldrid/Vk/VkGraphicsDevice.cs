@@ -57,7 +57,7 @@ namespace Veldrid.Vk
 
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
-        public override bool UvStartsTop => true;
+        public override bool UvOriginTopLeft => true;
 
         public override Swapchain MainSwapchain => _mainSwapchain;
 

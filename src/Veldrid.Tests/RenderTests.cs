@@ -133,7 +133,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (!GD.UvStartsTop)
+                if (!GD.UvOriginTopLeft)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -255,7 +255,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (!GD.UvStartsTop)
+                if (!GD.UvOriginTopLeft)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -406,7 +406,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (!GD.UvStartsTop)
+                if (!GD.UvOriginTopLeft)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -534,7 +534,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.X;
                 uint y = (uint)vertex.Y;
-                if (!GD.UvStartsTop)
+                if (!GD.UvOriginTopLeft)
                 {
                     y = framebuffer.Height - y - 1;
                 }

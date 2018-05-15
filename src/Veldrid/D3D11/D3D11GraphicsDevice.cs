@@ -28,7 +28,7 @@ namespace Veldrid.D3D11
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
-        public override bool UvStartsTop => true;
+        public override bool UvOriginTopLeft => true;
 
         public override ResourceFactory ResourceFactory => _d3d11ResourceFactory;
 

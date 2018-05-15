@@ -6,7 +6,10 @@ namespace Veldrid.D3D11
 {
     internal class D3D11Texture : Texture
     {
+        private readonly Device _device;
         private string _name;
+        private object _fullSRVLock = new object();
+        private ShaderResourceView _fullSRV;
 
         public override uint Width { get; }
         public override uint Height { get; }
@@ -23,6 +26,7 @@ namespace Veldrid.D3D11
 
         public D3D11Texture(Device device, ref TextureDescription description)
         {
+            _device = device;
             Width = description.Width;
             Height = description.Height;
             Depth = description.Depth;
@@ -156,6 +160,23 @@ namespace Veldrid.D3D11
         public override void Dispose()
         {
             DeviceTexture.Dispose();
+        }
+
+        internal ShaderResourceView GetFullShaderResourceView()
+        {
+            lock (_fullSRVLock)
+            {
+                if (_fullSRV == null)
+                {
+                    ShaderResourceViewDescription srvDesc = D3D11Util.GetSrvDesc(
+                        this,
+                        0, MipLevels,
+                        0, ArrayLayers);
+                    _fullSRV = new ShaderResourceView(_device, DeviceTexture, srvDesc);
+                }
+
+                return _fullSRV;
+            }
         }
     }
 }

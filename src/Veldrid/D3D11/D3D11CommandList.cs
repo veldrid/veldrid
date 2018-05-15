@@ -1143,10 +1143,8 @@ namespace Veldrid.D3D11
         protected override void GenerateMipmapsCore(Texture texture)
         {
             D3D11Texture d3d11Texture = Util.AssertSubtype<Texture, D3D11Texture>(texture);
-            TextureViewDescription texViewDesc = new TextureViewDescription(texture, 0, texture.MipLevels, 0, texture.ArrayLayers);
-            D3D11TextureView d3d11TexView = new D3D11TextureView(_gd.Device, ref texViewDesc);
-            _context.GenerateMips(d3d11TexView.ShaderResourceView);
-            d3d11TexView.Dispose();
+            ShaderResourceView srv = d3d11Texture.GetFullShaderResourceView();
+            _context.GenerateMips(srv);
         }
 
         public override string Name

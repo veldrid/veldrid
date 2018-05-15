@@ -6,6 +6,7 @@ namespace Veldrid.D3D11
     internal class D3D11TextureView : TextureView
     {
         private string _name;
+        private bool _srvOwned;
 
         public ShaderResourceView ShaderResourceView { get; }
         public UnorderedAccessView UnorderedAccessView { get; }
@@ -22,6 +23,7 @@ namespace Veldrid.D3D11
             }
             else
             {
+                _srvOwned = true;
                 ShaderResourceViewDescription srvDesc = D3D11Util.GetSrvDesc(
                     d3dTex,
                     description.BaseMipLevel,
@@ -86,7 +88,10 @@ namespace Veldrid.D3D11
 
         public override void Dispose()
         {
-            ShaderResourceView.Dispose();
+            if (_srvOwned)
+            {
+                ShaderResourceView.Dispose();
+            }
             UnorderedAccessView?.Dispose();
         }
     }

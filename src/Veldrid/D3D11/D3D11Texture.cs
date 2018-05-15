@@ -157,11 +157,6 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override void Dispose()
-        {
-            DeviceTexture.Dispose();
-        }
-
         internal ShaderResourceView GetFullShaderResourceView()
         {
             lock (_fullSRVLock)
@@ -177,6 +172,12 @@ namespace Veldrid.D3D11
 
                 return _fullSRV;
             }
+        }
+
+        public override void Dispose()
+        {
+            DeviceTexture.Dispose();
+            _fullSRV?.Dispose();
         }
     }
 }

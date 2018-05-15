@@ -63,7 +63,7 @@ namespace Veldrid.OpenGL
 
         public override GraphicsBackend BackendType => _backendType;
 
-        public override bool UvOriginTopLeft => false;
+        public override bool IsUvOriginTopLeft => false;
 
         public override ResourceFactory ResourceFactory => _resourceFactory;
 

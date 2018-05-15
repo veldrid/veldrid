@@ -81,7 +81,7 @@ namespace Veldrid.MTL
 
         public override GraphicsBackend BackendType => GraphicsBackend.Metal;
 
-        public override bool UvOriginTopLeft => true;
+        public override bool IsUvOriginTopLeft => true;
 
         public override ResourceFactory ResourceFactory { get; }
 

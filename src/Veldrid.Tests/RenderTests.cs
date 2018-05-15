@@ -547,6 +547,11 @@ namespace Veldrid.Tests
         [Fact]
         public void ComputeGeneratedVertices()
         {
+            if (!GD.Features.ComputeShader)
+            {
+                return;
+            }
+
             uint width = 512;
             uint height = 512;
             Texture output = RF.CreateTexture(

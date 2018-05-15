@@ -81,6 +81,8 @@ namespace Veldrid.MTL
 
         public override GraphicsBackend BackendType => GraphicsBackend.Metal;
 
+        public override bool UvStartsTop => true;
+
         public override ResourceFactory ResourceFactory { get; }
 
         public override Swapchain MainSwapchain => _mainSwapchain;

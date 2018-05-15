@@ -133,7 +133,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (HasInvertedY(GD.BackendType))
+                if (!GD.UvStartsTop)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -255,7 +255,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (HasInvertedY(GD.BackendType))
+                if (!GD.UvStartsTop)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -406,7 +406,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (HasInvertedY(GD.BackendType))
+                if (!GD.UvStartsTop)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -534,7 +534,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.X;
                 uint y = (uint)vertex.Y;
-                if (HasInvertedY(GD.BackendType))
+                if (!GD.UvStartsTop)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -614,11 +614,6 @@ namespace Veldrid.Tests
                     Assert.Equal(RgbaFloat.Red, readView[x, y]);
                 }
             GD.Unmap(readback);
-        }
-
-        private bool HasInvertedY(GraphicsBackend backendType)
-        {
-            return backendType == GraphicsBackend.OpenGL || backendType == GraphicsBackend.OpenGLES;
         }
     }
 

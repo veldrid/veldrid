@@ -21,6 +21,11 @@ namespace Veldrid
         public abstract GraphicsBackend BackendType { get; }
 
         /// <summary>
+        /// Gets a value identifying wether or not the uv coordinates start top-left or bottom-left.
+        /// </summary>
+        public abstract bool UvStartsTop { get; }
+
+        /// <summary>
         /// Gets the <see cref="ResourceFactory"/> controlled by this instance.
         /// </summary>
         public abstract ResourceFactory ResourceFactory { get; }

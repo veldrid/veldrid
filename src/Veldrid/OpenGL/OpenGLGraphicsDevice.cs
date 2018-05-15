@@ -63,6 +63,8 @@ namespace Veldrid.OpenGL
 
         public override GraphicsBackend BackendType => _backendType;
 
+        public override bool UvStartsTop => false;
+
         public override ResourceFactory ResourceFactory => _resourceFactory;
 
         public OpenGLExtensions Extensions => _extensions;

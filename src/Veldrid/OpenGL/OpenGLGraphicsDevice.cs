@@ -688,7 +688,7 @@ namespace Veldrid.OpenGL
             out PixelFormatProperties properties)
         {
             if (type == TextureType.Texture1D && !_features.Texture1D
-                || !OpenGLFormats.IsFormatSupported(_extensions, format))
+                || !OpenGLFormats.IsFormatSupported(_extensions, format, _backendType))
             {
                 properties = default(PixelFormatProperties);
                 return false;
@@ -960,100 +960,100 @@ namespace Veldrid.OpenGL
                     switch (workItem.Type)
                     {
                         case WorkItemType.ExecuteList:
+                        {
+                            OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
+                            try
                             {
-                                OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
-                                try
+                                list.ExecuteAll(_gd._commandExecutor);
+                                list.Parent.OnCompleted(list);
+                            }
+                            finally
+                            {
+                                if (!_gd.CheckCommandListDisposal(list.Parent))
                                 {
-                                    list.ExecuteAll(_gd._commandExecutor);
-                                    list.Parent.OnCompleted(list);
-                                }
-                                finally
-                                {
-                                    if (!_gd.CheckCommandListDisposal(list.Parent))
-                                    {
-                                        list.Reset();
-                                    }
+                                    list.Reset();
                                 }
                             }
-                            break;
+                        }
+                        break;
                         case WorkItemType.Map:
+                        {
+                            MappableResource resourceToMap = (MappableResource)workItem.Object0;
+                            ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
+                            MapMode mode = (MapMode)workItem.UInt0;
+                            uint subresource = workItem.UInt1;
+                            bool map = workItem.UInt2 == 1 ? true : false;
+                            if (map)
                             {
-                                MappableResource resourceToMap = (MappableResource)workItem.Object0;
-                                ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
-                                MapMode mode = (MapMode)workItem.UInt0;
-                                uint subresource = workItem.UInt1;
-                                bool map = workItem.UInt2 == 1 ? true : false;
-                                if (map)
-                                {
-                                    ExecuteMapResource(
-                                        resourceToMap,
-                                        mode,
-                                        subresource,
-                                        mre);
-                                }
-                                else
-                                {
-                                    ExecuteUnmapResource(resourceToMap, subresource, mre);
-                                }
+                                ExecuteMapResource(
+                                    resourceToMap,
+                                    mode,
+                                    subresource,
+                                    mre);
                             }
-                            break;
+                            else
+                            {
+                                ExecuteUnmapResource(resourceToMap, subresource, mre);
+                            }
+                        }
+                        break;
                         case WorkItemType.UpdateBuffer:
-                            {
-                                DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
-                                byte[] stagingArray = (byte[])workItem.Object1;
-                                StagingMemoryPool pool = (StagingMemoryPool)workItem.Object2;
-                                uint offsetInBytes = workItem.UInt0;
-                                uint sizeInBytes = workItem.UInt1;
+                        {
+                            DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
+                            byte[] stagingArray = (byte[])workItem.Object1;
+                            StagingMemoryPool pool = (StagingMemoryPool)workItem.Object2;
+                            uint offsetInBytes = workItem.UInt0;
+                            uint sizeInBytes = workItem.UInt1;
 
-                                fixed (byte* dataPtr = &stagingArray[0])
-                                {
-                                    _gd._commandExecutor.UpdateBuffer(
-                                        updateBuffer,
-                                        offsetInBytes,
-                                        (IntPtr)dataPtr,
-                                        sizeInBytes);
-                                }
-                                pool.Free(stagingArray);
+                            fixed (byte* dataPtr = &stagingArray[0])
+                            {
+                                _gd._commandExecutor.UpdateBuffer(
+                                    updateBuffer,
+                                    offsetInBytes,
+                                    (IntPtr)dataPtr,
+                                    sizeInBytes);
                             }
-                            break;
+                            pool.Free(stagingArray);
+                        }
+                        break;
                         case WorkItemType.GenericAction:
-                            {
-                                ((Action)workItem.Object0)();
-                            }
-                            break;
+                        {
+                            ((Action)workItem.Object0)();
+                        }
+                        break;
                         case WorkItemType.SignalResetEvent:
-                            {
-                                _gd.FlushDisposables();
-                                ((ManualResetEventSlim)workItem.Object0).Set();
-                            }
-                            break;
+                        {
+                            _gd.FlushDisposables();
+                            ((ManualResetEventSlim)workItem.Object0).Set();
+                        }
+                        break;
                         case WorkItemType.TerminateAction:
+                        {
+                            // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
+                            uint error = glGetError();
+                            if (error == (uint)ErrorCode.InvalidOperation)
                             {
-                                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
-                                uint error = glGetError();
-                                if (error == (uint)ErrorCode.InvalidOperation)
-                                {
-                                    return;
-                                }
-                                _makeCurrent(_gd._glContext);
+                                return;
+                            }
+                            _makeCurrent(_gd._glContext);
 
-                                _gd.FlushDisposables();
-                                _gd._deleteContext(_gd._glContext);
-                                _terminated = true;
-                            }
-                            break;
+                            _gd.FlushDisposables();
+                            _gd._deleteContext(_gd._glContext);
+                            _terminated = true;
+                        }
+                        break;
                         case WorkItemType.SetSyncToVerticalBlank:
-                            {
-                                bool value = workItem.UInt0 == 1 ? true : false;
-                                _gd._setSyncToVBlank(value);
-                            }
-                            break;
+                        {
+                            bool value = workItem.UInt0 == 1 ? true : false;
+                            _gd._setSyncToVBlank(value);
+                        }
+                        break;
                         case WorkItemType.SwapBuffers:
-                            {
-                                _gd._swapBuffers();
-                                _gd.FlushDisposables();
-                            }
-                            break;
+                        {
+                            _gd._swapBuffers();
+                            _gd.FlushDisposables();
+                        }
+                        break;
                         default:
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }

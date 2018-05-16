@@ -214,11 +214,13 @@ namespace Veldrid.OpenGL
                     return GLPixelFormat.RgInteger;
 
                 case PixelFormat.R8_G8_B8_A8_UNorm:
-                case PixelFormat.B8_G8_R8_A8_UNorm:
                 case PixelFormat.R16_G16_B16_A16_UNorm:
                 case PixelFormat.R16_G16_B16_A16_Float:
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return GLPixelFormat.Rgba;
+
+                case PixelFormat.B8_G8_R8_A8_UNorm:
+                    return GLPixelFormat.Bgra;
 
                 case PixelFormat.R8_G8_B8_A8_SNorm:
                 case PixelFormat.R8_G8_B8_A8_UInt:
@@ -584,7 +586,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        internal static bool IsFormatSupported(OpenGLExtensions extensions, PixelFormat format)
+        internal static bool IsFormatSupported(OpenGLExtensions extensions, PixelFormat format, GraphicsBackend backend)
         {
             switch (format)
             {
@@ -598,6 +600,11 @@ namespace Veldrid.OpenGL
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
                     return extensions.IsExtensionSupported("GL_EXT_texture_compression_s3tc");
+
+                case PixelFormat.B8_G8_R8_A8_UNorm:
+                case PixelFormat.R10_G10_B10_A2_UInt:
+                case PixelFormat.R10_G10_B10_A2_UNorm:
+                    return backend == GraphicsBackend.OpenGL;
 
                 default:
                     return true;

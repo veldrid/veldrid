@@ -712,10 +712,7 @@ namespace Veldrid.Tests
             uint dstX, uint dstY, uint dstZ,
             uint dstMipLevel, uint dstArrayLayer)
         {
-
-            // TODO: There should be a capability API that describes the support level for a PixelFormat.
-            if (GD.BackendType == GraphicsBackend.OpenGLES
-                && (format == PixelFormat.R10_G10_B10_A2_UInt || format == PixelFormat.R10_G10_B10_A2_UNorm))
+            if (!GD.GetPixelFormatSupport(format, srcType, TextureUsage.Staging))
             {
                 return;
             }

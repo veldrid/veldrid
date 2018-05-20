@@ -479,6 +479,15 @@ namespace Veldrid.Vk
                     _platformSurfaceExtension = CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME;
                 }
             }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                if (!availableInstanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
+                {
+                    throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME}");
+                }
+
+                _platformSurfaceExtension = CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME;
+            }
             else
             {
                 throw new NotSupportedException("This platform does not support Vulkan.");
@@ -1161,6 +1170,10 @@ namespace Veldrid.Vk
                 {
                     return instanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
                 }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return instanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
             }
 
             return false;

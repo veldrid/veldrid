@@ -625,27 +625,33 @@ namespace Veldrid.Vk
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
-            VkRect2D scissor = new VkRect2D((int)x, (int)y, (int)width, (int)height);
-            if (_scissorRects[index] != scissor)
+            if (index == 0 || _gd.Features.MultipleViewports)
             {
-                _scissorRects[index] = scissor;
-                vkCmdSetScissor(_cb, index, 1, ref scissor);
+                VkRect2D scissor = new VkRect2D((int)x, (int)y, (int)width, (int)height);
+                if (_scissorRects[index] != scissor)
+                {
+                    _scissorRects[index] = scissor;
+                    vkCmdSetScissor(_cb, index, 1, ref scissor);
+                }
             }
         }
 
         public override void SetViewport(uint index, ref Viewport viewport)
         {
-            VkViewport vkViewport = new VkViewport
+            if (index == 0 || _gd.Features.MultipleViewports)
             {
-                x = viewport.X,
-                y = viewport.Y,
-                width = viewport.Width,
-                height = viewport.Height,
-                minDepth = viewport.MinDepth,
-                maxDepth = viewport.MaxDepth
-            };
+                VkViewport vkViewport = new VkViewport
+                {
+                    x = viewport.X,
+                    y = viewport.Y,
+                    width = viewport.Width,
+                    height = viewport.Height,
+                    minDepth = viewport.MinDepth,
+                    maxDepth = viewport.MaxDepth
+                };
 
-            vkCmdSetViewport(_cb, index, 1, ref vkViewport);
+                vkCmdSetViewport(_cb, index, 1, ref vkViewport);
+            }
         }
 
         public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
@@ -966,7 +972,7 @@ namespace Veldrid.Vk
                 deviceImage, VkImageLayout.TransferSrcOptimal,
                 deviceImage, VkImageLayout.TransferDstOptimal,
                 blitCount, regions,
-                VkFilter.Linear);
+                VkFilter.Nearest);
 
             if ((vkTex.Usage & TextureUsage.Sampled) != 0)
             {

@@ -972,7 +972,7 @@ namespace Veldrid.Vk
                 deviceImage, VkImageLayout.TransferSrcOptimal,
                 deviceImage, VkImageLayout.TransferDstOptimal,
                 blitCount, regions,
-                VkFilter.Nearest);
+                VkFilter.Nearest); // TODO MOLTENVK: We should use Linear if it's supported, and only fall back to Nearest when we have to.
 
             if ((vkTex.Usage & TextureUsage.Sampled) != 0)
             {

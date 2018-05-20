@@ -4,6 +4,7 @@ using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using Veldrid.Android;
 using System;
+using Veldrid.MetalBindings;
 
 namespace Veldrid.Vk
 {
@@ -19,6 +20,8 @@ namespace Veldrid.Vk
                     return CreateWin32(instance, win32Source);
                 case AndroidSurfaceSwapchainSource androidSource:
                     return CreateAndroidSurface(instance, androidSource);
+                case NSWindowSwapchainSource nsWindowSource:
+                    return CreateNSWindowSurface(instance, nsWindowSource);
                 default:
                     throw new VeldridException($"The provided SwapchainSource cannot be used to create a Vulkan surface.");
             }
@@ -52,6 +55,22 @@ namespace Veldrid.Vk
             androidSurfaceCI.window = (Vulkan.Android.ANativeWindow*)aNativeWindow;
             VkResult result = vkCreateAndroidSurfaceKHR(instance, ref androidSurfaceCI, null, out VkSurfaceKHR surface);
             CheckResult(result);
+            return surface;
+        }
+
+        private static VkSurfaceKHR CreateNSWindowSurface(VkInstance instance, NSWindowSwapchainSource nsWindowSource)
+        {
+            CAMetalLayer metalLayer = CAMetalLayer.New();
+            NSWindow nswindow = new NSWindow(nsWindowSource.NSWindow);
+            NSView contentView = nswindow.contentView;
+            contentView.wantsLayer = true;
+            contentView.layer = metalLayer.NativePtr;
+
+            VkMacOSSurfaceCreateInfoMVK surfaceCI = VkMacOSSurfaceCreateInfoMVK.New();
+            surfaceCI.pView = contentView.NativePtr.ToPointer();
+            VkResult result = vkCreateMacOSSurfaceMVK(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
+            CheckResult(result);
+
             return surface;
         }
     }

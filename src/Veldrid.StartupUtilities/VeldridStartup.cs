@@ -193,12 +193,13 @@ namespace Veldrid.StartupUtilities
 #if !EXCLUDE_VULKAN_BACKEND
         public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
         {
-            IntPtr sdlHandle = window.SdlWindowHandle;
-            SDL_SysWMinfo sysWmInfo;
-            Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
-            Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
-            Vk.VkSurfaceSource surfaceSource = GetSurfaceSource(sysWmInfo);
-            GraphicsDevice gd = GraphicsDevice.CreateVulkan(options, surfaceSource, (uint)window.Width, (uint)window.Height);
+            SwapchainDescription scDesc = new SwapchainDescription(
+                GetSwapchainSource(window),
+                (uint)window.Width,
+                (uint)window.Height,
+                options.SwapchainDepthFormat,
+                options.SyncToVerticalBlank);
+            GraphicsDevice gd = GraphicsDevice.CreateVulkan(options, scDesc);
 
             return gd;
         }

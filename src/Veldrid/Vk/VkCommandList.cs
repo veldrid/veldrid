@@ -4,6 +4,7 @@ using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Veldrid.Vk
 {
@@ -31,6 +32,8 @@ namespace Veldrid.Vk
         private bool[] _graphicsResourceSetsChanged;
         private int _newGraphicsResourceSets;
 
+        private bool _newFramebuffer; // Render pass cycle state
+
         // Compute State
         private VkPipeline _currentComputePipeline;
         private VkResourceSet[] _currentComputeResourceSets = Array.Empty<VkResourceSet>();
@@ -47,9 +50,6 @@ namespace Veldrid.Vk
         private readonly Dictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new Dictionary<VkCommandBuffer, StagingResourceInfo>();
         private readonly List<StagingResourceInfo> _availableStagingInfos = new List<StagingResourceInfo>();
         private readonly List<VkBuffer> _availableStagingBuffers = new List<VkBuffer>();
-
-        // Render pass cycle state
-        private bool _newFramebuffer;
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
@@ -625,27 +625,33 @@ namespace Veldrid.Vk
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
-            VkRect2D scissor = new VkRect2D((int)x, (int)y, (int)width, (int)height);
-            if (_scissorRects[index] != scissor)
+            if (index == 0 || _gd.Features.MultipleViewports)
             {
-                _scissorRects[index] = scissor;
-                vkCmdSetScissor(_cb, index, 1, ref scissor);
+                VkRect2D scissor = new VkRect2D((int)x, (int)y, (int)width, (int)height);
+                if (_scissorRects[index] != scissor)
+                {
+                    _scissorRects[index] = scissor;
+                    vkCmdSetScissor(_cb, index, 1, ref scissor);
+                }
             }
         }
 
         public override void SetViewport(uint index, ref Viewport viewport)
         {
-            VkViewport vkViewport = new VkViewport
+            if (index == 0 || _gd.Features.MultipleViewports)
             {
-                x = viewport.X,
-                y = viewport.Y,
-                width = viewport.Width,
-                height = viewport.Height,
-                minDepth = viewport.MinDepth,
-                maxDepth = viewport.MaxDepth
-            };
+                VkViewport vkViewport = new VkViewport
+                {
+                    x = viewport.X,
+                    y = viewport.Y,
+                    width = viewport.Width,
+                    height = viewport.Height,
+                    minDepth = viewport.MinDepth,
+                    maxDepth = viewport.MaxDepth
+                };
 
-            vkCmdSetViewport(_cb, index, 1, ref vkViewport);
+                vkCmdSetViewport(_cb, index, 1, ref vkViewport);
+            }
         }
 
         public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
@@ -966,7 +972,7 @@ namespace Veldrid.Vk
                 deviceImage, VkImageLayout.TransferSrcOptimal,
                 deviceImage, VkImageLayout.TransferDstOptimal,
                 blitCount, regions,
-                VkFilter.Linear);
+                _gd.GetFormatFilter(vkTex.VkFormat));
 
             if ((vkTex.Usage & TextureUsage.Sampled) != 0)
             {

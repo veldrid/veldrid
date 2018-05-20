@@ -42,6 +42,12 @@ namespace Veldrid.Vk
         private readonly Queue<VkCommandBuffer> _availableCommandBuffers = new Queue<VkCommandBuffer>();
         private readonly List<VkCommandBuffer> _submittedCommandBuffers = new List<VkCommandBuffer>();
 
+        private StagingResourceInfo _currentStagingInfo;
+        private readonly object _stagingLock = new object();
+        private readonly Dictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new Dictionary<VkCommandBuffer, StagingResourceInfo>();
+        private readonly List<StagingResourceInfo> _availableStagingInfos = new List<StagingResourceInfo>();
+        private readonly List<VkBuffer> _availableStagingBuffers = new List<VkBuffer>();
+
         // Render pass cycle state
         private bool _newFramebuffer;
 
@@ -84,9 +90,11 @@ namespace Veldrid.Vk
             return cb;
         }
 
-        public void CommandBufferSubmitted()
+        public void CommandBufferSubmitted(VkCommandBuffer cb)
         {
             SubmittedCommandBufferCount += 1;
+            _submittedStagingInfos.Add(cb, _currentStagingInfo);
+            _currentStagingInfo = null;
         }
 
         public void CommandBufferCompleted(VkCommandBuffer completedCB)
@@ -106,6 +114,15 @@ namespace Veldrid.Vk
                     }
                 }
             }
+
+            lock (_stagingLock)
+            {
+                if (_submittedStagingInfos.TryGetValue(completedCB, out StagingResourceInfo info))
+                {
+                    RecycleStagingInfo(info);
+                }
+                _submittedStagingInfos.Remove(completedCB);
+            }
         }
 
         public override void Begin()
@@ -119,7 +136,13 @@ namespace Veldrid.Vk
             {
                 _commandBufferEnded = false;
                 _cb = GetNextCommandBuffer();
+                if (_currentStagingInfo != null)
+                {
+                    RecycleStagingInfo(_currentStagingInfo);
+                }
             }
+
+            _currentStagingInfo = GetStagingResourceInfo();
 
             VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
             beginInfo.flags = VkCommandBufferUsageFlags.OneTimeSubmit;
@@ -627,10 +650,9 @@ namespace Veldrid.Vk
 
         public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            PooledStagingBufferInfo stagingBufferInfo = GetStagingBuffer(sizeInBytes);
-            _gd.UpdateBuffer(stagingBufferInfo.Buffer, 0, source, sizeInBytes);
-            CopyBuffer(stagingBufferInfo.Buffer, 0, buffer, bufferOffsetInBytes, sizeInBytes);
-            vkCmdSetEvent(_cb, stagingBufferInfo.AvailableEvent, VkPipelineStageFlags.Transfer);
+            VkBuffer stagingBuffer = GetStagingBuffer(sizeInBytes);
+            _gd.UpdateBuffer(stagingBuffer, 0, source, sizeInBytes);
+            CopyBuffer(stagingBuffer, 0, buffer, bufferOffsetInBytes, sizeInBytes);
         }
 
         protected override void CopyBufferCore(
@@ -964,39 +986,27 @@ namespace Veldrid.Vk
             }
         }
 
-        private PooledStagingBufferInfo GetStagingBuffer(uint size)
+        private VkBuffer GetStagingBuffer(uint size)
         {
-            CheckUsedStagingBuffers();
-
-            foreach (PooledStagingBufferInfo info in _availableStagingBuffers)
+            lock (_stagingLock)
             {
-                if (info.Buffer.SizeInBytes >= size)
+                VkBuffer ret = null;
+                foreach (VkBuffer buffer in _availableStagingBuffers)
                 {
-                    _availableStagingBuffers.Remove(info);
-                    _usedStagingBuffers.Add(info);
-                    return info;
+                    if (buffer.SizeInBytes >= size)
+                    {
+                        ret = buffer;
+                        _availableStagingBuffers.Remove(buffer);
+                        break; ;
+                    }
                 }
-            }
-
-            VkBuffer newBuffer = (VkBuffer)_gd.ResourceFactory.CreateBuffer(new BufferDescription(size, BufferUsage.Staging));
-            PooledStagingBufferInfo newInfo = new PooledStagingBufferInfo(_gd, newBuffer);
-            _usedStagingBuffers.Add(newInfo);
-            return newInfo;
-        }
-
-        private void CheckUsedStagingBuffers()
-        {
-            for (int i = 0; i < _usedStagingBuffers.Count; i++)
-            {
-                PooledStagingBufferInfo info = _usedStagingBuffers[i];
-                VkResult status = vkGetEventStatus(_gd.Device, info.AvailableEvent);
-                if (status == VkResult.EventSet)
+                if (ret == null)
                 {
-                    vkResetEvent(_gd.Device, info.AvailableEvent);
-                    _availableStagingBuffers.Add(info);
-                    _usedStagingBuffers.RemoveAt(i);
-                    i -= 1;
+                    ret = (VkBuffer)_gd.ResourceFactory.CreateBuffer(new BufferDescription(size, BufferUsage.Staging));
                 }
+
+                _currentStagingInfo.BuffersUsed.Add(ret);
+                return ret;
             }
         }
 
@@ -1013,31 +1023,52 @@ namespace Veldrid.Vk
                 _destroyed = true;
                 vkDestroyCommandPool(_gd.Device, _pool, null);
 
-                CheckUsedStagingBuffers();
-                Debug.Assert(_usedStagingBuffers.Count == 0);
-                foreach (PooledStagingBufferInfo info in _availableStagingBuffers)
+                Debug.Assert(_submittedStagingInfos.Count == 0);
+
+                foreach (VkBuffer buffer in _availableStagingBuffers)
                 {
-                    info.Buffer.Dispose();
-                    vkDestroyEvent(_gd.Device, info.AvailableEvent, null);
+                    buffer.Dispose();
                 }
             }
         }
 
-        private readonly List<PooledStagingBufferInfo> _usedStagingBuffers = new List<PooledStagingBufferInfo>();
-        private readonly List<PooledStagingBufferInfo> _availableStagingBuffers = new List<PooledStagingBufferInfo>();
-
-        private class PooledStagingBufferInfo
+        private class StagingResourceInfo
         {
-            public readonly VkEvent AvailableEvent;
-            public readonly VkBuffer Buffer;
+            public List<VkBuffer> BuffersUsed { get; } = new List<VkBuffer>();
+            public void Clear() => BuffersUsed.Clear();
+        }
 
-            public PooledStagingBufferInfo(VkGraphicsDevice gd, VkBuffer buffer)
+        private StagingResourceInfo GetStagingResourceInfo()
+        {
+            lock (_stagingLock)
             {
-                VkEventCreateInfo eventCI = VkEventCreateInfo.New();
-                VkResult result = vkCreateEvent(gd.Device, ref eventCI, null, out AvailableEvent);
-                CheckResult(result);
+                StagingResourceInfo ret;
+                int availableCount = _availableStagingInfos.Count;
+                if (availableCount > 0)
+                {
+                    ret = _availableStagingInfos[availableCount - 1];
+                    _availableStagingInfos.RemoveAt(availableCount - 1);
+                }
+                else
+                {
+                    ret = new StagingResourceInfo();
+                }
 
-                Buffer = buffer;
+                return ret;
+            }
+        }
+
+        private void RecycleStagingInfo(StagingResourceInfo info)
+        {
+            lock (_stagingLock)
+            {
+                foreach (VkBuffer buffer in info.BuffersUsed)
+                {
+                    _availableStagingBuffers.Add(buffer);
+                }
+                info.Clear();
+
+                _availableStagingInfos.Add(info);
             }
         }
     }

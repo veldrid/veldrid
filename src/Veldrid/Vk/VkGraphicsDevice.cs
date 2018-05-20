@@ -151,7 +151,7 @@ namespace Veldrid.Vk
             VkCommandBuffer vkCB = vkCL.CommandBuffer;
 
             SubmitCommandBuffer(vkCL, vkCB, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
-            vkCL.CommandBufferSubmitted();
+            vkCL.CommandBufferSubmitted(vkCB);
         }
 
         private void SubmitCommandBuffer(

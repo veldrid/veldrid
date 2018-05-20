@@ -22,6 +22,8 @@ namespace Veldrid.Vk
                     return CreateAndroidSurface(instance, androidSource);
                 case NSWindowSwapchainSource nsWindowSource:
                     return CreateNSWindowSurface(instance, nsWindowSource);
+                case UIViewSwapchainSource uiViewSource:
+                    return CreateUIViewSurface(instance, uiViewSource);
                 default:
                     throw new VeldridException($"The provided SwapchainSource cannot be used to create a Vulkan surface.");
             }
@@ -70,7 +72,20 @@ namespace Veldrid.Vk
             surfaceCI.pView = contentView.NativePtr.ToPointer();
             VkResult result = vkCreateMacOSSurfaceMVK(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
             CheckResult(result);
+            return surface;
+        }
 
+        private static VkSurfaceKHR CreateUIViewSurface(VkInstance instance, UIViewSwapchainSource uiViewSource)
+        {
+            CAMetalLayer metalLayer = CAMetalLayer.New();
+            UIView uiView = new UIView(uiViewSource.UIView);
+            metalLayer.frame = uiView.frame;
+            metalLayer.opaque = true;
+            uiView.layer.addSublayer(metalLayer.NativePtr);
+
+            VkIOSSurfaceCreateInfoMVK surfaceCI = VkIOSSurfaceCreateInfoMVK.New();
+            surfaceCI.pView = uiView.NativePtr.ToPointer();
+            VkResult result = vkCreateIOSSurfaceMVK(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
             return surface;
         }
     }

@@ -482,12 +482,24 @@ namespace Veldrid.Vk
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                if (!availableInstanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
+                if (RuntimeInformation.OSDescription.Contains("Darwin")) // macOS
                 {
-                    throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME}");
-                }
+                    if (!availableInstanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
+                    {
+                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME}");
+                    }
 
-                _platformSurfaceExtension = CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME;
+                    _platformSurfaceExtension = CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME;
+                }
+                else // iOS
+                {
+                    if (!availableInstanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME))
+                    {
+                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME}");
+                    }
+
+                    _platformSurfaceExtension = CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME;
+                }
             }
             else
             {
@@ -1188,7 +1200,14 @@ namespace Veldrid.Vk
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return instanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+                if (RuntimeInformation.OSDescription.Contains("Darwin")) // macOS
+                {
+                    return instanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+                }
+                else // iOS
+                {
+                    return instanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME);
+                }
             }
 
             return false;

@@ -881,6 +881,13 @@ namespace Veldrid
             uint width, uint height, uint depth,
             uint layerCount);
 
+        /// <summary>
+        /// Generates mipmaps for the given <see cref="Texture"/>. The largest mipmap is used to generate all of the lower mipmap
+        /// levels contained in the Texture. The previous contents of all lower mipmap levels are overwritten by this operation.
+        /// The target Texture must have been created with <see cref="TextureUsage"/>.<see cref="TextureUsage.GenerateMipmaps"/>.
+        /// </summary>
+        /// <param name="texture">The <see cref="Texture"/> to generate mipmaps for. This Texture must have been created with
+        /// <see cref="TextureUsage"/>.<see cref="TextureUsage.GenerateMipmaps"/>.</param>
         public void GenerateMipmaps(Texture texture)
         {
             if ((texture.Usage & TextureUsage.GenerateMipmaps) == 0)

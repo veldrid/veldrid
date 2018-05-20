@@ -4,6 +4,7 @@ using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Veldrid.Vk
 {
@@ -31,6 +32,8 @@ namespace Veldrid.Vk
         private bool[] _graphicsResourceSetsChanged;
         private int _newGraphicsResourceSets;
 
+        private bool _newFramebuffer; // Render pass cycle state
+
         // Compute State
         private VkPipeline _currentComputePipeline;
         private VkResourceSet[] _currentComputeResourceSets = Array.Empty<VkResourceSet>();
@@ -47,9 +50,6 @@ namespace Veldrid.Vk
         private readonly Dictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new Dictionary<VkCommandBuffer, StagingResourceInfo>();
         private readonly List<StagingResourceInfo> _availableStagingInfos = new List<StagingResourceInfo>();
         private readonly List<VkBuffer> _availableStagingBuffers = new List<VkBuffer>();
-
-        // Render pass cycle state
-        private bool _newFramebuffer;
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
@@ -972,7 +972,7 @@ namespace Veldrid.Vk
                 deviceImage, VkImageLayout.TransferSrcOptimal,
                 deviceImage, VkImageLayout.TransferDstOptimal,
                 blitCount, regions,
-                VkFilter.Nearest); // TODO MOLTENVK: We should use Linear if it's supported, and only fall back to Nearest when we have to.
+                _gd.GetFormatFilter(vkTex.VkFormat));
 
             if ((vkTex.Usage & TextureUsage.Sampled) != 0)
             {

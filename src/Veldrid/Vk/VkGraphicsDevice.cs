@@ -33,6 +33,7 @@ namespace Veldrid.Vk
         private readonly List<VkCommandList> _commandListsToDispose = new List<VkCommandList>();
         private bool _debugMarkerEnabled;
         private vkDebugMarkerSetObjectNameEXT_d _setObjectNameDelegate;
+        private readonly ConcurrentDictionary<VkFormat, VkFilter> _filters = new ConcurrentDictionary<VkFormat, VkFilter>();
 
         private const int SharedCommandPoolCount = 4;
         private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
@@ -941,6 +942,20 @@ namespace Veldrid.Vk
                vkProps.maxArrayLayers,
                (uint)vkProps.sampleCounts);
             return true;
+        }
+
+        internal VkFilter GetFormatFilter(VkFormat format)
+        {
+            if (!_filters.TryGetValue(format, out VkFilter filter))
+            {
+                vkGetPhysicalDeviceFormatProperties(_physicalDevice, format, out VkFormatProperties vkFormatProps);
+                filter = (vkFormatProps.optimalTilingFeatures & VkFormatFeatureFlags.SampledImageFilterLinear) != 0
+                    ? VkFilter.Linear
+                    : VkFilter.Nearest;
+                _filters.TryAdd(format, filter);
+            }
+
+            return filter;
         }
 
         protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)

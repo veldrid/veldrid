@@ -320,6 +320,8 @@ namespace Veldrid.NeoDemo
                 BoundingFrustum cameraFrustum = new BoundingFrustum(view * projection);
                 Render(gd, cls[4], sc, RenderPasses.ReflectionMap, cameraFrustum, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
 
+                cl.GenerateMipmaps(sc.ReflectionColorTexture);
+
                 // Main scene
                 cls[4].SetFramebuffer(sc.MainSceneFramebuffer);
                 scWidth = sc.MainSceneFramebuffer.Width;

@@ -2020,4 +2020,16 @@ namespace Veldrid.OpenGLBinding
         RenderbufferWidth = 0x8D42,
         RenderbufferHeight = 0x8D43,
     }
+
+    public enum ClipControlOrigin
+    {
+        LowerLeft = 0x8CA1,
+        UpperLeft = 0x8CA2,
+    }
+
+    public enum ClipControlDepthRange
+    {
+        NegativeOneToOne = 0x935E,
+        ZeroToOne = 0x935F,
+    }
 }

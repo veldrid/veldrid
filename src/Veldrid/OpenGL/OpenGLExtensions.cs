@@ -47,6 +47,8 @@ namespace Veldrid.OpenGL
                 || GLESVersion(3, 1);
             MultiDrawIndirect = GLVersion(4, 3) || IsExtensionSupported("GL_ARB_multi_draw_indirect")
                 || IsExtensionSupported("GL_EXT_multi_draw_indirect");
+
+            ARB_ClipControl = GLVersion(4, 5) || IsExtensionSupported("GL_ARB_clip_control");
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -55,6 +57,7 @@ namespace Veldrid.OpenGL
         public readonly bool ARB_DebugOutput;
         public readonly bool KHR_Debug;
         public readonly bool ARB_ViewportArray;
+        public readonly bool ARB_ClipControl;
 
         // Differs between GL / GLES
         public readonly bool TextureStorage;

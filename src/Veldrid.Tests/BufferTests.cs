@@ -441,6 +441,12 @@ namespace Veldrid.Tests
         [InlineData(BufferUsage.Staging)]
         public void CreateBuffer_UsageFlagsCoverage(BufferUsage usage)
         {
+            if ((usage & BufferUsage.StructuredBufferReadOnly) != 0
+                || (usage & BufferUsage.StructuredBufferReadWrite) != 0)
+            {
+                return;
+            }
+
             BufferDescription description = new BufferDescription(64, usage);
             if ((usage & BufferUsage.StructuredBufferReadOnly) != 0 || (usage & BufferUsage.StructuredBufferReadWrite) != 0)
             {

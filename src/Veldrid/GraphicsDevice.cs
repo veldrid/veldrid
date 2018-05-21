@@ -454,10 +454,15 @@ namespace Veldrid
                     $"{nameof(mipLevel)} ({mipLevel}) must be less than the Texture's mip level count ({texture.MipLevels}).");
             }
 
-            if (arrayLayer >= texture.ArrayLayers)
+            uint effectiveArrayLayers = texture.ArrayLayers;
+            if ((texture.Usage & TextureUsage.Cubemap) != 0)
+            {
+                effectiveArrayLayers *= 6;
+            }
+            if (arrayLayer >= effectiveArrayLayers)
             {
                 throw new VeldridException(
-                    $"{nameof(arrayLayer)} ({arrayLayer}) must be less than the Texture's array layer count ({texture.ArrayLayers}).");
+                    $"{nameof(arrayLayer)} ({arrayLayer}) must be less than the Texture's effective array layer count ({effectiveArrayLayers}).");
             }
         }
 

@@ -28,8 +28,10 @@ namespace Veldrid.Tests
             GD.Unmap(texture, 0);
         }
 
-        [Fact]
-        public unsafe void Update_ThenMapRead_Succeeds_R32Float()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public unsafe void Update_ThenMapRead_Succeeds_R32Float(bool useArrayOverload)
         {
             Texture texture = RF.CreateTexture(
                 TextureDescription.Texture2D(1024, 1024, 1, 1, PixelFormat.R32_Float, TextureUsage.Staging));
@@ -38,7 +40,14 @@ namespace Veldrid.Tests
 
             fixed (float* dataPtr = data)
             {
-                GD.UpdateTexture(texture, (IntPtr)dataPtr, 1024 * 1024 * 4, 0, 0, 0, 1024, 1024, 1, 0, 0);
+                if (useArrayOverload)
+                {
+                    GD.UpdateTexture(texture, data, 0, 0, 0, 1024, 1024, 1, 0, 0);
+                }
+                else
+                {
+                    GD.UpdateTexture(texture, (IntPtr)dataPtr, 1024 * 1024 * 4, 0, 0, 0, 1024, 1024, 1, 0, 0);
+                }
             }
 
             MappedResource map = GD.Map(texture, MapMode.Read, 0);
@@ -54,65 +63,10 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
-        public unsafe void Update_ThenMapRead_Succeeds_R16UNorm()
-        {
-            Texture texture = RF.CreateTexture(
-                TextureDescription.Texture2D(1024, 1024, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
-
-            ushort[] data = Enumerable.Range(0, 1024 * 1024).Select(i => (ushort)i).ToArray();
-
-            fixed (ushort* dataPtr = data)
-            {
-                GD.UpdateTexture(texture, (IntPtr)dataPtr, 1024 * 1024 * sizeof(ushort), 0, 0, 0, 1024, 1024, 1, 0, 0);
-            }
-
-            MappedResource map = GD.Map(texture, MapMode.Read, 0);
-            ushort* mappedUShortPtr = (ushort*)map.Data;
-
-            for (int y = 0; y < 1024; y++)
-            {
-                for (int x = 0; x < 1024; x++)
-                {
-                    ushort index = (ushort)(y * 1024 + x);
-                    Assert.Equal(index, mappedUShortPtr[index]);
-                }
-            }
-        }
-
-        [Fact]
-        public unsafe void Update_ThenMapRead_Succeeds_R8_G8_SNorm()
-        {
-            Texture texture = RF.CreateTexture(
-                TextureDescription.Texture2D(8, 8, 1, 1, PixelFormat.R8_G8_SNorm, TextureUsage.Staging));
-
-            byte[] data = Enumerable.Range(0, 8 * 8 * 2).Select(i => (byte)i).ToArray();
-
-            fixed (byte* dataPtr = data)
-            {
-                GD.UpdateTexture(texture, (IntPtr)dataPtr, 8 * 8 * sizeof(byte) * 2, 0, 0, 0, 8, 8, 1, 0, 0);
-            }
-
-            MappedResource map = GD.Map(texture, MapMode.Read, 0);
-            byte* mappedBytePtr = (byte*)map.Data;
-
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    uint index0 = (uint)(y * map.RowPitch + x * 2);
-                    byte value0 = (byte)(y * 8 * 2 + x * 2);
-                    Assert.Equal(value0, mappedBytePtr[index0]);
-
-                    uint index1 = (uint)(index0 + 1);
-                    byte value1 = (byte)(value0 + 1);
-                    Assert.Equal(value1, mappedBytePtr[index1]);
-                }
-            }
-        }
-
-        [Fact]
-        public unsafe void Update_ThenMapRead_SingleMip_Succeeds_R16UNorm()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public unsafe void Update_ThenMapRead_SingleMip_Succeeds_R16UNorm(bool useArrayOverload)
         {
             Texture texture = RF.CreateTexture(
                 TextureDescription.Texture2D(1024, 1024, 3, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
@@ -121,7 +75,14 @@ namespace Veldrid.Tests
 
             fixed (ushort* dataPtr = data)
             {
-                GD.UpdateTexture(texture, (IntPtr)dataPtr, 256 * 256 * sizeof(ushort), 0, 0, 0, 256, 256, 1, 2, 0);
+                if (useArrayOverload)
+                {
+                    GD.UpdateTexture(texture, data, 0, 0, 0, 256, 256, 1, 2, 0);
+                }
+                else
+                {
+                    GD.UpdateTexture(texture, (IntPtr)dataPtr, 256 * 256 * sizeof(ushort), 0, 0, 0, 256, 256, 1, 2, 0);
+                }
             }
 
             MappedResource map = GD.Map(texture, MapMode.Read, 2);
@@ -134,32 +95,6 @@ namespace Veldrid.Tests
                     uint mapIndex = (uint)(y * (map.RowPitch / sizeof(ushort)) + x);
                     ushort value = (ushort)(y * 256 + x);
                     Assert.Equal(value, mappedUShortPtr[mapIndex]);
-                }
-            }
-        }
-
-        [Fact]
-        public unsafe void Update_ThenMapRead_Mip0_Succeeds_R16UNorm()
-        {
-            Texture texture = RF.CreateTexture(
-                TextureDescription.Texture2D(256, 256, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
-
-            ushort[] data = Enumerable.Range(0, 256 * 256).Select(i => (ushort)i).ToArray();
-
-            fixed (ushort* dataPtr = data)
-            {
-                GD.UpdateTexture(texture, (IntPtr)dataPtr, 256 * 256 * sizeof(ushort), 0, 0, 0, 256, 256, 1, 0, 0);
-            }
-
-            MappedResource map = GD.Map(texture, MapMode.Read, 0);
-            ushort* mappedFloatPtr = (ushort*)map.Data;
-
-            for (int y = 0; y < 256; y++)
-            {
-                for (int x = 0; x < 256; x++)
-                {
-                    ushort index = (ushort)(y * 256 + x);
-                    Assert.Equal(index, mappedFloatPtr[index]);
                 }
             }
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -343,8 +344,10 @@ namespace Veldrid
         /// Updates a portion of a <see cref="Texture"/> resource with new data.
         /// </summary>
         /// <param name="texture">The resource to update.</param>
-        /// <param name="source">A pointer to the start of the data to upload.</param>
-        /// <param name="sizeInBytes">The number of bytes to upload. This value must match the total size of the texture region specified.</param>
+        /// <param name="source">A pointer to the start of the data to upload. This must point to tightly-packed pixel data for
+        /// the region specified.</param>
+        /// <param name="sizeInBytes">The number of bytes to upload. This value must match the total size of the texture region
+        /// specified.</param>
         /// <param name="x">The minimum X value of the updated region.</param>
         /// <param name="y">The minimum Y value of the updated region.</param>
         /// <param name="z">The minimum Z value of the updated region.</param>
@@ -359,16 +362,69 @@ namespace Veldrid
             Texture texture,
             IntPtr source,
             uint sizeInBytes,
-            uint x,
-            uint y,
-            uint z,
-            uint width,
-            uint height,
-            uint depth,
-            uint mipLevel,
-            uint arrayLayer)
+            uint x, uint y, uint z,
+            uint width, uint height, uint depth,
+            uint mipLevel, uint arrayLayer)
         {
 #if VALIDATE_USAGE
+            ValidateUpdateTextureParameters(texture, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
+#endif
+            UpdateTextureCore(texture, source, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
+        }
+
+        /// <summary>
+        /// Updates a portion of a <see cref="Texture"/> resource with new data contained in an array
+        /// </summary>
+        /// <param name="texture">The resource to update.</param>
+        /// <param name="source">An array containing the data to upload. This must contain tightly-packed pixel data for the
+        /// region specified.</param>
+        /// <param name="x">The minimum X value of the updated region.</param>
+        /// <param name="y">The minimum Y value of the updated region.</param>
+        /// <param name="z">The minimum Z value of the updated region.</param>
+        /// <param name="width">The width of the updated region, in texels.</param>
+        /// <param name="height">The height of the updated region, in texels.</param>
+        /// <param name="depth">The depth of the updated region, in texels.</param>
+        /// <param name="mipLevel">The mipmap level to update. Must be less than the total number of mipmaps contained in the
+        /// <see cref="Texture"/>.</param>
+        /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
+        /// <see cref="Texture"/>.</param>
+        public void UpdateTexture<T>(
+            Texture texture,
+            T[] source,
+            uint x, uint y, uint z,
+            uint width, uint height, uint depth,
+            uint mipLevel, uint arrayLayer) where T : struct
+        {
+            uint sizeInBytes = (uint)(Unsafe.SizeOf<T>() * source.Length);
+#if VALIDATE_USAGE
+            ValidateUpdateTextureParameters(texture, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
+#endif
+            GCHandle gch = GCHandle.Alloc(source, GCHandleType.Pinned);
+            UpdateTextureCore(
+                texture,
+                gch.AddrOfPinnedObject(),
+                sizeInBytes,
+                x, y, z,
+                width, height, depth,
+                mipLevel, arrayLayer);
+        }
+
+        protected abstract void UpdateTextureCore(
+            Texture texture,
+            IntPtr source,
+            uint sizeInBytes,
+            uint x, uint y, uint z,
+            uint width, uint height, uint depth,
+            uint mipLevel, uint arrayLayer);
+
+        [Conditional("VALIDATE_USAGE")]
+        private static void ValidateUpdateTextureParameters(
+            Texture texture,
+            uint sizeInBytes,
+            uint x, uint y, uint z,
+            uint width, uint height, uint depth,
+            uint mipLevel, uint arrayLayer)
+        {
             if (FormatHelpers.IsCompressedFormat(texture.Format))
             {
                 if (x % 4 != 0 || y % 4 != 0 || height % 4 != 0 || width % 4 != 0)
@@ -386,22 +442,24 @@ namespace Veldrid
                 throw new VeldridException(
                     $"The data size is less than expected for the given update region. At least {expectedSize} bytes must be provided, but only {sizeInBytes} were.");
             }
-#endif
-            UpdateTextureCore(texture, source, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
-        }
 
-        protected abstract void UpdateTextureCore(
-            Texture texture,
-            IntPtr source,
-            uint sizeInBytes,
-            uint x,
-            uint y,
-            uint z,
-            uint width,
-            uint height,
-            uint depth,
-            uint mipLevel,
-            uint arrayLayer);
+            if (x + width > texture.Width || y + height > texture.Height || z + depth > texture.Depth)
+            {
+                throw new VeldridException($"The given region does not fit into the Texture.");
+            }
+
+            if (mipLevel >= texture.MipLevels)
+            {
+                throw new VeldridException(
+                    $"{nameof(mipLevel)} ({mipLevel}) must be less than the Texture's mip level count ({texture.MipLevels}).");
+            }
+
+            if (arrayLayer >= texture.ArrayLayers)
+            {
+                throw new VeldridException(
+                    $"{nameof(arrayLayer)} ({arrayLayer}) must be less than the Texture's array layer count ({texture.ArrayLayers}).");
+            }
+        }
 
         /// <summary>
         /// Updates a <see cref="DeviceBuffer"/> region with new data.

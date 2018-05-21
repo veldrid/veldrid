@@ -1520,6 +1520,12 @@ namespace Veldrid.OpenGLBinding
         private static glGenerateTextureMipmap_t p_glGenerateTextureMipmap;
         public static void glGenerateTextureMipmap(uint texture) => p_glGenerateTextureMipmap(texture);
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glClipControl_t(ClipControlOrigin origin, ClipControlDepthRange depth);
+        private static glClipControl_t p_glClipControl;
+        public static void glClipControl(ClipControlOrigin origin, ClipControlDepthRange depth)
+            => p_glClipControl(origin, depth);
+
         public static void LoadGetString(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -1685,6 +1691,7 @@ namespace Veldrid.OpenGLBinding
                 LoadFunction("glViewportIndexedf", out p_glViewportIndexedf);
                 LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
                 LoadFunction("glGenerateTextureMipmap", out p_glGenerateTextureMipmap);
+                LoadFunction("glClipControl", out p_glClipControl);
             }
             else
             {

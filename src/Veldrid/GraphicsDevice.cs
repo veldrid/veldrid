@@ -29,6 +29,12 @@ namespace Veldrid
         public abstract bool IsUvOriginTopLeft { get; }
 
         /// <summary>
+        /// Gets a value indicating whether this device's depth values range from 0 to 1.
+        /// If false, depth values instead range from -1 to 1.
+        /// </summary>
+        public abstract bool IsDepthRangeZeroToOne { get; }
+
+        /// <summary>
         /// Gets the <see cref="ResourceFactory"/> controlled by this instance.
         /// </summary>
         public abstract ResourceFactory ResourceFactory { get; }

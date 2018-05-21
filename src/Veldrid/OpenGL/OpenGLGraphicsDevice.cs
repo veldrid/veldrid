@@ -32,6 +32,7 @@ namespace Veldrid.OpenGL
         private OpenGLCommandExecutor _commandExecutor;
         private DebugProc _debugMessageCallback;
         private OpenGLExtensions _extensions;
+        private bool _isDepthRangeZeroToOne;
 
         private TextureSampleCount _maxColorTextureSamples;
         private uint _maxTextureSize;
@@ -64,6 +65,8 @@ namespace Veldrid.OpenGL
         public override GraphicsBackend BackendType => _backendType;
 
         public override bool IsUvOriginTopLeft => false;
+
+        public override bool IsDepthRangeZeroToOne => _isDepthRangeZeroToOne;
 
         public override ResourceFactory ResourceFactory => _resourceFactory;
 
@@ -246,6 +249,13 @@ namespace Veldrid.OpenGL
             int maxTexArrayLayers;
             glGetIntegerv(GetPName.MaxArrayTextureLayers, &maxTexArrayLayers);
             CheckLastError();
+
+            if (options.PreferDepthRangeZeroToOne && _extensions.ARB_ClipControl)
+            {
+                glClipControl(ClipControlOrigin.LowerLeft, ClipControlDepthRange.ZeroToOne);
+                CheckLastError();
+                _isDepthRangeZeroToOne = true;
+            }
 
             _maxTextureSize = (uint)maxTexSize;
             _maxTexDepth = (uint)maxTexDepth;

@@ -85,6 +85,8 @@ namespace Veldrid.MTL
 
         public override bool IsUvOriginTopLeft => true;
 
+        public override bool IsDepthRangeZeroToOne => true;
+
         public override ResourceFactory ResourceFactory { get; }
 
         public override Swapchain MainSwapchain => _mainSwapchain;

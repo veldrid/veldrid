@@ -50,6 +50,8 @@ namespace Veldrid.OpenGL
 
             StorageBuffers = GLVersion(4, 3) || IsExtensionSupported("GL_ARB_shader_storage_buffer_object")
                 || GLESVersion(3, 1);
+
+            ARB_ClipControl = GLVersion(4, 5) || IsExtensionSupported("GL_ARB_clip_control");
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -58,6 +60,7 @@ namespace Veldrid.OpenGL
         public readonly bool ARB_DebugOutput;
         public readonly bool KHR_Debug;
         public readonly bool ARB_ViewportArray;
+        public readonly bool ARB_ClipControl;
 
         // Differs between GL / GLES
         public readonly bool TextureStorage;

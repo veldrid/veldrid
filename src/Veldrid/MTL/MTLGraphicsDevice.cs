@@ -55,7 +55,9 @@ namespace Veldrid.MTL
                 samplerAnisotropy: true,
                 depthClipDisable: true,
                 texture1D: true, // TODO: Should be macOS 10.11+ and iOS 11.0+.
-                independentBlend: true);
+                independentBlend: true,
+                structuredBuffer: true,
+                subsetTextureView: true);
             ResourceBindingModel = options.ResourceBindingModel;
 
             ResourceFactory = new MTLResourceFactory(this);

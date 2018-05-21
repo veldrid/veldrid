@@ -178,6 +178,12 @@ namespace Veldrid
                 throw new VeldridException(
                     "To create a TextureView, the target texture must have either Sampled or Storage usage flags.");
             }
+            if (!Features.SubsetTextureView &&
+                (description.BaseMipLevel != 0 || description.MipLevels != description.Target.MipLevels
+                || description.BaseArrayLayer != 0 || description.ArrayLayers != description.Target.ArrayLayers))
+            {
+                throw new VeldridException("GraphicsDevice does not support subset TextureViews.");
+            }
 #endif
 
             return CreateTextureViewCore(ref description);
@@ -208,6 +214,11 @@ namespace Veldrid
             if ((usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
                 || (usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
             {
+                if (!Features.StructuredBuffer)
+                {
+                    throw new VeldridException("GraphicsDevice does not support structured buffers.");
+                }
+
                 if (description.StructureByteStride == 0)
                 {
                     throw new VeldridException("Structured Buffer objects must have a non-zero StructureByteStride.");

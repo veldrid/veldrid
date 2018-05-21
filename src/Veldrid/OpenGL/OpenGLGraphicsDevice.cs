@@ -159,7 +159,9 @@ namespace Veldrid.OpenGL
                 samplerAnisotropy: true,
                 depthClipDisable: _backendType == GraphicsBackend.OpenGL,
                 texture1D: _backendType == GraphicsBackend.OpenGL,
-                independentBlend: _extensions.IndependentBlend);
+                independentBlend: _extensions.IndependentBlend,
+                structuredBuffer: _extensions.StorageBuffers,
+                subsetTextureView: _extensions.ARB_TextureView );
 
             _resourceFactory = new OpenGLResourceFactory(this);
 

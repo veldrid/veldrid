@@ -23,7 +23,7 @@ namespace Veldrid.OpenGL
                 || GLESVersion(3, 1);
             ARB_DirectStateAccess = IsExtensionSupported("GL_ARB_direct_state_access");
             ARB_MultiBind = IsExtensionSupported("GL_ARB_multi_bind");
-            ARB_TextureView = IsExtensionSupported("GL_ARB_texture_view"); // OpenGL 4.3
+            ARB_TextureView = GLVersion(4, 3) || IsExtensionSupported("GL_ARB_texture_view"); // OpenGL 4.3
             CopyImage = IsExtensionSupported("GL_ARB_copy_image")
                 || GLESVersion(3, 2)
                 || IsExtensionSupported("GL_OES_copy_image")
@@ -47,6 +47,9 @@ namespace Veldrid.OpenGL
                 || GLESVersion(3, 1);
             MultiDrawIndirect = GLVersion(4, 3) || IsExtensionSupported("GL_ARB_multi_draw_indirect")
                 || IsExtensionSupported("GL_EXT_multi_draw_indirect");
+
+            StorageBuffers = GLVersion(4, 3) || IsExtensionSupported("GL_ARB_shader_storage_buffer_object")
+                || GLESVersion(3, 1);
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -68,6 +71,7 @@ namespace Veldrid.OpenGL
         public readonly bool IndependentBlend;
         public readonly bool DrawIndirect;
         public readonly bool MultiDrawIndirect;
+        public readonly bool StorageBuffers;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.

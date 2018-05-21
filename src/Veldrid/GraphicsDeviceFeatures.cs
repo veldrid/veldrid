@@ -70,6 +70,16 @@
         /// blend state.
         /// </summary>
         public bool IndependentBlend { get; }
+        /// <summary>
+        /// Indicates whether <see cref="BufferUsage.StructuredBufferReadOnly"/> and
+        /// <see cref="BufferUsage.StructuredBufferReadWrite"/> can be used. If false, structured buffers cannot be created.
+        /// </summary>
+        public bool StructuredBuffer { get; }
+        /// <summary>
+        /// Indicates whether a <see cref="TextureView"/> can be created which does not view the full set of mip levels and array
+        /// layers contained in its target Texture.
+        /// </summary>
+        public bool SubsetTextureView { get; }
 
         internal GraphicsDeviceFeatures(
             bool computeShader,
@@ -85,7 +95,9 @@
             bool samplerAnisotropy,
             bool depthClipDisable,
             bool texture1D,
-            bool independentBlend)
+            bool independentBlend,
+            bool structuredBuffer,
+            bool subsetTextureView)
         {
             ComputeShader = computeShader;
             GeometryShader = geometryShader;
@@ -101,6 +113,8 @@
             DepthClipDisable = depthClipDisable;
             Texture1D = texture1D;
             IndependentBlend = independentBlend;
+            StructuredBuffer = structuredBuffer;
+            SubsetTextureView = subsetTextureView;
         }
     }
 }

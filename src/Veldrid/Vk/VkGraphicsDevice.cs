@@ -111,7 +111,9 @@ namespace Veldrid.Vk
                 samplerAnisotropy: _physicalDeviceFeatures.samplerAnisotropy,
                 depthClipDisable: _physicalDeviceFeatures.depthClamp,
                 texture1D: true,
-                independentBlend: _physicalDeviceFeatures.independentBlend);
+                independentBlend: _physicalDeviceFeatures.independentBlend,
+                structuredBuffer: true,
+                subsetTextureView: true);
 
             ResourceFactory = new VkResourceFactory(this);
 

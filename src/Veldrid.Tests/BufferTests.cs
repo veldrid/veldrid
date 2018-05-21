@@ -423,6 +423,34 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
+        [Theory]
+        [InlineData(BufferUsage.UniformBuffer)]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.VertexBuffer)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.IndexBuffer)]
+        [InlineData(BufferUsage.IndexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.IndirectBuffer)]
+        [InlineData(BufferUsage.StructuredBufferReadOnly)]
+        [InlineData(BufferUsage.StructuredBufferReadOnly | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.StructuredBufferReadWrite)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer | BufferUsage.IndirectBuffer)]
+        [InlineData(BufferUsage.IndexBuffer | BufferUsage.IndirectBuffer)]
+        [InlineData(BufferUsage.Staging)]
+        public void CreateBuffer_UsageFlagsCoverage(BufferUsage usage)
+        {
+            BufferDescription description = new BufferDescription(64, usage);
+            if ((usage & BufferUsage.StructuredBufferReadOnly) != 0 || (usage & BufferUsage.StructuredBufferReadWrite) != 0)
+            {
+                description.StructureByteStride = 16;
+            }
+            DeviceBuffer buffer = RF.CreateBuffer(description);
+            GD.UpdateBuffer(buffer, 0, new Vector4[4]);
+            GD.WaitForIdle();
+        }
+
         private DeviceBuffer CreateBuffer(uint size, BufferUsage usage)
         {
             return RF.CreateBuffer(new BufferDescription(size, usage));

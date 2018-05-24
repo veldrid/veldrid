@@ -879,13 +879,6 @@ namespace Veldrid.OpenGL
 
         private void FlushDisposables()
         {
-            // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
-            uint error = glGetError();
-            if (error == (uint)ErrorCode.InvalidOperation)
-            {
-                return;
-            }
-
             while (_resourcesToDispose.TryDequeue(out OpenGLDeferredResource resource))
             {
                 resource.DestroyGLResources();

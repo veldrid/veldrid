@@ -224,7 +224,10 @@ namespace Veldrid.StartupUtilities
 #endif
 
 #if !EXCLUDE_OPENGL_BACKEND
-        public static unsafe GraphicsDevice CreateDefaultOpenGLGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window, GraphicsBackend backend)
+        public static unsafe GraphicsDevice CreateDefaultOpenGLGraphicsDevice(
+            GraphicsDeviceOptions options,
+            Sdl2Window window,
+            GraphicsBackend backend)
         {
             Sdl2Native.SDL_ClearError();
             IntPtr sdlHandle = window.SdlWindowHandle;
@@ -232,6 +235,18 @@ namespace Veldrid.StartupUtilities
             SDL_SysWMinfo sysWmInfo;
             Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
             Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
+
+            if (sysWmInfo.subsystem == SysWMType.Windows)
+            {
+                SwapchainDescription scDesc = new SwapchainDescription(
+                    GetSwapchainSource(window),
+                    (uint)window.Width,
+                    (uint)window.Height,
+                    options.SwapchainDepthFormat,
+                    options.SyncToVerticalBlank);
+                GraphicsDevice gd = GraphicsDevice.CreateOpenGL(options, scDesc);
+                return gd;
+            }
 
             SetSDLGLContextAttributes(options, backend);
 

@@ -10,7 +10,9 @@ using System.Threading;
 using Veldrid.OpenGL.EAGL;
 using static Veldrid.OpenGL.EGL.EGLNative;
 using NativeLibraryLoader;
+using Veldrid.OpenGL.WGL;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Veldrid.OpenGL
 {
@@ -28,7 +30,6 @@ namespace Veldrid.OpenGL
         private Action<IntPtr> _deleteContext;
         private Action _swapBuffers;
         private Action<bool> _setSyncToVBlank;
-        private OpenGLSwapchainFramebuffer _swapchainFramebuffer;
         private OpenGLTextureSamplerManager _textureSamplerManager;
         private OpenGLCommandExecutor _commandExecutor;
         private DebugProc _debugMessageCallback;
@@ -59,6 +60,7 @@ namespace Veldrid.OpenGL
         private Swapchain _mainSwapchain;
 
         private bool _syncToVBlank;
+        private IntPtr _ownedWindow;
 
         public int MajorVersion { get; private set; }
         public int MinorVersion { get; private set; }
@@ -102,7 +104,7 @@ namespace Veldrid.OpenGL
             uint width,
             uint height)
         {
-            Init(options, platformInfo, width, height, true);
+            Init(options, platformInfo, width, height, true, true);
         }
 
         private void Init(
@@ -110,7 +112,8 @@ namespace Veldrid.OpenGL
             OpenGLPlatformInfo platformInfo,
             uint width,
             uint height,
-            bool loadFunctions)
+            bool loadFunctions,
+            bool hasMainSwapchain)
         {
             _syncToVBlank = options.SyncToVerticalBlank;
             _glContext = platformInfo.OpenGLContextHandle;
@@ -178,12 +181,6 @@ namespace Veldrid.OpenGL
 
             glBindVertexArray(_vao);
             CheckLastError();
-
-            _swapchainFramebuffer = new OpenGLSwapchainFramebuffer(
-                width,
-                height,
-                PixelFormat.B8_G8_R8_A8_UNorm,
-                options.SwapchainDepthFormat);
 
             if (options.Debug && (_extensions.KHR_Debug || _extensions.ARB_DebugOutput))
             {
@@ -266,12 +263,15 @@ namespace Veldrid.OpenGL
             _maxTexDepth = (uint)maxTexDepth;
             _maxTexArrayLayers = (uint)maxTexArrayLayers;
 
-            _mainSwapchain = new OpenGLSwapchain(
-                this,
-                width,
-                height,
-                options.SwapchainDepthFormat,
-                platformInfo.ResizeSwapchain);
+            if (hasMainSwapchain)
+            {
+                _mainSwapchain = new OpenGLSwapchain(
+                    this,
+                    width,
+                    height,
+                    options.SwapchainDepthFormat,
+                    platformInfo.ResizeSwapchain);
+            }
 
             _workItems = new BlockingCollection<ExecutionThreadWorkItem>(new ConcurrentQueue<ExecutionThreadWorkItem>());
             platformInfo.ClearCurrentContext();
@@ -280,24 +280,48 @@ namespace Veldrid.OpenGL
             PostDeviceCreated();
         }
 
-        public OpenGLGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
+        public OpenGLGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDescription, GraphicsBackend backend)
         {
-            SwapchainSource source = swapchainDescription.Source;
+            if (swapchainDescription == null)
+            {
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    throw new VeldridException($"Creating headless OpenGL devices is only supported on Windows.");
+                }
+
+                InitializeWin32(options, null, backend);
+                return;
+            }
+
+            SwapchainSource source = swapchainDescription.Value.Source;
             if (source is UIViewSwapchainSource uiViewSource)
             {
+                if (backend == GraphicsBackend.OpenGL)
+                {
+                    throw new VeldridException($"iOS does not support OpenGL. Used OpenGL ES instead.");
+                }
                 InitializeUIView(options, uiViewSource.UIView);
             }
             else if (source is AndroidSurfaceSwapchainSource androidSource)
             {
+                if (backend == GraphicsBackend.OpenGL)
+                {
+                    throw new VeldridException($"Android does not support OpenGL. Used OpenGL ES instead.");
+                }
+
                 IntPtr aNativeWindow = Android.AndroidRuntime.ANativeWindow_fromSurface(
                     androidSource.JniEnv,
                     androidSource.Surface);
-                InitializeANativeWindow(options, aNativeWindow, swapchainDescription);
+                InitializeANativeWindow(options, aNativeWindow, swapchainDescription.Value);
+            }
+            else if (source is Win32SwapchainSource win32Source)
+            {
+                InitializeWin32(options, swapchainDescription, backend);
             }
             else
             {
                 throw new VeldridException(
-                    "This function does not support creating an OpenGLES GraphicsDevice with the given SwapchainSource.");
+                    $"This function does not support creating an {backend} GraphicsDevice with the given SwapchainSource.");
             }
         }
 
@@ -485,7 +509,7 @@ namespace Veldrid.OpenGL
                 setSwapchainFramebuffer,
                 resizeSwapchain);
 
-            Init(options, platformInfo, (uint)fbWidth, (uint)fbHeight, false);
+            Init(options, platformInfo, (uint)fbWidth, (uint)fbHeight, false, true);
         }
 
         private void InitializeANativeWindow(
@@ -613,7 +637,7 @@ namespace Veldrid.OpenGL
                 swapBuffers,
                 setSync);
 
-            Init(options, platformInfo, swapchainDescription.Width, swapchainDescription.Height, true);
+            Init(options, platformInfo, swapchainDescription.Width, swapchainDescription.Height, true, true);
         }
 
         private static int GetDepthBits(PixelFormat value)
@@ -627,6 +651,130 @@ namespace Veldrid.OpenGL
                 default:
                     throw new VeldridException($"Unsupported depth format: {value}");
             }
+        }
+
+        private static int GetStencilBits(PixelFormat format)
+        {
+            switch (format)
+            {
+                case PixelFormat.D24_UNorm_S8_UInt:
+                case PixelFormat.D32_Float_S8_UInt:
+                    return 8;
+                default:
+                    return 0;
+            }
+        }
+
+        private void InitializeWin32(GraphicsDeviceOptions options, SwapchainDescription? scDesc, GraphicsBackend backend)
+        {
+            IntPtr hdc;
+            IntPtr invisibleWindowHwnd = IntPtr.Zero;
+
+            if (scDesc != null)
+            {
+                hdc = WindowsNative.GetDC(Util.AssertSubtype<SwapchainSource, Win32SwapchainSource>(scDesc.Value.Source).Hwnd);
+            }
+            else
+            {
+                invisibleWindowHwnd = WindowsNative.CreateInvisibleWindow();
+                hdc = WindowsNative.GetDC(invisibleWindowHwnd);
+            }
+
+            WindowsExtensionCreationFunctions extensionFuncs = WindowsNative.GetExtensionFunctions();
+
+            uint depthBits = 0;
+            uint stencilBits = 0;
+            if (scDesc.HasValue && scDesc.Value.DepthFormat.HasValue)
+            {
+                PixelFormat depthFormat = scDesc.Value.DepthFormat.Value;
+                depthBits = (uint)GetDepthBits(depthFormat);
+                stencilBits = (uint)GetStencilBits(depthFormat);
+            }
+
+            IntPtr glContext;
+            if (extensionFuncs.IsSupported)
+            {
+                (int major, int minor) = WindowsNative.GetMaxGLVersion(backend == GraphicsBackend.OpenGLES);
+                if (!WindowsNative.CreateContextWithExtension(
+                    extensionFuncs,
+                    backend,
+                    hdc,
+                    options,
+                    depthBits,
+                    stencilBits,
+                    major,
+                    minor, out glContext))
+                {
+                    throw new VeldridException($"Failed to create OpenGL context.");
+                }
+            }
+            else
+            {
+                if (backend == GraphicsBackend.OpenGLES)
+                {
+                    throw new VeldridException($"OpenGL ES is not supported on this system.");
+                }
+
+                if (!WindowsNative.CreateContextRegular(hdc, depthBits, stencilBits, out glContext))
+                {
+                    throw new VeldridException($"Failed to create OpenGL context.");
+                }
+            }
+
+            WindowsNative.wglMakeCurrent(hdc, glContext);
+
+            IntPtr glLibHandle = WindowsNative.GetOpengl32Lib();
+            Func<string, IntPtr> getProcAddress = name =>
+            {
+                IntPtr ret = WindowsNative.wglGetProcAddress(name);
+                if (ret == IntPtr.Zero)
+                {
+                    ret = WindowsNative.GetProcAddress(glLibHandle, name);
+                }
+                return ret;
+            };
+
+            IntPtr setSwapIntervalPtr = getProcAddress("wglSwapIntervalEXT");
+            wglSwapIntervalEXT setSwapInterval = Marshal.GetDelegateForFunctionPointer<wglSwapIntervalEXT>(setSwapIntervalPtr);
+            if (scDesc != null)
+            {
+                setSwapInterval(scDesc.Value.SyncToVerticalBlank ? 1 : 0);
+            }
+
+            Action<IntPtr> deleteContext;
+            if (invisibleWindowHwnd == IntPtr.Zero)
+            {
+                deleteContext = ctx => WindowsNative.wglDeleteContext(ctx);
+            }
+            else
+            {
+                deleteContext = ctx =>
+                {
+                    WindowsNative.wglDeleteContext(ctx);
+                    WindowsNative.ReleaseDC(invisibleWindowHwnd, hdc);
+                };
+
+                _ownedWindow = invisibleWindowHwnd;
+            }
+            OpenGLPlatformInfo platformInfo = new OpenGLPlatformInfo(
+                glContext,
+                getProcAddress,
+                ctx => WindowsNative.wglMakeCurrent(hdc, ctx),
+                () => WindowsNative.wglGetCurrentContext(),
+                () => WindowsNative.wglMakeCurrent(hdc, IntPtr.Zero),
+                deleteContext,
+                () => WindowsNative.SwapBuffers(hdc),
+                sync => setSwapInterval(sync ? 1 : 0));
+
+            uint width = 0;
+            uint height = 0;
+            if (scDesc.HasValue)
+            {
+                width = scDesc.Value.Width;
+                height = scDesc.Value.Height;
+            }
+
+            Init(options, platformInfo, width, height, true, true);
         }
 
         protected override void SubmitCommandsCore(
@@ -880,6 +1028,26 @@ namespace Veldrid.OpenGL
             Util.AssertSubtype<Fence, OpenGLFence>(fence).Reset();
         }
 
+        internal static bool IsSupported(GraphicsBackend backend)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                if (backend == GraphicsBackend.OpenGL)
+                {
+                    return true;
+                }
+                else
+                {
+                    (int major, int minor) = WindowsNative.GetMaxGLVersion(backend == GraphicsBackend.OpenGLES);
+                    return major != 0 && minor != 0;
+                }
+            }
+            else
+            {
+                return true;
+            }
+        }
+
         internal void EnqueueDisposal(OpenGLDeferredResource resource)
         {
             _resourcesToDispose.Enqueue(resource);
@@ -955,6 +1123,7 @@ namespace Veldrid.OpenGL
         protected override void PlatformDispose()
         {
             _executionThread.Terminate();
+            int result = WindowsNative.DestroyWindow(_ownedWindow);
         }
 
         private class ExecutionThread
@@ -1087,6 +1256,7 @@ namespace Veldrid.OpenGL
                             _gd._deleteContext(_gd._glContext);
                             _gd.StagingMemoryPool.Dispose();
                             _terminated = true;
+                            ((ManualResetEventSlim)workItem.Object0).Set();
                         }
                         break;
                         case WorkItemType.SetSyncToVerticalBlank:
@@ -1453,13 +1623,16 @@ namespace Veldrid.OpenGL
             {
                 CheckExceptions();
 
-                _workItems.Add(new ExecutionThreadWorkItem(WorkItemType.TerminateAction));
+                ManualResetEventSlim mre = new ManualResetEventSlim(false);
+                _workItems.Add(new ExecutionThreadWorkItem(mre, WorkItemType.TerminateAction));
+                mre.Wait();
+                mre.Dispose();
             }
 
             internal void WaitForIdle()
             {
                 ManualResetEventSlim mre = new ManualResetEventSlim();
-                _workItems.Add(new ExecutionThreadWorkItem(mre));
+                _workItems.Add(new ExecutionThreadWorkItem(mre, WorkItemType.SignalResetEvent));
                 mre.Wait();
                 mre.Dispose();
 
@@ -1560,9 +1733,9 @@ namespace Veldrid.OpenGL
                 UInt2 = 0;
             }
 
-            public ExecutionThreadWorkItem(ManualResetEventSlim mre)
+            public ExecutionThreadWorkItem(ManualResetEventSlim mre, WorkItemType type)
             {
-                Type = WorkItemType.SignalResetEvent;
+                Type = type;
                 Object0 = mre;
                 Object1 = null;
 

@@ -13,8 +13,7 @@ namespace Veldrid.MetalBindings
 
         public static MTLCompileOptions New()
         {
-            var cls = new ObjCClass("MTLCompileOptions");
-            return cls.AllocInit<MTLCompileOptions>();
+            return s_class.AllocInit<MTLCompileOptions>();
         }
 
         public Bool8 fastMathEnabled
@@ -29,6 +28,7 @@ namespace Veldrid.MetalBindings
             set => objc_msgSend(NativePtr, sel_setLanguageVersion, (uint)value);
         }
 
+        private static readonly ObjCClass s_class = new ObjCClass(nameof(MTLCompileOptions));
         private static readonly Selector sel_fastMathEnabled = "fastMathEnabled";
         private static readonly Selector sel_setFastMathEnabled = "setFastMathEnabled:";
         private static readonly Selector sel_languageVersion = "languageVersion";

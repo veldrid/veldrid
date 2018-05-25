@@ -37,6 +37,8 @@ namespace Veldrid.MetalBindings
                 options,
                 out NSError error);
 
+            release(sourceNSS.NativePtr);
+
             if (library == IntPtr.Zero)
             {
                 throw new Exception("Shader compilation failed: " + error.localizedDescription);

@@ -11,8 +11,7 @@ namespace Veldrid.MetalBindings
 
         public static NSString New(string s)
         {
-            var cls = new ObjCClass("NSString");
-            var nss = cls.Alloc<NSString>();
+            var nss = s_class.Alloc<NSString>();
 
             fixed (char* utf16Ptr = s)
             {
@@ -28,6 +27,7 @@ namespace Veldrid.MetalBindings
             return MTLUtil.GetUtf8String(utf8Ptr);
         }
 
+        private static readonly ObjCClass s_class = new ObjCClass(nameof(NSString));
         private static readonly Selector sel_initWithCharacters = "initWithCharacters:length:";
         private static readonly Selector sel_utf8String = "UTF8String";
     }

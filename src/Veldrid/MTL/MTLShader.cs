@@ -17,29 +17,44 @@ namespace Veldrid.MTL
             : base(description.Stage)
         {
             _device = gd;
-            DispatchQueue queue = Dispatch.dispatch_get_global_queue(QualityOfServiceLevel.QOS_CLASS_USER_INTERACTIVE, 0);
-            fixed (byte* shaderBytesPtr = description.ShaderBytes)
-            {
-                DispatchData dispatchData = Dispatch.dispatch_data_create(
-                    shaderBytesPtr,
-                    (UIntPtr)description.ShaderBytes.Length,
-                    queue,
-                    IntPtr.Zero);
 
-                Library = gd.Device.newLibraryWithData(dispatchData);
-                try
+            if (description.ShaderBytes.Length > 4
+                && description.ShaderBytes[0] == 0x4d
+                && description.ShaderBytes[1] == 0x54
+                && description.ShaderBytes[2] == 0x4c
+                && description.ShaderBytes[3] == 0x42)
+            {
+                DispatchQueue queue = Dispatch.dispatch_get_global_queue(QualityOfServiceLevel.QOS_CLASS_USER_INTERACTIVE, 0);
+                fixed (byte* shaderBytesPtr = description.ShaderBytes)
                 {
-                    Function = Library.newFunctionWithName(description.EntryPoint);
-                    if (Function.NativePtr == IntPtr.Zero)
+                    DispatchData dispatchData = Dispatch.dispatch_data_create(
+                        shaderBytesPtr,
+                        (UIntPtr)description.ShaderBytes.Length,
+                        queue,
+                        IntPtr.Zero);
+                    try
                     {
-                        throw new VeldridException(
-                            $"Failed to create Metal {description.Stage} Shader. The given entry point \"{description.EntryPoint}\" was not found.");
+                        Library = gd.Device.newLibraryWithData(dispatchData);
+                    }
+                    finally
+                    {
+                        Dispatch.dispatch_release(dispatchData.NativePtr);
                     }
                 }
-                finally
-                {
-                    Dispatch.dispatch_release(dispatchData.NativePtr);
-                }
+            }
+            else
+            {
+                string source = Encoding.UTF8.GetString(description.ShaderBytes);
+                MTLCompileOptions compileOptions = MTLCompileOptions.New();
+                Library = gd.Device.newLibraryWithSource(source, compileOptions);
+                ObjectiveCRuntime.release(compileOptions);
+            }
+
+            Function = Library.newFunctionWithName(description.EntryPoint);
+            if (Function.NativePtr == IntPtr.Zero)
+            {
+                throw new VeldridException(
+                    $"Failed to create Metal {description.Stage} Shader. The given entry point \"{description.EntryPoint}\" was not found.");
             }
         }
 

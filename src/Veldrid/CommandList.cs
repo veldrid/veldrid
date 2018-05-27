@@ -753,7 +753,13 @@ namespace Veldrid
         public void CopyTexture(Texture source, Texture destination)
         {
 #if VALIDATE_USAGE
-            if (source.ArrayLayers != destination.ArrayLayers || source.MipLevels != destination.MipLevels
+            uint effectiveSrcArrayLayers = (source.Usage & TextureUsage.Cubemap) != 0
+                ? source.ArrayLayers * 6
+                : source.ArrayLayers;
+            uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
+                ? destination.ArrayLayers * 6
+                : destination.ArrayLayers;
+            if (effectiveSrcArrayLayers != effectiveDstArrayLayers || source.MipLevels != destination.MipLevels
                 || source.SampleCount != destination.SampleCount || source.Width != destination.Width
                 || source.Height != destination.Height || source.Depth != destination.Depth
                 || source.Format != destination.Format)
@@ -783,14 +789,20 @@ namespace Veldrid
         public void CopyTexture(Texture source, Texture destination, uint mipLevel, uint arrayLayer)
         {
 #if VALIDATE_USAGE
-            if (source.ArrayLayers != destination.ArrayLayers || source.MipLevels != destination.MipLevels
+            uint effectiveSrcArrayLayers = (source.Usage & TextureUsage.Cubemap) != 0
+                ? source.ArrayLayers * 6
+                : source.ArrayLayers;
+            uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
+                ? destination.ArrayLayers * 6
+                : destination.ArrayLayers;
+            if (effectiveSrcArrayLayers != effectiveDstArrayLayers || source.MipLevels != destination.MipLevels
                 || source.SampleCount != destination.SampleCount || source.Width != destination.Width
                 || source.Height != destination.Height || source.Depth != destination.Depth
                 || source.Format != destination.Format)
             {
                 throw new VeldridException("Source and destination Textures are not compatible to be copied.");
             }
-            if (mipLevel >= source.MipLevels || arrayLayer >= source.ArrayLayers)
+            if (mipLevel >= source.MipLevels || arrayLayer >= effectiveSrcArrayLayers)
             {
                 throw new VeldridException(
                     $"{nameof(mipLevel)} and {nameof(arrayLayer)} must be less than the given Textures' mip level count and array layer count.");
@@ -837,6 +849,46 @@ namespace Veldrid
             uint layerCount)
         {
 #if VALIDATE_USAGE
+            if (width == 0 || height == 0 || depth == 0)
+            {
+                throw new VeldridException($"The given copy region is empty.");
+            }
+            if (layerCount == 0)
+            {
+                throw new VeldridException($"{nameof(layerCount)} must be greater than 0.");
+            }
+            Util.GetMipDimensions(source, srcMipLevel, out uint srcWidth, out uint srcHeight, out uint srcDepth);
+            if (srcX + width > srcWidth || srcY + height > srcHeight || srcZ + depth > srcDepth)
+            {
+                throw new VeldridException($"The given copy region is not valid for the source Texture.");
+            }
+            Util.GetMipDimensions(destination, dstMipLevel, out uint dstWidth, out uint dstHeight, out uint dstDepth);
+            if (dstX + width > dstWidth || dstY + height > dstHeight || dstZ + depth > dstDepth)
+            {
+                throw new VeldridException($"The given copy region is not valid for the destination Texture.");
+            }
+            if (srcMipLevel >= source.MipLevels)
+            {
+                throw new VeldridException($"{nameof(srcMipLevel)} must be less than the number of mip levels in the source Texture.");
+            }
+            uint effectiveSrcArrayLayers = (source.Usage & TextureUsage.Cubemap) != 0
+                ? source.ArrayLayers * 6
+                : source.ArrayLayers;
+            if (srcBaseArrayLayer + layerCount > effectiveSrcArrayLayers)
+            {
+                throw new VeldridException($"An invalid mip range was given for the source Texture.");
+            }
+            if (dstMipLevel >= destination.MipLevels)
+            {
+                throw new VeldridException($"{nameof(dstMipLevel)} must be less than the number of mip levels in the destination Texture.");
+            }
+            uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
+                ? destination.ArrayLayers * 6
+                : destination.ArrayLayers;
+            if (dstBaseArrayLayer + layerCount > effectiveDstArrayLayers)
+            {
+                throw new VeldridException($"An invalid mip range was given for the destination Texture.");
+            }
 #endif
             CopyTextureCore(
                 source,

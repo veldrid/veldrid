@@ -858,12 +858,18 @@ namespace Veldrid
                 throw new VeldridException($"{nameof(layerCount)} must be greater than 0.");
             }
             Util.GetMipDimensions(source, srcMipLevel, out uint srcWidth, out uint srcHeight, out uint srcDepth);
-            if (srcX + width > srcWidth || srcY + height > srcHeight || srcZ + depth > srcDepth)
+            uint srcBlockSize = FormatHelpers.IsCompressedFormat(source.Format) ? 4u : 1u;
+            uint roundedSrcWidth = (srcWidth + srcBlockSize - 1) / srcBlockSize * srcBlockSize;
+            uint roundedSrcHeight = (srcHeight + srcBlockSize - 1) / srcBlockSize * srcBlockSize;
+            if (srcX + width > roundedSrcWidth || srcY + height > roundedSrcHeight || srcZ + depth > srcDepth)
             {
                 throw new VeldridException($"The given copy region is not valid for the source Texture.");
             }
             Util.GetMipDimensions(destination, dstMipLevel, out uint dstWidth, out uint dstHeight, out uint dstDepth);
-            if (dstX + width > dstWidth || dstY + height > dstHeight || dstZ + depth > dstDepth)
+            uint dstBlockSize = FormatHelpers.IsCompressedFormat(destination.Format) ? 4u : 1u;
+            uint roundedDstWidth = (dstWidth + dstBlockSize - 1) / dstBlockSize * dstBlockSize;
+            uint roundedDstHeight = (dstHeight + dstBlockSize - 1) / dstBlockSize * dstBlockSize;
+            if (dstX + width > roundedDstWidth || dstY + height > roundedDstHeight || dstZ + depth > dstDepth)
             {
                 throw new VeldridException($"The given copy region is not valid for the destination Texture.");
             }

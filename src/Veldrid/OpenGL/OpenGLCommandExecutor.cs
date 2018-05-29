@@ -1272,6 +1272,11 @@ namespace Veldrid.OpenGL
                 uint srcZOrLayer = Math.Max(srcBaseArrayLayer, srcZ);
                 uint dstZOrLayer = Math.Max(dstBaseArrayLayer, dstZ);
                 uint depthOrLayerCount = Math.Max(depth, layerCount);
+                // Copy width and height are allowed to be a full compressed block size, even if the mip level only contains a
+                // region smaller than the block size.
+                Util.GetMipDimensions(source, srcMipLevel, out uint mipWidth, out uint mipHeight, out _);
+                width = Math.Min(width, mipWidth);
+                height = Math.Min(height, mipHeight);
                 glCopyImageSubData(
                     srcGLTexture.Texture, srcGLTexture.TextureTarget, (int)srcMipLevel, (int)srcX, (int)srcY, (int)srcZOrLayer,
                     dstGLTexture.Texture, dstGLTexture.TextureTarget, (int)dstMipLevel, (int)dstX, (int)dstY, (int)dstZOrLayer,

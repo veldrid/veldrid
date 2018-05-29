@@ -226,6 +226,7 @@ namespace Veldrid.StartupUtilities
 #if !EXCLUDE_OPENGL_BACKEND
         public static unsafe GraphicsDevice CreateDefaultOpenGLGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window, GraphicsBackend backend)
         {
+            Sdl2Native.SDL_ClearError();
             IntPtr sdlHandle = window.SdlWindowHandle;
 
             SDL_SysWMinfo sysWmInfo;

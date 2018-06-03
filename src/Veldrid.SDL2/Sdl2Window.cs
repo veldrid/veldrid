@@ -208,6 +208,23 @@ namespace Veldrid.Sdl2
             }
         }
 
+        public float Opacity
+        {
+            get
+            {
+                float opacity = float.NaN;
+                if (SDL_GetWindowOpacity(_window, &opacity) == 0)
+                {
+                    return opacity;
+                }
+                return float.NaN;
+            }
+            set
+            {
+                SDL_SetWindowOpacity(_window, value);
+            }
+        }
+
         public bool Focused => (SDL_GetWindowFlags(_window) & SDL_WindowFlags.InputFocus) != 0;
 
         public IntPtr SdlWindowHandle => _window;

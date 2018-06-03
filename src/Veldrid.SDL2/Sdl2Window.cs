@@ -213,7 +213,7 @@ namespace Veldrid.Sdl2
             get
             {
                 float opacity = float.NaN;
-                if (SDL_GetWindowOpacity(_window, &opacity) == 1)
+                if (SDL_GetWindowOpacity(_window, &opacity) == 0)
                 {
                     return opacity;
                 }

@@ -1329,7 +1329,7 @@ namespace Veldrid.OpenGL
                 sizeInBytes = width * height * depth * pixelSize;
             }
 
-            FixedStagingBlock block = _stagingMemoryPool.GetFixedStagingBlock(sizeInBytes);
+            StagingBlock block = _stagingMemoryPool.GetStagingBlock(sizeInBytes);
 
             if (packAlignment < 4)
             {
@@ -1379,7 +1379,7 @@ namespace Veldrid.OpenGL
                 uint denseDepthPitch = FormatHelpers.GetDepthPitch(denseRowPitch, height, srcGLTexture.Format);
                 uint numRows = FormatHelpers.GetNumRows(height, srcGLTexture.Format);
                 uint trueCopySize = denseRowPitch * numRows;
-                FixedStagingBlock trueCopySrc = _stagingMemoryPool.GetFixedStagingBlock(trueCopySize);
+                StagingBlock trueCopySrc = _stagingMemoryPool.GetStagingBlock(trueCopySize);
 
                 Util.CopyTextureRegion(
                     block.Data,
@@ -1419,7 +1419,7 @@ namespace Veldrid.OpenGL
                     Util.GetMipDimensions(srcGLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                     uint fullMipSize = mipWidth * mipHeight * mipDepth * srcGLTexture.ArrayLayers * pixelSize;
 
-                    FixedStagingBlock fullBlock = _stagingMemoryPool.GetFixedStagingBlock(fullMipSize);
+                    StagingBlock fullBlock = _stagingMemoryPool.GetStagingBlock(fullMipSize);
 
                     _textureSamplerManager.SetTextureTransient(srcTarget, srcGLTexture.Texture);
                     CheckLastError();

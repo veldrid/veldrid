@@ -8,7 +8,7 @@ namespace Veldrid.OpenGL
     internal class OpenGLResourceFactory : ResourceFactory
     {
         private readonly OpenGLGraphicsDevice _gd;
-        private readonly StagingMemoryPool _pool = new StagingMemoryPool();
+        private readonly StagingMemoryPool _pool;
 
         public override GraphicsBackend BackendType => _gd.BackendType;
 
@@ -16,6 +16,7 @@ namespace Veldrid.OpenGL
             : base(gd.Features)
         {
             _gd = gd;
+            _pool = gd.StagingMemoryPool;
         }
 
         public override CommandList CreateCommandList(ref CommandListDescription description)

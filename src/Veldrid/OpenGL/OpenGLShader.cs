@@ -65,14 +65,11 @@ namespace Veldrid.OpenGL
             _shader = glCreateShader(_shaderType);
             CheckLastError();
 
-            fixed (byte* arrayPtr = &_stagingBlock.Array[0])
-            {
-                byte* textPtr = arrayPtr;
-                int length = (int)_stagingBlock.SizeInBytes;
-                byte** textsPtr = &textPtr;
+            byte* textPtr = (byte*)_stagingBlock.Data;
+            int length = (int)_stagingBlock.SizeInBytes;
+            byte** textsPtr = &textPtr;
 
-                glShaderSource(_shader, 1, textsPtr, &length);
-            }
+            glShaderSource(_shader, 1, textsPtr, &length);
             CheckLastError();
 
             glCompileShader(_shader);

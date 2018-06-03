@@ -10,6 +10,7 @@ using System.Threading;
 using Veldrid.OpenGL.EAGL;
 using static Veldrid.OpenGL.EGL.EGLNative;
 using NativeLibraryLoader;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.OpenGL
 {
@@ -87,6 +88,9 @@ namespace Veldrid.OpenGL
         public OpenGLTextureSamplerManager TextureSamplerManager => _textureSamplerManager;
 
         public override GraphicsDeviceFeatures Features => _features;
+
+        public StagingMemoryPool StagingMemoryPool => _stagingMemoryPool;
+
 
         public OpenGLGraphicsDevice(
             GraphicsDeviceOptions options,
@@ -766,15 +770,37 @@ namespace Veldrid.OpenGL
             uint mipLevel,
             uint arrayLayer)
         {
-            StagingBlock sb = _stagingMemoryPool.Stage(source, sizeInBytes);
-            _executionThread.Run(() =>
-            {
-                fixed (byte* dataPtr = &sb.Array[0])
-                {
-                    _commandExecutor.UpdateTexture(texture, (IntPtr)dataPtr, x, y, z, width, height, depth, mipLevel, arrayLayer);
-                    sb.Free();
-                }
-            });
+            StagingBlock textureData = _stagingMemoryPool.Stage(source, sizeInBytes);
+            StagingBlock argBlock = _stagingMemoryPool.GetStagingBlock(UpdateTextureArgsSize);
+            ref UpdateTextureArgs args = ref Unsafe.AsRef<UpdateTextureArgs>(argBlock.Data);
+            args.Texture = texture;
+            args.Data = (IntPtr)textureData.Data;
+            args.X = x;
+            args.Y = y;
+            args.Z = z;
+            args.Width = width;
+            args.Height = height;
+            args.Depth = depth;
+            args.MipLevel = mipLevel;
+            args.ArrayLayer = arrayLayer;
+
+            _executionThread.UpdateTexture(argBlock.Id, textureData.Id);
+        }
+
+        public static readonly uint UpdateTextureArgsSize = (uint)Unsafe.SizeOf<UpdateTextureArgs>();
+
+        public struct UpdateTextureArgs
+        {
+            public Texture Texture;
+            public IntPtr Data;
+            public uint X;
+            public uint Y;
+            public uint Z;
+            public uint Width;
+            public uint Height;
+            public uint Depth;
+            public uint MipLevel;
+            public uint ArrayLayer;
         }
 
         public override bool WaitForFence(Fence fence, ulong nanosecondTimeout)
@@ -955,100 +981,113 @@ namespace Veldrid.OpenGL
                     switch (workItem.Type)
                     {
                         case WorkItemType.ExecuteList:
-                        {
-                            OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
-                            try
                             {
-                                list.ExecuteAll(_gd._commandExecutor);
-                                list.Parent.OnCompleted(list);
-                            }
-                            finally
-                            {
-                                if (!_gd.CheckCommandListDisposal(list.Parent))
+                                OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
+                                try
                                 {
-                                    list.Reset();
+                                    list.ExecuteAll(_gd._commandExecutor);
+                                    list.Parent.OnCompleted(list);
+                                }
+                                finally
+                                {
+                                    if (!_gd.CheckCommandListDisposal(list.Parent))
+                                    {
+                                        list.Reset();
+                                    }
                                 }
                             }
-                        }
-                        break;
+                            break;
                         case WorkItemType.Map:
-                        {
-                            MappableResource resourceToMap = (MappableResource)workItem.Object0;
-                            ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
-                            MapMode mode = (MapMode)workItem.UInt0;
-                            uint subresource = workItem.UInt1;
-                            bool map = workItem.UInt2 == 1 ? true : false;
-                            if (map)
                             {
-                                ExecuteMapResource(
-                                    resourceToMap,
-                                    mode,
-                                    subresource,
-                                    mre);
+                                MappableResource resourceToMap = (MappableResource)workItem.Object0;
+                                ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
+                                MapMode mode = (MapMode)workItem.UInt0;
+                                uint subresource = workItem.UInt1;
+                                bool map = workItem.UInt2 == 1 ? true : false;
+                                if (map)
+                                {
+                                    ExecuteMapResource(
+                                        resourceToMap,
+                                        mode,
+                                        subresource,
+                                        mre);
+                                }
+                                else
+                                {
+                                    ExecuteUnmapResource(resourceToMap, subresource, mre);
+                                }
                             }
-                            else
-                            {
-                                ExecuteUnmapResource(resourceToMap, subresource, mre);
-                            }
-                        }
-                        break;
+                            break;
                         case WorkItemType.UpdateBuffer:
-                        {
-                            DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
-                            byte[] stagingArray = (byte[])workItem.Object1;
-                            StagingMemoryPool pool = (StagingMemoryPool)workItem.Object2;
-                            uint offsetInBytes = workItem.UInt0;
-                            uint sizeInBytes = workItem.UInt1;
-
-                            fixed (byte* dataPtr = &stagingArray[0])
                             {
+                                DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
+                                uint offsetInBytes = workItem.UInt0;
+                                StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
+                                
                                 _gd._commandExecutor.UpdateBuffer(
                                     updateBuffer,
                                     offsetInBytes,
-                                    (IntPtr)dataPtr,
-                                    sizeInBytes);
-                            }
-                            pool.Free(stagingArray);
-                        }
-                        break;
-                        case WorkItemType.GenericAction:
-                        {
-                            ((Action)workItem.Object0)();
-                        }
-                        break;
-                        case WorkItemType.SignalResetEvent:
-                        {
-                            _gd.FlushDisposables();
-                            ((ManualResetEventSlim)workItem.Object0).Set();
-                        }
-                        break;
-                        case WorkItemType.TerminateAction:
-                        {
-                            // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
-                            uint error = glGetError();
-                            if (error == (uint)ErrorCode.InvalidOperation)
-                            {
-                                return;
-                            }
-                            _makeCurrent(_gd._glContext);
+                                    (IntPtr)stagingBlock.Data,
+                                    stagingBlock.SizeInBytes);
 
-                            _gd.FlushDisposables();
-                            _gd._deleteContext(_gd._glContext);
-                            _terminated = true;
-                        }
-                        break;
+                                stagingBlock.Free();
+                            }
+                            break;
+                        case WorkItemType.UpdateTexture:
+                            unsafe
+                            {
+                                StagingMemoryPool pool = _gd.StagingMemoryPool;
+                                StagingBlock argBlock = pool.RetrieveById(workItem.UInt0);
+                                StagingBlock textureData = pool.RetrieveById(workItem.UInt1);
+                                ref UpdateTextureArgs args = ref Unsafe.AsRef<UpdateTextureArgs>(argBlock.Data);
+
+                                _gd._commandExecutor.UpdateTexture(
+                                    args.Texture, args.Data, args.X, args.Y, args.Z,
+                                    args.Width, args.Height, args.Depth, args.MipLevel, args.ArrayLayer);
+
+                                argBlock.Free();
+                                textureData.Free();
+                            }
+                            break;
+                        case WorkItemType.GenericAction:
+                            {
+                                ((Action)workItem.Object0)();
+                            }
+                            break;
+                        case WorkItemType.SignalResetEvent:
+                            {
+                                _gd.FlushDisposables();
+                                ((ManualResetEventSlim)workItem.Object0).Set();
+                            }
+                            break;
+                        case WorkItemType.TerminateAction:
+                            {
+                                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
+                                uint error = glGetError();
+                                if (error == (uint)ErrorCode.InvalidOperation)
+                                {
+                                    return;
+                                }
+                                _makeCurrent(_gd._glContext);
+
+                                _gd.FlushDisposables();
+                                _gd._deleteContext(_gd._glContext);
+                                _gd.StagingMemoryPool.Dispose();
+                                _terminated = true;
+                            }
+                            break;
                         case WorkItemType.SetSyncToVerticalBlank:
-                        {
-                            bool value = workItem.UInt0 == 1 ? true : false;
-                            _gd._setSyncToVBlank(value);
-                        }
-                        break;
+                            {
+                                bool value = workItem.UInt0 == 1 ? true : false;
+                                _gd._setSyncToVBlank(value);
+                            }
+                            break;
                         case WorkItemType.SwapBuffers:
-                        {
-                            _gd._swapBuffers();
-                            _gd.FlushDisposables();
-                        }
-                        break;
+                            {
+                                _gd._swapBuffers();
+                                _gd.FlushDisposables();
+                            }
+                            break;
                         default:
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }
@@ -1132,7 +1171,7 @@ namespace Veldrid.OpenGL
                                 subresourceSize = (uint)compressedSize;
                             }
 
-                            FixedStagingBlock block = _gd._stagingMemoryPool.GetFixedStagingBlock(subresourceSize);
+                            StagingBlock block = _gd._stagingMemoryPool.GetStagingBlock(subresourceSize);
 
                             uint packAlignment = 4;
                             if (!isCompressed)
@@ -1178,8 +1217,8 @@ namespace Veldrid.OpenGL
                                             // a subsection of the downloaded data into our staging block.
 
                                             uint fullDataSize = subresourceSize * texture.ArrayLayers;
-                                            FixedStagingBlock fullBlock
-                                                = _gd._stagingMemoryPool.GetFixedStagingBlock(fullDataSize);
+                                            StagingBlock fullBlock
+                                                = _gd._stagingMemoryPool.GetStagingBlock(fullDataSize);
 
                                             glGetTexImage(
                                                 texture.TextureTarget,
@@ -1383,6 +1422,13 @@ namespace Veldrid.OpenGL
                 _workItems.Add(new ExecutionThreadWorkItem(buffer, offsetInBytes, stagingBlock));
             }
 
+            internal void UpdateTexture(uint argBlockId, uint dataBlockId)
+            {
+                CheckExceptions();
+
+                _workItems.Add(new ExecutionThreadWorkItem(argBlockId, dataBlockId));
+            }
+
             internal void Run(Action a)
             {
                 CheckExceptions();
@@ -1437,10 +1483,9 @@ namespace Veldrid.OpenGL
             public readonly WorkItemType Type;
             public readonly object Object0;
             public readonly object Object1;
-            public readonly object Object2;
             public readonly uint UInt0;
             public readonly uint UInt1;
-            public readonly uint UInt2; // TODO: Technically, our max data size could fit into just two UInt32's.
+            public readonly uint UInt2;
 
             public ExecutionThreadWorkItem(
                 MappableResource resource,
@@ -1452,7 +1497,6 @@ namespace Veldrid.OpenGL
                 Type = WorkItemType.Map;
                 Object0 = resource;
                 Object1 = resetEvent;
-                Object2 = null;
 
                 UInt0 = (uint)mapMode;
                 UInt1 = subresource;
@@ -1464,7 +1508,6 @@ namespace Veldrid.OpenGL
                 Type = WorkItemType.ExecuteList;
                 Object0 = commandList;
                 Object1 = null;
-                Object2 = null;
 
                 UInt0 = 0;
                 UInt1 = 0;
@@ -1475,11 +1518,10 @@ namespace Veldrid.OpenGL
             {
                 Type = WorkItemType.UpdateBuffer;
                 Object0 = updateBuffer;
-                Object1 = stagedSource.Array;
-                Object2 = stagedSource.Pool;
+                Object1 = null;
 
                 UInt0 = offsetInBytes;
-                UInt1 = stagedSource.SizeInBytes;
+                UInt1 = stagedSource.Id;
                 UInt2 = 0;
             }
 
@@ -1488,10 +1530,20 @@ namespace Veldrid.OpenGL
                 Type = isTermination ? WorkItemType.TerminateAction : WorkItemType.GenericAction;
                 Object0 = a;
                 Object1 = null;
-                Object2 = null;
 
                 UInt0 = 0;
                 UInt1 = 0;
+                UInt2 = 0;
+            }
+
+            public ExecutionThreadWorkItem(uint argBlockId, uint dataBlockId)
+            {
+                Type = WorkItemType.UpdateTexture;
+                Object0 = null;
+                Object1 = null;
+
+                UInt0 = argBlockId;
+                UInt1 = dataBlockId;
                 UInt2 = 0;
             }
 
@@ -1500,7 +1552,6 @@ namespace Veldrid.OpenGL
                 Type = WorkItemType.SignalResetEvent;
                 Object0 = mre;
                 Object1 = null;
-                Object2 = null;
 
                 UInt0 = 0;
                 UInt1 = 0;
@@ -1512,7 +1563,6 @@ namespace Veldrid.OpenGL
                 Type = WorkItemType.SetSyncToVerticalBlank;
                 Object0 = null;
                 Object1 = null;
-                Object2 = null;
 
                 UInt0 = value ? 1u : 0u;
                 UInt1 = 0;
@@ -1524,12 +1574,10 @@ namespace Veldrid.OpenGL
                 Type = type;
                 Object0 = null;
                 Object1 = null;
-                Object2 = null;
 
                 UInt0 = 0;
                 UInt1 = 0;
                 UInt2 = 0;
-
             }
         }
 
@@ -1544,7 +1592,7 @@ namespace Veldrid.OpenGL
             public int RefCount;
             public MapMode Mode;
             public MappedResource MappedResource;
-            public FixedStagingBlock StagingBlock;
+            public StagingBlock StagingBlock;
         }
     }
 }

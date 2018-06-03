@@ -8,7 +8,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
 {
     internal unsafe class OpenGLNoAllocCommandEntryList : OpenGLCommandEntryList, IDisposable
     {
-        private readonly StagingMemoryPool _memoryPool = new StagingMemoryPool();
+        private readonly StagingMemoryPool _memoryPool;
         private readonly List<EntryStorageBlock> _blocks = new List<EntryStorageBlock>();
         private EntryStorageBlock _currentBlock;
         private uint _totalEntries;
@@ -90,6 +90,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         public OpenGLNoAllocCommandEntryList(OpenGLCommandList cl)
         {
             Parent = cl;
+            _memoryPool = cl.Device.StagingMemoryPool;
             _currentBlock = EntryStorageBlock.New();
             _blocks.Add(_currentBlock);
         }
@@ -305,13 +306,11 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case UpdateBufferEntryID:
                         ref NoAllocUpdateBufferEntry ube = ref Unsafe.AsRef<NoAllocUpdateBufferEntry>(entryBasePtr);
-                        fixed (byte* dataPtr = &ube.StagingBlock.Get(_resourceList)[0])
-                        {
-                            executor.UpdateBuffer(
-                                ube.Buffer.Get(_resourceList),
-                                ube.BufferOffsetInBytes,
-                                (IntPtr)dataPtr, ube.StagingBlockSize);
-                        }
+                        byte* dataPtr = (byte*)ube.StagingBlock.Data;
+                        executor.UpdateBuffer(
+                            ube.Buffer.Get(_resourceList),
+                            ube.BufferOffsetInBytes,
+                            (IntPtr)dataPtr, ube.StagingBlockSize);
                         currentOffset += UpdateBufferEntrySize;
                         break;
                     case CopyBufferEntryID:
@@ -472,7 +471,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         {
             StagingBlock stagingBlock = _memoryPool.Stage(source, sizeInBytes);
             _stagingBlocks.Add(stagingBlock);
-            NoAllocUpdateBufferEntry entry = new NoAllocUpdateBufferEntry(Track(buffer), bufferOffsetInBytes, Track(stagingBlock.Array), sizeInBytes);
+            NoAllocUpdateBufferEntry entry = new NoAllocUpdateBufferEntry(Track(buffer), bufferOffsetInBytes, stagingBlock, sizeInBytes);
             AddEntry(UpdateBufferEntryID, ref entry);
         }
 

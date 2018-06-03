@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid
 {
@@ -101,6 +102,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="other">The instance to compare to.</param>
         /// <returns>True if all elements are equal; false otherswise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(RgbaByte other)
         {
             return R.Equals(other.R) && G.Equals(other.G) && B.Equals(other.B) && A.Equals(other.A);
@@ -110,6 +112,7 @@ namespace Veldrid
         /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
             return HashHelper.Combine(R.GetHashCode(), G.GetHashCode(), B.GetHashCode(), A.GetHashCode());
@@ -122,6 +125,28 @@ namespace Veldrid
         public override string ToString()
         {
             return string.Format("R:{0}, G:{1}, B:{2}, A:{3}", R, G, B, A);
+        }
+
+        /// <summary>
+        /// Element-wise equality.
+        /// </summary>
+        /// <param name="left">The first value.</param>
+        /// <param name="right">The second value.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(RgbaByte left, RgbaByte right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>
+        /// Element-wise inequality.
+        /// </summary>
+        /// <param name="left">The first value.</param>
+        /// <param name="right">The second value.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(RgbaByte left, RgbaByte right)
+        {
+            return !left.Equals(right);
         }
     }
 }

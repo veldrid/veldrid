@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid
 {
@@ -37,6 +38,15 @@ namespace Veldrid
         public RgbaFloat(float r, float g, float b, float a)
         {
             _channels = new Vector4(r, g, b, a);
+        }
+
+        /// <summary>
+        /// Constructs a new RgbaFloat from the XYZW components of a vector.
+        /// </summary>
+        /// <param name="channels">The vector containing the color components.</param>
+        public RgbaFloat(Vector4 channels)
+        {
+            _channels = channels;
         }
 
         /// <summary>
@@ -105,6 +115,7 @@ namespace Veldrid
         /// Converts this RgbaFloat into a Vector4.
         /// </summary>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector4 ToVector4()
         {
             return _channels;
@@ -115,6 +126,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="other">The instance to compare to.</param>
         /// <returns>True if all elements are equal; false otherswise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(RgbaFloat other)
         {
             return _channels.Equals(other._channels);
@@ -124,6 +136,7 @@ namespace Veldrid
         /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
             return HashHelper.Combine(R.GetHashCode(), G.GetHashCode(), B.GetHashCode(), A.GetHashCode());
@@ -136,6 +149,28 @@ namespace Veldrid
         public override string ToString()
         {
             return string.Format("R:{0}, G:{1}, B:{2}, A:{3}", R, G, B, A);
+        }
+
+        /// <summary>
+        /// Element-wise equality.
+        /// </summary>
+        /// <param name="left">The first value.</param>
+        /// <param name="right">The second value.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(RgbaFloat left, RgbaFloat right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>
+        /// Element-wise inequality.
+        /// </summary>
+        /// <param name="left">The first value.</param>
+        /// <param name="right">The second value.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(RgbaFloat left, RgbaFloat right)
+        {
+            return !left.Equals(right);
         }
     }
 }

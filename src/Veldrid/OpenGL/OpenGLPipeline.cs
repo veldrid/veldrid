@@ -183,6 +183,10 @@ namespace Veldrid.OpenGL
 
         private void ProcessResourceSetLayouts(ResourceLayout[] layouts)
         {
+            if (Name != null)
+            {
+
+            }
             int resourceLayoutCount = layouts.Length;
             _setInfos = new SetBindingsInfo[resourceLayoutCount];
             int lastTextureLocation = -1;

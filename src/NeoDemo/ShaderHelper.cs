@@ -1,10 +1,22 @@
 ﻿using System;
 using System.IO;
+using Veldrid.SPIRV;
 
 namespace Veldrid.NeoDemo
 {
     public static class ShaderHelper
     {
+        public static (Shader vs, Shader fs) LoadSPIRV(
+            ResourceFactory factory,
+            string setName)
+        {
+            byte[] vsBytes = LoadBytecode(GraphicsBackend.Vulkan, setName, ShaderStages.Vertex);
+            byte[] fsBytes = LoadBytecode(GraphicsBackend.Vulkan, setName, ShaderStages.Fragment);
+            return factory.CreateFromSPIRV(
+                new ShaderDescription(ShaderStages.Vertex, vsBytes, "main"),
+                new ShaderDescription(ShaderStages.Fragment, fsBytes, "main"));
+        }
+
         public static Shader LoadShader(
             GraphicsDevice gd,
             ResourceFactory factory,
@@ -12,15 +24,14 @@ namespace Veldrid.NeoDemo
             ShaderStages stage,
             string entryPoint)
         {
-            Shader shader = factory.CreateShader(new ShaderDescription(stage, LoadBytecode(factory, setName, stage), entryPoint));
+            Shader shader = factory.CreateShader(new ShaderDescription(stage, LoadBytecode(factory.BackendType, setName, stage), entryPoint));
             shader.Name = $"{setName}-{stage.ToString()}";
             return shader;
         }
 
-        public static byte[] LoadBytecode(ResourceFactory factory, string setName, ShaderStages stage)
+        public static byte[] LoadBytecode(GraphicsBackend backend, string setName, ShaderStages stage)
         {
             string name = setName + "-" + stage.ToString().ToLower();
-            GraphicsBackend backend = factory.BackendType;
 
             if (backend == GraphicsBackend.Vulkan || backend == GraphicsBackend.Direct3D11)
             {

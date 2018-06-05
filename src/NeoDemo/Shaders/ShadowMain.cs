@@ -119,16 +119,17 @@ namespace Shaders
         [FragmentShader]
         public Vector4 FS(PixelInput input)
         {
+            bool dsc = false;
             if (ClipPlaneInfo.Enabled == 1)
             {
                 if (Vector4.Dot(ClipPlaneInfo.ClipPlane, new Vector4(input.Position_WorldSpace, 1)) < 0)
                 {
-                    Discard();
+                    dsc = true;
                 }
             }
 
             float alphaMapSample = Sample(AlphaMap, AlphaMapSampler, input.TexCoord).X;
-            if (alphaMapSample == 0)
+            if (alphaMapSample == 0 || dsc)
             {
                 Discard();
             }

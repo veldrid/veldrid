@@ -135,8 +135,9 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            Shader mainVS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Vertex, "VS");
-            Shader mainFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Fragment, "FS");
+            (Shader mainVS, Shader mainFS) = ShaderHelper.LoadSPIRV(disposeFactory, "ShadowMain");
+            //Shader mainVS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Vertex, "VS");
+            //Shader mainFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Fragment, "FS");
 
             ResourceLayout projViewLayout = StaticResourceCache.GetResourceLayout(
                 gd.ResourceFactory,
@@ -178,6 +179,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayout[] { projViewLayout, mainSharedLayout, mainPerObjectLayout, reflectionLayout },
                 sc.MainSceneFramebuffer.OutputDescription);
             _pipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref mainPD);
+            _pipeline.Name = "TexturedMesh Main Pipeline";
             mainPD.RasterizerState.CullMode = FaceCullMode.Front;
             mainPD.Outputs = sc.ReflectionFramebuffer.OutputDescription;
             _pipelineFrontCull = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref mainPD);

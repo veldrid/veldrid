@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -7,9 +8,12 @@ namespace Veldrid
 {
     internal unsafe sealed class StagingMemoryPool : IDisposable
     {
+        private const uint MinimumCapacity = 128;
+
         private readonly List<StagingBlock> _storage;
         private readonly SortedList<uint, uint> _availableBlocks;
         private object _lock = new object();
+        private bool _disposed;
 
         public StagingMemoryPool()
         {
@@ -34,7 +38,6 @@ namespace Veldrid
         public StagingBlock GetStagingBlock(uint sizeInBytes)
         {
             Rent(sizeInBytes, out StagingBlock block);
-            Unsafe.InitBlock(block.Data, 0, sizeInBytes);
             return block;
         }
 
@@ -69,9 +72,10 @@ namespace Veldrid
 
         private void Allocate(uint sizeInBytes, out StagingBlock stagingBlock)
         {
-            IntPtr ptr = Marshal.AllocHGlobal((int)sizeInBytes);
+            uint capacity = Math.Max(MinimumCapacity, sizeInBytes);
+            IntPtr ptr = Marshal.AllocHGlobal((int)capacity);
             uint id = (uint)_storage.Count;
-            stagingBlock = new StagingBlock(id, (void*)ptr, sizeInBytes, this);
+            stagingBlock = new StagingBlock(id, (void*)ptr, capacity, sizeInBytes);
             _storage.Add(stagingBlock);
         }
 
@@ -79,8 +83,9 @@ namespace Veldrid
         {
             lock (_lock)
             {
-                if (block.Id < _storage.Count)
+                if (!_disposed)
                 {
+                    Debug.Assert(block.Id < _storage.Count);
                     _availableBlocks.Add(block.Capacity, block.Id);
                 }
             }
@@ -96,6 +101,7 @@ namespace Veldrid
                     Marshal.FreeHGlobal((IntPtr)block.Data);
                 }
                 _storage.Clear();
+                _disposed = true;
             }
         }
 
@@ -114,20 +120,13 @@ namespace Veldrid
         public readonly void* Data;
         public readonly uint Capacity;
         public uint SizeInBytes;
-        public readonly StagingMemoryPool Pool;
 
-        public StagingBlock(uint id, void* data, uint capacity, StagingMemoryPool pool)
+        public StagingBlock(uint id, void* data, uint capacity, uint size)
         {
             Id = id;
             Data = data;
             Capacity = capacity;
-            SizeInBytes = capacity;
-            Pool = pool;
-        }
-
-        public void Free()
-        {
-            Pool.Free(this);
+            SizeInBytes = size;
         }
     }
 }

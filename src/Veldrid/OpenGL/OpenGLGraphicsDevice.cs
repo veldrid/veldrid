@@ -91,7 +91,6 @@ namespace Veldrid.OpenGL
 
         public StagingMemoryPool StagingMemoryPool => _stagingMemoryPool;
 
-
         public OpenGLGraphicsDevice(
             GraphicsDeviceOptions options,
             OpenGLPlatformInfo platformInfo,
@@ -165,7 +164,7 @@ namespace Veldrid.OpenGL
                 texture1D: _backendType == GraphicsBackend.OpenGL,
                 independentBlend: _extensions.IndependentBlend,
                 structuredBuffer: _extensions.StorageBuffers,
-                subsetTextureView: _extensions.ARB_TextureView );
+                subsetTextureView: _extensions.ARB_TextureView);
 
             _resourceFactory = new OpenGLResourceFactory(this);
 
@@ -773,7 +772,6 @@ namespace Veldrid.OpenGL
             StagingBlock textureData = _stagingMemoryPool.Stage(source, sizeInBytes);
             StagingBlock argBlock = _stagingMemoryPool.GetStagingBlock(UpdateTextureArgsSize);
             ref UpdateTextureArgs args = ref Unsafe.AsRef<UpdateTextureArgs>(argBlock.Data);
-            args.Texture = texture;
             args.Data = (IntPtr)textureData.Data;
             args.X = x;
             args.Y = y;
@@ -784,14 +782,13 @@ namespace Veldrid.OpenGL
             args.MipLevel = mipLevel;
             args.ArrayLayer = arrayLayer;
 
-            _executionThread.UpdateTexture(argBlock.Id, textureData.Id);
+            _executionThread.UpdateTexture(texture, argBlock.Id, textureData.Id);
         }
 
-        public static readonly uint UpdateTextureArgsSize = (uint)Unsafe.SizeOf<UpdateTextureArgs>();
+        private static readonly uint UpdateTextureArgsSize = (uint)Unsafe.SizeOf<UpdateTextureArgs>();
 
-        public struct UpdateTextureArgs
+        private struct UpdateTextureArgs
         {
-            public Texture Texture;
             public IntPtr Data;
             public uint X;
             public uint Y;
@@ -981,113 +978,111 @@ namespace Veldrid.OpenGL
                     switch (workItem.Type)
                     {
                         case WorkItemType.ExecuteList:
+                        {
+                            OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
+                            try
                             {
-                                OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
-                                try
+                                list.ExecuteAll(_gd._commandExecutor);
+                                list.Parent.OnCompleted(list);
+                            }
+                            finally
+                            {
+                                if (!_gd.CheckCommandListDisposal(list.Parent))
                                 {
-                                    list.ExecuteAll(_gd._commandExecutor);
-                                    list.Parent.OnCompleted(list);
-                                }
-                                finally
-                                {
-                                    if (!_gd.CheckCommandListDisposal(list.Parent))
-                                    {
-                                        list.Reset();
-                                    }
+                                    list.Reset();
                                 }
                             }
-                            break;
+                        }
+                        break;
                         case WorkItemType.Map:
+                        {
+                            MappableResource resourceToMap = (MappableResource)workItem.Object0;
+                            ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
+                            MapMode mode = (MapMode)workItem.UInt0;
+                            uint subresource = workItem.UInt1;
+                            bool map = workItem.UInt2 == 1 ? true : false;
+                            if (map)
                             {
-                                MappableResource resourceToMap = (MappableResource)workItem.Object0;
-                                ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
-                                MapMode mode = (MapMode)workItem.UInt0;
-                                uint subresource = workItem.UInt1;
-                                bool map = workItem.UInt2 == 1 ? true : false;
-                                if (map)
-                                {
-                                    ExecuteMapResource(
-                                        resourceToMap,
-                                        mode,
-                                        subresource,
-                                        mre);
-                                }
-                                else
-                                {
-                                    ExecuteUnmapResource(resourceToMap, subresource, mre);
-                                }
+                                ExecuteMapResource(
+                                    resourceToMap,
+                                    mode,
+                                    subresource,
+                                    mre);
                             }
-                            break;
+                            else
+                            {
+                                ExecuteUnmapResource(resourceToMap, subresource, mre);
+                            }
+                        }
+                        break;
                         case WorkItemType.UpdateBuffer:
-                            {
-                                DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
-                                uint offsetInBytes = workItem.UInt0;
-                                StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
-                                
-                                _gd._commandExecutor.UpdateBuffer(
-                                    updateBuffer,
-                                    offsetInBytes,
-                                    (IntPtr)stagingBlock.Data,
-                                    stagingBlock.SizeInBytes);
+                        {
+                            DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
+                            uint offsetInBytes = workItem.UInt0;
+                            StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
 
-                                stagingBlock.Free();
-                            }
-                            break;
+                            _gd._commandExecutor.UpdateBuffer(
+                                updateBuffer,
+                                offsetInBytes,
+                                (IntPtr)stagingBlock.Data,
+                                stagingBlock.SizeInBytes);
+
+                            _gd.StagingMemoryPool.Free(stagingBlock);
+                        }
+                        break;
                         case WorkItemType.UpdateTexture:
-                            unsafe
-                            {
-                                StagingMemoryPool pool = _gd.StagingMemoryPool;
-                                StagingBlock argBlock = pool.RetrieveById(workItem.UInt0);
-                                StagingBlock textureData = pool.RetrieveById(workItem.UInt1);
-                                ref UpdateTextureArgs args = ref Unsafe.AsRef<UpdateTextureArgs>(argBlock.Data);
+                            Texture texture = (Texture)workItem.Object0;
+                            StagingMemoryPool pool = _gd.StagingMemoryPool;
+                            StagingBlock argBlock = pool.RetrieveById(workItem.UInt0);
+                            StagingBlock textureData = pool.RetrieveById(workItem.UInt1);
+                            ref UpdateTextureArgs args = ref Unsafe.AsRef<UpdateTextureArgs>(argBlock.Data);
 
-                                _gd._commandExecutor.UpdateTexture(
-                                    args.Texture, args.Data, args.X, args.Y, args.Z,
-                                    args.Width, args.Height, args.Depth, args.MipLevel, args.ArrayLayer);
+                            _gd._commandExecutor.UpdateTexture(
+                                texture, args.Data, args.X, args.Y, args.Z,
+                                args.Width, args.Height, args.Depth, args.MipLevel, args.ArrayLayer);
 
-                                argBlock.Free();
-                                textureData.Free();
-                            }
+                            pool.Free(argBlock);
+                            pool.Free(textureData);
                             break;
                         case WorkItemType.GenericAction:
-                            {
-                                ((Action)workItem.Object0)();
-                            }
-                            break;
+                        {
+                            ((Action)workItem.Object0)();
+                        }
+                        break;
                         case WorkItemType.SignalResetEvent:
-                            {
-                                _gd.FlushDisposables();
-                                ((ManualResetEventSlim)workItem.Object0).Set();
-                            }
-                            break;
+                        {
+                            _gd.FlushDisposables();
+                            ((ManualResetEventSlim)workItem.Object0).Set();
+                        }
+                        break;
                         case WorkItemType.TerminateAction:
+                        {
+                            // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
+                            uint error = glGetError();
+                            if (error == (uint)ErrorCode.InvalidOperation)
                             {
-                                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
-                                uint error = glGetError();
-                                if (error == (uint)ErrorCode.InvalidOperation)
-                                {
-                                    return;
-                                }
-                                _makeCurrent(_gd._glContext);
+                                return;
+                            }
+                            _makeCurrent(_gd._glContext);
 
-                                _gd.FlushDisposables();
-                                _gd._deleteContext(_gd._glContext);
-                                _gd.StagingMemoryPool.Dispose();
-                                _terminated = true;
-                            }
-                            break;
+                            _gd.FlushDisposables();
+                            _gd._deleteContext(_gd._glContext);
+                            _gd.StagingMemoryPool.Dispose();
+                            _terminated = true;
+                        }
+                        break;
                         case WorkItemType.SetSyncToVerticalBlank:
-                            {
-                                bool value = workItem.UInt0 == 1 ? true : false;
-                                _gd._setSyncToVBlank(value);
-                            }
-                            break;
+                        {
+                            bool value = workItem.UInt0 == 1 ? true : false;
+                            _gd._setSyncToVBlank(value);
+                        }
+                        break;
                         case WorkItemType.SwapBuffers:
-                            {
-                                _gd._swapBuffers();
-                                _gd.FlushDisposables();
-                            }
-                            break;
+                        {
+                            _gd._swapBuffers();
+                            _gd.FlushDisposables();
+                        }
+                        break;
                         default:
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }
@@ -1230,7 +1225,7 @@ namespace Veldrid.OpenGL
                                             byte* sliceStart = (byte*)fullBlock.Data + (arrayLayer * subresourceSize);
                                             Buffer.MemoryCopy(sliceStart, block.Data, subresourceSize, subresourceSize);
 
-                                            fullBlock.Free();
+                                            _gd.StagingMemoryPool.Free(fullBlock);
                                         }
                                         else
                                         {
@@ -1355,7 +1350,7 @@ namespace Veldrid.OpenGL
                                     arrayLayer);
                             }
 
-                            info.StagingBlock.Free();
+                            _gd.StagingMemoryPool.Free(info.StagingBlock);
                         }
 
                         _gd._mappedResources.Remove(key);
@@ -1422,11 +1417,11 @@ namespace Veldrid.OpenGL
                 _workItems.Add(new ExecutionThreadWorkItem(buffer, offsetInBytes, stagingBlock));
             }
 
-            internal void UpdateTexture(uint argBlockId, uint dataBlockId)
+            internal void UpdateTexture(Texture texture, uint argBlockId, uint dataBlockId)
             {
                 CheckExceptions();
 
-                _workItems.Add(new ExecutionThreadWorkItem(argBlockId, dataBlockId));
+                _workItems.Add(new ExecutionThreadWorkItem(texture, argBlockId, dataBlockId));
             }
 
             internal void Run(Action a)
@@ -1536,10 +1531,10 @@ namespace Veldrid.OpenGL
                 UInt2 = 0;
             }
 
-            public ExecutionThreadWorkItem(uint argBlockId, uint dataBlockId)
+            public ExecutionThreadWorkItem(Texture texture, uint argBlockId, uint dataBlockId)
             {
                 Type = WorkItemType.UpdateTexture;
-                Object0 = null;
+                Object0 = texture;
                 Object1 = null;
 
                 UInt0 = argBlockId;

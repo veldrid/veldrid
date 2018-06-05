@@ -1399,7 +1399,7 @@ namespace Veldrid.OpenGL
                     width, height, 1,
                     dstMipLevel, dstLayer);
 
-                trueCopySrc.Free();
+                _stagingMemoryPool.Free(trueCopySrc);
             }
             else // !isCompressed
             {
@@ -1450,7 +1450,7 @@ namespace Veldrid.OpenGL
                         width, height, depth,
                         srcGLTexture.Format);
 
-                    fullBlock.Free();
+                    _stagingMemoryPool.Free(fullBlock);
                 }
 
                 UpdateTexture(
@@ -1466,7 +1466,7 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
-            block.Free();
+            _stagingMemoryPool.Free(block);
         }
 
         private static void CopyWithFBO(

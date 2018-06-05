@@ -97,7 +97,7 @@ namespace Veldrid.OpenGL
                 throw new VeldridException($"Unable to compile shader code for shader [{_name}] of type {_shaderType}: {message}");
             }
 
-            _stagingBlock.Free();
+            _gd.StagingMemoryPool.Free(_stagingBlock);
             Created = true;
         }
 
@@ -111,8 +111,15 @@ namespace Veldrid.OpenGL
             if (!_disposed)
             {
                 _disposed = true;
-                glDeleteShader(_shader);
-                CheckLastError();
+                if (Created)
+                {
+                    glDeleteShader(_shader);
+                    CheckLastError();
+                }
+                else
+                {
+                    _gd.StagingMemoryPool.Free(_stagingBlock);
+                }
             }
         }
     }

@@ -122,9 +122,10 @@ namespace Veldrid.OpenGL.NoAllocEntryList
 
         private void FlushStagingBlocks()
         {
+            StagingMemoryPool pool = _memoryPool;
             foreach (StagingBlock block in _stagingBlocks)
             {
-                block.Free();
+                pool.Free(block);
             }
 
             _stagingBlocks.Clear();

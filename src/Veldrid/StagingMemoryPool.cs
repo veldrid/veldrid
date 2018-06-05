@@ -1,114 +1,132 @@
 ﻿using System;
-using System.Buffers;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Veldrid
 {
-    internal unsafe class StagingMemoryPool
+    internal unsafe sealed class StagingMemoryPool : IDisposable
     {
-        private readonly ArrayPool<byte> _arrayPool = ArrayPool<byte>.Shared;
+        private const uint MinimumCapacity = 128;
+
+        private readonly List<StagingBlock> _storage;
+        private readonly SortedList<uint, uint> _availableBlocks;
+        private object _lock = new object();
+        private bool _disposed;
+
+        public StagingMemoryPool()
+        {
+            _storage = new List<StagingBlock>();
+            _availableBlocks = new SortedList<uint, uint>(new CapacityComparer());
+        }
 
         public StagingBlock Stage(IntPtr source, uint sizeInBytes)
         {
-            byte[] array = _arrayPool.Rent((int)sizeInBytes);
-            fixed (byte* arrayPtr = &array[0])
-            {
-                Debug.Assert(array.Length >= sizeInBytes);
-                Unsafe.CopyBlock(arrayPtr, source.ToPointer(), sizeInBytes);
-            }
-
-            return new StagingBlock(array, sizeInBytes, this);
+            Rent(sizeInBytes, out StagingBlock block);
+            Unsafe.CopyBlock(block.Data, source.ToPointer(), sizeInBytes);
+            return block;
         }
 
         public StagingBlock Stage(byte[] bytes)
         {
-            byte[] array = _arrayPool.Rent(bytes.Length);
-            Array.Copy(bytes, array, bytes.Length);
-            return new StagingBlock(array, (uint)bytes.Length, this);
+            Rent((uint)bytes.Length, out StagingBlock block);
+            Marshal.Copy(bytes, 0, (IntPtr)block.Data, bytes.Length);
+            return block;
         }
 
-        public FixedStagingBlock GetFixedStagingBlock(uint sizeInBytes)
+        public StagingBlock GetStagingBlock(uint sizeInBytes)
         {
-            byte[] array = _arrayPool.Rent((int)sizeInBytes);
-            return new FixedStagingBlock(array, sizeInBytes, this);
+            Rent(sizeInBytes, out StagingBlock block);
+            return block;
+        }
+
+        public StagingBlock RetrieveById(uint id)
+        {
+            return _storage[(int)id];
+        }
+
+        private void Rent(uint size, out StagingBlock block)
+        {
+            lock (_lock)
+            {
+                SortedList<uint, uint> available = _availableBlocks;
+                IList<uint> indices = available.Values;
+                for (int i = 0; i < available.Count; i++)
+                {
+                    int index = (int)indices[i];
+                    StagingBlock current = _storage[index];
+                    if (current.Capacity >= size)
+                    {
+                        available.RemoveAt(i);
+                        current.SizeInBytes = size;
+                        block = current;
+                        _storage[index] = current;
+                        return;
+                    }
+                }
+
+                Allocate(size, out block);
+            }
+        }
+
+        private void Allocate(uint sizeInBytes, out StagingBlock stagingBlock)
+        {
+            uint capacity = Math.Max(MinimumCapacity, sizeInBytes);
+            IntPtr ptr = Marshal.AllocHGlobal((int)capacity);
+            uint id = (uint)_storage.Count;
+            stagingBlock = new StagingBlock(id, (void*)ptr, capacity, sizeInBytes);
+            _storage.Add(stagingBlock);
         }
 
         public void Free(StagingBlock block)
         {
-            bool clearArray = false;
-#if DEBUG
-            clearArray = true;
-#endif
-            _arrayPool.Return(block.Array, clearArray);
+            lock (_lock)
+            {
+                if (!_disposed)
+                {
+                    Debug.Assert(block.Id < _storage.Count);
+                    _availableBlocks.Add(block.Capacity, block.Id);
+                }
+            }
         }
 
-        public void Free(FixedStagingBlock block)
+        public void Dispose()
         {
-            bool clearArray = false;
-#if DEBUG
-            clearArray = true;
-#endif
-            _arrayPool.Return(block.Array, clearArray);
+            lock (_lock)
+            {
+                _availableBlocks.Clear();
+                foreach (StagingBlock block in _storage)
+                {
+                    Marshal.FreeHGlobal((IntPtr)block.Data);
+                }
+                _storage.Clear();
+                _disposed = true;
+            }
         }
 
-        public void Free(byte[] array)
+        private class CapacityComparer : IComparer<uint>
         {
-            bool clearArray = false;
-#if DEBUG
-            clearArray = true;
-#endif
-            _arrayPool.Return(array, clearArray);
+            public int Compare(uint x, uint y)
+            {
+                return x >= y ? 1 : -1;
+            }
         }
     }
 
     internal unsafe struct StagingBlock
     {
-        public readonly byte[] Array;
-        public readonly uint SizeInBytes;
-        public readonly StagingMemoryPool Pool;
-
-        public StagingBlock(byte[] array, uint sizeInBytes, StagingMemoryPool pool)
-        {
-            Debug.Assert(array != null);
-            Debug.Assert(array.Length > 0);
-            Debug.Assert(sizeInBytes > 0);
-            Array = array;
-            SizeInBytes = sizeInBytes;
-            Pool = pool;
-        }
-
-        internal void Free()
-        {
-            Pool.Free(this);
-        }
-    }
-
-    internal unsafe struct FixedStagingBlock
-    {
-        public readonly byte[] Array;
-        public readonly uint SizeInBytes;
-        public readonly StagingMemoryPool Pool;
-        public readonly GCHandle GCHandle;
+        public readonly uint Id;
         public readonly void* Data;
+        public readonly uint Capacity;
+        public uint SizeInBytes;
 
-        public FixedStagingBlock(byte[] array, uint sizeInBytes, StagingMemoryPool pool)
+        public StagingBlock(uint id, void* data, uint capacity, uint size)
         {
-            Debug.Assert(array != null);
-            Debug.Assert(array.Length > 0);
-            Debug.Assert(sizeInBytes > 0);
-            Array = array;
-            SizeInBytes = sizeInBytes;
-            Pool = pool;
-            GCHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
-            Data = (void*)GCHandle.AddrOfPinnedObject();
-        }
-
-        internal void Free()
-        {
-            GCHandle.Free();
-            Pool.Free(this);
+            Id = id;
+            Data = data;
+            Capacity = capacity;
+            SizeInBytes = size;
         }
     }
 }

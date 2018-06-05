@@ -11,6 +11,7 @@ namespace Veldrid.OpenGL
         private OpenGLCommandEntryList _currentCommands;
 
         internal OpenGLCommandEntryList CurrentCommands => _currentCommands;
+        internal OpenGLGraphicsDevice Device => _gd;
 
         private readonly object _lock = new object();
         private readonly List<OpenGLCommandEntryList> _availableLists = new List<OpenGLCommandEntryList>();

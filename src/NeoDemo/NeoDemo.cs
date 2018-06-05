@@ -48,7 +48,7 @@ namespace Veldrid.NeoDemo
                 WindowInitialState = WindowState.Normal,
                 WindowTitle = "Veldrid NeoDemo"
             };
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true);
+            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved);
 #if DEBUG
             gdOptions.Debug = true;
 #endif

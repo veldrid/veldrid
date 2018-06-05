@@ -18,7 +18,7 @@ namespace Veldrid.NeoDemo
 
         public DirectionalLight()
         {
-            Vector3 lightDir = Vector3.Normalize(new Vector3(0.3f, -1f, -0.45f));
+            Vector3 lightDir = Vector3.Normalize(new Vector3(0.15f, -1f, -0.15f));
             Transform.Rotation = Util.FromToRotation(-Vector3.UnitZ, lightDir);
         }
 

@@ -86,7 +86,7 @@ namespace Veldrid.D3D11
                 profile,
                 flags);
 
-            if (result.ResultCode.Failure)
+            if (result.ResultCode.Failure || !string.IsNullOrEmpty(result.Message))
             {
                 throw new VeldridException($"Failed to compile HLSL code: {result.Message}");
             }

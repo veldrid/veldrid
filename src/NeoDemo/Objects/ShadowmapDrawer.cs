@@ -6,7 +6,7 @@ using Veldrid.Utilities;
 
 namespace Veldrid.NeoDemo.Objects
 {
-    public class ShadowmapDrawIndexeder : Renderable
+    public class ShadowmapDrawer : Renderable
     {
         private readonly Func<Sdl2Window> _windowGetter;
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
@@ -34,7 +34,7 @@ namespace Veldrid.NeoDemo.Objects
             _si = new SizeInfo { Size = _size, Position = _position };
         }
 
-        public ShadowmapDrawIndexeder(Func<Sdl2Window> windowGetter, Func<TextureView> bindingGetter)
+        public ShadowmapDrawer(Func<Sdl2Window> windowGetter, Func<TextureView> bindingGetter)
         {
             _windowGetter = windowGetter;
             OnWindowResized();
@@ -57,12 +57,11 @@ namespace Veldrid.NeoDemo.Objects
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
                 new VertexLayoutDescription(
-                    new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
+                    new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate,  VertexElementFormat.Float2))
             };
 
-            Shader vs = ShaderHelper.LoadShader(gd, factory, "ShadowmapPreviewShader", ShaderStages.Vertex, "VS");
-            Shader fs = ShaderHelper.LoadShader(gd, factory, "ShadowmapPreviewShader", ShaderStages.Fragment, "FS");
+            (Shader vs, Shader fs) = StaticResourceCache.GetShaders(gd, gd.ResourceFactory, "ShadowmapPreviewShader");
 
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),

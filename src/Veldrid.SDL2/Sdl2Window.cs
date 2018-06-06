@@ -930,6 +930,7 @@ namespace Veldrid.Sdl2
         private void SetWindowPosition(int x, int y)
         {
             SDL_SetWindowPosition(_window, x, y);
+            _cachedPosition.Value = new Point(x, y);
         }
 
         private Point GetWindowSize()

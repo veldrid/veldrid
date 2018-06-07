@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Text;
 using Veldrid.MetalBindings;
 
@@ -55,6 +56,17 @@ namespace Veldrid.MTL
             {
                 throw new VeldridException(
                     $"Failed to create Metal {description.Stage} Shader. The given entry point \"{description.EntryPoint}\" was not found.");
+            }
+
+            if (Function.functionConstantsDictionary.count != UIntPtr.Zero)
+            {
+                // Need to create specialized MTLFunction.
+                ObjectiveCRuntime.release(Function.NativePtr);
+                MTLFunctionConstantValues constantValues = MTLFunctionConstantValues.New();
+                Function = Library.newFunctionWithNameConstantValues(description.EntryPoint, constantValues);
+                ObjectiveCRuntime.release(constantValues.NativePtr);
+
+                Debug.Assert(Function.NativePtr != IntPtr.Zero, "Failed to create specialized MTLFunction");
             }
         }
 

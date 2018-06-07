@@ -19,8 +19,8 @@ namespace Veldrid.NeoDemo
             debug = true;
 #endif
             (Shader vs, Shader fs) = factory.CreateFromSPIRV(
-                new ShaderDescription(ShaderStages.Vertex, vsBytes, "main", debug),
-                new ShaderDescription(ShaderStages.Fragment, fsBytes, "main", debug),
+                new ShaderDescription(ShaderStages.Vertex, vsBytes, "main0", debug),
+                new ShaderDescription(ShaderStages.Fragment, fsBytes, "main0", debug),
                 GetOptions(gd));
 
             vs.Name = setName + "-Vertex";

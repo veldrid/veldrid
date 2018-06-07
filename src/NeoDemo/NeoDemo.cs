@@ -48,7 +48,7 @@ namespace Veldrid.NeoDemo
                 WindowInitialState = WindowState.Normal,
                 WindowTitle = "Veldrid NeoDemo"
             };
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved);
+            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true);
 #if DEBUG
             gdOptions.Debug = true;
 #endif
@@ -65,7 +65,7 @@ namespace Veldrid.NeoDemo
             _window.Resized += () => _windowResized = true;
 
 
-            _scene = new Scene(_window.Width, _window.Height);
+            _scene = new Scene(_gd, _window.Width, _window.Height);
 
             _sc.SetCurrentScene(_scene);
 
@@ -82,22 +82,22 @@ namespace Veldrid.NeoDemo
             _sc.Camera.Yaw = -MathF.PI / 2;
             _sc.Camera.Pitch = -MathF.PI / 9;
 
-            ShadowmapDrawIndexeder texDrawIndexeder = new ShadowmapDrawIndexeder(() => _window, () => _sc.NearShadowMapView);
+            ShadowmapDrawer texDrawIndexeder = new ShadowmapDrawer(() => _window, () => _sc.NearShadowMapView);
             _resizeHandled += (w, h) => texDrawIndexeder.OnWindowResized();
             texDrawIndexeder.Position = new Vector2(10, 25);
             _scene.AddRenderable(texDrawIndexeder);
 
-            ShadowmapDrawIndexeder texDrawIndexeder2 = new ShadowmapDrawIndexeder(() => _window, () => _sc.MidShadowMapView);
+            ShadowmapDrawer texDrawIndexeder2 = new ShadowmapDrawer(() => _window, () => _sc.MidShadowMapView);
             _resizeHandled += (w, h) => texDrawIndexeder2.OnWindowResized();
             texDrawIndexeder2.Position = new Vector2(20 + texDrawIndexeder2.Size.X, 25);
             _scene.AddRenderable(texDrawIndexeder2);
 
-            ShadowmapDrawIndexeder texDrawIndexeder3 = new ShadowmapDrawIndexeder(() => _window, () => _sc.FarShadowMapView);
+            ShadowmapDrawer texDrawIndexeder3 = new ShadowmapDrawer(() => _window, () => _sc.FarShadowMapView);
             _resizeHandled += (w, h) => texDrawIndexeder3.OnWindowResized();
             texDrawIndexeder3.Position = new Vector2(30 + (texDrawIndexeder3.Size.X * 2), 25);
             _scene.AddRenderable(texDrawIndexeder3);
 
-            ShadowmapDrawIndexeder reflectionTexDrawer = new ShadowmapDrawIndexeder(() => _window, () => _sc.ReflectionColorView);
+            ShadowmapDrawer reflectionTexDrawer = new ShadowmapDrawer(() => _window, () => _sc.ReflectionColorView);
             _resizeHandled += (w, h) => reflectionTexDrawer.OnWindowResized();
             reflectionTexDrawer.Position = new Vector2(40 + (reflectionTexDrawer.Size.X * 3), 25);
             _scene.AddRenderable(reflectionTexDrawer);
@@ -352,6 +352,23 @@ namespace Veldrid.NeoDemo
                 ToggleFullscreenState();
             }
 
+            if (InputTracker.GetKeyDown(Key.Keypad6))
+            {
+                _window.X += 10;
+            }
+            if (InputTracker.GetKeyDown(Key.Keypad4))
+            {
+                _window.X -= 10;
+            }
+            if (InputTracker.GetKeyDown(Key.Keypad8))
+            {
+                _window.Y += 10;
+            }
+            if (InputTracker.GetKeyDown(Key.Keypad2))
+            {
+                _window.Y -= 10;
+            }
+
             _window.Title = _gd.BackendType.ToString();
         }
 
@@ -452,11 +469,13 @@ namespace Veldrid.NeoDemo
                 _window.Resized += () => _windowResized = true;
             }
 
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, syncToVBlank, ResourceBindingModel.Improved);
+            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, syncToVBlank, ResourceBindingModel.Improved, true);
 #if DEBUG
             gdOptions.Debug = true;
 #endif
             _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend);
+
+            _scene.Camera.UpdateBackend(_gd);
 
             CreateAllObjects();
         }

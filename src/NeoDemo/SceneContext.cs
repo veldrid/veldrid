@@ -96,7 +96,7 @@ namespace Veldrid.NeoDemo
 
             uint ReflectionMapSize = 2048;
             ReflectionColorTexture = factory.CreateTexture(TextureDescription.Texture2D(ReflectionMapSize, ReflectionMapSize, 12, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.RenderTarget | TextureUsage.Sampled | TextureUsage.GenerateMipmaps));
-            ReflectionDepthTexture = factory.CreateTexture(TextureDescription.Texture2D(ReflectionMapSize, ReflectionMapSize, 1, 1, PixelFormat.R16_UNorm, TextureUsage.DepthStencil));
+            ReflectionDepthTexture = factory.CreateTexture(TextureDescription.Texture2D(ReflectionMapSize, ReflectionMapSize, 1, 1, PixelFormat.R32_Float, TextureUsage.DepthStencil));
             ReflectionColorView = factory.CreateTextureView(ReflectionColorTexture);
             ReflectionFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(ReflectionDepthTexture, ReflectionColorTexture));
             ReflectionViewProjBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
@@ -205,7 +205,7 @@ namespace Veldrid.NeoDemo
                 gd.SwapchainFramebuffer.Height,
                 1,
                 1,
-                PixelFormat.R16_UNorm,
+                PixelFormat.R32_Float,
                 TextureUsage.DepthStencil,
                 mainSceneSampleCountCapped));
             MainSceneFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(MainSceneDepthTexture, MainSceneColorTexture));

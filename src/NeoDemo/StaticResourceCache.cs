@@ -16,6 +16,9 @@ namespace Veldrid.NeoDemo
         private static readonly Dictionary<(string, ShaderStages), Shader> s_shaders
             = new Dictionary<(string, ShaderStages), Shader>();
 
+        private static readonly Dictionary<string, (Shader, Shader)> s_shaderSets
+            = new Dictionary<string, (Shader, Shader)>();
+
         private static readonly Dictionary<ImageSharpTexture, Texture> s_textures
             = new Dictionary<ImageSharpTexture, Texture>();
 
@@ -68,6 +71,20 @@ namespace Veldrid.NeoDemo
             return shader;
         }
 
+        public static (Shader vs, Shader fs) GetShaders(
+            GraphicsDevice gd,
+            ResourceFactory factory,
+            string name)
+        {
+            if (!s_shaderSets.TryGetValue(name, out (Shader vs, Shader fs) set))
+            {
+                set = ShaderHelper.LoadSPIRV(gd, factory, name);
+                s_shaderSets.Add(name, set);
+            }
+
+            return set;
+        }
+
         public static void DestroyAllDeviceObjects()
         {
             foreach (KeyValuePair<GraphicsPipelineDescription, Pipeline> kvp in s_pipelines)
@@ -87,6 +104,13 @@ namespace Veldrid.NeoDemo
                 kvp.Value.Dispose();
             }
             s_shaders.Clear();
+
+            foreach (KeyValuePair<string, (Shader, Shader)> kvp in s_shaderSets)
+            {
+                kvp.Value.Item1.Dispose();
+                kvp.Value.Item2.Dispose();
+            }
+            s_shaderSets.Clear();
 
             foreach (KeyValuePair<ImageSharpTexture, Texture> kvp in s_textures)
             {

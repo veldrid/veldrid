@@ -1,5 +1,4 @@
-﻿using ShaderGen;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.CompilerServices;
 using System;
 using Veldrid.ImageSharp;
@@ -99,13 +98,12 @@ namespace Veldrid.NeoDemo.Objects
             VertexLayoutDescription[] shadowDepthVertexLayouts = new VertexLayoutDescription[]
             {
                 new VertexLayoutDescription(
-                    new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
-                    new VertexElementDescription("Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3),
+                    new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
+                    new VertexElementDescription("Normal", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            Shader depthVS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowDepth", ShaderStages.Vertex, "VS");
-            Shader depthFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowDepth", ShaderStages.Fragment, "FS");
+            (Shader depthVS, Shader depthFS) = StaticResourceCache.GetShaders(gd, gd.ResourceFactory, "ShadowDepth");
 
             ResourceLayout projViewCombinedLayout = StaticResourceCache.GetResourceLayout(
                 gd.ResourceFactory,
@@ -117,12 +115,12 @@ namespace Veldrid.NeoDemo.Objects
 
             GraphicsPipelineDescription depthPD = new GraphicsPipelineDescription(
                 BlendStateDescription.Empty,
-                DepthStencilStateDescription.DepthOnlyLessEqual,
+                gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(shadowDepthVertexLayouts, new[] { depthVS, depthFS }),
                 new ResourceLayout[] { projViewCombinedLayout, worldLayout },
-                DemoOutputsDescriptions.ShadowMapPass);
+                sc.NearShadowMapFramebuffer.OutputDescription);
             _shadowMapPipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref depthPD);
 
             _shadowMapResourceSets = CreateShadowMapResourceSets(gd.ResourceFactory, disposeFactory, cl, sc, projViewCombinedLayout, worldLayout);
@@ -130,14 +128,12 @@ namespace Veldrid.NeoDemo.Objects
             VertexLayoutDescription[] mainVertexLayouts = new VertexLayoutDescription[]
             {
                 new VertexLayoutDescription(
-                    new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
-                    new VertexElementDescription("Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3),
+                    new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
+                    new VertexElementDescription("Normal", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
             };
 
-            (Shader mainVS, Shader mainFS) = ShaderHelper.LoadSPIRV(disposeFactory, "ShadowMain");
-            //Shader mainVS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Vertex, "VS");
-            //Shader mainFS = StaticResourceCache.GetShader(gd, gd.ResourceFactory, "ShadowMain", ShaderStages.Fragment, "FS");
+            (Shader mainVS, Shader mainFS) = StaticResourceCache.GetShaders(gd, gd.ResourceFactory, "ShadowMain");
 
             ResourceLayout projViewLayout = StaticResourceCache.GetResourceLayout(
                 gd.ResourceFactory,
@@ -172,7 +168,7 @@ namespace Veldrid.NeoDemo.Objects
 
             GraphicsPipelineDescription mainPD = new GraphicsPipelineDescription(
                 _alphamapTexture != null ? BlendStateDescription.SingleAlphaBlend : BlendStateDescription.SingleOverrideBlend,
-                DepthStencilStateDescription.DepthOnlyLessEqual,
+                gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(mainVertexLayouts, new[] { mainVS, mainFS }),

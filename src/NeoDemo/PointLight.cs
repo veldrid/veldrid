@@ -1,5 +1,4 @@
-﻿using ShaderGen;
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace Veldrid.NeoDemo
 {
@@ -21,7 +20,7 @@ namespace Veldrid.NeoDemo
 
     public struct PointLightsInfo
     {
-        [ArraySize(4)] public PointLightInfo[] PointLights;
+        public PointLightInfo[] PointLights;
         public int NumActiveLights;
 #pragma warning disable 0169
         private float _padding0;

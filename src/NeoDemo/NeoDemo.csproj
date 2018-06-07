@@ -6,9 +6,6 @@
     <RootNamespace>Veldrid.NeoDemo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssetsDir>$(MSBuildThisFileDirectory)Assets</AssetsDir>
-    <ShaderOutputPath>$(AssetsDir)\Shaders.Generated</ShaderOutputPath>
-    <ListAllShaderPaths>true</ListAllShaderPaths>
-    <ShaderContentIncludePath>Assets\Shaders.Generated</ShaderContentIncludePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +23,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="$(AssetsDir)\Shaders\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Assets\Shaders\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.SDL2\native\win-x64\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -36,8 +40,6 @@
 
   <ItemGroup>
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.0-beta1-*" />
-    <PackageReference Include="ShaderGen.Primitives" Version="$(ShaderGenVersion)" />
-    <PackageReference Include="ShaderGen.Build" Version="$(ShaderGenVersion)" PrivateAssets="All" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
     <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />

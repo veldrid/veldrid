@@ -80,11 +80,10 @@ namespace Veldrid.NeoDemo.Objects
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
                 new VertexLayoutDescription(
-                    new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3))
+                    new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3))
             };
 
-            Shader vs = ShaderHelper.LoadShader(gd, factory, "Skybox", ShaderStages.Vertex, "VS");
-            Shader fs = ShaderHelper.LoadShader(gd, factory, "Skybox", ShaderStages.Fragment, "FS");
+            (Shader vs, Shader fs) = StaticResourceCache.GetShaders(gd, gd.ResourceFactory, "Skybox");
 
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -94,7 +93,7 @@ namespace Veldrid.NeoDemo.Objects
 
             GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
                 BlendStateDescription.SingleAlphaBlend,
-                DepthStencilStateDescription.DepthOnlyLessEqual,
+                gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, true),
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(vertexLayouts, new[] { vs, fs }),
@@ -141,6 +140,8 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(renderPass == RenderPasses.ReflectionMap ? _reflectionPipeline : _pipeline);
             cl.SetGraphicsResourceSet(0, _resourceSet);
+            float depth = gd.IsDepthRangeZeroToOne ? 0 : 1;
+            cl.SetViewport(0, new Viewport(0, 0, sc.MainSceneColorTexture.Width, sc.MainSceneColorTexture.Height, depth, depth));
             cl.DrawIndexed((uint)s_indices.Length, 1, 0, 0, 0);
         }
 

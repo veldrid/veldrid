@@ -23,18 +23,29 @@ namespace Veldrid.NeoDemo
         private float _pitch;
 
         private Vector2 _previousMousePos;
+        private GraphicsBackend _backend;
+        private bool _useReverseDepth;
         private float _windowWidth;
         private float _windowHeight;
 
         public event Action<Matrix4x4> ProjectionChanged;
         public event Action<Matrix4x4> ViewChanged;
 
-        public Camera(float width, float height)
+        public Camera(GraphicsDevice gd, float width, float height)
         {
+            _backend = gd.BackendType;
+            _useReverseDepth = gd.IsDepthRangeZeroToOne;
             _windowWidth = width;
             _windowHeight = height;
-            UpdatePerspectiveMatrix(width, height);
+            UpdatePerspectiveMatrix();
             UpdateViewMatrix();
+        }
+
+        public void UpdateBackend(GraphicsDevice gd)
+        {
+            _backend = gd.BackendType;
+            _useReverseDepth = gd.IsDepthRangeZeroToOne;
+            UpdatePerspectiveMatrix();
         }
 
         public Matrix4x4 ViewMatrix => _viewMatrix;
@@ -111,12 +122,18 @@ namespace Veldrid.NeoDemo
         {
             _windowWidth = width;
             _windowHeight = height;
-            UpdatePerspectiveMatrix(width, height);
+            UpdatePerspectiveMatrix();
         }
 
-        private void UpdatePerspectiveMatrix(float width, float height)
+        private void UpdatePerspectiveMatrix()
         {
-            _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(_fov, width / height, _near, _far);
+            _projectionMatrix = Util.CreatePerspective(
+                _backend,
+                _useReverseDepth,
+                _fov,
+                _windowWidth / _windowHeight,
+                _near,
+                _far);
             ProjectionChanged?.Invoke(_projectionMatrix);
         }
 

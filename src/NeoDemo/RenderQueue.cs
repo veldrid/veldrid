@@ -58,6 +58,9 @@ namespace Veldrid.NeoDemo
 
         public void Add(Renderable item, Vector3 viewPosition)
         {
+            RenderOrderKey a = RenderOrderKey.Create(1, 250);
+            RenderOrderKey b = RenderOrderKey.Create(1, 3);
+
             int index = _renderables.Count;
             _indices.Add(new RenderItemIndex(item.GetRenderOrderKey(viewPosition), index));
             _renderables.Add(item);

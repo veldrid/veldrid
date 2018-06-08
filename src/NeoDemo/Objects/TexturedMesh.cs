@@ -39,7 +39,7 @@ namespace Veldrid.NeoDemo.Objects
         private readonly DisposeCollector _disposeCollector = new DisposeCollector();
 
         private readonly MaterialPropsAndBuffer _materialProps;
-
+        private readonly Vector3 _objectCenter;
         private bool _materialPropsOwned = false;
 
         public MaterialProperties MaterialProperties { get => _materialProps.Properties; set { _materialProps.Properties = value; } }
@@ -51,6 +51,7 @@ namespace Veldrid.NeoDemo.Objects
             _name = name;
             _meshData = meshData;
             _centeredBounds = meshData.GetBoundingBox();
+            _objectCenter = _centeredBounds.GetCenter();
             _textureData = textureData;
             _alphaTextureData = alphaTexture;
             _materialProps = materialProps;
@@ -255,7 +256,9 @@ namespace Veldrid.NeoDemo.Objects
 
         public override RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)
         {
-            return RenderOrderKey.Create(_pipeline.GetHashCode(), Vector3.Distance(_transform.Position, cameraPosition));
+            return RenderOrderKey.Create(
+                _pipeline.GetHashCode(),
+                Vector3.Distance((_objectCenter * _transform.Scale) + _transform.Position, cameraPosition));
         }
 
         public override RenderPasses RenderPasses

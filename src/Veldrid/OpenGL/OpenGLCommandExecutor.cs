@@ -955,6 +955,12 @@ namespace Veldrid.OpenGL
             uint rowPitch = FormatHelpers.GetRowPitch(blockAlignedWidth, texture.Format);
             uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, blockAlignedHeight, texture.Format);
 
+            // Compressed textures can specify regions that are larger than the dimensions.
+            // We should only pass up to the dimensions to OpenGL, though.
+            Util.GetMipDimensions(glTex, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+            width = Math.Min(width, mipWidth);
+            height = Math.Min(height, mipHeight);
+
             uint unpackAlignment = 4;
             if (!isCompressed)
             {

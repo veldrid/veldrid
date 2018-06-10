@@ -115,6 +115,27 @@ namespace Veldrid.OpenGLBinding
             int basevertex) => p_glDrawElementsInstancedBaseVertex(mode, count, type, indices, primcount, basevertex);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void glDrawElementsInstancedBaseVertexBaseInstance_t(
+            PrimitiveType mode,
+            uint count,
+            DrawElementsType type,
+            void* indices,
+            uint primcount,
+            int basevertex,
+            uint baseinstance);
+        private static glDrawElementsInstancedBaseVertexBaseInstance_t p_glDrawElementsInstancedBaseVertexBaseInstance;
+        public static void glDrawElementsInstancedBaseVertexBaseInstance(
+            PrimitiveType mode,
+            uint count,
+            DrawElementsType type,
+            void* indices,
+            uint primcount,
+            int basevertex,
+            uint baseinstance)
+            => p_glDrawElementsInstancedBaseVertexBaseInstance(
+                mode, count, type, indices, primcount, basevertex, baseinstance);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void glDrawArrays_t(PrimitiveType mode, int first, uint count);
         private static glDrawArrays_t p_glDrawArrays;
         public static void glDrawArrays(PrimitiveType mode, int first, uint count) => p_glDrawArrays(mode, first, count);
@@ -1692,6 +1713,7 @@ namespace Veldrid.OpenGLBinding
                 LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
                 LoadFunction("glGenerateTextureMipmap", out p_glGenerateTextureMipmap);
                 LoadFunction("glClipControl", out p_glClipControl);
+                LoadFunction("glDrawElementsInstancedBaseVertexBaseInstance", out p_glDrawElementsInstancedBaseVertexBaseInstance);
             }
             else
             {

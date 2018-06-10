@@ -234,7 +234,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case DrawIndexedEntryID:
                         ref NoAllocDrawIndexedEntry die = ref Unsafe.AsRef<NoAllocDrawIndexedEntry>(entryBasePtr);
-                        executor.DrawIndexed(die.IndexCount, die.InstanceCount, die.IndexStart, die.VertexOffset, die.InstanceCount);
+                        executor.DrawIndexed(die.IndexCount, die.InstanceCount, die.IndexStart, die.VertexOffset, die.InstanceStart);
                         currentOffset += DrawIndexedEntrySize;
                         break;
                     case DrawIndirectEntryID:

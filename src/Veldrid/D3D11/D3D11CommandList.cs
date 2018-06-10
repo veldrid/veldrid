@@ -505,7 +505,7 @@ namespace Veldrid.D3D11
         {
             PreDrawCommand();
 
-            if (instanceCount == 1)
+            if (instanceCount == 1 && instanceStart == 0)
             {
                 _context.Draw((int)vertexCount, (int)vertexStart);
             }
@@ -520,7 +520,7 @@ namespace Veldrid.D3D11
             PreDrawCommand();
 
             Debug.Assert(_ib != null);
-            if (instanceCount == 1)
+            if (instanceCount == 1 && instanceStart == 0)
             {
                 _context.DrawIndexed((int)indexCount, (int)indexStart, vertexOffset);
             }

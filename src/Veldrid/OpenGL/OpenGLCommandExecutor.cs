@@ -86,7 +86,7 @@ namespace Veldrid.OpenGL
         {
             PreDrawCommand();
 
-            if (instanceCount == 1)
+            if (instanceCount == 1 && instanceStart == 0)
             {
                 glDrawArrays(_primitiveType, (int)vertexStart, vertexCount);
                 CheckLastError();
@@ -113,7 +113,7 @@ namespace Veldrid.OpenGL
             uint indexSize = _drawElementsType == DrawElementsType.UnsignedShort ? 2u : 4u;
             void* indices = new IntPtr(indexStart * indexSize).ToPointer();
 
-            if (instanceCount == 1)
+            if (instanceCount == 1 && instanceStart == 0)
             {
                 if (vertexOffset == 0)
                 {
@@ -128,7 +128,19 @@ namespace Veldrid.OpenGL
             }
             else
             {
-                if (vertexOffset == 0)
+                if (instanceStart > 0)
+                {
+                    glDrawElementsInstancedBaseVertexBaseInstance(
+                        _primitiveType,
+                        indexCount,
+                        _drawElementsType,
+                        indices,
+                        instanceCount,
+                        vertexOffset,
+                        instanceStart);
+                    CheckLastError();
+                }
+                else if (vertexOffset == 0)
                 {
                     glDrawElementsInstanced(_primitiveType, indexCount, _drawElementsType, indices, instanceCount);
                     CheckLastError();

@@ -35,7 +35,7 @@ namespace Veldrid.NeoDemo
         private static CompilationOptions GetOptions(
             GraphicsDevice gd)
         {
-            bool fixClip = false;
+            bool fixClipZ = false;
             bool invertY = false;
             List<SpecializationConstant> specializations = new List<SpecializationConstant>();
             specializations.Add(SpecializationConstant.Create(102, gd.IsDepthRangeZeroToOne));
@@ -52,27 +52,13 @@ namespace Veldrid.NeoDemo
                 case GraphicsBackend.OpenGLES:
                     specializations.Add(SpecializationConstant.Create(100, false));
                     specializations.Add(SpecializationConstant.Create(101, true));
-                    fixClip = !gd.IsDepthRangeZeroToOne;
+                    fixClipZ = !gd.IsDepthRangeZeroToOne;
                     break;
                 default:
                     throw new InvalidOperationException();
             }
 
-            return new CompilationOptions(fixClip, invertY, specializations.ToArray());
-        }
-
-        public static Shader LoadShader(
-            GraphicsDevice gd,
-            ResourceFactory factory,
-            string setName,
-            ShaderStages stage,
-            string entryPoint)
-        {
-            if (factory.BackendType != GraphicsBackend.Vulkan) { throw new NotImplementedException(); }
-
-            Shader shader = factory.CreateShader(new ShaderDescription(stage, LoadBytecode(factory.BackendType, setName, stage), entryPoint));
-            shader.Name = $"{setName}-{stage.ToString()}";
-            return shader;
+            return new CompilationOptions(fixClipZ, invertY, specializations.ToArray());
         }
 
         public static byte[] LoadBytecode(GraphicsBackend backend, string setName, ShaderStages stage)

@@ -273,8 +273,9 @@ namespace Veldrid.StartupUtilities
 
         private static unsafe void SetSDLGLContextAttributes(GraphicsDeviceOptions options, GraphicsBackend backend)
         {
-            SDL_GLContextFlag contextFlags = options.Debug ?    SDL_GLContextFlag.Debug | SDL_GLContextFlag.ForwardCompatible : 
-                                                                SDL_GLContextFlag.ForwardCompatible;
+            SDL_GLContextFlag contextFlags = options.Debug
+                ? SDL_GLContextFlag.Debug | SDL_GLContextFlag.ForwardCompatible
+                : SDL_GLContextFlag.ForwardCompatible;
 
             Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.ContextFlags, (int)contextFlags);
 

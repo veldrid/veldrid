@@ -990,18 +990,8 @@ namespace Veldrid.OpenGL
                         case WorkItemType.ExecuteList:
                         {
                             OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
-                            try
-                            {
-                                list.ExecuteAll(_gd._commandExecutor);
-                                list.Parent.OnCompleted(list);
-                            }
-                            finally
-                            {
-                                if (!_gd.CheckCommandListDisposal(list.Parent))
-                                {
-                                    list.Reset();
-                                }
-                            }
+                            list.ExecuteAll(_gd._commandExecutor);
+                            list.Parent.OnCompleted(list);
                         }
                         break;
                         case WorkItemType.Map:

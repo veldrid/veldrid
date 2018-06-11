@@ -210,6 +210,8 @@ namespace Veldrid.OpenGL
         {
             lock (_lock)
             {
+                entryList.Reset();
+
                 Debug.Assert(!_availableLists.Contains(entryList));
                 _availableLists.Add(entryList);
 

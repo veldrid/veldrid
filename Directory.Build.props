@@ -7,13 +7,18 @@
     <BaseIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(RepositoryRootDirectory)bin\obj\$(MSBuildProjectName)'))\</BaseIntermediateOutputPath>
     <PackageOutputPath>$(BinDir)\Packages\$(Configuration)</PackageOutputPath>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <ShaderGenVersion>1.2.0-beta2</ShaderGenVersion>
+    <NativeLibraryLoaderVersion>1.0.9</NativeLibraryLoaderVersion>
+  </PropertyGroup>
+
   <PropertyGroup>
     <PackageLicenseUrl>https://raw.githubusercontent.com/mellinoe/veldrid/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Copyright>Copyright 2018 (c) Eric Mellino. All rights reserved.</Copyright>
     <Authors>Eric Mellino</Authors>
     <RepositoryUrl>https://github.com/mellinoe/veldrid</RepositoryUrl>
-    <ShaderGenVersion>1.2.0-beta2</ShaderGenVersion>
   </PropertyGroup>
 
   <PropertyGroup>

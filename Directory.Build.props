@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <ShaderGenVersion>1.2.0-beta2</ShaderGenVersion>
-    <NativeLibraryLoaderVersion>1.0.9</NativeLibraryLoaderVersion>
+    <NativeLibraryLoaderVersion>1.0.10</NativeLibraryLoaderVersion>
   </PropertyGroup>
 
   <PropertyGroup>

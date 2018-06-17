@@ -1233,12 +1233,15 @@ namespace Veldrid.Vk
 
         internal void ClearDepthTexture(VkTexture texture, VkClearDepthStencilValue clearValue)
         {
+            VkImageAspectFlags aspect = FormatHelpers.IsStencilFormat(texture.Format)
+                ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
+                : VkImageAspectFlags.Depth;
             VkImageSubresourceRange range = new VkImageSubresourceRange(
-                 VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil,
-                 0,
-                 texture.MipLevels,
-                 0,
-                 texture.ArrayLayers);
+                aspect,
+                0,
+                texture.MipLevels,
+                0,
+                texture.ArrayLayers);
             SharedCommandPool pool = GetFreeCommandPool();
             VkCommandBuffer cb = pool.BeginNewCommandBuffer();
             texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.TransferDstOptimal);

@@ -102,7 +102,12 @@ namespace Veldrid.NeoDemo
             return result;
         }
 
-        public static Matrix4x4 CreatePerspective(GraphicsBackend backend, bool useReverseDepth, float fov, float aspectRatio, float near, float far)
+        public static Matrix4x4 CreatePerspective(
+            GraphicsBackend backend,
+            bool useReverseDepth,
+            float fov,
+            float aspectRatio,
+            float near, float far)
         {
             Matrix4x4 persp;
             if (useReverseDepth)
@@ -156,6 +161,34 @@ namespace Veldrid.NeoDemo
             result.M43 = near * negFarRange;
 
             return result;
+        }
+
+        internal static Matrix4x4 CreateOrtho(
+            GraphicsBackend backend,
+            bool useReverseDepth,
+            float left, float right,
+            float bottom, float top,
+            float near, float far)
+        {
+            Matrix4x4 ortho;
+            if (useReverseDepth)
+            {
+                ortho = Matrix4x4.CreateOrthographicOffCenter(left, right, bottom, top, far, near);
+            }
+            else
+            {
+                ortho = Matrix4x4.CreateOrthographicOffCenter(left, right, bottom, top, near, far);
+            }
+            if (backend == GraphicsBackend.Vulkan)
+            {
+                ortho *= new Matrix4x4(
+                    1, 0, 0, 0,
+                    0, -1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1);
+            }
+
+            return ortho;
         }
 
         public static float[] GetFullScreenQuadVerts(GraphicsBackend backendType)

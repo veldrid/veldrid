@@ -108,7 +108,7 @@ namespace Veldrid.NeoDemo
             Vector3 lightPos = sc.DirectionalLight.Transform.Position - sc.DirectionalLight.Direction * 1000f;
             // Near
             Matrix4x4 viewProj0 = UpdateDirectionalLightMatrices(
-                gd.IsDepthRangeZeroToOne,
+                gd,
                 sc,
                 Camera.NearDistance,
                 _nearCascadeLimit,
@@ -122,7 +122,7 @@ namespace Veldrid.NeoDemo
 
             // Mid
             Matrix4x4 viewProj1 = UpdateDirectionalLightMatrices(
-                    gd.IsDepthRangeZeroToOne,
+                gd,
                 sc,
                 _nearCascadeLimit,
                 _midCascadeLimit,
@@ -136,7 +136,7 @@ namespace Veldrid.NeoDemo
 
             // Far
             Matrix4x4 viewProj2 = UpdateDirectionalLightMatrices(
-                    gd.IsDepthRangeZeroToOne,
+                gd,
                 sc,
                 _midCascadeLimit,
                 _farCascadeLimit,
@@ -248,7 +248,7 @@ namespace Veldrid.NeoDemo
             {
                 // Near
                 Matrix4x4 viewProj0 = UpdateDirectionalLightMatrices(
-                    gd.IsDepthRangeZeroToOne,
+                    gd,
                     sc,
                     Camera.NearDistance,
                     _nearCascadeLimit,
@@ -267,7 +267,7 @@ namespace Veldrid.NeoDemo
             {
                 // Mid
                 Matrix4x4 viewProj1 = UpdateDirectionalLightMatrices(
-                    gd.IsDepthRangeZeroToOne,
+                    gd,
                     sc,
                     _nearCascadeLimit,
                     _midCascadeLimit,
@@ -286,7 +286,7 @@ namespace Veldrid.NeoDemo
             {
                 // Far
                 Matrix4x4 viewProj2 = UpdateDirectionalLightMatrices(
-                    gd.IsDepthRangeZeroToOne,
+                    gd,
                     sc,
                     _midCascadeLimit,
                     _farCascadeLimit,
@@ -384,7 +384,7 @@ namespace Veldrid.NeoDemo
         }
 
         private Matrix4x4 UpdateDirectionalLightMatrices(
-            bool useReverseDepth,
+            GraphicsDevice gd,
             SceneContext sc,
             float near,
             float far,
@@ -397,7 +397,7 @@ namespace Veldrid.NeoDemo
             Vector3 unitY = Vector3.UnitY;
             FrustumCorners cameraCorners;
 
-            if (useReverseDepth)
+            if (gd.IsDepthRangeZeroToOne)
             {
                 FrustumHelpers.ComputePerspectiveFrustumCorners(
                     ref viewPos,
@@ -455,28 +455,16 @@ namespace Veldrid.NeoDemo
 
             Matrix4x4 lightView = Matrix4x4.CreateLookAt(lightPos, frustumCenter, Vector3.UnitY);
 
-            Matrix4x4 lightProjection;
+            Matrix4x4 lightProjection = Util.CreateOrtho(
+                gd.BackendType,
+                gd.IsDepthRangeZeroToOne,
+                -radius * _lScale,
+                radius * _rScale,
+                -radius * _bScale,
+                radius * _tScale,
+                -radius * _nScale,
+                radius * _fScale);
 
-            if (useReverseDepth)
-            {
-                lightProjection = Matrix4x4.CreateOrthographicOffCenter(
-                    -radius * _lScale,
-                    radius * _rScale,
-                    -radius * _bScale,
-                    radius * _tScale,
-                    radius * _fScale,
-                    -radius * _nScale);
-            }
-            else
-            {
-                lightProjection = Matrix4x4.CreateOrthographicOffCenter(
-                    -radius * _lScale,
-                    radius * _rScale,
-                    -radius * _bScale,
-                    radius * _tScale,
-                    -radius * _nScale,
-                    radius * _fScale);
-            }
             Matrix4x4 viewProjectionMatrix = lightView * lightProjection;
 
             lightFrustum = new BoundingFrustum(viewProjectionMatrix);

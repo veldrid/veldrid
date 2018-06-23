@@ -1,31 +1,38 @@
 ﻿using System;
 using System.IO;
+using Veldrid.SPIRV;
 
 namespace Veldrid.Tests
 {
     internal static class TestShaders
     {
-        public static Shader Load(ResourceFactory factory, string setName, ShaderStages stage, string entryPoint)
+        public static Shader[] LoadVertexFragment(ResourceFactory factory, string setName)
         {
-            string path = Path.Combine(
-                AppContext.BaseDirectory,
-                "Shaders",
-                $"{setName}-{stage.ToString().ToLowerInvariant()}.{GetShaderExtension(factory.BackendType)}");
-            byte[] shaderBytes = File.ReadAllBytes(path);
-            return factory.CreateShader(new ShaderDescription(stage, shaderBytes, entryPoint));
+            return factory.CreateFromSPIRV(
+                new ShaderDescription(ShaderStages.Vertex, File.ReadAllBytes(GetPath(setName, ShaderStages.Vertex)), "main"),
+                new ShaderDescription(ShaderStages.Fragment, File.ReadAllBytes(GetPath(setName, ShaderStages.Fragment)), "main"),
+                new CrossCompileOptions(false, false, new SpecializationConstant[]
+                {
+                    SpecializationConstant.Create(100, false)
+                }));
         }
 
-        private static string GetShaderExtension(GraphicsBackend backend)
+        public static Shader LoadCompute(ResourceFactory factory, string setName)
         {
-            switch (backend)
-            {
-                case GraphicsBackend.Direct3D11: return "hlsl.bytes";
-                case GraphicsBackend.Vulkan: return "450.glsl.spv";
-                case GraphicsBackend.OpenGL: return "330.glsl";
-                case GraphicsBackend.OpenGLES: return "300.glsles";
-                case GraphicsBackend.Metal: return "metallib";
-                default: throw new InvalidOperationException();
-            }
+            return factory.CreateFromSPIRV(
+                new ShaderDescription(ShaderStages.Compute, File.ReadAllBytes(GetPath(setName, ShaderStages.Compute)), "main"),
+                new CrossCompileOptions(false, false, new SpecializationConstant[]
+                {
+                    SpecializationConstant.Create(100, false)
+                }));
+        }
+
+        public static string GetPath(string setName, ShaderStages stage)
+        {
+            return Path.Combine(
+                AppContext.BaseDirectory,
+                "Shaders",
+                $"{setName}.{stage.ToString().ToLowerInvariant().Substring(0, 4)}");
         }
     }
 }

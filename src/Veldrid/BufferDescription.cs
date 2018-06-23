@@ -21,6 +21,11 @@ namespace Veldrid
         /// For all other buffer types, this value must be zero.
         /// </summary>
         public uint StructureByteStride;
+        /// <summary>
+        /// Indicates that this is a raw buffer. This should be combined with <see cref="BufferUsage.StructuredBufferReadWrite"/>.
+        /// This affects how the buffer is bound in the D3D11 backend.
+        /// </summary>
+        public bool RawBuffer;
 
         /// <summary>
         /// Constructs a new <see cref="BufferDescription"/> describing a non-dynamic <see cref="DeviceBuffer"/>.
@@ -32,6 +37,7 @@ namespace Veldrid
             SizeInBytes = sizeInBytes;
             Usage = usage;
             StructureByteStride = 0;
+            RawBuffer = false;
         }
 
         /// <summary>
@@ -46,6 +52,25 @@ namespace Veldrid
             SizeInBytes = sizeInBytes;
             Usage = usage;
             StructureByteStride = structureByteStride;
+            RawBuffer = false;
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="BufferDescription"/>.
+        /// </summary>
+        /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
+        /// <param name="usage">Indicates how the <see cref="DeviceBuffer"/> will be used.</param>
+        /// <param name="structureByteStride">For structured buffers, this value indicates the size in bytes of a single
+        /// structure element, and must be non-zero. For all other buffer types, this value must be zero.</param>
+        /// <param name="rawBuffer">Indicates that this is a raw buffer. This should be combined with
+        /// <see cref="BufferUsage.StructuredBufferReadWrite"/>. This affects how the buffer is bound in the D3D11 backend.
+        /// </param>
+        public BufferDescription(uint sizeInBytes, BufferUsage usage, uint structureByteStride, bool rawBuffer)
+        {
+            SizeInBytes = sizeInBytes;
+            Usage = usage;
+            StructureByteStride = structureByteStride;
+            RawBuffer = rawBuffer;
         }
 
         /// <summary>
@@ -57,7 +82,8 @@ namespace Veldrid
         {
             return SizeInBytes.Equals(other.SizeInBytes)
                 && Usage == other.Usage
-                && StructureByteStride.Equals(other.StructureByteStride);
+                && StructureByteStride.Equals(other.StructureByteStride)
+                && RawBuffer.Equals(other.RawBuffer);
         }
 
         /// <summary>
@@ -69,7 +95,8 @@ namespace Veldrid
             return HashHelper.Combine(
                 SizeInBytes.GetHashCode(),
                 Usage.GetHashCode(),
-                StructureByteStride.GetHashCode());
+                StructureByteStride.GetHashCode(),
+                RawBuffer.GetHashCode());
         }
     }
 }

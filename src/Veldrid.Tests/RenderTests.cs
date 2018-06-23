@@ -2,11 +2,34 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using Veldrid.Tests.Shaders;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace Veldrid.Tests
 {
+    internal struct UIntVertexAttribsVertex
+    {
+        public Vector2 Position;
+        public UInt4 Color_Int;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct UIntVertexAttribsInfo
+    {
+        public uint ColorNormalizationFactor;
+        private float padding0;
+        private float padding1;
+        private float padding2;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ColoredVertex
+    {
+        public Vector4 Color;
+        public Vector2 Position;
+        private Vector2 _padding0;
+    }
+
     public abstract class RenderTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
         [Fact]
@@ -34,14 +57,10 @@ namespace Veldrid.Tests
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
-                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
-                        new VertexElementDescription("Color_UInt", VertexElementSemantic.Color, VertexElementFormat.UInt4))
+                        new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                        new VertexElementDescription("Color_UInt", VertexElementSemantic.TextureCoordinate, VertexElementFormat.UInt4))
                 },
-                new Shader[]
-                {
-                    TestShaders.Load(RF, "UIntVertexAttribs", ShaderStages.Vertex, "VS"),
-                    TestShaders.Load(RF, "UIntVertexAttribs", ShaderStages.Fragment, "FS")
-                });
+                TestShaders.LoadVertexFragment(RF, "UIntVertexAttribs"));
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -62,42 +81,42 @@ namespace Veldrid.Tests
 
             uint colorNormalizationFactor = 2500;
 
-            UIntVertexAttribs.Vertex[] vertices = new UIntVertexAttribs.Vertex[]
+            UIntVertexAttribsVertex[] vertices = new UIntVertexAttribsVertex[]
             {
-                new UIntVertexAttribs.Vertex
+                new UIntVertexAttribsVertex
                 {
                     Position = new Vector2(0.5f, 0.5f),
-                    Color_Int = new ShaderGen.UInt4
+                    Color_Int = new UInt4
                     {
                         X = (uint)(0.25f * colorNormalizationFactor),
                         Y = (uint)(0.5f * colorNormalizationFactor),
                         Z = (uint)(0.75f * colorNormalizationFactor),
                     }
                 },
-                new UIntVertexAttribs.Vertex
+                new UIntVertexAttribsVertex
                 {
                     Position = new Vector2(10.5f, 12.5f),
-                    Color_Int = new ShaderGen.UInt4
+                    Color_Int = new UInt4
                     {
                         X = (uint)(0.25f * colorNormalizationFactor),
                         Y = (uint)(0.5f * colorNormalizationFactor),
                         Z = (uint)(0.75f * colorNormalizationFactor),
                     }
                 },
-                new UIntVertexAttribs.Vertex
+                new UIntVertexAttribsVertex
                 {
                     Position = new Vector2(25.5f, 35.5f),
-                    Color_Int = new ShaderGen.UInt4
+                    Color_Int = new UInt4
                     {
                         X = (uint)(0.75f * colorNormalizationFactor),
                         Y = (uint)(0.5f * colorNormalizationFactor),
                         Z = (uint)(0.25f * colorNormalizationFactor),
                     }
                 },
-                new UIntVertexAttribs.Vertex
+                new UIntVertexAttribsVertex
                 {
                     Position = new Vector2(49.5f, 49.5f),
-                    Color_Int = new ShaderGen.UInt4
+                    Color_Int = new UInt4
                     {
                         X = (uint)(0.15f * colorNormalizationFactor),
                         Y = (uint)(0.25f * colorNormalizationFactor),
@@ -107,9 +126,9 @@ namespace Veldrid.Tests
             };
 
             DeviceBuffer vb = RF.CreateBuffer(
-                new BufferDescription((uint)(Unsafe.SizeOf<UIntVertexAttribs.Vertex>() * vertices.Length), BufferUsage.VertexBuffer));
+                new BufferDescription((uint)(Unsafe.SizeOf<UIntVertexAttribsVertex>() * vertices.Length), BufferUsage.VertexBuffer));
             GD.UpdateBuffer(vb, 0, vertices);
-            GD.UpdateBuffer(infoBuffer, 0, new UIntVertexAttribs.Info { ColorNormalizationFactor = colorNormalizationFactor });
+            GD.UpdateBuffer(infoBuffer, 0, new UIntVertexAttribsInfo { ColorNormalizationFactor = colorNormalizationFactor });
 
             CommandList cl = RF.CreateCommandList();
 
@@ -129,11 +148,11 @@ namespace Veldrid.Tests
 
             MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read);
 
-            foreach (UIntVertexAttribs.Vertex vertex in vertices)
+            foreach (UIntVertexAttribsVertex vertex in vertices)
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (!GD.IsUvOriginTopLeft)
+                if (!GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -172,14 +191,10 @@ namespace Veldrid.Tests
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
-                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
-                        new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.UShort4_Norm))
+                        new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                        new VertexElementDescription("Color", VertexElementSemantic.TextureCoordinate, VertexElementFormat.UShort4_Norm))
                 },
-                new Shader[]
-                {
-                    TestShaders.Load(RF, "U16NormVertexAttribs", ShaderStages.Vertex, "VS"),
-                    TestShaders.Load(RF, "U16NormVertexAttribs", ShaderStages.Fragment, "FS")
-                });
+                TestShaders.LoadVertexFragment(RF, "U16NormVertexAttribs"));
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Ortho", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
@@ -255,7 +270,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (!GD.IsUvOriginTopLeft)
+                if (!GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -319,14 +334,10 @@ namespace Veldrid.Tests
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
-                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
-                        new VertexElementDescription("Color_UInt", VertexElementSemantic.Color, VertexElementFormat.UShort4))
+                        new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                        new VertexElementDescription("Color_UInt", VertexElementSemantic.TextureCoordinate, VertexElementFormat.UShort4))
                 },
-                new Shader[]
-                {
-                    TestShaders.Load(RF, "U16VertexAttribs", ShaderStages.Vertex, "VS"),
-                    TestShaders.Load(RF, "U16VertexAttribs", ShaderStages.Fragment, "FS")
-                });
+                TestShaders.LoadVertexFragment(RF, "U16VertexAttribs"));
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -380,9 +391,9 @@ namespace Veldrid.Tests
             };
 
             DeviceBuffer vb = RF.CreateBuffer(
-                new BufferDescription((uint)(Unsafe.SizeOf<UIntVertexAttribs.Vertex>() * vertices.Length), BufferUsage.VertexBuffer));
+                new BufferDescription((uint)(Unsafe.SizeOf<UIntVertexAttribsVertex>() * vertices.Length), BufferUsage.VertexBuffer));
             GD.UpdateBuffer(vb, 0, vertices);
-            GD.UpdateBuffer(infoBuffer, 0, new UIntVertexAttribs.Info { ColorNormalizationFactor = colorNormalizationFactor });
+            GD.UpdateBuffer(infoBuffer, 0, new UIntVertexAttribsInfo { ColorNormalizationFactor = colorNormalizationFactor });
 
             CommandList cl = RF.CreateCommandList();
 
@@ -406,7 +417,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (!GD.IsUvOriginTopLeft)
+                if (!GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -458,13 +469,9 @@ namespace Veldrid.Tests
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
-                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2))
+                        new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
                 },
-                new Shader[]
-                {
-                    TestShaders.Load(RF, "TexturedPoints", ShaderStages.Vertex, "VS"),
-                    TestShaders.Load(RF, "TexturedPoints", ShaderStages.Fragment, "FS")
-                });
+                TestShaders.LoadVertexFragment(RF, "TexturedPoints"));
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Ortho", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -534,7 +541,7 @@ namespace Veldrid.Tests
             {
                 uint x = (uint)vertex.X;
                 uint y = (uint)vertex.Y;
-                if (!GD.IsUvOriginTopLeft)
+                if (!GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -562,14 +569,15 @@ namespace Veldrid.Tests
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(
                 vertexSize * 4,
                 BufferUsage.StructuredBufferReadWrite,
-                vertexSize));
+                vertexSize,
+                true));
 
             ResourceLayout computeLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("OutputVertices", ResourceKind.StructuredBufferReadWrite, ShaderStages.Compute)));
             ResourceSet computeSet = RF.CreateResourceSet(new ResourceSetDescription(computeLayout, buffer));
 
             Pipeline computePipeline = RF.CreateComputePipeline(new ComputePipelineDescription(
-                TestShaders.Load(RF, "ComputeColoredQuadGenerator", ShaderStages.Compute, "CS"),
+                TestShaders.LoadCompute(RF, "ComputeColoredQuadGenerator"),
                 computeLayout,
                 1, 1, 1));
 
@@ -584,11 +592,7 @@ namespace Veldrid.Tests
                 PrimitiveTopology.TriangleStrip,
                 new ShaderSetDescription(
                     Array.Empty<VertexLayoutDescription>(),
-                    new[]
-                    {
-                        TestShaders.Load(RF, "ColoredQuadRenderer", ShaderStages.Vertex, "VS"),
-                        TestShaders.Load(RF, "ColoredQuadRenderer", ShaderStages.Fragment, "FS"),
-                    }),
+                    TestShaders.LoadVertexFragment(RF, "ColoredQuadRenderer")),
                 graphicsLayout,
                 framebuffer.OutputDescription));
 

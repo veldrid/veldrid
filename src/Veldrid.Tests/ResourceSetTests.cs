@@ -93,6 +93,7 @@ namespace Veldrid.Tests
             CommandList cl = RF.CreateCommandList();
             cl.Begin();
             Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(0, rs));
+            cl.End();
         }
 
         [Fact]
@@ -105,14 +106,10 @@ namespace Veldrid.Tests
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
-                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
-                        new VertexElementDescription("Color_UInt", VertexElementSemantic.Color, VertexElementFormat.UInt4))
+                        new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                        new VertexElementDescription("Color_UInt", VertexElementSemantic.TextureCoordinate, VertexElementFormat.UInt4))
                 },
-                new Shader[]
-                {
-                    TestShaders.Load(RF, "UIntVertexAttribs", ShaderStages.Vertex, "VS"),
-                    TestShaders.Load(RF, "UIntVertexAttribs", ShaderStages.Fragment, "FS")
-                });
+                TestShaders.LoadVertexFragment(RF, "UIntVertexAttribs"));
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -137,6 +134,7 @@ namespace Veldrid.Tests
             Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(1, set));
             Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(2, set));
             Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(3, set));
+            cl.End();
         }
 
         [Fact]
@@ -149,14 +147,10 @@ namespace Veldrid.Tests
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
-                        new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
-                        new VertexElementDescription("Color_UInt", VertexElementSemantic.Color, VertexElementFormat.UInt4))
+                        new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                        new VertexElementDescription("Color_UInt", VertexElementSemantic.TextureCoordinate, VertexElementFormat.UInt4))
                 },
-                new Shader[]
-                {
-                    TestShaders.Load(RF, "UIntVertexAttribs", ShaderStages.Vertex, "VS"),
-                    TestShaders.Load(RF, "UIntVertexAttribs", ShaderStages.Fragment, "FS")
-                });
+                TestShaders.LoadVertexFragment(RF, "UIntVertexAttribs"));
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -193,6 +187,7 @@ namespace Veldrid.Tests
             cl.SetGraphicsResourceSet(0, set);
             Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(0, set2)); // Wrong type
             Assert.Throws<VeldridException>(() => cl.SetGraphicsResourceSet(0, set3)); // Wrong count
+            cl.End();
         }
     }
 

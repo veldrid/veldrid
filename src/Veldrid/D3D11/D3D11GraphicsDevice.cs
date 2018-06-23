@@ -32,6 +32,8 @@ namespace Veldrid.D3D11
 
         public override bool IsDepthRangeZeroToOne => true;
 
+        public override bool IsClipSpaceYInverted => false;
+
         public override ResourceFactory ResourceFactory => _d3d11ResourceFactory;
 
         public SharpDX.Direct3D11.Device Device => _device;

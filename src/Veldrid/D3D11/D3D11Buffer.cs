@@ -19,7 +19,7 @@ namespace Veldrid.D3D11
 
         internal ShaderResourceView ShaderResourceView { get; }
 
-        public D3D11Buffer(Device device, uint sizeInBytes, BufferUsage usage, uint structureByteStride)
+        public D3D11Buffer(Device device, uint sizeInBytes, BufferUsage usage, uint structureByteStride, bool rawBuffer)
         {
             SizeInBytes = sizeInBytes;
             Usage = usage;
@@ -30,8 +30,15 @@ namespace Veldrid.D3D11
             if ((usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
                 || (usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
             {
-                bd.OptionFlags = ResourceOptionFlags.BufferStructured;
-                bd.StructureByteStride = (int)structureByteStride;
+                if (rawBuffer)
+                {
+                    bd.OptionFlags = ResourceOptionFlags.BufferAllowRawViews;
+                }
+                else
+                {
+                    bd.OptionFlags = ResourceOptionFlags.BufferStructured;
+                    bd.StructureByteStride = (int)structureByteStride;
+                }
             }
             if ((usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
             {
@@ -54,25 +61,56 @@ namespace Veldrid.D3D11
             if ((usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite
                 || (usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly)
             {
-                ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
+                if (rawBuffer)
                 {
-                    Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Buffer
-                };
-                srvDesc.Buffer.ElementCount = (int)(SizeInBytes / structureByteStride);
-                ShaderResourceView = new ShaderResourceView(device, _buffer, srvDesc);
+                    ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
+                    {
+                        Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.ExtendedBuffer,
+                        Format = SharpDX.DXGI.Format.R32_Typeless
+                    };
+                    srvDesc.BufferEx.ElementCount = (int)sizeInBytes / 4;
+                    srvDesc.BufferEx.Flags = ShaderResourceViewExtendedBufferFlags.Raw;
+                    ShaderResourceView = new ShaderResourceView(device, _buffer, srvDesc);
+                }
+                else
+                {
+                    ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
+                    {
+                        Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Buffer
+                    };
+                    srvDesc.Buffer.ElementCount = (int)(SizeInBytes / structureByteStride);
+                    ShaderResourceView = new ShaderResourceView(device, _buffer, srvDesc);
+                }
             }
 
             if ((usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
             {
-                UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription
+                if (rawBuffer)
                 {
-                    Dimension = UnorderedAccessViewDimension.Buffer
-                };
+                    UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription
+                    {
+                        Dimension = UnorderedAccessViewDimension.Buffer
+                    };
 
-                uavDesc.Buffer.ElementCount = (int)(SizeInBytes / structureByteStride);
-                uavDesc.Format = SharpDX.DXGI.Format.Unknown;
+                    uavDesc.Buffer.ElementCount = (int)sizeInBytes / 4;
+                    uavDesc.Buffer.Flags = UnorderedAccessViewBufferFlags.Raw;
+                    uavDesc.Format = SharpDX.DXGI.Format.R32_Typeless;
 
-                UnorderedAccessView = new UnorderedAccessView(device, _buffer, uavDesc);
+                    UnorderedAccessView = new UnorderedAccessView(device, _buffer, uavDesc);
+
+                }
+                else
+                {
+                    UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription
+                    {
+                        Dimension = UnorderedAccessViewDimension.Buffer
+                    };
+
+                    uavDesc.Buffer.ElementCount = (int)(SizeInBytes / structureByteStride);
+                    uavDesc.Format = SharpDX.DXGI.Format.Unknown;
+
+                    UnorderedAccessView = new UnorderedAccessView(device, _buffer, uavDesc);
+                }
             }
         }
 

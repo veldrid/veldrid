@@ -69,6 +69,8 @@ namespace Veldrid.OpenGL
 
         public override bool IsDepthRangeZeroToOne => _isDepthRangeZeroToOne;
 
+        public override bool IsClipSpaceYInverted => false;
+
         public override ResourceFactory ResourceFactory => _resourceFactory;
 
         public OpenGLExtensions Extensions => _extensions;

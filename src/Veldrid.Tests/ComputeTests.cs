@@ -1,10 +1,20 @@
 ﻿using System.Linq;
 using System.Runtime.CompilerServices;
-using Veldrid.Tests.Shaders;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace Veldrid.Tests
 {
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ComputeTestParams
+    {
+        public uint Width;
+        public uint Height;
+        private uint _padding1;
+        private uint _padding2;
+    }
+
     public abstract class ComputeTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
         [Fact]
@@ -40,7 +50,7 @@ namespace Veldrid.Tests
             ResourceSet rs = RF.CreateResourceSet(new ResourceSetDescription(layout, paramsBuffer, sourceBuffer, destinationBuffer));
 
             Pipeline pipeline = RF.CreateComputePipeline(new ComputePipelineDescription(
-                TestShaders.Load(RF, "BasicComputeTest", ShaderStages.Compute, "CS"),
+                TestShaders.LoadCompute(RF, "BasicComputeTest"),
                 layout,
                 16, 16, 1));
 

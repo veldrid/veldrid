@@ -62,6 +62,8 @@ namespace Veldrid.Vk
 
         public override bool IsDepthRangeZeroToOne => true;
 
+        public override bool IsClipSpaceYInverted => true;
+
         public override Swapchain MainSwapchain => _mainSwapchain;
 
         public override GraphicsDeviceFeatures Features { get; }

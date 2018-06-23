@@ -87,6 +87,8 @@ namespace Veldrid.MTL
 
         public override bool IsDepthRangeZeroToOne => true;
 
+        public override bool IsClipSpaceYInverted => false;
+
         public override ResourceFactory ResourceFactory { get; }
 
         public override Swapchain MainSwapchain => _mainSwapchain;

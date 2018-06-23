@@ -35,6 +35,12 @@ namespace Veldrid
         public abstract bool IsDepthRangeZeroToOne { get; }
 
         /// <summary>
+        /// Gets a value indicating whether this device's clip space Y values increase from top (-1) to bottom (1).
+        /// If false, clip space Y values instead increase from bottom (-1) to top (1).
+        /// </summary>
+        public abstract bool IsClipSpaceYInverted { get; }
+
+        /// <summary>
         /// Gets the <see cref="ResourceFactory"/> controlled by this instance.
         /// </summary>
         public abstract ResourceFactory ResourceFactory { get; }

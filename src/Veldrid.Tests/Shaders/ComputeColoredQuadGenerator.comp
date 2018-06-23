@@ -1,0 +1,35 @@
+#version 450
+
+struct ColoredVertex
+{
+    vec4 Color;
+    vec2 Position;
+    vec2 _padding0;
+};
+
+layout(std430, set = 0, binding = 0) buffer OutputVertices
+{
+    ColoredVertex _OutputVertices[];
+};
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(constant_id = 100) const bool ClipSpaceInvertedY = true;
+
+void main()
+{
+    float yMod = 1.f;
+    if (ClipSpaceInvertedY)
+    {
+        yMod -= 2.f;
+    }
+
+    _OutputVertices[0].Position = vec2(-1.f, 1.f * yMod);
+    _OutputVertices[0].Color = vec4(1, 0, 0, 1);
+    _OutputVertices[1].Position = vec2(1.f, 1.f * yMod);
+    _OutputVertices[1].Color = vec4(1, 0, 0, 1);
+    _OutputVertices[2].Position = vec2(-1.f, -1.f * yMod);
+    _OutputVertices[2].Color = vec4(1, 0, 0, 1);
+    _OutputVertices[3].Position = vec2(1.f, -1.f * yMod);
+    _OutputVertices[3].Color = vec4(1, 0, 0, 1);
+}

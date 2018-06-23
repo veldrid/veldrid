@@ -1,0 +1,40 @@
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+struct Veldrid_Tests_Shaders_ComputeTestParams
+{
+    uint Width;
+    uint Height;
+    uint _padding1;
+    uint _padding2;
+};
+
+layout(set = 0, binding = 0) uniform Params
+{
+    Veldrid_Tests_Shaders_ComputeTestParams field_Params;
+};
+
+layout(std430, set = 0, binding = 1)  buffer Source
+{
+    float field_Source[];
+};
+layout(std430, set = 0, binding = 2)  buffer Destination
+{
+    float field_Destination[];
+};
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+void CS()
+{
+    uvec3 id = gl_GlobalInvocationID;
+    uint index = id.y * field_Params.Width + id.x;
+    field_Destination[index]  = field_Source[index];
+    field_Source[index]  += field_Source[index];
+}
+
+
+
+void main()
+{
+    CS();
+}

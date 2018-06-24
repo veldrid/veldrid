@@ -33,7 +33,7 @@ namespace Veldrid
 
         public bool Equals(SpecializationConstant other)
         {
-            return ID.Equals(other.ID) && DataSize.Equals(other.Data) && Data.Equals(other.Data);
+            return ID.Equals(other.ID) && DataSize.Equals(other.DataSize) && Data.Equals(other.Data);
         }
 
         public override int GetHashCode()

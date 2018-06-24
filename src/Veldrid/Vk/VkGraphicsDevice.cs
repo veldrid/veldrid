@@ -40,6 +40,7 @@ namespace Veldrid.Vk
         private VkDescriptorPoolManager _descriptorPoolManager;
         private FixedUtf8String _platformSurfaceExtension;
         private bool _standardValidationSupported;
+        private bool _standardClipYDirection;
 
         // Staging Resources
         private const uint MinStagingBufferSize = 64;
@@ -62,7 +63,7 @@ namespace Veldrid.Vk
 
         public override bool IsDepthRangeZeroToOne => true;
 
-        public override bool IsClipSpaceYInverted => true;
+        public override bool IsClipSpaceYInverted => !_standardClipYDirection;
 
         public override Swapchain MainSwapchain => _mainSwapchain;
 
@@ -94,7 +95,7 @@ namespace Veldrid.Vk
             }
 
             CreatePhysicalDevice();
-            CreateLogicalDevice(surface);
+            CreateLogicalDevice(surface, options.PreferStandardClipSpaceYDirection);
 
             _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
 
@@ -625,7 +626,7 @@ namespace Veldrid.Vk
             vkGetPhysicalDeviceMemoryProperties(_physicalDevice, out _physicalDeviceMemProperties);
         }
 
-        private void CreateLogicalDevice(VkSurfaceKHR surface)
+        private void CreateLogicalDevice(VkSurfaceKHR surface, bool preferStandardClipY)
         {
             GetQueueFamilyIndices(surface);
 
@@ -675,6 +676,11 @@ namespace Veldrid.Vk
                 else if (extensionName == "VK_KHR_swapchain")
                 {
                     extensionNames.Add((IntPtr)properties[property].extensionName);
+                }
+                else if (preferStandardClipY && extensionName == "vk_khr maintenance1")
+                {
+                    extensionNames.Add((IntPtr)properties[property].extensionName);
+                    _standardClipYDirection = true;
                 }
             }
 

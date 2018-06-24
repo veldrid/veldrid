@@ -642,12 +642,19 @@ namespace Veldrid.Vk
         {
             if (index == 0 || _gd.Features.MultipleViewports)
             {
+                float vpY = _gd.IsClipSpaceYInverted
+                    ? viewport.Y
+                    : viewport.Height + viewport.Y;
+                float vpHeight = _gd.IsClipSpaceYInverted
+                    ? viewport.Height
+                    : -viewport.Height;
+
                 VkViewport vkViewport = new VkViewport
                 {
                     x = viewport.X,
-                    y = viewport.Y,
+                    y = vpY,
                     width = viewport.Width,
-                    height = viewport.Height,
+                    height = vpHeight,
                     minDepth = viewport.MinDepth,
                     maxDepth = viewport.MaxDepth
                 };

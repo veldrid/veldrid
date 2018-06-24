@@ -28,6 +28,11 @@ namespace Veldrid
         /// The Z dimension of the thread group size.
         /// </summary>
         public uint ThreadGroupSizeZ;
+        /// <summary>
+        /// An array of <see cref="SpecializationConstant"/> used to override specialization constants in the created
+        /// <see cref="Pipeline"/>. Each element in this array describes a single ID-value pair, which will be matched with the
+        /// constants specified in the <see cref="Shader"/>.
+        /// </summary>
         public SpecializationConstant[] Specializations;
 
         /// <summary>
@@ -87,6 +92,9 @@ namespace Veldrid
         /// <param name="threadGroupSizeX">The X dimension of the thread group size.</param>
         /// <param name="threadGroupSizeY">The Y dimension of the thread group size.</param>
         /// <param name="threadGroupSizeZ">The Z dimension of the thread group size.</param>
+        /// <param name="specializations">An array of <see cref="SpecializationConstant"/> used to override specialization
+        /// constants in the created <see cref="Pipeline"/>. Each element in this array describes a single ID-value pair, which
+        /// will be matched with the constants specified in the <see cref="Shader"/>.</param>
         public ComputePipelineDescription(
             Shader shaderStage,
             ResourceLayout resourceLayout,

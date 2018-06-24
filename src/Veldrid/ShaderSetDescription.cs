@@ -19,6 +19,11 @@ namespace Veldrid
         /// shader. All other stages are optional, but if either Tessellation stage is present, then the other must also be.
         /// </summary>
         public Shader[] Shaders;
+        /// <summary>
+        /// An array of <see cref="SpecializationConstant"/> used to override specialization constants in the created
+        /// <see cref="Pipeline"/>. Each element in this array describes a single ID-value pair, which will be matched with the
+        /// constants specified in the Shaders.
+        /// </summary>
         public SpecializationConstant[] Specializations;
 
         /// <summary>
@@ -46,7 +51,13 @@ namespace Veldrid
         /// <param name="shaders">An array of <see cref="Shader"/> objects, one for each shader stage which is to be active
         /// in the <see cref="Pipeline"/>. At a minimum, every graphics Pipeline must include a Vertex and Fragment shader. All
         /// other stages are optional, but if either Tessellation stage is present, then the other must also be.</param>
-        public ShaderSetDescription(VertexLayoutDescription[] vertexLayouts, Shader[] shaders, SpecializationConstant[] specializations)
+        /// <param name="specializations">An array of <see cref="SpecializationConstant"/> used to override specialization
+        /// constants in the created <see cref="Pipeline"/>. Each element in this array describes a single ID-value pair, which
+        /// will be matched with the constants specified in each <see cref="Shader"/>.</param>
+        public ShaderSetDescription(
+            VertexLayoutDescription[] vertexLayouts,
+            Shader[] shaders,
+            SpecializationConstant[] specializations)
         {
             VertexLayouts = vertexLayouts;
             Shaders = shaders;

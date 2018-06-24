@@ -22,8 +22,8 @@ namespace Veldrid
         /// </summary>
         public uint StructureByteStride;
         /// <summary>
-        /// Indicates that this is a raw buffer. This should be combined with <see cref="BufferUsage.StructuredBufferReadWrite"/>.
-        /// This affects how the buffer is bound in the D3D11 backend.
+        /// Indicates that this is a raw buffer. This should be combined with
+        /// <see cref="BufferUsage.StructuredBufferReadWrite"/>. This affects how the buffer is bound in the D3D11 backend.
         /// </summary>
         public bool RawBuffer;
 

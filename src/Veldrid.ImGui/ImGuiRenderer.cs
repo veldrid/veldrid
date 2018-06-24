@@ -119,7 +119,10 @@ namespace Veldrid
                 new DepthStencilStateDescription(false, false, ComparisonKind.Always),
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, true),
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(vertexLayouts, new[] { _vertexShader, _fragmentShader }),
+                new ShaderSetDescription(
+                    vertexLayouts,
+                    new[] { _vertexShader, _fragmentShader },
+                    new[] { new SpecializationConstant(0, gd.IsClipSpaceYInverted) }),
                 new ResourceLayout[] { _layout, _textureLayout },
                 outputDescription,
                 ResourceBindingModel.Default);

@@ -677,7 +677,7 @@ namespace Veldrid.Vk
                 {
                     extensionNames.Add((IntPtr)properties[property].extensionName);
                 }
-                else if (preferStandardClipY && extensionName == "vk_khr maintenance1")
+                else if (preferStandardClipY && extensionName == "VK_KHR_maintenance1")
                 {
                     extensionNames.Add((IntPtr)properties[property].extensionName);
                     _standardClipYDirection = true;

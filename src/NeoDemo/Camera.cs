@@ -23,7 +23,7 @@ namespace Veldrid.NeoDemo
         private float _pitch;
 
         private Vector2 _previousMousePos;
-        private GraphicsBackend _backend;
+        private GraphicsDevice _gd;
         private bool _useReverseDepth;
         private float _windowWidth;
         private float _windowHeight;
@@ -33,7 +33,7 @@ namespace Veldrid.NeoDemo
 
         public Camera(GraphicsDevice gd, float width, float height)
         {
-            _backend = gd.BackendType;
+            _gd = gd;
             _useReverseDepth = gd.IsDepthRangeZeroToOne;
             _windowWidth = width;
             _windowHeight = height;
@@ -43,7 +43,7 @@ namespace Veldrid.NeoDemo
 
         public void UpdateBackend(GraphicsDevice gd)
         {
-            _backend = gd.BackendType;
+            _gd = gd;
             _useReverseDepth = gd.IsDepthRangeZeroToOne;
             UpdatePerspectiveMatrix();
         }
@@ -128,7 +128,7 @@ namespace Veldrid.NeoDemo
         private void UpdatePerspectiveMatrix()
         {
             _projectionMatrix = Util.CreatePerspective(
-                _backend,
+                _gd,
                 _useReverseDepth,
                 _fov,
                 _windowWidth / _windowHeight,

@@ -37,21 +37,21 @@ namespace Veldrid.NeoDemo
         {
             bool fixClipZ = false;
             bool invertY = false;
-            List<SpecializationConstant> specializations = new List<SpecializationConstant>();
-            specializations.Add(SpecializationConstant.Create(102, gd.IsDepthRangeZeroToOne));
+            List<SPIRV.SpecializationConstant> specializations = new List<SPIRV.SpecializationConstant>();
+            specializations.Add(SPIRV.SpecializationConstant.Create(102, gd.IsDepthRangeZeroToOne));
             switch (gd.BackendType)
             {
                 case GraphicsBackend.Direct3D11:
                 case GraphicsBackend.Metal:
-                    specializations.Add(SpecializationConstant.Create(100, false));
+                    specializations.Add(SPIRV.SpecializationConstant.Create(100, false));
                     break;
                 case GraphicsBackend.Vulkan:
-                    specializations.Add(SpecializationConstant.Create(100, true));
+                    specializations.Add(SPIRV.SpecializationConstant.Create(100, true));
                     break;
                 case GraphicsBackend.OpenGL:
                 case GraphicsBackend.OpenGLES:
-                    specializations.Add(SpecializationConstant.Create(100, false));
-                    specializations.Add(SpecializationConstant.Create(101, true));
+                    specializations.Add(SPIRV.SpecializationConstant.Create(100, false));
+                    specializations.Add(SPIRV.SpecializationConstant.Create(101, true));
                     fixClipZ = !gd.IsDepthRangeZeroToOne;
                     break;
                 default:

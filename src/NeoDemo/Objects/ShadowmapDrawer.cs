@@ -74,7 +74,10 @@ namespace Veldrid.NeoDemo.Objects
                 new DepthStencilStateDescription(false, true, ComparisonKind.Always),
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(vertexLayouts, new[] { vs, fs }),
+                new ShaderSetDescription(
+                    vertexLayouts,
+                    new[] { vs, fs },
+                    new[] { new SpecializationConstant(100, gd.IsClipSpaceYInverted) }),
                 new ResourceLayout[] { layout },
                 sc.MainSceneFramebuffer.OutputDescription);
 

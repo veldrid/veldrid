@@ -52,9 +52,7 @@ namespace Veldrid
 
         public static int Array<T>(T[] items)
         {
-            Debug.Assert(items != null);
-
-            if (items.Length == 0)
+            if (items == null || items.Length == 0)
             {
                 return 0;
             }

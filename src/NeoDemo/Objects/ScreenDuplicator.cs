@@ -41,7 +41,7 @@ namespace Veldrid.NeoDemo.Objects
                 sc.DuplicatorFramebuffer.OutputDescription);
             _pipeline = factory.CreateGraphicsPipeline(ref pd);
 
-            float[] verts = Util.GetFullScreenQuadVerts(gd.BackendType);
+            float[] verts = Util.GetFullScreenQuadVerts(gd);
 
             _vb = factory.CreateBuffer(new BufferDescription(verts.SizeInBytes() * sizeof(float), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(_vb, 0, verts);

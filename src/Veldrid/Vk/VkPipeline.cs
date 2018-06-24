@@ -3,6 +3,7 @@ using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.Vk
 {
@@ -176,6 +177,37 @@ namespace Veldrid.Vk
             pipelineCI.pVertexInputState = &vertexInputCI;
 
             // Shader Stage
+
+            VkSpecializationInfo specializationInfo;
+            SpecializationConstant[] specDescs = description.ShaderSet.Specializations;
+            if (specDescs != null)
+            {
+                uint specDataSize = 0;
+                foreach (SpecializationConstant spec in specDescs)
+                {
+                    specDataSize += spec.DataSize;
+                }
+                byte* fullSpecData = stackalloc byte[(int)specDataSize];
+                int specializationCount = specDescs.Length;
+                VkSpecializationMapEntry* mapEntries = stackalloc VkSpecializationMapEntry[specializationCount];
+                uint specOffset = 0;
+                for (int i = 0; i < specializationCount; i++)
+                {
+                    ulong data = specDescs[i].Data;
+                    byte* srcData = (byte*)&data;
+                    uint dataSize = specDescs[i].DataSize;
+                    Unsafe.CopyBlock(fullSpecData + specOffset, srcData, dataSize);
+                    mapEntries[i].constantID = specDescs[i].ID;
+                    mapEntries[i].offset = specOffset;
+                    mapEntries[i].size = (UIntPtr)dataSize;
+                    specOffset += dataSize;
+                }
+                specializationInfo.dataSize = (UIntPtr)specDataSize;
+                specializationInfo.pData = fullSpecData;
+                specializationInfo.mapEntryCount = (uint)specializationCount;
+                specializationInfo.pMapEntries = mapEntries;
+            }
+
             Shader[] shaders = description.ShaderSet.Shaders;
             StackList<VkPipelineShaderStageCreateInfo> stages = new StackList<VkPipelineShaderStageCreateInfo>();
             foreach (Shader shader in shaders)
@@ -185,6 +217,7 @@ namespace Veldrid.Vk
                 stageCI.module = vkShader.ShaderModule;
                 stageCI.stage = VkFormats.VdToVkShaderStages(shader.Stage);
                 stageCI.pName = CommonStrings.main; // Meh
+                stageCI.pSpecializationInfo = &specializationInfo;
                 stages.Add(stageCI);
             }
 
@@ -323,12 +356,44 @@ namespace Veldrid.Vk
             pipelineCI.layout = _pipelineLayout;
 
             // Shader Stage
+
+            VkSpecializationInfo specializationInfo;
+            SpecializationConstant[] specDescs = description.Specializations;
+            if (specDescs != null)
+            {
+                uint specDataSize = 0;
+                foreach (SpecializationConstant spec in specDescs)
+                {
+                    specDataSize += spec.DataSize;
+                }
+                byte* fullSpecData = stackalloc byte[(int)specDataSize];
+                int specializationCount = specDescs.Length;
+                VkSpecializationMapEntry* mapEntries = stackalloc VkSpecializationMapEntry[specializationCount];
+                uint specOffset = 0;
+                for (int i = 0; i < specializationCount; i++)
+                {
+                    ulong data = specDescs[i].Data;
+                    byte* srcData = (byte*)&data;
+                    uint dataSize = specDescs[i].DataSize;
+                    Unsafe.CopyBlock(fullSpecData + specOffset, srcData, dataSize);
+                    mapEntries[i].constantID = specDescs[i].ID;
+                    mapEntries[i].offset = specOffset;
+                    mapEntries[i].size = (UIntPtr)dataSize;
+                    specOffset += dataSize;
+                }
+                specializationInfo.dataSize = (UIntPtr)specDataSize;
+                specializationInfo.pData = fullSpecData;
+                specializationInfo.mapEntryCount = (uint)specializationCount;
+                specializationInfo.pMapEntries = mapEntries;
+            }
+
             Shader shader = description.ComputeShader;
             VkShader vkShader = Util.AssertSubtype<Shader, VkShader>(shader);
             VkPipelineShaderStageCreateInfo stageCI = VkPipelineShaderStageCreateInfo.New();
             stageCI.module = vkShader.ShaderModule;
             stageCI.stage = VkFormats.VdToVkShaderStages(shader.Stage);
             stageCI.pName = CommonStrings.main; // Meh
+            stageCI.pSpecializationInfo = &specializationInfo;
             pipelineCI.stage = stageCI;
 
             VkResult result = vkCreateComputePipelines(

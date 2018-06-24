@@ -59,6 +59,11 @@ namespace Veldrid
 
         internal static bool ArrayEquals<T>(T[] left, T[] right) where T : class
         {
+            if (left == null || right == null)
+            {
+                return left == right;
+            }
+
             if (left.Length != right.Length)
             {
                 return false;
@@ -77,6 +82,11 @@ namespace Veldrid
 
         internal static bool ArrayEqualsEquatable<T>(T[] left, T[] right) where T : struct, IEquatable<T>
         {
+            if (left == null || right == null)
+            {
+                return left == right;
+            }
+
             if (left.Length != right.Length)
             {
                 return false;

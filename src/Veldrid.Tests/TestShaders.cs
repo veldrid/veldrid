@@ -11,9 +11,9 @@ namespace Veldrid.Tests
             return factory.CreateFromSPIRV(
                 new ShaderDescription(ShaderStages.Vertex, File.ReadAllBytes(GetPath(setName, ShaderStages.Vertex)), "main"),
                 new ShaderDescription(ShaderStages.Fragment, File.ReadAllBytes(GetPath(setName, ShaderStages.Fragment)), "main"),
-                new CrossCompileOptions(false, false, new SpecializationConstant[]
+                new CrossCompileOptions(false, false, new SPIRV.SpecializationConstant[]
                 {
-                    SpecializationConstant.Create(100, false)
+                    SPIRV.SpecializationConstant.Create(100, false)
                 }));
         }
 
@@ -21,9 +21,9 @@ namespace Veldrid.Tests
         {
             return factory.CreateFromSPIRV(
                 new ShaderDescription(ShaderStages.Compute, File.ReadAllBytes(GetPath(setName, ShaderStages.Compute)), "main"),
-                new CrossCompileOptions(false, false, new SpecializationConstant[]
+                new CrossCompileOptions(false, false, new SPIRV.SpecializationConstant[]
                 {
-                    SpecializationConstant.Create(100, false)
+                    SPIRV.SpecializationConstant.Create(100, false)
                 }));
         }
 

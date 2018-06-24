@@ -28,6 +28,7 @@ namespace Veldrid
         /// The Z dimension of the thread group size.
         /// </summary>
         public uint ThreadGroupSizeZ;
+        public SpecializationConstant[] Specializations;
 
         /// <summary>
         /// Constructs a new ComputePipelineDescription.
@@ -50,6 +51,7 @@ namespace Veldrid
             ThreadGroupSizeX = threadGroupSizeX;
             ThreadGroupSizeY = threadGroupSizeY;
             ThreadGroupSizeZ = threadGroupSizeZ;
+            Specializations = null;
         }
 
         /// <summary>
@@ -73,6 +75,32 @@ namespace Veldrid
             ThreadGroupSizeX = threadGroupSizeX;
             ThreadGroupSizeY = threadGroupSizeY;
             ThreadGroupSizeZ = threadGroupSizeZ;
+            Specializations = null;
+        }
+
+        /// <summary>
+        /// Constructs a new ComputePipelineDescription.
+        /// </summary>
+        /// <param name="shaderStage">The compute <see cref="Shader"/> to be used in the Pipeline. This must be a Shader with
+        /// <see cref="ShaderStages.Compute"/>.</param>
+        /// <param name="resourceLayout">The resource layout available to the Pipeline.</param>
+        /// <param name="threadGroupSizeX">The X dimension of the thread group size.</param>
+        /// <param name="threadGroupSizeY">The Y dimension of the thread group size.</param>
+        /// <param name="threadGroupSizeZ">The Z dimension of the thread group size.</param>
+        public ComputePipelineDescription(
+            Shader shaderStage,
+            ResourceLayout resourceLayout,
+            uint threadGroupSizeX,
+            uint threadGroupSizeY,
+            uint threadGroupSizeZ,
+            SpecializationConstant[] specializations)
+        {
+            ComputeShader = shaderStage;
+            ResourceLayouts = new[] { resourceLayout };
+            ThreadGroupSizeX = threadGroupSizeX;
+            ThreadGroupSizeY = threadGroupSizeY;
+            ThreadGroupSizeZ = threadGroupSizeZ;
+            Specializations = specializations;
         }
 
         /// <summary>

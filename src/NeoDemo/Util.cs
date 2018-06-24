@@ -103,7 +103,7 @@ namespace Veldrid.NeoDemo
         }
 
         public static Matrix4x4 CreatePerspective(
-            GraphicsBackend backend,
+            GraphicsDevice gd,
             bool useReverseDepth,
             float fov,
             float aspectRatio,
@@ -118,7 +118,7 @@ namespace Veldrid.NeoDemo
             {
                 persp = CreatePerspective(fov, aspectRatio, near, far);
             }
-            if (backend == GraphicsBackend.Vulkan)
+            if (gd.IsClipSpaceYInverted)
             {
                 persp *= new Matrix4x4(
                     1, 0, 0, 0,
@@ -164,7 +164,7 @@ namespace Veldrid.NeoDemo
         }
 
         internal static Matrix4x4 CreateOrtho(
-            GraphicsBackend backend,
+            GraphicsDevice gd,
             bool useReverseDepth,
             float left, float right,
             float bottom, float top,
@@ -179,7 +179,7 @@ namespace Veldrid.NeoDemo
             {
                 ortho = Matrix4x4.CreateOrthographicOffCenter(left, right, bottom, top, near, far);
             }
-            if (backend == GraphicsBackend.Vulkan)
+            if (gd.IsClipSpaceYInverted)
             {
                 ortho *= new Matrix4x4(
                     1, 0, 0, 0,
@@ -191,31 +191,27 @@ namespace Veldrid.NeoDemo
             return ortho;
         }
 
-        public static float[] GetFullScreenQuadVerts(GraphicsBackend backendType)
+        public static float[] GetFullScreenQuadVerts(GraphicsDevice gd)
         {
-            switch (backendType)
+            if (gd.IsClipSpaceYInverted)
             {
-                case GraphicsBackend.Direct3D11:
-                case GraphicsBackend.Metal:
-                case GraphicsBackend.OpenGL:
-                case GraphicsBackend.OpenGLES:
-                    return new float[]
-                    {
-                        -1, 1, 0, 0,
-                        1, 1, 1, 0,
-                        1, -1, 1, 1,
-                        -1, -1, 0, 1
-                    };
-                case GraphicsBackend.Vulkan:
-                    return new float[]
-                    {
+                return new float[]
+                {
                         -1, -1, 0, 0,
                         1, -1, 1, 0,
                         1, 1, 1, 1,
                         -1, 1, 0, 1
-                    };
-                default:
-                    throw new InvalidOperationException();
+                };
+            }
+            else
+            {
+                return new float[]
+                {
+                        -1, 1, 0, 0,
+                        1, 1, 1, 0,
+                        1, -1, 1, 1,
+                        -1, -1, 0, 1
+                };
             }
         }
     }

@@ -456,7 +456,7 @@ namespace Veldrid.NeoDemo
             Matrix4x4 lightView = Matrix4x4.CreateLookAt(lightPos, frustumCenter, Vector3.UnitY);
 
             Matrix4x4 lightProjection = Util.CreateOrtho(
-                gd.BackendType,
+                gd,
                 gd.IsDepthRangeZeroToOne,
                 -radius * _lScale,
                 radius * _rScale,

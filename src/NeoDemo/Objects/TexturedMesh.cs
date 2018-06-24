@@ -119,7 +119,10 @@ namespace Veldrid.NeoDemo.Objects
                 gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(shadowDepthVertexLayouts, new[] { depthVS, depthFS }),
+                new ShaderSetDescription(
+                    shadowDepthVertexLayouts,
+                    new[] { depthVS, depthFS },
+                    new[] { new SpecializationConstant(100, gd.IsClipSpaceYInverted) }),
                 new ResourceLayout[] { projViewCombinedLayout, worldLayout },
                 sc.NearShadowMapFramebuffer.OutputDescription);
             _shadowMapPipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref depthPD);
@@ -172,7 +175,7 @@ namespace Veldrid.NeoDemo.Objects
                 gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
-                new ShaderSetDescription(mainVertexLayouts, new[] { mainVS, mainFS }),
+                new ShaderSetDescription(mainVertexLayouts, new[] { mainVS, mainFS }, new[] { new SpecializationConstant(100, gd.IsClipSpaceYInverted) }),
                 new ResourceLayout[] { projViewLayout, mainSharedLayout, mainPerObjectLayout, reflectionLayout },
                 sc.MainSceneFramebuffer.OutputDescription);
             _pipeline = StaticResourceCache.GetPipeline(gd.ResourceFactory, ref mainPD);

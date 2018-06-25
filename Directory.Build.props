@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ShaderGenVersion>1.2.0-beta2</ShaderGenVersion>
+    <VeldridSpirvVersion>1.0.0-beta3*</VeldridSpirvVersion>
     <NativeLibraryLoaderVersion>1.0.10</NativeLibraryLoaderVersion>
   </PropertyGroup>
 

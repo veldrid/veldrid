@@ -18,7 +18,7 @@ namespace Veldrid.NeoDemo
 #if DEBUG
             debug = true;
 #endif
-            Shader[] shaders = factory.CreateFromSPIRV(
+            Shader[] shaders = factory.CreateFromSpirv(
                 new ShaderDescription(ShaderStages.Vertex, vsBytes, "main", debug),
                 new ShaderDescription(ShaderStages.Fragment, fsBytes, "main", debug),
                 GetOptions(gd));
@@ -32,33 +32,33 @@ namespace Veldrid.NeoDemo
             return (vs, fs);
         }
 
-        private static CompilationOptions GetOptions(
+        private static CrossCompileOptions GetOptions(
             GraphicsDevice gd)
         {
             bool fixClipZ = false;
             bool invertY = false;
-            List<SPIRV.SpecializationConstant> specializations = new List<SPIRV.SpecializationConstant>();
-            specializations.Add(SPIRV.SpecializationConstant.Create(102, gd.IsDepthRangeZeroToOne));
+            List<SpecializationConstant> specializations = new List<SpecializationConstant>();
+            specializations.Add(new SpecializationConstant(102, gd.IsDepthRangeZeroToOne));
             switch (gd.BackendType)
             {
                 case GraphicsBackend.Direct3D11:
                 case GraphicsBackend.Metal:
-                    specializations.Add(SPIRV.SpecializationConstant.Create(100, false));
+                    specializations.Add(new SpecializationConstant(100, false));
                     break;
                 case GraphicsBackend.Vulkan:
-                    specializations.Add(SPIRV.SpecializationConstant.Create(100, true));
+                    specializations.Add(new SpecializationConstant(100, true));
                     break;
                 case GraphicsBackend.OpenGL:
                 case GraphicsBackend.OpenGLES:
-                    specializations.Add(SPIRV.SpecializationConstant.Create(100, false));
-                    specializations.Add(SPIRV.SpecializationConstant.Create(101, true));
+                    specializations.Add(new SpecializationConstant(100, false));
+                    specializations.Add(new SpecializationConstant(101, true));
                     fixClipZ = !gd.IsDepthRangeZeroToOne;
                     break;
                 default:
                     throw new InvalidOperationException();
             }
 
-            return new CompilationOptions(fixClipZ, invertY, specializations.ToArray());
+            return new CrossCompileOptions(fixClipZ, invertY, specializations.ToArray());
         }
 
         public static byte[] LoadBytecode(GraphicsBackend backend, string setName, ShaderStages stage)

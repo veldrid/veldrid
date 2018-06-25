@@ -18,11 +18,7 @@ layout(constant_id = 100) const bool ClipSpaceInvertedY = true;
 
 void main()
 {
-    float yMod = 1.f;
-    if (ClipSpaceInvertedY)
-    {
-        yMod -= 2.f;
-    }
+    float yMod = ClipSpaceInvertedY ? -1f : 1f;
 
     _OutputVertices[0].Position = vec2(-1.f, 1.f * yMod);
     _OutputVertices[0].Color = vec4(1, 0, 0, 1);

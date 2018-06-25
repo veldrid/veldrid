@@ -22,7 +22,7 @@ namespace Veldrid
         /// <summary>
         /// An array of <see cref="SpecializationConstant"/> used to override specialization constants in the created
         /// <see cref="Pipeline"/>. Each element in this array describes a single ID-value pair, which will be matched with the
-        /// constants specified in the Shaders.
+        /// constants specified in each <see cref="Shader"/>.
         /// </summary>
         public SpecializationConstant[] Specializations;
 

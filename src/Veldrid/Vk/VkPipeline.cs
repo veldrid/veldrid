@@ -185,7 +185,7 @@ namespace Veldrid.Vk
                 uint specDataSize = 0;
                 foreach (SpecializationConstant spec in specDescs)
                 {
-                    specDataSize += spec.DataSize;
+                    specDataSize += VkFormats.GetSpecializationConstantSize(spec.Type);
                 }
                 byte* fullSpecData = stackalloc byte[(int)specDataSize];
                 int specializationCount = specDescs.Length;
@@ -195,7 +195,7 @@ namespace Veldrid.Vk
                 {
                     ulong data = specDescs[i].Data;
                     byte* srcData = (byte*)&data;
-                    uint dataSize = specDescs[i].DataSize;
+                    uint dataSize = VkFormats.GetSpecializationConstantSize(specDescs[i].Type);
                     Unsafe.CopyBlock(fullSpecData + specOffset, srcData, dataSize);
                     mapEntries[i].constantID = specDescs[i].ID;
                     mapEntries[i].offset = specOffset;
@@ -364,7 +364,7 @@ namespace Veldrid.Vk
                 uint specDataSize = 0;
                 foreach (SpecializationConstant spec in specDescs)
                 {
-                    specDataSize += spec.DataSize;
+                    specDataSize += VkFormats.GetSpecializationConstantSize(spec.Type);
                 }
                 byte* fullSpecData = stackalloc byte[(int)specDataSize];
                 int specializationCount = specDescs.Length;
@@ -374,7 +374,7 @@ namespace Veldrid.Vk
                 {
                     ulong data = specDescs[i].Data;
                     byte* srcData = (byte*)&data;
-                    uint dataSize = specDescs[i].DataSize;
+                    uint dataSize = VkFormats.GetSpecializationConstantSize(specDescs[i].Type);
                     Unsafe.CopyBlock(fullSpecData + specOffset, srcData, dataSize);
                     mapEntries[i].constantID = specDescs[i].ID;
                     mapEntries[i].offset = specOffset;

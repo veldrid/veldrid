@@ -13,6 +13,7 @@ namespace Veldrid.MTL
         public MTLLibrary Library { get; private set; }
         public MTLFunction Function { get; private set; }
         public override string Name { get; set; }
+        public bool HasFunctionConstants { get; }
 
         public unsafe MTLShader(ref ShaderDescription description, MTLGraphicsDevice gd)
             : base(description.Stage)
@@ -58,16 +59,7 @@ namespace Veldrid.MTL
                     $"Failed to create Metal {description.Stage} Shader. The given entry point \"{description.EntryPoint}\" was not found.");
             }
 
-            if (Function.functionConstantsDictionary.count != UIntPtr.Zero)
-            {
-                // Need to create specialized MTLFunction.
-                ObjectiveCRuntime.release(Function.NativePtr);
-                MTLFunctionConstantValues constantValues = MTLFunctionConstantValues.New();
-                Function = Library.newFunctionWithNameConstantValues(description.EntryPoint, constantValues);
-                ObjectiveCRuntime.release(constantValues.NativePtr);
-
-                Debug.Assert(Function.NativePtr != IntPtr.Zero, "Failed to create specialized MTLFunction");
-            }
+            HasFunctionConstants = Function.functionConstantsDictionary.count != UIntPtr.Zero;
         }
 
         public override void Dispose()

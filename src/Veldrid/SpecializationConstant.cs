@@ -4,84 +4,93 @@ using System.Runtime.CompilerServices;
 namespace Veldrid
 {
     /// <summary>
-    /// Describes a single SPIR-V Specialization Costant. Used to substitute new values into Shaders when constructing a
+    /// Describes a single shader specialization constant. Used to substitute new values into Shaders when constructing a
     /// <see cref="Pipeline"/>.
     /// </summary>
     public struct SpecializationConstant : IEquatable<SpecializationConstant>
     {
         /// <summary>
-        /// The SPIR-V Specialization Constant ID.
+        /// The constant variable ID, as defined in the <see cref="Shader"/>.
         /// </summary>
         public uint ID;
         /// <summary>
-        /// The size of data contained in this constant, expressed in bytes. The size of a Specialization Constant should match
-        /// the size of the SPIR-V data type that is being specialized by this instance.
+        /// The type of data stored in this instance. Must be a scalar numeric type.
         /// </summary>
-        public uint DataSize;
+        public ShaderConstantType Type;
         /// <summary>
         /// An 8-byte block storing the contents of the specialization value. This is treated as an untyped buffer and is
-        /// interepreted according to the data type specified in the SPIR-V shader.
+        /// interepreted according to <see cref="Type"/>.
         /// </summary>
         public ulong Data;
-
 
         /// <summary>
         /// Constructs a new <see cref="SpecializationConstant"/>.
         /// </summary>
-        /// <param name="id">The Specialization Constant ID.</param>
-        /// <param name="dataSize">The size of data contained in this constant, expressed in bytes. Legal values are 2, 4, and 8
-        /// bytes.</param>
+        /// <param name="id">The constant variable ID, as defined in the <see cref="Shader"/>.</param>
+        /// <param name="type">The type of data stored in this instance. Must be a scalar numeric type.</param>
         /// <param name="data">An 8-byte block storing the contents of the specialization value. This is treated as an untyped
-        /// buffer and is  interepreted according to the data type specified in the SPIR-V shader.</param>
-        public SpecializationConstant(uint id, uint dataSize, ulong data)
+        /// buffer and is interepreted according to <see cref="Type"/>.</param>
+        public SpecializationConstant(uint id, ShaderConstantType type, ulong data)
         {
             ID = id;
-            DataSize = dataSize;
+            Type = type;
             Data = data;
         }
 
         /// <summary>
         /// Constructs a new <see cref="SpecializationConstant"/> for a boolean.
         /// </summary>
-        /// <param name="id">The Specialization Constant ID.</param>
+        /// <param name="id">The constant variable ID.</param>
         /// <param name="value">The constant value.</param>
-        public SpecializationConstant(uint id, bool value) : this(id, sizeof(uint), Store(value ? 1u : 0u)) { }
+        public SpecializationConstant(uint id, bool value) : this(id, ShaderConstantType.Bool, Store(value ? (byte)1u : (byte)0u)) { }
+        /// <summary>
+        /// Constructs a new <see cref="SpecializationConstant"/> for a 16-bit unsigned integer.
+        /// </summary>
+        /// <param name="id">The constant variable ID.</param>
+        /// <param name="value">The constant value.</param>
+        public SpecializationConstant(uint id, ushort value) : this(id, ShaderConstantType.UInt16, Store(value)) { }
+        /// <summary>
+        /// Constructs a new <see cref="SpecializationConstant"/> for a 16-bit signed integer.
+        /// </summary>
+        /// <param name="id">The constant variable ID.</param>
+        /// <param name="value">The constant value.</param>
+        public SpecializationConstant(uint id, short value) : this(id, ShaderConstantType.Int16, Store(value)) { }
         /// <summary>
         /// Constructs a new <see cref="SpecializationConstant"/> for a 32-bit unsigned integer.
         /// </summary>
-        /// <param name="id">The Specialization Constant ID.</param>
+        /// <param name="id">The constant variable ID.</param>
         /// <param name="value">The constant value.</param>
-        public SpecializationConstant(uint id, uint value) : this(id, sizeof(uint), Store(value)) { }
+        public SpecializationConstant(uint id, uint value) : this(id, ShaderConstantType.UInt32, Store(value)) { }
         /// <summary>
         /// Constructs a new <see cref="SpecializationConstant"/> for a 32-bit signed integer.
         /// </summary>
-        /// <param name="id">The Specialization Constant ID.</param>
+        /// <param name="id">The constant variable ID.</param>
         /// <param name="value">The constant value.</param>
-        public SpecializationConstant(uint id, int value) : this(id, sizeof(int), Store(value)) { }
+        public SpecializationConstant(uint id, int value) : this(id, ShaderConstantType.Int32, Store(value)) { }
         /// <summary>
         /// Constructs a new <see cref="SpecializationConstant"/> for a 64-bit unsigned integer.
         /// </summary>
-        /// <param name="id">The Specialization Constant ID.</param>
+        /// <param name="id">The constant variable ID.</param>
         /// <param name="value">The constant value.</param>
-        public SpecializationConstant(uint id, ulong value) : this(id, sizeof(ulong), Store(value)) { }
+        public SpecializationConstant(uint id, ulong value) : this(id, ShaderConstantType.UInt64, Store(value)) { }
         /// <summary>
         /// Constructs a new <see cref="SpecializationConstant"/> for a 64-bit signed integer.
         /// </summary>
-        /// <param name="id">The Specialization Constant ID.</param>
+        /// <param name="id">The constant variable ID.</param>
         /// <param name="value">The constant value.</param>
-        public SpecializationConstant(uint id, long value) : this(id, sizeof(long), Store(value)) { }
+        public SpecializationConstant(uint id, long value) : this(id, ShaderConstantType.Int64, Store(value)) { }
         /// <summary>
         /// Constructs a new <see cref="SpecializationConstant"/> for a 32-bit floating-point value.
         /// </summary>
-        /// <param name="id">The Specialization Constant ID.</param>
+        /// <param name="id">The constant variable ID.</param>
         /// <param name="value">The constant value.</param>
-        public SpecializationConstant(uint id, float value) : this(id, sizeof(float), Store(value)) { }
+        public SpecializationConstant(uint id, float value) : this(id, ShaderConstantType.Float, Store(value)) { }
         /// <summary>
         /// Constructs a new <see cref="SpecializationConstant"/> for a 64-bit floating-point value.
         /// </summary>
-        /// <param name="id">The Specialization Constant ID.</param>
+        /// <param name="id">The constant variable ID.</param>
         /// <param name="value">The constant value.</param>
-        public SpecializationConstant(uint id, double value) : this(id, sizeof(double), Store(value)) { }
+        public SpecializationConstant(uint id, double value) : this(id, ShaderConstantType.Double, Store(value)) { }
 
         internal static unsafe ulong Store<T>(T value)
         {
@@ -97,7 +106,7 @@ namespace Veldrid
         /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(SpecializationConstant other)
         {
-            return ID.Equals(other.ID) && DataSize.Equals(other.DataSize) && Data.Equals(other.Data);
+            return ID.Equals(other.ID) && Type.Equals(other.Type) && Data.Equals(other.Data);
         }
 
         /// <summary>
@@ -106,7 +115,7 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(ID.GetHashCode(), DataSize.GetHashCode(), Data.GetHashCode());
+            return HashHelper.Combine(ID.GetHashCode(), Type.GetHashCode(), Data.GetHashCode());
         }
     }
 }

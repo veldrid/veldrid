@@ -311,6 +311,31 @@ namespace Veldrid.MTL
             }
         }
 
+        internal static MTLDataType VdVoMTLShaderConstantType(ShaderConstantType type)
+        {
+            switch (type)
+            {
+                case ShaderConstantType.Bool:
+                    return MTLDataType.Bool;
+                case ShaderConstantType.UInt16:
+                    return MTLDataType.UShort;
+                case ShaderConstantType.Int16:
+                    return MTLDataType.Short;
+                case ShaderConstantType.UInt32:
+                    return MTLDataType.UInt;
+                case ShaderConstantType.Int32:
+                    return MTLDataType.Int;
+                case ShaderConstantType.Float:
+                    return MTLDataType.Float;
+                case ShaderConstantType.UInt64:
+                case ShaderConstantType.Int64:
+                case ShaderConstantType.Double:
+                    throw new VeldridException($"Metal does not support 64-bit shader constants.");
+                default:
+                    throw Illegal.Value<ShaderConstantType>();
+            }
+        }
+
         internal static MTLCompareFunction VdToMTLCompareFunction(ComparisonKind comparisonKind)
         {
             switch (comparisonKind)

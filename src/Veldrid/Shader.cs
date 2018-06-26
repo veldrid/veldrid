@@ -8,9 +8,10 @@ namespace Veldrid
     /// </summary>
     public abstract class Shader : DeviceResource, IDisposable
     {
-        internal Shader(ShaderStages stage)
+        internal Shader(ShaderStages stage, string entryPoint)
         {
             Stage = stage;
+            EntryPoint = entryPoint;
         }
 
         /// <summary>

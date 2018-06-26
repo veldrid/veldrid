@@ -16,7 +16,7 @@ namespace Veldrid.MTL
         public bool HasFunctionConstants { get; }
 
         public unsafe MTLShader(ref ShaderDescription description, MTLGraphicsDevice gd)
-            : base(description.Stage)
+            : base(description.Stage, description.EntryPoint)
         {
             _device = gd;
 

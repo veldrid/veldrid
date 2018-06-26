@@ -21,8 +21,8 @@ namespace Veldrid.OpenGL
 
         public uint Shader => _shader;
 
-        public OpenGLShader(OpenGLGraphicsDevice gd, ShaderStages stage, StagingBlock stagingBlock)
-            : base(stage)
+        public OpenGLShader(OpenGLGraphicsDevice gd, ShaderStages stage, StagingBlock stagingBlock, string entryPoint)
+            : base(stage, entryPoint)
         {
 #if VALIDATE_USAGE
             if (stage == ShaderStages.Compute && !gd.Extensions.ComputeShaders)

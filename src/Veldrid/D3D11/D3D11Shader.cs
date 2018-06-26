@@ -12,7 +12,7 @@ namespace Veldrid.D3D11
         public byte[] Bytecode { get; internal set; }
 
         public D3D11Shader(Device device, ShaderDescription description)
-            : base(description.Stage)
+            : base(description.Stage, description.EntryPoint)
         {
             if (description.ShaderBytes.Length > 4
                 && description.ShaderBytes[0] == 0x44

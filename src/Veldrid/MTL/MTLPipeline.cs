@@ -57,7 +57,6 @@ namespace Veldrid.MTL
                 if (mtlShader.HasFunctionConstants)
                 {
                     // Need to create specialized MTLFunction.
-                    ObjectiveCRuntime.release(mtlShader.Function.NativePtr);
                     MTLFunctionConstantValues constantValues = CreateConstantValues(description.ShaderSet.Specializations);
                     specializedFunction = mtlShader.Library.newFunctionWithNameConstantValues(mtlShader.EntryPoint, constantValues);
                     AddSpecializedFunction(specializedFunction);
@@ -72,11 +71,11 @@ namespace Veldrid.MTL
 
                 if (shader.Stage == ShaderStages.Vertex)
                 {
-                    mtlDesc.vertexFunction = mtlShader.Function;
+                    mtlDesc.vertexFunction = specializedFunction;
                 }
                 else if (shader.Stage == ShaderStages.Fragment)
                 {
-                    mtlDesc.fragmentFunction = mtlShader.Function;
+                    mtlDesc.fragmentFunction = specializedFunction;
                 }
             }
 
@@ -222,7 +221,6 @@ namespace Veldrid.MTL
             if (mtlShader.HasFunctionConstants)
             {
                 // Need to create specialized MTLFunction.
-                ObjectiveCRuntime.release(mtlShader.Function.NativePtr);
                 MTLFunctionConstantValues constantValues = CreateConstantValues(description.Specializations);
                 specializedFunction = mtlShader.Library.newFunctionWithNameConstantValues(mtlShader.EntryPoint, constantValues);
                 AddSpecializedFunction(specializedFunction);
@@ -266,10 +264,13 @@ namespace Veldrid.MTL
         private unsafe MTLFunctionConstantValues CreateConstantValues(SpecializationConstant[] specializations)
         {
             MTLFunctionConstantValues ret = MTLFunctionConstantValues.New();
-            foreach (SpecializationConstant sc in specializations)
+            if (specializations != null)
             {
-                MTLDataType mtlType = MTLFormats.VdVoMTLShaderConstantType(sc.Type);
-                ret.setConstantValuetypeatIndex(&sc.Data, mtlType, (UIntPtr)sc.ID);
+                foreach (SpecializationConstant sc in specializations)
+                {
+                    MTLDataType mtlType = MTLFormats.VdVoMTLShaderConstantType(sc.Type);
+                    ret.setConstantValuetypeatIndex(&sc.Data, mtlType, (UIntPtr)sc.ID);
+                }
             }
 
             return ret;
@@ -295,9 +296,12 @@ namespace Veldrid.MTL
                     ObjectiveCRuntime.release(ComputePipelineState.NativePtr);
                 }
 
-                foreach (MTLFunction function in _specializedFunctions)
+                if (_specializedFunctions != null)
                 {
-                    ObjectiveCRuntime.release(function.NativePtr);
+                    foreach (MTLFunction function in _specializedFunctions)
+                    {
+                        ObjectiveCRuntime.release(function.NativePtr);
+                    }
                 }
                 _specializedFunctions.Clear();
 

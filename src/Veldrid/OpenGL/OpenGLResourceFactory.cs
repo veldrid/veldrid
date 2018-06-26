@@ -57,7 +57,7 @@ namespace Veldrid.OpenGL
         protected override Shader CreateShaderCore(ref ShaderDescription description)
         {
             StagingBlock stagingBlock = _pool.Stage(description.ShaderBytes);
-            return new OpenGLShader(_gd, description.Stage, stagingBlock);
+            return new OpenGLShader(_gd, description.Stage, stagingBlock, description.EntryPoint);
         }
 
         protected override Texture CreateTextureCore(ref TextureDescription description)

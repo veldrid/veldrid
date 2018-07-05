@@ -302,8 +302,8 @@ namespace Veldrid.MTL
                     {
                         ObjectiveCRuntime.release(function.NativePtr);
                     }
+                    _specializedFunctions.Clear();
                 }
-                _specializedFunctions.Clear();
 
                 _disposed = true;
             }

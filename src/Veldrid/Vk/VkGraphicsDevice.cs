@@ -307,7 +307,14 @@ namespace Veldrid.Vk
         {
             lock (_commandListsToDispose)
             {
-                _commandListsToDispose.Add(vkCL);
+                if (vkCL.SubmittedCommandBufferCount == 0)
+                {
+                    vkCL.DestroyCommandPool();
+                }
+                else
+                {
+                    _commandListsToDispose.Add(vkCL);
+                }
             }
         }
 

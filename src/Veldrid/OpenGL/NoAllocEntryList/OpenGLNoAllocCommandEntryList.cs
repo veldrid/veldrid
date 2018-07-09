@@ -218,27 +218,27 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         currentOffset += BeginEntrySize;
                         break;
                     case ClearColorTargetID:
-                        ref NoAllocClearColorTargetEntry ccte = ref Unsafe.AsRef<NoAllocClearColorTargetEntry>(entryBasePtr);
+                        NoAllocClearColorTargetEntry ccte = Unsafe.ReadUnaligned<NoAllocClearColorTargetEntry>(entryBasePtr);
                         executor.ClearColorTarget(ccte.Index, ccte.ClearColor);
                         currentOffset += ClearColorTargetEntrySize;
                         break;
                     case ClearDepthTargetID:
-                        ref NoAllocClearDepthTargetEntry cdte = ref Unsafe.AsRef<NoAllocClearDepthTargetEntry>(entryBasePtr);
+                        NoAllocClearDepthTargetEntry cdte = Unsafe.ReadUnaligned<NoAllocClearDepthTargetEntry>(entryBasePtr);
                         executor.ClearDepthStencil(cdte.Depth, cdte.Stencil);
                         currentOffset += ClearDepthTargetEntrySize;
                         break;
                     case DrawEntryID:
-                        ref NoAllocDrawEntry de = ref Unsafe.AsRef<NoAllocDrawEntry>(entryBasePtr);
+                        NoAllocDrawEntry de = Unsafe.ReadUnaligned<NoAllocDrawEntry>(entryBasePtr);
                         executor.Draw(de.VertexCount, de.InstanceCount, de.VertexStart, de.InstanceStart);
                         currentOffset += DrawEntrySize;
                         break;
                     case DrawIndexedEntryID:
-                        ref NoAllocDrawIndexedEntry die = ref Unsafe.AsRef<NoAllocDrawIndexedEntry>(entryBasePtr);
+                        NoAllocDrawIndexedEntry die = Unsafe.ReadUnaligned<NoAllocDrawIndexedEntry>(entryBasePtr);
                         executor.DrawIndexed(die.IndexCount, die.InstanceCount, die.IndexStart, die.VertexOffset, die.InstanceStart);
                         currentOffset += DrawIndexedEntrySize;
                         break;
                     case DrawIndirectEntryID:
-                        ref NoAllocDrawIndirectEntry drawIndirectEntry = ref Unsafe.AsRef<NoAllocDrawIndirectEntry>(entryBasePtr);
+                        NoAllocDrawIndirectEntry drawIndirectEntry = Unsafe.ReadUnaligned<NoAllocDrawIndirectEntry>(entryBasePtr);
                         executor.DrawIndirect(
                             drawIndirectEntry.IndirectBuffer.Get(_resourceList),
                             drawIndirectEntry.Offset,
@@ -247,17 +247,17 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         currentOffset += DrawIndirectEntrySize;
                         break;
                     case DrawIndexedIndirectEntryID:
-                        ref NoAllocDrawIndexedIndirectEntry diie = ref Unsafe.AsRef<NoAllocDrawIndexedIndirectEntry>(entryBasePtr);
+                        NoAllocDrawIndexedIndirectEntry diie = Unsafe.ReadUnaligned<NoAllocDrawIndexedIndirectEntry>(entryBasePtr);
                         executor.DrawIndexedIndirect(diie.IndirectBuffer.Get(_resourceList), diie.Offset, diie.DrawCount, diie.Stride);
                         currentOffset += DrawIndexedIndirectEntrySize;
                         break;
                     case DispatchEntryID:
-                        ref NoAllocDispatchEntry dispatchEntry = ref Unsafe.AsRef<NoAllocDispatchEntry>(entryBasePtr);
+                        NoAllocDispatchEntry dispatchEntry = Unsafe.ReadUnaligned<NoAllocDispatchEntry>(entryBasePtr);
                         executor.Dispatch(dispatchEntry.GroupCountX, dispatchEntry.GroupCountY, dispatchEntry.GroupCountZ);
                         currentOffset += DispatchEntrySize;
                         break;
                     case DispatchIndirectEntryID:
-                        ref NoAllocDispatchIndirectEntry dispatchIndir = ref Unsafe.AsRef<NoAllocDispatchIndirectEntry>(entryBasePtr);
+                        NoAllocDispatchIndirectEntry dispatchIndir = Unsafe.ReadUnaligned<NoAllocDispatchIndirectEntry>(entryBasePtr);
                         executor.DispatchIndirect(dispatchIndir.IndirectBuffer.Get(_resourceList), dispatchIndir.Offset);
                         currentOffset += DispatchIndirectEntrySize;
                         break;
@@ -266,47 +266,47 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         currentOffset += EndEntrySize;
                         break;
                     case SetFramebufferEntryID:
-                        ref NoAllocSetFramebufferEntry sfbe = ref Unsafe.AsRef<NoAllocSetFramebufferEntry>(entryBasePtr);
+                        NoAllocSetFramebufferEntry sfbe = Unsafe.ReadUnaligned<NoAllocSetFramebufferEntry>(entryBasePtr);
                         executor.SetFramebuffer(sfbe.Framebuffer.Get(_resourceList));
                         currentOffset += SetFramebufferEntrySize;
                         break;
                     case SetIndexBufferEntryID:
-                        ref NoAllocSetIndexBufferEntry sibe = ref Unsafe.AsRef<NoAllocSetIndexBufferEntry>(entryBasePtr);
+                        NoAllocSetIndexBufferEntry sibe = Unsafe.ReadUnaligned<NoAllocSetIndexBufferEntry>(entryBasePtr);
                         executor.SetIndexBuffer(sibe.Buffer.Get(_resourceList), sibe.Format);
                         currentOffset += SetIndexBufferEntrySize;
                         break;
                     case SetPipelineEntryID:
-                        ref NoAllocSetPipelineEntry spe = ref Unsafe.AsRef<NoAllocSetPipelineEntry>(entryBasePtr);
+                        NoAllocSetPipelineEntry spe = Unsafe.ReadUnaligned<NoAllocSetPipelineEntry>(entryBasePtr);
                         executor.SetPipeline(spe.Pipeline.Get(_resourceList));
                         currentOffset += SetPipelineEntrySize;
                         break;
                     case SetGraphicsResourceSetEntryID:
-                        ref NoAllocSetGraphicsResourceSetEntry sgrse = ref Unsafe.AsRef<NoAllocSetGraphicsResourceSetEntry>(entryBasePtr);
+                        NoAllocSetGraphicsResourceSetEntry sgrse = Unsafe.ReadUnaligned<NoAllocSetGraphicsResourceSetEntry>(entryBasePtr);
                         executor.SetGraphicsResourceSet(sgrse.Slot, sgrse.ResourceSet.Get(_resourceList));
                         currentOffset += SetGraphicsResourceSetEntrySize;
                         break;
                     case SetComputeResourceSetEntryID:
-                        ref NoAllocSetComputeResourceSetEntry scrse = ref Unsafe.AsRef<NoAllocSetComputeResourceSetEntry>(entryBasePtr);
+                        NoAllocSetComputeResourceSetEntry scrse = Unsafe.ReadUnaligned<NoAllocSetComputeResourceSetEntry>(entryBasePtr);
                         executor.SetComputeResourceSet(scrse.Slot, scrse.ResourceSet.Get(_resourceList));
                         currentOffset += SetComputeResourceSetEntrySize;
                         break;
                     case SetScissorRectEntryID:
-                        ref NoAllocSetScissorRectEntry ssre = ref Unsafe.AsRef<NoAllocSetScissorRectEntry>(entryBasePtr);
+                        NoAllocSetScissorRectEntry ssre = Unsafe.ReadUnaligned<NoAllocSetScissorRectEntry>(entryBasePtr);
                         executor.SetScissorRect(ssre.Index, ssre.X, ssre.Y, ssre.Width, ssre.Height);
                         currentOffset += SetScissorRectEntrySize;
                         break;
                     case SetVertexBufferEntryID:
-                        ref NoAllocSetVertexBufferEntry svbe = ref Unsafe.AsRef<NoAllocSetVertexBufferEntry>(entryBasePtr);
+                        NoAllocSetVertexBufferEntry svbe = Unsafe.ReadUnaligned<NoAllocSetVertexBufferEntry>(entryBasePtr);
                         executor.SetVertexBuffer(svbe.Index, svbe.Buffer.Get(_resourceList));
                         currentOffset += SetVertexBufferEntrySize;
                         break;
                     case SetViewportEntryID:
-                        ref NoAllocSetViewportEntry svpe = ref Unsafe.AsRef<NoAllocSetViewportEntry>(entryBasePtr);
+                        NoAllocSetViewportEntry svpe = Unsafe.ReadUnaligned<NoAllocSetViewportEntry>(entryBasePtr);
                         executor.SetViewport(svpe.Index, ref svpe.Viewport);
                         currentOffset += SetViewportEntrySize;
                         break;
                     case UpdateBufferEntryID:
-                        ref NoAllocUpdateBufferEntry ube = ref Unsafe.AsRef<NoAllocUpdateBufferEntry>(entryBasePtr);
+                        NoAllocUpdateBufferEntry ube = Unsafe.ReadUnaligned<NoAllocUpdateBufferEntry>(entryBasePtr);
                         byte* dataPtr = (byte*)ube.StagingBlock.Data;
                         executor.UpdateBuffer(
                             ube.Buffer.Get(_resourceList),
@@ -315,7 +315,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         currentOffset += UpdateBufferEntrySize;
                         break;
                     case CopyBufferEntryID:
-                        ref NoAllocCopyBufferEntry cbe = ref Unsafe.AsRef<NoAllocCopyBufferEntry>(entryBasePtr);
+                        NoAllocCopyBufferEntry cbe = Unsafe.ReadUnaligned<NoAllocCopyBufferEntry>(entryBasePtr);
                         executor.CopyBuffer(
                             cbe.Source.Get(_resourceList),
                             cbe.SourceOffset,
@@ -325,7 +325,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         currentOffset += CopyBufferEntrySize;
                         break;
                     case CopyTextureEntryID:
-                        ref NoAllocCopyTextureEntry cte = ref Unsafe.AsRef<NoAllocCopyTextureEntry>(entryBasePtr);
+                        NoAllocCopyTextureEntry cte = Unsafe.ReadUnaligned<NoAllocCopyTextureEntry>(entryBasePtr);
                         executor.CopyTexture(
                             cte.Source.Get(_resourceList),
                             cte.SrcX, cte.SrcY, cte.SrcZ,
@@ -340,12 +340,12 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         currentOffset += CopyTextureEntrySize;
                         break;
                     case ResolveTextureEntryID:
-                        ref NoAllocResolveTextureEntry rte = ref Unsafe.AsRef<NoAllocResolveTextureEntry>(entryBasePtr);
+                        NoAllocResolveTextureEntry rte = Unsafe.ReadUnaligned<NoAllocResolveTextureEntry>(entryBasePtr);
                         executor.ResolveTexture(rte.Source.Get(_resourceList), rte.Destination.Get(_resourceList));
                         currentOffset += ResolveTextureEntrySize;
                         break;
                     case GenerateMipmapsEntryID:
-                        ref NoAllocGenerateMipmapsEntry gme = ref Unsafe.AsRef<NoAllocGenerateMipmapsEntry>(entryBasePtr);
+                        NoAllocGenerateMipmapsEntry gme = Unsafe.ReadUnaligned<NoAllocGenerateMipmapsEntry>(entryBasePtr);
                         executor.GenerateMipmaps(gme.Texture.Get(_resourceList));
                         currentOffset += GenerateMipmapsEntrySize;
                         break;

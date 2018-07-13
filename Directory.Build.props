@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VeldridSpirvVersion>1.0.0-beta3</VeldridSpirvVersion>
+    <VeldridSpirvVersion>1.0.0-beta4</VeldridSpirvVersion>
     <NativeLibraryLoaderVersion>1.0.10</NativeLibraryLoaderVersion>
   </PropertyGroup>
 

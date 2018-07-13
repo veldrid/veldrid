@@ -383,14 +383,22 @@ namespace Veldrid.Vk
                 dstSubresource = new VkImageSubresourceLayers { layerCount = 1, aspectMask = aspectFlags }
             };
 
+            vkSource.TransitionImageLayout(_cb, 0, 1, 0, 1, VkImageLayout.TransferSrcOptimal);
+            vkDestination.TransitionImageLayout(_cb, 0, 1, 0, 1, VkImageLayout.TransferDstOptimal);
+
             vkCmdResolveImage(
                 _cb,
                 vkSource.OptimalDeviceImage,
-                vkSource.GetImageLayout(0, 0),
+                 VkImageLayout.TransferSrcOptimal,
                 vkDestination.OptimalDeviceImage,
-                vkDestination.GetImageLayout(0, 0),
+                VkImageLayout.TransferDstOptimal,
                 1,
                 ref region);
+
+            if ((vkDestination.Usage & TextureUsage.Sampled) != 0)
+            {
+                vkDestination.TransitionImageLayout(_cb, 0, 1, 0, 1, VkImageLayout.ShaderReadOnlyOptimal);
+            }
         }
 
         public override void End()

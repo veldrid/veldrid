@@ -310,10 +310,6 @@ namespace Veldrid.Vk
             subpassDependency.srcStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             subpassDependency.dstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             subpassDependency.dstAccessMask = VkAccessFlags.ColorAttachmentRead | VkAccessFlags.ColorAttachmentWrite;
-            if (outputDesc.DepthAttachment != null)
-            {
-                subpassDependency.dstAccessMask |= VkAccessFlags.DepthStencilAttachmentRead | VkAccessFlags.DepthStencilAttachmentWrite;
-            }
 
             renderPassCI.attachmentCount = attachments.Count;
             renderPassCI.pAttachments = (VkAttachmentDescription*)attachments.Data;

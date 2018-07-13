@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -18,22 +19,12 @@ namespace Veldrid.Vk
                 throw new ArgumentNullException(nameof(s));
             }
 
-            byte[] text = Encoding.UTF8.GetBytes(s);
+            int byteCount = Encoding.UTF8.GetByteCount(s);
+            byte[] text = new byte[byteCount + 1];
             _handle = GCHandle.Alloc(text, GCHandleType.Pinned);
-            _numBytes = (uint)text.Length;
-        }
-
-        public void SetText(string s)
-        {
-            if (s == null)
-            {
-                throw new ArgumentNullException(nameof(s));
-            }
-
-            _handle.Free();
-            byte[] text = Encoding.UTF8.GetBytes(s);
-            _handle = GCHandle.Alloc(text, GCHandleType.Pinned);
-            _numBytes = (uint)text.Length;
+            _numBytes = (uint)text.Length - 1; // Includes null terminator
+            int encodedCount = Encoding.UTF8.GetBytes(s, 0, s.Length, text, 0);
+            Debug.Assert(encodedCount == byteCount);
         }
 
         private string GetString()

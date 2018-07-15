@@ -47,7 +47,7 @@ namespace Veldrid.MTL
             OutputAttachmentDescription colorAttachment = new OutputAttachmentDescription(colorFormat);
 
             OutputDescription = new OutputDescription(depthAttachment, colorAttachment);
-            _placeholderTexture = new MTLPlaceholderTexture();
+            _placeholderTexture = new MTLPlaceholderTexture(colorFormat);
             _placeholderTexture.Resize(width, height);
             _colorTargets = new[] { new FramebufferAttachment(_placeholderTexture, 0) };
         }

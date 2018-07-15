@@ -145,6 +145,8 @@ namespace Veldrid.D3D11
             ArrayLayers = (uint)existingTexture.Description.ArraySize;
             Format = D3D11Formats.ToVdFormat(existingTexture.Description.Format);
             SampleCount = D3D11Formats.ToVdSampleCount(existingTexture.Description.SampleDescription);
+            Type = TextureType.Texture2D;
+            Usage = TextureUsage.RenderTarget;
         }
 
         public override string Name

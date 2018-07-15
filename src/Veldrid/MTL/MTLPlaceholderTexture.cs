@@ -26,6 +26,11 @@ namespace Veldrid.MTL
 
         public override string Name { get; set; }
 
+        public MTLPlaceholderTexture(PixelFormat format)
+        {
+            Format = format;
+        }
+
         public void Resize(uint width, uint height)
         {
             _width = width;

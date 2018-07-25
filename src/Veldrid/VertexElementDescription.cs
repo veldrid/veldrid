@@ -67,8 +67,8 @@ namespace Veldrid
         {
             return HashHelper.Combine(
                 Name.GetHashCode(),
-                Format.GetHashCode(),
-                Semantic.GetHashCode());
+                (int)Format,
+                (int)Semantic);
         }
     }
 }

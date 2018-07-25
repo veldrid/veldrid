@@ -109,9 +109,9 @@ namespace Veldrid
         public override int GetHashCode()
         {
             return HashHelper.Combine(
-                CullMode.GetHashCode(),
-                FillMode.GetHashCode(),
-                FrontFace.GetHashCode(),
+                (int)CullMode,
+                (int)FillMode,
+                (int)FrontFace,
                 DepthClipEnabled.GetHashCode(),
                 ScissorTestEnabled.GetHashCode());
         }

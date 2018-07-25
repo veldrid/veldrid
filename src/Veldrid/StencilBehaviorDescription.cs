@@ -59,7 +59,7 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(Fail.GetHashCode(), Pass.GetHashCode(), DepthFail.GetHashCode(), Comparison.GetHashCode());
+            return HashHelper.Combine((int)Fail, (int)Pass, (int)DepthFail, (int)Comparison);
         }
     }
 }

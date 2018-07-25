@@ -204,7 +204,7 @@ namespace Veldrid
             return HashHelper.Combine(
                 DepthTestEnabled.GetHashCode(),
                 DepthWriteEnabled.GetHashCode(),
-                DepthComparison.GetHashCode(),
+                (int)DepthComparison,
                 StencilTestEnabled.GetHashCode(),
                 StencilFront.GetHashCode(),
                 StencilBack.GetHashCode(),

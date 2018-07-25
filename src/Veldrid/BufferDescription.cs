@@ -94,7 +94,7 @@ namespace Veldrid
         {
             return HashHelper.Combine(
                 SizeInBytes.GetHashCode(),
-                Usage.GetHashCode(),
+                (int)Usage,
                 StructureByteStride.GetHashCode(),
                 RawBuffer.GetHashCode());
         }

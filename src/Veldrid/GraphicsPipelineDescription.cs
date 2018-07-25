@@ -160,7 +160,9 @@ namespace Veldrid
                 && PrimitiveTopology == other.PrimitiveTopology
                 && ShaderSet.Equals(other.ShaderSet)
                 && Util.ArrayEquals(ResourceLayouts, other.ResourceLayouts)
-                && ResourceBindingModel.Equals(other.ResourceBindingModel)
+                && (ResourceBindingModel.HasValue && other.ResourceBindingModel.HasValue
+                    ? ResourceBindingModel.Value == other.ResourceBindingModel.Value
+                    : ResourceBindingModel.HasValue == other.ResourceBindingModel.HasValue)
                 && Outputs.Equals(other.Outputs);
         }
 
@@ -174,7 +176,7 @@ namespace Veldrid
                 BlendState.GetHashCode(),
                 DepthStencilState.GetHashCode(),
                 RasterizerState.GetHashCode(),
-                PrimitiveTopology.GetHashCode(),
+                (int)PrimitiveTopology,
                 ShaderSet.GetHashCode(),
                 HashHelper.Array(ResourceLayouts),
                 ResourceBindingModel.GetHashCode(),

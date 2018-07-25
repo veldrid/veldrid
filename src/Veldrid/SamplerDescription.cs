@@ -186,16 +186,16 @@ namespace Veldrid
         public override int GetHashCode()
         {
             return HashHelper.Combine(
-                AddressModeU.GetHashCode(),
-                AddressModeV.GetHashCode(),
-                AddressModeW.GetHashCode(),
-                Filter.GetHashCode(),
+                (int)AddressModeU,
+                (int)AddressModeV,
+                (int)AddressModeW,
+                (int)Filter,
                 ComparisonKind.GetHashCode(),
                 MaximumAnisotropy.GetHashCode(),
                 MinimumLod.GetHashCode(),
                 MaximumLod.GetHashCode(),
                 LodBias.GetHashCode(),
-                BorderColor.GetHashCode());
+                (int)BorderColor);
         }
     }
 }

@@ -173,12 +173,12 @@ namespace Veldrid
         {
             return HashHelper.Combine(
                 BlendEnabled.GetHashCode(),
-                SourceColorFactor.GetHashCode(),
-                DestinationColorFactor.GetHashCode(),
-                ColorFunction.GetHashCode(),
-                SourceAlphaFactor.GetHashCode(),
-                DestinationAlphaFactor.GetHashCode(),
-                AlphaFunction.GetHashCode());
+                (int)SourceColorFactor,
+                (int)DestinationColorFactor,
+                (int)ColorFunction,
+                (int)SourceAlphaFactor,
+                (int)DestinationAlphaFactor,
+                (int)AlphaFunction);
         }
     }
 }

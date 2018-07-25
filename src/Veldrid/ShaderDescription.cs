@@ -83,7 +83,7 @@ namespace Veldrid
         public override int GetHashCode()
         {
             return HashHelper.Combine(
-                Stage.GetHashCode(),
+                (int)Stage,
                 ShaderBytes.GetHashCode(),
                 EntryPoint.GetHashCode(),
                 Debug.GetHashCode());

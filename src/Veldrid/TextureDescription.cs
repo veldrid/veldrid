@@ -290,10 +290,10 @@ namespace Veldrid
                 Depth.GetHashCode(),
                 MipLevels.GetHashCode(),
                 ArrayLayers.GetHashCode(),
-                Format.GetHashCode(),
-                Usage.GetHashCode(),
-                Type.GetHashCode(),
-                SampleCount.GetHashCode());
+                (int)Format,
+                (int)Usage,
+                (int)Type,
+                (int)SampleCount);
         }
     }
 }

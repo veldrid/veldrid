@@ -106,7 +106,7 @@ namespace Veldrid
         /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(SpecializationConstant other)
         {
-            return ID.Equals(other.ID) && Type.Equals(other.Type) && Data.Equals(other.Data);
+            return ID.Equals(other.ID) && Type == other.Type && Data.Equals(other.Data);
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(ID.GetHashCode(), Type.GetHashCode(), Data.GetHashCode());
+            return HashHelper.Combine(ID.GetHashCode(), (int)Type, Data.GetHashCode());
         }
     }
 }

@@ -57,6 +57,16 @@ namespace Veldrid
             return Encoding.UTF8.GetString(stringStart, characters);
         }
 
+        internal static bool NullableEquals<T>(T? left, T? right) where T : struct, IEquatable<T>
+        {
+            if (left.HasValue && right.HasValue)
+            {
+                return left.Value.Equals(right.Value);
+            }
+
+            return left.HasValue == right.HasValue;
+        }
+
         internal static bool ArrayEquals<T>(T[] left, T[] right) where T : class
         {
             if (left == null || right == null)

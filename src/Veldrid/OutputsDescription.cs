@@ -89,7 +89,7 @@ namespace Veldrid
             return HashHelper.Combine(
                 DepthAttachment.GetHashCode(),
                 HashHelper.Array(ColorAttachments),
-                SampleCount.GetHashCode());
+                (int)SampleCount);
         }
     }
 }

@@ -42,6 +42,7 @@ namespace Veldrid.Sdl2
         private BufferedValue<Point> _cachedSize = new BufferedValue<Point>();
         private string _cachedWindowTitle;
         private bool _newWindowTitleReceived;
+        private bool _firstMouseEvent = true;
 
         public Sdl2Window(string title, int x, int y, int width, int height, SDL_WindowFlags flags, bool threadedProcessing)
         {
@@ -330,6 +331,7 @@ namespace Veldrid.Sdl2
             {
                 SDL_ShowWindow(_window);
             }
+
             _exists = true;
         }
 
@@ -341,6 +343,7 @@ namespace Veldrid.Sdl2
 
         public InputSnapshot PumpEvents()
         {
+            _currentMouseDelta = new Vector2();
             if (_threadedProcessing)
             {
                 SimpleInputSnapshot snapshot = Interlocked.Exchange(ref _privateSnapshot, _privateBackbuffer);
@@ -567,11 +570,18 @@ namespace Veldrid.Sdl2
         private void HandleMouseMotionEvent(SDL_MouseMotionEvent mouseMotionEvent)
         {
             Vector2 mousePos = new Vector2(mouseMotionEvent.x, mouseMotionEvent.y);
-            _currentMouseDelta = new Vector2(mouseMotionEvent.x - _currentMouseX, mouseMotionEvent.y - _currentMouseY);
+            Vector2 delta = new Vector2(mouseMotionEvent.x - _currentMouseX, mouseMotionEvent.y - _currentMouseY);
             _currentMouseX = (int)mousePos.X;
             _currentMouseY = (int)mousePos.Y;
             _privateSnapshot.MousePosition = mousePos;
-            MouseMove?.Invoke(new MouseMoveEventArgs(GetCurrentMouseState(), mousePos));
+
+            if (!_firstMouseEvent)
+            {
+                _currentMouseDelta = delta;
+                MouseMove?.Invoke(new MouseMoveEventArgs(GetCurrentMouseState(), mousePos));
+            }
+
+            _firstMouseEvent = false;
         }
 
         private void HandleKeyboardEvent(SDL_KeyboardEvent keyboardEvent)

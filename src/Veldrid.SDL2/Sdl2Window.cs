@@ -258,6 +258,8 @@ namespace Veldrid.Sdl2
             if (_exists)
             {
                 SDL_WarpMouseInWindow(_window, x, y);
+                _currentMouseX = x;
+                _currentMouseY = y;
             }
         }
 
@@ -562,6 +564,7 @@ namespace Veldrid.Sdl2
         private void HandleMouseMotionEvent(SDL_MouseMotionEvent mouseMotionEvent)
         {
             Vector2 mousePos = new Vector2(mouseMotionEvent.x, mouseMotionEvent.y);
+            _privateSnapshot.MouseDelta = new Vector2(_currentMouseX - (int)mousePos.X, _currentMouseY - (int)mousePos.Y);
             _currentMouseX = (int)mousePos.X;
             _currentMouseY = (int)mousePos.Y;
             _privateSnapshot.MousePosition = mousePos;
@@ -974,6 +977,7 @@ namespace Veldrid.Sdl2
             public IReadOnlyList<char> KeyCharPresses => KeyCharPressesList;
 
             public Vector2 MousePosition { get; set; }
+            public Vector2 MouseDelta { get; set; }
 
             private bool[] _mouseDown = new bool[13];
             public bool[] MouseDown => _mouseDown;
@@ -989,6 +993,7 @@ namespace Veldrid.Sdl2
                 KeyEventsList.Clear();
                 MouseEventsList.Clear();
                 KeyCharPressesList.Clear();
+                MouseDelta = Vector2.Zero;
                 WheelDelta = 0f;
             }
 
@@ -1006,6 +1011,7 @@ namespace Veldrid.Sdl2
                 foreach (var kcp in KeyCharPressesList) { other.KeyCharPressesList.Add(kcp); }
 
                 other.MousePosition = MousePosition;
+                other.MouseDelta = MouseDelta;
                 other.WheelDelta = WheelDelta;
                 _mouseDown.CopyTo(other._mouseDown, 0);
             }

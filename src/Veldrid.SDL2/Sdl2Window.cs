@@ -35,6 +35,7 @@ namespace Veldrid.Sdl2
         private int _currentMouseX;
         private int _currentMouseY;
         private bool[] _currentMouseButtonStates = new bool[13];
+        private Vector2 _currentMouseDelta;
 
         // Cached Sdl2Window state (for threaded processing)
         private BufferedValue<Point> _cachedPosition = new BufferedValue<Point>();
@@ -258,8 +259,12 @@ namespace Veldrid.Sdl2
             if (_exists)
             {
                 SDL_WarpMouseInWindow(_window, x, y);
+                _currentMouseX = x;
+                _currentMouseY = y;
             }
         }
+
+        public Vector2 MouseDelta => _currentMouseDelta;
 
         public void Close()
         {
@@ -562,6 +567,7 @@ namespace Veldrid.Sdl2
         private void HandleMouseMotionEvent(SDL_MouseMotionEvent mouseMotionEvent)
         {
             Vector2 mousePos = new Vector2(mouseMotionEvent.x, mouseMotionEvent.y);
+            _currentMouseDelta = new Vector2(mouseMotionEvent.x - _currentMouseX, mouseMotionEvent.y - _currentMouseY);
             _currentMouseX = (int)mousePos.X;
             _currentMouseY = (int)mousePos.Y;
             _privateSnapshot.MousePosition = mousePos;

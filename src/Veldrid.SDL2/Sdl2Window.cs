@@ -577,7 +577,7 @@ namespace Veldrid.Sdl2
 
             if (!_firstMouseEvent)
             {
-                _currentMouseDelta = delta;
+                _currentMouseDelta += delta;
                 MouseMove?.Invoke(new MouseMoveEventArgs(GetCurrentMouseState(), mousePos));
             }
 

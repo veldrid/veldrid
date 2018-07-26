@@ -255,6 +255,7 @@ namespace Veldrid.Sdl2
             return new Point(p.X + position.X, p.Y + position.Y);
         }
 
+        public void SetMousePosition(Vector2 position) => SetMousePosition((int)position.X, (int)position.Y);
         public void SetMousePosition(int x, int y)
         {
             if (_exists)

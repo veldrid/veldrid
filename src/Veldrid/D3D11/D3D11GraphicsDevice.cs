@@ -429,8 +429,9 @@ namespace Veldrid.D3D11
                     front: (int)z,
                     bottom: (int)(y + height),
                     back: (int)(z + depth));
-                uint srcRowPitch = FormatHelpers.GetSizeInBytes(texture.Format) * width;
-                uint srcDepthPitch = srcRowPitch * depth;
+
+                uint srcRowPitch = FormatHelpers.GetRowPitch(width, texture.Format);
+                uint srcDepthPitch = FormatHelpers.GetDepthPitch(srcRowPitch, height, texture.Format);
                 lock (_immediateContextLock)
                 {
                     _immediateContext.UpdateSubresource(

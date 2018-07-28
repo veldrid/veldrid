@@ -808,6 +808,23 @@ namespace Veldrid.Tests
             GD.WaitForIdle();
         }
 
+        [Theory]
+        [InlineData(PixelFormat.BC1_Rgb_UNorm)]
+        [InlineData(PixelFormat.BC1_Rgba_UNorm)]
+        [InlineData(PixelFormat.BC2_UNorm)]
+        [InlineData(PixelFormat.BC3_UNorm)]
+        [InlineData(PixelFormat.BC4_UNorm)]
+        [InlineData(PixelFormat.BC4_SNorm)]
+        [InlineData(PixelFormat.BC5_UNorm)]
+        [InlineData(PixelFormat.BC5_SNorm)]
+        [InlineData(PixelFormat.BC7_UNorm)]
+        public void CreateSmallTexture(PixelFormat format)
+        {
+            Texture tex = RF.CreateTexture(TextureDescription.Texture2D(1, 1, 1, 1, format, TextureUsage.Sampled));
+            Assert.Equal(1u, tex.Width);
+            Assert.Equal(1u, tex.Height);
+        }
+
         private static readonly FormatProps[] s_allFormatProps =
         {
             new FormatProps(PixelFormat.R8_UNorm, 8, 0, 0, 0),

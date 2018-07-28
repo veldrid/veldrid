@@ -81,11 +81,19 @@ namespace Veldrid.D3D11
                 arraySize *= 6;
             }
 
+            int roundedWidth = (int)description.Width;
+            int roundedHeight = (int)description.Height;
+            if (FormatHelpers.IsCompressedFormat(description.Format))
+            {
+                roundedWidth = ((roundedWidth + 3) / 4) * 4;
+                roundedHeight = ((roundedHeight + 3) / 4) * 4;
+            }
+
             if (Type == TextureType.Texture1D)
             {
                 Texture1DDescription desc1D = new Texture1DDescription()
                 {
-                    Width = (int)description.Width,
+                    Width = roundedWidth,
                     MipLevels = (int)description.MipLevels,
                     ArraySize = arraySize,
                     Format = DxgiFormat,
@@ -101,8 +109,8 @@ namespace Veldrid.D3D11
             {
                 Texture2DDescription deviceDescription = new Texture2DDescription()
                 {
-                    Width = (int)description.Width,
-                    Height = (int)description.Height,
+                    Width = roundedWidth,
+                    Height = roundedHeight,
                     MipLevels = (int)description.MipLevels,
                     ArraySize = arraySize,
                     Format = DxgiFormat,
@@ -120,8 +128,8 @@ namespace Veldrid.D3D11
                 Debug.Assert(Type == TextureType.Texture3D);
                 Texture3DDescription desc3D = new Texture3DDescription()
                 {
-                    Width = (int)description.Width,
-                    Height = (int)description.Height,
+                    Width = roundedWidth,
+                    Height = roundedHeight,
                     Depth = (int)description.Depth,
                     MipLevels = (int)description.MipLevels,
                     Format = DxgiFormat,

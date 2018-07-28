@@ -213,5 +213,25 @@
         /// data.
         /// </summary>
         ETC2_R8_G8_B8_A8_UNorm,
+        /// <summary>
+        /// BC4 block compressed format, unsigned normalized values.
+        /// </summary>
+        BC4_UNorm,
+        /// <summary>
+        /// BC4 block compressed format, signed normalized values.
+        /// </summary>
+        BC4_SNorm,
+        /// <summary>
+        /// BC5 block compressed format, unsigned normalized values.
+        /// </summary>
+        BC5_UNorm,
+        /// <summary>
+        /// BC5 block compressed format, signed normalized values.
+        /// </summary>
+        BC5_SNorm,
+        /// <summary>
+        /// BC7 block compressed format.
+        /// </summary>
+        BC7_UNorm
     }
 }

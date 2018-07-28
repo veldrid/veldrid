@@ -67,6 +67,11 @@ namespace Veldrid
                 case PixelFormat.BC1_Rgba_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.BC4_UNorm:
+                case PixelFormat.BC4_SNorm:
+                case PixelFormat.BC5_UNorm:
+                case PixelFormat.BC5_SNorm:
+                case PixelFormat.BC7_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
@@ -191,6 +196,11 @@ namespace Veldrid
                 || format == PixelFormat.BC1_Rgba_UNorm
                 || format == PixelFormat.BC2_UNorm
                 || format == PixelFormat.BC3_UNorm
+                || format == PixelFormat.BC4_UNorm
+                || format == PixelFormat.BC4_SNorm
+                || format == PixelFormat.BC5_UNorm
+                || format == PixelFormat.BC5_SNorm
+                || format == PixelFormat.BC7_UNorm
                 || format == PixelFormat.ETC2_R8_G8_B8_UNorm
                 || format == PixelFormat.ETC2_R8_G8_B8_A1_UNorm
                 || format == PixelFormat.ETC2_R8_G8_B8_A8_UNorm;
@@ -204,6 +214,11 @@ namespace Veldrid
                 case PixelFormat.BC1_Rgb_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.BC4_UNorm:
+                case PixelFormat.BC4_SNorm:
+                case PixelFormat.BC5_UNorm:
+                case PixelFormat.BC5_SNorm:
+                case PixelFormat.BC7_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
@@ -222,11 +237,16 @@ namespace Veldrid
             {
                 case PixelFormat.BC1_Rgba_UNorm:
                 case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC4_UNorm:
+                case PixelFormat.BC4_SNorm:
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
                     return 8;
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.BC5_UNorm:
+                case PixelFormat.BC5_SNorm:
+                case PixelFormat.BC7_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
                     return 16;
                 default:
@@ -242,6 +262,11 @@ namespace Veldrid
                 case PixelFormat.BC1_Rgb_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.BC4_UNorm:
+                case PixelFormat.BC4_SNorm:
+                case PixelFormat.BC5_UNorm:
+                case PixelFormat.BC5_SNorm:
+                case PixelFormat.BC7_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:

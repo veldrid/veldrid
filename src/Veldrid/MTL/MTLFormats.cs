@@ -99,6 +99,16 @@ namespace Veldrid.MTL
                     return MTLPixelFormat.BC2_RGBA;
                 case PixelFormat.BC3_UNorm:
                     return MTLPixelFormat.BC3_RGBA;
+                case PixelFormat.BC4_UNorm:
+                    return MTLPixelFormat.BC4_RUnorm;
+                case PixelFormat.BC4_SNorm:
+                    return MTLPixelFormat.BC4_RSnorm;
+                case PixelFormat.BC5_UNorm:
+                    return MTLPixelFormat.BC5_RGUnorm;
+                case PixelFormat.BC5_SNorm:
+                    return MTLPixelFormat.BC5_RGSnorm;
+                case PixelFormat.BC7_UNorm:
+                    return MTLPixelFormat.BC7_RGBAUnorm;
 
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                     return MTLPixelFormat.ETC2_RGB8;
@@ -132,6 +142,11 @@ namespace Veldrid.MTL
                 case PixelFormat.BC1_Rgba_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.BC4_UNorm:
+                case PixelFormat.BC4_SNorm:
+                case PixelFormat.BC5_UNorm:
+                case PixelFormat.BC5_SNorm:
+                case PixelFormat.BC7_UNorm:
                     return metalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v1)
                         || metalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v2)
                         || metalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3);

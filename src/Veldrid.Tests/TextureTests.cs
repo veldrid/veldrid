@@ -144,6 +144,16 @@ namespace Veldrid.Tests
         [InlineData(PixelFormat.BC2_UNorm, 16, 8, 4, 16, 16)]
         [InlineData(PixelFormat.BC3_UNorm, 16, 0, 0, 64, 64)]
         [InlineData(PixelFormat.BC3_UNorm, 16, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC4_UNorm, 8, 0, 0, 16, 16)]
+        [InlineData(PixelFormat.BC4_UNorm, 8, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC4_SNorm, 8, 0, 0, 16, 16)]
+        [InlineData(PixelFormat.BC4_SNorm, 8, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC5_UNorm, 16, 0, 0, 16, 16)]
+        [InlineData(PixelFormat.BC5_UNorm, 16, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC5_SNorm, 16, 0, 0, 16, 16)]
+        [InlineData(PixelFormat.BC5_SNorm, 16, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC7_UNorm, 16, 0, 0, 16, 16)]
+        [InlineData(PixelFormat.BC7_UNorm, 16, 8, 4, 16, 16)]
         public unsafe void Copy_Compressed_Texture(PixelFormat format, uint blockSizeInBytes, uint srcX, uint srcY, uint copyWidth, uint copyHeight)
         {
             Texture copySrc = RF.CreateTexture(TextureDescription.Texture2D(

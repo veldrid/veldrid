@@ -163,6 +163,11 @@ namespace Veldrid.OpenGL
                 case PixelFormat.BC1_Rgba_UNorm:
                 case PixelFormat.BC2_UNorm:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.BC4_UNorm:
+                case PixelFormat.BC4_SNorm:
+                case PixelFormat.BC5_UNorm:
+                case PixelFormat.BC5_SNorm:
+                case PixelFormat.BC7_UNorm:
                 default:
                     throw Illegal.Value<PixelFormat>();
             }

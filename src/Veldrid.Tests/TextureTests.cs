@@ -156,6 +156,11 @@ namespace Veldrid.Tests
         [InlineData(PixelFormat.BC7_UNorm, 16, 8, 4, 16, 16)]
         public unsafe void Copy_Compressed_Texture(PixelFormat format, uint blockSizeInBytes, uint srcX, uint srcY, uint copyWidth, uint copyHeight)
         {
+            if (!GD.GetPixelFormatSupport(format, TextureType.Texture2D, TextureUsage.Sampled))
+            {
+                return;
+            }
+
             Texture copySrc = RF.CreateTexture(TextureDescription.Texture2D(
                 64, 64, 1, 1, format, TextureUsage.Staging));
             Texture copyDst = RF.CreateTexture(TextureDescription.Texture2D(

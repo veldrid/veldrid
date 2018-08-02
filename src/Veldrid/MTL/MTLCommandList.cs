@@ -20,6 +20,7 @@ namespace Veldrid.MTL
         private RgbaFloat?[] _clearColors = Array.Empty<RgbaFloat?>();
         private (float depth, byte stencil)? _clearDepth;
         private MTLBuffer _indexBuffer;
+        private uint _ibOffset;
         private MTLIndexType _indexType;
         private new MTLPipeline _graphicsPipeline;
         private bool _graphicsPipelineChanged;
@@ -38,6 +39,7 @@ namespace Veldrid.MTL
         private uint _vertexBufferCount;
         private uint _nonVertexBufferCount;
         private MTLBuffer[] _vertexBuffers;
+        private uint[] _vbOffsets;
         private bool[] _vertexBuffersActive;
         private bool _disposed;
 
@@ -200,7 +202,7 @@ namespace Veldrid.MTL
                             : i);
                         _rce.setVertexBuffer(
                             _vertexBuffers[i].DeviceBuffer,
-                            UIntPtr.Zero,
+                            (UIntPtr)_vbOffsets[i],
                             index);
                     }
                 }
@@ -293,6 +295,7 @@ namespace Veldrid.MTL
 
                 _vertexBufferCount = _graphicsPipeline.VertexBufferCount;
                 Util.EnsureArrayMinimumSize(ref _vertexBuffers, _vertexBufferCount);
+                Util.EnsureArrayMinimumSize(ref _vbOffsets, _vertexBufferCount);
                 Util.EnsureArrayMinimumSize(ref _vertexBuffersActive, _vertexBufferCount);
                 Util.ClearArray(_vertexBuffersActive);
 
@@ -581,7 +584,7 @@ namespace Veldrid.MTL
                         _graphicsPipeline.PrimitiveType,
                         _indexType,
                         _indexBuffer.DeviceBuffer,
-                        UIntPtr.Zero,
+                        (UIntPtr)_ibOffset,
                         mtlBuffer.DeviceBuffer,
                         (UIntPtr)currentOffset);
                 }
@@ -985,20 +988,23 @@ namespace Veldrid.MTL
             Debug.Assert(!ComputeEncoderActive);
         }
 
-        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format)
+        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
             _indexBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
+            _ibOffset = offset;
             _indexType = MTLFormats.VdToMTLIndexFormat(format);
         }
 
-        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
+        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
         {
             Util.EnsureArrayMinimumSize(ref _vertexBuffers, index + 1);
+            Util.EnsureArrayMinimumSize(ref _vbOffsets, index + 1);
             Util.EnsureArrayMinimumSize(ref _vertexBuffersActive, index + 1);
-            if (_vertexBuffers[index] != buffer)
+            if (_vertexBuffers[index] != buffer || _vbOffsets[index] != offset)
             {
-                var mtlBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
+                MTLBuffer mtlBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
                 _vertexBuffers[index] = mtlBuffer;
+                _vbOffsets[index] = offset;
                 _vertexBuffersActive[index] = false;
             }
         }

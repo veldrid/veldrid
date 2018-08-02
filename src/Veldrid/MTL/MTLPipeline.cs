@@ -108,7 +108,7 @@ namespace Veldrid.MTL
                         ? NonVertexBufferCount + i
                         : i);
                     mtlAttribute.format = MTLFormats.VdToMTLVertexFormat(elementDesc.Format);
-                    mtlAttribute.offset = (UIntPtr)offset;
+                    mtlAttribute.offset = elementDesc.Offset != 0 ? (UIntPtr)elementDesc.Offset : (UIntPtr)offset;
                     offset += FormatHelpers.GetSizeInBytes(elementDesc.Format);
                     element += 1;
                 }

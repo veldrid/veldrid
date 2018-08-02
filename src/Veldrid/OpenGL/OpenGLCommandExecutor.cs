@@ -20,10 +20,12 @@ namespace Veldrid.OpenGL
         private OpenGLResourceSet[] _graphicsResourceSets = Array.Empty<OpenGLResourceSet>();
         private bool[] _newGraphicsResourceSets = Array.Empty<bool>();
         private OpenGLBuffer[] _vertexBuffers = Array.Empty<OpenGLBuffer>();
+        private uint[] _vbOffsets = Array.Empty<uint>();
         private uint[] _vertexAttribDivisors = Array.Empty<uint>();
         private uint _vertexAttributesBound;
         private readonly Viewport[] _viewports = new Viewport[20];
         private DrawElementsType _drawElementsType;
+        private uint _ibOffset;
         private PrimitiveType _primitiveType;
 
         private OpenGLPipeline _computePipeline;
@@ -111,7 +113,7 @@ namespace Veldrid.OpenGL
             PreDrawCommand();
 
             uint indexSize = _drawElementsType == DrawElementsType.UnsignedShort ? 2u : 4u;
-            void* indices = new IntPtr(indexStart * indexSize).ToPointer();
+            void* indices = (void*)((indexStart * indexSize) + _ibOffset);
 
             if (instanceCount == 1 && instanceStart == 0)
             {
@@ -249,6 +251,7 @@ namespace Veldrid.OpenGL
                 OpenGLBuffer vb = _vertexBuffers[i];
                 glBindBuffer(BufferTarget.ArrayBuffer, vb.Buffer);
                 uint offset = 0;
+                uint vbOffset = _vbOffsets[i];
                 for (uint slot = 0; slot < input.Elements.Length; slot++)
                 {
                     ref VertexElementDescription element = ref input.Elements[slot]; // Large structure -- use by reference.
@@ -261,6 +264,10 @@ namespace Veldrid.OpenGL
                         element.Format,
                         out bool normalized,
                         out bool isInteger);
+
+                    uint actualOffset = element.Offset != 0 ? element.Offset : offset;
+                    actualOffset += vbOffset;
+
                     if (isInteger && !normalized)
                     {
                         glVertexAttribIPointer(
@@ -268,7 +275,7 @@ namespace Veldrid.OpenGL
                             FormatHelpers.GetElementCount(element.Format),
                             type,
                             (uint)_graphicsPipeline.VertexStrides[i],
-                            (void*)offset);
+                            (void*)actualOffset);
                         CheckLastError();
                     }
                     else
@@ -279,7 +286,7 @@ namespace Veldrid.OpenGL
                             type,
                             normalized,
                             (uint)_graphicsPipeline.VertexStrides[i],
-                            (void*)offset);
+                            (void*)actualOffset);
                         CheckLastError();
                     }
 
@@ -380,7 +387,7 @@ namespace Veldrid.OpenGL
             _fb = fb;
         }
 
-        public void SetIndexBuffer(DeviceBuffer ib, IndexFormat format)
+        public void SetIndexBuffer(DeviceBuffer ib, IndexFormat format, uint offset)
         {
             OpenGLBuffer glIB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(ib);
             glIB.EnsureResourcesCreated();
@@ -389,6 +396,7 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
             _drawElementsType = OpenGLFormats.VdToGLDrawElementsType(format);
+            _ibOffset = offset;
         }
 
         public void SetPipeline(Pipeline pipeline)
@@ -591,6 +599,7 @@ namespace Veldrid.OpenGL
 
             int vertexStridesCount = _graphicsPipeline.VertexStrides.Length;
             Util.EnsureArrayMinimumSize(ref _vertexBuffers, (uint)vertexStridesCount);
+            Util.EnsureArrayMinimumSize(ref _vbOffsets, (uint)vertexStridesCount);
 
             uint totalVertexElements = 0;
             for (int i = 0; i < _graphicsPipeline.VertexLayouts.Length; i++)
@@ -861,13 +870,15 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void SetVertexBuffer(uint index, DeviceBuffer vb)
+        public void SetVertexBuffer(uint index, DeviceBuffer vb, uint offset)
         {
             OpenGLBuffer glVB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(vb);
             glVB.EnsureResourcesCreated();
 
             Util.EnsureArrayMinimumSize(ref _vertexBuffers, index + 1);
+            Util.EnsureArrayMinimumSize(ref _vbOffsets, index + 1);
             _vertexBuffers[index] = glVB;
+            _vbOffsets[index] = offset;
         }
 
         public void SetViewport(uint index, ref Viewport viewport)

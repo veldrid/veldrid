@@ -162,7 +162,7 @@ namespace Veldrid.D3D11
                         GetSemanticString(desc.Semantic),
                         SemanticIndices.GetAndIncrement(ref si, desc.Semantic),
                         D3D11Formats.ToDxgiFormat(desc.Format),
-                        currentOffset,
+                        desc.Offset != 0 ? (int)desc.Offset : currentOffset,
                         slot,
                         stepRate == 0 ? InputClassification.PerVertexData : InputClassification.PerInstanceData,
                         (int)stepRate);

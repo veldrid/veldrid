@@ -19,6 +19,10 @@ namespace Veldrid
         /// The format of the element.
         /// </summary>
         public VertexElementFormat Format;
+        /// <summary>
+        /// The offset in bytes from the beginning of the vertex.
+        /// </summary>
+        public uint Offset;
 
         /// <summary>
         /// Constructs a new VertexElementDescription describing a per-vertex element.
@@ -45,6 +49,26 @@ namespace Veldrid
             Name = name;
             Format = format;
             Semantic = semantic;
+            Offset = 0;
+        }
+
+        /// <summary>
+        /// Constructs a new VertexElementDescription.
+        /// </summary>
+        /// <param name="name">The name of the element.</param>
+        /// <param name="semantic">The semantic type of the element.</param>
+        /// <param name="format">The format of the element.</param>
+        /// <param name="offset">The offset in bytes from the beginning of the vertex.</param>
+        public VertexElementDescription(
+            string name,
+            VertexElementSemantic semantic,
+            VertexElementFormat format,
+            uint offset)
+        {
+            Name = name;
+            Format = format;
+            Semantic = semantic;
+            Offset = offset;
         }
 
         /// <summary>
@@ -56,7 +80,8 @@ namespace Veldrid
         {
             return Name.Equals(other.Name)
                 && Format == other.Format
-                && Semantic == other.Semantic;
+                && Semantic == other.Semantic
+                && Offset == other.Offset;
         }
 
         /// <summary>
@@ -68,7 +93,8 @@ namespace Veldrid
             return HashHelper.Combine(
                 Name.GetHashCode(),
                 (int)Format,
-                (int)Semantic);
+                (int)Semantic,
+                (int)Offset);
         }
     }
 }

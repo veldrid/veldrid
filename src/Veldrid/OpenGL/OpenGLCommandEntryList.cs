@@ -15,12 +15,12 @@ namespace Veldrid.OpenGL
         void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ);
         void End();
         void SetFramebuffer(Framebuffer fb);
-        void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format);
+        void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format, uint offset);
         void SetPipeline(Pipeline pipeline);
         void SetGraphicsResourceSet(uint slot, ResourceSet rs);
         void SetComputeResourceSet(uint slot, ResourceSet rs);
         void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
-        void SetVertexBuffer(uint index, DeviceBuffer buffer);
+        void SetVertexBuffer(uint index, DeviceBuffer buffer, uint offset);
         void SetViewport(uint index, ref Viewport viewport);
         void ResolveTexture(Texture source, Texture destination);
         void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);

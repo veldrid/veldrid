@@ -101,6 +101,21 @@ namespace Veldrid
         /// <param name="buffer">The new <see cref="DeviceBuffer"/>.</param>
         public void SetVertexBuffer(uint index, DeviceBuffer buffer)
         {
+            SetVertexBuffer(index, buffer, 0);
+        }
+
+        /// <summary>
+        /// Sets the active <see cref="DeviceBuffer"/> for the given index.
+        /// When drawing, the bound <see cref="DeviceBuffer"/> objects must be compatible with the bound <see cref="Pipeline"/>.
+        /// The given buffer must be non-null. It is not necessary to un-bind vertex buffers for Pipelines which will not
+        /// use them. All extra vertex buffers are simply ignored.
+        /// </summary>
+        /// <param name="index">The buffer slot.</param>
+        /// <param name="buffer">The new <see cref="DeviceBuffer"/>.</param>
+        /// <param name="offset">The offset from the start of the buffer, in bytes, from which data will start to be read.
+        /// </param>
+        public void SetVertexBuffer(uint index, DeviceBuffer buffer, uint offset)
+        {
 #if VALIDATE_USAGE
             if ((buffer.Usage & BufferUsage.VertexBuffer) == 0)
             {
@@ -108,15 +123,10 @@ namespace Veldrid
                     $"Buffer cannot be bound as a vertex buffer because it was not created with BufferUsage.VertexBuffer.");
             }
 #endif
-            SetVertexBufferCore(index, buffer);
+            SetVertexBufferCore(index, buffer, offset);
         }
 
-        // TODO: private protected
-        /// <summary>
-        /// </summary>
-        /// <param name="index"></param>
-        /// <param name="buffer"></param>
-        protected abstract void SetVertexBufferCore(uint index, DeviceBuffer buffer);
+        protected abstract void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset);
 
         /// <summary>
         /// Sets the active <see cref="DeviceBuffer"/>.
@@ -125,6 +135,19 @@ namespace Veldrid
         /// <param name="buffer">The new <see cref="DeviceBuffer"/>.</param>
         /// <param name="format">The format of data in the <see cref="DeviceBuffer"/>.</param>
         public void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format)
+        {
+            SetIndexBuffer(buffer, format, 0);
+        }
+
+        /// <summary>
+        /// Sets the active <see cref="DeviceBuffer"/>.
+        /// When drawing, an <see cref="DeviceBuffer"/> must be bound.
+        /// </summary>
+        /// <param name="buffer">The new <see cref="DeviceBuffer"/>.</param>
+        /// <param name="format">The format of data in the <see cref="DeviceBuffer"/>.</param>
+        /// <param name="offset">The offset from the start of the buffer, in bytes, from which data will start to be read.
+        /// </param>
+        public void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
 #if VALIDATE_USAGE
             if ((buffer.Usage & BufferUsage.IndexBuffer) == 0)
@@ -135,15 +158,10 @@ namespace Veldrid
             _indexBuffer = buffer;
             _indexFormat = format;
 #endif
-            SetIndexBufferCore(buffer, format);
+            SetIndexBufferCore(buffer, format, offset);
         }
 
-        // TODO: private protected
-        /// <summary>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="format"></param>
-        protected abstract void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format);
+        protected abstract void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset);
 
         /// <summary>
         /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the graphics

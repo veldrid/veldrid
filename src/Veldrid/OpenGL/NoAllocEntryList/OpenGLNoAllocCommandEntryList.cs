@@ -272,7 +272,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case SetIndexBufferEntryID:
                         NoAllocSetIndexBufferEntry sibe = Unsafe.ReadUnaligned<NoAllocSetIndexBufferEntry>(entryBasePtr);
-                        executor.SetIndexBuffer(sibe.Buffer.Get(_resourceList), sibe.Format);
+                        executor.SetIndexBuffer(sibe.Buffer.Get(_resourceList), sibe.Format, sibe.Offset);
                         currentOffset += SetIndexBufferEntrySize;
                         break;
                     case SetPipelineEntryID:
@@ -297,7 +297,7 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         break;
                     case SetVertexBufferEntryID:
                         NoAllocSetVertexBufferEntry svbe = Unsafe.ReadUnaligned<NoAllocSetVertexBufferEntry>(entryBasePtr);
-                        executor.SetVertexBuffer(svbe.Index, svbe.Buffer.Get(_resourceList));
+                        executor.SetVertexBuffer(svbe.Index, svbe.Buffer.Get(_resourceList), svbe.Offset);
                         currentOffset += SetVertexBufferEntrySize;
                         break;
                     case SetViewportEntryID:
@@ -420,9 +420,9 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(SetFramebufferEntryID, ref entry);
         }
 
-        public void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format)
+        public void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
-            NoAllocSetIndexBufferEntry entry = new NoAllocSetIndexBufferEntry(Track(buffer), format);
+            NoAllocSetIndexBufferEntry entry = new NoAllocSetIndexBufferEntry(Track(buffer), format, offset);
             AddEntry(SetIndexBufferEntryID, ref entry);
         }
 
@@ -450,9 +450,9 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(SetScissorRectEntryID, ref entry);
         }
 
-        public void SetVertexBuffer(uint index, DeviceBuffer buffer)
+        public void SetVertexBuffer(uint index, DeviceBuffer buffer, uint offset)
         {
-            NoAllocSetVertexBufferEntry entry = new NoAllocSetVertexBufferEntry(index, Track(buffer));
+            NoAllocSetVertexBufferEntry entry = new NoAllocSetVertexBufferEntry(index, Track(buffer), offset);
             AddEntry(SetVertexBufferEntryID, ref entry);
         }
 

@@ -159,7 +159,7 @@ namespace Veldrid.Vk
                         format = VkFormats.VdToVkVertexElementFormat(inputElement.Format),
                         binding = (uint)binding,
                         location = (uint)(targetLocation + location),
-                        offset = currentOffset
+                        offset = inputElement.Offset != 0 ? inputElement.Offset : currentOffset
                     };
 
                     targetIndex += 1;

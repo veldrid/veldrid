@@ -28,6 +28,7 @@ namespace Veldrid.D3D11
 
         // Cached pipeline State
         private DeviceBuffer _ib;
+        private uint _ibOffset;
         private BlendState _blendState;
         private DepthStencilState _depthStencilState;
         private uint _stencilReference;
@@ -195,14 +196,15 @@ namespace Veldrid.D3D11
             _begun = false;
         }
 
-        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format)
+        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
-            if (_ib != buffer)
+            if (_ib != buffer || _ibOffset != offset)
             {
                 _ib = buffer;
+                _ibOffset = offset;
                 D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
                 UnbindUAVBuffer(buffer);
-                _context.InputAssembler.SetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(format), 0);
+                _context.InputAssembler.SetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(format), (int)offset);
             }
         }
 
@@ -493,11 +495,12 @@ namespace Veldrid.D3D11
             return ret;
         }
 
-        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
+        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
         {
             D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
             UnbindUAVBuffer(buffer);
             _vertexBindings[index] = d3d11Buffer.Buffer;
+            _vertexOffsets[index] = (int)offset;
             _numVertexBindings = Math.Max((index + 1), _numVertexBindings);
         }
 
@@ -645,7 +648,11 @@ namespace Veldrid.D3D11
             fixed (int* stridesPtr = _vertexStrides)
             fixed (int* offsetsPtr = _vertexOffsets)
             {
-                _context.InputAssembler.SetVertexBuffers(0, (int)_numVertexBindings, (IntPtr)buffersPtr, (IntPtr)stridesPtr, (IntPtr)offsetsPtr);
+                _context.InputAssembler.SetVertexBuffers(
+                    0, (int)_numVertexBindings,
+                    (IntPtr)buffersPtr,
+                    (IntPtr)stridesPtr,
+                    (IntPtr)offsetsPtr);
             }
         }
 

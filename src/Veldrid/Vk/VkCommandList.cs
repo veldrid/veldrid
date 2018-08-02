@@ -573,18 +573,18 @@ namespace Veldrid.Vk
                 null);
         }
 
-        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer)
+        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
             Vulkan.VkBuffer deviceBuffer = vkBuffer.DeviceBuffer;
-            ulong offset = 0;
-            vkCmdBindVertexBuffers(_cb, index, 1, ref deviceBuffer, ref offset);
+            ulong offset64 = offset;
+            vkCmdBindVertexBuffers(_cb, index, 1, ref deviceBuffer, ref offset64);
         }
 
-        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format)
+        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
-            vkCmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, 0, VkFormats.VdToVkIndexFormat(format));
+            vkCmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, offset, VkFormats.VdToVkIndexFormat(format));
         }
 
         protected override void SetPipelineCore(Pipeline pipeline)

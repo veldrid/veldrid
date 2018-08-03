@@ -1,12 +1,15 @@
 ﻿using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 
 namespace Veldrid.D3D11
 {
     internal class D3D11ResourceCache : IDisposable
     {
         private readonly Device _device;
+        private readonly object _lock = new object();
 
         private readonly Dictionary<BlendStateDescription, BlendState> _blendStates
             = new Dictionary<BlendStateDescription, BlendState>();
@@ -25,8 +28,30 @@ namespace Veldrid.D3D11
             _device = device;
         }
 
-        internal BlendState GetBlendState(ref BlendStateDescription description)
+        public void GetPipelineResources(
+            ref BlendStateDescription blendDesc,
+            ref DepthStencilStateDescription dssDesc,
+            ref RasterizerStateDescription rasterDesc,
+            bool multisample,
+            VertexLayoutDescription[] vertexLayouts,
+            byte[] vsBytecode,
+            out BlendState blendState,
+            out DepthStencilState depthState,
+            out RasterizerState rasterState,
+            out InputLayout inputLayout)
         {
+            lock (_lock)
+            {
+                blendState = GetBlendState(ref blendDesc);
+                depthState = GetDepthStencilState(ref dssDesc);
+                rasterState = GetRasterizerState(ref rasterDesc, multisample);
+                inputLayout = GetInputLayout(vertexLayouts, vsBytecode);
+            }
+        }
+
+        private BlendState GetBlendState(ref BlendStateDescription description)
+        {
+            Debug.Assert(Monitor.IsEntered(_lock));
             if (!_blendStates.TryGetValue(description, out BlendState blendState))
             {
                 blendState = CreateNewBlendState(ref description);
@@ -59,8 +84,9 @@ namespace Veldrid.D3D11
             return new BlendState(_device, d3dBlendStateDesc);
         }
 
-        internal DepthStencilState GetDepthStencilState(ref DepthStencilStateDescription description)
+        private DepthStencilState GetDepthStencilState(ref DepthStencilStateDescription description)
         {
+            Debug.Assert(Monitor.IsEntered(_lock));
             if (!_depthStencilStates.TryGetValue(description, out DepthStencilState dss))
             {
                 dss = CreateNewDepthStencilState(ref description);
@@ -99,8 +125,9 @@ namespace Veldrid.D3D11
             };
         }
 
-        internal RasterizerState GetRasterizerState(ref RasterizerStateDescription description, bool multisample)
+        private RasterizerState GetRasterizerState(ref RasterizerStateDescription description, bool multisample)
         {
+            Debug.Assert(Monitor.IsEntered(_lock));
             D3D11RasterizerStateCacheKey key = new D3D11RasterizerStateCacheKey(description, multisample);
             if (!_rasterizerStates.TryGetValue(key, out RasterizerState rasterizerState))
             {
@@ -126,8 +153,12 @@ namespace Veldrid.D3D11
             return new RasterizerState(_device, rssDesc);
         }
 
-        internal InputLayout GetInputLayout(VertexLayoutDescription[] vertexLayouts, byte[] vsBytecode)
+        private InputLayout GetInputLayout(VertexLayoutDescription[] vertexLayouts, byte[] vsBytecode)
         {
+            Debug.Assert(Monitor.IsEntered(_lock));
+
+            if (vsBytecode == null || vertexLayouts == null || vertexLayouts.Length == 0) { return null; }
+
             InputLayoutCacheKey tempKey = InputLayoutCacheKey.CreateTempKey(vertexLayouts);
             if (!_inputLayouts.TryGetValue(tempKey, out InputLayout inputLayout))
             {

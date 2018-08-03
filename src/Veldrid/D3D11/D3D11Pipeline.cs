@@ -28,14 +28,6 @@ namespace Veldrid.D3D11
         public D3D11Pipeline(D3D11ResourceCache cache, ref GraphicsPipelineDescription description)
             : base(ref description)
         {
-            BlendState = cache.GetBlendState(ref description.BlendState);
-            DepthStencilState = cache.GetDepthStencilState(ref description.DepthStencilState);
-            StencilReference = description.DepthStencilState.StencilReference;
-            RasterizerState = cache.GetRasterizerState(
-                ref description.RasterizerState,
-                description.Outputs.SampleCount != TextureSampleCount.Count1);
-            PrimitiveTopology = D3D11Formats.VdToD3D11PrimitiveTopology(description.PrimitiveTopology);
-
             byte[] vsBytecode = null;
             Shader[] stages = description.ShaderSet.Shaders;
             for (int i = 0; i < description.ShaderSet.Shaders.Length; i++)
@@ -68,6 +60,24 @@ namespace Veldrid.D3D11
                 }
             }
 
+            cache.GetPipelineResources(
+                ref description.BlendState,
+                ref description.DepthStencilState,
+                ref description.RasterizerState,
+                description.Outputs.SampleCount != TextureSampleCount.Count1,
+                description.ShaderSet.VertexLayouts,
+                vsBytecode,
+                out BlendState blendState,
+                out DepthStencilState depthStencilState,
+                out RasterizerState rasterizerState,
+                out InputLayout inputLayout);
+
+            BlendState = blendState;
+            DepthStencilState = depthStencilState;
+            StencilReference = description.DepthStencilState.StencilReference;
+            RasterizerState = rasterizerState;
+            PrimitiveTopology = D3D11Formats.VdToD3D11PrimitiveTopology(description.PrimitiveTopology);
+
             ResourceLayout[] genericLayouts = description.ResourceLayouts;
             ResourceLayouts = new D3D11ResourceLayout[genericLayouts.Length];
             for (int i = 0; i < ResourceLayouts.Length; i++)
@@ -78,7 +88,7 @@ namespace Veldrid.D3D11
             Debug.Assert(vsBytecode != null || ComputeShader != null);
             if (vsBytecode != null && description.ShaderSet.VertexLayouts.Length > 0)
             {
-                InputLayout = cache.GetInputLayout(description.ShaderSet.VertexLayouts, vsBytecode);
+                InputLayout = inputLayout;
                 int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
                 VertexStrides = new int[numVertexBuffers];
                 for (int i = 0; i < numVertexBuffers; i++)

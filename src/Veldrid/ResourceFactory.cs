@@ -59,6 +59,34 @@ namespace Veldrid
                     }
                 }
             }
+            foreach (VertexLayoutDescription layoutDesc in description.ShaderSet.VertexLayouts)
+            {
+                bool hasExplicitLayout = false;
+                uint minOffset = 0;
+                foreach (VertexElementDescription elementDesc in layoutDesc.Elements)
+                {
+                    if (hasExplicitLayout && elementDesc.Offset == 0)
+                    {
+                        throw new VeldridException(
+                            $"If any vertex element has an explicit offset, then all elements must have an explicit offset.");
+                    }
+
+                    if (elementDesc.Offset != 0 && elementDesc.Offset < minOffset)
+                    {
+                        throw new VeldridException(
+                            $"Vertex element \"{elementDesc.Name}\" has an explicit offset which overlaps with the previous element.");
+                    }
+
+                    minOffset = elementDesc.Offset + FormatHelpers.GetSizeInBytes(elementDesc.Format);
+                    hasExplicitLayout |= elementDesc.Offset != 0;
+                }
+
+                if (minOffset > layoutDesc.Stride)
+                {
+                    throw new VeldridException(
+                        $"The vertex layout's stride ({layoutDesc.Stride}) is less than the full size of the vertex ({minOffset})");
+                }
+            }
 #endif
             return CreateGraphicsPipelineCore(ref description);
         }

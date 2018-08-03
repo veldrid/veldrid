@@ -36,4 +36,9 @@
     <Content Include="Shaders/*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Shaders\VertexLayoutTestShader.frag" />
+    <None Remove="Shaders\VertexLayoutTestShader.vert" />
+  </ItemGroup>
+
 </Project>

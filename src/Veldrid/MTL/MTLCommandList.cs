@@ -127,7 +127,7 @@ namespace Veldrid.MTL
             if (PreDrawCommand())
             {
                 uint indexSize = _indexType == MTLIndexType.UInt16 ? 2u : 4u;
-                uint indexBufferOffset = indexSize * indexStart;
+                uint indexBufferOffset = (indexSize * indexStart) + _ibOffset;
 
                 if (vertexOffset == 0 && instanceStart == 0)
                 {

@@ -114,7 +114,11 @@ namespace Veldrid.Vk
 
             uint propCount = 0;
             VkResult result = vkEnumerateInstanceExtensionProperties((byte*)null, ref propCount, null);
-            CheckResult(result);
+            if (result != VkResult.Success)
+            {
+                return Array.Empty<string>();
+            }
+
             if (propCount == 0)
             {
                 return Array.Empty<string>();

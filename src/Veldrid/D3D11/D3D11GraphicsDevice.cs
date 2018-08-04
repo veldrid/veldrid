@@ -48,12 +48,26 @@ namespace Veldrid.D3D11
 
         public D3D11GraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDesc)
         {
+            DeviceCreationFlags flags = DeviceCreationFlags.None;
+            bool debug = options.Debug;
 #if DEBUG
-            DeviceCreationFlags creationFlags = DeviceCreationFlags.Debug;
-#else
-            DeviceCreationFlags creationFlags = options.Debug ? DeviceCreationFlags.Debug : DeviceCreationFlags.None;
-#endif 
-            _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, creationFlags);
+            debug = true;
+#endif
+            if (debug)
+            {
+                flags = DeviceCreationFlags.Debug;
+            }
+
+            try
+            {
+                _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, flags);
+            }
+            catch (SharpDXException ex) when (debug && (uint)ex.HResult == 0x887A002D)
+            {
+                // The D3D11 debug layer is not installed. Create a normal device without debug support, instead.
+                _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Warp, DeviceCreationFlags.None);
+            }
+
             if (swapchainDesc != null)
             {
                 SwapchainDescription desc = swapchainDesc.Value;

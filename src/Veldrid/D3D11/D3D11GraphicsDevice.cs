@@ -65,7 +65,7 @@ namespace Veldrid.D3D11
             catch (SharpDXException ex) when (debug && (uint)ex.HResult == 0x887A002D)
             {
                 // The D3D11 debug layer is not installed. Create a normal device without debug support, instead.
-                _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Warp, DeviceCreationFlags.None);
+                _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.None);
             }
 
             if (swapchainDesc != null)

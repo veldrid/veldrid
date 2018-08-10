@@ -281,6 +281,7 @@ namespace Veldrid.D3D11
                 for (int i = 0; i < original.Length; i++)
                 {
                     vertexLayouts[i].Stride = original[i].Stride;
+                    vertexLayouts[i].InstanceStepRate = original[i].InstanceStepRate;
                     vertexLayouts[i].Elements = (VertexElementDescription[])original[i].Elements.Clone();
                 }
 

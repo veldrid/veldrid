@@ -2,11 +2,10 @@
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Transforms;
-using SixLabors.ImageSharp.Processing.Transforms.Resamplers;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.ImageSharp
 {
@@ -76,7 +75,7 @@ namespace Veldrid.ImageSharp
             for (uint level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                fixed (void* pin = &image.DangerousGetPinnableReferenceToPixelBuffer())
+                fixed (void* pin = &MemoryMarshal.GetReference(image.GetPixelSpan()))
                 {
                     MappedResource map = gd.Map(staging, MapMode.Write, level);
                     uint rowWidth = (uint)(image.Width * 4);
@@ -118,7 +117,7 @@ namespace Veldrid.ImageSharp
             for (int level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                fixed (void* pin = &image.DangerousGetPinnableReferenceToPixelBuffer())
+                fixed (void* pin = &MemoryMarshal.GetReference(image.GetPixelSpan()))
                 {
                     gd.UpdateTexture(
                         tex,
@@ -138,8 +137,6 @@ namespace Veldrid.ImageSharp
             return tex;
         }
 
-        private static readonly IResampler s_resampler = new Lanczos3Resampler();
-
         private static Image<T>[] GenerateMipmaps<T>(Image<T> baseImage) where T : struct, IPixel<T>
         {
             int mipLevelCount = MipmapHelper.ComputeMipLevels(baseImage.Width, baseImage.Height);
@@ -153,7 +150,7 @@ namespace Veldrid.ImageSharp
             {
                 int newWidth = Math.Max(1, currentWidth / 2);
                 int newHeight = Math.Max(1, currentHeight / 2);
-                Image<T> newImage = baseImage.Clone(context => context.Resize(newWidth, newHeight, s_resampler));
+                Image<T> newImage = baseImage.Clone(context => context.Resize(newWidth, newHeight, KnownResamplers.Lanczos3));
                 Debug.Assert(i < mipLevelCount);
                 mipLevels[i] = newImage;
 

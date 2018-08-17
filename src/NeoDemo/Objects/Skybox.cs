@@ -4,6 +4,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Veldrid.Utilities;
 
 namespace Veldrid.NeoDemo.Objects
@@ -49,12 +50,12 @@ namespace Veldrid.NeoDemo.Objects
 
             Texture textureCube;
             TextureView textureView;
-            fixed (Rgba32* frontPin = &_front.DangerousGetPinnableReferenceToPixelBuffer())
-            fixed (Rgba32* backPin = &_back.DangerousGetPinnableReferenceToPixelBuffer())
-            fixed (Rgba32* leftPin = &_left.DangerousGetPinnableReferenceToPixelBuffer())
-            fixed (Rgba32* rightPin = &_right.DangerousGetPinnableReferenceToPixelBuffer())
-            fixed (Rgba32* topPin = &_top.DangerousGetPinnableReferenceToPixelBuffer())
-            fixed (Rgba32* bottomPin = &_bottom.DangerousGetPinnableReferenceToPixelBuffer())
+            fixed (Rgba32* frontPin = &MemoryMarshal.GetReference(_front.GetPixelSpan()))
+            fixed (Rgba32* backPin = &MemoryMarshal.GetReference(_back.GetPixelSpan()))
+            fixed (Rgba32* leftPin = &MemoryMarshal.GetReference(_left.GetPixelSpan()))
+            fixed (Rgba32* rightPin = &MemoryMarshal.GetReference(_right.GetPixelSpan()))
+            fixed (Rgba32* topPin = &MemoryMarshal.GetReference(_top.GetPixelSpan()))
+            fixed (Rgba32* bottomPin = &MemoryMarshal.GetReference(_bottom.GetPixelSpan()))
             {
                 uint width = (uint)_front.Width;
                 uint height = (uint)_front.Height;

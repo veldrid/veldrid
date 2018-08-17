@@ -427,7 +427,6 @@ namespace Veldrid.Vk
 
         protected override void SetFramebufferCore(Framebuffer fb)
         {
-            _newFramebuffer = true;
             if (_activeRenderPass.Handle != VkRenderPass.Null)
             {
                 EndCurrentRenderPass();
@@ -447,6 +446,7 @@ namespace Veldrid.Vk
             VkFramebufferBase vkFB = Util.AssertSubtype<Framebuffer, VkFramebufferBase>(fb);
             _currentFramebuffer = vkFB;
             _currentFramebufferEverActive = false;
+            _newFramebuffer = true;
             Util.EnsureArrayMinimumSize(ref _scissorRects, Math.Max(1, (uint)vkFB.ColorTargets.Count));
             uint clearValueCount = (uint)vkFB.ColorTargets.Count;
             Util.EnsureArrayMinimumSize(ref _clearValues, clearValueCount + 1); // Leave an extra space for the depth value (tracked separately).
@@ -477,8 +477,8 @@ namespace Veldrid.Vk
             _currentFramebufferEverActive = true;
 
             uint attachmentCount = _currentFramebuffer.AttachmentCount;
-            bool haveAnyAttachments = _framebuffer.ColorTargets.Count > 0 || _framebuffer.DepthTarget != null;
-            bool haveAllClearValues = _depthClearValue.HasValue || _framebuffer.DepthTarget == null;
+            bool haveAnyAttachments = _currentFramebuffer.ColorTargets.Count > 0 || _currentFramebuffer.DepthTarget != null;
+            bool haveAllClearValues = _depthClearValue.HasValue || _currentFramebuffer.DepthTarget == null;
             bool haveAnyClearValues = _depthClearValue.HasValue;
             for (int i = 0; i < _currentFramebuffer.ColorTargets.Count; i++)
             {

@@ -85,7 +85,7 @@ namespace Veldrid.OpenGL
 
         public override Swapchain CreateSwapchain(ref SwapchainDescription description)
         {
-            throw new NotSupportedException("OpenGL does not support creating Swapchain objects.");
+            return new OpenGLSecondarySwapchain(_gd, ref description);
         }
     }
 }

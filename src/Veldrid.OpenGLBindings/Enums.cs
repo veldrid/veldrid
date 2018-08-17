@@ -2032,4 +2032,9 @@ namespace Veldrid.OpenGLBinding
         NegativeOneToOne = 0x935E,
         ZeroToOne = 0x935F,
     }
+
+    public enum FenceCondition
+    {
+        GpuCommandsComplete = 0x9117,
+    }
 }

@@ -1549,6 +1549,18 @@ namespace Veldrid.OpenGLBinding
         public static void glClipControl(ClipControlOrigin origin, ClipControlDepthRange depth)
             => p_glClipControl(origin, depth);
 
+        private delegate IntPtr glFenceSync_t(FenceCondition condition, uint flags);
+        private static glFenceSync_t p_glFenceSync;
+        public static IntPtr glFenceSync(FenceCondition condition, uint flags) => p_glFenceSync(condition, flags);
+
+        private delegate void glWaitSync_t(IntPtr sync, uint flags, ulong timeout);
+        private static glWaitSync_t p_glWaitSync;
+        public static void glWaitSync(IntPtr sync, uint flags, ulong timeout) => p_glWaitSync(sync, flags, timeout);
+
+        private delegate void glDeleteSync_t(IntPtr sync);
+        private static glDeleteSync_t p_glDeleteSync;
+        public static void glDeleteSync(IntPtr sync) => p_glDeleteSync(sync);
+
         public static void LoadGetString(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -1707,6 +1719,9 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glCreateBuffers", out p_glCreateBuffers);
             LoadFunction("glCreateTextures", out p_glCreateTextures);
             LoadFunction("glGenerateMipmap", out p_glGenerateMipmap);
+            LoadFunction("glFenceSync", out p_glFenceSync);
+            LoadFunction("glWaitSync", out p_glWaitSync);
+            LoadFunction("glDeleteSync", out p_glDeleteSync);
 
             if (!gles)
             {

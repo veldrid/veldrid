@@ -30,6 +30,7 @@ namespace Veldrid.OpenGL
         private Action<IntPtr> _deleteContext;
         private Action _swapBuffers;
         private Action<bool> _setSyncToVBlank;
+        private Action _clearCurrentContext;
         private OpenGLTextureSamplerManager _textureSamplerManager;
         private OpenGLCommandExecutor _commandExecutor;
         private DebugProc _debugMessageCallback;
@@ -61,6 +62,7 @@ namespace Veldrid.OpenGL
 
         private bool _syncToVBlank;
         private IntPtr _ownedWindow;
+        private readonly List<OpenGLSecondarySwapchain> _secondarySwapchains = new List<OpenGLSecondarySwapchain>();
 
         public int MajorVersion { get; private set; }
         public int MinorVersion { get; private set; }
@@ -97,6 +99,8 @@ namespace Veldrid.OpenGL
         public override GraphicsDeviceFeatures Features => _features;
 
         public StagingMemoryPool StagingMemoryPool => _stagingMemoryPool;
+
+        public IntPtr ContextHandle => _glContext;
 
         public OpenGLGraphicsDevice(
             GraphicsDeviceOptions options,
@@ -274,7 +278,8 @@ namespace Veldrid.OpenGL
             }
 
             _workItems = new BlockingCollection<ExecutionThreadWorkItem>(new ConcurrentQueue<ExecutionThreadWorkItem>());
-            platformInfo.ClearCurrentContext();
+            _clearCurrentContext = platformInfo.ClearCurrentContext;
+            _clearCurrentContext();
             _executionThread = new ExecutionThread(this, _workItems, _makeCurrent, _glContext);
 
             PostDeviceCreated();
@@ -699,11 +704,13 @@ namespace Veldrid.OpenGL
                     extensionFuncs,
                     backend,
                     hdc,
-                    options,
+                    options.Debug,
                     depthBits,
                     stencilBits,
                     major,
-                    minor, out glContext))
+                    minor,
+                    IntPtr.Zero,
+                    out glContext))
                 {
                     throw new VeldridException($"Failed to create OpenGL context.");
                 }
@@ -761,7 +768,7 @@ namespace Veldrid.OpenGL
                 getProcAddress,
                 ctx => WindowsNative.wglMakeCurrent(hdc, ctx),
                 () => WindowsNative.wglGetCurrentContext(),
-                () => WindowsNative.wglMakeCurrent(hdc, IntPtr.Zero),
+                () => WindowsNative.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero),
                 deleteContext,
                 () => WindowsNative.SwapBuffers(hdc),
                 sync => setSwapInterval(sync ? 1 : 0));
@@ -840,7 +847,7 @@ namespace Veldrid.OpenGL
         {
             WaitForIdle();
 
-            _executionThread.SwapBuffers();
+            _executionThread.SwapBuffers(swapchain);
         }
 
         protected override void WaitForIdleCore()
@@ -1126,6 +1133,25 @@ namespace Veldrid.OpenGL
             int result = WindowsNative.DestroyWindow(_ownedWindow);
         }
 
+        internal OpenGLPlatformInfo CreateSharedContext(
+            GraphicsDeviceOptions options,
+            SwapchainDescription scDesc,
+            GraphicsBackend backendType,
+            IntPtr shareContext)
+        {
+            OpenGLPlatformInfo info = OpenGLContextCreation.CreateContext(options, scDesc, backendType, shareContext);
+            _executionThread.ShareContexts(info.OpenGLContextHandle);
+            return info;
+        }
+
+        internal void RegisterSecondarySwapchain(OpenGLSecondarySwapchain sc)
+        {
+            lock (_secondarySwapchains)
+            {
+                _secondarySwapchains.Add(sc);
+            }
+        }
+
         private class ExecutionThread
         {
             private readonly OpenGLGraphicsDevice _gd;
@@ -1252,7 +1278,13 @@ namespace Veldrid.OpenGL
                             }
                             _makeCurrent(_gd._glContext);
 
+                            foreach (OpenGLSecondarySwapchain sc in _gd._secondarySwapchains)
+                            {
+                                sc.Dispose();
+                            }
+
                             _gd.FlushDisposables();
+                            _gd._clearCurrentContext();
                             _gd._deleteContext(_gd._glContext);
                             _gd.StagingMemoryPool.Dispose();
                             _terminated = true;
@@ -1267,15 +1299,36 @@ namespace Veldrid.OpenGL
                         break;
                         case WorkItemType.SwapBuffers:
                         {
-                            _gd._swapBuffers();
-                            _gd.FlushDisposables();
+                            if (workItem.Object0 is OpenGLSecondarySwapchain secondarySC)
+                            {
+                                IntPtr sync = glFenceSync(FenceCondition.GpuCommandsComplete, 0);
+                                CheckLastError();
+                                secondarySC.SwapBuffers(sync);
+                            }
+                            else
+                            {
+                                _gd._swapBuffers();
+                                _gd.FlushDisposables();
+                            }
+                        }
+                        break;
+                        case WorkItemType.ShareContext:
+                        {
+                            _gd._clearCurrentContext();
+                            int shareResult = WindowsNative.wglShareLists(_gd.ContextHandle, (IntPtr)workItem.UInt0);
+                            ((ManualResetEventSlim)workItem.Object0).Set();
+                            _makeCurrent(_context);
+                            if (shareResult == 0)
+                            {
+                                throw new VeldridException($"Failed to share a new secondary OpenGL context.");
+                            }
                         }
                         break;
                         default:
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }
                 }
-                catch (Exception e)
+                catch (Exception e) when (!Debugger.IsAttached)
                 {
                     lock (_exceptionsLock)
                     {
@@ -1644,9 +1697,17 @@ namespace Veldrid.OpenGL
                 _workItems.Add(new ExecutionThreadWorkItem(value));
             }
 
-            internal void SwapBuffers()
+            internal void SwapBuffers(Swapchain swapchain)
             {
-                _workItems.Add(new ExecutionThreadWorkItem(WorkItemType.SwapBuffers));
+                _workItems.Add(new ExecutionThreadWorkItem(swapchain));
+            }
+
+            internal void ShareContexts(IntPtr contextHandle)
+            {
+                ManualResetEventSlim mre = new ManualResetEventSlim();
+                _workItems.Add(new ExecutionThreadWorkItem(mre, contextHandle));
+                mre.Wait();
+                mre.Dispose();
             }
         }
 
@@ -1662,6 +1723,7 @@ namespace Veldrid.OpenGL
             SignalResetEvent,
             SetSyncToVerticalBlank,
             SwapBuffers,
+            ShareContext,
         }
 
         private unsafe struct ExecutionThreadWorkItem
@@ -1762,6 +1824,28 @@ namespace Veldrid.OpenGL
                 Object1 = null;
 
                 UInt0 = 0;
+                UInt1 = 0;
+                UInt2 = 0;
+            }
+
+            public ExecutionThreadWorkItem(Swapchain sc)
+            {
+                Type = WorkItemType.SwapBuffers;
+                Object0 = sc;
+                Object1 = null;
+
+                UInt0 = 0;
+                UInt1 = 0;
+                UInt2 = 0;
+            }
+
+            public ExecutionThreadWorkItem(ManualResetEventSlim mre, IntPtr shareContext)
+            {
+                Type = WorkItemType.ShareContext;
+                Object0 = mre;
+                Object1 = null;
+
+                UInt0 = (uint)shareContext;
                 UInt1 = 0;
                 UInt2 = 0;
             }

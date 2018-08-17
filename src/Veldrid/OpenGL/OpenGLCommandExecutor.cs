@@ -365,16 +365,26 @@ namespace Veldrid.OpenGL
                 CheckLastError();
                 _isSwapchainFB = false;
             }
-            else if (fb is OpenGLSwapchainFramebuffer)
+            else if (fb is OpenGLSwapchainFramebuffer scFB)
             {
-                if (_platformInfo.SetSwapchainFramebuffer != null)
+                if (scFB.IsSecondarySwapchain)
                 {
-                    _platformInfo.SetSwapchainFramebuffer();
+                    scFB.FlushChanges();
+                    scFB.Framebuffer.EnsureResourcesCreated();
+                    glBindFramebuffer(FramebufferTarget.Framebuffer, scFB.Framebuffer.Framebuffer);
+                    CheckLastError();
                 }
                 else
                 {
-                    glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                    CheckLastError();
+                    if (_platformInfo.SetSwapchainFramebuffer != null)
+                    {
+                        _platformInfo.SetSwapchainFramebuffer();
+                    }
+                    else
+                    {
+                        glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                        CheckLastError();
+                    }
                 }
 
                 _isSwapchainFB = true;

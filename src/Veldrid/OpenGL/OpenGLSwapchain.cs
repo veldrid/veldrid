@@ -21,10 +21,12 @@ namespace Veldrid.OpenGL
         {
             _gd = gd;
             _framebuffer = new OpenGLSwapchainFramebuffer(
+                _gd,
                 width,
                 height,
                 PixelFormat.B8_G8_R8_A8_UNorm,
-                depthFormat);
+                depthFormat,
+                false);
             _resizeAction = resizeAction;
         }
 

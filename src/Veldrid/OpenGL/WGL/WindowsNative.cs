@@ -76,6 +76,9 @@ namespace Veldrid.OpenGL.WGL
         [DllImport(Opengl32LibName, CharSet = CharSet.Ansi)]
         public static extern IntPtr wglGetProcAddress(string lpszProc);
 
+        [DllImport(Opengl32LibName)]
+        public static extern int wglShareLists(IntPtr context1, IntPtr context2);
+
         [DllImport(Kernel32LibName, CharSet = CharSet.Ansi)]
         public static extern IntPtr LoadLibrary(string lpFileName);
 
@@ -191,11 +194,12 @@ namespace Veldrid.OpenGL.WGL
             WindowsExtensionCreationFunctions extensionFuncs,
             GraphicsBackend backend,
             IntPtr hdc,
-            GraphicsDeviceOptions options,
+            bool debug,
             uint depthBits,
             uint stencilBits,
             int major,
             int minor,
+            IntPtr shareContext,
             out IntPtr context)
         {
             int attribCount = 8;
@@ -241,7 +245,7 @@ namespace Veldrid.OpenGL.WGL
             pfd.nSize = (ushort)Unsafe.SizeOf<PIXELFORMATDESCRIPTOR>();
             SetPixelFormat(hdc, format, &pfd);
 
-            int contextAttribCount = options.Debug ? 4 : 3;
+            int contextAttribCount = debug ? 4 : 3;
             int* contextAttribs = stackalloc int[(contextAttribCount * 2) + 1];
             i = 0;
             contextAttribs[i++] = WGL_CONTEXT_MAJOR_VERSION_ARB;
@@ -252,14 +256,14 @@ namespace Veldrid.OpenGL.WGL
             contextAttribs[i++] = backend == GraphicsBackend.OpenGL
                 ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB
                 : WGL_CONTEXT_ES_PROFILE_BIT_EXT;
-            if (options.Debug)
+            if (debug)
             {
                 contextAttribs[i++] = WGL_CONTEXT_FLAGS_ARB;
                 contextAttribs[i++] = WGL_CONTEXT_DEBUG_BIT_ARB;
             }
             contextAttribs[i++] = 0; // Terminator
 
-            context = extensionFuncs.CreateContextAttribsARB(hdc, IntPtr.Zero, contextAttribs);
+            context = extensionFuncs.CreateContextAttribsARB(hdc, shareContext, contextAttribs);
             return context != IntPtr.Zero;
         }
 
@@ -384,7 +388,7 @@ namespace Veldrid.OpenGL.WGL
 
                     foreach ((int major, int minor) in testVersions)
                     {
-                        if (CreateContextWithExtension(extensions, backend, hdc, new GraphicsDeviceOptions(), 0, 0, major, minor, out IntPtr context))
+                        if (CreateContextWithExtension(extensions, backend, hdc, false, 0, 0, major, minor, IntPtr.Zero, out IntPtr context))
                         {
                             wglDeleteContext(context);
                             return (major, minor);

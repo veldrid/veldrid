@@ -12,18 +12,45 @@ namespace Veldrid.OpenGL
             GraphicsBackend backend,
             IntPtr shareContext)
         {
+            if (scDesc.Source is Win32SwapchainSource win32Source)
+            {
+                return CreateContextWin32(
+                    options,
+                    win32Source.Hwnd,
+                    scDesc.DepthFormat,
+                    scDesc.SyncToVerticalBlank,
+                    backend,
+                    shareContext);
+            }
+            else if (scDesc.Source is XlibSwapchainSource xlibSource)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                throw new NotSupportedException(
+                    $"Creating an OpenGL context from a {scDesc.Source.GetType().Name} is not supported.");
+            }
+        }
+
+        public static OpenGLPlatformInfo CreateContextWin32(
+            GraphicsDeviceOptions options,
+            IntPtr hwnd,
+            PixelFormat? depthFormat,
+            bool syncToVerticalBlank,
+            GraphicsBackend backend,
+            IntPtr shareContext)
+        {
             IntPtr hdc;
-            IntPtr hwnd = Util.AssertSubtype<SwapchainSource, Win32SwapchainSource>(scDesc.Source).Hwnd;
             hdc = WindowsNative.GetDC(hwnd);
             WindowsExtensionCreationFunctions extensionFuncs = WindowsNative.GetExtensionFunctions();
 
             uint depthBits = 0;
             uint stencilBits = 0;
-            if (scDesc.DepthFormat.HasValue)
+            if (depthFormat.HasValue)
             {
-                PixelFormat depthFormat = scDesc.DepthFormat.Value;
-                depthBits = (uint)GetDepthBits(depthFormat);
-                stencilBits = (uint)GetStencilBits(depthFormat);
+                depthBits = (uint)GetDepthBits(depthFormat.Value);
+                stencilBits = (uint)GetStencilBits(depthFormat.Value);
             }
 
             IntPtr glContext;
@@ -58,7 +85,7 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            //WindowsNative.wglMakeCurrent(hdc, glContext);
+            WindowsNative.wglMakeCurrent(hdc, glContext);
 
             IntPtr glLibHandle = WindowsNative.GetOpengl32Lib();
             Func<string, IntPtr> getProcAddress = name =>
@@ -72,9 +99,10 @@ namespace Veldrid.OpenGL
             };
 
             IntPtr setSwapIntervalPtr = getProcAddress("wglSwapIntervalEXT");
-            wglSwapIntervalEXT setSwapInterval = null;
-            //wglSwapIntervalEXT setSwapInterval = Marshal.GetDelegateForFunctionPointer<wglSwapIntervalEXT>(setSwapIntervalPtr);
-            //setSwapInterval(scDesc.SyncToVerticalBlank ? 1 : 0);
+            wglSwapIntervalEXT setSwapInterval = Marshal.GetDelegateForFunctionPointer<wglSwapIntervalEXT>(setSwapIntervalPtr);
+            setSwapInterval(syncToVerticalBlank ? 1 : 0);
+
+            WindowsNative.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
 
             Action<IntPtr> deleteContext = ctx =>
             {

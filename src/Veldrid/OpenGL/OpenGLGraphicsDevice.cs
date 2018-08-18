@@ -672,106 +672,25 @@ namespace Veldrid.OpenGL
 
         private void InitializeWin32(GraphicsDeviceOptions options, SwapchainDescription? scDesc, GraphicsBackend backend)
         {
-            IntPtr hdc;
-            IntPtr invisibleWindowHwnd = IntPtr.Zero;
-
+            IntPtr hwnd;
             if (scDesc != null)
             {
-                hdc = WindowsNative.GetDC(Util.AssertSubtype<SwapchainSource, Win32SwapchainSource>(scDesc.Value.Source).Hwnd);
+                hwnd = Util.AssertSubtype<SwapchainSource, Win32SwapchainSource>(scDesc.Value.Source).Hwnd;
             }
             else
             {
-                invisibleWindowHwnd = WindowsNative.CreateInvisibleWindow();
-                hdc = WindowsNative.GetDC(invisibleWindowHwnd);
+                _ownedWindow = WindowsNative.CreateInvisibleWindow();
+                hwnd = _ownedWindow;
             }
 
-            WindowsExtensionCreationFunctions extensionFuncs = WindowsNative.GetExtensionFunctions();
-
-            uint depthBits = 0;
-            uint stencilBits = 0;
-            if (scDesc.HasValue && scDesc.Value.DepthFormat.HasValue)
-            {
-                PixelFormat depthFormat = scDesc.Value.DepthFormat.Value;
-                depthBits = (uint)GetDepthBits(depthFormat);
-                stencilBits = (uint)GetStencilBits(depthFormat);
-            }
-
-            IntPtr glContext;
-            if (extensionFuncs.IsSupported)
-            {
-                (int major, int minor) = WindowsNative.GetMaxGLVersion(backend == GraphicsBackend.OpenGLES);
-                if (!WindowsNative.CreateContextWithExtension(
-                    extensionFuncs,
-                    backend,
-                    hdc,
-                    options.Debug,
-                    depthBits,
-                    stencilBits,
-                    major,
-                    minor,
-                    IntPtr.Zero,
-                    out glContext))
-                {
-                    throw new VeldridException($"Failed to create OpenGL context.");
-                }
-            }
-            else
-            {
-                if (backend == GraphicsBackend.OpenGLES)
-                {
-                    throw new VeldridException($"OpenGL ES is not supported on this system.");
-                }
-
-                if (!WindowsNative.CreateContextRegular(hdc, depthBits, stencilBits, out glContext))
-                {
-                    throw new VeldridException($"Failed to create OpenGL context.");
-                }
-            }
-
-            WindowsNative.wglMakeCurrent(hdc, glContext);
-
-            IntPtr glLibHandle = WindowsNative.GetOpengl32Lib();
-            Func<string, IntPtr> getProcAddress = name =>
-            {
-                IntPtr ret = WindowsNative.wglGetProcAddress(name);
-                if (ret == IntPtr.Zero)
-                {
-                    ret = WindowsNative.GetProcAddress(glLibHandle, name);
-                }
-                return ret;
-            };
-
-            IntPtr setSwapIntervalPtr = getProcAddress("wglSwapIntervalEXT");
-            wglSwapIntervalEXT setSwapInterval = Marshal.GetDelegateForFunctionPointer<wglSwapIntervalEXT>(setSwapIntervalPtr);
-            if (scDesc != null)
-            {
-                setSwapInterval(scDesc.Value.SyncToVerticalBlank ? 1 : 0);
-            }
-
-            Action<IntPtr> deleteContext;
-            if (invisibleWindowHwnd == IntPtr.Zero)
-            {
-                deleteContext = ctx => WindowsNative.wglDeleteContext(ctx);
-            }
-            else
-            {
-                deleteContext = ctx =>
-                {
-                    WindowsNative.wglDeleteContext(ctx);
-                    WindowsNative.ReleaseDC(invisibleWindowHwnd, hdc);
-                };
-
-                _ownedWindow = invisibleWindowHwnd;
-            }
-            OpenGLPlatformInfo platformInfo = new OpenGLPlatformInfo(
-                glContext,
-                getProcAddress,
-                ctx => WindowsNative.wglMakeCurrent(hdc, ctx),
-                () => WindowsNative.wglGetCurrentContext(),
-                () => WindowsNative.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero),
-                deleteContext,
-                () => WindowsNative.SwapBuffers(hdc),
-                sync => setSwapInterval(sync ? 1 : 0));
+            OpenGLPlatformInfo platformInfo = OpenGLContextCreation.CreateContextWin32(
+                options,
+                hwnd,
+                scDesc?.DepthFormat ?? null,
+                scDesc?.SyncToVerticalBlank ?? false,
+                backend,
+                IntPtr.Zero);
+            platformInfo.MakeCurrent(platformInfo.OpenGLContextHandle);
 
             uint width = 0;
             uint height = 0;
@@ -1130,7 +1049,10 @@ namespace Veldrid.OpenGL
         protected override void PlatformDispose()
         {
             _executionThread.Terminate();
-            int result = WindowsNative.DestroyWindow(_ownedWindow);
+            if (_ownedWindow != IntPtr.Zero)
+            {
+                WindowsNative.DestroyWindow(_ownedWindow);
+            }
         }
 
         internal OpenGLPlatformInfo CreateSharedContext(
@@ -1140,7 +1062,10 @@ namespace Veldrid.OpenGL
             IntPtr shareContext)
         {
             OpenGLPlatformInfo info = OpenGLContextCreation.CreateContext(options, scDesc, backendType, shareContext);
-            _executionThread.ShareContexts(info.OpenGLContextHandle);
+            if (scDesc.Source is Win32SwapchainSource)
+            {
+                _executionThread.ShareContexts(info.OpenGLContextHandle);
+            }
             return info;
         }
 

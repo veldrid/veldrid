@@ -16,7 +16,7 @@ namespace Veldrid.MTL
         private readonly MTLDevice _device;
         private readonly MTLCommandQueue _commandQueue;
         private readonly MTLSwapchain _mainSwapchain;
-        private readonly TextureSampleCount _maxSampleCount;
+        private readonly bool[] _supportedSampleCounts;
 
         private readonly object _submittedCommandsLock = new object();
         private readonly List<(MTLCommandBuffer, MTLFence)> _submittedCBs = new List<(MTLCommandBuffer, MTLFence)>();
@@ -63,12 +63,15 @@ namespace Veldrid.MTL
             ResourceFactory = new MTLResourceFactory(this);
             _commandQueue = _device.newCommandQueue();
 
-            foreach (TextureSampleCount count in (TextureSampleCount[])Enum.GetValues(typeof(TextureSampleCount)))
+            TextureSampleCount[] allSampleCounts = (TextureSampleCount[])Enum.GetValues(typeof(TextureSampleCount));
+            _supportedSampleCounts = new bool[allSampleCounts.Length];
+            for (int i = 0; i < allSampleCounts.Length; i++)
             {
+                TextureSampleCount count = allSampleCounts[i];
                 uint uintValue = FormatHelpers.GetSampleCountUInt32(count);
                 if (_device.supportsTextureSampleCount((UIntPtr)uintValue))
                 {
-                    _maxSampleCount = count;
+                    _supportedSampleCounts[i] = true;
                 }
             }
 
@@ -129,7 +132,15 @@ namespace Veldrid.MTL
 
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
         {
-            return _maxSampleCount;
+            for (int i = _supportedSampleCounts.Length - 1; i >= 0; i--)
+            {
+                if (_supportedSampleCounts[i])
+                {
+                    return (TextureSampleCount)i;
+                }
+            }
+
+            return TextureSampleCount.Count1;
         }
 
         protected override bool GetPixelFormatSupportCore(
@@ -145,8 +156,8 @@ namespace Veldrid.MTL
             }
 
             uint sampleCounts = 0;
-            int max = (int)_maxSampleCount + 1;
-            for (int i = 0; i < max; i++)
+
+            for (int i = 0; i < _supportedSampleCounts.Length; i++)
             {
                 sampleCounts |= (uint)(1 << i);
             }

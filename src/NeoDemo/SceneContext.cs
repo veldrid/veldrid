@@ -176,9 +176,17 @@ namespace Veldrid.NeoDemo
 
             ResourceFactory factory = gd.ResourceFactory;
 
-            TextureSampleCount mainSceneSampleCountCapped = (TextureSampleCount)Math.Min(
-                (int)gd.GetSampleCountLimit(PixelFormat.R8_G8_B8_A8_UNorm, false),
-                (int)MainSceneSampleCount);
+            gd.GetPixelFormatSupport(
+                PixelFormat.R8_G8_B8_A8_UNorm,
+                TextureType.Texture2D,
+                TextureUsage.RenderTarget,
+                out PixelFormatProperties properties);
+
+            TextureSampleCount sampleCount = MainSceneSampleCount;
+            while (!properties.IsSampleCountSupported(sampleCount))
+            {
+                sampleCount = (TextureSampleCount)(sampleCount - 1);
+            }
 
             TextureDescription mainColorDesc = TextureDescription.Texture2D(
                 gd.SwapchainFramebuffer.Width,
@@ -187,10 +195,10 @@ namespace Veldrid.NeoDemo
                 1,
                 PixelFormat.R8_G8_B8_A8_UNorm,
                 TextureUsage.RenderTarget | TextureUsage.Sampled,
-                mainSceneSampleCountCapped);
+                sampleCount);
 
             MainSceneColorTexture = factory.CreateTexture(ref mainColorDesc);
-            if (mainSceneSampleCountCapped != TextureSampleCount.Count1)
+            if (sampleCount != TextureSampleCount.Count1)
             {
                 mainColorDesc.SampleCount = TextureSampleCount.Count1;
                 MainSceneResolvedColorTexture = factory.CreateTexture(ref mainColorDesc);
@@ -207,7 +215,7 @@ namespace Veldrid.NeoDemo
                 1,
                 PixelFormat.R32_Float,
                 TextureUsage.DepthStencil,
-                mainSceneSampleCountCapped));
+                sampleCount));
             MainSceneFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(MainSceneDepthTexture, MainSceneColorTexture));
             MainSceneViewResourceSet = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, MainSceneResolvedColorView, gd.PointSampler));
 

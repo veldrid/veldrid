@@ -735,7 +735,7 @@ namespace Veldrid
 #endif
                 case GraphicsBackend.OpenGLES:
 #if !EXCLUDE_OPENGL_BACKEND
-                    return true;
+                    return !RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 #else
                     return false;
 #endif

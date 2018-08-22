@@ -419,6 +419,7 @@ namespace Veldrid
                 x, y, z,
                 width, height, depth,
                 mipLevel, arrayLayer);
+            gch.Free();
         }
 
         protected abstract void UpdateTextureCore(

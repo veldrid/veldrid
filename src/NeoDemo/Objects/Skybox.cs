@@ -36,7 +36,7 @@ namespace Veldrid.NeoDemo.Objects
             _bottom = bottom;
         }
 
-        public unsafe override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
+        public override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             ResourceFactory factory = gd.ResourceFactory;
 

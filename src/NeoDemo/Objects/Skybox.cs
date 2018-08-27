@@ -1,11 +1,9 @@
 ﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Veldrid.Utilities;
+using Veldrid.ImageSharp;
 
 namespace Veldrid.NeoDemo.Objects
 {
@@ -48,35 +46,10 @@ namespace Veldrid.NeoDemo.Objects
             _ib = factory.CreateBuffer(new BufferDescription(s_indices.SizeInBytes(), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, s_indices);
 
-            Texture textureCube;
-            TextureView textureView;
-            fixed (Rgba32* frontPin = &MemoryMarshal.GetReference(_front.GetPixelSpan()))
-            fixed (Rgba32* backPin = &MemoryMarshal.GetReference(_back.GetPixelSpan()))
-            fixed (Rgba32* leftPin = &MemoryMarshal.GetReference(_left.GetPixelSpan()))
-            fixed (Rgba32* rightPin = &MemoryMarshal.GetReference(_right.GetPixelSpan()))
-            fixed (Rgba32* topPin = &MemoryMarshal.GetReference(_top.GetPixelSpan()))
-            fixed (Rgba32* bottomPin = &MemoryMarshal.GetReference(_bottom.GetPixelSpan()))
-            {
-                uint width = (uint)_front.Width;
-                uint height = (uint)_front.Height;
-                textureCube = factory.CreateTexture(TextureDescription.Texture2D(
-                    width,
-                    height,
-                    1,
-                    1,
-                    PixelFormat.R8_G8_B8_A8_UNorm,
-                    TextureUsage.Sampled | TextureUsage.Cubemap));
+            ImageSharpCubeMapTexture imageSharpCubeMapTexture = new ImageSharpCubeMapTexture(_front, _back, _left, _right, _top, _bottom);
 
-                uint faceSize = (uint)(_front.Width * _front.Height * Unsafe.SizeOf<Rgba32>());
-                gd.UpdateTexture(textureCube, (IntPtr)rightPin, faceSize, 0, 0, 0, width, height, 1, 0, 0);
-                gd.UpdateTexture(textureCube, (IntPtr)leftPin, faceSize, 0, 0, 0, width, height, 1, 0, 1);
-                gd.UpdateTexture(textureCube, (IntPtr)topPin, faceSize, 0, 0, 0, width, height, 1, 0, 2);
-                gd.UpdateTexture(textureCube, (IntPtr)bottomPin, faceSize, 0, 0, 0, width, height, 1, 0, 3);
-                gd.UpdateTexture(textureCube, (IntPtr)backPin, faceSize, 0, 0, 0, width, height, 1, 0, 4);
-                gd.UpdateTexture(textureCube, (IntPtr)frontPin, faceSize, 0, 0, 0, width, height, 1, 0, 5);
-
-                textureView = factory.CreateTextureView(new TextureViewDescription(textureCube));
-            }
+            Texture textureCube = imageSharpCubeMapTexture.CreateCubeMapTextures(gd, factory);
+            TextureView textureView = factory.CreateTextureView(new TextureViewDescription(textureCube));
 
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {

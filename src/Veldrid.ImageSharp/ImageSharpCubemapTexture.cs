@@ -36,34 +36,34 @@ namespace Veldrid.ImageSharp
         /// <summary>
         /// Provides standardized access to the cubemap texture array
         /// </summary>
-        private const int POSITIVE_X = 0;
-        private const int NEGATIVE_X = 1;
-        private const int POSITIVE_Y = 2;
-        private const int NEGATIVE_Y = 3;
-        private const int POSITIVE_Z = 4;
-        private const int NEGATIVE_Z = 5;
+        private const int PositiveXArrayLayer = 0;
+        private const int NegativeXArrayLayer = 1;
+        private const int PostitiveYArrayLayer = 2;
+        private const int NegativeYArrayLayer = 3;
+        private const int PositiveZArrayLayer = 4;
+        private const int NegativeZArrayLayer = 5;
 
         public ImageSharpCubemapTexture(
-            string negativeZPath,
-            string positiveZPath,
-            string negativeXPath,
             string positiveXPath,
+            string negativeXPath,
             string positiveYPath,
-            string negativeYPath) : this(
-                Image.Load(negativeZPath), 
-                Image.Load(positiveZPath),
-                Image.Load(negativeXPath),
+            string negativeYPath,
+            string positiveZPath,
+            string negativeZPath) : this(
                 Image.Load(positiveXPath),
+                Image.Load(negativeXPath),
                 Image.Load(positiveYPath),
-                Image.Load(negativeYPath)) { }
+                Image.Load(negativeYPath),
+                Image.Load(positiveZPath), 
+                Image.Load(negativeZPath)) { }
 
         public ImageSharpCubemapTexture(
-            Image<Rgba32> negativeZ,
-            Image<Rgba32> positiveZ,
-            Image<Rgba32> negativeX,
             Image<Rgba32> positiveX,
+            Image<Rgba32> negativeX,
             Image<Rgba32> positiveY,
-            Image<Rgba32> negativeY)
+            Image<Rgba32> negativeY,
+            Image<Rgba32> positiveZ,
+            Image<Rgba32> negativeZ)
         {
             CubemapTextures = new Image<Rgba32>[] { positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ };        
         }
@@ -72,12 +72,12 @@ namespace Veldrid.ImageSharp
         {
             Texture cubemapTexture;
 
-            fixed (Rgba32* negativeZPin = &MemoryMarshal.GetReference(CubemapTextures[NEGATIVE_Z].GetPixelSpan()))
-            fixed (Rgba32* positiveZPin = &MemoryMarshal.GetReference(CubemapTextures[POSITIVE_Z].GetPixelSpan()))
-            fixed (Rgba32* negativeXPin = &MemoryMarshal.GetReference(CubemapTextures[NEGATIVE_X].GetPixelSpan()))
-            fixed (Rgba32* positiveXPin = &MemoryMarshal.GetReference(CubemapTextures[POSITIVE_X].GetPixelSpan()))
-            fixed (Rgba32* positiveYPin = &MemoryMarshal.GetReference(CubemapTextures[POSITIVE_Y].GetPixelSpan()))
-            fixed (Rgba32* negativeYPin = &MemoryMarshal.GetReference(CubemapTextures[NEGATIVE_Y].GetPixelSpan()))
+            fixed (Rgba32* positiveXPin = &MemoryMarshal.GetReference(CubemapTextures[PositiveXArrayLayer].GetPixelSpan()))
+            fixed (Rgba32* negativeXPin = &MemoryMarshal.GetReference(CubemapTextures[NegativeXArrayLayer].GetPixelSpan()))
+            fixed (Rgba32* positiveYPin = &MemoryMarshal.GetReference(CubemapTextures[PostitiveYArrayLayer].GetPixelSpan()))
+            fixed (Rgba32* negativeYPin = &MemoryMarshal.GetReference(CubemapTextures[NegativeYArrayLayer].GetPixelSpan()))
+            fixed (Rgba32* positiveZPin = &MemoryMarshal.GetReference(CubemapTextures[PositiveZArrayLayer].GetPixelSpan()))
+            fixed (Rgba32* negativeZPin = &MemoryMarshal.GetReference(CubemapTextures[NegativeZArrayLayer].GetPixelSpan()))
             {
                 cubemapTexture = factory.CreateTexture(TextureDescription.Texture2D(
                     Width,
@@ -88,12 +88,12 @@ namespace Veldrid.ImageSharp
                     TextureUsage.Sampled | TextureUsage.Cubemap));
 
                 uint faceSize = (uint)(Width * Height * PixelSizeInBytes);
-                gd.UpdateTexture(cubemapTexture, (IntPtr)positiveXPin, faceSize, 0, 0, 0, Width, Height, 1, 0, POSITIVE_X);
-                gd.UpdateTexture(cubemapTexture, (IntPtr)negativeXPin, faceSize, 0, 0, 0, Width, Height, 1, 0, NEGATIVE_X);
-                gd.UpdateTexture(cubemapTexture, (IntPtr)positiveYPin, faceSize, 0, 0, 0, Width, Height, 1, 0, POSITIVE_Y);
-                gd.UpdateTexture(cubemapTexture, (IntPtr)negativeYPin, faceSize, 0, 0, 0, Width, Height, 1, 0, NEGATIVE_Y);
-                gd.UpdateTexture(cubemapTexture, (IntPtr)positiveZPin, faceSize, 0, 0, 0, Width, Height, 1, 0, POSITIVE_Z);
-                gd.UpdateTexture(cubemapTexture, (IntPtr)negativeZPin, faceSize, 0, 0, 0, Width, Height, 1, 0, NEGATIVE_Z);
+                gd.UpdateTexture(cubemapTexture, (IntPtr)positiveXPin, faceSize, 0, 0, 0, Width, Height, 1, 0, PositiveXArrayLayer);
+                gd.UpdateTexture(cubemapTexture, (IntPtr)negativeXPin, faceSize, 0, 0, 0, Width, Height, 1, 0, NegativeXArrayLayer);
+                gd.UpdateTexture(cubemapTexture, (IntPtr)positiveYPin, faceSize, 0, 0, 0, Width, Height, 1, 0, PostitiveYArrayLayer);
+                gd.UpdateTexture(cubemapTexture, (IntPtr)negativeYPin, faceSize, 0, 0, 0, Width, Height, 1, 0, NegativeYArrayLayer);
+                gd.UpdateTexture(cubemapTexture, (IntPtr)positiveZPin, faceSize, 0, 0, 0, Width, Height, 1, 0, PositiveZArrayLayer);
+                gd.UpdateTexture(cubemapTexture, (IntPtr)negativeZPin, faceSize, 0, 0, 0, Width, Height, 1, 0, NegativeZArrayLayer);
             }
             return cubemapTexture;
         }

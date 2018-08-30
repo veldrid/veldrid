@@ -46,7 +46,7 @@ namespace Veldrid.NeoDemo.Objects
             _ib = factory.CreateBuffer(new BufferDescription(s_indices.SizeInBytes(), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, s_indices);
 
-            ImageSharpCubemapTexture imageSharpCubeMapTexture = new ImageSharpCubemapTexture(_front, _back, _left, _right, _top, _bottom);
+            ImageSharpCubemapTexture imageSharpCubeMapTexture = new ImageSharpCubemapTexture(_right, _left, _top, _bottom, _back, _front);
 
             Texture textureCube = imageSharpCubeMapTexture.CreateCubemapTextures(gd, factory);
             TextureView textureView = factory.CreateTextureView(new TextureViewDescription(textureCube));

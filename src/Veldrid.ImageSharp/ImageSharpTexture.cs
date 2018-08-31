@@ -137,7 +137,7 @@ namespace Veldrid.ImageSharp
             return tex;
         }
 
-        public static Image<T>[] GenerateMipmaps<T>(Image<T> baseImage) where T : struct, IPixel<T>
+        internal static Image<T>[] GenerateMipmaps<T>(Image<T> baseImage) where T : struct, IPixel<T>
         {
             int mipLevelCount = MipmapHelper.ComputeMipLevels(baseImage.Width, baseImage.Height);
             Image<T>[] mipLevels = new Image<T>[mipLevelCount];

@@ -62,7 +62,7 @@ namespace Veldrid.ImageSharp
                 Image.Load(negativeYPath),
                 Image.Load(positiveZPath), 
                 Image.Load(negativeZPath),
-                false) { }
+                true) { }
 
         public ImageSharpCubemapTexture(
             string positiveXPath,
@@ -88,7 +88,7 @@ namespace Veldrid.ImageSharp
             Image<Rgba32> negativeY,
             Image<Rgba32> positiveZ,
             Image<Rgba32> negativeZ,
-            bool mipmap = false)
+            bool mipmap = true)
         {
             if (mipmap)
             {
@@ -114,7 +114,7 @@ namespace Veldrid.ImageSharp
 
         }
 
-        public unsafe Texture CreateCubemapTextures(GraphicsDevice gd, ResourceFactory factory)
+        public unsafe Texture CreateDeviceTexture(GraphicsDevice gd, ResourceFactory factory)
         {
             Texture cubemapTexture = factory.CreateTexture(TextureDescription.Texture2D(
                         Width,

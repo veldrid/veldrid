@@ -90,9 +90,9 @@ namespace Veldrid.ImageSharp
             Image<Rgba32> negativeZ,
             bool mipmap = true)
         {
+            CubemapTextures = new Image<Rgba32>[6][];
             if (mipmap)
             {
-                CubemapTextures = new Image<Rgba32>[6][];
                 CubemapTextures[0] = ImageSharpTexture.GenerateMipmaps(positiveX);
                 CubemapTextures[1] = ImageSharpTexture.GenerateMipmaps(negativeX);
                 CubemapTextures[2] = ImageSharpTexture.GenerateMipmaps(positiveY);
@@ -103,7 +103,6 @@ namespace Veldrid.ImageSharp
 
             else
             {
-                CubemapTextures = new Image<Rgba32>[6][];
                 CubemapTextures[0] = new Image<Rgba32>[1] { positiveX };
                 CubemapTextures[1] = new Image<Rgba32>[1] { negativeX };
                 CubemapTextures[2] = new Image<Rgba32>[1] { positiveY };

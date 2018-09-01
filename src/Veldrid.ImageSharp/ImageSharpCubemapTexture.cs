@@ -93,12 +93,12 @@ namespace Veldrid.ImageSharp
             CubemapTextures = new Image<Rgba32>[6][];
             if (mipmap)
             {
-                CubemapTextures[0] = ImageSharpTexture.GenerateMipmaps(positiveX);
-                CubemapTextures[1] = ImageSharpTexture.GenerateMipmaps(negativeX);
-                CubemapTextures[2] = ImageSharpTexture.GenerateMipmaps(positiveY);
-                CubemapTextures[3] = ImageSharpTexture.GenerateMipmaps(negativeY);
-                CubemapTextures[4] = ImageSharpTexture.GenerateMipmaps(positiveZ);
-                CubemapTextures[5] = ImageSharpTexture.GenerateMipmaps(negativeZ);
+                CubemapTextures[0] = MipmapHelper.GenerateMipmaps(positiveX);
+                CubemapTextures[1] = MipmapHelper.GenerateMipmaps(negativeX);
+                CubemapTextures[2] = MipmapHelper.GenerateMipmaps(positiveY);
+                CubemapTextures[3] = MipmapHelper.GenerateMipmaps(negativeY);
+                CubemapTextures[4] = MipmapHelper.GenerateMipmaps(positiveZ);
+                CubemapTextures[5] = MipmapHelper.GenerateMipmaps(negativeZ);
             }
 
             else

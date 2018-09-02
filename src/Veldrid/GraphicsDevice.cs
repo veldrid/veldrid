@@ -565,6 +565,33 @@ namespace Veldrid
 
         /// <summary>
         /// Updates a <see cref="DeviceBuffer"/> region with new data.
+        /// This function must be used with a blittable value type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of data to upload.</typeparam>
+        /// <param name="buffer">The resource to update.</param>
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.</param>
+        /// <param name="source">An array containing the data to upload.</param>
+        /// <param name="sourceRange">The number of items of type <typeparamref name="T"/> to copy from <paramref name="source"/></param>
+        public unsafe void UpdateBuffer<T>(
+            DeviceBuffer buffer,
+            uint bufferOffsetInBytes,
+            T[] source,
+            int sourceRange) where T : struct
+        {
+            if (sourceRange > source.Length)
+            {
+                throw new VeldridException(
+                    $"The number of items to copy from source exceeds its size of {source.Length}.");
+            }
+
+            GCHandle gch = GCHandle.Alloc(source, GCHandleType.Pinned);
+            UpdateBuffer(buffer, bufferOffsetInBytes, gch.AddrOfPinnedObject(), (uint)(Unsafe.SizeOf<T>() * sourceRange));
+            gch.Free();
+        }
+
+        /// <summary>
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// </summary>
         /// <param name="buffer">The resource to update.</param>
         /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at

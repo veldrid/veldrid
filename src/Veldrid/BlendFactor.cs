@@ -6,11 +6,11 @@
     public enum BlendFactor : byte
     {
         /// <summary>
-        /// Each component is multiplied by 1.
+        /// Each component is multiplied by 0.
         /// </summary>
         Zero,
         /// <summary>
-        /// Each component is multiplied by 0.
+        /// Each component is multiplied by 1.
         /// </summary>
         One,
         /// <summary>

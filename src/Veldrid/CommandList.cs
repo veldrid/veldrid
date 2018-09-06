@@ -751,6 +751,11 @@ namespace Veldrid
         {
 #if VALIDATE_USAGE
 #endif
+            if (sizeInBytes == 0)
+            {
+                return;
+            }
+
             CopyBufferCore(source, sourceOffset, destination, destinationOffset, sizeInBytes);
         }
 

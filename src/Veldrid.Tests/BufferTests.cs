@@ -457,6 +457,46 @@ namespace Veldrid.Tests
             GD.WaitForIdle();
         }
 
+        [Theory]
+        [InlineData(BufferUsage.UniformBuffer)]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.VertexBuffer)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.IndexBuffer)]
+        [InlineData(BufferUsage.IndexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.IndirectBuffer)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer | BufferUsage.IndirectBuffer)]
+        [InlineData(BufferUsage.IndexBuffer | BufferUsage.IndirectBuffer)]
+        [InlineData(BufferUsage.Staging)]
+        public unsafe void CopyBuffer_ZeroSize(BufferUsage usage)
+        {
+            DeviceBuffer src = CreateBuffer(1024, usage);
+            DeviceBuffer dst = CreateBuffer(1024, usage);
+
+            byte[] initialDataSrc = Enumerable.Range(0, 1024).Select(i => (byte)i).ToArray();
+            byte[] initialDataDst = Enumerable.Range(0, 1024).Select(i => (byte)(i * 2)).ToArray();
+            GD.UpdateBuffer(src, 0, initialDataSrc);
+            GD.UpdateBuffer(dst, 0, initialDataDst);
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyBuffer(src, 0, dst, 0, 0);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            DeviceBuffer readback = GetReadback(dst);
+
+            MappedResourceView<byte> readMap = GD.Map<byte>(readback, MapMode.Read);
+            for (int i = 0; i < 1024; i++)
+            {
+                Assert.Equal((byte)(i * 2), readMap[i]);
+            }
+            GD.Unmap(readback);
+        }
+
         private DeviceBuffer CreateBuffer(uint size, BufferUsage usage)
         {
             return RF.CreateBuffer(new BufferDescription(size, usage));

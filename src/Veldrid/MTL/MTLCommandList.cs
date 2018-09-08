@@ -432,7 +432,15 @@ namespace Veldrid.MTL
                         + srcRowPitch * compressedSrcY
                         + blockSizeInBytes * compressedSrcX;
 
-                    MTLSize sourceSize = new MTLSize(width, height, depth);
+                    uint copyWidth = width > mipWidth && width <= blockSize
+                        ? mipWidth
+                        : width;
+
+                    uint copyHeight = height > mipHeight && height <= blockSize
+                        ? mipHeight
+                        : height;
+
+                    MTLSize sourceSize = new MTLSize(copyWidth, copyHeight, depth);
                     if (dstMTLTexture.Type != TextureType.Texture3D)
                     {
                         srcDepthPitch = 0;

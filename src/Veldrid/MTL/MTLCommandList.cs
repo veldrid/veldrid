@@ -321,13 +321,8 @@ namespace Veldrid.MTL
                 viewport.MaxDepth);
         }
 
-        public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            if (sizeInBytes == 0)
-            {
-                return;
-            }
-
             bool useComputeCopy = (bufferOffsetInBytes % 4 != 0)
                 || (sizeInBytes % 4 != 0 && bufferOffsetInBytes != 0 && sizeInBytes != buffer.SizeInBytes);
 

@@ -732,7 +732,27 @@ namespace Veldrid
         /// which new data will be uploaded.</param>
         /// <param name="source">A pointer to the start of the data to upload.</param>
         /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
-        public abstract void UpdateBuffer(
+        public void UpdateBuffer(
+            DeviceBuffer buffer,
+            uint bufferOffsetInBytes,
+            IntPtr source,
+            uint sizeInBytes)
+        {
+            if (bufferOffsetInBytes + sizeInBytes > buffer.SizeInBytes)
+            {
+                throw new VeldridException(
+                    $"The DeviceBuffer's capacity ({buffer.SizeInBytes}) is not large enough to store the amount of " +
+                    $"data specified ({sizeInBytes}) at the given offset ({bufferOffsetInBytes}).");
+            }
+            if (sizeInBytes == 0)
+            {
+                return;
+            }
+
+            UpdateBufferCore(buffer, bufferOffsetInBytes, source, sizeInBytes);
+        }
+
+        protected abstract void UpdateBufferCore(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             IntPtr source,

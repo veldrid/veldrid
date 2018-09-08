@@ -149,7 +149,7 @@ namespace Veldrid.OpenGL
             _currentCommands.Reset();
         }
 
-        public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             _currentCommands.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }

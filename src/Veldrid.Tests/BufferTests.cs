@@ -497,6 +497,59 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
+        [Theory]
+        [InlineData(BufferUsage.UniformBuffer, false)]
+        [InlineData(BufferUsage.UniformBuffer, true)]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic, false)]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic, true)]
+        [InlineData(BufferUsage.VertexBuffer, false)]
+        [InlineData(BufferUsage.VertexBuffer, true)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.Dynamic, false)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.Dynamic, true)]
+        [InlineData(BufferUsage.IndexBuffer, false)]
+        [InlineData(BufferUsage.IndexBuffer, true)]
+        [InlineData(BufferUsage.IndirectBuffer, false)]
+        [InlineData(BufferUsage.IndirectBuffer, true)]
+        [InlineData(BufferUsage.Staging, false)]
+        [InlineData(BufferUsage.Staging, true)]
+        public unsafe void UpdateBuffer_ZeroSize(BufferUsage usage, bool useCommandListUpdate)
+        {
+            DeviceBuffer buffer = CreateBuffer(1024, usage);
+
+            byte[] initialData = Enumerable.Range(0, 1024).Select(i => (byte)i).ToArray();
+            byte[] otherData = Enumerable.Range(0, 1024).Select(i => (byte)(i + 10)).ToArray();
+            GD.UpdateBuffer(buffer, 0, initialData);
+
+            if (useCommandListUpdate)
+            {
+                CommandList cl = RF.CreateCommandList();
+                cl.Begin();
+                fixed (byte* dataPtr = otherData)
+                {
+                    cl.UpdateBuffer(buffer, 0, (IntPtr)dataPtr, 0);
+                }
+                cl.End();
+                GD.SubmitCommands(cl);
+                GD.WaitForIdle();
+            }
+            else
+            {
+                fixed (byte* dataPtr = otherData)
+                {
+                    GD.UpdateBuffer(buffer, 0, (IntPtr)dataPtr, 0);
+                }
+            }
+
+            DeviceBuffer readback = GetReadback(buffer);
+
+            MappedResourceView<byte> readMap = GD.Map<byte>(readback, MapMode.Read);
+            for (int i = 0; i < 1024; i++)
+            {
+                Assert.Equal((byte)i, readMap[i]);
+            }
+            GD.Unmap(readback);
+        }
+
         private DeviceBuffer CreateBuffer(uint size, BufferUsage usage)
         {
             return RF.CreateBuffer(new BufferDescription(size, usage));

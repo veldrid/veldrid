@@ -672,7 +672,14 @@ namespace Veldrid.OpenGL
                 count = -1;
             }
 
-            _submittedCommandListCounts[glCommandList] = count;
+            if (count == 0)
+            {
+                _submittedCommandListCounts.Remove(glCommandList);
+            }
+            else
+            {
+                _submittedCommandListCounts[glCommandList] = count;
+            }
             return count;
         }
 

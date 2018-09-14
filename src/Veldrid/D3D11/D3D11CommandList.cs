@@ -12,7 +12,6 @@ namespace Veldrid.D3D11
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly DeviceContext _context;
-        private readonly DeviceContext1 _context1;
         private bool _begun;
         private bool _disposed;
 
@@ -82,11 +81,6 @@ namespace Veldrid.D3D11
         {
             _gd = gd;
             _context = new DeviceContext(gd.Device);
-            _context1 = _context.QueryInterfaceOrNull<DeviceContext1>();
-            if (_context1 == null)
-            {
-                throw new VeldridException("Direct3D 11.1 is required.");
-            }
         }
 
         public SharpDX.Direct3D11.CommandList DeviceCommandList { get; private set; }
@@ -1047,7 +1041,7 @@ namespace Veldrid.D3D11
                 }
                 else
                 {
-                    _context1.UpdateSubresource1(d3dBuffer.Buffer, 0, subregion, source, 0, 0, 0);
+                    UpdateSubresource_Workaround(d3dBuffer.Buffer, 0, subregion.Value, source);
                 }
             }
             else if (useMap && updateFullBuffer) // Can only update full buffer with WriteDiscard.
@@ -1075,6 +1069,24 @@ namespace Veldrid.D3D11
                 _submittedStagingBuffers.Add(staging);
             }
         }
+
+        private unsafe void UpdateSubresource_Workaround(
+            Resource resource,
+            int subresource,
+            ResourceRegion region,
+            IntPtr data)
+        {
+            bool needWorkaround = !_gd.SupportsCommandLists;
+            void* pAdjustedSrcData = data.ToPointer();
+            if (needWorkaround)
+            {
+                Debug.Assert(region.Top == 0 && region.Front == 0);
+                pAdjustedSrcData = (byte*)data - region.Left;
+            }
+
+            _context.UpdateSubresource(resource, subresource, region, (IntPtr)pAdjustedSrcData, 0, 0);
+        }
+
 
         private D3D11Buffer GetFreeStagingBuffer(uint sizeInBytes)
         {
@@ -1189,7 +1201,6 @@ namespace Veldrid.D3D11
             {
                 DeviceCommandList?.Dispose();
                 _context.Dispose();
-                _context1.Dispose();
                 _disposed = true;
             }
         }

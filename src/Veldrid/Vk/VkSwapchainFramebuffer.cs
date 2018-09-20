@@ -99,6 +99,19 @@ namespace Veldrid.Vk
             _outputDescription = OutputDescription.CreateFromFramebuffer(this);
         }
 
+        private void DestroySwapchainFramebuffers()
+        {
+            if (_scFramebuffers != null)
+            {
+                for (int i = 0; i < _scFramebuffers.Length; i++)
+                {
+                    _scFramebuffers[i]?.Dispose();
+                    _scFramebuffers[i] = null;
+                }
+                Array.Clear(_scFramebuffers, 0, _scFramebuffers.Length);
+            }
+        }
+
         private void CreateDepthTexture()
         {
             if (_depthFormat.HasValue)
@@ -184,11 +197,15 @@ namespace Veldrid.Vk
             {
                 _destroyed = true;
                 _depthAttachment?.Target.Dispose();
-                for (int i = 0; i < _scFramebuffers.Length; i++)
-                {
-                    _scFramebuffers[i]?.Dispose();
-                }
+                DestroySwapchainFramebuffers();
             }
+        }
+
+        private void DestroyDummyFramebuffer()
+        {
+            _scFramebuffers[0].ColorTargets[0].Target.Dispose();
+            _scFramebuffers[0].DepthTarget?.Target.Dispose();
+            _scFramebuffers[0].Dispose();
         }
     }
 }

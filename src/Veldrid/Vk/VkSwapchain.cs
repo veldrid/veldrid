@@ -81,10 +81,14 @@ namespace Veldrid.Vk
 
         public override void Resize(uint width, uint height)
         {
-            CreateSwapchain(width, height);
-            AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence);
-            vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-            vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
+            if (CreateSwapchain(width, height))
+            {
+                if (AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence))
+                {
+                    vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
+                    vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
+                }
+            }
         }
 
         public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, Vulkan.VkFence fence)
@@ -94,6 +98,7 @@ namespace Veldrid.Vk
                 _syncToVBlank = _newSyncToVBlank.Value;
                 _newSyncToVBlank = null;
                 CreateSwapchain(_framebuffer.Width, _framebuffer.Height);
+                return false;
             }
 
             VkResult result = vkAcquireNextImageKHR(
@@ -107,7 +112,6 @@ namespace Veldrid.Vk
             if (result == VkResult.ErrorOutOfDateKHR || result == VkResult.SuboptimalKHR)
             {
                 CreateSwapchain(_framebuffer.Width, _framebuffer.Height);
-
                 return false;
             }
             else if (result != VkResult.Success)
@@ -118,13 +122,8 @@ namespace Veldrid.Vk
             return true;
         }
 
-        private void CreateSwapchain(uint width, uint height)
+        private bool CreateSwapchain(uint width, uint height)
         {
-            if (_deviceSwapchain != VkSwapchainKHR.Null)
-            {
-                _gd.WaitForIdle();
-            }
-
             // Obtain the surface capabilities first -- this will indicate whether the surface has been lost.
             VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_gd.PhysicalDevice, _surface, out VkSurfaceCapabilitiesKHR surfaceCapabilities);
             if (result == VkResult.ErrorSurfaceLostKHR)
@@ -132,9 +131,20 @@ namespace Veldrid.Vk
                 throw new VeldridException($"The Swapchain's underlying surface has been lost.");
             }
 
+            if (surfaceCapabilities.minImageExtent.width == 0 && surfaceCapabilities.minImageExtent.height == 0
+                && surfaceCapabilities.maxImageExtent.width == 0 && surfaceCapabilities.maxImageExtent.height == 0)
+            {
+                return false;
+            }
+
+            if (_deviceSwapchain != VkSwapchainKHR.Null)
+            {
+                _gd.WaitForIdle();
+            }
+
             _currentImageIndex = 0;
             uint surfaceFormatCount = 0;
-             result = vkGetPhysicalDeviceSurfaceFormatsKHR(_gd.PhysicalDevice, _surface, ref surfaceFormatCount, null);
+            result = vkGetPhysicalDeviceSurfaceFormatsKHR(_gd.PhysicalDevice, _surface, ref surfaceFormatCount, null);
             CheckResult(result);
             VkSurfaceFormatKHR[] formats = new VkSurfaceFormatKHR[surfaceFormatCount];
             result = vkGetPhysicalDeviceSurfaceFormatsKHR(_gd.PhysicalDevice, _surface, ref surfaceFormatCount, out formats[0]);
@@ -233,6 +243,7 @@ namespace Veldrid.Vk
             }
 
             _framebuffer.SetNewSwapchain(_deviceSwapchain, width, height, surfaceFormat, swapchainCI.imageExtent);
+            return true;
         }
 
         private bool GetPresentQueueIndex(out uint queueFamilyIndex)

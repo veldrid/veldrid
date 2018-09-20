@@ -321,9 +321,8 @@ namespace Veldrid.Vk
         protected override void SwapBuffersCore(Swapchain swapchain)
         {
             VkSwapchain vkSC = Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain);
-
-            VkPresentInfoKHR presentInfo = VkPresentInfoKHR.New();
             VkSwapchainKHR deviceSwapchain = vkSC.DeviceSwapchain;
+            VkPresentInfoKHR presentInfo = VkPresentInfoKHR.New();
             presentInfo.swapchainCount = 1;
             presentInfo.pSwapchains = &deviceSwapchain;
             uint imageIndex = vkSC.ImageIndex;

@@ -200,12 +200,5 @@ namespace Veldrid.Vk
                 DestroySwapchainFramebuffers();
             }
         }
-
-        private void DestroyDummyFramebuffer()
-        {
-            _scFramebuffers[0].ColorTargets[0].Target.Dispose();
-            _scFramebuffers[0].DepthTarget?.Target.Dispose();
-            _scFramebuffers[0].Dispose();
-        }
     }
 }

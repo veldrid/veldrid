@@ -241,9 +241,6 @@ namespace Veldrid.Sdl2
         public event Action MouseEntered;
         public event Action MouseLeft;
         public event Action Exposed;
-        public event Action Minimized;
-        public event Action Maximized;
-        public event Action Restored;
         public event Action<Point> Moved;
         public event Action<MouseWheelEventArgs> MouseWheel;
         public event Action<MouseMoveEventArgs> MouseMove;
@@ -370,7 +367,6 @@ namespace Veldrid.Sdl2
 
             lock (Sdl2EventProcessor.Lock)
             {
-                //Console.WriteLine($"Processing");
                 Sdl2EventProcessor.PumpEvents();
                 for (int i = 0; i < _events.Count; i++)
                 {
@@ -869,21 +865,10 @@ namespace Veldrid.Sdl2
             switch (windowEvent.@event)
             {
                 case SDL_WindowEventID.Resized:
-                    HandleResizedMessage();
-                    break;
                 case SDL_WindowEventID.SizeChanged:
-                    HandleResizedMessage();
-                    break;
                 case SDL_WindowEventID.Minimized:
-                    Minimized?.Invoke();
-                    HandleResizedMessage();
-                    break;
                 case SDL_WindowEventID.Maximized:
-                    Maximized?.Invoke();
-                    HandleResizedMessage();
-                    break;
                 case SDL_WindowEventID.Restored:
-                    Restored?.Invoke();
                     HandleResizedMessage();
                     break;
                 case SDL_WindowEventID.FocusGained:

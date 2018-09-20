@@ -76,7 +76,7 @@ namespace Veldrid.NeoDemo
             Skybox skybox = Skybox.LoadDefaultSkybox();
             _scene.AddRenderable(skybox);
 
-            //AddSponzaAtriumObjects();
+            AddSponzaAtriumObjects();
             _sc.Camera.Position = new Vector3(-80, 25, -4.3f);
             _sc.Camera.Yaw = -MathF.PI / 2;
             _sc.Camera.Pitch = -MathF.PI / 9;

@@ -117,6 +117,8 @@ namespace Veldrid.NeoDemo.Objects
             float depth = gd.IsDepthRangeZeroToOne ? 0 : 1;
             cl.SetViewport(0, new Viewport(0, 0, sc.MainSceneColorTexture.Width, sc.MainSceneColorTexture.Height, depth, depth));
             cl.DrawIndexed((uint)s_indices.Length, 1, 0, 0, 0);
+
+            cl.SetViewport(0, new Viewport(0, 0, sc.MainSceneColorTexture.Width, sc.MainSceneColorTexture.Height, 0, 1));
         }
 
         public override RenderPasses RenderPasses => RenderPasses.Standard | RenderPasses.ReflectionMap;

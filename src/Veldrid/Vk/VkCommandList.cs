@@ -208,7 +208,6 @@ namespace Veldrid.Vk
                     clearValue = clearValue
                 };
 
-                Texture depthTex = _currentFramebuffer.DepthTarget.Value.Target;
                 uint renderableWidth = _currentFramebuffer.RenderableWidth;
                 uint renderableHeight = _currentFramebuffer.RenderableHeight;
                 if (renderableWidth > 0 && renderableHeight > 0)

@@ -195,14 +195,19 @@ namespace Veldrid.Vk
                 submissionFence = vkFence;
             }
 
+            lock (_submittedFencesLock)
+            {
+                _submittedFences.Add(new FenceSubmissionInfo(submissionFence, vkCL, vkCB));
+            }
+
             lock (_graphicsQueueLock)
             {
-                vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
-                _submittedFences.Add(new FenceSubmissionInfo(submissionFence, vkCL, vkCB));
-
+                VkResult result = vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
+                CheckResult(result);
                 if (useExtraFence)
                 {
-                    vkQueueSubmit(_graphicsQueue, 0, null, submissionFence);
+                    result = vkQueueSubmit(_graphicsQueue, 0, null, submissionFence);
+                    CheckResult(result);
                 }
             }
         }
@@ -1105,18 +1110,17 @@ namespace Veldrid.Vk
                     stagingTex, 0, 0, 0, 0, 0,
                     texture, x, y, z, mipLevel, arrayLayer,
                     width, height, depth, 1);
-                pool.EndAndSubmit(cb);
                 lock (_stagingResourcesLock)
                 {
                     _submittedStagingTextures.Add(cb, stagingTex);
                 }
+                pool.EndAndSubmit(cb);
             }
         }
 
         private VkTexture GetFreeStagingTexture(uint width, uint height, uint depth, PixelFormat format)
         {
-            uint pixelSize = FormatHelpers.GetSizeInBytes(format);
-            uint totalSize = width * height * depth * pixelSize;
+            uint totalSize = FormatHelpers.GetRegionSize(width, height, depth, format);
             lock (_stagingResourcesLock)
             {
                 for (int i = 0; i < _availableStagingTextures.Count; i++)

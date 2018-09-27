@@ -14,6 +14,7 @@ namespace Veldrid.Vk
     internal unsafe class VkGraphicsDevice : GraphicsDevice
     {
         private static readonly FixedUtf8String s_name = "Veldrid-VkGraphicsDevice";
+        private static readonly Lazy<bool> s_isSupported = new Lazy<bool>(CheckIsSupported, isThreadSafe: true);
 
         private VkInstance _instance;
         private VkPhysicalDevice _physicalDevice;
@@ -1193,10 +1194,41 @@ namespace Veldrid.Vk
 
         internal static bool IsSupported()
         {
+            return s_isSupported.Value;
+        }
+
+        private static bool CheckIsSupported()
+        {
             if (!IsVulkanLoaded())
             {
                 return false;
             }
+
+            VkInstanceCreateInfo instanceCI = VkInstanceCreateInfo.New();
+            VkApplicationInfo applicationInfo = new VkApplicationInfo();
+            applicationInfo.apiVersion = new VkVersion(1, 0, 0);
+            applicationInfo.applicationVersion = new VkVersion(1, 0, 0);
+            applicationInfo.engineVersion = new VkVersion(1, 0, 0);
+            applicationInfo.pApplicationName = s_name;
+            applicationInfo.pEngineName = s_name;
+
+            instanceCI.pApplicationInfo = &applicationInfo;
+
+            VkResult result = vkCreateInstance(ref instanceCI, null, out VkInstance testInstance);
+            if (result != VkResult.Success)
+            {
+                return false;
+            }
+
+            uint physicalDeviceCount = 0;
+            result = vkEnumeratePhysicalDevices(testInstance, ref physicalDeviceCount, null);
+            if (result != VkResult.Success || physicalDeviceCount == 0)
+            {
+                vkDestroyInstance(testInstance, null);
+                return false;
+            }
+
+            vkDestroyInstance(testInstance, null);
 
             HashSet<string> instanceExtensions = new HashSet<string>(GetInstanceExtensions());
             if (!instanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))

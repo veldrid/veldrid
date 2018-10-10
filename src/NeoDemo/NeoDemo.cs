@@ -108,6 +108,7 @@ namespace Veldrid.NeoDemo
             _scene.AddRenderable(_fsq);
 
             CreateAllObjects();
+            ImGui.StyleColorsClassic();
         }
 
         private void AddSponzaAtriumObjects()
@@ -240,23 +241,23 @@ namespace Veldrid.NeoDemo
                     if (ImGui.BeginMenu("Graphics Backend"))
                     {
 
-                        if (ImGui.MenuItem("Vulkan", GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)))
+                        if (ImGui.MenuItem("Vulkan", string.Empty, _gd.BackendType == GraphicsBackend.Vulkan, GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)))
                         {
                             ChangeBackend(GraphicsBackend.Vulkan);
                         }
-                        if (ImGui.MenuItem("OpenGL", GraphicsDevice.IsBackendSupported(GraphicsBackend.OpenGL)))
+                        if (ImGui.MenuItem("OpenGL", string.Empty, _gd.BackendType == GraphicsBackend.OpenGL, GraphicsDevice.IsBackendSupported(GraphicsBackend.OpenGL)))
                         {
                             ChangeBackend(GraphicsBackend.OpenGL);
                         }
-                        if (ImGui.MenuItem("OpenGL ES", GraphicsDevice.IsBackendSupported(GraphicsBackend.OpenGLES)))
+                        if (ImGui.MenuItem("OpenGL ES", string.Empty, _gd.BackendType == GraphicsBackend.OpenGLES, GraphicsDevice.IsBackendSupported(GraphicsBackend.OpenGLES)))
                         {
                             ChangeBackend(GraphicsBackend.OpenGLES);
                         }
-                        if (ImGui.MenuItem("Direct3D 11", GraphicsDevice.IsBackendSupported(GraphicsBackend.Direct3D11)))
+                        if (ImGui.MenuItem("Direct3D 11", string.Empty, _gd.BackendType == GraphicsBackend.Direct3D11, GraphicsDevice.IsBackendSupported(GraphicsBackend.Direct3D11)))
                         {
                             ChangeBackend(GraphicsBackend.Direct3D11);
                         }
-                        if (ImGui.MenuItem("Metal", GraphicsDevice.IsBackendSupported(GraphicsBackend.Metal)))
+                        if (ImGui.MenuItem("Metal", string.Empty, _gd.BackendType == GraphicsBackend.Metal, GraphicsDevice.IsBackendSupported(GraphicsBackend.Metal)))
                         {
                             ChangeBackend(GraphicsBackend.Metal);
                         }
@@ -264,7 +265,7 @@ namespace Veldrid.NeoDemo
                     }
                     if (ImGui.BeginMenu("MSAA"))
                     {
-                        if (ImGui.Combo("MSAA", ref _msaaOption, _msaaOptions))
+                        if (ImGui.Combo("MSAA", ref _msaaOption, _msaaOptions, _msaaOptions.Length))
                         {
                             ChangeMsaa(_msaaOption);
                         }
@@ -280,7 +281,7 @@ namespace Veldrid.NeoDemo
                     {
                         _recreateWindow = !_recreateWindow;
                     }
-                    if (ImGui.IsItemHovered(HoveredFlags.Default))
+                    if (ImGui.IsItemHovered())
                     {
                         ImGui.SetTooltip(
                             "Causes a new OS window to be created whenever the graphics backend is switched. This is much safer, and is the default.");

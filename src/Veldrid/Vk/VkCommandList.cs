@@ -697,6 +697,19 @@ namespace Veldrid.Vk
             };
 
             vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, ref region);
+
+            VkMemoryBarrier barrier;
+            barrier.sType = VkStructureType.MemoryBarrier;
+            barrier.srcAccessMask = VkAccessFlags.TransferWrite;
+            barrier.dstAccessMask = VkAccessFlags.VertexAttributeRead;
+            barrier.pNext = null;
+            vkCmdPipelineBarrier(
+                _cb,
+                VkPipelineStageFlags.Transfer, VkPipelineStageFlags.VertexInput,
+                VkDependencyFlags.None,
+                1, ref barrier,
+                0, null,
+                0, null);
         }
 
         protected override void CopyTextureCore(

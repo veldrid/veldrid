@@ -30,7 +30,6 @@ namespace Veldrid.Vk
         private VkPipeline _currentGraphicsPipeline;
         private VkResourceSet[] _currentGraphicsResourceSets = Array.Empty<VkResourceSet>();
         private bool[] _graphicsResourceSetsChanged;
-        private int _newGraphicsResourceSets;
 
         private bool _newFramebuffer; // Render pass cycle state
 
@@ -38,7 +37,6 @@ namespace Veldrid.Vk
         private VkPipeline _currentComputePipeline;
         private VkResourceSet[] _currentComputeResourceSets = Array.Empty<VkResourceSet>();
         private bool[] _computeResourceSetsChanged;
-        private int _newComputeResourceSets;
         private string _name;
 
         private readonly object _commandBufferListLock = new object();
@@ -260,12 +258,10 @@ namespace Veldrid.Vk
             EnsureRenderPassActive();
 
             FlushNewResourceSets(
-                _newGraphicsResourceSets,
                 _currentGraphicsResourceSets,
                 _graphicsResourceSetsChanged,
                 VkPipelineBindPoint.Graphics,
                 _currentGraphicsPipeline.PipelineLayout);
-            _newGraphicsResourceSets = 0;
 
             if (!_currentGraphicsPipeline.ScissorTestEnabled)
             {
@@ -274,63 +270,45 @@ namespace Veldrid.Vk
         }
 
         private void FlushNewResourceSets(
-            int newResourceSetsCount,
             VkResourceSet[] resourceSets,
             bool[] resourceSetsChanged,
             VkPipelineBindPoint bindPoint,
             VkPipelineLayout pipelineLayout)
         {
-            if (newResourceSetsCount > 0)
-            {
-                int totalChanged = 0;
-                uint currentSlot = 0;
-                uint currentBatchIndex = 0;
-                uint currentBatchFirstSet = 0;
-                VkDescriptorSet* descriptorSets = stackalloc VkDescriptorSet[newResourceSetsCount];
-                while (totalChanged < newResourceSetsCount)
-                {
-                    if (resourceSetsChanged[currentSlot])
-                    {
-                        resourceSetsChanged[currentSlot] = false;
-                        descriptorSets[currentBatchIndex] = resourceSets[currentSlot].DescriptorSet;
-                        totalChanged += 1;
-                        currentBatchIndex += 1;
-                        currentSlot += 1;
-                    }
-                    else
-                    {
-                        if (currentBatchIndex != 0)
-                        {
-                            // Flush current batch.
-                            vkCmdBindDescriptorSets(
-                                _cb,
-                                bindPoint,
-                                pipelineLayout,
-                                currentBatchFirstSet,
-                                currentBatchIndex,
-                                descriptorSets,
-                                0,
-                                null);
-                            currentBatchIndex = 0;
-                        }
+            int setCount = resourceSets.Length;
+            VkDescriptorSet* descriptorSets = stackalloc VkDescriptorSet[setCount];
+            uint currentBatchCount = 0;
+            uint currentBatchFirstSet = 0;
 
-                        currentSlot += 1;
-                        currentBatchFirstSet = currentSlot;
-                    }
+            for (uint currentSlot = 0; currentSlot < resourceSets.Length; currentSlot++)
+            {
+                bool batchEnded = !resourceSetsChanged[currentSlot] || currentSlot == resourceSets.Length - 1;
+
+                if (resourceSetsChanged[currentSlot])
+                {
+                    resourceSetsChanged[currentSlot] = false;
+                    descriptorSets[currentBatchCount] = resourceSets[currentSlot].DescriptorSet;
+                    currentBatchCount += 1;
                 }
 
-                if (currentBatchIndex != 0)
+                if (batchEnded)
                 {
-                    // Flush current batch.
-                    vkCmdBindDescriptorSets(
-                        _cb,
-                        bindPoint,
-                        pipelineLayout,
-                        currentBatchFirstSet,
-                        currentBatchIndex,
-                        descriptorSets,
-                        0,
-                        null);
+                    if (currentBatchCount != 0)
+                    {
+                        // Flush current batch.
+                        vkCmdBindDescriptorSets(
+                            _cb,
+                            bindPoint,
+                            pipelineLayout,
+                            currentBatchFirstSet,
+                            currentBatchCount,
+                            descriptorSets,
+                            0,
+                            null);
+                    }
+
+                    currentBatchCount = 0;
+                    currentBatchFirstSet = currentSlot + 1;
                 }
             }
         }
@@ -347,12 +325,10 @@ namespace Veldrid.Vk
             EnsureNoRenderPass();
 
             FlushNewResourceSets(
-                _newComputeResourceSets,
                 _currentComputeResourceSets,
                 _computeResourceSetsChanged,
                 VkPipelineBindPoint.Compute,
                 _currentComputePipeline.PipelineLayout);
-            _newComputeResourceSets = 0;
         }
 
         protected override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
@@ -594,7 +570,6 @@ namespace Veldrid.Vk
                 Util.EnsureArrayMinimumSize(ref _currentGraphicsResourceSets, vkPipeline.ResourceSetCount);
                 Util.ClearArray(_currentGraphicsResourceSets);
                 Util.EnsureArrayMinimumSize(ref _graphicsResourceSetsChanged, vkPipeline.ResourceSetCount);
-                _newGraphicsResourceSets = 0;
                 vkCmdBindPipeline(_cb, VkPipelineBindPoint.Graphics, vkPipeline.DevicePipeline);
                 _currentGraphicsPipeline = vkPipeline;
             }
@@ -604,7 +579,6 @@ namespace Veldrid.Vk
                 Util.EnsureArrayMinimumSize(ref _currentComputeResourceSets, vkPipeline.ResourceSetCount);
                 Util.ClearArray(_currentComputeResourceSets);
                 Util.EnsureArrayMinimumSize(ref _computeResourceSetsChanged, vkPipeline.ResourceSetCount);
-                _newComputeResourceSets = 0;
                 vkCmdBindPipeline(_cb, VkPipelineBindPoint.Compute, vkPipeline.DevicePipeline);
                 _currentComputePipeline = vkPipeline;
             }
@@ -617,7 +591,6 @@ namespace Veldrid.Vk
                 VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
                 _currentGraphicsResourceSets[slot] = vkRS;
                 _graphicsResourceSetsChanged[slot] = true;
-                _newGraphicsResourceSets += 1;
             }
         }
 
@@ -628,7 +601,6 @@ namespace Veldrid.Vk
                 VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
                 _currentComputeResourceSets[slot] = vkRS;
                 _computeResourceSetsChanged[slot] = true;
-                _newComputeResourceSets += 1;
             }
         }
 

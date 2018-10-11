@@ -5,6 +5,11 @@ namespace Veldrid.Sdl2
 {
     public static unsafe partial class Sdl2Native
     {
+        /// <summary>
+        /// A special sentinel value indicating that a newly-created window should be centered in the screen.
+        /// </summary>
+        public const int SDL_WINDOWPOS_CENTERED = 0x2FFF0000;
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate SDL_Window SDL_CreateWindow_t(string title, int x, int y, int w, int h, SDL_WindowFlags flags);
         private static SDL_CreateWindow_t s_sdl_createWindow = LoadFunction<SDL_CreateWindow_t>("SDL_CreateWindow");

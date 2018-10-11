@@ -1,4 +1,4 @@
-﻿namespace Veldrid.StartupUtilities
+namespace Veldrid.StartupUtilities
 {
     public struct WindowCreateInfo
     {
@@ -8,7 +8,7 @@
         public int WindowHeight;
         public WindowState WindowInitialState;
         public string WindowTitle;
-
+        
         public WindowCreateInfo(
             int x,
             int y,
@@ -23,6 +23,23 @@
             WindowHeight = windowHeight;
             WindowInitialState = windowInitialState;
             WindowTitle = windowTitle;
+        }
+        
+        public static WindowCreateInfo CreateCenteredWindow(
+            int windowWidth,
+            int windowHeight,
+            WindowState windowInitialState,
+            string windowTitle)
+        {
+            return new WindowCreateInfo
+            {
+                X = 0x2FFF0000,
+                Y = 0x2FFF0000,
+                WindowWidth =  windowWidth,
+                WindowHeight = windowHeight,
+                WindowInitialState = windowInitialState,
+                WindowTitle = windowTitle
+            };
         }
     }
 }

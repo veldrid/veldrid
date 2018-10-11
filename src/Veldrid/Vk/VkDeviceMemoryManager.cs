@@ -173,6 +173,7 @@ namespace Veldrid.Vk
             private readonly bool _persistentMapped;
             private readonly List<VkMemoryBlock> _freeBlocks = new List<VkMemoryBlock>();
             private readonly VkDeviceMemory _memory;
+            private readonly void* _mappedPtr;
 
             private ulong _totalMemorySize;
             private ulong _totalAllocatedBytes = 0;
@@ -198,13 +199,14 @@ namespace Veldrid.Vk
                     result = vkMapMemory(_device, _memory, 0, _totalMemorySize, 0, &mappedPtr);
                     CheckResult(result);
                 }
+                _mappedPtr = mappedPtr;
 
                 VkMemoryBlock initialBlock = new VkMemoryBlock(
                     _memory,
                     0,
                     _totalMemorySize,
                     _memoryTypeIndex,
-                    mappedPtr,
+                    _mappedPtr,
                     false);
                 _freeBlocks.Add(initialBlock);
             }
@@ -229,7 +231,7 @@ namespace Veldrid.Vk
 
                         if (alignedBlockSize >= size) // Valid match -- split it and return.
                         {
-                            _freeBlocks.Remove(freeBlock);
+                            _freeBlocks.RemoveAt(i);
 
                             freeBlock.Size = alignedBlockSize;
                             if ((freeBlock.Offset % alignment) != 0)
@@ -248,7 +250,7 @@ namespace Veldrid.Vk
                                     _memoryTypeIndex,
                                     freeBlock.BaseMappedPointer,
                                     false);
-                                _freeBlocks.Add(splitBlock);
+                                _freeBlocks.Insert(i, splitBlock);
                                 block = freeBlock;
                                 block.Size = size;
                             }
@@ -268,10 +270,52 @@ namespace Veldrid.Vk
 
             public void Free(VkMemoryBlock block)
             {
+                for (int i = 0; i < _freeBlocks.Count; i++)
+                {
+                    if (_freeBlocks[i].Offset > block.Offset)
+                    {
+                        _freeBlocks.Insert(i, block);
+                        MergeContiguousBlocks();
+#if DEBUG
+                        RemoveAllocatedBlock(block);
+#endif
+                        return;
+                    }
+                }
+
                 _freeBlocks.Add(block);
 #if DEBUG
                 RemoveAllocatedBlock(block);
 #endif
+            }
+
+            private void MergeContiguousBlocks()
+            {
+                int contiguousLength = 1;
+                for (int i = 0; i < _freeBlocks.Count - 1; i++)
+                {
+                    ulong blockStart = _freeBlocks[i].Offset;
+                    while (i + contiguousLength < _freeBlocks.Count
+                        && _freeBlocks[i + contiguousLength - 1].End == _freeBlocks[i + contiguousLength].Offset)
+                    {
+                        contiguousLength += 1;
+                    }
+
+                    if (contiguousLength > 1)
+                    {
+                        ulong blockEnd = _freeBlocks[i + contiguousLength - 1].End;
+                        _freeBlocks.RemoveRange(i, contiguousLength);
+                        VkMemoryBlock mergedBlock = new VkMemoryBlock(
+                            Memory,
+                            blockStart,
+                            blockEnd - blockStart,
+                            _memoryTypeIndex,
+                            _mappedPtr,
+                            false);
+                        _freeBlocks.Insert(i, mergedBlock);
+                        contiguousLength = 0;
+                    }
+                }
             }
 
 #if DEBUG
@@ -334,7 +378,7 @@ namespace Veldrid.Vk
         }
     }
 
-    [DebuggerDisplay("[Mem:{DeviceMemory.Handle}] Off:{Offset}, Size:{Size}")]
+    [DebuggerDisplay("[Mem:{DeviceMemory.Handle}] Off:{Offset}, Size:{Size} End:{Offset+Size}")]
     internal unsafe struct VkMemoryBlock : IEquatable<VkMemoryBlock>
     {
         public readonly uint MemoryTypeIndex;
@@ -347,7 +391,7 @@ namespace Veldrid.Vk
 
         public void* BlockMappedPointer => ((byte*)BaseMappedPointer) + Offset;
         public bool IsPersistentMapped => BaseMappedPointer != null;
-
+        public ulong End => Offset + Size;
 
         public VkMemoryBlock(
             VkDeviceMemory memory,

@@ -81,7 +81,7 @@ namespace Veldrid.Vk
         public VkDescriptorPoolManager DescriptorPoolManager => _descriptorPoolManager;
 
         private readonly object _submittedFencesLock = new object();
-        private readonly Queue<Vulkan.VkFence> _availableSubmissionFences = new Queue<Vulkan.VkFence>();
+        private readonly ConcurrentQueue<Vulkan.VkFence> _availableSubmissionFences = new ConcurrentQueue<Vulkan.VkFence>();
         private readonly List<FenceSubmissionInfo> _submittedFences = new List<FenceSubmissionInfo>();
         private readonly VkSwapchain _mainSwapchain;
 
@@ -241,7 +241,7 @@ namespace Veldrid.Vk
             fsi.CommandList?.CommandBufferCompleted(completedCB);
             VkResult resetResult = vkResetFences(_device, 1, ref fence);
             CheckResult(resetResult);
-            _availableSubmissionFences.Enqueue(fence);
+            ReturnSubmissionFence(fence);
             lock (_stagingResourcesLock)
             {
                 if (_submittedStagingTextures.TryGetValue(completedCB, out VkTexture stagingTex))
@@ -294,18 +294,23 @@ namespace Veldrid.Vk
             }
         }
 
+        private void ReturnSubmissionFence(Vulkan.VkFence fence)
+        {
+            _availableSubmissionFences.Enqueue(fence);
+        }
+
         private Vulkan.VkFence GetFreeSubmissionFence()
         {
-            if (_availableSubmissionFences.Count > 0)
+            if (_availableSubmissionFences.TryDequeue(out Vulkan.VkFence availableFence))
             {
-                return _availableSubmissionFences.Dequeue();
+                return availableFence;
             }
             else
             {
                 VkFenceCreateInfo fenceCI = VkFenceCreateInfo.New();
-                VkResult result = vkCreateFence(_device, ref fenceCI, null, out Vulkan.VkFence ret);
+                VkResult result = vkCreateFence(_device, ref fenceCI, null, out Vulkan.VkFence newFence);
                 CheckResult(result);
-                return ret;
+                return newFence;
             }
         }
 

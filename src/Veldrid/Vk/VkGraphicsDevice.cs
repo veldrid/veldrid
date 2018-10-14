@@ -196,11 +196,6 @@ namespace Veldrid.Vk
                 submissionFence = vkFence;
             }
 
-            lock (_submittedFencesLock)
-            {
-                _submittedFences.Add(new FenceSubmissionInfo(submissionFence, vkCL, vkCB));
-            }
-
             lock (_graphicsQueueLock)
             {
                 VkResult result = vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
@@ -210,6 +205,11 @@ namespace Veldrid.Vk
                     result = vkQueueSubmit(_graphicsQueue, 0, null, submissionFence);
                     CheckResult(result);
                 }
+            }
+
+            lock (_submittedFencesLock)
+            {
+                _submittedFences.Add(new FenceSubmissionInfo(submissionFence, vkCL, vkCB));
             }
         }
 

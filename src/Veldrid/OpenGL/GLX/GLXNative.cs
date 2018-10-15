@@ -120,6 +120,7 @@ namespace Veldrid.OpenGL.GLX
         internal const int GLX_CONTEXT_FLAGS_ARB = 0x2094;
         internal const int GLX_CONTEXT_CORE_PROFILE_BIT_ARB = 0x00000001;
         internal const int GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB = 0x00000002;
+        internal const int GLX_CONTEXT_ES_PROFILE_BIT_EXT = 0x00000004;
         internal const int GLX_CONTEXT_PROFILE_MASK_ARB = 0x9126;
 
         [DllImport(GlxLibName)]

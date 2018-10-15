@@ -10,14 +10,14 @@ namespace Veldrid.StartupUtilities
     public static class VeldridStartup
     {
         /// <summary>
-        /// Initialize SDL with SDLInitFlags.Video
+        /// Initialize SDL
         /// <para>
         /// If preferredBackend is OpenGL or OpenGLES sets the SDL contexts attributes appropriately
         /// </para>
         /// </summary>
-        public static void InitializeSDL(GraphicsDeviceOptions deviceOptions, GraphicsBackend preferredBackend)
+        public static void InitializeSDL(SDLInitFlags initFlags, GraphicsDeviceOptions deviceOptions, GraphicsBackend preferredBackend)
         {
-            Sdl2Native.SDL_Init(SDLInitFlags.Video);
+            Sdl2Native.SDL_Init(initFlags);
             if (preferredBackend == GraphicsBackend.OpenGL || preferredBackend == GraphicsBackend.OpenGLES)
             {
                 SetSDLGLContextAttributes(deviceOptions, preferredBackend);
@@ -49,7 +49,7 @@ namespace Veldrid.StartupUtilities
             out Sdl2Window window,
             out GraphicsDevice gd)
         {
-            InitializeSDL(deviceOptions, preferredBackend);
+            InitializeSDL(SDLInitFlags.Video, deviceOptions, preferredBackend);
 
             window = CreateWindow(ref windowCI);
             gd = CreateGraphicsDevice(window, deviceOptions, preferredBackend);

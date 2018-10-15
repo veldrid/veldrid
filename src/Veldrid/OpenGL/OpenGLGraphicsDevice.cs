@@ -323,6 +323,10 @@ namespace Veldrid.OpenGL
             {
                 InitializeWin32(options, swapchainDescription, backend);
             }
+            else if (source is XlibSwapchainSource xlibSource)
+            {
+                InitializeXlib(options, swapchainDescription, backend);
+            }
             else
             {
                 throw new VeldridException(
@@ -686,6 +690,30 @@ namespace Veldrid.OpenGL
             OpenGLPlatformInfo platformInfo = OpenGLContextCreation.CreateContextWin32(
                 options,
                 hwnd,
+                scDesc?.DepthFormat ?? null,
+                scDesc?.SyncToVerticalBlank ?? false,
+                backend,
+                IntPtr.Zero);
+            platformInfo.MakeCurrent(platformInfo.OpenGLContextHandle);
+
+            uint width = 0;
+            uint height = 0;
+            if (scDesc.HasValue)
+            {
+                width = scDesc.Value.Width;
+                height = scDesc.Value.Height;
+            }
+
+            Init(options, platformInfo, width, height, true, true);
+        }
+
+        private void InitializeXlib(GraphicsDeviceOptions options, SwapchainDescription? scDesc, GraphicsBackend backend)
+        {
+            XlibSwapchainSource xlibSource = (XlibSwapchainSource)scDesc.Value.Source;
+            OpenGLPlatformInfo platformInfo = OpenGLContextCreation.CreateContextXlib(
+                options,
+                xlibSource.Display,
+                xlibSource.Window,
                 scDesc?.DepthFormat ?? null,
                 scDesc?.SyncToVerticalBlank ?? false,
                 backend,
@@ -1117,57 +1145,57 @@ namespace Veldrid.OpenGL
                     switch (workItem.Type)
                     {
                         case WorkItemType.ExecuteList:
-                        {
-                            OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
-                            try
                             {
-                                list.ExecuteAll(_gd._commandExecutor);
-                            }
-                            finally
-                            {
-                                if (!_gd.CheckCommandListDisposal(list.Parent))
+                                OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
+                                try
                                 {
-                                    list.Parent.OnCompleted(list);
+                                    list.ExecuteAll(_gd._commandExecutor);
+                                }
+                                finally
+                                {
+                                    if (!_gd.CheckCommandListDisposal(list.Parent))
+                                    {
+                                        list.Parent.OnCompleted(list);
+                                    }
                                 }
                             }
-                        }
-                        break;
+                            break;
                         case WorkItemType.Map:
-                        {
-                            MappableResource resourceToMap = (MappableResource)workItem.Object0;
-                            ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
-                            MapMode mode = (MapMode)workItem.UInt0;
-                            uint subresource = workItem.UInt1;
-                            bool map = workItem.UInt2 == 1 ? true : false;
-                            if (map)
                             {
-                                ExecuteMapResource(
-                                    resourceToMap,
-                                    mode,
-                                    subresource,
-                                    mre);
+                                MappableResource resourceToMap = (MappableResource)workItem.Object0;
+                                ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
+                                MapMode mode = (MapMode)workItem.UInt0;
+                                uint subresource = workItem.UInt1;
+                                bool map = workItem.UInt2 == 1 ? true : false;
+                                if (map)
+                                {
+                                    ExecuteMapResource(
+                                        resourceToMap,
+                                        mode,
+                                        subresource,
+                                        mre);
+                                }
+                                else
+                                {
+                                    ExecuteUnmapResource(resourceToMap, subresource, mre);
+                                }
                             }
-                            else
-                            {
-                                ExecuteUnmapResource(resourceToMap, subresource, mre);
-                            }
-                        }
-                        break;
+                            break;
                         case WorkItemType.UpdateBuffer:
-                        {
-                            DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
-                            uint offsetInBytes = workItem.UInt0;
-                            StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
+                            {
+                                DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
+                                uint offsetInBytes = workItem.UInt0;
+                                StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
 
-                            _gd._commandExecutor.UpdateBuffer(
-                                updateBuffer,
-                                offsetInBytes,
-                                (IntPtr)stagingBlock.Data,
-                                stagingBlock.SizeInBytes);
+                                _gd._commandExecutor.UpdateBuffer(
+                                    updateBuffer,
+                                    offsetInBytes,
+                                    (IntPtr)stagingBlock.Data,
+                                    stagingBlock.SizeInBytes);
 
-                            _gd.StagingMemoryPool.Free(stagingBlock);
-                        }
-                        break;
+                                _gd.StagingMemoryPool.Free(stagingBlock);
+                            }
+                            break;
                         case WorkItemType.UpdateTexture:
                             Texture texture = (Texture)workItem.Object0;
                             StagingMemoryPool pool = _gd.StagingMemoryPool;
@@ -1183,72 +1211,72 @@ namespace Veldrid.OpenGL
                             pool.Free(textureData);
                             break;
                         case WorkItemType.GenericAction:
-                        {
-                            ((Action)workItem.Object0)();
-                        }
-                        break;
+                            {
+                                ((Action)workItem.Object0)();
+                            }
+                            break;
                         case WorkItemType.SignalResetEvent:
-                        {
-                            _gd.FlushDisposables();
-                            ((ManualResetEventSlim)workItem.Object0).Set();
-                        }
-                        break;
-                        case WorkItemType.TerminateAction:
-                        {
-                            // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
-                            uint error = glGetError();
-                            if (error == (uint)ErrorCode.InvalidOperation)
                             {
-                                return;
-                            }
-                            _makeCurrent(_gd._glContext);
-
-                            foreach (OpenGLSecondarySwapchain sc in _gd._secondarySwapchains)
-                            {
-                                sc.Dispose();
-                            }
-
-                            _gd.FlushDisposables();
-                            _gd._clearCurrentContext();
-                            _gd._deleteContext(_gd._glContext);
-                            _gd.StagingMemoryPool.Dispose();
-                            _terminated = true;
-                            ((ManualResetEventSlim)workItem.Object0).Set();
-                        }
-                        break;
-                        case WorkItemType.SetSyncToVerticalBlank:
-                        {
-                            bool value = workItem.UInt0 == 1 ? true : false;
-                            _gd._setSyncToVBlank(value);
-                        }
-                        break;
-                        case WorkItemType.SwapBuffers:
-                        {
-                            if (workItem.Object0 is OpenGLSecondarySwapchain secondarySC)
-                            {
-                                IntPtr sync = glFenceSync(FenceCondition.GpuCommandsComplete, 0);
-                                CheckLastError();
-                                secondarySC.SwapBuffers(sync);
-                            }
-                            else
-                            {
-                                _gd._swapBuffers();
                                 _gd.FlushDisposables();
+                                ((ManualResetEventSlim)workItem.Object0).Set();
                             }
-                        }
-                        break;
-                        case WorkItemType.ShareContext:
-                        {
-                            _gd._clearCurrentContext();
-                            int shareResult = WindowsNative.wglShareLists(_gd.ContextHandle, (IntPtr)workItem.UInt0);
-                            ((ManualResetEventSlim)workItem.Object0).Set();
-                            _makeCurrent(_context);
-                            if (shareResult == 0)
+                            break;
+                        case WorkItemType.TerminateAction:
                             {
-                                throw new VeldridException($"Failed to share a new secondary OpenGL context.");
+                                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
+                                uint error = glGetError();
+                                if (error == (uint)ErrorCode.InvalidOperation)
+                                {
+                                    return;
+                                }
+                                _makeCurrent(_gd._glContext);
+
+                                foreach (OpenGLSecondarySwapchain sc in _gd._secondarySwapchains)
+                                {
+                                    sc.Dispose();
+                                }
+
+                                _gd.FlushDisposables();
+                                _gd._clearCurrentContext();
+                                _gd._deleteContext(_gd._glContext);
+                                _gd.StagingMemoryPool.Dispose();
+                                _terminated = true;
+                                ((ManualResetEventSlim)workItem.Object0).Set();
                             }
-                        }
-                        break;
+                            break;
+                        case WorkItemType.SetSyncToVerticalBlank:
+                            {
+                                bool value = workItem.UInt0 == 1 ? true : false;
+                                _gd._setSyncToVBlank(value);
+                            }
+                            break;
+                        case WorkItemType.SwapBuffers:
+                            {
+                                if (workItem.Object0 is OpenGLSecondarySwapchain secondarySC)
+                                {
+                                    IntPtr sync = glFenceSync(FenceCondition.GpuCommandsComplete, 0);
+                                    CheckLastError();
+                                    secondarySC.SwapBuffers(sync);
+                                }
+                                else
+                                {
+                                    _gd._swapBuffers();
+                                    _gd.FlushDisposables();
+                                }
+                            }
+                            break;
+                        case WorkItemType.ShareContext:
+                            {
+                                _gd._clearCurrentContext();
+                                int shareResult = WindowsNative.wglShareLists(_gd.ContextHandle, (IntPtr)workItem.UInt0);
+                                ((ManualResetEventSlim)workItem.Object0).Set();
+                                _makeCurrent(_context);
+                                if (shareResult == 0)
+                                {
+                                    throw new VeldridException($"Failed to share a new secondary OpenGL context.");
+                                }
+                            }
+                            break;
                         default:
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }

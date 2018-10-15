@@ -236,7 +236,7 @@ namespace Veldrid.StartupUtilities
             Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
             Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
 
-            if (sysWmInfo.subsystem == SysWMType.Windows)
+            if (sysWmInfo.subsystem == SysWMType.Windows || sysWmInfo.subsystem == SysWMType.X11)
             {
                 SwapchainDescription scDesc = new SwapchainDescription(
                     GetSwapchainSource(window),

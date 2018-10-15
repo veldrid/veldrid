@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Veldrid.OpenGL.WGL;
+using static Veldrid.OpenGL.GLX.GLXNative;
 
 namespace Veldrid.OpenGL
 {
@@ -121,6 +122,71 @@ namespace Veldrid.OpenGL
                 sync => setSwapInterval(sync ? 1 : 0));
 
             return platformInfo;
+        }
+
+        public static unsafe OpenGLPlatformInfo CreateContextXlib(
+            GraphicsDeviceOptions options,
+            IntPtr display,
+            IntPtr window,
+            PixelFormat? depthFormat,
+            bool syncToVerticalBlank,
+            GraphicsBackend backend,
+            IntPtr shareContext)
+        {
+            IntPtr screen = XDefaultScreenOfDisplay(display);
+            int screenId = XDefaultScreen(display);
+
+            XWindowAttributes windowAttribs;
+            int result = XGetWindowAttributes(display, window, &windowAttribs);
+            if (result == 0)
+            {
+                throw new VeldridException($"Failed to retrieve the X11 window attributes.");
+            }
+
+            XVisualInfo vinfoTemplate;
+            vinfoTemplate.visual = windowAttribs.visual;
+            int retCount;
+            XVisualInfo* visualInfos = XGetVisualInfo(display, 0, &vinfoTemplate, &retCount);
+
+            int[] context_attribs =
+            {
+                GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+                GLX_CONTEXT_MINOR_VERSION_ARB, 2,
+                GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+                0
+            };
+
+            IntPtr fbConfig = glXGetFBConfigFromVisualSGIX(display, &visualInfos[0]);
+
+            IntPtr context;
+            fixed (int* attribsPtr = context_attribs)
+            {
+                context = glXCreateContextAttribsARB(display, fbConfig, shareContext, 1, attribsPtr);
+            }
+
+            Func<string, IntPtr> getProcAddress = name => glXGetProcAddress(name);
+
+            Action<IntPtr> makeCurrent = ctx => glXMakeCurrent(display, window, ctx);
+
+            Func<IntPtr> getCurrentContext = () => glXGetCurrentContext();
+
+            Action<IntPtr> deleteContext = ctx => glXDestroyContext(display, ctx);
+
+            Action clearCurrentContext = () => glXMakeCurrent(IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+
+            Action swapBuffers = () => glXSwapBuffers(display, window);
+
+            Action<bool> setSyncToVerticalBlank = val => { }; // TODO
+
+            return new OpenGLPlatformInfo(
+                context,
+                getProcAddress,
+                makeCurrent,
+                getCurrentContext,
+                clearCurrentContext,
+                deleteContext,
+                swapBuffers,
+                setSyncToVerticalBlank);
         }
 
         private static int GetDepthBits(PixelFormat value)

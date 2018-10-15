@@ -229,6 +229,12 @@ namespace Veldrid.StartupUtilities
             Sdl2Window window,
             GraphicsBackend backend)
         {
+            if (backend != GraphicsBackend.OpenGL && backend != GraphicsBackend.OpenGLES)
+            {
+                throw new VeldridException(
+                    $"{nameof(backend)} must be {nameof(GraphicsBackend.OpenGL)} or {nameof(GraphicsBackend.OpenGL)}.");
+            }
+
             Sdl2Native.SDL_ClearError();
             IntPtr sdlHandle = window.SdlWindowHandle;
 
@@ -244,7 +250,15 @@ namespace Veldrid.StartupUtilities
                     (uint)window.Height,
                     options.SwapchainDepthFormat,
                     options.SyncToVerticalBlank);
-                GraphicsDevice gd = GraphicsDevice.CreateOpenGL(options, scDesc);
+                GraphicsDevice gd;
+                if (backend == GraphicsBackend.OpenGL)
+                {
+                    gd = GraphicsDevice.CreateOpenGL(options, scDesc);
+                }
+                else
+                {
+                    gd = GraphicsDevice.CreateOpenGLES(options, scDesc);
+                }
                 return gd;
             }
 

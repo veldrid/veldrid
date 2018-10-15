@@ -81,14 +81,7 @@ namespace Veldrid.Vk
 
         public override void Resize(uint width, uint height)
         {
-            if (CreateSwapchain(width, height))
-            {
-                if (AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence))
-                {
-                    vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-                    vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
-                }
-            }
+            RecreateAndReacquire(width, height);
         }
 
         public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, Vulkan.VkFence fence)
@@ -97,7 +90,7 @@ namespace Veldrid.Vk
             {
                 _syncToVBlank = _newSyncToVBlank.Value;
                 _newSyncToVBlank = null;
-                CreateSwapchain(_framebuffer.Width, _framebuffer.Height);
+                RecreateAndReacquire(_framebuffer.Width, _framebuffer.Height);
                 return false;
             }
 
@@ -120,6 +113,18 @@ namespace Veldrid.Vk
             }
 
             return true;
+        }
+
+        private void RecreateAndReacquire(uint width, uint height)
+        {
+            if (CreateSwapchain(width, height))
+            {
+                if (AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence))
+                {
+                    vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
+                    vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
+                }
+            }
         }
 
         private bool CreateSwapchain(uint width, uint height)

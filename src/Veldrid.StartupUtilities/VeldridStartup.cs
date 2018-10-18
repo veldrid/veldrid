@@ -8,7 +8,7 @@ using Veldrid.Sdl2;
 namespace Veldrid.StartupUtilities
 {
     public static class VeldridStartup
-    {        
+    {
         public static void CreateWindowAndGraphicsDevice(
             WindowCreateInfo windowCI,
             out Sdl2Window window,
@@ -273,6 +273,12 @@ namespace Veldrid.StartupUtilities
 
         public static unsafe void SetSDLGLContextAttributes(GraphicsDeviceOptions options, GraphicsBackend backend)
         {
+            if (backend != GraphicsBackend.OpenGL && backend != GraphicsBackend.OpenGLES)
+            {
+                throw new VeldridException(
+                    $"{nameof(backend)} must be {nameof(GraphicsBackend.OpenGL)} or {nameof(GraphicsBackend.OpenGLES)}.");
+            }
+
             SDL_GLContextFlag contextFlags = options.Debug
                 ? SDL_GLContextFlag.Debug | SDL_GLContextFlag.ForwardCompatible
                 : SDL_GLContextFlag.ForwardCompatible;

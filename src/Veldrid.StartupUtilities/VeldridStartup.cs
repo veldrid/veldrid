@@ -8,7 +8,7 @@ using Veldrid.Sdl2;
 namespace Veldrid.StartupUtilities
 {
     public static class VeldridStartup
-    {
+    {        
         public static void CreateWindowAndGraphicsDevice(
             WindowCreateInfo windowCI,
             out Sdl2Window window,

@@ -33,6 +33,8 @@ namespace Veldrid.D3D11
             }
         }
 
+        private readonly Format _colorFormat;
+
         public SwapChain DxgiSwapChain => _dxgiSwapChain;
 
         public int SyncInterval => _syncInterval;
@@ -42,6 +44,11 @@ namespace Veldrid.D3D11
             _device = device;
             _depthFormat = description.DepthFormat;
             SyncToVerticalBlank = description.SyncToVerticalBlank;
+
+            _colorFormat = description.ColorSrgb
+                ? Format.B8G8R8A8_UNorm_SRgb
+                : Format.B8G8R8A8_UNorm;
+
             if (description.Source is Win32SwapchainSource win32Source)
             {
                 SwapChainDescription dxgiSCDesc = new SwapChainDescription
@@ -49,7 +56,7 @@ namespace Veldrid.D3D11
                     BufferCount = 2,
                     IsWindowed = true,
                     ModeDescription = new ModeDescription(
-                        (int)description.Width, (int)description.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
+                        (int)description.Width, (int)description.Height, new Rational(60, 1), _colorFormat),
                     OutputHandle = win32Source.Hwnd,
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.Discard,
@@ -73,7 +80,7 @@ namespace Veldrid.D3D11
                 {
                     AlphaMode = AlphaMode.Ignore,
                     BufferCount = 2,
-                    Format = Format.B8G8R8A8_UNorm,
+                    Format = _colorFormat,
                     Height = (int)(description.Width * _pixelScale),
                     Width = (int)(description.Width * _pixelScale),
                     SampleDescription = new SampleDescription(1, 0),
@@ -127,8 +134,11 @@ namespace Veldrid.D3D11
                 _referencedCLs.Clear();
             }
 
+            bool resizeBuffers = false;
+
             if (_framebuffer != null)
             {
+                resizeBuffers = true;
                 if (_depthTexture != null)
                 {
                     _depthTexture.Dispose();
@@ -139,7 +149,10 @@ namespace Veldrid.D3D11
 
             uint actualWidth = (uint)(width * _pixelScale);
             uint actualHeight = (uint)(height * _pixelScale);
-            _dxgiSwapChain.ResizeBuffers(2, (int)actualWidth, (int)actualHeight, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
+            if (resizeBuffers)
+            {
+                _dxgiSwapChain.ResizeBuffers(2, (int)actualWidth, (int)actualHeight, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
+            }
 
             // Get the backbuffer from the swapchain
             using (Texture2D backBufferTexture = _dxgiSwapChain.GetBackBuffer<Texture2D>(0))
@@ -154,7 +167,10 @@ namespace Veldrid.D3D11
                     _depthTexture = new D3D11Texture(_device, ref depthDesc);
                 }
 
-                D3D11Texture backBufferVdTexture = new D3D11Texture(backBufferTexture);
+                D3D11Texture backBufferVdTexture = new D3D11Texture(
+                    backBufferTexture,
+                    TextureType.Texture2D,
+                    D3D11Formats.ToVdFormat(_colorFormat));
                 FramebufferDescription desc = new FramebufferDescription(_depthTexture, backBufferVdTexture);
                 _framebuffer = new D3D11Framebuffer(_device, ref desc);
                 _framebuffer.Swapchain = this;

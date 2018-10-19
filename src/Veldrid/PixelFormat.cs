@@ -232,6 +232,16 @@
         /// <summary>
         /// BC7 block compressed format.
         /// </summary>
-        BC7_UNorm
+        BC7_UNorm,
+        /// <summary>
+        /// RGBA component order. Each component is an 8-bit unsigned normalized integer.
+        /// This is an SRGB format.
+        /// </summary>
+        R8_G8_B8_A8_UNorm_SRgb,
+        /// <summary>
+        /// BGRA component order. Each component is an 8-bit unsigned normalized integer.
+        /// This is an SRGB format.
+        /// </summary>
+        B8_G8_R8_A8_UNorm_SRgb,
     }
 }

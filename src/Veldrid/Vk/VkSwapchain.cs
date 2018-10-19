@@ -18,6 +18,7 @@ namespace Veldrid.Vk
         private readonly VkQueue _presentQueue;
         private bool _syncToVBlank;
         private readonly SwapchainSource _swapchainSource;
+        private readonly bool _colorSrgb;
         private bool? _newSyncToVBlank;
         private uint _currentImageIndex;
         private string _name;
@@ -50,6 +51,7 @@ namespace Veldrid.Vk
             _gd = gd;
             _syncToVBlank = description.SyncToVerticalBlank;
             _swapchainSource = description.Source;
+            _colorSrgb = description.ColorSrgb;
 
             if (existingSurface == VkSurfaceKHR.Null)
             {
@@ -155,16 +157,20 @@ namespace Veldrid.Vk
             result = vkGetPhysicalDeviceSurfaceFormatsKHR(_gd.PhysicalDevice, _surface, ref surfaceFormatCount, out formats[0]);
             CheckResult(result);
 
+            VkFormat desiredFormat = _colorSrgb
+                ? VkFormat.B8g8r8a8Srgb
+                : VkFormat.B8g8r8a8Unorm;
+
             VkSurfaceFormatKHR surfaceFormat = new VkSurfaceFormatKHR();
             if (formats.Length == 1 && formats[0].format == VkFormat.Undefined)
             {
-                surfaceFormat = new VkSurfaceFormatKHR { colorSpace = VkColorSpaceKHR.SrgbNonlinearKHR, format = VkFormat.B8g8r8a8Unorm };
+                surfaceFormat = new VkSurfaceFormatKHR { colorSpace = VkColorSpaceKHR.SrgbNonlinearKHR, format = desiredFormat };
             }
             else
             {
                 foreach (VkSurfaceFormatKHR format in formats)
                 {
-                    if (format.colorSpace == VkColorSpaceKHR.SrgbNonlinearKHR && format.format == VkFormat.B8g8r8a8Unorm)
+                    if (format.colorSpace == VkColorSpaceKHR.SrgbNonlinearKHR && format.format == desiredFormat)
                     {
                         surfaceFormat = format;
                         break;
@@ -172,6 +178,11 @@ namespace Veldrid.Vk
                 }
                 if (surfaceFormat.format == VkFormat.Undefined)
                 {
+                    if (_colorSrgb && surfaceFormat.format != VkFormat.R8g8b8a8Srgb)
+                    {
+                        throw new VeldridException($"Unable to create an sRGB Swapchain for this surface.");
+                    }
+
                     surfaceFormat = formats[0];
                 }
             }

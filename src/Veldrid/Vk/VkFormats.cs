@@ -517,8 +517,12 @@ namespace Veldrid.Vk
 
                 case PixelFormat.R8_G8_B8_A8_UNorm:
                     return VkFormat.R8g8b8a8Unorm;
+                case PixelFormat.R8_G8_B8_A8_UNorm_SRgb:
+                    return VkFormat.R8g8b8a8Srgb;
                 case PixelFormat.B8_G8_R8_A8_UNorm:
                     return VkFormat.B8g8r8a8Unorm;
+                case PixelFormat.B8_G8_R8_A8_UNorm_SRgb:
+                    return VkFormat.B8g8r8a8Srgb;
                 case PixelFormat.R8_G8_B8_A8_SNorm:
                     return VkFormat.R8g8b8a8Snorm;
                 case PixelFormat.R8_G8_B8_A8_UInt:
@@ -647,8 +651,12 @@ namespace Veldrid.Vk
 
                 case VkFormat.R8g8b8a8Unorm:
                     return PixelFormat.R8_G8_B8_A8_UNorm;
+                case VkFormat.R8g8b8a8Srgb:
+                    return PixelFormat.R8_G8_B8_A8_UNorm_SRgb;
                 case VkFormat.B8g8r8a8Unorm:
                     return PixelFormat.B8_G8_R8_A8_UNorm;
+                case VkFormat.B8g8r8a8Srgb:
+                    return PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
                 case VkFormat.R8g8b8a8Snorm:
                     return PixelFormat.R8_G8_B8_A8_SNorm;
                 case VkFormat.R8g8b8a8Uint:

@@ -35,10 +35,12 @@ namespace Veldrid
                 case PixelFormat.R16_G16_SInt:
                 case PixelFormat.R16_G16_Float:
                 case PixelFormat.R8_G8_B8_A8_UNorm:
+                case PixelFormat.R8_G8_B8_A8_UNorm_SRgb:
                 case PixelFormat.R8_G8_B8_A8_SNorm:
                 case PixelFormat.R8_G8_B8_A8_UInt:
                 case PixelFormat.R8_G8_B8_A8_SInt:
                 case PixelFormat.B8_G8_R8_A8_UNorm:
+                case PixelFormat.B8_G8_R8_A8_UNorm_SRgb:
                 case PixelFormat.R10_G10_B10_A2_UNorm:
                 case PixelFormat.R10_G10_B10_A2_UInt:
                 case PixelFormat.R11_G11_B10_Float:
@@ -190,6 +192,14 @@ namespace Veldrid
             return format == PixelFormat.D24_UNorm_S8_UInt || format == PixelFormat.D32_Float_S8_UInt;
         }
 
+        internal static bool IsDepthStencilFormat(PixelFormat format)
+        {
+            return format == PixelFormat.D32_Float_S8_UInt
+                || format == PixelFormat.D24_UNorm_S8_UInt
+                || format == PixelFormat.R16_UNorm
+                || format == PixelFormat.R32_Float;
+        }
+
         internal static bool IsCompressedFormat(PixelFormat format)
         {
             return format == PixelFormat.BC1_Rgb_UNorm
@@ -298,6 +308,20 @@ namespace Veldrid
             }
 
             return width * height * depth * blockSizeInBytes;
+        }
+
+        internal static TextureSampleCount GetSampleCount(uint samples)
+        {
+            switch (samples)
+            {
+                case 1: return TextureSampleCount.Count1;
+                case 2: return TextureSampleCount.Count2;
+                case 4: return TextureSampleCount.Count4;
+                case 8: return TextureSampleCount.Count8;
+                case 16: return TextureSampleCount.Count16;
+                case 32: return TextureSampleCount.Count32;
+                default: throw new VeldridException("Unsupported multisample count: " + samples);
+            }
         }
     }
 }

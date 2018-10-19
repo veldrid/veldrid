@@ -99,6 +99,8 @@ namespace Veldrid.OpenGL
 
                 case PixelFormat.R8_G8_B8_A8_UNorm:
                     return PixelInternalFormat.Rgba8;
+                case PixelFormat.R8_G8_B8_A8_UNorm_SRgb:
+                    return PixelInternalFormat.Srgb8Alpha8;
                 case PixelFormat.R8_G8_B8_A8_SNorm:
                     return PixelInternalFormat.Rgba8Snorm;
                 case PixelFormat.R8_G8_B8_A8_UInt:
@@ -126,6 +128,8 @@ namespace Veldrid.OpenGL
 
                 case PixelFormat.B8_G8_R8_A8_UNorm:
                     return PixelInternalFormat.Rgba;
+                case PixelFormat.B8_G8_R8_A8_UNorm_SRgb:
+                    return PixelInternalFormat.Srgb8Alpha8;
 
                 case PixelFormat.BC1_Rgb_UNorm:
                     return PixelInternalFormat.CompressedRgbS3tcDxt1Ext;
@@ -228,12 +232,14 @@ namespace Veldrid.OpenGL
                     return GLPixelFormat.RgInteger;
 
                 case PixelFormat.R8_G8_B8_A8_UNorm:
+                case PixelFormat.R8_G8_B8_A8_UNorm_SRgb:
                 case PixelFormat.R16_G16_B16_A16_UNorm:
                 case PixelFormat.R16_G16_B16_A16_Float:
                 case PixelFormat.R32_G32_B32_A32_Float:
                     return GLPixelFormat.Rgba;
 
                 case PixelFormat.B8_G8_R8_A8_UNorm:
+                case PixelFormat.B8_G8_R8_A8_UNorm_SRgb:
                     return GLPixelFormat.Bgra;
 
                 case PixelFormat.R8_G8_B8_A8_SNorm:
@@ -282,8 +288,10 @@ namespace Veldrid.OpenGL
                 case PixelFormat.R8_G8_UNorm:
                 case PixelFormat.R8_G8_UInt:
                 case PixelFormat.R8_G8_B8_A8_UNorm:
+                case PixelFormat.R8_G8_B8_A8_UNorm_SRgb:
                 case PixelFormat.R8_G8_B8_A8_UInt:
                 case PixelFormat.B8_G8_R8_A8_UNorm:
+                case PixelFormat.B8_G8_R8_A8_UNorm_SRgb:
                     return GLPixelType.UnsignedByte;
                 case PixelFormat.R8_SNorm:
                 case PixelFormat.R8_SInt:
@@ -412,6 +420,7 @@ namespace Veldrid.OpenGL
                     return SizedInternalFormat.Rg32f;
 
                 case PixelFormat.R8_G8_B8_A8_UNorm:
+                case PixelFormat.R8_G8_B8_A8_UNorm_SRgb:
                     return SizedInternalFormat.Rgba8;
                 case PixelFormat.R8_G8_B8_A8_SNorm:
                     return SizedInternalFormat.Rgba8i;
@@ -420,6 +429,7 @@ namespace Veldrid.OpenGL
                 case PixelFormat.R8_G8_B8_A8_SInt:
                     return SizedInternalFormat.Rgba8i;
                 case PixelFormat.B8_G8_R8_A8_UNorm:
+                case PixelFormat.B8_G8_R8_A8_UNorm_SRgb:
                     return SizedInternalFormat.Rgba8;
 
                 case PixelFormat.R16_G16_B16_A16_UNorm:
@@ -641,6 +651,7 @@ namespace Veldrid.OpenGL
                         || extensions.IsExtensionSupported("GL_EXT_texture_compression_bptc");
 
                 case PixelFormat.B8_G8_R8_A8_UNorm:
+                case PixelFormat.B8_G8_R8_A8_UNorm_SRgb:
                 case PixelFormat.R10_G10_B10_A2_UInt:
                 case PixelFormat.R10_G10_B10_A2_UNorm:
                     return backend == GraphicsBackend.OpenGL;

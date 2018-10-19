@@ -30,6 +30,10 @@ namespace Veldrid
         /// Indicates whether presentation of the Swapchain will be synchronized to the window system's vertical refresh rate.
         /// </summary>
         public bool SyncToVerticalBlank;
+        /// <summary>
+        /// Indicates whether the color target of the Swapchain will use an sRGB PixelFormat.
+        /// </summary>
+        public bool ColorSrgb;
 
         /// <summary>
         /// Constructs a new SwapchainDescription.
@@ -43,13 +47,48 @@ namespace Veldrid
         /// If null, then no depth target will be created.</param>
         /// <param name="syncToVerticalBlank">Indicates whether presentation of the Swapchain will be synchronized to the window
         /// system's vertical refresh rate.</param>
-        public SwapchainDescription(SwapchainSource source, uint width, uint height, PixelFormat? depthFormat, bool syncToVerticalBlank)
+        public SwapchainDescription(
+            SwapchainSource source,
+            uint width,
+            uint height,
+            PixelFormat? depthFormat,
+            bool syncToVerticalBlank)
         {
             Source = source;
             Width = width;
             Height = height;
             DepthFormat = depthFormat;
             SyncToVerticalBlank = syncToVerticalBlank;
+            ColorSrgb = false;
+        }
+
+        /// <summary>
+        /// Constructs a new SwapchainDescription.
+        /// </summary>
+        /// <param name="source">The <see cref="SwapchainSource"/> which will be used as the target of rendering operations.
+        /// This is a window-system-specific object which differs by platform.</param>
+        /// <param name="width">The initial width of the Swapchain surface.</param>
+        /// <param name="height">The initial height of the Swapchain surface.</param>
+        /// <param name="depthFormat">The optional format of the depth target of the Swapchain's Framebuffer.
+        /// If non-null, this must be a valid depth Texture format.
+        /// If null, then no depth target will be created.</param>
+        /// <param name="syncToVerticalBlank">Indicates whether presentation of the Swapchain will be synchronized to the window
+        /// system's vertical refresh rate.</param>
+        /// <param name="colorSrgb">Indicates whether the color target of the Swapchain will use an sRGB PixelFormat.</param>
+        public SwapchainDescription(
+            SwapchainSource source,
+            uint width,
+            uint height,
+            PixelFormat? depthFormat,
+            bool syncToVerticalBlank,
+            bool colorSrgb)
+        {
+            Source = source;
+            Width = width;
+            Height = height;
+            DepthFormat = depthFormat;
+            SyncToVerticalBlank = syncToVerticalBlank;
+            ColorSrgb = colorSrgb;
         }
 
         /// <summary>
@@ -63,7 +102,8 @@ namespace Veldrid
                 && Width.Equals(other.Width)
                 && Height.Equals(other.Height)
                 && DepthFormat == other.DepthFormat
-                && SyncToVerticalBlank.Equals(other.SyncToVerticalBlank);
+                && SyncToVerticalBlank.Equals(other.SyncToVerticalBlank)
+                && ColorSrgb.Equals(other.ColorSrgb);
         }
 
         /// <summary>
@@ -77,7 +117,8 @@ namespace Veldrid
                 Width.GetHashCode(),
                 Height.GetHashCode(),
                 DepthFormat.GetHashCode(),
-                SyncToVerticalBlank.GetHashCode());
+                SyncToVerticalBlank.GetHashCode(),
+                ColorSrgb.GetHashCode());
         }
     }
 }

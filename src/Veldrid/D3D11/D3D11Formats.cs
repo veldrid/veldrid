@@ -68,8 +68,12 @@ namespace Veldrid.D3D11
 
                 case PixelFormat.R8_G8_B8_A8_UNorm:
                     return Format.R8G8B8A8_UNorm;
+                case PixelFormat.R8_G8_B8_A8_UNorm_SRgb:
+                    return Format.R8G8B8A8_UNorm_SRgb;
                 case PixelFormat.B8_G8_R8_A8_UNorm:
                     return Format.B8G8R8A8_UNorm;
+                case PixelFormat.B8_G8_R8_A8_UNorm_SRgb:
+                    return Format.B8G8R8A8_UNorm_SRgb;
                 case PixelFormat.R8_G8_B8_A8_SNorm:
                     return Format.R8G8B8A8_SNorm;
                 case PixelFormat.R8_G8_B8_A8_UInt:
@@ -163,6 +167,38 @@ namespace Veldrid.D3D11
             }
 
             return flags;
+        }
+
+        internal static TextureUsage GetVdUsage(BindFlags bindFlags, CpuAccessFlags cpuFlags, ResourceOptionFlags optionFlags)
+        {
+            TextureUsage usage = 0;
+            if ((bindFlags & BindFlags.RenderTarget) != 0)
+            {
+                usage |= TextureUsage.RenderTarget;
+            }
+            if ((bindFlags & BindFlags.DepthStencil) != 0)
+            {
+                usage |= TextureUsage.DepthStencil;
+            }
+            if ((bindFlags & BindFlags.ShaderResource) != 0)
+            {
+                usage |= TextureUsage.Sampled;
+            }
+            if ((bindFlags & BindFlags.UnorderedAccess) != 0)
+            {
+                usage |= TextureUsage.Storage;
+            }
+
+            if ((optionFlags & ResourceOptionFlags.TextureCube) != 0)
+            {
+                usage |= TextureUsage.Cubemap;
+            }
+            if ((optionFlags & ResourceOptionFlags.GenerateMipMaps) != 0)
+            {
+                usage |= TextureUsage.GenerateMipmaps;
+            }
+
+            return usage;
         }
 
         internal static bool IsUnsupportedFormat(PixelFormat format)
@@ -322,8 +358,13 @@ namespace Veldrid.D3D11
 
                 case Format.R8G8B8A8_UNorm:
                     return PixelFormat.R8_G8_B8_A8_UNorm;
+                case Format.R8G8B8A8_UNorm_SRgb:
+                    return PixelFormat.R8_G8_B8_A8_UNorm_SRgb;
+
                 case Format.B8G8R8A8_UNorm:
                     return PixelFormat.B8_G8_R8_A8_UNorm;
+                case Format.B8G8R8A8_UNorm_SRgb:
+                    return PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
                 case Format.R8G8B8A8_SNorm:
                     return PixelFormat.R8_G8_B8_A8_SNorm;
                 case Format.R8G8B8A8_UInt:
@@ -380,20 +421,6 @@ namespace Veldrid.D3D11
                     return PixelFormat.R11_G11_B10_Float;
                 default:
                     throw Illegal.Value<PixelFormat>();
-            }
-        }
-
-        internal static TextureSampleCount ToVdSampleCount(SampleDescription sampleDescription)
-        {
-            switch (sampleDescription.Count)
-            {
-                case 1: return TextureSampleCount.Count1;
-                case 2: return TextureSampleCount.Count2;
-                case 4: return TextureSampleCount.Count4;
-                case 8: return TextureSampleCount.Count8;
-                case 16: return TextureSampleCount.Count16;
-                case 32: return TextureSampleCount.Count32;
-                default: throw new VeldridException("Unsupported multisample count: " + sampleDescription.Count);
             }
         }
 

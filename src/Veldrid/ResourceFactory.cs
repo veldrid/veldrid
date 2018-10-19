@@ -1,3 +1,5 @@
+using System;
+
 namespace Veldrid
 {
     /// <summary>
@@ -164,6 +166,17 @@ namespace Veldrid
             }
 #endif
             return CreateTextureCore(ref description);
+        }
+
+        public Texture CreateTexture(IntPtr nativeTexture, TextureDescription description)
+            => CreateTextureCore(nativeTexture, ref description);
+
+        public Texture CreateTexture(IntPtr nativeTexture, ref TextureDescription description)
+            => CreateTextureCore(nativeTexture, ref description);
+
+        protected virtual Texture CreateTextureCore(IntPtr nativeTexture, ref TextureDescription description)
+        {
+            throw new NotSupportedException();
         }
 
         // TODO: private protected

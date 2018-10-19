@@ -65,8 +65,12 @@ namespace Veldrid.MTL
 
                 case PixelFormat.R8_G8_B8_A8_UNorm:
                     return MTLPixelFormat.RGBA8Unorm;
+                case PixelFormat.R8_G8_B8_A8_UNorm_SRgb:
+                    return MTLPixelFormat.RGBA8Unorm_sRGB;
                 case PixelFormat.B8_G8_R8_A8_UNorm:
                     return MTLPixelFormat.BGRA8Unorm;
+                case PixelFormat.B8_G8_R8_A8_UNorm_SRgb:
+                    return MTLPixelFormat.BGRA8Unorm_sRGB;
                 case PixelFormat.R8_G8_B8_A8_SNorm:
                     return MTLPixelFormat.RGBA8Snorm;
                 case PixelFormat.R8_G8_B8_A8_UInt:

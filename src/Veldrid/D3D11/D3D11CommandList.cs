@@ -50,6 +50,7 @@ namespace Veldrid.D3D11
         // Resource sets are invalidated when a new resource set is bound with an incompatible SRV or UAV.
         private bool[] _invalidatedComputeResourceSets = new bool[1];
         private string _name;
+        private bool _vertexBindingsChanged;
 
         // Cached resources
         private const int MaxCachedUniformBuffers = 15;
@@ -492,10 +493,14 @@ namespace Veldrid.D3D11
         protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
         {
             D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
-            UnbindUAVBuffer(buffer);
-            _vertexBindings[index] = d3d11Buffer.Buffer;
-            _vertexOffsets[index] = (int)offset;
-            _numVertexBindings = Math.Max((index + 1), _numVertexBindings);
+            if (_vertexBindings[index] != d3d11Buffer.Buffer || _vertexOffsets[index] != offset)
+            {
+                _vertexBindingsChanged = true;
+                UnbindUAVBuffer(buffer);
+                _vertexBindings[index] = d3d11Buffer.Buffer;
+                _vertexOffsets[index] = (int)offset;
+                _numVertexBindings = Math.Max((index + 1), _numVertexBindings);
+            }
         }
 
         protected override void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
@@ -634,19 +639,24 @@ namespace Veldrid.D3D11
 
         private unsafe void FlushVertexBindings()
         {
-            IntPtr* buffersPtr = stackalloc IntPtr[(int)_numVertexBindings];
-            for (int i = 0; i < _numVertexBindings; i++)
+            if (_vertexBindingsChanged)
             {
-                buffersPtr[i] = _vertexBindings[i].NativePointer;
-            }
-            fixed (int* stridesPtr = _vertexStrides)
-            fixed (int* offsetsPtr = _vertexOffsets)
-            {
-                _context.InputAssembler.SetVertexBuffers(
-                    0, (int)_numVertexBindings,
-                    (IntPtr)buffersPtr,
-                    (IntPtr)stridesPtr,
-                    (IntPtr)offsetsPtr);
+                IntPtr* buffersPtr = stackalloc IntPtr[(int)_numVertexBindings];
+                for (int i = 0; i < _numVertexBindings; i++)
+                {
+                    buffersPtr[i] = _vertexBindings[i].NativePointer;
+                }
+                fixed (int* stridesPtr = _vertexStrides)
+                fixed (int* offsetsPtr = _vertexOffsets)
+                {
+                    _context.InputAssembler.SetVertexBuffers(
+                        0, (int)_numVertexBindings,
+                        (IntPtr)buffersPtr,
+                        (IntPtr)stridesPtr,
+                        (IntPtr)offsetsPtr);
+                }
+
+                _vertexBindingsChanged = false;
             }
         }
 

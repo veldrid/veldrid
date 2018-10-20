@@ -151,7 +151,7 @@ namespace Veldrid.D3D11
             uint actualHeight = (uint)(height * _pixelScale);
             if (resizeBuffers)
             {
-                _dxgiSwapChain.ResizeBuffers(2, (int)actualWidth, (int)actualHeight, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
+                _dxgiSwapChain.ResizeBuffers(2, (int)actualWidth, (int)actualHeight, _colorFormat, SwapChainFlags.None);
             }
 
             // Get the backbuffer from the swapchain

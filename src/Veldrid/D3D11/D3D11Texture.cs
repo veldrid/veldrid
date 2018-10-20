@@ -143,18 +143,26 @@ namespace Veldrid.D3D11
             }
         }
 
-        public D3D11Texture(Texture2D existingTexture)
+        public D3D11Texture(Texture2D existingTexture, TextureType type, PixelFormat format)
         {
+            _device = existingTexture.Device;
             DeviceTexture = existingTexture;
             Width = (uint)existingTexture.Description.Width;
             Height = (uint)existingTexture.Description.Height;
             Depth = 1;
             MipLevels = (uint)existingTexture.Description.MipLevels;
             ArrayLayers = (uint)existingTexture.Description.ArraySize;
-            Format = D3D11Formats.ToVdFormat(existingTexture.Description.Format);
-            SampleCount = D3D11Formats.ToVdSampleCount(existingTexture.Description.SampleDescription);
-            Type = TextureType.Texture2D;
-            Usage = TextureUsage.RenderTarget;
+            Format = format;
+            SampleCount = FormatHelpers.GetSampleCount((uint)existingTexture.Description.SampleDescription.Count);
+            Type = type;
+            Usage = D3D11Formats.GetVdUsage(
+                existingTexture.Description.BindFlags,
+                existingTexture.Description.CpuAccessFlags,
+                existingTexture.Description.OptionFlags);
+
+            DxgiFormat = D3D11Formats.ToDxgiFormat(
+                format,
+                (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
         }
 
         public override string Name

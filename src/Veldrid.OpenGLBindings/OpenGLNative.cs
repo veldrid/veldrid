@@ -1549,6 +1549,19 @@ namespace Veldrid.OpenGLBinding
         public static void glClipControl(ClipControlOrigin origin, ClipControlDepthRange depth)
             => p_glClipControl(origin, depth);
 
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glGetFramebufferAttachmentParameteriv_t(
+            FramebufferTarget target,
+            GLFramebufferAttachment attachment,
+            FramebufferParameterName pname,
+            int* @params);
+        private static glGetFramebufferAttachmentParameteriv_t p_glGetFramebufferAttachmentParameteriv;
+        public static void glGetFramebufferAttachmentParameteriv(
+            FramebufferTarget target,
+            GLFramebufferAttachment attachment,
+            FramebufferParameterName pname,
+            int* @params) => p_glGetFramebufferAttachmentParameteriv(target, attachment, pname, @params);
+
         public static void LoadGetString(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -1707,6 +1720,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glCreateBuffers", out p_glCreateBuffers);
             LoadFunction("glCreateTextures", out p_glCreateTextures);
             LoadFunction("glGenerateMipmap", out p_glGenerateMipmap);
+            LoadFunction("glGetFramebufferAttachmentParameteriv", out p_glGetFramebufferAttachmentParameteriv);
 
             if (!gles)
             {

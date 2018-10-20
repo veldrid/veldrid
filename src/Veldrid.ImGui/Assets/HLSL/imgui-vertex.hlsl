@@ -17,11 +17,16 @@ struct PS_INPUT
     float2 uv  : TEXCOORD0;
 };
 
+float3 SrgbToLinear(float3 srgb)
+{
+    return srgb * (srgb * (srgb * 0.305306011 + 0.682171111) + 0.012522878);
+}
+
 PS_INPUT VS(VS_INPUT input)
 {
     PS_INPUT output;
     output.pos = mul(ProjectionMatrix, float4(input.pos.xy, 0.f, 1.f));
-    output.col = input.col;
+    output.col = float4(SrgbToLinear(input.col.rgb), 1);
     output.uv = input.uv;
     return output;
 }

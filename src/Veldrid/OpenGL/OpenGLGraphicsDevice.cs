@@ -179,21 +179,43 @@ namespace Veldrid.OpenGL
             glBindVertexArray(_vao);
             CheckLastError();
 
-            _swapchainFramebuffer = new OpenGLSwapchainFramebuffer(
-                width,
-                height,
-                PixelFormat.B8_G8_R8_A8_UNorm,
-                options.SwapchainDepthFormat);
-
             if (options.Debug && (_extensions.KHR_Debug || _extensions.ARB_DebugOutput))
             {
                 EnableDebugCallback();
             }
 
+            const int GL_SRGB = 0x8C40;
+            int colorEncoding;
+            glGetFramebufferAttachmentParameteriv(
+                FramebufferTarget.DrawFramebuffer,
+                GLFramebufferAttachment.FrontLeft,
+                FramebufferParameterName.ColorEncoding,
+                &colorEncoding);
+            CheckLastError();
+
+            PixelFormat swapchainFormat;
+            if (colorEncoding == GL_SRGB)
+            {
+                swapchainFormat = PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
+            }
+            else
+            {
+                swapchainFormat = PixelFormat.B8_G8_R8_A8_UNorm;
+            }
+
+            _swapchainFramebuffer = new OpenGLSwapchainFramebuffer(
+                width,
+                height,
+                swapchainFormat,
+                options.SwapchainDepthFormat);
+
             // Set miscellaneous initial states.
             if (_backendType == GraphicsBackend.OpenGL)
             {
                 glEnable(EnableCap.TextureCubeMapSeamless);
+                CheckLastError();
+
+                glEnable(EnableCap.FramebufferSrgb);
                 CheckLastError();
             }
 

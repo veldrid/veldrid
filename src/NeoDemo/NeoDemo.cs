@@ -56,6 +56,8 @@ namespace Veldrid.NeoDemo
             VeldridStartup.CreateWindowAndGraphicsDevice(
                 windowCI,
                 gdOptions,
+                GraphicsBackend.Direct3D11,
+                true,
                 //GraphicsBackend.Metal,
                 // GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
@@ -473,7 +475,7 @@ namespace Veldrid.NeoDemo
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend);
+            _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend, true);
 
             _scene.Camera.UpdateBackend(_gd);
 

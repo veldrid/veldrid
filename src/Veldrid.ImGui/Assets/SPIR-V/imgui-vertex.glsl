@@ -22,10 +22,15 @@ out gl_PerVertex
     vec4 gl_Position;
 };
 
+vec3 SrgbToLinear(vec3 srgb)
+{
+    return srgb * (srgb * (srgb * 0.305306011 + 0.682171111) + 0.012522878);
+}
+
 void main() 
 {
     gl_Position = projection * vec4(vsin_position, 0, 1);
-    vsout_color = vsin_color;
+    vsout_color = vec4(SrgbToLinear(vsin_color.rgb), 1);
     vsout_texCoord = vsin_texCoord;
     if (IsClipSpaceYInverted)
     {

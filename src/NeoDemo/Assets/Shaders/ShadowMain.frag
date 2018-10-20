@@ -179,7 +179,7 @@ void main()
         surfaceColor = (surfaceColor * (1 - _MaterialProperties.Reflectivity)) + (reflectionSample * _MaterialProperties.Reflectivity);
     }
 
-    vec4 ambientLight = vec4(0.3f, 0.3f, 0.3f, 1.f);
+    vec4 ambientLight = vec4(0.05f, 0.05f, 0.05f, 1.f);
     vec3 lightDir = -_LightInfo.Direction;
     vec4 directionalColor = ambientLight * surfaceColor;
     float shadowBias = 0.0005f;

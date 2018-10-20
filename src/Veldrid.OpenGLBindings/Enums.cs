@@ -2032,4 +2032,23 @@ namespace Veldrid.OpenGLBinding
         NegativeOneToOne = 0x935E,
         ZeroToOne = 0x935F,
     }
+
+    public enum FramebufferParameterName
+    {
+        ColorEncoding = 0x8210,
+        ComponentType = 0x8211,
+        RedSize = 0x8212,
+        GreenSize = 0x8213,
+        BlueSize = 0x8214,
+        AlphaSize = 0x8215,
+        DepthSize = 0x8216,
+        StencilSize = 0x8217,
+        ObjectType = 0x8CD0,
+        ObjectName = 0x8CD1,
+        TextureLvel = 0x8CD2,
+        CubeMapFace = 0x8CD3,
+        TextureLayer = 0x8CD4,
+        Layered = 0x8DA7,
+        LayerTargets = 0x8DA8,
+    }
 }

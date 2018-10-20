@@ -39,6 +39,7 @@ namespace Veldrid.NeoDemo
             bool invertY = false;
             List<SpecializationConstant> specializations = new List<SpecializationConstant>();
             specializations.Add(new SpecializationConstant(102, gd.IsDepthRangeZeroToOne));
+
             switch (gd.BackendType)
             {
                 case GraphicsBackend.Direct3D11:
@@ -57,6 +58,11 @@ namespace Veldrid.NeoDemo
                 default:
                     throw new InvalidOperationException();
             }
+
+            PixelFormat swapchainFormat = gd.MainSwapchain.Framebuffer.OutputDescription.ColorAttachments[0].Format;
+            bool swapchainIsSrgb = swapchainFormat == PixelFormat.B8_G8_R8_A8_UNorm_SRgb
+                || swapchainFormat == PixelFormat.R8_G8_B8_A8_UNorm_SRgb;
+            specializations.Add(new SpecializationConstant(103, swapchainIsSrgb));
 
             return new CrossCompileOptions(fixClipZ, invertY, specializations.ToArray());
         }

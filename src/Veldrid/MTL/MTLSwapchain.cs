@@ -55,8 +55,12 @@ namespace Veldrid.MTL
                 throw new VeldridException($"A Metal Swapchain can only be created from an NSWindow or UIView.");
             }
 
+            PixelFormat format = description.ColorSrgb
+                ? PixelFormat.B8_G8_R8_A8_UNorm_SRgb
+                : PixelFormat.B8_G8_R8_A8_UNorm;
+
             _metalLayer.device = _gd.Device;
-            _metalLayer.pixelFormat = MTLPixelFormat.BGRA8Unorm;
+            _metalLayer.pixelFormat = MTLFormats.VdToMTLPixelFormat(format, false);
             _metalLayer.framebufferOnly = true;
             _metalLayer.drawableSize = new CGSize(width, height);
             GetNextDrawable();
@@ -67,7 +71,7 @@ namespace Veldrid.MTL
                 width,
                 height,
                 description.DepthFormat,
-                PixelFormat.B8_G8_R8_A8_UNorm);
+                format);
         }
 
         public void GetNextDrawable()

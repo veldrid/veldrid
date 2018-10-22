@@ -32,11 +32,19 @@ namespace Veldrid.NeoDemo
             return (vs, fs);
         }
 
-        private static CrossCompileOptions GetOptions(
-            GraphicsDevice gd)
+        private static CrossCompileOptions GetOptions(GraphicsDevice gd)
         {
-            bool fixClipZ = false;
+            SpecializationConstant[] specializations = GetSpecializations(gd);
+
+            bool fixClipZ = (gd.BackendType == GraphicsBackend.OpenGL || gd.BackendType == GraphicsBackend.OpenGLES)
+                && !gd.IsDepthRangeZeroToOne;
             bool invertY = false;
+
+            return new CrossCompileOptions(fixClipZ, invertY, specializations);
+        }
+
+        public static SpecializationConstant[] GetSpecializations(GraphicsDevice gd)
+        {
             List<SpecializationConstant> specializations = new List<SpecializationConstant>();
             specializations.Add(new SpecializationConstant(102, gd.IsDepthRangeZeroToOne));
 
@@ -53,7 +61,6 @@ namespace Veldrid.NeoDemo
                 case GraphicsBackend.OpenGLES:
                     specializations.Add(new SpecializationConstant(100, false));
                     specializations.Add(new SpecializationConstant(101, true));
-                    fixClipZ = !gd.IsDepthRangeZeroToOne;
                     break;
                 default:
                     throw new InvalidOperationException();
@@ -64,7 +71,7 @@ namespace Veldrid.NeoDemo
                 || swapchainFormat == PixelFormat.R8_G8_B8_A8_UNorm_SRgb;
             specializations.Add(new SpecializationConstant(103, swapchainIsSrgb));
 
-            return new CrossCompileOptions(fixClipZ, invertY, specializations.ToArray());
+            return specializations.ToArray();
         }
 
         public static byte[] LoadBytecode(GraphicsBackend backend, string setName, ShaderStages stage)

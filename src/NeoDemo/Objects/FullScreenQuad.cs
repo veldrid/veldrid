@@ -37,7 +37,8 @@ namespace Veldrid.NeoDemo.Objects
                             new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
                             new VertexElementDescription("TexCoords", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2))
                     },
-                    new[] { vs, fs }),
+                    new[] { vs, fs },
+                    ShaderHelper.GetSpecializations(gd)),
                 new ResourceLayout[] { resourceLayout },
                 gd.SwapchainFramebuffer.OutputDescription);
             _pipeline = factory.CreateGraphicsPipeline(ref pd);

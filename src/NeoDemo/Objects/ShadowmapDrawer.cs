@@ -77,7 +77,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ShaderSetDescription(
                     vertexLayouts,
                     new[] { vs, fs },
-                    new[] { new SpecializationConstant(100, gd.IsClipSpaceYInverted) }),
+                    ShaderHelper.GetSpecializations(gd)),
                 new ResourceLayout[] { layout },
                 sc.MainSceneFramebuffer.OutputDescription);
 

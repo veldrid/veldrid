@@ -52,6 +52,7 @@ namespace Veldrid.OpenGL
                 || GLESVersion(3, 1);
 
             ARB_ClipControl = GLVersion(4, 5) || IsExtensionSupported("GL_ARB_clip_control");
+            EXT_sRGBWriteControl = _backend == GraphicsBackend.OpenGLES && IsExtensionSupported("GL_EXT_sRGB_write_control");
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -61,6 +62,7 @@ namespace Veldrid.OpenGL
         public readonly bool KHR_Debug;
         public readonly bool ARB_ViewportArray;
         public readonly bool ARB_ClipControl;
+        public readonly bool EXT_sRGBWriteControl;
 
         // Differs between GL / GLES
         public readonly bool TextureStorage;

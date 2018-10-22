@@ -14,16 +14,16 @@ namespace Veldrid.OpenGL
 
         public OpenGLSwapchain(
             OpenGLGraphicsDevice gd,
-            uint width,
-            uint height,
-            PixelFormat? depthFormat,
+            OpenGLSwapchainFramebuffer framebuffer,
             Action<uint, uint> resizeAction)
         {
             _gd = gd;
+            PixelFormat? depthFormat = framebuffer.DepthTarget?.Target.Format ?? null;
+
             _framebuffer = new OpenGLSwapchainFramebuffer(
-                width,
-                height,
-                PixelFormat.B8_G8_R8_A8_UNorm,
+                framebuffer.Width,
+                framebuffer.Height,
+                framebuffer.ColorTargets[0].Target.Format,
                 depthFormat);
             _resizeAction = resizeAction;
         }

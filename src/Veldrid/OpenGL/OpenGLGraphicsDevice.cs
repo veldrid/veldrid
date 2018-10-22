@@ -184,17 +184,10 @@ namespace Veldrid.OpenGL
                 EnableDebugCallback();
             }
 
-            const int GL_SRGB = 0x8C40;
-            int colorEncoding;
-            glGetFramebufferAttachmentParameteriv(
-                FramebufferTarget.DrawFramebuffer,
-                GLFramebufferAttachment.FrontLeft,
-                FramebufferParameterName.ColorEncoding,
-                &colorEncoding);
-            CheckLastError();
+            bool backbufferIsSrgb = ManualSrgbBackbufferQuery();
 
             PixelFormat swapchainFormat;
-            if (colorEncoding == GL_SRGB)
+            if (backbufferIsSrgb)
             {
                 swapchainFormat = PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
             }
@@ -214,7 +207,10 @@ namespace Veldrid.OpenGL
             {
                 glEnable(EnableCap.TextureCubeMapSeamless);
                 CheckLastError();
+            }
 
+            if (_backendType == GraphicsBackend.OpenGL || _extensions.EXT_sRGBWriteControl)
+            {
                 glEnable(EnableCap.FramebufferSrgb);
                 CheckLastError();
             }
@@ -290,9 +286,7 @@ namespace Veldrid.OpenGL
 
             _mainSwapchain = new OpenGLSwapchain(
                 this,
-                width,
-                height,
-                options.SwapchainDepthFormat,
+                _swapchainFramebuffer,
                 platformInfo.ResizeSwapchain);
 
             _workItems = new BlockingCollection<ExecutionThreadWorkItem>(new ConcurrentQueue<ExecutionThreadWorkItem>());
@@ -300,6 +294,67 @@ namespace Veldrid.OpenGL
             _executionThread = new ExecutionThread(this, _workItems, _makeCurrent, _glContext);
 
             PostDeviceCreated();
+        }
+
+        private bool ManualSrgbBackbufferQuery()
+        {
+            if (_backendType == GraphicsBackend.OpenGLES && !_extensions.EXT_sRGBWriteControl)
+            {
+                return false;
+            }
+
+            glGenTextures(1, out uint copySrc);
+            CheckLastError();
+
+            float* data = stackalloc float[4];
+            data[0] = 0.5f;
+            data[1] = 0.5f;
+            data[2] = 0.5f;
+            data[3] = 1f;
+
+            glActiveTexture(TextureUnit.Texture0);
+            CheckLastError();
+            glBindTexture(TextureTarget.Texture2D, copySrc);
+            CheckLastError();
+                glTexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, 1, 1, 0, GLPixelFormat.Rgba, GLPixelType.Float, data);
+                CheckLastError();
+            glGenFramebuffers(1, out uint copySrcFb);
+            CheckLastError();
+
+            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, copySrc);
+            CheckLastError();
+            glFramebufferTexture2D(FramebufferTarget.ReadFramebuffer, GLFramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, copySrc, 0);
+            CheckLastError();
+
+            glEnable(EnableCap.FramebufferSrgb);
+            CheckLastError();
+            glBlitFramebuffer(
+                0, 0, 1, 1,
+                0, 0, 1, 1,
+                ClearBufferMask.ColorBufferBit,
+                BlitFramebufferFilter.Nearest);
+            CheckLastError();
+
+            glDisable(EnableCap.FramebufferSrgb);
+            CheckLastError();
+
+            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
+            CheckLastError();
+            glBindFramebuffer(FramebufferTarget.DrawFramebuffer, copySrcFb);
+            CheckLastError();
+            glBlitFramebuffer(
+                0, 0, 1, 1,
+                0, 0, 1, 1,
+                ClearBufferMask.ColorBufferBit,
+                BlitFramebufferFilter.Nearest);
+            CheckLastError();
+            glGetTexImage(TextureTarget.Texture2D, 0, GLPixelFormat.Rgba, GLPixelType.Float, data);
+            CheckLastError();
+
+            glDeleteFramebuffers(1, ref copySrcFb);
+            glDeleteTextures(1, ref copySrc);
+
+            return data[0] > 0.6f;
         }
 
         public OpenGLGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)

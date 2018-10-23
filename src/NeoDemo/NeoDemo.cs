@@ -35,6 +35,7 @@ namespace Veldrid.NeoDemo
         private TextureSampleCount? _newSampleCount;
 
         private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
+        private bool _colorSrgb = true;
         private FullScreenQuad _fsq;
 
         public NeoDemo()
@@ -56,8 +57,8 @@ namespace Veldrid.NeoDemo
             VeldridStartup.CreateWindowAndGraphicsDevice(
                 windowCI,
                 gdOptions,
-                GraphicsBackend.Direct3D11,
-                true,
+                GraphicsBackend.OpenGLES,
+                _colorSrgb,
                 //GraphicsBackend.Metal,
                 // GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
@@ -283,6 +284,11 @@ namespace Veldrid.NeoDemo
                     {
                         _recreateWindow = !_recreateWindow;
                     }
+                    if (ImGui.MenuItem("sRGB Swapchain Format", string.Empty, _colorSrgb, true))
+                    {
+                        _colorSrgb = !_colorSrgb;
+                        ChangeBackend(_gd.BackendType);
+                    }
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.SetTooltip(
@@ -475,7 +481,7 @@ namespace Veldrid.NeoDemo
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend, true);
+            _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend, _colorSrgb);
 
             _scene.Camera.UpdateBackend(_gd);
 

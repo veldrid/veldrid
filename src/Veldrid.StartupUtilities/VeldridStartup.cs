@@ -371,6 +371,10 @@ namespace Veldrid.StartupUtilities
             {
                 Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.FramebufferSrgbCapable, 1);
             }
+            else
+            {
+                Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.FramebufferSrgbCapable, 0);
+            }
         }
 #endif
 

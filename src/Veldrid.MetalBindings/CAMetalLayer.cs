@@ -53,6 +53,12 @@ namespace Veldrid.MetalBindings
 
         public CAMetalDrawable nextDrawable() => objc_msgSend<CAMetalDrawable>(NativePtr, sel_nextDrawable);
 
+        public Bool8 displaySyncEnabled
+        {
+            get => bool8_objc_msgSend(NativePtr, "displaySyncEnabled");
+            set => objc_msgSend(NativePtr, "setDisplaySyncEnabled:", value);
+        }
+
         private static readonly Selector sel_device = "device";
         private static readonly Selector sel_setDevice = "setDevice:";
         private static readonly Selector sel_pixelFormat = "pixelFormat";

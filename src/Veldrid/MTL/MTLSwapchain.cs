@@ -10,11 +10,23 @@ namespace Veldrid.MTL
         private CAMetalLayer _metalLayer;
         private readonly MTLGraphicsDevice _gd;
         private UIView _uiView; // Valid only when a UIViewSwapchainSource is used.
+        private bool _syncToVerticalBlank;
 
         private CAMetalDrawable _drawable;
 
         public override Framebuffer Framebuffer => _framebuffer;
-        public override bool SyncToVerticalBlank { get; set; }
+        public override bool SyncToVerticalBlank
+        {
+            get => _syncToVerticalBlank;
+            set
+            {
+                if (_syncToVerticalBlank != value)
+                {
+                    SetSyncToVerticalBlank(value);
+                }
+            }
+        }
+
         public override string Name { get; set; }
 
         public CAMetalDrawable CurrentDrawable => _drawable;
@@ -22,7 +34,7 @@ namespace Veldrid.MTL
         public MTLSwapchain(MTLGraphicsDevice gd, ref SwapchainDescription description)
         {
             _gd = gd;
-            SyncToVerticalBlank = description.SyncToVerticalBlank;
+            _syncToVerticalBlank = description.SyncToVerticalBlank;
 
             _metalLayer = CAMetalLayer.New();
 
@@ -63,6 +75,9 @@ namespace Veldrid.MTL
             _metalLayer.pixelFormat = MTLFormats.VdToMTLPixelFormat(format, false);
             _metalLayer.framebufferOnly = true;
             _metalLayer.drawableSize = new CGSize(width, height);
+
+            SetSyncToVerticalBlank(_syncToVerticalBlank);
+
             GetNextDrawable();
 
             _framebuffer = new MTLSwapchainFramebuffer(
@@ -97,6 +112,18 @@ namespace Veldrid.MTL
                 _metalLayer.frame = _uiView.frame;
             }
             GetNextDrawable();
+        }
+
+        private void SetSyncToVerticalBlank(bool value)
+        {
+            _syncToVerticalBlank = value;
+
+            if (_gd.MetalFeatures.MaxFeatureSet == MTLFeatureSet.macOS_GPUFamily1_v3
+                || _gd.MetalFeatures.MaxFeatureSet == MTLFeatureSet.macOS_GPUFamily1_v4
+                || _gd.MetalFeatures.MaxFeatureSet == MTLFeatureSet.macOS_GPUFamily2_v1)
+            {
+                _metalLayer.displaySyncEnabled = value;
+            }
         }
 
         public override void Dispose()

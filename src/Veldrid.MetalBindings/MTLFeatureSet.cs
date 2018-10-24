@@ -21,5 +21,7 @@ namespace Veldrid.MetalBindings
         macOS_GPUFamily1_v1 = 10000,
         macOS_GPUFamily1_v2 = 10001,
         macOS_GPUFamily1_v3 = 10003,
+        macOS_GPUFamily1_v4 = 10004,
+        macOS_GPUFamily2_v1 = 10005,
     }
 }

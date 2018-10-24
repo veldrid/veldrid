@@ -13,11 +13,8 @@ namespace Veldrid.NeoDemo
         private static readonly Dictionary<ResourceLayoutDescription, ResourceLayout> s_layouts
             = new Dictionary<ResourceLayoutDescription, ResourceLayout>();
 
-        private static readonly Dictionary<(string, ShaderStages), Shader> s_shaders
-            = new Dictionary<(string, ShaderStages), Shader>();
-
-        private static readonly Dictionary<string, (Shader, Shader)> s_shaderSets
-            = new Dictionary<string, (Shader, Shader)>();
+        private static readonly Dictionary<ShaderSetCacheKey, (Shader, Shader)> s_shaderSets
+            = new Dictionary<ShaderSetCacheKey, (Shader, Shader)>();
 
         private static readonly Dictionary<ImageSharpTexture, Texture> s_textures
             = new Dictionary<ImageSharpTexture, Texture>();
@@ -60,10 +57,12 @@ namespace Veldrid.NeoDemo
             ResourceFactory factory,
             string name)
         {
-            if (!s_shaderSets.TryGetValue(name, out (Shader vs, Shader fs) set))
+            SpecializationConstant[] constants = ShaderHelper.GetSpecializations(gd);
+            ShaderSetCacheKey cacheKey = new ShaderSetCacheKey(name, constants);
+            if (!s_shaderSets.TryGetValue(cacheKey, out (Shader vs, Shader fs) set))
             {
                 set = ShaderHelper.LoadSPIRV(gd, factory, name);
-                s_shaderSets.Add(name, set);
+                s_shaderSets.Add(cacheKey, set);
             }
 
             return set;
@@ -83,13 +82,7 @@ namespace Veldrid.NeoDemo
             }
             s_layouts.Clear();
 
-            foreach (KeyValuePair<(string, ShaderStages), Shader> kvp in s_shaders)
-            {
-                kvp.Value.Dispose();
-            }
-            s_shaders.Clear();
-
-            foreach (KeyValuePair<string, (Shader, Shader)> kvp in s_shaderSets)
+            foreach (KeyValuePair<ShaderSetCacheKey, (Shader, Shader)> kvp in s_shaderSets)
             {
                 kvp.Value.Item1.Dispose();
                 kvp.Value.Item2.Dispose();

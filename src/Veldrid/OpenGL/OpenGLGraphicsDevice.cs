@@ -187,7 +187,7 @@ namespace Veldrid.OpenGL
             bool backbufferIsSrgb = ManualSrgbBackbufferQuery();
 
             PixelFormat swapchainFormat;
-            if (backbufferIsSrgb)
+            if (backbufferIsSrgb || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 swapchainFormat = PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
             }

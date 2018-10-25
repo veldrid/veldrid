@@ -592,6 +592,12 @@ namespace Veldrid.D3D11
                     return Format.R32G32B32_SInt;
                 case VertexElementFormat.Int4:
                     return Format.R32G32B32A32_SInt;
+                case VertexElementFormat.Half1:
+                    return Format.R16_Float;
+                case VertexElementFormat.Half2:
+                    return Format.R16G16_Float;
+                case VertexElementFormat.Half4:
+                    return Format.R16G16B16A16_Float;
 
                 default:
                     throw Illegal.Value<VertexElementFormat>();

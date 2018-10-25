@@ -374,6 +374,12 @@ namespace Veldrid.Vk
                     return VkFormat.R32g32b32Sint;
                 case VertexElementFormat.Int4:
                     return VkFormat.R32g32b32a32Sint;
+                case VertexElementFormat.Half1:
+                    return VkFormat.R16Sfloat;
+                case VertexElementFormat.Half2:
+                    return VkFormat.R16g16Sfloat;
+                case VertexElementFormat.Half4:
+                    return VkFormat.R16g16b16a16Sfloat;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }

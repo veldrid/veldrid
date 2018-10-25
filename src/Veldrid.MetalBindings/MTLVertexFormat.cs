@@ -44,5 +44,6 @@ namespace Veldrid.MetalBindings
         uint4 = 39,
         int1010102Normalized = 40,
         uint1010102Normalized = 41,
+        half = 53,
     }
 }

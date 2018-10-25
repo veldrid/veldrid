@@ -568,6 +568,12 @@ namespace Veldrid.OpenGL
                     normalized = false;
                     isInteger = false;
                     return VertexAttribPointerType.Float;
+                case VertexElementFormat.Half1:
+                case VertexElementFormat.Half2:
+                case VertexElementFormat.Half4:
+                    normalized = false;
+                    isInteger = false;
+                    return VertexAttribPointerType.HalfFloat;
                 case VertexElementFormat.Byte2_Norm:
                 case VertexElementFormat.Byte4_Norm:
                     normalized = true;

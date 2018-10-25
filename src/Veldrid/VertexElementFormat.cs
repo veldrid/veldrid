@@ -117,5 +117,17 @@
         /// Four 32-bit signed integers.
         /// </summary>
         Int4,
+        /// <summary>
+        /// One 16-bit floating point value.
+        /// </summary>
+        Half1,
+        /// <summary>
+        /// Two 16-bit floating point values.
+        /// </summary>
+        Half2,
+        /// <summary>
+        /// Four 16-bit floating point values.
+        /// </summary>
+        Half4,
     }
 }

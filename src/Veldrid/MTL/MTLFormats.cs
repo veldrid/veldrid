@@ -527,6 +527,12 @@ namespace Veldrid.MTL
                     return MTLVertexFormat.float3;
                 case VertexElementFormat.Float4:
                     return MTLVertexFormat.float4;
+                case VertexElementFormat.Half1:
+                    return MTLVertexFormat.half;
+                case VertexElementFormat.Half2:
+                    return MTLVertexFormat.half2;
+                case VertexElementFormat.Half4:
+                    return MTLVertexFormat.half4;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }

@@ -37,6 +37,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Shaders\F16VertexAttribs.frag" />
+    <None Remove="Shaders\F16VertexAttribs.vert" />
     <None Remove="Shaders\VertexLayoutTestShader.frag" />
     <None Remove="Shaders\VertexLayoutTestShader.vert" />
   </ItemGroup>

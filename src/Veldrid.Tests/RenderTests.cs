@@ -433,6 +433,157 @@ namespace Veldrid.Tests
         }
 
         [Fact]
+        public void Points_WithFloat16Color()
+        {
+            Texture target = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            Texture staging = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
+
+            Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, target));
+
+            DeviceBuffer infoBuffer = RF.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
+            DeviceBuffer orthoBuffer = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            Matrix4x4 orthoMatrix = Matrix4x4.CreateOrthographicOffCenter(
+                0,
+                framebuffer.Width,
+                framebuffer.Height,
+                0,
+                -1,
+                1);
+            GD.UpdateBuffer(orthoBuffer, 0, ref orthoMatrix);
+
+            ShaderSetDescription shaderSet = new ShaderSetDescription(
+                new VertexLayoutDescription[]
+                {
+                    new VertexLayoutDescription(
+                        new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                        new VertexElementDescription("Color_Half", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Half4))
+                },
+                TestShaders.LoadVertexFragment(RF, "F16VertexAttribs"));
+
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                new ResourceLayoutElementDescription("OrthoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+
+            ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, infoBuffer, orthoBuffer));
+
+            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.Default,
+                PrimitiveTopology.PointList,
+                shaderSet,
+                layout,
+                framebuffer.OutputDescription);
+
+            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+
+            uint colorNormalizationFactor = 2500;
+
+            const ushort f16_375 = 0x5DDC; // 375.0
+            const ushort f16_500 = 0x5FD0; // 500.0
+            const ushort f16_625 = 0x60E2; // 625.0
+            const ushort f16_875 = 0x62D6; // 875.0
+            const ushort f16_1250 = 0x64E2; // 1250.0
+            const ushort f16_1875 = 0x6753; // 1875.0
+
+            VertexCPU_UShort[] vertices = new VertexCPU_UShort[]
+            {
+                new VertexCPU_UShort
+                {
+                    Position = new Vector2(0.5f, 0.5f),
+                    R = f16_625,
+                    G = f16_1250,
+                    B = f16_1875,
+                },
+                new VertexCPU_UShort
+                {
+                    Position = new Vector2(10.5f, 12.5f),
+                    R = f16_625,
+                    G = f16_1250,
+                    B = f16_1875,
+                },
+                new VertexCPU_UShort
+                {
+                    Position = new Vector2(25.5f, 35.5f),
+                    R = f16_1875,
+                    G = f16_1250,
+                    B = f16_625,
+                },
+                new VertexCPU_UShort
+                {
+                    Position = new Vector2(49.5f, 49.5f),
+                    R = f16_375,
+                    G = f16_500,
+                    B = f16_875,
+                },
+            };
+
+            RgbaFloat[] expectedColors = new[]
+            {
+                new RgbaFloat(
+                    625.0f / colorNormalizationFactor,
+                    1250.0f / colorNormalizationFactor,
+                    1875.0f / colorNormalizationFactor,
+                    1),
+                new RgbaFloat(
+                    625.0f / colorNormalizationFactor,
+                    1250.0f / colorNormalizationFactor,
+                    1875.0f / colorNormalizationFactor,
+                    1),
+                new RgbaFloat(
+                    1875.0f / colorNormalizationFactor,
+                    1250.0f / colorNormalizationFactor,
+                    625.0f / colorNormalizationFactor,
+                    1),
+                new RgbaFloat(
+                    375.0f / colorNormalizationFactor,
+                    500.0f / colorNormalizationFactor,
+                    875.0f / colorNormalizationFactor,
+                    1),
+            };
+
+            DeviceBuffer vb = RF.CreateBuffer(
+                new BufferDescription((uint)(Unsafe.SizeOf<UIntVertexAttribsVertex>() * vertices.Length), BufferUsage.VertexBuffer));
+            GD.UpdateBuffer(vb, 0, vertices);
+            GD.UpdateBuffer(infoBuffer, 0, new UIntVertexAttribsInfo { ColorNormalizationFactor = colorNormalizationFactor });
+
+            CommandList cl = RF.CreateCommandList();
+
+            cl.Begin();
+            cl.SetFramebuffer(framebuffer);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
+            cl.ClearColorTarget(0, RgbaFloat.Black);
+            cl.SetPipeline(pipeline);
+            cl.SetVertexBuffer(0, vb);
+            cl.SetGraphicsResourceSet(0, set);
+            cl.Draw((uint)vertices.Length);
+            cl.CopyTexture(target, staging);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read);
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                VertexCPU_UShort vertex = vertices[i];
+                uint x = (uint)vertex.Position.X;
+                uint y = (uint)vertex.Position.Y;
+                if (!GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted)
+                {
+                    y = framebuffer.Height - y - 1;
+                }
+
+                RgbaFloat expectedColor = expectedColors[i];
+                Assert.Equal(expectedColor, readView[x, y], RgbaFloatFuzzyComparer.Instance);
+            }
+            GD.Unmap(staging);
+        }
+
+        [Fact]
         public unsafe void Points_WithTexture_UpdateUnrelated()
         {
             // This is a regression test for the case where a user modifies an unrelated texture

@@ -91,6 +91,7 @@ namespace Veldrid
                 case VertexElementFormat.Byte2:
                 case VertexElementFormat.SByte2_Norm:
                 case VertexElementFormat.SByte2:
+                case VertexElementFormat.Half1:
                     return 2;
                 case VertexElementFormat.Float1:
                 case VertexElementFormat.UInt1:
@@ -103,6 +104,7 @@ namespace Veldrid
                 case VertexElementFormat.UShort2:
                 case VertexElementFormat.Short2_Norm:
                 case VertexElementFormat.Short2:
+                case VertexElementFormat.Half2:
                     return 4;
                 case VertexElementFormat.Float2:
                 case VertexElementFormat.UInt2:
@@ -111,6 +113,7 @@ namespace Veldrid
                 case VertexElementFormat.UShort4:
                 case VertexElementFormat.Short4_Norm:
                 case VertexElementFormat.Short4:
+                case VertexElementFormat.Half4:
                     return 8;
                 case VertexElementFormat.Float3:
                 case VertexElementFormat.UInt3:
@@ -132,6 +135,7 @@ namespace Veldrid
                 case VertexElementFormat.Float1:
                 case VertexElementFormat.UInt1:
                 case VertexElementFormat.Int1:
+                case VertexElementFormat.Half1:
                     return 1;
                 case VertexElementFormat.Float2:
                 case VertexElementFormat.Byte2_Norm:
@@ -144,6 +148,7 @@ namespace Veldrid
                 case VertexElementFormat.Short2:
                 case VertexElementFormat.UInt2:
                 case VertexElementFormat.Int2:
+                case VertexElementFormat.Half2:
                     return 2;
                 case VertexElementFormat.Float3:
                 case VertexElementFormat.UInt3:
@@ -160,6 +165,7 @@ namespace Veldrid
                 case VertexElementFormat.Short4:
                 case VertexElementFormat.UInt4:
                 case VertexElementFormat.Int4:
+                case VertexElementFormat.Half4:
                     return 4;
                 default:
                     throw Illegal.Value<VertexElementFormat>();

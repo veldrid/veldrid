@@ -174,7 +174,7 @@ namespace Veldrid.NeoDemo
         {
             if (!_textures.TryGetValue(texturePath, out ImageSharpTexture tex))
             {
-                tex = new ImageSharpTexture(texturePath, mipmap);
+                tex = new ImageSharpTexture(texturePath, mipmap, true);
                 _textures.Add(texturePath, tex);
             }
 

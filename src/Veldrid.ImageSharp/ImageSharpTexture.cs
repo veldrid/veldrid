@@ -31,7 +31,7 @@ namespace Veldrid.ImageSharp
         /// <summary>
         /// The pixel format of all images.
         /// </summary>
-        public PixelFormat Format => PixelFormat.R8_G8_B8_A8_UNorm_SRgb;
+        public PixelFormat Format { get; }
 
         /// <summary>
         /// The size of each pixel, in bytes.
@@ -45,8 +45,11 @@ namespace Veldrid.ImageSharp
 
         public ImageSharpTexture(string path) : this(Image.Load(path), true) { }
         public ImageSharpTexture(string path, bool mipmap) : this(Image.Load(path), mipmap) { }
-        public ImageSharpTexture(Image<Rgba32> image, bool mipmap = true)
+        public ImageSharpTexture(string path, bool mipmap, bool srgb) : this(Image.Load(path), mipmap, srgb) { }
+        public ImageSharpTexture(Image<Rgba32> image, bool mipmap = true) : this(image, mipmap, false) { }
+        public ImageSharpTexture(Image<Rgba32> image, bool mipmap = true, bool srgb = false)
         {
+            Format = srgb ? PixelFormat.R8_G8_B8_A8_UNorm_SRgb : PixelFormat.R8_G8_B8_A8_UNorm;
             if (mipmap)
             {
                 Images = MipmapHelper.GenerateMipmaps(image);
@@ -65,10 +68,10 @@ namespace Veldrid.ImageSharp
         private unsafe Texture CreateTextureViaStaging(GraphicsDevice gd, ResourceFactory factory)
         {
             Texture staging = factory.CreateTexture(
-                TextureDescription.Texture2D(Width, Height, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm_SRgb, TextureUsage.Staging));
+                TextureDescription.Texture2D(Width, Height, MipLevels, 1, Format, TextureUsage.Staging));
 
             Texture ret = factory.CreateTexture(
-                TextureDescription.Texture2D(Width, Height, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm_SRgb, TextureUsage.Sampled));
+                TextureDescription.Texture2D(Width, Height, MipLevels, 1, Format, TextureUsage.Sampled));
 
             CommandList cl = gd.ResourceFactory.CreateCommandList();
             cl.Begin();
@@ -113,7 +116,7 @@ namespace Veldrid.ImageSharp
         private unsafe Texture CreateTextureViaUpdate(GraphicsDevice gd, ResourceFactory factory)
         {
             Texture tex = factory.CreateTexture(TextureDescription.Texture2D(
-                Width, Height, MipLevels, 1, PixelFormat.R8_G8_B8_A8_UNorm_SRgb, TextureUsage.Sampled));
+                Width, Height, MipLevels, 1, Format, TextureUsage.Sampled));
             for (int level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];

@@ -1,2 +1,2 @@
-glslangvalidator -V imgui-vertex.glsl -o imgui-vertex.spv -S vert
-glslangvalidator -V imgui-frag.glsl -o imgui-frag.spv -S frag
+glslangvalidator -V %~dp0imgui-vertex.glsl -o %~dp0imgui-vertex.spv -S vert
+glslangvalidator -V %~dp0imgui-frag.glsl -o %~dp0imgui-frag.spv -S frag

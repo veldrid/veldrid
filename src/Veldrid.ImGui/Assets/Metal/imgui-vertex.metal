@@ -26,7 +26,7 @@ vertex PS_INPUT VS(
 {
     PS_INPUT output;
     output.pos = ProjectionMatrix * float4(input.pos.xy, 0.f, 1.f);
-    output.col = float4(SrgbToLinear(input.col.rgb), 1);
+    output.col = float4(SrgbToLinear(input.col.rgb), input.col.a);
     output.uv = input.uv;
     return output;
 }

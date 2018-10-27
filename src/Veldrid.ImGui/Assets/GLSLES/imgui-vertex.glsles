@@ -20,6 +20,6 @@ vec3 SrgbToLinear(vec3 srgb)
 void main()
 {
     gl_Position = projection_matrix * vec4(in_position, 0, 1);
-    color = vec4(SrgbToLinear(in_color.rgb), 1);
+    color = vec4(SrgbToLinear(in_color.rgb), in_color.a);
 	texCoord = in_texCoord;
 }

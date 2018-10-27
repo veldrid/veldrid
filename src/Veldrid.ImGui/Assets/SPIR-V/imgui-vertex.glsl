@@ -30,7 +30,7 @@ vec3 SrgbToLinear(vec3 srgb)
 void main() 
 {
     gl_Position = projection * vec4(vsin_position, 0, 1);
-    vsout_color = vec4(SrgbToLinear(vsin_color.rgb), 1);
+    vsout_color = vec4(SrgbToLinear(vsin_color.rgb), vsin_color.a);
     vsout_texCoord = vsin_texCoord;
     if (IsClipSpaceYInverted)
     {

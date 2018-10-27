@@ -23,11 +23,11 @@ namespace Veldrid.NeoDemo
         {
             if (_imguiRenderer == null)
             {
-                _imguiRenderer = new ImGuiRenderer(gd, sc.MainSceneFramebuffer.OutputDescription, _width, _height);
+                _imguiRenderer = new ImGuiRenderer(gd, sc.MainSceneFramebuffer.OutputDescription, _width, _height, false);
             }
             else
             {
-                _imguiRenderer.CreateDeviceResources(gd, sc.MainSceneFramebuffer.OutputDescription);
+                _imguiRenderer.CreateDeviceResources(gd, sc.MainSceneFramebuffer.OutputDescription, false);
             }
         }
 

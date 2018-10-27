@@ -57,12 +57,12 @@ namespace Veldrid.NeoDemo
             VeldridStartup.CreateWindowAndGraphicsDevice(
                 windowCI,
                 gdOptions,
-                GraphicsBackend.OpenGLES,
-                _colorSrgb,
+                VeldridStartup.GetPlatformDefaultBackend(),
                 //GraphicsBackend.Metal,
                 // GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
                 //GraphicsBackend.OpenGLES,
+                _colorSrgb,
                 out _window,
                 out _gd);
             _window.Resized += () => _windowResized = true;

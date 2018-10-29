@@ -4,6 +4,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -45,6 +46,8 @@ namespace Veldrid.ImageSharp
 
         public ImageSharpTexture(string path) : this(Image.Load(path), true) { }
         public ImageSharpTexture(string path, bool mipmap) : this(Image.Load(path), mipmap) { }
+        public ImageSharpTexture(Stream stream) : this(Image.Load(stream), true) { }
+        public ImageSharpTexture(Stream stream, bool mipmap) : this(Image.Load(stream), mipmap) { }
         public ImageSharpTexture(string path, bool mipmap, bool srgb) : this(Image.Load(path), mipmap, srgb) { }
         public ImageSharpTexture(Image<Rgba32> image, bool mipmap = true) : this(image, mipmap, false) { }
         public ImageSharpTexture(Image<Rgba32> image, bool mipmap = true, bool srgb = false)

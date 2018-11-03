@@ -22,7 +22,13 @@ namespace Veldrid.OpenGL
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
         public override FramebufferAttachment? DepthTarget => _depthTarget;
 
-        internal OpenGLSwapchainFramebuffer(uint width, uint height, PixelFormat colorFormat, PixelFormat? depthFormat)
+        public bool DisableSrgbConversion { get; }
+
+        internal OpenGLSwapchainFramebuffer(
+            uint width, uint height,
+            PixelFormat colorFormat,
+            PixelFormat? depthFormat,
+            bool disableSrgbConversion)
         {
             _depthFormat = depthFormat;
             // This is wrong, but it's not really used.
@@ -53,6 +59,8 @@ namespace Veldrid.OpenGL
             }
 
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
+
+            DisableSrgbConversion = disableSrgbConversion;
         }
 
         public void Resize(uint width, uint height)

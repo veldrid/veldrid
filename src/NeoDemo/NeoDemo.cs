@@ -49,7 +49,7 @@ namespace Veldrid.NeoDemo
                 WindowInitialState = WindowState.Normal,
                 WindowTitle = "Veldrid NeoDemo"
             };
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true);
+            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true, _colorSrgb);
 #if DEBUG
             gdOptions.Debug = true;
 #endif
@@ -62,7 +62,6 @@ namespace Veldrid.NeoDemo
                 // GraphicsBackend.Vulkan,
                 //GraphicsBackend.OpenGL,
                 //GraphicsBackend.OpenGLES,
-                _colorSrgb,
                 out _window,
                 out _gd);
             _window.Resized += () => _windowResized = true;
@@ -284,15 +283,15 @@ namespace Veldrid.NeoDemo
                     {
                         _recreateWindow = !_recreateWindow;
                     }
-                    if (ImGui.MenuItem("sRGB Swapchain Format", string.Empty, _colorSrgb, true))
-                    {
-                        _colorSrgb = !_colorSrgb;
-                        ChangeBackend(_gd.BackendType);
-                    }
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.SetTooltip(
                             "Causes a new OS window to be created whenever the graphics backend is switched. This is much safer, and is the default.");
+                    }
+                    if (ImGui.MenuItem("sRGB Swapchain Format", string.Empty, _colorSrgb, true))
+                    {
+                        _colorSrgb = !_colorSrgb;
+                        ChangeBackend(_gd.BackendType);
                     }
                     bool threadedRendering = _scene.ThreadedRendering;
                     if (ImGui.MenuItem("Render with multiple threads", string.Empty, threadedRendering, true))
@@ -477,11 +476,11 @@ namespace Veldrid.NeoDemo
                 _window.Resized += () => _windowResized = true;
             }
 
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, syncToVBlank, ResourceBindingModel.Improved, true);
+            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, syncToVBlank, ResourceBindingModel.Improved, true, true, _colorSrgb);
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend, _colorSrgb);
+            _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend);
 
             _scene.Camera.UpdateBackend(_gd);
 

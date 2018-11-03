@@ -781,7 +781,8 @@ namespace Veldrid
                 SwapchainSource.CreateWin32(hwnd, IntPtr.Zero),
                 width, height,
                 options.SwapchainDepthFormat,
-                options.SyncToVerticalBlank);
+                options.SyncToVerticalBlank,
+                options.SwapchainSrgbFormat);
 
             return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
         }
@@ -809,7 +810,8 @@ namespace Veldrid
                 (uint)renderWidth,
                 (uint)renderHeight,
                 options.SwapchainDepthFormat,
-                options.SyncToVerticalBlank);
+                options.SyncToVerticalBlank,
+                options.SwapchainSrgbFormat);
 
             return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
         }
@@ -851,7 +853,8 @@ namespace Veldrid
                 surfaceSource.GetSurfaceSource(),
                 width, height,
                 options.SwapchainDepthFormat,
-                options.SyncToVerticalBlank);
+                options.SyncToVerticalBlank,
+                options.SwapchainSrgbFormat);
 
             return new Vk.VkGraphicsDevice(options, scDesc);
         }
@@ -925,7 +928,10 @@ namespace Veldrid
         {
             SwapchainDescription swapchainDesc = new SwapchainDescription(
                 new NSWindowSwapchainSource(nsWindow),
-                0, 0, options.SwapchainDepthFormat, options.SyncToVerticalBlank);
+                0, 0,
+                options.SwapchainDepthFormat,
+                options.SyncToVerticalBlank,
+                options.SwapchainSrgbFormat);
 
             return new MTL.MTLGraphicsDevice(options, swapchainDesc);
         }

@@ -360,13 +360,33 @@ namespace Veldrid.OpenGL
         {
             if (fb is OpenGLFramebuffer glFB)
             {
+                if (_backend == GraphicsBackend.OpenGL || _extensions.EXT_sRGBWriteControl)
+                {
+                    glEnable(EnableCap.FramebufferSrgb);
+                    CheckLastError();
+                }
+
                 glFB.EnsureResourcesCreated();
                 glBindFramebuffer(FramebufferTarget.Framebuffer, glFB.Framebuffer);
                 CheckLastError();
                 _isSwapchainFB = false;
             }
-            else if (fb is OpenGLSwapchainFramebuffer)
+            else if (fb is OpenGLSwapchainFramebuffer swapchainFB)
             {
+                if ((_backend == GraphicsBackend.OpenGL || _extensions.EXT_sRGBWriteControl))
+                {
+                    if (swapchainFB.DisableSrgbConversion)
+                    {
+                        glDisable(EnableCap.FramebufferSrgb);
+                        CheckLastError();
+                    }
+                    else
+                    {
+                        glEnable(EnableCap.FramebufferSrgb);
+                        CheckLastError();
+                    }
+                }
+
                 if (_platformInfo.SetSwapchainFramebuffer != null)
                 {
                     _platformInfo.SetSwapchainFramebuffer();

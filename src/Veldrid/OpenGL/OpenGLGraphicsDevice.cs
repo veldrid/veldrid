@@ -187,7 +187,7 @@ namespace Veldrid.OpenGL
             bool backbufferIsSrgb = ManualSrgbBackbufferQuery();
 
             PixelFormat swapchainFormat;
-            if (backbufferIsSrgb || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (options.SwapchainSrgbFormat && (backbufferIsSrgb || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
             {
                 swapchainFormat = PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
             }
@@ -200,18 +200,13 @@ namespace Veldrid.OpenGL
                 width,
                 height,
                 swapchainFormat,
-                options.SwapchainDepthFormat);
+                options.SwapchainDepthFormat,
+                swapchainFormat != PixelFormat.B8_G8_R8_A8_UNorm_SRgb);
 
             // Set miscellaneous initial states.
             if (_backendType == GraphicsBackend.OpenGL)
             {
                 glEnable(EnableCap.TextureCubeMapSeamless);
-                CheckLastError();
-            }
-
-            if (_backendType == GraphicsBackend.OpenGL || _extensions.EXT_sRGBWriteControl)
-            {
-                glEnable(EnableCap.FramebufferSrgb);
                 CheckLastError();
             }
 

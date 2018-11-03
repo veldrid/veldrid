@@ -18,13 +18,7 @@ namespace Veldrid.OpenGL
             Action<uint, uint> resizeAction)
         {
             _gd = gd;
-            PixelFormat? depthFormat = framebuffer.DepthTarget?.Target.Format ?? null;
-
-            _framebuffer = new OpenGLSwapchainFramebuffer(
-                framebuffer.Width,
-                framebuffer.Height,
-                framebuffer.ColorTargets[0].Target.Format,
-                depthFormat);
+            _framebuffer = framebuffer;
             _resizeAction = resizeAction;
         }
 

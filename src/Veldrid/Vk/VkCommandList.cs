@@ -847,13 +847,27 @@ namespace Veldrid.Vk
                 };
 
                 Util.GetMipDimensions(dstVkTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
+                uint bufferRowLength = Math.Max(mipWidth, blockSize);
+                uint bufferImageHeight = Math.Max(mipHeight, blockSize);
+                uint compressedDstX = dstX / blockSize;
+                uint compressedDstY = dstY / blockSize;
+                uint blockSizeInBytes = blockSize == 1
+                    ? FormatHelpers.GetSizeInBytes(srcVkTexture.Format)
+                    : FormatHelpers.GetBlockSizeInBytes(srcVkTexture.Format);
+                uint rowPitch = FormatHelpers.GetRowPitch(bufferRowLength, dstVkTexture.Format);
+                uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, dstVkTexture.Format);
+
                 VkBufferImageCopy region = new VkBufferImageCopy
                 {
                     bufferRowLength = mipWidth,
                     bufferImageHeight = mipHeight,
-                    bufferOffset = dstLayout.offset + (dstX * FormatHelpers.GetSizeInBytes(dstVkTexture.Format)),
+                    bufferOffset = dstLayout.offset
+                        + (dstZ * depthPitch)
+                        + (compressedDstY * rowPitch)
+                        + (compressedDstX * blockSizeInBytes),
                     imageExtent = new VkExtent3D { width = width, height = height, depth = depth },
-                    imageOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY, z = (int)dstZ },
+                    imageOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
                     imageSubresource = srcSubresource
                 };
 

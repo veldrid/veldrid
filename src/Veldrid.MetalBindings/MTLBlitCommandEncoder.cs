@@ -52,7 +52,7 @@ namespace Veldrid.MetalBindings
             UIntPtr destinationOffset,
             UIntPtr destinationBytesPerRow,
             UIntPtr destinationBytesPerImage)
-            => objc_msgSend(NativePtr, sel_copyFromTexture,
+            => objc_msgSend(NativePtr, sel_copyFromTexture0,
                 sourceTexture,
                 sourceSlice,
                 sourceLevel,
@@ -70,9 +70,31 @@ namespace Veldrid.MetalBindings
 
         public void endEncoding() => objc_msgSend(NativePtr, sel_endEncoding);
 
+        public void copyFromTexture(
+            MTLTexture sourceTexture,
+            UIntPtr sourceSlice,
+            UIntPtr sourceLevel,
+            MTLOrigin sourceOrigin,
+            MTLSize sourceSize,
+            MTLTexture destinationTexture,
+            UIntPtr destinationSlice,
+            UIntPtr destinationLevel,
+            MTLOrigin destinationOrigin)
+            => objc_msgSend(NativePtr, sel_copyFromTexture1,
+                sourceTexture,
+                sourceSlice,
+                sourceLevel,
+                sourceOrigin,
+                sourceSize,
+                destinationTexture,
+                destinationSlice,
+                destinationLevel,
+                destinationOrigin);
+
         private static readonly Selector sel_copyFromBuffer0 = "copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:";
         private static readonly Selector sel_copyFromBuffer1 = "copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:";
-        private static readonly Selector sel_copyFromTexture = "copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toBuffer:destinationOffset:destinationBytesPerRow:destinationBytesPerImage:";
+        private static readonly Selector sel_copyFromTexture0 = "copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toBuffer:destinationOffset:destinationBytesPerRow:destinationBytesPerImage:";
+        private static readonly Selector sel_copyFromTexture1 = "copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:";
         private static readonly Selector sel_generateMipmapsForTexture = "generateMipmapsForTexture:";
         private static readonly Selector sel_synchronizeResource = "synchronizeResource:";
         private static readonly Selector sel_endEncoding = "endEncoding";

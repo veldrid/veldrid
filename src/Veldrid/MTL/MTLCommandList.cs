@@ -537,6 +537,7 @@ namespace Veldrid.MTL
             }
             else if (!srcIsStaging && dstIsStaging)
             {
+                // Normal -> Staging
                 MTLOrigin srcOrigin = new MTLOrigin(srcX, srcY, srcZ);
                 MTLSize srcSize = new MTLSize(width, height, depth);
                 for (uint layer = 0; layer < layerCount; layer++)
@@ -546,7 +547,23 @@ namespace Veldrid.MTL
                         dstBaseArrayLayer + layer,
                         out uint dstBytesPerRow,
                         out uint dstBytesPerImage);
-                    ulong dstOffset = Util.ComputeSubresourceOffset(dstMTLTexture, dstMipLevel, dstBaseArrayLayer + layer);
+
+                    Util.GetMipDimensions(srcMTLTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                    uint blockSize = FormatHelpers.IsCompressedFormat(srcMTLTexture.Format) ? 4u : 1u;
+                    uint bufferRowLength = Math.Max(mipWidth, blockSize);
+                    uint bufferImageHeight = Math.Max(mipHeight, blockSize);
+                    uint compressedDstX = dstX / blockSize;
+                    uint compressedDstY = dstY / blockSize;
+                    uint blockSizeInBytes = blockSize == 1
+                        ? FormatHelpers.GetSizeInBytes(srcMTLTexture.Format)
+                        : FormatHelpers.GetBlockSizeInBytes(srcMTLTexture.Format);
+                    uint rowPitch = FormatHelpers.GetRowPitch(bufferRowLength, srcMTLTexture.Format);
+                    uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, srcMTLTexture.Format);
+
+                    ulong dstOffset = Util.ComputeSubresourceOffset(dstMTLTexture, dstMipLevel, dstBaseArrayLayer + layer)
+                        + (dstZ * depthPitch)
+                        + (compressedDstY * rowPitch)
+                        + (compressedDstX * blockSizeInBytes);
 
                     _bce.copyTextureToBuffer(
                         srcMTLTexture.DeviceTexture,
@@ -558,6 +575,23 @@ namespace Veldrid.MTL
                         (UIntPtr)dstOffset,
                         (UIntPtr)dstBytesPerRow,
                         (UIntPtr)dstBytesPerImage);
+                }
+            }
+            else
+            {
+                // Normal -> Normal
+                for (uint layer = 0; layer < layerCount; layer++)
+                {
+                    _bce.copyFromTexture(
+                        srcMTLTexture.DeviceTexture,
+                        (UIntPtr)(srcBaseArrayLayer + layer),
+                        (UIntPtr)srcMipLevel,
+                        new MTLOrigin(srcX, srcY, srcZ),
+                        new MTLSize(width, height, depth),
+                        dstMTLTexture.DeviceTexture,
+                        (UIntPtr)(dstBaseArrayLayer + layer),
+                        (UIntPtr)dstMipLevel,
+                        new MTLOrigin(dstX, dstY, dstZ));
                 }
             }
         }

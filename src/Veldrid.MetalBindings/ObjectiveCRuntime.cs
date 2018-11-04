@@ -167,6 +167,9 @@ namespace Veldrid.MetalBindings
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern float float_objc_msgSend(IntPtr receiver, Selector selector);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+
+        public static extern CGFloat CGFloat_objc_msgSend(IntPtr receiver, Selector selector);
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern double double_objc_msgSend(IntPtr receiver, Selector selector);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector);

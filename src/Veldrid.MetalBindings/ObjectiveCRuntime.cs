@@ -131,6 +131,20 @@ namespace Veldrid.MetalBindings
             UIntPtr i);
 
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        public static extern void objc_msgSend(
+            IntPtr receiver,
+            Selector selector,
+            MTLTexture sourceTexture,
+            UIntPtr sourceSlice,
+            UIntPtr sourceLevel,
+            MTLOrigin sourceOrigin,
+            MTLSize sourceSize,
+            MTLTexture destinationTexture,
+            UIntPtr destinationSlice,
+            UIntPtr destinationLevel,
+            MTLOrigin destinationOrigin);
+
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern byte* bytePtr_objc_msgSend(IntPtr receiver, Selector selector);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern CGSize CGSize_objc_msgSend(IntPtr receiver, Selector selector);

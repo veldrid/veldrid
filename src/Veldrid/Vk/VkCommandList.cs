@@ -853,8 +853,8 @@ namespace Veldrid.Vk
                 uint compressedDstX = dstX / blockSize;
                 uint compressedDstY = dstY / blockSize;
                 uint blockSizeInBytes = blockSize == 1
-                    ? FormatHelpers.GetSizeInBytes(srcVkTexture.Format)
-                    : FormatHelpers.GetBlockSizeInBytes(srcVkTexture.Format);
+                    ? FormatHelpers.GetSizeInBytes(dstVkTexture.Format)
+                    : FormatHelpers.GetBlockSizeInBytes(dstVkTexture.Format);
                 uint rowPitch = FormatHelpers.GetRowPitch(bufferRowLength, dstVkTexture.Format);
                 uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, dstVkTexture.Format);
 

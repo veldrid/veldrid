@@ -51,7 +51,7 @@ namespace Veldrid.ImageSharp
         public ImageSharpTexture(Stream stream, bool mipmap) : this(Image.Load(stream), mipmap) { }
         public ImageSharpTexture(Stream stream, bool mipmap, bool srgb) : this(Image.Load(stream), mipmap, srgb) { }
         public ImageSharpTexture(Image<Rgba32> image, bool mipmap = true) : this(image, mipmap, false) { }
-        public ImageSharpTexture(Image<Rgba32> image, bool mipmap = true, bool srgb = false)
+        public ImageSharpTexture(Image<Rgba32> image, bool mipmap, bool srgb)
         {
             Format = srgb ? PixelFormat.R8_G8_B8_A8_UNorm_SRgb : PixelFormat.R8_G8_B8_A8_UNorm;
             if (mipmap)

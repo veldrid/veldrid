@@ -1404,14 +1404,6 @@ namespace Veldrid.OpenGL
                 }
                 else
                 {
-                    if (srcTarget == TextureTarget.Texture2DArray
-                        || srcTarget == TextureTarget.Texture2DMultisampleArray
-                        || srcTarget == TextureTarget.TextureCubeMapArray)
-                    {
-                        throw new VeldridException(
-                            $"Copying an OpenGL compressed array Texture requires ARB_copy_image or ARB_direct_state_access.");
-                    }
-
                     _textureSamplerManager.SetTextureTransient(srcTarget, srcGLTexture.Texture);
                     CheckLastError();
 
@@ -1419,7 +1411,8 @@ namespace Veldrid.OpenGL
                     CheckLastError();
                 }
 
-                _textureSamplerManager.SetTextureTransient(TextureTarget.Texture2D, dstGLTexture.Texture);
+                TextureTarget dstTarget = dstGLTexture.TextureTarget;
+                _textureSamplerManager.SetTextureTransient(dstTarget, dstGLTexture.Texture);
                 CheckLastError();
 
                 Util.GetMipDimensions(srcGLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
@@ -1435,8 +1428,10 @@ namespace Veldrid.OpenGL
                 uint trueCopySize = denseRowPitch * numRows;
                 StagingBlock trueCopySrc = _stagingMemoryPool.GetStagingBlock(trueCopySize);
 
+                uint layerStartOffset = denseDepthPitch * srcLayer;
+
                 Util.CopyTextureRegion(
-                    block.Data,
+                    (byte*)block.Data + layerStartOffset,
                     srcX, srcY, srcZ,
                     fullRowPitch, fullDepthPitch,
                     trueCopySrc.Data,

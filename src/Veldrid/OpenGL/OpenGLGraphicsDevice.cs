@@ -311,8 +311,8 @@ namespace Veldrid.OpenGL
             CheckLastError();
             glBindTexture(TextureTarget.Texture2D, copySrc);
             CheckLastError();
-                glTexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, 1, 1, 0, GLPixelFormat.Rgba, GLPixelType.Float, data);
-                CheckLastError();
+            glTexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, 1, 1, 0, GLPixelFormat.Rgba, GLPixelType.Float, data);
+            CheckLastError();
             glGenFramebuffers(1, out uint copySrcFb);
             CheckLastError();
 
@@ -1069,57 +1069,57 @@ namespace Veldrid.OpenGL
                     switch (workItem.Type)
                     {
                         case WorkItemType.ExecuteList:
-                        {
-                            OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
-                            try
                             {
-                                list.ExecuteAll(_gd._commandExecutor);
-                            }
-                            finally
-                            {
-                                if (!_gd.CheckCommandListDisposal(list.Parent))
+                                OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
+                                try
                                 {
-                                    list.Parent.OnCompleted(list);
+                                    list.ExecuteAll(_gd._commandExecutor);
+                                }
+                                finally
+                                {
+                                    if (!_gd.CheckCommandListDisposal(list.Parent))
+                                    {
+                                        list.Parent.OnCompleted(list);
+                                    }
                                 }
                             }
-                        }
-                        break;
+                            break;
                         case WorkItemType.Map:
-                        {
-                            MappableResource resourceToMap = (MappableResource)workItem.Object0;
-                            ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
-                            MapMode mode = (MapMode)workItem.UInt0;
-                            uint subresource = workItem.UInt1;
-                            bool map = workItem.UInt2 == 1 ? true : false;
-                            if (map)
                             {
-                                ExecuteMapResource(
-                                    resourceToMap,
-                                    mode,
-                                    subresource,
-                                    mre);
+                                MappableResource resourceToMap = (MappableResource)workItem.Object0;
+                                ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
+                                MapMode mode = (MapMode)workItem.UInt0;
+                                uint subresource = workItem.UInt1;
+                                bool map = workItem.UInt2 == 1 ? true : false;
+                                if (map)
+                                {
+                                    ExecuteMapResource(
+                                        resourceToMap,
+                                        mode,
+                                        subresource,
+                                        mre);
+                                }
+                                else
+                                {
+                                    ExecuteUnmapResource(resourceToMap, subresource, mre);
+                                }
                             }
-                            else
-                            {
-                                ExecuteUnmapResource(resourceToMap, subresource, mre);
-                            }
-                        }
-                        break;
+                            break;
                         case WorkItemType.UpdateBuffer:
-                        {
-                            DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
-                            uint offsetInBytes = workItem.UInt0;
-                            StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
+                            {
+                                DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
+                                uint offsetInBytes = workItem.UInt0;
+                                StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
 
-                            _gd._commandExecutor.UpdateBuffer(
-                                updateBuffer,
-                                offsetInBytes,
-                                (IntPtr)stagingBlock.Data,
-                                stagingBlock.SizeInBytes);
+                                _gd._commandExecutor.UpdateBuffer(
+                                    updateBuffer,
+                                    offsetInBytes,
+                                    (IntPtr)stagingBlock.Data,
+                                    stagingBlock.SizeInBytes);
 
-                            _gd.StagingMemoryPool.Free(stagingBlock);
-                        }
-                        break;
+                                _gd.StagingMemoryPool.Free(stagingBlock);
+                            }
+                            break;
                         case WorkItemType.UpdateTexture:
                             Texture texture = (Texture)workItem.Object0;
                             StagingMemoryPool pool = _gd.StagingMemoryPool;
@@ -1135,44 +1135,44 @@ namespace Veldrid.OpenGL
                             pool.Free(textureData);
                             break;
                         case WorkItemType.GenericAction:
-                        {
-                            ((Action)workItem.Object0)();
-                        }
-                        break;
-                        case WorkItemType.SignalResetEvent:
-                        {
-                            _gd.FlushDisposables();
-                            ((ManualResetEventSlim)workItem.Object0).Set();
-                        }
-                        break;
-                        case WorkItemType.TerminateAction:
-                        {
-                            // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
-                            uint error = glGetError();
-                            if (error == (uint)ErrorCode.InvalidOperation)
                             {
-                                return;
+                                ((Action)workItem.Object0)();
                             }
-                            _makeCurrent(_gd._glContext);
+                            break;
+                        case WorkItemType.SignalResetEvent:
+                            {
+                                _gd.FlushDisposables();
+                                ((ManualResetEventSlim)workItem.Object0).Set();
+                            }
+                            break;
+                        case WorkItemType.TerminateAction:
+                            {
+                                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
+                                uint error = glGetError();
+                                if (error == (uint)ErrorCode.InvalidOperation)
+                                {
+                                    return;
+                                }
+                                _makeCurrent(_gd._glContext);
 
-                            _gd.FlushDisposables();
-                            _gd._deleteContext(_gd._glContext);
-                            _gd.StagingMemoryPool.Dispose();
-                            _terminated = true;
-                        }
-                        break;
+                                _gd.FlushDisposables();
+                                _gd._deleteContext(_gd._glContext);
+                                _gd.StagingMemoryPool.Dispose();
+                                _terminated = true;
+                            }
+                            break;
                         case WorkItemType.SetSyncToVerticalBlank:
-                        {
-                            bool value = workItem.UInt0 == 1 ? true : false;
-                            _gd._setSyncToVBlank(value);
-                        }
-                        break;
+                            {
+                                bool value = workItem.UInt0 == 1 ? true : false;
+                                _gd._setSyncToVBlank(value);
+                            }
+                            break;
                         case WorkItemType.SwapBuffers:
-                        {
-                            _gd._swapBuffers();
-                            _gd.FlushDisposables();
-                        }
-                        break;
+                            {
+                                _gd._swapBuffers();
+                                _gd.FlushDisposables();
+                            }
+                            break;
                         default:
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }
@@ -1242,18 +1242,17 @@ namespace Veldrid.OpenGL
                                 mipHeight,
                                 texture.Format)
                                 * mipDepth;
+                            int compressedSize = 0;
 
                             bool isCompressed = FormatHelpers.IsCompressedFormat(texture.Format);
                             if (isCompressed)
                             {
-                                int compressedSize;
                                 glGetTexLevelParameteriv(
                                     texture.TextureTarget,
                                     (int)mipLevel,
                                     GetTextureParameter.TextureCompressedImageSize,
                                     &compressedSize);
                                 CheckLastError();
-                                subresourceSize = (uint)compressedSize;
                             }
 
                             StagingBlock block = _gd._stagingMemoryPool.GetStagingBlock(subresourceSize);
@@ -1331,30 +1330,55 @@ namespace Veldrid.OpenGL
                                 }
                                 else // isCompressed
                                 {
-                                    if (_gd.Extensions.ARB_DirectStateAccess)
+                                    if (texture.TextureTarget == TextureTarget.Texture2DArray
+                                        || texture.TextureTarget == TextureTarget.Texture2DMultisampleArray
+                                        || texture.TextureTarget == TextureTarget.TextureCubeMapArray)
                                     {
-                                        glGetCompressedTextureImage(
-                                            texture.Texture,
-                                            (int)mipLevel,
-                                            block.SizeInBytes,
-                                            block.Data);
-                                        CheckLastError();
+                                        // We only want a single subresource (array slice), so we need to copy
+                                        // a subsection of the downloaded data into our staging block.
+
+                                        uint fullDataSize = (uint)compressedSize;
+                                        StagingBlock fullBlock = _gd._stagingMemoryPool.GetStagingBlock(fullDataSize);
+
+                                        if (_gd.Extensions.ARB_DirectStateAccess)
+                                        {
+                                            glGetCompressedTextureImage(
+                                                texture.Texture,
+                                                (int)mipLevel,
+                                                fullBlock.SizeInBytes,
+                                                fullBlock.Data);
+                                            CheckLastError();
+                                        }
+                                        else
+                                        {
+                                            _gd.TextureSamplerManager.SetTextureTransient(texture.TextureTarget, texture.Texture);
+                                            CheckLastError();
+
+                                            glGetCompressedTexImage(texture.TextureTarget, (int)mipLevel, fullBlock.Data);
+                                            CheckLastError();
+                                        }
+                                        byte* sliceStart = (byte*)fullBlock.Data + (arrayLayer * subresourceSize);
+                                        Buffer.MemoryCopy(sliceStart, block.Data, subresourceSize, subresourceSize);
                                     }
                                     else
                                     {
-                                        if (texture.TextureTarget == TextureTarget.Texture2DArray
-                                            || texture.TextureTarget == TextureTarget.Texture2DMultisampleArray
-                                            || texture.TextureTarget == TextureTarget.TextureCubeMapArray)
+                                        if (_gd.Extensions.ARB_DirectStateAccess)
                                         {
-                                            throw new VeldridException(
-                                                $"Mapping an OpenGL compressed array Texture requires ARB_DirectStateAccess.");
+                                            glGetCompressedTextureImage(
+                                                texture.Texture,
+                                                (int)mipLevel,
+                                                block.SizeInBytes,
+                                                block.Data);
+                                            CheckLastError();
                                         }
+                                        else
+                                        {
+                                            _gd.TextureSamplerManager.SetTextureTransient(texture.TextureTarget, texture.Texture);
+                                            CheckLastError();
 
-                                        _gd.TextureSamplerManager.SetTextureTransient(texture.TextureTarget, texture.Texture);
-                                        CheckLastError();
-
-                                        glGetCompressedTexImage(texture.TextureTarget, (int)mipLevel, block.Data);
-                                        CheckLastError();
+                                            glGetCompressedTexImage(texture.TextureTarget, (int)mipLevel, block.Data);
+                                            CheckLastError();
+                                        }
                                     }
                                 }
                             }

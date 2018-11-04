@@ -202,6 +202,79 @@ namespace Veldrid.Tests
             GD.Unmap(copyDst);
         }
 
+        [InlineData(true)]
+        [InlineData(false)]
+        [Theory]
+        public unsafe void Copy_Compressed_Array(bool separateLayerCopies)
+        {
+            PixelFormat format = PixelFormat.BC3_UNorm;
+            if (!GD.GetPixelFormatSupport(format, TextureType.Texture2D, TextureUsage.Sampled))
+            {
+                return;
+            }
+
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                16, 16,
+                1, 4,
+                format,
+                TextureUsage.Sampled);
+
+            Texture copySrc = RF.CreateTexture(texDesc);
+            texDesc.Usage = TextureUsage.Staging;
+            Texture copyDst = RF.CreateTexture(texDesc);
+
+            for (uint layer = 0; layer < copySrc.ArrayLayers; layer++)
+            {
+                int byteCount = 16 * 16;
+                byte[] data = Enumerable.Range(0, byteCount).Select(i => (byte)(i + layer)).ToArray();
+                GD.UpdateTexture(
+                    copySrc,
+                    data,
+                    0, 0, 0,
+                    16, 16, 1,
+                    0, layer);
+            }
+
+            CommandList copyCL = RF.CreateCommandList();
+            copyCL.Begin();
+            if (separateLayerCopies)
+            {
+                for (uint layer = 0; layer < copySrc.ArrayLayers; layer++)
+                {
+                    copyCL.CopyTexture(copySrc, 0, 0, 0, 0, layer, copyDst, 0, 0, 0, 0, layer, 16, 16, 1, 1);
+                }
+            }
+            else
+            {
+                copyCL.CopyTexture(copySrc, 0, 0, 0, 0, 0, copyDst, 0, 0, 0, 0, 0, 16, 16, 1, copySrc.ArrayLayers);
+            }
+            copyCL.End();
+            Fence fence = RF.CreateFence(false);
+            GD.SubmitCommands(copyCL, fence);
+            GD.WaitForFence(fence);
+
+            for (uint layer = 0; layer < copyDst.ArrayLayers; layer++)
+            {
+                MappedResource map = GD.Map(copyDst, MapMode.Read, layer);
+                byte* basePtr = (byte*)map.Data;
+
+                int index = 0;
+                uint rowSize = 64;
+                uint numRows = 4;
+                for (uint row = 0; row < numRows; row++)
+                {
+                    byte* rowBase = basePtr + (row * map.RowPitch);
+                    for (uint x = 0; x < rowSize; x++)
+                    {
+                        Assert.Equal((byte)(index + layer), rowBase[x]);
+                        index += 1;
+                    }
+                }
+
+                GD.Unmap(copyDst, layer);
+            }
+        }
+
         [Fact]
         public unsafe void Update_ThenMapRead_3D()
         {
@@ -408,41 +481,48 @@ namespace Veldrid.Tests
             GD.Unmap(tex2D);
         }
 
-        [Fact]
-        public void Copy_WitOffsets_2D()
+        [InlineData(TextureUsage.Staging, TextureUsage.Staging)]
+        [InlineData(TextureUsage.Staging, TextureUsage.Sampled)]
+        [InlineData(TextureUsage.Sampled, TextureUsage.Staging)]
+        [InlineData(TextureUsage.Sampled, TextureUsage.Sampled)]
+        [Theory]
+        public void Copy_WithOffsets_2D(TextureUsage srcUsage, TextureUsage dstUsage)
         {
             Texture src = RF.CreateTexture(TextureDescription.Texture2D(
-                100, 100, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+                100, 100, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, srcUsage));
 
             Texture dst = RF.CreateTexture(TextureDescription.Texture2D(
-                100, 100, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
+                100, 100, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, dstUsage));
 
-            MappedResourceView<RgbaByte> writeView = GD.Map<RgbaByte>(src, MapMode.Write);
+            RgbaByte[] srcData = new RgbaByte[src.Height * src.Width];
             for (int y = 0; y < src.Height; y++)
                 for (int x = 0; x < src.Width; x++)
                 {
-                    writeView[x, y] = new RgbaByte((byte)x, (byte)y, 0, 1);
+                    srcData[y * src.Width + x] = new RgbaByte((byte)x, (byte)y, 0, 1);
                 }
-            GD.Unmap(src);
+
+            GD.UpdateTexture(src, srcData, 0, 0, 0, src.Width, src.Height, 1, 0, 0);
 
             CommandList cl = RF.CreateCommandList();
             cl.Begin();
             cl.CopyTexture(
                 src,
                 50, 50, 0, 0, 0,
-                dst, 10, 10, 0, 0, 0,
+                dst,
+                10, 10, 0, 0, 0,
                 50, 50, 1, 1);
             cl.End();
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
-            MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(dst, MapMode.Read);
+            Texture readback = GetReadback(dst);
+            MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(readback, MapMode.Read);
             for (int y = 10; y < 60; y++)
                 for (int x = 10; x < 60; x++)
                 {
                     Assert.Equal(new RgbaByte((byte)(x + 40), (byte)(y + 40), 0, 1), readView[x, y]);
                 }
-            GD.Unmap(dst);
+            GD.Unmap(readback);
         }
 
         [Fact]

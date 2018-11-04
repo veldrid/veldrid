@@ -354,6 +354,10 @@ namespace Veldrid.OpenGL
 
         public OpenGLGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
+            options.SwapchainDepthFormat = swapchainDescription.DepthFormat;
+            options.SwapchainSrgbFormat = swapchainDescription.ColorSrgb;
+            options.SyncToVerticalBlank = swapchainDescription.SyncToVerticalBlank;
+
             SwapchainSource source = swapchainDescription.Source;
             if (source is UIViewSwapchainSource uiViewSource)
             {

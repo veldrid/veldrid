@@ -65,6 +65,12 @@ namespace Veldrid.D3D11
             return new D3D11Texture(_device, ref description);
         }
 
+        protected override Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description)
+        {
+            Texture2D existingTexture = new Texture2D((IntPtr)nativeTexture);
+            return new D3D11Texture(existingTexture, description.Type, description.Format);
+        }
+
         protected override TextureView CreateTextureViewCore(ref TextureViewDescription description)
         {
             return new D3D11TextureView(_device, ref description);

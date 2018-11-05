@@ -65,6 +65,11 @@ namespace Veldrid.MTL
             return new MTLTexture(ref description, _gd);
         }
 
+        protected override Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description)
+        {
+            return new MTLTexture(nativeTexture, ref description);
+        }
+
         protected override TextureView CreateTextureViewCore(ref TextureViewDescription description)
         {
             return new MTLTextureView(ref description, _gd);

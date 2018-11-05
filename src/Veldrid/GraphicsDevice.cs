@@ -718,6 +718,42 @@ namespace Veldrid
             PlatformDispose();
         }
 
+        public virtual bool GetD3D11Info(out BackendInfoD3D11 info) { info = null; return false; }
+
+        public BackendInfoD3D11 GetD3D11Info()
+        {
+            if (!GetD3D11Info(out BackendInfoD3D11 info))
+            {
+                throw new VeldridException($"{nameof(GetD3D11Info)} can only be used on a D3D11 GraphicsDevice.");
+            }
+
+            return info;
+        }
+
+        public virtual bool GetVulkanInfo(out BackendInfoVulkan info) { info = null; return false; }
+
+        public BackendInfoVulkan GetVulkanInfo()
+        {
+            if (!GetVulkanInfo(out BackendInfoVulkan info))
+            {
+                throw new VeldridException($"{nameof(GetVulkanInfo)} can only be used on a Vulkan GraphicsDevice.");
+            }
+
+            return info;
+        }
+
+        public virtual bool GetOpenGLInfo(out BackendInfoOpenGL info) { info = null; return false; }
+
+        public BackendInfoOpenGL GetOpenGLInfo()
+        {
+            if (!GetOpenGLInfo(out BackendInfoOpenGL info))
+            {
+                throw new VeldridException($"{nameof(GetOpenGLInfo)} can only be used on an OpenGL GraphicsDevice.");
+            }
+
+            return info;
+        }
+
         /// <summary>
         /// Checks whether the given <see cref="GraphicsBackend"/> is supported on this system.
         /// </summary>
@@ -846,6 +882,17 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Vulkan.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="vkOptions">The Vulkan-specific options used to create the device.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
+        public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, VulkanDeviceOptions vkOptions)
+        {
+            return new Vk.VkGraphicsDevice(options, null, vkOptions);
+        }
+
+        /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Vulkan, with a main Swapchain.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
@@ -854,6 +901,21 @@ namespace Veldrid
         public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
             return new Vk.VkGraphicsDevice(options, swapchainDescription);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Vulkan, with a main Swapchain.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="vkOptions">The Vulkan-specific options used to create the device.</param>
+        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
+        public static GraphicsDevice CreateVulkan(
+            GraphicsDeviceOptions options,
+            SwapchainDescription swapchainDescription,
+            VulkanDeviceOptions vkOptions)
+        {
+            return new Vk.VkGraphicsDevice(options, swapchainDescription, vkOptions);
         }
 
         /// <summary>

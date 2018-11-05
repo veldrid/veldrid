@@ -84,6 +84,71 @@ namespace Veldrid.OpenGL
             }
         }
 
+        public OpenGLTexture(OpenGLGraphicsDevice gd, uint nativeTexture, ref TextureDescription description)
+        {
+            _gd = gd;
+            _texture = nativeTexture;
+            Width = description.Width;
+            Height = description.Height;
+            Depth = description.Depth;
+            Format = description.Format;
+            MipLevels = description.MipLevels;
+            ArrayLayers = description.ArrayLayers;
+            Usage = description.Usage;
+            Type = description.Type;
+            SampleCount = description.SampleCount;
+
+            _framebuffers = new uint[MipLevels * ArrayLayers];
+            _pbos = new uint[MipLevels * ArrayLayers];
+            _pboSizes = new uint[MipLevels * ArrayLayers];
+
+            GLPixelFormat = OpenGLFormats.VdToGLPixelFormat(Format);
+            GLPixelType = OpenGLFormats.VdToGLPixelType(Format);
+            GLInternalFormat = OpenGLFormats.VdToGLPixelInternalFormat(Format);
+
+            if ((Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
+            {
+                GLPixelFormat = FormatHelpers.IsStencilFormat(Format)
+                    ? GLPixelFormat.DepthStencil
+                    : GLPixelFormat.DepthComponent;
+                if (Format == PixelFormat.R16_UNorm)
+                {
+                    GLInternalFormat = PixelInternalFormat.DepthComponent16;
+                }
+                else if (Format == PixelFormat.R32_Float)
+                {
+                    GLInternalFormat = PixelInternalFormat.DepthComponent32f;
+                }
+            }
+
+            if ((Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+            {
+                TextureTarget = ArrayLayers == 1 ? TextureTarget.TextureCubeMap : TextureTarget.TextureCubeMapArray;
+            }
+            else if (Type == TextureType.Texture1D)
+            {
+                TextureTarget = ArrayLayers == 1 ? TextureTarget.Texture1D : TextureTarget.ProxyTexture1DArray;
+            }
+            else if (Type == TextureType.Texture2D)
+            {
+                if (ArrayLayers == 1)
+                {
+                    TextureTarget = SampleCount == TextureSampleCount.Count1 ? TextureTarget.Texture2D : TextureTarget.Texture2DMultisample;
+                }
+                else
+                {
+                    TextureTarget = SampleCount == TextureSampleCount.Count1 ? TextureTarget.Texture2DArray : TextureTarget.Texture2DMultisampleArray;
+                }
+            }
+            else
+            {
+                Debug.Assert(Type == TextureType.Texture3D);
+                TextureTarget = TextureTarget.Texture3D;
+            }
+
+            Created = true;
+        }
+
         public override uint Width { get; }
 
         public override uint Height { get; }

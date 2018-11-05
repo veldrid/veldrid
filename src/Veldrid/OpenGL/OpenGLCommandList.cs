@@ -220,6 +220,21 @@ namespace Veldrid.OpenGL
             }
         }
 
+        internal override void PushDebugGroupCore(string name)
+        {
+            _currentCommands.PushDebugGroup(name);
+        }
+
+        internal override void PopDebugGroupCore()
+        {
+            _currentCommands.PopDebugGroup();
+        }
+
+        internal override void InsertDebugMarkerCore(string name)
+        {
+            _currentCommands.InsertDebugMarker(name);
+        }
+
         public override void Dispose()
         {
             _gd.EnqueueDisposal(this);

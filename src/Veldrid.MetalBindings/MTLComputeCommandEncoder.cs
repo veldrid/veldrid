@@ -48,5 +48,13 @@ namespace Veldrid.MetalBindings
 
         public void setSamplerState(MTLSamplerState sampler, UIntPtr index)
             => objc_msgSend(NativePtr, sel_setSamplerState, sampler.NativePtr, index);
+
+        public void pushDebugGroup(NSString @string)
+            => objc_msgSend(NativePtr, Selectors.pushDebugGroup, @string.NativePtr);
+
+        public void popDebugGroup() => objc_msgSend(NativePtr, Selectors.popDebugGroup);
+
+        public void insertDebugSignpost(NSString @string)
+            => objc_msgSend(NativePtr, Selectors.insertDebugSignpost, @string.NativePtr);
     }
 }

@@ -33,7 +33,10 @@ namespace Veldrid.Vk
         private PFN_vkDebugReportCallbackEXT _debugCallbackFunc;
         private readonly List<VkCommandList> _commandListsToDispose = new List<VkCommandList>();
         private bool _debugMarkerEnabled;
-        private vkDebugMarkerSetObjectNameEXT_d _setObjectNameDelegate;
+        private vkDebugMarkerSetObjectNameEXT_t _setObjectNameDelegate;
+        private vkCmdDebugMarkerBeginEXT_t _markerBegin;
+        private vkCmdDebugMarkerEndEXT_t _markerEnd;
+        private vkCmdDebugMarkerInsertEXT_t _markerInsert;
         private readonly ConcurrentDictionary<VkFormat, VkFilter> _filters = new ConcurrentDictionary<VkFormat, VkFilter>();
 
         private const int SharedCommandPoolCount = 4;
@@ -79,6 +82,9 @@ namespace Veldrid.Vk
         public uint PresentQueueIndex => _presentQueueIndex;
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
         public VkDescriptorPoolManager DescriptorPoolManager => _descriptorPoolManager;
+        public vkCmdDebugMarkerBeginEXT_t MarkerBegin => _markerBegin;
+        public vkCmdDebugMarkerEndEXT_t MarkerEnd => _markerEnd;
+        public vkCmdDebugMarkerInsertEXT_t MarkerInsert => _markerInsert;
 
         private readonly object _submittedFencesLock = new object();
         private readonly ConcurrentQueue<Vulkan.VkFence> _availableSubmissionFences = new ConcurrentQueue<Vulkan.VkFence>();
@@ -116,7 +122,8 @@ namespace Veldrid.Vk
                 texture1D: true,
                 independentBlend: _physicalDeviceFeatures.independentBlend,
                 structuredBuffer: true,
-                subsetTextureView: true);
+                subsetTextureView: true,
+                commandListDebugMarkers: _debugMarkerEnabled);
 
             ResourceFactory = new VkResourceFactory(this);
 
@@ -725,14 +732,28 @@ namespace Veldrid.Vk
 
             if (_debugMarkerEnabled)
             {
-                IntPtr setObjectNamePtr;
-                using (FixedUtf8String debugExtFnName = "vkDebugMarkerSetObjectNameEXT")
-                {
-                    setObjectNamePtr = vkGetInstanceProcAddr(_instance, debugExtFnName);
-                }
-
-                _setObjectNameDelegate = Marshal.GetDelegateForFunctionPointer<vkDebugMarkerSetObjectNameEXT_d>(setObjectNamePtr);
+                _setObjectNameDelegate = Marshal.GetDelegateForFunctionPointer<vkDebugMarkerSetObjectNameEXT_t>(
+                    GetInstanceProcAddr("vkDebugMarkerSetObjectNameEXT"));
+                _markerBegin = Marshal.GetDelegateForFunctionPointer<vkCmdDebugMarkerBeginEXT_t>(
+                    GetInstanceProcAddr("vkCmdDebugMarkerBeginEXT"));
+                _markerEnd = Marshal.GetDelegateForFunctionPointer<vkCmdDebugMarkerEndEXT_t>(
+                    GetInstanceProcAddr("vkCmdDebugMarkerEndEXT"));
+                _markerInsert = Marshal.GetDelegateForFunctionPointer<vkCmdDebugMarkerInsertEXT_t>(
+                    GetInstanceProcAddr("vkCmdDebugMarkerInsertEXT"));
             }
+        }
+
+        private IntPtr GetInstanceProcAddr(string name)
+        {
+            int byteCount = Encoding.UTF8.GetByteCount(name);
+            byte* utf8Ptr = stackalloc byte[byteCount];
+
+            fixed (char* namePtr = name)
+            {
+                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+            }
+
+            return vkGetInstanceProcAddr(_instance, utf8Ptr);
         }
 
         private void GetQueueFamilyIndices(VkSurfaceKHR surface)
@@ -1390,5 +1411,8 @@ namespace Veldrid.Vk
         VkDebugReportCallbackEXT callback,
         VkAllocationCallbacks* pAllocator);
 
-    internal unsafe delegate VkResult vkDebugMarkerSetObjectNameEXT_d(VkDevice device, VkDebugMarkerObjectNameInfoEXT* pNameInfo);
+    internal unsafe delegate VkResult vkDebugMarkerSetObjectNameEXT_t(VkDevice device, VkDebugMarkerObjectNameInfoEXT* pNameInfo);
+    internal unsafe delegate void vkCmdDebugMarkerBeginEXT_t(VkCommandBuffer commandBuffer, VkDebugMarkerMarkerInfoEXT* pMarkerInfo);
+    internal unsafe delegate void vkCmdDebugMarkerEndEXT_t(VkCommandBuffer commandBuffer);
+    internal unsafe delegate void vkCmdDebugMarkerInsertEXT_t(VkCommandBuffer commandBuffer, VkDebugMarkerMarkerInfoEXT* pMarkerInfo);
 }

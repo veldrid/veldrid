@@ -1562,6 +1562,59 @@ namespace Veldrid.OpenGLBinding
             FramebufferParameterName pname,
             int* @params) => p_glGetFramebufferAttachmentParameteriv(target, attachment, pname, @params);
 
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glFlush_t();
+        private static glFlush_t p_glFlush;
+        public static void glFlush() => p_glFlush();
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glFinish_t();
+        private static glFinish_t p_glFinish;
+        public static void glFinish() => p_glFinish();
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glPushDebugGroup_t(DebugSource source, uint id, uint length, byte* message);
+        private static glPushDebugGroup_t p_glPushDebugGroup;
+        public static void glPushDebugGroup(DebugSource source, uint id, uint length, byte* message)
+            => p_glPushDebugGroup(source, id, length, message);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glPopDebugGroup_t();
+        private static glPopDebugGroup_t p_glPopDebugGroup;
+        public static void glPopDebugGroup() => p_glPopDebugGroup();
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glDebugMessageInsert_t(
+            DebugSource source,
+            DebugType type,
+            uint id,
+            DebugSeverity severity,
+            uint length,
+            byte* message);
+        private static glDebugMessageInsert_t p_glDebugMessageInsert;
+        public static void glDebugMessageInsert(
+            DebugSource source,
+            DebugType type,
+            uint id,
+            DebugSeverity severity,
+            uint length,
+            byte* message) => p_glDebugMessageInsert(source, type, id, severity, length, message);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glInsertEventMarker_t(uint length, byte* marker);
+        private static glInsertEventMarker_t p_glInsertEventMarker;
+        public static void glInsertEventMarker(uint length, byte* marker) => p_glInsertEventMarker(length, marker);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glPushGroupMarkerEXT_t(uint length, byte* marker);
+        private static glPushGroupMarkerEXT_t p_glPushGroupMarker;
+        public static void glPushGroupMarker(uint length, byte* marker) => p_glPushGroupMarker(length, marker);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glPopGroupMarkerEXT_t();
+        private static glPopGroupMarkerEXT_t p_glPopGroupMarker;
+        public static void glPopGroupMarker() => p_glPopGroupMarker();
+
         public static void LoadGetString(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -1721,6 +1774,12 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glCreateTextures", out p_glCreateTextures);
             LoadFunction("glGenerateMipmap", out p_glGenerateMipmap);
             LoadFunction("glGetFramebufferAttachmentParameteriv", out p_glGetFramebufferAttachmentParameteriv);
+            LoadFunction("glFlush", out p_glFlush);
+            LoadFunction("glFinish", out p_glFinish);
+
+            LoadFunction("glPushDebugGroup", out p_glPushDebugGroup);
+            LoadFunction("glPopDebugGroup", out p_glPopDebugGroup);
+            LoadFunction("glDebugMessageInsert", out p_glDebugMessageInsert);
 
             if (!gles)
             {
@@ -1751,6 +1810,9 @@ namespace Veldrid.OpenGLBinding
                 LoadFunction("glGetRenderbufferParameteriv", out p_glGetRenderbufferParameteriv);
                 LoadFunction("glGenRenderbuffers", out p_glGenRenderbuffers);
                 LoadFunction("glBindRenderbuffer", out p_glBindRenderbuffer);
+                LoadFunction("glInsertEventMarker", out p_glInsertEventMarker);
+                LoadFunction("glPushGroupMarker", out p_glPushGroupMarker);
+                LoadFunction("glPopGroupMarker", out p_glPopGroupMarker);
             }
         }
 

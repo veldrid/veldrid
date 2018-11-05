@@ -20,5 +20,8 @@ namespace Veldrid.MetalBindings
         internal static readonly Selector setPixelFormat = "setPixelFormat:";
         internal static readonly Selector alloc = "alloc";
         internal static readonly Selector init = "init";
+        internal static readonly Selector pushDebugGroup = "pushDebugGroup:";
+        internal static readonly Selector popDebugGroup = "popDebugGroup";
+        internal static readonly Selector insertDebugSignpost = "insertDebugSignpost:";
     }
 }

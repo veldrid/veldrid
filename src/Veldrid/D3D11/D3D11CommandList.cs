@@ -12,6 +12,7 @@ namespace Veldrid.D3D11
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly DeviceContext _context;
+        private readonly UserDefinedAnnotation _uda;
         private bool _begun;
         private bool _disposed;
 
@@ -82,6 +83,7 @@ namespace Veldrid.D3D11
         {
             _gd = gd;
             _context = new DeviceContext(gd.Device);
+            _uda = _context.QueryInterfaceOrNull<UserDefinedAnnotation>();
         }
 
         public SharpDX.Direct3D11.CommandList DeviceCommandList { get; private set; }
@@ -1205,10 +1207,26 @@ namespace Veldrid.D3D11
             _submittedStagingBuffers.Clear();
         }
 
+        internal override void PushDebugGroupCore(string name)
+        {
+            _uda?.BeginEvent(name);
+        }
+
+        internal override void PopDebugGroupCore()
+        {
+            _uda?.EndEvent();
+        }
+
+        internal override void InsertDebugMarkerCore(string name)
+        {
+            _uda?.SetMarker(name);
+        }
+
         public override void Dispose()
         {
             if (!_disposed)
             {
+                _uda?.Dispose();
                 DeviceCommandList?.Dispose();
                 _context.Dispose();
                 _disposed = true;

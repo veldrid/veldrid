@@ -85,6 +85,15 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte GenerateMipmapsEntryID = 23;
         private static readonly uint GenerateMipmapsEntrySize = Util.USizeOf<NoAllocGenerateMipmapsEntry>();
 
+        private const byte PushDebugGroupEntryID = 24;
+        private static readonly uint PushDebugGroupEntrySize = Util.USizeOf<NoAllocPushDebugGroupEntry>();
+
+        private const byte PopDebugGroupEntryID = 25;
+        private static readonly uint PopDebugGroupEntrySize = Util.USizeOf<NoAllocPopDebugGroupEntry>();
+
+        private const byte InsertDebugMarkerEntryID = 26;
+        private static readonly uint InsertDebugMarkerEntrySize = Util.USizeOf<NoAllocInsertDebugMarkerEntry>();
+
         public OpenGLCommandList Parent { get; }
 
         public OpenGLNoAllocCommandEntryList(OpenGLCommandList cl)
@@ -349,6 +358,20 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         executor.GenerateMipmaps(gme.Texture.Get(_resourceList));
                         currentOffset += GenerateMipmapsEntrySize;
                         break;
+                    case PushDebugGroupEntryID:
+                        NoAllocPushDebugGroupEntry pdge = Unsafe.ReadUnaligned<NoAllocPushDebugGroupEntry>(entryBasePtr);
+                        executor.PushDebugGroup(pdge.Name.Get(_resourceList));
+                        currentOffset += PushDebugGroupEntrySize;
+                        break;
+                    case PopDebugGroupEntryID:
+                        executor.PopDebugGroup();
+                        currentOffset += PopDebugGroupEntrySize;
+                        break;
+                    case InsertDebugMarkerEntryID:
+                        NoAllocInsertDebugMarkerEntry idme = Unsafe.ReadUnaligned<NoAllocInsertDebugMarkerEntry>(entryBasePtr);
+                        executor.InsertDebugMarker(idme.Name.Get(_resourceList));
+                        currentOffset += InsertDebugMarkerEntrySize;
+                        break;
                     default:
                         throw new InvalidOperationException("Invalid entry ID: " + id);
                 }
@@ -517,6 +540,24 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         {
             NoAllocGenerateMipmapsEntry entry = new NoAllocGenerateMipmapsEntry(Track(texture));
             AddEntry(GenerateMipmapsEntryID, ref entry);
+        }
+
+        public void PushDebugGroup(string name)
+        {
+            NoAllocPushDebugGroupEntry entry = new NoAllocPushDebugGroupEntry(Track(name));
+            AddEntry(PushDebugGroupEntryID, ref entry);
+        }
+
+        public void PopDebugGroup()
+        {
+            NoAllocPopDebugGroupEntry entry = new NoAllocPopDebugGroupEntry();
+            AddEntry(PopDebugGroupEntryID, ref entry);
+        }
+
+        public void InsertDebugMarker(string name)
+        {
+            NoAllocInsertDebugMarkerEntry entry = new NoAllocInsertDebugMarkerEntry(Track(name));
+            AddEntry(InsertDebugMarkerEntryID, ref entry);
         }
 
         private Tracked<T> Track<T>(T item) where T : class

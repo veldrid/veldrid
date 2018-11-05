@@ -169,7 +169,8 @@ namespace Veldrid.OpenGL
                 texture1D: _backendType == GraphicsBackend.OpenGL,
                 independentBlend: _extensions.IndependentBlend,
                 structuredBuffer: _extensions.StorageBuffers,
-                subsetTextureView: _extensions.ARB_TextureView);
+                subsetTextureView: _extensions.ARB_TextureView,
+                commandListDebugMarkers: _extensions.KHR_Debug || _extensions.EXT_DebugMarker);
 
             _resourceFactory = new OpenGLResourceFactory(this);
 
@@ -1020,7 +1021,7 @@ namespace Veldrid.OpenGL
         {
             return (source, type, id, severity, length, message, userParam) =>
             {
-                if (severity >= minimumSeverity)
+                if (severity >= minimumSeverity && type != DebugType.DebugTypeMarker)
                 {
                     string messageString = Marshal.PtrToStringAnsi((IntPtr)message, (int)length);
                     Debug.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
@@ -1181,7 +1182,7 @@ namespace Veldrid.OpenGL
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }
                 }
-                catch (Exception e)
+                catch (Exception e) when (!Debugger.IsAttached)
                 {
                     lock (_exceptionsLock)
                     {

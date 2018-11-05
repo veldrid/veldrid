@@ -5,6 +5,7 @@ using static Veldrid.Vk.VulkanUtil;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace Veldrid.Vk
 {
@@ -1029,6 +1030,54 @@ namespace Veldrid.Vk
                 _currentStagingInfo.BuffersUsed.Add(ret);
                 return ret;
             }
+        }
+
+        internal override void PushDebugGroupCore(string name)
+        {
+            vkCmdDebugMarkerBeginEXT_t func = _gd.MarkerBegin;
+            if (func == null) { return; }
+
+            VkDebugMarkerMarkerInfoEXT markerInfo = VkDebugMarkerMarkerInfoEXT.New();
+
+            int byteCount = Encoding.UTF8.GetByteCount(name);
+            byte* utf8Ptr = stackalloc byte[byteCount + 1];
+            fixed (char* namePtr = name)
+            {
+                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+            }
+            utf8Ptr[byteCount] = 0;
+
+            markerInfo.pMarkerName = utf8Ptr;
+
+            func(_cb, &markerInfo);
+        }
+
+        internal override void PopDebugGroupCore()
+        {
+            vkCmdDebugMarkerEndEXT_t func = _gd.MarkerEnd;
+            if (func == null) { return; }
+
+            func(_cb);
+        }
+
+        internal override void InsertDebugMarkerCore(string name)
+        {
+            vkCmdDebugMarkerInsertEXT_t func = _gd.MarkerInsert;
+            if (func == null) { return; }
+
+            VkDebugMarkerMarkerInfoEXT markerInfo = VkDebugMarkerMarkerInfoEXT.New();
+
+            int byteCount = Encoding.UTF8.GetByteCount(name);
+            byte* utf8Ptr = stackalloc byte[byteCount + 1];
+            fixed (char* namePtr = name)
+            {
+                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+            }
+            utf8Ptr[byteCount] = 0;
+
+            markerInfo.pMarkerName = utf8Ptr;
+
+            func(_cb, &markerInfo);
         }
 
         public override void Dispose()

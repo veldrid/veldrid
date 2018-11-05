@@ -132,6 +132,14 @@ namespace Veldrid.MetalBindings
         public void setTriangleFillMode(MTLTriangleFillMode fillMode)
             => objc_msgSend(NativePtr, sel_setTriangleFillMode, (uint)fillMode);
 
+        public void pushDebugGroup(NSString @string)
+            => objc_msgSend(NativePtr, Selectors.pushDebugGroup, @string.NativePtr);
+
+        public void popDebugGroup() => objc_msgSend(NativePtr, Selectors.popDebugGroup);
+
+        public void insertDebugSignpost(NSString @string)
+            => objc_msgSend(NativePtr, Selectors.insertDebugSignpost, @string.NativePtr);
+
         private static readonly Selector sel_setRenderPipelineState = "setRenderPipelineState:";
         private static readonly Selector sel_setVertexBuffer = "setVertexBuffer:offset:atIndex:";
         private static readonly Selector sel_setFragmentBuffer = "setFragmentBuffer:offset:atIndex:";

@@ -1051,6 +1051,60 @@ namespace Veldrid.MTL
             }
         }
 
+        internal override void PushDebugGroupCore(string name)
+        {
+            NSString nsName = NSString.New(name);
+            if (!_bce.IsNull)
+            {
+                _bce.pushDebugGroup(nsName);
+            }
+            else if (!_cce.IsNull)
+            {
+                _cce.pushDebugGroup(nsName);
+            }
+            else if (!_rce.IsNull)
+            {
+                _rce.pushDebugGroup(nsName);
+            }
+
+            ObjectiveCRuntime.release(nsName);
+        }
+
+        internal override void PopDebugGroupCore()
+        {
+            if (!_bce.IsNull)
+            {
+                _bce.popDebugGroup();
+            }
+            else if (!_cce.IsNull)
+            {
+                _cce.popDebugGroup();
+            }
+            else if (!_rce.IsNull)
+            {
+                _rce.popDebugGroup();
+            }
+        }
+
+        internal override void InsertDebugMarkerCore(string name)
+        {
+            NSString nsName = NSString.New(name);
+            if (!_bce.IsNull)
+            {
+                _bce.insertDebugSignpost(nsName);
+            }
+            else if (!_cce.IsNull)
+            {
+                _cce.insertDebugSignpost(nsName);
+            }
+            else if (!_rce.IsNull)
+            {
+                _rce.insertDebugSignpost(nsName);
+            }
+
+            ObjectiveCRuntime.release(nsName);
+        }
+
         public override void Dispose()
         {
             if (!_disposed)

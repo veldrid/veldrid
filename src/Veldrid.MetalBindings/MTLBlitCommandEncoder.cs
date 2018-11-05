@@ -70,6 +70,13 @@ namespace Veldrid.MetalBindings
 
         public void endEncoding() => objc_msgSend(NativePtr, sel_endEncoding);
 
+        public void pushDebugGroup(NSString @string) => objc_msgSend(NativePtr, Selectors.pushDebugGroup, @string.NativePtr);
+
+        public void popDebugGroup() => objc_msgSend(NativePtr, Selectors.popDebugGroup);
+
+        public void insertDebugSignpost(NSString @string)
+            => objc_msgSend(NativePtr, Selectors.insertDebugSignpost, @string.NativePtr);
+
         public void copyFromTexture(
             MTLTexture sourceTexture,
             UIntPtr sourceSlice,

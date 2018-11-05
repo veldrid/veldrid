@@ -40,6 +40,9 @@ namespace Veldrid.OpenGL
             uint layerCount);
 
         void GenerateMipmaps(Texture texture);
+        void PushDebugGroup(string name);
+        void PopDebugGroup();
+        void InsertDebugMarker(string name);
 
         void Reset();
         void Dispose();

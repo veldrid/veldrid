@@ -92,7 +92,8 @@ namespace Veldrid.D3D11
                 texture1D: true,
                 independentBlend: true,
                 structuredBuffer: true,
-                subsetTextureView: true);
+                subsetTextureView: true,
+                commandListDebugMarkers: _device.FeatureLevel >= SharpDX.Direct3D.FeatureLevel.Level_11_1);
 
             _d3d11ResourceFactory = new D3D11ResourceFactory(this);
 

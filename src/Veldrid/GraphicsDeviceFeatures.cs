@@ -80,6 +80,12 @@
         /// layers contained in its target Texture.
         /// </summary>
         public bool SubsetTextureView { get; }
+        /// <summary>
+        /// Indicates whether <see cref="CommandList"/> instances created with this device support the
+        /// <see cref="CommandList.PushDebugGroup(string)"/>, <see cref="CommandList.PopDebugGroup"/>, and
+        /// <see cref="CommandList.InsertDebugMarker(string)"/> methods. If not, these methods will have no effect.
+        /// </summary>
+        public bool CommandListDebugMarkers { get; }
 
         internal GraphicsDeviceFeatures(
             bool computeShader,
@@ -97,7 +103,8 @@
             bool texture1D,
             bool independentBlend,
             bool structuredBuffer,
-            bool subsetTextureView)
+            bool subsetTextureView,
+            bool commandListDebugMarkers)
         {
             ComputeShader = computeShader;
             GeometryShader = geometryShader;
@@ -115,6 +122,7 @@
             IndependentBlend = independentBlend;
             StructuredBuffer = structuredBuffer;
             SubsetTextureView = subsetTextureView;
+            CommandListDebugMarkers = commandListDebugMarkers;
         }
     }
 }

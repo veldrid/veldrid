@@ -1006,6 +1006,43 @@ namespace Veldrid
         protected abstract void GenerateMipmapsCore(Texture texture);
 
         /// <summary>
+        /// Pushes a debug group at the current position in the <see cref="CommandList"/>. This allows subsequent commands to be
+        /// categorized and filtered when viewed in external debugging tools. This method can be called multiple times in order
+        /// to create nested debug groupings. Each call to PushDebugGroup must be followed by a matching call to
+        /// <see cref="PopDebugGroup"/>.
+        /// </summary>
+        /// <param name="name">The name of the group. This is an opaque identifier used for display by graphics debuggers.</param>
+        public void PushDebugGroup(string name)
+        {
+            PushDebugGroupCore(name);
+        }
+
+        internal abstract void PushDebugGroupCore(string name);
+
+        /// <summary>
+        /// Pops the current debug group. This method must only be called after <see cref="PushDebugGroup(string)"/> has been
+        /// called on this instance.
+        /// </summary>
+        public void PopDebugGroup()
+        {
+            PopDebugGroupCore();
+        }
+
+        internal abstract void PopDebugGroupCore();
+
+        /// <summary>
+        /// Inserts a debug marker into the CommandList at the current position. This is used by graphics debuggers to identify
+        /// points of interest in a graphics command stream.
+        /// </summary>
+        /// <param name="name">The name of the marker. This is an opaque identifier used for display by graphics debuggers.</param>
+        public void InsertDebugMarker(string name)
+        {
+            InsertDebugMarkerCore(name);
+        }
+
+        internal abstract void InsertDebugMarkerCore(string name);
+
+        /// <summary>
         /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
         /// tools.
         /// </summary>

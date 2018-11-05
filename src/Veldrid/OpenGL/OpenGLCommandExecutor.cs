@@ -2,6 +2,7 @@
 using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
+using System.Text;
 
 namespace Veldrid.OpenGL
 {
@@ -643,6 +644,80 @@ namespace Veldrid.OpenGL
                 TextureTarget target = glTex.TextureTarget;
                 _textureSamplerManager.SetTextureTransient(target, glTex.Texture);
                 glGenerateMipmap(target);
+                CheckLastError();
+            }
+        }
+
+        public void PushDebugGroup(string name)
+        {
+            if (_extensions.KHR_Debug)
+            {
+                int byteCount = Encoding.UTF8.GetByteCount(name);
+                byte* utf8Ptr = stackalloc byte[byteCount];
+                fixed (char* namePtr = name)
+                {
+                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                }
+                glPushDebugGroup(DebugSource.DebugSourceApplication, 0, (uint)byteCount, utf8Ptr);
+                CheckLastError();
+            }
+            else if (_extensions.EXT_DebugMarker)
+            {
+                int byteCount = Encoding.UTF8.GetByteCount(name);
+                byte* utf8Ptr = stackalloc byte[byteCount];
+                fixed (char* namePtr = name)
+                {
+                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                }
+                glPushGroupMarker((uint)byteCount, utf8Ptr);
+                CheckLastError();
+            }
+        }
+
+        public void PopDebugGroup()
+        {
+            if (_extensions.KHR_Debug)
+            {
+                glPopDebugGroup();
+                CheckLastError();
+            }
+            else if (_extensions.EXT_DebugMarker)
+            {
+                glPopGroupMarker();
+                CheckLastError();
+            }
+        }
+
+        public void InsertDebugMarker(string name)
+        {
+            if (_extensions.KHR_Debug)
+            {
+                int byteCount = Encoding.UTF8.GetByteCount(name);
+                byte* utf8Ptr = stackalloc byte[byteCount];
+                fixed (char* namePtr = name)
+                {
+                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                }
+
+                glDebugMessageInsert(
+                    DebugSource.DebugSourceApplication,
+                    DebugType.DebugTypeMarker,
+                    0,
+                    DebugSeverity.DebugSeverityNotification,
+                    (uint)byteCount,
+                    utf8Ptr);
+                CheckLastError();
+            }
+            else if (_extensions.EXT_DebugMarker)
+            {
+                int byteCount = Encoding.UTF8.GetByteCount(name);
+                byte* utf8Ptr = stackalloc byte[byteCount];
+                fixed (char* namePtr = name)
+                {
+                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                }
+
+                glInsertEventMarker((uint)byteCount, utf8Ptr);
                 CheckLastError();
             }
         }

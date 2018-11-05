@@ -637,6 +637,7 @@ namespace Veldrid.Vk
                 case VkFormat.R32Sint:
                     return PixelFormat.R32_SInt;
                 case VkFormat.R32Sfloat:
+                case VkFormat.D32Sfloat:
                     return PixelFormat.R32_Float;
 
                 case VkFormat.R8g8Unorm:

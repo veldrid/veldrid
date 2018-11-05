@@ -18,6 +18,7 @@ namespace Veldrid.D3D11
         private readonly bool _supportsConcurrentResources;
         private readonly bool _supportsCommandLists;
         private readonly object _immediateContextLock = new object();
+        private readonly BackendInfoD3D11 _d3d11Info;
 
         private readonly object _mappedResourceLock = new object();
         private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
@@ -107,6 +108,7 @@ namespace Veldrid.D3D11
                 bufferRangeBinding: _device.FeatureLevel >= SharpDX.Direct3D.FeatureLevel.Level_11_1);
 
             _d3d11ResourceFactory = new D3D11ResourceFactory(this);
+            _d3d11Info = new BackendInfoD3D11(this);
 
             PostDeviceCreated();
         }
@@ -564,6 +566,12 @@ namespace Veldrid.D3D11
 
         protected override void WaitForIdleCore()
         {
+        }
+
+        public override bool GetD3D11Info(out BackendInfoD3D11 info)
+        {
+            info = _d3d11Info;
+            return true;
         }
     }
 }

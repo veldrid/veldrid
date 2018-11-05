@@ -95,6 +95,28 @@ namespace Veldrid.MTL
             }
         }
 
+        public MTLTexture(ulong nativeTexture, ref TextureDescription description)
+        {
+            DeviceTexture = new MetalBindings.MTLTexture((IntPtr)nativeTexture);
+            Width = description.Width;
+            Height = description.Height;
+            Depth = description.Depth;
+            ArrayLayers = description.ArrayLayers;
+            MipLevels = description.MipLevels;
+            Format = description.Format;
+            Usage = description.Usage;
+            Type = description.Type;
+            SampleCount = description.SampleCount;
+            bool isDepth = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
+
+            MTLPixelFormat = MTLFormats.VdToMTLPixelFormat(Format, isDepth);
+            MTLTextureType = MTLFormats.VdToMTLTextureType(
+                    Type,
+                    ArrayLayers,
+                    SampleCount != TextureSampleCount.Count1,
+                    (Usage & TextureUsage.Cubemap) != 0);
+        }
+
         internal uint GetSubresourceSize(uint mipLevel, uint arrayLayer)
         {
             uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;

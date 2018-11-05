@@ -38,6 +38,7 @@ namespace Veldrid.Vk
         private vkCmdDebugMarkerEndEXT_t _markerEnd;
         private vkCmdDebugMarkerInsertEXT_t _markerInsert;
         private readonly ConcurrentDictionary<VkFormat, VkFilter> _filters = new ConcurrentDictionary<VkFormat, VkFilter>();
+        private readonly BackendInfoVulkan _vulkanInfo;
 
         private const int SharedCommandPoolCount = 4;
         private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
@@ -73,6 +74,12 @@ namespace Veldrid.Vk
 
         public override GraphicsDeviceFeatures Features { get; }
 
+        public override bool GetVulkanInfo(out BackendInfoVulkan info)
+        {
+            info = _vulkanInfo;
+            return true;
+        }
+
         public VkInstance Instance => _instance;
         public VkDevice Device => _device;
         public VkPhysicalDevice PhysicalDevice => _physicalDevice;
@@ -92,8 +99,11 @@ namespace Veldrid.Vk
         private readonly VkSwapchain _mainSwapchain;
 
         public VkGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? scDesc)
+            : this(options, scDesc, new VulkanDeviceOptions()) { }
+
+        public VkGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? scDesc, VulkanDeviceOptions vkOptions)
         {
-            CreateInstance(options.Debug);
+            CreateInstance(options.Debug, vkOptions);
 
             VkSurfaceKHR surface = VkSurfaceKHR.Null;
             if (scDesc != null)
@@ -102,7 +112,7 @@ namespace Veldrid.Vk
             }
 
             CreatePhysicalDevice();
-            CreateLogicalDevice(surface, options.PreferStandardClipSpaceYDirection);
+            CreateLogicalDevice(surface, options.PreferStandardClipSpaceYDirection, vkOptions);
 
             _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
 
@@ -140,6 +150,8 @@ namespace Veldrid.Vk
             {
                 _sharedGraphicsCommandPools.Push(new SharedCommandPool(this, true));
             }
+
+            _vulkanInfo = new BackendInfoVulkan(this);
 
             PostDeviceCreated();
         }
@@ -454,7 +466,7 @@ namespace Veldrid.Vk
             }
         }
 
-        private void CreateInstance(bool debug)
+        private void CreateInstance(bool debug, VulkanDeviceOptions options)
         {
             HashSet<string> availableInstanceLayers = new HashSet<string>(EnumerateInstanceLayers());
             HashSet<string> availableInstanceExtensions = new HashSet<string>(GetInstanceExtensions());
@@ -538,6 +550,20 @@ namespace Veldrid.Vk
 
             instanceExtensions.Add(_platformSurfaceExtension);
 
+            string[] requestedInstanceExtensions = options.InstanceExtensions ?? Array.Empty<string>();
+            List<FixedUtf8String> tempStrings = new List<FixedUtf8String>();
+            foreach (string requiredExt in requestedInstanceExtensions)
+            {
+                if (!availableInstanceExtensions.Contains(requiredExt))
+                {
+                    throw new VeldridException($"The required instance extension was not available: {requiredExt}");
+                }
+
+                FixedUtf8String utf8Str = new FixedUtf8String(requiredExt);
+                instanceExtensions.Add(utf8Str);
+                tempStrings.Add(utf8Str);
+            }
+
             bool debugReportExtensionAvailable = false;
             if (debug)
             {
@@ -568,6 +594,11 @@ namespace Veldrid.Vk
             if (debug && debugReportExtensionAvailable)
             {
                 EnableDebugCallback();
+            }
+
+            foreach (FixedUtf8String tempStr in tempStrings)
+            {
+                tempStr.Dispose();
             }
         }
 
@@ -651,7 +682,7 @@ namespace Veldrid.Vk
             vkGetPhysicalDeviceMemoryProperties(_physicalDevice, out _physicalDeviceMemProperties);
         }
 
-        private void CreateLogicalDevice(VkSurfaceKHR surface, bool preferStandardClipY)
+        private void CreateLogicalDevice(VkSurfaceKHR surface, bool preferStandardClipY, VulkanDeviceOptions options)
         {
             GetQueueFamilyIndices(surface);
 
@@ -690,6 +721,8 @@ namespace Veldrid.Vk
             result = vkEnumerateDeviceExtensionProperties(_physicalDevice, (byte*)null, &propertyCount, properties);
             CheckResult(result);
 
+            HashSet<string> requiredInstanceExtensions = new HashSet<string>(options.DeviceExtensions ?? Array.Empty<string>());
+
             StackList<IntPtr> extensionNames = new StackList<IntPtr>();
             for (int property = 0; property < propertyCount; property++)
             {
@@ -697,17 +730,31 @@ namespace Veldrid.Vk
                 if (extensionName == "VK_EXT_debug_marker")
                 {
                     extensionNames.Add(CommonStrings.VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
+                    requiredInstanceExtensions.Remove(extensionName);
                     _debugMarkerEnabled = true;
                 }
                 else if (extensionName == "VK_KHR_swapchain")
                 {
                     extensionNames.Add((IntPtr)properties[property].extensionName);
+                    requiredInstanceExtensions.Remove(extensionName);
                 }
                 else if (preferStandardClipY && extensionName == "VK_KHR_maintenance1")
                 {
                     extensionNames.Add((IntPtr)properties[property].extensionName);
+                    requiredInstanceExtensions.Remove(extensionName);
                     _standardClipYDirection = true;
                 }
+                else if (requiredInstanceExtensions.Remove(extensionName))
+                {
+                    extensionNames.Add((IntPtr)properties[property].extensionName);
+                }
+            }
+
+            if (requiredInstanceExtensions.Count != 0)
+            {
+                string missingList = string.Join(", ", requiredInstanceExtensions);
+                throw new VeldridException(
+                    $"The following Vulkan device extensions were not available: {missingList}");
             }
 
             VkDeviceCreateInfo deviceCreateInfo = VkDeviceCreateInfo.New();
@@ -1339,6 +1386,14 @@ namespace Veldrid.Vk
 
         internal override uint GetStructuredBufferMinOffsetAlignmentCore()
             => (uint)_physicalDeviceProperties.limits.minStorageBufferOffsetAlignment;
+
+        internal void TransitionImageLayout(VkTexture texture, VkImageLayout layout)
+        {
+            SharedCommandPool pool = GetFreeCommandPool();
+            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, layout);
+            pool.EndAndSubmit(cb);
+        }
 
         private class SharedCommandPool
         {

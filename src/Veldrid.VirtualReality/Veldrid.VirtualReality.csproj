@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Veldrid\Vk\VkFormats.VdToVkPixelFormat.cs" Link="VkFormats.VdToVkPixelFormat.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)native\win-x64\openvr_api.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackagePath>runtimes/win-x64/native</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+  </ItemGroup>
+
+</Project>

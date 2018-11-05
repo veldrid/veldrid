@@ -168,6 +168,14 @@ namespace Veldrid
             return CreateTextureCore(ref description);
         }
 
+        public Texture CreateTexture(ulong nativeTexture, TextureDescription description)
+            => CreateTextureCore(nativeTexture, ref description);
+
+        public Texture CreateTexture(ulong nativeTexture, ref TextureDescription description)
+            => CreateTextureCore(nativeTexture, ref description);
+
+        protected abstract Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description);
+
         // TODO: private protected
         /// <summary>
         /// </summary>

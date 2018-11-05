@@ -66,6 +66,11 @@ namespace Veldrid.OpenGL
             return new OpenGLTexture(_gd, ref description);
         }
 
+        protected override Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description)
+        {
+            return new OpenGLTexture(_gd, (uint)nativeTexture, ref description);
+        }
+
         protected override TextureView CreateTextureViewCore(ref TextureViewDescription description)
         {
             return new OpenGLTextureView(_gd, ref description);

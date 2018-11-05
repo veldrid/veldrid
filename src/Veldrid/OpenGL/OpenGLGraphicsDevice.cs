@@ -34,6 +34,7 @@ namespace Veldrid.OpenGL
         private DebugProc _debugMessageCallback;
         private OpenGLExtensions _extensions;
         private bool _isDepthRangeZeroToOne;
+        private BackendInfoOpenGL _openglInfo;
 
         private TextureSampleCount _maxColorTextureSamples;
         private uint _maxTextureSize;
@@ -45,7 +46,6 @@ namespace Veldrid.OpenGL
         private readonly StagingMemoryPool _stagingMemoryPool = new StagingMemoryPool();
         private BlockingCollection<ExecutionThreadWorkItem> _workItems;
         private ExecutionThread _executionThread;
-
         private readonly object _commandListDisposalLock = new object();
         private readonly Dictionary<OpenGLCommandList, int> _submittedCommandListCounts
             = new Dictionary<OpenGLCommandList, int>();
@@ -298,6 +298,7 @@ namespace Veldrid.OpenGL
             _workItems = new BlockingCollection<ExecutionThreadWorkItem>(new ConcurrentQueue<ExecutionThreadWorkItem>());
             platformInfo.ClearCurrentContext();
             _executionThread = new ExecutionThread(this, _workItems, _makeCurrent, _glContext);
+            _openglInfo = new BackendInfoOpenGL(this);
 
             PostDeviceCreated();
         }
@@ -1041,7 +1042,25 @@ namespace Veldrid.OpenGL
 
         protected override void PlatformDispose()
         {
+            FlushAndFinish();
             _executionThread.Terminate();
+        }
+
+        public override bool GetOpenGLInfo(out BackendInfoOpenGL info)
+        {
+            info = _openglInfo;
+            return true;
+        }
+
+        internal void ExecuteOnGLThread(Action action)
+        {
+            _executionThread.Run(action);
+            _executionThread.WaitForIdle();
+        }
+
+        internal void FlushAndFinish()
+        {
+            _executionThread.FlushAndFinish();
         }
 
         internal override uint GetUniformBufferMinOffsetAlignmentCore() => _minUboOffsetAlignment;
@@ -1160,12 +1179,6 @@ namespace Veldrid.OpenGL
                             ((Action)workItem.Object0)();
                         }
                         break;
-                        case WorkItemType.SignalResetEvent:
-                        {
-                            _gd.FlushDisposables();
-                            ((ManualResetEventSlim)workItem.Object0).Set();
-                        }
-                        break;
                         case WorkItemType.TerminateAction:
                         {
                             // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
@@ -1192,6 +1205,18 @@ namespace Veldrid.OpenGL
                         {
                             _gd._swapBuffers();
                             _gd.FlushDisposables();
+                        }
+                        break;
+                        case WorkItemType.WaitForIdle:
+                        {
+                            _gd.FlushDisposables();
+                            bool isFullFlush = workItem.UInt0 != 0;
+                            if (isFullFlush)
+                            {
+                                glFlush();
+                                glFinish();
+                            }
+                            ((ManualResetEventSlim)workItem.Object0).Set();
                         }
                         break;
                         default:
@@ -1576,7 +1601,7 @@ namespace Veldrid.OpenGL
             internal void WaitForIdle()
             {
                 ManualResetEventSlim mre = new ManualResetEventSlim();
-                _workItems.Add(new ExecutionThreadWorkItem(mre));
+                _workItems.Add(new ExecutionThreadWorkItem(mre, isFullFlush: false));
                 mre.Wait();
                 mre.Dispose();
 
@@ -1592,6 +1617,16 @@ namespace Veldrid.OpenGL
             {
                 _workItems.Add(new ExecutionThreadWorkItem(WorkItemType.SwapBuffers));
             }
+
+            internal void FlushAndFinish()
+            {
+                ManualResetEventSlim mre = new ManualResetEventSlim();
+                _workItems.Add(new ExecutionThreadWorkItem(mre, isFullFlush: true));
+                mre.Wait();
+                mre.Dispose();
+
+                CheckExceptions();
+            }
         }
 
         public enum WorkItemType : byte
@@ -1603,9 +1638,9 @@ namespace Veldrid.OpenGL
             UpdateTexture,
             GenericAction,
             TerminateAction,
-            SignalResetEvent,
             SetSyncToVerticalBlank,
             SwapBuffers,
+            WaitForIdle,
         }
 
         private unsafe struct ExecutionThreadWorkItem
@@ -1677,13 +1712,13 @@ namespace Veldrid.OpenGL
                 UInt2 = 0;
             }
 
-            public ExecutionThreadWorkItem(ManualResetEventSlim mre)
+            public ExecutionThreadWorkItem(ManualResetEventSlim mre, bool isFullFlush)
             {
-                Type = WorkItemType.SignalResetEvent;
+                Type = WorkItemType.WaitForIdle;
                 Object0 = mre;
                 Object1 = null;
 
-                UInt0 = 0;
+                UInt0 = isFullFlush ? 1u : 0u;
                 UInt1 = 0;
                 UInt2 = 0;
             }

@@ -45,26 +45,12 @@ namespace Veldrid.NeoDemo
 
         public static SpecializationConstant[] GetSpecializations(GraphicsDevice gd)
         {
-            List<SpecializationConstant> specializations = new List<SpecializationConstant>();
-            specializations.Add(new SpecializationConstant(102, gd.IsDepthRangeZeroToOne));
+            bool glOrGles = gd.BackendType == GraphicsBackend.OpenGL || gd.BackendType == GraphicsBackend.OpenGLES;
 
-            switch (gd.BackendType)
-            {
-                case GraphicsBackend.Direct3D11:
-                case GraphicsBackend.Metal:
-                    specializations.Add(new SpecializationConstant(100, false));
-                    break;
-                case GraphicsBackend.Vulkan:
-                    specializations.Add(new SpecializationConstant(100, true));
-                    break;
-                case GraphicsBackend.OpenGL:
-                case GraphicsBackend.OpenGLES:
-                    specializations.Add(new SpecializationConstant(100, false));
-                    specializations.Add(new SpecializationConstant(101, true));
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
+            List<SpecializationConstant> specializations = new List<SpecializationConstant>();
+            specializations.Add(new SpecializationConstant(100, gd.IsClipSpaceYInverted));
+            specializations.Add(new SpecializationConstant(101, glOrGles)); // TextureCoordinatesInvertedY
+            specializations.Add(new SpecializationConstant(102, gd.IsDepthRangeZeroToOne));
 
             PixelFormat swapchainFormat = gd.MainSwapchain.Framebuffer.OutputDescription.ColorAttachments[0].Format;
             bool swapchainIsSrgb = swapchainFormat == PixelFormat.B8_G8_R8_A8_UNorm_SRgb

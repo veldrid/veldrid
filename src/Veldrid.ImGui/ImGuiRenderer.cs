@@ -376,8 +376,9 @@ namespace Veldrid
             bool leftPressed = false;
             bool middlePressed = false;
             bool rightPressed = false;
-            foreach (MouseEvent me in snapshot.MouseEvents)
+            for (int i = 0; i < snapshot.MouseEvents.Count; i++)
             {
+                MouseEvent me = snapshot.MouseEvents[i];
                 if (me.Down)
                 {
                     switch (me.MouseButton)

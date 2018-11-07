@@ -9,6 +9,10 @@ namespace Veldrid.NeoDemo.Objects
 {
     public class TexturedMesh : CullRenderable
     {
+        // Useful for testing uniform bindings with an offset.
+        private static readonly bool s_useUniformOffset = false;
+        private uint _uniformOffset = 0;
+
         private readonly string _name;
         private readonly MeshData _meshData;
         private readonly ImageSharpTexture _textureData;
@@ -61,13 +65,20 @@ namespace Veldrid.NeoDemo.Objects
 
         public unsafe override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
+            if (s_useUniformOffset)
+            {
+                _uniformOffset = gd.UniformBufferMinOffsetAlignment;
+            }
             ResourceFactory disposeFactory = new DisposeCollectorResourceFactory(gd.ResourceFactory, _disposeCollector);
             _vb = _meshData.CreateVertexBuffer(disposeFactory, cl);
             _vb.Name = _name + "_VB";
             _ib = _meshData.CreateIndexBuffer(disposeFactory, cl, out _indexCount);
             _ib.Name = _name + "_IB";
 
-            _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(64 * 2, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            uint bufferSize = 128;
+            if (s_useUniformOffset) { bufferSize += _uniformOffset; }
+
+            _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(bufferSize, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             if (_materialPropsOwned)
             {
                 _materialProps.CreateDeviceObjects(gd, cl, sc);
@@ -198,7 +209,7 @@ namespace Veldrid.NeoDemo.Objects
                 sc.PointLightsBuffer));
 
             _mainPerObjectRS = disposeFactory.CreateResourceSet(new ResourceSetDescription(mainPerObjectLayout,
-                _worldAndInverseBuffer,
+                new DeviceBufferRange(_worldAndInverseBuffer, _uniformOffset, 128),
                 _materialProps.UniformBuffer,
                 _textureView,
                 gd.Aniso4xSampler,
@@ -240,7 +251,7 @@ namespace Veldrid.NeoDemo.Objects
                     viewProjBuffer));
                 ResourceSet worldRS = disposeFactory.CreateResourceSet(new ResourceSetDescription(
                     worldLayout,
-                    _worldAndInverseBuffer));
+                    new DeviceBufferRange(_worldAndInverseBuffer, _uniformOffset, 128)));
                 ret[i * 2 + 1] = worldRS;
             }
 
@@ -306,7 +317,7 @@ namespace Veldrid.NeoDemo.Objects
             WorldAndInverse wai;
             wai.World = _transform.GetTransformMatrix();
             wai.InverseWorld = VdUtilities.CalculateInverseTranspose(ref wai.World);
-            gd.UpdateBuffer(_worldAndInverseBuffer, 0, ref wai);
+            gd.UpdateBuffer(_worldAndInverseBuffer, _uniformOffset, ref wai);
         }
 
         private void RenderShadowMap(CommandList cl, SceneContext sc, int shadowMapIndex)

@@ -122,15 +122,16 @@ namespace Veldrid.Vk
             }
         }
 
-        internal static VkDescriptorType VdToVkDescriptorType(ResourceKind kind)
+        internal static VkDescriptorType VdToVkDescriptorType(ResourceKind kind, ResourceLayoutElementOptions options)
         {
+            bool dynamicBinding = (options & ResourceLayoutElementOptions.DynamicBinding) != 0;
             switch (kind)
             {
                 case ResourceKind.UniformBuffer:
-                    return VkDescriptorType.UniformBuffer;
+                    return dynamicBinding ? VkDescriptorType.UniformBufferDynamic : VkDescriptorType.UniformBuffer;
                 case ResourceKind.StructuredBufferReadWrite:
                 case ResourceKind.StructuredBufferReadOnly:
-                    return VkDescriptorType.StorageBuffer;
+                    return dynamicBinding ? VkDescriptorType.StorageBufferDynamic : VkDescriptorType.StorageBuffer;
                 case ResourceKind.TextureReadOnly:
                     return VkDescriptorType.SampledImage;
                 case ResourceKind.TextureReadWrite:

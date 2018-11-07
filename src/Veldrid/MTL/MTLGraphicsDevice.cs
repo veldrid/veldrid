@@ -58,7 +58,8 @@ namespace Veldrid.MTL
                 independentBlend: true,
                 structuredBuffer: true,
                 subsetTextureView: true,
-                commandListDebugMarkers: true);
+                commandListDebugMarkers: true,
+                bufferRangeBinding: true);
             ResourceBindingModel = options.ResourceBindingModel;
 
             ResourceFactory = new MTLResourceFactory(this);
@@ -69,11 +70,11 @@ namespace Veldrid.MTL
             for (int i = 0; i < allSampleCounts.Length; i++)
             {
                 TextureSampleCount count = allSampleCounts[i];
-                    uint uintValue = FormatHelpers.GetSampleCountUInt32(count);
-                    if (_device.supportsTextureSampleCount((UIntPtr)uintValue))
-                    {
-                        _supportedSampleCounts[i] = true;
-                    }
+                uint uintValue = FormatHelpers.GetSampleCountUInt32(count);
+                if (_device.supportsTextureSampleCount((UIntPtr)uintValue))
+                {
+                    _supportedSampleCounts[i] = true;
+                }
             }
 
             if (swapchainDesc != null)
@@ -488,5 +489,8 @@ namespace Veldrid.MTL
                 return _unalignedBufferCopyPipeline;
             }
         }
+
+        internal override uint GetUniformBufferMinOffsetAlignmentCore() => MetalFeatures.IsMacOS ? 16u : 256u;
+        internal override uint GetStructuredBufferMinOffsetAlignmentCore() => 16u;
     }
 }

@@ -238,8 +238,9 @@ namespace Veldrid.MTL
             uint bufferIndex = 0;
             foreach (MTLResourceLayout layout in ResourceLayouts)
             {
-                foreach (ResourceKind kind in layout.ResourceKinds)
+                foreach (ResourceLayoutElementDescription rle in layout.Description.Elements)
                 {
+                    ResourceKind kind = rle.Kind;
                     if (kind == ResourceKind.UniformBuffer
                         || kind == ResourceKind.StructuredBufferReadOnly)
                     {

@@ -19,6 +19,10 @@ namespace Veldrid
         /// The <see cref="ShaderStages"/> in which this element is used.
         /// </summary>
         public ShaderStages Stages;
+        /// <summary>
+        /// Miscellaneous resource options for this element.
+        /// </summary>
+        public ResourceLayoutElementOptions Options;
 
         /// <summary>
         /// Constructs a new ResourceLayoutElementDescription.
@@ -31,6 +35,26 @@ namespace Veldrid
             Name = name;
             Kind = kind;
             Stages = stages;
+            Options = ResourceLayoutElementOptions.None;
+        }
+
+        /// <summary>
+        /// Constructs a new ResourceLayoutElementDescription.
+        /// </summary>
+        /// <param name="name">The name of the element.</param>
+        /// <param name="kind">The kind of resource.</param>
+        /// <param name="stages">The <see cref="ShaderStages"/> in which this element is used.</param>
+        /// <param name="options">Miscellaneous resource options for this element.</param>
+        public ResourceLayoutElementDescription(
+            string name,
+            ResourceKind kind,
+            ShaderStages stages,
+            ResourceLayoutElementOptions options)
+        {
+            Name = name;
+            Kind = kind;
+            Stages = stages;
+            Options = options;
         }
 
         /// <summary>
@@ -40,7 +64,7 @@ namespace Veldrid
         /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(ResourceLayoutElementDescription other)
         {
-            return Name.Equals(other.Name) && Kind == other.Kind && Stages == other.Stages;
+            return Name.Equals(other.Name) && Kind == other.Kind && Stages == other.Stages && Options == other.Options;
         }
 
         /// <summary>
@@ -49,7 +73,22 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(Name.GetHashCode(), (int)Kind, (int)Stages);
+            return HashHelper.Combine(Name.GetHashCode(), (int)Kind, (int)Stages, (int)Options);
         }
+    }
+
+    [Flags]
+    public enum ResourceLayoutElementOptions
+    {
+        /// <summary>
+        /// No special options.
+        /// </summary>
+        None,
+        /// <summary>
+        /// Can be applied to a buffer type resource (<see cref="ResourceKind.StructuredBufferReadOnly"/>,
+        /// <see cref="ResourceKind.StructuredBufferReadWrite"/>, or <see cref="ResourceKind.UniformBuffer"/>), allowing it to be
+        /// bound with a dynamic offset using 
+        /// </summary>
+        DynamicBinding = 1 << 0,
     }
 }

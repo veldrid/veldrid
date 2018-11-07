@@ -81,6 +81,27 @@ namespace Veldrid.Tests
         }
 
         [Fact]
+        public void ResourceSet_InvalidUniformOffset_Fails()
+        {
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("UB0", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+
+            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.UniformBuffer));
+
+            Assert.Throws<VeldridException>(() =>
+            {
+                RF.CreateResourceSet(new ResourceSetDescription(layout,
+                    new DeviceBufferRange(buffer, GD.UniformBufferMinOffsetAlignment - 1, 256)));
+            });
+
+            Assert.Throws<VeldridException>(() =>
+            {
+                RF.CreateResourceSet(new ResourceSetDescription(layout,
+                    new DeviceBufferRange(buffer, GD.UniformBufferMinOffsetAlignment + 1, 256)));
+            });
+        }
+
+        [Fact]
         public void ResourceSet_NoPipelineBound_Fails()
         {
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(

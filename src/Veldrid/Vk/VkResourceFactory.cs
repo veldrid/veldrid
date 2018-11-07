@@ -43,6 +43,7 @@ namespace Veldrid.Vk
 
         public override ResourceSet CreateResourceSet(ref ResourceSetDescription description)
         {
+            ValidationHelpers.ValidateResourceSet(_gd, ref description);
             return new VkResourceSet(_gd, ref description);
         }
 

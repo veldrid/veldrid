@@ -46,6 +46,7 @@ namespace Veldrid.OpenGL
 
         public override ResourceSet CreateResourceSet(ref ResourceSetDescription description)
         {
+            ValidationHelpers.ValidateResourceSet(_gd, ref description);
             return new OpenGLResourceSet(ref description);
         }
 

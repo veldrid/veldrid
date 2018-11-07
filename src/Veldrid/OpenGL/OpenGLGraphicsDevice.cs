@@ -39,6 +39,8 @@ namespace Veldrid.OpenGL
         private uint _maxTextureSize;
         private uint _maxTexDepth;
         private uint _maxTexArrayLayers;
+        private uint _minUboOffsetAlignment;
+        private uint _minSsboOffsetAlignment;
 
         private readonly StagingMemoryPool _stagingMemoryPool = new StagingMemoryPool();
         private BlockingCollection<ExecutionThreadWorkItem> _workItems;
@@ -170,7 +172,21 @@ namespace Veldrid.OpenGL
                 independentBlend: _extensions.IndependentBlend,
                 structuredBuffer: _extensions.StorageBuffers,
                 subsetTextureView: _extensions.ARB_TextureView,
-                commandListDebugMarkers: _extensions.KHR_Debug || _extensions.EXT_DebugMarker);
+                commandListDebugMarkers: _extensions.KHR_Debug || _extensions.EXT_DebugMarker,
+                bufferRangeBinding: true);
+
+            int uboAlignment;
+            glGetIntegerv(GetPName.UniformBufferOffsetAlignment, &uboAlignment);
+            CheckLastError();
+            _minUboOffsetAlignment = (uint)uboAlignment;
+
+            if (_features.StructuredBuffer)
+            {
+                int ssboAlignment;
+                glGetIntegerv(GetPName.ShaderStorageBufferOffsetAlignment, &ssboAlignment);
+                CheckLastError();
+                _minSsboOffsetAlignment = (uint)ssboAlignment;
+            }
 
             _resourceFactory = new OpenGLResourceFactory(this);
 
@@ -1033,6 +1049,10 @@ namespace Veldrid.OpenGL
         {
             _executionThread.Terminate();
         }
+
+        internal override uint GetUniformBufferMinOffsetAlignmentCore() => _minUboOffsetAlignment;
+
+        internal override uint GetStructuredBufferMinOffsetAlignmentCore() => _minSsboOffsetAlignment;
 
         private class ExecutionThread
         {

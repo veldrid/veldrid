@@ -76,6 +76,12 @@ namespace Veldrid
             }
         }
 
+        public uint UniformBufferMinOffsetAlignment => GetUniformBufferMinOffsetAlignmentCore();
+        public uint StructuredBufferMinOffsetAlignment => GetStructuredBufferMinOffsetAlignmentCore();
+
+        internal abstract uint GetUniformBufferMinOffsetAlignmentCore();
+        internal abstract uint GetStructuredBufferMinOffsetAlignmentCore();
+
         /// <summary>
         /// Submits the given <see cref="CommandList"/> for execution by this device.
         /// Commands submitted in this way may not be completed when this method returns.

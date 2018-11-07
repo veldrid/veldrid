@@ -258,5 +258,32 @@ namespace Veldrid
         {
             return (T[])array.Clone();
         }
+
+        public static DeviceBufferRange GetBufferRange(BindableResource resource)
+        {
+            if (resource is DeviceBufferRange range) { return range; }
+            else
+            {
+                DeviceBuffer buffer = (DeviceBuffer)resource;
+                return new DeviceBufferRange(buffer, 0, buffer.SizeInBytes);
+            }
+        }
+
+        public static bool GetDeviceBuffer(BindableResource resource, out DeviceBuffer buffer)
+        {
+            if (resource is DeviceBuffer db)
+            {
+                buffer = db;
+                return true;
+            }
+            else if (resource is DeviceBufferRange range)
+            {
+                buffer = range.Buffer;
+                return true;
+            }
+
+            buffer = null;
+            return false;
+        }
     }
 }

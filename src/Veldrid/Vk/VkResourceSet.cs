@@ -40,11 +40,14 @@ namespace Veldrid.Vk
                 descriptorWrites[i].dstBinding = (uint)i;
                 descriptorWrites[i].dstSet = _descriptorAllocationToken.Set;
 
-                if (type == VkDescriptorType.UniformBuffer || type == VkDescriptorType.StorageBuffer)
+                if (type == VkDescriptorType.UniformBuffer || type == VkDescriptorType.UniformBufferDynamic
+                    || type == VkDescriptorType.StorageBuffer || type == VkDescriptorType.StorageBufferDynamic)
                 {
-                    VkBuffer vkBuffer = Util.AssertSubtype<BindableResource, VkBuffer>(boundResources[i]);
-                    bufferInfos[i].buffer = vkBuffer.DeviceBuffer;
-                    bufferInfos[i].range = vkBuffer.SizeInBytes;
+                    DeviceBufferRange range = Util.GetBufferRange(boundResources[i]);
+                    VkBuffer rangedVkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(range.Buffer);
+                    bufferInfos[i].buffer = rangedVkBuffer.DeviceBuffer;
+                    bufferInfos[i].offset = range.Offset;
+                    bufferInfos[i].range = range.SizeInBytes;
                     descriptorWrites[i].pBufferInfo = &bufferInfos[i];
                 }
                 else if (type == VkDescriptorType.SampledImage)

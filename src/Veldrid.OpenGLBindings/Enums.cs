@@ -1653,6 +1653,7 @@ namespace Veldrid.OpenGLBinding
         MaxGeometryImageUniforms = 37069,
         MaxFragmentImageUniforms = 37070,
         MaxCombinedImageUniforms = 37071,
+        ShaderStorageBufferOffsetAlignment = 37087,
         ContextRobustAccess = 37107,
         TextureBinding2DMultisample = 37124,
         TextureBinding2DMultisampleArray = 37125,

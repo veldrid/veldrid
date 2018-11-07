@@ -35,7 +35,7 @@ namespace Veldrid.Vk
             {
                 bindings[i].binding = i;
                 bindings[i].descriptorCount = 1;
-                VkDescriptorType descriptorType = VkFormats.VdToVkDescriptorType(elements[i].Kind);
+                VkDescriptorType descriptorType = VkFormats.VdToVkDescriptorType(elements[i].Kind, elements[i].Options);
                 bindings[i].descriptorType = descriptorType;
                 bindings[i].stageFlags = VkFormats.VdToVkShaderStages(elements[i].Stages);
 

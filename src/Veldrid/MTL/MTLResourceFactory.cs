@@ -41,6 +41,7 @@ namespace Veldrid.MTL
 
         public override ResourceSet CreateResourceSet(ref ResourceSetDescription description)
         {
+            ValidationHelpers.ValidateResourceSet(_gd, ref description);
             return new MTLResourceSet(ref description, _gd);
         }
 

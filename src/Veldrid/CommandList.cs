@@ -185,8 +185,8 @@ namespace Veldrid
             }
 
             ResourceLayout layout = _graphicsPipeline.ResourceLayouts[slot];
-            int pipelineLength = layout.ResourceKinds.Length;
-            int setLength = rs.Layout.ResourceKinds.Length;
+            int pipelineLength = layout.Description.Elements.Length;
+            int setLength = rs.Layout.Description.Elements.Length;
             if (pipelineLength != setLength)
             {
                 throw new VeldridException($"Failed to bind ResourceSet to slot {slot}. The number of resources in the ResourceSet ({setLength}) does not match the number expected by the active Pipeline ({pipelineLength}).");
@@ -194,8 +194,8 @@ namespace Veldrid
 
             for (int i = 0; i < pipelineLength; i++)
             {
-                ResourceKind pipelineKind = layout.ResourceKinds[i];
-                ResourceKind setKind = rs.Layout.ResourceKinds[i];
+                ResourceKind pipelineKind = layout.Description.Elements[i].Kind;
+                ResourceKind setKind = rs.Layout.Description.Elements[i].Kind;
                 if (pipelineKind != setKind)
                 {
                     throw new VeldridException(
@@ -235,8 +235,8 @@ namespace Veldrid
             }
 
             ResourceLayout layout = _computePipeline.ResourceLayouts[slot];
-            int pipelineLength = layout.ResourceKinds.Length;
-            int setLength = rs.Layout.ResourceKinds.Length;
+            int pipelineLength = layout.Description.Elements.Length;
+            int setLength = rs.Layout.Description.Elements.Length;
             if (pipelineLength != setLength)
             {
                 throw new VeldridException($"Failed to bind ResourceSet to slot {slot}. The number of resources in the ResourceSet ({setLength}) does not match the number expected by the active Pipeline ({pipelineLength}).");
@@ -244,8 +244,8 @@ namespace Veldrid
 
             for (int i = 0; i < pipelineLength; i++)
             {
-                ResourceKind pipelineKind = layout.ResourceKinds[i];
-                ResourceKind setKind = rs.Layout.ResourceKinds[i];
+                ResourceKind pipelineKind = layout.Description.Elements[i].Kind;
+                ResourceKind setKind = rs.Layout.Description.Elements[i].Kind;
                 if (pipelineKind != setKind)
                 {
                     throw new VeldridException(

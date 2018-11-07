@@ -714,14 +714,16 @@ namespace Veldrid.MTL
 
             for (int i = 0; i < mtlRS.Resources.Length; i++)
             {
-                var bindingInfo = layout.GetBindingInfo(i);
-                var resource = mtlRS.Resources[i];
+                MTLResourceLayout.ResourceBindingInfo bindingInfo = layout.GetBindingInfo(i);
+                BindableResource resource = mtlRS.Resources[i];
                 switch (bindingInfo.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                        MTLBuffer mtlBuffer = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
-                        BindBuffer(mtlBuffer, slot, bindingInfo.Slot, bindingInfo.Stages);
+                    {
+                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
+                    }
                     case ResourceKind.TextureReadOnly:
                         MTLTextureView mtlTexView = Util.AssertSubtype<BindableResource, MTLTextureView>(resource);
                         BindTexture(mtlTexView, slot, bindingInfo.Slot, bindingInfo.Stages);
@@ -735,13 +737,17 @@ namespace Veldrid.MTL
                         BindSampler(mtlSampler, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
-                        MTLBuffer mtlStructuredBuff = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
-                        BindBuffer(mtlStructuredBuff, slot, bindingInfo.Slot, bindingInfo.Stages);
+                    {
+                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
+                    }
                     case ResourceKind.StructuredBufferReadWrite:
-                        MTLBuffer mtlStructuredBuffRW = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
-                        BindBuffer(mtlStructuredBuffRW, slot, bindingInfo.Slot, bindingInfo.Stages);
+                    {
+                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
+                    }
                     default:
                         throw Illegal.Value<ResourceKind>();
                 }
@@ -761,9 +767,11 @@ namespace Veldrid.MTL
                 switch (bindingInfo.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                        MTLBuffer mtlBuffer = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
-                        BindBuffer(mtlBuffer, slot, bindingInfo.Slot, bindingInfo.Stages);
+                    {
+                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
+                    }
                     case ResourceKind.TextureReadOnly:
                         MTLTextureView mtlTexView = Util.AssertSubtype<BindableResource, MTLTextureView>(resource);
                         BindTexture(mtlTexView, slot, bindingInfo.Slot, bindingInfo.Stages);
@@ -777,25 +785,30 @@ namespace Veldrid.MTL
                         BindSampler(mtlSampler, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
-                        MTLBuffer mtlStructuredBuff = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
-                        BindBuffer(mtlStructuredBuff, slot, bindingInfo.Slot, bindingInfo.Stages);
+                    {
+                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
+                    }
                     case ResourceKind.StructuredBufferReadWrite:
-                        MTLBuffer mtlStructuredBuffRW = Util.AssertSubtype<BindableResource, MTLBuffer>(resource);
-                        BindBuffer(mtlStructuredBuffRW, slot, bindingInfo.Slot, bindingInfo.Stages);
+                    {
+                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
+                    }
                     default:
                         throw Illegal.Value<ResourceKind>();
                 }
             }
         }
 
-        private void BindBuffer(MTLBuffer mtlBuffer, uint set, uint slot, ShaderStages stages)
+        private void BindBuffer(DeviceBufferRange range, uint set, uint slot, ShaderStages stages)
         {
+            MTLBuffer mtlBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(range.Buffer);
             uint baseBuffer = GetBufferBase(set, stages != ShaderStages.Compute);
             if (stages == ShaderStages.Compute)
             {
-                _cce.setBuffer(mtlBuffer.DeviceBuffer, UIntPtr.Zero, (UIntPtr)(slot + baseBuffer));
+                _cce.setBuffer(mtlBuffer.DeviceBuffer, (UIntPtr)range.Offset, (UIntPtr)(slot + baseBuffer));
             }
             else
             {
@@ -804,11 +817,11 @@ namespace Veldrid.MTL
                     UIntPtr index = (UIntPtr)(_graphicsPipeline.ResourceBindingModel == ResourceBindingModel.Improved
                         ? slot + baseBuffer
                         : slot + _vertexBufferCount + baseBuffer);
-                    _rce.setVertexBuffer(mtlBuffer.DeviceBuffer, UIntPtr.Zero, index);
+                    _rce.setVertexBuffer(mtlBuffer.DeviceBuffer, (UIntPtr)range.Offset, index);
                 }
                 if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
                 {
-                    _rce.setFragmentBuffer(mtlBuffer.DeviceBuffer, UIntPtr.Zero, (UIntPtr)(slot + baseBuffer));
+                    _rce.setFragmentBuffer(mtlBuffer.DeviceBuffer, (UIntPtr)range.Offset, (UIntPtr)(slot + baseBuffer));
                 }
             }
         }

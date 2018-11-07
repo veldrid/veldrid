@@ -86,6 +86,11 @@
         /// <see cref="CommandList.InsertDebugMarker(string)"/> methods. If not, these methods will have no effect.
         /// </summary>
         public bool CommandListDebugMarkers { get; }
+        /// <summary>
+        /// Indicates whether uniform and structured buffers can be bound with an offset and a size. If false, buffer resources
+        /// must be bound with their full range.
+        /// </summary>
+        public bool BufferRangeBinding { get; }
 
         internal GraphicsDeviceFeatures(
             bool computeShader,
@@ -104,7 +109,8 @@
             bool independentBlend,
             bool structuredBuffer,
             bool subsetTextureView,
-            bool commandListDebugMarkers)
+            bool commandListDebugMarkers,
+            bool bufferRangeBinding)
         {
             ComputeShader = computeShader;
             GeometryShader = geometryShader;
@@ -123,6 +129,7 @@
             StructuredBuffer = structuredBuffer;
             SubsetTextureView = subsetTextureView;
             CommandListDebugMarkers = commandListDebugMarkers;
+            BufferRangeBinding = bufferRangeBinding;
         }
     }
 }

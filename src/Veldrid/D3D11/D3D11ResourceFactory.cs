@@ -46,6 +46,7 @@ namespace Veldrid.D3D11
 
         public override ResourceSet CreateResourceSet(ref ResourceSetDescription description)
         {
+            ValidationHelpers.ValidateResourceSet(_gd, ref description);
             return new D3D11ResourceSet(ref description);
         }
 

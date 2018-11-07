@@ -123,7 +123,8 @@ namespace Veldrid.Vk
                 independentBlend: _physicalDeviceFeatures.independentBlend,
                 structuredBuffer: true,
                 subsetTextureView: true,
-                commandListDebugMarkers: _debugMarkerEnabled);
+                commandListDebugMarkers: _debugMarkerEnabled,
+                bufferRangeBinding: true);
 
             ResourceFactory = new VkResourceFactory(this);
 
@@ -1331,6 +1332,12 @@ namespace Veldrid.Vk
             texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.DepthStencilAttachmentOptimal);
             pool.EndAndSubmit(cb);
         }
+
+        internal override uint GetUniformBufferMinOffsetAlignmentCore()
+            => (uint)_physicalDeviceProperties.limits.minUniformBufferOffsetAlignment;
+
+        internal override uint GetStructuredBufferMinOffsetAlignmentCore()
+            => (uint)_physicalDeviceProperties.limits.minStorageBufferOffsetAlignment;
 
         private class SharedCommandPool
         {

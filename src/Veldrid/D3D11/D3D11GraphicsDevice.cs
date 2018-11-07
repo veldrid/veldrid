@@ -60,12 +60,22 @@ namespace Veldrid.D3D11
 
             try
             {
-                _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, flags);
+                _device = new SharpDX.Direct3D11.Device(
+                    SharpDX.Direct3D.DriverType.Hardware,
+                    flags,
+                    SharpDX.Direct3D.FeatureLevel.Level_11_1);
             }
-            catch (SharpDXException ex) when (debug && (uint)ex.HResult == 0x887A002D)
+            catch (SharpDXException)
             {
-                // The D3D11 debug layer is not installed. Create a normal device without debug support, instead.
-                _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.None);
+                try
+                {
+                    _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, flags);
+                }
+                catch (SharpDXException ex) when (debug && (uint)ex.HResult == 0x887A002D)
+                {
+                    // The D3D11 debug layer is not installed. Create a normal device without debug support, instead.
+                    _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.None);
+                }
             }
 
             if (swapchainDesc != null)
@@ -93,7 +103,8 @@ namespace Veldrid.D3D11
                 independentBlend: true,
                 structuredBuffer: true,
                 subsetTextureView: true,
-                commandListDebugMarkers: _device.FeatureLevel >= SharpDX.Direct3D.FeatureLevel.Level_11_1);
+                commandListDebugMarkers: _device.FeatureLevel >= SharpDX.Direct3D.FeatureLevel.Level_11_1,
+                bufferRangeBinding: _device.FeatureLevel >= SharpDX.Direct3D.FeatureLevel.Level_11_1);
 
             _d3d11ResourceFactory = new D3D11ResourceFactory(this);
 
@@ -523,6 +534,10 @@ namespace Veldrid.D3D11
         {
             Util.AssertSubtype<Fence, D3D11Fence>(fence).Reset();
         }
+
+        internal override uint GetUniformBufferMinOffsetAlignmentCore() => 256u;
+
+        internal override uint GetStructuredBufferMinOffsetAlignmentCore() => 16;
 
         private static int GetSyncInterval(bool syncToVBlank)
         {

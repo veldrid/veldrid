@@ -21,7 +21,7 @@ namespace Veldrid.Vk
         public VkPipelineLayout PipelineLayout => _pipelineLayout;
 
         public uint ResourceSetCount { get; }
-
+        public int DynamicOffsetsCount { get; }
         public bool ScissorTestEnabled { get; }
 
         public override bool IsComputePipeline { get; }
@@ -327,6 +327,11 @@ namespace Veldrid.Vk
             CheckResult(result);
 
             ResourceSetCount = (uint)description.ResourceLayouts.Length;
+            DynamicOffsetsCount = 0;
+            foreach (VkResourceLayout layout in ResourceLayouts)
+            {
+                DynamicOffsetsCount += layout.DynamicBufferCount;
+            }
         }
 
         public VkPipeline(VkGraphicsDevice gd, ref ComputePipelineDescription description)
@@ -402,6 +407,11 @@ namespace Veldrid.Vk
             CheckResult(result);
 
             ResourceSetCount = (uint)description.ResourceLayouts.Length;
+            DynamicOffsetsCount = 0;
+            foreach (VkResourceLayout layout in ResourceLayouts)
+            {
+                DynamicOffsetsCount += layout.DynamicBufferCount;
+            }
         }
 
         public override string Name

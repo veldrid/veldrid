@@ -13,6 +13,7 @@ namespace Veldrid
         {
 #if VALIDATE_USAGE
             Layout = description.Layout;
+            Resources = description.BoundResources;
 #endif
         }
 
@@ -29,6 +30,7 @@ namespace Veldrid
 
 #if VALIDATE_USAGE
         internal ResourceLayout Layout { get; }
+        public BindableResource[] Resources { get; }
 #endif
     }
 }

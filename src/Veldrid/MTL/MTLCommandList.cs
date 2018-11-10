@@ -31,10 +31,10 @@ namespace Veldrid.MTL
         private MTLScissorRect[] _scissorRects = Array.Empty<MTLScissorRect>();
         private bool _scissorRectsChanged;
         private uint _graphicsResourceSetCount;
-        private ResourceSet[] _graphicsResourceSets;
+        private BoundResourceSetInfo[] _graphicsResourceSets;
         private bool[] _graphicsResourceSetsActive;
         private uint _computeResourceSetCount;
-        private ResourceSet[] _computeResourceSets;
+        private BoundResourceSetInfo[] _computeResourceSets;
         private bool[] _computeResourceSetsActive;
         private uint _vertexBufferCount;
         private uint _nonVertexBufferCount;
@@ -46,7 +46,7 @@ namespace Veldrid.MTL
         public MTLCommandBuffer CommandBuffer => _cb;
 
         public MTLCommandList(ref CommandListDescription description, MTLGraphicsDevice gd)
-            : base(ref description, gd.Features)
+            : base(ref description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
         {
             _gd = gd;
         }
@@ -671,10 +671,14 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(rpDesc.NativePtr);
         }
 
-        protected override void SetComputeResourceSetCore(uint slot, ResourceSet set)
+        protected override void SetComputeResourceSetCore(uint slot, ResourceSet set, uint dynamicOffsetCount, ref uint dynamicOffsets)
         {
-            _computeResourceSets[slot] = set;
-            _computeResourceSetsActive[slot] = false;
+            if (!_computeResourceSets[slot].Equals(set, dynamicOffsetCount, ref dynamicOffsets))
+            {
+                _computeResourceSets[slot].Offsets.Dispose();
+                _computeResourceSets[slot] = new BoundResourceSetInfo(set, dynamicOffsetCount, ref dynamicOffsets);
+                _computeResourceSetsActive[slot] = false;
+            }
         }
 
         protected override void SetFramebufferCore(Framebuffer fb)
@@ -700,27 +704,38 @@ namespace Veldrid.MTL
             _currentFramebufferEverActive = false;
         }
 
-        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs)
+        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
         {
-            _graphicsResourceSets[slot] = rs;
-            _graphicsResourceSetsActive[slot] = false;
+            if (!_graphicsResourceSets[slot].Equals(rs, dynamicOffsetCount, ref dynamicOffsets))
+            {
+                _graphicsResourceSets[slot].Offsets.Dispose();
+                _graphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsetCount, ref dynamicOffsets);
+                _graphicsResourceSetsActive[slot] = false;
+            }
         }
 
-        private void ActivateGraphicsResourceSet(uint slot, ResourceSet rs)
+        private void ActivateGraphicsResourceSet(uint slot, BoundResourceSetInfo brsi)
         {
             Debug.Assert(RenderEncoderActive);
-            MTLResourceSet mtlRS = Util.AssertSubtype<ResourceSet, MTLResourceSet>(rs);
+            MTLResourceSet mtlRS = Util.AssertSubtype<ResourceSet, MTLResourceSet>(brsi.Set);
             MTLResourceLayout layout = mtlRS.Layout;
+            uint dynamicOffsetIndex = 0;
 
             for (int i = 0; i < mtlRS.Resources.Length; i++)
             {
                 MTLResourceLayout.ResourceBindingInfo bindingInfo = layout.GetBindingInfo(i);
                 BindableResource resource = mtlRS.Resources[i];
+                uint bufferOffset = 0;
+                if (bindingInfo.DynamicBuffer)
+                {
+                    bufferOffset = brsi.Offsets.Get(dynamicOffsetIndex);
+                    dynamicOffsetIndex += 1;
+                }
                 switch (bindingInfo.Kind)
                 {
                     case ResourceKind.UniformBuffer:
                     {
-                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     }
@@ -738,13 +753,13 @@ namespace Veldrid.MTL
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
                     {
-                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     }
                     case ResourceKind.StructuredBufferReadWrite:
                     {
-                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     }
@@ -754,21 +769,29 @@ namespace Veldrid.MTL
             }
         }
 
-        private void ActivateComputeResourceSet(uint slot, ResourceSet rs)
+        private void ActivateComputeResourceSet(uint slot, BoundResourceSetInfo brsi)
         {
             Debug.Assert(ComputeEncoderActive);
-            MTLResourceSet mtlRS = Util.AssertSubtype<ResourceSet, MTLResourceSet>(rs);
+            MTLResourceSet mtlRS = Util.AssertSubtype<ResourceSet, MTLResourceSet>(brsi.Set);
             MTLResourceLayout layout = mtlRS.Layout;
+            uint dynamicOffsetIndex = 0;
 
             for (int i = 0; i < mtlRS.Resources.Length; i++)
             {
-                var bindingInfo = layout.GetBindingInfo(i);
-                var resource = mtlRS.Resources[i];
+                MTLResourceLayout.ResourceBindingInfo bindingInfo = layout.GetBindingInfo(i);
+                BindableResource resource = mtlRS.Resources[i];
+                uint bufferOffset = 0;
+                if (bindingInfo.DynamicBuffer)
+                {
+                    bufferOffset = brsi.Offsets.Get(dynamicOffsetIndex);
+                    dynamicOffsetIndex += 1;
+                }
+
                 switch (bindingInfo.Kind)
                 {
                     case ResourceKind.UniformBuffer:
                     {
-                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     }
@@ -786,13 +809,13 @@ namespace Veldrid.MTL
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
                     {
-                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     }
                     case ResourceKind.StructuredBufferReadWrite:
                     {
-                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     }

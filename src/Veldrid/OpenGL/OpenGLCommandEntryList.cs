@@ -17,8 +17,8 @@ namespace Veldrid.OpenGL
         void SetFramebuffer(Framebuffer fb);
         void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format, uint offset);
         void SetPipeline(Pipeline pipeline);
-        void SetGraphicsResourceSet(uint slot, ResourceSet rs);
-        void SetComputeResourceSet(uint slot, ResourceSet rs);
+        void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets);
+        void SetComputeResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets);
         void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
         void SetVertexBuffer(uint index, DeviceBuffer buffer, uint offset);
         void SetViewport(uint index, ref Viewport viewport);

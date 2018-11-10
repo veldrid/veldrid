@@ -43,7 +43,7 @@ namespace Veldrid.Vk
                 if (type == VkDescriptorType.UniformBuffer || type == VkDescriptorType.UniformBufferDynamic
                     || type == VkDescriptorType.StorageBuffer || type == VkDescriptorType.StorageBufferDynamic)
                 {
-                    DeviceBufferRange range = Util.GetBufferRange(boundResources[i]);
+                    DeviceBufferRange range = Util.GetBufferRange(boundResources[i], 0);
                     VkBuffer rangedVkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(range.Buffer);
                     bufferInfos[i].buffer = rangedVkBuffer.DeviceBuffer;
                     bufferInfos[i].offset = range.Offset;

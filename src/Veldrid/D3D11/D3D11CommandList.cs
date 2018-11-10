@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Buffers;
 
 namespace Veldrid.D3D11
 {
@@ -43,12 +44,12 @@ namespace Veldrid.D3D11
         private PixelShader _pixelShader;
 
         private new D3D11Pipeline _graphicsPipeline;
-        private D3D11ResourceSet[] _graphicsResourceSets = new D3D11ResourceSet[1];
+        private BoundResourceSetInfo[] _graphicsResourceSets = new BoundResourceSetInfo[1];
         // Resource sets are invalidated when a new resource set is bound with an incompatible SRV or UAV.
         private bool[] _invalidatedGraphicsResourceSets = new bool[1];
 
         private new D3D11Pipeline _computePipeline;
-        private D3D11ResourceSet[] _computeResourceSets = new D3D11ResourceSet[1];
+        private BoundResourceSetInfo[] _computeResourceSets = new BoundResourceSetInfo[1];
         // Resource sets are invalidated when a new resource set is bound with an incompatible SRV or UAV.
         private bool[] _invalidatedComputeResourceSets = new bool[1];
         private string _name;
@@ -82,7 +83,7 @@ namespace Veldrid.D3D11
         private readonly List<D3D11Swapchain> _referencedSwapchains = new List<D3D11Swapchain>();
 
         public D3D11CommandList(D3D11GraphicsDevice gd, ref CommandListDescription description)
-            : base(ref description, gd.Features)
+            : base(ref description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
         {
             _gd = gd;
             _context = new DeviceContext(gd.Device);
@@ -137,7 +138,8 @@ namespace Veldrid.D3D11
             _hullShader = null;
             _domainShader = null;
             _pixelShader = null;
-            Util.ClearArray(_graphicsResourceSets);
+
+            ClearSets(_graphicsResourceSets);
 
             Util.ClearArray(_vertexBoundUniformBuffers);
             Util.ClearArray(_vertexBoundTextureViews);
@@ -148,7 +150,7 @@ namespace Veldrid.D3D11
             Util.ClearArray(_fragmentBoundSamplers);
 
             _computePipeline = null;
-            Util.ClearArray(_computeResourceSets);
+            ClearSets(_computeResourceSets);
 
             foreach (KeyValuePair<Texture, List<BoundTextureInfo>> kvp in _boundSRVs)
             {
@@ -165,6 +167,15 @@ namespace Veldrid.D3D11
                 PoolBoundTextureList(list);
             }
             _boundUAVs.Clear();
+        }
+
+        private void ClearSets(BoundResourceSetInfo[] boundSets)
+        {
+            foreach (BoundResourceSetInfo boundSetInfo in boundSets)
+            {
+                boundSetInfo.Offsets.Dispose();
+            }
+            Util.ClearArray(boundSets);
         }
 
         public override void End()
@@ -215,7 +226,7 @@ namespace Veldrid.D3D11
             {
                 D3D11Pipeline d3dPipeline = Util.AssertSubtype<Pipeline, D3D11Pipeline>(pipeline);
                 _graphicsPipeline = d3dPipeline;
-                Util.ClearArray(_graphicsResourceSets); // Invalidate resource set bindings -- they may be invalid.
+                ClearSets(_graphicsResourceSets); // Invalidate resource set bindings -- they may be invalid.
                 Util.ClearArray(_invalidatedGraphicsResourceSets);
 
                 BlendState blendState = d3dPipeline.BlendState;
@@ -305,7 +316,7 @@ namespace Veldrid.D3D11
             {
                 D3D11Pipeline d3dPipeline = Util.AssertSubtype<Pipeline, D3D11Pipeline>(pipeline);
                 _computePipeline = d3dPipeline;
-                Util.ClearArray(_computeResourceSets); // Invalidate resource set bindings -- they may be invalid.
+                ClearSets(_computeResourceSets); // Invalidate resource set bindings -- they may be invalid.
                 Util.ClearArray(_invalidatedComputeResourceSets);
 
                 ComputeShader computeShader = d3dPipeline.ComputeShader;
@@ -315,32 +326,34 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs)
+        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
         {
-            if (_graphicsResourceSets[slot] == rs)
+            if (_graphicsResourceSets[slot].Equals(rs, dynamicOffsetsCount, ref dynamicOffsets))
             {
                 return;
             }
 
-            D3D11ResourceSet d3d11RS = Util.AssertSubtype<ResourceSet, D3D11ResourceSet>(rs);
-            _graphicsResourceSets[slot] = d3d11RS;
-            ActivateResourceSet(slot, d3d11RS, true);
+            _graphicsResourceSets[slot].Offsets.Dispose();
+            _graphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsetsCount, ref dynamicOffsets);
+            ActivateResourceSet(slot, _graphicsResourceSets[slot], true);
         }
 
-        protected override void SetComputeResourceSetCore(uint slot, ResourceSet set)
+        protected override void SetComputeResourceSetCore(uint slot, ResourceSet set, uint dynamicOffsetsCount, ref uint dynamicOffsets)
         {
-            if (_computeResourceSets[slot] == set)
+            if (_computeResourceSets[slot].Equals(set, dynamicOffsetsCount, ref dynamicOffsets))
             {
                 return;
             }
 
-            D3D11ResourceSet d3d11RS = Util.AssertSubtype<ResourceSet, D3D11ResourceSet>(set);
-            _computeResourceSets[slot] = d3d11RS;
-            ActivateResourceSet(slot, d3d11RS, false);
+            _computeResourceSets[slot].Offsets.Dispose();
+            _computeResourceSets[slot] = new BoundResourceSetInfo(set, dynamicOffsetsCount, ref dynamicOffsets);
+            ActivateResourceSet(slot, _computeResourceSets[slot], false);
         }
 
-        private void ActivateResourceSet(uint slot, D3D11ResourceSet d3d11RS, bool graphics)
+        private void ActivateResourceSet(uint slot, BoundResourceSetInfo brsi, bool graphics)
         {
+            D3D11ResourceSet d3d11RS = Util.AssertSubtype<ResourceSet, D3D11ResourceSet>(brsi.Set);
+
             int cbBase = GetConstantBufferBase(slot, graphics);
             int uaBase = GetUnorderedAccessBase(slot, graphics);
             int textureBase = GetTextureBase(slot, graphics);
@@ -348,27 +361,34 @@ namespace Veldrid.D3D11
 
             D3D11ResourceLayout layout = d3d11RS.Layout;
             BindableResource[] resources = d3d11RS.Resources;
+            uint dynamicOffsetIndex = 0;
             for (int i = 0; i < resources.Length; i++)
             {
                 BindableResource resource = resources[i];
+                uint bufferOffset = 0;
+                if (layout.IsDynamicBuffer(i))
+                {
+                    bufferOffset = brsi.Offsets.Get(dynamicOffsetIndex);
+                    dynamicOffsetIndex += 1;
+                }
                 D3D11ResourceLayout.ResourceBindingInfo rbi = layout.GetDeviceSlotIndex(i);
                 switch (rbi.Kind)
                 {
                     case ResourceKind.UniformBuffer:
                     {
-                        D3D11BufferRange range = GetBufferRange(resource);
+                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
                         BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
                         break;
                     }
                     case ResourceKind.StructuredBufferReadOnly:
                     {
-                        D3D11BufferRange range = GetBufferRange(resource);
+                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
                         BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
                         break;
                     }
                     case ResourceKind.StructuredBufferReadWrite:
                     {
-                        D3D11BufferRange range = GetBufferRange(resource);
+                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
                         UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
                         BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
                         break;
@@ -392,17 +412,17 @@ namespace Veldrid.D3D11
             }
         }
 
-        private D3D11BufferRange GetBufferRange(BindableResource resource)
+        private D3D11BufferRange GetBufferRange(BindableResource resource, uint additionalOffset)
         {
             if (resource is D3D11Buffer d3d11Buff)
             {
-                return new D3D11BufferRange(d3d11Buff, 0, d3d11Buff.SizeInBytes);
+                return new D3D11BufferRange(d3d11Buff, additionalOffset, d3d11Buff.SizeInBytes);
             }
             else if (resource is DeviceBufferRange range)
             {
                 return new D3D11BufferRange(
                     Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(range.Buffer),
-                    range.Offset,
+                    range.Offset + additionalOffset,
                     range.SizeInBytes);
             }
             else
@@ -1313,6 +1333,16 @@ namespace Veldrid.D3D11
                 DeviceCommandList?.Dispose();
                 _context1?.Dispose();
                 _context.Dispose();
+
+                foreach (BoundResourceSetInfo boundGraphicsSet in _graphicsResourceSets)
+                {
+                    boundGraphicsSet.Offsets.Dispose();
+                }
+                foreach (BoundResourceSetInfo boundComputeSet in _computeResourceSets)
+                {
+                    boundComputeSet.Offsets.Dispose();
+                }
+
                 _disposed = true;
             }
         }

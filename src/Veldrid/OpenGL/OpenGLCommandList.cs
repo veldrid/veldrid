@@ -20,7 +20,7 @@ namespace Veldrid.OpenGL
         public override string Name { get; set; }
 
         public OpenGLCommandList(OpenGLGraphicsDevice gd, ref CommandListDescription description)
-            : base(ref description, gd.Features)
+            : base(ref description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
         {
             _gd = gd;
         }
@@ -119,14 +119,14 @@ namespace Veldrid.OpenGL
             _currentCommands.SetPipeline(pipeline);
         }
 
-        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs)
+        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
         {
-            _currentCommands.SetGraphicsResourceSet(slot, rs);
+            _currentCommands.SetGraphicsResourceSet(slot, rs, dynamicOffsetCount, ref dynamicOffsets);
         }
 
-        protected override void SetComputeResourceSetCore(uint slot, ResourceSet rs)
+        protected override void SetComputeResourceSetCore(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
         {
-            _currentCommands.SetComputeResourceSet(slot, rs);
+            _currentCommands.SetComputeResourceSet(slot, rs, dynamicOffsetCount, ref dynamicOffsets);
         }
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)

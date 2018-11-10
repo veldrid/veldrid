@@ -1,4 +1,5 @@
-﻿namespace Veldrid
+﻿#if VALIDATE_USAGE
+namespace Veldrid
 {
     internal static class ValidationHelpers
     {
@@ -25,7 +26,7 @@
                     || element.Kind == ResourceKind.StructuredBufferReadOnly
                     || element.Kind == ResourceKind.StructuredBufferReadWrite)
                 {
-                    DeviceBufferRange range = Util.GetBufferRange(description.BoundResources[i]);
+                    DeviceBufferRange range = Util.GetBufferRange(description.BoundResources[i], 0);
 
                     if (!gd.Features.BufferRangeBinding && (range.Offset != 0 || range.SizeInBytes != range.Buffer.SizeInBytes))
                     {
@@ -33,15 +34,15 @@
                             $"which requires {nameof(GraphicsDeviceFeatures)}.{nameof(GraphicsDeviceFeatures.BufferRangeBinding)}.");
                     }
 
-                    uint alignment = element.Kind == ResourceKind.UniformBuffer
-                        ? gd.UniformBufferMinOffsetAlignment
-                        : gd.StructuredBufferMinOffsetAlignment;
+                    //uint alignment = element.Kind == ResourceKind.UniformBuffer
+                    //    ? gd.UniformBufferMinOffsetAlignment
+                    //    : gd.StructuredBufferMinOffsetAlignment;
 
-                    if ((range.Offset % alignment) != 0)
-                    {
-                        throw new VeldridException($"The {nameof(DeviceBufferRange)} in slot {i} has an invalid offset: {range.Offset}. " +
-                            $"The offset for this buffer must be a multiple of {alignment}.");
-                    }
+                    //if ((range.Offset % alignment) != 0)
+                    //{
+                    //    throw new VeldridException($"The {nameof(DeviceBufferRange)} in slot {i} has an invalid offset: {range.Offset}. " +
+                    //        $"The offset for this buffer must be a multiple of {alignment}.");
+                    //}
                 }
             }
         }
@@ -115,3 +116,4 @@
         }
     }
 }
+#endif

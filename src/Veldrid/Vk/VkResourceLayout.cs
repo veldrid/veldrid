@@ -15,6 +15,7 @@ namespace Veldrid.Vk
         public VkDescriptorSetLayout DescriptorSetLayout => _dsl;
         public VkDescriptorType[] DescriptorTypes => _descriptorTypes;
         public DescriptorResourceCounts DescriptorResourceCounts { get; }
+        public new int DynamicBufferCount { get; }
 
         public VkResourceLayout(VkGraphicsDevice gd, ref ResourceLayoutDescription description)
             : base(ref description)
@@ -38,6 +39,10 @@ namespace Veldrid.Vk
                 VkDescriptorType descriptorType = VkFormats.VdToVkDescriptorType(elements[i].Kind, elements[i].Options);
                 bindings[i].descriptorType = descriptorType;
                 bindings[i].stageFlags = VkFormats.VdToVkShaderStages(elements[i].Stages);
+                if ((elements[i].Options & ResourceLayoutElementOptions.DynamicBinding) != 0)
+                {
+                    DynamicBufferCount += 1;
+                }
 
                 _descriptorTypes[i] = descriptorType;
 

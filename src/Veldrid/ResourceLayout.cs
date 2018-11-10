@@ -11,12 +11,20 @@ namespace Veldrid
     {
 #if VALIDATE_USAGE
         internal readonly ResourceLayoutDescription Description;
+        internal readonly uint DynamicBufferCount;
 #endif
 
         internal ResourceLayout(ref ResourceLayoutDescription description)
         {
 #if VALIDATE_USAGE
             Description = description;
+            foreach (ResourceLayoutElementDescription element in description.Elements)
+            {
+                if ((element.Options & ResourceLayoutElementOptions.DynamicBinding) != 0)
+                {
+                    DynamicBufferCount += 1;
+                }
+            }
 #endif
         }
 

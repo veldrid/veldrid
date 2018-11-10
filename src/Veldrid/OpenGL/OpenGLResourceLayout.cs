@@ -12,6 +12,11 @@
             Elements = Util.ShallowClone(description.Elements);
         }
 
+        public bool IsDynamicBuffer(uint slot)
+        {
+            return (Elements[slot].Options & ResourceLayoutElementOptions.DynamicBinding) != 0;
+        }
+
         public override void Dispose()
         {
         }

@@ -18,7 +18,7 @@ namespace Veldrid.OpenGL
         private Framebuffer _fb;
         private bool _isSwapchainFB;
         private OpenGLPipeline _graphicsPipeline;
-        private OpenGLResourceSet[] _graphicsResourceSets = Array.Empty<OpenGLResourceSet>();
+        private BoundResourceSetInfo[] _graphicsResourceSets = Array.Empty<BoundResourceSetInfo>();
         private bool[] _newGraphicsResourceSets = Array.Empty<bool>();
         private OpenGLBuffer[] _vertexBuffers = Array.Empty<OpenGLBuffer>();
         private uint[] _vbOffsets = Array.Empty<uint>();
@@ -30,7 +30,7 @@ namespace Veldrid.OpenGL
         private PrimitiveType _primitiveType;
 
         private OpenGLPipeline _computePipeline;
-        private OpenGLResourceSet[] _computeResourceSets = Array.Empty<OpenGLResourceSet>();
+        private BoundResourceSetInfo[] _computeResourceSets = Array.Empty<BoundResourceSetInfo>();
         private bool[] _newComputeResourceSets = Array.Empty<bool>();
 
         private bool _graphicsPipelineActive;
@@ -232,11 +232,12 @@ namespace Veldrid.OpenGL
                 : (uint)_computePipeline.ResourceLayouts.Length;
             for (uint slot = 0; slot < sets; slot++)
             {
-                OpenGLResourceSet glSet = graphics ? _graphicsResourceSets[slot] : _computeResourceSets[slot];
+                BoundResourceSetInfo brsi = graphics ? _graphicsResourceSets[slot] : _computeResourceSets[slot];
+                OpenGLResourceSet glSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(brsi.Set);
                 ResourceLayoutElementDescription[] layoutElements = glSet.Layout.Elements;
                 bool isNew = graphics ? _newGraphicsResourceSets[slot] : _newComputeResourceSets[slot];
 
-                ActivateResourceSet(slot, graphics, glSet, layoutElements, isNew);
+                ActivateResourceSet(slot, graphics, brsi, layoutElements, isNew);
             }
 
             Util.ClearArray(graphics ? _newGraphicsResourceSets : _newComputeResourceSets);
@@ -740,22 +741,22 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void SetGraphicsResourceSet(uint slot, ResourceSet rs)
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
         {
-            if (_graphicsResourceSets[slot] != rs)
+            if (!_graphicsResourceSets[slot].Equals(rs, dynamicOffsetCount, ref dynamicOffsets))
             {
-                OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(rs);
-                _graphicsResourceSets[slot] = glResourceSet;
+                _graphicsResourceSets[slot].Offsets.Dispose();
+                _graphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsetCount, ref dynamicOffsets);
                 _newGraphicsResourceSets[slot] = true;
             }
         }
 
-        public void SetComputeResourceSet(uint slot, ResourceSet rs)
+        public void SetComputeResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
         {
-            if (_computeResourceSets[slot] != rs)
+            if (!_computeResourceSets[slot].Equals(rs, dynamicOffsetCount, ref dynamicOffsets))
             {
-                OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(rs);
-                _computeResourceSets[slot] = glResourceSet;
+                _computeResourceSets[slot].Offsets.Dispose();
+                _computeResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsetCount, ref dynamicOffsets);
                 _newComputeResourceSets[slot] = true;
             }
         }
@@ -763,27 +764,37 @@ namespace Veldrid.OpenGL
         private void ActivateResourceSet(
             uint slot,
             bool graphics,
-            OpenGLResourceSet glResourceSet,
+            BoundResourceSetInfo brsi,
             ResourceLayoutElementDescription[] layoutElements,
             bool isNew)
         {
+            OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(brsi.Set);
             OpenGLPipeline pipeline = graphics ? _graphicsPipeline : _computePipeline;
             uint ubBaseIndex = GetUniformBaseIndex(slot, graphics);
             uint ssboBaseIndex = GetShaderStorageBaseIndex(slot, graphics);
 
             uint ubOffset = 0;
             uint ssboOffset = 0;
+            uint dynamicOffsetIndex = 0;
             for (uint element = 0; element < glResourceSet.Resources.Length; element++)
             {
                 ResourceKind kind = layoutElements[element].Kind;
                 BindableResource resource = glResourceSet.Resources[(int)element];
+
+                uint bufferOffset = 0;
+                if (glResourceSet.Layout.IsDynamicBuffer(element))
+                {
+                    bufferOffset = brsi.Offsets.Get(dynamicOffsetIndex);
+                    dynamicOffsetIndex += 1;
+                }
+
                 switch (kind)
                 {
                     case ResourceKind.UniformBuffer:
                     {
                         if (!isNew) { continue; }
 
-                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         OpenGLBuffer glUB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
 
                         glUB.EnsureResourcesCreated();
@@ -815,7 +826,7 @@ namespace Veldrid.OpenGL
                     {
                         if (!isNew) { continue; }
 
-                        DeviceBufferRange range = Util.GetBufferRange(resource);
+                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
 
                         glBuffer.EnsureResourcesCreated();

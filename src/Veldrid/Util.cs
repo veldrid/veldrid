@@ -259,13 +259,16 @@ namespace Veldrid
             return (T[])array.Clone();
         }
 
-        public static DeviceBufferRange GetBufferRange(BindableResource resource)
+        public static DeviceBufferRange GetBufferRange(BindableResource resource, uint additionalOffset)
         {
-            if (resource is DeviceBufferRange range) { return range; }
+            if (resource is DeviceBufferRange range)
+            {
+                return new DeviceBufferRange(range.Buffer, range.Offset + additionalOffset, range.SizeInBytes);
+            }
             else
             {
                 DeviceBuffer buffer = (DeviceBuffer)resource;
-                return new DeviceBufferRange(buffer, 0, buffer.SizeInBytes);
+                return new DeviceBufferRange(buffer, additionalOffset, buffer.SizeInBytes);
             }
         }
 

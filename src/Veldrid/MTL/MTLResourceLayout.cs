@@ -55,7 +55,11 @@ namespace Veldrid.MTL
                     default: throw Illegal.Value<ResourceKind>();
                 }
 
-                _bindingInfosByVdIndex[i] = new ResourceBindingInfo(slot, elements[i].Stages, elements[i].Kind);
+                _bindingInfosByVdIndex[i] = new ResourceBindingInfo(
+                    slot,
+                    elements[i].Stages,
+                    elements[i].Kind,
+                    (elements[i].Options & ResourceLayoutElementOptions.DynamicBinding) != 0);
             }
 
             BufferCount = bufferIndex;
@@ -74,12 +78,14 @@ namespace Veldrid.MTL
             public uint Slot;
             public ShaderStages Stages;
             public ResourceKind Kind;
+            public bool DynamicBuffer;
 
-            public ResourceBindingInfo(uint slot, ShaderStages stages, ResourceKind kind)
+            public ResourceBindingInfo(uint slot, ShaderStages stages, ResourceKind kind, bool dynamicBuffer)
             {
                 Slot = slot;
                 Stages = stages;
                 Kind = kind;
+                DynamicBuffer = dynamicBuffer;
             }
         }
     }

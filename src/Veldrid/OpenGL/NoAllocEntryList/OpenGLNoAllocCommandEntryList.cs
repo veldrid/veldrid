@@ -40,8 +40,8 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte SetPipelineEntryID = 8;
         private static readonly uint SetPipelineEntrySize = Util.USizeOf<NoAllocSetPipelineEntry>();
 
-        private const byte SetGraphicsResourceSetEntryID = 9;
-        private static readonly uint SetGraphicsResourceSetEntrySize = Util.USizeOf<NoAllocSetGraphicsResourceSetEntry>();
+        private const byte SetResourceSetEntryID = 9;
+        private static readonly uint SetResourceSetEntrySize = Util.USizeOf<NoAllocSetResourceSetEntry>();
 
         private const byte SetScissorRectEntryID = 10;
         private static readonly uint SetScissorRectEntrySize = Util.USizeOf<NoAllocSetScissorRectEntry>();
@@ -69,9 +69,6 @@ namespace Veldrid.OpenGL.NoAllocEntryList
 
         private const byte DispatchEntryID = 18;
         private static readonly uint DispatchEntrySize = Util.USizeOf<NoAllocDispatchEntry>();
-
-        private const byte SetComputeResourceSetEntryID = 19;
-        private static readonly uint SetComputeResourceSetEntrySize = Util.USizeOf<NoAllocSetComputeResourceSetEntry>();
 
         private const byte DrawIndirectEntryID = 20;
         private static readonly uint DrawIndirectEntrySize = Util.USizeOf<NoAllocDrawIndirectEntry>();
@@ -289,15 +286,29 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         executor.SetPipeline(spe.Pipeline.Get(_resourceList));
                         currentOffset += SetPipelineEntrySize;
                         break;
-                    case SetGraphicsResourceSetEntryID:
-                        NoAllocSetGraphicsResourceSetEntry sgrse = Unsafe.ReadUnaligned<NoAllocSetGraphicsResourceSetEntry>(entryBasePtr);
-                        executor.SetGraphicsResourceSet(sgrse.Slot, sgrse.ResourceSet.Get(_resourceList));
-                        currentOffset += SetGraphicsResourceSetEntrySize;
-                        break;
-                    case SetComputeResourceSetEntryID:
-                        NoAllocSetComputeResourceSetEntry scrse = Unsafe.ReadUnaligned<NoAllocSetComputeResourceSetEntry>(entryBasePtr);
-                        executor.SetComputeResourceSet(scrse.Slot, scrse.ResourceSet.Get(_resourceList));
-                        currentOffset += SetComputeResourceSetEntrySize;
+                    case SetResourceSetEntryID:
+                        NoAllocSetResourceSetEntry srse = Unsafe.ReadUnaligned<NoAllocSetResourceSetEntry>(entryBasePtr);
+                        ResourceSet rs = srse.ResourceSet.Get(_resourceList);
+                        uint* dynamicOffsetsPtr = srse.DynamicOffsetCount > NoAllocSetResourceSetEntry.MaxInlineDynamicOffsets
+                            ? (uint*)srse.DynamicOffsets_Block.Data
+                            : srse.DynamicOffsets_Inline;
+                        if (srse.IsGraphics)
+                        {
+                            executor.SetGraphicsResourceSet(
+                                srse.Slot,
+                                rs,
+                                srse.DynamicOffsetCount,
+                                ref Unsafe.AsRef<uint>(dynamicOffsetsPtr));
+                        }
+                        else
+                        {
+                            executor.SetComputeResourceSet(
+                                srse.Slot,
+                                rs,
+                                srse.DynamicOffsetCount,
+                                ref Unsafe.AsRef<uint>(dynamicOffsetsPtr));
+                        }
+                        currentOffset += SetResourceSetEntrySize;
                         break;
                     case SetScissorRectEntryID:
                         NoAllocSetScissorRectEntry ssre = Unsafe.ReadUnaligned<NoAllocSetScissorRectEntry>(entryBasePtr);
@@ -455,16 +466,37 @@ namespace Veldrid.OpenGL.NoAllocEntryList
             AddEntry(SetPipelineEntryID, ref entry);
         }
 
-        public void SetGraphicsResourceSet(uint slot, ResourceSet rs)
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
         {
-            NoAllocSetGraphicsResourceSetEntry entry = new NoAllocSetGraphicsResourceSetEntry(slot, Track(rs));
-            AddEntry(SetGraphicsResourceSetEntryID, ref entry);
+            SetResourceSet(slot, rs, dynamicOffsetCount, ref dynamicOffsets, isGraphics: true);
         }
 
-        public void SetComputeResourceSet(uint slot, ResourceSet rs)
+        private void SetResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets, bool isGraphics)
         {
-            NoAllocSetComputeResourceSetEntry entry = new NoAllocSetComputeResourceSetEntry(slot, Track(rs));
-            AddEntry(SetComputeResourceSetEntryID, ref entry);
+            NoAllocSetResourceSetEntry entry;
+
+            if (dynamicOffsetCount > NoAllocSetResourceSetEntry.MaxInlineDynamicOffsets)
+            {
+                StagingBlock block = _memoryPool.GetStagingBlock(dynamicOffsetCount * sizeof(uint));
+                _stagingBlocks.Add(block);
+                for (uint i = 0; i < dynamicOffsetCount; i++)
+                {
+                    *((uint*)block.Data + i) = Unsafe.Add(ref dynamicOffsets, (int)i);
+                }
+
+                entry = new NoAllocSetResourceSetEntry(slot, Track(rs), isGraphics, block);
+            }
+            else
+            {
+                entry = new NoAllocSetResourceSetEntry(slot, Track(rs), isGraphics, dynamicOffsetCount, ref dynamicOffsets);
+            }
+
+            AddEntry(SetResourceSetEntryID, ref entry);
+        }
+
+        public void SetComputeResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
+        {
+            SetResourceSet(slot, rs, dynamicOffsetCount, ref dynamicOffsets, isGraphics: false);
         }
 
         public void SetScissorRect(uint index, uint x, uint y, uint width, uint height)

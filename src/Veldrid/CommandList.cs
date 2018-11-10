@@ -24,6 +24,8 @@ namespace Veldrid
     public abstract class CommandList : DeviceResource, IDisposable
     {
         private readonly GraphicsDeviceFeatures _features;
+        private readonly uint _uniformBufferAlignment;
+        private readonly uint _structuredBufferAlignment;
 
         /// <summary>
         /// The active <see cref="Framebuffer"/>.
@@ -37,9 +39,15 @@ namespace Veldrid
         private IndexFormat _indexFormat;
 #endif
 
-        internal CommandList(ref CommandListDescription description, GraphicsDeviceFeatures features)
+        internal CommandList(
+            ref CommandListDescription description,
+            GraphicsDeviceFeatures features,
+            uint uniformAlignment,
+            uint structuredAlignment)
         {
             _features = features;
+            _uniformBufferAlignment = uniformAlignment;
+            _structuredBufferAlignment = structuredAlignment;
         }
 
         internal void ClearCachedState()
@@ -169,7 +177,16 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
-        public void SetGraphicsResourceSet(uint slot, ResourceSet rs)
+        public unsafe void SetGraphicsResourceSet(uint slot, ResourceSet rs)
+            => SetGraphicsResourceSet(slot, rs, 0, ref Unsafe.AsRef<uint>(null));
+
+        /// <summary>
+        /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the graphics
+        /// Pipeline.
+        /// </summary>
+        /// <param name="slot">The resource slot.</param>
+        /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
         {
 #if VALIDATE_USAGE
             if (_graphicsPipeline == null)
@@ -186,7 +203,8 @@ namespace Veldrid
 
             ResourceLayout layout = _graphicsPipeline.ResourceLayouts[slot];
             int pipelineLength = layout.Description.Elements.Length;
-            int setLength = rs.Layout.Description.Elements.Length;
+            ResourceLayoutDescription layoutDesc = rs.Layout.Description;
+            int setLength = layoutDesc.Elements.Length;
             if (pipelineLength != setLength)
             {
                 throw new VeldridException($"Failed to bind ResourceSet to slot {slot}. The number of resources in the ResourceSet ({setLength}) does not match the number expected by the active Pipeline ({pipelineLength}).");
@@ -195,15 +213,46 @@ namespace Veldrid
             for (int i = 0; i < pipelineLength; i++)
             {
                 ResourceKind pipelineKind = layout.Description.Elements[i].Kind;
-                ResourceKind setKind = rs.Layout.Description.Elements[i].Kind;
+                ResourceKind setKind = layoutDesc.Elements[i].Kind;
                 if (pipelineKind != setKind)
                 {
                     throw new VeldridException(
                         $"Failed to bind ResourceSet to slot {slot}. Resource element {i} was of the incorrect type. The bound Pipeline expects {pipelineKind}, but the ResourceSet contained {setKind}.");
                 }
             }
+
+            if (rs.Layout.DynamicBufferCount != dynamicOffsetsCount)
+            {
+                throw new VeldridException(
+                    $"A dynamic offset must be provided for each resource that specifies " +
+                    $"{nameof(ResourceLayoutElementOptions)}.{nameof(ResourceLayoutElementOptions.DynamicBinding)}. " +
+                    $"{rs.Layout.DynamicBufferCount} offsets were expected, but only {dynamicOffsetsCount} were provided.");
+            }
+
+            uint dynamicOffsetIndex = 0;
+            for (uint i = 0; i < layoutDesc.Elements.Length; i++)
+            {
+                if ((layoutDesc.Elements[i].Options & ResourceLayoutElementOptions.DynamicBinding) != 0)
+                {
+                    uint requiredAlignment = layoutDesc.Elements[i].Kind == ResourceKind.UniformBuffer
+                        ? _uniformBufferAlignment
+                        : _structuredBufferAlignment;
+                    uint desiredOffset = Unsafe.Add(ref dynamicOffsets, (int)dynamicOffsetIndex);
+                    dynamicOffsetIndex += 1;
+                    DeviceBufferRange range = Util.GetBufferRange(rs.Resources[i], desiredOffset);
+
+                    if ((range.Offset % requiredAlignment) != 0)
+                    {
+                        throw new VeldridException(
+                            $"The effective offset of the buffer in slot {i} does not meet the alignment " +
+                            $"requirements of this device. The offset must be a multiple of {requiredAlignment}, but it is " +
+                            $"{range.Offset}");
+                    }
+                }
+            }
+
 #endif
-            SetGraphicsResourceSetCore(slot, rs);
+            SetGraphicsResourceSetCore(slot, rs, dynamicOffsetsCount, ref dynamicOffsets);
         }
 
         // TODO: private protected
@@ -211,7 +260,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot"></param>
         /// <param name="rs"></param>
-        protected abstract void SetGraphicsResourceSetCore(uint slot, ResourceSet rs);
+        protected abstract void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets);
 
         /// <summary>
         /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the compute
@@ -219,7 +268,16 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
-        public void SetComputeResourceSet(uint slot, ResourceSet rs)
+        public unsafe void SetComputeResourceSet(uint slot, ResourceSet rs)
+            => SetComputeResourceSet(slot, rs, 0, ref Unsafe.AsRef<uint>(null));
+
+        /// <summary>
+        /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the compute
+        /// Pipeline.
+        /// </summary>
+        /// <param name="slot">The resource slot.</param>
+        /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
+        public unsafe void SetComputeResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
         {
 #if VALIDATE_USAGE
             if (_computePipeline == null)
@@ -253,7 +311,7 @@ namespace Veldrid
                 }
             }
 #endif
-            SetComputeResourceSetCore(slot, rs);
+            SetComputeResourceSetCore(slot, rs, dynamicOffsetsCount, ref dynamicOffsets);
         }
 
         // TODO: private protected
@@ -261,7 +319,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot"></param>
         /// <param name="set"></param>
-        protected abstract void SetComputeResourceSetCore(uint slot, ResourceSet set);
+        protected abstract void SetComputeResourceSetCore(uint slot, ResourceSet set, uint dynamicOffsetsCount, ref uint dynamicOffsets);
 
         /// <summary>
         /// Sets the active <see cref="Framebuffer"/> which will be rendered to.

@@ -76,7 +76,7 @@ namespace Veldrid.NeoDemo.Objects
             _ib.Name = _name + "_IB";
 
             uint bufferSize = 128;
-            if (s_useUniformOffset) { bufferSize += _uniformOffset; }
+            if (s_useUniformOffset) { bufferSize += _uniformOffset * 2; }
 
             _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(bufferSize, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             if (_materialPropsOwned)
@@ -209,7 +209,7 @@ namespace Veldrid.NeoDemo.Objects
                 sc.PointLightsBuffer));
 
             _mainPerObjectRS = disposeFactory.CreateResourceSet(new ResourceSetDescription(mainPerObjectLayout,
-                new DeviceBufferRange(_worldAndInverseBuffer, _uniformOffset / 2, 128),
+                new DeviceBufferRange(_worldAndInverseBuffer, _uniformOffset, 128),
                 _materialProps.UniformBuffer,
                 _textureView,
                 gd.Aniso4xSampler,
@@ -251,7 +251,7 @@ namespace Veldrid.NeoDemo.Objects
                     viewProjBuffer));
                 ResourceSet worldRS = disposeFactory.CreateResourceSet(new ResourceSetDescription(
                     worldLayout,
-                    new DeviceBufferRange(_worldAndInverseBuffer, _uniformOffset / 2, 128)));
+                    new DeviceBufferRange(_worldAndInverseBuffer, _uniformOffset, 128)));
                 ret[i * 2 + 1] = worldRS;
             }
 
@@ -317,7 +317,7 @@ namespace Veldrid.NeoDemo.Objects
             WorldAndInverse wai;
             wai.World = _transform.GetTransformMatrix();
             wai.InverseWorld = VdUtilities.CalculateInverseTranspose(ref wai.World);
-            gd.UpdateBuffer(_worldAndInverseBuffer, _uniformOffset, ref wai);
+            gd.UpdateBuffer(_worldAndInverseBuffer, _uniformOffset * 2, ref wai);
         }
 
         private void RenderShadowMap(CommandList cl, SceneContext sc, int shadowMapIndex)
@@ -326,7 +326,7 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(_shadowMapPipeline);
             cl.SetGraphicsResourceSet(0, _shadowMapResourceSets[shadowMapIndex * 2]);
-            uint offset = _uniformOffset / 2;
+            uint offset = _uniformOffset;
             cl.SetGraphicsResourceSet(1, _shadowMapResourceSets[shadowMapIndex * 2 + 1], 1, ref offset);
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }
@@ -338,7 +338,7 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetPipeline(reflectionPass ? _pipelineFrontCull : _pipeline);
             cl.SetGraphicsResourceSet(0, _mainProjViewRS);
             cl.SetGraphicsResourceSet(1, _mainSharedRS);
-            uint offset = _uniformOffset / 2;
+            uint offset = _uniformOffset;
             cl.SetGraphicsResourceSet(2, _mainPerObjectRS, 1, ref offset);
             cl.SetGraphicsResourceSet(3, reflectionPass ? _reflectionRS : _noReflectionRS);
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);

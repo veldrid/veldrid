@@ -69,7 +69,7 @@ namespace Veldrid.Vk
         {
             uint totalSets = 1000;
             uint descriptorCount = 100;
-            uint poolSizeCount = 5;
+            uint poolSizeCount = 7;
             VkDescriptorPoolSize* sizes = stackalloc VkDescriptorPoolSize[(int)poolSizeCount];
             sizes[0].type = VkDescriptorType.UniformBuffer;
             sizes[0].descriptorCount = descriptorCount;
@@ -81,6 +81,10 @@ namespace Veldrid.Vk
             sizes[3].descriptorCount = descriptorCount;
             sizes[4].type = VkDescriptorType.StorageImage;
             sizes[4].descriptorCount = descriptorCount;
+            sizes[5].type = VkDescriptorType.UniformBufferDynamic;
+            sizes[5].descriptorCount = descriptorCount;
+            sizes[6].type = VkDescriptorType.StorageBufferDynamic;
+            sizes[6].descriptorCount = descriptorCount;
 
             VkDescriptorPoolCreateInfo poolCI = VkDescriptorPoolCreateInfo.New();
             poolCI.flags = VkDescriptorPoolCreateFlags.FreeDescriptorSet;

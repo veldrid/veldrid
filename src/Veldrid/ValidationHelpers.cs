@@ -34,19 +34,18 @@ namespace Veldrid
                             $"which requires {nameof(GraphicsDeviceFeatures)}.{nameof(GraphicsDeviceFeatures.BufferRangeBinding)}.");
                     }
 
-                    //uint alignment = element.Kind == ResourceKind.UniformBuffer
-                    //    ? gd.UniformBufferMinOffsetAlignment
-                    //    : gd.StructuredBufferMinOffsetAlignment;
+                    uint alignment = element.Kind == ResourceKind.UniformBuffer
+                       ? gd.UniformBufferMinOffsetAlignment
+                       : gd.StructuredBufferMinOffsetAlignment;
 
-                    //if ((range.Offset % alignment) != 0)
-                    //{
-                    //    throw new VeldridException($"The {nameof(DeviceBufferRange)} in slot {i} has an invalid offset: {range.Offset}. " +
-                    //        $"The offset for this buffer must be a multiple of {alignment}.");
-                    //}
+                    if ((range.Offset % alignment) != 0)
+                    {
+                       throw new VeldridException($"The {nameof(DeviceBufferRange)} in slot {i} has an invalid offset: {range.Offset}. " +
+                           $"The offset for this buffer must be a multiple of {alignment}.");
+                    }
                 }
             }
         }
-
 
         private static void ValidateResourceKind(ResourceKind kind, BindableResource resource, uint slot)
         {

@@ -58,7 +58,6 @@ namespace Veldrid
         /// <param name="outputDescription">The output format.</param>
         /// <param name="width">The initial width of the rendering target. Can be resized.</param>
         /// <param name="height">The initial height of the rendering target. Can be resized.</param>
-        /// <param name="outputLinear">Indicates whether the fragment shader should write linear RGB data.
         public ImGuiRenderer(GraphicsDevice gd, OutputDescription outputDescription, int width, int height)
             : this(gd, outputDescription, width, height, false) { }
 

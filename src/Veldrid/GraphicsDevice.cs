@@ -76,7 +76,18 @@ namespace Veldrid
             }
         }
 
+        /// <summary>
+        /// The required alignment, in bytes, for uniform buffer offsets. <see cref="DeviceBufferRange.Offset"/> must be a
+        /// multiple of this value. When binding a <see cref="ResourceSet"/> to a <see cref="CommandList"/> with an overload
+        /// accepting dynamic offsets, each offset must be a multiple of this value.
+        /// </summary>
         public uint UniformBufferMinOffsetAlignment => GetUniformBufferMinOffsetAlignmentCore();
+
+        /// <summary>
+        /// The required alignment, in bytes, for structured buffer offsets. <see cref="DeviceBufferRange.Offset"/> must be a
+        /// multiple of this value. When binding a <see cref="ResourceSet"/> to a <see cref="CommandList"/> with an overload
+        /// accepting dynamic offsets, each offset must be a multiple of this value.
+        /// </summary>
         public uint StructuredBufferMinOffsetAlignment => GetStructuredBufferMinOffsetAlignmentCore();
 
         internal abstract uint GetUniformBufferMinOffsetAlignmentCore();

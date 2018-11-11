@@ -30,7 +30,7 @@ namespace Veldrid
 
 #if VALIDATE_USAGE
         internal ResourceLayout Layout { get; }
-        public BindableResource[] Resources { get; }
+        internal BindableResource[] Resources { get; }
 #endif
     }
 }

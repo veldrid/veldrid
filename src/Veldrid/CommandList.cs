@@ -190,7 +190,9 @@ namespace Veldrid
         /// buffers contained in the <see cref="ResourceSet"/>. The number of elements in this array must be equal to the number
         /// of dynamic buffers (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the
         /// <see cref="ResourceSet"/>. These offsets are applied in the order that dynamic buffer
-        /// elements appear in the <see cref="ResourceSet"/>.</param>
+        /// elements appear in the <see cref="ResourceSet"/>. Each of these offsets must be a multiple of either
+        /// <see cref="GraphicsDevice.UniformBufferMinOffsetAlignment"/> or
+        /// <see cref="GraphicsDevice.StructuredBufferMinOffsetAlignment"/>, depending on the kind of resource.</param>
         public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint[] dynamicOffsets)
             => SetGraphicsResourceSet(slot, rs, (uint)dynamicOffsets.Length, ref dynamicOffsets[0]);
 
@@ -205,7 +207,9 @@ namespace Veldrid
         /// <see cref="ResourceSet"/>.</param>
         /// <param name="dynamicOffsets">A reference to the first of a series of offsets which will be applied to the dynamic
         /// buffers contained in the <see cref="ResourceSet"/>. These offsets are applied in the order that dynamic buffer
-        /// elements appear in the <see cref="ResourceSet"/>.</param>
+        /// elements appear in the <see cref="ResourceSet"/>. Each of these offsets must be a multiple of either
+        /// <see cref="GraphicsDevice.UniformBufferMinOffsetAlignment"/> or
+        /// <see cref="GraphicsDevice.StructuredBufferMinOffsetAlignment"/>, depending on the kind of resource.</param>
         public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
         {
 #if VALIDATE_USAGE
@@ -317,7 +321,9 @@ namespace Veldrid
         /// <see cref="ResourceSet"/>.</param>
         /// <param name="dynamicOffsets">A reference to the first of a series of offsets which will be applied to the dynamic
         /// buffers contained in the <see cref="ResourceSet"/>. These offsets are applied in the order that dynamic buffer
-        /// elements appear in the <see cref="ResourceSet"/>.</param>
+        /// elements appear in the <see cref="ResourceSet"/>. Each of these offsets must be a multiple of either
+        /// <see cref="GraphicsDevice.UniformBufferMinOffsetAlignment"/> or
+        /// <see cref="GraphicsDevice.StructuredBufferMinOffsetAlignment"/>, depending on the kind of resource.</param>
         public unsafe void SetComputeResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
         {
 #if VALIDATE_USAGE

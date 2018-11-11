@@ -186,6 +186,26 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
+        /// <param name="dynamicOffsets">An array containing the offsets to apply to the dynamic
+        /// buffers contained in the <see cref="ResourceSet"/>. The number of elements in this array must be equal to the number
+        /// of dynamic buffers (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the
+        /// <see cref="ResourceSet"/>. These offsets are applied in the order that dynamic buffer
+        /// elements appear in the <see cref="ResourceSet"/>.</param>
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint[] dynamicOffsets)
+            => SetGraphicsResourceSet(slot, rs, (uint)dynamicOffsets.Length, ref dynamicOffsets[0]);
+
+        /// <summary>
+        /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the graphics
+        /// Pipeline.
+        /// </summary>
+        /// <param name="slot">The resource slot.</param>
+        /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
+        /// <param name="dynamicOffsetsCount">The number of dynamic offsets being used. This must be equal to the number of
+        /// dynamic buffers (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the
+        /// <see cref="ResourceSet"/>.</param>
+        /// <param name="dynamicOffsets">A reference to the first of a series of offsets which will be applied to the dynamic
+        /// buffers contained in the <see cref="ResourceSet"/>. These offsets are applied in the order that dynamic buffer
+        /// elements appear in the <see cref="ResourceSet"/>.</param>
         public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
         {
 #if VALIDATE_USAGE
@@ -260,11 +280,13 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot"></param>
         /// <param name="rs"></param>
+        /// <param name="dynamicOffsets"></param>
+        /// <param name="dynamicOffsetsCount"></param>
         protected abstract void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets);
 
         /// <summary>
         /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the compute
-        /// Pipeline.
+        /// <see cref="Pipeline"/>.
         /// </summary>
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
@@ -273,10 +295,29 @@ namespace Veldrid
 
         /// <summary>
         /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the compute
-        /// Pipeline.
+        /// <see cref="Pipeline"/>.
         /// </summary>
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
+        /// <param name="dynamicOffsets">An array containing the offsets to apply to the dynamic buffers contained in the
+        /// <see cref="ResourceSet"/>. The number of elements in this array must be equal to the number of dynamic buffers
+        /// (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the <see cref="ResourceSet"/>. These offsets
+        /// are applied in the order that dynamic buffer elements appear in the <see cref="ResourceSet"/>.</param>
+        public void SetComputeResourceSet(uint slot, ResourceSet rs, uint[] dynamicOffsets)
+            => SetComputeResourceSet(slot, rs, (uint)dynamicOffsets.Length, ref dynamicOffsets[0]);
+
+        /// <summary>
+        /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the compute
+        /// <see cref="Pipeline"/>.
+        /// </summary>
+        /// <param name="slot">The resource slot.</param>
+        /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
+        /// <param name="dynamicOffsetsCount">The number of dynamic offsets being used. This must be equal to the number of
+        /// dynamic buffers (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the
+        /// <see cref="ResourceSet"/>.</param>
+        /// <param name="dynamicOffsets">A reference to the first of a series of offsets which will be applied to the dynamic
+        /// buffers contained in the <see cref="ResourceSet"/>. These offsets are applied in the order that dynamic buffer
+        /// elements appear in the <see cref="ResourceSet"/>.</param>
         public unsafe void SetComputeResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
         {
 #if VALIDATE_USAGE
@@ -319,6 +360,8 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot"></param>
         /// <param name="set"></param>
+        /// <param name="dynamicOffsetsCount"></param>
+        /// <param name="dynamicOffsets"></param>
         protected abstract void SetComputeResourceSetCore(uint slot, ResourceSet set, uint dynamicOffsetsCount, ref uint dynamicOffsets);
 
         /// <summary>

@@ -1093,7 +1093,9 @@ namespace Veldrid.OpenGL
                 _workItems = workItems;
                 _makeCurrent = makeCurrent;
                 _context = context;
-                new Thread(Run).Start();
+                Thread thread = new Thread(Run);
+                thread.IsBackground = true;
+                thread.Start();
             }
 
             private void Run()

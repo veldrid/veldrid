@@ -972,7 +972,7 @@ namespace Veldrid.OpenGL
             uint ret = 0;
             for (uint i = 0; i < slot; i++)
             {
-                ret += pipeline.GetUniformBufferCount(i);
+                ret += pipeline.GetShaderStorageBufferCount(i);
             }
 
             return ret;

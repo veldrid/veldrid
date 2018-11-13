@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VeldridSpirvVersion>1.0.0-beta4</VeldridSpirvVersion>
+    <VeldridSpirvVersion>1.0.0</VeldridSpirvVersion>
     <NativeLibraryLoaderVersion>1.0.10</NativeLibraryLoaderVersion>
   </PropertyGroup>
 
@@ -27,22 +27,12 @@
     <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
   </PropertyGroup>
 
-  <!-- Workaround for NuGet bug, see https://github.com/AArnott/Nerdbank.GitVersioning/issues/113 -->
   <PropertyGroup>
-    <NerdbankGitVersioningVersion>2.1.23</NerdbankGitVersioningVersion>
+    <NerdbankGitVersioningVersion>2.2.33</NerdbankGitVersioningVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Nerdbank.GitVersioning" Version="$(NerdbankGitVersioningVersion)" PrivateAssets="all" />
   </ItemGroup>
-
-  <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' == 'true' ">
-    <Import Project="$(UserProfile)\.nuget\packages\nerdbank.gitversioning\$(NerdbankGitVersioningVersion)\buildCrossTargeting\Nerdbank.GitVersioning.targets"
-            Condition="Exists('$(UserProfile)\.nuget\packages\nerdbank.gitversioning\$(NerdbankGitVersioningVersion)\buildCrossTargeting\Nerdbank.GitVersioning.targets')" />
-  </ImportGroup>
-  <Target Name="FixUpVersion"
-      BeforeTargets="_GenerateRestoreProjectSpec"
-      DependsOnTargets="GetBuildVersion"
-      Condition=" '$(NerdbankGitVersioningTasksPath)' != '' " />
 
 </Project>

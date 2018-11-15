@@ -68,6 +68,7 @@ namespace Veldrid.D3D11
                     using (Factory dxgiFactory = dxgiDevice.Adapter.GetParent<Factory>())
                     {
                         _dxgiSwapChain = new SwapChain(dxgiFactory, _device, dxgiSCDesc);
+                        dxgiFactory.MakeWindowAssociation(win32Source.Hwnd, WindowAssociationFlags.IgnoreAltEnter);
                     }
                 }
             }

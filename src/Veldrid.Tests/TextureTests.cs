@@ -249,8 +249,9 @@ namespace Veldrid.Tests
                 copyCL.CopyTexture(copySrc, 0, 0, 0, 0, 0, copyDst, 0, 0, 0, 0, 0, 16, 16, 1, copySrc.ArrayLayers);
             }
             copyCL.End();
-            GD.SubmitCommands(copyCL);
-            GD.WaitForIdle();
+            Fence fence = RF.CreateFence(false);
+            GD.SubmitCommands(copyCL, fence);
+            GD.WaitForFence(fence);
 
             for (uint layer = 0; layer < copyDst.ArrayLayers; layer++)
             {

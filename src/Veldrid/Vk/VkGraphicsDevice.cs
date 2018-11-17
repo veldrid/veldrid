@@ -712,6 +712,7 @@ namespace Veldrid.Vk
             deviceFeatures.textureCompressionETC2 = _physicalDeviceFeatures.textureCompressionETC2;
             deviceFeatures.multiDrawIndirect = _physicalDeviceFeatures.multiDrawIndirect;
             deviceFeatures.drawIndirectFirstInstance = _physicalDeviceFeatures.drawIndirectFirstInstance;
+            deviceFeatures.shaderStorageImageMultisample = _physicalDeviceFeatures.shaderStorageImageMultisample;
 
             uint propertyCount = 0;
             VkResult result = vkEnumerateDeviceExtensionProperties(_physicalDevice, (byte*)null, &propertyCount, null);

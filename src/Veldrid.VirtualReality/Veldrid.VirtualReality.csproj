@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\veldrid\src\Veldrid\Veldrid.csproj" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.2" />
+  </ItemGroup>
+
+</Project>

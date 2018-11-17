@@ -138,12 +138,20 @@ namespace Veldrid.Tests
         [Theory]
         [InlineData(PixelFormat.BC1_Rgb_UNorm, 8, 0, 0, 64, 64)]
         [InlineData(PixelFormat.BC1_Rgb_UNorm, 8, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC1_Rgb_UNorm_SRgb, 8, 0, 0, 64, 64)]
+        [InlineData(PixelFormat.BC1_Rgb_UNorm_SRgb, 8, 8, 4, 16, 16)]
         [InlineData(PixelFormat.BC1_Rgba_UNorm, 8, 0, 0, 64, 64)]
         [InlineData(PixelFormat.BC1_Rgba_UNorm, 8, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC1_Rgba_UNorm_SRgb, 8, 0, 0, 64, 64)]
+        [InlineData(PixelFormat.BC1_Rgba_UNorm_SRgb, 8, 8, 4, 16, 16)]
         [InlineData(PixelFormat.BC2_UNorm, 16, 0, 0, 64, 64)]
         [InlineData(PixelFormat.BC2_UNorm, 16, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC2_UNorm_SRgb, 16, 0, 0, 64, 64)]
+        [InlineData(PixelFormat.BC2_UNorm_SRgb, 16, 8, 4, 16, 16)]
         [InlineData(PixelFormat.BC3_UNorm, 16, 0, 0, 64, 64)]
         [InlineData(PixelFormat.BC3_UNorm, 16, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC3_UNorm_SRgb, 16, 0, 0, 64, 64)]
+        [InlineData(PixelFormat.BC3_UNorm_SRgb, 16, 8, 4, 16, 16)]
         [InlineData(PixelFormat.BC4_UNorm, 8, 0, 0, 16, 16)]
         [InlineData(PixelFormat.BC4_UNorm, 8, 8, 4, 16, 16)]
         [InlineData(PixelFormat.BC4_SNorm, 8, 0, 0, 16, 16)]
@@ -154,6 +162,8 @@ namespace Veldrid.Tests
         [InlineData(PixelFormat.BC5_SNorm, 16, 8, 4, 16, 16)]
         [InlineData(PixelFormat.BC7_UNorm, 16, 0, 0, 16, 16)]
         [InlineData(PixelFormat.BC7_UNorm, 16, 8, 4, 16, 16)]
+        [InlineData(PixelFormat.BC7_UNorm_SRgb, 16, 0, 0, 16, 16)]
+        [InlineData(PixelFormat.BC7_UNorm_SRgb, 16, 8, 4, 16, 16)]
         public unsafe void Copy_Compressed_Texture(PixelFormat format, uint blockSizeInBytes, uint srcX, uint srcY, uint copyWidth, uint copyHeight)
         {
             if (!GD.GetPixelFormatSupport(format, TextureType.Texture2D, TextureUsage.Sampled))
@@ -890,14 +900,19 @@ namespace Veldrid.Tests
 
         [Theory]
         [InlineData(PixelFormat.BC1_Rgb_UNorm)]
+        [InlineData(PixelFormat.BC1_Rgb_UNorm_SRgb)]
         [InlineData(PixelFormat.BC1_Rgba_UNorm)]
+        [InlineData(PixelFormat.BC1_Rgba_UNorm_SRgb)]
         [InlineData(PixelFormat.BC2_UNorm)]
+        [InlineData(PixelFormat.BC2_UNorm_SRgb)]
         [InlineData(PixelFormat.BC3_UNorm)]
+        [InlineData(PixelFormat.BC3_UNorm_SRgb)]
         [InlineData(PixelFormat.BC4_UNorm)]
         [InlineData(PixelFormat.BC4_SNorm)]
         [InlineData(PixelFormat.BC5_UNorm)]
         [InlineData(PixelFormat.BC5_SNorm)]
         [InlineData(PixelFormat.BC7_UNorm)]
+        [InlineData(PixelFormat.BC7_UNorm_SRgb)]
         public void CreateSmallTexture(PixelFormat format)
         {
             Texture tex = RF.CreateTexture(TextureDescription.Texture2D(1, 1, 1, 1, format, TextureUsage.Sampled));

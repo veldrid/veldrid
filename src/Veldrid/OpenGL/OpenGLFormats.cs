@@ -133,12 +133,20 @@ namespace Veldrid.OpenGL
 
                 case PixelFormat.BC1_Rgb_UNorm:
                     return PixelInternalFormat.CompressedRgbS3tcDxt1Ext;
+                case PixelFormat.BC1_Rgb_UNorm_SRgb:
+                    return PixelInternalFormat.CompressedSrgbS3tcDxt1Ext;
                 case PixelFormat.BC1_Rgba_UNorm:
                     return PixelInternalFormat.CompressedRgbaS3tcDxt1Ext;
+                case PixelFormat.BC1_Rgba_UNorm_SRgb:
+                    return PixelInternalFormat.CompressedSrgbAlphaS3tcDxt1Ext;
                 case PixelFormat.BC2_UNorm:
                     return PixelInternalFormat.CompressedRgbaS3tcDxt3Ext;
+                case PixelFormat.BC2_UNorm_SRgb:
+                    return PixelInternalFormat.CompressedSrgbAlphaS3tcDxt3Ext;
                 case PixelFormat.BC3_UNorm:
                     return PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
+                case PixelFormat.BC3_UNorm_SRgb:
+                    return PixelInternalFormat.CompressedSrgbAlphaS3tcDxt5Ext;
                 case PixelFormat.BC4_UNorm:
                     return PixelInternalFormat.CompressedRedRgtc1;
                 case PixelFormat.BC4_SNorm:
@@ -149,6 +157,8 @@ namespace Veldrid.OpenGL
                     return PixelInternalFormat.CompressedSignedRgRgtc2;
                 case PixelFormat.BC7_UNorm:
                     return PixelInternalFormat.CompressedRgbaBptcUnorm;
+                case PixelFormat.BC7_UNorm_SRgb:
+                    return PixelInternalFormat.CompressedSrgbAlphaBptcUnorm;
 
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                     return PixelInternalFormat.CompressedRgb8Etc2;
@@ -253,12 +263,17 @@ namespace Veldrid.OpenGL
                     return GLPixelFormat.RgbaInteger;
 
                 case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC1_Rgb_UNorm_SRgb:
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                     return GLPixelFormat.Rgb;
                 case PixelFormat.BC1_Rgba_UNorm:
+                case PixelFormat.BC1_Rgba_UNorm_SRgb:
                 case PixelFormat.BC2_UNorm:
+                case PixelFormat.BC2_UNorm_SRgb:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.BC3_UNorm_SRgb:
                 case PixelFormat.BC7_UNorm:
+                case PixelFormat.BC7_UNorm_SRgb:
                 case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
                     return GLPixelFormat.Rgba;
@@ -334,12 +349,17 @@ namespace Veldrid.OpenGL
                     return GLPixelType.Float;
 
                 case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC1_Rgb_UNorm_SRgb:
                 case PixelFormat.BC1_Rgba_UNorm:
+                case PixelFormat.BC1_Rgba_UNorm_SRgb:
                 case PixelFormat.BC2_UNorm:
+                case PixelFormat.BC2_UNorm_SRgb:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.BC3_UNorm_SRgb:
                 case PixelFormat.BC4_UNorm:
                 case PixelFormat.BC5_UNorm:
                 case PixelFormat.BC7_UNorm:
+                case PixelFormat.BC7_UNorm_SRgb:
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
@@ -454,12 +474,20 @@ namespace Veldrid.OpenGL
 
                 case PixelFormat.BC1_Rgb_UNorm:
                     return (SizedInternalFormat)PixelInternalFormat.CompressedRgbS3tcDxt1Ext;
+                case PixelFormat.BC1_Rgb_UNorm_SRgb:
+                    return (SizedInternalFormat)PixelInternalFormat.CompressedSrgbS3tcDxt1Ext;
                 case PixelFormat.BC1_Rgba_UNorm:
                     return (SizedInternalFormat)PixelInternalFormat.CompressedRgbaS3tcDxt1Ext;
+                case PixelFormat.BC1_Rgba_UNorm_SRgb:
+                    return (SizedInternalFormat)PixelInternalFormat.CompressedSrgbAlphaS3tcDxt1Ext;
                 case PixelFormat.BC2_UNorm:
                     return (SizedInternalFormat)PixelInternalFormat.CompressedRgbaS3tcDxt3Ext;
+                case PixelFormat.BC2_UNorm_SRgb:
+                    return (SizedInternalFormat)PixelInternalFormat.CompressedSrgbAlphaS3tcDxt3Ext;
                 case PixelFormat.BC3_UNorm:
                     return (SizedInternalFormat)PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
+                case PixelFormat.BC3_UNorm_SRgb:
+                    return (SizedInternalFormat)PixelInternalFormat.CompressedSrgbAlphaS3tcDxt5Ext;
                 case PixelFormat.BC4_UNorm:
                     return (SizedInternalFormat)PixelInternalFormat.CompressedRedRgtc1;
                 case PixelFormat.BC4_SNorm:
@@ -470,6 +498,8 @@ namespace Veldrid.OpenGL
                     return (SizedInternalFormat)PixelInternalFormat.CompressedSignedRgRgtc2;
                 case PixelFormat.BC7_UNorm:
                     return (SizedInternalFormat)PixelInternalFormat.CompressedRgbaBptcUnorm;
+                case PixelFormat.BC7_UNorm_SRgb:
+                    return (SizedInternalFormat)PixelInternalFormat.CompressedSrgbAlphaBptcUnorm;
 
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                     return (SizedInternalFormat)PixelInternalFormat.CompressedRgb8Etc2;
@@ -643,9 +673,13 @@ namespace Veldrid.OpenGL
                     return extensions.GLESVersion(3, 0) || extensions.GLVersion(4, 3);
 
                 case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC1_Rgb_UNorm_SRgb:
                 case PixelFormat.BC1_Rgba_UNorm:
+                case PixelFormat.BC1_Rgba_UNorm_SRgb:
                 case PixelFormat.BC2_UNorm:
+                case PixelFormat.BC2_UNorm_SRgb:
                 case PixelFormat.BC3_UNorm:
+                case PixelFormat.BC3_UNorm_SRgb:
                     return extensions.IsExtensionSupported("GL_EXT_texture_compression_s3tc");
 
                 case PixelFormat.BC4_UNorm:
@@ -655,6 +689,7 @@ namespace Veldrid.OpenGL
                     return extensions.GLVersion(3, 0) || extensions.IsExtensionSupported("GL_ARB_texture_compression_rgtc");
 
                 case PixelFormat.BC7_UNorm:
+                case PixelFormat.BC7_UNorm_SRgb:
                     return extensions.GLVersion(4, 2) || extensions.IsExtensionSupported("GL_ARB_texture_compression_bptc")
                         || extensions.IsExtensionSupported("GL_EXT_texture_compression_bptc");
 

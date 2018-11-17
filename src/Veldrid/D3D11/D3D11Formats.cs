@@ -102,10 +102,17 @@ namespace Veldrid.D3D11
                 case PixelFormat.BC1_Rgb_UNorm:
                 case PixelFormat.BC1_Rgba_UNorm:
                     return Format.BC1_UNorm;
+                case PixelFormat.BC1_Rgb_UNorm_SRgb:
+                case PixelFormat.BC1_Rgba_UNorm_SRgb:
+                    return Format.BC1_UNorm_SRgb;
                 case PixelFormat.BC2_UNorm:
                     return Format.BC2_UNorm;
+                case PixelFormat.BC2_UNorm_SRgb:
+                    return Format.BC2_UNorm_SRgb;
                 case PixelFormat.BC3_UNorm:
                     return Format.BC3_UNorm;
+                case PixelFormat.BC3_UNorm_SRgb:
+                    return Format.BC3_UNorm_SRgb;
                 case PixelFormat.BC4_UNorm:
                     return Format.BC4_UNorm;
                 case PixelFormat.BC4_SNorm:
@@ -116,6 +123,8 @@ namespace Veldrid.D3D11
                     return Format.BC5_SNorm;
                 case PixelFormat.BC7_UNorm:
                     return Format.BC7_UNorm;
+                case PixelFormat.BC7_UNorm_SRgb:
+                    return Format.BC7_UNorm_SRgb;
 
                 case PixelFormat.D24_UNorm_S8_UInt:
                     Debug.Assert(depthFormat);

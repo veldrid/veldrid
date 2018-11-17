@@ -243,5 +243,10 @@
         /// This is an SRGB format.
         /// </summary>
         B8_G8_R8_A8_UNorm_SRgb,
+        BC1_Rgb_UNorm_SRgb,
+        BC1_Rgba_UNorm_SRgb,
+        BC2_UNorm_SRgb,
+        BC3_UNorm_SRgb,
+        BC7_UNorm_SRgb,
     }
 }

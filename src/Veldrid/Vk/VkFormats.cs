@@ -557,12 +557,20 @@ namespace Veldrid.Vk
 
                 case PixelFormat.BC1_Rgb_UNorm:
                     return VkFormat.Bc1RgbUnormBlock;
+                case PixelFormat.BC1_Rgb_UNorm_SRgb:
+                    return VkFormat.Bc1RgbSrgbBlock;
                 case PixelFormat.BC1_Rgba_UNorm:
                     return VkFormat.Bc1RgbaUnormBlock;
+                case PixelFormat.BC1_Rgba_UNorm_SRgb:
+                    return VkFormat.Bc1RgbaSrgbBlock;
                 case PixelFormat.BC2_UNorm:
                     return VkFormat.Bc2UnormBlock;
+                case PixelFormat.BC2_UNorm_SRgb:
+                    return VkFormat.Bc2SrgbBlock;
                 case PixelFormat.BC3_UNorm:
                     return VkFormat.Bc3UnormBlock;
+                case PixelFormat.BC3_UNorm_SRgb:
+                    return VkFormat.Bc3SrgbBlock;
                 case PixelFormat.BC4_UNorm:
                     return VkFormat.Bc4UnormBlock;
                 case PixelFormat.BC4_SNorm:
@@ -573,6 +581,8 @@ namespace Veldrid.Vk
                     return VkFormat.Bc5SnormBlock;
                 case PixelFormat.BC7_UNorm:
                     return VkFormat.Bc7UnormBlock;
+                case PixelFormat.BC7_UNorm_SRgb:
+                    return VkFormat.Bc7SrgbBlock;
 
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                     return VkFormat.Etc2R8g8b8UnormBlock;
@@ -691,12 +701,20 @@ namespace Veldrid.Vk
 
                 case VkFormat.Bc1RgbUnormBlock:
                     return PixelFormat.BC1_Rgb_UNorm;
+                case VkFormat.Bc1RgbSrgbBlock:
+                    return PixelFormat.BC1_Rgb_UNorm_SRgb;
                 case VkFormat.Bc1RgbaUnormBlock:
                     return PixelFormat.BC1_Rgba_UNorm;
+                case VkFormat.Bc1RgbaSrgbBlock:
+                    return PixelFormat.BC1_Rgba_UNorm_SRgb;
                 case VkFormat.Bc2UnormBlock:
                     return PixelFormat.BC2_UNorm;
+                case VkFormat.Bc2SrgbBlock:
+                    return PixelFormat.BC2_UNorm_SRgb;
                 case VkFormat.Bc3UnormBlock:
                     return PixelFormat.BC3_UNorm;
+                case VkFormat.Bc3SrgbBlock:
+                    return PixelFormat.BC3_UNorm_SRgb;
                 case VkFormat.Bc4UnormBlock:
                     return PixelFormat.BC4_UNorm;
                 case VkFormat.Bc4SnormBlock:
@@ -707,6 +725,8 @@ namespace Veldrid.Vk
                     return PixelFormat.BC5_SNorm;
                 case VkFormat.Bc7UnormBlock:
                     return PixelFormat.BC7_UNorm;
+                case VkFormat.Bc7SrgbBlock:
+                    return PixelFormat.BC7_UNorm_SRgb;
 
                 case VkFormat.A2b10g10r10UnormPack32:
                     return PixelFormat.R10_G10_B10_A2_UNorm;

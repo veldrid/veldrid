@@ -473,7 +473,21 @@ namespace Veldrid
                     $"The data size is less than expected for the given update region. At least {expectedSize} bytes must be provided, but only {sizeInBytes} were.");
             }
 
-            if (x + width > texture.Width || y + height > texture.Height || z + depth > texture.Depth)
+            // Compressed textures don't necessarily need to have a Texture.Width and Texture.Height that are a multiple of 4.
+            // But the mipdata width and height *does* need to be a multiple of 4.
+            uint roundedTextureWidth, roundedTextureHeight;
+            if (FormatHelpers.IsCompressedFormat(texture.Format))
+            {
+                roundedTextureWidth = (texture.Width + 3) / 4 * 4;
+                roundedTextureHeight = (texture.Height + 3) / 4 * 4;
+            }
+            else
+            {
+                roundedTextureWidth = texture.Width;
+                roundedTextureHeight = texture.Height;
+            }
+
+            if (x + width > roundedTextureWidth || y + height > roundedTextureHeight || z + depth > texture.Depth)
             {
                 throw new VeldridException($"The given region does not fit into the Texture.");
             }

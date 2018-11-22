@@ -630,6 +630,24 @@ namespace Veldrid.Tests
         }
 
         [Fact]
+        public unsafe void Update_NonMultipleOfFourWithCompressedTexture_2D()
+        {
+            Texture tex2D = RF.CreateTexture(TextureDescription.Texture2D(
+                2, 2, 1, 1, PixelFormat.BC1_Rgb_UNorm, TextureUsage.Staging));
+
+            byte[] data = new byte[16];
+
+            fixed (byte* dataPtr = &data[0])
+            {
+                GD.UpdateTexture(
+                    tex2D, (IntPtr)dataPtr, (uint)data.Length,
+                    0, 0, 0,
+                    4, 4, 1,
+                    0, 0);
+            }
+        }
+
+        [Fact]
         public unsafe void Map_NonZeroMip_3D()
         {
             Texture tex3D = RF.CreateTexture(TextureDescription.Texture3D(

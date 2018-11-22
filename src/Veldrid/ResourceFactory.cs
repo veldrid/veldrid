@@ -168,16 +168,13 @@ namespace Veldrid
             return CreateTextureCore(ref description);
         }
 
-        public Texture CreateTexture(IntPtr nativeTexture, TextureDescription description)
+        public Texture CreateTexture(ulong nativeTexture, TextureDescription description)
             => CreateTextureCore(nativeTexture, ref description);
 
-        public Texture CreateTexture(IntPtr nativeTexture, ref TextureDescription description)
+        public Texture CreateTexture(ulong nativeTexture, ref TextureDescription description)
             => CreateTextureCore(nativeTexture, ref description);
 
-        protected virtual Texture CreateTextureCore(IntPtr nativeTexture, ref TextureDescription description)
-        {
-            throw new NotSupportedException();
-        }
+        protected abstract Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description);
 
         // TODO: private protected
         /// <summary>

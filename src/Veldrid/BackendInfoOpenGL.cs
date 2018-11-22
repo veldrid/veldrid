@@ -16,9 +16,6 @@ namespace Veldrid
 
         public void FlushAndFinish() => _gd.FlushAndFinish();
 
-        public uint GetTextureName(Texture texture)
-        {
-            return Util.AssertSubtype<Texture, OpenGLTexture>(texture).Texture;
-        }
+        public uint GetTextureName(Texture texture) => Util.AssertSubtype<Texture, OpenGLTexture>(texture).Texture;
     }
 }

@@ -15,8 +15,6 @@ namespace Veldrid
         public IntPtr Device => _gd.Device.NativePointer;
 
         public IntPtr GetTexturePointer(Texture texture)
-        {
-            return Util.AssertSubtype<Texture, D3D11Texture>(texture).DeviceTexture.NativePointer;
-        }
+            => Util.AssertSubtype<Texture, D3D11Texture>(texture).DeviceTexture.NativePointer;
     }
 }

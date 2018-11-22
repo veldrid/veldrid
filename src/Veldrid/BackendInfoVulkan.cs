@@ -26,20 +26,25 @@ namespace Veldrid
             {
                 for (uint level = 0; level < vkTex.MipLevels; level++)
                 {
-                    vkTex.SetImageLayout(level, layer, (Vulkan.VkImageLayout)layout);
+                    vkTex.SetImageLayout(level, layer, (VkImageLayout)layout);
                 }
             }
         }
 
-        public ulong GetImage(Texture texture)
+        public ulong GetVkImage(Texture texture)
         {
-            return Util.AssertSubtype<Texture, VkTexture>(texture).OptimalDeviceImage.Handle;
+            VkTexture vkTexture = Util.AssertSubtype<Texture, VkTexture>(texture);
+            if ((vkTexture.Usage & TextureUsage.Staging) != 0)
+            {
+                throw new VeldridException(
+                    $"{nameof(GetVkImage)} cannot be used if the {nameof(Texture)} " +
+                    $"has {nameof(TextureUsage)}.{nameof(TextureUsage.Staging)}.");
+            }
+
+            return vkTexture.OptimalDeviceImage.Handle;
         }
 
-        public uint GetVkFormat(Texture texture)
-        {
-            return (uint)Util.AssertSubtype<Texture, VkTexture>(texture).VkFormat;
-        }
+        //public uint GetVkFormat(Texture texture) => (uint)Util.AssertSubtype<Texture, VkTexture>(texture).VkFormat;
 
         public void TransitionImageLayout(Texture texture, uint layout)
         {

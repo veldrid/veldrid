@@ -19,7 +19,7 @@ namespace Veldrid.VirtualReality.Sample
                     WindowState.Normal,
                     "Veldrid.VirtualReality Sample"));
 
-            VRContext vrContext = VRContext.CreateOculus();
+            VRContext vrContext = VRContext.CreateOpenVR();
 
             GraphicsBackend backend = GraphicsBackend.Vulkan;
 

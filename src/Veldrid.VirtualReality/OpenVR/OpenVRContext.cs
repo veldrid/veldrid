@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Text;
 using Valve.VR;
+using Veldrid.Vk;
 using OVR = Valve.VR.OpenVR;
 
 namespace Veldrid.VirtualReality.OpenVR
@@ -149,7 +150,7 @@ namespace Veldrid.VirtualReality.OpenVR
                 vkInfo.TransitionImageLayout(colorTex, (uint)Vulkan.VkImageLayout.TransferSrcOptimal);
 
                 VRVulkanTextureData_t vkTexData;
-                vkTexData.m_nImage = vkInfo.GetImage(colorTex);
+                vkTexData.m_nImage = vkInfo.GetVkImage(colorTex);
                 vkTexData.m_pDevice = vkInfo.Device;
                 vkTexData.m_pPhysicalDevice = vkInfo.PhysicalDevice;
                 vkTexData.m_pInstance = vkInfo.Instance;
@@ -157,7 +158,9 @@ namespace Veldrid.VirtualReality.OpenVR
                 vkTexData.m_nQueueFamilyIndex = vkInfo.GraphicsQueueFamilyIndex;
                 vkTexData.m_nWidth = colorTex.Width;
                 vkTexData.m_nHeight = colorTex.Height;
-                vkTexData.m_nFormat = vkInfo.GetVkFormat(colorTex);
+                vkTexData.m_nFormat = (uint)VkFormats.VdToVkPixelFormat(
+                    colorTex.Format,
+                    (colorTex.Usage & TextureUsage.DepthStencil) != 0);
                 vkTexData.m_nSampleCount = GetSampleCount(colorTex.SampleCount);
 
                 texT.eColorSpace = EColorSpace.Gamma;

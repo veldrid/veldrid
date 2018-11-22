@@ -40,6 +40,7 @@ namespace Veldrid.OpenGL
                 || IsExtensionSupported("OES_geometry_shader");
             DrawElementsBaseVertex = GLVersion(3, 2)
                 || IsExtensionSupported("GL_ARB_draw_elements_base_vertex")
+                || GLESVersion(3, 2)
                 || IsExtensionSupported("GL_OES_draw_elements_base_vertex");
             IndependentBlend = GLVersion(4, 0) || GLESVersion(3, 2);
 

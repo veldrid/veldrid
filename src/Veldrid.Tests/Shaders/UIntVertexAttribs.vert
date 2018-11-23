@@ -54,4 +54,5 @@ void main()
     Veldrid_Tests_Shaders_UIntVertexAttribs_FragmentInput output_ = VS(input_);
     fsin_0 = output_.Color;
     gl_Position = output_.Position;
+    gl_PointSize = 1;
 }

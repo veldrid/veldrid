@@ -33,4 +33,5 @@ void main()
     input_.Position = Position;
     Veldrid_Tests_Shaders_TexturedPoints_FragmentInput output_ = VS(input_);
     gl_Position = output_.Position;
+    gl_PointSize = 1;
 }

@@ -27,4 +27,5 @@ void main()
     gl_Position = _Ortho * vec4(vsin_Position, 0, 1);
     fsin_Color = vec4(vsin_Color.x, vsin_Color.y, vsin_Color.z, 1) / _Info.ColorNormalizationFactor;
     fsin_Color.w = 1;
+    gl_PointSize = 1;
 }

@@ -168,9 +168,43 @@ namespace Veldrid
             return CreateTextureCore(ref description);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="Texture"/> from an existing native texture.
+        /// </summary>
+        /// <param name="nativeTexture">A backend-specific handle identifying an existing native texture. See remarks.</param>
+        /// <param name="description">The properties of the existing Texture.</param>
+        /// <returns>A new <see cref="Texture"/> wrapping the existing native texture.</returns>
+        /// <remarks>
+        /// The nativeTexture parameter is backend-specific, and the type of data passed in depends on which graphics API is
+        /// being used.
+        /// When using the Vulkan backend, nativeTexture must be a valid VkImage handle.
+        /// When using the Metal backend, nativeTexture must be a valid MTLTexture pointer.
+        /// When using the D3D11 backend, nativeTexture must be a valid pointer to an ID3D11Texture1D, ID3D11Texture2D, or
+        /// ID3D11Texture3D.
+        /// When using the OpenGL backend, nativeTexture must be a valid OpenGL texture name.
+        /// The properties of the Texture will be determined from the <see cref="TextureDescription"/> passed in. These
+        /// properties must match the true properties of the existing native texture.
+        /// </remarks>
         public Texture CreateTexture(ulong nativeTexture, TextureDescription description)
             => CreateTextureCore(nativeTexture, ref description);
 
+        /// <summary>
+        /// Creates a new <see cref="Texture"/> from an existing native texture.
+        /// </summary>
+        /// <param name="nativeTexture">A backend-specific handle identifying an existing native texture. See remarks.</param>
+        /// <param name="description">The properties of the existing Texture.</param>
+        /// <returns>A new <see cref="Texture"/> wrapping the existing native texture.</returns>
+        /// <remarks>
+        /// The nativeTexture parameter is backend-specific, and the type of data passed in depends on which graphics API is
+        /// being used.
+        /// When using the Vulkan backend, nativeTexture must be a valid VkImage handle.
+        /// When using the Metal backend, nativeTexture must be a valid MTLTexture pointer.
+        /// When using the D3D11 backend, nativeTexture must be a valid pointer to an ID3D11Texture1D, ID3D11Texture2D, or
+        /// ID3D11Texture3D.
+        /// When using the OpenGL backend, nativeTexture must be a valid OpenGL texture name.
+        /// The properties of the Texture will be determined from the <see cref="TextureDescription"/> passed in. These
+        /// properties must match the true properties of the existing native texture.
+        /// </remarks>
         public Texture CreateTexture(ulong nativeTexture, ref TextureDescription description)
             => CreateTextureCore(nativeTexture, ref description);
 

@@ -732,8 +732,19 @@ namespace Veldrid
             PlatformDispose();
         }
 
+        /// <summary>
+        /// Tries to get a <see cref="BackendInfoD3D11"/> for this instance. This method will only succeed if this is a D3D11
+        /// GraphicsDevice.
+        /// </summary>
+        /// <param name="info">If successful, this will contain the <see cref="BackendInfoD3D11"/> for this instance.</param>
+        /// <returns>True if this is a D3D11 GraphicsDevice and the operation was successful. False otherwise.</returns>
         public virtual bool GetD3D11Info(out BackendInfoD3D11 info) { info = null; return false; }
 
+        /// <summary>
+        /// Gets a <see cref="BackendInfoD3D11"/> for this instance. This method will only succeed if this is a D3D11
+        /// GraphicsDevice. Otherwise, this method will throw an exception.
+        /// </summary>
+        /// <returns>The <see cref="BackendInfoD3D11"/> for this instance.</returns>
         public BackendInfoD3D11 GetD3D11Info()
         {
             if (!GetD3D11Info(out BackendInfoD3D11 info))
@@ -744,8 +755,19 @@ namespace Veldrid
             return info;
         }
 
+        /// <summary>
+        /// Tries to get a <see cref="BackendInfoVulkan"/> for this instance. This method will only succeed if this is a Vulkan
+        /// GraphicsDevice.
+        /// </summary>
+        /// <param name="info">If successful, this will contain the <see cref="BackendInfoVulkan"/> for this instance.</param>
+        /// <returns>True if this is a Vulkan GraphicsDevice and the operation was successful. False otherwise.</returns>
         public virtual bool GetVulkanInfo(out BackendInfoVulkan info) { info = null; return false; }
 
+        /// <summary>
+        /// Gets a <see cref="BackendInfoVulkan"/> for this instance. This method will only succeed if this is a Vulkan
+        /// GraphicsDevice. Otherwise, this method will throw an exception.
+        /// </summary>
+        /// <returns>The <see cref="BackendInfoVulkan"/> for this instance.</returns>
         public BackendInfoVulkan GetVulkanInfo()
         {
             if (!GetVulkanInfo(out BackendInfoVulkan info))
@@ -756,8 +778,19 @@ namespace Veldrid
             return info;
         }
 
+        /// <summary>
+        /// Tries to get a <see cref="BackendInfoOpenGL"/> for this instance. This method will only succeed if this is an OpenGL
+        /// GraphicsDevice.
+        /// </summary>
+        /// <param name="info">If successful, this will contain the <see cref="BackendInfoOpenGL"/> for this instance.</param>
+        /// <returns>True if this is an OpenGL GraphicsDevice and the operation was successful. False otherwise.</returns>
         public virtual bool GetOpenGLInfo(out BackendInfoOpenGL info) { info = null; return false; }
 
+        /// <summary>
+        /// Gets a <see cref="BackendInfoOpenGL"/> for this instance. This method will only succeed if this is an OpenGL
+        /// GraphicsDevice. Otherwise, this method will throw an exception.
+        /// </summary>
+        /// <returns>The <see cref="BackendInfoOpenGL"/> for this instance.</returns>
         public BackendInfoOpenGL GetOpenGLInfo()
         {
             if (!GetOpenGLInfo(out BackendInfoOpenGL info))

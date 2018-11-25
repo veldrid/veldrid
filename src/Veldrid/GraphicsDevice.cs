@@ -115,7 +115,7 @@ namespace Veldrid
         /// execution.</param>
         public void SubmitCommands(CommandList commandList, Fence fence) => SubmitCommandsCore(commandList, fence);
 
-        protected abstract void SubmitCommandsCore(
+        private protected abstract void SubmitCommandsCore(
             CommandList commandList,
             Fence fence);
 
@@ -213,7 +213,7 @@ namespace Veldrid
         /// <param name="swapchain">The <see cref="Swapchain"/> to swap and present.</param>
         public void SwapBuffers(Swapchain swapchain) => SwapBuffersCore(swapchain);
 
-        protected abstract void SwapBuffersCore(Swapchain swapchain);
+        private protected abstract void SwapBuffersCore(Swapchain swapchain);
 
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> object representing the render targets of the main swapchain.
@@ -249,7 +249,7 @@ namespace Veldrid
             FlushDeferredDisposals();
         }
 
-        protected abstract void WaitForIdleCore();
+        private protected abstract void WaitForIdleCore();
 
         /// <summary>
         /// Gets the maximum sample count supported by the given <see cref="PixelFormat"/>.
@@ -439,7 +439,7 @@ namespace Veldrid
             gch.Free();
         }
 
-        protected abstract void UpdateTextureCore(
+        private protected abstract void UpdateTextureCore(
             Texture texture,
             IntPtr source,
             uint sizeInBytes,
@@ -616,7 +616,7 @@ namespace Veldrid
             UpdateBufferCore(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }
 
-        protected abstract void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
+        private protected abstract void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
 
         /// <summary>
         /// Gets whether or not the given <see cref="PixelFormat"/>, <see cref="TextureType"/>, and <see cref="TextureUsage"/>
@@ -654,7 +654,7 @@ namespace Veldrid
             return GetPixelFormatSupportCore(format, type, usage, out properties);
         }
 
-        protected abstract bool GetPixelFormatSupportCore(
+        private protected abstract bool GetPixelFormatSupportCore(
             PixelFormat format,
             TextureType type,
             TextureUsage usage,

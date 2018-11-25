@@ -109,5 +109,12 @@ namespace Veldrid.Utilities
             DisposeCollector.Add(sc);
             return sc;
         }
+
+        protected override Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description)
+        {
+            Texture tex = Factory.CreateTexture(nativeTexture, ref description);
+            DisposeCollector.Add(tex);
+            return tex;
+        }
     }
 }

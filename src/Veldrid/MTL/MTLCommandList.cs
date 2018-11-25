@@ -77,13 +77,13 @@ namespace Veldrid.MTL
             ClearCachedState();
         }
 
-        protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
+        private protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
         {
             EnsureNoRenderPass();
             _clearColors[index] = clearColor;
         }
 
-        protected override void ClearDepthStencilCore(float depth, byte stencil)
+        private protected override void ClearDepthStencilCore(float depth, byte stencil)
         {
             EnsureNoRenderPass();
             _clearDepth = (depth, stencil);
@@ -97,7 +97,7 @@ namespace Veldrid.MTL
                 _computePipeline.ThreadsPerThreadgroup);
         }
 
-        protected override void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
+        private protected override void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
             if (PreDrawCommand())
             {
@@ -122,7 +122,7 @@ namespace Veldrid.MTL
             }
         }
 
-        protected override void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        private protected override void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
             if (PreDrawCommand())
             {
@@ -272,7 +272,7 @@ namespace Veldrid.MTL
             EnsureNoRenderPass();
         }
 
-        protected override void SetPipelineCore(Pipeline pipeline)
+        private protected override void SetPipelineCore(Pipeline pipeline)
         {
             if (pipeline.IsComputePipeline)
             {
@@ -321,7 +321,7 @@ namespace Veldrid.MTL
                 viewport.MaxDepth);
         }
 
-        protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             bool useComputeCopy = (bufferOffsetInBytes % 4 != 0)
                 || (sizeInBytes % 4 != 0 && bufferOffsetInBytes != 0 && sizeInBytes != buffer.SizeInBytes);
@@ -596,7 +596,7 @@ namespace Veldrid.MTL
             }
         }
 
-        protected override void GenerateMipmapsCore(Texture texture)
+        private protected override void GenerateMipmapsCore(Texture texture)
         {
             Debug.Assert(texture.MipLevels > 1);
             EnsureBlitEncoder();
@@ -1066,14 +1066,14 @@ namespace Veldrid.MTL
             Debug.Assert(!ComputeEncoderActive);
         }
 
-        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
+        private protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
             _indexBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
             _ibOffset = offset;
             _indexType = MTLFormats.VdToMTLIndexFormat(format);
         }
 
-        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
+        private protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
         {
             Util.EnsureArrayMinimumSize(ref _vertexBuffers, index + 1);
             Util.EnsureArrayMinimumSize(ref _vbOffsets, index + 1);
@@ -1087,7 +1087,7 @@ namespace Veldrid.MTL
             }
         }
 
-        internal override void PushDebugGroupCore(string name)
+        private protected override void PushDebugGroupCore(string name)
         {
             NSString nsName = NSString.New(name);
             if (!_bce.IsNull)
@@ -1106,7 +1106,7 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(nsName);
         }
 
-        internal override void PopDebugGroupCore()
+        private protected override void PopDebugGroupCore()
         {
             if (!_bce.IsNull)
             {
@@ -1122,7 +1122,7 @@ namespace Veldrid.MTL
             }
         }
 
-        internal override void InsertDebugMarkerCore(string name)
+        private protected override void InsertDebugMarkerCore(string name)
         {
             NSString nsName = NSString.New(name);
             if (!_bce.IsNull)

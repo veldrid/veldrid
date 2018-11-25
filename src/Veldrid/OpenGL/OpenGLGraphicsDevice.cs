@@ -723,7 +723,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        protected override void SubmitCommandsCore(
+        private protected override void SubmitCommandsCore(
             CommandList cl,
             Fence fence)
         {
@@ -782,14 +782,14 @@ namespace Veldrid.OpenGL
             return _submittedCommandListCounts.TryGetValue(glCommandList, out int count) ? count : 0;
         }
 
-        protected override void SwapBuffersCore(Swapchain swapchain)
+        private protected override void SwapBuffersCore(Swapchain swapchain)
         {
             WaitForIdle();
 
             _executionThread.SwapBuffers();
         }
 
-        protected override void WaitForIdleCore()
+        private protected override void WaitForIdleCore()
         {
             _executionThread.WaitForIdle();
         }
@@ -799,7 +799,7 @@ namespace Veldrid.OpenGL
             return _maxColorTextureSamples;
         }
 
-        protected override bool GetPixelFormatSupportCore(
+        private protected override bool GetPixelFormatSupportCore(
             PixelFormat format,
             TextureType type,
             TextureUsage usage,
@@ -856,7 +856,7 @@ namespace Veldrid.OpenGL
             _executionThread.Unmap(resource, subresource);
         }
 
-        protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             lock (_mappedResourceLock)
             {
@@ -869,7 +869,7 @@ namespace Veldrid.OpenGL
             _executionThread.UpdateBuffer(buffer, bufferOffsetInBytes, sb);
         }
 
-        protected override void UpdateTextureCore(
+        private protected override void UpdateTextureCore(
             Texture texture,
             IntPtr source,
             uint sizeInBytes,

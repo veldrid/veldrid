@@ -27,12 +27,9 @@ namespace Veldrid
         private readonly uint _uniformBufferAlignment;
         private readonly uint _structuredBufferAlignment;
 
-        /// <summary>
-        /// The active <see cref="Framebuffer"/>.
-        /// </summary>
-        protected Framebuffer _framebuffer;
-        protected Pipeline _graphicsPipeline;
-        protected Pipeline _computePipeline;
+        private protected Framebuffer _framebuffer;
+        private protected Pipeline _graphicsPipeline;
+        private protected Pipeline _computePipeline;
 
 #if VALIDATE_USAGE
         private DeviceBuffer _indexBuffer;
@@ -97,7 +94,7 @@ namespace Veldrid
             SetPipelineCore(pipeline);
         }
 
-        protected abstract void SetPipelineCore(Pipeline pipeline);
+        private protected abstract void SetPipelineCore(Pipeline pipeline);
 
         /// <summary>
         /// Sets the active <see cref="DeviceBuffer"/> for the given index.
@@ -134,7 +131,7 @@ namespace Veldrid
             SetVertexBufferCore(index, buffer, offset);
         }
 
-        protected abstract void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset);
+        private protected abstract void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset);
 
         /// <summary>
         /// Sets the active <see cref="DeviceBuffer"/>.
@@ -169,7 +166,7 @@ namespace Veldrid
             SetIndexBufferCore(buffer, format, offset);
         }
 
-        protected abstract void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset);
+        private protected abstract void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset);
 
         /// <summary>
         /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the graphics
@@ -415,7 +412,7 @@ namespace Veldrid
             ClearColorTargetCore(index, clearColor);
         }
 
-        protected abstract void ClearColorTargetCore(uint index, RgbaFloat clearColor);
+        private protected abstract void ClearColorTargetCore(uint index, RgbaFloat clearColor);
 
         /// <summary>
         /// Clears the depth-stencil target of the active <see cref="Framebuffer"/>.
@@ -451,7 +448,7 @@ namespace Veldrid
             ClearDepthStencilCore(depth, stencil);
         }
 
-        protected abstract void ClearDepthStencilCore(float depth, byte stencil);
+        private protected abstract void ClearDepthStencilCore(float depth, byte stencil);
 
         /// <summary>
         /// Sets all active viewports to cover the entire active <see cref="Framebuffer"/>.
@@ -543,7 +540,7 @@ namespace Veldrid
             DrawCore(vertexCount, instanceCount, vertexStart, instanceStart);
         }
 
-        protected abstract void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
+        private protected abstract void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
 
         /// <summary>
         /// Draws indexed primitives from the currently-bound state in this <see cref="CommandList"/>.
@@ -579,7 +576,7 @@ namespace Veldrid
             DrawIndexedCore(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
-        protected abstract void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
+        private protected abstract void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
 
         /// <summary>
         /// Issues indirect draw commands based on the information contained in the given indirect <see cref="DeviceBuffer"/>.
@@ -859,7 +856,7 @@ namespace Veldrid
             UpdateBufferCore(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }
 
-        protected abstract void UpdateBufferCore(
+        private protected abstract void UpdateBufferCore(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             IntPtr source,
@@ -1110,7 +1107,7 @@ namespace Veldrid
             }
         }
 
-        protected abstract void GenerateMipmapsCore(Texture texture);
+        private protected abstract void GenerateMipmapsCore(Texture texture);
 
         /// <summary>
         /// Pushes a debug group at the current position in the <see cref="CommandList"/>. This allows subsequent commands to be
@@ -1124,7 +1121,7 @@ namespace Veldrid
             PushDebugGroupCore(name);
         }
 
-        internal abstract void PushDebugGroupCore(string name);
+        private protected abstract void PushDebugGroupCore(string name);
 
         /// <summary>
         /// Pops the current debug group. This method must only be called after <see cref="PushDebugGroup(string)"/> has been
@@ -1135,7 +1132,7 @@ namespace Veldrid
             PopDebugGroupCore();
         }
 
-        internal abstract void PopDebugGroupCore();
+        private protected abstract void PopDebugGroupCore();
 
         /// <summary>
         /// Inserts a debug marker into the CommandList at the current position. This is used by graphics debuggers to identify
@@ -1147,7 +1144,7 @@ namespace Veldrid
             InsertDebugMarkerCore(name);
         }
 
-        internal abstract void InsertDebugMarkerCore(string name);
+        private protected abstract void InsertDebugMarkerCore(string name);
 
         /// <summary>
         /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other

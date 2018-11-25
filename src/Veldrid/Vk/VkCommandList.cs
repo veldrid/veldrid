@@ -158,7 +158,7 @@ namespace Veldrid.Vk
             ClearSets(_currentComputeResourceSets);
         }
 
-        protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
+        private protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
         {
             VkClearValue clearValue = new VkClearValue
             {
@@ -192,7 +192,7 @@ namespace Veldrid.Vk
             }
         }
 
-        protected override void ClearDepthStencilCore(float depth, byte stencil)
+        private protected override void ClearDepthStencilCore(float depth, byte stencil)
         {
             VkClearValue clearValue = new VkClearValue { depthStencil = new VkClearDepthStencilValue(depth, stencil) };
 
@@ -228,13 +228,13 @@ namespace Veldrid.Vk
             }
         }
 
-        protected override void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
+        private protected override void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
             PreDrawCommand();
             vkCmdDraw(_cb, vertexCount, instanceCount, vertexStart, instanceStart);
         }
 
-        protected override void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        private protected override void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
             PreDrawCommand();
             vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
@@ -561,7 +561,7 @@ namespace Veldrid.Vk
                 null);
         }
 
-        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
+        private protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
             Vulkan.VkBuffer deviceBuffer = vkBuffer.DeviceBuffer;
@@ -569,13 +569,13 @@ namespace Veldrid.Vk
             vkCmdBindVertexBuffers(_cb, index, 1, ref deviceBuffer, ref offset64);
         }
 
-        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
+        private protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
             vkCmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, offset, VkFormats.VdToVkIndexFormat(format));
         }
 
-        protected override void SetPipelineCore(Pipeline pipeline)
+        private protected override void SetPipelineCore(Pipeline pipeline)
         {
             if (!pipeline.IsComputePipeline && _currentGraphicsPipeline != pipeline)
             {
@@ -664,7 +664,7 @@ namespace Veldrid.Vk
             }
         }
 
-        protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             VkBuffer stagingBuffer = GetStagingBuffer(sizeInBytes);
             _gd.UpdateBuffer(stagingBuffer, 0, source, sizeInBytes);
@@ -1009,7 +1009,7 @@ namespace Veldrid.Vk
             }
         }
 
-        protected override void GenerateMipmapsCore(Texture texture)
+        private protected override void GenerateMipmapsCore(Texture texture)
         {
             EnsureNoRenderPass();
             VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(texture);
@@ -1097,7 +1097,7 @@ namespace Veldrid.Vk
             }
         }
 
-        internal override void PushDebugGroupCore(string name)
+        private protected override void PushDebugGroupCore(string name)
         {
             vkCmdDebugMarkerBeginEXT_t func = _gd.MarkerBegin;
             if (func == null) { return; }
@@ -1117,7 +1117,7 @@ namespace Veldrid.Vk
             func(_cb, &markerInfo);
         }
 
-        internal override void PopDebugGroupCore()
+        private protected override void PopDebugGroupCore()
         {
             vkCmdDebugMarkerEndEXT_t func = _gd.MarkerEnd;
             if (func == null) { return; }
@@ -1125,7 +1125,7 @@ namespace Veldrid.Vk
             func(_cb);
         }
 
-        internal override void InsertDebugMarkerCore(string name)
+        private protected override void InsertDebugMarkerCore(string name)
         {
             vkCmdDebugMarkerInsertEXT_t func = _gd.MarkerInsert;
             if (func == null) { return; }

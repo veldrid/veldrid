@@ -17,7 +17,6 @@
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.2" />
     <PackageReference Include="AssimpNet" Version="4.1.0" />
     <Content Include="..\Veldrid.SDL2\native\win-x64\SDL2.dll" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="openvr_api.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

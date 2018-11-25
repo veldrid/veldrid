@@ -5,7 +5,7 @@
     /// Each name is a compound identifier, where each component denotes a name and a number of bits used to store that
     /// component. The final component identifies the storage type of each component. "Float" identifies a signed, floating-point
     /// type, UNorm identifies an unsigned integer type which is normalized, meaning it occupies the full space of the integer
-    /// type.
+    /// type. The SRgb suffix for normalized integer formats indicates that the RGB components are stored in sRGB format.
     /// </summary>
     public enum PixelFormat : byte
     {

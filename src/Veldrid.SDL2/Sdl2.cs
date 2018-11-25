@@ -50,7 +50,17 @@ namespace Veldrid.Sdl2
         /// </exception>
         public static T LoadFunction<T>(string name)
         {
-            return s_sdl2Lib.LoadFunction<T>(name);
+            try
+            {
+                return s_sdl2Lib.LoadFunction<T>(name);
+            }
+            catch
+            {
+                Debug.WriteLine(
+                    $"Unable to load SDL2 function \"{name}\". " +
+                    $"Attempting to call this function will cause an exception to be thrown.");
+                return default(T);
+            }
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

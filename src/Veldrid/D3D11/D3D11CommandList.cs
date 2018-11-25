@@ -208,7 +208,7 @@ namespace Veldrid.D3D11
             _begun = false;
         }
 
-        protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
+        private protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
             if (_ib != buffer || _ibOffset != offset)
             {
@@ -220,7 +220,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void SetPipelineCore(Pipeline pipeline)
+        private protected override void SetPipelineCore(Pipeline pipeline)
         {
             if (!pipeline.IsComputePipeline && _graphicsPipeline != pipeline)
             {
@@ -541,7 +541,7 @@ namespace Veldrid.D3D11
             return ret;
         }
 
-        protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
+        private protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
         {
             D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
             if (_vertexBindings[index] != d3d11Buffer.Buffer || _vertexOffsets[index] != offset)
@@ -554,7 +554,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
+        private protected override void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
             PreDrawCommand();
 
@@ -568,7 +568,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        private protected override void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
             PreDrawCommand();
 
@@ -1113,17 +1113,17 @@ namespace Veldrid.D3D11
             _context.OutputMerger.SetRenderTargets(d3dFB.DepthStencilView, d3dFB.RenderTargetViews);
         }
 
-        protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
+        private protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
         {
             _context.ClearRenderTargetView(D3D11Framebuffer.RenderTargetViews[index], new RawColor4(clearColor.R, clearColor.G, clearColor.B, clearColor.A));
         }
 
-        protected override void ClearDepthStencilCore(float depth, byte stencil)
+        private protected override void ClearDepthStencilCore(float depth, byte stencil)
         {
             _context.ClearDepthStencilView(D3D11Framebuffer.DepthStencilView, DepthStencilClearFlags.Depth, depth, stencil);
         }
 
-        protected unsafe override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        private protected unsafe override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             D3D11Buffer d3dBuffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
             if (sizeInBytes == 0)
@@ -1276,7 +1276,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void GenerateMipmapsCore(Texture texture)
+        private protected override void GenerateMipmapsCore(Texture texture)
         {
             TextureView fullTexView = texture.GetFullTextureView(_gd);
             D3D11TextureView d3d11View = Util.AssertSubtype<TextureView, D3D11TextureView>(fullTexView);
@@ -1313,17 +1313,17 @@ namespace Veldrid.D3D11
             _submittedStagingBuffers.Clear();
         }
 
-        internal override void PushDebugGroupCore(string name)
+        private protected override void PushDebugGroupCore(string name)
         {
             _uda?.BeginEvent(name);
         }
 
-        internal override void PopDebugGroupCore()
+        private protected override void PopDebugGroupCore()
         {
             _uda?.EndEvent();
         }
 
-        internal override void InsertDebugMarkerCore(string name)
+        private protected override void InsertDebugMarkerCore(string name)
         {
             _uda?.SetMarker(name);
         }

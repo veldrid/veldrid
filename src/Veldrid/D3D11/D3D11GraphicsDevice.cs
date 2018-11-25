@@ -113,7 +113,7 @@ namespace Veldrid.D3D11
             PostDeviceCreated();
         }
 
-        protected override void SubmitCommandsCore(CommandList cl, Fence fence)
+        private protected override void SubmitCommandsCore(CommandList cl, Fence fence)
         {
             D3D11CommandList d3d11CL = Util.AssertSubtype<CommandList, D3D11CommandList>(cl);
             lock (_immediateContextLock)
@@ -131,7 +131,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void SwapBuffersCore(Swapchain swapchain)
+        private protected override void SwapBuffersCore(Swapchain swapchain)
         {
             lock (_immediateContextLock)
             {
@@ -172,7 +172,7 @@ namespace Veldrid.D3D11
             return _device.CheckMultisampleQualityLevels(format, sampleCount) != 0;
         }
 
-        protected override bool GetPixelFormatSupportCore(
+        private protected override bool GetPixelFormatSupportCore(
             PixelFormat format,
             TextureType type,
             TextureUsage usage,
@@ -319,7 +319,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected unsafe override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        private protected unsafe override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             D3D11Buffer d3dBuffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
             if (sizeInBytes == 0)
@@ -411,7 +411,7 @@ namespace Veldrid.D3D11
             return Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(staging);
         }
 
-        protected unsafe override void UpdateTextureCore(
+        private protected unsafe override void UpdateTextureCore(
             Texture texture,
             IntPtr source,
             uint sizeInBytes,
@@ -564,7 +564,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void WaitForIdleCore()
+        private protected override void WaitForIdleCore()
         {
         }
 

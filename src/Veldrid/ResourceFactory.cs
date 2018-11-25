@@ -7,6 +7,8 @@ namespace Veldrid
     /// </summary>
     public abstract class ResourceFactory
     {
+        /// <summary></summary>
+        /// <param name="features"></param>
         protected ResourceFactory(GraphicsDeviceFeatures features)
         {
             Features = features;
@@ -93,6 +95,9 @@ namespace Veldrid
             return CreateGraphicsPipelineCore(ref description);
         }
 
+        /// <summary></summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
         protected abstract Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description);
 
         /// <summary>
@@ -208,6 +213,10 @@ namespace Veldrid
         public Texture CreateTexture(ulong nativeTexture, ref TextureDescription description)
             => CreateTextureCore(nativeTexture, ref description);
 
+        /// <summary></summary>
+        /// <param name="nativeTexture"></param>
+        /// <param name="description"></param>
+        /// <returns></returns>
         protected abstract Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description);
 
         // TODO: private protected
@@ -371,6 +380,9 @@ namespace Veldrid
             return CreateSamplerCore(ref description);
         }
 
+        /// <summary></summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
         protected abstract Sampler CreateSamplerCore(ref SamplerDescription description);
 
         /// <summary>
@@ -405,6 +417,9 @@ namespace Veldrid
             return CreateShaderCore(ref description);
         }
 
+        /// <summary></summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
         protected abstract Shader CreateShaderCore(ref ShaderDescription description);
 
         /// <summary>

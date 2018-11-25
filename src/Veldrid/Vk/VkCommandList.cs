@@ -119,8 +119,8 @@ namespace Veldrid.Vk
                 if (_submittedStagingInfos.TryGetValue(completedCB, out StagingResourceInfo info))
                 {
                     RecycleStagingInfo(info);
+                    _submittedStagingInfos.Remove(completedCB);
                 }
-                _submittedStagingInfos.Remove(completedCB);
             }
         }
 

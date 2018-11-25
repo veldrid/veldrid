@@ -274,15 +274,6 @@ namespace Veldrid.NeoDemo
 
                         ImGui.EndMenu();
                     }
-                    bool isFullscreen = _window.WindowState == WindowState.BorderlessFullScreen;
-                    if (ImGui.MenuItem("Fullscreen", "F11", isFullscreen, true))
-                    {
-                        ToggleFullscreenState();
-                    }
-                    if (ImGui.MenuItem("Always Recreate Sdl2Window", string.Empty, _recreateWindow, true))
-                    {
-                        _recreateWindow = !_recreateWindow;
-                    }
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.SetTooltip(
@@ -308,7 +299,29 @@ namespace Veldrid.NeoDemo
                     {
                         _gd.SyncToVerticalBlank = !_gd.SyncToVerticalBlank;
                     }
-
+                    ImGui.EndMenu();
+                }
+                if (ImGui.BeginMenu("Window"))
+                {
+                    bool isFullscreen = _window.WindowState == WindowState.BorderlessFullScreen;
+                    if (ImGui.MenuItem("Fullscreen", "F11", isFullscreen, true))
+                    {
+                        ToggleFullscreenState();
+                    }
+                    if (ImGui.MenuItem("Always Recreate Sdl2Window", string.Empty, _recreateWindow, true))
+                    {
+                        _recreateWindow = !_recreateWindow;
+                    }
+                    bool hasBorder = _window.HasBorder;
+                    if (ImGui.MenuItem("Window Border", string.Empty, hasBorder, true))
+                    {
+                        _window.HasBorder = !hasBorder;
+                    }
+                    bool resizable = _window.Resizable;
+                    if (ImGui.MenuItem("Window Resizable", string.Empty, resizable, true))
+                    {
+                        _window.Resizable = !resizable;
+                    }
                     ImGui.EndMenu();
                 }
                 if (ImGui.BeginMenu("Materials"))

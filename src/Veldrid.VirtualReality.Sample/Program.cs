@@ -1,6 +1,7 @@
 ﻿using ImGuiNET;
 using SixLabors.ImageSharp;
 using System;
+using System.IO;
 using System.Numerics;
 using Veldrid.ImageSharp;
 using Veldrid.Sdl2;
@@ -19,7 +20,7 @@ namespace Veldrid.VirtualReality.Sample
                     WindowState.Normal,
                     "Veldrid.VirtualReality Sample"));
 
-            VRContext vrContext = VRContext.CreateOpenVR();
+            VRContext vrContext = VRContext.CreateOculus();
 
             GraphicsBackend backend = GraphicsBackend.Vulkan;
 
@@ -47,16 +48,16 @@ namespace Veldrid.VirtualReality.Sample
             AssimpMesh mesh = new AssimpMesh(
                 gd,
                 vrContext.LeftEyeFramebuffer.OutputDescription,
-                @"E:\projects\ascendance\demo\demo3d\Assets\cat.obj",
-                @"E:\projects\ascendance\demo\demo3d\Assets\cat_spec.png");
+                Path.Combine(AppContext.BaseDirectory, "cat", "cat.obj"),
+                Path.Combine(AppContext.BaseDirectory, "cat", "cat_diff.png"));
 
             Skybox skybox = new Skybox(
-                Image.Load(@"E:\Assets\envmap_miramar\miramar_ft.png"),
-                Image.Load(@"E:\Assets\envmap_miramar\miramar_bk.png"),
-                Image.Load(@"E:\Assets\envmap_miramar\miramar_lf.png"),
-                Image.Load(@"E:\Assets\envmap_miramar\miramar_rt.png"),
-                Image.Load(@"E:\Assets\envmap_miramar\miramar_up.png"),
-                Image.Load(@"E:\Assets\envmap_miramar\miramar_dn.png"));
+                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_ft.png")),
+                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_bk.png")),
+                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_lf.png")),
+                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_rt.png")),
+                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_up.png")),
+                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_dn.png")));
             skybox.CreateDeviceObjects(gd, vrContext.LeftEyeFramebuffer.OutputDescription);
 
             CommandList windowCL = gd.ResourceFactory.CreateCommandList();

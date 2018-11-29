@@ -15,6 +15,11 @@ struct PS_INPUT
     float2 uv;
 };
 
+float3 SrgbToLinear(float3 srgb)
+{
+    return srgb * (srgb * (srgb * 0.305306011 + 0.682171111) + 0.012522878);
+}
+
 constant bool UseLegacyColorSpaceHandling [[ function_constant(1) ]];
 
 vertex PS_INPUT VS(

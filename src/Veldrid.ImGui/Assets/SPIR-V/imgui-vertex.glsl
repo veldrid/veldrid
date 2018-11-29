@@ -16,6 +16,7 @@ layout (location = 0) out vec4 vsout_color;
 layout (location = 1) out vec2 vsout_texCoord;
 
 layout (constant_id = 0) const bool IsClipSpaceYInverted = true;
+layout (constant_id = 1) const bool UseLegacyColorSpaceHandling = false;
 
 out gl_PerVertex 
 {
@@ -30,7 +31,11 @@ vec3 SrgbToLinear(vec3 srgb)
 void main() 
 {
     gl_Position = projection * vec4(vsin_position, 0, 1);
-    vsout_color = vec4(SrgbToLinear(vsin_color.rgb), vsin_color.a);
+    vsout_color = vsin_color;
+    if (!UseLegacyColorSpaceHandling)
+    {
+        vsout_color.rgb = SrgbToLinear(vsin_color.rgb);
+    }
     vsout_texCoord = vsin_texCoord;
     if (IsClipSpaceYInverted)
     {

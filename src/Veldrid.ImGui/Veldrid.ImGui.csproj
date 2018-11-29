@@ -4,13 +4,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile Condition="'$(Configuration)' == 'Release'">$(BinDir)/$(AssemblyName).xml</DocumentationFile>
+    <RootNamespace>Veldrid</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="Assets\GLSLES\imgui-frag-srgb.glsles" />
-    <None Remove="Assets\GLSL\imgui-frag-srgb.glsl" />
-    <None Remove="Assets\HLSL\imgui-frag-srgb.hlsl.bytes" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Assets/GLSL/imgui-vertex.glsl">
@@ -19,26 +14,20 @@
     <EmbeddedResource Include="Assets/GLSL/imgui-frag.glsl">
       <LogicalName>imgui-frag.glsl</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Assets\GLSL\imgui-frag-srgb.glsl">
-      <LogicalName>imgui-frag-srgb.glsl</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Assets/GLSLES/imgui-vertex.glsles">
       <LogicalName>imgui-vertex.glsles</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Assets/GLSLES/imgui-frag.glsles">
       <LogicalName>imgui-frag.glsles</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Assets\GLSLES\imgui-frag-srgb.glsles">
-      <LogicalName>imgui-frag-srgb.glsles</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Assets/HLSL/imgui-vertex.hlsl.bytes">
       <LogicalName>imgui-vertex.hlsl.bytes</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Assets\HLSL\imgui-vertex-legacy.hlsl.bytes">
+      <LogicalName>imgui-vertex-legacy.hlsl.bytes</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="Assets/HLSL/imgui-frag.hlsl.bytes">
       <LogicalName>imgui-frag.hlsl.bytes</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Assets\HLSL\imgui-frag-srgb.hlsl.bytes">
-      <LogicalName>imgui-frag-srgb.hlsl.bytes</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Assets/SPIR-V/imgui-vertex.spv">
       <LogicalName>imgui-vertex.spv</LogicalName>

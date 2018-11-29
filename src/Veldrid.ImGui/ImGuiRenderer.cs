@@ -17,7 +17,7 @@ namespace Veldrid
     {
         private GraphicsDevice _gd;
         private readonly Assembly _assembly;
-        private bool _outputLinear;
+        private ColorSpaceHandling _colorSpaceHandling;
 
         // Device objects
         private DeviceBuffer _vertexBuffer;
@@ -59,7 +59,7 @@ namespace Veldrid
         /// <param name="width">The initial width of the rendering target. Can be resized.</param>
         /// <param name="height">The initial height of the rendering target. Can be resized.</param>
         public ImGuiRenderer(GraphicsDevice gd, OutputDescription outputDescription, int width, int height)
-            : this(gd, outputDescription, width, height, false) { }
+            : this(gd, outputDescription, width, height, ColorSpaceHandling.Legacy) { }
 
         /// <summary>
         /// Constructs a new ImGuiRenderer.
@@ -68,13 +68,12 @@ namespace Veldrid
         /// <param name="outputDescription">The output format.</param>
         /// <param name="width">The initial width of the rendering target. Can be resized.</param>
         /// <param name="height">The initial height of the rendering target. Can be resized.</param>
-        /// <param name="outputLinear">Indicates whether the fragment shader should write linear RGB data.
-        /// If false, then the fragment shader outputs sRGB data.</param>
-        public ImGuiRenderer(GraphicsDevice gd, OutputDescription outputDescription, int width, int height, bool outputLinear)
+        /// <param name="colorSpaceHandling">Identifies how the renderer should treat vertex colors.</param>
+        public ImGuiRenderer(GraphicsDevice gd, OutputDescription outputDescription, int width, int height, ColorSpaceHandling colorSpaceHandling)
         {
             _gd = gd;
             _assembly = typeof(ImGuiRenderer).GetTypeInfo().Assembly;
-            _outputLinear = outputLinear;
+            _colorSpaceHandling = colorSpaceHandling;
             _windowWidth = width;
             _windowHeight = height;
 
@@ -104,11 +103,11 @@ namespace Veldrid
         }
 
         public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription)
-            => CreateDeviceResources(gd, outputDescription, _outputLinear);
-        public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription, bool outputLinear)
+            => CreateDeviceResources(gd, outputDescription, _colorSpaceHandling);
+        public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription, ColorSpaceHandling colorSpaceHandling)
         {
             _gd = gd;
-            _outputLinear = outputLinear;
+            _colorSpaceHandling = colorSpaceHandling;
             ResourceFactory factory = gd.ResourceFactory;
             _vertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer | BufferUsage.Dynamic));
             _vertexBuffer.Name = "ImGui.NET Vertex Buffer";
@@ -119,8 +118,8 @@ namespace Veldrid
             _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             _projMatrixBuffer.Name = "ImGui.NET Projection Buffer";
 
-            byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex, _outputLinear);
-            byte[] fragmentShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-frag", ShaderStages.Fragment, _outputLinear);
+            byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex, _colorSpaceHandling);
+            byte[] fragmentShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-frag", ShaderStages.Fragment, _colorSpaceHandling);
             _vertexShader = factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vertexShaderBytes, "VS"));
             _fragmentShader = factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fragmentShaderBytes, "FS"));
 
@@ -149,7 +148,7 @@ namespace Veldrid
                     new[]
                     {
                         new SpecializationConstant(0, gd.IsClipSpaceYInverted),
-                        new SpecializationConstant(1, _outputLinear),
+                        new SpecializationConstant(1, _colorSpaceHandling == ColorSpaceHandling.Legacy),
                     }),
                 new ResourceLayout[] { _layout, _textureLayout },
                 outputDescription,
@@ -231,25 +230,29 @@ namespace Veldrid
             _lastAssignedID = 100;
         }
 
-        private byte[] LoadEmbeddedShaderCode(ResourceFactory factory, string name, ShaderStages stage, bool outputLinear)
+        private byte[] LoadEmbeddedShaderCode(
+            ResourceFactory factory,
+            string name,
+            ShaderStages stage,
+            ColorSpaceHandling colorSpaceHandling)
         {
             switch (factory.BackendType)
             {
                 case GraphicsBackend.Direct3D11:
                 {
-                    if (stage == ShaderStages.Fragment && !outputLinear) { name += "-srgb"; }
+                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
                     string resourceName = name + ".hlsl.bytes";
                     return GetEmbeddedResourceBytes(resourceName);
                 }
                 case GraphicsBackend.OpenGL:
                 {
-                    if (stage == ShaderStages.Fragment && !outputLinear) { name += "-srgb"; }
+                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
                     string resourceName = name + ".glsl";
                     return GetEmbeddedResourceBytes(resourceName);
                 }
                 case GraphicsBackend.OpenGLES:
                 {
-                    if (stage == ShaderStages.Fragment && !outputLinear) { name += "-srgb"; }
+                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
                     string resourceName = name + ".glsles";
                     return GetEmbeddedResourceBytes(resourceName);
                 }

@@ -15,10 +15,7 @@ struct PS_INPUT
     float2 uv;
 };
 
-float3 SrgbToLinear(float3 srgb)
-{
-    return srgb * (srgb * (srgb * 0.305306011 + 0.682171111) + 0.012522878);
-}
+constant bool UseLegacyColorSpaceHandling [[ function_constant(1) ]];
 
 vertex PS_INPUT VS(
     VS_INPUT input [[ stage_in ]],
@@ -26,7 +23,14 @@ vertex PS_INPUT VS(
 {
     PS_INPUT output;
     output.pos = ProjectionMatrix * float4(input.pos.xy, 0.f, 1.f);
-    output.col = float4(SrgbToLinear(input.col.rgb), input.col.a);
+    if (UseLegacyColorSpaceHandling)
+    {
+        output.col = input.col;
+    }
+    else
+    {
+        output.col = float4(SrgbToLinear(input.col.rgb), input.col.a);
+    }
     output.uv = input.uv;
     return output;
 }

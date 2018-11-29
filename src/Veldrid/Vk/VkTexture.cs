@@ -83,11 +83,12 @@ namespace Veldrid.Vk
                 imageCI.usage = VkFormats.VdToVkTextureUsage(Usage);
                 imageCI.tiling = isStaging ? VkImageTiling.Linear : VkImageTiling.Optimal;
                 imageCI.format = VkFormat;
+                imageCI.flags = VkImageCreateFlags.MutableFormat;
 
                 imageCI.samples = VkSampleCount;
                 if (isCubemap)
                 {
-                    imageCI.flags = VkImageCreateFlags.CubeCompatible;
+                    imageCI.flags |= VkImageCreateFlags.CubeCompatible;
                 }
 
                 uint subresourceCount = MipLevels * _actualImageArrayLayers * Depth;

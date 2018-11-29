@@ -22,7 +22,7 @@ namespace Veldrid.Vk
             VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();
             VkTexture tex = Util.AssertSubtype<Texture, VkTexture>(description.Target);
             imageViewCI.image = tex.OptimalDeviceImage;
-            imageViewCI.format = tex.VkFormat;
+            imageViewCI.format = VkFormats.VdToVkPixelFormat(Format, (Target.Usage & TextureUsage.DepthStencil) != 0);
 
             VkImageAspectFlags aspectFlags;
             if ((description.Target.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)

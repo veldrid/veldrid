@@ -17,7 +17,8 @@ namespace Veldrid.D3D11
             D3D11Texture d3dTex = Util.AssertSubtype<Texture, D3D11Texture>(description.Target);
 
             if (BaseMipLevel == 0 && MipLevels == Target.MipLevels
-                && BaseArrayLayer == 0 && ArrayLayers == Target.ArrayLayers)
+                && BaseArrayLayer == 0 && ArrayLayers == Target.ArrayLayers
+                && Format == Target.Format)
             {
                 ShaderResourceView = d3dTex.GetFullShaderResourceView();
             }
@@ -29,7 +30,8 @@ namespace Veldrid.D3D11
                     description.BaseMipLevel,
                     description.MipLevels,
                     description.BaseArrayLayer,
-                    description.ArrayLayers);
+                    description.ArrayLayers,
+                    Format);
                 ShaderResourceView = new ShaderResourceView(device, d3dTex.DeviceTexture, srvDesc);
             }
 

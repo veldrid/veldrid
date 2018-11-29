@@ -214,6 +214,16 @@ namespace Veldrid
             {
                 throw new VeldridException("GraphicsDevice does not support subset TextureViews.");
             }
+            if (description.Format != null && description.Format != description.Target.Format)
+            {
+                if (!FormatHelpers.IsFormatViewCompatible(description.Format.Value, description.Target.Format))
+                {
+                    throw new VeldridException(
+                        $"Cannot create a TextureView with format {description.Format.Value} targeting a Texture with format " +
+                        $"{description.Target.Format}. A TextureView's format must have the same size and number of " +
+                        $"components as the underlying Texture's format, or the same format.");
+                }
+            }
 #endif
 
             return CreateTextureViewCore(ref description);

@@ -45,20 +45,23 @@ namespace Veldrid.OpenGL
             Target = Util.AssertSubtype<Texture, OpenGLTexture>(description.Target);
 
             if (BaseMipLevel != 0 || MipLevels != Target.MipLevels
-                || BaseArrayLayer != 0 || ArrayLayers != Target.ArrayLayers)
+                || BaseArrayLayer != 0 || ArrayLayers != Target.ArrayLayers
+                || Format != Target.Format)
             {
                 if (_gd.BackendType == GraphicsBackend.OpenGL)
                 {
                     if (!_gd.Extensions.ARB_TextureView)
                     {
                         throw new VeldridException(
-                            "TextureView objects covering a subset of a Texture's dimensions require OpenGL 4.3, or ARB_texture_view.");
+                            "TextureView objects covering a subset of a Texture's dimensions or using a different PixelFormat " +
+                            "require OpenGL 4.3, or ARB_texture_view.");
                     }
                 }
                 else
                 {
                     throw new VeldridException(
-                        "TextureView objects covering a subset of a Texture's dimensions are not supported on OpenGL ES.");
+                        "TextureView objects covering a subset of a Texture's dimensions or using a different PixelFormat are " +
+                        "not supported on OpenGL ES.");
                 }
                 _needsTextureView = true;
             }
@@ -242,7 +245,7 @@ namespace Veldrid.OpenGL
             }
 
             PixelInternalFormat internalFormat = (PixelInternalFormat)OpenGLFormats.VdToGLSizedInternalFormat(
-                Target.Format,
+                Format,
                 (Target.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
             Debug.Assert(Target.Created);
             glTextureView(

@@ -290,6 +290,23 @@ namespace Veldrid
             }
         }
 
+        internal static bool IsFormatViewCompatible(PixelFormat viewFormat, PixelFormat realFormat)
+        {
+            if (IsCompressedFormat(realFormat))
+            {
+                return IsSrgbCounterpart(viewFormat, realFormat);
+            }
+            else
+            {
+                return GetViewFamilyFormat(viewFormat) == GetViewFamilyFormat(realFormat);
+            }
+        }
+
+        private static bool IsSrgbCounterpart(PixelFormat viewFormat, PixelFormat realFormat)
+        {
+            throw new NotImplementedException();
+        }
+
         internal static uint GetNumRows(uint height, PixelFormat format)
         {
             switch (format)
@@ -352,6 +369,87 @@ namespace Veldrid
                 case 16: return TextureSampleCount.Count16;
                 case 32: return TextureSampleCount.Count32;
                 default: throw new VeldridException("Unsupported multisample count: " + samples);
+            }
+        }
+
+        internal static PixelFormat GetViewFamilyFormat(PixelFormat format)
+        {
+            switch (format)
+            {
+                case PixelFormat.R32_G32_B32_A32_Float:
+                case PixelFormat.R32_G32_B32_A32_UInt:
+                case PixelFormat.R32_G32_B32_A32_SInt:
+                    return PixelFormat.R32_G32_B32_A32_Float;
+                case PixelFormat.R16_G16_B16_A16_Float:
+                case PixelFormat.R16_G16_B16_A16_UNorm:
+                case PixelFormat.R16_G16_B16_A16_UInt:
+                case PixelFormat.R16_G16_B16_A16_SNorm:
+                case PixelFormat.R16_G16_B16_A16_SInt:
+                    return PixelFormat.R16_G16_B16_A16_Float;
+                case PixelFormat.R32_G32_Float:
+                case PixelFormat.R32_G32_UInt:
+                case PixelFormat.R32_G32_SInt:
+                    return PixelFormat.R32_G32_Float;
+                case PixelFormat.R10_G10_B10_A2_UNorm:
+                case PixelFormat.R10_G10_B10_A2_UInt:
+                    return PixelFormat.R10_G10_B10_A2_UNorm;
+                case PixelFormat.R8_G8_B8_A8_UNorm:
+                case PixelFormat.R8_G8_B8_A8_UNorm_SRgb:
+                case PixelFormat.R8_G8_B8_A8_UInt:
+                case PixelFormat.R8_G8_B8_A8_SNorm:
+                case PixelFormat.R8_G8_B8_A8_SInt:
+                    return PixelFormat.R8_G8_B8_A8_UNorm;
+                case PixelFormat.R16_G16_Float:
+                case PixelFormat.R16_G16_UNorm:
+                case PixelFormat.R16_G16_UInt:
+                case PixelFormat.R16_G16_SNorm:
+                case PixelFormat.R16_G16_SInt:
+                    return PixelFormat.R16_G16_Float;
+                case PixelFormat.R32_Float:
+                case PixelFormat.R32_UInt:
+                case PixelFormat.R32_SInt:
+                    return PixelFormat.R32_Float;
+                case PixelFormat.R8_G8_UNorm:
+                case PixelFormat.R8_G8_UInt:
+                case PixelFormat.R8_G8_SNorm:
+                case PixelFormat.R8_G8_SInt:
+                    return PixelFormat.R8_G8_UNorm;
+                case PixelFormat.R16_Float:
+                case PixelFormat.R16_UNorm:
+                case PixelFormat.R16_UInt:
+                case PixelFormat.R16_SNorm:
+                case PixelFormat.R16_SInt:
+                    return PixelFormat.R16_Float;
+                case PixelFormat.R8_UNorm:
+                case PixelFormat.R8_UInt:
+                case PixelFormat.R8_SNorm:
+                case PixelFormat.R8_SInt:
+                    return PixelFormat.R8_UNorm;
+                case PixelFormat.BC1_Rgba_UNorm:
+                case PixelFormat.BC1_Rgba_UNorm_SRgb:
+                case PixelFormat.BC1_Rgb_UNorm:
+                case PixelFormat.BC1_Rgb_UNorm_SRgb:
+                    return PixelFormat.BC1_Rgba_UNorm;
+                case PixelFormat.BC2_UNorm:
+                case PixelFormat.BC2_UNorm_SRgb:
+                    return PixelFormat.BC2_UNorm;
+                case PixelFormat.BC3_UNorm:
+                case PixelFormat.BC3_UNorm_SRgb:
+                    return PixelFormat.BC3_UNorm;
+                case PixelFormat.BC4_UNorm:
+                case PixelFormat.BC4_SNorm:
+                    return PixelFormat.BC4_UNorm;
+                case PixelFormat.BC5_UNorm:
+                case PixelFormat.BC5_SNorm:
+                    return PixelFormat.BC5_UNorm;
+                case PixelFormat.B8_G8_R8_A8_UNorm:
+                case PixelFormat.B8_G8_R8_A8_UNorm_SRgb:
+                    return PixelFormat.B8_G8_R8_A8_UNorm;
+                case PixelFormat.BC7_UNorm:
+                case PixelFormat.BC7_UNorm_SRgb:
+                    return PixelFormat.BC7_UNorm;
+                default:
+                    return format;
             }
         }
     }

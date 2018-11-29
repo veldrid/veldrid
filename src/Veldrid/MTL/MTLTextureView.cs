@@ -17,11 +17,12 @@ namespace Veldrid.MTL
         {
             MTLTexture targetMTLTexture = Util.AssertSubtype<Texture, MTLTexture>(description.Target);
             if (BaseMipLevel != 0 || MipLevels != Target.MipLevels
-                || BaseArrayLayer != 0 || ArrayLayers != Target.ArrayLayers)
+                || BaseArrayLayer != 0 || ArrayLayers != Target.ArrayLayers
+                || Format != Target.Format)
             {
                 _hasTextureView = true;
                 TargetDeviceTexture = targetMTLTexture.DeviceTexture.newTextureView(
-                    targetMTLTexture.MTLPixelFormat,
+                    MTLFormats.VdToMTLPixelFormat(Format, (description.Target.Usage & TextureUsage.DepthStencil) != 0),
                     targetMTLTexture.MTLTextureType,
                     new NSRange(BaseMipLevel, MipLevels),
                     new NSRange(BaseArrayLayer, ArrayLayers));

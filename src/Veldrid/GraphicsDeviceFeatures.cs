@@ -77,7 +77,7 @@
         public bool StructuredBuffer { get; }
         /// <summary>
         /// Indicates whether a <see cref="TextureView"/> can be created which does not view the full set of mip levels and array
-        /// layers contained in its target Texture.
+        /// layers contained in its target Texture, or uses a different <see cref="PixelFormat"/> from the underlying Texture.
         /// </summary>
         public bool SubsetTextureView { get; }
         /// <summary>

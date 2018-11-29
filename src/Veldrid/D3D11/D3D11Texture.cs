@@ -23,6 +23,7 @@ namespace Veldrid.D3D11
 
         public Resource DeviceTexture { get; }
         public SharpDX.DXGI.Format DxgiFormat { get; }
+        public SharpDX.DXGI.Format TypelessDxgiFormat { get; }
 
         public D3D11Texture(Device device, ref TextureDescription description)
         {
@@ -40,6 +41,7 @@ namespace Veldrid.D3D11
             DxgiFormat = D3D11Formats.ToDxgiFormat(
                 description.Format,
                 (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
+            TypelessDxgiFormat = D3D11Formats.GetTypelessFormat(DxgiFormat);
 
             CpuAccessFlags cpuFlags = CpuAccessFlags.None;
             ResourceUsage resourceUsage = ResourceUsage.Default;
@@ -96,7 +98,7 @@ namespace Veldrid.D3D11
                     Width = roundedWidth,
                     MipLevels = (int)description.MipLevels,
                     ArraySize = arraySize,
-                    Format = DxgiFormat,
+                    Format = TypelessDxgiFormat,
                     BindFlags = bindFlags,
                     CpuAccessFlags = cpuFlags,
                     Usage = resourceUsage,
@@ -113,7 +115,7 @@ namespace Veldrid.D3D11
                     Height = roundedHeight,
                     MipLevels = (int)description.MipLevels,
                     ArraySize = arraySize,
-                    Format = DxgiFormat,
+                    Format = TypelessDxgiFormat,
                     BindFlags = bindFlags,
                     CpuAccessFlags = cpuFlags,
                     Usage = resourceUsage,
@@ -132,7 +134,7 @@ namespace Veldrid.D3D11
                     Height = roundedHeight,
                     Depth = (int)description.Depth,
                     MipLevels = (int)description.MipLevels,
-                    Format = DxgiFormat,
+                    Format = TypelessDxgiFormat,
                     BindFlags = bindFlags,
                     CpuAccessFlags = cpuFlags,
                     Usage = resourceUsage,
@@ -163,6 +165,7 @@ namespace Veldrid.D3D11
             DxgiFormat = D3D11Formats.ToDxgiFormat(
                 format,
                 (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
+            TypelessDxgiFormat = D3D11Formats.GetTypelessFormat(DxgiFormat);
         }
 
         public override string Name
@@ -184,7 +187,8 @@ namespace Veldrid.D3D11
                     ShaderResourceViewDescription srvDesc = D3D11Util.GetSrvDesc(
                         this,
                         0, MipLevels,
-                        0, ArrayLayers);
+                        0, ArrayLayers,
+                        Format);
                     _fullSRV = new ShaderResourceView(_device, DeviceTexture, srvDesc);
                 }
 

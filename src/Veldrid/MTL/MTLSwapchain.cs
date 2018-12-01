@@ -52,6 +52,15 @@ namespace Veldrid.MTL
                 contentView.wantsLayer = true;
                 contentView.layer = _metalLayer.NativePtr;
             }
+            else if (source is NSViewSwapchainSource nsViewSource)
+            {
+                NSView contentView = new NSView(nsViewSource.NSView);
+                CGSize windowContentSize = contentView.frame.size;
+                width = (uint)windowContentSize.width;
+                height = (uint)windowContentSize.height;
+                contentView.wantsLayer = true;
+                contentView.layer = _metalLayer.NativePtr;
+            }
             else if (source is UIViewSwapchainSource uiViewSource)
             {
                 UIScreen mainScreen = UIScreen.mainScreen;
@@ -67,7 +76,7 @@ namespace Veldrid.MTL
             }
             else
             {
-                throw new VeldridException($"A Metal Swapchain can only be created from an NSWindow or UIView.");
+                throw new VeldridException($"A Metal Swapchain can only be created from an NSWindow, NSView, or UIView.");
             }
 
             PixelFormat format = description.ColorSrgb
@@ -108,7 +117,6 @@ namespace Veldrid.MTL
 
         public override void Resize(uint width, uint height)
         {
-
             if (_uiView.NativePtr != IntPtr.Zero)
             {
                 UIScreen mainScreen = UIScreen.mainScreen;

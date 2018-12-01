@@ -45,6 +45,6 @@
 
         public override string Name { get; set; }
 
-        public override void Dispose() { }
+        private protected override void DisposeCore() { }
     }
 }

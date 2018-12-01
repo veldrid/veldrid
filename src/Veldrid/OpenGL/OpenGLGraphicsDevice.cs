@@ -228,13 +228,7 @@ namespace Veldrid.OpenGL
             }
 
             _textureSamplerManager = new OpenGLTextureSamplerManager(_extensions);
-            _commandExecutor = new OpenGLCommandExecutor(
-                _backendType,
-                _textureSamplerManager,
-                _extensions,
-                _stagingMemoryPool,
-                platformInfo,
-                Features);
+            _commandExecutor = new OpenGLCommandExecutor(this, platformInfo);
 
             int maxColorTextureSamples;
             if (_backendType == GraphicsBackend.OpenGL)

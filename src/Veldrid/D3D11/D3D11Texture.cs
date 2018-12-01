@@ -8,8 +8,6 @@ namespace Veldrid.D3D11
     {
         private readonly Device _device;
         private string _name;
-        private object _fullSRVLock = new object();
-        private ShaderResourceView _fullSRV;
 
         public override uint Width { get; }
         public override uint Height { get; }
@@ -178,28 +176,9 @@ namespace Veldrid.D3D11
             }
         }
 
-        internal ShaderResourceView GetFullShaderResourceView()
-        {
-            lock (_fullSRVLock)
-            {
-                if (_fullSRV == null)
-                {
-                    ShaderResourceViewDescription srvDesc = D3D11Util.GetSrvDesc(
-                        this,
-                        0, MipLevels,
-                        0, ArrayLayers,
-                        Format);
-                    _fullSRV = new ShaderResourceView(_device, DeviceTexture, srvDesc);
-                }
-
-                return _fullSRV;
-            }
-        }
-
-        public override void Dispose()
+        private protected override void DisposeCore()
         {
             DeviceTexture.Dispose();
-            _fullSRV?.Dispose();
         }
     }
 }

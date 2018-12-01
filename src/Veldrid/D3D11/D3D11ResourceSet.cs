@@ -11,17 +11,6 @@
         {
             Resources = Util.ShallowClone(description.BoundResources);
             Layout = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(description.Layout);
-
-            foreach (BindableResource resource in description.BoundResources)
-            {
-                if (!(resource is D3D11Buffer
-                    || resource is D3D11TextureView
-                    || resource is D3D11Sampler
-                    || (resource is DeviceBufferRange dbr && dbr.Buffer is D3D11Buffer)))
-                {
-                    throw new VeldridException("Invalid resource type present in D3D11ResourceSet: " + resource.GetType().Name);
-                }
-            }
         }
 
         public override string Name

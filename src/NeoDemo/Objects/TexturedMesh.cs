@@ -24,7 +24,6 @@ namespace Veldrid.NeoDemo.Objects
         private DeviceBuffer _ib;
         private int _indexCount;
         private Texture _texture;
-        private TextureView _textureView;
         private Texture _alphamapTexture;
         private TextureView _alphaMapView;
 
@@ -94,8 +93,6 @@ namespace Veldrid.NeoDemo.Objects
                 RgbaByte color = RgbaByte.Pink;
                 gd.UpdateTexture(_texture, (IntPtr)(&color), 4, 0, 0, 0, 1, 1, 1, 0, 0);
             }
-
-            _textureView = StaticResourceCache.GetTextureView(gd.ResourceFactory, _texture);
 
             if (_alphaTextureData != null)
             {
@@ -211,7 +208,7 @@ namespace Veldrid.NeoDemo.Objects
             _mainPerObjectRS = disposeFactory.CreateResourceSet(new ResourceSetDescription(mainPerObjectLayout,
                 new DeviceBufferRange(_worldAndInverseBuffer, _uniformOffset, 128),
                 _materialProps.UniformBuffer,
-                _textureView,
+                _texture,
                 gd.Aniso4xSampler,
                 _alphaMapView,
                 gd.LinearSampler,

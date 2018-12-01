@@ -394,14 +394,16 @@ namespace Veldrid.D3D11
                         break;
                     }
                     case ResourceKind.TextureReadOnly:
-                        D3D11TextureView texView = Util.AssertSubtype<BindableResource, D3D11TextureView>(resource);
-                        UnbindUAVTexture(texView.Target);
-                        BindTextureView(texView, textureBase + rbi.Slot, rbi.Stages, slot);
+                        TextureView texView = Util.GetTextureView(_gd, resource);
+                        D3D11TextureView d3d11TexView = Util.AssertSubtype<TextureView, D3D11TextureView>(texView);
+                        UnbindUAVTexture(d3d11TexView.Target);
+                        BindTextureView(d3d11TexView, textureBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.TextureReadWrite:
-                        D3D11TextureView rwTexView = Util.AssertSubtype<BindableResource, D3D11TextureView>(resource);
-                        UnbindSRVTexture(rwTexView.Target);
-                        BindUnorderedAccessView(rwTexView.Target, null, rwTexView.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
+                        TextureView rwTexView = Util.GetTextureView(_gd, resource);
+                        D3D11TextureView d3d11RWTexView = Util.AssertSubtype<TextureView, D3D11TextureView>(rwTexView);
+                        UnbindSRVTexture(d3d11RWTexView.Target);
+                        BindUnorderedAccessView(d3d11RWTexView.Target, null, d3d11RWTexView.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.Sampler:
                         D3D11Sampler sampler = Util.AssertSubtype<BindableResource, D3D11Sampler>(resource);
@@ -1276,8 +1278,9 @@ namespace Veldrid.D3D11
 
         protected override void GenerateMipmapsCore(Texture texture)
         {
-            D3D11Texture d3d11Texture = Util.AssertSubtype<Texture, D3D11Texture>(texture);
-            ShaderResourceView srv = d3d11Texture.GetFullShaderResourceView();
+            TextureView fullTexView = texture.GetFullTextureView(_gd);
+            D3D11TextureView d3d11View = Util.AssertSubtype<TextureView, D3D11TextureView>(fullTexView);
+            ShaderResourceView srv = d3d11View.ShaderResourceView;
             _context.GenerateMips(srv);
         }
 

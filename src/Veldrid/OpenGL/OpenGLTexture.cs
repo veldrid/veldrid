@@ -608,7 +608,7 @@ namespace Veldrid.OpenGL
             return _pboSizes[subresource];
         }
 
-        public override void Dispose()
+        private protected override void DisposeCore()
         {
             _gd.EnqueueDisposal(this);
         }

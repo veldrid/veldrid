@@ -84,19 +84,25 @@ namespace Veldrid
                 }
                 case ResourceKind.TextureReadOnly:
                 {
-                    if (!(resource is TextureView tv && (tv.Target.Usage & TextureUsage.Sampled) == TextureUsage.Sampled))
+                    if (!(resource is TextureView tv && (tv.Target.Usage & TextureUsage.Sampled) != 0)
+                        && !(resource is Texture t && (t.Usage & TextureUsage.Sampled) != 0))
                     {
                         throw new VeldridException(
-                            $"Resource in slot {slot} does not match {nameof(ResourceKind)}.{kind} specified in the {nameof(ResourceLayout)}. It must be a {nameof(TextureView)} whose target has {nameof(TextureUsage)}.{nameof(TextureUsage.Sampled)}.");
+                            $"Resource in slot {slot} does not match {nameof(ResourceKind)}.{kind} specified in the " +
+                            $"{nameof(ResourceLayout)}. It must be a {nameof(Texture)} or {nameof(TextureView)} whose target " +
+                            $"has {nameof(TextureUsage)}.{nameof(TextureUsage.Sampled)}.");
                     }
                     break;
                 }
                 case ResourceKind.TextureReadWrite:
                 {
-                    if (!(resource is TextureView tv && (tv.Target.Usage & TextureUsage.Storage) == TextureUsage.Storage))
+                    if (!(resource is TextureView tv && (tv.Target.Usage & TextureUsage.Storage) != 0)
+                        && !(resource is Texture t && (t.Usage & TextureUsage.Storage) != 0))
                     {
                         throw new VeldridException(
-                            $"Resource in slot {slot} does not match {nameof(ResourceKind)}.{kind} specified in the {nameof(ResourceLayout)}. It must be a {nameof(TextureView)} whose target has {nameof(TextureUsage)}.{nameof(TextureUsage.Storage)}.");
+                            $"Resource in slot {slot} does not match {nameof(ResourceKind)}.{kind} specified in the " +
+                            $"{nameof(ResourceLayout)}. It must be a {nameof(Texture)} or {nameof(TextureView)} whose target " +
+                            $"has {nameof(TextureUsage)}.{nameof(TextureUsage.Storage)}.");
                     }
                     break;
                 }

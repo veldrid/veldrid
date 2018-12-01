@@ -583,8 +583,10 @@ namespace Veldrid.Tests
             GD.Unmap(staging);
         }
 
-        [Fact]
-        public unsafe void Points_WithTexture_UpdateUnrelated()
+        [InlineData(false)]
+        [InlineData(true)]
+        [Theory]
+        public unsafe void Points_WithTexture_UpdateUnrelated(bool useTextureView)
         {
             // This is a regression test for the case where a user modifies an unrelated texture
             // at a time after a ResourceSet containing a texture has been bound. The OpenGL
@@ -609,7 +611,7 @@ namespace Veldrid.Tests
 
             Texture sampledTexture = RF.CreateTexture(
                 TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
-            TextureView view = RF.CreateTextureView(sampledTexture);
+
             RgbaFloat white = RgbaFloat.White;
             GD.UpdateTexture(sampledTexture, (IntPtr)(&white), (uint)Unsafe.SizeOf<RgbaFloat>(), 0, 0, 0, 1, 1, 1, 0, 0);
 
@@ -629,7 +631,16 @@ namespace Veldrid.Tests
                 new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("Smp", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, orthoBuffer, view, GD.PointSampler));
+            ResourceSet set;
+            if (useTextureView)
+            {
+                TextureView view = RF.CreateTextureView(sampledTexture);
+                set = RF.CreateResourceSet(new ResourceSetDescription(layout, orthoBuffer, view, GD.PointSampler));
+            }
+            else
+            {
+                set = RF.CreateResourceSet(new ResourceSetDescription(layout, orthoBuffer, sampledTexture, GD.PointSampler));
+            }
 
             GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,

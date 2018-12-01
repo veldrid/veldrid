@@ -117,7 +117,7 @@ namespace Veldrid.MTL
             depthPitch = FormatHelpers.GetDepthPitch(rowPitch, storageHeight, Format);
         }
 
-        public override void Dispose()
+        private protected override void DisposeCore()
         {
             if (!_disposed)
             {

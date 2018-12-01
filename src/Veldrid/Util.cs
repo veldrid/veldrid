@@ -288,5 +288,22 @@ namespace Veldrid
             buffer = null;
             return false;
         }
+
+        internal static TextureView GetTextureView(GraphicsDevice gd, BindableResource resource)
+        {
+            if (resource is TextureView view)
+            {
+                return view;
+            }
+            else if (resource is Texture tex)
+            {
+                return tex.GetFullTextureView(gd);
+            }
+            else
+            {
+                throw new VeldridException(
+                    $"Unexpected resource type. Expected Texture or TextureView but found {resource.GetType().Name}");
+            }
+        }
     }
 }

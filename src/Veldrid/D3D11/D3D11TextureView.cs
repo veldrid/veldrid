@@ -6,34 +6,23 @@ namespace Veldrid.D3D11
     internal class D3D11TextureView : TextureView
     {
         private string _name;
-        private bool _srvOwned;
 
         public ShaderResourceView ShaderResourceView { get; }
         public UnorderedAccessView UnorderedAccessView { get; }
 
-        public D3D11TextureView(Device device, ref TextureViewDescription description)
+        public D3D11TextureView(D3D11GraphicsDevice gd, ref TextureViewDescription description)
             : base(ref description)
         {
+            Device device = gd.Device;
             D3D11Texture d3dTex = Util.AssertSubtype<Texture, D3D11Texture>(description.Target);
-
-            if (BaseMipLevel == 0 && MipLevels == Target.MipLevels
-                && BaseArrayLayer == 0 && ArrayLayers == Target.ArrayLayers
-                && Format == Target.Format)
-            {
-                ShaderResourceView = d3dTex.GetFullShaderResourceView();
-            }
-            else
-            {
-                _srvOwned = true;
-                ShaderResourceViewDescription srvDesc = D3D11Util.GetSrvDesc(
-                    d3dTex,
-                    description.BaseMipLevel,
-                    description.MipLevels,
-                    description.BaseArrayLayer,
-                    description.ArrayLayers,
-                    Format);
-                ShaderResourceView = new ShaderResourceView(device, d3dTex.DeviceTexture, srvDesc);
-            }
+            ShaderResourceViewDescription srvDesc = D3D11Util.GetSrvDesc(
+                d3dTex,
+                description.BaseMipLevel,
+                description.MipLevels,
+                description.BaseArrayLayer,
+                description.ArrayLayers,
+                Format);
+            ShaderResourceView = new ShaderResourceView(device, d3dTex.DeviceTexture, srvDesc);
 
             if ((d3dTex.Usage & TextureUsage.Storage) == TextureUsage.Storage)
             {
@@ -90,10 +79,6 @@ namespace Veldrid.D3D11
 
         public override void Dispose()
         {
-            if (_srvOwned)
-            {
-                ShaderResourceView.Dispose();
-            }
             UnorderedAccessView?.Dispose();
         }
     }

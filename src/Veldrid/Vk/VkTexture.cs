@@ -323,7 +323,7 @@ namespace Veldrid.Vk
             _format = format;
         }
 
-        public override void Dispose()
+        private protected override void DisposeCore()
         {
             if (!_destroyed)
             {

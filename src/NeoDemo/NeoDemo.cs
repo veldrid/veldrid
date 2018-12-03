@@ -274,6 +274,21 @@ namespace Veldrid.NeoDemo
 
                         ImGui.EndMenu();
                     }
+                    bool threadedRendering = _scene.ThreadedRendering;
+                    if (ImGui.MenuItem("Render with multiple threads", string.Empty, threadedRendering, true))
+                    {
+                        _scene.ThreadedRendering = !_scene.ThreadedRendering;
+                    }
+                    bool tinted = _fsq.UseTintedTexture;
+                    if (ImGui.MenuItem("Tinted output", string.Empty, tinted, true))
+                    {
+                        _fsq.UseTintedTexture = !tinted;
+                    }
+
+                    ImGui.EndMenu();
+                }
+                if (ImGui.BeginMenu("Window"))
+                {
                     bool isFullscreen = _window.WindowState == WindowState.BorderlessFullScreen;
                     if (ImGui.MenuItem("Fullscreen", "F11", isFullscreen, true))
                     {
@@ -293,20 +308,20 @@ namespace Veldrid.NeoDemo
                         _colorSrgb = !_colorSrgb;
                         ChangeBackend(_gd.BackendType);
                     }
-                    bool threadedRendering = _scene.ThreadedRendering;
-                    if (ImGui.MenuItem("Render with multiple threads", string.Empty, threadedRendering, true))
-                    {
-                        _scene.ThreadedRendering = !_scene.ThreadedRendering;
-                    }
-                    bool tinted = _fsq.UseTintedTexture;
-                    if (ImGui.MenuItem("Tinted output", string.Empty, tinted, true))
-                    {
-                        _fsq.UseTintedTexture = !tinted;
-                    }
                     bool vsync = _gd.SyncToVerticalBlank;
                     if (ImGui.MenuItem("VSync", string.Empty, vsync, true))
                     {
                         _gd.SyncToVerticalBlank = !_gd.SyncToVerticalBlank;
+                    }
+                    bool resizable = _window.Resizable;
+                    if (ImGui.MenuItem("Resizable Window", string.Empty, resizable))
+                    {
+                        _window.Resizable = !_window.Resizable;
+                    }
+                    bool bordered = _window.BorderVisible;
+                    if (ImGui.MenuItem("Visible Window Border", string.Empty, bordered))
+                    {
+                        _window.BorderVisible = !_window.BorderVisible;
                     }
 
                     ImGui.EndMenu();

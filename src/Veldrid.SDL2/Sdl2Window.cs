@@ -229,6 +229,18 @@ namespace Veldrid.Sdl2
 
         public bool Focused => (SDL_GetWindowFlags(_window) & SDL_WindowFlags.InputFocus) != 0;
 
+        public bool Resizable
+        {
+            get => (SDL_GetWindowFlags(_window) & SDL_WindowFlags.Resizable) != 0;
+            set => SDL_SetWindowResizable(_window, value ? 1u : 0u);
+        }
+
+        public bool BorderVisible
+        {
+            get => (SDL_GetWindowFlags(_window) & SDL_WindowFlags.Borderless) == 0;
+            set => SDL_SetWindowBordered(_window, value ? 1u : 0u);
+        }
+
         public IntPtr SdlWindowHandle => _window;
 
         public event Action Resized;
@@ -974,9 +986,6 @@ namespace Veldrid.Sdl2
 
             return _window;
         }
-
-        private bool GetWindowBordered() => (SDL_GetWindowFlags(_window) & SDL_WindowFlags.Borderless) == 0;
-        private void SetWindowBordered(bool value) => SDL_SetWindowBordered(_window, value ? 1u : 0u);
 
         private class SimpleInputSnapshot : InputSnapshot
         {

@@ -104,6 +104,11 @@ namespace Veldrid.Sdl2
         private delegate int SDL_GetWindowOpacity_t(SDL_Window window, float* opacity);
         private static SDL_GetWindowOpacity_t s_getWindowOpacity = LoadFunction<SDL_GetWindowOpacity_t>("SDL_GetWindowOpacity");
         public static int SDL_GetWindowOpacity(SDL_Window Sdl2Window, float* opacity) => s_getWindowOpacity(Sdl2Window, opacity);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void SDL_SetWindowResizable_t(SDL_Window window, uint resizable);
+        private static SDL_SetWindowResizable_t s_setWindowResizable = LoadFunction<SDL_SetWindowResizable_t>("SDL_SetWindowResizable");
+        public static void SDL_SetWindowResizable(SDL_Window window, uint resizable) => s_setWindowResizable(window, resizable);
     }
 
     [Flags]

@@ -72,11 +72,16 @@ namespace Veldrid
             {
                 if (_fullTextureView == null)
                 {
-                    _fullTextureView = gd.ResourceFactory.CreateTextureView(this);
+                    _fullTextureView = CreateFullTextureView(gd);
                 }
 
                 return _fullTextureView;
             }
+        }
+
+        private protected virtual TextureView CreateFullTextureView(GraphicsDevice gd)
+        {
+            return gd.ResourceFactory.CreateTextureView(this);
         }
 
         /// <summary>

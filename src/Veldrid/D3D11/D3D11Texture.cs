@@ -166,6 +166,13 @@ namespace Veldrid.D3D11
             TypelessDxgiFormat = D3D11Formats.GetTypelessFormat(DxgiFormat);
         }
 
+        private protected override TextureView CreateFullTextureView(GraphicsDevice gd)
+        {
+            TextureViewDescription desc = new TextureViewDescription(this);
+            D3D11GraphicsDevice d3d11GD = Util.AssertSubtype<GraphicsDevice, D3D11GraphicsDevice>(gd);
+            return new D3D11TextureView(d3d11GD, ref desc);
+        }
+
         public override string Name
         {
             get => _name;

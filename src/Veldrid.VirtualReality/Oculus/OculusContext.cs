@@ -22,7 +22,8 @@ namespace Veldrid.VirtualReality.Oculus
         private ovrTimewarpProjectionDesc _posTimewarpProjectionDesc;
         private double _sensorSampleTime;
         private EyePair_ovrPosef _eyeRenderPoses;
-        private Matrix4x4[] _views = new Matrix4x4[2];
+        private Quaternion[] _rotations = new Quaternion[2];
+        private Vector3[] _positions = new Vector3[2];
         private Matrix4x4[] _projections = new Matrix4x4[2];
 
         public override string DeviceName => _deviceName;
@@ -150,7 +151,7 @@ namespace Veldrid.VirtualReality.Oculus
             _frameIndex++;
         }
 
-        public override HmdPoseState WaitForPoses()
+        public unsafe override HmdPoseState WaitForPoses()
         {
             ovrSessionStatus sessionStatus;
             var result = ovr_GetSessionStatus(_session, &sessionStatus);
@@ -165,9 +166,7 @@ namespace Veldrid.VirtualReality.Oculus
             }
 
             // Call ovr_GetRenderDesc each frame to get the ovrEyeRenderDesc, as the returned values (e.g. HmdToEyePose) may change at runtime.
-            ovrEyeRenderDesc[] eyeRenderDescs = new ovrEyeRenderDesc[2];
-            var size = Unsafe.SizeOf<ovrEyeRenderDesc>();
-
+            ovrEyeRenderDesc* eyeRenderDescs = stackalloc ovrEyeRenderDesc[2];
             eyeRenderDescs[0] = ovr_GetRenderDesc2(_session, ovrEyeType.Left, _hmdDesc.DefaultEyeFov[0]);
             eyeRenderDescs[1] = ovr_GetRenderDesc2(_session, ovrEyeType.Right, _hmdDesc.DefaultEyeFov[1]);
 
@@ -190,18 +189,17 @@ namespace Veldrid.VirtualReality.Oculus
             // Render Scene to Eye Buffers
             for (int eye = 0; eye < 2; ++eye)
             {
-                Quaternion eyeQuat = _eyeRenderPoses[eye].Orientation;
-                Vector3 eyePos = _eyeRenderPoses[eye].Position;
-                Vector3 combinedPos = eyePos;
-                Vector3 forward = Vector3.Transform(-Vector3.UnitZ, eyeQuat);
-                Vector3 up = Vector3.Transform(Vector3.UnitY, eyeQuat);
-                _views[eye] = Matrix4x4.CreateLookAt(eyePos, eyePos + forward, up);
-                var proj = ovrMatrix4f_Projection(eyeRenderDescs[eye].Fov, 0.2f, 1000f, ovrProjectionModifier.None);
+                _rotations[eye] = _eyeRenderPoses[eye].Orientation;
+                _positions[eye] = _eyeRenderPoses[eye].Position;
+                Matrix4x4 proj = ovrMatrix4f_Projection(eyeRenderDescs[eye].Fov, 0.2f, 1000f, ovrProjectionModifier.None);
                 _posTimewarpProjectionDesc = ovrTimewarpProjectionDesc_FromProjection(proj, ovrProjectionModifier.None);
                 _projections[eye] = Matrix4x4.Transpose(proj);
             }
 
-            return new HmdPoseState(_views[0], _views[1], _projections[0], _projections[1]);
+            return new HmdPoseState(
+                _projections[0], _projections[1],
+                _positions[0], _positions[1],
+                _rotations[0], _rotations[1]);
         }
 
         public override void Dispose()

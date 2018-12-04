@@ -1,9 +1,10 @@
 ﻿using ImGuiNET;
 using SixLabors.ImageSharp;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Numerics;
-using Veldrid.ImageSharp;
+using Veldrid.NeoDemo;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
 
@@ -11,6 +12,9 @@ namespace Veldrid.VirtualReality.Sample
 {
     class Program
     {
+        private static Vector3 _userPosition;
+        private static double _motionSpeed = 2.0;
+
         static void Main(string[] args)
         {
             Sdl2Window window = VeldridStartup.CreateWindow(
@@ -22,14 +26,14 @@ namespace Veldrid.VirtualReality.Sample
 
             VRContext vrContext = VRContext.CreateOculus();
 
-            GraphicsBackend backend = GraphicsBackend.Vulkan;
+            GraphicsBackend backend = GraphicsBackend.Direct3D11;
 
             bool debug = false;
 #if DEBUG
             debug = true;
 #endif
 
-            GraphicsDeviceOptions gdo = new GraphicsDeviceOptions(debug, null, true, ResourceBindingModel.Improved, true, true, true);
+            GraphicsDeviceOptions gdo = new GraphicsDeviceOptions(debug, null, false, ResourceBindingModel.Improved, true, true, true);
 
             if (backend == GraphicsBackend.Vulkan)
             {
@@ -42,7 +46,7 @@ namespace Veldrid.VirtualReality.Sample
 
             vrContext.Initialize(gd);
 
-            ImGuiRenderer igr = new ImGuiRenderer(gd, sc.Framebuffer.OutputDescription, window.Width, window.Height, true);
+            ImGuiRenderer igr = new ImGuiRenderer(gd, sc.Framebuffer.OutputDescription, window.Width, window.Height, ColorSpaceHandling.Linear);
             window.Resized += () => igr.WindowResized(window.Width, window.Height);
 
             AssimpMesh mesh = new AssimpMesh(
@@ -65,10 +69,20 @@ namespace Veldrid.VirtualReality.Sample
 
             MirrorTextureEyeSource eyeSource = MirrorTextureEyeSource.BothEyes;
 
+            Stopwatch sw = Stopwatch.StartNew();
+            double lastFrameTime = sw.Elapsed.TotalSeconds;
+
             while (window.Exists)
             {
+                double newFrameTime = sw.Elapsed.TotalSeconds;
+                double deltaSeconds = newFrameTime - lastFrameTime;
+                lastFrameTime = newFrameTime;
+                Console.WriteLine($"Frame time: {deltaSeconds}");
+
                 InputSnapshot snapshot = window.PumpEvents();
                 if (!window.Exists) { break; }
+                InputTracker.UpdateFrameInput(snapshot);
+                HandleInputs(deltaSeconds);
 
                 igr.Update(1f / 60f, snapshot);
 
@@ -115,11 +129,13 @@ namespace Veldrid.VirtualReality.Sample
                 eyesCL.Begin();
 
                 eyesCL.PushDebugGroup("Left Eye");
-                RenderEye(eyesCL, vrContext.LeftEyeFramebuffer, mesh, skybox, poses.LeftEyeProjection, poses.LeftEyeView);
+                Matrix4x4 leftView = poses.CreateView(VREye.Left, _userPosition, -Vector3.UnitZ, Vector3.UnitY);
+                RenderEye(eyesCL, vrContext.LeftEyeFramebuffer, mesh, skybox, poses.LeftEyeProjection, leftView);
                 eyesCL.PopDebugGroup();
 
                 eyesCL.PushDebugGroup("Right Eye");
-                RenderEye(eyesCL, vrContext.RightEyeFramebuffer, mesh, skybox, poses.RightEyeProjection, poses.RightEyeView);
+                Matrix4x4 rightView = poses.CreateView(VREye.Right, _userPosition, -Vector3.UnitZ, Vector3.UnitY);
+                RenderEye(eyesCL, vrContext.RightEyeFramebuffer, mesh, skybox, poses.RightEyeProjection, rightView);
                 eyesCL.PopDebugGroup();
 
                 eyesCL.End();
@@ -153,6 +169,24 @@ namespace Veldrid.VirtualReality.Sample
                 Matrix4x4.CreateScale(1.5f) * Matrix4x4.CreateTranslation(0.5f, -1, -2f)));
 
             skybox.Render(cl, fb, proj, view);
+        }
+
+        private static void HandleInputs(double deltaSeconds)
+        {
+            Vector3 motionDir = Vector3.Zero;
+
+            if (InputTracker.GetKey(Key.W)) { motionDir += -Vector3.UnitZ; }
+            if (InputTracker.GetKey(Key.A)) { motionDir += -Vector3.UnitX; }
+            if (InputTracker.GetKey(Key.S)) { motionDir += Vector3.UnitZ; }
+            if (InputTracker.GetKey(Key.D)) { motionDir += Vector3.UnitX; }
+            if (InputTracker.GetKey(Key.Q)) { motionDir += -Vector3.UnitY; }
+            if (InputTracker.GetKey(Key.E)) { motionDir += Vector3.UnitY; }
+
+            if (motionDir != Vector3.Zero)
+            {
+                motionDir = Vector3.Normalize(motionDir);
+                _userPosition += motionDir * (float)(deltaSeconds * _motionSpeed);
+            }
         }
 
         private static (GraphicsDevice gd, Swapchain sc) CreateDeviceAndSwapchain(

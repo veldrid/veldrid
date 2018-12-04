@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\NeoDemo\InputTracker.cs" Link="InputTracker.cs" />
+
     <ProjectReference Include="..\Veldrid.ImGui\Veldrid.ImGui.csproj" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.ImageSharp\Veldrid.ImageSharp.csproj" />

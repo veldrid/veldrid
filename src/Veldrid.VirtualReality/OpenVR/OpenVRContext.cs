@@ -21,7 +21,7 @@ namespace Veldrid.VirtualReality.OpenVR
         private Matrix4x4 _projRight;
         private Matrix4x4 _headToEyeLeft;
         private Matrix4x4 _headToEyeRight;
-        private TrackedDevicePose_t[] devicePoses = new TrackedDevicePose_t[1];
+        private TrackedDevicePose_t[] _devicePoses = new TrackedDevicePose_t[1];
 
         public override string DeviceName => _deviceName;
 
@@ -101,16 +101,25 @@ namespace Veldrid.VirtualReality.OpenVR
 
         public override HmdPoseState WaitForPoses()
         {
-            EVRCompositorError compositorError = _compositor.WaitGetPoses(devicePoses, Array.Empty<TrackedDevicePose_t>());
+            EVRCompositorError compositorError = _compositor.WaitGetPoses(_devicePoses, Array.Empty<TrackedDevicePose_t>());
 
-            TrackedDevicePose_t hmdPose = devicePoses[OVR.k_unTrackedDeviceIndex_Hmd];
+            TrackedDevicePose_t hmdPose = _devicePoses[OVR.k_unTrackedDeviceIndex_Hmd];
             Matrix4x4 deviceToAbsolute = ToSysMatrix(hmdPose.mDeviceToAbsoluteTracking);
             Matrix4x4.Invert(deviceToAbsolute, out Matrix4x4 absoluteToDevice);
 
             Matrix4x4 viewLeft = absoluteToDevice * _headToEyeLeft;
-            Matrix4x4 vwieRight = absoluteToDevice * _headToEyeRight;
+            Matrix4x4 viewRight = absoluteToDevice * _headToEyeRight;
 
-            return new HmdPoseState(viewLeft, vwieRight, _projLeft, _projRight);
+            Matrix4x4.Invert(viewLeft, out Matrix4x4 invViewLeft);
+            Matrix4x4.Decompose(invViewLeft, out _, out Quaternion leftRotation, out Vector3 leftPosition);
+
+            Matrix4x4.Invert(viewRight, out Matrix4x4 invViewRight);
+            Matrix4x4.Decompose(invViewRight, out _, out Quaternion rightRotation, out Vector3 rightPosition);
+
+            return new HmdPoseState(
+                _projLeft, _projRight,
+                leftPosition, rightPosition,
+                leftRotation, rightRotation);
         }
 
         public override void SubmitFrame()
@@ -202,6 +211,17 @@ namespace Veldrid.VirtualReality.OpenVR
 
         public override void Dispose()
         {
+            _mirrorTexture.Dispose();
+
+            _leftEyeFB.ColorTargets[0].Target.Dispose();
+            _leftEyeFB.DepthTarget?.Target.Dispose();
+            _leftEyeFB.Dispose();
+
+            _rightEyeFB.ColorTargets[0].Target.Dispose();
+            _rightEyeFB.DepthTarget?.Target.Dispose();
+            _rightEyeFB.Dispose();
+
+            OVR.Shutdown();
         }
 
         private Framebuffer CreateFramebuffer(uint width, uint height)

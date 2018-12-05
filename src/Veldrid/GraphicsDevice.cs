@@ -13,6 +13,7 @@ namespace Veldrid
     {
         private readonly object _deferredDisposalLock = new object();
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
+        private Sampler _aniso4xSampler;
 
         internal GraphicsDevice() { }
 
@@ -698,7 +699,10 @@ namespace Veldrid
         {
             PointSampler = ResourceFactory.CreateSampler(SamplerDescription.Point);
             LinearSampler = ResourceFactory.CreateSampler(SamplerDescription.Linear);
-            Aniso4xSampler = ResourceFactory.CreateSampler(SamplerDescription.Aniso4x);
+            if (Features.SamplerAnisotropy)
+            {
+                _aniso4xSampler = ResourceFactory.CreateSampler(SamplerDescription.Aniso4x);
+            }
         }
 
         /// <summary>
@@ -716,8 +720,22 @@ namespace Veldrid
         /// <summary>
         /// Gets a simple 4x anisotropic-filtered <see cref="Sampler"/> object owned by this instance.
         /// This object is created with <see cref="SamplerDescription.Aniso4x"/>.
+        /// This property can only be used when <see cref="GraphicsDeviceFeatures.SamplerAnisotropy"/> is supported.
         /// </summary>
-        public Sampler Aniso4xSampler { get; private set; }
+        public Sampler Aniso4xSampler
+        {
+            get
+            {
+                if (!Features.SamplerAnisotropy)
+                {
+                    throw new VeldridException(
+                        "GraphicsDevice.Aniso4xSampler cannot be used unless GraphicsDeviceFeatures.SamplerAnisotropy is supported.");
+                }
+
+                Debug.Assert(_aniso4xSampler != null);
+                return _aniso4xSampler;
+            }
+        }
 
         /// <summary>
         /// Frees unmanaged resources controlled by this device.

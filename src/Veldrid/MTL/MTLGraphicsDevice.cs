@@ -13,6 +13,8 @@ namespace Veldrid.MTL
     internal unsafe class MTLGraphicsDevice : GraphicsDevice
     {
         private static readonly Lazy<bool> s_isSupported = new Lazy<bool>(GetIsSupported);
+        private static readonly Dictionary<IntPtr, MTLGraphicsDevice> s_aotRegisteredBlocks
+            = new Dictionary<IntPtr, MTLGraphicsDevice>();
 
         private readonly MTLDevice _device;
         private readonly MTLCommandQueue _commandQueue;
@@ -47,23 +49,6 @@ namespace Veldrid.MTL
             GraphicsDeviceOptions options,
             SwapchainDescription? swapchainDesc)
         {
-            _libSystem = new NativeLibrary("libSystem.dylib");
-            _concreteGlobalBlock = _libSystem.LoadFunction("_NSConcreteGlobalBlock");
-            _completionHandler = OnCommandBufferCompleted;
-            _completionHandlerFuncPtr = Marshal.GetFunctionPointerForDelegate<MTLCommandBufferHandler>(_completionHandler);
-
-            _completionBlockDescriptor = Marshal.AllocHGlobal(Unsafe.SizeOf<BlockDescriptor>());
-            BlockDescriptor* descriptorPtr = (BlockDescriptor*)_completionBlockDescriptor;
-            descriptorPtr->reserved = 0;
-            descriptorPtr->Block_size = (ulong)Unsafe.SizeOf<BlockDescriptor>();
-
-            _completionBlockLiteral = Marshal.AllocHGlobal(Unsafe.SizeOf<BlockLiteral>());
-            BlockLiteral* blockPtr = (BlockLiteral*)_completionBlockLiteral;
-            blockPtr->isa = _concreteGlobalBlock;
-            blockPtr->flags = 1 << 28 | 1 << 29;
-            blockPtr->invoke = _completionHandlerFuncPtr;
-            blockPtr->descriptor = descriptorPtr;
-
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
             MetalFeatures = new MTLFeatureSupport(_device);
             Features = new GraphicsDeviceFeatures(
@@ -86,6 +71,37 @@ namespace Veldrid.MTL
                 commandListDebugMarkers: true,
                 bufferRangeBinding: true);
             ResourceBindingModel = options.ResourceBindingModel;
+
+            _libSystem = new NativeLibrary("libSystem.dylib");
+            _concreteGlobalBlock = _libSystem.LoadFunction("_NSConcreteGlobalBlock");
+            if (MetalFeatures.IsMacOS)
+            {
+                _completionHandler = OnCommandBufferCompleted;
+            }
+            else
+            {
+                _completionHandler = OnCommandBufferCompleted_Static;
+            }
+            _completionHandlerFuncPtr = Marshal.GetFunctionPointerForDelegate<MTLCommandBufferHandler>(_completionHandler);
+            _completionBlockDescriptor = Marshal.AllocHGlobal(Unsafe.SizeOf<BlockDescriptor>());
+            BlockDescriptor* descriptorPtr = (BlockDescriptor*)_completionBlockDescriptor;
+            descriptorPtr->reserved = 0;
+            descriptorPtr->Block_size = (ulong)Unsafe.SizeOf<BlockDescriptor>();
+
+            _completionBlockLiteral = Marshal.AllocHGlobal(Unsafe.SizeOf<BlockLiteral>());
+            BlockLiteral* blockPtr = (BlockLiteral*)_completionBlockLiteral;
+            blockPtr->isa = _concreteGlobalBlock;
+            blockPtr->flags = 1 << 28 | 1 << 29;
+            blockPtr->invoke = _completionHandlerFuncPtr;
+            blockPtr->descriptor = descriptorPtr;
+
+            if (!MetalFeatures.IsMacOS)
+            {
+                lock (s_aotRegisteredBlocks)
+                {
+                    s_aotRegisteredBlocks.Add(_completionBlockLiteral, this);
+                }
+            }
 
             ResourceFactory = new MTLResourceFactory(this);
             _commandQueue = _device.newCommandQueue();
@@ -142,6 +158,19 @@ namespace Veldrid.MTL
             }
 
             ObjectiveCRuntime.release(cb.NativePtr);
+        }
+
+        // Xamarin AOT requires native callbacks be static.
+        [MonoPInvokeCallback(typeof(MTLCommandBufferHandler))]
+        private static void OnCommandBufferCompleted_Static(IntPtr block, MTLCommandBuffer cb)
+        {
+            lock (s_aotRegisteredBlocks)
+            {
+                if (s_aotRegisteredBlocks.TryGetValue(block, out MTLGraphicsDevice gd))
+                {
+                    gd.OnCommandBufferCompleted(block, cb);
+                }
+            }
         }
 
         private protected override void SubmitCommandsCore(CommandList commandList, Fence fence)
@@ -384,6 +413,11 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(_commandQueue.NativePtr);
             ObjectiveCRuntime.release(_device.NativePtr);
 
+            lock (s_aotRegisteredBlocks)
+            {
+                s_aotRegisteredBlocks.Remove(_completionBlockLiteral);
+            }
+
             _libSystem.Dispose();
             Marshal.FreeHGlobal(_completionBlockDescriptor);
             Marshal.FreeHGlobal(_completionBlockLiteral);
@@ -525,5 +559,10 @@ namespace Veldrid.MTL
 
         internal override uint GetUniformBufferMinOffsetAlignmentCore() => MetalFeatures.IsMacOS ? 16u : 256u;
         internal override uint GetStructuredBufferMinOffsetAlignmentCore() => 16u;
+    }
+
+    internal sealed class MonoPInvokeCallbackAttribute : Attribute
+    {
+        public MonoPInvokeCallbackAttribute(Type t) { }
     }
 }

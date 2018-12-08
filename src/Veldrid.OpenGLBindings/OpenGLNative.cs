@@ -1615,6 +1615,24 @@ namespace Veldrid.OpenGLBinding
         private static glPopGroupMarkerEXT_t p_glPopGroupMarker;
         public static void glPopGroupMarker() => p_glPopGroupMarker();
 
+        private delegate void glReadPixels_t(
+            int x,
+            int y,
+            uint width,
+            uint height,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* data);
+        private static glReadPixels_t p_glReadPixels;
+        public static void glReadPixels(
+            int x,
+            int y,
+            uint width,
+            uint height,
+            GLPixelFormat format,
+            GLPixelType type,
+            void* data) => p_glReadPixels(x, y, width, height, format, type, data);
+
         public static void LoadGetString(IntPtr glContext, Func<string, IntPtr> getProcAddress)
         {
             s_getProcAddress = getProcAddress;
@@ -1767,7 +1785,6 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glCopyTexSubImage3D", out p_glCopyTexSubImage3D);
             LoadFunction("glMapBufferRange", out p_glMapBufferRange);
             LoadFunction("glMapNamedBufferRange", out p_glMapNamedBufferRange);
-            LoadFunction("glGetTexImage", out p_glGetTexImage);
             LoadFunction("glGetTextureSubImage", out p_glGetTextureSubImage);
             LoadFunction("glCopyNamedBufferSubData", out p_glCopyNamedBufferSubData);
             LoadFunction("glCreateBuffers", out p_glCreateBuffers);
@@ -1783,6 +1800,7 @@ namespace Veldrid.OpenGLBinding
 
             if (!gles)
             {
+                LoadFunction("glGetTexImage", out p_glGetTexImage);
                 LoadFunction("glPolygonMode", out p_glPolygonMode);
                 LoadFunction("glViewportIndexedf", out p_glViewportIndexedf);
                 LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
@@ -1792,6 +1810,7 @@ namespace Veldrid.OpenGLBinding
             }
             else
             {
+                LoadFunction("glReadPixels", out p_glReadPixels);
                 LoadFunction("glViewport", out p_glViewport);
                 LoadFunction("glDepthRangef", out p_glDepthRangef);
                 LoadFunction("glScissor", out p_glScissor);

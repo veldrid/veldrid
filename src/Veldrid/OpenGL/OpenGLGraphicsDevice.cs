@@ -355,8 +355,22 @@ namespace Veldrid.OpenGL
                 ClearBufferMask.ColorBufferBit,
                 BlitFramebufferFilter.Nearest);
             CheckLastError();
-            glGetTexImage(TextureTarget.Texture2D, 0, GLPixelFormat.Rgba, GLPixelType.Float, data);
-            CheckLastError();
+            if (_backendType == GraphicsBackend.OpenGLES)
+            {
+                glBindFramebuffer(FramebufferTarget.ReadFramebuffer, copySrc);
+                CheckLastError();
+                glReadPixels(
+                    0, 0, 1, 1,
+                    GLPixelFormat.Rgba,
+                    GLPixelType.Float,
+                    data);
+                CheckLastError();
+            }
+            else
+            {
+                glGetTexImage(TextureTarget.Texture2D, 0, GLPixelFormat.Rgba, GLPixelType.Float, data);
+                CheckLastError();
+            }
 
             glDeleteFramebuffers(1, ref copySrcFb);
             glDeleteTextures(1, ref copySrc);
@@ -1109,57 +1123,57 @@ namespace Veldrid.OpenGL
                     switch (workItem.Type)
                     {
                         case WorkItemType.ExecuteList:
-                        {
-                            OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
-                            try
                             {
-                                list.ExecuteAll(_gd._commandExecutor);
-                            }
-                            finally
-                            {
-                                if (!_gd.CheckCommandListDisposal(list.Parent))
+                                OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
+                                try
                                 {
-                                    list.Parent.OnCompleted(list);
+                                    list.ExecuteAll(_gd._commandExecutor);
+                                }
+                                finally
+                                {
+                                    if (!_gd.CheckCommandListDisposal(list.Parent))
+                                    {
+                                        list.Parent.OnCompleted(list);
+                                    }
                                 }
                             }
-                        }
-                        break;
+                            break;
                         case WorkItemType.Map:
-                        {
-                            MappableResource resourceToMap = (MappableResource)workItem.Object0;
-                            ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
-                            MapMode mode = (MapMode)workItem.UInt0;
-                            uint subresource = workItem.UInt1;
-                            bool map = workItem.UInt2 == 1 ? true : false;
-                            if (map)
                             {
-                                ExecuteMapResource(
-                                    resourceToMap,
-                                    mode,
-                                    subresource,
-                                    mre);
+                                MappableResource resourceToMap = (MappableResource)workItem.Object0;
+                                ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
+                                MapMode mode = (MapMode)workItem.UInt0;
+                                uint subresource = workItem.UInt1;
+                                bool map = workItem.UInt2 == 1 ? true : false;
+                                if (map)
+                                {
+                                    ExecuteMapResource(
+                                        resourceToMap,
+                                        mode,
+                                        subresource,
+                                        mre);
+                                }
+                                else
+                                {
+                                    ExecuteUnmapResource(resourceToMap, subresource, mre);
+                                }
                             }
-                            else
-                            {
-                                ExecuteUnmapResource(resourceToMap, subresource, mre);
-                            }
-                        }
-                        break;
+                            break;
                         case WorkItemType.UpdateBuffer:
-                        {
-                            DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
-                            uint offsetInBytes = workItem.UInt0;
-                            StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
+                            {
+                                DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
+                                uint offsetInBytes = workItem.UInt0;
+                                StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
 
-                            _gd._commandExecutor.UpdateBuffer(
-                                updateBuffer,
-                                offsetInBytes,
-                                (IntPtr)stagingBlock.Data,
-                                stagingBlock.SizeInBytes);
+                                _gd._commandExecutor.UpdateBuffer(
+                                    updateBuffer,
+                                    offsetInBytes,
+                                    (IntPtr)stagingBlock.Data,
+                                    stagingBlock.SizeInBytes);
 
-                            _gd.StagingMemoryPool.Free(stagingBlock);
-                        }
-                        break;
+                                _gd.StagingMemoryPool.Free(stagingBlock);
+                            }
+                            break;
                         case WorkItemType.UpdateTexture:
                             Texture texture = (Texture)workItem.Object0;
                             StagingMemoryPool pool = _gd.StagingMemoryPool;
@@ -1175,50 +1189,50 @@ namespace Veldrid.OpenGL
                             pool.Free(textureData);
                             break;
                         case WorkItemType.GenericAction:
-                        {
-                            ((Action)workItem.Object0)();
-                        }
-                        break;
+                            {
+                                ((Action)workItem.Object0)();
+                            }
+                            break;
                         case WorkItemType.TerminateAction:
-                        {
-                            // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
-                            uint error = glGetError();
-                            if (error == (uint)ErrorCode.InvalidOperation)
                             {
-                                return;
-                            }
-                            _makeCurrent(_gd._glContext);
+                                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
+                                uint error = glGetError();
+                                if (error == (uint)ErrorCode.InvalidOperation)
+                                {
+                                    return;
+                                }
+                                _makeCurrent(_gd._glContext);
 
-                            _gd.FlushDisposables();
-                            _gd._deleteContext(_gd._glContext);
-                            _gd.StagingMemoryPool.Dispose();
-                            _terminated = true;
-                        }
-                        break;
-                        case WorkItemType.SetSyncToVerticalBlank:
-                        {
-                            bool value = workItem.UInt0 == 1 ? true : false;
-                            _gd._setSyncToVBlank(value);
-                        }
-                        break;
-                        case WorkItemType.SwapBuffers:
-                        {
-                            _gd._swapBuffers();
-                            _gd.FlushDisposables();
-                        }
-                        break;
-                        case WorkItemType.WaitForIdle:
-                        {
-                            _gd.FlushDisposables();
-                            bool isFullFlush = workItem.UInt0 != 0;
-                            if (isFullFlush)
-                            {
-                                glFlush();
-                                glFinish();
+                                _gd.FlushDisposables();
+                                _gd._deleteContext(_gd._glContext);
+                                _gd.StagingMemoryPool.Dispose();
+                                _terminated = true;
                             }
+                            break;
+                        case WorkItemType.SetSyncToVerticalBlank:
+                            {
+                                bool value = workItem.UInt0 == 1 ? true : false;
+                                _gd._setSyncToVBlank(value);
+                            }
+                            break;
+                        case WorkItemType.SwapBuffers:
+                            {
+                                _gd._swapBuffers();
+                                _gd.FlushDisposables();
+                            }
+                            break;
+                        case WorkItemType.WaitForIdle:
+                            {
+                                _gd.FlushDisposables();
+                                bool isFullFlush = workItem.UInt0 != 0;
+                                if (isFullFlush)
+                                {
+                                    glFlush();
+                                    glFinish();
+                                }
                             ((ManualResetEventSlim)workItem.Object0).Set();
-                        }
-                        break;
+                            }
+                            break;
                         default:
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }

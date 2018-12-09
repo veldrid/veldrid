@@ -184,6 +184,21 @@ namespace Veldrid.OpenGLBinding
         public static void glActiveTexture(TextureUnit texture) => p_glActiveTexture(texture);
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glFramebufferTexture1D_t(
+            FramebufferTarget target,
+            GLFramebufferAttachment attachment,
+            TextureTarget textarget,
+            uint texture,
+            int level);
+        private static glFramebufferTexture1D_t p_glFramebufferTexture1D;
+        public static void glFramebufferTexture1D(
+            FramebufferTarget target,
+            GLFramebufferAttachment attachment,
+            TextureTarget textarget,
+            uint texture,
+            int level) => p_glFramebufferTexture1D(target, attachment, textarget, texture, level);
+
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate void glFramebufferTexture2D_t(
             FramebufferTarget target,
             GLFramebufferAttachment attachment,
@@ -1798,8 +1813,11 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glPopDebugGroup", out p_glPopDebugGroup);
             LoadFunction("glDebugMessageInsert", out p_glDebugMessageInsert);
 
+            LoadFunction("glReadPixels", out p_glReadPixels);
+
             if (!gles)
             {
+                LoadFunction("glFramebufferTexture1D", out p_glFramebufferTexture1D);
                 LoadFunction("glGetTexImage", out p_glGetTexImage);
                 LoadFunction("glPolygonMode", out p_glPolygonMode);
                 LoadFunction("glViewportIndexedf", out p_glViewportIndexedf);
@@ -1810,7 +1828,6 @@ namespace Veldrid.OpenGLBinding
             }
             else
             {
-                LoadFunction("glReadPixels", out p_glReadPixels);
                 LoadFunction("glViewport", out p_glViewport);
                 LoadFunction("glDepthRangef", out p_glDepthRangef);
                 LoadFunction("glScissor", out p_glScissor);

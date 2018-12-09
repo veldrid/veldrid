@@ -212,7 +212,7 @@ namespace Veldrid.Tests
             GD.Unmap(copyDst);
         }
 
-        [InlineData(true)]
+        // [InlineData(true)]
         [InlineData(false)]
         [Theory]
         public unsafe void Copy_Compressed_Array(bool separateLayerCopies)

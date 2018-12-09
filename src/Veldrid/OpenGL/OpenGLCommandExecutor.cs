@@ -787,77 +787,77 @@ namespace Veldrid.OpenGL
                 switch (kind)
                 {
                     case ResourceKind.UniformBuffer:
-                    {
-                        if (!isNew) { continue; }
-
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        OpenGLBuffer glUB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
-
-                        glUB.EnsureResourcesCreated();
-                        if (pipeline.GetUniformBindingForSlot(slot, element, out OpenGLUniformBinding uniformBindingInfo))
                         {
-                            if (range.SizeInBytes < uniformBindingInfo.BlockSize)
+                            if (!isNew) { continue; }
+
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            OpenGLBuffer glUB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
+
+                            glUB.EnsureResourcesCreated();
+                            if (pipeline.GetUniformBindingForSlot(slot, element, out OpenGLUniformBinding uniformBindingInfo))
                             {
-                                string name = glResourceSet.Layout.Elements[element].Name;
-                                throw new VeldridException(
-                                    $"Not enough data in uniform buffer \"{name}\" (slot {slot}, element {element}). Shader expects at least {uniformBindingInfo.BlockSize} bytes, but buffer only contains {glUB.SizeInBytes} bytes");
+                                if (range.SizeInBytes < uniformBindingInfo.BlockSize)
+                                {
+                                    string name = glResourceSet.Layout.Elements[element].Name;
+                                    throw new VeldridException(
+                                        $"Not enough data in uniform buffer \"{name}\" (slot {slot}, element {element}). Shader expects at least {uniformBindingInfo.BlockSize} bytes, but buffer only contains {glUB.SizeInBytes} bytes");
+                                }
+                                glUniformBlockBinding(pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + ubOffset);
+                                CheckLastError();
+
+                                glBindBufferRange(
+                                    BufferRangeTarget.UniformBuffer,
+                                    ubBaseIndex + ubOffset,
+                                    glUB.Buffer,
+                                    (IntPtr)range.Offset,
+                                    (UIntPtr)range.SizeInBytes);
+                                CheckLastError();
+
+                                ubOffset += 1;
                             }
-                            glUniformBlockBinding(pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + ubOffset);
-                            CheckLastError();
-
-                            glBindBufferRange(
-                                BufferRangeTarget.UniformBuffer,
-                                ubBaseIndex + ubOffset,
-                                glUB.Buffer,
-                                (IntPtr)range.Offset,
-                                (UIntPtr)range.SizeInBytes);
-                            CheckLastError();
-
-                            ubOffset += 1;
+                            break;
                         }
-                        break;
-                    }
                     case ResourceKind.StructuredBufferReadWrite:
                     case ResourceKind.StructuredBufferReadOnly:
-                    {
-                        if (!isNew) { continue; }
-
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
-
-                        glBuffer.EnsureResourcesCreated();
-                        if (pipeline.GetStorageBufferBindingForSlot(slot, element, out OpenGLShaderStorageBinding shaderStorageBinding))
                         {
-                            if (_backend == GraphicsBackend.OpenGL)
-                            {
-                                glShaderStorageBlockBinding(
-                                    pipeline.Program,
-                                    shaderStorageBinding.StorageBlockBinding,
-                                    ssboBaseIndex + ssboOffset);
-                                CheckLastError();
+                            if (!isNew) { continue; }
 
-                                glBindBufferRange(
-                                    BufferRangeTarget.ShaderStorageBuffer,
-                                    ssboBaseIndex + ssboOffset,
-                                    glBuffer.Buffer,
-                                    (IntPtr)range.Offset,
-                                    (UIntPtr)range.SizeInBytes);
-                                CheckLastError();
-                            }
-                            else
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
+
+                            glBuffer.EnsureResourcesCreated();
+                            if (pipeline.GetStorageBufferBindingForSlot(slot, element, out OpenGLShaderStorageBinding shaderStorageBinding))
                             {
-                                glBindBufferRange(
-                                    BufferRangeTarget.ShaderStorageBuffer,
-                                    shaderStorageBinding.StorageBlockBinding,
-                                    glBuffer.Buffer,
-                                    (IntPtr)range.Offset,
-                                    (UIntPtr)range.SizeInBytes);
-                                CheckLastError();
+                                if (_backend == GraphicsBackend.OpenGL)
+                                {
+                                    glShaderStorageBlockBinding(
+                                        pipeline.Program,
+                                        shaderStorageBinding.StorageBlockBinding,
+                                        ssboBaseIndex + ssboOffset);
+                                    CheckLastError();
+
+                                    glBindBufferRange(
+                                        BufferRangeTarget.ShaderStorageBuffer,
+                                        ssboBaseIndex + ssboOffset,
+                                        glBuffer.Buffer,
+                                        (IntPtr)range.Offset,
+                                        (UIntPtr)range.SizeInBytes);
+                                    CheckLastError();
+                                }
+                                else
+                                {
+                                    glBindBufferRange(
+                                        BufferRangeTarget.ShaderStorageBuffer,
+                                        shaderStorageBinding.StorageBlockBinding,
+                                        glBuffer.Buffer,
+                                        (IntPtr)range.Offset,
+                                        (UIntPtr)range.SizeInBytes);
+                                    CheckLastError();
+                                }
+                                ssboOffset += 1;
                             }
-                            ssboOffset += 1;
+                            break;
                         }
-                        break;
-                    }
                     case ResourceKind.TextureReadOnly:
                         TextureView texView = Util.GetTextureView(_gd, resource);
                         OpenGLTextureView glTexView = Util.AssertSubtype<TextureView, OpenGLTextureView>(texView);
@@ -1472,6 +1472,7 @@ namespace Veldrid.OpenGL
             }
 
             uint packAlignment = 4;
+            uint depthSliceSize = 0;
             uint sizeInBytes;
             TextureTarget srcTarget = srcGLTexture.TextureTarget;
             if (isCompressed)
@@ -1492,7 +1493,8 @@ namespace Veldrid.OpenGL
             {
                 uint pixelSize = FormatHelpers.GetSizeInBytes(srcGLTexture.Format);
                 packAlignment = pixelSize;
-                sizeInBytes = width * height * depth * pixelSize;
+                depthSliceSize = width * height * pixelSize;
+                sizeInBytes = depthSliceSize * depth;
             }
 
             StagingBlock block = _stagingMemoryPool.GetStagingBlock(sizeInBytes);
@@ -1574,44 +1576,57 @@ namespace Veldrid.OpenGL
                 }
                 else
                 {
-                    // We need to download the entire mip and then move the single copy region into
-                    // the staging block we have.
-                    uint pixelSize = FormatHelpers.GetSizeInBytes(srcGLTexture.Format);
-                    Util.GetMipDimensions(srcGLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                    uint fullMipSize = mipWidth * mipHeight * mipDepth * srcGLTexture.ArrayLayers * pixelSize;
+                    for (uint layer = 0; layer < depth; layer++)
+                    {
+                        uint curLayer = srcZ + srcLayer + layer;
+                        uint curOffset = depthSliceSize * layer;
+                        glGenFramebuffers(1, out uint readFB);
+                        CheckLastError();
+                        glBindFramebuffer(FramebufferTarget.ReadFramebuffer, readFB);
+                        CheckLastError();
 
-                    StagingBlock fullBlock = _stagingMemoryPool.GetStagingBlock(fullMipSize);
+                        if (srcGLTexture.ArrayLayers > 1 || srcGLTexture.Type == TextureType.Texture3D)
+                        {
+                            glFramebufferTextureLayer(
+                                FramebufferTarget.ReadFramebuffer,
+                                GLFramebufferAttachment.ColorAttachment0,
+                                srcGLTexture.Texture,
+                                (int)srcMipLevel,
+                                (int)curLayer);
+                            CheckLastError();
+                        }
+                        else if (srcGLTexture.Type == TextureType.Texture1D)
+                        {
+                            glFramebufferTexture1D(
+                                FramebufferTarget.ReadFramebuffer,
+                                GLFramebufferAttachment.ColorAttachment0,
+                                TextureTarget.Texture1D,
+                                srcGLTexture.Texture,
+                                (int)srcMipLevel);
+                            CheckLastError();
+                        }
+                        else
+                        {
+                            glFramebufferTexture2D(
+                                FramebufferTarget.ReadFramebuffer,
+                                GLFramebufferAttachment.ColorAttachment0,
+                                TextureTarget.Texture2D,
+                                srcGLTexture.Texture,
+                                (int)srcMipLevel);
+                            CheckLastError();
+                        }
 
-                    _textureSamplerManager.SetTextureTransient(srcTarget, srcGLTexture.Texture);
-                    CheckLastError();
-
-                    glGetTexImage(
-                        srcTarget,
-                        (int)srcMipLevel,
-                        srcGLTexture.GLPixelFormat,
-                        srcGLTexture.GLPixelType,
-                        fullBlock.Data);
-                    CheckLastError();
-
-                    uint fullRowSize = mipWidth * pixelSize; // Src row pitch
-                    uint fullZSliceSize = fullRowSize * mipHeight; // Src depth pitch
-                    uint denseRowSize = width * pixelSize; // Dst row pitch
-                    uint denseZSliceSize = denseRowSize * height; // Dst depth pitch
-                    byte* fullBlockSliceStart = (byte*)fullBlock.Data + fullZSliceSize * srcLayer;
-
-                    Util.CopyTextureRegion(
-                        fullBlockSliceStart,
-                        srcX, srcY, srcZ,
-                        fullRowSize,
-                        fullZSliceSize,
-                        block.Data,
-                        0, 0, 0,
-                        denseRowSize,
-                        denseZSliceSize,
-                        width, height, depth,
-                        srcGLTexture.Format);
-
-                    _stagingMemoryPool.Free(fullBlock);
+                        CheckLastError();
+                        glReadPixels(
+                            (int)srcX, (int)srcY,
+                            width, height,
+                            srcGLTexture.GLPixelFormat,
+                            srcGLTexture.GLPixelType,
+                            (byte*)block.Data + curOffset);
+                        CheckLastError();
+                        glDeleteFramebuffers(1, ref readFB);
+                        CheckLastError();
+                    }
                 }
 
                 UpdateTexture(

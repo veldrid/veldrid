@@ -1297,11 +1297,11 @@ namespace Veldrid.OpenGL
                             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
                             Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
 
-                            uint subresourceSize = FormatHelpers.GetDepthPitch(
+                            uint depthSliceSize = FormatHelpers.GetDepthPitch(
                                 FormatHelpers.GetRowPitch(mipWidth, texture.Format),
                                 mipHeight,
-                                texture.Format)
-                                * mipDepth;
+                                texture.Format);
+                            uint subresourceSize = depthSliceSize * mipDepth;
                             int compressedSize = 0;
 
                             bool isCompressed = FormatHelpers.IsCompressedFormat(texture.Format);
@@ -1350,40 +1350,54 @@ namespace Veldrid.OpenGL
                                     }
                                     else
                                     {
-                                        _gd.TextureSamplerManager.SetTextureTransient(texture.TextureTarget, texture.Texture);
-                                        CheckLastError();
-
-                                        if (texture.TextureTarget == TextureTarget.Texture2DArray
-                                            || texture.TextureTarget == TextureTarget.Texture2DMultisampleArray
-                                            || texture.TextureTarget == TextureTarget.TextureCubeMapArray)
+                                        for (uint layer = 0; layer < mipDepth; layer++)
                                         {
-                                            // We only want a single subresource (array slice), so we need to copy
-                                            // a subsection of the downloaded data into our staging block.
-
-                                            uint fullDataSize = subresourceSize * texture.ArrayLayers;
-                                            StagingBlock fullBlock
-                                                = _gd._stagingMemoryPool.GetStagingBlock(fullDataSize);
-
-                                            glGetTexImage(
-                                                texture.TextureTarget,
-                                                (int)mipLevel,
-                                                texture.GLPixelFormat,
-                                                texture.GLPixelType,
-                                                fullBlock.Data);
+                                            uint curLayer = arrayLayer + layer;
+                                            uint curOffset = depthSliceSize * layer;
+                                            glGenFramebuffers(1, out uint readFB);
                                             CheckLastError();
-                                            byte* sliceStart = (byte*)fullBlock.Data + (arrayLayer * subresourceSize);
-                                            Buffer.MemoryCopy(sliceStart, block.Data, subresourceSize, subresourceSize);
+                                            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, readFB);
+                                            CheckLastError();
 
-                                            _gd.StagingMemoryPool.Free(fullBlock);
-                                        }
-                                        else
-                                        {
-                                            glGetTexImage(
-                                                texture.TextureTarget,
-                                                (int)mipLevel,
+                                            if (texture.ArrayLayers > 1 || texture.Type == TextureType.Texture3D)
+                                            {
+                                                glFramebufferTextureLayer(
+                                                    FramebufferTarget.ReadFramebuffer,
+                                                    GLFramebufferAttachment.ColorAttachment0,
+                                                    texture.Texture,
+                                                    (int)mipLevel,
+                                                    (int)curLayer);
+                                                CheckLastError();
+                                            }
+                                            else if (texture.Type == TextureType.Texture1D)
+                                            {
+                                                glFramebufferTexture1D(
+                                                    FramebufferTarget.ReadFramebuffer,
+                                                    GLFramebufferAttachment.ColorAttachment0,
+                                                    TextureTarget.Texture1D,
+                                                    texture.Texture,
+                                                    (int)mipLevel);
+                                                CheckLastError();
+                                            }
+                                            else
+                                            {
+                                                glFramebufferTexture2D(
+                                                    FramebufferTarget.ReadFramebuffer,
+                                                    GLFramebufferAttachment.ColorAttachment0,
+                                                    TextureTarget.Texture2D,
+                                                    texture.Texture,
+                                                    (int)mipLevel);
+                                                CheckLastError();
+                                            }
+
+                                            glReadPixels(
+                                                0, 0,
+                                                mipWidth, mipHeight,
                                                 texture.GLPixelFormat,
                                                 texture.GLPixelType,
-                                                block.Data);
+                                                (byte*)block.Data + curOffset);
+                                            CheckLastError();
+                                            glDeleteFramebuffers(1, ref readFB);
                                             CheckLastError();
                                         }
                                     }
@@ -1419,6 +1433,7 @@ namespace Veldrid.OpenGL
                                         }
                                         byte* sliceStart = (byte*)fullBlock.Data + (arrayLayer * subresourceSize);
                                         Buffer.MemoryCopy(sliceStart, block.Data, subresourceSize, subresourceSize);
+                                        _gd._stagingMemoryPool.Free(fullBlock);
                                     }
                                     else
                                     {

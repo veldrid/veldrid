@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Text;
 using static Veldrid.VirtualReality.Oculus.LibOvrNative;
 
@@ -25,6 +24,41 @@ namespace Veldrid.VirtualReality.Oculus
         private Quaternion[] _rotations = new Quaternion[2];
         private Vector3[] _positions = new Vector3[2];
         private Matrix4x4[] _projections = new Matrix4x4[2];
+
+        private static Lazy<bool> s_isSupported = new Lazy<bool>(CheckSupport);
+        private static bool CheckSupport()
+        {
+            try
+            {
+                ovrInitParams initParams = new ovrInitParams();
+                initParams.Flags = ovrInitFlags.RequestVersion | ovrInitFlags.FocusAware | ovrInitFlags.Debug;
+                initParams.RequestedMinorVersion = 30;
+
+                ovrResult result = ovr_Initialize(&initParams);
+                if (result != ovrResult.Success)
+                {
+                    return false;
+                }
+
+                ovrSession session;
+                ovrGraphicsLuid luid;
+                result = ovr_Create(&session, &luid);
+                if (result != ovrResult.Success)
+                {
+                    return false;
+                }
+
+                ovr_Destroy(session);
+                ovr_Shutdown();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        internal static bool IsSupported() => s_isSupported.Value;
 
         public override string DeviceName => _deviceName;
 
@@ -204,7 +238,14 @@ namespace Veldrid.VirtualReality.Oculus
 
         public override void Dispose()
         {
-            throw new NotImplementedException();
+            foreach (OculusSwapchain sc in _eyeSwapchains)
+            {
+                sc.Dispose();
+            }
+
+            _mirrorTexture.Dispose();
+            ovr_Destroy(_session);
+            ovr_Shutdown();
         }
 
         public override (string[] instance, string[] device) GetRequiredVulkanExtensions()
@@ -451,7 +492,6 @@ namespace Veldrid.VirtualReality.Oculus
 
         public void Dispose()
         {
-            // TODO: Dispose depth/color textures.
             foreach (Framebuffer fb in Framebuffers)
             {
                 fb.ColorTargets[0].Target.Dispose();

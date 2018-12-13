@@ -25,8 +25,10 @@ namespace Veldrid.VirtualReality
 
         public static VRContext CreateOculus() => CreateOculus(default);
         public static VRContext CreateOculus(VRContextOptions options) => new OculusContext(options);
+        public static bool IsOculusSupported() => OculusContext.IsSupported();
 
         public static VRContext CreateOpenVR() => CreateOpenVR(default);
         public static VRContext CreateOpenVR(VRContextOptions options) => new OpenVRContext(options);
+        public static bool IsOpenVRSupported() => OpenVRContext.IsSupported();
     }
 }

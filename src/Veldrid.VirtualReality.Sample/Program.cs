@@ -14,9 +14,22 @@ namespace Veldrid.VirtualReality.Sample
     {
         private static Vector3 _userPosition;
         private static double _motionSpeed = 2.0;
+        private static bool _useOculus;
+        private static bool _switchVRContext;
 
         static void Main(string[] args)
         {
+            _useOculus = true;
+            if (!VRContext.IsOculusSupported())
+            {
+                _useOculus = false;
+                if (!VRContext.IsOpenVRSupported())
+                {
+                    Console.WriteLine("This sample requires an Oculus or OpenVR-capable headset.");
+                    return;
+                }
+            }
+
             Sdl2Window window = VeldridStartup.CreateWindow(
                 new WindowCreateInfo(
                     Sdl2Native.SDL_WINDOWPOS_CENTERED, Sdl2Native.SDL_WINDOWPOS_CENTERED,
@@ -24,7 +37,7 @@ namespace Veldrid.VirtualReality.Sample
                     WindowState.Normal,
                     "Veldrid.VirtualReality Sample"));
 
-            VRContext vrContext = VRContext.CreateOculus();
+            VRContext vrContext = _useOculus ? VRContext.CreateOculus() : VRContext.CreateOpenVR();
 
             GraphicsBackend backend = GraphicsBackend.Direct3D11;
 
@@ -77,7 +90,6 @@ namespace Veldrid.VirtualReality.Sample
                 double newFrameTime = sw.Elapsed.TotalSeconds;
                 double deltaSeconds = newFrameTime - lastFrameTime;
                 lastFrameTime = newFrameTime;
-                Console.WriteLine($"Frame time: {deltaSeconds}");
 
                 InputSnapshot snapshot = window.PumpEvents();
                 if (!window.Exists) { break; }
@@ -103,6 +115,22 @@ namespace Veldrid.VirtualReality.Sample
                             if (ImGui.MenuItem("Right Eye", null, eyeSource == MirrorTextureEyeSource.RightEye))
                             {
                                 eyeSource = MirrorTextureEyeSource.RightEye;
+                            }
+
+                            ImGui.EndMenu();
+                        }
+
+                        if (ImGui.BeginMenu("VR API"))
+                        {
+                            if (ImGui.MenuItem("Oculus", null, _useOculus) && !_useOculus)
+                            {
+                                _useOculus = true;
+                                _switchVRContext = true;
+                            }
+                            if (ImGui.MenuItem("OpenVR", null, !_useOculus) && _useOculus)
+                            {
+                                _useOculus = false;
+                                _switchVRContext = true;
                             }
 
                             ImGui.EndMenu();
@@ -142,8 +170,17 @@ namespace Veldrid.VirtualReality.Sample
                 gd.SubmitCommands(eyesCL);
 
                 vrContext.SubmitFrame();
+
+                if (_switchVRContext)
+                {
+                    _switchVRContext = false;
+                    vrContext.Dispose();
+                    vrContext = _useOculus ? VRContext.CreateOculus() : VRContext.CreateOpenVR();
+                    vrContext.Initialize(gd);
+                }
             }
 
+            vrContext.Dispose();
             gd.Dispose();
         }
 

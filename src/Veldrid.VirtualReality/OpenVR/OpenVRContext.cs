@@ -50,6 +50,18 @@ namespace Veldrid.VirtualReality.OpenVR
             _mirrorTexture = new OpenVRMirrorTexture(this);
         }
 
+        internal static bool IsSupported()
+        {
+            try
+            {
+                return OVR.IsHmdPresent();
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public override void Initialize(GraphicsDevice gd)
         {
             _gd = gd;

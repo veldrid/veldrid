@@ -1630,6 +1630,7 @@ namespace Veldrid.OpenGLBinding
         private static glPopGroupMarkerEXT_t p_glPopGroupMarker;
         public static void glPopGroupMarker() => p_glPopGroupMarker();
 
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate void glReadPixels_t(
             int x,
             int y,

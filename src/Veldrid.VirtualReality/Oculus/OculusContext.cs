@@ -494,8 +494,6 @@ namespace Veldrid.VirtualReality.Oculus
         {
             foreach (Framebuffer fb in Framebuffers)
             {
-                fb.ColorTargets[0].Target.Dispose();
-                fb.DepthTarget?.Target.Dispose();
                 fb.Dispose();
             }
 

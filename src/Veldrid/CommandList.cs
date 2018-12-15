@@ -1136,7 +1136,7 @@ namespace Veldrid
 
         /// <summary>
         /// Inserts a debug marker into the CommandList at the current position. This is used by graphics debuggers to identify
-        /// points of interest in a graphics command stream.
+        /// points of interest in a command stream.
         /// </summary>
         /// <param name="name">The name of the marker. This is an opaque identifier used for display by graphics debuggers.</param>
         public void InsertDebugMarker(string name)

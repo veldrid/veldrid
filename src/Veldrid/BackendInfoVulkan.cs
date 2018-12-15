@@ -57,7 +57,7 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Gets the underlying VkImage wrapped by the given Veldrid Texture. This method can not be used on Texture's with
+        /// Gets the underlying VkImage wrapped by the given Veldrid Texture. This method can not be used on Textures with
         /// TextureUsage.Staging.
         /// </summary>
         /// <param name="texture">The Texture whose underlying VkImage will be returned.</param>

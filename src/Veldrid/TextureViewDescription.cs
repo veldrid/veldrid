@@ -13,7 +13,7 @@ namespace Veldrid
         public Texture Target;
         /// <summary>
         /// The base mip level visible in the view. Must be less than <see cref="Texture.MipLevels"/>.
-        /// /// </summary>
+        /// </summary>
         public uint BaseMipLevel;
         /// <summary>
         /// The number of mip levels visible in the view.

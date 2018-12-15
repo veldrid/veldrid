@@ -37,7 +37,11 @@ namespace Veldrid.VirtualReality.Sample
                     WindowState.Normal,
                     "Veldrid.VirtualReality Sample"));
 
-            VRContext vrContext = _useOculus ? VRContext.CreateOculus() : VRContext.CreateOpenVR();
+            VRContextOptions options = new VRContextOptions
+            {
+                EyeFramebufferSampleCount = TextureSampleCount.Count4
+            };
+            VRContext vrContext = _useOculus ? VRContext.CreateOculus(options) : VRContext.CreateOpenVR(options);
 
             GraphicsBackend backend = GraphicsBackend.Direct3D11;
 

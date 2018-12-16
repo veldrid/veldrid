@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/AArnott/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
   "version": "5.65.0",
   "publicReleaseRefSpec": [
-    "^refs/tags/v\\d+\\.\\d+" // we also release tags starting with vN.N
+    "^refs/tags/veldrid.imgui-v\\d+\\.\\d+"
   ],
   "cloudBuild": {
     "buildNumber": {

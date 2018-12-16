@@ -179,7 +179,6 @@ namespace Veldrid.D3D11
                 case Format.R10G10B10A2_Typeless:
                 case Format.R10G10B10A2_UNorm:
                 case Format.R10G10B10A2_UInt:
-                case Format.R11G11B10_Float:
                     return Format.R10G10B10A2_Typeless;
                 case Format.R8G8B8A8_Typeless:
                 case Format.R8G8B8A8_UNorm:

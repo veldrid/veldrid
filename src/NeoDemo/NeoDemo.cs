@@ -37,6 +37,7 @@ namespace Veldrid.NeoDemo
         private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
         private bool _colorSrgb = true;
         private FullScreenQuad _fsq;
+        public static RenderDoc _renderDoc;
 
         public NeoDemo()
         {
@@ -53,7 +54,6 @@ namespace Veldrid.NeoDemo
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-
             VeldridStartup.CreateWindowAndGraphicsDevice(
                 windowCI,
                 gdOptions,
@@ -363,6 +363,78 @@ namespace Veldrid.NeoDemo
 
                     ImGui.EndMenu();
                 }
+
+                if (ImGui.BeginMenu("RenderDoc"))
+                {
+                    if (_renderDoc == null)
+                    {
+                        if (ImGui.MenuItem("Load"))
+                        {
+                            if (RenderDoc.Load(out _renderDoc))
+                            {
+                                ChangeBackend(_gd.BackendType);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (ImGui.MenuItem("Trigger Capture"))
+                        {
+                            _renderDoc.TriggerCapture();
+                        }
+                        if (ImGui.BeginMenu("Options"))
+                        {
+                            bool allowVsync = _renderDoc.AllowVSync;
+                            if (ImGui.Checkbox("Allow VSync", ref allowVsync))
+                            {
+                                _renderDoc.AllowVSync = allowVsync;
+                            }
+                            bool validation = _renderDoc.APIValidation;
+                            if (ImGui.Checkbox("API Validation", ref validation))
+                            {
+                                _renderDoc.APIValidation = validation;
+                            }
+                            int delayForDebugger = (int)_renderDoc.DelayForDebugger;
+                            if (ImGui.InputInt("Debugger Delay", ref delayForDebugger))
+                            {
+                                delayForDebugger = Math.Clamp(delayForDebugger, 0, int.MaxValue);
+                                _renderDoc.DelayForDebugger = (uint)delayForDebugger;
+                            }
+                            bool verifyBufferAccess = _renderDoc.VerifyBufferAccess;
+                            if (ImGui.Checkbox("Verify Buffer Access", ref verifyBufferAccess))
+                            {
+                                _renderDoc.VerifyBufferAccess = verifyBufferAccess;
+                            }
+                            bool overlayEnabled = _renderDoc.OverlayEnabled;
+                            if (ImGui.Checkbox("Overlay Visible", ref overlayEnabled))
+                            {
+                                _renderDoc.OverlayEnabled = overlayEnabled;
+                            }
+                            bool overlayFrameRate = _renderDoc.OverlayFrameRate;
+                            if (ImGui.Checkbox("Overlay Frame Rate", ref overlayFrameRate))
+                            {
+                                _renderDoc.OverlayFrameRate = overlayFrameRate;
+                            }
+                            bool overlayFrameNumber = _renderDoc.OverlayFrameNumber;
+                            if (ImGui.Checkbox("Overlay Frame Number", ref overlayFrameNumber))
+                            {
+                                _renderDoc.OverlayFrameNumber = overlayFrameNumber;
+                            }
+                            bool overlayCaptureList = _renderDoc.OverlayCaptureList;
+                            if (ImGui.Checkbox("Overlay Capture List", ref overlayCaptureList))
+                            {
+                                _renderDoc.OverlayCaptureList = overlayCaptureList;
+                            }
+                            ImGui.EndMenu();
+                        }
+                        if (ImGui.MenuItem("Launch Replay UI"))
+                        {
+                            _renderDoc.LaunchReplayUI();
+                        }
+                    }
+                    ImGui.EndMenu();
+                }
+
 
                 ImGui.Text(_fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTimeMilliseconds.ToString("#00.00 ms"));
 

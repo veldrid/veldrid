@@ -2,6 +2,7 @@
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace Veldrid.ImageSharp
@@ -78,6 +79,23 @@ namespace Veldrid.ImageSharp
                 Image.Load(negativeYPath),
                 Image.Load(positiveZPath),
                 Image.Load(negativeZPath),
+                mipmap)
+        { }
+
+        public ImageSharpCubemapTexture(
+            Stream positiveXStream,
+            Stream negativeXStream,
+            Stream positiveYStream,
+            Stream negativeYStream,
+            Stream positiveZStream,
+            Stream negativeZStream,
+            bool mipmap) : this(
+                Image.Load(positiveXStream),
+                Image.Load(negativeXStream),
+                Image.Load(positiveYStream),
+                Image.Load(negativeYStream),
+                Image.Load(positiveZStream),
+                Image.Load(negativeZStream),
                 mipmap)
         { }
 

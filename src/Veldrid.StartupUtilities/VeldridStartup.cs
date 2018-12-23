@@ -152,6 +152,9 @@ namespace Veldrid.StartupUtilities
                     return SwapchainSource.CreateXlib(
                         x11Info.display,
                         x11Info.Sdl2Window);
+                case SysWMType.Wayland:
+                    WaylandWindowInfo wlInfo = Unsafe.Read<WaylandWindowInfo>(&sysWmInfo.info);
+                    return SwapchainSource.CreateWayland(wlInfo.display, wlInfo.surface);
                 case SysWMType.Cocoa:
                     CocoaWindowInfo cocoaInfo = Unsafe.Read<CocoaWindowInfo>(&sysWmInfo.info);
                     IntPtr nsWindow = cocoaInfo.Window;

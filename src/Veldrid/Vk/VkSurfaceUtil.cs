@@ -1,5 +1,6 @@
 ﻿using Vulkan;
 using Vulkan.Xlib;
+using Vulkan.Wayland;
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using Veldrid.Android;
@@ -16,6 +17,8 @@ namespace Veldrid.Vk
             {
                 case XlibSwapchainSource xlibSource:
                     return CreateXlib(instance, xlibSource);
+                case WaylandSwapchainSource waylandSource:
+                    return CreateWayland(instance, waylandSource);
                 case Win32SwapchainSource win32Source:
                     return CreateWin32(instance, win32Source);
                 case AndroidSurfaceSwapchainSource androidSource:
@@ -45,6 +48,16 @@ namespace Veldrid.Vk
             xsci.dpy = (Display*)xlibSource.Display;
             xsci.window = new Window { Value = xlibSource.Window };
             VkResult result = vkCreateXlibSurfaceKHR(instance, ref xsci, null, out VkSurfaceKHR surface);
+            CheckResult(result);
+            return surface;
+        }
+
+        private static VkSurfaceKHR CreateWayland(VkInstance instance, WaylandSwapchainSource waylandSource)
+        {
+            VkWaylandSurfaceCreateInfoKHR wsci = VkWaylandSurfaceCreateInfoKHR.New();
+            wsci.display = (wl_display*) waylandSource.Display;
+            wsci.surface = (wl_surface*) waylandSource.Surface;
+            VkResult result = vkCreateWaylandSurfaceKHR(instance, ref wsci, null, out VkSurfaceKHR surface);
             CheckResult(result);
             return surface;
         }

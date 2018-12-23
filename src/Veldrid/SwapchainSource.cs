@@ -43,6 +43,16 @@ namespace Veldrid
         public static SwapchainSource CreateXlib(IntPtr display, IntPtr window) => new XlibSwapchainSource(display, window);
 
         /// <summary>
+        /// Creates a new SwapchainSource from the given Wayland information.
+        /// </summary>
+        /// <param name="display">The Wayland display proxy.</param>
+        /// <param name="surface">The Wayland surface proxy to map.</param>
+        /// <returns>A new SwapchainSource which can be used to create a <see cref="Swapchain"/> for the given Wayland surface.
+        /// </returns>
+        public static SwapchainSource CreateWayland(IntPtr display, IntPtr surface) => new WaylandSwapchainSource(display, surface);
+
+
+        /// <summary>
         /// Creates a new SwapchainSource for the given NSWindow.
         /// </summary>
         /// <param name="nsWindow">A pointer to an NSWindow.</param>
@@ -112,6 +122,18 @@ namespace Veldrid
         {
             Display = display;
             Window = window;
+        }
+    }
+
+    internal class WaylandSwapchainSource : SwapchainSource
+    {
+        public IntPtr Display { get; }
+        public IntPtr Surface { get; }
+
+        public WaylandSwapchainSource(IntPtr display, IntPtr surface)
+        {
+            Display = display;
+            Surface = surface;
         }
     }
 

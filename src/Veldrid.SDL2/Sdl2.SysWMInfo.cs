@@ -46,6 +46,13 @@ namespace Veldrid.Sdl2
         public IntPtr Sdl2Window;
     }
 
+    public struct WaylandWindowInfo
+    {
+        public IntPtr display;
+        public IntPtr surface;
+        public IntPtr shellSurface;
+    }
+
     public struct CocoaWindowInfo
     {
         /// <summary>

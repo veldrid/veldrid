@@ -517,7 +517,12 @@ namespace Veldrid.Vk
                         throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME}");
                     }
 
-                    _platformSurfaceExtension = CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME;
+                    if (!availableInstanceExtensions.Contains(CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME))
+                    {
+                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME}");
+                    }
+
+                    _platformSurfaceExtension = CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME;
                 }
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))

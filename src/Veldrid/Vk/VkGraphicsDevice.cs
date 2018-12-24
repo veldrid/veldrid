@@ -43,7 +43,6 @@ namespace Veldrid.Vk
         private const int SharedCommandPoolCount = 4;
         private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
         private VkDescriptorPoolManager _descriptorPoolManager;
-        private FixedUtf8String _platformSurfaceExtension;
         private bool _standardValidationSupported;
         private bool _standardClipYDirection;
 
@@ -482,76 +481,56 @@ namespace Veldrid.Vk
             StackList<IntPtr, Size64Bytes> instanceExtensions = new StackList<IntPtr, Size64Bytes>();
             StackList<IntPtr, Size64Bytes> instanceLayers = new StackList<IntPtr, Size64Bytes>();
 
-            if (!availableInstanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
+            if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
             {
-                throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME}");
+                instanceExtensions.Add(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME);
             }
-            instanceExtensions.Add(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME);
 
-            bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-
-            if (isWindows)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (!availableInstanceExtensions.Contains(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME))
+                if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME))
                 {
-                    throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME}");
+                    instanceExtensions.Add(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
                 }
-
-                _platformSurfaceExtension = CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 if (RuntimeInformation.OSDescription.Contains("Unix")) // Android
                 {
-                    if (!availableInstanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME))
+                    if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME))
                     {
-                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME}");
+                        instanceExtensions.Add(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
                     }
-
-                    _platformSurfaceExtension = CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME;
                 }
                 else // Desktop Linux
                 {
-                    if (!availableInstanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME))
+                    if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME))
                     {
-                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME}");
+                        instanceExtensions.Add(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
                     }
-
-                    if (!availableInstanceExtensions.Contains(CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME))
+                    if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME))
                     {
-                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME}");
+                        instanceExtensions.Add(CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
                     }
-
-                    _platformSurfaceExtension = CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME;
                 }
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 if (RuntimeInformation.OSDescription.Contains("Darwin")) // macOS
                 {
-                    if (!availableInstanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
+                    if (availableInstanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
                     {
-                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME}");
+                        instanceExtensions.Add(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
                     }
-
-                    _platformSurfaceExtension = CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME;
                 }
                 else // iOS
                 {
-                    if (!availableInstanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME))
+                    if (availableInstanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME))
                     {
-                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME}");
+                        instanceExtensions.Add(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME);
                     }
-
-                    _platformSurfaceExtension = CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME;
                 }
             }
-            else
-            {
-                throw new NotSupportedException("This platform does not support Vulkan.");
-            }
-
-            instanceExtensions.Add(_platformSurfaceExtension);
 
             string[] requestedInstanceExtensions = options.InstanceExtensions ?? Array.Empty<string>();
             List<FixedUtf8String> tempStrings = new List<FixedUtf8String>();

@@ -55,7 +55,7 @@ namespace Veldrid.Vk
 
             if (existingSurface == VkSurfaceKHR.Null)
             {
-                _surface = VkSurfaceUtil.CreateSurface(gd.Instance, _swapchainSource);
+                _surface = VkSurfaceUtil.CreateSurface(gd, gd.Instance, _swapchainSource);
             }
             else
             {

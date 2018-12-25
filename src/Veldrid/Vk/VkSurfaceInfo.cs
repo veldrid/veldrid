@@ -51,7 +51,7 @@ namespace Veldrid.Vk
 
         public unsafe override VkSurfaceKHR CreateSurface(VkInstance instance)
         {
-            return VkSurfaceUtil.CreateSurface(instance, GetSurfaceSource());
+            return VkSurfaceUtil.CreateSurface(null, instance, GetSurfaceSource());
         }
 
         internal override SwapchainSource GetSurfaceSource()
@@ -73,7 +73,7 @@ namespace Veldrid.Vk
 
         public unsafe override VkSurfaceKHR CreateSurface(VkInstance instance)
         {
-            return VkSurfaceUtil.CreateSurface(instance, GetSurfaceSource());
+            return VkSurfaceUtil.CreateSurface(null, instance, GetSurfaceSource());
         }
 
         internal unsafe override SwapchainSource GetSurfaceSource()

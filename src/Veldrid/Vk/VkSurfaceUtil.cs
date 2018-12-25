@@ -11,21 +11,52 @@ namespace Veldrid.Vk
 {
     internal static unsafe class VkSurfaceUtil
     {
-        internal static VkSurfaceKHR CreateSurface(VkInstance instance, SwapchainSource swapchainSource)
+        internal static VkSurfaceKHR CreateSurface(VkGraphicsDevice gd, VkInstance instance, SwapchainSource swapchainSource)
         {
+            // TODO a null GD is passed from VkSurfaceSource.CreateSurface for compatibility
+            //      when VkSurfaceInfo is removed we do not have to handle gd == null anymore
+            var doCheck = gd != null;
+
+            if (doCheck && !gd.HasSurfaceExtension(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
+                throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME}");
+
             switch (swapchainSource)
             {
                 case XlibSwapchainSource xlibSource:
+                    if (doCheck && !gd.HasSurfaceExtension(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME))
+                    {
+                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME}");
+                    }
                     return CreateXlib(instance, xlibSource);
                 case WaylandSwapchainSource waylandSource:
+                    if (doCheck && !gd.HasSurfaceExtension(CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME))
+                    {
+                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME}");
+                    }
                     return CreateWayland(instance, waylandSource);
                 case Win32SwapchainSource win32Source:
+                    if (doCheck && !gd.HasSurfaceExtension(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME))
+                    {
+                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME}");
+                    }
                     return CreateWin32(instance, win32Source);
                 case AndroidSurfaceSwapchainSource androidSource:
+                    if (doCheck && !gd.HasSurfaceExtension(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME))
+                    {
+                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME}");
+                    }
                     return CreateAndroidSurface(instance, androidSource);
                 case NSWindowSwapchainSource nsWindowSource:
+                    if (doCheck && !gd.HasSurfaceExtension(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
+                    {
+                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME}");
+                    }
                     return CreateNSWindowSurface(instance, nsWindowSource);
                 case UIViewSwapchainSource uiViewSource:
+                    if (doCheck && !gd.HasSurfaceExtension(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME))
+                    {
+                        throw new VeldridException($"The required instance extension was not available: {CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME}");
+                    }
                     return CreateUIViewSurface(instance, uiViewSource);
                 default:
                     throw new VeldridException($"The provided SwapchainSource cannot be used to create a Vulkan surface.");

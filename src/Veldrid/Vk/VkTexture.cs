@@ -49,6 +49,8 @@ namespace Veldrid.Vk
         private VkImageLayout[] _imageLayouts;
         private string _name;
 
+        public ResourceRefCount RefCount { get; }
+
         internal VkTexture(VkGraphicsDevice gd, ref TextureDescription description)
         {
             _gd = gd;
@@ -154,6 +156,7 @@ namespace Veldrid.Vk
 
             ClearIfRenderTarget();
             TransitionIfSampled();
+            RefCount = new ResourceRefCount(RefCountedDispose);
         }
 
         // Used to construct Swapchain textures.
@@ -185,6 +188,7 @@ namespace Veldrid.Vk
             _imageLayouts = new[] { VkImageLayout.Undefined };
 
             ClearIfRenderTarget();
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         private void ClearIfRenderTarget()
@@ -334,8 +338,15 @@ namespace Veldrid.Vk
 
         private protected override void DisposeCore()
         {
+            RefCount.Decrement();
+        }
+
+        private void RefCountedDispose()
+        {
             if (!_destroyed)
             {
+                base.Dispose();
+
                 _destroyed = true;
 
                 bool isStaging = (Usage & TextureUsage.Staging) == TextureUsage.Staging;

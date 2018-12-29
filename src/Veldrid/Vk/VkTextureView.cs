@@ -15,6 +15,8 @@ namespace Veldrid.Vk
 
         public new VkTexture Target => (VkTexture)base.Target;
 
+        public ResourceRefCount RefCount { get; }
+
         public VkTextureView(VkGraphicsDevice gd, ref TextureViewDescription description)
             : base(ref description)
         {
@@ -67,6 +69,7 @@ namespace Veldrid.Vk
             }
 
             vkCreateImageView(_gd.Device, ref imageViewCI, null, out _imageView);
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         public override string Name
@@ -80,6 +83,11 @@ namespace Veldrid.Vk
         }
 
         public override void Dispose()
+        {
+            RefCount.Decrement();
+        }
+
+        private void DisposeCore()
         {
             if (!_destroyed)
             {

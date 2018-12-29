@@ -12,6 +12,8 @@ namespace Veldrid.Vk
 
         public Vulkan.VkSampler DeviceSampler => _sampler;
 
+        public ResourceRefCount RefCount { get; }
+
         public VkSampler(VkGraphicsDevice gd, ref SamplerDescription description)
         {
             _gd = gd;
@@ -39,6 +41,7 @@ namespace Veldrid.Vk
             };
 
             vkCreateSampler(_gd.Device, ref samplerCI, null, out _sampler);
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         public override string Name
@@ -52,6 +55,11 @@ namespace Veldrid.Vk
         }
 
         public override void Dispose()
+        {
+            RefCount.Decrement();
+        }
+
+        private void DisposeCore()
         {
             if (!_disposed)
             {

@@ -26,11 +26,14 @@ namespace Veldrid.Vk
 
         public override bool IsComputePipeline { get; }
 
+        public ResourceRefCount RefCount { get; }
+
         public VkPipeline(VkGraphicsDevice gd, ref GraphicsPipelineDescription description)
             : base(ref description)
         {
             _gd = gd;
             IsComputePipeline = false;
+            RefCount = new ResourceRefCount(DisposeCore);
 
             VkGraphicsPipelineCreateInfo pipelineCI = VkGraphicsPipelineCreateInfo.New();
 
@@ -340,6 +343,7 @@ namespace Veldrid.Vk
         {
             _gd = gd;
             IsComputePipeline = true;
+            RefCount = new ResourceRefCount(DisposeCore);
 
             VkComputePipelineCreateInfo pipelineCI = VkComputePipelineCreateInfo.New();
 
@@ -426,6 +430,11 @@ namespace Veldrid.Vk
         }
 
         public override void Dispose()
+        {
+            RefCount.Decrement();
+        }
+
+        private void DisposeCore()
         {
             if (!_destroyed)
             {

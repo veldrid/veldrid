@@ -10,14 +10,25 @@ namespace Veldrid.Vk
             IReadOnlyList<FramebufferAttachmentDescription> colorTextures)
             : base(depthTexture, colorTextures)
         {
+            RefCount = new ResourceRefCount(DisposeCore);
         }
+
+        public VkFramebufferBase()
+        {
+            RefCount = new ResourceRefCount(DisposeCore);
+        }
+
+        public ResourceRefCount RefCount { get; }
 
         public abstract uint RenderableWidth { get; }
         public abstract uint RenderableHeight { get; }
 
-        public VkFramebufferBase()
+        public override void Dispose()
         {
+            RefCount.Decrement();
         }
+
+        protected abstract void DisposeCore();
 
         public abstract Vulkan.VkFramebuffer CurrentFramebuffer { get; }
         public abstract VkRenderPass RenderPassNoClear_Init { get; }

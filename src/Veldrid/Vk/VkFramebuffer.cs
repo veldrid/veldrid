@@ -292,7 +292,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public override void Dispose()
+        protected override void DisposeCore()
         {
             if (!_destroyed)
             {

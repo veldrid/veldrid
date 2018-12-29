@@ -87,7 +87,7 @@ namespace Veldrid
         /// <summary>
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             lock (_fullTextureViewLock)
             {

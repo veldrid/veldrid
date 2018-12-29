@@ -48,4 +48,9 @@
     <ProjectReference Include="..\Veldrid.ImGui\Veldrid.ImGui.csproj" />
   </ItemGroup>
 
+<ItemGroup>
+  <PackageReference Include="Veldrid" Version="4.5.0" ExcludeAssets="All" />
+  <PackageReference Include="Veldrid.SDL2" Version="4.5.0" ExcludeAssets="All" />
+</ItemGroup>
+
 </Project>

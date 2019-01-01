@@ -11,11 +11,17 @@
     <EmbeddedResource Include="Assets/GLSL/imgui-vertex.glsl">
       <LogicalName>imgui-vertex.glsl</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Assets/GLSL/imgui-vertex-legacy.glsl">
+      <LogicalName>imgui-vertex-legacy.glsl</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="Assets/GLSL/imgui-frag.glsl">
       <LogicalName>imgui-frag.glsl</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Assets/GLSLES/imgui-vertex.glsles">
       <LogicalName>imgui-vertex.glsles</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets/GLSLES/imgui-vertex-legacy.glsles">
+      <LogicalName>imgui-vertex-legacy.glsles</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Assets/GLSLES/imgui-frag.glsles">
       <LogicalName>imgui-frag.glsles</LogicalName>

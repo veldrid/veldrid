@@ -23,4 +23,9 @@
     </Content>
   </ItemGroup>
 
+  <PropertyGroup>
+    <Description>Virtual Reality integration for Veldrid, supporting both OpenVR and Oculus SDK.</Description>
+    <PackageTags>VR Virual Reality OpenVR Oculus 3D Graphics Direct3D DirectX Vulkan OpenGL Core Standard Game</PackageTags>
+  </PropertyGroup>
+
 </Project>

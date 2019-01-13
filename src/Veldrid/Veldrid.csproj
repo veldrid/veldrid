@@ -52,8 +52,4 @@
     <PackageTags>3D Graphics Direct3D DirectX Vulkan OpenGL Metal Core Standard Game</PackageTags>
   </PropertyGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="cp E:\projects\veldrid\bin\Debug\Veldrid\netstandard2.0\Veldrid.dll C:\Users\Eric\.nuget\packages\veldrid\4.5.0\lib\netstandard2.0 &amp;&amp; cp E:\projects\veldrid\bin\Debug\Veldrid\netstandard2.0\Veldrid.pdb C:\Users\Eric\.nuget\packages\veldrid\4.5.0\lib\netstandard2.0" />
-  </Target>
-
 </Project>

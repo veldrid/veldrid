@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
+    <PackageReference Include="Veldrid" Version="4.5.0" />
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.2" />
   </ItemGroup>
 

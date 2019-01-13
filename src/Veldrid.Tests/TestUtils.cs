@@ -171,7 +171,8 @@ namespace Veldrid.Tests
 
         public GraphicsDeviceTestBase()
         {
-            if (RenderDoc.Load(out _renderDoc))
+            if (Environment.GetEnvironmentVariable("VELDRID_TESTS_ENABLE_RENDERDOC") == "1"
+                && RenderDoc.Load(out _renderDoc))
             {
                 _renderDoc.DebugOutputMute = false;
             }

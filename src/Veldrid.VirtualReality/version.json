@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/AArnott/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
-  "version": "1.0.0-beta1.{height}",
+  "version": "1.0.0",
   "publicReleaseRefSpec": [
-    "^refs/tags/v\\d+\\.\\d+" // we also release tags starting with vN.N
+    "^refs/tags/veldrid.virtualreality-v\\d+\\.\\d+"
   ],
   "cloudBuild": {
     "buildNumber": {

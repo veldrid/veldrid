@@ -162,13 +162,19 @@ namespace Veldrid.Tests
         private readonly Sdl2Window _window;
         private readonly GraphicsDevice _gd;
         private readonly DisposeCollectorResourceFactory _factory;
+        private readonly RenderDoc _renderDoc;
 
         public GraphicsDevice GD => _gd;
         public ResourceFactory RF => _factory;
         public Sdl2Window Window => _window;
+        public RenderDoc RenderDoc => _renderDoc;
 
         public GraphicsDeviceTestBase()
         {
+            if (RenderDoc.Load(out _renderDoc))
+            {
+                _renderDoc.DebugOutputMute = false;
+            }
             Activator.CreateInstance<T>().CreateGraphicsDevice(out _window, out _gd);
             _factory = new DisposeCollectorResourceFactory(_gd.ResourceFactory);
         }

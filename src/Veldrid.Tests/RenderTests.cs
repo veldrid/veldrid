@@ -820,7 +820,7 @@ namespace Veldrid.Tests
             Pipeline graphicsPipeline = RF.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
-                RasterizerStateDescription.Default,
+                RasterizerStateDescription.CullNone,
                 PrimitiveTopology.TriangleStrip,
                 new ShaderSetDescription(
                     Array.Empty<VertexLayoutDescription>(),

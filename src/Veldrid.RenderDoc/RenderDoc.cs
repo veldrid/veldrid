@@ -171,8 +171,8 @@ namespace Veldrid
         /// </summary>
         public bool DebugOutputMute
         {
-            get => _api.GetCaptureOptionU32(RENDERDOC_CaptureOption.CaptureAllCmdLists) != 0;
-            set => _api.SetCaptureOptionU32(RENDERDOC_CaptureOption.CaptureAllCmdLists, value ? 1u : 0u);
+            get => _api.GetCaptureOptionU32(RENDERDOC_CaptureOption.DebugOutputMute) != 0;
+            set => _api.SetCaptureOptionU32(RENDERDOC_CaptureOption.DebugOutputMute, value ? 1u : 0u);
         }
 
         /// <summary>

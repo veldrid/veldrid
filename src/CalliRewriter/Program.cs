@@ -97,6 +97,8 @@ namespace Veldrid.OpenGLBinding
                 string libName = group.Key;
                 string libClassName = GetClassName(libName);
                 TypeDefinition libHolder = new TypeDefinition("_Internal", libClassName, TypeAttributes.Sealed | TypeAttributes.Abstract);
+                libHolder.IsPublic = true;
+                libHolder.BaseType = module.TypeSystem.Object;
                 module.Types.Add(libHolder);
 
                 MethodAttributes staticConstructorAttributes =
@@ -111,7 +113,7 @@ namespace Veldrid.OpenGLBinding
                 libHolder.IsBeforeFieldInit = false;
                 ILProcessor libHolderIL = libHolderCctor.Body.GetILProcessor();
 
-                FieldDefinition nativeLibField = new FieldDefinition("s_nativeLibrary", FieldAttributes.Static | FieldAttributes.Assembly, s_nativeLibTypeRef);
+                FieldDefinition nativeLibField = new FieldDefinition("s_nativeLibrary", FieldAttributes.Static | FieldAttributes.Private, s_nativeLibTypeRef);
                 libHolder.Fields.Add(nativeLibField);
                 libHolderIL.Emit(OpCodes.Ldstr, libName);
                 libHolderIL.Emit(OpCodes.Call, s_loadLibraryRef);
@@ -123,7 +125,7 @@ namespace Veldrid.OpenGLBinding
                     FieldDefinition field = libHolder.Fields.SingleOrDefault(fd => fd.Name == functionPtrName);
                     if (field == null)
                     {
-                        field = new FieldDefinition(functionPtrName, FieldAttributes.Static | FieldAttributes.Private, s_intPtrRef);
+                        field = new FieldDefinition(functionPtrName, FieldAttributes.Static | FieldAttributes.Public, s_intPtrRef);
                         libHolder.Fields.Add(field);
 
                         libHolderIL.Emit(OpCodes.Ldsfld, nativeLibField);

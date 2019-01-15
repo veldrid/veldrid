@@ -12,25 +12,27 @@ namespace Veldrid.OpenGLBinding
 {
     public class Program
     {
-        private static readonly HashSet<string> s_nativeLibs = new HashSet<string>();
-        private static readonly List<(string nativeLib, string function, FieldDefinition field)> s_initializedFields
-            = new List<(string nativeLib, string function, FieldDefinition field)>();
+        private static readonly List<(string lib, string function)> s_functionsToLoad = new List<(string lib, string function)>();
 
         private static TypeDefinition s_calliTargetRef;
         private static TypeReference s_intPtrRef;
+        private static TypeDefinition s_calliHelperRef;
+        private static MethodDefinition s_loadLibraryRef;
+        private static TypeReference s_nativeLibTypeRef;
+        private static MethodDefinition s_loadFunctionRef;
 
         public static int Main(string[] args)
         {
-            string vkDllPath = null;
+            string inputpath = null;
             string outputPath = null;
             bool copiedToTemp = false;
             ArgumentSyntax s = ArgumentSyntax.Parse(args, syntax =>
             {
-                syntax.DefineOption("in", ref vkDllPath, "The location of the assembly to rewrite.");
+                syntax.DefineOption("in", ref inputpath, "The location of the assembly to rewrite.");
                 syntax.DefineOption("out", ref outputPath, "The output location of the rewritten DLL. If not specified, the DLL is rewritten in-place.");
             });
 
-            if (vkDllPath == null)
+            if (inputpath == null)
             {
                 Console.WriteLine("Error: --in is required.");
                 Console.WriteLine(s.GetHelpText());
@@ -38,21 +40,21 @@ namespace Veldrid.OpenGLBinding
             }
             if (outputPath == null)
             {
-                outputPath = vkDllPath + ".new";
+                outputPath = inputpath;
                 string copyPath = Path.GetTempFileName();
-                File.Copy(vkDllPath, copyPath, overwrite: true);
-                vkDllPath = copyPath;
+                File.Copy(inputpath, copyPath, overwrite: true);
+                inputpath = copyPath;
                 copiedToTemp = true;
             }
             try
             {
-                Rewrite(vkDllPath, outputPath);
+                Rewrite(inputpath, outputPath);
             }
             finally
             {
                 if (copiedToTemp)
                 {
-                    File.Delete(vkDllPath);
+                    File.Delete(inputpath);
                 }
             }
             return 0;
@@ -65,54 +67,100 @@ namespace Veldrid.OpenGLBinding
                 ModuleDefinition mainModule = dll.Modules[0];
                 s_calliTargetRef = mainModule.GetType("Veldrid.MetalBindings.CalliTargetAttribute");
                 s_intPtrRef = mainModule.TypeSystem.IntPtr;
+                s_calliHelperRef = mainModule.GetType("Veldrid.MetalBindings.CalliRewriteHelper");
+                s_loadLibraryRef = s_calliHelperRef.Methods.Single(md => md.Name == "LoadLibrary");
+                s_nativeLibTypeRef = s_loadLibraryRef.ReturnType;
+                s_loadFunctionRef = s_calliHelperRef.Methods.Single(md => md.Name == "LoadFunction");
+
+                foreach (TypeDefinition type in mainModule.Types)
+                {
+                    DiscoverNativeLibs(type);
+                }
+
+                CreateLibraryLoaders(mainModule);
 
                 foreach (TypeDefinition type in mainModule.Types)
                 {
                     ProcessType(type);
                 }
 
-                CreateStaticInitializers(mainModule);
-
                 dll.Write(outputPath);
             }
         }
 
-        private static void CreateStaticInitializers(ModuleDefinition module)
+        private static void CreateLibraryLoaders(ModuleDefinition module)
         {
-            TypeDefinition libHolder = new TypeDefinition("_Internal", "_NativeLibraries", TypeAttributes.Sealed | TypeAttributes.Abstract);
-            module.Types.Add(libHolder);
+            IEnumerable<IGrouping<string, (string lib, string function)>> groups = s_functionsToLoad.GroupBy(pair => pair.lib);
 
-            MethodAttributes staticConstructorAttributes =
-                MethodAttributes.Private |
-                MethodAttributes.HideBySig |
-                MethodAttributes.SpecialName |
-                MethodAttributes.RTSpecialName |
-                MethodAttributes.Static;
-
-            MethodDefinition staticConstructor = new MethodDefinition(".cctor", staticConstructorAttributes, module.TypeSystem.Void);
-            libHolder.Methods.Add(staticConstructor);
-            libHolder.IsBeforeFieldInit = false;
-            ILProcessor il = staticConstructor.Body.GetILProcessor();
-
-            IEnumerable<IGrouping<string, (string nativeLib, string function, FieldDefinition field)>> groups
-                = s_initializedFields.GroupBy(tup => tup.nativeLib);
-            foreach (IGrouping<string, (string nativeLib, string function, FieldDefinition field)> group in groups)
+            foreach (IGrouping<string, (string lib, string function)> group in groups)
             {
                 string libName = group.Key;
-                string libFieldName = GetFieldName(libName);
-                FieldDefinition field = new FieldDefinition(libFieldName, FieldAttributes.Static | FieldAttributes.Assembly, module.TypeSystem.IntPtr);
-                libHolder.Fields.Add(field);
-                il.Emit(OpCodes.Ldc_I4_5);
-                il.Emit(OpCodes.Conv_I);
-                il.Emit(OpCodes.Stsfld, field);
-                il.Emit(OpCodes.Ret);
-                //il.Emit(OpCodes.Stsfld, libFieldName);
+                string libClassName = GetClassName(libName);
+                TypeDefinition libHolder = new TypeDefinition("_Internal", libClassName, TypeAttributes.Sealed | TypeAttributes.Abstract);
+                module.Types.Add(libHolder);
+
+                MethodAttributes staticConstructorAttributes =
+                    MethodAttributes.Private |
+                    MethodAttributes.HideBySig |
+                    MethodAttributes.SpecialName |
+                    MethodAttributes.RTSpecialName |
+                    MethodAttributes.Static;
+
+                MethodDefinition libHolderCctor = new MethodDefinition(".cctor", staticConstructorAttributes, module.TypeSystem.Void);
+                libHolder.Methods.Add(libHolderCctor);
+                libHolder.IsBeforeFieldInit = false;
+                ILProcessor libHolderIL = libHolderCctor.Body.GetILProcessor();
+
+                FieldDefinition nativeLibField = new FieldDefinition("s_nativeLibrary", FieldAttributes.Static | FieldAttributes.Assembly, s_nativeLibTypeRef);
+                libHolder.Fields.Add(nativeLibField);
+                libHolderIL.Emit(OpCodes.Ldstr, libName);
+                libHolderIL.Emit(OpCodes.Call, s_loadLibraryRef);
+                libHolderIL.Emit(OpCodes.Stsfld, nativeLibField);
+
+                foreach ((string lib, string function) in group)
+                {
+                    string functionPtrName = GetFunctionPointerFieldName(function);
+                    FieldDefinition field = libHolder.Fields.SingleOrDefault(fd => fd.Name == functionPtrName);
+                    if (field == null)
+                    {
+                        field = new FieldDefinition(functionPtrName, FieldAttributes.Static | FieldAttributes.Private, s_intPtrRef);
+                        libHolder.Fields.Add(field);
+
+                        libHolderIL.Emit(OpCodes.Ldsfld, nativeLibField);
+                        libHolderIL.Emit(OpCodes.Ldstr, function);
+                        libHolderIL.Emit(OpCodes.Call, s_loadFunctionRef);
+                        libHolderIL.Emit(OpCodes.Stsfld, field);
+                    }
+                }
+
+                libHolderIL.Emit(OpCodes.Ret);
             }
         }
 
-        private static string GetFieldName(string libName)
+        private static string GetClassName(string libName)
         {
-            return "s_" + libName.Replace('\\', '_').Replace('/', '_').Replace('.', '_');
+            return "LibHolder_" + libName.Replace('\\', '_').Replace('/', '_').Replace('.', '_');
+        }
+
+        private static string GetFunctionPointerFieldName(string function)
+        {
+            return $"{function}_ptr";
+        }
+
+        private static void DiscoverNativeLibs(TypeDefinition type)
+        {
+            foreach (MethodDefinition method in type.Methods)
+            {
+                DiscoverNativeLibs(method);
+            }
+        }
+
+        private static void DiscoverNativeLibs(MethodDefinition method)
+        {
+            if (method.CustomAttributes.Any(ca => ca.AttributeType == s_calliTargetRef))
+            {
+                s_functionsToLoad.Add((method.PInvokeInfo.Module.Name, method.PInvokeInfo.EntryPoint));
+            }
         }
 
         private static void ProcessType(TypeDefinition type)
@@ -130,7 +178,6 @@ namespace Veldrid.OpenGLBinding
                 MethodCallingConvention callingConvention = GetCallConv(method.PInvokeInfo);
                 string nativeLib = method.PInvokeInfo.Module.Name;
                 string entryPoint = method.PInvokeInfo.EntryPoint;
-                s_nativeLibs.Add(nativeLib);
                 method.IsPInvokeImpl = false;
                 method.Body = new MethodBody(method);
                 ILProcessor processor = method.Body.GetILProcessor();
@@ -177,13 +224,10 @@ namespace Veldrid.OpenGLBinding
                 }
             }
 
-            string functionPtrName = method.Name + "_ptr";
-            FieldDefinition field = new FieldDefinition(functionPtrName, FieldAttributes.Static | FieldAttributes.Private, s_intPtrRef);
-            method.DeclaringType.Fields.Add(field);
+            TypeDefinition libHolderType = method.Module.GetType("_Internal", GetClassName(nativeLib));
+            FieldDefinition libField = libHolderType.Fields.Single(fd => fd.Name == GetFunctionPointerFieldName(entryPoint));
 
-            s_initializedFields.Add((nativeLib, entryPoint, field));
-
-            il.Emit(OpCodes.Ldsfld, field);
+            il.Emit(OpCodes.Ldsfld, libField);
 
             CallSite callSite = new CallSite(method.ReturnType)
             {

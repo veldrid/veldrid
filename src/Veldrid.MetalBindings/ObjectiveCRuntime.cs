@@ -8,7 +8,7 @@ namespace Veldrid.MetalBindings
     {
         private const string ObjCLibrary = "/usr/lib/libobjc.A.dylib";
 
-        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend"), CalliTarget]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector);
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector, float a);

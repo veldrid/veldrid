@@ -7,6 +7,17 @@
 
   <ItemGroup>
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0" />
+    <ProjectReference Include="../CalliRewriter/CalliRewriter.csproj" 
+                      ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <RewriterExecutable>$(BinDir)/$(Configuration)/CalliRewriter/netcoreapp2.0/CalliRewriter.dll</RewriterExecutable>
+  </PropertyGroup>
+  <Target Name="RewriteCalliStubs"> <!-- AfterTargets="Build" -->
+    <Message Text="Rewriting calli stubs." />
+    <Exec Command="dotnet $(RewriterExecutable) --in $(TargetPath)" />
+  </Target>
 </Project>

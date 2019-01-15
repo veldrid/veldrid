@@ -182,6 +182,7 @@ namespace Veldrid.OpenGLBinding
                 string entryPoint = method.PInvokeInfo.EntryPoint;
                 method.IsPInvokeImpl = false;
                 method.Body = new MethodBody(method);
+                method.ImplAttributes |= MethodImplAttributes.AggressiveInlining;
                 ILProcessor processor = method.Body.GetILProcessor();
                 RewriteMethod(method, nativeLib, entryPoint, callingConvention);
                 method.CustomAttributes.Remove(method.CustomAttributes.Single(ca => ca.AttributeType == s_calliTargetRef));

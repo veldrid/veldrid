@@ -186,6 +186,7 @@ namespace Veldrid.D3D11
             }
 
             DeviceCommandList = _context.FinishCommandList(false);
+            DeviceCommandList.DebugName = _name;
             ResetManagedState();
             _begun = false;
         }

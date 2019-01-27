@@ -107,6 +107,7 @@ namespace Veldrid.NeoDemo
 
             Vector3 lightPos = sc.DirectionalLight.Transform.Position - sc.DirectionalLight.Direction * 1000f;
             // Near
+            cl.PushDebugGroup("Shadow Map - Near Cascade");
             Matrix4x4 viewProj0 = UpdateDirectionalLightMatrices(
                 gd,
                 sc,
@@ -119,8 +120,10 @@ namespace Veldrid.NeoDemo
             cl.SetFullViewports();
             cl.ClearDepthStencil(depthClear);
             Render(gd, cl, sc, RenderPasses.ShadowMapNear, lightFrustum, lightPos, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            cl.PopDebugGroup();
 
             // Mid
+            cl.PushDebugGroup("Shadow Map - Mid Cascade");
             Matrix4x4 viewProj1 = UpdateDirectionalLightMatrices(
                 gd,
                 sc,
@@ -133,8 +136,10 @@ namespace Veldrid.NeoDemo
             cl.SetFullViewports();
             cl.ClearDepthStencil(depthClear);
             Render(gd, cl, sc, RenderPasses.ShadowMapMid, lightFrustum, lightPos, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            cl.PopDebugGroup();
 
             // Far
+            cl.PushDebugGroup("Shadow Map - Far Cascade");
             Matrix4x4 viewProj2 = UpdateDirectionalLightMatrices(
                 gd,
                 sc,
@@ -147,8 +152,10 @@ namespace Veldrid.NeoDemo
             cl.SetFullViewports();
             cl.ClearDepthStencil(depthClear);
             Render(gd, cl, sc, RenderPasses.ShadowMapFar, lightFrustum, lightPos, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            cl.PopDebugGroup();
 
             // Reflections
+            cl.PushDebugGroup("Planar Reflection Map");
             cl.SetFramebuffer(sc.ReflectionFramebuffer);
             float fbWidth = sc.ReflectionFramebuffer.Width;
             float fbHeight = sc.ReflectionFramebuffer.Height;
@@ -176,8 +183,10 @@ namespace Veldrid.NeoDemo
             Render(gd, cl, sc, RenderPasses.ReflectionMap, cameraFrustum, _camera.Position, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             cl.GenerateMipmaps(sc.ReflectionColorTexture);
+            cl.PopDebugGroup();
 
             // Main scene
+            cl.PushDebugGroup("Main Scene Pass");
             cl.SetFramebuffer(sc.MainSceneFramebuffer);
             fbWidth = sc.MainSceneFramebuffer.Width;
             fbHeight = sc.MainSceneFramebuffer.Height;
@@ -188,25 +197,34 @@ namespace Veldrid.NeoDemo
             sc.UpdateCameraBuffers(cl); // Re-set because reflection step changed it.
             cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
             Render(gd, cl, sc, RenderPasses.Standard, cameraFrustum, _camera.Position, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            cl.PopDebugGroup();
+            cl.PushDebugGroup("Transparent Pass");
             Render(gd, cl, sc, RenderPasses.AlphaBlend, cameraFrustum, _camera.Position, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            cl.PopDebugGroup();
+            cl.PushDebugGroup("Overlay");
             Render(gd, cl, sc, RenderPasses.Overlay, cameraFrustum, _camera.Position, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            cl.PopDebugGroup();
 
             if (sc.MainSceneColorTexture.SampleCount != TextureSampleCount.Count1)
             {
                 cl.ResolveTexture(sc.MainSceneColorTexture, sc.MainSceneResolvedColorTexture);
             }
 
+            cl.PushDebugGroup("Duplicator");
             cl.SetFramebuffer(sc.DuplicatorFramebuffer);
             fbWidth = sc.DuplicatorFramebuffer.Width;
             fbHeight = sc.DuplicatorFramebuffer.Height;
             cl.SetFullViewports();
             Render(gd, cl, sc, RenderPasses.Duplicator, new BoundingFrustum(), _camera.Position, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            cl.PopDebugGroup();
 
+            cl.PushDebugGroup("Swapchain Pass");
             cl.SetFramebuffer(gd.SwapchainFramebuffer);
             fbWidth = gd.SwapchainFramebuffer.Width;
             fbHeight = gd.SwapchainFramebuffer.Height;
             cl.SetFullViewports();
             Render(gd, cl, sc, RenderPasses.SwapchainOutput, new BoundingFrustum(), _camera.Position, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
+            cl.PopDebugGroup();
 
             cl.End();
 

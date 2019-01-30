@@ -113,7 +113,6 @@ namespace Veldrid
             _vertexBuffer.Name = "ImGui.NET Vertex Buffer";
             _indexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer | BufferUsage.Dynamic));
             _indexBuffer.Name = "ImGui.NET Index Buffer";
-            RecreateFontDeviceTexture(gd);
 
             _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             _projMatrixBuffer.Name = "ImGui.NET Projection Buffer";
@@ -159,7 +158,7 @@ namespace Veldrid
                 _projMatrixBuffer,
                 gd.PointSampler));
 
-            _fontTextureResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_textureLayout, _fontTextureView));
+            RecreateFontDeviceTexture(gd);
         }
 
         /// <summary>
@@ -292,6 +291,11 @@ namespace Veldrid
         /// <summary>
         /// Recreates the device texture used to render text.
         /// </summary>
+        public unsafe void RecreateFontDeviceTexture() => RecreateFontDeviceTexture(_gd);
+
+        /// <summary>
+        /// Recreates the device texture used to render text.
+        /// </summary>
         public unsafe void RecreateFontDeviceTexture(GraphicsDevice gd)
         {
             ImGuiIOPtr io = ImGui.GetIO();
@@ -322,6 +326,7 @@ namespace Veldrid
                 0,
                 0);
             _fontTextureView = gd.ResourceFactory.CreateTextureView(_fontTexture);
+            _fontTextureResourceSet = gd.ResourceFactory.CreateResourceSet(new ResourceSetDescription(_textureLayout, _fontTextureView));
 
             io.Fonts.ClearTexData();
         }
@@ -584,6 +589,7 @@ namespace Veldrid
             _textureLayout.Dispose();
             _pipeline.Dispose();
             _mainResourceSet.Dispose();
+            _fontTextureResourceSet.Dispose();
 
             foreach (IDisposable resource in _ownedResources)
             {

@@ -305,6 +305,7 @@ namespace Veldrid
             // Store our identifier
             io.Fonts.SetTexID(_fontAtlasID);
 
+            _fontTexture?.Dispose();
             _fontTexture = gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
                 (uint)width,
                 (uint)height,
@@ -325,7 +326,11 @@ namespace Veldrid
                 1,
                 0,
                 0);
+
+            _fontTextureView?.Dispose();
             _fontTextureView = gd.ResourceFactory.CreateTextureView(_fontTexture);
+
+            _fontTextureResourceSet?.Dispose();
             _fontTextureResourceSet = gd.ResourceFactory.CreateResourceSet(new ResourceSetDescription(_textureLayout, _fontTextureView));
 
             io.Fonts.ClearTexData();

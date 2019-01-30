@@ -24,7 +24,6 @@ namespace Veldrid
         private DeviceBuffer _indexBuffer;
         private DeviceBuffer _projMatrixBuffer;
         private Texture _fontTexture;
-        private TextureView _fontTextureView;
         private Shader _vertexShader;
         private Shader _fragmentShader;
         private ResourceLayout _layout;
@@ -327,11 +326,8 @@ namespace Veldrid
                 0,
                 0);
 
-            _fontTextureView?.Dispose();
-            _fontTextureView = gd.ResourceFactory.CreateTextureView(_fontTexture);
-
             _fontTextureResourceSet?.Dispose();
-            _fontTextureResourceSet = gd.ResourceFactory.CreateResourceSet(new ResourceSetDescription(_textureLayout, _fontTextureView));
+            _fontTextureResourceSet = gd.ResourceFactory.CreateResourceSet(new ResourceSetDescription(_textureLayout, _fontTexture));
 
             io.Fonts.ClearTexData();
         }
@@ -587,7 +583,6 @@ namespace Veldrid
             _indexBuffer.Dispose();
             _projMatrixBuffer.Dispose();
             _fontTexture.Dispose();
-            _fontTextureView.Dispose();
             _vertexShader.Dispose();
             _fragmentShader.Dispose();
             _layout.Dispose();

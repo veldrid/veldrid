@@ -1,4 +1,5 @@
 ﻿using NativeLibraryLoader;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -73,5 +74,9 @@ namespace Veldrid.Sdl2
         private static SDL_ClearError_t s_sdl_clearError = LoadFunction<SDL_ClearError_t>("SDL_ClearError");
         public static byte* SDL_ClearError() { s_sdl_clearError(); return null; }
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void SDL_free_t(void* ptr);
+        private static SDL_free_t s_sdl_free = LoadFunction<SDL_free_t>("SDL_free");
+        public static void SDL_free(void* ptr) { s_sdl_free(ptr); }
     }
 }

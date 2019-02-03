@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -330,7 +331,12 @@ namespace Veldrid.Sdl2
         /// <summary>
         /// text/plain drag-and-drop event
         /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         DropTest,
+        /// <summary>
+        /// text/plain drag-and-drop event
+        /// </summary>
+        DropText = DropTest,
         /// <summary>
         /// A new set of drops is beginning (NULL filename) 
         /// </summary>
@@ -567,5 +573,19 @@ namespace Veldrid.Sdl2
         /// The input text.
         /// </summary>
         public fixed byte text[MaxTextSize];
+    }
+
+    public unsafe struct SDL_DropEvent
+    {
+        /// <summary>
+        /// SDL_DROPFILE, SDL_DROPTEXT, SDL_DROPBEGIN, or SDL_DROPCOMPLETE.
+        /// </summary>
+        public SDL_EventType type;
+        /// <summary>timestamp of the event.</summary>
+        public uint timestamp;
+        /// <summary>the file name, which should be freed with SDL_free(), is NULL on BEGIN/COMPLETE</summary>
+        public byte* file;
+        /// <summary>the window that was dropped on, if any</summary>
+        public uint windowID;
     }
 }

@@ -66,6 +66,20 @@ namespace Veldrid.NeoDemo
                 out _gd);
             _window.Resized += () => _windowResized = true;
 
+            void OnDragDrop(DragDropEvent ev)
+            {
+                Console.WriteLine($"File dropped: {ev.File}");
+            }
+
+            _window.DragDrop += OnDragDrop;
+
+            void ProcessorTest(ref SDL_Event ev)
+            {
+                Console.WriteLine($"Got a {ev.type} @ {ev.timestamp}");
+            }
+
+            Sdl2Events.Subscribe(ProcessorTest);
+
             _scene = new Scene(_gd, _window.Width, _window.Height);
 
             _sc.SetCurrentScene(_scene);

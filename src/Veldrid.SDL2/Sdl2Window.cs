@@ -70,7 +70,7 @@ namespace Veldrid.Sdl2
             {
                 _window = SDL_CreateWindow(title, x, y, width, height, flags);
                 WindowID = SDL_GetWindowID(_window);
-                Sdl2EventProcessor.RegisterWindow(this);
+                Sdl2WindowRegistry.RegisterWindow(this);
                 PostWindowCreated(flags);
             }
         }
@@ -97,7 +97,7 @@ namespace Veldrid.Sdl2
             {
                 _window = SDL_CreateWindowFrom(windowHandle);
                 WindowID = SDL_GetWindowID(_window);
-                Sdl2EventProcessor.RegisterWindow(this);
+                Sdl2WindowRegistry.RegisterWindow(this);
                 PostWindowCreated(0);
             }
         }
@@ -260,6 +260,7 @@ namespace Veldrid.Sdl2
         public event Action<MouseEvent> MouseUp;
         public event Action<KeyEvent> KeyDown;
         public event Action<KeyEvent> KeyUp;
+        public event Action<DragDropEvent> DragDrop;
 
         public Point ClientToScreen(Point p)
         {
@@ -294,7 +295,7 @@ namespace Veldrid.Sdl2
 
         private void CloseCore()
         {
-            Sdl2EventProcessor.RemoveWindow(this);
+            Sdl2WindowRegistry.RemoveWindow(this);
             Closing?.Invoke();
             SDL_DestroyWindow(_window);
             _exists = false;
@@ -306,7 +307,7 @@ namespace Veldrid.Sdl2
             WindowParams wp = (WindowParams)state;
             _window = wp.Create();
             WindowID = SDL_GetWindowID(_window);
-            Sdl2EventProcessor.RegisterWindow(this);
+            Sdl2WindowRegistry.RegisterWindow(this);
             PostWindowCreated(wp.WindowFlags);
             wp.ResetEvent.Set();
 
@@ -377,23 +378,20 @@ namespace Veldrid.Sdl2
         {
             CheckNewWindowTitle();
 
-            lock (Sdl2EventProcessor.Lock)
+            Sdl2Events.ProcessEvents();
+            for (int i = 0; i < _events.Count; i++)
             {
-                Sdl2EventProcessor.PumpEvents();
-                for (int i = 0; i < _events.Count; i++)
+                SDL_Event ev = _events[i];
+                if (eventHandler == null)
                 {
-                    SDL_Event ev = _events[i];
-                    if (eventHandler == null)
-                    {
-                        HandleEvent(&ev);
-                    }
-                    else
-                    {
-                        eventHandler(ref ev);
-                    }
+                    HandleEvent(&ev);
                 }
-                _events.Clear();
+                else
+                {
+                    eventHandler(ref ev);
+                }
             }
+            _events.Clear();
         }
 
         public void PumpEvents(SDLEventHandler eventHandler)
@@ -441,65 +439,11 @@ namespace Veldrid.Sdl2
                     SDL_MouseWheelEvent mouseWheelEvent = Unsafe.Read<SDL_MouseWheelEvent>(ev);
                     HandleMouseWheelEvent(mouseWheelEvent);
                     break;
-                case SDL_EventType.JoyAxisMotion:
-                    break;
-                case SDL_EventType.JoyBallMotion:
-                    break;
-                case SDL_EventType.JoyHatMotion:
-                    break;
-                case SDL_EventType.JoyButtonDown:
-                    break;
-                case SDL_EventType.JoyButtonUp:
-                    break;
-                case SDL_EventType.JoyDeviceAdded:
-                    break;
-                case SDL_EventType.JoyDeviceRemoved:
-                    break;
-                case SDL_EventType.ControllerAxisMotion:
-                    break;
-                case SDL_EventType.ControllerButtonDown:
-                    break;
-                case SDL_EventType.ControllerButtonUp:
-                    break;
-                case SDL_EventType.ControllerDeviceAdded:
-                    break;
-                case SDL_EventType.ControllerDeviceRemoved:
-                    break;
-                case SDL_EventType.ControllerDeviceRemapped:
-                    break;
-                case SDL_EventType.FingerDown:
-                    break;
-                case SDL_EventType.FingerUp:
-                    break;
-                case SDL_EventType.FingerMotion:
-                    break;
-                case SDL_EventType.DollarGesture:
-                    break;
-                case SDL_EventType.DollarRecord:
-                    break;
-                case SDL_EventType.MultiGesture:
-                    break;
-                case SDL_EventType.ClipboardUpdate:
-                    break;
                 case SDL_EventType.DropFile:
-                    break;
-                case SDL_EventType.DropTest:
-                    break;
                 case SDL_EventType.DropBegin:
-                    break;
-                case SDL_EventType.DropComplete:
-                    break;
-                case SDL_EventType.AudioDeviceAdded:
-                    break;
-                case SDL_EventType.AudioDeviceRemoved:
-                    break;
-                case SDL_EventType.RenderTargetsReset:
-                    break;
-                case SDL_EventType.RenderDeviceReset:
-                    break;
-                case SDL_EventType.UserEvent:
-                    break;
-                case SDL_EventType.LastEvent:
+                case SDL_EventType.DropTest:
+                    SDL_DropEvent dropEvent = Unsafe.Read<SDL_DropEvent>(ev);
+                    HandleDropEvent(dropEvent);
                     break;
                 default:
                     // Ignore
@@ -541,6 +485,17 @@ namespace Veldrid.Sdl2
         {
             _privateSnapshot.WheelDelta += mouseWheelEvent.y;
             MouseWheel?.Invoke(new MouseWheelEventArgs(GetCurrentMouseState(), (float)mouseWheelEvent.y));
+        }
+
+        private void HandleDropEvent(SDL_DropEvent dropEvent)
+        {
+            string file = Utilities.GetString(dropEvent.file);
+            SDL_free(dropEvent.file);
+
+            if (dropEvent.type == SDL_EventType.DropFile)
+            {
+                DragDrop?.Invoke(new DragDropEvent(file));
+            }
         }
 
         private void HandleMouseButtonEvent(SDL_MouseButtonEvent mouseButtonEvent)

@@ -37,12 +37,16 @@ namespace Veldrid.Sdl2
         private bool[] _currentMouseButtonStates = new bool[13];
         private Vector2 _currentMouseDelta;
 
+        // Mouse lock state
+        private Vector2? _lockedMousePos;
+
         // Cached Sdl2Window state (for threaded processing)
         private BufferedValue<Point> _cachedPosition = new BufferedValue<Point>();
         private BufferedValue<Point> _cachedSize = new BufferedValue<Point>();
         private string _cachedWindowTitle;
         private bool _newWindowTitleReceived;
         private bool _firstMouseEvent = true;
+        private Vector2 _warpAccum;
 
         public Sdl2Window(string title, int x, int y, int width, int height, SDL_WindowFlags flags, bool threadedProcessing)
         {
@@ -280,6 +284,16 @@ namespace Veldrid.Sdl2
 
         public Vector2 MouseDelta => _currentMouseDelta;
 
+        public void LockCursor() => LockCursor(new Vector2(_currentMouseX, _currentMouseY));
+        public void LockCursor(Vector2 position)
+        {
+            _lockedMousePos = position;
+        }
+
+        public void UnlockCursor() => _lockedMousePos = null;
+
+        public bool CursorLocked => _lockedMousePos != null;
+
         public void Close()
         {
             if (_threadedProcessing)
@@ -393,6 +407,18 @@ namespace Veldrid.Sdl2
                     }
                 }
                 _events.Clear();
+            }
+
+            _currentMouseDelta -= _warpAccum;
+            _warpAccum = Vector2.Zero;
+
+            if (_lockedMousePos != null)
+            {
+                Vector2 mousePos = new Vector2(_currentMouseX, _currentMouseY);
+                Vector2 lockedPos = _lockedMousePos.Value;
+                Vector2 warpAmount = lockedPos - mousePos;
+                _warpAccum += warpAmount;
+                SDL_WarpMouseInWindow(_window, (int)lockedPos.X, (int)lockedPos.Y);
             }
         }
 
@@ -583,7 +609,7 @@ namespace Veldrid.Sdl2
         private void HandleMouseMotionEvent(SDL_MouseMotionEvent mouseMotionEvent)
         {
             Vector2 mousePos = new Vector2(mouseMotionEvent.x, mouseMotionEvent.y);
-            Vector2 delta = new Vector2(mouseMotionEvent.x - _currentMouseX, mouseMotionEvent.y - _currentMouseY);
+            Vector2 delta = new Vector2(mouseMotionEvent.xrel, mouseMotionEvent.yrel);
             _currentMouseX = (int)mousePos.X;
             _currentMouseY = (int)mousePos.Y;
             _privateSnapshot.MousePosition = mousePos;

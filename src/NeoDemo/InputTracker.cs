@@ -15,7 +15,10 @@ namespace Veldrid.NeoDemo
         private static HashSet<MouseButton> _newMouseButtonsThisFrame = new HashSet<MouseButton>();
 
         public static Vector2 MousePosition;
+
+        public static Vector2 MouseDelta { get; private set; }
         public static InputSnapshot FrameSnapshot { get; private set; }
+        public static bool IsCursorCaptured { get; internal set; }
 
         public static bool GetKey(Key key)
         {
@@ -37,13 +40,14 @@ namespace Veldrid.NeoDemo
             return _newMouseButtonsThisFrame.Contains(button);
         }
 
-        public static void UpdateFrameInput(InputSnapshot snapshot)
+        public static void UpdateFrameInput(InputSnapshot snapshot, Sdl2Window window)
         {
             FrameSnapshot = snapshot;
             _newKeysThisFrame.Clear();
             _newMouseButtonsThisFrame.Clear();
 
             MousePosition = snapshot.MousePosition;
+            MouseDelta = window.MouseDelta;
             for (int i = 0; i < snapshot.KeyEvents.Count; i++)
             {
                 KeyEvent ke = snapshot.KeyEvents[i];

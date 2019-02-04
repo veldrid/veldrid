@@ -47,6 +47,8 @@
     <ProjectReference Include="..\Veldrid.ImageSharp\Veldrid.ImageSharp.csproj" />
     <ProjectReference Include="..\Veldrid.Utilities\Veldrid.Utilities.csproj" />
     <ProjectReference Include="..\Veldrid.ImGui\Veldrid.ImGui.csproj" />
+
+    <PackageReference Include="PInvoke.User32" Version="0.5.184" />
   </ItemGroup>
 
 </Project>

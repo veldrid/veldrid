@@ -9,6 +9,8 @@ using Veldrid.NeoDemo.Objects;
 using Veldrid.StartupUtilities;
 using Veldrid.Utilities;
 using Veldrid.Sdl2;
+using PInvoke;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.NeoDemo
 {
@@ -50,7 +52,7 @@ namespace Veldrid.NeoDemo
                 WindowInitialState = WindowState.Normal,
                 WindowTitle = "Veldrid NeoDemo"
             };
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true, _colorSrgb);
+            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true, _colorSrgb);
 #if DEBUG
             gdOptions.Debug = true;
 #endif
@@ -111,6 +113,20 @@ namespace Veldrid.NeoDemo
 
             CreateAllObjects();
             ImGui.StyleColorsClassic();
+
+            //User32.INPUT[] inputs = new User32.INPUT[1];
+            //inputs[0].type = User32.InputType.INPUT_MOUSE;
+            //System.Threading.Tasks.Task.Run(() =>
+            //{
+            //    while (_window.Exists)
+            //    {
+            //        inputs[0].Inputs.mi.dx = (int)(10 * Math.Cos(Environment.TickCount / 1000));
+            //        inputs[0].Inputs.mi.dwFlags = User32.MOUSEEVENTF.MOUSEEVENTF_MOVE;
+            //        User32.SendInput(1, inputs, Unsafe.SizeOf<User32.INPUT>());
+
+            //        System.Threading.Tasks.Task.Delay(16).Wait();
+            //    }
+            //});
         }
 
         private void AddSponzaAtriumObjects()
@@ -217,7 +233,7 @@ namespace Veldrid.NeoDemo
 
                 InputSnapshot snapshot = null;
                 snapshot = _window.PumpEvents();
-                InputTracker.UpdateFrameInput(snapshot);
+                InputTracker.UpdateFrameInput(snapshot, _window);
                 Update((float)deltaSeconds);
                 if (!_window.Exists)
                 {
@@ -293,6 +309,11 @@ namespace Veldrid.NeoDemo
                     if (ImGui.MenuItem("Fullscreen", "F11", isFullscreen, true))
                     {
                         ToggleFullscreenState();
+                    }
+                    bool cursorLocked = _window.CursorLocked;
+                    if (ImGui.MenuItem("Lock Cursor", "Esc", cursorLocked))
+                    {
+                        ToggleCursorLock();
                     }
                     if (ImGui.MenuItem("Always Recreate Sdl2Window", string.Empty, _recreateWindow, true))
                     {
@@ -435,15 +456,20 @@ namespace Veldrid.NeoDemo
                     ImGui.EndMenu();
                 }
 
-
                 ImGui.Text(_fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTimeMilliseconds.ToString("#00.00 ms"));
 
                 ImGui.EndMainMenuBar();
+
+                ImGui.PlotHistogram("Mouse X Delta", ref _sc.Camera._xDeltas[0], _sc.Camera._xDeltas.Length, 0, null, -10f, 10f, new Vector2(500, 300));
             }
 
             if (InputTracker.GetKeyDown(Key.F11))
             {
                 ToggleFullscreenState();
+            }
+            if (InputTracker.GetKeyDown(Key.Escape))
+            {
+                ToggleCursorLock();
             }
 
             if (InputTracker.GetKeyDown(Key.Keypad6))
@@ -464,6 +490,21 @@ namespace Veldrid.NeoDemo
             }
 
             _window.Title = _gd.BackendType.ToString();
+        }
+
+        private void ToggleCursorLock()
+        {
+            if (!_window.CursorLocked)
+            {
+                _window.LockCursor(new Vector2(_window.Width / 2, _window.Height / 2));
+            }
+            else
+            {
+                _window.UnlockCursor();
+            }
+
+            _window.CursorVisible = !_window.CursorLocked;
+            InputTracker.IsCursorCaptured = _window.CursorLocked;
         }
 
         private void ChangeMsaa(int msaaOption)

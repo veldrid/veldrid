@@ -31,6 +31,9 @@ namespace Veldrid.NeoDemo
         public event Action<Matrix4x4> ProjectionChanged;
         public event Action<Matrix4x4> ViewChanged;
 
+        public float[] _xDeltas = new float[1000];
+        public int _frame = 0;
+
         public Camera(GraphicsDevice gd, float width, float height)
         {
             _gd = gd;
@@ -105,11 +108,11 @@ namespace Veldrid.NeoDemo
                 UpdateViewMatrix();
             }
 
-            Vector2 mouseDelta = InputTracker.MousePosition - _previousMousePos;
+            Vector2 mouseDelta = InputTracker.MouseDelta;
             _previousMousePos = InputTracker.MousePosition;
 
             if (!ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow)
-                && (InputTracker.GetMouseButton(MouseButton.Left) || InputTracker.GetMouseButton(MouseButton.Right)))
+                && (InputTracker.IsCursorCaptured || InputTracker.GetMouseButton(MouseButton.Left) || InputTracker.GetMouseButton(MouseButton.Right)))
             {
                 Yaw += -mouseDelta.X * 0.01f;
                 Pitch += -mouseDelta.Y * 0.01f;
@@ -117,6 +120,9 @@ namespace Veldrid.NeoDemo
 
                 UpdateViewMatrix();
             }
+
+            _xDeltas[_frame] = mouseDelta.X;
+            _frame = (_frame + 1) % _xDeltas.Length;
         }
 
         public void WindowResized(float width, float height)

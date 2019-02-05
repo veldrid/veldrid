@@ -108,7 +108,7 @@ namespace Veldrid.NeoDemo
             Vector2 mouseDelta = InputTracker.MousePosition - _previousMousePos;
             _previousMousePos = InputTracker.MousePosition;
 
-            if (!ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow)
+            if (!ImGui.GetIO().WantCaptureMouse
                 && (InputTracker.GetMouseButton(MouseButton.Left) || InputTracker.GetMouseButton(MouseButton.Right)))
             {
                 Yaw += -mouseDelta.X * 0.01f;

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using static Veldrid.Sdl2.Sdl2Native;
 
@@ -35,9 +36,10 @@ namespace Veldrid.Sdl2
             }
         }
 
-        private static void ProcessWindowEvent(ref SDL_Event ev)
+        private static unsafe void ProcessWindowEvent(ref SDL_Event ev)
         {
             bool handled = false;
+            uint windowID = 0;
             switch (ev.type)
             {
                 case SDL_EventType.Quit:
@@ -52,10 +54,15 @@ namespace Veldrid.Sdl2
                 case SDL_EventType.MouseButtonDown:
                 case SDL_EventType.MouseButtonUp:
                 case SDL_EventType.MouseWheel:
+                    windowID = ev.windowID;
+                    handled = true;
+                    break;
                 case SDL_EventType.DropBegin:
                 case SDL_EventType.DropComplete:
                 case SDL_EventType.DropFile:
                 case SDL_EventType.DropText:
+                    SDL_DropEvent dropEvent = Unsafe.As<SDL_Event, SDL_DropEvent>(ref ev);
+                    windowID = dropEvent.windowID;
                     handled = true;
                     break;
                 default:
@@ -63,7 +70,8 @@ namespace Veldrid.Sdl2
                     break;
             }
 
-            if (handled && _eventsByWindowID.TryGetValue(ev.windowID, out Sdl2Window window))
+
+            if (handled && _eventsByWindowID.TryGetValue(windowID, out Sdl2Window window))
             {
                 window.AddEvent(ev);
             }

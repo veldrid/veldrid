@@ -18,6 +18,5 @@ namespace Veldrid.Sdl2
         private delegate void SDL_WarpMouseInWindow_t(SDL_Window window, int x, int y);
         private static SDL_WarpMouseInWindow_t s_sdl_warpMouseInWindow = LoadFunction<SDL_WarpMouseInWindow_t>("SDL_WarpMouseInWindow");
         public static void SDL_WarpMouseInWindow(SDL_Window window, int x, int y) => s_sdl_warpMouseInWindow(window, x, y);
-
     }
 }

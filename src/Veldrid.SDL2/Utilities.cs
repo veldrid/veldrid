@@ -6,6 +6,8 @@ namespace Veldrid.Sdl2
     {
         public static unsafe string GetString(byte* stringStart)
         {
+            if (stringStart == null) { return null; }
+
             int characters = 0;
             while (stringStart[characters] != 0)
             {

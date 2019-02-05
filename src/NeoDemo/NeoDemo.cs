@@ -9,6 +9,7 @@ using Veldrid.NeoDemo.Objects;
 using Veldrid.StartupUtilities;
 using Veldrid.Utilities;
 using Veldrid.Sdl2;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.NeoDemo
 {
@@ -35,9 +36,11 @@ namespace Veldrid.NeoDemo
         private TextureSampleCount? _newSampleCount;
 
         private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
+        private readonly Sdl2ControllerTracker _controllerTracker;
         private bool _colorSrgb = true;
         private FullScreenQuad _fsq;
         public static RenderDoc _renderDoc;
+        private bool _controllerDebugMenu;
 
         public NeoDemo()
         {
@@ -60,25 +63,14 @@ namespace Veldrid.NeoDemo
                 //VeldridStartup.GetPlatformDefaultBackend(),
                 //GraphicsBackend.Metal,
                 // GraphicsBackend.Vulkan,
-                GraphicsBackend.OpenGL,
+                // GraphicsBackend.OpenGL,
                 //GraphicsBackend.OpenGLES,
                 out _window,
                 out _gd);
             _window.Resized += () => _windowResized = true;
 
-            void OnDragDrop(DragDropEvent ev)
-            {
-                Console.WriteLine($"File dropped: {ev.File}");
-            }
-
-            _window.DragDrop += OnDragDrop;
-
-            void ProcessorTest(ref SDL_Event ev)
-            {
-                Console.WriteLine($"Got a {ev.type} @ {ev.timestamp}");
-            }
-
-            Sdl2Events.Subscribe(ProcessorTest);
+            Sdl2Native.SDL_Init(SDLInitFlags.GameController);
+            Sdl2ControllerTracker.CreateDefault(out _controllerTracker);
 
             _scene = new Scene(_gd, _window.Width, _window.Height);
 
@@ -230,6 +222,9 @@ namespace Veldrid.NeoDemo
                 previousFrameTicks = currentFrameTicks;
 
                 InputSnapshot snapshot = null;
+                Sdl2Events.ProcessEvents();
+                Sdl2Events.ProcessEvents();
+                Sdl2Events.ProcessEvents();
                 snapshot = _window.PumpEvents();
                 InputTracker.UpdateFrameInput(snapshot);
                 Update((float)deltaSeconds);
@@ -374,6 +369,10 @@ namespace Veldrid.NeoDemo
                     {
                         RefreshDeviceObjects(100);
                     }
+                    if (ImGui.MenuItem("Controller State"))
+                    {
+                        _controllerDebugMenu = true;
+                    }
 
                     ImGui.EndMenu();
                 }
@@ -449,6 +448,24 @@ namespace Veldrid.NeoDemo
                     ImGui.EndMenu();
                 }
 
+                if (_controllerDebugMenu)
+                {
+                    if (ImGui.Begin("Controller State", ref _controllerDebugMenu, ImGuiWindowFlags.NoCollapse))
+                    {
+                        ImGui.Columns(2);
+                        ImGui.Text($"Name: {_controllerTracker.ControllerName}");
+                        foreach (SDL_GameControllerAxis axis in (SDL_GameControllerAxis[])Enum.GetValues(typeof(SDL_GameControllerAxis)))
+                        {
+                            ImGui.Text($"{axis}: {_controllerTracker.GetAxis(axis)}");
+                        }
+                        ImGui.NextColumn();
+                        foreach (SDL_GameControllerButton button in (SDL_GameControllerButton[])Enum.GetValues(typeof(SDL_GameControllerButton)))
+                        {
+                            ImGui.Text($"{button}: {_controllerTracker.IsPressed(button)}");
+                        }
+                    }
+                    ImGui.End();
+                }
 
                 ImGui.Text(_fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTimeMilliseconds.ToString("#00.00 ms"));
 

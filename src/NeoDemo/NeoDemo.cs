@@ -62,7 +62,7 @@ namespace Veldrid.NeoDemo
                 gdOptions,
                 //VeldridStartup.GetPlatformDefaultBackend(),
                 //GraphicsBackend.Metal,
-                // GraphicsBackend.Vulkan,
+                GraphicsBackend.Vulkan,
                 // GraphicsBackend.OpenGL,
                 //GraphicsBackend.OpenGLES,
                 out _window,
@@ -72,7 +72,7 @@ namespace Veldrid.NeoDemo
             Sdl2Native.SDL_Init(SDLInitFlags.GameController);
             Sdl2ControllerTracker.CreateDefault(out _controllerTracker);
 
-            _scene = new Scene(_gd, _window.Width, _window.Height);
+            _scene = new Scene(_gd, _window.Width, _window.Height, _controllerTracker);
 
             _sc.SetCurrentScene(_scene);
 

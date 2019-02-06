@@ -78,7 +78,7 @@ namespace Veldrid.NeoDemo
         private float Normalize(short value)
         {
             return value < 0
-                ? (value / (float)short.MinValue)
+                ? -(value / (float)short.MinValue)
                 : (value / (float)short.MaxValue);
         }
 

@@ -27,16 +27,18 @@ namespace Veldrid.NeoDemo
         private bool _useReverseDepth;
         private float _windowWidth;
         private float _windowHeight;
+        private readonly Sdl2ControllerTracker _controller;
 
         public event Action<Matrix4x4> ProjectionChanged;
         public event Action<Matrix4x4> ViewChanged;
 
-        public Camera(GraphicsDevice gd, float width, float height)
+        public Camera(GraphicsDevice gd, float width, float height, Sdl2ControllerTracker controller)
         {
             _gd = gd;
             _useReverseDepth = gd.IsDepthRangeZeroToOne;
             _windowWidth = width;
             _windowHeight = height;
+            _controller = controller;
             UpdatePerspectiveMatrix();
             UpdateViewMatrix();
         }
@@ -97,6 +99,30 @@ namespace Veldrid.NeoDemo
                 motionDir += Vector3.UnitY;
             }
 
+            float controllerLeftX = _controller.GetAxis(SDL_GameControllerAxis.LeftX);
+            float controllerLeftY = _controller.GetAxis(SDL_GameControllerAxis.LeftY);
+            float controllerRightX = _controller.GetAxis(SDL_GameControllerAxis.RightX);
+            float controllerRightY = _controller.GetAxis(SDL_GameControllerAxis.RightY);
+            float controllerTriggerL = _controller.GetAxis(SDL_GameControllerAxis.TriggerLeft);
+            float controllerTriggerR = _controller.GetAxis(SDL_GameControllerAxis.TriggerRight);
+
+            if (MathF.Abs(controllerLeftX) > 0.2f)
+            {
+                motionDir += controllerLeftX * Vector3.UnitX;
+            }
+            if (MathF.Abs(controllerLeftY) > 0.2f)
+            {
+                motionDir += controllerLeftY * Vector3.UnitZ;
+            }
+            if (controllerTriggerL > 0f)
+            {
+                motionDir += controllerTriggerL * -Vector3.UnitY;
+            }
+            if (controllerTriggerR > 0f)
+            {
+                motionDir += controllerTriggerR * Vector3.UnitY;
+            }
+
             if (motionDir != Vector3.Zero)
             {
                 Quaternion lookRotation = Quaternion.CreateFromYawPitchRoll(Yaw, Pitch, 0f);
@@ -113,10 +139,19 @@ namespace Veldrid.NeoDemo
             {
                 Yaw += -mouseDelta.X * 0.01f;
                 Pitch += -mouseDelta.Y * 0.01f;
-                Pitch = Math.Clamp(Pitch, -1.55f, 1.55f);
-
-                UpdateViewMatrix();
             }
+
+            if (MathF.Abs(controllerRightX) > 0.2f)
+            {
+                Yaw += -controllerRightX * deltaSeconds;
+            }
+            if (MathF.Abs(controllerRightY) > 0.2f)
+            {
+                Pitch += -controllerRightY * deltaSeconds;
+            }
+
+            Pitch = Math.Clamp(Pitch, -1.55f, 1.55f);
+            UpdateViewMatrix();
         }
 
         public void WindowResized(float width, float height)

@@ -99,30 +99,30 @@ namespace Veldrid.NeoDemo
                 motionDir += Vector3.UnitY;
             }
 
-            float controllerLeftX = _controller.GetAxis(SDL_GameControllerAxis.LeftX);
-            float controllerLeftY = _controller.GetAxis(SDL_GameControllerAxis.LeftY);
-            float controllerRightX = _controller.GetAxis(SDL_GameControllerAxis.RightX);
-            float controllerRightY = _controller.GetAxis(SDL_GameControllerAxis.RightY);
-            float controllerTriggerL = _controller.GetAxis(SDL_GameControllerAxis.TriggerLeft);
-            float controllerTriggerR = _controller.GetAxis(SDL_GameControllerAxis.TriggerRight);
+            if (_controller != null)
+            {
+                float controllerLeftX = _controller.GetAxis(SDL_GameControllerAxis.LeftX);
+                float controllerLeftY = _controller.GetAxis(SDL_GameControllerAxis.LeftY);
+                float controllerTriggerL = _controller.GetAxis(SDL_GameControllerAxis.TriggerLeft);
+                float controllerTriggerR = _controller.GetAxis(SDL_GameControllerAxis.TriggerRight);
 
-            if (MathF.Abs(controllerLeftX) > 0.2f)
-            {
-                motionDir += controllerLeftX * Vector3.UnitX;
+                if (MathF.Abs(controllerLeftX) > 0.2f)
+                {
+                    motionDir += controllerLeftX * Vector3.UnitX;
+                }
+                if (MathF.Abs(controllerLeftY) > 0.2f)
+                {
+                    motionDir += controllerLeftY * Vector3.UnitZ;
+                }
+                if (controllerTriggerL > 0f)
+                {
+                    motionDir += controllerTriggerL * -Vector3.UnitY;
+                }
+                if (controllerTriggerR > 0f)
+                {
+                    motionDir += controllerTriggerR * Vector3.UnitY;
+                }
             }
-            if (MathF.Abs(controllerLeftY) > 0.2f)
-            {
-                motionDir += controllerLeftY * Vector3.UnitZ;
-            }
-            if (controllerTriggerL > 0f)
-            {
-                motionDir += controllerTriggerL * -Vector3.UnitY;
-            }
-            if (controllerTriggerR > 0f)
-            {
-                motionDir += controllerTriggerR * Vector3.UnitY;
-            }
-
             if (motionDir != Vector3.Zero)
             {
                 Quaternion lookRotation = Quaternion.CreateFromYawPitchRoll(Yaw, Pitch, 0f);
@@ -141,13 +141,18 @@ namespace Veldrid.NeoDemo
                 Pitch += -mouseDelta.Y * 0.01f;
             }
 
-            if (MathF.Abs(controllerRightX) > 0.2f)
+            if (_controller != null)
             {
-                Yaw += -controllerRightX * deltaSeconds;
-            }
-            if (MathF.Abs(controllerRightY) > 0.2f)
-            {
-                Pitch += -controllerRightY * deltaSeconds;
+                float controllerRightX = _controller.GetAxis(SDL_GameControllerAxis.RightX);
+                float controllerRightY = _controller.GetAxis(SDL_GameControllerAxis.RightY);
+                if (MathF.Abs(controllerRightX) > 0.2f)
+                {
+                    Yaw += -controllerRightX * deltaSeconds;
+                }
+                if (MathF.Abs(controllerRightY) > 0.2f)
+                {
+                    Pitch += -controllerRightY * deltaSeconds;
+                }
             }
 
             Pitch = Math.Clamp(Pitch, -1.55f, 1.55f);

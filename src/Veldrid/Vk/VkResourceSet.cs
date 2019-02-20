@@ -1,7 +1,6 @@
 ﻿using Vulkan;
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
-using System.Collections.Generic;
 
 namespace Veldrid.Vk
 {
@@ -14,11 +13,6 @@ namespace Veldrid.Vk
         private string _name;
 
         public VkDescriptorSet DescriptorSet => _descriptorAllocationToken.Set;
-
-        private readonly List<VkTexture> _sampledTextures = new List<VkTexture>();
-        public IReadOnlyList<VkTexture> SampledTextures => _sampledTextures;
-        private readonly List<VkTexture> _storageImages = new List<VkTexture>();
-        public IReadOnlyList<VkTexture> StorageTextures => _storageImages;
 
         public VkResourceSet(VkGraphicsDevice gd, ref ResourceSetDescription description)
             : base(ref description)
@@ -63,7 +57,6 @@ namespace Veldrid.Vk
                     imageInfos[i].imageView = vkTexView.ImageView;
                     imageInfos[i].imageLayout = VkImageLayout.ShaderReadOnlyOptimal;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
-                    _sampledTextures.Add(Util.AssertSubtype<Texture, VkTexture>(texView.Target));
                 }
                 else if (type == VkDescriptorType.StorageImage)
                 {
@@ -72,7 +65,6 @@ namespace Veldrid.Vk
                     imageInfos[i].imageView = vkTexView.ImageView;
                     imageInfos[i].imageLayout = VkImageLayout.General;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
-                    _storageImages.Add(Util.AssertSubtype<Texture, VkTexture>(texView.Target));
                 }
                 else if (type == VkDescriptorType.Sampler)
                 {

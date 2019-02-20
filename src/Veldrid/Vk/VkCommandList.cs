@@ -23,7 +23,6 @@ namespace Veldrid.Vk
         private VkClearValue[] _clearValues = Array.Empty<VkClearValue>();
         private bool[] _validColorClearValues = Array.Empty<bool>();
         private VkClearValue? _depthClearValue;
-        private readonly List<VkTexture> _preDrawSampledImages = new List<VkTexture>();
 
         // Graphics State
         private VkFramebufferBase _currentFramebuffer;
@@ -257,9 +256,6 @@ namespace Veldrid.Vk
 
         private void PreDrawCommand()
         {
-            TransitionImages(_preDrawSampledImages, VkImageLayout.ShaderReadOnlyOptimal);
-            _preDrawSampledImages.Clear();
-
             EnsureRenderPassActive();
 
             FlushNewResourceSets(
@@ -330,15 +326,6 @@ namespace Veldrid.Vk
             }
         }
 
-        private void TransitionImages(IReadOnlyList<VkTexture> sampledTextures, VkImageLayout layout)
-        {
-            for (int i = 0; i < sampledTextures.Count; i++)
-            {
-                VkTexture tex = sampledTextures[i];
-                tex.TransitionImageLayout(_cb, 0, tex.MipLevels, 0, tex.ArrayLayers, layout);
-            }
-        }
-
         public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
         {
             PreDispatchCommand();
@@ -349,21 +336,6 @@ namespace Veldrid.Vk
         private void PreDispatchCommand()
         {
             EnsureNoRenderPass();
-
-            for (uint currentSlot = 0; currentSlot < _currentComputeResourceSets.Length; currentSlot++)
-            {
-                VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(
-                    _currentComputeResourceSets[currentSlot].Set);
-                TransitionImages(vkSet.SampledTextures, VkImageLayout.ShaderReadOnlyOptimal);
-                TransitionImages(vkSet.StorageTextures, VkImageLayout.General);
-                foreach (VkTexture storageTex in vkSet.StorageTextures)
-                {
-                    if ((storageTex.Usage & TextureUsage.Sampled) != 0)
-                    {
-                        _preDrawSampledImages.Add(storageTex);
-                    }
-                }
-            }
 
             FlushNewResourceSets(
                 _currentComputeResourceSets,

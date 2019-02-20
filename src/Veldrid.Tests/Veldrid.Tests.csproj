@@ -38,11 +38,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Shaders\ComputeTextureGenerator.comp" />
     <None Remove="Shaders\F16VertexAttribs.frag" />
     <None Remove="Shaders\F16VertexAttribs.vert" />
-    <None Remove="Shaders\FullScreenBlit.frag" />
-    <None Remove="Shaders\FullScreenBlit.vert" />
     <None Remove="Shaders\VertexLayoutTestShader.frag" />
     <None Remove="Shaders\VertexLayoutTestShader.vert" />
   </ItemGroup>

@@ -206,28 +206,6 @@ namespace Veldrid.Vk
                 srcStageFlags = VkPipelineStageFlags.TopOfPipe;
                 dstStageFlags = VkPipelineStageFlags.Transfer;
             }
-            else if (oldLayout == VkImageLayout.Preinitialized && newLayout == VkImageLayout.General)
-            {
-                barrier.srcAccessMask = VkAccessFlags.None;
-                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
-                srcStageFlags = VkPipelineStageFlags.TopOfPipe;
-                dstStageFlags = VkPipelineStageFlags.ComputeShader;
-            }
-            else if (oldLayout == VkImageLayout.General && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
-            {
-                barrier.srcAccessMask = VkAccessFlags.TransferRead;
-                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
-                srcStageFlags = VkPipelineStageFlags.Transfer;
-                dstStageFlags = VkPipelineStageFlags.FragmentShader;
-            }
-            else if (oldLayout == VkImageLayout.ShaderReadOnlyOptimal && newLayout == VkImageLayout.General)
-            {
-                barrier.srcAccessMask = VkAccessFlags.ShaderRead;
-                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
-                srcStageFlags = VkPipelineStageFlags.FragmentShader;
-                dstStageFlags = VkPipelineStageFlags.ComputeShader;
-            }
-
             else if (oldLayout == VkImageLayout.TransferSrcOptimal && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
             {
                 barrier.srcAccessMask = VkAccessFlags.TransferRead;

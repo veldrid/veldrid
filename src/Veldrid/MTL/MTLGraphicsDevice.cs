@@ -178,16 +178,16 @@ namespace Veldrid.MTL
             MTLCommandList mtlCL = Util.AssertSubtype<CommandList, MTLCommandList>(commandList);
 
             mtlCL.CommandBuffer.addCompletedHandler(_completionBlockLiteral);
-            if (fence != null)
+            lock (_submittedCommandsLock)
             {
-                MTLFence mtlFence = Util.AssertSubtype<Fence, MTLFence>(fence);
-                lock (_submittedCommandsLock)
+                if (fence != null)
                 {
+                    MTLFence mtlFence = Util.AssertSubtype<Fence, MTLFence>(fence);
                     _submittedCBs.Add(mtlCL.CommandBuffer, mtlFence);
                 }
-            }
 
-            _latestSubmittedCB = mtlCL.Commit();
+                _latestSubmittedCB = mtlCL.Commit();
+            }
         }
 
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
@@ -354,12 +354,15 @@ namespace Veldrid.MTL
             lock (_submittedCommandsLock)
             {
                 lastCB = _latestSubmittedCB;
+                ObjectiveCRuntime.retain(lastCB.NativePtr);
             }
 
             if (lastCB.NativePtr != IntPtr.Zero && lastCB.status != MTLCommandBufferStatus.Completed)
             {
                 lastCB.waitUntilCompleted();
             }
+
+            ObjectiveCRuntime.release(lastCB.NativePtr);
         }
 
         protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)

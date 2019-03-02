@@ -798,11 +798,13 @@ namespace Veldrid.MTL
                         break;
                     }
                     case ResourceKind.TextureReadOnly:
-                        MTLTextureView mtlTexView = Util.AssertSubtype<BindableResource, MTLTextureView>(resource);
+                        TextureView texView = Util.GetTextureView(_gd, resource);
+                        MTLTextureView mtlTexView = Util.AssertSubtype<TextureView, MTLTextureView>(texView);
                         BindTexture(mtlTexView, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.TextureReadWrite:
-                        MTLTextureView mtlTexViewRW = Util.AssertSubtype<BindableResource, MTLTextureView>(resource);
+                        TextureView texViewRW = Util.GetTextureView(_gd, resource);
+                        MTLTextureView mtlTexViewRW = Util.AssertSubtype<TextureView, MTLTextureView>(texViewRW);
                         BindTexture(mtlTexViewRW, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.Sampler:

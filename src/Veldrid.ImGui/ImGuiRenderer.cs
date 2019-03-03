@@ -228,12 +228,12 @@ namespace Veldrid
         /// </summary>
         public ResourceSet GetImageResourceSet(IntPtr imGuiBinding)
         {
-            if (!_viewsById.TryGetValue(imGuiBinding, out ResourceSetInfo tvi))
+            if (!_viewsById.TryGetValue(imGuiBinding, out ResourceSetInfo rsi))
             {
                 throw new InvalidOperationException("No registered ImGui binding with id " + imGuiBinding.ToString());
             }
 
-            return tvi.ResourceSet;
+            return rsi.ResourceSet;
         }
 
         public void ClearCachedImageResources()

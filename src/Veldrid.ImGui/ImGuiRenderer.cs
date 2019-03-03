@@ -179,6 +179,17 @@ namespace Veldrid
             return rsi.ImGuiBinding;
         }
 
+        public void RemoveImGuiBinding(TextureView textureView)
+        {
+            if (_setsByView.TryGetValue(textureView, out ResourceSetInfo rsi))
+            {
+                _setsByView.Remove(textureView);
+                _viewsById.Remove(rsi.ImGuiBinding);
+                _ownedResources.Remove(rsi.ResourceSet);
+                rsi.ResourceSet.Dispose();
+            }
+        }
+
         private IntPtr GetNextImGuiBindingID()
         {
             int newID = _lastAssignedID++;
@@ -199,6 +210,17 @@ namespace Veldrid
             }
 
             return GetOrCreateImGuiBinding(factory, textureView);
+        }
+
+        public void RemoveImGuiBinding(Texture texture)
+        {
+            if (_autoViewsByTexture.TryGetValue(texture, out TextureView textureView))
+            {
+                _autoViewsByTexture.Remove(texture);
+                _ownedResources.Remove(textureView);
+                textureView.Dispose();
+                RemoveImGuiBinding(textureView);
+            }
         }
 
         /// <summary>

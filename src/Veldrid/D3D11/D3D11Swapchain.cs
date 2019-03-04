@@ -82,7 +82,7 @@ namespace Veldrid.D3D11
                     AlphaMode = AlphaMode.Ignore,
                     BufferCount = 2,
                     Format = _colorFormat,
-                    Height = (int)(description.Width * _pixelScale),
+                    Height = (int)(description.Height * _pixelScale),
                     Width = (int)(description.Width * _pixelScale),
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.FlipSequential,

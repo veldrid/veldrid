@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Veldrid
+namespace Veldrid.OpenGL
 {
     internal unsafe sealed class StagingMemoryPool : IDisposable
     {

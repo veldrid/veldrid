@@ -750,6 +750,7 @@ namespace Veldrid
             PlatformDispose();
         }
 
+#if !EXCLUDE_D3D11_BACKEND
         /// <summary>
         /// Tries to get a <see cref="BackendInfoD3D11"/> for this instance. This method will only succeed if this is a D3D11
         /// GraphicsDevice.
@@ -772,7 +773,9 @@ namespace Veldrid
 
             return info;
         }
+#endif
 
+#if !EXCLUDE_VULKAN_BACKEND
         /// <summary>
         /// Tries to get a <see cref="BackendInfoVulkan"/> for this instance. This method will only succeed if this is a Vulkan
         /// GraphicsDevice.
@@ -795,7 +798,9 @@ namespace Veldrid
 
             return info;
         }
+#endif
 
+#if !EXCLUDE_OPENGL_BACKEND
         /// <summary>
         /// Tries to get a <see cref="BackendInfoOpenGL"/> for this instance. This method will only succeed if this is an OpenGL
         /// GraphicsDevice.
@@ -818,6 +823,7 @@ namespace Veldrid
 
             return info;
         }
+#endif
 
         /// <summary>
         /// Checks whether the given <see cref="GraphicsBackend"/> is supported on this system.

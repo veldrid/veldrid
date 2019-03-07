@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !EXCLUDE_VULKAN_BACKEND
+using System;
 using Veldrid.Vk;
 using Vulkan;
 
@@ -86,3 +87,4 @@ namespace Veldrid
         }
     }
 }
+#endif

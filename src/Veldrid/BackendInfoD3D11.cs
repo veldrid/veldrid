@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !EXCLUDE_D3D11_BACKEND
+using System;
 using Veldrid.D3D11;
 
 namespace Veldrid
@@ -31,3 +32,4 @@ namespace Veldrid
             => Util.AssertSubtype<Texture, D3D11Texture>(texture).DeviceTexture.NativePointer;
     }
 }
+#endif

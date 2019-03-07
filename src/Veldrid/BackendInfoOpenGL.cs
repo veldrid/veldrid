@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !EXCLUDE_OPENGL_BACKEND
+using System;
 using Veldrid.OpenGL;
 
 namespace Veldrid
@@ -34,3 +35,4 @@ namespace Veldrid
         public uint GetTextureName(Texture texture) => Util.AssertSubtype<Texture, OpenGLTexture>(texture).Texture;
     }
 }
+#endif

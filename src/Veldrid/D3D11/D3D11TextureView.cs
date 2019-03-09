@@ -37,15 +37,33 @@ namespace Veldrid.D3D11
                 {
                     if (d3dTex.ArrayLayers == 1)
                     {
-                        uavDesc.Dimension = UnorderedAccessViewDimension.Texture2D;
-                        uavDesc.Texture2D.MipSlice = (int)description.BaseMipLevel;
+                        if (d3dTex.Type == TextureType.Texture1D)
+                        {
+                            uavDesc.Dimension = UnorderedAccessViewDimension.Texture1D;
+                            uavDesc.Texture1D.MipSlice = (int)description.BaseMipLevel;
+                        }
+                        else
+                        {
+                            uavDesc.Dimension = UnorderedAccessViewDimension.Texture2D;
+                            uavDesc.Texture2D.MipSlice = (int)description.BaseMipLevel;
+                        }
                     }
                     else
                     {
-                        uavDesc.Dimension = UnorderedAccessViewDimension.Texture2DArray;
-                        uavDesc.Texture2DArray.MipSlice = (int)description.BaseMipLevel;
-                        uavDesc.Texture2DArray.FirstArraySlice = (int)description.BaseArrayLayer;
-                        uavDesc.Texture2DArray.ArraySize = (int)description.ArrayLayers;
+                        if (d3dTex.Type == TextureType.Texture1D)
+                        {
+                            uavDesc.Dimension = UnorderedAccessViewDimension.Texture1DArray;
+                            uavDesc.Texture1DArray.MipSlice = (int)description.BaseMipLevel;
+                            uavDesc.Texture1DArray.FirstArraySlice = (int)description.BaseArrayLayer;
+                            uavDesc.Texture1DArray.ArraySize = (int)description.ArrayLayers;
+                        }
+                        else
+                        {
+                            uavDesc.Dimension = UnorderedAccessViewDimension.Texture2DArray;
+                            uavDesc.Texture2DArray.MipSlice = (int)description.BaseMipLevel;
+                            uavDesc.Texture2DArray.FirstArraySlice = (int)description.BaseArrayLayer;
+                            uavDesc.Texture2DArray.ArraySize = (int)description.ArrayLayers;
+                        }
                     }
                 }
                 else

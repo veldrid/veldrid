@@ -850,6 +850,68 @@ namespace Veldrid.Tests
             Assert.Equal(RgbaFloat.White, readView[3, 0]);
             GD.Unmap(readback);
         }
+
+        [Fact]
+        public void SampleTexture1D()
+        {
+            if (!GD.Features.Texture1D) { return; }
+
+            Texture target = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            Texture staging = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
+
+            Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, target));
+
+            ShaderSetDescription shaderSet = new ShaderSetDescription(
+                Array.Empty<VertexLayoutDescription>(),
+                TestShaders.LoadVertexFragment(RF, "FullScreenTriSampleTexture"));
+
+            Texture tex1D = RF.CreateTexture(
+                TextureDescription.Texture1D(128, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
+            RgbaFloat[] colors = new RgbaFloat[tex1D.Width];
+            for (int i = 0; i < colors.Length; i++) { colors[i] = RgbaFloat.Pink; }
+            GD.UpdateTexture(tex1D, colors, 0, 0, 0, tex1D.Width, 1, 1, 0, 0);
+
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("Smp", ResourceKind.Sampler, ShaderStages.Fragment)));
+
+            ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, tex1D, GD.PointSampler));
+
+            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.CullNone,
+                PrimitiveTopology.TriangleList,
+                shaderSet,
+                layout,
+                framebuffer.OutputDescription);
+
+            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+
+            CommandList cl = RF.CreateCommandList();
+
+            cl.Begin();
+            cl.SetFramebuffer(framebuffer);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
+            cl.ClearColorTarget(0, RgbaFloat.Black);
+            cl.SetPipeline(pipeline);
+            cl.SetGraphicsResourceSet(0, set);
+            cl.Draw(3);
+            cl.CopyTexture(target, staging);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read);
+            for (int x = 0; x < staging.Width; x++)
+            {
+                Assert.Equal(RgbaFloat.Pink, readView[x, 0]);
+            }
+            GD.Unmap(staging);
+        }
     }
 
 #if TEST_OPENGL

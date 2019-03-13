@@ -205,7 +205,22 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
             TextureTarget originalTarget = Target.TextureTarget;
-            if (originalTarget == TextureTarget.Texture2D)
+            if (originalTarget == TextureTarget.Texture1D)
+            {
+                TextureTarget = TextureTarget.Texture1D;
+            }
+            else if (originalTarget == TextureTarget.Texture1DArray)
+            {
+                if (ArrayLayers > 1)
+                {
+                    TextureTarget = TextureTarget.Texture1DArray;
+                }
+                else
+                {
+                    TextureTarget = TextureTarget.Texture1D;
+                }
+            }
+            else if (originalTarget == TextureTarget.Texture2D)
             {
                 TextureTarget = TextureTarget.Texture2D;
             }

@@ -127,7 +127,7 @@ namespace Veldrid.OpenGL
             }
             else if (Type == TextureType.Texture1D)
             {
-                TextureTarget = ArrayLayers == 1 ? TextureTarget.Texture1D : TextureTarget.ProxyTexture1DArray;
+                TextureTarget = ArrayLayers == 1 ? TextureTarget.Texture1D : TextureTarget.Texture1DArray;
             }
             else if (Type == TextureType.Texture2D)
             {

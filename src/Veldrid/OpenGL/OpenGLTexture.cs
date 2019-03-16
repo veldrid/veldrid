@@ -64,7 +64,7 @@ namespace Veldrid.OpenGL
             }
             else if (Type == TextureType.Texture1D)
             {
-                TextureTarget = ArrayLayers == 1 ? TextureTarget.Texture1D : TextureTarget.ProxyTexture1DArray;
+                TextureTarget = ArrayLayers == 1 ? TextureTarget.Texture1D : TextureTarget.Texture1DArray;
             }
             else if (Type == TextureType.Texture2D)
             {
@@ -252,8 +252,9 @@ namespace Veldrid.OpenGL
                     }
                 }
             }
-            else if (TextureTarget == TextureTarget.Texture2D)
+            else if (TextureTarget == TextureTarget.Texture2D || TextureTarget == TextureTarget.Texture1DArray)
             {
+                uint heightOrArrayLayers = TextureTarget == TextureTarget.Texture2D ? Height : ArrayLayers;
                 if (dsa)
                 {
                     glTextureStorage2D(
@@ -261,7 +262,7 @@ namespace Veldrid.OpenGL
                         MipLevels,
                         OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
-                        Height);
+                        heightOrArrayLayers);
                     CheckLastError();
                 }
                 else if (_gd.Extensions.TextureStorage)
@@ -271,7 +272,7 @@ namespace Veldrid.OpenGL
                         MipLevels,
                         OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
-                        Height);
+                        heightOrArrayLayers);
                     CheckLastError();
                 }
                 else

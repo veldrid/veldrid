@@ -851,8 +851,10 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
-        [Fact]
-        public void SampleTexture1D()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void SampleTexture1D(bool arrayTexture)
         {
             if (!GD.Features.Texture1D) { return; }
 
@@ -863,12 +865,14 @@ namespace Veldrid.Tests
 
             Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, target));
 
+            string SetName = arrayTexture ? "FullScreenTriSampleTextureArray" : "FullScreenTriSampleTexture";
             ShaderSetDescription shaderSet = new ShaderSetDescription(
                 Array.Empty<VertexLayoutDescription>(),
-                TestShaders.LoadVertexFragment(RF, "FullScreenTriSampleTexture"));
+                TestShaders.LoadVertexFragment(RF, SetName));
 
+            uint layers = arrayTexture ? 10u : 1u;
             Texture tex1D = RF.CreateTexture(
-                TextureDescription.Texture1D(128, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
+                TextureDescription.Texture1D(128, 1, layers, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
             RgbaFloat[] colors = new RgbaFloat[tex1D.Width];
             for (int i = 0; i < colors.Length; i++) { colors[i] = RgbaFloat.Pink; }
             GD.UpdateTexture(tex1D, colors, 0, 0, 0, tex1D.Width, 1, 1, 0, 0);

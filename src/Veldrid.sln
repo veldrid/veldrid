@@ -27,9 +27,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.VirtualReality", "V
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.VirtualReality.Sample", "Veldrid.VirtualReality.Sample\Veldrid.VirtualReality.Sample.csproj", "{830C467F-6068-4BCD-B8B8-6EAD72321350}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Veldrid.RenderDoc", "Veldrid.RenderDoc\Veldrid.RenderDoc.csproj", "{AFAEF056-CAD3-4C32-AEC3-AAC35A251295}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.RenderDoc", "Veldrid.RenderDoc\Veldrid.RenderDoc.csproj", "{AFAEF056-CAD3-4C32-AEC3-AAC35A251295}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|ARM = Debug|ARM

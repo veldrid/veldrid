@@ -46,22 +46,24 @@ namespace Veldrid.Vk
                 imageViewCI.viewType = description.ArrayLayers == 1 ? VkImageViewType.ImageCube : VkImageViewType.ImageCubeArray;
                 imageViewCI.subresourceRange.layerCount *= 6;
             }
-
-            switch (tex.Type)
+            else
             {
-                case TextureType.Texture1D:
-                    imageViewCI.viewType = description.ArrayLayers == 1
-                        ? VkImageViewType.Image1D
-                        : VkImageViewType.Image1DArray;
-                    break;
-                case TextureType.Texture2D:
-                    imageViewCI.viewType = description.ArrayLayers == 1
-                        ? VkImageViewType.Image2D
-                        : VkImageViewType.Image2DArray;
-                    break;
-                case TextureType.Texture3D:
-                    imageViewCI.viewType = VkImageViewType.Image3D;
-                    break;
+                switch (tex.Type)
+                {
+                    case TextureType.Texture1D:
+                        imageViewCI.viewType = description.ArrayLayers == 1
+                            ? VkImageViewType.Image1D
+                            : VkImageViewType.Image1DArray;
+                        break;
+                    case TextureType.Texture2D:
+                        imageViewCI.viewType = description.ArrayLayers == 1
+                            ? VkImageViewType.Image2D
+                            : VkImageViewType.Image2DArray;
+                        break;
+                    case TextureType.Texture3D:
+                        imageViewCI.viewType = VkImageViewType.Image3D;
+                        break;
+                }
             }
 
             vkCreateImageView(_gd.Device, ref imageViewCI, null, out _imageView);

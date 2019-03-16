@@ -153,6 +153,7 @@ namespace Veldrid.Vk
             }
 
             ClearIfRenderTarget();
+            TransitionIfSampled();
         }
 
         // Used to construct Swapchain textures.
@@ -196,6 +197,14 @@ namespace Veldrid.Vk
             else if ((Usage & TextureUsage.DepthStencil) != 0)
             {
                 _gd.ClearDepthTexture(this, new VkClearDepthStencilValue(0, 0));
+            }
+        }
+
+        private void TransitionIfSampled()
+        {
+            if ((Usage & TextureUsage.Sampled) != 0)
+            {
+                _gd.TransitionImageLayout(this, VkImageLayout.ShaderReadOnlyOptimal);
             }
         }
 

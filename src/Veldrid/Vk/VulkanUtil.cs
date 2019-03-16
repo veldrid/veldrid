@@ -213,6 +213,13 @@ namespace Veldrid.Vk
                 srcStageFlags = VkPipelineStageFlags.TopOfPipe;
                 dstStageFlags = VkPipelineStageFlags.ComputeShader;
             }
+            else if (oldLayout == VkImageLayout.Preinitialized && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.None;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
+                srcStageFlags = VkPipelineStageFlags.TopOfPipe;
+                dstStageFlags = VkPipelineStageFlags.FragmentShader;
+            }
             else if (oldLayout == VkImageLayout.General && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
             {
                 barrier.srcAccessMask = VkAccessFlags.TransferRead;

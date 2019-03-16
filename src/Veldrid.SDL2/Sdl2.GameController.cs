@@ -51,6 +51,7 @@ namespace Veldrid.Sdl2
         private ushort padding4;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct SDL_ControllerButtonEvent
     {
         /// <summary>
@@ -77,6 +78,7 @@ namespace Veldrid.Sdl2
         private byte padding2;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     struct SDL_ControllerDeviceEvent
     {
         /// <summary>

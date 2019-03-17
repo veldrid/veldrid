@@ -238,7 +238,7 @@ namespace Veldrid.OpenGL
                     {
                         // Set size, load empty data into texture
                         glTexImage1D(
-                            TextureTarget.Texture2D,
+                            TextureTarget.Texture1D,
                             currentLevel,
                             GLInternalFormat,
                             levelWidth,
@@ -268,7 +268,7 @@ namespace Veldrid.OpenGL
                 else if (_gd.Extensions.TextureStorage)
                 {
                     glTexStorage2D(
-                        TextureTarget.Texture2D,
+                        TextureTarget,
                         MipLevels,
                         OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
@@ -278,12 +278,12 @@ namespace Veldrid.OpenGL
                 else
                 {
                     uint levelWidth = Width;
-                    uint levelHeight = Height;
+                    uint levelHeight = heightOrArrayLayers;
                     for (int currentLevel = 0; currentLevel < MipLevels; currentLevel++)
                     {
                         // Set size, load empty data into texture
                         glTexImage2D(
-                            TextureTarget.Texture2D,
+                            TextureTarget,
                             currentLevel,
                             GLInternalFormat,
                             levelWidth,
@@ -295,7 +295,10 @@ namespace Veldrid.OpenGL
                         CheckLastError();
 
                         levelWidth = Math.Max(1, levelWidth / 2);
-                        levelHeight = Math.Max(1, levelHeight / 2);
+                        if (TextureTarget == TextureTarget.Texture2D)
+                        {
+                            levelHeight = Math.Max(1, levelHeight / 2);
+                        }
                     }
                 }
             }

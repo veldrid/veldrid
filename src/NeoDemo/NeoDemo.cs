@@ -36,7 +36,7 @@ namespace Veldrid.NeoDemo
         private TextureSampleCount? _newSampleCount;
 
         private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
-        private readonly Sdl2ControllerTracker _controllerTracker;
+        private Sdl2ControllerTracker _controllerTracker;
         private bool _colorSrgb = true;
         private FullScreenQuad _fsq;
         public static RenderDoc _renderDoc;
@@ -369,9 +369,20 @@ namespace Veldrid.NeoDemo
                     {
                         RefreshDeviceObjects(100);
                     }
-                    if (ImGui.MenuItem("Controller State"))
+                    if (_controllerTracker != null)
                     {
-                        _controllerDebugMenu = true;
+                        if (ImGui.MenuItem("Controller State"))
+                        {
+                            _controllerDebugMenu = true;
+                        }
+                    }
+                    else
+                    {
+                        if (ImGui.MenuItem("Connect to Controller"))
+                        {
+                            Sdl2ControllerTracker.CreateDefault(out _controllerTracker);
+                            _scene.Camera.Controller = _controllerTracker;
+                        }
                     }
 
                     ImGui.EndMenu();
@@ -452,16 +463,24 @@ namespace Veldrid.NeoDemo
                 {
                     if (ImGui.Begin("Controller State", ref _controllerDebugMenu, ImGuiWindowFlags.NoCollapse))
                     {
-                        ImGui.Columns(2);
-                        ImGui.Text($"Name: {_controllerTracker.ControllerName}");
-                        foreach (SDL_GameControllerAxis axis in (SDL_GameControllerAxis[])Enum.GetValues(typeof(SDL_GameControllerAxis)))
+
+                        if (_controllerTracker != null)
                         {
-                            ImGui.Text($"{axis}: {_controllerTracker.GetAxis(axis)}");
+                            ImGui.Columns(2);
+                            ImGui.Text($"Name: {_controllerTracker.ControllerName}");
+                            foreach (SDL_GameControllerAxis axis in (SDL_GameControllerAxis[])Enum.GetValues(typeof(SDL_GameControllerAxis)))
+                            {
+                                ImGui.Text($"{axis}: {_controllerTracker.GetAxis(axis)}");
+                            }
+                            ImGui.NextColumn();
+                            foreach (SDL_GameControllerButton button in (SDL_GameControllerButton[])Enum.GetValues(typeof(SDL_GameControllerButton)))
+                            {
+                                ImGui.Text($"{button}: {_controllerTracker.IsPressed(button)}");
+                            }
                         }
-                        ImGui.NextColumn();
-                        foreach (SDL_GameControllerButton button in (SDL_GameControllerButton[])Enum.GetValues(typeof(SDL_GameControllerButton)))
+                        else
                         {
-                            ImGui.Text($"{button}: {_controllerTracker.IsPressed(button)}");
+                            ImGui.Text("No controller detected.");
                         }
                     }
                     ImGui.End();

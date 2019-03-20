@@ -111,8 +111,8 @@ namespace Veldrid.ImageSharp
             cl.End();
 
             gd.SubmitCommands(cl);
-            gd.DisposeWhenIdle(staging);
-            gd.DisposeWhenIdle(cl);
+            staging.Dispose();
+            cl.Dispose();
 
             return ret;
         }

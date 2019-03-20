@@ -414,7 +414,7 @@ namespace Veldrid.Tests
                 tex1D.Width, 1, 1, 1);
             cl.End();
             GD.SubmitCommands(cl);
-            GD.DisposeWhenIdle(cl);
+            cl.Dispose();
             GD.WaitForIdle();
 
             MappedResourceView<ushort> readView = GD.Map<ushort>(tex2D, MapMode.Read);
@@ -480,7 +480,7 @@ namespace Veldrid.Tests
                 tex2D.Width, 1, 1, 1);
             cl.End();
             GD.SubmitCommands(cl);
-            GD.DisposeWhenIdle(cl);
+            cl.Dispose();
             GD.WaitForIdle();
 
             MappedResourceView<ushort> readView = GD.Map<ushort>(tex2D, MapMode.Read);

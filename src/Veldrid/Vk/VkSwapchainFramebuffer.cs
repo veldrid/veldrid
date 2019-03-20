@@ -10,6 +10,7 @@ namespace Veldrid.Vk
     internal unsafe class VkSwapchainFramebuffer : VkFramebufferBase
     {
         private readonly VkGraphicsDevice _gd;
+        private readonly VkSwapchain _swapchain;
         private readonly VkSurfaceKHR _surface;
         private readonly PixelFormat? _depthFormat;
         private uint _currentImageIndex;
@@ -49,8 +50,11 @@ namespace Veldrid.Vk
 
         public override uint AttachmentCount { get; }
 
+        public VkSwapchain Swapchain => _swapchain;
+
         public VkSwapchainFramebuffer(
             VkGraphicsDevice gd,
+            VkSwapchain swapchain,
             VkSurfaceKHR surface,
             uint width,
             uint height,
@@ -58,6 +62,7 @@ namespace Veldrid.Vk
             : base()
         {
             _gd = gd;
+            _swapchain = swapchain;
             _surface = surface;
             _depthFormat = depthFormat;
 

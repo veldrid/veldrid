@@ -43,6 +43,7 @@ namespace Veldrid.Vk
         public VkSurfaceKHR Surface => _surface;
         public VkQueue PresentQueue => _presentQueue;
         public uint PresentQueueIndex => _presentQueueIndex;
+        public ResourceRefCount RefCount { get; }
 
         public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description) : this(gd, ref description, VkSurfaceKHR.Null) { }
 
@@ -68,7 +69,7 @@ namespace Veldrid.Vk
             }
             vkGetDeviceQueue(_gd.Device, _presentQueueIndex, 0, out _presentQueue);
 
-            _framebuffer = new VkSwapchainFramebuffer(gd, _surface, description.Width, description.Height, description.DepthFormat);
+            _framebuffer = new VkSwapchainFramebuffer(gd, this, _surface, description.Width, description.Height, description.DepthFormat);
 
             CreateSwapchain(description.Width, description.Height);
 
@@ -79,6 +80,8 @@ namespace Veldrid.Vk
             AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence);
             vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
             vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
+
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         public override void Resize(uint width, uint height)
@@ -294,6 +297,11 @@ namespace Veldrid.Vk
         }
 
         public override void Dispose()
+        {
+            RefCount.Decrement();
+        }
+
+        private void DisposeCore()
         {
             vkDestroyFence(_gd.Device, _imageAvailableFence, null);
             _framebuffer.Dispose();

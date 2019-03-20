@@ -31,7 +31,6 @@ namespace Veldrid.Vk
         private readonly object _graphicsQueueLock = new object();
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private PFN_vkDebugReportCallbackEXT _debugCallbackFunc;
-        private readonly List<VkCommandList> _commandListsToDispose = new List<VkCommandList>();
         private bool _debugMarkerEnabled;
         private vkDebugMarkerSetObjectNameEXT_t _setObjectNameDelegate;
         private vkCmdDebugMarkerBeginEXT_t _markerBegin;
@@ -296,21 +295,6 @@ namespace Veldrid.Vk
                     }
                 }
             }
-
-            VkCommandList cl = fsi.CommandList;
-            if (cl != null)
-            {
-                lock (_commandListsToDispose)
-                {
-                    if (cl.SubmittedCommandBufferCount == 0)
-                    {
-                        if (_commandListsToDispose.Remove(cl))
-                        {
-                            cl.DestroyCommandPool();
-                        }
-                    }
-                }
-            }
         }
 
         private void ReturnSubmissionFence(Vulkan.VkFence fence)
@@ -330,21 +314,6 @@ namespace Veldrid.Vk
                 VkResult result = vkCreateFence(_device, ref fenceCI, null, out Vulkan.VkFence newFence);
                 CheckResult(result);
                 return newFence;
-            }
-        }
-
-        public void EnqueueDisposedCommandBuffer(VkCommandList vkCL)
-        {
-            lock (_commandListsToDispose)
-            {
-                if (vkCL.SubmittedCommandBufferCount == 0)
-                {
-                    vkCL.DestroyCommandPool();
-                }
-                else
-                {
-                    _commandListsToDispose.Add(vkCL);
-                }
             }
         }
 
@@ -449,19 +418,6 @@ namespace Veldrid.Vk
                 nameInfo.pObjectName = utf8Ptr;
                 VkResult result = _setObjectNameDelegate(_device, &nameInfo);
                 CheckResult(result);
-            }
-        }
-
-        private void FlushQueuedDisposables()
-        {
-            lock (_commandListsToDispose)
-            {
-                foreach (VkCommandList vkCB in _commandListsToDispose)
-                {
-                    vkCB.DestroyCommandPool();
-                }
-
-                _commandListsToDispose.Clear();
             }
         }
 
@@ -968,7 +924,6 @@ namespace Veldrid.Vk
             }
 
             CheckSubmittedFences();
-            FlushQueuedDisposables();
         }
 
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)

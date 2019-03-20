@@ -53,7 +53,8 @@ namespace Veldrid.Vk
 
         public VkCommandPool CommandPool => _pool;
         public VkCommandBuffer CommandBuffer => _cb;
-        public uint SubmittedCommandBufferCount { get; private set; }
+
+        public ResourceRefCount RefCount { get; }
 
         public VkCommandList(VkGraphicsDevice gd, ref CommandListDescription description)
             : base(ref description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
@@ -66,6 +67,7 @@ namespace Veldrid.Vk
             CheckResult(result);
 
             _cb = GetNextCommandBuffer();
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         private VkCommandBuffer GetNextCommandBuffer()
@@ -92,19 +94,18 @@ namespace Veldrid.Vk
 
         public void CommandBufferSubmitted(VkCommandBuffer cb)
         {
+            RefCount.Increment();
             foreach (ResourceRefCount rrc in _currentStagingInfo.Resources)
             {
                 rrc.Increment();
             }
 
-            SubmittedCommandBufferCount += 1;
             _submittedStagingInfos.Add(cb, _currentStagingInfo);
             _currentStagingInfo = null;
         }
 
         public void CommandBufferCompleted(VkCommandBuffer completedCB)
         {
-            SubmittedCommandBufferCount -= 1;
 
             lock (_commandBufferListLock)
             {
@@ -128,6 +129,8 @@ namespace Veldrid.Vk
                     _submittedStagingInfos.Remove(completedCB);
                 }
             }
+
+            RefCount.Decrement();
         }
 
         public override void Begin()
@@ -250,6 +253,7 @@ namespace Veldrid.Vk
         {
             PreDrawCommand();
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
+            _currentStagingInfo.Resources.Add(vkBuffer.RefCount);
             vkCmdDrawIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
         }
 
@@ -257,6 +261,7 @@ namespace Veldrid.Vk
         {
             PreDrawCommand();
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
+            _currentStagingInfo.Resources.Add(vkBuffer.RefCount);
             vkCmdDrawIndexedIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
         }
 
@@ -389,6 +394,7 @@ namespace Veldrid.Vk
             PreDispatchCommand();
 
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
+            _currentStagingInfo.Resources.Add(vkBuffer.RefCount);
             vkCmdDispatchIndirect(_cb, vkBuffer.DeviceBuffer, offset);
         }
 
@@ -400,7 +406,9 @@ namespace Veldrid.Vk
             }
 
             VkTexture vkSource = Util.AssertSubtype<Texture, VkTexture>(source);
+            _currentStagingInfo.Resources.Add(vkSource.RefCount);
             VkTexture vkDestination = Util.AssertSubtype<Texture, VkTexture>(destination);
+            _currentStagingInfo.Resources.Add(vkDestination.RefCount);
             VkImageAspectFlags aspectFlags = ((source.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
                 ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
                 : VkImageAspectFlags.Color;
@@ -481,6 +489,11 @@ namespace Veldrid.Vk
             Util.ClearArray(_validColorClearValues);
             Util.EnsureArrayMinimumSize(ref _validColorClearValues, clearValueCount);
             _currentStagingInfo.Resources.Add(vkFB.RefCount);
+
+            if (fb is VkSwapchainFramebuffer scFB)
+            {
+                _currentStagingInfo.Resources.Add(scFB.Swapchain.RefCount);
+            }
         }
 
         private void EnsureRenderPassActive()
@@ -1202,11 +1215,10 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            _gd.EnqueueDisposedCommandBuffer(this);
+            RefCount.Decrement();
         }
 
-        // Must only be called once the command buffer has fully executed.
-        public void DestroyCommandPool()
+        private void DisposeCore()
         {
             if (!_destroyed)
             {

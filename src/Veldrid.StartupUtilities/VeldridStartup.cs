@@ -192,7 +192,9 @@ namespace Veldrid.StartupUtilities
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return GraphicsBackend.Metal;
+                return GraphicsDevice.IsBackendSupported(GraphicsBackend.Metal)
+                    ? GraphicsBackend.Metal
+                    : GraphicsBackend.OpenGL;
             }
             else
             {

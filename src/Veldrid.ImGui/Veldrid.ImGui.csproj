@@ -60,7 +60,7 @@
 
   <ItemGroup Condition="'$(UseStableVersions)' != 'true'" >
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
-    <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
+    <ProjectReference Include="..\Veldrid.InputPrimitives\Veldrid.InputPrimitives.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

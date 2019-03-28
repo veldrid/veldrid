@@ -30,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Veldrid.InputPrimitives\Veldrid.InputPrimitives.csproj" />
     <PackageReference Include="NativeLibraryLoader" Version="$(NativeLibraryLoaderVersion)" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />

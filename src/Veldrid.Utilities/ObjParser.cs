@@ -591,12 +591,28 @@ namespace Veldrid.Utilities
             MaterialName = materialName;
         }
 
+        public DeviceBuffer CreateVertexBuffer(ResourceFactory factory, GraphicsDevice gd)
+        {
+            DeviceBuffer vb = factory.CreateBuffer(
+                new BufferDescription((uint)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes), BufferUsage.VertexBuffer));
+            gd.UpdateBuffer(vb, 0, Vertices);
+            return vb;
+        }
+
         public DeviceBuffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
         {
             DeviceBuffer vb = factory.CreateBuffer(
                 new BufferDescription((uint)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(vb, 0, Vertices);
             return vb;
+        }
+
+        public DeviceBuffer CreateIndexBuffer(ResourceFactory factory, GraphicsDevice gd, out int indexCount)
+        {
+            DeviceBuffer ib = factory.CreateBuffer(new BufferDescription((uint)(Indices.Length * sizeof(int)), BufferUsage.IndexBuffer));
+            gd.UpdateBuffer(ib, 0, Indices);
+            indexCount = Indices.Length;
+            return ib;
         }
 
         public DeviceBuffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)

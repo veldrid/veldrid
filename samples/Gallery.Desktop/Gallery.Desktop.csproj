@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleMeshRender\SimpleMeshRender.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AssemblyName>VeldridGallery</AssemblyName>
+    <RootNamespace>Veldrid.SampleGallery</RootNamespace>
+  </PropertyGroup>
+
+</Project>

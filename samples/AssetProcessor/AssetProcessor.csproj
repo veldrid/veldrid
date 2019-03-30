@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AssimpNet" Version="$(AssimpNetVersion)" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005" />
+    <ProjectReference Include="..\AssetPrimitives\AssetPrimitives.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)src\Veldrid\Veldrid.csproj" />
+  </ItemGroup>
+
+</Project>

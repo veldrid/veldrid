@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(SamplesDir)/AssetProcessor/AssetProcessor.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid/Veldrid.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.Utilities\Veldrid.Utilities.csproj" />
+    <ProjectReference Include="..\AssetPrimitives\AssetPrimitives.csproj" />
+    <ProjectReference Include="..\SampleGallery.Core\SampleGallery.Core.csproj" />
+  </ItemGroup>
+
+</Project>

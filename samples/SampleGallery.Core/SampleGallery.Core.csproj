@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Veldrid.SampleGallery</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.Utilities\Veldrid.Utilities.csproj" />
+  </ItemGroup>
+
+</Project>

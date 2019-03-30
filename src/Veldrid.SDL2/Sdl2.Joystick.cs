@@ -32,5 +32,13 @@ namespace Veldrid.Sdl2
         /// Count the number of joysticks attached to the system right now.
         /// </summary>
         public static int SDL_NumJoysticks() => s_sdl_numJoysticks();
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int SDL_JoystickInstanceID_t(SDL_Joystick joystick);
+        private static SDL_JoystickInstanceID_t s_sdl_joystickInstanceID = Sdl2Native.LoadFunction<SDL_JoystickInstanceID_t>("SDL_JoystickInstanceID");
+        /// <summary>
+        /// Returns the instance ID of the specified joystick on success or a negative error code on failure; call SDL_GetError() for more information.
+        /// </summary>
+        public static int SDL_JoystickInstanceID(SDL_Joystick joystick) => s_sdl_joystickInstanceID(joystick);
     }
 }

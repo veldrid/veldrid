@@ -515,9 +515,9 @@ namespace Veldrid.OpenGL
                 }
             };
 
-            Action setSwapchainFramebuffer = () =>
+            Action<uint> setSwapchainFramebufferTarget = target =>
             {
-                glBindFramebuffer(FramebufferTarget.Framebuffer, fb);
+                glBindFramebuffer((FramebufferTarget)target, fb);
                 CheckLastError();
             };
 
@@ -583,7 +583,7 @@ namespace Veldrid.OpenGL
                 destroyContext,
                 swapBuffers,
                 syncInterval => { },
-                setSwapchainFramebuffer,
+                setSwapchainFramebufferTarget,
                 resizeSwapchain);
 
             Init(options, platformInfo, (uint)fbWidth, (uint)fbHeight, false);
@@ -1143,7 +1143,6 @@ namespace Veldrid.OpenGL
                         {
                             MappableResource resourceToMap = (MappableResource)workItem.Object0;
                             ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
-
                             MapParams* resultPtr = (MapParams*)Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
 
                             if (resultPtr->Map)

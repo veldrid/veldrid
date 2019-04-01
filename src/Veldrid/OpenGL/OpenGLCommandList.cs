@@ -235,6 +235,17 @@ namespace Veldrid.OpenGL
             _currentCommands.InsertDebugMarker(name);
         }
 
+        private protected override void BlitTextureCore(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter)
+        {
+            _currentCommands.BlitTexture(
+                source, srcX, srcY, srcWidth, srcHeight,
+                destination, dstX, dstY, dstWidth, dstHeight,
+                linearFilter);
+        }
+
         public override void Dispose()
         {
             _gd.EnqueueDisposal(this);

@@ -6,8 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.Utilities\Veldrid.Utilities.csproj" />
+    <ProjectReference Include="..\..\src\Veldrid.ImGui\Veldrid.ImGui.csproj" />
+    <ProjectReference Include="..\..\src\Veldrid.InputPrimitives\Veldrid.InputPrimitives.csproj" />
   </ItemGroup>
 
 </Project>

@@ -24,15 +24,13 @@ namespace Veldrid.SampleGallery
             VeldridUIViewController controller = new VeldridUIViewController();
             Window.RootViewController = controller;
 
-            Example example = new SimpleMeshRender();
 
             controller.DeviceCreated += () =>
             {
-                example.Initialize(controller.Device, controller.MainSwapchain);
-                example.LoadResourcesAsync().Wait();
+                Gallery gallery = new Gallery(controller);
+                gallery.LoadExample(new SimpleMeshRender());
                 controller.Run();
             };
-            controller.Rendering += t => example.Render(t);
 
             // make the window visible
             Window.MakeKeyAndVisible();

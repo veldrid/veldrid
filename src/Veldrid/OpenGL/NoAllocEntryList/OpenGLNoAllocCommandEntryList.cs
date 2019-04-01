@@ -91,6 +91,9 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         private const byte InsertDebugMarkerEntryID = 26;
         private static readonly uint InsertDebugMarkerEntrySize = Util.USizeOf<NoAllocInsertDebugMarkerEntry>();
 
+        private const byte BlitTextureEntryID = 27;
+        private static readonly uint BlitTextureEntrySize = Util.USizeOf<NoAllocBlitTextureEntry>();
+
         public OpenGLCommandList Parent { get; }
 
         public OpenGLNoAllocCommandEntryList(OpenGLCommandList cl)
@@ -383,6 +386,14 @@ namespace Veldrid.OpenGL.NoAllocEntryList
                         executor.InsertDebugMarker(idme.Name.Get(_resourceList));
                         currentOffset += InsertDebugMarkerEntrySize;
                         break;
+                    case BlitTextureEntryID:
+                        NoAllocBlitTextureEntry bte = Unsafe.ReadUnaligned<NoAllocBlitTextureEntry>(entryBasePtr);
+                        executor.BlitTexture(
+                            bte.Source.Get(_resourceList), bte.SrcX, bte.SrcY, bte.SrcWidth, bte.SrcHeight,
+                            bte.Destination.Get(_resourceList), bte.DstX, bte.DstY, bte.DstWidth, bte.DstHeight,
+                            bte.LinearFilter);
+                        currentOffset += BlitTextureEntrySize;
+                        break;
                     default:
                         throw new InvalidOperationException("Invalid entry ID: " + id);
                 }
@@ -590,6 +601,18 @@ namespace Veldrid.OpenGL.NoAllocEntryList
         {
             NoAllocInsertDebugMarkerEntry entry = new NoAllocInsertDebugMarkerEntry(Track(name));
             AddEntry(InsertDebugMarkerEntryID, ref entry);
+        }
+
+        public void BlitTexture(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter)
+        {
+            NoAllocBlitTextureEntry entry = new NoAllocBlitTextureEntry(
+                Track(source), srcX, srcY, srcWidth, srcHeight,
+                Track(destination), dstX, dstY, dstWidth, dstHeight,
+                linearFilter);
+            AddEntry(BlitTextureEntryID, ref entry);
         }
 
         private Tracked<T> Track<T>(T item) where T : class

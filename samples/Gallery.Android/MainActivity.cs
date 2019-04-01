@@ -1,14 +1,9 @@
 ﻿using Android.App;
 using Android.OS;
 using Android.Support.V7.App;
-using Android.Runtime;
-using Android.Widget;
-using Veldrid;
-using Veldrid.SampleGallery;
-using System;
 using Android.Content.PM;
 
-namespace Gallery.Android
+namespace Veldrid.SampleGallery
 {
     [Activity(
         Label = "@string/app_name",
@@ -18,7 +13,6 @@ namespace Gallery.Android
     public class MainActivity : AppCompatActivity
     {
         private VeldridSurfaceView _view;
-        private SimpleMeshRender _example;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -42,15 +36,14 @@ namespace Gallery.Android
                 : GraphicsBackend.OpenGLES;
             _view = new VeldridSurfaceView(this, backend, options);
             _view.DeviceCreated += OnDeviceCreated;
-            _example = new SimpleMeshRender();
             SetContentView(_view);
         }
 
         private void OnDeviceCreated()
         {
-            _example.Initialize(_view.GraphicsDevice, _view.MainSwapchain);
-            _example.LoadResourcesAsync().Wait();
-            _view.RunContinuousRenderLoop(() => _example.Render(0.0));
+            Gallery gallery = new Gallery(_view);
+            gallery.LoadExample(new SimpleMeshRender());
+            _view.RunContinuousRenderLoop();
         }
     }
 }

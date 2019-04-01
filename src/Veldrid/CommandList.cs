@@ -1146,6 +1146,24 @@ namespace Veldrid
 
         private protected abstract void InsertDebugMarkerCore(string name);
 
+        public void BlitTexture(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter)
+        {
+#if VALIDATE_USAGE
+#endif
+            BlitTextureCore(
+                source, srcX, srcY, srcWidth, srcHeight,
+                destination, dstX, dstY, dstWidth, dstHeight,
+                linearFilter);
+        }
+
+        private protected abstract void BlitTextureCore(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter);
+
         /// <summary>
         /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
         /// tools.

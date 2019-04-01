@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Veldrid.Utilities;
 
 namespace Veldrid.SampleGallery
@@ -6,15 +7,43 @@ namespace Veldrid.SampleGallery
     public abstract class Example
     {
         protected GraphicsDevice Device { get; private set; }
+        protected IGalleryDriver Gallery { get; private set; }
         protected ResourceFactory Factory => _factory;
-        protected Swapchain MainSwapchain { get; private set; }
+        public Framebuffer Framebuffer { get; private set; }
         private DisposeCollectorResourceFactory _factory;
 
-        public void Initialize(GraphicsDevice device, Swapchain mainSwapchain)
+        public void Initialize(IGalleryDriver gallery)
         {
-            Device = device;
-            MainSwapchain = mainSwapchain;
-            _factory = new DisposeCollectorResourceFactory(device.ResourceFactory);
+            Gallery = gallery;
+            Device = gallery.Device;
+            _factory = new DisposeCollectorResourceFactory(Device.ResourceFactory);
+            RecreateFramebuffer();
+            gallery.Resized += OnGallerySizeChanged;
+        }
+
+        private void OnGallerySizeChanged()
+        {
+            RecreateFramebuffer();
+            OnGallerySizeChangedCore();
+        }
+
+        protected virtual void OnGallerySizeChangedCore() { }
+
+        private void RecreateFramebuffer()
+        {
+            Framebuffer?.Dispose();
+
+            Texture color = Factory.CreateTexture(
+                TextureDescription.Texture2D(
+                    Gallery.Width, Gallery.Height, 1, 1,
+                    PixelFormat.R8_G8_B8_A8_UNorm_SRgb,
+                    TextureUsage.Sampled | TextureUsage.RenderTarget));
+            Texture depth = Factory.CreateTexture(
+                TextureDescription.Texture2D(
+                    Gallery.Width, Gallery.Height, 1, 1,
+                    PixelFormat.R32_Float,
+                    TextureUsage.DepthStencil));
+            Framebuffer = Factory.CreateFramebuffer(new FramebufferDescription(depth, color));
         }
 
         public void Shutdown()

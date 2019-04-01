@@ -1284,5 +1284,70 @@ namespace Veldrid.Vk
                 _availableStagingInfos.Add(info);
             }
         }
+
+        private protected override void BlitTextureCore(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter)
+        {
+            bool haveAnyClearValues = _depthClearValue.HasValue;
+            for (int i = 0; i < _currentFramebuffer.ColorTargets.Count; i++)
+            {
+                if (_validColorClearValues[i])
+                {
+                    haveAnyClearValues = true;
+                    break;
+                }
+            }
+
+            if (haveAnyClearValues)
+            {
+                BeginCurrentRenderPass();
+                EndCurrentRenderPass();
+            }
+            else
+            {
+                EnsureNoRenderPass();
+            }
+
+            VkTexture vkSrc = Util.AssertSubtype<Texture, VkTexture>(source);
+            VkTexture vkDst = Util.AssertSubtype<Texture, VkTexture>(destination.ColorTargets[0].Target);
+
+            VkImageLayout srcPrevLayout = vkSrc.GetImageLayout(0, 0);
+            vkSrc.TransitionImageLayout(_cb, 0, 1, 0, 1, VkImageLayout.TransferSrcOptimal);
+            VkImageLayout dstPrevLayout = vkDst.GetImageLayout(0, 0);
+            vkDst.TransitionImageLayout(_cb, 0, 1, destination.ColorTargets[0].ArrayLayer, 1, VkImageLayout.TransferDstOptimal);
+
+            VkImageBlit region = new VkImageBlit();
+            region.srcSubresource.aspectMask = FormatHelpers.IsDepthStencilFormat(vkSrc.Format) ? VkImageAspectFlags.Depth : VkImageAspectFlags.Color;
+            region.srcSubresource.mipLevel = 0;
+            region.srcSubresource.baseArrayLayer = 0;
+            region.srcSubresource.layerCount = 1;
+            region.srcOffsets_0.x = (int)srcX;
+            region.srcOffsets_0.y = (int)srcY;
+            region.srcOffsets_1.x = (int)(srcX + srcWidth);
+            region.srcOffsets_1.y = (int)(srcY + srcHeight);
+            region.srcOffsets_1.z = 1;
+
+            region.dstSubresource.aspectMask = FormatHelpers.IsDepthStencilFormat(vkDst.Format) ? VkImageAspectFlags.Depth : VkImageAspectFlags.Color;
+            region.dstSubresource.mipLevel = 0;
+            region.dstSubresource.baseArrayLayer = destination.ColorTargets[0].ArrayLayer;
+            region.dstSubresource.layerCount = 1;
+            region.dstOffsets_0.x = (int)dstX;
+            region.dstOffsets_0.y = (int)dstY;
+            region.dstOffsets_1.x = (int)(dstX + dstWidth);
+            region.dstOffsets_1.y = (int)(dstY + dstHeight);
+            region.dstOffsets_1.z = 1;
+
+            vkCmdBlitImage(
+                _cb,
+                vkSrc.OptimalDeviceImage, VkImageLayout.TransferSrcOptimal,
+                vkDst.OptimalDeviceImage, VkImageLayout.TransferDstOptimal,
+                1, ref region,
+                linearFilter ? VkFilter.Linear : VkFilter.Nearest);
+
+            vkSrc.TransitionImageLayout(_cb, 0, 1, 0, 1, srcPrevLayout);
+            vkDst.TransitionImageLayout(_cb, 0, 1, destination.ColorTargets[0].ArrayLayer, 1, dstPrevLayout);
+        }
     }
 }

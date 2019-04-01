@@ -9,9 +9,9 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[assembly: global::Android.Runtime.ResourceDesignerAttribute("Gallery.Android.Resource", IsApplication=true)]
+[assembly: global::Android.Runtime.ResourceDesignerAttribute("Veldrid.SampleGallery.Resource", IsApplication=true)]
 
-namespace Gallery.Android
+namespace Veldrid.SampleGallery
 {
 	
 	

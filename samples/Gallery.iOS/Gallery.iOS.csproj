@@ -128,6 +128,10 @@
     <Folder Include="Resources\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Veldrid.InputPrimitives\Veldrid.InputPrimitives.csproj">
+      <Project>{3678bb19-30c3-4fe4-bd8c-bf57954e0bef}</Project>
+      <Name>Veldrid.InputPrimitives</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj">
       <Project>{6647f17c-02e9-4ef2-b882-40e22a187744}</Project>
       <Name>Veldrid.MetalBindings</Name>
@@ -158,6 +162,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="ImGui.NET">
+      <Version>1.68.1</Version>
+    </PackageReference>
     <PackageReference Include="Vk">
       <Version>1.0.21</Version>
     </PackageReference>

@@ -43,6 +43,10 @@ namespace Veldrid.OpenGL
         void PushDebugGroup(string name);
         void PopDebugGroup();
         void InsertDebugMarker(string name);
+        void BlitTexture(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter);
 
         void Reset();
         void Dispose();

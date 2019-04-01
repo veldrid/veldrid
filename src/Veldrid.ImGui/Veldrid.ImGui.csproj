@@ -53,12 +53,12 @@
     <PackageReference Include="ImGui.NET" Version="1.70.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(UseStableVersions)' == 'true'" >
+  <ItemGroup Condition="'$(UseStableVersions)' == 'true'">
     <PackageReference Include="Veldrid" Version="4.5.0" />
     <PackageReference Include="Veldrid.SDL2" Version="4.5.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(UseStableVersions)' != 'true'" >
+  <ItemGroup Condition="'$(UseStableVersions)' != 'true'">
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.InputPrimitives\Veldrid.InputPrimitives.csproj" />
   </ItemGroup>

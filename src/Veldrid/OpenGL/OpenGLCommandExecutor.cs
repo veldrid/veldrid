@@ -3,6 +3,7 @@ using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
 using System.Text;
+using System.Diagnostics;
 
 namespace Veldrid.OpenGL
 {
@@ -730,6 +731,62 @@ namespace Veldrid.OpenGL
             }
         }
 
+        public void BlitTexture(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter)
+        {
+            Debug.Assert(source.Type == TextureType.Texture2D);
+
+            glGenFramebuffers(1, out uint readFB);
+            CheckLastError();
+            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, readFB);
+
+            OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(source);
+            glFramebufferTexture2D(
+                FramebufferTarget.ReadFramebuffer,
+                GLFramebufferAttachment.ColorAttachment0,
+                TextureTarget.Texture2D,
+                glTex.Texture,
+                0);
+            FramebufferErrorCode errorCode = glCheckFramebufferStatus(FramebufferTarget.ReadFramebuffer);
+            CheckLastError();
+            if (errorCode != FramebufferErrorCode.FramebufferComplete)
+            {
+                throw new VeldridException("Framebuffer was not successfully created: " + errorCode);
+            }
+
+            if (destination is OpenGLFramebuffer glFB)
+            {
+                glBindFramebuffer(FramebufferTarget.Framebuffer, glFB.Framebuffer);
+                CheckLastError();
+            }
+            else
+            {
+                Util.AssertSubtype<Framebuffer, OpenGLSwapchainFramebuffer>(destination);
+                if (_platformInfo.SetSwapchainFramebufferTarget != null)
+                {
+                    _platformInfo.SetSwapchainFramebufferTarget((uint)FramebufferTarget.DrawFramebuffer);
+                }
+                else
+                {
+                    glBindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+                    CheckLastError();
+                }
+            }
+
+            ClearBufferMask mask = FormatHelpers.IsDepthStencilFormat(source.Format)
+                ? ClearBufferMask.DepthBufferBit
+                : ClearBufferMask.ColorBufferBit;
+
+            glBlitFramebuffer(
+                (int)srcX, (int)srcY, (int)(srcX + srcWidth), (int)(srcY + srcHeight),
+                (int)dstX, (int)dstY, (int)(dstX + dstWidth), (int)(dstY + dstHeight),
+                mask,
+                linearFilter ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest);
+            CheckLastError();
+        }
+
         private void ActivateComputePipeline()
         {
             _graphicsPipelineActive = false;
@@ -823,7 +880,6 @@ namespace Veldrid.OpenGL
                                 (IntPtr)range.Offset,
                                 (UIntPtr)range.SizeInBytes);
                             CheckLastError();
-
                             ubOffset += 1;
                         }
                         break;
@@ -835,7 +891,6 @@ namespace Veldrid.OpenGL
 
                         DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
-
                         glBuffer.EnsureResourcesCreated();
                         if (pipeline.GetStorageBufferBindingForSlot(slot, element, out OpenGLShaderStorageBinding shaderStorageBinding))
                         {

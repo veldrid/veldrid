@@ -1329,6 +1329,26 @@ namespace Veldrid.D3D11
             _uda?.SetMarker(name);
         }
 
+        private protected override void BlitTextureCore(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter)
+        {
+            if (srcWidth != dstWidth || srcHeight != dstHeight)
+            {
+                // Needs to use a shader to sample onto a quad a la TextureBlitter in Veldrid.VirtualReality.
+                throw new NotImplementedException();
+            }
+
+            D3D11Texture d3dSrc = Util.AssertSubtype<Texture, D3D11Texture>(source);
+            D3D11Texture d3dDst = Util.AssertSubtype<Texture, D3D11Texture>(destination.ColorTargets[0].Target);
+
+            uint dstZ = destination.ColorTargets[0].ArrayLayer;
+            _context.CopySubresourceRegion(
+                d3dSrc.DeviceTexture, 0, new ResourceRegion((int)srcX, (int)srcY, 0, (int)(srcX + srcWidth), (int)(srcY + srcHeight), 1),
+                d3dDst.DeviceTexture, 0, (int)dstX, (int)dstY, (int)dstZ);
+        }
+
         public override void Dispose()
         {
             if (!_disposed)

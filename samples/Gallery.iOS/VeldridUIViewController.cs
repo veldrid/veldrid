@@ -9,7 +9,7 @@ using Veldrid;
 
 namespace Veldrid.SampleGallery
 {
-    public class VeldridUIViewController : UIViewController
+    public class VeldridUIViewController : UIViewController, IGalleryDriver
     {
         private readonly GraphicsDeviceOptions _options;
         private readonly GraphicsBackend _backend;
@@ -17,13 +17,17 @@ namespace Veldrid.SampleGallery
         private CADisplayLink _timer;
         private Swapchain _sc;
         private bool _viewLoaded;
+        private readonly GenericInputSnapshot _snapshot = new GenericInputSnapshot();
 
         public event Action DeviceCreated;
         public event Action Resized;
-        public event Action<double> Rendering;
+        public event Action<double> Render;
+        public event Action<double, InputSnapshot> Update;
 
         public GraphicsDevice Device => _gd;
         public Swapchain MainSwapchain => _sc;
+        public uint Width => (uint)View.Frame.Width;
+        public uint Height => (uint)View.Frame.Height;
 
         public VeldridUIViewController()
         {
@@ -40,22 +44,24 @@ namespace Veldrid.SampleGallery
                 preferDepthRangeZeroToOne: true,
                 preferStandardClipSpaceYDirection: true,
                 swapchainSrgbFormat: true);
-            _backend = GraphicsBackend.Metal;
+            _backend = GraphicsBackend.OpenGLES;
         }
 
         public void Run()
         {
-            _timer = CADisplayLink.Create(Render);
+            _timer = CADisplayLink.Create(DisplayLinkAction);
             _timer.FrameInterval = 1;
             _timer.AddToRunLoop(NSRunLoop.Main, NSRunLoop.NSDefaultRunLoopMode);
         }
 
-        private void Render()
+        private void DisplayLinkAction()
         {
             if (_viewLoaded)
             {
                 float elapsed = (float)(_timer.TargetTimestamp - _timer.Timestamp);
-                Rendering?.Invoke(elapsed);
+                Update?.Invoke(elapsed, _snapshot);
+                _snapshot.Clear();
+                Render?.Invoke(elapsed);
             }
         }
 

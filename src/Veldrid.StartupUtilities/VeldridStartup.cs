@@ -206,7 +206,7 @@ namespace Veldrid.StartupUtilities
 
 #if !EXCLUDE_VULKAN_BACKEND
         public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
-            => CreateVulkanGraphicsDevice(options, window, false);
+            => CreateVulkanGraphicsDevice(options, window, options.SwapchainSrgbFormat);
         public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(
             GraphicsDeviceOptions options,
             Sdl2Window window,

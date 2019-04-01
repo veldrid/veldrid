@@ -5,11 +5,10 @@ using Android.Views;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Veldrid;
 
-namespace Gallery.Android
+namespace Veldrid.SampleGallery
 {
-    public class VeldridSurfaceView : SurfaceView, ISurfaceHolderCallback
+    public class VeldridSurfaceView : SurfaceView, ISurfaceHolderCallback, IGalleryDriver
     {
         private readonly GraphicsBackend _backend;
         protected GraphicsDeviceOptions DeviceOptions { get; }
@@ -18,14 +17,18 @@ namespace Gallery.Android
         private bool _enabled;
         private bool _needsResize;
         private bool _surfaceCreated;
+        private readonly GenericInputSnapshot _snapshot = new GenericInputSnapshot();
 
-        public GraphicsDevice GraphicsDevice { get; protected set; }
+        public GraphicsDevice Device { get; protected set; }
         public Swapchain MainSwapchain { get; protected set; }
+        uint IGalleryDriver.Width => (uint)Width;
+        uint IGalleryDriver.Height => (uint)Height;
 
-        public event Action Rendering;
         public event Action DeviceCreated;
         public event Action DeviceDisposed;
         public event Action Resized;
+        public event Action<double, InputSnapshot> Update;
+        public event Action<double> Render;
 
         public VeldridSurfaceView(Context context, GraphicsBackend backend)
             : this(context, backend, new GraphicsDeviceOptions())
@@ -54,9 +57,9 @@ namespace Gallery.Android
             bool deviceCreated = false;
             if (_backend == GraphicsBackend.Vulkan)
             {
-                if (GraphicsDevice == null)
+                if (Device == null)
                 {
-                    GraphicsDevice = GraphicsDevice.CreateVulkan(DeviceOptions);
+                    Device = GraphicsDevice.CreateVulkan(DeviceOptions);
                     deviceCreated = true;
                 }
 
@@ -68,11 +71,11 @@ namespace Gallery.Android
                     (uint)Height,
                     DeviceOptions.SwapchainDepthFormat,
                     DeviceOptions.SyncToVerticalBlank);
-                MainSwapchain = GraphicsDevice.ResourceFactory.CreateSwapchain(sd);
+                MainSwapchain = Device.ResourceFactory.CreateSwapchain(sd);
             }
             else
             {
-                Debug.Assert(GraphicsDevice == null && MainSwapchain == null);
+                Debug.Assert(Device == null && MainSwapchain == null);
                 SwapchainSource ss = SwapchainSource.CreateAndroidSurface(holder.Surface.Handle, JNIEnv.Handle);
                 SwapchainDescription sd = new SwapchainDescription(
                     ss,
@@ -80,8 +83,8 @@ namespace Gallery.Android
                     (uint)Height,
                     DeviceOptions.SwapchainDepthFormat,
                     DeviceOptions.SyncToVerticalBlank);
-                GraphicsDevice = GraphicsDevice.CreateOpenGLES(DeviceOptions, sd);
-                MainSwapchain = GraphicsDevice.MainSwapchain;
+                Device = GraphicsDevice.CreateOpenGLES(DeviceOptions, sd);
+                MainSwapchain = Device.MainSwapchain;
                 deviceCreated = true;
             }
 
@@ -93,9 +96,8 @@ namespace Gallery.Android
             _surfaceCreated = true;
         }
 
-        public void RunContinuousRenderLoop(Action a)
+        public void RunContinuousRenderLoop()
         {
-            Rendering += a;
             Task.Factory.StartNew(() => RenderLoop(), TaskCreationOptions.LongRunning);
         }
 
@@ -111,9 +113,15 @@ namespace Gallery.Android
 
         private void RenderLoop()
         {
+            Stopwatch sw = Stopwatch.StartNew();
+            double previousSeconds = sw.Elapsed.TotalSeconds;
             _enabled = true;
             while (_enabled)
             {
+                double currentSeconds = sw.Elapsed.TotalSeconds;
+                double elapsed = currentSeconds - previousSeconds;
+                previousSeconds = currentSeconds;
+
                 try
                 {
                     if (_paused || !_surfaceCreated) { continue; }
@@ -131,9 +139,12 @@ namespace Gallery.Android
                         Resized?.Invoke();
                     }
 
-                    if (GraphicsDevice != null)
+                    Update?.Invoke(elapsed, _snapshot);
+                    _snapshot.Clear();
+
+                    if (Device != null)
                     {
-                        Rendering?.Invoke();
+                        Render?.Invoke(elapsed);
                     }
                 }
                 catch (Exception e)
@@ -153,8 +164,8 @@ namespace Gallery.Android
             }
             else
             {
-                GraphicsDevice.Dispose();
-                GraphicsDevice = null;
+                Device.Dispose();
+                Device = null;
                 MainSwapchain = null;
                 DeviceDisposed?.Invoke();
             }

@@ -54,11 +54,10 @@ namespace Veldrid.SampleGallery
         public override void Render(double deltaSeconds)
         {
             CL.Begin();
-            CL.SetFramebuffer(MainSwapchain.Framebuffer);
+            CL.SetFramebuffer(Framebuffer);
             CL.ClearColorTarget(0, RgbaFloat.DarkRed);
             CL.End();
             Device.SubmitCommands(CL);
-            Device.SwapBuffers(MainSwapchain);
         }
     }
 }

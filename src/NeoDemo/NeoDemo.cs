@@ -226,7 +226,7 @@ namespace Veldrid.NeoDemo
                 Sdl2Events.ProcessEvents();
                 Sdl2Events.ProcessEvents();
                 snapshot = _window.PumpEvents();
-                InputTracker.UpdateFrameInput(snapshot);
+                InputTracker.UpdateFrameInput(snapshot, _window);
                 Update((float)deltaSeconds);
                 if (!_window.Exists)
                 {

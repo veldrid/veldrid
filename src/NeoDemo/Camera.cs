@@ -133,14 +133,18 @@ namespace Veldrid.NeoDemo
                 UpdateViewMatrix();
             }
 
-            Vector2 mouseDelta = InputTracker.MousePosition - _previousMousePos;
-            _previousMousePos = InputTracker.MousePosition;
+            Vector2 mouseDelta = InputTracker.MouseDelta;
 
             if (!ImGui.GetIO().WantCaptureMouse
                 && (InputTracker.GetMouseButton(MouseButton.Left) || InputTracker.GetMouseButton(MouseButton.Right)))
             {
+                Sdl2Native.SDL_SetRelativeMouseMode(true);
                 Yaw += -mouseDelta.X * 0.01f;
                 Pitch += -mouseDelta.Y * 0.01f;
+            }
+            else
+            {
+                Sdl2Native.SDL_SetRelativeMouseMode(false);
             }
 
             if (_controller != null)

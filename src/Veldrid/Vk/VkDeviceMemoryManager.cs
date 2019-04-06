@@ -61,7 +61,7 @@ namespace Veldrid.Vk
                         }
                     }
 
-                    return new VkMemoryBlock(memory, 0, size, memoryTypeBits, null, true);
+                    return new VkMemoryBlock(memory, 0, size, memoryTypeBits, mappedPtr, true);
                 }
                 else
                 {

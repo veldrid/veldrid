@@ -97,7 +97,24 @@ namespace Veldrid.Vk
                 VkResult result = vkCreateImage(gd.Device, ref imageCI, null, out _optimalImage);
                 CheckResult(result);
 
-                vkGetImageMemoryRequirements(gd.Device, _optimalImage, out VkMemoryRequirements memoryRequirements);
+                VkMemoryRequirements memoryRequirements;
+                bool prefersDedicatedAllocation;
+                if (_gd.GetImageMemoryRequirements2 != null)
+                {
+                    VkImageMemoryRequirementsInfo2KHR memReqsInfo2 = VkImageMemoryRequirementsInfo2KHR.New();
+                    memReqsInfo2.image = _optimalImage;
+                    VkMemoryRequirements2KHR memReqs2 = VkMemoryRequirements2KHR.New();
+                    VkMemoryDedicatedRequirementsKHR dedicatedReqs = VkMemoryDedicatedRequirementsKHR.New();
+                    memReqs2.pNext = &dedicatedReqs;
+                    _gd.GetImageMemoryRequirements2(_gd.Device, &memReqsInfo2, &memReqs2);
+                    memoryRequirements = memReqs2.memoryRequirements;
+                    prefersDedicatedAllocation = dedicatedReqs.prefersDedicatedAllocation || dedicatedReqs.requiresDedicatedAllocation;
+                }
+                else
+                {
+                    vkGetImageMemoryRequirements(gd.Device, _optimalImage, out memoryRequirements);
+                    prefersDedicatedAllocation = false;
+                }
 
                 VkMemoryBlock memoryToken = gd.MemoryManager.Allocate(
                     gd.PhysicalDeviceMemProperties,
@@ -105,7 +122,10 @@ namespace Veldrid.Vk
                     VkMemoryPropertyFlags.DeviceLocal,
                     false,
                     memoryRequirements.size,
-                    memoryRequirements.alignment);
+                    memoryRequirements.alignment,
+                    prefersDedicatedAllocation,
+                    _optimalImage,
+                    Vulkan.VkBuffer.Null);
                 _memoryBlock = memoryToken;
                 result = vkBindImageMemory(gd.Device, _optimalImage, _memoryBlock.DeviceMemory, _memoryBlock.Offset);
                 CheckResult(result);
@@ -141,14 +161,36 @@ namespace Veldrid.Vk
                 bufferCI.size = stagingSize;
                 VkResult result = vkCreateBuffer(_gd.Device, ref bufferCI, null, out _stagingBuffer);
                 CheckResult(result);
-                vkGetBufferMemoryRequirements(_gd.Device, _stagingBuffer, out VkMemoryRequirements bufferMemReqs);
+
+                VkMemoryRequirements bufferMemReqs;
+                bool prefersDedicatedAllocation;
+                if (_gd.GetBufferMemoryRequirements2 != null)
+                {
+                    VkBufferMemoryRequirementsInfo2KHR memReqInfo2 = VkBufferMemoryRequirementsInfo2KHR.New();
+                    memReqInfo2.buffer = _stagingBuffer;
+                    VkMemoryRequirements2KHR memReqs2 = VkMemoryRequirements2KHR.New();
+                    VkMemoryDedicatedRequirementsKHR dedicatedReqs = VkMemoryDedicatedRequirementsKHR.New();
+                    memReqs2.pNext = &dedicatedReqs;
+                    _gd.GetBufferMemoryRequirements2(_gd.Device, &memReqInfo2, &memReqs2);
+                    bufferMemReqs = memReqs2.memoryRequirements;
+                    prefersDedicatedAllocation = dedicatedReqs.prefersDedicatedAllocation || dedicatedReqs.requiresDedicatedAllocation;
+                }
+                else
+                {
+                    vkGetBufferMemoryRequirements(gd.Device, _stagingBuffer, out bufferMemReqs);
+                    prefersDedicatedAllocation = false;
+                }
+
                 _memoryBlock = _gd.MemoryManager.Allocate(
                     _gd.PhysicalDeviceMemProperties,
                     bufferMemReqs.memoryTypeBits,
                     VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
                     true,
                     bufferMemReqs.size,
-                    bufferMemReqs.alignment);
+                    bufferMemReqs.alignment,
+                    prefersDedicatedAllocation,
+                    VkImage.Null,
+                    _stagingBuffer);
 
                 result = vkBindBufferMemory(_gd.Device, _stagingBuffer, _memoryBlock.DeviceMemory, _memoryBlock.Offset);
                 CheckResult(result);

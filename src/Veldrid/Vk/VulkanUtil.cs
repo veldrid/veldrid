@@ -33,51 +33,6 @@ namespace Veldrid.Vk
             throw new VeldridException("No suitable memory type.");
         }
 
-        public static void CreateImage(
-            VkDevice device,
-            VkPhysicalDeviceMemoryProperties physicalDeviceMemProperties,
-            VkDeviceMemoryManager memoryManager,
-            uint width,
-            uint height,
-            uint depth,
-            uint arrayLayers,
-            VkFormat format,
-            VkImageTiling tiling,
-            VkImageUsageFlags usage,
-            VkMemoryPropertyFlags properties,
-            out VkImage image,
-            out VkMemoryBlock memory)
-        {
-            VkImageCreateInfo imageCI = VkImageCreateInfo.New();
-            imageCI.imageType = VkImageType.Image2D;
-            imageCI.extent.width = width;
-            imageCI.extent.height = height;
-            imageCI.extent.depth = depth;
-            imageCI.mipLevels = 1;
-            imageCI.arrayLayers = arrayLayers;
-            imageCI.format = format;
-            imageCI.tiling = tiling;
-            imageCI.initialLayout = VkImageLayout.Preinitialized;
-            imageCI.usage = usage;
-            imageCI.sharingMode = VkSharingMode.Exclusive;
-            imageCI.samples = VkSampleCountFlags.Count1;
-
-            VkResult result = vkCreateImage(device, ref imageCI, null, out image);
-            CheckResult(result);
-
-            vkGetImageMemoryRequirements(device, image, out VkMemoryRequirements memRequirements);
-            VkMemoryBlock memoryToken = memoryManager.Allocate(
-                physicalDeviceMemProperties,
-                memRequirements.memoryTypeBits,
-                properties,
-                false,
-                memRequirements.size,
-                memRequirements.alignment);
-            memory = memoryToken;
-            result = vkBindImageMemory(device, image, memory.DeviceMemory, memory.Offset);
-            CheckResult(result);
-        }
-
         public static string[] EnumerateInstanceLayers()
         {
             uint propCount = 0;

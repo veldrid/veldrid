@@ -44,6 +44,8 @@ namespace Veldrid.Vk
         private VkDescriptorPoolManager _descriptorPoolManager;
         private bool _standardValidationSupported;
         private bool _standardClipYDirection;
+        private vkGetBufferMemoryRequirements2_t _getBufferMemoryRequirements2;
+        private vkGetImageMemoryRequirements2_t _getImageMemoryRequirements2;
 
         // Staging Resources
         private const uint MinStagingBufferSize = 64;
@@ -90,6 +92,8 @@ namespace Veldrid.Vk
         public vkCmdDebugMarkerBeginEXT_t MarkerBegin => _markerBegin;
         public vkCmdDebugMarkerEndEXT_t MarkerEnd => _markerEnd;
         public vkCmdDebugMarkerInsertEXT_t MarkerInsert => _markerInsert;
+        public vkGetBufferMemoryRequirements2_t GetBufferMemoryRequirements2 => _getBufferMemoryRequirements2;
+        public vkGetImageMemoryRequirements2_t GetImageMemoryRequirements2 => _getImageMemoryRequirements2;
 
         private readonly object _submittedFencesLock = new object();
         private readonly ConcurrentQueue<Vulkan.VkFence> _availableSubmissionFences = new ConcurrentQueue<Vulkan.VkFence>();
@@ -114,7 +118,11 @@ namespace Veldrid.Vk
             CreatePhysicalDevice();
             CreateLogicalDevice(surface, options.PreferStandardClipSpaceYDirection, vkOptions);
 
-            _memoryManager = new VkDeviceMemoryManager(_device, _physicalDevice);
+            _memoryManager = new VkDeviceMemoryManager(
+                _device,
+                _physicalDevice,
+                _getBufferMemoryRequirements2,
+                _getImageMemoryRequirements2);
 
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
@@ -673,6 +681,8 @@ namespace Veldrid.Vk
 
             HashSet<string> requiredInstanceExtensions = new HashSet<string>(options.DeviceExtensions ?? Array.Empty<string>());
 
+            bool hasMemReqs2 = false;
+            bool hasDedicatedAllocation = false;
             StackList<IntPtr> extensionNames = new StackList<IntPtr>();
             for (int property = 0; property < propertyCount; property++)
             {
@@ -693,6 +703,18 @@ namespace Veldrid.Vk
                     extensionNames.Add((IntPtr)properties[property].extensionName);
                     requiredInstanceExtensions.Remove(extensionName);
                     _standardClipYDirection = true;
+                }
+                else if (extensionName == "VK_KHR_get_memory_requirements2")
+                {
+                    extensionNames.Add((IntPtr)properties[property].extensionName);
+                    requiredInstanceExtensions.Remove(extensionName);
+                    hasMemReqs2 = true;
+                }
+                else if (extensionName == "VK_KHR_dedicated_allocation")
+                {
+                    extensionNames.Add((IntPtr)properties[property].extensionName);
+                    requiredInstanceExtensions.Remove(extensionName);
+                    hasDedicatedAllocation = true;
                 }
                 else if (requiredInstanceExtensions.Remove(extensionName))
                 {
@@ -740,6 +762,13 @@ namespace Veldrid.Vk
                 _markerInsert = Marshal.GetDelegateForFunctionPointer<vkCmdDebugMarkerInsertEXT_t>(
                     GetInstanceProcAddr("vkCmdDebugMarkerInsertEXT"));
             }
+            if (hasDedicatedAllocation && hasMemReqs2)
+            {
+                _getBufferMemoryRequirements2 = GetDeviceProcAddr<vkGetBufferMemoryRequirements2_t>("vkGetBufferMemoryRequirements2")
+                    ?? GetDeviceProcAddr<vkGetBufferMemoryRequirements2_t>("vkGetBufferMemoryRequirements2KHR");
+                _getImageMemoryRequirements2 = GetDeviceProcAddr<vkGetImageMemoryRequirements2_t>("vkGetImageMemoryRequirements2")
+                    ?? GetDeviceProcAddr<vkGetImageMemoryRequirements2_t>("vkGetImageMemoryRequirements2KHR");
+            }
         }
 
         private IntPtr GetInstanceProcAddr(string name)
@@ -753,6 +782,26 @@ namespace Veldrid.Vk
             }
 
             return vkGetInstanceProcAddr(_instance, utf8Ptr);
+        }
+
+        private IntPtr GetDeviceProcAddr(string name)
+        {
+            int byteCount = Encoding.UTF8.GetByteCount(name);
+            byte* utf8Ptr = stackalloc byte[byteCount];
+
+            fixed (char* namePtr = name)
+            {
+                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+            }
+
+            return vkGetDeviceProcAddr(_device, utf8Ptr);
+        }
+
+        private T GetDeviceProcAddr<T>(string name)
+        {
+            IntPtr funcPtr = GetDeviceProcAddr(name);
+            if (funcPtr != IntPtr.Zero) { return Marshal.GetDelegateForFunctionPointer<T>(funcPtr); }
+            else { return default; }
         }
 
         private void GetQueueFamilyIndices(VkSurfaceKHR surface)
@@ -1427,4 +1476,8 @@ namespace Veldrid.Vk
     internal unsafe delegate void vkCmdDebugMarkerBeginEXT_t(VkCommandBuffer commandBuffer, VkDebugMarkerMarkerInfoEXT* pMarkerInfo);
     internal unsafe delegate void vkCmdDebugMarkerEndEXT_t(VkCommandBuffer commandBuffer);
     internal unsafe delegate void vkCmdDebugMarkerInsertEXT_t(VkCommandBuffer commandBuffer, VkDebugMarkerMarkerInfoEXT* pMarkerInfo);
+
+    internal unsafe delegate void vkGetBufferMemoryRequirements2_t(VkDevice device, VkBufferMemoryRequirementsInfo2KHR* pInfo, VkMemoryRequirements2KHR* pMemoryRequirements);
+    internal unsafe delegate void vkGetImageMemoryRequirements2_t(VkDevice device, VkImageMemoryRequirementsInfo2KHR* pInfo, VkMemoryRequirements2KHR* pMemoryRequirements);
+
 }

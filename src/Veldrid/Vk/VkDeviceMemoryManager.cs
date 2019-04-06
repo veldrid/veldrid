@@ -18,10 +18,19 @@ namespace Veldrid.Vk
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryTypeUnmapped = new Dictionary<uint, ChunkAllocatorSet>();
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryType = new Dictionary<uint, ChunkAllocatorSet>();
 
-        public VkDeviceMemoryManager(VkDevice device, VkPhysicalDevice physicalDevice)
+        private readonly vkGetBufferMemoryRequirements2_t _getBufferMemoryRequirements2;
+        private readonly vkGetImageMemoryRequirements2_t _getImageMemoryRequirements2;
+
+        public VkDeviceMemoryManager(
+            VkDevice device,
+            VkPhysicalDevice physicalDevice,
+            vkGetBufferMemoryRequirements2_t getBufferMemoryRequirements2,
+            vkGetImageMemoryRequirements2_t getImageMemoryRequirements2)
         {
             _device = device;
             _physicalDevice = physicalDevice;
+            _getBufferMemoryRequirements2 = getBufferMemoryRequirements2;
+            _getImageMemoryRequirements2 = getImageMemoryRequirements2;
         }
 
         public VkMemoryBlock Allocate(
@@ -32,6 +41,29 @@ namespace Veldrid.Vk
             ulong size,
             ulong alignment)
         {
+            return Allocate(
+                memProperties,
+                memoryTypeBits,
+                flags,
+                persistentMapped,
+                size,
+                alignment,
+                false,
+                VkImage.Null,
+                Vulkan.VkBuffer.Null);
+        }
+
+        public VkMemoryBlock Allocate(
+            VkPhysicalDeviceMemoryProperties memProperties,
+            uint memoryTypeBits,
+            VkMemoryPropertyFlags flags,
+            bool persistentMapped,
+            ulong size,
+            ulong alignment,
+            bool dedicated,
+            VkImage dedicatedImage,
+            Vulkan.VkBuffer dedicatedBuffer)
+        {
             lock (_lock)
             {
                 uint memoryTypeIndex = FindMemoryType(memProperties, memoryTypeBits, flags);
@@ -40,11 +72,21 @@ namespace Veldrid.Vk
                     ? MinDedicatedAllocationSizeDynamic
                     : MinDedicatedAllocationSizeNonDynamic;
 
-                if (size >= minDedicatedAllocationSize)
+                if (dedicated || size >= minDedicatedAllocationSize)
                 {
                     VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.New();
                     allocateInfo.allocationSize = size;
                     allocateInfo.memoryTypeIndex = memoryTypeIndex;
+
+                    VkMemoryDedicatedAllocateInfoKHR dedicatedAI;
+                    if (dedicated)
+                    {
+                        dedicatedAI = VkMemoryDedicatedAllocateInfoKHR.New();
+                        dedicatedAI.buffer = dedicatedBuffer;
+                        dedicatedAI.image = dedicatedImage;
+                        allocateInfo.pNext = &dedicatedAI;
+                    }
+
                     VkResult allocationResult = vkAllocateMemory(_device, ref allocateInfo, null, out VkDeviceMemory memory);
                     if (allocationResult != VkResult.Success)
                     {

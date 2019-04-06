@@ -121,6 +121,7 @@ namespace Veldrid.Vk
             _memoryManager = new VkDeviceMemoryManager(
                 _device,
                 _physicalDevice,
+                _physicalDeviceProperties.limits.bufferImageGranularity,
                 _getBufferMemoryRequirements2,
                 _getImageMemoryRequirements2);
 

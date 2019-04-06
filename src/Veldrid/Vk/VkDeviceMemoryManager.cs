@@ -13,8 +13,9 @@ namespace Veldrid.Vk
         private const ulong MinDedicatedAllocationSizeNonDynamic = 1024 * 1024 * 256;
         private readonly VkDevice _device;
         private readonly VkPhysicalDevice _physicalDevice;
+        private readonly ulong _bufferImageGranularity;
         private readonly object _lock = new object();
-
+        private ulong _totalAllocatedBytes;
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryTypeUnmapped = new Dictionary<uint, ChunkAllocatorSet>();
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryType = new Dictionary<uint, ChunkAllocatorSet>();
 
@@ -24,11 +25,13 @@ namespace Veldrid.Vk
         public VkDeviceMemoryManager(
             VkDevice device,
             VkPhysicalDevice physicalDevice,
+            ulong bufferImageGranularity,
             vkGetBufferMemoryRequirements2_t getBufferMemoryRequirements2,
             vkGetImageMemoryRequirements2_t getImageMemoryRequirements2)
         {
             _device = device;
             _physicalDevice = physicalDevice;
+            _bufferImageGranularity = bufferImageGranularity;
             _getBufferMemoryRequirements2 = getBufferMemoryRequirements2;
             _getImageMemoryRequirements2 = getImageMemoryRequirements2;
         }
@@ -64,6 +67,10 @@ namespace Veldrid.Vk
             VkImage dedicatedImage,
             Vulkan.VkBuffer dedicatedBuffer)
         {
+            // Round up to the nearest multiple of bufferImageGranularity.
+            size = ((size / _bufferImageGranularity) + 1) * _bufferImageGranularity;
+            _totalAllocatedBytes += size;
+
             lock (_lock)
             {
                 uint memoryTypeIndex = FindMemoryType(memProperties, memoryTypeBits, flags);
@@ -121,6 +128,7 @@ namespace Veldrid.Vk
 
         public void Free(VkMemoryBlock block)
         {
+            _totalAllocatedBytes -= block.Size;
             lock (_lock)
             {
                 if (block.DedicatedAllocation)
@@ -329,6 +337,7 @@ namespace Veldrid.Vk
 #if DEBUG
                 RemoveAllocatedBlock(block);
 #endif
+                _totalAllocatedBytes -= block.Size;
             }
 
             private void MergeContiguousBlocks()

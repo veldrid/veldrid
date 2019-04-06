@@ -1046,7 +1046,10 @@ namespace Veldrid.OpenGL
         {
             return (source, type, id, severity, length, message, userParam) =>
             {
-                if (severity >= minimumSeverity && type != DebugType.DebugTypeMarker)
+                if (severity >= minimumSeverity
+                    && type != DebugType.DebugTypeMarker
+                    && type != DebugType.DebugTypePushGroup
+                    && type != DebugType.DebugTypePopGroup)
                 {
                     string messageString = Marshal.PtrToStringAnsi((IntPtr)message, (int)length);
                     Debug.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");

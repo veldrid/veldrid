@@ -50,5 +50,14 @@ namespace Veldrid.Sdl2
         /// Returns 0 on success or -1 if not supported; call SDL_GetError() for more information.
         /// </returns>
         public static int SDL_CaptureMouse(bool enabled) => s_sdl_captureMouse(enabled);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void SDL_SetWindowGrab_t(SDL_Window window, bool grabbed);
+        private static SDL_SetWindowGrab_t s_sdl_setWindowGrabbed = LoadFunction<SDL_SetWindowGrab_t>("SDL_SetWindowGrab");
+        /// <summary>
+        /// Enable/disable window grab mouse.
+        /// If enabled mouse will be contained inside of window.
+        /// </summary>
+        public static void SDL_SetWindowGrab(SDL_Window window, bool grabbed) => s_sdl_setWindowGrabbed(window, grabbed);
     }
 }

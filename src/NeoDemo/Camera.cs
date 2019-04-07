@@ -22,22 +22,25 @@ namespace Veldrid.NeoDemo
         private float _yaw;
         private float _pitch;
 
-        private Vector2 _previousMousePos;
+        private Vector2 _mousePressedPos;
+        private bool _mousePressed = false;
         private GraphicsDevice _gd;
         private bool _useReverseDepth;
         private float _windowWidth;
         private float _windowHeight;
+        private Sdl2Window _window;
         private Sdl2ControllerTracker _controller;
 
         public event Action<Matrix4x4> ProjectionChanged;
         public event Action<Matrix4x4> ViewChanged;
 
-        public Camera(GraphicsDevice gd, float width, float height, Sdl2ControllerTracker controller)
+        public Camera(GraphicsDevice gd, Sdl2Window window, Sdl2ControllerTracker controller)
         {
             _gd = gd;
             _useReverseDepth = gd.IsDepthRangeZeroToOne;
-            _windowWidth = width;
-            _windowHeight = height;
+            _window = window;
+            _windowWidth = window.Width;
+            _windowHeight = window.Height;
             _controller = controller;
             UpdatePerspectiveMatrix();
             UpdateViewMatrix();
@@ -133,18 +136,27 @@ namespace Veldrid.NeoDemo
                 UpdateViewMatrix();
             }
 
-            Vector2 mouseDelta = InputTracker.MouseDelta;
-
             if (!ImGui.GetIO().WantCaptureMouse
                 && (InputTracker.GetMouseButton(MouseButton.Left) || InputTracker.GetMouseButton(MouseButton.Right)))
             {
-                Sdl2Native.SDL_SetRelativeMouseMode(true);
-                Yaw += -mouseDelta.X * 0.01f;
-                Pitch += -mouseDelta.Y * 0.01f;
+                if (!_mousePressed)
+                {
+                    _mousePressed = true;
+                    _mousePressedPos = InputTracker.MousePosition;
+                    Sdl2Native.SDL_ShowCursor(0);
+                    Sdl2Native.SDL_SetWindowGrab(_window.SdlWindowHandle, true); 
+                }
+                Vector2 mouseDelta = _mousePressedPos - InputTracker.MousePosition;
+                Sdl2Native.SDL_WarpMouseInWindow(_window.SdlWindowHandle, (int)_mousePressedPos.X, (int)_mousePressedPos.Y);
+                Yaw += mouseDelta.X * 0.002f;
+                Pitch += -mouseDelta.Y * 0.002f;
             }
-            else
+            else if(_mousePressed)
             {
-                Sdl2Native.SDL_SetRelativeMouseMode(false);
+                Sdl2Native.SDL_WarpMouseInWindow(_window.SdlWindowHandle, (int)_mousePressedPos.X, (int)_mousePressedPos.Y);
+                Sdl2Native.SDL_SetWindowGrab(_window.SdlWindowHandle, false);
+                Sdl2Native.SDL_ShowCursor(1);
+                _mousePressed = false;
             }
 
             if (_controller != null)

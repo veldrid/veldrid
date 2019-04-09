@@ -5,6 +5,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="C:\Users\Eric\Pictures\KoiGN.jpg"
+                      Link="cat_diff.png"
+                      LogicalName="cat_diff.png" />
+    <EmbeddedResource Include="..\..\src\Veldrid.VirtualReality.Sample\cat\cat.obj"
+                      Link="cat.obj"
+                      LogicalName="cat.obj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="$(SamplesDir)/AssetProcessor/AssetProcessor.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid/Veldrid.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.Utilities\Veldrid.Utilities.csproj" />

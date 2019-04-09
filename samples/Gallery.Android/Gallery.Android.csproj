@@ -100,6 +100,9 @@
     <PackageReference Include="ImGui.NET">
       <Version>1.68.1</Version>
     </PackageReference>
+    <PackageReference Include="Veldrid.SPIRV">
+      <Version>1.0.9</Version>
+    </PackageReference>
     <PackageReference Include="Xamarin.Android.Support.Design" Version="27.0.2.1" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0" />
   </ItemGroup>

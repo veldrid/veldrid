@@ -43,7 +43,7 @@ namespace AssetProcessor
                 }
 
                 ProcessedTexture texData = new ProcessedTexture(
-                        PixelFormat.R8_G8_B8_A8_UNorm, TextureType.Texture2D,
+                        PixelFormat.R8_G8_B8_A8_UNorm_SRgb, TextureType.Texture2D,
                         (uint)image.Width, (uint)image.Height, 1,
                         (uint)mipmaps.Length, 1,
                         allTexData);

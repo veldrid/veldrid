@@ -77,8 +77,11 @@ namespace AssetPrimitives
         {
             switch (format)
             {
-                case PixelFormat.R8_G8_B8_A8_UNorm: return 4;
-                case PixelFormat.BC3_UNorm: return 1;
+                case PixelFormat.R8_G8_B8_A8_UNorm:
+                case PixelFormat.R8_G8_B8_A8_UNorm_SRgb:
+                    return 4;
+                case PixelFormat.BC3_UNorm:
+                    return 1;
                 default: throw new NotImplementedException();
             }
         }

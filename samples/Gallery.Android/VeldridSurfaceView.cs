@@ -169,6 +169,8 @@ namespace Veldrid.SampleGallery
                 MainSwapchain = null;
                 DeviceDisposed?.Invoke();
             }
+
+            _enabled = false;
         }
 
         public void OnPause()

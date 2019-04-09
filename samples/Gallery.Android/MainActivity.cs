@@ -34,6 +34,7 @@ namespace Veldrid.SampleGallery
             GraphicsBackend backend = GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)
                 ? GraphicsBackend.Vulkan
                 : GraphicsBackend.OpenGLES;
+            backend = GraphicsBackend.OpenGLES;
             _view = new VeldridSurfaceView(this, backend, options);
             _view.DeviceCreated += OnDeviceCreated;
             SetContentView(_view);

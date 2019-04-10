@@ -149,7 +149,7 @@ namespace Veldrid.NeoDemo
                 Vector2 mouseDelta = _mousePressedPos - InputTracker.MousePosition;
                 Sdl2Native.SDL_WarpMouseInWindow(_window.SdlWindowHandle, (int)_mousePressedPos.X, (int)_mousePressedPos.Y);
                 Yaw += mouseDelta.X * 0.002f;
-                Pitch += -mouseDelta.Y * 0.002f;
+                Pitch += mouseDelta.Y * 0.002f;
             }
             else if(_mousePressed)
             {

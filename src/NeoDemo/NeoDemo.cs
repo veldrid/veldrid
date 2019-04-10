@@ -72,7 +72,7 @@ namespace Veldrid.NeoDemo
             Sdl2Native.SDL_Init(SDLInitFlags.GameController);
             Sdl2ControllerTracker.CreateDefault(out _controllerTracker);
 
-            _scene = new Scene(_gd, _window.Width, _window.Height, _controllerTracker);
+            _scene = new Scene(_gd, _window, _controllerTracker);
 
             _sc.SetCurrentScene(_scene);
 
@@ -226,7 +226,7 @@ namespace Veldrid.NeoDemo
                 Sdl2Events.ProcessEvents();
                 Sdl2Events.ProcessEvents();
                 snapshot = _window.PumpEvents();
-                InputTracker.UpdateFrameInput(snapshot);
+                InputTracker.UpdateFrameInput(snapshot, _window);
                 Update((float)deltaSeconds);
                 if (!_window.Exists)
                 {

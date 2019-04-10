@@ -538,7 +538,7 @@ namespace Veldrid.Sdl2
         private void HandleMouseMotionEvent(SDL_MouseMotionEvent mouseMotionEvent)
         {
             Vector2 mousePos = new Vector2(mouseMotionEvent.x, mouseMotionEvent.y);
-            Vector2 delta = new Vector2(mouseMotionEvent.x - _currentMouseX, mouseMotionEvent.y - _currentMouseY);
+            Vector2 delta = new Vector2(mouseMotionEvent.xrel, mouseMotionEvent.yrel);
             _currentMouseX = (int)mousePos.X;
             _currentMouseY = (int)mousePos.Y;
             _privateSnapshot.MousePosition = mousePos;

@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace Veldrid.OpenGLBinding
@@ -8,6 +9,7 @@ namespace Veldrid.OpenGLBinding
     // GLuint64 = uint64
     // GLenum = uint
     // Glclampf = 32-bit float, [0, 1]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public static unsafe class OpenGLNative
     {
         private static Func<string, IntPtr> s_getProcAddress;
@@ -19,6 +21,11 @@ namespace Veldrid.OpenGLBinding
         private static glGenVertexArrays_t p_glGenVertexArrays;
         public static void glGenVertexArrays(uint n, out uint arrays) => p_glGenVertexArrays(n, out arrays);
 
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glDeleteVertexArrays_t(uint n, ref uint buffers);
+        private static glDeleteVertexArrays_t p_glDeleteVertexArrays;
+        public static void glDeleteVertexArrays(uint n, ref uint buffers) => p_glDeleteVertexArrays(n, ref buffers);
+        
         [UnmanagedFunctionPointer(CallConv)]
         private delegate uint glGetError_t();
         private static glGetError_t p_glGetError;
@@ -463,6 +470,15 @@ namespace Veldrid.OpenGLBinding
             BlendingFactorDest dstRGB,
             BlendingFactorSrc srcAlpha,
             BlendingFactorDest dstAlpha) => p_glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+        
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glBlendFunc_t(
+            BlendingFactorSrc srcRGB,
+            BlendingFactorDest dstRGB);
+        private static glBlendFunc_t p_glBlendFunc;
+        public static void glBlendFunc(
+            BlendingFactorSrc srcRGB,
+            BlendingFactorDest dstRGB) => p_glBlendFunc(srcRGB, dstRGB);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glEnable_t(EnableCap cap);
@@ -496,6 +512,15 @@ namespace Veldrid.OpenGLBinding
         public static void glBlendEquationSeparate(BlendEquationMode modeRGB, BlendEquationMode modeAlpha)
             => p_glBlendEquationSeparate(modeRGB, modeAlpha);
 
+        
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glBlendEquation_t(BlendEquationMode mode);
+        private static glBlendEquation_t p_glBlendEquation;
+        public static void glBlendEquation(BlendEquationMode mode)
+            => p_glBlendEquation(mode);
+
+        
+        
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glBlendColor_t(float red, float green, float blue, float alpha);
         private static glBlendColor_t p_glBlendColor;
@@ -570,6 +595,51 @@ namespace Veldrid.OpenGLBinding
         private delegate void glUniform1i_t(int location, int v0);
         private static glUniform1i_t p_glUniform1i;
         public static void glUniform1i(int location, int v0) => p_glUniform1i(location, v0);
+        
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glUniform2i_t(int location, int v0, int v1);
+        private static glUniform2i_t p_glUniform2i;
+        public static void glUniform2i(int location, int v0, int v1) => p_glUniform2i(location, v0, v1);
+        
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glUniform3i_t(int location, int v0, int v1, int v2);
+        private static glUniform3i_t p_glUniform3i;
+        public static void glUniform3i(int location, int v0, int v1, int v2) 
+            => p_glUniform3i(location, v0, v1, v2);
+        
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glUniform4i_t(int location, int v0, int v1, int v2, int v3);
+        private static glUniform4i_t p_glUniform4i;
+        public static void glUniform4i(int location, int v0, int v1, int v2, int v3) 
+            => p_glUniform4i(location, v0, v1, v2, v3);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glUniform1f_t(int location, float v0);
+        private static glUniform1f_t p_glUniform1f;
+        public static void glUniform1f(int location, float v0) => p_glUniform1f(location, v0);
+        
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glUniform2f_t(int location, float v0, float v1);
+        private static glUniform2f_t p_glUniform2f;
+        public static void glUniform2f(int location, float v0, float v1) => p_glUniform2f(location, v0, v1);
+        
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glUniform3f_t(int location, float v0, float v1, float v2);
+        private static glUniform3f_t p_glUniform3f;
+        public static void glUniform3f(int location, float v0, float v1, float v2) 
+            => p_glUniform3f(location, v0, v1, v2);
+        
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glUniform4f_t(int location, float v0, float v1, float v2, float v3);
+        private static glUniform4f_t p_glUniform4f;
+        public static void glUniform4f(int location, float v0, float v1, float v2, float v3) 
+            => p_glUniform4f(location, v0, v1, v2, v3);
+        
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glUniformMatrix4fv_t(int location, int count, bool transpose, float* value);
+        private static glUniformMatrix4fv_t p_glUniformMatrix4fv;
+        public static void glUniformMatrix4fv(int location, int count, bool transpose, float* value) 
+            => p_glUniformMatrix4fv(location, count, transpose, value);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate uint glGetUniformBlockIndex_t(uint program, byte* uniformBlockName);
@@ -945,13 +1015,13 @@ namespace Veldrid.OpenGLBinding
             SizedInternalFormat format​);
         private static glBindImageTexture_t p_glBindImageTexture;
         public static void glBindImageTexture(
-            uint unit​,
-            uint texture​,
-            int level​,
-            GLboolean layered​,
-            int layer​,
-            TextureAccess access​,
-            SizedInternalFormat format​) => p_glBindImageTexture(unit, texture, level, layered, layer, access, format);
+            uint unit,
+            uint texture,
+            int level,
+            GLboolean layered,
+            int layer,
+            TextureAccess access,
+            SizedInternalFormat format) => p_glBindImageTexture(unit, texture, level, layered, layer, access, format);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glMemoryBarrier_t(MemoryBarrierFlags barriers);
@@ -1474,6 +1544,19 @@ namespace Veldrid.OpenGLBinding
             int* @params) => p_glGetActiveUniformBlockiv(program, uniformBlockIndex, pname, @params);
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glGetActiveUniform_t(uint program, uint index, int bufSize, int* length, int* size, uint* type, byte* name);
+        private static glGetActiveUniform_t p_glGetActiveUniform;
+        public static void glGetActiveUniform(uint program, uint index, int bufSize, int* length, int* size, uint* type, byte* name)
+            => p_glGetActiveUniform(program, index, bufSize, length, size, type, name);
+        
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glGetActiveAttrib_t(uint program, uint index, int bufSize, int* length, int* size, uint* type, byte* name);
+        private static glGetActiveAttrib_t p_glGetActiveAttrib;
+        public static void glGetActiveAttrib(uint program, uint index, int bufSize, int* length, int* size, uint* type, byte* name)
+            => p_glGetActiveAttrib(program, index, bufSize, length, size, type, name);
+        
+        
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate void glGetCompressedTexImage_t(TextureTarget target, int level, void* pixels);
         private static glGetCompressedTexImage_t p_glGetCompressedTexImage;
         public static void glGetCompressedTexImage(TextureTarget target, int level, void* pixels)
@@ -1668,6 +1751,8 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glStencilMask", out p_glStencilMask);
             LoadFunction("glClearStencil", out p_glClearStencil);
             LoadFunction("glGetActiveUniformBlockiv", out p_glGetActiveUniformBlockiv);
+            LoadFunction("glGetActiveUniform", out p_glGetActiveUniform);
+            LoadFunction("glGetActiveAttrib", out p_glGetActiveAttrib);
             LoadFunction("glGetCompressedTexImage", out p_glGetCompressedTexImage);
             LoadFunction("glGetCompressedTextureImage", out p_glGetCompressedTextureImage);
             LoadFunction("glGetTexLevelParameteriv", out p_glGetTexLevelParameteriv);
@@ -1675,6 +1760,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glCompressedTexImage1D", out p_glCompressedTexSubImage1D);
 
             LoadFunction("glGenVertexArrays", out p_glGenVertexArrays);
+            LoadFunction("glDeleteVertexArrays", out p_glDeleteVertexArrays);
             LoadFunction("glGetError", out p_glGetError);
             LoadFunction("glBindVertexArray", out p_glBindVertexArray);
             LoadFunction("glClearColor", out p_glClearColor);
@@ -1733,6 +1819,8 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glDisablei", out p_glDisablei);
             LoadFunction("glBlendEquationSeparatei", out p_glBlendEquationSeparatei);
             LoadFunction("glBlendEquationSeparate", out p_glBlendEquationSeparate);
+            LoadFunction("glBlendEquation", out p_glBlendEquation);
+            LoadFunction("glBlendFunc", out p_glBlendFunc);
             LoadFunction("glBlendColor", out p_glBlendColor);
             LoadFunction("glDepthFunc", out p_glDepthFunc);
             LoadFunction("glDepthMask", out p_glDepthMask);
@@ -1746,6 +1834,14 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glUniformBlockBinding", out p_glUniformBlockBinding);
             LoadFunction("glDeleteProgram", out p_glDeleteProgram);
             LoadFunction("glUniform1i", out p_glUniform1i);
+            LoadFunction("glUniform2i", out p_glUniform2i);
+            LoadFunction("glUniform3i", out p_glUniform3i);
+            LoadFunction("glUniform4i", out p_glUniform4i);
+            LoadFunction("glUniform1f", out p_glUniform1f);
+            LoadFunction("glUniform2f", out p_glUniform2f);
+            LoadFunction("glUniform3f", out p_glUniform3f);
+            LoadFunction("glUniform4f", out p_glUniform4f);
+            LoadFunction("glUniformMatrix4fv", out p_glUniformMatrix4fv);
             LoadFunction("glGetUniformBlockIndex", out p_glGetUniformBlockIndex);
             LoadFunction("glGetUniformLocation", out p_glGetUniformLocation);
             LoadFunction("glGetAttribLocation", out p_glGetAttribLocation);

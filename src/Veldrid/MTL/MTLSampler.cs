@@ -18,9 +18,9 @@ namespace Veldrid.MTL
                 out MTLSamplerMipFilter mip);
 
             MTLSamplerDescriptor mtlDesc = MTLSamplerDescriptor.New();
-            mtlDesc.rAddressMode = MTLFormats.VdToMTLAddressMode(description.AddressModeU);
-            mtlDesc.sAddressMode = MTLFormats.VdToMTLAddressMode(description.AddressModeV);
-            mtlDesc.tAddressMode = MTLFormats.VdToMTLAddressMode(description.AddressModeW);
+            mtlDesc.sAddressMode = MTLFormats.VdToMTLAddressMode(description.AddressModeU);
+            mtlDesc.tAddressMode = MTLFormats.VdToMTLAddressMode(description.AddressModeV);
+            mtlDesc.rAddressMode = MTLFormats.VdToMTLAddressMode(description.AddressModeW);
             mtlDesc.minFilter = min;
             mtlDesc.magFilter = mag;
             mtlDesc.mipFilter = mip;

@@ -18,23 +18,10 @@ namespace Veldrid.SampleGallery
         {
             base.OnCreate(savedInstanceState);
 
-            bool isDebugBuild = false;
-#if DEBUG
-            isDebugBuild = true;
-#endif
-
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(
-                debug: isDebugBuild,
-                swapchainDepthFormat: PixelFormat.R16_UNorm,
-                syncToVerticalBlank: false,
-                resourceBindingModel: ResourceBindingModel.Improved,
-                preferDepthRangeZeroToOne: true,
-                preferStandardClipSpaceYDirection: true,
-                swapchainSrgbFormat: true);
+            GraphicsDeviceOptions options = Gallery.GetPreferredOptions();
             GraphicsBackend backend = GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)
                 ? GraphicsBackend.Vulkan
                 : GraphicsBackend.OpenGLES;
-            backend = GraphicsBackend.OpenGLES;
             _view = new VeldridSurfaceView(this, backend, options);
             _view.DeviceCreated += OnDeviceCreated;
             SetContentView(_view);

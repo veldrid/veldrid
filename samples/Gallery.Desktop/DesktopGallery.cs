@@ -9,13 +9,14 @@ namespace Veldrid.SampleGallery
     {
         private Sdl2Window _window;
         private GraphicsDevice _gd;
+        private readonly InputState _inputState = new InputState();
 
         public uint Width => (uint)_window.Width;
 
         public uint Height => (uint)_window.Height;
 
         public event Action Resized;
-        public event Action<double, InputSnapshot> Update;
+        public event Action<double> Update;
         public event Action<double> Render;
 
         public GraphicsDevice Device => _gd;
@@ -51,11 +52,16 @@ namespace Veldrid.SampleGallery
                 previousTime = currentTime;
 
                 InputSnapshot snapshot = _window.PumpEvents();
+                _inputState.Clear();
+                _inputState.AddSnapshot(snapshot);
+                _inputState.MouseDelta = _window.MouseDelta;
                 if (!_window.Exists) { break; }
 
-                Update?.Invoke(elapsed, snapshot);
+                Update?.Invoke(elapsed);
                 Render?.Invoke(elapsed);
             }
         }
+
+        public InputStateView GetInputState() => _inputState.View;
     }
 }

@@ -1304,6 +1304,7 @@ namespace Veldrid.Vk
             {
                 BeginCurrentRenderPass();
                 EndCurrentRenderPass();
+                _currentFramebufferEverActive = false;
             }
             else
             {

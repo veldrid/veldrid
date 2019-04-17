@@ -50,6 +50,8 @@ namespace Veldrid
         private int _lastAssignedID = 100;
         private bool _frameBegun;
 
+        private readonly InputState _inputState = new InputState();
+
         /// <summary>
         /// Constructs a new ImGuiRenderer.
         /// </summary>
@@ -372,13 +374,24 @@ namespace Veldrid
         /// </summary>
         public void Update(float deltaSeconds, InputSnapshot snapshot)
         {
+            _inputState.Clear();
+            _inputState.AddSnapshot(snapshot);
+            _inputState.WheelDelta = 0f;
+
+            Update(deltaSeconds, _inputState.View);
+
+        }
+
+        public void Update(float deltaSeconds, InputStateView inputState)
+        {
+            UpdateImGuiInput(inputState);
+
             if (_frameBegun)
             {
                 ImGui.Render();
             }
 
             SetPerFrameImGuiData(deltaSeconds);
-            UpdateImGuiInput(snapshot);
 
             _frameBegun = true;
             ImGui.NewFrame();
@@ -398,7 +411,7 @@ namespace Veldrid
             io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
         }
 
-        private unsafe void UpdateImGuiInput(InputSnapshot snapshot)
+        private unsafe void UpdateImGuiInput(InputStateView inputState)
         {
             ImGuiIOPtr io = ImGui.GetIO();
 
@@ -406,9 +419,9 @@ namespace Veldrid
             bool leftPressed = false;
             bool middlePressed = false;
             bool rightPressed = false;
-            for (int i = 0; i < snapshot.MouseEvents.Count; i++)
+            for (int i = 0; i < inputState.MouseEvents.Count; i++)
             {
-                MouseEvent me = snapshot.MouseEvents[i];
+                MouseEvent me = inputState.MouseEvents[i];
                 if (me.Down)
                 {
                     switch (me.MouseButton)
@@ -426,20 +439,20 @@ namespace Veldrid
                 }
             }
 
-            io.MouseDown[0] = leftPressed || snapshot.IsMouseDown(MouseButton.Left);
-            io.MouseDown[1] = rightPressed || snapshot.IsMouseDown(MouseButton.Right);
-            io.MouseDown[2] = middlePressed || snapshot.IsMouseDown(MouseButton.Middle);
-            io.MousePos = snapshot.MousePosition;
-            io.MouseWheel = snapshot.WheelDelta;
+            io.MouseDown[0] = leftPressed || inputState.IsMouseDown(MouseButton.Left);
+            io.MouseDown[1] = rightPressed || inputState.IsMouseDown(MouseButton.Right);
+            io.MouseDown[2] = middlePressed || inputState.IsMouseDown(MouseButton.Middle);
+            io.MousePos = inputState.MousePosition;
+            io.MouseWheel = inputState.WheelDelta;
 
-            IReadOnlyList<char> keyCharPresses = snapshot.KeyCharPresses;
+            IReadOnlyList<char> keyCharPresses = inputState.KeyCharPresses;
             for (int i = 0; i < keyCharPresses.Count; i++)
             {
                 char c = keyCharPresses[i];
                 ImGui.GetIO().AddInputCharacter(c);
             }
 
-            IReadOnlyList<KeyEvent> keyEvents = snapshot.KeyEvents;
+            IReadOnlyList<KeyEvent> keyEvents = inputState.KeyEvents;
             for (int i = 0; i < keyEvents.Count; i++)
             {
                 KeyEvent keyEvent = keyEvents[i];

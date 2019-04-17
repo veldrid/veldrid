@@ -41,7 +41,7 @@ namespace Veldrid.SampleGallery
             Texture depth = Factory.CreateTexture(
                 TextureDescription.Texture2D(
                     Gallery.Width, Gallery.Height, 1, 1,
-                    PixelFormat.R32_Float,
+                    PixelFormat.R16_UNorm,
                     TextureUsage.DepthStencil));
             Framebuffer = Factory.CreateFramebuffer(new FramebufferDescription(depth, color));
         }

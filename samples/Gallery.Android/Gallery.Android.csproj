@@ -35,6 +35,9 @@
     <AndroidUseSharedRuntime>True</AndroidUseSharedRuntime>
     <AndroidLinkMode>None</AndroidLinkMode>
     <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
+    <AotAssemblies>false</AotAssemblies>
+    <EnableLLVM>false</EnableLLVM>
+    <BundleAssemblies>false</BundleAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -46,8 +49,12 @@
     <WarningLevel>4</WarningLevel>
     <AndroidManagedSymbols>true</AndroidManagedSymbols>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
-    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
+    <AndroidLinkMode>None</AndroidLinkMode>
     <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
+    <AotAssemblies>false</AotAssemblies>
+    <EnableLLVM>false</EnableLLVM>
+    <BundleAssemblies>false</BundleAssemblies>
+    <AndroidSupportedAbis />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -66,6 +73,31 @@
     <Compile Include="VeldridSurfaceView.cs" />
   </ItemGroup>
   <ItemGroup>
+    <AndroidNativeLibrary Include="..\..\..\..\NDK\android-ndk-r18b\sources\third_party\vulkan\src\build-android\jniLibs\arm64-v8a\libVkLayer_core_validation.so">
+      <Link>libVkLayer_core_validation.so</Link>
+      <Abi>arm64-v8a</Abi>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="..\..\..\..\NDK\android-ndk-r18b\sources\third_party\vulkan\src\build-android\jniLibs\arm64-v8a\libVkLayer_object_tracker.so">
+      <Abi>arm64-v8a</Abi>
+      <Link>libVkLayer_object_tracker.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="..\..\..\..\NDK\android-ndk-r18b\sources\third_party\vulkan\src\build-android\jniLibs\arm64-v8a\libVkLayer_parameter_validation.so">
+      <Link>libVkLayer_parameter_validation.so</Link>
+      <Abi>arm64-v8a</Abi>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="..\..\..\..\NDK\android-ndk-r18b\sources\third_party\vulkan\src\build-android\jniLibs\arm64-v8a\libVkLayer_threading.so">
+      <Link>libVkLayer_threading.so</Link>
+      <Abi>arm64-v8a</Abi>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="..\..\..\..\NDK\android-ndk-r18b\sources\third_party\vulkan\src\build-android\jniLibs\arm64-v8a\libVkLayer_unique_objects.so">
+      <Link>libVkLayer_unique_objects.so</Link>
+      <Abi>arm64-v8a</Abi>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="Assets\AboutAssets.txt" />
@@ -104,7 +136,7 @@
       <Version>1.0.9</Version>
     </PackageReference>
     <PackageReference Include="Xamarin.Android.Support.Design" Version="27.0.2.1" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Veldrid.InputPrimitives\Veldrid.InputPrimitives.csproj">

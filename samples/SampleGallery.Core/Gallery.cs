@@ -41,9 +41,10 @@ namespace Veldrid.SampleGallery
             _example.LoadResourcesAsync().Wait();
         }
 
-        private void Update(double deltaSeconds, InputSnapshot snapshot)
+        private void Update(double deltaSeconds)
         {
-            _imguiRenderer.Update((float)deltaSeconds, snapshot);
+            InputTracker.UpdateFrameInput(_driver.GetInputState());
+            _imguiRenderer.Update((float)deltaSeconds, _driver.GetInputState());
         }
 
         private void Render(double deltaSeconds)
@@ -51,10 +52,12 @@ namespace Veldrid.SampleGallery
             _example?.Render(deltaSeconds); // _example.Framebuffer now contains output.
 
             ImGui.Text($"Framerate: {ImGui.GetIO().Framerate}");
+            ImGui.Text($"Mouse pos: {ImGui.GetIO().MousePos}");
 
             _cl.Begin();
             _cl.SetFramebuffer(_mainSwapchain.Framebuffer);
             _cl.ClearColorTarget(0, new RgbaFloat(0, 0, 0.2f, 1));
+            _cl.ClearDepthStencil(1f);
             if (_example != null)
             {
                 _cl.BlitTexture(
@@ -67,6 +70,7 @@ namespace Veldrid.SampleGallery
             _cl.End();
             _gd.SubmitCommands(_cl);
             _gd.SwapBuffers(_mainSwapchain);
+            _gd.WaitForIdle();
         }
 
         public static GraphicsDeviceOptions GetPreferredOptions()

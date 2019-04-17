@@ -19,9 +19,8 @@ namespace Veldrid.SampleGallery
         private ResourceSet _resourceSet;
         private CommandList _cl;
         private DeviceBuffer _uniformBuffer;
-        private Vector3 _cameraPos = new Vector3(0, 1, 3);
-        private Quaternion _cameraRot = Quaternion.CreateFromAxisAngle(Vector3.UnitX, -0.35f);
         private Vector3 _modelPos = new Vector3(0, 0, 0);
+        private Camera _camera;
 
         public override async Task LoadResourcesAsync()
         {
@@ -35,6 +34,7 @@ namespace Veldrid.SampleGallery
                     ObjFile model = objParser.Parse(catFS);
                     ConstructedMeshInfo firstMesh = model.GetFirstMesh();
                     _vertexBuffer = firstMesh.CreateVertexBuffer(Factory, Device);
+
                     int indexCount;
                     _indexBuffer = firstMesh.CreateIndexBuffer(Factory, Device, out indexCount);
                     _indexCount = (uint)indexCount;
@@ -47,7 +47,7 @@ namespace Veldrid.SampleGallery
                 ProcessedTexture tex;
                 using (Stream catDiffFS = OpenEmbeddedAsset("cat_diff.png"))
                 {
-                    ImageSharpProcessor imageProcessor = new ImageSharpProcessor();
+                    StbImageProcessor imageProcessor = new StbImageProcessor();
                     tex = await imageProcessor.ProcessT(catDiffFS, "png");
                 }
 
@@ -85,22 +85,29 @@ namespace Veldrid.SampleGallery
                 shadersDesc,
                 layout,
                 Framebuffer.OutputDescription));
+            _camera = new Camera(Device, Framebuffer.Width, Framebuffer.Height);
+        }
+
+        protected override void OnGallerySizeChangedCore()
+        {
+            _camera.ViewSizeChanged(Framebuffer.Width, Framebuffer.Height);
         }
 
         public override void Render(double deltaSeconds)
         {
-            Vector3 camForward = Vector3.Transform(-Vector3.UnitZ, _cameraRot);
+            _camera.Update((float)deltaSeconds);
+
             (Matrix4x4 projection, Matrix4x4 view, Matrix4x4 world) uniformState =
                 (
-                Matrix4x4.CreatePerspectiveFieldOfView(1f, Framebuffer.Width / (float)Framebuffer.Height, 0.1f, 100f),
-                Matrix4x4.CreateLookAt(_cameraPos, _cameraPos + camForward, Vector3.UnitY),
+                _camera.ProjectionMatrix,
+                _camera.ViewMatrix,
                 Matrix4x4.CreateWorld(_modelPos, Vector3.UnitX, Vector3.UnitY)
                 );
 
             _cl.Begin();
             _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
             _cl.SetFramebuffer(Framebuffer);
-            _cl.ClearColorTarget(0, RgbaFloat.DarkRed);
+            _cl.ClearColorTarget(0, new RgbaFloat(0, 0, 0.05f, 1f));
             _cl.ClearDepthStencil(1.0f);
             _cl.SetPipeline(_pipeline);
             _cl.SetVertexBuffer(0, _vertexBuffer);

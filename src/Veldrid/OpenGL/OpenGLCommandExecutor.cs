@@ -983,7 +983,7 @@ namespace Veldrid.OpenGL
                 glScissorIndexed(
                     index,
                     (int)x,
-                    (int)(_viewports[(int)index].Height - (int)height - y),
+                    (int)(_fb.Height - (int)height - y),
                     width,
                     height);
                 CheckLastError();
@@ -994,7 +994,7 @@ namespace Veldrid.OpenGL
                 {
                     glScissor(
                         (int)x,
-                        (int)(_viewports[(int)index].Height - (int)height - y),
+                        (int)(_fb.Height - (int)height - y),
                         width,
                         height);
                     CheckLastError();

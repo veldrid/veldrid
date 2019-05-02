@@ -54,7 +54,6 @@ namespace Veldrid.OpenGL
         private readonly object _mappedResourceLock = new object();
         private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfoWithStaging> _mappedResources
             = new Dictionary<MappedResourceCacheKey, MappedResourceInfoWithStaging>();
-        private readonly MapResultHolder _mapResultHolder = new MapResultHolder();
 
         private readonly object _resetEventsLock = new object();
         private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
@@ -855,8 +854,7 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            _executionThread.Map(resource, mode, subresource);
-            return _mapResultHolder.Resource;
+            return _executionThread.Map(resource, mode, subresource);
         }
 
         protected override void UnmapCore(MappableResource resource, uint subresource)
@@ -1126,57 +1124,56 @@ namespace Veldrid.OpenGL
                     switch (workItem.Type)
                     {
                         case WorkItemType.ExecuteList:
+                        {
+                            OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
+                            try
                             {
-                                OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
-                                try
+                                list.ExecuteAll(_gd._commandExecutor);
+                            }
+                            finally
+                            {
+                                if (!_gd.CheckCommandListDisposal(list.Parent))
                                 {
-                                    list.ExecuteAll(_gd._commandExecutor);
-                                }
-                                finally
-                                {
-                                    if (!_gd.CheckCommandListDisposal(list.Parent))
-                                    {
-                                        list.Parent.OnCompleted(list);
-                                    }
+                                    list.Parent.OnCompleted(list);
                                 }
                             }
-                            break;
+                        }
+                        break;
                         case WorkItemType.Map:
+                        {
+                            MappableResource resourceToMap = (MappableResource)workItem.Object0;
+                            ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
+
+                            MapParams* resultPtr = (MapParams*)Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
+
+                            if (resultPtr->Map)
                             {
-                                MappableResource resourceToMap = (MappableResource)workItem.Object0;
-                                ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
-                                MapMode mode = (MapMode)workItem.UInt0;
-                                uint subresource = workItem.UInt1;
-                                bool map = workItem.UInt2 == 1 ? true : false;
-                                if (map)
-                                {
-                                    ExecuteMapResource(
-                                        resourceToMap,
-                                        mode,
-                                        subresource,
-                                        mre);
-                                }
-                                else
-                                {
-                                    ExecuteUnmapResource(resourceToMap, subresource, mre);
-                                }
+                                ExecuteMapResource(
+                                    resourceToMap,
+                                    mre,
+                                    resultPtr);
                             }
-                            break;
+                            else
+                            {
+                                ExecuteUnmapResource(resourceToMap, resultPtr->Subresource, mre);
+                            }
+                        }
+                        break;
                         case WorkItemType.UpdateBuffer:
-                            {
-                                DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
-                                uint offsetInBytes = workItem.UInt0;
-                                StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
+                        {
+                            DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
+                            uint offsetInBytes = workItem.UInt0;
+                            StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
 
-                                _gd._commandExecutor.UpdateBuffer(
-                                    updateBuffer,
-                                    offsetInBytes,
-                                    (IntPtr)stagingBlock.Data,
-                                    stagingBlock.SizeInBytes);
+                            _gd._commandExecutor.UpdateBuffer(
+                                updateBuffer,
+                                offsetInBytes,
+                                (IntPtr)stagingBlock.Data,
+                                stagingBlock.SizeInBytes);
 
-                                _gd.StagingMemoryPool.Free(stagingBlock);
-                            }
-                            break;
+                            _gd.StagingMemoryPool.Free(stagingBlock);
+                        }
+                        break;
                         case WorkItemType.UpdateTexture:
                             Texture texture = (Texture)workItem.Object0;
                             StagingMemoryPool pool = _gd.StagingMemoryPool;
@@ -1192,50 +1189,50 @@ namespace Veldrid.OpenGL
                             pool.Free(textureData);
                             break;
                         case WorkItemType.GenericAction:
-                            {
-                                ((Action)workItem.Object0)();
-                            }
-                            break;
+                        {
+                            ((Action)workItem.Object0)();
+                        }
+                        break;
                         case WorkItemType.TerminateAction:
+                        {
+                            // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
+                            uint error = glGetError();
+                            if (error == (uint)ErrorCode.InvalidOperation)
                             {
-                                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
-                                uint error = glGetError();
-                                if (error == (uint)ErrorCode.InvalidOperation)
-                                {
-                                    return;
-                                }
-                                _makeCurrent(_gd._glContext);
+                                return;
+                            }
+                            _makeCurrent(_gd._glContext);
 
-                                _gd.FlushDisposables();
-                                _gd._deleteContext(_gd._glContext);
-                                _gd.StagingMemoryPool.Dispose();
-                                _terminated = true;
-                            }
-                            break;
+                            _gd.FlushDisposables();
+                            _gd._deleteContext(_gd._glContext);
+                            _gd.StagingMemoryPool.Dispose();
+                            _terminated = true;
+                        }
+                        break;
                         case WorkItemType.SetSyncToVerticalBlank:
-                            {
-                                bool value = workItem.UInt0 == 1 ? true : false;
-                                _gd._setSyncToVBlank(value);
-                            }
-                            break;
+                        {
+                            bool value = workItem.UInt0 == 1 ? true : false;
+                            _gd._setSyncToVBlank(value);
+                        }
+                        break;
                         case WorkItemType.SwapBuffers:
-                            {
-                                _gd._swapBuffers();
-                                _gd.FlushDisposables();
-                            }
-                            break;
+                        {
+                            _gd._swapBuffers();
+                            _gd.FlushDisposables();
+                        }
+                        break;
                         case WorkItemType.WaitForIdle:
+                        {
+                            _gd.FlushDisposables();
+                            bool isFullFlush = workItem.UInt0 != 0;
+                            if (isFullFlush)
                             {
-                                _gd.FlushDisposables();
-                                bool isFullFlush = workItem.UInt0 != 0;
-                                if (isFullFlush)
-                                {
-                                    glFlush();
-                                    glFinish();
-                                }
-                            ((ManualResetEventSlim)workItem.Object0).Set();
+                                glFlush();
+                                glFinish();
                             }
-                            break;
+                            ((ManualResetEventSlim)workItem.Object0).Set();
+                        }
+                        break;
                         default:
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }
@@ -1251,10 +1248,12 @@ namespace Veldrid.OpenGL
 
             private void ExecuteMapResource(
                 MappableResource resource,
-                MapMode mode,
-                uint subresource,
-                ManualResetEventSlim mre)
+                ManualResetEventSlim mre,
+                MapParams* result)
             {
+                uint subresource = result->Subresource;
+                MapMode mode = result->MapMode;
+
                 MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
                 try
                 {
@@ -1289,8 +1288,11 @@ namespace Veldrid.OpenGL
                             info.RefCount = 1;
                             info.Mode = mode;
                             _gd._mappedResources.Add(key, info);
-                            _gd._mapResultHolder.Resource = info.MappedResource;
-                            _gd._mapResultHolder.Succeeded = true;
+                            result->Data = (IntPtr)mappedPtr;
+                            result->DataSize = buffer.SizeInBytes;
+                            result->RowPitch = 0;
+                            result->DepthPitch = 0;
+                            result->Succeeded = true;
                         }
                         else
                         {
@@ -1482,14 +1484,17 @@ namespace Veldrid.OpenGL
                             info.Mode = mode;
                             info.StagingBlock = block;
                             _gd._mappedResources.Add(key, info);
-                            _gd._mapResultHolder.Resource = info.MappedResource;
-                            _gd._mapResultHolder.Succeeded = true;
+                            result->Data = (IntPtr)block.Data;
+                            result->DataSize = subresourceSize;
+                            result->RowPitch = rowPitch;
+                            result->DepthPitch = depthPitch;
+                            result->Succeeded = true;
                         }
                     }
                 }
                 catch
                 {
-                    _gd._mapResultHolder.Succeeded = false;
+                    result->Succeeded = false;
                     throw;
                 }
                 finally
@@ -1570,27 +1575,38 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            public void Map(MappableResource resource, MapMode mode, uint subresource)
+            public MappedResource Map(MappableResource resource, MapMode mode, uint subresource)
             {
                 CheckExceptions();
 
+                MapParams mrp = new MapParams();
+                mrp.Map = true;
+                mrp.Subresource = subresource;
+                mrp.MapMode = mode;
+
                 ManualResetEventSlim mre = new ManualResetEventSlim(false);
-                _workItems.Add(new ExecutionThreadWorkItem(resource, mode, subresource, true, mre));
+                _workItems.Add(new ExecutionThreadWorkItem(resource, &mrp, mre));
                 mre.Wait();
-                if (!_gd._mapResultHolder.Succeeded)
+                if (!mrp.Succeeded)
                 {
                     throw new VeldridException("Failed to map OpenGL resource.");
                 }
 
                 mre.Dispose();
+
+                return new MappedResource(resource, mode, mrp.Data, mrp.DataSize, mrp.Subresource, mrp.RowPitch, mrp.DepthPitch);
             }
 
             internal void Unmap(MappableResource resource, uint subresource)
             {
                 CheckExceptions();
 
+                MapParams mrp = new MapParams();
+                mrp.Map = false;
+                mrp.Subresource = subresource;
+
                 ManualResetEventSlim mre = new ManualResetEventSlim(false);
-                _workItems.Add(new ExecutionThreadWorkItem(resource, 0, subresource, false, mre));
+                _workItems.Add(new ExecutionThreadWorkItem(resource, &mrp, mre));
                 mre.Wait();
                 mre.Dispose();
             }
@@ -1686,18 +1702,15 @@ namespace Veldrid.OpenGL
 
             public ExecutionThreadWorkItem(
                 MappableResource resource,
-                MapMode mapMode,
-                uint subresource,
-                bool map,
+                MapParams* mapResult,
                 ManualResetEventSlim resetEvent)
             {
                 Type = WorkItemType.Map;
                 Object0 = resource;
                 Object1 = resetEvent;
 
-                UInt0 = (uint)mapMode;
-                UInt1 = subresource;
-                UInt2 = map ? 1u : 0u;
+                Util.PackIntPtr((IntPtr)mapResult, out UInt0, out UInt1);
+                UInt2 = 0;
             }
 
             public ExecutionThreadWorkItem(OpenGLCommandEntryList commandList)
@@ -1778,10 +1791,16 @@ namespace Veldrid.OpenGL
             }
         }
 
-        private class MapResultHolder
+        private struct MapParams
         {
+            public MapMode MapMode;
+            public uint Subresource;
+            public bool Map;
             public bool Succeeded;
-            public MappedResource Resource;
+            public IntPtr Data;
+            public uint DataSize;
+            public uint RowPitch;
+            public uint DepthPitch;
         }
 
         internal struct MappedResourceInfoWithStaging

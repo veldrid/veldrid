@@ -305,5 +305,18 @@ namespace Veldrid
                     $"Unexpected resource type. Expected Texture or TextureView but found {resource.GetType().Name}");
             }
         }
+
+        internal static void PackIntPtr(IntPtr sourcePtr, out uint low, out uint high)
+        {
+            ulong src64 = (ulong)sourcePtr;
+            low = (uint)(src64 & 0x00000000FFFFFFFF);
+            high = (uint)((src64 & 0xFFFFFFFF00000000u) >> 32);
+        }
+
+        internal static IntPtr UnpackIntPtr(uint low, uint high)
+        {
+            ulong src64 = low | ((ulong)high << 32);
+            return (IntPtr)src64;
+        }
     }
 }

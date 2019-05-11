@@ -19,8 +19,9 @@ namespace Veldrid.NeoDemo
 
         public unsafe Sdl2ControllerTracker(int index)
         {
-            _controllerIndex = index;
             _controller = SDL_GameControllerOpen(index);
+            SDL_Joystick joystick = SDL_GameControllerGetJoystick(_controller);
+            _controllerIndex = SDL_JoystickInstanceID(joystick);
             ControllerName = Marshal.PtrToStringUTF8((IntPtr)SDL_GameControllerName(_controller));
             Sdl2Events.Subscribe(ProcessEvent);
         }

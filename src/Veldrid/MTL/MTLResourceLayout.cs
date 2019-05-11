@@ -11,9 +11,17 @@ namespace Veldrid.MTL
 #endif
         public ResourceBindingInfo GetBindingInfo(int index) => _bindingInfosByVdIndex[index];
 
+#if !VALIDATE_USAGE
+        public ResourceLayoutDescription Description { get; }
+#endif
+
         public MTLResourceLayout(ref ResourceLayoutDescription description, MTLGraphicsDevice gd)
             : base(ref description)
         {
+#if !VALIDATE_USAGE
+            Description = description;
+#endif
+
             ResourceLayoutElementDescription[] elements = description.Elements;
 #if !VALIDATE_USAGE
             ResourceKinds = new ResourceKind[elements.Length];

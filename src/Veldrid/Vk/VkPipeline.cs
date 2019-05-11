@@ -332,7 +332,7 @@ namespace Veldrid.Vk
 
             ResourceSetCount = (uint)description.ResourceLayouts.Length;
             DynamicOffsetsCount = 0;
-            foreach (VkResourceLayout layout in ResourceLayouts)
+            foreach (VkResourceLayout layout in description.ResourceLayouts)
             {
                 DynamicOffsetsCount += layout.DynamicBufferCount;
             }
@@ -413,7 +413,7 @@ namespace Veldrid.Vk
 
             ResourceSetCount = (uint)description.ResourceLayouts.Length;
             DynamicOffsetsCount = 0;
-            foreach (VkResourceLayout layout in ResourceLayouts)
+            foreach (VkResourceLayout layout in description.ResourceLayouts)
             {
                 DynamicOffsetsCount += layout.DynamicBufferCount;
             }

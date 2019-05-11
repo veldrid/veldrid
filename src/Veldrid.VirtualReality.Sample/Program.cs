@@ -97,7 +97,7 @@ namespace Veldrid.VirtualReality.Sample
 
                 InputSnapshot snapshot = window.PumpEvents();
                 if (!window.Exists) { break; }
-                InputTracker.UpdateFrameInput(snapshot);
+                InputTracker.UpdateFrameInput(snapshot, window);
                 HandleInputs(deltaSeconds);
 
                 igr.Update(1f / 60f, snapshot);

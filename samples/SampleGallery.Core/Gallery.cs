@@ -53,6 +53,7 @@ namespace Veldrid.SampleGallery
 
             ImGui.Text($"Framerate: {ImGui.GetIO().Framerate}");
             ImGui.Text($"Mouse pos: {ImGui.GetIO().MousePos}");
+            ImGui.Text($"Backend: {_driver.Device.BackendType}");
 
             _cl.Begin();
             _cl.SetFramebuffer(_mainSwapchain.Framebuffer);

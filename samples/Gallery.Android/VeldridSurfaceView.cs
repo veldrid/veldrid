@@ -142,7 +142,6 @@ namespace Veldrid.SampleGallery
                     }
 
                     Update?.Invoke(elapsed);
-                    _inputState.Clear();
 
                     if (Device != null)
                     {

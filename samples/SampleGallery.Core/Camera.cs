@@ -113,9 +113,9 @@ namespace Veldrid.SampleGallery
                     _mousePressed = true;
                     _mousePressedPos = InputTracker.MousePosition;
                 }
-                Vector2 mouseDelta = _mousePressedPos - InputTracker.MousePosition;
-                Yaw += mouseDelta.X * 0.002f;
-                Pitch += mouseDelta.Y * 0.002f;
+                Vector2 mouseDelta = InputTracker.MouseDelta;
+                Yaw -= mouseDelta.X * 0.002f;
+                Pitch -= mouseDelta.Y * 0.002f;
             }
             else if(_mousePressed)
             {

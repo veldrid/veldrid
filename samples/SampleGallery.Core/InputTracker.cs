@@ -55,6 +55,19 @@ namespace Veldrid.SampleGallery
                     KeyUp(ke.Key);
                 }
             }
+
+            for (int i = 0; i < snapshot.MouseDown.Count; i++)
+            {
+                if (snapshot.MouseDown[i])
+                {
+                    MouseDown((MouseButton)i);
+                }
+                else
+                {
+                    MouseUp((MouseButton)i);
+                }
+            }
+
             for (int i = 0; i < snapshot.MouseEvents.Count; i++)
             {
                 MouseEvent me = snapshot.MouseEvents[i];

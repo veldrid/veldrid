@@ -63,7 +63,7 @@ namespace Veldrid.SampleGallery
             ResourceLayout layout = Factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("UniformState", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
-                new ResourceLayoutElementDescription("Tex", ResourceKind.Sampler, ShaderStages.Fragment)));
+                new ResourceLayoutElementDescription("Smp", ResourceKind.Sampler, ShaderStages.Fragment)));
             _resourceSet = Factory.CreateResourceSet(
                 new ResourceSetDescription(layout, _uniformBuffer, catTexture, Device.LinearSampler));
 
@@ -75,17 +75,20 @@ namespace Veldrid.SampleGallery
                 new[] { vertexLayout },
                 Factory.CreateFromSpirv(
                     new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(VertexCode), "main"),
-                    new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(Fragmentcode), "main")));
+                    new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(FragmentCode), "main")));
 
             _pipeline = Factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
-                DepthStencilStateDescription.DepthOnlyLessEqual,
+                Device.IsDepthRangeZeroToOne
+                    ? DepthStencilStateDescription.DepthOnlyGreaterEqual
+                    : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 shadersDesc,
                 layout,
                 Framebuffer.OutputDescription));
             _camera = new Camera(Device, Framebuffer.Width, Framebuffer.Height);
+            _camera.Position = new Vector3(0, 1, 3);
         }
 
         protected override void OnGallerySizeChangedCore()
@@ -108,7 +111,7 @@ namespace Veldrid.SampleGallery
             _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
             _cl.SetFramebuffer(Framebuffer);
             _cl.ClearColorTarget(0, new RgbaFloat(0, 0, 0.05f, 1f));
-            _cl.ClearDepthStencil(1.0f);
+            _cl.ClearDepthStencil(Device.IsDepthRangeZeroToOne ? 0f : 1f);
             _cl.SetPipeline(_pipeline);
             _cl.SetVertexBuffer(0, _vertexBuffer);
             _cl.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
@@ -139,7 +142,7 @@ void main()
     gl_Position = Projection * View * World * vec4(vsin_position, 1);
     fsin_uv = vsin_uv;
 }";
-        private const string Fragmentcode =
+        private const string FragmentCode =
 @"#version 450 core
 layout(location = 0) in vec2 fsin_uv;
 layout(location = 0) out vec4 fsout_color;

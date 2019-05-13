@@ -141,6 +141,8 @@ namespace Veldrid.SampleGallery
                         Resized?.Invoke();
                     }
 
+                    FlushInput();
+
                     Update?.Invoke(elapsed);
 
                     if (Device != null)
@@ -154,6 +156,16 @@ namespace Veldrid.SampleGallery
                     throw;
                 }
             }
+        }
+
+        private void FlushInput()
+        {
+            lock (_inputState)
+            {
+                _inputState.MouseDelta = _inputState.MousePosition - _prevTouchPos;
+                _prevTouchPos = _inputState.MousePosition;
+            }
+
         }
 
         private void HandleSurfaceDestroyed()
@@ -188,25 +200,26 @@ namespace Veldrid.SampleGallery
 
         public override bool OnTouchEvent(MotionEvent e)
         {
-            switch (e.Action)
+            lock (_inputState)
             {
-                case MotionEventActions.Down:
-                    _inputState.MouseDown[0] = true;
-                    _inputState.MousePosition = new Vector2(e.GetX(), e.GetY());
-                    break;
-                case MotionEventActions.Up:
-                    _inputState.MouseDown[0] = false;
-                    _inputState.MousePosition = new Vector2(e.GetX(), e.GetY());
-                    break;
-                case MotionEventActions.Move:
-                    _inputState.MousePosition = new Vector2(e.GetX(), e.GetY());
-                    break;
+                switch (e.Action)
+                {
+                    case MotionEventActions.Down:
+                        _inputState.MouseDown[0] = true;
+                        _inputState.MousePosition = new Vector2(e.GetX(), e.GetY());
+                        _prevTouchPos = _inputState.MousePosition;
+                        break;
+                    case MotionEventActions.Up:
+                        _inputState.MouseDown[0] = false;
+                        _inputState.MousePosition = new Vector2(e.GetX(), e.GetY());
+                        break;
+                    case MotionEventActions.Move:
+                        _inputState.MousePosition = new Vector2(e.GetX(), e.GetY());
+                        break;
+                }
+
+                return true;
             }
-
-            _inputState.MouseDelta = _inputState.MousePosition - _prevTouchPos;
-            _prevTouchPos = _inputState.MousePosition;
-
-            return true;
         }
     }
 }

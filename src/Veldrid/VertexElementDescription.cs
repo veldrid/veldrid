@@ -13,6 +13,8 @@ namespace Veldrid
         public string Name;
         /// <summary>
         /// The semantic type of the element.
+        /// NOTE: When using Veldrid.SPIRV, all vertex elements will use
+        /// <see cref="VertexElementSemantic.TextureCoordinate"/>.
         /// </summary>
         public VertexElementSemantic Semantic;
         /// <summary>

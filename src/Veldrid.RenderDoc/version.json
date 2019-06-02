@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/AArnott/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publicReleaseRefSpec": [
     "^refs/tags/veldrid.renderdoc-v\\d+\\.\\d+"
   ],

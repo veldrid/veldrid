@@ -115,6 +115,7 @@ namespace Veldrid.SampleGallery
         public override void Render(double deltaSeconds)
         {
             _camera.Update((float)deltaSeconds);
+            Device.UpdateBuffer(_cameraInfoBuffer, 0, _camera.GetCameraInfo());
 
             (Matrix4x4 projection, Matrix4x4 view, Matrix4x4 world) uniformState =
                 (
@@ -124,12 +125,7 @@ namespace Veldrid.SampleGallery
                 );
 
             _cl.Begin();
-            if (!_done)
-            {
-                Device.UpdateBuffer(_cameraInfoBuffer, 0, _camera.GetCameraInfo());
-                _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
-                _done = true;
-            }
+            _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
             _cl.SetFramebuffer(Framebuffer);
             _cl.ClearColorTarget(0, new RgbaFloat(0, 0, 0.05f, 1f));
             _cl.ClearDepthStencil(Device.IsDepthRangeZeroToOne ? 0f : 1f);
@@ -141,11 +137,11 @@ namespace Veldrid.SampleGallery
 
             //for (float y = -10; y <= 10; y += 2.5f)
             //    for (float x = -10; x <= 10; x += 2.5f)
-                {
-              //      uniformState.world = Matrix4x4.CreateWorld(_modelPos + new Vector3(x, y, 0), Vector3.UnitX, Vector3.UnitY);
-              //      _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
-                    _cl.DrawIndexed(_indexCount);
-                }
+            {
+                //      uniformState.world = Matrix4x4.CreateWorld(_modelPos + new Vector3(x, y, 0), Vector3.UnitX, Vector3.UnitY);
+                //      _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
+                _cl.DrawIndexed(_indexCount);
+            }
 
             _skyboxRenderer.Render(_cl);
 

@@ -27,6 +27,8 @@ namespace Veldrid.SampleGallery
         private bool _useReverseDepth;
         private float _windowWidth;
         private float _windowHeight;
+        private Matrix4x4 _invView;
+        private Matrix4x4 _invProjection;
 
         public event Action<Matrix4x4> ProjectionChanged;
         public event Action<Matrix4x4> ViewChanged;
@@ -117,7 +119,7 @@ namespace Veldrid.SampleGallery
                 Yaw -= mouseDelta.X * 0.002f;
                 Pitch -= mouseDelta.Y * 0.002f;
             }
-            else if(_mousePressed)
+            else if (_mousePressed)
             {
                 _mousePressed = false;
             }
@@ -142,6 +144,7 @@ namespace Veldrid.SampleGallery
                 _windowWidth / _windowHeight,
                 _near,
                 _far);
+            Matrix4x4.Invert(_projectionMatrix, out _invProjection);
             ProjectionChanged?.Invoke(_projectionMatrix);
         }
 
@@ -151,11 +154,16 @@ namespace Veldrid.SampleGallery
             Vector3 lookDir = Vector3.Transform(-Vector3.UnitZ, lookRotation);
             _lookDirection = lookDir;
             _viewMatrix = Matrix4x4.CreateLookAt(_position, _position + _lookDirection, Vector3.UnitY);
+            Matrix4x4.Invert(_viewMatrix, out _invView);
             ViewChanged?.Invoke(_viewMatrix);
         }
 
         public CameraInfo GetCameraInfo() => new CameraInfo
         {
+            View = _viewMatrix,
+            InvView = _invView,
+            Projection = _projectionMatrix,
+            InvProjection = _invProjection,
             CameraPosition_WorldSpace = _position,
             CameraLookDirection = _lookDirection
         };
@@ -164,6 +172,10 @@ namespace Veldrid.SampleGallery
     [StructLayout(LayoutKind.Sequential)]
     public struct CameraInfo
     {
+        public Matrix4x4 View;
+        public Matrix4x4 InvView;
+        public Matrix4x4 Projection;
+        public Matrix4x4 InvProjection;
         public Vector3 CameraPosition_WorldSpace;
         private float _padding1;
         public Vector3 CameraLookDirection;

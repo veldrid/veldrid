@@ -14,6 +14,7 @@
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.Utilities\Veldrid.Utilities.csproj" />
     <ProjectReference Include="..\..\src\Veldrid.ImGui\Veldrid.ImGui.csproj" />
     <ProjectReference Include="..\..\src\Veldrid.InputPrimitives\Veldrid.InputPrimitives.csproj" />
+    <ProjectReference Include="..\AssetProcessor\AssetProcessor.csproj" />
   </ItemGroup>
 
 </Project>

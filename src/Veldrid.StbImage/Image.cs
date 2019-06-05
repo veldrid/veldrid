@@ -1,6 +1,6 @@
 ﻿namespace StbSharp
 {
-	public class Image
+	internal class Image
 	{
 		public int Width { get; set; }
 		public int Height { get; set; }

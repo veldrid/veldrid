@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
-using AssetPrimitives;
-using AssetProcessor;
-using Veldrid.Utilities;
-using Veldrid.SPIRV;
-using System.Text;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+using Veldrid.SPIRV;
+using Veldrid.StbImage;
+using Veldrid.Utilities;
 
 namespace Veldrid.SampleGallery
 {
@@ -21,6 +21,9 @@ namespace Veldrid.SampleGallery
         private DeviceBuffer _uniformBuffer;
         private Vector3 _modelPos = new Vector3(0, 0, 0);
         private Camera _camera;
+        private SkyboxRenderer _skyboxRenderer;
+        private DeviceBuffer _cameraInfoBuffer;
+        private bool _done;
 
         public override async Task LoadResourcesAsync()
         {
@@ -44,17 +47,12 @@ namespace Veldrid.SampleGallery
             Texture catTexture = null;
             tasks.Add(Task.Run(async () =>
             {
-                ProcessedTexture tex;
                 using (Stream catDiffFS = OpenEmbeddedAsset("cat_diff.png"))
                 {
-                    StbImageProcessor imageProcessor = new StbImageProcessor();
-                    tex = await imageProcessor.ProcessT(catDiffFS, "png");
+                    catTexture = StbTextureLoader.Load(Device, Factory, catDiffFS, false, true);
                 }
-
-                catTexture = tex.CreateDeviceTexture(Device, Factory, TextureUsage.Sampled);
             }));
 
-            // Task.WhenAll(tasks);
             Task.WaitAll(tasks.ToArray());
 
             _cl = Factory.CreateCommandList();
@@ -89,6 +87,24 @@ namespace Veldrid.SampleGallery
                 Framebuffer.OutputDescription));
             _camera = new Camera(Device, Framebuffer.Width, Framebuffer.Height);
             _camera.Position = new Vector3(0, 1, 3);
+
+            _cameraInfoBuffer = Factory.CreateBuffer(
+                new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+
+            GalleryConfig.Global.CameraInfoLayout = Device.ResourceFactory.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("CameraInfo", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment)));
+            GalleryConfig.Global.CameraInfoSet = Device.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
+                GalleryConfig.Global.CameraInfoLayout, _cameraInfoBuffer));
+
+            using (var face0 = OpenEmbeddedAsset("miramar_ft.png"))
+            using (var face1 = OpenEmbeddedAsset("miramar_bk.png"))
+            using (var face5 = OpenEmbeddedAsset("miramar_lf.png"))
+            using (var face4 = OpenEmbeddedAsset("miramar_rt.png"))
+            using (var face2 = OpenEmbeddedAsset("miramar_up.png"))
+            using (var face3 = OpenEmbeddedAsset("miramar_dn.png"))
+            {
+                _skyboxRenderer = new SkyboxRenderer(Device, new[] { face0, face1, face2, face3, face4, face5 });
+            }
         }
 
         protected override void OnGallerySizeChangedCore()
@@ -108,7 +124,12 @@ namespace Veldrid.SampleGallery
                 );
 
             _cl.Begin();
-            _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
+            if (!_done)
+            {
+                Device.UpdateBuffer(_cameraInfoBuffer, 0, _camera.GetCameraInfo());
+                _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
+                _done = true;
+            }
             _cl.SetFramebuffer(Framebuffer);
             _cl.ClearColorTarget(0, new RgbaFloat(0, 0, 0.05f, 1f));
             _cl.ClearDepthStencil(Device.IsDepthRangeZeroToOne ? 0f : 1f);
@@ -116,7 +137,18 @@ namespace Veldrid.SampleGallery
             _cl.SetVertexBuffer(0, _vertexBuffer);
             _cl.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
             _cl.SetGraphicsResourceSet(0, _resourceSet);
-            _cl.DrawIndexed(_indexCount);
+
+
+            //for (float y = -10; y <= 10; y += 2.5f)
+            //    for (float x = -10; x <= 10; x += 2.5f)
+                {
+              //      uniformState.world = Matrix4x4.CreateWorld(_modelPos + new Vector3(x, y, 0), Vector3.UnitX, Vector3.UnitY);
+              //      _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
+                    _cl.DrawIndexed(_indexCount);
+                }
+
+            _skyboxRenderer.Render(_cl);
+
             _cl.End();
             Device.SubmitCommands(_cl);
         }

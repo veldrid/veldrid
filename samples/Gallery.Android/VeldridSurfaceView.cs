@@ -72,7 +72,8 @@ namespace Veldrid.SampleGallery
                     (uint)Width,
                     (uint)Height,
                     DeviceOptions.SwapchainDepthFormat,
-                    DeviceOptions.SyncToVerticalBlank);
+                    DeviceOptions.SyncToVerticalBlank,
+                    DeviceOptions.SwapchainSrgbFormat);
                 MainSwapchain = Device.ResourceFactory.CreateSwapchain(sd);
             }
             else
@@ -84,7 +85,8 @@ namespace Veldrid.SampleGallery
                     (uint)Width,
                     (uint)Height,
                     DeviceOptions.SwapchainDepthFormat,
-                    DeviceOptions.SyncToVerticalBlank);
+                    DeviceOptions.SyncToVerticalBlank,
+                    DeviceOptions.SwapchainSrgbFormat);
                 Device = GraphicsDevice.CreateOpenGLES(DeviceOptions, sd);
                 MainSwapchain = Device.MainSwapchain;
                 deviceCreated = true;

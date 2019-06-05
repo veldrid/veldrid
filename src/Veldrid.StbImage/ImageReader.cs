@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace StbSharp
 {
-	public unsafe class ImageReader
+	internal unsafe class ImageReader
 	{
 		public class AnimatedGifFrame
 		{

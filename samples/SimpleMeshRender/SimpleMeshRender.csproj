@@ -11,6 +11,10 @@
     <EmbeddedResource Include="..\..\src\Veldrid.VirtualReality.Sample\cat\cat.obj"
                       Link="cat.obj"
                       LogicalName="cat.obj" />
+
+    <EmbeddedResource Include="..\..\src\Veldrid.VirtualReality.Sample\skybox\**"
+                      Link="%(Filename)%(Extension)"
+                      LogicalName="%(FileName)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

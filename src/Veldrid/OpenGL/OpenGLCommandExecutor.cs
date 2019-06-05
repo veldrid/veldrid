@@ -785,6 +785,9 @@ namespace Veldrid.OpenGL
                 mask,
                 linearFilter ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest);
             CheckLastError();
+
+            glDeleteFramebuffers(1, ref readFB);
+            CheckLastError();
         }
 
         private void ActivateComputePipeline()

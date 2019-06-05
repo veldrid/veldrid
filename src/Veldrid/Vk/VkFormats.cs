@@ -6,6 +6,18 @@ namespace Veldrid.Vk
 {
     internal static partial class VkFormats
     {
+        internal static readonly VkFormat[] StandardSwapchainFormats =
+        {
+            VkFormat.B8g8r8a8Unorm,
+            VkFormat.R8g8b8a8Unorm,
+        };
+
+        internal static readonly VkFormat[] SrgbSwapchainFormats =
+        {
+            VkFormat.B8g8r8a8Srgb,
+            VkFormat.R8g8b8a8Srgb,
+        };
+
         internal static VkSamplerAddressMode VdToVkSamplerAddressMode(SamplerAddressMode mode)
         {
             switch (mode)

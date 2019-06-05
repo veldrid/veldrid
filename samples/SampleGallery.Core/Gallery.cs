@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.SampleGallery
 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Veldrid.Utilities;
 
@@ -11,6 +12,7 @@ namespace Veldrid.SampleGallery
         protected ResourceFactory Factory => _factory;
         public Framebuffer Framebuffer { get; private set; }
         private DisposeCollectorResourceFactory _factory;
+        private DeviceBuffer _mainFBInfoBuffer;
 
         public void Initialize(IGalleryDriver gallery)
         {
@@ -19,6 +21,17 @@ namespace Veldrid.SampleGallery
             _factory = new DisposeCollectorResourceFactory(Device.ResourceFactory);
             RecreateFramebuffer();
             gallery.Resized += OnGallerySizeChanged;
+
+            GalleryConfig.Global.MainFBInfoLayout = Factory.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("FBInfo", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment)));
+            _mainFBInfoBuffer = Device.ResourceFactory.CreateBuffer(
+                new BufferDescription((uint)Unsafe.SizeOf<FBInfo>(), BufferUsage.UniformBuffer));
+            Device.UpdateBuffer(
+                _mainFBInfoBuffer,
+                0,
+                new FBInfo() { Width = Framebuffer.Width, Height = Framebuffer.Height });
+            GalleryConfig.Global.MainFBInfoSet = Device.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
+                GalleryConfig.Global.MainFBInfoLayout, _mainFBInfoBuffer));
         }
 
         private void OnGallerySizeChanged()
@@ -44,6 +57,16 @@ namespace Veldrid.SampleGallery
                     PixelFormat.R16_UNorm,
                     TextureUsage.DepthStencil));
             Framebuffer = Factory.CreateFramebuffer(new FramebufferDescription(depth, color));
+            GalleryConfig.Global.MainFB = Framebuffer;
+
+            if (_mainFBInfoBuffer != null)
+            {
+                Device.UpdateBuffer(
+                    _mainFBInfoBuffer,
+                    0,
+                    new FBInfo() { Width = Framebuffer.Width, Height = Framebuffer.Height });
+            }
+
         }
 
         public void Shutdown()

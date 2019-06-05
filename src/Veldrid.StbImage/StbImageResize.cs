@@ -2,7 +2,7 @@
 
 namespace StbSharp
 {
-	public static unsafe partial class StbImageResize
+	internal static unsafe partial class StbImageResize
 	{
 		public delegate float stbir__kernel_fn(float x, float scale);
 

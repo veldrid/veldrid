@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text;
 
+using static Vulkan.RawConstants;
+
 namespace Veldrid.Vk
 {
     internal unsafe class VkCommandList : CommandList
@@ -600,15 +602,47 @@ namespace Veldrid.Vk
             _currentFramebuffer.TransitionToIntermediateLayout(_cb);
             _activeRenderPass = VkRenderPass.Null;
 
+            VkMemoryBarrier barrier = VkMemoryBarrier.New();
+            barrier.srcAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT |
+                   VK_ACCESS_INDEX_READ_BIT |
+                   VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT |
+                   VK_ACCESS_UNIFORM_READ_BIT |
+                   VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_SHADER_READ_BIT |
+                   VK_ACCESS_SHADER_WRITE_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_TRANSFER_READ_BIT |
+                   VK_ACCESS_TRANSFER_WRITE_BIT |
+                   VK_ACCESS_HOST_READ_BIT |
+                   VK_ACCESS_HOST_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT |
+                   VK_ACCESS_INDEX_READ_BIT |
+                   VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT |
+                   VK_ACCESS_UNIFORM_READ_BIT |
+                   VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_SHADER_READ_BIT |
+                   VK_ACCESS_SHADER_WRITE_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_TRANSFER_READ_BIT |
+                   VK_ACCESS_TRANSFER_WRITE_BIT |
+                   VK_ACCESS_HOST_READ_BIT |
+                   VK_ACCESS_HOST_WRITE_BIT;
+
             // Place a barrier between RenderPasses, so that color / depth outputs
             // can be read in subsequent passes.
             vkCmdPipelineBarrier(
                 _cb,
-                VkPipelineStageFlags.BottomOfPipe,
-                VkPipelineStageFlags.TopOfPipe,
+                VkPipelineStageFlags.AllCommands,
+                VkPipelineStageFlags.AllCommands,
                 VkDependencyFlags.None,
-                0,
-                null,
+                1,
+                ref barrier,
                 0,
                 null,
                 0,
@@ -1290,6 +1324,8 @@ namespace Veldrid.Vk
             Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
             bool linearFilter)
         {
+            FullBarrier();
+
             bool haveAnyClearValues = _depthClearValue.HasValue;
             for (int i = 0; i < _currentFramebuffer.ColorTargets.Count; i++)
             {
@@ -1349,6 +1385,57 @@ namespace Veldrid.Vk
 
             vkSrc.TransitionImageLayout(_cb, 0, 1, 0, 1, srcPrevLayout);
             vkDst.TransitionImageLayout(_cb, 0, 1, destination.ColorTargets[0].ArrayLayer, 1, dstPrevLayout);
+
+            FullBarrier();
+        }
+
+        private void FullBarrier()
+        {
+            VkMemoryBarrier barrier = VkMemoryBarrier.New();
+            barrier.srcAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT |
+                   VK_ACCESS_INDEX_READ_BIT |
+                   VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT |
+                   VK_ACCESS_UNIFORM_READ_BIT |
+                   VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_SHADER_READ_BIT |
+                   VK_ACCESS_SHADER_WRITE_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_TRANSFER_READ_BIT |
+                   VK_ACCESS_TRANSFER_WRITE_BIT |
+                   VK_ACCESS_HOST_READ_BIT |
+                   VK_ACCESS_HOST_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT |
+                   VK_ACCESS_INDEX_READ_BIT |
+                   VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT |
+                   VK_ACCESS_UNIFORM_READ_BIT |
+                   VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_SHADER_READ_BIT |
+                   VK_ACCESS_SHADER_WRITE_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_TRANSFER_READ_BIT |
+                   VK_ACCESS_TRANSFER_WRITE_BIT |
+                   VK_ACCESS_HOST_READ_BIT |
+                   VK_ACCESS_HOST_WRITE_BIT;
+
+            // Place a barrier between RenderPasses, so that color / depth outputs
+            // can be read in subsequent passes.
+            vkCmdPipelineBarrier(
+                _cb,
+                VkPipelineStageFlags.AllCommands,
+                VkPipelineStageFlags.AllCommands,
+                VkDependencyFlags.None,
+                1,
+                ref barrier,
+                0,
+                null,
+                0,
+                null);
         }
     }
 }

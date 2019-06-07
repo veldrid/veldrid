@@ -40,6 +40,12 @@ namespace Veldrid
         private int _windowHeight;
         private Vector2 _scaleFactor = Vector2.One;
 
+        public Vector2 ScaleFactor
+        {
+            get => _scaleFactor;
+            set => _scaleFactor = value;
+        }
+
         // Image trackers
         private readonly Dictionary<TextureView, ResourceSetInfo> _setsByView
             = new Dictionary<TextureView, ResourceSetInfo>();
@@ -259,33 +265,33 @@ namespace Veldrid
             switch (factory.BackendType)
             {
                 case GraphicsBackend.Direct3D11:
-                {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
-                    string resourceName = name + ".hlsl.bytes";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
+                        string resourceName = name + ".hlsl.bytes";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.OpenGL:
-                {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
-                    string resourceName = name + ".glsl";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
+                        string resourceName = name + ".glsl";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.OpenGLES:
-                {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
-                    string resourceName = name + ".glsles";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
+                        string resourceName = name + ".glsles";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.Vulkan:
-                {
-                    string resourceName = name + ".spv";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        string resourceName = name + ".spv";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.Metal:
-                {
-                    string resourceName = name + ".metallib";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        string resourceName = name + ".metallib";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 default:
                     throw new NotImplementedException();
             }

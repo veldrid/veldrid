@@ -119,6 +119,16 @@ namespace Veldrid.Sdl2
         private delegate int SDL_GetNumVideoDisplays_t();
         private static SDL_GetNumVideoDisplays_t s_sdl_getNumVideoDisplays = LoadFunction<SDL_GetNumVideoDisplays_t>("SDL_GetNumVideoDisplays");
         public static int SDL_GetNumVideoDisplays() => s_sdl_getNumVideoDisplays();
+
+        private delegate int SDL_GetWindowDisplayIndex_t(SDL_Window* window);
+        private static SDL_GetWindowDisplayIndex_t s_sdl_getWindowDisplayIndex = LoadFunction<SDL_GetWindowDisplayIndex_t>("SDL_GetWindowDisplayIndex");
+        public static int SDL_GetWindowDisplayIndex(SDL_Window* window) => s_sdl_getWindowDisplayIndex(window);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int SDL_GetDisplayDPI_t(int displayIndex, float* ddpi, float* hdpi, float* vdpi);
+        private static SDL_GetDisplayDPI_t s_sdl_getDisplayDPI = LoadFunction<SDL_GetDisplayDPI_t>("SDL_GetDisplayDPI");
+        public static int SDL_GetDisplayDPI(int displayIndex, float* ddpi, float* hdpi, float* vdpi)
+            => s_sdl_getDisplayDPI(displayIndex, ddpi, hdpi, vdpi);
     }
 
     [Flags]

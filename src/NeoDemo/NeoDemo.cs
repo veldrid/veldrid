@@ -41,6 +41,7 @@ namespace Veldrid.NeoDemo
         private FullScreenQuad _fsq;
         public static RenderDoc _renderDoc;
         private bool _controllerDebugMenu;
+        private bool _hiDpi = true;
 
         public NeoDemo()
         {
@@ -51,7 +52,8 @@ namespace Veldrid.NeoDemo
                 WindowWidth = 960,
                 WindowHeight = 540,
                 WindowInitialState = WindowState.Normal,
-                WindowTitle = "Veldrid NeoDemo"
+                WindowTitle = "Veldrid NeoDemo",
+                HiDpi = _hiDpi
             };
             GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true, _colorSrgb);
 #if DEBUG
@@ -76,7 +78,8 @@ namespace Veldrid.NeoDemo
 
             _sc.SetCurrentScene(_scene);
 
-            _igRenderable = new ImGuiRenderable(_window.Width, _window.Height);
+            _igRenderable = new ImGuiRenderable(
+                (int)_gd.MainSwapchain.Framebuffer.Width, (int)_gd.MainSwapchain.Framebuffer.Height);
             _resizeHandled += (w, h) => _igRenderable.WindowResized(w, h);
             _scene.AddRenderable(_igRenderable);
             _scene.AddUpdateable(_igRenderable);
@@ -117,6 +120,10 @@ namespace Veldrid.NeoDemo
 
             CreateAllObjects();
             ImGui.StyleColorsClassic();
+
+            _igRenderable.Renderer.ScaleFactor = new Vector2(
+                    _gd.MainSwapchain.Framebuffer.Width / (float)_window.Width,
+                    _gd.MainSwapchain.Framebuffer.Height / (float)_window.Height);
         }
 
         private void AddSponzaAtriumObjects()
@@ -329,6 +336,11 @@ namespace Veldrid.NeoDemo
                     if (ImGui.MenuItem("Visible Window Border", string.Empty, bordered))
                     {
                         _window.BorderVisible = !_window.BorderVisible;
+                    }
+                    if (ImGui.MenuItem("High DPI Window", string.Empty, _hiDpi, true))
+                    {
+                        _hiDpi = !_hiDpi;
+                        ChangeBackend(_gd.BackendType);
                     }
 
                     ImGui.EndMenu();
@@ -555,16 +567,14 @@ namespace Veldrid.NeoDemo
         private void Draw()
         {
             Debug.Assert(_window.Exists);
-            int width = _window.Width;
-            int height = _window.Height;
 
             if (_windowResized)
             {
                 _windowResized = false;
 
-                _gd.ResizeMainWindow((uint)width, (uint)height);
-                _scene.Camera.WindowResized(width, height);
-                _resizeHandled?.Invoke(width, height);
+                _gd.ResizeMainWindow((uint)_window.Width, (uint)_window.Height);
+                _scene.Camera.WindowResized(_gd.MainSwapchain.Framebuffer.Width, _gd.MainSwapchain.Framebuffer.Height);
+                _resizeHandled?.Invoke((int)_gd.MainSwapchain.Framebuffer.Width, (int)_gd.MainSwapchain.Framebuffer.Height);
                 CommandList cl = _gd.ResourceFactory.CreateCommandList();
                 cl.Begin();
                 _sc.RecreateWindowSizedResources(_gd, cl);
@@ -606,7 +616,8 @@ namespace Veldrid.NeoDemo
                     WindowWidth = _window.Width,
                     WindowHeight = _window.Height,
                     WindowInitialState = _window.WindowState,
-                    WindowTitle = "Veldrid NeoDemo"
+                    WindowTitle = "Veldrid NeoDemo",
+                    HiDpi = _hiDpi
                 };
 
                 _window.Close();

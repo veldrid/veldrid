@@ -11,6 +11,8 @@ namespace Veldrid.NeoDemo
         private int _width;
         private int _height;
 
+        public ImGuiRenderer Renderer => _imguiRenderer;
+
         public ImGuiRenderable(int width, int height)
         {
             _width = width;

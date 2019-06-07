@@ -59,6 +59,12 @@ namespace Veldrid.MetalBindings
             set => objc_msgSend(NativePtr, "setDisplaySyncEnabled:", value);
         }
 
+        public CGFloat contentsScale
+        {   
+            get => CGFloat_objc_msgSend(NativePtr, "contentsScale");
+            set => objc_msgSend(NativePtr, "setContentsScale:", value);
+        }
+
         private static readonly Selector sel_device = "device";
         private static readonly Selector sel_setDevice = "setDevice:";
         private static readonly Selector sel_pixelFormat = "pixelFormat";

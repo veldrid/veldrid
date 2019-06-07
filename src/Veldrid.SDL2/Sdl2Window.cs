@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Text;
+using System.Runtime.InteropServices;
 
 using static Veldrid.Sdl2.Sdl2Native;
 using System.ComponentModel;
@@ -244,6 +245,8 @@ namespace Veldrid.Sdl2
 
         public IntPtr SdlWindowHandle => _window;
 
+        public double DisplayScale { get; private set; }
+
         public event Action Resized;
         public event Action Closing;
         public event Action Closed;
@@ -359,7 +362,23 @@ namespace Veldrid.Sdl2
                 SDL_ShowWindow(_window);
             }
 
+            RefreshDPI();
+
             _exists = true;
+        }
+
+        private void RefreshDPI()
+        {
+            int displayIndex = SDL_GetWindowDisplayIndex((SDL_Window*)_window);
+            if (displayIndex < 0) { displayIndex = 0; }
+            int defaultDPI = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 72 : 96;
+            float diagonal, horizontal, vertical;
+            if (SDL_GetDisplayDPI(displayIndex, &diagonal, &horizontal, &vertical) != 0)
+            {
+                horizontal = defaultDPI;
+            }
+
+            DisplayScale = horizontal / (double)defaultDPI;
         }
 
         // Called by Sdl2EventProcessor when an event for this window is encountered.

@@ -9,6 +9,7 @@ namespace Veldrid.MTL
         private readonly MTLSwapchainFramebuffer _framebuffer;
         private CAMetalLayer _metalLayer;
         private readonly MTLGraphicsDevice _gd;
+        private readonly NSWindow _nsWindow;
         private UIView _uiView; // Valid only when a UIViewSwapchainSource is used.
         private bool _syncToVerticalBlank;
         private bool _disposed;
@@ -47,11 +48,11 @@ namespace Veldrid.MTL
             SwapchainSource source = description.Source;
             if (source is NSWindowSwapchainSource nsWindowSource)
             {
-                NSWindow nswindow = new NSWindow(nsWindowSource.NSWindow);
-                CGSize windowContentSize = nswindow.contentView.frame.size;
-                width = (uint)windowContentSize.width;
-                height = (uint)windowContentSize.height;
-                NSView contentView = nswindow.contentView;
+                _nsWindow = new NSWindow(nsWindowSource.NSWindow);
+                CGSize backingSize = _nsWindow.convertRectToBacking(_nsWindow.contentView.frame).size;
+                width = (uint)backingSize.width;
+                height = (uint)backingSize.height;
+                NSView contentView = _nsWindow.contentView;
                 contentView.wantsLayer = true;
                 contentView.layer = _metalLayer.NativePtr;
             }
@@ -128,6 +129,12 @@ namespace Veldrid.MTL
                 height = (uint)(height * nativeScale);
 
                 _metalLayer.frame = _uiView.frame;
+            }
+            else if (_nsWindow.NativePtr != IntPtr.Zero)
+            {
+                CGSize backingSize = _nsWindow.convertRectToBacking(_nsWindow.contentView.frame).size;
+                width = (uint)backingSize.width;
+                height = (uint)backingSize.height;
             }
 
             _framebuffer.Resize(width, height);

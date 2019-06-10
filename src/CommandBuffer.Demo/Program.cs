@@ -79,10 +79,10 @@ namespace CommandBufferDemo
                 fr[i].ImageAcquired = gd.ResourceFactory.CreateSemaphore();
                 fr[i].RenderComplete = gd.ResourceFactory.CreateSemaphore();
 
-                RenderEncoder rp = fr[i].CB.BeginRenderPass(sc.Framebuffers[i], LoadAction.Clear, StoreAction.Store, s_colors[i], 1.0f);
-                rp.BindPipeline(p);
-                rp.Draw(3);
-                rp.End();
+                fr[i].CB.BeginRenderPass(sc.Framebuffers[i], LoadAction.Clear, StoreAction.Store, s_colors[i], 1.0f);
+                fr[i].CB.BindPipeline(p);
+                fr[i].CB.Draw(3);
+                fr[i].CB.EndRenderPass();
             }
 
             return fr;

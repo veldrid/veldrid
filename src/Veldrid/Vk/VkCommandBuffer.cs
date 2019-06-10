@@ -68,7 +68,7 @@ namespace Veldrid.Vk
             vkDestroyCommandPool(_gd.Device, _pool, null);
         }
 
-        internal override RenderEncoder BeginRenderPassCore(in RenderPassDescription rpi)
+        internal override void BeginRenderPassCore(in RenderPassDescription rpi)
         {
             if (rpi.Framebuffer is VkSwapchainFramebuffer)
             {
@@ -117,13 +117,11 @@ namespace Veldrid.Vk
 
             SetViewport(0, new Viewport(0, 0, _currentFB.Width, _currentFB.Height, 0f, 1f));
 
-            vkCmdSetScissor(_cb, 0, 1, &rpBI.renderArea);
             // TODO: Multiple scissors.
-
-            return new RenderEncoder(this, rpi);
+            vkCmdSetScissor(_cb, 0, 1, &rpBI.renderArea);
         }
 
-        internal override void End(RenderEncoder renderEncoder)
+        public override void EndRenderPass()
         {
             RequireActiveRenderPass();
             vkCmdEndRenderPass(_cb);
@@ -138,14 +136,14 @@ namespace Veldrid.Vk
             }
         }
 
-        internal override void BindIndexBuffer(DeviceBuffer buffer, IndexFormat format, uint offset)
+        public override void BindIndexBuffer(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
             RequireActiveRenderPass();
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
             vkCmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, offset, VkFormats.VdToVkIndexFormat(format));
         }
 
-        internal override void BindPipeline(Pipeline pipeline)
+        public override void BindPipeline(Pipeline pipeline)
         {
             RequireActiveRenderPass();
             _currentGraphicsPipeline = Util.AssertSubtype<Pipeline, VkPipeline>(pipeline);
@@ -155,7 +153,7 @@ namespace Veldrid.Vk
                 _currentGraphicsPipeline.DevicePipeline);
         }
 
-        internal override void BindResourceSet(uint slot, ResourceSet resourceSet, Span<uint> dynamicOffsets)
+        public override void BindResourceSet(uint slot, ResourceSet resourceSet, Span<uint> dynamicOffsets)
         {
             RequireActiveRenderPass();
             VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(resourceSet);
@@ -172,7 +170,7 @@ namespace Veldrid.Vk
             }
         }
 
-        internal override void BindVertexBuffer(uint index, DeviceBuffer buffer, uint offset)
+        public override void BindVertexBuffer(uint index, DeviceBuffer buffer, uint offset)
         {
             RequireActiveRenderPass();
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
@@ -181,13 +179,13 @@ namespace Veldrid.Vk
             vkCmdBindVertexBuffers(_cb, index, 1, &deviceBuffer, &offset64);
         }
 
-        internal override void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
+        public override void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
             RequireActiveRenderPass();
             vkCmdDraw(_cb, vertexCount, instanceCount, vertexStart, instanceStart);
         }
 
-        internal override void DrawIndexed(
+        public override void DrawIndexed(
             uint indexCount,
             uint instanceCount,
             uint indexStart,
@@ -198,7 +196,7 @@ namespace Veldrid.Vk
             vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
-        internal override void InsertDebugMarker(string name)
+        public override void InsertDebugMarker(string name)
         {
             vkCmdDebugMarkerInsertEXT_t func = _gd.MarkerInsert;
             if (func == null) { return; }
@@ -218,7 +216,7 @@ namespace Veldrid.Vk
             func(_cb, &markerInfo);
         }
 
-        internal override void PushDebugGroup(string name)
+        public override void PushDebugGroup(string name)
         {
             BeginIfNeeded();
             vkCmdDebugMarkerBeginEXT_t func = _gd.MarkerBegin;
@@ -239,7 +237,7 @@ namespace Veldrid.Vk
             func(_cb, &markerInfo);
         }
 
-        internal override void PopDebugGroup()
+        public override void PopDebugGroup()
         {
             vkCmdDebugMarkerEndEXT_t func = _gd.MarkerEnd;
             if (func == null) { return; }
@@ -247,14 +245,14 @@ namespace Veldrid.Vk
             func(_cb);
         }
 
-        internal override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
+        public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
             RequireActiveRenderPass();
             VkRect2D scissor = new VkRect2D((int)x, (int)y, width, height);
             vkCmdSetScissor(_cb, index, 1, &scissor);
         }
 
-        internal override void SetViewport(uint index, Viewport viewport)
+        public override void SetViewport(uint index, Viewport viewport)
         {
             RequireActiveRenderPass();
 

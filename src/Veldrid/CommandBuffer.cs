@@ -6,7 +6,7 @@ namespace Veldrid
     {
         public abstract void Dispose();
 
-        public RenderEncoder BeginRenderPass(
+        public void BeginRenderPass(
             Framebuffer framebuffer,
             LoadAction loadAction,
             StoreAction storeAction,
@@ -15,7 +15,7 @@ namespace Veldrid
             => BeginRenderPassCore(
                 new RenderPassDescription(framebuffer, loadAction, storeAction, clearColor, clearDepth, Span<Texture>.Empty));
 
-        public RenderEncoder BeginRenderPass(
+        public void BeginRenderPass(
             Framebuffer framebuffer,
             LoadAction loadAction,
             StoreAction storeAction,
@@ -25,28 +25,29 @@ namespace Veldrid
             => BeginRenderPassCore(
                 new RenderPassDescription(framebuffer, loadAction, storeAction, clearColor, clearDepth, resolveTextures));
 
-        internal abstract RenderEncoder BeginRenderPassCore(in RenderPassDescription rpi);
-        internal abstract void BindVertexBuffer(uint index, DeviceBuffer buffer, uint offset);
-        internal abstract void BindIndexBuffer(DeviceBuffer buffer, IndexFormat format, uint offset);
-        internal abstract void BindPipeline(Pipeline pipeline);
-        internal void BindResourceSet(uint slot, ResourceSet resourceSet)
+        internal abstract void BeginRenderPassCore(in RenderPassDescription rpi);
+        public abstract void BindVertexBuffer(uint index, DeviceBuffer buffer, uint offset);
+        public abstract void BindIndexBuffer(DeviceBuffer buffer, IndexFormat format, uint offset);
+        public abstract void BindPipeline(Pipeline pipeline);
+        public void BindResourceSet(uint slot, ResourceSet resourceSet)
             => BindResourceSet(slot, resourceSet, Span<uint>.Empty);
-        internal abstract void BindResourceSet(uint slot, ResourceSet resourceSet, Span<uint> dynamicOffsets);
-        internal abstract void DrawIndexed(
+        public abstract void BindResourceSet(uint slot, ResourceSet resourceSet, Span<uint> dynamicOffsets);
+        public void DrawIndexed(uint indexCount) => DrawIndexed(indexCount, 1, 0, 0, 0);
+        public abstract void DrawIndexed(
             uint indexCount,
             uint instanceCount,
             uint indexStart,
             int vertexOffset,
             uint instanceStart);
-        internal abstract void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
-        internal abstract void SetViewport(uint index, Viewport viewport);
-        internal abstract void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
+        public void Draw(uint vertexCount) => Draw(vertexCount, 1, 0, 0);
+        public abstract void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart);
+        public abstract void SetViewport(uint index, Viewport viewport);
+        public abstract void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
+        public abstract void EndRenderPass();
 
-        internal abstract void InsertDebugMarker(string name);
-        internal abstract void PushDebugGroup(string name);
-        internal abstract void PopDebugGroup();
-
-        internal abstract void End(RenderEncoder renderEncoder);
+        public abstract void InsertDebugMarker(string name);
+        public abstract void PushDebugGroup(string name);
+        public abstract void PopDebugGroup();
     }
 
     internal readonly struct RenderPassDescription
@@ -88,46 +89,5 @@ namespace Veldrid
         Store,
         Resolve,
         StoreAndResolve
-    }
-
-    public readonly struct RenderEncoder
-    {
-        private readonly CommandBuffer _cb;
-        private readonly RenderPassDescription _rpDesc;
-
-        internal RenderEncoder(CommandBuffer cb, in RenderPassDescription rpDesc)
-        {
-            _cb = cb;
-            _rpDesc = rpDesc;
-        }
-
-        public void BindVertexBuffer(uint index, DeviceBuffer buffer, uint offset)
-            => _cb.BindVertexBuffer(index, buffer, offset);
-        public void BindIndexBuffer(DeviceBuffer buffer, IndexFormat format, uint offset)
-            => _cb.BindIndexBuffer(buffer, format, offset);
-        public void BindPipeline(Pipeline pipeline) => _cb.BindPipeline(pipeline);
-        public void BindResourceSet(uint slot, ResourceSet resourceSet)
-            => _cb.BindResourceSet(slot, resourceSet);
-        public void BindResourceSet(uint slot, ResourceSet resourceSet, Span<uint> dynamicOffsets)
-            => _cb.BindResourceSet(slot, resourceSet, dynamicOffsets);
-        public void DrawIndexed(uint indexCount) => DrawIndexed(indexCount, 1, 0, 0, 0);
-        public void DrawIndexed(
-            uint indexCount,
-            uint instanceCount,
-            uint indexStart,
-            int vertexOffset,
-            uint instanceStart)
-            => _cb.DrawIndexed(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
-        public void Draw(uint vertexCount) => Draw(vertexCount, 1, 0, 0);
-        public void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
-            => _cb.Draw(vertexCount, instanceCount, vertexStart, instanceStart);
-        public void SetViewport(uint index, Viewport viewport) => _cb.SetViewport(index, viewport);
-        public void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
-            => _cb.SetScissorRect(index, x, y, width, height);
-        public void End() => _cb.End(this);
-
-        public void InsertDebugMarker(string name) => _cb.InsertDebugMarker(name);
-        public void PushDebugGroup(string name) => _cb.PushDebugGroup(name);
-        public void PopDebugGroup() => _cb.PopDebugGroup();
     }
 }

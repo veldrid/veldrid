@@ -23,12 +23,12 @@ namespace Veldrid.Vk
         private VkPhysicalDeviceFeatures _physicalDeviceFeatures;
         private VkPhysicalDeviceMemoryProperties _physicalDeviceMemProperties;
         private VkDevice _device;
-        private uint _graphicsQueueIndex;
+        private uint _universalQueueIndex;
         private uint _presentQueueIndex;
         private VkCommandPool _graphicsCommandPool;
         private readonly object _graphicsCommandPoolLock = new object();
-        private VkQueue _graphicsQueue;
-        private readonly object _graphicsQueueLock = new object();
+        private VkQueue _universalQueue;
+        private readonly object _universalQueueLock = new object();
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private PFN_vkDebugReportCallbackEXT _debugCallbackFunc;
         private bool _debugMarkerEnabled;
@@ -84,8 +84,8 @@ namespace Veldrid.Vk
         public VkDevice Device => _device;
         public VkPhysicalDevice PhysicalDevice => _physicalDevice;
         public VkPhysicalDeviceMemoryProperties PhysicalDeviceMemProperties => _physicalDeviceMemProperties;
-        public VkQueue GraphicsQueue => _graphicsQueue;
-        public uint GraphicsQueueIndex => _graphicsQueueIndex;
+        public VkQueue UniversalQueue => _universalQueue;
+        public uint UniversalQueueIndex => _universalQueueIndex;
         public uint PresentQueueIndex => _presentQueueIndex;
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
         public VkDescriptorPoolManager DescriptorPoolManager => _descriptorPoolManager;
@@ -223,13 +223,13 @@ namespace Veldrid.Vk
                 submissionFence = vkFence;
             }
 
-            lock (_graphicsQueueLock)
+            lock (_universalQueueLock)
             {
-                VkResult result = vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
+                VkResult result = vkQueueSubmit(_universalQueue, 1, ref si, vkFence);
                 CheckResult(result);
                 if (useExtraFence)
                 {
-                    result = vkQueueSubmit(_graphicsQueue, 0, null, submissionFence);
+                    result = vkQueueSubmit(_universalQueue, 0, null, submissionFence);
                     CheckResult(result);
                 }
             }
@@ -336,7 +336,7 @@ namespace Veldrid.Vk
             uint imageIndex = vkSC.ImageIndex;
             presentInfo.pImageIndices = &imageIndex;
 
-            object presentLock = vkSC.PresentQueueIndex == _graphicsQueueIndex ? _graphicsQueueLock : vkSC;
+            object presentLock = vkSC.PresentQueueIndex == _universalQueueIndex ? _universalQueueLock : vkSC;
             lock (presentLock)
             {
                 vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
@@ -633,7 +633,7 @@ namespace Veldrid.Vk
         {
             GetQueueFamilyIndices(surface);
 
-            HashSet<uint> familyIndices = new HashSet<uint> { _graphicsQueueIndex, _presentQueueIndex };
+            HashSet<uint> familyIndices = new HashSet<uint> { _universalQueueIndex, _presentQueueIndex };
             VkDeviceQueueCreateInfo* queueCreateInfos = stackalloc VkDeviceQueueCreateInfo[familyIndices.Count];
             uint queueCreateInfosCount = (uint)familyIndices.Count;
 
@@ -641,7 +641,7 @@ namespace Veldrid.Vk
             foreach (uint index in familyIndices)
             {
                 VkDeviceQueueCreateInfo queueCreateInfo = VkDeviceQueueCreateInfo.New();
-                queueCreateInfo.queueFamilyIndex = _graphicsQueueIndex;
+                queueCreateInfo.queueFamilyIndex = _universalQueueIndex;
                 queueCreateInfo.queueCount = 1;
                 float priority = 1f;
                 queueCreateInfo.pQueuePriorities = &priority;
@@ -738,7 +738,7 @@ namespace Veldrid.Vk
             result = vkCreateDevice(_physicalDevice, ref deviceCreateInfo, null, out _device);
             CheckResult(result);
 
-            vkGetDeviceQueue(_device, _graphicsQueueIndex, 0, out _graphicsQueue);
+            vkGetDeviceQueue(_device, _universalQueueIndex, 0, out _universalQueue);
 
             if (_debugMarkerEnabled)
             {
@@ -807,7 +807,7 @@ namespace Veldrid.Vk
             {
                 if ((qfp[i].queueFlags & VkQueueFlags.Graphics) != 0)
                 {
-                    _graphicsQueueIndex = i;
+                    _universalQueueIndex = i;
                 }
 
                 if (!foundPresent)
@@ -836,7 +836,7 @@ namespace Veldrid.Vk
         {
             VkCommandPoolCreateInfo commandPoolCI = VkCommandPoolCreateInfo.New();
             commandPoolCI.flags = VkCommandPoolCreateFlags.ResetCommandBuffer;
-            commandPoolCI.queueFamilyIndex = _graphicsQueueIndex;
+            commandPoolCI.queueFamilyIndex = _universalQueueIndex;
             VkResult result = vkCreateCommandPool(_device, ref commandPoolCI, null, out _graphicsCommandPool);
             CheckResult(result);
         }
@@ -956,9 +956,9 @@ namespace Veldrid.Vk
 
         private protected override void WaitForIdleCore()
         {
-            lock (_graphicsQueueLock)
+            lock (_universalQueueLock)
             {
-                vkQueueWaitIdle(_graphicsQueue);
+                vkQueueWaitIdle(_universalQueue);
             }
 
             CheckSubmittedFences();
@@ -1327,7 +1327,7 @@ namespace Veldrid.Vk
             return false;
         }
 
-        internal void ClearColorTexture(VkTexture texture, VkClearColorValue color)
+        internal void ClearColorTexture(VkTexture texture, VkClearColorValue color, VkImageLayout finalLayout)
         {
             VkImageSubresourceRange range = new VkImageSubresourceRange(
                  VkImageAspectFlags.Color,
@@ -1339,7 +1339,7 @@ namespace Veldrid.Vk
             VkCommandBuffer cb = pool.BeginNewCommandBuffer();
             texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.TransferDstOptimal);
             vkCmdClearColorImage(cb, texture.OptimalDeviceImage, VkImageLayout.TransferDstOptimal, &color, 1, &range);
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.ColorAttachmentOptimal);
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, finalLayout);
             pool.EndAndSubmit(cb);
         }
 
@@ -1382,6 +1382,93 @@ namespace Veldrid.Vk
             pool.EndAndSubmit(cb);
         }
 
+        private protected override void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index)
+        {
+            VkSwapchain vkSwapchain = Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain);
+            VulkanSemaphore vkSemaphore = Util.AssertSubtype<Semaphore, VulkanSemaphore>(waitSemaphore);
+
+            VkPresentInfoKHR pi = VkPresentInfoKHR.New();
+            pi.pImageIndices = &index;
+            pi.swapchainCount = 1;
+
+            VkSwapchainKHR nativeSwapchain = vkSwapchain.DeviceSwapchain;
+            pi.pSwapchains = &nativeSwapchain;
+
+            VkSemaphore semaphore = vkSemaphore?.NativeSemaphore ?? VkSemaphore.Null;
+            pi.pWaitSemaphores = &semaphore;
+            pi.waitSemaphoreCount = waitSemaphore != null ? 1u : 0u;
+
+            VkResult results;
+            pi.pResults = &results;
+
+            var sw = Stopwatch.StartNew();
+            lock (_universalQueueLock)
+            {
+                VkResult presentResult = vkQueuePresentKHR(_universalQueue, &pi);
+            }
+            sw.Stop();
+            Console.WriteLine($"Total present time: {sw.Elapsed.TotalMilliseconds} ms.");
+
+        }
+
+        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        {
+            VkSwapchain vkSwapchain = Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain);
+            VulkanSemaphore vkSemaphore = semaphore != null
+                ? Util.AssertSubtype<Semaphore, VulkanSemaphore>(semaphore)
+                : null;
+            VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
+
+            uint imageIndex = 0;
+            var sw = Stopwatch.StartNew();
+            VkResult result = vkAcquireNextImageKHR(
+                _device,
+                vkSwapchain.DeviceSwapchain,
+                ulong.MaxValue,
+                vkSemaphore?.NativeSemaphore ?? VkSemaphore.Null,
+                vkFence?.DeviceFence ?? Vulkan.VkFence.Null,
+                ref imageIndex);
+            CheckResult(result);
+            sw.Stop();
+            Console.WriteLine($"Total acquire time: {sw.Elapsed.TotalMilliseconds} ms.");
+            return imageIndex;
+        }
+
+        private protected override void SubmitCommandsCore(
+            CommandBuffer commandBuffer,
+            Semaphore wait,
+            Semaphore signal,
+            Fence fence)
+        {
+            VulkanCommandBuffer vkCB = Util.AssertSubtype<CommandBuffer, VulkanCommandBuffer>(commandBuffer);
+            VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
+            VkCommandBuffer nativeCB = vkCB.GetSubmissionCB();
+            VkSubmitInfo si = VkSubmitInfo.New();
+            si.commandBufferCount = 1;
+            si.pCommandBuffers = &nativeCB;
+
+            VkSemaphore vkWait = (wait as VulkanSemaphore)?.NativeSemaphore ?? VkSemaphore.Null;
+            si.waitSemaphoreCount = wait != null ? 1u : 0u;
+            si.pWaitSemaphores = &vkWait;
+
+            si.signalSemaphoreCount = signal != null ? 1u : 0u;
+            VkSemaphore vkSignal = (signal as VulkanSemaphore)?.NativeSemaphore ?? VkSemaphore.Null;
+            si.pSignalSemaphores = &vkSignal;
+
+            // TODO: Wrong
+            VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
+            si.pWaitDstStageMask = &waitDstStageMask;
+
+            lock (_universalQueueLock)
+            {
+                var sw = Stopwatch.StartNew();
+                VkResult result = vkQueueSubmit(_universalQueue, 1, &si, vkFence?.DeviceFence ?? Vulkan.VkFence.Null);
+                CheckResult(result);
+                sw.Stop();
+                Console.WriteLine($"Total vkQueueSubmit time: {sw.Elapsed.TotalMilliseconds} ms.");
+            }
+        }
+
         private class SharedCommandPool
         {
             private readonly VkGraphicsDevice _gd;
@@ -1397,7 +1484,7 @@ namespace Veldrid.Vk
 
                 VkCommandPoolCreateInfo commandPoolCI = VkCommandPoolCreateInfo.New();
                 commandPoolCI.flags = VkCommandPoolCreateFlags.Transient | VkCommandPoolCreateFlags.ResetCommandBuffer;
-                commandPoolCI.queueFamilyIndex = _gd.GraphicsQueueIndex;
+                commandPoolCI.queueFamilyIndex = _gd.UniversalQueueIndex;
                 VkResult result = vkCreateCommandPool(_gd.Device, ref commandPoolCI, null, out _pool);
                 CheckResult(result);
 

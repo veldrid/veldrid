@@ -8,7 +8,7 @@ namespace Veldrid.Vk
         private readonly VkDevice _device;
 
         public VkResourceFactory(VkGraphicsDevice vkGraphicsDevice)
-            : base (vkGraphicsDevice.Features)
+            : base(vkGraphicsDevice.Features)
         {
             _gd = vkGraphicsDevice;
             _device = vkGraphicsDevice.Device;
@@ -92,6 +92,16 @@ namespace Veldrid.Vk
         public override Swapchain CreateSwapchain(ref SwapchainDescription description)
         {
             return new VkSwapchain(_gd, ref description);
+        }
+
+        protected override CommandBuffer CreateCommandBufferCore(ref CommandBufferDescription description)
+        {
+            return new VulkanCommandBuffer(_gd, ref description);
+        }
+
+        protected override Semaphore CreateSemaphoreCore()
+        {
+            return new VulkanSemaphore(_gd);
         }
     }
 }

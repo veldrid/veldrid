@@ -35,10 +35,12 @@ namespace Veldrid.StartupUtilities
             out GraphicsDevice gd)
         {
             Sdl2Native.SDL_Init(SDLInitFlags.Video);
+#if !EXCLUDE_OPENGL_BACKEND
             if (preferredBackend == GraphicsBackend.OpenGL || preferredBackend == GraphicsBackend.OpenGLES)
             {
                 SetSDLGLContextAttributes(deviceOptions, preferredBackend);
             }
+#endif
 
             window = CreateWindow(ref windowCI);
             gd = CreateGraphicsDevice(window, deviceOptions, preferredBackend);
@@ -166,7 +168,7 @@ namespace Veldrid.StartupUtilities
 
 #if !EXCLUDE_METAL_BACKEND
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
-            => CreateMetalGraphicsDevice(options, window, false);
+            => CreateMetalGraphicsDevice(options, window, options.SwapchainSrgbFormat);
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(
             GraphicsDeviceOptions options,
             Sdl2Window window,
@@ -206,7 +208,7 @@ namespace Veldrid.StartupUtilities
 
 #if !EXCLUDE_VULKAN_BACKEND
         public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
-            => CreateVulkanGraphicsDevice(options, window, false);
+            => CreateVulkanGraphicsDevice(options, window, options.SwapchainSrgbFormat);
         public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(
             GraphicsDeviceOptions options,
             Sdl2Window window,

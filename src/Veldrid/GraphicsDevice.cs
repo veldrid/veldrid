@@ -116,8 +116,17 @@ namespace Veldrid
         /// execution.</param>
         public void SubmitCommands(CommandList commandList, Fence fence) => SubmitCommandsCore(commandList, fence);
 
+        private protected abstract void SubmitCommandsCore(CommandList commandList, Fence fence);
+
+        public void SubmitCommands(CommandBuffer commandBuffer, Semaphore wait, Semaphore signal, Fence fence)
+        {
+            SubmitCommandsCore(commandBuffer, wait, signal, fence);
+        }
+
         private protected abstract void SubmitCommandsCore(
-            CommandList commandList,
+            CommandBuffer commandBuffer,
+            Semaphore wait,
+            Semaphore signal,
             Fence fence);
 
         /// <summary>
@@ -215,6 +224,20 @@ namespace Veldrid
         public void SwapBuffers(Swapchain swapchain) => SwapBuffersCore(swapchain);
 
         private protected abstract void SwapBuffersCore(Swapchain swapchain);
+
+        public void Present(Swapchain swapchain, Semaphore waitSemaphore, uint index)
+        {
+            PresentCore(swapchain, waitSemaphore, index);
+        }
+
+        private protected abstract void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index);
+
+        public uint AcquireNextImage(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        {
+            return AcquireNextImageCore(swapchain, semaphore, fence);
+        }
+
+        private protected abstract uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence);
 
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> object representing the render targets of the main swapchain.

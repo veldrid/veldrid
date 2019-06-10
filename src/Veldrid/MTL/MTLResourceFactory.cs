@@ -84,5 +84,15 @@ namespace Veldrid.MTL
         {
             return new MTLSwapchain(_gd, ref description);
         }
+
+        protected override CommandBuffer CreateCommandBufferCore(ref CommandBufferDescription description)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override Semaphore CreateSemaphoreCore()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

@@ -196,7 +196,7 @@ namespace Veldrid.Vk
                 CheckResult(result);
             }
 
-            ClearIfRenderTarget();
+            ClearIfRenderTarget(VkImageLayout.ColorAttachmentOptimal);
             TransitionIfSampled();
             RefCount = new ResourceRefCount(RefCountedDispose);
         }
@@ -229,16 +229,16 @@ namespace Veldrid.Vk
             _optimalImage = existingImage;
             _imageLayouts = new[] { VkImageLayout.Undefined };
 
-            ClearIfRenderTarget();
+            ClearIfRenderTarget(VkImageLayout.PresentSrcKHR);
             RefCount = new ResourceRefCount(DisposeCore);
         }
 
-        private void ClearIfRenderTarget()
+        private void ClearIfRenderTarget(VkImageLayout finalLayout)
         {
             // If the image is going to be used as a render target, we need to clear the data before its first use.
             if ((Usage & TextureUsage.RenderTarget) != 0)
             {
-                _gd.ClearColorTexture(this, new VkClearColorValue(0, 0, 0, 0));
+                _gd.ClearColorTexture(this, new VkClearColorValue(0, 0, 0, 0), finalLayout);
             }
             else if ((Usage & TextureUsage.DepthStencil) != 0)
             {

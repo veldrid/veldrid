@@ -315,6 +315,36 @@ namespace Veldrid.Vk
             }
         }
 
+        internal static VkAttachmentStoreOp VdToVkStoreAction(StoreAction storeAction)
+        {
+            switch (storeAction)
+            {
+                case StoreAction.DontCare:
+                    return VkAttachmentStoreOp.DontCare;
+                case StoreAction.Store:
+                    return VkAttachmentStoreOp.Store;
+                case StoreAction.Resolve:
+                    return VkAttachmentStoreOp.DontCare;
+                default:
+                    throw Illegal.Value<StoreAction>();
+            }
+        }
+
+        internal static VkAttachmentLoadOp VdToVkLoadAction(LoadAction loadAction)
+        {
+            switch (loadAction)
+            {
+                case LoadAction.DontCare:
+                    return VkAttachmentLoadOp.DontCare;
+                case LoadAction.Load:
+                    return VkAttachmentLoadOp.Load;
+                case LoadAction.Clear:
+                    return VkAttachmentLoadOp.Clear;
+                default:
+                    throw Illegal.Value<LoadAction>();
+            }
+        }
+
         internal static VkFormat VdToVkVertexElementFormat(VertexElementFormat format)
         {
             switch (format)

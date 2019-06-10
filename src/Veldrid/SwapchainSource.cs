@@ -12,6 +12,8 @@ namespace Veldrid
     {
         internal SwapchainSource() { }
 
+        internal abstract void GetSize(out uint width, out uint height);
+
         /// <summary>
         /// Creates a new SwapchainSource for a Win32 window.
         /// </summary>
@@ -99,6 +101,24 @@ namespace Veldrid
             Hwnd = hwnd;
             Hinstance = hinstance;
         }
+
+        internal unsafe override void GetSize(out uint width, out uint height)
+        {
+            RECT r;
+            GetWindowRect(Hwnd, &r);
+            width = (uint)(r.right - r.left);
+            height = (uint)(r.bottom - r.top);
+        }
+
+        private struct RECT
+        {
+            public long left, right, top, bottom;
+        }
+
+        [DllImport("user32.dll")]
+        private static unsafe extern uint GetWindowRect(
+            IntPtr hWnd,
+            RECT* lpRect);
     }
 
     internal class UwpSwapchainSource : SwapchainSource
@@ -110,6 +130,11 @@ namespace Veldrid
         {
             SwapChainPanelNative = swapChainPanelNative;
             LogicalDpi = logicalDpi;
+        }
+
+        internal override void GetSize(out uint width, out uint height)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -123,6 +148,11 @@ namespace Veldrid
             Display = display;
             Window = window;
         }
+
+        internal override void GetSize(out uint width, out uint height)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     internal class WaylandSwapchainSource : SwapchainSource
@@ -135,6 +165,11 @@ namespace Veldrid
             Display = display;
             Surface = surface;
         }
+
+        internal override void GetSize(out uint width, out uint height)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     internal class NSWindowSwapchainSource : SwapchainSource
@@ -145,6 +180,11 @@ namespace Veldrid
         {
             NSWindow = nsWindow;
         }
+
+        internal override void GetSize(out uint width, out uint height)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     internal class UIViewSwapchainSource : SwapchainSource
@@ -154,6 +194,11 @@ namespace Veldrid
         public UIViewSwapchainSource(IntPtr uiView)
         {
             UIView = uiView;
+        }
+
+        internal override void GetSize(out uint width, out uint height)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -167,6 +212,11 @@ namespace Veldrid
             Surface = surfaceHandle;
             JniEnv = jniEnv;
         }
+
+        internal override void GetSize(out uint width, out uint height)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     internal class NSViewSwapchainSource : SwapchainSource
@@ -176,6 +226,11 @@ namespace Veldrid
         public NSViewSwapchainSource(IntPtr nsView)
         {
             NSView = nsView;
+        }
+
+        internal override void GetSize(out uint width, out uint height)
+        {
+            throw new NotImplementedException();
         }
     }
 }

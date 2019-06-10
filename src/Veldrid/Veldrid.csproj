@@ -5,6 +5,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>$(BinDir)\$(AssemblyName).xml</DocumentationFile>
     <NoWarn Condition="'$(Configuration)' == 'Debug'">1591</NoWarn>
+    <ExcludeD3D11>true</ExcludeD3D11>
+    <ExcludeOpenGL>true</ExcludeOpenGL>
     <DefineConstants>$(DefineConstants);VALIDATE_USAGE</DefineConstants>
     <DefineConstants Condition="'$(ExcludeD3D11)' == 'true'">$(DefineConstants);EXCLUDE_D3D11_BACKEND</DefineConstants>
     <DefineConstants Condition="'$(ExcludeVulkan)' == 'true'">$(DefineConstants);EXCLUDE_VULKAN_BACKEND</DefineConstants>
@@ -14,10 +16,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Buffers" Version="4.4.0" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0" />
-    <PackageReference Include="NativeLibraryLoader" Version="$(NativeLibraryLoaderVersion)" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="NativeLibraryLoader" Version="1.0.12" />
 
     <PackageReference Include="SharpDX" Version="4.0.1" Condition="'$(ExcludeD3D11)' != 'true'" />
     <PackageReference Include="SharpDX.D3DCompiler" Version="4.0.1" Condition="'$(ExcludeD3D11)' != 'true'" />

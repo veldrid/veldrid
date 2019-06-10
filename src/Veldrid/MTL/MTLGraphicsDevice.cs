@@ -562,6 +562,21 @@ namespace Veldrid.MTL
 
         internal override uint GetUniformBufferMinOffsetAlignmentCore() => MetalFeatures.IsMacOS ? 16u : 256u;
         internal override uint GetStructuredBufferMinOffsetAlignmentCore() => 16u;
+
+        private protected override void SubmitCommandsCore(CommandBuffer commandBuffer, Semaphore wait, Semaphore signal, Fence fence)
+        {
+            throw new NotImplementedException();
+        }
+
+        private protected override void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index)
+        {
+            throw new NotImplementedException();
+        }
+
+        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     internal sealed class MonoPInvokeCallbackAttribute : Attribute

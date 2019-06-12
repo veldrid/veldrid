@@ -81,6 +81,8 @@ namespace Veldrid.D3D11
                 d3dBlendStateDesc.RenderTarget[i].AlphaBlendOperation = D3D11Formats.VdToD3D11BlendOperation(state.AlphaFunction);
             }
 
+            d3dBlendStateDesc.AlphaToCoverageEnable = description.AlphaToCoverageEnabled;
+
             return new BlendState(_device, d3dBlendStateDesc);
         }
 

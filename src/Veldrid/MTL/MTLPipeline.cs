@@ -152,6 +152,8 @@ namespace Veldrid.MTL
                 colorDesc.destinationRGBBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.DestinationColorFactor);
             }
 
+            mtlDesc.alphaToCoverageEnabled = blendStateDesc.AlphaToCoverageEnabled;
+
             RenderPipelineState = gd.Device.newRenderPipelineStateWithDescriptor(mtlDesc);
             ObjectiveCRuntime.release(mtlDesc.NativePtr);
 

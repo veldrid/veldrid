@@ -28,6 +28,7 @@ namespace Veldrid.MTL
         public MetalBindings.MTLBuffer DeviceBuffer { get; private set; }
 
         public MTLBuffer(ref BufferDescription bd, MTLGraphicsDevice gd)
+            : base(gd)
         {
             SizeInBytes = bd.SizeInBytes;
             uint roundFactor = (4 - (SizeInBytes % 4)) % 4;

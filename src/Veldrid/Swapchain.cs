@@ -22,6 +22,9 @@ namespace Veldrid
 
         public uint BufferCount => (uint)Framebuffers.Length;
 
+        public uint Width => Framebuffers[0].Width;
+        public uint Height => Framebuffers[0].Height;
+
         /// <summary>
         /// Resizes the renderable Textures managed by this instance to the given dimensions.
         /// </summary>

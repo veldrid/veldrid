@@ -260,8 +260,8 @@ namespace Veldrid.Vk
                     colorAttachmentDesc.samples = vkColorTex.VkSampleCount;
                     colorAttachmentDesc.loadOp = VkFormats.VdToVkLoadAction(desc.LoadAction);
                     colorAttachmentDesc.storeOp = VkFormats.VdToVkStoreAction(desc.StoreAction);
-                    colorAttachmentDesc.initialLayout = GetFinalLayout(vkColorTex);
-                    colorAttachmentDesc.finalLayout = GetFinalLayout(vkColorTex);
+                    colorAttachmentDesc.initialLayout = VulkanUtil.GetFinalLayout(vkColorTex);
+                    colorAttachmentDesc.finalLayout = VulkanUtil.GetFinalLayout(vkColorTex);
                     attachments.Add(colorAttachmentDesc);
 
                     VkAttachmentReference colorAttachmentRef = new VkAttachmentReference();
@@ -282,8 +282,8 @@ namespace Veldrid.Vk
                     depthAttachmentDesc.storeOp = VkFormats.VdToVkStoreAction(desc.StoreAction);
                     depthAttachmentDesc.stencilLoadOp = VkFormats.VdToVkLoadAction(desc.LoadAction);
                     depthAttachmentDesc.stencilStoreOp = VkFormats.VdToVkStoreAction(desc.StoreAction);
-                    depthAttachmentDesc.initialLayout = GetFinalLayout(vkDepthTex);
-                    depthAttachmentDesc.finalLayout = GetFinalLayout(vkDepthTex);
+                    depthAttachmentDesc.initialLayout = VulkanUtil.GetFinalLayout(vkDepthTex);
+                    depthAttachmentDesc.finalLayout = VulkanUtil.GetFinalLayout(vkDepthTex);
 
                     depthAttachmentRef.attachment = (uint)ColorTargets.Count;
                     depthAttachmentRef.layout = VkImageLayout.DepthStencilAttachmentOptimal;
@@ -323,30 +323,6 @@ namespace Veldrid.Vk
             }
 
             return ret;
-        }
-
-        private VkImageLayout GetFinalLayout(VkTexture tex)
-        {
-            if (IsPresented && (tex.Usage & TextureUsage.DepthStencil) == 0)
-            {
-                return VkImageLayout.PresentSrcKHR;
-            }
-            if ((tex.Usage & TextureUsage.Storage) != 0)
-            {
-                return VkImageLayout.General;
-            }
-            else if ((tex.Usage & TextureUsage.Sampled) != 0)
-            {
-                return VkImageLayout.ShaderReadOnlyOptimal;
-            }
-            else if ((tex.Usage & TextureUsage.DepthStencil) != 0)
-            {
-                return VkImageLayout.DepthStencilAttachmentOptimal;
-            }
-            else
-            {
-                return VkImageLayout.ColorAttachmentOptimal;
-            }
         }
 
         public override void TransitionToIntermediateLayout(VkCommandBuffer cb)

@@ -285,6 +285,8 @@ namespace Veldrid
         /// <returns></returns>
         protected abstract TextureView CreateTextureViewCore(ref TextureViewDescription description);
 
+        public DeviceBuffer CreateBuffer(uint sizeInBytes, BufferUsage usage)
+            => CreateBuffer(new BufferDescription(sizeInBytes, usage));
         /// <summary>
         /// Creates a new <see cref="DeviceBuffer"/>.
         /// </summary>

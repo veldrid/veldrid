@@ -91,6 +91,34 @@ namespace Veldrid
             ColorSrgb = colorSrgb;
         }
 
+
+        /// <summary>
+        /// Constructs a new SwapchainDescription.
+        /// </summary>
+        /// <param name="source">The <see cref="SwapchainSource"/> which will be used as the target of rendering operations.
+        /// This is a window-system-specific object which differs by platform.</param>
+        /// <param name="depthFormat">The optional format of the depth target of the Swapchain's Framebuffer.
+        /// If non-null, this must be a valid depth Texture format.
+        /// If null, then no depth target will be created.</param>
+        /// <param name="syncToVerticalBlank">Indicates whether presentation of the Swapchain will be synchronized to the window
+        /// system's vertical refresh rate.</param>
+        /// <param name="colorSrgb">Indicates whether the color target of the Swapchain will use an sRGB PixelFormat.</param>
+        public SwapchainDescription(
+            SwapchainSource source,
+            PixelFormat? depthFormat,
+            bool syncToVerticalBlank,
+            bool colorSrgb)
+        {
+            Source = source;
+            DepthFormat = depthFormat;
+            SyncToVerticalBlank = syncToVerticalBlank;
+            ColorSrgb = colorSrgb;
+
+            // Queried automatically
+            Width = 0;
+            Height = 0;
+        }
+
         /// <summary>
         /// Element-wise equality.
         /// </summary>

@@ -405,6 +405,9 @@ namespace Veldrid.Vk
                     case VkSwapchain sc:
                         SetDebugMarkerName(VkDebugReportObjectTypeEXT.SwapchainKHREXT, sc.DeviceSwapchain.Handle, name);
                         break;
+                    case VulkanCommandBuffer vkCB:
+                        // TODO: Set name of the CB in there.
+                        break;
                     default:
                         break;
                 }
@@ -1401,13 +1404,10 @@ namespace Veldrid.Vk
             VkResult results;
             pi.pResults = &results;
 
-            var sw = Stopwatch.StartNew();
             lock (_universalQueueLock)
             {
                 VkResult presentResult = vkQueuePresentKHR(_universalQueue, &pi);
             }
-            sw.Stop();
-            Console.WriteLine($"Total present time: {sw.Elapsed.TotalMilliseconds} ms.");
 
         }
 
@@ -1420,7 +1420,6 @@ namespace Veldrid.Vk
             VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
 
             uint imageIndex = 0;
-            var sw = Stopwatch.StartNew();
             VkResult result = vkAcquireNextImageKHR(
                 _device,
                 vkSwapchain.DeviceSwapchain,
@@ -1429,8 +1428,6 @@ namespace Veldrid.Vk
                 vkFence?.DeviceFence ?? Vulkan.VkFence.Null,
                 ref imageIndex);
             CheckResult(result);
-            sw.Stop();
-            Console.WriteLine($"Total acquire time: {sw.Elapsed.TotalMilliseconds} ms.");
             return imageIndex;
         }
 
@@ -1461,11 +1458,8 @@ namespace Veldrid.Vk
 
             lock (_universalQueueLock)
             {
-                var sw = Stopwatch.StartNew();
                 VkResult result = vkQueueSubmit(_universalQueue, 1, &si, vkFence?.DeviceFence ?? Vulkan.VkFence.Null);
                 CheckResult(result);
-                sw.Stop();
-                Console.WriteLine($"Total vkQueueSubmit time: {sw.Elapsed.TotalMilliseconds} ms.");
             }
         }
 

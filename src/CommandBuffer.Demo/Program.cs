@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Veldrid;
 using Veldrid.Sdl2;
@@ -11,39 +13,35 @@ namespace CommandBufferDemo
     {
         static void Main(string[] args)
         {
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(
-                false,
-                PixelFormat.R16_UNorm,
-                false,
-                ResourceBindingModel.Improved,
-                true,
-                true,
-                true);
+            WindowCreateInfo windowCI = new WindowCreateInfo
+            {
+                X = Sdl2Native.SDL_WINDOWPOS_CENTERED,
+                Y = Sdl2Native.SDL_WINDOWPOS_CENTERED,
+                WindowWidth = 1280,
+                WindowHeight = 720,
+                WindowInitialState = WindowState.Normal,
+                WindowTitle = "Veldrid NeoDemo"
+            };
+            Sdl2Window window = VeldridStartup.CreateWindow(windowCI);
+
+            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true, true);
 #if DEBUG
-            options.Debug = true;
+            gdOptions.Debug = true;
 #endif
-            VeldridStartup.CreateWindowAndGraphicsDevice(
-                new WindowCreateInfo(
-                    Sdl2Native.SDL_WINDOWPOS_CENTERED, Sdl2Native.SDL_WINDOWPOS_CENTERED,
-                    1280, 720,
-                    WindowState.Normal,
-                    "CommandBuffers"),
-                options,
-                GraphicsBackend.Vulkan,
-                out Sdl2Window window,
-                out GraphicsDevice gd);
+            GraphicsDevice gd = GraphicsDevice.Create(gdOptions, GraphicsBackend.Vulkan);
+            SwapchainSource ss = VeldridStartup.GetSwapchainSource(window);
+            Swapchain sc = gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(ss, PixelFormat.R32_Float, false, true));
             bool windowResized = false;
             window.Resized += () => windowResized = true;
 
-            Swapchain sc = gd.MainSwapchain;
+            (Pipeline p, ResourceLayout layout) = CreateQuadPipeline(gd.ResourceFactory, sc.Framebuffers[0].OutputDescription);
+            uint bufferSpace = Math.Max((uint)Unsafe.SizeOf<Vector4>(), gd.UniformBufferMinOffsetAlignment);
+            DeviceBuffer offsetsBuffer = gd.ResourceFactory.CreateBuffer(
+                bufferSpace * sc.BufferCount, BufferUsage.UniformBuffer | BufferUsage.Dynamic);
+            ResourceSet rs = gd.ResourceFactory.CreateResourceSet(new ResourceSetDescription(layout,
+                new DeviceBufferRange(offsetsBuffer, 0, 16)));
 
-            Pipeline p = CreateQuadPipeline(gd.ResourceFactory, sc.Framebuffers[0].OutputDescription);
-
-            PerFrame[] fr = CreateSwapchainResources(gd, sc, p);
-
-            uint frameIndex = 0;
-
-            frameIndex = gd.AcquireNextImage(sc, fr[0].ImageAcquired, null);
+            StandardFrameLoop loop = new StandardFrameLoop(gd, sc);
             while (window.Exists)
             {
                 InputSnapshot input = window.PumpEvents();
@@ -51,44 +49,28 @@ namespace CommandBufferDemo
                 if (windowResized)
                 {
                     windowResized = false;
-                    sc.Resize();
-                    fr = CreateSwapchainResources(gd, sc, p);
-                    frameIndex = gd.AcquireNextImage(sc, fr[0].ImageAcquired, null);
+                    loop.ResizeSwapchain();
                 }
 
-                gd.WaitForFence(fr[frameIndex].Fence);
-                gd.ResetFence(fr[frameIndex].Fence);
-                gd.SubmitCommands(
-                    fr[frameIndex].CB,
-                    fr[frameIndex].ImageAcquired,
-                    fr[frameIndex].RenderComplete,
-                    fr[frameIndex].Fence);
-                gd.Present(sc, fr[frameIndex].RenderComplete, frameIndex);
-                uint nextFrame = (frameIndex + 1) % (uint)fr.Length;
-                frameIndex = gd.AcquireNextImage(sc, fr[nextFrame].ImageAcquired, null);
+                loop.RunFrame((CommandBuffer cb, uint frameIndex, Framebuffer fb) =>
+                {
+                    float t = Environment.TickCount / 2000.0f;
+                    Vector2 offsets = new Vector2(MathF.Cos(t), MathF.Sin(t)) * 0.3f;
+                    uint frameOffset = frameIndex * bufferSpace;
+                    offsetsBuffer.Update(frameOffset, new Vector4(offsets, 0, 0));
+
+                    cb.BeginRenderPass(fb, LoadAction.Clear, StoreAction.Store, s_colors[frameIndex], 1.0f);
+                    cb.BindPipeline(p);
+                    Span<uint> bindOffsets = stackalloc uint[1];
+                    bindOffsets[0] = frameOffset;
+                    cb.BindGraphicsResourceSet(0, rs, bindOffsets);
+                    cb.Draw(3);
+                    cb.EndRenderPass();
+                });
             }
         }
 
-        private static PerFrame[] CreateSwapchainResources(GraphicsDevice gd, Swapchain sc, Pipeline p)
-        {
-            PerFrame[] fr = new PerFrame[sc.BufferCount];
-            for (uint i = 0; i < fr.Length; i++)
-            {
-                fr[i].CB = gd.ResourceFactory.CreateCommandBuffer(CommandBufferFlags.Reusable);
-                fr[i].Fence = gd.ResourceFactory.CreateFence(signaled: true);
-                fr[i].ImageAcquired = gd.ResourceFactory.CreateSemaphore();
-                fr[i].RenderComplete = gd.ResourceFactory.CreateSemaphore();
-
-                fr[i].CB.BeginRenderPass(sc.Framebuffers[i], LoadAction.Clear, StoreAction.Store, s_colors[i], 1.0f);
-                fr[i].CB.BindPipeline(p);
-                fr[i].CB.Draw(3);
-                fr[i].CB.EndRenderPass();
-            }
-
-            return fr;
-        }
-
-        private static Pipeline CreateQuadPipeline(ResourceFactory factory, OutputDescription outputs)
+        private static (Pipeline, ResourceLayout) CreateQuadPipeline(ResourceFactory factory, OutputDescription outputs)
         {
             const string VS =
 @"
@@ -97,11 +79,17 @@ namespace CommandBufferDemo
 
 layout (location = 0) out vec4 fsin_color;
 
-const vec2 QuadInfos[3] = 
+layout (set = 0, binding = 0) uniform OffsetInfo
 {
-    vec2(-0.75, -0.75),
-    vec2(0, 0.75),
-    vec2(0.75, -0.75),
+    vec2 offsets;
+    vec2 _padding0;
+};
+
+const vec2 QuadInfos[3] =
+{
+    vec2(-0.35, -0.35),
+    vec2(0, 0.35),
+    vec2(0.35, -0.35),
 };
 
 const vec4 Colors[3] = 
@@ -113,7 +101,7 @@ const vec4 Colors[3] =
 
 void main()
 {
-    gl_Position = vec4(QuadInfos[gl_VertexIndex], 0, 1);
+    gl_Position = vec4(QuadInfos[gl_VertexIndex] + offsets, 0, 1);
     fsin_color = Colors[gl_VertexIndex];
 }
 ";
@@ -128,7 +116,10 @@ void main()
     fsout_color = fsin_color;
 }
 ";
-            return factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+            ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("OffsetsInfo", ResourceKind.UniformBuffer, ShaderStages.Vertex, ResourceLayoutElementOptions.DynamicBinding)));
+
+            Pipeline pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
@@ -138,23 +129,16 @@ void main()
                     factory.CreateFromSpirv(
                         new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(VS), "main"),
                         new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(FS), "main"))),
-                Array.Empty<ResourceLayout>(),
+                layout,
                 outputs));
+            return (pipeline, layout);
         }
 
         private static readonly RgbaFloat[] s_colors =
         {
-            new RgbaFloat(1, 0, 0, 1),
-            new RgbaFloat(1, 0.2f, 0, 1),
-            new RgbaFloat(1, 0.3f, 0.2f, 1),
+            new RgbaFloat(0, 0, 0.03f, 1),
+            new RgbaFloat(0, 0, 0.03f, 1),
+            new RgbaFloat(0, 0, 0.03f, 1),
         };
-    }
-
-    public struct PerFrame
-    {
-        public CommandBuffer CB;
-        public Semaphore ImageAcquired;
-        public Semaphore RenderComplete;
-        public Fence Fence;
     }
 }

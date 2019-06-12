@@ -1,11 +1,9 @@
 ﻿using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using System.Reflection;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace Veldrid
 {
@@ -259,33 +257,33 @@ namespace Veldrid
             switch (factory.BackendType)
             {
                 case GraphicsBackend.Direct3D11:
-                {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
-                    string resourceName = name + ".hlsl.bytes";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
+                        string resourceName = name + ".hlsl.bytes";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.OpenGL:
-                {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
-                    string resourceName = name + ".glsl";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
+                        string resourceName = name + ".glsl";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.OpenGLES:
-                {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
-                    string resourceName = name + ".glsles";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
+                        string resourceName = name + ".glsles";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.Vulkan:
-                {
-                    string resourceName = name + ".spv";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        string resourceName = name + ".spv";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.Metal:
-                {
-                    string resourceName = name + ".metallib";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        string resourceName = name + ".metallib";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 default:
                     throw new NotImplementedException();
             }
@@ -364,6 +362,16 @@ namespace Veldrid
                 _frameBegun = false;
                 ImGui.Render();
                 RenderImDrawData(ImGui.GetDrawData(), gd, cl);
+            }
+        }
+
+        public unsafe void Render(GraphicsDevice gd, CommandBuffer cb)
+        {
+            if (_frameBegun)
+            {
+                _frameBegun = false;
+                ImGui.Render();
+                RenderImDrawData(ImGui.GetDrawData(), gd, cb);
             }
         }
 
@@ -588,6 +596,114 @@ namespace Veldrid
                             (uint)(pcmd.ClipRect.W - pcmd.ClipRect.Y));
 
                         cl.DrawIndexed(pcmd.ElemCount, 1, (uint)idx_offset, vtx_offset, 0);
+                    }
+
+                    idx_offset += (int)pcmd.ElemCount;
+                }
+                vtx_offset += cmd_list.VtxBuffer.Size;
+            }
+        }
+
+        private unsafe void RenderImDrawData(ImDrawDataPtr draw_data, GraphicsDevice gd, CommandBuffer cb)
+        {
+            uint vertexOffsetInVertices = 0;
+            uint indexOffsetInElements = 0;
+
+            if (draw_data.CmdListsCount == 0)
+            {
+                return;
+            }
+
+            uint totalVBSize = (uint)(draw_data.TotalVtxCount * sizeof(ImDrawVert));
+            if (totalVBSize > _vertexBuffer.SizeInBytes)
+            {
+                _vertexBuffer.Dispose();
+                _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+            }
+
+            uint totalIBSize = (uint)(draw_data.TotalIdxCount * sizeof(ushort));
+            if (totalIBSize > _indexBuffer.SizeInBytes)
+            {
+                _indexBuffer.Dispose();
+                _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
+            }
+
+            for (int i = 0; i < draw_data.CmdListsCount; i++)
+            {
+                ImDrawListPtr cmd_list = draw_data.CmdListsRange[i];
+
+                // TODO: Double/triple-buffered resources
+                _vertexBuffer.Update(
+                    vertexOffsetInVertices * (uint)sizeof(ImDrawVert),
+                    cmd_list.VtxBuffer.Data,
+                    (uint)(cmd_list.VtxBuffer.Size * sizeof(ImDrawVert)));
+
+                _indexBuffer.Update(
+                    indexOffsetInElements * sizeof(ushort),
+                    cmd_list.IdxBuffer.Data,
+                    (uint)(cmd_list.IdxBuffer.Size * sizeof(ushort)));
+
+                vertexOffsetInVertices += (uint)cmd_list.VtxBuffer.Size;
+                indexOffsetInElements += (uint)cmd_list.IdxBuffer.Size;
+            }
+
+            // Setup orthographic projection matrix into our constant buffer
+            {
+                var io = ImGui.GetIO();
+
+                Matrix4x4 mvp = Matrix4x4.CreateOrthographicOffCenter(
+                    0f,
+                    io.DisplaySize.X,
+                    io.DisplaySize.Y,
+                    0.0f,
+                    -1.0f,
+                    1.0f);
+
+                _projMatrixBuffer.Update(0, ref mvp);
+            }
+
+            cb.BindVertexBuffer(0, _vertexBuffer);
+            cb.BindIndexBuffer(_indexBuffer, IndexFormat.UInt16);
+            cb.BindPipeline(_pipeline);
+            cb.BindGraphicsResourceSet(0, _mainResourceSet);
+
+            draw_data.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
+
+            // Render command lists
+            int vtx_offset = 0;
+            int idx_offset = 0;
+            for (int n = 0; n < draw_data.CmdListsCount; n++)
+            {
+                ImDrawListPtr cmd_list = draw_data.CmdListsRange[n];
+                for (int cmd_i = 0; cmd_i < cmd_list.CmdBuffer.Size; cmd_i++)
+                {
+                    ImDrawCmdPtr pcmd = cmd_list.CmdBuffer[cmd_i];
+                    if (pcmd.UserCallback != IntPtr.Zero)
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        if (pcmd.TextureId != IntPtr.Zero)
+                        {
+                            if (pcmd.TextureId == _fontAtlasID)
+                            {
+                                cb.BindGraphicsResourceSet(1, _fontTextureResourceSet);
+                            }
+                            else
+                            {
+                                cb.BindGraphicsResourceSet(1, GetImageResourceSet(pcmd.TextureId));
+                            }
+                        }
+
+                        cb.SetScissorRect(
+                            0,
+                            (uint)pcmd.ClipRect.X,
+                            (uint)pcmd.ClipRect.Y,
+                            (uint)(pcmd.ClipRect.Z - pcmd.ClipRect.X),
+                            (uint)(pcmd.ClipRect.W - pcmd.ClipRect.Y));
+
+                        cb.DrawIndexed(pcmd.ElemCount, 1, (uint)idx_offset, vtx_offset, 0);
                     }
 
                     idx_offset += (int)pcmd.ElemCount;

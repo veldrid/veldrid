@@ -62,7 +62,7 @@ namespace Veldrid.NeoDemo
                 gdOptions,
                 //VeldridStartup.GetPlatformDefaultBackend(),
                 //GraphicsBackend.Metal,
-                // GraphicsBackend.Vulkan,
+                GraphicsBackend.Vulkan,
                 // GraphicsBackend.OpenGL,
                 //GraphicsBackend.OpenGLES,
                 out _window,

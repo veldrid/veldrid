@@ -47,6 +47,9 @@ namespace Veldrid.Vk
         public VkSampleCountFlags VkSampleCount { get; }
 
         private VkImageLayout[] _imageLayouts;
+
+        public bool IsSwapchainTexture { get; }
+
         private string _name;
 
         public ResourceRefCount RefCount { get; }
@@ -228,6 +231,7 @@ namespace Veldrid.Vk
             VkSampleCount = VkFormats.VdToVkSampleCount(sampleCount);
             _optimalImage = existingImage;
             _imageLayouts = new[] { VkImageLayout.Undefined };
+            IsSwapchainTexture = true;
 
             ClearIfRenderTarget(VkImageLayout.PresentSrcKHR);
             RefCount = new ResourceRefCount(DisposeCore);

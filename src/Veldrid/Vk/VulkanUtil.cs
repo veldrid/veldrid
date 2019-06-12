@@ -288,6 +288,31 @@ namespace Veldrid.Vk
                 0, null,
                 1, &barrier);
         }
+
+        internal static VkImageLayout GetFinalLayout(VkTexture tex)
+        {
+            bool isPresented = tex.IsSwapchainTexture;
+            if (isPresented && (tex.Usage & TextureUsage.DepthStencil) == 0)
+            {
+                return VkImageLayout.PresentSrcKHR;
+            }
+            if ((tex.Usage & TextureUsage.Storage) != 0)
+            {
+                return VkImageLayout.General;
+            }
+            else if ((tex.Usage & TextureUsage.Sampled) != 0)
+            {
+                return VkImageLayout.ShaderReadOnlyOptimal;
+            }
+            else if ((tex.Usage & TextureUsage.DepthStencil) != 0)
+            {
+                return VkImageLayout.DepthStencilAttachmentOptimal;
+            }
+            else
+            {
+                return VkImageLayout.ColorAttachmentOptimal;
+            }
+        }
     }
 
     internal unsafe static class VkPhysicalDeviceMemoryPropertiesEx

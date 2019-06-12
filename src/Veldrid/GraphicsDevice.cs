@@ -1109,5 +1109,44 @@ namespace Veldrid
             return new MTL.MTLGraphicsDevice(options, swapchainDesc);
         }
 #endif
+
+        public static GraphicsDevice Create(GraphicsDeviceOptions options, GraphicsBackend backend)
+        {
+            switch (backend)
+            {
+                case GraphicsBackend.Direct3D11:
+#if !EXCLUDE_D3D11_BACKEND
+
+#else
+                    throw new VeldridException("D3D11 support has not been included in this configuration of Veldrid");
+#endif
+                case GraphicsBackend.Vulkan:
+#if !EXCLUDE_VULKAN_BACKEND
+                    return CreateVulkan(options);
+#else
+                    throw new VeldridException("D3D11 support has not been included in this configuration of Veldrid");
+#endif
+                case GraphicsBackend.OpenGL:
+#if !EXCLUDE_OPENGL_BACKEND
+                    return CreateOpenGL(options);
+#else
+                    throw new VeldridException("OpenGL support has not been included in this configuration of Veldrid");
+#endif
+                case GraphicsBackend.Metal:
+#if !EXCLUDE_METAL_BACKEND
+                    return CreateMetal(options);
+#else
+                    throw new VeldridException("Metal support has not been included in this configuration of Veldrid");
+#endif
+                case GraphicsBackend.OpenGLES:
+#if !EXCLUDE_OPENGL_BACKEND
+                    return CreateOpenGLES(options);
+#else
+                    throw new VeldridException("OpenGL support has not been included in this configuration of Veldrid");
+#endif
+                default:
+                    throw Illegal.Value<GraphicsBackend>();
+            }
+        }
     }
 }

@@ -178,8 +178,11 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("ReflectionViewProj", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("ClipPlaneInfo", ResourceKind.UniformBuffer, ShaderStages.Fragment)));
 
+            BlendStateDescription alphaBlendDesc = BlendStateDescription.SingleAlphaBlend;
+            alphaBlendDesc.AlphaToCoverageEnabled = true;
+
             GraphicsPipelineDescription mainPD = new GraphicsPipelineDescription(
-                _alphamapTexture != null ? BlendStateDescription.SingleAlphaBlend : BlendStateDescription.SingleOverrideBlend,
+                _alphamapTexture != null ? alphaBlendDesc : BlendStateDescription.SingleOverrideBlend,
                 gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,

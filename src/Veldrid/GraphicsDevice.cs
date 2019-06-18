@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Veldrid.WebGL;
 
 namespace Veldrid
 {
@@ -1143,6 +1144,11 @@ namespace Veldrid
             return new MTL.MTLGraphicsDevice(options, swapchainDesc);
         }
 #endif
+
+        public static GraphicsDevice CreateWebGL(GraphicsDeviceOptions options, object canvas)
+        {
+            return new WebGLGraphicsDevice(options, canvas);
+        }
 
         public static GraphicsDevice Create(GraphicsDeviceOptions options, GraphicsBackend backend)
         {

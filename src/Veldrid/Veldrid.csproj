@@ -27,6 +27,8 @@
 
     <PackageReference Include="Vk" Version="1.0.21" Condition="'$(ExcludeVulkan)' != 'true'" />
 
+    <ProjectReference Include="..\..\..\WebGL.NET\src\WebGLDotNET\WebGLDotNET.csproj" />
+
     <ProjectReference Include="..\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj" Condition="'$(ExcludeMetal)' != 'true'" />
 
     <ProjectReference Include="..\Veldrid.OpenGLBindings\Veldrid.OpenGLBindings.csproj" Condition="'$(ExcludeOpenGL)' != 'true'" />

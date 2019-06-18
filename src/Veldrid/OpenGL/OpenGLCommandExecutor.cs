@@ -369,11 +369,11 @@ namespace Veldrid.OpenGL
                 CheckLastError();
                 _isSwapchainFB = false;
             }
-            else if (fb is OpenGLSwapchainFramebuffer swapchainFB)
+            else if (fb is OpenGLSwapchainFramebuffer scFB)
             {
                 if ((_backend == GraphicsBackend.OpenGL || _extensions.EXT_sRGBWriteControl))
                 {
-                    if (swapchainFB.DisableSrgbConversion)
+                    if (scFB.DisableSrgbConversion)
                     {
                         glDisable(EnableCap.FramebufferSrgb);
                         CheckLastError();
@@ -385,14 +385,24 @@ namespace Veldrid.OpenGL
                     }
                 }
 
-                if (_platformInfo.SetSwapchainFramebuffer != null)
+                if (scFB.IsSecondarySwapchain)
                 {
-                    _platformInfo.SetSwapchainFramebuffer();
+                    scFB.FlushChanges();
+                    scFB.Framebuffer.EnsureResourcesCreated();
+                    glBindFramebuffer(FramebufferTarget.Framebuffer, scFB.Framebuffer.Framebuffer);
+                    CheckLastError();
                 }
                 else
                 {
-                    glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                    CheckLastError();
+                    if (_platformInfo.SetSwapchainFramebuffer != null)
+                    {
+                        _platformInfo.SetSwapchainFramebuffer();
+                    }
+                    else
+                    {
+                        glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                        CheckLastError();
+                    }
                 }
 
                 _isSwapchainFB = true;

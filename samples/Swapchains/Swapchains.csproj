@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.ImGui\Veldrid.ImGui.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.Utilities\Veldrid.Utilities.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -53,6 +53,12 @@ namespace Veldrid.MetalBindings
 
         public MTLVertexDescriptor vertexDescriptor => objc_msgSend<MTLVertexDescriptor>(NativePtr, sel_vertexDescriptor);
 
+        public Bool8 alphaToCoverageEnabled
+        {
+            get => bool8_objc_msgSend(NativePtr, sel_isAlphaToCoverageEnabled);
+            set => objc_msgSend(NativePtr, sel_setAlphaToCoverageEnabled, value);
+        }
+
         private static readonly Selector sel_vertexFunction = "vertexFunction";
         private static readonly Selector sel_setVertexFunction = "setVertexFunction:";
         private static readonly Selector sel_fragmentFunction = "fragmentFunction";
@@ -65,5 +71,7 @@ namespace Veldrid.MetalBindings
         private static readonly Selector sel_sampleCount = "sampleCount";
         private static readonly Selector sel_setSampleCount = "setSampleCount:";
         private static readonly Selector sel_vertexDescriptor = "vertexDescriptor";
+        private static readonly Selector sel_isAlphaToCoverageEnabled = "isAlphaToCoverageEnabled";
+        private static readonly Selector sel_setAlphaToCoverageEnabled = "setAlphaToCoverageEnabled:";
     }
 }

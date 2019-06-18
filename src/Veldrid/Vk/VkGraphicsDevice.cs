@@ -423,14 +423,16 @@ namespace Veldrid.Vk
             nameInfo.@object = target;
 
             int byteCount = Encoding.UTF8.GetByteCount(name);
-            byte* utf8Ptr = stackalloc byte[byteCount];
+            byte* utf8Ptr = stackalloc byte[byteCount + 1];
             fixed (char* namePtr = name)
             {
                 Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
-                nameInfo.pObjectName = utf8Ptr;
-                VkResult result = _setObjectNameDelegate(_device, &nameInfo);
-                CheckResult(result);
             }
+            utf8Ptr[byteCount] = 0;
+
+            nameInfo.pObjectName = utf8Ptr;
+            VkResult result = _setObjectNameDelegate(_device, &nameInfo);
+            CheckResult(result);
         }
 
         private void CreateInstance(bool debug, VulkanDeviceOptions options)
@@ -766,12 +768,13 @@ namespace Veldrid.Vk
         private IntPtr GetInstanceProcAddr(string name)
         {
             int byteCount = Encoding.UTF8.GetByteCount(name);
-            byte* utf8Ptr = stackalloc byte[byteCount];
+            byte* utf8Ptr = stackalloc byte[byteCount + 1];
 
             fixed (char* namePtr = name)
             {
                 Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
             }
+            utf8Ptr[byteCount] = 0;
 
             return vkGetInstanceProcAddr(_instance, utf8Ptr);
         }
@@ -779,12 +782,13 @@ namespace Veldrid.Vk
         private IntPtr GetDeviceProcAddr(string name)
         {
             int byteCount = Encoding.UTF8.GetByteCount(name);
-            byte* utf8Ptr = stackalloc byte[byteCount];
+            byte* utf8Ptr = stackalloc byte[byteCount + 1];
 
             fixed (char* namePtr = name)
             {
                 Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
             }
+            utf8Ptr[byteCount] = 0;
 
             return vkGetDeviceProcAddr(_device, utf8Ptr);
         }

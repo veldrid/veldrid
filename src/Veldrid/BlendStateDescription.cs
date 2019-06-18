@@ -17,6 +17,10 @@ namespace Veldrid
         /// used in the <see cref="Pipeline"/>.
         /// </summary>
         public BlendAttachmentDescription[] AttachmentStates;
+        /// <summary>
+        /// Enables alpha-to-coverage, which causes a fragment's alpha value to be used when determining multi-sample coverage.
+        /// </summary>
+        public bool AlphaToCoverageEnabled;
 
         /// <summary>
         /// Constructs a new <see cref="BlendStateDescription"/>,
@@ -27,6 +31,24 @@ namespace Veldrid
         {
             BlendFactor = blendFactor;
             AttachmentStates = attachmentStates;
+            AlphaToCoverageEnabled = false;
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="BlendStateDescription"/>,
+        /// </summary>
+        /// <param name="blendFactor">The constant blend color.</param>
+        /// <param name="alphaToCoverageEnabled">Enables alpha-to-coverage, which causes a fragment's alpha value to be
+        /// used when determining multi-sample coverage.</param>
+        /// <param name="attachmentStates">The blend attachment states.</param>
+        public BlendStateDescription(
+            RgbaFloat blendFactor,
+            bool alphaToCoverageEnabled,
+            params BlendAttachmentDescription[] attachmentStates)
+        {
+            BlendFactor = blendFactor;
+            AttachmentStates = attachmentStates;
+            AlphaToCoverageEnabled = alphaToCoverageEnabled;
         }
 
         /// <summary>
@@ -77,7 +99,8 @@ namespace Veldrid
         public bool Equals(BlendStateDescription other)
         {
             return BlendFactor.Equals(other.BlendFactor)
-                && Util.ArrayEqualsEquatable(AttachmentStates, other.AttachmentStates); 
+                && AlphaToCoverageEnabled.Equals(other.AlphaToCoverageEnabled)
+                && Util.ArrayEqualsEquatable(AttachmentStates, other.AttachmentStates);
         }
 
         /// <summary>
@@ -86,7 +109,10 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(BlendFactor.GetHashCode(), HashHelper.Array(AttachmentStates));
+            return HashHelper.Combine(
+                BlendFactor.GetHashCode(),
+                AlphaToCoverageEnabled.GetHashCode(),
+                HashHelper.Array(AttachmentStates));
         }
 
         internal BlendStateDescription ShallowClone()

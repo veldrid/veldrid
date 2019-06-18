@@ -451,6 +451,17 @@ namespace Veldrid.OpenGL
             glBlendColor(blendState.BlendFactor.R, blendState.BlendFactor.G, blendState.BlendFactor.B, blendState.BlendFactor.A);
             CheckLastError();
 
+            if (blendState.AlphaToCoverageEnabled)
+            {
+                glEnable(EnableCap.SampleAlphaToCoverage);
+                CheckLastError();
+            }
+            else
+            {
+                glDisable(EnableCap.SampleAlphaToCoverage);
+                CheckLastError();
+            }
+
             if (_features.IndependentBlend)
             {
                 for (uint i = 0; i < blendState.AttachmentStates.Length; i++)

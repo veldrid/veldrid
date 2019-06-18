@@ -118,6 +118,7 @@ namespace Veldrid.Vk
             VkPipelineMultisampleStateCreateInfo multisampleCI = VkPipelineMultisampleStateCreateInfo.New();
             VkSampleCountFlags vkSampleCount = VkFormats.VdToVkSampleCount(description.Outputs.SampleCount);
             multisampleCI.rasterizationSamples = vkSampleCount;
+            multisampleCI.alphaToCoverageEnable = description.BlendState.AlphaToCoverageEnabled;
 
             pipelineCI.pMultisampleState = &multisampleCI;
 

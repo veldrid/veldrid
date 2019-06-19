@@ -119,7 +119,7 @@ namespace Veldrid.NeoDemo
             _scene.AddRenderable(_fsq);
 
             CreateAllObjects();
-            // ImGui.StyleColorsClassic();
+            ImGui.StyleColorsClassic();
         }
 
         private void AddSponzaAtriumObjects()

@@ -193,7 +193,7 @@ namespace Veldrid.OpenGL
                 case SamplerAddressMode.Mirror:
                     return TextureWrapMode.MirroredRepeat;
                 case SamplerAddressMode.Clamp:
-                    return TextureWrapMode.Clamp;
+                    return TextureWrapMode.ClampToEdge;
                 case SamplerAddressMode.Border:
                     return TextureWrapMode.ClampToBorder;
                 default:

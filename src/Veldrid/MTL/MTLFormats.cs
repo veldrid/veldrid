@@ -433,7 +433,7 @@ namespace Veldrid.MTL
                 case SamplerAddressMode.Clamp:
                     return MTLSamplerAddressMode.ClampToEdge;
                 case SamplerAddressMode.Mirror:
-                    return MTLSamplerAddressMode.MirrorClampToEdge;
+                    return MTLSamplerAddressMode.MirrorRepeat;
                 case SamplerAddressMode.Wrap:
                     return MTLSamplerAddressMode.Repeat;
                 default:

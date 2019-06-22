@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Veldrid.CommandRecording;
 
 namespace Veldrid
 {

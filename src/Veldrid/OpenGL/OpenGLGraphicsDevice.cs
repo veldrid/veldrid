@@ -13,6 +13,7 @@ using NativeLibraryLoader;
 using Veldrid.OpenGL.WGL;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Veldrid.CommandRecording;
 
 namespace Veldrid.OpenGL
 {
@@ -209,7 +210,7 @@ namespace Veldrid.OpenGL
 
             if (hasMainSwapchain)
             {
-                bool backbufferIsSrgb = ManualSrgbBackbufferQuery();
+                bool backbufferIsSrgb = ManualSrgbBackbufferQuery(_backendType, _extensions.EXT_sRGBWriteControl);
 
                 PixelFormat swapchainFormat;
                 if (options.SwapchainSrgbFormat && (backbufferIsSrgb || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
@@ -233,7 +234,8 @@ namespace Veldrid.OpenGL
                 _mainSwapchain = new OpenGLSwapchain(
                     this,
                     _swapchainFramebuffer,
-                    platformInfo.ResizeSwapchain);
+                    platformInfo.ResizeSwapchain,
+                    null);
             }
 
             // Set miscellaneous initial states.
@@ -727,8 +729,7 @@ namespace Veldrid.OpenGL
             OpenGLPlatformInfo platformInfo = OpenGLContextCreation.CreateContextWin32(
                 options,
                 hwnd,
-                scDesc?.DepthFormat ?? null,
-                scDesc?.SyncToVerticalBlank ?? false,
+                scDesc,
                 backend,
                 IntPtr.Zero);
             platformInfo.MakeCurrent(platformInfo.OpenGLContextHandle);
@@ -775,13 +776,9 @@ namespace Veldrid.OpenGL
             lock (_commandListDisposalLock)
             {
                 OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
-                OpenGLCommandEntryList entryList = glCommandList.CurrentCommands;
+                NoAllocCommandEntryList entryList = glCommandList.CurrentCommands;
                 IncrementCount(glCommandList);
-                _executionThread.ExecuteCommands(entryList);
-                if (fence is OpenGLFence glFence)
-                {
-                    glFence.Set();
-                }
+                _executionThread.ExecuteCommands(entryList, fence);
             }
         }
 
@@ -1166,6 +1163,26 @@ namespace Veldrid.OpenGL
 
         internal override uint GetStructuredBufferMinOffsetAlignmentCore() => _minSsboOffsetAlignment;
 
+        private protected override void SubmitCommandsCore(
+            CommandBuffer commandBuffer,
+            Semaphore wait,
+            Semaphore signal,
+            Fence fence)
+        {
+            OpenGLCommandBuffer glCB = Util.AssertSubtype<CommandBuffer, OpenGLCommandBuffer>(commandBuffer);
+            _executionThread.ExecuteCommands(glCB, fence);
+        }
+
+        private protected override void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index)
+        {
+            _executionThread.SwapBuffers(swapchain);
+        }
+
+        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        {
+            return 0;
+        }
+
         private class ExecutionThread
         {
             private readonly OpenGLGraphicsDevice _gd;
@@ -1209,17 +1226,43 @@ namespace Veldrid.OpenGL
                     {
                         case WorkItemType.ExecuteList:
                         {
-                            OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
+                            NoAllocCommandEntryList list = (NoAllocCommandEntryList)workItem.Object0;
                             try
                             {
                                 list.ExecuteAll(_gd._commandExecutor);
+                                if (workItem.Object1 != null)
+                                {
+                                    ((OpenGLFence)workItem.Object1).Set();
+                                }
                             }
                             finally
                             {
-                                if (!_gd.CheckCommandListDisposal(list.Parent))
+                                // if (!_gd.CheckCommandListDisposal(list.Parent))
+                                // {
+                                //     list.Parent.OnCompleted(list);
+                                // }
+                            }
+                        }
+                        break;
+                        case WorkItemType.ExecuteCommandBuffer:
+                        {
+                            OpenGLCommandBuffer cb = (OpenGLCommandBuffer)workItem.Object0;
+                            try
+                            {
+                                cb.BeginExecuting();
+                                cb.GetEntryList().ExecuteAll(_gd._commandExecutor);
+                                cb.EndExecuting();
+                                if (workItem.Object1 != null)
                                 {
-                                    list.Parent.OnCompleted(list);
+                                    ((OpenGLFence)workItem.Object1).Set();
                                 }
+                            }
+                            finally
+                            {
+                                // if (!_gd.CheckCommandListDisposal(list.Parent))
+                                // {
+                                //     list.Parent.OnCompleted(list);
+                                // }
                             }
                         }
                         break;
@@ -1329,7 +1372,8 @@ namespace Veldrid.OpenGL
                             _makeCurrent(_context);
                             if (shareResult == 0)
                             {
-                                throw new VeldridException($"Failed to share a new secondary OpenGL context.");
+                                // throw new VeldridException($"Failed to share a new secondary OpenGL context.");
+                                Console.WriteLine($"Failed to share a new secondary OpenGL context: {shareResult}.");
                             }
                         }
                         break;
@@ -1723,11 +1767,17 @@ namespace Veldrid.OpenGL
                 mre.Dispose();
             }
 
-            public void ExecuteCommands(OpenGLCommandEntryList entryList)
+            public void ExecuteCommands(NoAllocCommandEntryList entryList, Fence fence)
             {
                 CheckExceptions();
-                entryList.Parent.OnSubmitted(entryList);
-                _workItems.Add(new ExecutionThreadWorkItem(entryList));
+                // entryList.Parent.OnSubmitted(entryList);
+                _workItems.Add(new ExecutionThreadWorkItem(entryList, fence));
+            }
+
+            public void ExecuteCommands(OpenGLCommandBuffer cb, Fence fence)
+            {
+                CheckExceptions();
+                _workItems.Add(new ExecutionThreadWorkItem(cb, fence));
             }
 
             internal void UpdateBuffer(DeviceBuffer buffer, uint offsetInBytes, StagingBlock stagingBlock)
@@ -1813,6 +1863,7 @@ namespace Veldrid.OpenGL
             SwapBuffers,
             WaitForIdle,
             ShareContext,
+            ExecuteCommandBuffer,
         }
 
         private unsafe struct ExecutionThreadWorkItem
@@ -1837,11 +1888,22 @@ namespace Veldrid.OpenGL
                 UInt2 = 0;
             }
 
-            public ExecutionThreadWorkItem(OpenGLCommandEntryList commandList)
+            public ExecutionThreadWorkItem(NoAllocCommandEntryList commandList, Fence fence)
             {
                 Type = WorkItemType.ExecuteList;
                 Object0 = commandList;
-                Object1 = null;
+                Object1 = fence;
+
+                UInt0 = 0;
+                UInt1 = 0;
+                UInt2 = 0;
+            }
+
+            public ExecutionThreadWorkItem(OpenGLCommandBuffer cb, Fence fence)
+            {
+                Type = WorkItemType.ExecuteCommandBuffer;
+                Object0 = cb;
+                Object1 = fence;
 
                 UInt0 = 0;
                 UInt1 = 0;

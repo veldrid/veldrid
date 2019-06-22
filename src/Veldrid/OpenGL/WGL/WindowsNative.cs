@@ -123,6 +123,8 @@ namespace Veldrid.OpenGL.WGL
         public const int CS_HREDRAW = 0x0002;
         public const int CS_OWNDC = 0x0020;
 
+        public const int WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB = 0x20A9;
+
         private static readonly object s_functionsLock = new object();
         private static WindowsExtensionCreationFunctions s_functions;
         public static WindowsExtensionCreationFunctions GetExtensionFunctions()
@@ -197,12 +199,13 @@ namespace Veldrid.OpenGL.WGL
             bool debug,
             uint depthBits,
             uint stencilBits,
+            bool srgb,
             int major,
             int minor,
             IntPtr shareContext,
             out IntPtr context)
         {
-            int attribCount = 8;
+            int attribCount = 9;
             int* pixelFormatAttributes = stackalloc int[(attribCount * 2) + 1];
             int i = 0;
 
@@ -229,6 +232,9 @@ namespace Veldrid.OpenGL.WGL
 
             pixelFormatAttributes[i++] = WGL_STENCIL_BITS_ARB;
             pixelFormatAttributes[i++] = (int)stencilBits;
+
+            pixelFormatAttributes[i++] = WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB;
+            pixelFormatAttributes[i++] = srgb ? 1 : 0;
 
             pixelFormatAttributes[i++] = 0; // Terminator
 
@@ -264,6 +270,11 @@ namespace Veldrid.OpenGL.WGL
             contextAttribs[i++] = 0; // Terminator
 
             context = extensionFuncs.CreateContextAttribsARB(hdc, shareContext, contextAttribs);
+            if (context == IntPtr.Zero)
+            {
+                uint lastError = (uint)Marshal.GetLastWin32Error();
+                Console.WriteLine($"create context error: {lastError}");
+            }
             return context != IntPtr.Zero;
         }
 
@@ -388,7 +399,7 @@ namespace Veldrid.OpenGL.WGL
 
                     foreach ((int major, int minor) in testVersions)
                     {
-                        if (CreateContextWithExtension(extensions, backend, hdc, false, 0, 0, major, minor, IntPtr.Zero, out IntPtr context))
+                        if (CreateContextWithExtension(extensions, backend, hdc, false, 0, 0, false, major, minor, IntPtr.Zero, out IntPtr context))
                         {
                             wglDeleteContext(context);
                             return (major, minor);

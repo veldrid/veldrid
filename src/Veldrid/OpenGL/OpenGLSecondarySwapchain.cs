@@ -7,6 +7,8 @@ namespace Veldrid.OpenGL
     {
         private readonly OpenGLGraphicsDevice _gd;
         private readonly OpenGLSubordinateContext _subordinateContext;
+        private readonly SwapchainSource _swapchainSource;
+        private readonly Framebuffer[] _framebuffers;
         private bool _syncToVerticalBlank;
         private OpenGLSwapchainFramebuffer _fb;
         private bool _disposed;
@@ -14,15 +16,16 @@ namespace Veldrid.OpenGL
         public OpenGLSecondarySwapchain(OpenGLGraphicsDevice gd, ref SwapchainDescription scDesc)
         {
             _gd = gd;
+            _swapchainSource = scDesc.Source;
             OpenGLPlatformInfo info = gd.CreateSharedContext(
                 new GraphicsDeviceOptions(),
                 scDesc,
                 _gd.BackendType,
                 _gd.ContextHandle);
+            bool backbufferIsSrgb = scDesc.ColorSrgb;
             info.ClearCurrentContext();
             _syncToVerticalBlank = scDesc.SyncToVerticalBlank;
 
-            bool backbufferIsSrgb = OpenGLUtil.ManualSrgbBackbufferQuery(_gd.BackendType, _gd.Extensions.EXT_sRGBWriteControl);
 
             PixelFormat swapchainFormat;
             if (scDesc.ColorSrgb && (backbufferIsSrgb || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
@@ -34,15 +37,19 @@ namespace Veldrid.OpenGL
                 swapchainFormat = PixelFormat.B8_G8_R8_A8_UNorm;
             }
 
+            _swapchainSource.GetSize(out uint width, out uint height);
+
             _fb = new OpenGLSwapchainFramebuffer(
                 _gd,
-                scDesc.Width, scDesc.Height,
+                width, height,
                 swapchainFormat,
                 scDesc.DepthFormat,
                 false,
                 true);
             _subordinateContext = new OpenGLSubordinateContext(info, _fb);
-            _subordinateContext.Resize(scDesc.Width, scDesc.Height);
+            _subordinateContext.Resize(width, height);
+
+            _framebuffers = new[] { _fb, _fb };
 
             _gd.RegisterSecondarySwapchain(this);
         }
@@ -59,6 +66,8 @@ namespace Veldrid.OpenGL
 
         public bool Created { get; private set; }
 
+        public override Framebuffer[] Framebuffers => _framebuffers;
+
         public void DestroyGLResources()
         {
             if (!_disposed)
@@ -71,6 +80,12 @@ namespace Veldrid.OpenGL
         public override void Dispose()
         {
             _gd.EnqueueDisposal(this);
+        }
+
+        public override void Resize()
+        {
+            _swapchainSource.GetSize(out uint width, out uint height);
+            Resize(width, height);
         }
 
         public override void Resize(uint width, uint height)

@@ -7,7 +7,8 @@ namespace Veldrid.OpenGL
     {
         private readonly ManualResetEvent _mre;
 
-        public OpenGLFence(bool signaled)
+        public OpenGLFence(OpenGLGraphicsDevice gd, bool signaled)
+            : base(gd)
         {
             _mre = new ManualResetEvent(signaled);
         }

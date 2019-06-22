@@ -57,15 +57,17 @@ namespace Veldrid.NeoDemo
                 WindowInitialState = WindowState.Normal,
                 WindowTitle = "Veldrid NeoDemo"
             };
-            _window = VeldridStartup.CreateWindow(windowCI);
+            // _window = VeldridStartup.CreateWindow(windowCI);
 
             GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true, _colorSrgb);
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            _gd = GraphicsDevice.CreateVulkan(gdOptions);
-            SwapchainSource ss = VeldridStartup.GetSwapchainSource(_window);
-            _swapchain = _gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(ss, null, false, _colorSrgb));
+            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, GraphicsBackend.OpenGL, out _window, out _gd);
+            _swapchain = _gd.MainSwapchain;
+            // _gd = GraphicsDevice.CreateOpenGL(gdOptions);
+            // SwapchainSource ss = VeldridStartup.GetSwapchainSource(_window);
+            // _swapchain = _gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(ss, null, false, _colorSrgb));
             SwapchainFormat = _swapchain.Framebuffers[0].ColorTargets[0].Target.Format;
             SwapchainBufferCount = _swapchain.BufferCount;
             _window.Resized += () => _windowResized = true;

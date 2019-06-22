@@ -648,6 +648,103 @@ namespace Veldrid.OpenGL
             Util.EnsureArrayMinimumSize(ref _vertexAttribDivisors, totalVertexElements);
         }
 
+        internal void MemoryBarrier(
+            Texture texture,
+            uint baseMipLevel, uint levelCount,
+            uint baseArrayLayer, uint layerCount,
+            ShaderStages sourceStage,
+            ShaderStages destinationStage)
+        {
+            glMemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+
+        }
+
+        internal void EndRenderPass()
+        {
+        }
+
+        internal void BeginRenderPass(in RenderPassDescription rpd)
+        {
+            _fb = rpd.Framebuffer;
+            if (_fb is OpenGLFramebuffer glFB)
+            {
+                if (_backend == GraphicsBackend.OpenGL || _extensions.EXT_sRGBWriteControl)
+                {
+                    glEnable(EnableCap.FramebufferSrgb);
+                    CheckLastError();
+                }
+
+                glFB.EnsureResourcesCreated();
+                glBindFramebuffer(FramebufferTarget.Framebuffer, glFB.Framebuffer);
+                CheckLastError();
+                _isSwapchainFB = false;
+            }
+            else if (_fb is OpenGLSwapchainFramebuffer scFB)
+            {
+                if ((_backend == GraphicsBackend.OpenGL || _extensions.EXT_sRGBWriteControl))
+                {
+                    if (scFB.DisableSrgbConversion)
+                    {
+                        glDisable(EnableCap.FramebufferSrgb);
+                        CheckLastError();
+                    }
+                    else
+                    {
+                        glEnable(EnableCap.FramebufferSrgb);
+                        CheckLastError();
+                    }
+                }
+
+                if (scFB.IsSecondarySwapchain)
+                {
+                    scFB.FlushChanges();
+                    scFB.Framebuffer.EnsureResourcesCreated();
+                    glBindFramebuffer(FramebufferTarget.Framebuffer, scFB.Framebuffer.Framebuffer);
+                    CheckLastError();
+                }
+                else
+                {
+                    if (_platformInfo.SetSwapchainFramebuffer != null)
+                    {
+                        _platformInfo.SetSwapchainFramebuffer();
+                    }
+                    else
+                    {
+                        glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                        CheckLastError();
+                    }
+                }
+
+                _isSwapchainFB = true;
+            }
+            else
+            {
+                throw new VeldridException("Invalid Framebuffer type: " + _fb.GetType().Name);
+            }
+
+            // Reset to full viewports.
+            SetViewport(0, new Viewport(0, 0, _fb.Width, _fb.Height, 0, 1));
+            for (uint index = 1; index < _fb.ColorTargets.Count; index++)
+            {
+                SetViewport(index, new Viewport(0, 0, _fb.Width, _fb.Height, 0, 1));
+            }
+
+            // Reset to full scissor rect.
+            SetScissorRect(0, 0, 0, _fb.Width, _fb.Height);
+            for (uint index = 1; index < _fb.ColorTargets.Count; index++)
+            {
+                SetScissorRect(index, 0, 0, _fb.Width, _fb.Height);
+            }
+
+            if (rpd.LoadAction == LoadAction.Clear)
+            {
+                glClearDepth(rpd.ClearDepth);
+                glClearColor(rpd.ClearColor.R, rpd.ClearColor.G, rpd.ClearColor.B, rpd.ClearColor.A);
+                glDepthMask(true);
+                glClear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            }
+        }
+
         public void GenerateMipmaps(Texture texture)
         {
             OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(texture);
@@ -1034,6 +1131,7 @@ namespace Veldrid.OpenGL
             _vbOffsets[index] = offset;
         }
 
+        public void SetViewport(uint index, Viewport viewport) => SetViewport(index, ref viewport);
         public void SetViewport(uint index, ref Viewport viewport)
         {
             _viewports[(int)index] = viewport;

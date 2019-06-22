@@ -105,18 +105,25 @@ namespace Veldrid
         internal unsafe override void GetSize(out uint width, out uint height)
         {
             RECT r;
-            GetWindowRect(Hwnd, &r);
+            uint succeeded = GetClientRect(Hwnd, &r);
+            if (succeeded == 0)
+            {
+                throw new VeldridException($"Failed to retrieve Win32 window size.");
+            }
             width = (uint)(r.right - r.left);
             height = (uint)(r.bottom - r.top);
         }
 
         private struct RECT
         {
-            public long left, right, top, bottom;
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
         }
 
         [DllImport("user32.dll")]
-        private static unsafe extern uint GetWindowRect(
+        private static unsafe extern uint GetClientRect(
             IntPtr hWnd,
             RECT* lpRect);
     }

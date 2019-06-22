@@ -18,8 +18,7 @@ namespace Veldrid.OpenGL
                 return CreateContextWin32(
                     options,
                     win32Source.Hwnd,
-                    scDesc.DepthFormat,
-                    scDesc.SyncToVerticalBlank,
+                    scDesc,
                     backend,
                     shareContext);
             }
@@ -37,8 +36,7 @@ namespace Veldrid.OpenGL
         public static OpenGLPlatformInfo CreateContextWin32(
             GraphicsDeviceOptions options,
             IntPtr hwnd,
-            PixelFormat? depthFormat,
-            bool syncToVerticalBlank,
+            SwapchainDescription? scDesc,
             GraphicsBackend backend,
             IntPtr shareContext)
         {
@@ -48,10 +46,15 @@ namespace Veldrid.OpenGL
 
             uint depthBits = 0;
             uint stencilBits = 0;
-            if (depthFormat.HasValue)
+            bool srgb = options.SwapchainSrgbFormat;
+            if (scDesc != null)
             {
-                depthBits = (uint)GetDepthBits(depthFormat.Value);
-                stencilBits = (uint)GetStencilBits(depthFormat.Value);
+                srgb = scDesc.Value.ColorSrgb;
+                if (scDesc.Value.DepthFormat != null)
+                {
+                    depthBits = (uint)GetDepthBits(scDesc.Value.DepthFormat.Value);
+                    stencilBits = (uint)GetStencilBits(scDesc.Value.DepthFormat.Value);
+                }
             }
 
             IntPtr glContext;
@@ -65,9 +68,10 @@ namespace Veldrid.OpenGL
                     options.Debug,
                     depthBits,
                     stencilBits,
+                    srgb,
                     major,
                     minor,
-                    IntPtr.Zero,
+                    shareContext,
                     out glContext))
                 {
                     throw new VeldridException($"Failed to create OpenGL context.");
@@ -101,7 +105,11 @@ namespace Veldrid.OpenGL
 
             IntPtr setSwapIntervalPtr = getProcAddress("wglSwapIntervalEXT");
             wglSwapIntervalEXT setSwapInterval = Marshal.GetDelegateForFunctionPointer<wglSwapIntervalEXT>(setSwapIntervalPtr);
-            setSwapInterval(syncToVerticalBlank ? 1 : 0);
+
+            if (scDesc != null)
+            {
+                setSwapInterval(scDesc.Value.SyncToVerticalBlank ? 1 : 0);
+            }
 
             WindowsNative.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
 

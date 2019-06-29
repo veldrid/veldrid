@@ -2,18 +2,20 @@
 {
     internal class WebGLFramebuffer : Framebuffer
     {
-        private WebGLSwapchain webGLSwapchain;
+        private readonly WebGLSwapchain _swapchain;
 
-        public WebGLFramebuffer(WebGLSwapchain webGLSwapchain)
+        public override string Name { get; set; }
+        public WebGLDotNET.WebGLFramebuffer WglFramebuffer { get; }
+        public bool IsSwapchainFramebuffer => _swapchain != null;
+
+        public WebGLFramebuffer(WebGLGraphicsDevice gd, ref FramebufferDescription description)
         {
-            this.webGLSwapchain = webGLSwapchain;
+            WglFramebuffer = gd.Ctx.CreateFramebuffer();
         }
-
-        public override string Name { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
         public override void Dispose()
         {
-            throw new System.NotImplementedException();
+            WglFramebuffer.Dispose();
         }
     }
 }

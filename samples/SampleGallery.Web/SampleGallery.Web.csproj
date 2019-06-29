@@ -1,0 +1,48 @@
+﻿<Project Sdk="Mono.WebAssembly.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <MonoWasmLinkMode>Full</MonoWasmLinkMode>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <!--<ProjectReference Include="..\LinkerWorkaround\LinkerWorkaround.csproj" />-->
+    <ProjectReference Include="..\WebGLDotNET\WebGLDotNET.csproj" />
+  </ItemGroup>
+ 
+  <ItemGroup>
+    <Reference Include="WebAssembly.Bindings">
+      <HintPath>$(RepositoryRootDirectory)\wasm-deps\WebAssembly.Bindings.dll</HintPath>
+    </Reference>
+    <Reference Include="WebGLDotNET">
+      <HintPath>$(RepositoryRootDirectory)\wasm-deps\WebGLDotNET.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepositoryRootDirectory)\veldrid\src\Veldrid\Veldrid.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="canvaskit.js" />
+    <None Remove="index.html" />
+    <None Remove="Scripts\mono_support.js" />
+    <None Remove="Scripts\SkiaSharp.js" />
+    
+    <None Remove="canvaskit.wasm" />
+    <Content Include="canvaskit.wasm">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="server.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="run.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  
+</Project>

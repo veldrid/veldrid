@@ -1,4 +1,6 @@
-﻿namespace Veldrid.WebGL
+﻿using System;
+
+namespace Veldrid.WebGL
 {
     internal class WebGLResourceFactory : ResourceFactory
     {
@@ -14,12 +16,12 @@
 
         public override CommandList CreateCommandList(ref CommandListDescription description)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public override Pipeline CreateComputePipeline(ref ComputePipelineDescription description)
         {
-            throw new System.NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override Fence CreateFence(bool signaled)
@@ -29,27 +31,27 @@
 
         public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)
         {
-            throw new System.NotImplementedException();
+            return new WebGLFramebuffer(_gd, ref description);
         }
 
         public override ResourceLayout CreateResourceLayout(ref ResourceLayoutDescription description)
         {
-            throw new System.NotImplementedException();
+            return new WebGLResourceLayout(ref description);
         }
 
         public override ResourceSet CreateResourceSet(ref ResourceSetDescription description)
         {
-            throw new System.NotImplementedException();
+            return new WebGLResourceSet(_gd, ref description);
         }
 
         public override Swapchain CreateSwapchain(ref SwapchainDescription description)
         {
-            throw new System.NotImplementedException();
+            throw new VeldridException("WebGL does not support multiple swapchains.");
         }
 
         protected override DeviceBuffer CreateBufferCore(ref BufferDescription description)
         {
-            throw new System.NotImplementedException();
+            return new WebGLBuffer(_gd, ref description);
         }
 
         protected override CommandBuffer CreateCommandBufferCore(ref CommandBufferDescription description)
@@ -59,37 +61,37 @@
 
         protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
         {
-            throw new System.NotImplementedException();
+            return new WebGLPipeline(_gd, ref description);
         }
 
         protected override Sampler CreateSamplerCore(ref SamplerDescription description)
         {
-            throw new System.NotImplementedException();
+            return new WebGLSampler(_gd, ref description);
         }
 
         protected override Semaphore CreateSemaphoreCore()
         {
-            throw new System.NotImplementedException();
+            return new WebGLSemaphore();
         }
 
         protected override Shader CreateShaderCore(ref ShaderDescription description)
         {
-            throw new System.NotImplementedException();
+            return new WebGLShader(_gd, ref description);
         }
 
         protected override Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         protected override Texture CreateTextureCore(ref TextureDescription description)
         {
-            throw new System.NotImplementedException();
+            return new WebGLTexture(_gd, ref description);
         }
 
         protected override TextureView CreateTextureViewCore(ref TextureViewDescription description)
         {
-            throw new System.NotImplementedException();
+            return new WebGLTextureView(_gd, description);
         }
     }
 }

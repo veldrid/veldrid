@@ -2,17 +2,24 @@
 {
     internal class WebGLSwapchain : Swapchain
     {
-        private WebGLGraphicsDevice webGLGraphicsDevice;
+        private WebGLGraphicsDevice _gd;
 
-        public WebGLSwapchain(WebGLGraphicsDevice webGLGraphicsDevice)
+        public WebGLSwapchain(WebGLGraphicsDevice gd)
         {
-            this.webGLGraphicsDevice = webGLGraphicsDevice;
-            Framebuffer = new WebGLFramebuffer(this);
+            _gd = gd;
+            Framebuffer = new WebGLSwapchainFramebuffer(
+                gd,
+                (uint)(int)gd.Canvas.GetObjectProperty("width"),
+                (uint)(int)gd.Canvas.GetObjectProperty("height"),
+                PixelFormat.R8_G8_B8_A8_UNorm,
+                PixelFormat.R16_UNorm,
+                false);
+            Framebuffers = new[] { Framebuffer };
         }
 
         public override Framebuffer Framebuffer { get; }
 
-        public override Framebuffer[] Framebuffers => throw new System.NotImplementedException();
+        public override Framebuffer[] Framebuffers { get; }
 
         public override bool SyncToVerticalBlank { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
         public override string Name { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }

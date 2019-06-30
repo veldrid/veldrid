@@ -35,10 +35,12 @@ namespace Veldrid.StartupUtilities
             out GraphicsDevice gd)
         {
             Sdl2Native.SDL_Init(SDLInitFlags.Video);
+#if !EXCLUDE_OPENGL_BACKEND
             if (preferredBackend == GraphicsBackend.OpenGL || preferredBackend == GraphicsBackend.OpenGLES)
             {
                 SetSDLGLContextAttributes(deviceOptions, preferredBackend);
             }
+#endif
 
             window = CreateWindow(ref windowCI);
             gd = CreateGraphicsDevice(window, deviceOptions, preferredBackend);
@@ -166,7 +168,7 @@ namespace Veldrid.StartupUtilities
 
 #if !EXCLUDE_METAL_BACKEND
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
-            => CreateMetalGraphicsDevice(options, window, false);
+            => CreateMetalGraphicsDevice(options, window, options.SwapchainSrgbFormat);
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(
             GraphicsDeviceOptions options,
             Sdl2Window window,
@@ -248,12 +250,38 @@ namespace Veldrid.StartupUtilities
             Sdl2Window window,
             GraphicsBackend backend)
         {
+            if (backend != GraphicsBackend.OpenGL && backend != GraphicsBackend.OpenGLES)
+            {
+                throw new VeldridException(
+                    $"{nameof(backend)} must be {nameof(GraphicsBackend.OpenGL)} or {nameof(GraphicsBackend.OpenGL)}.");
+            }
+
             Sdl2Native.SDL_ClearError();
             IntPtr sdlHandle = window.SdlWindowHandle;
 
             SDL_SysWMinfo sysWmInfo;
             Sdl2Native.SDL_GetVersion(&sysWmInfo.version);
             Sdl2Native.SDL_GetWMWindowInfo(sdlHandle, &sysWmInfo);
+
+            if (sysWmInfo.subsystem == SysWMType.Windows || sysWmInfo.subsystem == SysWMType.X11)
+            {
+                SwapchainDescription scDesc = new SwapchainDescription(
+                    GetSwapchainSource(window),
+                    (uint)window.Width,
+                    (uint)window.Height,
+                    options.SwapchainDepthFormat,
+                    options.SyncToVerticalBlank);
+                GraphicsDevice gd;
+                if (backend == GraphicsBackend.OpenGL)
+                {
+                    gd = GraphicsDevice.CreateOpenGL(options, scDesc);
+                }
+                else
+                {
+                    gd = GraphicsDevice.CreateOpenGLES(options, scDesc);
+                }
+                return gd;
+            }
 
             SetSDLGLContextAttributes(options, backend);
 

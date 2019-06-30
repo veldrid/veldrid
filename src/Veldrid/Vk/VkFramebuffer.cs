@@ -18,6 +18,9 @@ namespace Veldrid.Vk
         private bool _destroyed;
         private string _name;
 
+        private readonly Dictionary<RenderPassDescription, VkRenderPass> _renderPasses
+            = new Dictionary<RenderPassDescription, VkRenderPass>();
+
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _deviceFramebuffer;
         public override VkRenderPass RenderPassNoClear_Init => _renderPassNoClear;
         public override VkRenderPass RenderPassNoClear_Load => _renderPassNoClearLoad;
@@ -27,11 +30,13 @@ namespace Veldrid.Vk
         public override uint RenderableHeight => Height;
 
         public override uint AttachmentCount { get; }
+        public bool IsPresented { get; }
 
         public VkFramebuffer(VkGraphicsDevice gd, ref FramebufferDescription description, bool isPresented)
             : base(description.DepthTarget, description.ColorTargets)
         {
             _gd = gd;
+            IsPresented = isPresented;
 
             VkRenderPassCreateInfo renderPassCI = VkRenderPassCreateInfo.New();
 
@@ -235,6 +240,89 @@ namespace Veldrid.Vk
                 AttachmentCount += 1;
             }
             AttachmentCount += (uint)ColorTargets.Count;
+        }
+
+        internal VkRenderPass GetRenderPass(in RenderPassDescription desc)
+        {
+            if (!_renderPasses.TryGetValue(desc, out VkRenderPass ret))
+            {
+                VkRenderPassCreateInfo renderPassCI = VkRenderPassCreateInfo.New();
+
+                StackList<VkAttachmentDescription> attachments = new StackList<VkAttachmentDescription>();
+
+                uint colorAttachmentCount = (uint)ColorTargets.Count;
+                StackList<VkAttachmentReference> colorAttachmentRefs = new StackList<VkAttachmentReference>();
+                for (int i = 0; i < colorAttachmentCount; i++)
+                {
+                    VkTexture vkColorTex = Util.AssertSubtype<Texture, VkTexture>(ColorTargets[i].Target);
+                    VkAttachmentDescription colorAttachmentDesc = new VkAttachmentDescription();
+                    colorAttachmentDesc.format = vkColorTex.VkFormat;
+                    colorAttachmentDesc.samples = vkColorTex.VkSampleCount;
+                    colorAttachmentDesc.loadOp = VkFormats.VdToVkLoadAction(desc.LoadAction);
+                    colorAttachmentDesc.storeOp = VkFormats.VdToVkStoreAction(desc.StoreAction);
+                    colorAttachmentDesc.initialLayout = VulkanUtil.GetFinalLayout(vkColorTex);
+                    colorAttachmentDesc.finalLayout = VulkanUtil.GetFinalLayout(vkColorTex);
+                    attachments.Add(colorAttachmentDesc);
+
+                    VkAttachmentReference colorAttachmentRef = new VkAttachmentReference();
+                    colorAttachmentRef.attachment = (uint)i;
+                    colorAttachmentRef.layout = VkImageLayout.ColorAttachmentOptimal;
+                    colorAttachmentRefs.Add(colorAttachmentRef);
+                }
+
+                VkAttachmentDescription depthAttachmentDesc = new VkAttachmentDescription();
+                VkAttachmentReference depthAttachmentRef = new VkAttachmentReference();
+                if (DepthTarget != null)
+                {
+                    VkTexture vkDepthTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
+                    bool hasStencil = FormatHelpers.IsStencilFormat(vkDepthTex.Format);
+                    depthAttachmentDesc.format = vkDepthTex.VkFormat;
+                    depthAttachmentDesc.samples = vkDepthTex.VkSampleCount;
+                    depthAttachmentDesc.loadOp = VkFormats.VdToVkLoadAction(desc.LoadAction);
+                    depthAttachmentDesc.storeOp = VkFormats.VdToVkStoreAction(desc.StoreAction);
+                    depthAttachmentDesc.stencilLoadOp = VkFormats.VdToVkLoadAction(desc.LoadAction);
+                    depthAttachmentDesc.stencilStoreOp = VkFormats.VdToVkStoreAction(desc.StoreAction);
+                    depthAttachmentDesc.initialLayout = VulkanUtil.GetFinalLayout(vkDepthTex);
+                    depthAttachmentDesc.finalLayout = VulkanUtil.GetFinalLayout(vkDepthTex);
+
+                    depthAttachmentRef.attachment = (uint)ColorTargets.Count;
+                    depthAttachmentRef.layout = VkImageLayout.DepthStencilAttachmentOptimal;
+                }
+
+                VkSubpassDescription subpass = new VkSubpassDescription();
+                subpass.pipelineBindPoint = VkPipelineBindPoint.Graphics;
+                if (ColorTargets.Count > 0)
+                {
+                    subpass.colorAttachmentCount = colorAttachmentCount;
+                    subpass.pColorAttachments = (VkAttachmentReference*)colorAttachmentRefs.Data;
+                }
+
+                if (DepthTarget != null)
+                {
+                    subpass.pDepthStencilAttachment = &depthAttachmentRef;
+                    attachments.Add(depthAttachmentDesc);
+                }
+
+                // VkSubpassDependency subpassDependency = new VkSubpassDependency();
+                // subpassDependency.srcSubpass = SubpassExternal;
+                // subpassDependency.srcStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
+                // subpassDependency.dstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
+                // subpassDependency.dstAccessMask = VkAccessFlags.ColorAttachmentRead | VkAccessFlags.ColorAttachmentWrite;
+
+                renderPassCI.attachmentCount = attachments.Count;
+                renderPassCI.pAttachments = (VkAttachmentDescription*)attachments.Data;
+                renderPassCI.subpassCount = 1;
+                renderPassCI.pSubpasses = &subpass;
+                // renderPassCI.dependencyCount = 1;
+                // renderPassCI.pDependencies = &subpassDependency;
+
+                VkResult creationResult = vkCreateRenderPass(_gd.Device, ref renderPassCI, null, out ret);
+                CheckResult(creationResult);
+
+                _renderPasses.Add(desc, ret);
+            }
+
+            return ret;
         }
 
         public override void TransitionToIntermediateLayout(VkCommandBuffer cb)

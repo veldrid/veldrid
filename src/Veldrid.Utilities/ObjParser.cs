@@ -603,7 +603,14 @@ namespace Veldrid.Utilities
         {
             DeviceBuffer vb = factory.CreateBuffer(
                 new BufferDescription((uint)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes), BufferUsage.VertexBuffer));
-            cl.UpdateBuffer(vb, 0, Vertices);
+            if (cl != null)
+            {
+                cl.UpdateBuffer(vb, 0, Vertices);
+            }
+            else
+            {
+                vb.Update(0, Vertices);
+            }
             return vb;
         }
 
@@ -618,7 +625,14 @@ namespace Veldrid.Utilities
         public DeviceBuffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
         {
             DeviceBuffer ib = factory.CreateBuffer(new BufferDescription((uint)(Indices.Length * sizeof(int)), BufferUsage.IndexBuffer));
-            cl.UpdateBuffer(ib, 0, Indices);
+            if (cl != null)
+            {
+                cl.UpdateBuffer(ib, 0, Indices);
+            }
+            else
+            {
+                ib.Update(0, Indices);
+            }
             indexCount = Indices.Length;
             return ib;
         }

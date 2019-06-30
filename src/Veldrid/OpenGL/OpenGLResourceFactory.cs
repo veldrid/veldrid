@@ -86,12 +86,22 @@ namespace Veldrid.OpenGL
 
         public override Fence CreateFence(bool signaled)
         {
-            return new OpenGLFence(signaled);
+            return new OpenGLFence(_gd, signaled);
         }
 
         public override Swapchain CreateSwapchain(ref SwapchainDescription description)
         {
-            throw new NotSupportedException("OpenGL does not support creating Swapchain objects.");
+            return new OpenGLSecondarySwapchain(_gd, ref description);
+        }
+
+        protected override CommandBuffer CreateCommandBufferCore(ref CommandBufferDescription description)
+        {
+            return new OpenGLCommandBuffer(_gd, ref description);
+        }
+
+        protected override Semaphore CreateSemaphoreCore()
+        {
+            return new OpenGLSemaphore();
         }
     }
 }

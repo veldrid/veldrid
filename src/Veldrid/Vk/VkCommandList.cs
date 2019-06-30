@@ -64,7 +64,7 @@ namespace Veldrid.Vk
             _gd = gd;
             VkCommandPoolCreateInfo poolCI = VkCommandPoolCreateInfo.New();
             poolCI.flags = VkCommandPoolCreateFlags.ResetCommandBuffer;
-            poolCI.queueFamilyIndex = gd.GraphicsQueueIndex;
+            poolCI.queueFamilyIndex = gd.UniversalQueueIndex;
             VkResult result = vkCreateCommandPool(_gd.Device, ref poolCI, null, out _pool);
             CheckResult(result);
 

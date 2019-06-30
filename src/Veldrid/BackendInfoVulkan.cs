@@ -33,11 +33,11 @@ namespace Veldrid
         /// <summary>
         /// Gets the VkQueue which is used by the GraphicsDevice to submit graphics work.
         /// </summary>
-        public IntPtr GraphicsQueue => _gd.GraphicsQueue.Handle;
+        public IntPtr GraphicsQueue => _gd.UniversalQueue.Handle;
         /// <summary>
         /// Gets the queue family index of the graphics VkQueue.
         /// </summary>
-        public uint GraphicsQueueFamilyIndex => _gd.GraphicsQueueIndex;
+        public uint GraphicsQueueFamilyIndex => _gd.UniversalQueueIndex;
 
         /// <summary>
         /// Overrides the current VkImageLayout tracked by the given Texture. This should be used when a VkImage is created by

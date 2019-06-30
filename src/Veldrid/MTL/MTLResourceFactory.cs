@@ -77,12 +77,22 @@ namespace Veldrid.MTL
 
         public override Fence CreateFence(bool signaled)
         {
-            return new MTLFence(signaled);
+            return new MTLFence(_gd, signaled);
         }
 
         public override Swapchain CreateSwapchain(ref SwapchainDescription description)
         {
             return new MTLSwapchain(_gd, ref description);
+        }
+
+        protected override CommandBuffer CreateCommandBufferCore(ref CommandBufferDescription description)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override Semaphore CreateSemaphoreCore()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace Veldrid
 {
@@ -10,14 +11,29 @@ namespace Veldrid
     {
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> representing the render targets of this instance.
+        /// This property cannot be used with
+        /// <see cref="CommandBuffer.BeginRenderPass(Framebuffer, LoadAction, StoreAction, RgbaFloat, float, Span{Texture})"/>.
+        /// Instead, use one of the Framebuffers from <see cref="Framebuffers"/>.
         /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public abstract Framebuffer Framebuffer { get; }
+
+        public abstract Framebuffer[] Framebuffers { get; }
+
+        public uint BufferCount => (uint)Framebuffers.Length;
+
+        public uint Width => Framebuffers[0].Width;
+        public uint Height => Framebuffers[0].Height;
+
         /// <summary>
         /// Resizes the renderable Textures managed by this instance to the given dimensions.
         /// </summary>
         /// <param name="width">The new width of the Swapchain.</param>
         /// <param name="height">The new height of the Swapchain.</param>
         public abstract void Resize(uint width, uint height);
+
+        public abstract void Resize();
+
         /// <summary>
         /// Gets or sets whether presentation of this Swapchain will be synchronized to the window system's vertical refresh
         /// rate.

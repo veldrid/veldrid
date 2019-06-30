@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RootNamespace>Veldrid.NeoDemo</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssetsDir>$(MSBuildThisFileDirectory)..\NeoDemo\Assets</AssetsDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="$(AssetsDir)\Textures\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Assets\Textures\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(AssetsDir)\Models\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Assets\Models\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(AssetsDir)\Shaders\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Assets\Shaders\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\CommandBuffer.Demo\StandardFrameLoop.cs" Link="StandardFrameLoop.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.SDL2\native\win-x64\SDL2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.SDL2\native\osx-x64\libsdl2.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Veldrid.SPIRV" Version="$(VeldridSpirvVersion)" />
+    <ProjectReference Include="..\Veldrid.RenderDoc\Veldrid.RenderDoc.csproj" />
+    <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
+    <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
+    <ProjectReference Include="..\Veldrid.ImageSharp\Veldrid.ImageSharp.csproj" />
+    <ProjectReference Include="..\Veldrid.Utilities\Veldrid.Utilities.csproj" />
+    <ProjectReference Include="..\Veldrid.ImGui\Veldrid.ImGui.csproj" />
+  </ItemGroup>
+
+</Project>

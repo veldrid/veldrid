@@ -1,4 +1,4 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.CommandRecording
 {
     internal struct NoAllocBlitTextureEntry
     {

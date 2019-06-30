@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLCommandExecutor
+    internal unsafe class OpenGLCommandExecutor : GLCommandExecutor
     {
         private readonly OpenGLGraphicsDevice _gd;
         private readonly GraphicsBackend _backend;
@@ -48,11 +48,11 @@ namespace Veldrid.OpenGL
             _features = gd.Features;
         }
 
-        public void Begin()
+        public override void Begin()
         {
         }
 
-        public void ClearColorTarget(uint index, RgbaFloat clearColor)
+        public override void ClearColorTarget(uint index, RgbaFloat clearColor)
         {
             if (!_isSwapchainFB)
             {
@@ -69,7 +69,7 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void ClearDepthStencil(float depth, byte stencil)
+        public override void ClearDepthStencil(float depth, byte stencil)
         {
             glClearDepth_Compat(depth);
             CheckLastError();
@@ -82,7 +82,7 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
+        public override void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
             PreDrawCommand();
 
@@ -106,7 +106,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
+        public override void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
             PreDrawCommand();
 
@@ -159,7 +159,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public override void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             PreDrawCommand();
 
@@ -185,7 +185,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public override void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             PreDrawCommand();
 
@@ -310,7 +310,7 @@ namespace Veldrid.OpenGL
             _vertexAttributesBound = totalSlotsBound;
         }
 
-        internal void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
+        public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
         {
             PreDispatchCommand();
 
@@ -320,7 +320,7 @@ namespace Veldrid.OpenGL
             PostDispatchCommand();
         }
 
-        public void DispatchIndirect(DeviceBuffer indirectBuffer, uint offset)
+        public override void DispatchIndirect(DeviceBuffer indirectBuffer, uint offset)
         {
             PreDispatchCommand();
 
@@ -351,11 +351,11 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void End()
+        public override void End()
         {
         }
 
-        public void SetFramebuffer(Framebuffer fb)
+        public override void SetFramebuffer(Framebuffer fb)
         {
             if (fb is OpenGLFramebuffer glFB)
             {
@@ -370,11 +370,11 @@ namespace Veldrid.OpenGL
                 CheckLastError();
                 _isSwapchainFB = false;
             }
-            else if (fb is OpenGLSwapchainFramebuffer swapchainFB)
+            else if (fb is OpenGLSwapchainFramebuffer scFB)
             {
                 if ((_backend == GraphicsBackend.OpenGL || _extensions.EXT_sRGBWriteControl))
                 {
-                    if (swapchainFB.DisableSrgbConversion)
+                    if (scFB.DisableSrgbConversion)
                     {
                         glDisable(EnableCap.FramebufferSrgb);
                         CheckLastError();
@@ -386,14 +386,24 @@ namespace Veldrid.OpenGL
                     }
                 }
 
-                if (_platformInfo.SetSwapchainFramebuffer != null)
+                if (scFB.IsSecondarySwapchain)
                 {
-                    _platformInfo.SetSwapchainFramebuffer();
+                    scFB.FlushChanges();
+                    scFB.Framebuffer.EnsureResourcesCreated();
+                    glBindFramebuffer(FramebufferTarget.Framebuffer, scFB.Framebuffer.Framebuffer);
+                    CheckLastError();
                 }
                 else
                 {
-                    glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                    CheckLastError();
+                    if (_platformInfo.SetSwapchainFramebuffer != null)
+                    {
+                        _platformInfo.SetSwapchainFramebuffer();
+                    }
+                    else
+                    {
+                        glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                        CheckLastError();
+                    }
                 }
 
                 _isSwapchainFB = true;
@@ -406,7 +416,7 @@ namespace Veldrid.OpenGL
             _fb = fb;
         }
 
-        public void SetIndexBuffer(DeviceBuffer ib, IndexFormat format, uint offset)
+        public override void SetIndexBuffer(DeviceBuffer ib, IndexFormat format, uint offset)
         {
             OpenGLBuffer glIB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(ib);
             glIB.EnsureResourcesCreated();
@@ -418,7 +428,7 @@ namespace Veldrid.OpenGL
             _ibOffset = offset;
         }
 
-        public void SetPipeline(Pipeline pipeline)
+        public override void SetPipeline(Pipeline pipeline)
         {
             if (!pipeline.IsComputePipeline && _graphicsPipeline != pipeline)
             {
@@ -639,7 +649,103 @@ namespace Veldrid.OpenGL
             Util.EnsureArrayMinimumSize(ref _vertexAttribDivisors, totalVertexElements);
         }
 
-        public void GenerateMipmaps(Texture texture)
+        public override void MemoryBarrier(
+            Texture texture,
+            uint baseMipLevel, uint levelCount,
+            uint baseArrayLayer, uint layerCount,
+            ShaderStages sourceStage,
+            ShaderStages destinationStage)
+        {
+            glMemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+        }
+
+        public override void EndRenderPass()
+        {
+        }
+
+        public override void BeginRenderPass(in RenderPassDescription rpd)
+        {
+            _fb = rpd.Framebuffer;
+            if (_fb is OpenGLFramebuffer glFB)
+            {
+                if (_backend == GraphicsBackend.OpenGL || _extensions.EXT_sRGBWriteControl)
+                {
+                    glEnable(EnableCap.FramebufferSrgb);
+                    CheckLastError();
+                }
+
+                glFB.EnsureResourcesCreated();
+                glBindFramebuffer(FramebufferTarget.Framebuffer, glFB.Framebuffer);
+                CheckLastError();
+                _isSwapchainFB = false;
+            }
+            else if (_fb is OpenGLSwapchainFramebuffer scFB)
+            {
+                if ((_backend == GraphicsBackend.OpenGL || _extensions.EXT_sRGBWriteControl))
+                {
+                    if (scFB.DisableSrgbConversion)
+                    {
+                        glDisable(EnableCap.FramebufferSrgb);
+                        CheckLastError();
+                    }
+                    else
+                    {
+                        glEnable(EnableCap.FramebufferSrgb);
+                        CheckLastError();
+                    }
+                }
+
+                if (scFB.IsSecondarySwapchain)
+                {
+                    scFB.FlushChanges();
+                    scFB.Framebuffer.EnsureResourcesCreated();
+                    glBindFramebuffer(FramebufferTarget.Framebuffer, scFB.Framebuffer.Framebuffer);
+                    CheckLastError();
+                }
+                else
+                {
+                    if (_platformInfo.SetSwapchainFramebuffer != null)
+                    {
+                        _platformInfo.SetSwapchainFramebuffer();
+                    }
+                    else
+                    {
+                        glBindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                        CheckLastError();
+                    }
+                }
+
+                _isSwapchainFB = true;
+            }
+            else
+            {
+                throw new VeldridException("Invalid Framebuffer type: " + _fb.GetType().Name);
+            }
+
+            // Reset to full viewports.
+            SetViewport(0, new Viewport(0, 0, _fb.Width, _fb.Height, 0, 1));
+            for (uint index = 1; index < _fb.ColorTargets.Count; index++)
+            {
+                SetViewport(index, new Viewport(0, 0, _fb.Width, _fb.Height, 0, 1));
+            }
+
+            // Reset to full scissor rect.
+            SetScissorRect(0, 0, 0, _fb.Width, _fb.Height);
+            for (uint index = 1; index < _fb.ColorTargets.Count; index++)
+            {
+                SetScissorRect(index, 0, 0, _fb.Width, _fb.Height);
+            }
+
+            if (rpd.LoadAction == LoadAction.Clear)
+            {
+                glClearDepth(rpd.ClearDepth);
+                glClearColor(rpd.ClearColor.R, rpd.ClearColor.G, rpd.ClearColor.B, rpd.ClearColor.A);
+                glDepthMask(true);
+                glClear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            }
+        }
+
+        public override void GenerateMipmaps(Texture texture)
         {
             OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(texture);
             glTex.EnsureResourcesCreated();
@@ -657,7 +763,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void PushDebugGroup(string name)
+        public override void PushDebugGroup(string name)
         {
             if (_extensions.KHR_Debug)
             {
@@ -683,7 +789,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void PopDebugGroup()
+        public override void PopDebugGroup()
         {
             if (_extensions.KHR_Debug)
             {
@@ -697,7 +803,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void InsertDebugMarker(string name)
+        public override void InsertDebugMarker(string name)
         {
             if (_extensions.KHR_Debug)
             {
@@ -731,7 +837,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void BlitTexture(
+        public override void BlitTexture(
             Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
             Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
             bool linearFilter)
@@ -808,7 +914,7 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
+        public override void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
         {
             if (!_graphicsResourceSets[slot].Equals(rs, dynamicOffsetCount, ref dynamicOffsets))
             {
@@ -818,7 +924,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void SetComputeResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
+        public override void SetComputeResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
         {
             if (!_computeResourceSets[slot].Equals(rs, dynamicOffsetCount, ref dynamicOffsets))
             {
@@ -988,7 +1094,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void ResolveTexture(Texture source, Texture destination)
+        public override void ResolveTexture(Texture source, Texture destination)
         {
             OpenGLTexture glSourceTex = Util.AssertSubtype<Texture, OpenGLTexture>(source);
             OpenGLTexture glDestinationTex = Util.AssertSubtype<Texture, OpenGLTexture>(destination);
@@ -1045,7 +1151,7 @@ namespace Veldrid.OpenGL
             return ret;
         }
 
-        public void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
+        public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
             if (_backend == GraphicsBackend.OpenGL)
             {
@@ -1071,7 +1177,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void SetVertexBuffer(uint index, DeviceBuffer vb, uint offset)
+        public override void SetVertexBuffer(uint index, DeviceBuffer vb, uint offset)
         {
             OpenGLBuffer glVB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(vb);
             glVB.EnsureResourcesCreated();
@@ -1082,7 +1188,8 @@ namespace Veldrid.OpenGL
             _vbOffsets[index] = offset;
         }
 
-        public void SetViewport(uint index, ref Viewport viewport)
+        public override void SetViewport(uint index, Viewport viewport) => SetViewport(index, ref viewport);
+        public override void SetViewport(uint index, ref Viewport viewport)
         {
             _viewports[(int)index] = viewport;
 
@@ -1110,7 +1217,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr dataPtr, uint sizeInBytes)
+        public override void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr dataPtr, uint sizeInBytes)
         {
             OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(buffer);
             glBuffer.EnsureResourcesCreated();
@@ -1138,7 +1245,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void UpdateTexture(
+        public override void UpdateTexture(
             Texture texture,
             IntPtr dataPtr,
             uint x,
@@ -1445,7 +1552,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
+        public override void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
         {
             OpenGLBuffer srcGLBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(source);
             OpenGLBuffer dstGLBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(destination);
@@ -1480,7 +1587,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void CopyTexture(
+        public override void CopyTexture(
             Texture source,
             uint srcX, uint srcY, uint srcZ,
             uint srcMipLevel,

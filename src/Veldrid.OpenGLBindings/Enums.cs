@@ -2052,4 +2052,9 @@ namespace Veldrid.OpenGLBinding
         Layered = 0x8DA7,
         LayerTargets = 0x8DA8,
     }
+
+    public enum FenceCondition
+    {
+        GpuCommandsComplete = 0x9117,
+    }
 }

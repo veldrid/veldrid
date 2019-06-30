@@ -31,6 +31,8 @@ namespace Veldrid.MTL
 
         public CAMetalDrawable CurrentDrawable => _drawable;
 
+        public override Framebuffer[] Framebuffers => throw new NotImplementedException();
+
         public MTLSwapchain(MTLGraphicsDevice gd, ref SwapchainDescription description)
         {
             _gd = gd;
@@ -134,6 +136,11 @@ namespace Veldrid.MTL
                 _metalLayer.frame = _uiView.frame;
             }
             GetNextDrawable();
+        }
+
+        public override void Resize()
+        {
+            throw new NotImplementedException();
         }
 
         private void SetSyncToVerticalBlank(bool value)

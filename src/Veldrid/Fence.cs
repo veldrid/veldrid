@@ -8,6 +8,13 @@ namespace Veldrid
     /// </summary>
     public abstract class Fence : DeviceResource, IDisposable
     {
+        private readonly GraphicsDevice _gd;
+
+        internal Fence(GraphicsDevice gd)
+        {
+            _gd = gd;
+        }
+
         /// <summary>
         /// Gets a value indicating whether the Fence is currently signaled. A Fence is signaled after a CommandList finishes
         /// execution after it was submitted with a Fence instance.
@@ -18,6 +25,9 @@ namespace Veldrid
         /// Sets this instance to the unsignaled state.
         /// </summary>
         public abstract void Reset();
+
+        public void Wait() => _gd.WaitForFence(this);
+        public void Wait(TimeSpan timeout) => _gd.WaitForFence(this, timeout);
 
         /// <summary>
         /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other

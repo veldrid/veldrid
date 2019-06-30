@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
+    <ProjectReference Include="..\Veldrid.Utilities\Veldrid.Utilities.csproj" />
+    <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
+  </ItemGroup>
+
+</Project>

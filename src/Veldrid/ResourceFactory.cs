@@ -219,7 +219,6 @@ namespace Veldrid
         /// <returns></returns>
         protected abstract Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description);
 
-        // TODO: private protected
         /// <summary>
         /// </summary>
         /// <param name="description"></param>
@@ -280,13 +279,14 @@ namespace Veldrid
             return CreateTextureViewCore(ref description);
         }
 
-        // TODO: private protected
         /// <summary>
         /// </summary>
         /// <param name="description"></param>
         /// <returns></returns>
         protected abstract TextureView CreateTextureViewCore(ref TextureViewDescription description);
 
+        public DeviceBuffer CreateBuffer(uint sizeInBytes, BufferUsage usage)
+            => CreateBuffer(new BufferDescription(sizeInBytes, usage));
         /// <summary>
         /// Creates a new <see cref="DeviceBuffer"/>.
         /// </summary>
@@ -344,7 +344,6 @@ namespace Veldrid
             return CreateBufferCore(ref description);
         }
 
-        // TODO: private protected
         /// <summary>
         /// </summary>
         /// <param name="description"></param>
@@ -485,5 +484,26 @@ namespace Veldrid
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="Swapchain"/>.</returns>
         public abstract Swapchain CreateSwapchain(ref SwapchainDescription description);
+
+        public CommandBuffer CreateCommandBuffer()
+            => CreateCommandBuffer(new CommandBufferDescription(CommandBufferFlags.None));
+        public CommandBuffer CreateCommandBuffer(CommandBufferFlags flags)
+            => CreateCommandBuffer(new CommandBufferDescription(flags));
+        public CommandBuffer CreateCommandBuffer(CommandBufferDescription description)
+            => CreateCommandBuffer(ref description);
+
+        public CommandBuffer CreateCommandBuffer(ref CommandBufferDescription description)
+        {
+            return CreateCommandBufferCore(ref description);
+        }
+
+        protected abstract CommandBuffer CreateCommandBufferCore(ref CommandBufferDescription description);
+
+        public Semaphore CreateSemaphore()
+        {
+            return CreateSemaphoreCore();
+        }
+
+        protected abstract Semaphore CreateSemaphoreCore();
     }
 }

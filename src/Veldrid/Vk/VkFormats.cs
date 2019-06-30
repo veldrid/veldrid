@@ -155,6 +155,125 @@ namespace Veldrid.Vk
             }
         }
 
+        internal static VkPipelineStageFlags GetConservativeSrcStageFlags(Texture texture, ShaderStages stage)
+        {
+            switch (stage)
+            {
+                case ShaderStages.None:
+                    return VkPipelineStageFlags.None;
+                case ShaderStages.Vertex:
+                    return VkPipelineStageFlags.VertexInput | VkPipelineStageFlags.VertexShader;
+                case ShaderStages.Geometry:
+                    return VkPipelineStageFlags.GeometryShader;
+                case ShaderStages.TessellationControl:
+                    return VkPipelineStageFlags.TessellationControlShader;
+                case ShaderStages.TessellationEvaluation:
+                    return VkPipelineStageFlags.TessellationEvaluationShader;
+                case ShaderStages.Fragment:
+                    VkPipelineStageFlags ret = VkPipelineStageFlags.None;
+                    if ((texture.Usage & TextureUsage.DepthStencil) != 0)
+                    {
+                        ret |= VkPipelineStageFlags.EarlyFragmentTests | VkPipelineStageFlags.LateFragmentTests;
+                    }
+                    if ((texture.Usage & TextureUsage.RenderTarget) != 0)
+                    {
+                        ret |= VkPipelineStageFlags.ColorAttachmentOutput;
+                    }
+                    else if ((texture.Usage & TextureUsage.Storage) != 0)
+                    {
+                        ret |= VkPipelineStageFlags.FragmentShader;
+                    }
+                    return ret;
+                case ShaderStages.Compute:
+                    return VkPipelineStageFlags.ComputeShader;
+                default:
+                    throw Illegal.Value<ShaderStages>();
+            }
+        }
+
+        internal static VkPipelineStageFlags GetConservativeDstStageFlags(Texture texture, ShaderStages stage)
+        {
+            switch (stage)
+            {
+                case ShaderStages.None:
+                    return VkPipelineStageFlags.None;
+                case ShaderStages.Vertex:
+                    return VkPipelineStageFlags.VertexInput | VkPipelineStageFlags.VertexShader;
+                case ShaderStages.Geometry:
+                    return VkPipelineStageFlags.GeometryShader;
+                case ShaderStages.TessellationControl:
+                    return VkPipelineStageFlags.TessellationControlShader;
+                case ShaderStages.TessellationEvaluation:
+                    return VkPipelineStageFlags.TessellationEvaluationShader;
+                case ShaderStages.Fragment:
+                    return VkPipelineStageFlags.FragmentShader;
+                case ShaderStages.Compute:
+                    return VkPipelineStageFlags.ComputeShader;
+                default:
+                    throw Illegal.Value<ShaderStages>();
+            }
+        }
+
+        internal static VkAccessFlags GetConservativeDstAccessFlags(Texture texture, ShaderStages sourceStage)
+        {
+            switch (sourceStage)
+            {
+                case ShaderStages.Vertex:
+                case ShaderStages.Geometry:
+                case ShaderStages.TessellationControl:
+                case ShaderStages.TessellationEvaluation:
+                    return (texture.Usage & TextureUsage.Storage) != 0
+                        ? VkAccessFlags.ShaderRead
+                        : VkAccessFlags.None;
+                case ShaderStages.Fragment:
+                case ShaderStages.Compute:
+                    if ((texture.Usage & TextureUsage.Sampled) != 0
+                        || (texture.Usage & TextureUsage.Storage) != 0)
+                    {
+                        return VkAccessFlags.ShaderRead;
+                    }
+                    else
+                    {
+                        return VkAccessFlags.None;
+                    }
+                default:
+                    throw Illegal.Value<ShaderStages>();
+            }
+        }
+
+        internal static VkAccessFlags GetConservativeSrcAccessFlags(Texture texture, ShaderStages sourceStage)
+        {
+            switch (sourceStage)
+            {
+                case ShaderStages.Vertex:
+                case ShaderStages.Geometry:
+                case ShaderStages.TessellationControl:
+                case ShaderStages.TessellationEvaluation:
+                    return (texture.Usage & TextureUsage.Storage) != 0
+                        ? VkAccessFlags.ShaderWrite
+                        : VkAccessFlags.None;
+                case ShaderStages.Fragment:
+                    VkAccessFlags ret = VkAccessFlags.None;
+                    if ((texture.Usage & TextureUsage.RenderTarget) != 0)
+                    {
+                        ret |= VkAccessFlags.ColorAttachmentWrite;
+                    }
+                    if ((texture.Usage & TextureUsage.DepthStencil) != 0)
+                    {
+                        ret |= VkAccessFlags.DepthStencilAttachmentWrite;
+                    }
+                    if ((texture.Usage & TextureUsage.Storage) != 0)
+                    {
+                        ret |= VkAccessFlags.ShaderWrite;
+                    }
+                    return ret;
+                case ShaderStages.Compute:
+                    return VkAccessFlags.ShaderWrite;
+                default:
+                    throw Illegal.Value<ShaderStages>();
+            }
+        }
+
         internal static VkSampleCountFlags VdToVkSampleCount(TextureSampleCount sampleCount)
         {
             switch (sampleCount)
@@ -324,6 +443,36 @@ namespace Veldrid.Vk
                     return VkBlendFactor.OneMinusConstantColor;
                 default:
                     throw Illegal.Value<BlendFactor>();
+            }
+        }
+
+        internal static VkAttachmentStoreOp VdToVkStoreAction(StoreAction storeAction)
+        {
+            switch (storeAction)
+            {
+                case StoreAction.DontCare:
+                    return VkAttachmentStoreOp.DontCare;
+                case StoreAction.Store:
+                    return VkAttachmentStoreOp.Store;
+                case StoreAction.Resolve:
+                    return VkAttachmentStoreOp.DontCare;
+                default:
+                    throw Illegal.Value<StoreAction>();
+            }
+        }
+
+        internal static VkAttachmentLoadOp VdToVkLoadAction(LoadAction loadAction)
+        {
+            switch (loadAction)
+            {
+                case LoadAction.DontCare:
+                    return VkAttachmentLoadOp.DontCare;
+                case LoadAction.Load:
+                    return VkAttachmentLoadOp.Load;
+                case LoadAction.Clear:
+                    return VkAttachmentLoadOp.Clear;
+                default:
+                    throw Illegal.Value<LoadAction>();
             }
         }
 

@@ -274,6 +274,13 @@ namespace Veldrid.Vk
                 srcStageFlags = VkPipelineStageFlags.ColorAttachmentOutput;
                 dstStageFlags = VkPipelineStageFlags.Transfer;
             }
+            else if (oldLayout == VkImageLayout.TransferDstOptimal && newLayout == VkImageLayout.PresentSrcKHR)
+            {
+                barrier.srcAccessMask = VkAccessFlags.TransferWrite;
+                barrier.dstAccessMask = VkAccessFlags.MemoryRead;
+                srcStageFlags = VkPipelineStageFlags.Transfer;
+                dstStageFlags = VkPipelineStageFlags.BottomOfPipe;
+            }
             else
             {
                 Debug.Fail("Invalid image layout transition.");
@@ -287,6 +294,31 @@ namespace Veldrid.Vk
                 0, null,
                 0, null,
                 1, &barrier);
+        }
+
+        internal static VkImageLayout GetFinalLayout(VkTexture tex)
+        {
+            bool isPresented = tex.IsSwapchainTexture;
+            if (isPresented && (tex.Usage & TextureUsage.DepthStencil) == 0)
+            {
+                return VkImageLayout.PresentSrcKHR;
+            }
+            if ((tex.Usage & TextureUsage.Storage) != 0)
+            {
+                return VkImageLayout.General;
+            }
+            else if ((tex.Usage & TextureUsage.Sampled) != 0)
+            {
+                return VkImageLayout.ShaderReadOnlyOptimal;
+            }
+            else if ((tex.Usage & TextureUsage.DepthStencil) != 0)
+            {
+                return VkImageLayout.DepthStencilAttachmentOptimal;
+            }
+            else
+            {
+                return VkImageLayout.ColorAttachmentOptimal;
+            }
         }
     }
 

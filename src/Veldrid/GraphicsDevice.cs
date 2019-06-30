@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Veldrid.WebGL;
 
 namespace Veldrid
 {
@@ -116,8 +117,17 @@ namespace Veldrid
         /// execution.</param>
         public void SubmitCommands(CommandList commandList, Fence fence) => SubmitCommandsCore(commandList, fence);
 
+        private protected abstract void SubmitCommandsCore(CommandList commandList, Fence fence);
+
+        public void SubmitCommands(CommandBuffer commandBuffer, Semaphore wait, Semaphore signal, Fence fence)
+        {
+            SubmitCommandsCore(commandBuffer, wait, signal, fence);
+        }
+
         private protected abstract void SubmitCommandsCore(
-            CommandList commandList,
+            CommandBuffer commandBuffer,
+            Semaphore wait,
+            Semaphore signal,
             Fence fence);
 
         /// <summary>
@@ -215,6 +225,20 @@ namespace Veldrid
         public void SwapBuffers(Swapchain swapchain) => SwapBuffersCore(swapchain);
 
         private protected abstract void SwapBuffersCore(Swapchain swapchain);
+
+        public void Present(Swapchain swapchain, Semaphore waitSemaphore, uint index)
+        {
+            PresentCore(swapchain, waitSemaphore, index);
+        }
+
+        private protected abstract void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index);
+
+        public uint AcquireNextImage(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        {
+            return AcquireNextImageCore(swapchain, semaphore, fence);
+        }
+
+        private protected abstract uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence);
 
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> object representing the render targets of the main swapchain.
@@ -848,7 +872,7 @@ namespace Veldrid
 #endif
                 case GraphicsBackend.OpenGL:
 #if !EXCLUDE_OPENGL_BACKEND
-                    return true;
+                    return OpenGL.OpenGLGraphicsDevice.IsSupported(GraphicsBackend.OpenGL);
 #else
                     return false;
 #endif
@@ -860,7 +884,7 @@ namespace Veldrid
 #endif
                 case GraphicsBackend.OpenGLES:
 #if !EXCLUDE_OPENGL_BACKEND
-                    return !RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                    return OpenGL.OpenGLGraphicsDevice.IsSupported(GraphicsBackend.OpenGLES);
 #else
                     return false;
 #endif
@@ -1030,18 +1054,52 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL ES, with a main Swapchain.
-        /// This overload can only be used on iOS or Android to create a GraphicsDevice for an Android Surface or an iOS UIView.
+        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL.
+        /// This overload can only be used on Windows.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the OpenGL API.</returns>
+        public static GraphicsDevice CreateOpenGL(GraphicsDeviceOptions options)
+        {
+            return new OpenGL.OpenGLGraphicsDevice(options, null, GraphicsBackend.OpenGL);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL, with a main Swapchain.
+        /// This overload can only be used on Windows to create a GraphicsDevice for a Win32 window.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="swapchainDescription">A description of the main Swapchain to create.
-        /// The SwapchainSource must have been created from an Android Surface or an iOS UIView.</param>
-        /// <returns>A new <see cref="GraphicsDevice"/> using the OpenGL or OpenGL ES API.</returns>
-        public static GraphicsDevice CreateOpenGLES(
-            GraphicsDeviceOptions options,
-            SwapchainDescription swapchainDescription)
+        /// The SwapchainSource must have been created from a Win32 window.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the OpenGL API.</returns>
+        public static GraphicsDevice CreateOpenGL(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
-            return new OpenGL.OpenGLGraphicsDevice(options, swapchainDescription);
+            return new OpenGL.OpenGLGraphicsDevice(options, swapchainDescription, GraphicsBackend.OpenGL);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL ES.
+        /// This overload can only be used on Windows.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> OpenGL ES API.</returns>
+        public static GraphicsDevice CreateOpenGLES(GraphicsDeviceOptions options)
+        {
+            return new OpenGL.OpenGLGraphicsDevice(options, null, GraphicsBackend.OpenGLES);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL ES, with a main Swapchain.
+        /// This overload can only be used on Windows, iOS or Android to create a GraphicsDevice for a Win32 window, an iOS
+        /// UIView, or an Android Surface.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="swapchainDescription">A description of the main Swapchain to create.
+        /// The SwapchainSource must have been created from a Win32 window, an iOS UIView, or an Android Surface.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the OpenGL ES API.</returns>
+        public static GraphicsDevice CreateOpenGLES(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
+        {
+            return new OpenGL.OpenGLGraphicsDevice(options, swapchainDescription, GraphicsBackend.OpenGLES);
         }
 #endif
 
@@ -1086,5 +1144,49 @@ namespace Veldrid
             return new MTL.MTLGraphicsDevice(options, swapchainDesc);
         }
 #endif
+
+        public static GraphicsDevice CreateWebGL(GraphicsDeviceOptions options, object canvas)
+        {
+            return new WebGLGraphicsDevice(options, canvas);
+        }
+
+        public static GraphicsDevice Create(GraphicsDeviceOptions options, GraphicsBackend backend)
+        {
+            switch (backend)
+            {
+                case GraphicsBackend.Direct3D11:
+#if !EXCLUDE_D3D11_BACKEND
+
+#else
+                    throw new VeldridException("D3D11 support has not been included in this configuration of Veldrid");
+#endif
+                case GraphicsBackend.Vulkan:
+#if !EXCLUDE_VULKAN_BACKEND
+                    return CreateVulkan(options);
+#else
+                    throw new VeldridException("D3D11 support has not been included in this configuration of Veldrid");
+#endif
+                case GraphicsBackend.OpenGL:
+#if !EXCLUDE_OPENGL_BACKEND
+                    return CreateOpenGL(options);
+#else
+                    throw new VeldridException("OpenGL support has not been included in this configuration of Veldrid");
+#endif
+                case GraphicsBackend.Metal:
+#if !EXCLUDE_METAL_BACKEND
+                    return CreateMetal(options);
+#else
+                    throw new VeldridException("Metal support has not been included in this configuration of Veldrid");
+#endif
+                case GraphicsBackend.OpenGLES:
+#if !EXCLUDE_OPENGL_BACKEND
+                    return CreateOpenGLES(options);
+#else
+                    throw new VeldridException("OpenGL support has not been included in this configuration of Veldrid");
+#endif
+                default:
+                    throw Illegal.Value<GraphicsBackend>();
+            }
+        }
     }
 }

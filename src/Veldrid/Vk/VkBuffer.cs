@@ -24,6 +24,7 @@ namespace Veldrid.Vk
         public VkMemoryRequirements BufferMemoryRequirements => _bufferMemoryRequirements;
 
         public VkBuffer(VkGraphicsDevice gd, uint sizeInBytes, BufferUsage usage, string callerMember = null)
+            : base(gd)
         {
             _gd = gd;
             SizeInBytes = sizeInBytes;

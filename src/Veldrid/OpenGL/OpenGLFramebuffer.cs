@@ -131,7 +131,6 @@ namespace Veldrid.OpenGL
                         (int)DepthTarget.Value.ArrayLayer);
                     CheckLastError();
                 }
-
             }
 
             FramebufferErrorCode errorCode = glCheckFramebufferStatus(FramebufferTarget.Framebuffer);

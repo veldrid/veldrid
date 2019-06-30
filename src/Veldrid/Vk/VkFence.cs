@@ -13,6 +13,7 @@ namespace Veldrid.Vk
         public Vulkan.VkFence DeviceFence => _fence;
 
         public VkFence(VkGraphicsDevice gd, bool signaled)
+            : base(gd)
         {
             _gd = gd;
             VkFenceCreateInfo fenceCI = VkFenceCreateInfo.New();

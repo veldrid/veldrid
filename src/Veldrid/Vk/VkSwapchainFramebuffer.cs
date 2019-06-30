@@ -29,6 +29,7 @@ namespace Veldrid.Vk
         private OutputDescription _outputDescription;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
+        public VkFramebuffer[] Framebuffers => _scFramebuffers;
 
         public override VkRenderPass RenderPassNoClear_Init => _scFramebuffers[0].RenderPassNoClear_Init;
         public override VkRenderPass RenderPassNoClear_Load => _scFramebuffers[0].RenderPassNoClear_Load;

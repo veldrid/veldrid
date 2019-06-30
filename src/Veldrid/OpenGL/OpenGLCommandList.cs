@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Veldrid.OpenGL.NoAllocEntryList;
+using Veldrid.CommandRecording;
 
 namespace Veldrid.OpenGL
 {
     internal class OpenGLCommandList : CommandList
     {
         private readonly OpenGLGraphicsDevice _gd;
-        private OpenGLCommandEntryList _currentCommands;
+        private NoAllocCommandEntryList _currentCommands;
 
-        internal OpenGLCommandEntryList CurrentCommands => _currentCommands;
+        internal NoAllocCommandEntryList CurrentCommands => _currentCommands;
         internal OpenGLGraphicsDevice Device => _gd;
 
         private readonly object _lock = new object();
-        private readonly List<OpenGLCommandEntryList> _availableLists = new List<OpenGLCommandEntryList>();
-        private readonly List<OpenGLCommandEntryList> _submittedLists = new List<OpenGLCommandEntryList>();
+        private readonly List<NoAllocCommandEntryList> _availableLists = new List<NoAllocCommandEntryList>();
+        private readonly List<NoAllocCommandEntryList> _submittedLists = new List<NoAllocCommandEntryList>();
 
         public override string Name { get; set; }
 
@@ -37,19 +37,19 @@ namespace Veldrid.OpenGL
             _currentCommands.Begin();
         }
 
-        private OpenGLCommandEntryList GetFreeCommandList()
+        private NoAllocCommandEntryList GetFreeCommandList()
         {
             lock (_lock)
             {
                 if (_availableLists.Count > 0)
                 {
-                    OpenGLCommandEntryList ret = _availableLists[_availableLists.Count - 1];
+                    NoAllocCommandEntryList ret = _availableLists[_availableLists.Count - 1];
                     _availableLists.RemoveAt(_availableLists.Count - 1);
                     return ret;
                 }
                 else
                 {
-                    return new OpenGLNoAllocCommandEntryList(this);
+                    return new NoAllocCommandEntryList();
                 }
             }
         }
@@ -194,7 +194,7 @@ namespace Veldrid.OpenGL
             _currentCommands.GenerateMipmaps(texture);
         }
 
-        public void OnSubmitted(OpenGLCommandEntryList entryList)
+        public void OnSubmitted(NoAllocCommandEntryList entryList)
         {
             _currentCommands = null;
             lock (_lock)
@@ -206,7 +206,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void OnCompleted(OpenGLCommandEntryList entryList)
+        public void OnCompleted(NoAllocCommandEntryList entryList)
         {
             lock (_lock)
             {
@@ -256,11 +256,11 @@ namespace Veldrid.OpenGL
             lock (_lock)
             {
                 _currentCommands?.Dispose();
-                foreach (OpenGLCommandEntryList list in _availableLists)
+                foreach (NoAllocCommandEntryList list in _availableLists)
                 {
                     list.Dispose();
                 }
-                foreach (OpenGLCommandEntryList list in _submittedLists)
+                foreach (NoAllocCommandEntryList list in _submittedLists)
                 {
                     list.Dispose();
                 }

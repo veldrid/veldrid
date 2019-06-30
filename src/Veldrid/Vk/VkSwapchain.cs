@@ -1,9 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Vulkan;
-using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
-using System;
-using System.Runtime.InteropServices;
+using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
@@ -22,6 +21,7 @@ namespace Veldrid.Vk
         private bool? _newSyncToVBlank;
         private uint _currentImageIndex;
         private string _name;
+        private Framebuffer[] _framebuffers;
 
         public override string Name { get => _name; set { _name = value; _gd.SetResourceName(this, value); } }
         public override Framebuffer Framebuffer => _framebuffer;
@@ -44,6 +44,8 @@ namespace Veldrid.Vk
         public VkQueue PresentQueue => _presentQueue;
         public uint PresentQueueIndex => _presentQueueIndex;
         public ResourceRefCount RefCount { get; }
+
+        public override Framebuffer[] Framebuffers => _framebuffers;
 
         public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description) : this(gd, ref description, VkSurfaceKHR.Null) { }
 
@@ -77,9 +79,9 @@ namespace Veldrid.Vk
             fenceCI.flags = VkFenceCreateFlags.None;
             vkCreateFence(_gd.Device, ref fenceCI, null, out _imageAvailableFence);
 
-            AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence);
-            vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-            vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
+            // AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence);
+            // vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
+            // vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
 
             RefCount = new ResourceRefCount(DisposeCore);
         }
@@ -87,6 +89,12 @@ namespace Veldrid.Vk
         public override void Resize(uint width, uint height)
         {
             RecreateAndReacquire(width, height);
+        }
+
+        public override void Resize()
+        {
+            _swapchainSource.GetSize(out uint width, out uint height);
+            CreateSwapchain(width, height);
         }
 
         public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, Vulkan.VkFence fence)
@@ -124,11 +132,11 @@ namespace Veldrid.Vk
         {
             if (CreateSwapchain(width, height))
             {
-                if (AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence))
-                {
-                    vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-                    vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
-                }
+                // if (AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence))
+                // {
+                //     vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
+                //     vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
+                // }
             }
         }
 
@@ -238,9 +246,9 @@ namespace Veldrid.Vk
             swapchainCI.imageArrayLayers = 1;
             swapchainCI.imageUsage = VkImageUsageFlags.ColorAttachment | VkImageUsageFlags.TransferDst;
 
-            FixedArray2<uint> queueFamilyIndices = new FixedArray2<uint>(_gd.GraphicsQueueIndex, _gd.PresentQueueIndex);
+            FixedArray2<uint> queueFamilyIndices = new FixedArray2<uint>(_gd.UniversalQueueIndex, _gd.PresentQueueIndex);
 
-            if (_gd.GraphicsQueueIndex != _gd.PresentQueueIndex)
+            if (_gd.UniversalQueueIndex != _gd.PresentQueueIndex)
             {
                 swapchainCI.imageSharingMode = VkSharingMode.Concurrent;
                 swapchainCI.queueFamilyIndexCount = 2;
@@ -267,12 +275,13 @@ namespace Veldrid.Vk
             }
 
             _framebuffer.SetNewSwapchain(_deviceSwapchain, width, height, surfaceFormat, swapchainCI.imageExtent);
+            _framebuffers = _framebuffer.Framebuffers;
             return true;
         }
 
         private bool GetPresentQueueIndex(out uint queueFamilyIndex)
         {
-            uint graphicsQueueIndex = _gd.GraphicsQueueIndex;
+            uint graphicsQueueIndex = _gd.UniversalQueueIndex;
             uint presentQueueIndex = _gd.PresentQueueIndex;
 
             if (QueueSupportsPresent(graphicsQueueIndex, _surface))

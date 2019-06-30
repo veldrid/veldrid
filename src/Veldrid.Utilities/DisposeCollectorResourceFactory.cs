@@ -116,5 +116,17 @@ namespace Veldrid.Utilities
             DisposeCollector.Add(tex);
             return tex;
         }
+
+        protected override CommandBuffer CreateCommandBufferCore(ref CommandBufferDescription description)
+        {
+            CommandBuffer cb = Factory.CreateCommandBuffer(ref description);
+            DisposeCollector.Add(cb);
+            return cb;
+        }
+
+        protected override Semaphore CreateSemaphoreCore()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

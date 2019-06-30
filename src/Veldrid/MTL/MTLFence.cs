@@ -7,7 +7,8 @@ namespace Veldrid.MTL
     {
         private readonly ManualResetEvent _mre;
 
-        public MTLFence(bool signaled)
+        public MTLFence(GraphicsDevice gd, bool signaled)
+            : base(gd)
         {
             _mre = new ManualResetEvent(signaled);
         }

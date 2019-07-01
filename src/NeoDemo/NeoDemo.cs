@@ -394,7 +394,7 @@ namespace Veldrid.NeoDemo
                         {
                             if (RenderDoc.Load(out _renderDoc))
                             {
-                                ChangeBackend(_gd.BackendType);
+                                ChangeBackend(_gd.BackendType, forceRecreateWindow: true);
                             }
                         }
                     }
@@ -586,13 +586,14 @@ namespace Veldrid.NeoDemo
             _gd.SwapBuffers();
         }
 
-        private void ChangeBackend(GraphicsBackend backend)
+        private void ChangeBackend(GraphicsBackend backend) => ChangeBackend(backend, false);
+        private void ChangeBackend(GraphicsBackend backend, bool forceRecreateWindow)
         {
             DestroyAllObjects();
             bool syncToVBlank = _gd.SyncToVerticalBlank;
             _gd.Dispose();
 
-            if (_recreateWindow)
+            if (_recreateWindow || forceRecreateWindow)
             {
 
                 WindowCreateInfo windowCI = new WindowCreateInfo

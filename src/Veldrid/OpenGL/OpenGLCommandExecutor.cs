@@ -65,8 +65,19 @@ namespace Veldrid.OpenGL
             glClearColor(color.R, color.G, color.B, color.A);
             CheckLastError();
 
+            if (_graphicsPipeline != null && _graphicsPipeline.RasterizerState.ScissorTestEnabled)
+            {
+                glDisable(EnableCap.ScissorTest);
+                CheckLastError();
+            }
+
             glClear(ClearBufferMask.ColorBufferBit);
             CheckLastError();
+
+            if (_graphicsPipeline != null && _graphicsPipeline.RasterizerState.ScissorTestEnabled)
+            {
+                glEnable(EnableCap.ScissorTest);
+            }
         }
 
         public override void ClearDepthStencil(float depth, byte stencil)
@@ -77,9 +88,20 @@ namespace Veldrid.OpenGL
             glClearStencil(stencil);
             CheckLastError();
 
+            if (_graphicsPipeline != null && _graphicsPipeline.RasterizerState.ScissorTestEnabled)
+            {
+                glDisable(EnableCap.ScissorTest);
+                CheckLastError();
+            }
+
             glDepthMask(true);
             glClear(ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             CheckLastError();
+
+            if (_graphicsPipeline != null && _graphicsPipeline.RasterizerState.ScissorTestEnabled)
+            {
+                glEnable(EnableCap.ScissorTest);
+            }
         }
 
         public override void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)

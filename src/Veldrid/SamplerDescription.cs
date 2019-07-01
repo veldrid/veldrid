@@ -8,15 +8,15 @@ namespace Veldrid
     public struct SamplerDescription : IEquatable<SamplerDescription>
     {
         /// <summary>
-        /// The <see cref="SamplerAddressMode"/> mode to use for the U (or R) coordinate.
+        /// The <see cref="SamplerAddressMode"/> mode to use for the U (or S) coordinate.
         /// </summary>
         public SamplerAddressMode AddressModeU;
         /// <summary>
-        /// The <see cref="SamplerAddressMode"/> mode to use for the V (or S) coordinate.
+        /// The <see cref="SamplerAddressMode"/> mode to use for the V (or T) coordinate.
         /// </summary>
         public SamplerAddressMode AddressModeV;
         /// <summary>
-        /// The <see cref="SamplerAddressMode"/> mode to use for the W (or T) coordinate.
+        /// The <see cref="SamplerAddressMode"/> mode to use for the W (or R) coordinate.
         /// </summary>
         public SamplerAddressMode AddressModeW;
         /// <summary>

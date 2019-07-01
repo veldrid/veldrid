@@ -115,10 +115,12 @@ namespace Veldrid.NeoDemo.Objects
             cb.BindPipeline(renderPass == RenderPasses.ReflectionMap ? _reflectionPipeline : _pipeline);
             cb.BindGraphicsResourceSet(0, _resourceSet);
             float depth = gd.IsDepthRangeZeroToOne ? 0 : 1;
-            cb.SetViewport(0, new Viewport(0, 0, sc.MainSceneColorTexture.Width, sc.MainSceneColorTexture.Height, depth, depth));
+
+            var targetTex = renderPass == RenderPasses.ReflectionMap ? sc.ReflectionColorTexture : sc.MainSceneColorTexture;
+            cb.SetViewport(0, new Viewport(0, 0, targetTex.Width, targetTex.Height, depth, depth));
             cb.DrawIndexed((uint)s_indices.Length, 1, 0, 0, 0);
 
-            cb.SetViewport(0, new Viewport(0, 0, sc.MainSceneColorTexture.Width, sc.MainSceneColorTexture.Height, 0, 1));
+            cb.SetViewport(0, new Viewport(0, 0, targetTex.Width, targetTex.Height, 0, 1));
         }
 
         public override RenderPasses RenderPasses => RenderPasses.Standard | RenderPasses.ReflectionMap;

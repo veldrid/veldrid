@@ -7,7 +7,8 @@ namespace Veldrid.D3D11
     {
         private readonly ManualResetEvent _mre;
 
-        public D3D11Fence(bool signaled)
+        public D3D11Fence(D3D11GraphicsDevice gd, bool signaled)
+            : base(gd)
         {
             _mre = new ManualResetEvent(signaled);
         }

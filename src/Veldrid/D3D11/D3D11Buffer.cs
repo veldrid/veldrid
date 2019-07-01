@@ -24,9 +24,10 @@ namespace Veldrid.D3D11
 
         public SharpDX.Direct3D11.Buffer Buffer => _buffer;
 
-        public D3D11Buffer(Device device, uint sizeInBytes, BufferUsage usage, uint structureByteStride, bool rawBuffer)
+        public D3D11Buffer(D3D11GraphicsDevice gd, uint sizeInBytes, BufferUsage usage, uint structureByteStride, bool rawBuffer)
+            : base(gd)
         {
-            _device = device;
+            _device = gd.Device;
             SizeInBytes = sizeInBytes;
             Usage = usage;
             _structureByteStride = structureByteStride;
@@ -64,7 +65,7 @@ namespace Veldrid.D3D11
                 bd.CpuAccessFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
             }
 
-            _buffer = new SharpDX.Direct3D11.Buffer(device, bd);
+            _buffer = new SharpDX.Direct3D11.Buffer(_device, bd);
         }
 
         public override string Name

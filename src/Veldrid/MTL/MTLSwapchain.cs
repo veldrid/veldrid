@@ -138,11 +138,6 @@ namespace Veldrid.MTL
             GetNextDrawable();
         }
 
-        public override void Resize()
-        {
-            throw new NotImplementedException();
-        }
-
         private void SetSyncToVerticalBlank(bool value)
         {
             _syncToVerticalBlank = value;

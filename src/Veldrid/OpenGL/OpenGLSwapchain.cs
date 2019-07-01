@@ -34,12 +34,6 @@ namespace Veldrid.OpenGL
             _resizeAction?.Invoke(width, height);
         }
 
-        public override void Resize()
-        {
-            _swapchainSource.GetSize(out uint width, out uint height);
-            Resize(width, height);
-        }
-
         public override void Dispose()
         {
         }

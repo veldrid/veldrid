@@ -82,12 +82,6 @@ namespace Veldrid.OpenGL
             _gd.EnqueueDisposal(this);
         }
 
-        public override void Resize()
-        {
-            _swapchainSource.GetSize(out uint width, out uint height);
-            Resize(width, height);
-        }
-
         public override void Resize(uint width, uint height)
         {
             _fb.Resize(width, height);

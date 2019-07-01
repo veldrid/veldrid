@@ -63,7 +63,7 @@ namespace Veldrid.OpenGL
             _entryList.EndRenderPass();
         }
 
-        internal override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
+        private protected override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
         {
             BeginRecording();
             _entryList.DispatchIndirect(indirectBuffer, offset);

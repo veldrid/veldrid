@@ -34,9 +34,5 @@
             throw new System.NotImplementedException();
         }
 
-        public override void Resize()
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }

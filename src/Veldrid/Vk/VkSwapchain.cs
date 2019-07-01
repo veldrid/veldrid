@@ -91,12 +91,6 @@ namespace Veldrid.Vk
             RecreateAndReacquire(width, height);
         }
 
-        public override void Resize()
-        {
-            _swapchainSource.GetSize(out uint width, out uint height);
-            CreateSwapchain(width, height);
-        }
-
         public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, Vulkan.VkFence fence)
         {
             if (_newSyncToVBlank != null)

@@ -28,9 +28,10 @@ namespace CommandBufferDemo
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            GraphicsDevice gd = GraphicsDevice.Create(gdOptions, GraphicsBackend.Vulkan);
+            GraphicsDevice gd = GraphicsDevice.Create(gdOptions, GraphicsBackend.Direct3D11);
             SwapchainSource ss = VeldridStartup.GetSwapchainSource(window);
-            Swapchain sc = gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(ss, PixelFormat.R32_Float, false, true));
+            Swapchain sc = gd.ResourceFactory.CreateSwapchain(
+                new SwapchainDescription(ss, (uint)window.Width, (uint)window.Height, PixelFormat.R16_UNorm, false, true));
             bool windowResized = false;
             window.Resized += () => windowResized = true;
 
@@ -49,7 +50,7 @@ namespace CommandBufferDemo
                 if (windowResized)
                 {
                     windowResized = false;
-                    loop.ResizeSwapchain();
+                    loop.ResizeSwapchain((uint)window.Width, (uint)window.Height);
                 }
 
                 loop.RunFrame((CommandBuffer cb, uint frameIndex, Framebuffer fb) =>

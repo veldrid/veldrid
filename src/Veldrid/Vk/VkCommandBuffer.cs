@@ -435,7 +435,7 @@ namespace Veldrid.Vk
             vkCmdDispatch(_cb, groupCountX, groupCountY, groupCountZ);
         }
 
-        internal override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
+        private protected override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             vkCmdDispatchIndirect(_cb, vkBuffer.DeviceBuffer, offset);

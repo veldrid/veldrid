@@ -32,8 +32,6 @@ namespace Veldrid
         /// <param name="height">The new height of the Swapchain.</param>
         public abstract void Resize(uint width, uint height);
 
-        public abstract void Resize();
-
         /// <summary>
         /// Gets or sets whether presentation of this Swapchain will be synchronized to the window system's vertical refresh
         /// rate.

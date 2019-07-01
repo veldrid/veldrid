@@ -53,6 +53,8 @@ namespace Veldrid
         private bool _frameBegun;
         private uint _frameIndex;
 
+        private readonly InputState _inputState = new InputState();
+
         /// <summary>
         /// Constructs a new ImGuiCBRenderer.
         /// </summary>
@@ -378,6 +380,19 @@ namespace Veldrid
                 ImGui.Render();
                 RenderImDrawData(ImGui.GetDrawData(), gd, cb);
             }
+        }
+
+        /// <summary>
+        /// Updates ImGui input and IO configuration state.
+        /// </summary>
+        public void Update(float deltaSeconds, InputSnapshot snapshot)
+        {
+            _inputState.Clear();
+            _inputState.AddSnapshot(snapshot);
+            _inputState.WheelDelta = 0f;
+
+            Update(deltaSeconds, _inputState.View);
+
         }
 
         public void Update(float deltaSeconds, InputStateView inputState)

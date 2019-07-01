@@ -75,9 +75,7 @@
             }
         }
 
-        public void ResizeSwapchain() => ResizeSwapchain(null, null);
-        public void ResizeSwapchain(uint width, uint height) => ResizeSwapchain((uint?)width, height);
-        private void ResizeSwapchain(uint? width, uint? height)
+        public void ResizeSwapchain(uint width, uint height) 
         {
             if (_oldSet == null)
             {
@@ -105,14 +103,7 @@
                 _currentSet._cbs[i] = _gd.ResourceFactory.CreateCommandBuffer();
             }
 
-            if (width == null)
-            {
-                _sc.Resize();
-            }
-            else
-            {
-                _sc.Resize(width.Value, height.Value);
-            }
+            _sc.Resize(width, height);
 
             FrameIndex = _gd.AcquireNextImage(_sc, _currentSet._imageAcquiredSems[0], null);
         }

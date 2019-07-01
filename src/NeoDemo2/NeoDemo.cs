@@ -63,7 +63,7 @@ namespace Veldrid.NeoDemo
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, GraphicsBackend.Vulkan, out _window, out _gd);
+            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, GraphicsBackend.Direct3D11, out _window, out _gd);
             _swapchain = _gd.MainSwapchain;
             // _gd = GraphicsDevice.CreateOpenGL(gdOptions);
             // SwapchainSource ss = VeldridStartup.GetSwapchainSource(_window);
@@ -564,7 +564,7 @@ namespace Veldrid.NeoDemo
             {
                 _windowResized = false;
 
-                _frameLoop.ResizeSwapchain();
+                _frameLoop.ResizeSwapchain((uint)width, (uint)height);
 
                 _scene.Camera.WindowResized(width, height);
                 _resizeHandled?.Invoke(width, height);

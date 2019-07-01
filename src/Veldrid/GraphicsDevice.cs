@@ -1156,7 +1156,7 @@ namespace Veldrid
             {
                 case GraphicsBackend.Direct3D11:
 #if !EXCLUDE_D3D11_BACKEND
-
+                    return CreateD3D11(options);
 #else
                     throw new VeldridException("D3D11 support has not been included in this configuration of Veldrid");
 #endif

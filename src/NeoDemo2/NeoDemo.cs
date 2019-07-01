@@ -63,7 +63,7 @@ namespace Veldrid.NeoDemo
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, GraphicsBackend.OpenGL, out _window, out _gd);
+            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, GraphicsBackend.Vulkan, out _window, out _gd);
             _swapchain = _gd.MainSwapchain;
             // _gd = GraphicsDevice.CreateOpenGL(gdOptions);
             // SwapchainSource ss = VeldridStartup.GetSwapchainSource(_window);

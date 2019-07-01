@@ -33,7 +33,7 @@ namespace Veldrid.SampleGallery
                 PrimitiveTopology.TriangleStrip,
                 shaderSet,
                 new[] { GalleryConfig.Global.CameraInfoLayout, GalleryConfig.Global.MainFBInfoLayout, layout },
-                GalleryConfig.Global.MainFB.OutputDescription);
+                GalleryConfig.Global.MainFBOutput);
 
             _pipeline = Factory.CreateGraphicsPipeline(gpd);
 
@@ -41,16 +41,16 @@ namespace Veldrid.SampleGallery
             _set = Factory.CreateResourceSet(new ResourceSetDescription(layout, cubeTex, Device.Aniso4xSampler));
         }
 
-        public void Render(CommandList cl)
+        public void Render(CommandBuffer cb, uint frameIndex)
         {
             float depth = Device.IsDepthRangeZeroToOne ? 0 : 1;
-            cl.SetViewport(0, new Viewport(0, 0, GalleryConfig.Global.MainFB.Width, GalleryConfig.Global.MainFB.Height, depth, depth));
+            cb.SetViewport(0, new Viewport(0, 0, GalleryConfig.Global.ViewWidth, GalleryConfig.Global.ViewHeight, depth, depth));
 
-            cl.SetPipeline(_pipeline);
-            cl.SetGraphicsResourceSet(0, GalleryConfig.Global.CameraInfoSet);
-            cl.SetGraphicsResourceSet(1, GalleryConfig.Global.MainFBInfoSet);
-            cl.SetGraphicsResourceSet(2, _set);
-            cl.Draw(4);
+            cb.BindPipeline(_pipeline);
+            cb.BindGraphicsResourceSet(0, GalleryConfig.Global.CameraInfoSets[frameIndex]);
+            cb.BindGraphicsResourceSet(1, GalleryConfig.Global.MainFBInfoSet);
+            cb.BindGraphicsResourceSet(2, _set);
+            cb.Draw(4);
         }
 
         private static string VertexCode =

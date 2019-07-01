@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\src\CommandBuffer.Demo\StandardFrameLoop.cs" Link="StandardFrameLoop.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.9" />
   </ItemGroup>
 

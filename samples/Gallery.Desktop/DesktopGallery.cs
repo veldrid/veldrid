@@ -10,6 +10,10 @@ namespace Veldrid.SampleGallery
         private Sdl2Window _window;
         private GraphicsDevice _gd;
         private readonly InputState _inputState = new InputState();
+        private StandardFrameLoop _frameLoop;
+        private bool _needsResize;
+        private Stopwatch _sw;
+        private double _previousTime;
 
         public uint Width => (uint)_window.Width;
 
@@ -17,11 +21,14 @@ namespace Veldrid.SampleGallery
 
         public event Action Resized;
         public event Action<double> Update;
-        public event Action<double> Render;
+        public event Action<double, CommandBuffer> Render;
 
         public GraphicsDevice Device => _gd;
 
         public Swapchain MainSwapchain => _gd.MainSwapchain;
+
+        public uint FrameIndex => _frameLoop.FrameIndex;
+        public uint BufferCount => MainSwapchain.BufferCount;
 
         public void Run(string[] args)
         {
@@ -35,31 +42,44 @@ namespace Veldrid.SampleGallery
                 WindowState.Normal,
                 "Veldrid Sample Gallery");
             VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, options, backend, out _window, out _gd);
+            _frameLoop = new StandardFrameLoop(_gd, _gd.MainSwapchain);
             _window.Resized += () =>
             {
-                Resized?.Invoke();
+                _needsResize = true;
             };
 
             Gallery gallery = new Gallery(this);
             gallery.LoadExample(new SimpleMeshRender());
 
-            Stopwatch sw = Stopwatch.StartNew();
-            double previousTime = sw.Elapsed.TotalSeconds;
+            _sw = Stopwatch.StartNew();
+            _previousTime = _sw.Elapsed.TotalSeconds;
             while (_window.Exists)
             {
-                double currentTime = sw.Elapsed.TotalSeconds;
-                double elapsed = currentTime - previousTime;
-                previousTime = currentTime;
-
                 InputSnapshot snapshot = _window.PumpEvents();
                 _inputState.Clear();
                 _inputState.AddSnapshot(snapshot);
                 _inputState.MouseDelta = _window.MouseDelta;
                 if (!_window.Exists) { break; }
 
-                Update?.Invoke(elapsed);
-                Render?.Invoke(elapsed);
+                if (_needsResize)
+                {
+                    _needsResize = false;
+                    _frameLoop.ResizeSwapchain();
+                    Resized?.Invoke();
+                }
+
+                _frameLoop.RunFrame(FrameHandler);
             }
+        }
+
+        private void FrameHandler(CommandBuffer cb, uint frameIndex, Framebuffer fb)
+        {
+            double currentTime = _sw.Elapsed.TotalSeconds;
+            double elapsed = currentTime - _previousTime;
+            _previousTime = currentTime;
+
+            Update?.Invoke(elapsed);
+            Render?.Invoke(elapsed, cb);
         }
 
         public InputStateView GetInputState() => _inputState.View;

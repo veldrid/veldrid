@@ -380,21 +380,84 @@ namespace Veldrid
             }
         }
 
-        /// <summary>
-        /// Updates ImGui input and IO configuration state.
-        /// </summary>
-        public void Update(float deltaSeconds, InputSnapshot snapshot)
+        public void Update(float deltaSeconds, InputStateView inputState)
         {
+            UpdateImGuiInput(inputState);
+
             if (_frameBegun)
             {
                 ImGui.Render();
             }
 
             SetPerFrameImGuiData(deltaSeconds);
-            UpdateImGuiInput(snapshot);
 
             _frameBegun = true;
             ImGui.NewFrame();
+        }
+
+        private unsafe void UpdateImGuiInput(InputStateView inputState)
+        {
+            ImGuiIOPtr io = ImGui.GetIO();
+
+            // Determine if any of the mouse buttons were pressed during this snapshot period, even if they are no longer held.
+            bool leftPressed = false;
+            bool middlePressed = false;
+            bool rightPressed = false;
+            for (int i = 0; i < inputState.MouseEvents.Count; i++)
+            {
+                MouseEvent me = inputState.MouseEvents[i];
+                if (me.Down)
+                {
+                    switch (me.MouseButton)
+                    {
+                        case MouseButton.Left:
+                            leftPressed = true;
+                            break;
+                        case MouseButton.Middle:
+                            middlePressed = true;
+                            break;
+                        case MouseButton.Right:
+                            rightPressed = true;
+                            break;
+                    }
+                }
+            }
+
+            io.MouseDown[0] = leftPressed || inputState.IsMouseDown(MouseButton.Left);
+            io.MouseDown[1] = rightPressed || inputState.IsMouseDown(MouseButton.Right);
+            io.MouseDown[2] = middlePressed || inputState.IsMouseDown(MouseButton.Middle);
+            io.MousePos = inputState.MousePosition;
+            io.MouseWheel = inputState.WheelDelta;
+
+            IReadOnlyList<char> keyCharPresses = inputState.KeyCharPresses;
+            for (int i = 0; i < keyCharPresses.Count; i++)
+            {
+                char c = keyCharPresses[i];
+                ImGui.GetIO().AddInputCharacter(c);
+            }
+
+            IReadOnlyList<KeyEvent> keyEvents = inputState.KeyEvents;
+            for (int i = 0; i < keyEvents.Count; i++)
+            {
+                KeyEvent keyEvent = keyEvents[i];
+                io.KeysDown[(int)keyEvent.Key] = keyEvent.Down;
+                if (keyEvent.Key == Key.ControlLeft)
+                {
+                    _controlDown = keyEvent.Down;
+                }
+                if (keyEvent.Key == Key.ShiftLeft)
+                {
+                    _shiftDown = keyEvent.Down;
+                }
+                if (keyEvent.Key == Key.AltLeft)
+                {
+                    _altDown = keyEvent.Down;
+                }
+            }
+
+            io.KeyCtrl = _controlDown;
+            io.KeyAlt = _altDown;
+            io.KeyShift = _shiftDown;
         }
 
         /// <summary>

@@ -423,6 +423,23 @@ namespace Veldrid
             uint width, uint height, uint depth,
             uint layerCount);
 
+        public void BlitTexture(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter)
+        {
+            RequireNoRenderPass();
+            BlitTextureCore(
+                source, srcX, srcY, srcWidth, srcHeight,
+                destination, dstX, dstY, dstWidth, dstHeight,
+                linearFilter);
+        }
+
+        private protected abstract void BlitTextureCore(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter);
+
         public void GenerateMipmaps(Texture texture)
         {
             if ((texture.Usage & TextureUsage.GenerateMipmaps) == 0)

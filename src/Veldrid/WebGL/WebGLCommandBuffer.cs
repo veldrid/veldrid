@@ -176,6 +176,18 @@ namespace Veldrid.WebGL
             _entryList.UpdateBuffer(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }
 
+        private protected override void BlitTextureCore(
+            Texture source, uint srcX, uint srcY, uint srcWidth, uint srcHeight,
+            Framebuffer destination, uint dstX, uint dstY, uint dstWidth, uint dstHeight,
+            bool linearFilter)
+        {
+            BeginRecording();
+            _entryList.BlitTexture(
+                source, srcX, srcY, srcWidth, srcHeight,
+                destination, dstX, dstY, dstWidth, dstHeight,
+                linearFilter);
+        }
+
         internal NoAllocCommandEntryList GetEntryList() => _entryList;
 
         private void BeginRecording()

@@ -16,14 +16,14 @@ namespace Veldrid.SampleGallery
         private DeviceBuffer _indexBuffer;
         private uint _indexCount;
         private Pipeline _pipeline;
-        private ResourceSet _resourceSet;
-        private CommandList _cl;
-        private DeviceBuffer _uniformBuffer;
         private Vector3 _modelPos = new Vector3(0, 0, 0);
         private Camera _camera;
         private SkyboxRenderer _skyboxRenderer;
-        private DeviceBuffer _cameraInfoBuffer;
-        private bool _done;
+
+        // Per-frame resources
+        private DeviceBuffer[] _cameraInfoBuffers;
+        private DeviceBuffer[] _uniformBuffers;
+        private ResourceSet[] _resourceSets;
 
         public override async Task LoadResourcesAsync()
         {
@@ -55,15 +55,10 @@ namespace Veldrid.SampleGallery
 
             Task.WaitAll(tasks.ToArray());
 
-            _cl = Factory.CreateCommandList();
-
-            _uniformBuffer = Factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer));
             ResourceLayout layout = Factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("UniformState", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("Smp", ResourceKind.Sampler, ShaderStages.Fragment)));
-            _resourceSet = Factory.CreateResourceSet(
-                new ResourceSetDescription(layout, _uniformBuffer, catTexture, Device.LinearSampler));
 
             VertexLayoutDescription vertexLayout = new VertexLayoutDescription(
                 new VertexElementDescription("vsin_position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3, 0),
@@ -84,17 +79,30 @@ namespace Veldrid.SampleGallery
                 PrimitiveTopology.TriangleList,
                 shadersDesc,
                 layout,
-                Framebuffer.OutputDescription));
-            _camera = new Camera(Device, Framebuffer.Width, Framebuffer.Height);
+                Framebuffers[0].OutputDescription));
+            _camera = new Camera(Device, Framebuffers[0].Width, Framebuffers[0].Height);
             _camera.Position = new Vector3(0, 1, 3);
-
-            _cameraInfoBuffer = Factory.CreateBuffer(
-                new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
             GalleryConfig.Global.CameraInfoLayout = Device.ResourceFactory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("CameraInfo", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment)));
-            GalleryConfig.Global.CameraInfoSet = Device.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
-                GalleryConfig.Global.CameraInfoLayout, _cameraInfoBuffer));
+
+            _uniformBuffers = new DeviceBuffer[Gallery.BufferCount];
+            _resourceSets = new ResourceSet[Gallery.BufferCount];
+            _uniformBuffers = new DeviceBuffer[Gallery.BufferCount];
+            _cameraInfoBuffers = new DeviceBuffer[Gallery.BufferCount];
+            GalleryConfig.Global.CameraInfoSets = new ResourceSet[Gallery.BufferCount];
+
+            for (uint i = 0; i < Gallery.BufferCount; i++)
+            {
+                _uniformBuffers[i] = Factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer));
+                _resourceSets[i] = Factory.CreateResourceSet(
+                    new ResourceSetDescription(layout, _uniformBuffers[i], catTexture, Device.LinearSampler));
+                _cameraInfoBuffers[i] = Factory.CreateBuffer(
+                    new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+                GalleryConfig.Global.CameraInfoSets[i] = Device.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
+                    GalleryConfig.Global.CameraInfoLayout, _cameraInfoBuffers[i]));
+
+            }
 
             using (var face0 = OpenEmbeddedAsset("miramar_ft.png"))
             using (var face1 = OpenEmbeddedAsset("miramar_bk.png"))
@@ -109,13 +117,13 @@ namespace Veldrid.SampleGallery
 
         protected override void OnGallerySizeChangedCore()
         {
-            _camera.ViewSizeChanged(Framebuffer.Width, Framebuffer.Height);
+            _camera.ViewSizeChanged(Framebuffers[0].Width, Framebuffers[0].Height);
         }
 
-        public override void Render(double deltaSeconds)
+        public override void Render(double deltaSeconds, CommandBuffer cb)
         {
             _camera.Update((float)deltaSeconds);
-            Device.UpdateBuffer(_cameraInfoBuffer, 0, _camera.GetCameraInfo());
+            Device.UpdateBuffer(_cameraInfoBuffers[Gallery.FrameIndex], 0, _camera.GetCameraInfo());
 
             (Matrix4x4 projection, Matrix4x4 view, Matrix4x4 world) uniformState =
                 (
@@ -124,29 +132,28 @@ namespace Veldrid.SampleGallery
                 Matrix4x4.CreateWorld(_modelPos, Vector3.UnitX, Vector3.UnitY)
                 );
 
-            _cl.Begin();
-            _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
-            _cl.SetFramebuffer(Framebuffer);
-            _cl.ClearColorTarget(0, new RgbaFloat(0, 0, 0.05f, 1f));
-            _cl.ClearDepthStencil(Device.IsDepthRangeZeroToOne ? 0f : 1f);
-            _cl.SetPipeline(_pipeline);
-            _cl.SetVertexBuffer(0, _vertexBuffer);
-            _cl.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
-            _cl.SetGraphicsResourceSet(0, _resourceSet);
-
+            cb.UpdateBuffer(_uniformBuffers[Gallery.FrameIndex], 0, ref uniformState);
+            cb.BeginRenderPass(
+                Framebuffers[Gallery.FrameIndex],
+                LoadAction.Clear,
+                StoreAction.Store,
+                RgbaFloat.Red,
+                Device.IsDepthRangeZeroToOne ? 0f : 1f);
+            cb.BindPipeline(_pipeline);
+            cb.BindVertexBuffer(0, _vertexBuffer);
+            cb.BindIndexBuffer(_indexBuffer, IndexFormat.UInt16);
+            cb.BindGraphicsResourceSet(0, _resourceSets[Gallery.FrameIndex]);
 
             //for (float y = -10; y <= 10; y += 2.5f)
             //    for (float x = -10; x <= 10; x += 2.5f)
             {
                 //      uniformState.world = Matrix4x4.CreateWorld(_modelPos + new Vector3(x, y, 0), Vector3.UnitX, Vector3.UnitY);
                 //      _cl.UpdateBuffer(_uniformBuffer, 0, ref uniformState);
-                _cl.DrawIndexed(_indexCount);
+                cb.DrawIndexed(_indexCount);
             }
 
-            _skyboxRenderer.Render(_cl);
-
-            _cl.End();
-            Device.SubmitCommands(_cl);
+            _skyboxRenderer.Render(cb, Gallery.FrameIndex);
+            cb.EndRenderPass();
         }
 
         private Stream OpenEmbeddedAsset(string name)

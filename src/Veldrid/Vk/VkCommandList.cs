@@ -897,27 +897,21 @@ namespace Veldrid.Vk
                     1,
                     ref region);
 
-                if ((srcVkTexture.Usage & TextureUsage.Sampled) != 0)
-                {
-                    srcVkTexture.TransitionImageLayout(
-                        cb,
-                        srcMipLevel,
-                        1,
-                        srcBaseArrayLayer,
-                        layerCount,
-                        VkImageLayout.ShaderReadOnlyOptimal);
-                }
+                srcVkTexture.TransitionImageLayout(
+                    cb,
+                    srcMipLevel,
+                    1,
+                    srcBaseArrayLayer,
+                    layerCount,
+                    GetFinalLayout(srcVkTexture));
 
-                if ((dstVkTexture.Usage & TextureUsage.Sampled) != 0)
-                {
-                    dstVkTexture.TransitionImageLayout(
-                        cb,
-                        dstMipLevel,
-                        1,
-                        dstBaseArrayLayer,
-                        layerCount,
-                        VkImageLayout.ShaderReadOnlyOptimal);
-                }
+                dstVkTexture.TransitionImageLayout(
+                    cb,
+                    dstMipLevel,
+                    1,
+                    dstBaseArrayLayer,
+                    layerCount,
+                    GetFinalLayout(dstVkTexture));
             }
             else if (sourceIsStaging && !destIsStaging)
             {
@@ -968,16 +962,13 @@ namespace Veldrid.Vk
 
                 vkCmdCopyBufferToImage(cb, srcBuffer, dstImage, VkImageLayout.TransferDstOptimal, 1, ref regions);
 
-                if ((dstVkTexture.Usage & TextureUsage.Sampled) != 0)
-                {
-                    dstVkTexture.TransitionImageLayout(
-                        cb,
-                        dstMipLevel,
-                        1,
-                        dstBaseArrayLayer,
-                        layerCount,
-                        VkImageLayout.ShaderReadOnlyOptimal);
-                }
+                dstVkTexture.TransitionImageLayout(
+                    cb,
+                    dstMipLevel,
+                    1,
+                    dstBaseArrayLayer,
+                    layerCount,
+                    GetFinalLayout(dstVkTexture));
             }
             else if (!sourceIsStaging && destIsStaging)
             {
@@ -1028,16 +1019,13 @@ namespace Veldrid.Vk
 
                 vkCmdCopyImageToBuffer(cb, srcImage, VkImageLayout.TransferSrcOptimal, dstBuffer, 1, ref region);
 
-                if ((srcVkTexture.Usage & TextureUsage.Sampled) != 0)
-                {
-                    srcVkTexture.TransitionImageLayout(
-                        cb,
-                        srcMipLevel,
-                        1,
-                        srcBaseArrayLayer,
-                        layerCount,
-                        VkImageLayout.ShaderReadOnlyOptimal);
-                }
+                srcVkTexture.TransitionImageLayout(
+                    cb,
+                    srcMipLevel,
+                    1,
+                    srcBaseArrayLayer,
+                    layerCount,
+                    GetFinalLayout(srcVkTexture));
             }
             else
             {

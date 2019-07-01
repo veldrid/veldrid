@@ -20,17 +20,24 @@ namespace Veldrid.SampleGallery
         private bool _surfaceCreated;
         private Vector2 _prevTouchPos;
         private readonly InputState _inputState = new InputState();
+        private StandardFrameLoop _frameLoop;
+        private Stopwatch _sw;
+        private double _previousSeconds;
 
         public GraphicsDevice Device { get; protected set; }
         public Swapchain MainSwapchain { get; protected set; }
         uint IGalleryDriver.Width => (uint)Width;
         uint IGalleryDriver.Height => (uint)Height;
 
+        public uint FrameIndex => _frameLoop.FrameIndex;
+
+        public uint BufferCount => MainSwapchain.BufferCount;
+
         public event Action DeviceCreated;
         public event Action DeviceDisposed;
         public event Action Resized;
         public event Action<double> Update;
-        public event Action<double> Render;
+        public event Action<double, CommandBuffer> Render;
 
         public VeldridSurfaceView(Context context, GraphicsBackend backend)
             : this(context, backend, new GraphicsDeviceOptions())
@@ -65,7 +72,8 @@ namespace Veldrid.SampleGallery
                     deviceCreated = true;
                 }
 
-                Debug.Assert(MainSwapchain == null);
+                MainSwapchain?.Dispose();
+
                 SwapchainSource ss = SwapchainSource.CreateAndroidSurface(holder.Surface.Handle, JNIEnv.Handle);
                 SwapchainDescription sd = new SwapchainDescription(
                     ss,
@@ -92,6 +100,8 @@ namespace Veldrid.SampleGallery
                 deviceCreated = true;
             }
 
+            _frameLoop = new StandardFrameLoop(Device, MainSwapchain);
+
             if (deviceCreated)
             {
                 DeviceCreated?.Invoke();
@@ -117,15 +127,11 @@ namespace Veldrid.SampleGallery
 
         private void RenderLoop()
         {
-            Stopwatch sw = Stopwatch.StartNew();
-            double previousSeconds = sw.Elapsed.TotalSeconds;
+            _sw = Stopwatch.StartNew();
+            _previousSeconds = _sw.Elapsed.TotalSeconds;
             _enabled = true;
             while (_enabled)
             {
-                double currentSeconds = sw.Elapsed.TotalSeconds;
-                double elapsed = currentSeconds - previousSeconds;
-                previousSeconds = currentSeconds;
-
                 try
                 {
                     if (_paused || !_surfaceCreated) { continue; }
@@ -139,17 +145,15 @@ namespace Veldrid.SampleGallery
                     if (_needsResize)
                     {
                         _needsResize = false;
-                        MainSwapchain.Resize((uint)Width, (uint)Height);
+                        _frameLoop.ResizeSwapchain((uint)Width, (uint)Height);
                         Resized?.Invoke();
                     }
 
                     FlushInput();
 
-                    Update?.Invoke(elapsed);
-
                     if (Device != null)
                     {
-                        Render?.Invoke(elapsed);
+                        _frameLoop.RunFrame(HandleFrame);
                     }
                 }
                 catch (Exception e)
@@ -160,6 +164,16 @@ namespace Veldrid.SampleGallery
             }
         }
 
+        private void HandleFrame(CommandBuffer cb, uint frameIndex, Framebuffer fb)
+        {
+            double currentSeconds = _sw.Elapsed.TotalSeconds;
+            double elapsed = currentSeconds - _previousSeconds;
+            _previousSeconds = currentSeconds;
+
+            Update?.Invoke(elapsed);
+            Render?.Invoke(elapsed, cb);
+        }
+
         private void FlushInput()
         {
             lock (_inputState)
@@ -167,7 +181,6 @@ namespace Veldrid.SampleGallery
                 _inputState.MouseDelta = _inputState.MousePosition - _prevTouchPos;
                 _prevTouchPos = _inputState.MousePosition;
             }
-
         }
 
         private void HandleSurfaceDestroyed()

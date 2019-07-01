@@ -63,19 +63,19 @@ namespace Veldrid.SampleGallery
             gd.UpdateBuffer(_sampleRegionUB, 0, _lastMinMaxUV);
         }
 
-        public void Render(CommandList cl, ResourceSet rs, Vector2 minUV, Vector2 maxUV)
+        public void Render(CommandBuffer cb, ResourceSet rs, Vector2 minUV, Vector2 maxUV)
         {
             Vector4 newVal = new Vector4(minUV.X, minUV.Y, maxUV.X, maxUV.Y);
             if (_lastMinMaxUV != newVal)
             {
                 _lastMinMaxUV = newVal;
-                cl.UpdateBuffer(_sampleRegionUB, 0, newVal);
+                cb.UpdateBuffer(_sampleRegionUB, 0, newVal);
             }
 
-            cl.SetPipeline(_pipeline);
-            cl.SetGraphicsResourceSet(0, rs);
-            cl.SetGraphicsResourceSet(1, _sampleRegionSet);
-            cl.Draw(4);
+            cb.BindPipeline(_pipeline);
+            cb.BindGraphicsResourceSet(0, rs);
+            cb.BindGraphicsResourceSet(1, _sampleRegionSet);
+            cb.Draw(4);
         }
 
         public void Dispose()

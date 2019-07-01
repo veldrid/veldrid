@@ -4,12 +4,15 @@
     {
         public static GalleryConfig Global { get; set; } = new GalleryConfig();
 
-        public Framebuffer MainFB { get; set; }
+        public OutputDescription MainFBOutput { get; set; }
+        public ResourceLayout BlitterLayout { get; internal set; }
+
         /// <summary>
-        /// Contents:
+        /// An array of ResourceSets, one for each buffered frame.
+        /// Contents of each set:
         ///   0: UniformBuffer w/ <see cref="CameraInfo"/> struct.
         /// </summary>
-        public ResourceSet CameraInfoSet { get; set; }
+        public ResourceSet[] CameraInfoSets { get; set; }
         /// <summary>
         /// The layout for <see cref="CameraInfoSet"/>.
         /// </summary>
@@ -23,6 +26,8 @@
         /// The layout for <see cref="MainFBInfoSet"/>.
         /// </summary>
         public ResourceLayout MainFBInfoLayout { get; set; }
+        public float ViewWidth { get; set; }
+        public float ViewHeight { get; set; }
     }
 
     public struct FBInfo

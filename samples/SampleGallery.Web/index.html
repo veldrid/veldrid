@@ -6,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <script src="runtime.js"></script>
     <script defer src="Scripts/mono_support.js"></script>
-    <script defer src="Scripts/SkiaSharp.js"></script>
-    <script defer src="canvaskit.js"></script>
     <script defer src="mono.js"></script>
 </head>
     <body>
@@ -22,7 +20,7 @@
                     if (feedback) {
                         feedback.parentElement.removeChild(feedback);
                     }
-                    BINDING.call_static_method("[Samples] Samples.Program:Main", []);
+                    BINDING.call_static_method("[SampleGallery.Web] Veldrid.SampleGallery.Program:Main", []);
                 },
             };</script>
     

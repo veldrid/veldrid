@@ -1,26 +1,22 @@
-﻿using Humanizer;
-using Samples.Helpers;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Numerics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Veldrid;
 using WebAssembly;
 
-namespace Samples
+namespace Veldrid.SampleGallery
 {
     class Program
     {
         const int CanvasWidth = 640;
         const int CanvasHeight = 480;
-        static readonly Vector4 CanvasColor = new Vector4(255, 0, 255, 255);
 
         static Action<double> loop = new Action<double>(Loop);
         static double previousMilliseconds;
 
         static JSObject window;
+
         private static GraphicsDevice _gd;
         private static Stopwatch _sw;
         private static CommandBuffer[] _cbs;
@@ -35,19 +31,17 @@ namespace Samples
 
         static void Main()
         {
-            // Let's first check if we can continue with WebGL2 instead of crashing.
-            if (!isBrowserSupportsWebGL2())
+            if (!IsWebGL2Supported())
             {
-                HtmlHelper.AddParagraph("We are sorry, but your browser does not seem to support WebGL2.");
-                HtmlHelper.AddParagraph("See the <a href=\"https://github.com/WaveEngine/WebGL.NET\">GitHub repo</a>.");
+                HtmlHelper.AddParagraph("WebGL2 is required to run the Veldrid Sample Gallery.");
                 return;
             }
 
-            HtmlHelper.AddHeader1("Veldrid WebGL Backend");
+            HtmlHelper.AddHeader1("Veldrid Sample Gallery");
 
-            var divCanvasName = $"div_canvas";
-            var canvasName = $"canvas";
-            var canvas = HtmlHelper.AddCanvas(divCanvasName, canvasName, CanvasWidth, CanvasHeight);
+            string divCanvasName = $"div_canvas";
+            string canvasName = $"canvas";
+            JSObject canvas = HtmlHelper.AddCanvas(divCanvasName, canvasName, CanvasWidth, CanvasHeight);
             GraphicsDeviceOptions options = new GraphicsDeviceOptions();
             _gd = GraphicsDevice.CreateWebGL(options, canvas);
             _sw = Stopwatch.StartNew();
@@ -141,7 +135,7 @@ namespace Samples
             cb.EndRenderPass();
         }
 
-        static bool isBrowserSupportsWebGL2()
+        static bool IsWebGL2Supported()
         {
             if (window == null)
             {
@@ -273,6 +267,80 @@ void main()
             };
 
             return indices;
+        }
+    }
+
+    // Taken from https://github.com/WaveEngine/WebGL.NET/blob/ab82649a1d2d54f79249b2ba0f71b7cfe1c283f1/src/Samples/Helpers/HtmlHelper.cs
+    public static class HtmlHelper
+    {
+        public static JSObject AddCanvas(string divId, string canvasId, int width, int height)
+        {
+            using (var document = (JSObject)Runtime.GetGlobalObject("document"))
+            using (var body = (JSObject)document.GetObjectProperty("body"))
+            {
+                var canvas = (JSObject)document.Invoke("createElement", "canvas");
+                canvas.SetObjectProperty("width", width);
+                canvas.SetObjectProperty("height", height);
+                canvas.SetObjectProperty("id", canvasId);
+
+                using (var canvasDiv = (JSObject)document.Invoke("createElement", "div"))
+                {
+                    canvasDiv.SetObjectProperty("id", divId);
+                    canvasDiv.Invoke("appendChild", canvas);
+
+                    body.Invoke("appendChild", canvasDiv);
+                }
+
+                return canvas;
+            }
+        }
+
+        public static void AddHeader(int headerIndex, string text)
+        {
+            using (var document = (JSObject)Runtime.GetGlobalObject("document"))
+            using (var body = (JSObject)document.GetObjectProperty("body"))
+            using (var header = (JSObject)document.Invoke("createElement", $"h{headerIndex}"))
+            using (var headerText = (JSObject)document.Invoke("createTextNode", text))
+            {
+                header.Invoke("appendChild", headerText);
+                body.Invoke("appendChild", header);
+            }
+        }
+
+        public static void AddHeader1(string text) => AddHeader(1, text);
+
+        public static void AddHeader2(string text) => AddHeader(2, text);
+
+        public static void AddParagraph(string text)
+        {
+            using (var document = (JSObject)Runtime.GetGlobalObject("document"))
+            using (var body = (JSObject)document.GetObjectProperty("body"))
+            using (var paragraph = (JSObject)document.Invoke("createElement", "p"))
+            {
+                paragraph.SetObjectProperty("innerHTML", text);
+                body.Invoke("appendChild", paragraph);
+            }
+        }
+
+        public static void AddButton(string id, string text)
+        {
+            using (var document = (JSObject)Runtime.GetGlobalObject("document"))
+            using (var body = (JSObject)document.GetObjectProperty("body"))
+            using (var button = (JSObject)document.Invoke("createElement", "button"))
+            {
+                button.SetObjectProperty("innerHTML", text);
+                button.SetObjectProperty("id", id);
+                body.Invoke("appendChild", button);
+            }
+        }
+
+        public static void AttachButtonOnClickEvent(string id, Action<JSObject> onClickAction)
+        {
+            using (var document = (JSObject)Runtime.GetGlobalObject("document"))
+            using (var button = (JSObject)document.Invoke("getElementById", id))
+            {
+                button.SetObjectProperty("onclick", onClickAction);
+            }
         }
     }
 }

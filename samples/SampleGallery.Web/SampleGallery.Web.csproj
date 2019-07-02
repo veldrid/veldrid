@@ -16,19 +16,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepositoryRootDirectory)\veldrid\src\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid\Veldrid.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="canvaskit.js" />
     <None Remove="index.html" />
     <None Remove="Scripts\mono_support.js" />
     <None Remove="Scripts\SkiaSharp.js" />
-    
-    <None Remove="canvaskit.wasm" />
-    <Content Include="canvaskit.wasm">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   
   <ItemGroup>

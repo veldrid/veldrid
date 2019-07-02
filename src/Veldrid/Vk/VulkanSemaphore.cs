@@ -27,5 +27,7 @@ namespace Veldrid.Vk
         {
             vkDestroySemaphore(_gd.Device, NativeSemaphore, null);
         }
+
+        public override string ToString() => string.Format("Vulkan Semaphore [{0}]", _semaphore.Handle.ToString("X"));
     }
 }

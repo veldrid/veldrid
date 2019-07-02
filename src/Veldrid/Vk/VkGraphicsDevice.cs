@@ -1412,7 +1412,6 @@ namespace Veldrid.Vk
             {
                 VkResult presentResult = vkQueuePresentKHR(_universalQueue, &pi);
             }
-
         }
 
         private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
@@ -1431,7 +1430,22 @@ namespace Veldrid.Vk
                 vkSemaphore?.NativeSemaphore ?? VkSemaphore.Null,
                 vkFence?.DeviceFence ?? Vulkan.VkFence.Null,
                 ref imageIndex);
-            CheckResult(result);
+            if (result == VkResult.ErrorOutOfDateKHR)
+            {
+                vkSwapchain.Resize(vkSwapchain.Width, vkSwapchain.Height);
+                imageIndex = 0;
+                result = vkAcquireNextImageKHR(
+                    _device,
+                    vkSwapchain.DeviceSwapchain,
+                    ulong.MaxValue,
+                    vkSemaphore?.NativeSemaphore ?? VkSemaphore.Null,
+                    vkFence?.DeviceFence ?? Vulkan.VkFence.Null,
+                    ref imageIndex);
+            }
+            else
+            {
+                CheckResult(result);
+            }
             return imageIndex;
         }
 

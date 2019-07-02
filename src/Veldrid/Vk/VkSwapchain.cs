@@ -88,7 +88,14 @@ namespace Veldrid.Vk
 
         public override void Resize(uint width, uint height)
         {
-            RecreateAndReacquire(width, height);
+            if (width != Width || height != Height)
+            {
+                CreateSwapchain(width, height);
+            }
+            else
+            {
+                Console.WriteLine($"Ignoring resize.");
+            }
         }
 
         public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, Vulkan.VkFence fence)

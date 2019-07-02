@@ -63,13 +63,11 @@ namespace Veldrid.NeoDemo
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, GraphicsBackend.Direct3D11, out _window, out _gd);
+            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, GraphicsBackend.Vulkan, out _window, out _gd);
             _swapchain = _gd.MainSwapchain;
-            // _gd = GraphicsDevice.CreateOpenGL(gdOptions);
-            // SwapchainSource ss = VeldridStartup.GetSwapchainSource(_window);
-            // _swapchain = _gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(ss, null, false, _colorSrgb));
             SwapchainFormat = _swapchain.Framebuffers[0].ColorTargets[0].Target.Format;
             SwapchainBufferCount = _swapchain.BufferCount;
+
             _window.Resized += () => _windowResized = true;
 
             _frameLoop = new StandardFrameLoop(_gd, _swapchain);
@@ -240,6 +238,7 @@ namespace Veldrid.NeoDemo
             }
 
             DestroyAllObjects();
+            _frameLoop.Dispose();
             _gd.Dispose();
         }
 
@@ -617,10 +616,15 @@ namespace Veldrid.NeoDemo
             gdOptions.Debug = true;
 #endif
             _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend);
+            _swapchain = _gd.MainSwapchain;
+            SwapchainFormat = _swapchain.Framebuffers[0].ColorTargets[0].Target.Format;
+            SwapchainBufferCount = _swapchain.BufferCount;
+            _frameLoop = new StandardFrameLoop(_gd, _swapchain);
 
             _scene.Camera.UpdateBackend(_gd);
 
             CreateAllObjects();
+            FrameIndex = _frameLoop.FrameIndex;
         }
 
         private void DestroyAllObjects()

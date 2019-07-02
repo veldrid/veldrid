@@ -393,6 +393,11 @@ namespace Veldrid.Vk
                     vkDestroyImageView(_gd.Device, view, null);
                 }
 
+                foreach (KeyValuePair<RenderPassDescription, VkRenderPass> kvp in _renderPasses)
+                {
+                    vkDestroyRenderPass(_gd.Device, kvp.Value, null);
+                }
+
                 _destroyed = true;
             }
         }

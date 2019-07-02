@@ -20,6 +20,7 @@ namespace Veldrid.Vk
         private VkPipeline _currentGraphicsPipeline;
         private VkFramebuffer _currentFB;
         private VkPipeline _currentComputePipeline;
+        private bool _disposed;
 
         public override string Name
         {
@@ -76,7 +77,11 @@ namespace Veldrid.Vk
         public override void Dispose()
         {
             // TODO: Ref-counted disposal.
-            vkDestroyCommandPool(_gd.Device, _pool, null);
+            if (!_disposed)
+            {
+                _disposed = true;
+                vkDestroyCommandPool(_gd.Device, _pool, null);
+            }
         }
 
         internal override void BeginRenderPassCore(in RenderPassDescription rpi)

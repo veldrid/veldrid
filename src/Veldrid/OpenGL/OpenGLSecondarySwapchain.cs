@@ -68,6 +68,8 @@ namespace Veldrid.OpenGL
 
         public override Framebuffer[] Framebuffers => _framebuffers;
 
+        public override uint LastAcquiredImage => throw new NotImplementedException();
+
         public void DestroyGLResources()
         {
             if (!_disposed)

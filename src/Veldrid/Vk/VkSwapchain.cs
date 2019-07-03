@@ -47,6 +47,8 @@ namespace Veldrid.Vk
 
         public override Framebuffer[] Framebuffers => _framebuffers;
 
+        public override uint LastAcquiredImage => _currentImageIndex;
+
         public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description) : this(gd, ref description, VkSurfaceKHR.Null) { }
 
         public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description, VkSurfaceKHR existingSurface)
@@ -88,14 +90,12 @@ namespace Veldrid.Vk
 
         public override void Resize(uint width, uint height)
         {
-            if (width != Width || height != Height)
-            {
-                CreateSwapchain(width, height);
-            }
-            else
-            {
-                Console.WriteLine($"Ignoring resize.");
-            }
+            CreateSwapchain(width, height);
+        }
+
+        public void RecreateSwapchain()
+        {
+            CreateSwapchain(Width, Height);
         }
 
         public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, Vulkan.VkFence fence)
@@ -161,7 +161,6 @@ namespace Veldrid.Vk
                 _gd.WaitForIdle();
             }
 
-            _currentImageIndex = 0;
             uint surfaceFormatCount = 0;
             result = vkGetPhysicalDeviceSurfaceFormatsKHR(_gd.PhysicalDevice, _surface, ref surfaceFormatCount, null);
             CheckResult(result);
@@ -234,6 +233,7 @@ namespace Veldrid.Vk
 
             uint maxImageCount = surfaceCapabilities.maxImageCount == 0 ? uint.MaxValue : surfaceCapabilities.maxImageCount;
             uint imageCount = Math.Min(maxImageCount, surfaceCapabilities.minImageCount + 1);
+            _currentImageIndex = imageCount - 1;
 
             VkSwapchainCreateInfoKHR swapchainCI = VkSwapchainCreateInfoKHR.New();
             swapchainCI.surface = _surface;
@@ -321,6 +321,11 @@ namespace Veldrid.Vk
             vkDestroyFence(_gd.Device, _imageAvailableFence, null);
             _framebuffer.Dispose();
             vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
+        }
+
+        internal void SetLastImageIndex(uint imageIndex)
+        {
+            _currentImageIndex = imageIndex;
         }
     }
 }

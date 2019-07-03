@@ -16,7 +16,7 @@ namespace Veldrid.D3D11
         private D3D11Framebuffer[] _framebuffers;
         private D3D11Texture _depthTexture;
         private float _pixelScale = 1f;
-        private uint _imageIndex = 0;
+        private uint _imageIndex;
 
         private readonly object _referencedCommandsLock = new object();
         private HashSet<D3D11CommandList> _referencedCLs = new HashSet<D3D11CommandList>();
@@ -44,7 +44,7 @@ namespace Veldrid.D3D11
 
         public override Framebuffer[] Framebuffers => _framebuffers;
 
-        public uint AcquiredImageIndex => _imageIndex;
+        public override uint LastAcquiredImage => _imageIndex;
 
         public D3D11Swapchain(SharpDX.Direct3D11.Device device, ref SwapchainDescription description)
         {
@@ -128,6 +128,7 @@ namespace Veldrid.D3D11
             }
 
             _bufferCount = (uint)_dxgiSwapChain.Description.BufferCount;
+            _imageIndex = _bufferCount - 1;
 
             Resize(description.Width, description.Height);
         }
@@ -198,6 +199,8 @@ namespace Veldrid.D3D11
                     _framebuffers[i].Swapchain = this;
                 }
             }
+
+            _imageIndex = _bufferCount - 1;
         }
 
         public void AddCommandListReference(D3D11CommandList cl)

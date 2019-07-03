@@ -1178,9 +1178,17 @@ namespace Veldrid.OpenGL
             _executionThread.SwapBuffers(swapchain);
         }
 
-        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        private protected override AcquireResult AcquireNextImageCore(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex)
         {
-            return 0;
+            OpenGLSwapchain glSC = Util.AssertSubtype<Swapchain, OpenGLSwapchain>(swapchain);
+            glSC.AcquireNextImage();
+            imageIndex = glSC.LastAcquiredImage;
+            (fence as OpenGLFence)?.Set();
+            return AcquireResult.Success;
         }
 
         private class ExecutionThread

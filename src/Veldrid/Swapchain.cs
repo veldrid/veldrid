@@ -20,8 +20,9 @@ namespace Veldrid
 
         public abstract Framebuffer[] Framebuffers { get; }
 
-        public uint BufferCount => (uint)Framebuffers.Length;
+        public abstract uint LastAcquiredImage { get; }
 
+        public uint BufferCount => (uint)Framebuffers.Length;
         public uint Width => Framebuffers[0].Width;
         public uint Height => Framebuffers[0].Height;
 

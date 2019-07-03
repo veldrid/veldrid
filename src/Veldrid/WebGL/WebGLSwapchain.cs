@@ -3,6 +3,7 @@
     internal class WebGLSwapchain : Swapchain
     {
         private WebGLGraphicsDevice _gd;
+        private uint _lastAcquiredImage;
 
         public WebGLSwapchain(WebGLGraphicsDevice gd)
         {
@@ -21,18 +22,18 @@
 
         public override Framebuffer[] Framebuffers { get; }
 
-        public override bool SyncToVerticalBlank { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-        public override string Name { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override bool SyncToVerticalBlank { get; set; }
+        public override string Name { get; set; }
 
-        public override void Dispose()
-        {
-            throw new System.NotImplementedException();
-        }
+        public override uint LastAcquiredImage => _lastAcquiredImage;
+
 
         public override void Resize(uint width, uint height)
         {
-            throw new System.NotImplementedException();
         }
 
+        public override void Dispose()
+        {
+        }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
@@ -11,7 +10,6 @@ namespace Veldrid.MTL
         private readonly MTLGraphicsDevice _gd;
         private UIView _uiView; // Valid only when a UIViewSwapchainSource is used.
         private bool _syncToVerticalBlank;
-
         private CAMetalDrawable _drawable;
 
         public override Framebuffer Framebuffer => _framebuffer;
@@ -32,6 +30,8 @@ namespace Veldrid.MTL
         public CAMetalDrawable CurrentDrawable => _drawable;
 
         public override Framebuffer[] Framebuffers => throw new NotImplementedException();
+
+        public override uint LastAcquiredImage => throw new NotImplementedException();
 
         public MTLSwapchain(MTLGraphicsDevice gd, ref SwapchainDescription description)
         {

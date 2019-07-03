@@ -88,10 +88,15 @@ namespace Veldrid.WebGL
             throw new NotImplementedException();
         }
 
-        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        private protected override AcquireResult AcquireNextImageCore(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex)
         {
-            Util.AssertSubtype<Fence, WebGLFence>(fence).Set();
-            return 0;
+            (fence as WebGLFence)?.Set();
+            imageIndex = 0;
+            return AcquireResult.Success;
         }
 
         private protected override bool GetPixelFormatSupportCore(

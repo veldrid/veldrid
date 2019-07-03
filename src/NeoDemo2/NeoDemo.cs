@@ -562,8 +562,7 @@ namespace Veldrid.NeoDemo
             if (_windowResized)
             {
                 _windowResized = false;
-
-                _frameLoop.ResizeSwapchain((uint)width, (uint)height);
+                _swapchain.Resize((uint)width, (uint)height);
 
                 _scene.Camera.WindowResized(width, height);
                 _resizeHandled?.Invoke(width, height);
@@ -590,6 +589,7 @@ namespace Veldrid.NeoDemo
         {
             DestroyAllObjects();
             bool syncToVBlank = _gd.SyncToVerticalBlank;
+            _frameLoop.Dispose();
             _gd.Dispose();
 
             if (_recreateWindow)

@@ -573,7 +573,11 @@ namespace Veldrid.MTL
             throw new NotImplementedException();
         }
 
-        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        private protected override AcquireResult AcquireNextImageCore(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex)
         {
             throw new NotImplementedException();
         }

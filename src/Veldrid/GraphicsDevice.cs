@@ -233,12 +233,20 @@ namespace Veldrid
 
         private protected abstract void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index);
 
-        public uint AcquireNextImage(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        public AcquireResult AcquireNextImage(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex)
         {
-            return AcquireNextImageCore(swapchain, semaphore, fence);
+            return AcquireNextImageCore(swapchain, semaphore, fence, out imageIndex);
         }
 
-        private protected abstract uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence);
+        private protected abstract AcquireResult AcquireNextImageCore(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex);
 
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> object representing the render targets of the main swapchain.
@@ -1188,5 +1196,11 @@ namespace Veldrid
                     throw Illegal.Value<GraphicsBackend>();
             }
         }
+    }
+
+    public enum AcquireResult
+    {
+        Success,
+        OutOfDate,
     }
 }

@@ -594,22 +594,27 @@ namespace Veldrid.D3D11
             D3D11Swapchain d3d11SC = Util.AssertSubtype<Swapchain, D3D11Swapchain>(swapchain);
             lock (_immediateContextLock)
             {
-                if (d3d11SC.AcquiredImageIndex != index)
+                if (d3d11SC.LastAcquiredImage != index)
                 {
                     throw new VeldridException(
                         $"Attempted to present image {index}, " +
-                        $"but image {d3d11SC.AcquiredImageIndex} is currently acquired.");
+                        $"but image {d3d11SC.LastAcquiredImage} is currently acquired.");
                 }
                  var result = d3d11SC.DxgiSwapChain.Present(d3d11SC.SyncInterval, PresentFlags.None);
             }
         }
 
-        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        private protected override AcquireResult AcquireNextImageCore(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex)
         {
             D3D11Swapchain d3d11SC = Util.AssertSubtype<Swapchain, D3D11Swapchain>(swapchain);
             d3d11SC.AcquireNextImage();
             (fence as D3D11Fence)?.Set();
-            return d3d11SC.AcquiredImageIndex;
+            imageIndex = d3d11SC.LastAcquiredImage;
+            return AcquireResult.Success;
         }
     }
 }

@@ -1414,7 +1414,11 @@ namespace Veldrid.Vk
             }
         }
 
-        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        private protected override AcquireResult AcquireNextImageCore(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex)
         {
             VkSwapchain vkSwapchain = Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain);
             VulkanSemaphore vkSemaphore = semaphore != null
@@ -1422,7 +1426,8 @@ namespace Veldrid.Vk
                 : null;
             VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
 
-            uint imageIndex = 0;
+            AcquireResult acquireResult = AcquireResult.Success;
+            imageIndex = 0;
             VkResult result = vkAcquireNextImageKHR(
                 _device,
                 vkSwapchain.DeviceSwapchain,
@@ -1432,7 +1437,7 @@ namespace Veldrid.Vk
                 ref imageIndex);
             if (result == VkResult.ErrorOutOfDateKHR)
             {
-                vkSwapchain.Resize(vkSwapchain.Width, vkSwapchain.Height);
+                vkSwapchain.RecreateSwapchain();
                 imageIndex = 0;
                 result = vkAcquireNextImageKHR(
                     _device,
@@ -1441,12 +1446,16 @@ namespace Veldrid.Vk
                     vkSemaphore?.NativeSemaphore ?? VkSemaphore.Null,
                     vkFence?.DeviceFence ?? Vulkan.VkFence.Null,
                     ref imageIndex);
+                acquireResult = AcquireResult.OutOfDate;
             }
             else
             {
                 CheckResult(result);
             }
-            return imageIndex;
+
+            vkSwapchain.SetLastImageIndex(imageIndex);
+
+            return acquireResult;
         }
 
         private protected override void SubmitCommandsCore(

@@ -9,12 +9,14 @@ namespace Veldrid.OpenGL
         private readonly Action<uint, uint> _resizeAction;
         private readonly SwapchainSource _swapchainSource;
 
+        private uint _lastAcquiredImage;
+
         public override Framebuffer Framebuffer => _framebuffer;
         public override bool SyncToVerticalBlank { get => _gd.SyncToVerticalBlank; set => _gd.SyncToVerticalBlank = value; }
         public override string Name { get; set; } = "OpenGL Context Swapchain";
 
         public override Framebuffer[] Framebuffers { get; }
-
+        public override uint LastAcquiredImage => _lastAcquiredImage;
         public OpenGLSwapchain(
             OpenGLGraphicsDevice gd,
             OpenGLSwapchainFramebuffer framebuffer,
@@ -24,6 +26,7 @@ namespace Veldrid.OpenGL
             _gd = gd;
             _framebuffer = framebuffer;
             Framebuffers = new[] { _framebuffer, _framebuffer };
+            _lastAcquiredImage = BufferCount - 1;
             _resizeAction = resizeAction;
             _swapchainSource = swapchainSource;
         }
@@ -32,6 +35,12 @@ namespace Veldrid.OpenGL
         {
             _framebuffer.Resize(width, height);
             _resizeAction?.Invoke(width, height);
+            _lastAcquiredImage = BufferCount - 1;
+        }
+
+        public void AcquireNextImage()
+        {
+            _lastAcquiredImage = (LastAcquiredImage + 1) % BufferCount;
         }
 
         public override void Dispose()

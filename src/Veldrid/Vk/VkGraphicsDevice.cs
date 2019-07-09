@@ -1471,8 +1471,95 @@ namespace Veldrid.Vk
             si.commandBufferCount = 1;
             si.pCommandBuffers = &nativeCB;
 
-            VkSemaphore vkWait = (wait as VulkanSemaphore)?.NativeSemaphore ?? VkSemaphore.Null;
             si.waitSemaphoreCount = wait != null ? 1u : 0u;
+            VkSemaphore vkWait = (wait as VulkanSemaphore)?.NativeSemaphore ?? VkSemaphore.Null;
+            si.pWaitSemaphores = &vkWait;
+
+            si.signalSemaphoreCount = signal != null ? 1u : 0u;
+            VkSemaphore vkSignal = (signal as VulkanSemaphore)?.NativeSemaphore ?? VkSemaphore.Null;
+            si.pSignalSemaphores = &vkSignal;
+
+            // TODO: Wrong
+            VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
+            si.pWaitDstStageMask = &waitDstStageMask;
+
+            lock (_universalQueueLock)
+            {
+                VkResult result = vkQueueSubmit(_universalQueue, 1, &si, vkFence?.DeviceFence ?? Vulkan.VkFence.Null);
+                CheckResult(result);
+            }
+        }
+
+        private protected override void SubmitCommandsCore(
+            CommandBuffer[] commandBuffers,
+            Semaphore[] waits,
+            Semaphore[] signals,
+            Fence fence)
+        {
+            VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
+
+            VkSubmitInfo si = VkSubmitInfo.New();
+
+            VkCommandBuffer* nativeCBs = stackalloc VkCommandBuffer[commandBuffers.Length];
+            si.commandBufferCount = (uint)commandBuffers.Length;
+            for (int i = 0; i < commandBuffers.Length; i++)
+            {
+                CommandBuffer commandBuffer = commandBuffers[i];
+                VulkanCommandBuffer vkCB = Util.AssertSubtype<CommandBuffer, VulkanCommandBuffer>(commandBuffer);
+                VkCommandBuffer nativeCB = vkCB.GetSubmissionCB();
+                si.pCommandBuffers[i] = nativeCB;
+            }
+
+            VkSemaphore* vkWaits = stackalloc VkSemaphore[waits.Length];
+            si.waitSemaphoreCount = (uint)waits.Length;
+            for (int i = 0; i < waits.Length; i++)
+            {
+                VkSemaphore vkWait = Util.AssertSubtype<Semaphore, VulkanSemaphore>(waits[i]).NativeSemaphore;
+                si.pWaitSemaphores[i] = vkWait.Handle;
+            }
+
+            VkSemaphore* vkSignals = stackalloc VkSemaphore[signals.Length];
+            si.signalSemaphoreCount = (uint)signals.Length;
+            for (int i = 0; i < signals.Length; i++)
+            {
+                VkSemaphore vkSignal = Util.AssertSubtype<Semaphore, VulkanSemaphore>(signals[i]).NativeSemaphore;
+                si.pSignalSemaphores[i] = vkSignal.Handle;
+            }
+
+            // TODO: Wrong
+            VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
+            si.pWaitDstStageMask = &waitDstStageMask;
+
+            lock (_universalQueueLock)
+            {
+                VkResult result = vkQueueSubmit(_universalQueue, 1, &si, vkFence?.DeviceFence ?? Vulkan.VkFence.Null);
+                CheckResult(result);
+            }
+        }
+
+        private protected override void SubmitCommandsCore(
+            CommandBuffer[] commandBuffers,
+            Semaphore wait,
+            Semaphore signal,
+            Fence fence)
+        {
+            VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
+
+            VkSubmitInfo si = VkSubmitInfo.New();
+
+            VkCommandBuffer* nativeCBs = stackalloc VkCommandBuffer[commandBuffers.Length];
+            si.commandBufferCount = (uint)commandBuffers.Length;
+            si.pCommandBuffers = nativeCBs;
+            for (int i = 0; i < commandBuffers.Length; i++)
+            {
+                CommandBuffer commandBuffer = commandBuffers[i];
+                VulkanCommandBuffer vkCB = Util.AssertSubtype<CommandBuffer, VulkanCommandBuffer>(commandBuffer);
+                VkCommandBuffer nativeCB = vkCB.GetSubmissionCB();
+                si.pCommandBuffers[i] = nativeCB;
+            }
+
+            si.waitSemaphoreCount = wait != null ? 1u : 0u;
+            VkSemaphore vkWait = (wait as VulkanSemaphore)?.NativeSemaphore ?? VkSemaphore.Null;
             si.pWaitSemaphores = &vkWait;
 
             si.signalSemaphoreCount = signal != null ? 1u : 0u;

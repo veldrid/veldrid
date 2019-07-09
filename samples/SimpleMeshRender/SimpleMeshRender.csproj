@@ -2,19 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <ShaderVariantDef>shader-variants.json</ShaderVariantDef>
+    <EmbedGeneratedShaders>true</EmbedGeneratedShaders>
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\src\Veldrid.VirtualReality.Sample\cat\cat_diff.png"
-                      Link="cat_diff.png"
-                      LogicalName="cat_diff.png" />
-    <EmbeddedResource Include="..\..\src\Veldrid.VirtualReality.Sample\cat\cat.obj"
-                      Link="cat.obj"
-                      LogicalName="cat.obj" />
+    <ShaderSourceDir Include="$(MSBuildThisFileDirectory)Shaders" />
+  </ItemGroup>
 
-    <EmbeddedResource Include="..\..\src\Veldrid.VirtualReality.Sample\skybox\**"
-                      Link="%(Filename)%(Extension)"
-                      LogicalName="%(FileName)%(Extension)" />
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\src\Veldrid.VirtualReality.Sample\cat\cat_diff.png" Link="cat_diff.png" LogicalName="cat_diff.png" />
+    <EmbeddedResource Include="..\..\src\Veldrid.VirtualReality.Sample\cat\cat.obj" Link="cat.obj" LogicalName="cat.obj" />
+
+    <EmbeddedResource Include="..\..\src\Veldrid.VirtualReality.Sample\skybox\**" Link="%(Filename)%(Extension)" LogicalName="%(FileName)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,7 +22,9 @@
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid/Veldrid.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.Utilities\Veldrid.Utilities.csproj" />
     <ProjectReference Include="..\AssetPrimitives\AssetPrimitives.csproj" />
-    <ProjectReference Include="..\SampleGallery.Core\SampleGallery.Core.csproj" />
+    <ProjectReference Include="..\SampleGallery.Core\Gallery.Core.csproj" />
+
+    <PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.10" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

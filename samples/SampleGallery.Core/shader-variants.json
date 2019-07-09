@@ -1,0 +1,135 @@
+[
+  {
+    "Name": "TextureBlitter",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "blitter-vertex.glsl"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "blitter-fragment.glsl"
+      }
+    ],
+    "CrossCompileOptions": {
+      "FixClipSpaceZ": false,
+      "InvertVertexOutputY": false,
+    },
+    "Targets": [
+      "MSL",
+      "HLSL"
+    ]
+  },
+  {
+    "Name": "TextureBlitter",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "blitter-vertex.glsl"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "blitter-fragment.glsl"
+      }
+    ],
+    "CrossCompileOptions": {
+      "FixClipSpaceZ": false,
+      "InvertVertexOutputY": false,
+      "Specializations": [
+        {
+          "ID": "1",
+          "Type": "Bool",
+          "Data": 1
+        }
+      ]
+    },
+    "Targets": [
+      "ESSL",
+      "GLSL",
+    ]
+  },
+  {
+    "Name": "TextureBlitter_SRGB",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "blitter-vertex.glsl"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "blitter-fragment.glsl"
+      }
+    ],
+    "CrossCompileOptions": {
+      "FixClipSpaceZ": false,
+      "InvertVertexOutputY": false,
+      "Specializations": [
+        {
+          "ID": "0",
+          "Type": "Bool",
+          "Data": 1
+        },
+      ]
+    },
+    "Targets": [
+      "MSL",
+      "HLSL"
+    ]
+  },
+  {
+    "Name": "TextureBlitter_SRGB",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "blitter-vertex.glsl"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "blitter-fragment.glsl"
+      }
+    ],
+    "CrossCompileOptions": {
+      "FixClipSpaceZ": false,
+      "InvertVertexOutputY": false,
+      "Specializations": [
+        {
+          "ID": "0",
+          "Type": "Bool",
+          "Data": 1
+        },
+        {
+          "ID": "1",
+          "Type": "Bool",
+          "Data": 1
+        }
+      ]
+    },
+    "Targets": [
+      "ESSL",
+      "GLSL",
+    ]
+  },
+  {
+    "Name": "Skybox",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "skybox-vertex.glsl"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "skybox-fragment.glsl"
+      }
+    ],
+    "CrossCompileOptions": {
+      "FixClipSpaceZ": false,
+      "InvertVertexOutputY": false,
+    },
+    "Targets": [
+      "ESSL",
+      "GLSL",
+      "MSL",
+      "HLSL"
+    ]
+  }
+]

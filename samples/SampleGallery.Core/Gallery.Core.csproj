@@ -3,22 +3,30 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Veldrid.SampleGallery</RootNamespace>
+    <ShaderVariantDef>shader-variants.json</ShaderVariantDef>
+    <EmbedGeneratedShaders>true</EmbedGeneratedShaders>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ShaderSourceDir Include="$(MSBuildThisFileDirectory)Shaders" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\..\src\CommandBuffer.Demo\StandardFrameLoop.cs" Link="StandardFrameLoop.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Veldrid.SPIRV" Version="1.0.9" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.Utilities\Veldrid.Utilities.csproj" />
-    <ProjectReference Include="..\..\src\Veldrid.ImGui\Veldrid.ImGui.csproj" />
-    <ProjectReference Include="..\..\src\Veldrid.InputPrimitives\Veldrid.InputPrimitives.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.ImGui\Veldrid.ImGui.csproj" />
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.InputPrimitives\Veldrid.InputPrimitives.csproj" />
     <ProjectReference Include="..\AssetProcessor\AssetProcessor.csproj" />
+
+    <PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.10" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

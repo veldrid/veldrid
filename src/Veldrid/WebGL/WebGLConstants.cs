@@ -562,5 +562,26 @@
         public const uint MAX_VARYING_COMPONENTS = 35659;
         public const uint MAX_PROGRAM_TEXEL_OFFSET = 35077;
         public const uint RGB9_E5 = 35901;
+
+        // https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/
+        public const uint COMPRESSED_RGB_S3TC_DXT1_EXT = 0x83F0;
+        public const uint COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1;
+        public const uint COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2;
+        public const uint COMPRESSED_RGBA_S3TC_DXT5_EXT = 0x83F3;
+
+        // https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_compression_rgtc.txt
+        public const uint COMPRESSED_RED_RGTC1_EXT = 0x8DBB;
+        public const uint COMPRESSED_SIGNED_RED_RGTC1_EXT = 0x8DBC;
+        public const uint COMPRESSED_RED_GREEN_RGTC2_EXT = 0x8DBD;
+        public const uint COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT = 0x8DBE;
+
+        // https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_bptc/
+        public const uint COMPRESSED_RGBA_BPTC_UNORM_EXT = 0x8E8C;
+        public const uint COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT = 0x8E8D;
+        public const uint COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT = 0x8E8E;
+        public const uint COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT = 0x8E8F;
+
+        // https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/
+        public const uint COMPRESSED_RGB_ETC1_WEBGL = 0x8D64;
     }
 }

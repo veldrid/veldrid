@@ -568,6 +568,16 @@ namespace Veldrid.MTL
             throw new NotImplementedException();
         }
 
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore[] waits, Semaphore[] signals, Fence fence)
+        {
+            throw new NotImplementedException();
+        }
+
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore wait, Semaphore signal, Fence fence)
+        {
+            throw new NotImplementedException();
+        }
+
         private protected override void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index)
         {
             throw new NotImplementedException();

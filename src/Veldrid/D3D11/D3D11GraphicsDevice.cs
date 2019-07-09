@@ -589,6 +589,34 @@ namespace Veldrid.D3D11
             (fence as D3D11Fence)?.Set();
         }
 
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore[] waits, Semaphore[] signals, Fence fence)
+        {
+            lock (_immediateContextLock)
+            {
+                foreach (CommandBuffer commandBuffer in commandBuffers)
+                {
+                    D3D11CommandBuffer d3d11CB = Util.AssertSubtype<CommandBuffer, D3D11CommandBuffer>(commandBuffer);
+                    SharpDX.Direct3D11.CommandList list = d3d11CB.GetCompletedList();
+                    _immediateContext.ExecuteCommandList(list, false);
+                }
+            }
+            (fence as D3D11Fence)?.Set();
+        }
+
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore wait, Semaphore signal, Fence fence)
+        {
+            lock (_immediateContextLock)
+            {
+                foreach (CommandBuffer commandBuffer in commandBuffers)
+                {
+                    D3D11CommandBuffer d3d11CB = Util.AssertSubtype<CommandBuffer, D3D11CommandBuffer>(commandBuffer);
+                    SharpDX.Direct3D11.CommandList list = d3d11CB.GetCompletedList();
+                    _immediateContext.ExecuteCommandList(list, false);
+                }
+            }
+            (fence as D3D11Fence)?.Set();
+        }
+
         private protected override void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index)
         {
             D3D11Swapchain d3d11SC = Util.AssertSubtype<Swapchain, D3D11Swapchain>(swapchain);
@@ -600,7 +628,7 @@ namespace Veldrid.D3D11
                         $"Attempted to present image {index}, " +
                         $"but image {d3d11SC.LastAcquiredImage} is currently acquired.");
                 }
-                 var result = d3d11SC.DxgiSwapChain.Present(d3d11SC.SyncInterval, PresentFlags.None);
+                var result = d3d11SC.DxgiSwapChain.Present(d3d11SC.SyncInterval, PresentFlags.None);
             }
         }
 

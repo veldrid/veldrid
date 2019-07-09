@@ -13,5 +13,13 @@ namespace Veldrid.SampleGallery
                 t.Dispose();
             }
         }
+
+        internal static void EnsureArraySize(ref CommandBuffer[] array, int length)
+        {
+            if (array.Length != length)
+            {
+                Array.Resize(ref array, length);
+            }
+        }
     }
 }

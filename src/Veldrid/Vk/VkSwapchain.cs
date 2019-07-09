@@ -81,10 +81,6 @@ namespace Veldrid.Vk
             fenceCI.flags = VkFenceCreateFlags.None;
             vkCreateFence(_gd.Device, ref fenceCI, null, out _imageAvailableFence);
 
-            // AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence);
-            // vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-            // vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
-
             RefCount = new ResourceRefCount(DisposeCore);
         }
 
@@ -233,7 +229,6 @@ namespace Veldrid.Vk
 
             uint maxImageCount = surfaceCapabilities.maxImageCount == 0 ? uint.MaxValue : surfaceCapabilities.maxImageCount;
             uint imageCount = Math.Min(maxImageCount, surfaceCapabilities.minImageCount + 1);
-            _currentImageIndex = imageCount - 1;
 
             VkSwapchainCreateInfoKHR swapchainCI = VkSwapchainCreateInfoKHR.New();
             swapchainCI.surface = _surface;
@@ -277,6 +272,7 @@ namespace Veldrid.Vk
 
             _framebuffer.SetNewSwapchain(_deviceSwapchain, width, height, surfaceFormat, swapchainCI.imageExtent);
             _framebuffers = _framebuffer.Framebuffers;
+            _currentImageIndex = (uint)(_framebuffers.Length - 1);
             return true;
         }
 

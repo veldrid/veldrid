@@ -20,7 +20,7 @@ namespace Veldrid.SampleGallery
         private bool _surfaceCreated;
         private Vector2 _prevTouchPos;
         private readonly InputState _inputState = new InputState();
-        private StandardFrameLoop _frameLoop;
+        private AdvancedFrameLoop _frameLoop;
         private Stopwatch _sw;
         private double _previousSeconds;
 
@@ -33,11 +33,13 @@ namespace Veldrid.SampleGallery
 
         public uint BufferCount => MainSwapchain.BufferCount;
 
+        public bool SupportsImGui => true;
+
         public event Action DeviceCreated;
         public event Action DeviceDisposed;
         public event Action Resized;
         public event Action<double> Update;
-        public event Action<double, CommandBuffer> Render;
+        public event Func<double, CommandBuffer[]> Render;
 
         public VeldridSurfaceView(Context context, GraphicsBackend backend)
             : this(context, backend, new GraphicsDeviceOptions())
@@ -100,7 +102,7 @@ namespace Veldrid.SampleGallery
                 deviceCreated = true;
             }
 
-            _frameLoop = new StandardFrameLoop(Device, MainSwapchain);
+            _frameLoop = new AdvancedFrameLoop(Device, MainSwapchain);
 
             if (deviceCreated)
             {
@@ -145,7 +147,7 @@ namespace Veldrid.SampleGallery
                     if (_needsResize)
                     {
                         _needsResize = false;
-                        _frameLoop.ResizeSwapchain((uint)Width, (uint)Height);
+                        MainSwapchain.Resize((uint)Width, (uint)Height);
                         Resized?.Invoke();
                     }
 
@@ -156,7 +158,7 @@ namespace Veldrid.SampleGallery
                         _frameLoop.RunFrame(HandleFrame);
                     }
                 }
-                catch (Exception e)
+                catch (Exception e) when (!Debugger.IsAttached)
                 {
                     Debug.WriteLine("Encountered an error while rendering: " + e);
                     throw;
@@ -164,14 +166,14 @@ namespace Veldrid.SampleGallery
             }
         }
 
-        private void HandleFrame(CommandBuffer cb, uint frameIndex, Framebuffer fb)
+        private CommandBuffer[] HandleFrame(uint frameIndex, Framebuffer fb)
         {
             double currentSeconds = _sw.Elapsed.TotalSeconds;
             double elapsed = currentSeconds - _previousSeconds;
             _previousSeconds = currentSeconds;
 
             Update?.Invoke(elapsed);
-            Render?.Invoke(elapsed, cb);
+            return Render?.Invoke(elapsed);
         }
 
         private void FlushInput()

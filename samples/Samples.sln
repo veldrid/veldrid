@@ -35,7 +35,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1131953F-78D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AssetProcessor", "AssetProcessor\AssetProcessor.csproj", "{8967AEBF-5CBC-4EAD-B509-2A310877FB88}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleGallery.Core", "SampleGallery.Core\SampleGallery.Core.csproj", "{C359C613-466F-41AD-A150-E1B6CFE785A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gallery.Core", "SampleGallery.Core\Gallery.Core.csproj", "{C359C613-466F-41AD-A150-E1B6CFE785A5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleMeshRender", "SimpleMeshRender\SimpleMeshRender.csproj", "{BA16808B-FBB7-4051-AC23-AAFB3422D2AB}"
 EndProject
@@ -49,7 +49,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.InputPrimitives", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.StbImage", "..\src\Veldrid.StbImage\Veldrid.StbImage.csproj", "{289C73E7-DE85-4AF6-9605-007D2CE9B79C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleGallery.Web", "SampleGallery.Web\SampleGallery.Web.csproj", "{21DF6E6F-11EF-4E26-B233-050C54929191}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gallery.Web", "Gallery.Web\Gallery.Web.csproj", "{21DF6E6F-11EF-4E26-B233-050C54929191}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

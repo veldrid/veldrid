@@ -1,0 +1,29 @@
+[
+  {
+    "Name": "SimpleMeshRender",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "vertex.glsl"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "fragment.glsl"
+      }
+    ],
+    "Macros": [
+    ],
+    "CrossCompileOptions": {
+      "FixClipSpaceZ": false,
+      "InvertVertexOutputY": false,
+      "Specializations": [
+      ]
+    },
+    "Targets": [
+      "ESSL",
+      "GLSL",
+      "MSL",
+      "HLSL"
+    ]
+  }
+]

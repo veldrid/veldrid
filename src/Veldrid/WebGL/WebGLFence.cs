@@ -12,7 +12,7 @@
 
         public override bool Signaled => _signaled;
 
-        public override string Name { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override string Name { get; set; }
 
         public override void Dispose()
         {

@@ -139,7 +139,6 @@ namespace Veldrid.Vk
         private protected override void EndRenderPassCore()
         {
             vkCmdEndRenderPass(_cb);
-            DebugFullPipelineBarrier();
         }
 
         private protected override void MemoryBarrierCore(
@@ -157,7 +156,7 @@ namespace Veldrid.Vk
             ShaderStages sourceStage,
             ShaderStages destinationStage)
         {
-            DebugFullPipelineBarrier();
+            BeginIfNeeded();
             VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(texture);
             VkImageMemoryBarrier barrier = VkImageMemoryBarrier.New();
             barrier.srcAccessMask = VkFormats.GetConservativeSrcAccessFlags(texture, sourceStage);

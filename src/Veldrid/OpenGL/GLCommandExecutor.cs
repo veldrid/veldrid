@@ -35,7 +35,6 @@ namespace Veldrid.OpenGL
         public abstract void SetViewport(uint index, ref Viewport viewport);
         public abstract void SetViewport(uint index, Viewport viewport);
         public abstract void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr dataPtr, uint sizeInBytes);
-        public abstract void UpdateTexture(Texture texture, IntPtr dataPtr, uint x, uint y, uint z, uint width, uint height, uint depth, uint mipLevel, uint arrayLayer);
         public abstract void MemoryBarrier(
             Texture texture,
             uint baseMipLevel, uint levelCount,

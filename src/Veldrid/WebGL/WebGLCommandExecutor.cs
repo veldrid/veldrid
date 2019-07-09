@@ -626,7 +626,6 @@ namespace Veldrid.WebGL
                             _ctx.UniformBlockBinding(pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + ubOffset);
                             _gd.CheckError();
 
-                            Console.WriteLine($"Calling BindBufferRange");
                             _ctx.BindBufferRange(
                                 UNIFORM_BUFFER,
                                 ubBaseIndex + ubOffset,
@@ -792,9 +791,10 @@ namespace Veldrid.WebGL
             _gd.CheckError();
         }
 
-        public override void UpdateTexture(
+        public void UpdateTexture(
             Texture texture,
             IntPtr dataPtr,
+            uint dataSize,
             uint x,
             uint y,
             uint z,
@@ -804,279 +804,189 @@ namespace Veldrid.WebGL
             uint mipLevel,
             uint arrayLayer)
         {
-            throw new NotImplementedException();
-            //if (width == 0 || height == 0 || depth == 0) { return; }
+            if (width == 0 || height == 0 || depth == 0) { return; }
 
-            //WebGLTexture glTex = Util.AssertSubtype<Texture, WebGLTexture>(texture);
-            //glTex.EnsureResourcesCreated();
+            WebGLTexture glTex = Util.AssertSubtype<Texture, WebGLTexture>(texture);
 
-            //TextureTarget texTarget = glTex.TextureTarget;
+            uint texTarget = glTex.Target;
 
-            //_textureSamplerManager.SetTextureTransient(texTarget, glTex.Texture);
-            //_gd.CheckError();
+            _textureSamplerManager.SetTextureTransient(texTarget, glTex.WglTexture);
+            _gd.CheckError();
 
-            //bool isCompressed = FormatHelpers.IsCompressedFormat(texture.Format);
-            //uint blockSize = isCompressed ? 4u : 1u;
+            bool isCompressed = FormatHelpers.IsCompressedFormat(texture.Format);
+            uint blockSize = isCompressed ? 4u : 1u;
 
-            //uint blockAlignedWidth = Math.Max(width, blockSize);
-            //uint blockAlignedHeight = Math.Max(width, blockSize);
+            uint blockAlignedWidth = Math.Max(width, blockSize);
+            uint blockAlignedHeight = Math.Max(width, blockSize);
 
-            //uint rowPitch = FormatHelpers.GetRowPitch(blockAlignedWidth, texture.Format);
-            //uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, blockAlignedHeight, texture.Format);
+            uint rowPitch = FormatHelpers.GetRowPitch(blockAlignedWidth, texture.Format);
+            uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, blockAlignedHeight, texture.Format);
 
-            //// Compressed textures can specify regions that are larger than the dimensions.
-            //// We should only pass up to the dimensions to WebGL, though.
-            //Util.GetMipDimensions(glTex, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-            //width = Math.Min(width, mipWidth);
-            //height = Math.Min(height, mipHeight);
+            // Compressed textures can specify regions that are larger than the dimensions.
+            // We should only pass up to the dimensions to WebGL, though.
+            Util.GetMipDimensions(glTex, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+            width = Math.Min(width, mipWidth);
+            height = Math.Min(height, mipHeight);
 
-            //uint unpackAlignment = 4;
-            //if (!isCompressed)
-            //{
-            //    unpackAlignment = FormatHelpers.GetSizeInBytes(glTex.Format);
-            //}
-            //if (unpackAlignment < 4)
-            //{
-            //    glPixelStorei(PixelStoreParameter.UnpackAlignment, (int)unpackAlignment);
-            //    _gd.CheckError();
-            //}
+            uint unpackAlignment = 4;
+            if (!isCompressed)
+            {
+                unpackAlignment = FormatHelpers.GetSizeInBytes(glTex.Format);
+            }
+            if (unpackAlignment < 4)
+            {
+                _ctx.PixelStorei(UNPACK_ALIGNMENT, (int)unpackAlignment);
+                _gd.CheckError();
+            }
 
-            //if (texTarget == TextureTarget.Texture1D)
-            //{
-            //    if (isCompressed)
-            //    {
-            //        glCompressedTexSubImage1D(
-            //            TextureTarget.Texture1D,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            width,
-            //            glTex.GLInternalFormat,
-            //            rowPitch,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //    else
-            //    {
-            //        glTexSubImage1D(
-            //            TextureTarget.Texture1D,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            width,
-            //            glTex.GLPixelFormat,
-            //            glTex.GLPixelType,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //}
-            //else if (texTarget == TextureTarget.Texture1DArray)
-            //{
-            //    if (isCompressed)
-            //    {
-            //        glCompressedTexSubImage2D(
-            //            TextureTarget.Texture1DArray,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)arrayLayer,
-            //            width,
-            //            1,
-            //            glTex.GLInternalFormat,
-            //            rowPitch,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //    else
-            //    {
-            //        glTexSubImage2D(
-            //        TextureTarget.Texture1DArray,
-            //        (int)mipLevel,
-            //        (int)x,
-            //        (int)arrayLayer,
-            //        width,
-            //        1,
-            //        glTex.GLPixelFormat,
-            //        glTex.GLPixelType,
-            //        dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //}
-            //else if (texTarget == TextureTarget.Texture2D)
-            //{
-            //    if (isCompressed)
-            //    {
-            //        glCompressedTexSubImage2D(
-            //            TextureTarget.Texture2D,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)y,
-            //            width,
-            //            height,
-            //            glTex.GLInternalFormat,
-            //            depthPitch,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //    else
-            //    {
-            //        glTexSubImage2D(
-            //            TextureTarget.Texture2D,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)y,
-            //            width,
-            //            height,
-            //            glTex.GLPixelFormat,
-            //            glTex.GLPixelType,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //}
-            //else if (texTarget == TextureTarget.Texture2DArray)
-            //{
-            //    if (isCompressed)
-            //    {
-            //        glCompressedTexSubImage3D(
-            //            TextureTarget.Texture2DArray,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)y,
-            //            (int)arrayLayer,
-            //            width,
-            //            height,
-            //            1,
-            //            glTex.GLInternalFormat,
-            //            depthPitch,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //    else
-            //    {
-            //        glTexSubImage3D(
-            //            TextureTarget.Texture2DArray,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)y,
-            //            (int)arrayLayer,
-            //            width,
-            //            height,
-            //            1,
-            //            glTex.GLPixelFormat,
-            //            glTex.GLPixelType,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //}
-            //else if (texTarget == TextureTarget.Texture3D)
-            //{
-            //    if (isCompressed)
-            //    {
-            //        glCompressedTexSubImage3D(
-            //            TextureTarget.Texture3D,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)y,
-            //            (int)z,
-            //            width,
-            //            height,
-            //            depth,
-            //            glTex.GLInternalFormat,
-            //            depthPitch * depth,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //    else
-            //    {
-            //        glTexSubImage3D(
-            //            TextureTarget.Texture3D,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)y,
-            //            (int)z,
-            //            width,
-            //            height,
-            //            depth,
-            //            glTex.GLPixelFormat,
-            //            glTex.GLPixelType,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //}
-            //else if (texTarget == TextureTarget.TextureCubeMap)
-            //{
-            //    TextureTarget cubeTarget = GetCubeTarget(arrayLayer);
-            //    if (isCompressed)
-            //    {
-            //        glCompressedTexSubImage2D(
-            //            cubeTarget,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)y,
-            //            width,
-            //            height,
-            //            glTex.GLInternalFormat,
-            //            depthPitch,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //    else
-            //    {
-            //        glTexSubImage2D(
-            //            cubeTarget,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)y,
-            //            width,
-            //            height,
-            //            glTex.GLPixelFormat,
-            //            glTex.GLPixelType,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //}
-            //else if (texTarget == TextureTarget.TextureCubeMapArray)
-            //{
-            //    if (isCompressed)
-            //    {
-            //        glCompressedTexSubImage3D(
-            //            TextureTarget.TextureCubeMapArray,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)y,
-            //            (int)arrayLayer,
-            //            width,
-            //            height,
-            //            1,
-            //            glTex.GLInternalFormat,
-            //            depthPitch,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //    else
-            //    {
-            //        glTexSubImage3D(
-            //            TextureTarget.TextureCubeMapArray,
-            //            (int)mipLevel,
-            //            (int)x,
-            //            (int)y,
-            //            (int)arrayLayer,
-            //            width,
-            //            height,
-            //            1,
-            //            glTex.GLPixelFormat,
-            //            glTex.GLPixelType,
-            //            dataPtr.ToPointer());
-            //        _gd.CheckError();
-            //    }
-            //}
-            //else
-            //{
-            //    throw new VeldridException($"Invalid WebGL TextureTarget encountered: {glTex.TextureTarget}.");
-            //}
+            ReadOnlySpan<byte> dataSpan = new ReadOnlySpan<byte>(dataPtr.ToPointer(), (int)dataSize);
+            var wasmArray = WebAssembly.Core.Uint8Array.From(dataSpan);
 
-            //if (unpackAlignment < 4)
-            //{
-            //    glPixelStorei(PixelStoreParameter.UnpackAlignment, 4);
-            //    _gd.CheckError();
-            //}
+            if (texTarget == TEXTURE_2D)
+            {
+                if (isCompressed)
+                {
+                    _ctx.CompressedTexSubImage2D(
+                        TEXTURE_2D,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)width,
+                        (int)height,
+                        (uint)glTex.GLInternalFormat,
+                        wasmArray);
+                    _gd.CheckError();
+                }
+                else
+                {
+                    _ctx.TexSubImage2D(
+                        TEXTURE_2D,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)width,
+                        (int)height,
+                        glTex.GLPixelFormat,
+                        glTex.GLPixelType,
+                        wasmArray);
+                    _gd.CheckError();
+                }
+            }
+            else if (texTarget == TEXTURE_2D_ARRAY)
+            {
+                if (isCompressed)
+                {
+                    _ctx.CompressedTexSubImage3D(
+                        TEXTURE_2D_ARRAY,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)arrayLayer,
+                        (int)width,
+                        (int)height,
+                        1,
+                        (uint)glTex.GLInternalFormat,
+                        wasmArray,
+                        0,
+                        dataSize);
+                    _gd.CheckError();
+                }
+                else
+                {
+                    _ctx.TexSubImage3D(
+                        TEXTURE_2D_ARRAY,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)arrayLayer,
+                        (int)width,
+                        (int)height,
+                        1,
+                        glTex.GLPixelFormat,
+                        glTex.GLPixelType,
+                        wasmArray,
+                        0);
+                    _gd.CheckError();
+                }
+            }
+            else if (texTarget == TEXTURE_3D)
+            {
+                if (isCompressed)
+                {
+                    _ctx.CompressedTexSubImage3D(
+                        TEXTURE_3D,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)z,
+                        (int)width,
+                        (int)height,
+                        (int)depth,
+                        (uint)glTex.GLInternalFormat,
+                        wasmArray,
+                        0,
+                        dataSize);
+                    _gd.CheckError();
+                }
+                else
+                {
+                    _ctx.TexSubImage3D(
+                        TEXTURE_3D,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)z,
+                        (int)width,
+                        (int)height,
+                        (int)depth,
+                        glTex.GLPixelFormat,
+                        glTex.GLPixelType,
+                        wasmArray,
+                        0);
+                    _gd.CheckError();
+                }
+            }
+            else if (texTarget == TEXTURE_CUBE_MAP)
+            {
+                uint cubeTarget = GetCubeTarget(arrayLayer);
+                if (isCompressed)
+                {
+                    _ctx.CompressedTexSubImage2D(
+                        cubeTarget,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)width,
+                        (int)height,
+                        (uint)glTex.GLInternalFormat,
+                        wasmArray);
+                    _gd.CheckError();
+                }
+                else
+                {
+                    _ctx.TexSubImage2D(
+                        cubeTarget,
+                        (int)mipLevel,
+                        (int)x,
+                        (int)y,
+                        (int)width,
+                        (int)height,
+                        glTex.GLPixelFormat,
+                        glTex.GLPixelType,
+                        wasmArray);
+                    _gd.CheckError();
+                }
+            }
+            else
+            {
+                throw new VeldridException($"Invalid WebGL TextureTarget encountered: {glTex.Target}.");
+            }
+
+            if (unpackAlignment < 4)
+            {
+                _ctx.PixelStorei(UNPACK_ALIGNMENT, 4);
+                _gd.CheckError();
+            }
         }
 
         private uint GetCubeTarget(uint arrayLayer)

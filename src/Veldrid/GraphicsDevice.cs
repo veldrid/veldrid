@@ -130,6 +130,36 @@ namespace Veldrid
             Semaphore signal,
             Fence fence);
 
+        public void SubmitCommands(
+            CommandBuffer[] commandBuffers,
+            Semaphore[] waits,
+            Semaphore[] signals,
+            Fence fence)
+        {
+            SubmitCommandsCore(commandBuffers, waits, signals, fence);
+        }
+
+        private protected abstract void SubmitCommandsCore(
+            CommandBuffer[] commandBuffers,
+            Semaphore[] waits,
+            Semaphore[] signals,
+            Fence fence);
+
+        public void SubmitCommands(
+            CommandBuffer[] commandBuffers,
+            Semaphore wait,
+            Semaphore signal,
+            Fence fence)
+        {
+            SubmitCommandsCore(commandBuffers, wait, signal, fence);
+        }
+
+        private protected abstract void SubmitCommandsCore(
+            CommandBuffer[] commandBuffers,
+            Semaphore wait,
+            Semaphore signal,
+            Fence fence);
+
         /// <summary>
         /// Blocks the calling thread until the given <see cref="Fence"/> becomes signaled.
         /// </summary>

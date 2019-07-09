@@ -1,4 +1,6 @@
-﻿namespace Veldrid.WebGL
+﻿using System;
+
+namespace Veldrid.WebGL
 {
     /// <summary>
     /// A utility class managing the relationships between textures, samplers, and their binding locations.
@@ -15,7 +17,7 @@
         public WebGLTextureSamplerManager(WebGLGraphicsDevice gd)
         {
             _gd = gd;
-            _maxTextureUnits = 8; // TODO
+            _maxTextureUnits = (int)_gd.Ctx.GetParameter(WebGLConstants.MAX_TEXTURE_IMAGE_UNITS);
             _textureUnitTextures = new WebGLTextureView[_maxTextureUnits];
             _textureUnitSamplers = new BoundSamplerStateInfo[_maxTextureUnits];
 

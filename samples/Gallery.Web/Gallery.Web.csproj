@@ -17,12 +17,13 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="..\SampleGallery.Core\Gallery.Core.csproj" />
+    <ProjectReference Include="..\SimpleMeshRender\SimpleMeshRender.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="index.html" />
     <None Remove="Scripts\mono_support.js" />
-    <None Remove="Scripts\SkiaSharp.js" />
   </ItemGroup>
   
   <ItemGroup>

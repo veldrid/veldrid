@@ -1271,7 +1271,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public override void UpdateTexture(
+        public void UpdateTexture(
             Texture texture,
             IntPtr dataPtr,
             uint x,

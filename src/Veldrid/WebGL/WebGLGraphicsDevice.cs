@@ -46,8 +46,10 @@ namespace Veldrid.WebGL
             Ctx = new WebGL2RenderingContext(Canvas);
             MainSwapchain = new WebGLSwapchain(this);
 
-            _executor = new WebGLCommandExecutor(this);
             TextureSamplerManager = new WebGLTextureSamplerManager(this);
+            _executor = new WebGLCommandExecutor(this);
+
+            PostDeviceCreated();
         }
 
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
@@ -126,6 +128,30 @@ namespace Veldrid.WebGL
             Util.AssertSubtype<Fence, WebGLFence>(fence).Set();
         }
 
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore[] waits, Semaphore[] signals, Fence fence)
+        {
+            foreach (CommandBuffer commandBuffer in commandBuffers)
+            {
+                WebGLCommandBuffer wglCB = Util.AssertSubtype<CommandBuffer, WebGLCommandBuffer>(commandBuffer);
+                wglCB.BeginExecuting();
+                wglCB.GetEntryList().ExecuteAll(_executor);
+                wglCB.EndExecuting();
+            }
+            Util.AssertSubtype<Fence, WebGLFence>(fence).Set();
+        }
+
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore wait, Semaphore signal, Fence fence)
+        {
+            foreach (CommandBuffer commandBuffer in commandBuffers)
+            {
+                WebGLCommandBuffer wglCB = Util.AssertSubtype<CommandBuffer, WebGLCommandBuffer>(commandBuffer);
+                wglCB.BeginExecuting();
+                wglCB.GetEntryList().ExecuteAll(_executor);
+                wglCB.EndExecuting();
+            }
+            Util.AssertSubtype<Fence, WebGLFence>(fence).Set();
+        }
+
         private protected override void SwapBuffersCore(Swapchain swapchain)
         {
         }
@@ -145,7 +171,7 @@ namespace Veldrid.WebGL
             uint mipLevel,
             uint arrayLayer)
         {
-            throw new NotImplementedException();
+            _executor.UpdateTexture(texture, source, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
         }
 
         private protected override void WaitForIdleCore()

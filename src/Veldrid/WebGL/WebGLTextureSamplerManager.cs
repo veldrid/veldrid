@@ -47,6 +47,7 @@ namespace Veldrid.WebGL
 
         public void SetSampler(uint textureUnit, WebGLSampler sampler)
         {
+            Console.WriteLine($"SetSampler({textureUnit}, {sampler})");
             if (_textureUnitSamplers[textureUnit].Sampler != sampler)
             {
                 bool mipmapped = false;
@@ -57,6 +58,7 @@ namespace Veldrid.WebGL
                 }
 
                 var wglSampler = mipmapped ? sampler.MipmapSampler : sampler.NoMipmapSampler;
+                Console.WriteLine($"Binding sampler {wglSampler} to unit {textureUnit}.");
                 _gd.Ctx.BindSampler(textureUnit, wglSampler);
                 _gd.CheckError();
 
@@ -84,6 +86,7 @@ namespace Veldrid.WebGL
             {
                 WebGLSampler sampler = _textureUnitSamplers[textureUnit].Sampler;
                 WebGLDotNET.WebGLSampler wglSampler = mipmapped ? sampler.MipmapSampler : sampler.NoMipmapSampler;
+                Console.WriteLine($"Binding sampler {wglSampler} to unit {textureUnit}.");
                 _gd.Ctx.BindSampler(textureUnit, wglSampler);
                 _gd.CheckError();
                 _textureUnitSamplers[textureUnit].Mipmapped = mipmapped;

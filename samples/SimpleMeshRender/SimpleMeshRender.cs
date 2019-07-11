@@ -31,8 +31,6 @@ namespace Veldrid.SampleGallery
             List<Task> tasks = new List<Task>();
 
             Console.WriteLine($"Loading cat model.");
-            // tasks.Add(Task.Run(() =>
-            // {
             using (Stream catFS = OpenEmbeddedAsset("cat.obj"))
             {
                 ObjParser objParser = new ObjParser();
@@ -44,19 +42,13 @@ namespace Veldrid.SampleGallery
                 _indexBuffer = firstMesh.CreateIndexBuffer(Factory, Device, out indexCount);
                 _indexCount = (uint)indexCount;
             }
-            // }));
 
             Console.WriteLine($"Loading cat texture.");
             Texture catTexture = null;
-            // tasks.Add(Task.Run(async () =>
-            // {
             using (Stream catDiffFS = OpenEmbeddedAsset("cat_diff.png"))
             {
                 catTexture = StbTextureLoader.Load(Device, Factory, catDiffFS, false, true);
             }
-            // }));
-
-            // Task.WaitAll(tasks.ToArray());
 
             Console.WriteLine($"Loading main mesh Pipeline.");
             ResourceLayout layout = Factory.CreateResourceLayout(new ResourceLayoutDescription(

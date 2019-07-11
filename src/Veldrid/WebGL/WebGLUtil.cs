@@ -530,5 +530,89 @@ namespace Veldrid.WebGL
                     throw Illegal.Value<VertexElementFormat>();
             }
         }
+
+        internal static uint VdToGLTextureWrapMode(SamplerAddressMode mode)
+        {
+            switch (mode)
+            {
+                case SamplerAddressMode.Wrap:
+                    return REPEAT;
+                case SamplerAddressMode.Mirror:
+                    return MIRRORED_REPEAT;
+                case SamplerAddressMode.Clamp:
+                    return CLAMP_TO_EDGE;
+                case SamplerAddressMode.Border:
+                    throw new NotSupportedException();
+                default:
+                    throw Illegal.Value<SamplerAddressMode>();
+            }
+        }
+
+        internal static void VdToGLTextureMinMagFilter(SamplerFilter filter, bool mip, out uint min, out uint mag)
+        {
+            switch (filter)
+            {
+                case SamplerFilter.Anisotropic:
+                case SamplerFilter.MinPoint_MagPoint_MipPoint:
+                    min = mip ? NEAREST_MIPMAP_NEAREST : NEAREST;
+                    mag = NEAREST;
+                    break;
+                case SamplerFilter.MinPoint_MagPoint_MipLinear:
+                    min = mip ? NEAREST_MIPMAP_LINEAR : NEAREST;
+                    mag = NEAREST;
+                    break;
+                case SamplerFilter.MinPoint_MagLinear_MipPoint:
+                    min = mip ? NEAREST_MIPMAP_NEAREST : NEAREST;
+                    mag = LINEAR;
+                    break;
+                case SamplerFilter.MinPoint_MagLinear_MipLinear:
+                    min = mip ? NEAREST_MIPMAP_LINEAR : NEAREST;
+                    mag = LINEAR;
+                    break;
+                case SamplerFilter.MinLinear_MagPoint_MipPoint:
+                    min = mip ? LINEAR_MIPMAP_NEAREST : LINEAR;
+                    mag = NEAREST;
+                    break;
+                case SamplerFilter.MinLinear_MagPoint_MipLinear:
+                    min = mip ? LINEAR_MIPMAP_LINEAR : LINEAR;
+                    mag = NEAREST;
+                    break;
+                case SamplerFilter.MinLinear_MagLinear_MipPoint:
+                    min = mip ? LINEAR_MIPMAP_NEAREST : LINEAR;
+                    mag = LINEAR;
+                    break;
+                case SamplerFilter.MinLinear_MagLinear_MipLinear:
+                    min = mip ? LINEAR_MIPMAP_LINEAR : LINEAR;
+                    mag = LINEAR;
+                    break;
+                default:
+                    throw Illegal.Value<SamplerFilter>();
+            }
+        }
+
+        internal static uint VdToGLDepthFunction(ComparisonKind value)
+        {
+            switch (value)
+            {
+                case ComparisonKind.Never:
+                    return NEVER;
+                case ComparisonKind.Less:
+                    return LESS;
+                case ComparisonKind.Equal:
+                    return EQUAL;
+                case ComparisonKind.LessEqual:
+                    return LEQUAL;
+                case ComparisonKind.Greater:
+                    return GREATER;
+                case ComparisonKind.NotEqual:
+                    return NOTEQUAL;
+                case ComparisonKind.GreaterEqual:
+                    return GEQUAL;
+                case ComparisonKind.Always:
+                    return ALWAYS;
+                default:
+                    throw Illegal.Value<ComparisonKind>();
+            }
+        }
     }
 }

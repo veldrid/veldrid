@@ -2,6 +2,7 @@
 using Veldrid.Sdl2;
 using System.Diagnostics;
 using System;
+using Snake;
 
 namespace Veldrid.SampleGallery
 {
@@ -45,7 +46,7 @@ namespace Veldrid.SampleGallery
                 WindowState.Normal,
                 "Veldrid Sample Gallery");
 
-            // backend = GraphicsBackend.OpenGL;
+            backend = GraphicsBackend.Direct3D11;
 
             VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, options, backend, out _window, out _gd);
             _frameLoop = new AdvancedFrameLoop(_gd, _gd.MainSwapchain);
@@ -55,7 +56,7 @@ namespace Veldrid.SampleGallery
             };
 
             Gallery gallery = new Gallery(this);
-            gallery.LoadExample(new SimpleMeshRender());
+            gallery.LoadExample(new SnakeExample());
 
             _sw = Stopwatch.StartNew();
             _previousTime = _sw.Elapsed.TotalSeconds;

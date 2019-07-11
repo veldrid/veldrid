@@ -115,13 +115,22 @@ namespace Veldrid.SampleGallery
         private bool TryParseKeyCode(string keyStr, out Key key)
         {
             if (Enum.TryParse(keyStr, ignoreCase: true, out key)) { return true; }
-            Console.WriteLine($"Couldn't parse key string: {keyStr}");
 
             switch (keyStr)
             {
-                case "W":
-                    key = Key.W; return true;
+                case "ArrowLeft":
+                    key = Key.Left; return true;
+                case "ArrowRight":
+                    key = Key.Right; return true;
+                case "ArrowUp":
+                    key = Key.Up; return true;
+                case "ArrowDown":
+                    key = Key.Down; return true;
+                case " ":
+                    key = Key.Space; return true;
+
                 default:
+                    Console.WriteLine($"Couldn't parse key string: {keyStr}");
                     return false;
             }
         }

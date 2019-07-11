@@ -1161,6 +1161,11 @@ namespace Veldrid.OpenGL
             _executionThread.FlushAndFinish();
         }
 
+        internal void EnsureResourceInitialized(OpenGLDeferredResource deferredResource)
+        {
+            _executionThread.InitializeResource(deferredResource);
+        }
+
         internal override uint GetUniformBufferMinOffsetAlignmentCore() => _minUboOffsetAlignment;
 
         internal override uint GetStructuredBufferMinOffsetAlignmentCore() => _minSsboOffsetAlignment;
@@ -1432,6 +1437,23 @@ namespace Veldrid.OpenGL
                                 glFinish();
                             }
                             ((ManualResetEventSlim)workItem.Object0).Set();
+                        }
+                        break;
+                        case WorkItemType.InitializeResource:
+                        {
+                            InitializeResourceInfo info = (InitializeResourceInfo)workItem.Object0;
+                            try
+                            {
+                                info.DeferredResource.EnsureResourcesCreated();
+                            }
+                            catch (Exception e)
+                            {
+                                info.Exception = e;
+                            }
+                            finally
+                            {
+                                info.ResetEvent.Set();
+                            }
                         }
                         break;
                         default:
@@ -1904,6 +1926,19 @@ namespace Veldrid.OpenGL
 
                 CheckExceptions();
             }
+
+            internal void InitializeResource(OpenGLDeferredResource deferredResource)
+            {
+                InitializeResourceInfo info = new InitializeResourceInfo(deferredResource, new ManualResetEventSlim());
+                _workItems.Add(new ExecutionThreadWorkItem(info));
+                info.ResetEvent.Wait();
+                info.ResetEvent.Dispose();
+
+                if (info.Exception != null)
+                {
+                    throw info.Exception;
+                }
+            }
         }
 
         public enum WorkItemType : byte
@@ -1920,6 +1955,7 @@ namespace Veldrid.OpenGL
             WaitForIdle,
             ShareContext,
             ExecuteCommandBuffer,
+            InitializeResource,
         }
 
         private unsafe struct ExecutionThreadWorkItem
@@ -2068,6 +2104,17 @@ namespace Veldrid.OpenGL
                 UInt2 = 0;
             }
 
+            public ExecutionThreadWorkItem(InitializeResourceInfo info)
+            {
+                Type = WorkItemType.InitializeResource;
+                Object0 = info;
+                Object1 = null;
+
+                UInt0 = 0;
+                UInt1 = 0;
+                UInt2 = 0;
+            }
+
             public ExecutionThreadWorkItem(ManualResetEventSlim mre, IntPtr shareContext)
             {
                 Type = WorkItemType.ShareContext;
@@ -2098,6 +2145,19 @@ namespace Veldrid.OpenGL
             public MapMode Mode;
             public MappedResource MappedResource;
             public StagingBlock StagingBlock;
+        }
+
+        private class InitializeResourceInfo
+        {
+            public OpenGLDeferredResource DeferredResource;
+            public ManualResetEventSlim ResetEvent;
+            public Exception Exception;
+
+            public InitializeResourceInfo(OpenGLDeferredResource deferredResource, ManualResetEventSlim mre)
+            {
+                DeferredResource = deferredResource;
+                ResetEvent = mre;
+            }
         }
     }
 }

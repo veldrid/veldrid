@@ -48,6 +48,7 @@ namespace Veldrid.MTL
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
             SwapchainDescription? swapchainDesc)
+            : base(ref options)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
             MetalFeatures = new MTLFeatureSupport(_device);

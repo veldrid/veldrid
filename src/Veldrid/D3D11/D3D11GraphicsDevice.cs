@@ -48,6 +48,7 @@ namespace Veldrid.D3D11
         public override GraphicsDeviceFeatures Features { get; }
 
         public D3D11GraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDesc)
+            : base(ref options)
         {
             DeviceCreationFlags flags = DeviceCreationFlags.None;
             bool debug = options.Debug;

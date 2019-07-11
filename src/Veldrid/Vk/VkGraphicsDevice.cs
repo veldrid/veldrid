@@ -106,6 +106,7 @@ namespace Veldrid.Vk
             : this(options, scDesc, new VulkanDeviceOptions()) { }
 
         public VkGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? scDesc, VulkanDeviceOptions vkOptions)
+            : base(ref options)
         {
             CreateInstance(options.Debug, vkOptions);
 
@@ -340,12 +341,9 @@ namespace Veldrid.Vk
             lock (presentLock)
             {
                 vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
-                if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, vkSC.ImageAvailableFence))
-                {
-                    Vulkan.VkFence fence = vkSC.ImageAvailableFence;
-                    vkWaitForFences(_device, 1, ref fence, true, ulong.MaxValue);
-                    vkResetFences(_device, 1, ref fence);
-                }
+                vkSC.AcquireNextImage(null, vkSC.ImageAvailableFence);
+                vkSC.ImageAvailableFence.Wait();
+                vkSC.ImageAvailableFence.Reset();
             }
         }
 
@@ -1421,41 +1419,10 @@ namespace Veldrid.Vk
             out uint imageIndex)
         {
             VkSwapchain vkSwapchain = Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain);
-            VulkanSemaphore vkSemaphore = semaphore != null
-                ? Util.AssertSubtype<Semaphore, VulkanSemaphore>(semaphore)
-                : null;
-            VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
 
-            AcquireResult acquireResult = AcquireResult.Success;
-            imageIndex = 0;
-            VkResult result = vkAcquireNextImageKHR(
-                _device,
-                vkSwapchain.DeviceSwapchain,
-                ulong.MaxValue,
-                vkSemaphore?.NativeSemaphore ?? VkSemaphore.Null,
-                vkFence?.DeviceFence ?? Vulkan.VkFence.Null,
-                ref imageIndex);
-            if (result == VkResult.ErrorOutOfDateKHR)
-            {
-                vkSwapchain.RecreateSwapchain();
-                imageIndex = 0;
-                result = vkAcquireNextImageKHR(
-                    _device,
-                    vkSwapchain.DeviceSwapchain,
-                    ulong.MaxValue,
-                    vkSemaphore?.NativeSemaphore ?? VkSemaphore.Null,
-                    vkFence?.DeviceFence ?? Vulkan.VkFence.Null,
-                    ref imageIndex);
-                acquireResult = AcquireResult.OutOfDate;
-            }
-            else
-            {
-                CheckResult(result);
-            }
-
-            vkSwapchain.SetLastImageIndex(imageIndex);
-
-            return acquireResult;
+            AcquireResult result = vkSwapchain.AcquireNextImage(semaphore, fence);
+            imageIndex = vkSwapchain.LastAcquiredImage;
+            return result;
         }
 
         private protected override void SubmitCommandsCore(

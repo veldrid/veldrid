@@ -21,6 +21,7 @@ namespace Veldrid.WebGL
         public override GraphicsDeviceFeatures Features { get; }
 
         public WebGLGraphicsDevice(GraphicsDeviceOptions options, object canvas)
+            : base(ref options)
         {
             Features = new GraphicsDeviceFeatures(
                 computeShader: false,

@@ -61,7 +61,7 @@ namespace Veldrid
                     out _frameIndex);
                 if (acquireResult != AcquireResult.Success)
                 {
-                    throw new VeldridException($"Failed to acquire image.");
+                    throw new VeldridException($"Failed to acquire Swapchain image.");
                 }
             }
 
@@ -148,7 +148,7 @@ namespace Veldrid
                     out _frameIndex);
                 if (acquireResult != AcquireResult.Success)
                 {
-                    throw new VeldridException($"Failed to acquire image.");
+                    throw new VeldridException($"Failed to acquire Swapchain image.");
                 }
             }
 

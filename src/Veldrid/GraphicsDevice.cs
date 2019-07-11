@@ -16,7 +16,10 @@ namespace Veldrid
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
         private Sampler _aniso4xSampler;
 
-        internal GraphicsDevice() { }
+        internal GraphicsDevice(ref GraphicsDeviceOptions options)
+        {
+            EnableCommandBuffers = options.EnableCommandBuffers;
+        }
 
         /// <summary>
         /// Gets a value identifying the specific graphics API used by this instance.
@@ -798,6 +801,8 @@ namespace Veldrid
                 return _aniso4xSampler;
             }
         }
+
+        public bool EnableCommandBuffers { get; }
 
         /// <summary>
         /// Frees unmanaged resources controlled by this device.

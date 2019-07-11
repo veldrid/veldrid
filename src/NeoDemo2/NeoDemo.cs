@@ -57,9 +57,9 @@ namespace Veldrid.NeoDemo
                 WindowInitialState = WindowState.Normal,
                 WindowTitle = "Veldrid NeoDemo"
             };
-            // _window = VeldridStartup.CreateWindow(windowCI);
 
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true, _colorSrgb);
+            GraphicsDeviceOptions gdOptions = GraphicsDeviceOptions.Recommended_4_7_0;
+            gdOptions.SwapchainSrgbFormat = _colorSrgb;
 #if DEBUG
             gdOptions.Debug = true;
 #endif
@@ -611,7 +611,8 @@ namespace Veldrid.NeoDemo
                 _window.Resized += () => _windowResized = true;
             }
 
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, syncToVBlank, ResourceBindingModel.Improved, true, true, _colorSrgb);
+            GraphicsDeviceOptions gdOptions = GraphicsDeviceOptions.Recommended_4_7_0;
+            gdOptions.SwapchainSrgbFormat = _colorSrgb;
 #if DEBUG
             gdOptions.Debug = true;
 #endif

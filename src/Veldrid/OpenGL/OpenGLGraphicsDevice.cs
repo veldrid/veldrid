@@ -112,6 +112,7 @@ namespace Veldrid.OpenGL
             OpenGLPlatformInfo platformInfo,
             uint width,
             uint height)
+            : base(ref options)
         {
             Init(options, platformInfo, width, height, true, true);
         }
@@ -320,6 +321,7 @@ namespace Veldrid.OpenGL
         }
 
         public OpenGLGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDescription, GraphicsBackend backend)
+            : base(ref options)
         {
             if (swapchainDescription != null)
             {

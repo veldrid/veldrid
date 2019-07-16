@@ -2,6 +2,7 @@
 using Veldrid.Sdl2;
 using System.Diagnostics;
 using System;
+using Snake;
 
 namespace Veldrid.SampleGallery
 {
@@ -10,7 +11,7 @@ namespace Veldrid.SampleGallery
         private Sdl2Window _window;
         private GraphicsDevice _gd;
         private readonly InputState _inputState = new InputState();
-        private StandardFrameLoop _frameLoop;
+        private AdvancedFrameLoop _frameLoop;
         private bool _needsResize;
         private Stopwatch _sw;
         private double _previousTime;
@@ -21,7 +22,7 @@ namespace Veldrid.SampleGallery
 
         public event Action Resized;
         public event Action<double> Update;
-        public event Action<double, CommandBuffer> Render;
+        public event Func<double, CommandBuffer[]> Render;
 
         public GraphicsDevice Device => _gd;
 
@@ -30,26 +31,32 @@ namespace Veldrid.SampleGallery
         public uint FrameIndex => _frameLoop.FrameIndex;
         public uint BufferCount => MainSwapchain.BufferCount;
 
+        public bool SupportsImGui => true;
+
         public void Run(string[] args)
         {
             GraphicsDeviceOptions options = Gallery.GetPreferredOptions();
             GraphicsBackend backend = GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)
                 ? GraphicsBackend.Vulkan
                 : VeldridStartup.GetPlatformDefaultBackend();
+
             WindowCreateInfo windowCI = new WindowCreateInfo(
                 Sdl2Native.SDL_WINDOWPOS_CENTERED, Sdl2Native.SDL_WINDOWPOS_CENTERED,
                 1280, 720,
                 WindowState.Normal,
                 "Veldrid Sample Gallery");
+
+            backend = GraphicsBackend.Direct3D11;
+
             VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, options, backend, out _window, out _gd);
-            _frameLoop = new StandardFrameLoop(_gd, _gd.MainSwapchain);
+            _frameLoop = new AdvancedFrameLoop(_gd, _gd.MainSwapchain);
             _window.Resized += () =>
             {
                 _needsResize = true;
             };
 
             Gallery gallery = new Gallery(this);
-            gallery.LoadExample(new SimpleMeshRender());
+            gallery.LoadExample(new SnakeExample());
 
             _sw = Stopwatch.StartNew();
             _previousTime = _sw.Elapsed.TotalSeconds;
@@ -64,7 +71,7 @@ namespace Veldrid.SampleGallery
                 if (_needsResize)
                 {
                     _needsResize = false;
-                    _frameLoop.ResizeSwapchain();
+                    MainSwapchain.Resize((uint)_window.Width, (uint)_window.Height);
                     Resized?.Invoke();
                 }
 
@@ -72,14 +79,14 @@ namespace Veldrid.SampleGallery
             }
         }
 
-        private void FrameHandler(CommandBuffer cb, uint frameIndex, Framebuffer fb)
+        private CommandBuffer[] FrameHandler(uint frameIndex, Framebuffer fb)
         {
             double currentTime = _sw.Elapsed.TotalSeconds;
             double elapsed = currentTime - _previousTime;
             _previousTime = currentTime;
 
             Update?.Invoke(elapsed);
-            Render?.Invoke(elapsed, cb);
+            return Render?.Invoke(elapsed);
         }
 
         public InputStateView GetInputState() => _inputState.View;

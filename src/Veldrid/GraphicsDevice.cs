@@ -16,7 +16,10 @@ namespace Veldrid
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
         private Sampler _aniso4xSampler;
 
-        internal GraphicsDevice() { }
+        internal GraphicsDevice(ref GraphicsDeviceOptions options)
+        {
+            EnableCommandBuffers = options.EnableCommandBuffers;
+        }
 
         /// <summary>
         /// Gets a value identifying the specific graphics API used by this instance.
@@ -130,6 +133,36 @@ namespace Veldrid
             Semaphore signal,
             Fence fence);
 
+        public void SubmitCommands(
+            CommandBuffer[] commandBuffers,
+            Semaphore[] waits,
+            Semaphore[] signals,
+            Fence fence)
+        {
+            SubmitCommandsCore(commandBuffers, waits, signals, fence);
+        }
+
+        private protected abstract void SubmitCommandsCore(
+            CommandBuffer[] commandBuffers,
+            Semaphore[] waits,
+            Semaphore[] signals,
+            Fence fence);
+
+        public void SubmitCommands(
+            CommandBuffer[] commandBuffers,
+            Semaphore wait,
+            Semaphore signal,
+            Fence fence)
+        {
+            SubmitCommandsCore(commandBuffers, wait, signal, fence);
+        }
+
+        private protected abstract void SubmitCommandsCore(
+            CommandBuffer[] commandBuffers,
+            Semaphore wait,
+            Semaphore signal,
+            Fence fence);
+
         /// <summary>
         /// Blocks the calling thread until the given <see cref="Fence"/> becomes signaled.
         /// </summary>
@@ -233,12 +266,20 @@ namespace Veldrid
 
         private protected abstract void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index);
 
-        public uint AcquireNextImage(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        public AcquireResult AcquireNextImage(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex)
         {
-            return AcquireNextImageCore(swapchain, semaphore, fence);
+            return AcquireNextImageCore(swapchain, semaphore, fence, out imageIndex);
         }
 
-        private protected abstract uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence);
+        private protected abstract AcquireResult AcquireNextImageCore(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex);
 
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> object representing the render targets of the main swapchain.
@@ -761,6 +802,8 @@ namespace Veldrid
             }
         }
 
+        public bool EnableCommandBuffers { get; }
+
         /// <summary>
         /// Frees unmanaged resources controlled by this device.
         /// All created child resources must be Disposed prior to calling this method.
@@ -1156,7 +1199,7 @@ namespace Veldrid
             {
                 case GraphicsBackend.Direct3D11:
 #if !EXCLUDE_D3D11_BACKEND
-
+                    return CreateD3D11(options);
 #else
                     throw new VeldridException("D3D11 support has not been included in this configuration of Veldrid");
 #endif
@@ -1188,5 +1231,11 @@ namespace Veldrid
                     throw Illegal.Value<GraphicsBackend>();
             }
         }
+    }
+
+    public enum AcquireResult
+    {
+        Success,
+        OutOfDate,
     }
 }

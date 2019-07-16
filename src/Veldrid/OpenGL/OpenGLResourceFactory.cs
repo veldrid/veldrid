@@ -36,7 +36,9 @@ namespace Veldrid.OpenGL
 
         public override Pipeline CreateComputePipeline(ref ComputePipelineDescription description)
         {
-            return new OpenGLPipeline(_gd, ref description);
+            OpenGLPipeline pipeline = new OpenGLPipeline(_gd, ref description);
+            _gd.EnsureResourceInitialized(pipeline);
+            return pipeline;
         }
 
         public override ResourceLayout CreateResourceLayout(ref ResourceLayoutDescription description)
@@ -58,7 +60,9 @@ namespace Veldrid.OpenGL
         protected override Shader CreateShaderCore(ref ShaderDescription description)
         {
             StagingBlock stagingBlock = _pool.Stage(description.ShaderBytes);
-            return new OpenGLShader(_gd, description.Stage, stagingBlock, description.EntryPoint);
+            OpenGLShader shader = new OpenGLShader(_gd, description.Stage, stagingBlock, description.EntryPoint);
+            _gd.EnsureResourceInitialized(shader);
+            return shader;
         }
 
         protected override Texture CreateTextureCore(ref TextureDescription description)

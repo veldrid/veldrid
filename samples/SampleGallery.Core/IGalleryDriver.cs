@@ -10,11 +10,12 @@ namespace Veldrid.SampleGallery
         Swapchain MainSwapchain { get; }
         uint FrameIndex { get; }
         uint BufferCount { get; }
+        bool SupportsImGui { get; }
 
         InputStateView GetInputState();
 
         event Action Resized;
         event Action<double> Update;
-        event Action<double, CommandBuffer> Render;
+        event Func<double, CommandBuffer[]> Render;
     }
 }

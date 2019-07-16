@@ -1,0 +1,39 @@
+﻿<Project Sdk="Mono.WebAssembly.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <MonoWasmLinkMode>Full</MonoWasmLinkMode>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Reference Include="WebAssembly.Bindings">
+      <HintPath>$(RepositoryRootDirectory)\wasm-deps\WebAssembly.Bindings.dll</HintPath>
+    </Reference>
+    <Reference Include="WebGLDotNET">
+      <HintPath>$(RepositoryRootDirectory)\wasm-deps\WebGLDotNET.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="..\SampleGallery.Core\Gallery.Core.csproj" />
+    <ProjectReference Include="..\SimpleMeshRender\SimpleMeshRender.csproj" />
+    <ProjectReference Include="..\Snake\Snake.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="index.html" />
+    <None Remove="Scripts\mono_support.js" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="server.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="run.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  
+</Project>

@@ -8,7 +8,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private Vulkan.VkFence _fence;
         private string _name;
-        private bool _destroyed;
+        private bool _disposed;
 
         public Vulkan.VkFence DeviceFence => _fence;
 
@@ -40,10 +40,10 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            if (!_destroyed)
+            if (!_disposed)
             {
                 vkDestroyFence(_gd.Device, _fence, null);
-                _destroyed = true;
+                _disposed = true;
             }
         }
     }

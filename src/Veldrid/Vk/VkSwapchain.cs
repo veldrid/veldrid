@@ -12,13 +12,12 @@ namespace Veldrid.Vk
         private readonly VkSurfaceKHR _surface;
         private VkSwapchainKHR _deviceSwapchain;
         private readonly VkSwapchainFramebuffer _framebuffer;
-        private Vulkan.VkFence _imageAvailableFence;
+        private Fence _imageAvailableFence;
         private readonly uint _presentQueueIndex;
         private readonly VkQueue _presentQueue;
         private bool _syncToVBlank;
         private readonly SwapchainSource _swapchainSource;
         private readonly bool _colorSrgb;
-        private bool? _newSyncToVBlank;
         private uint _currentImageIndex;
         private string _name;
         private Framebuffer[] _framebuffers;
@@ -27,25 +26,28 @@ namespace Veldrid.Vk
         public override Framebuffer Framebuffer => _framebuffer;
         public override bool SyncToVerticalBlank
         {
-            get => _newSyncToVBlank ?? _syncToVBlank;
+            get => _syncToVBlank;
             set
             {
                 if (_syncToVBlank != value)
                 {
-                    _newSyncToVBlank = value;
+                    _syncToVBlank = value;
+                    Resize(Width, Height);
                 }
             }
         }
 
         public VkSwapchainKHR DeviceSwapchain => _deviceSwapchain;
         public uint ImageIndex => _currentImageIndex;
-        public Vulkan.VkFence ImageAvailableFence => _imageAvailableFence;
+        public Fence ImageAvailableFence => _imageAvailableFence;
         public VkSurfaceKHR Surface => _surface;
         public VkQueue PresentQueue => _presentQueue;
         public uint PresentQueueIndex => _presentQueueIndex;
         public ResourceRefCount RefCount { get; }
 
         public override Framebuffer[] Framebuffers => _framebuffers;
+
+        public override uint LastAcquiredImage => _currentImageIndex;
 
         public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description) : this(gd, ref description, VkSurfaceKHR.Null) { }
 
@@ -75,68 +77,70 @@ namespace Veldrid.Vk
 
             CreateSwapchain(description.Width, description.Height);
 
-            VkFenceCreateInfo fenceCI = VkFenceCreateInfo.New();
-            fenceCI.flags = VkFenceCreateFlags.None;
-            vkCreateFence(_gd.Device, ref fenceCI, null, out _imageAvailableFence);
-
-            // AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence);
-            // vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-            // vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
+            _imageAvailableFence = _gd.ResourceFactory.CreateFence(false);
 
             RefCount = new ResourceRefCount(DisposeCore);
+
+            if (!_gd.EnableCommandBuffers)
+            {
+                AcquireNextImage(null, _imageAvailableFence);
+                _imageAvailableFence.Wait();
+                _imageAvailableFence.Reset();
+            }
         }
 
         public override void Resize(uint width, uint height)
         {
-            RecreateAndReacquire(width, height);
-        }
-
-        public override void Resize()
-        {
-            _swapchainSource.GetSize(out uint width, out uint height);
             CreateSwapchain(width, height);
+            if (!_gd.EnableCommandBuffers)
+            {
+                AcquireNextImage(null, _imageAvailableFence);
+                _imageAvailableFence.Wait();
+                _imageAvailableFence.Reset();
+            }
         }
 
-        public bool AcquireNextImage(VkDevice device, VkSemaphore semaphore, Vulkan.VkFence fence)
+        public void RecreateSwapchain()
         {
-            if (_newSyncToVBlank != null)
-            {
-                _syncToVBlank = _newSyncToVBlank.Value;
-                _newSyncToVBlank = null;
-                RecreateAndReacquire(_framebuffer.Width, _framebuffer.Height);
-                return false;
-            }
+            CreateSwapchain(Width, Height);
+        }
 
+        public AcquireResult AcquireNextImage(Semaphore semaphore, Fence fence)
+        {
+            VulkanSemaphore vkSemaphore = semaphore != null
+                ? Util.AssertSubtype<Semaphore, VulkanSemaphore>(semaphore)
+                : null;
+            VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
+
+
+            AcquireResult acquireResult = AcquireResult.Success;
+            _currentImageIndex = 0;
             VkResult result = vkAcquireNextImageKHR(
-                device,
-                _deviceSwapchain,
+                _gd.Device,
+                DeviceSwapchain,
                 ulong.MaxValue,
-                semaphore,
-                fence,
+                vkSemaphore?.NativeSemaphore ?? VkSemaphore.Null,
+                vkFence?.DeviceFence ?? Vulkan.VkFence.Null,
                 ref _currentImageIndex);
-            _framebuffer.SetImageIndex(_currentImageIndex);
-            if (result == VkResult.ErrorOutOfDateKHR || result == VkResult.SuboptimalKHR)
+            if (result == VkResult.ErrorOutOfDateKHR)
             {
-                CreateSwapchain(_framebuffer.Width, _framebuffer.Height);
-                return false;
+                acquireResult = AcquireResult.OutOfDate;
             }
-            else if (result != VkResult.Success)
+            else
             {
-                throw new VeldridException("Could not acquire next image from the Vulkan swapchain.");
+                CheckResult(result);
             }
 
-            return true;
+            return acquireResult;
         }
 
         private void RecreateAndReacquire(uint width, uint height)
         {
             if (CreateSwapchain(width, height))
             {
-                // if (AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence))
-                // {
-                //     vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
-                //     vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
-                // }
+                AcquireNextImage(null, _imageAvailableFence);
+                _imageAvailableFence.Wait();
+                _imageAvailableFence.Reset();
             }
         }
 
@@ -160,7 +164,6 @@ namespace Veldrid.Vk
                 _gd.WaitForIdle();
             }
 
-            _currentImageIndex = 0;
             uint surfaceFormatCount = 0;
             result = vkGetPhysicalDeviceSurfaceFormatsKHR(_gd.PhysicalDevice, _surface, ref surfaceFormatCount, null);
             CheckResult(result);
@@ -276,6 +279,7 @@ namespace Veldrid.Vk
 
             _framebuffer.SetNewSwapchain(_deviceSwapchain, width, height, surfaceFormat, swapchainCI.imageExtent);
             _framebuffers = _framebuffer.Framebuffers;
+            _currentImageIndex = (uint)(_framebuffers.Length - 1);
             return true;
         }
 
@@ -317,7 +321,7 @@ namespace Veldrid.Vk
 
         private void DisposeCore()
         {
-            vkDestroyFence(_gd.Device, _imageAvailableFence, null);
+            _imageAvailableFence.Dispose();
             _framebuffer.Dispose();
             vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
         }

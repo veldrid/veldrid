@@ -24,15 +24,15 @@ namespace CommandBufferDemo
             };
             Sdl2Window window = VeldridStartup.CreateWindow(windowCI);
 
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true, true);
+            GraphicsDeviceOptions gdOptions = GraphicsDeviceOptions.Recommended_4_7_0;
 #if DEBUG
             gdOptions.Debug = true;
 #endif
             GraphicsDevice gd = GraphicsDevice.Create(gdOptions, GraphicsBackend.Metal);
             SwapchainSource ss = VeldridStartup.GetSwapchainSource(window);
-            Swapchain sc = gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(ss, PixelFormat.R32_Float, false, true));
-            bool windowResized = false;
-            window.Resized += () => windowResized = true;
+            Swapchain sc = gd.ResourceFactory.CreateSwapchain(
+                new SwapchainDescription(ss, (uint)window.Width, (uint)window.Height, PixelFormat.R16_UNorm, false, true));
+            window.Resized += () => sc.Resize((uint)window.Width, (uint)window.Height);
 
             (Pipeline p, ResourceLayout layout) = CreateQuadPipeline(gd.ResourceFactory, sc.Framebuffers[0].OutputDescription);
             uint bufferSpace = Math.Max((uint)Unsafe.SizeOf<Vector4>(), gd.UniformBufferMinOffsetAlignment);
@@ -46,11 +46,6 @@ namespace CommandBufferDemo
             {
                 InputSnapshot input = window.PumpEvents();
                 if (!window.Exists) { break; }
-                if (windowResized)
-                {
-                    windowResized = false;
-                    loop.ResizeSwapchain();
-                }
 
                 loop.RunFrame((CommandBuffer cb, uint frameIndex, Framebuffer fb) =>
                 {

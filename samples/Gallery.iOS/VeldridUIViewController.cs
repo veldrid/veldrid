@@ -29,6 +29,12 @@ namespace Veldrid.SampleGallery
         public uint Width => (uint)View.Frame.Width;
         public uint Height => (uint)View.Frame.Height;
 
+        public uint FrameIndex => throw new NotImplementedException();
+
+        public uint BufferCount => throw new NotImplementedException();
+
+        public bool SupportsImGui => throw new NotImplementedException();
+
         public VeldridUIViewController()
         {
             bool isDebugBuild = false;
@@ -45,6 +51,32 @@ namespace Veldrid.SampleGallery
                 preferStandardClipSpaceYDirection: true,
                 swapchainSrgbFormat: true);
             _backend = GraphicsBackend.OpenGLES;
+        }
+
+        event Action<double> IGalleryDriver.Update
+        {
+            add
+            {
+                throw new NotImplementedException();
+            }
+
+            remove
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        event Action<double, CommandBuffer> IGalleryDriver.Render
+        {
+            add
+            {
+                throw new NotImplementedException();
+            }
+
+            remove
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public void Run()
@@ -101,6 +133,11 @@ namespace Veldrid.SampleGallery
             base.ViewDidLayoutSubviews();
             _sc.Resize((uint)View.Frame.Width, (uint)View.Frame.Height);
             Resized?.Invoke();
+        }
+
+        public InputStateView GetInputState()
+        {
+            throw new NotImplementedException();
         }
     }
 }

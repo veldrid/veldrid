@@ -14,6 +14,8 @@ using Veldrid.OpenGL.WGL;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Veldrid.CommandRecording;
+using System.Linq;
+using System.Buffers;
 
 namespace Veldrid.OpenGL
 {
@@ -110,6 +112,7 @@ namespace Veldrid.OpenGL
             OpenGLPlatformInfo platformInfo,
             uint width,
             uint height)
+            : base(ref options)
         {
             Init(options, platformInfo, width, height, true, true);
         }
@@ -318,6 +321,7 @@ namespace Veldrid.OpenGL
         }
 
         public OpenGLGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDescription, GraphicsBackend backend)
+            : base(ref options)
         {
             if (swapchainDescription != null)
             {
@@ -1029,6 +1033,10 @@ namespace Veldrid.OpenGL
                     return major != 0 && minor != 0;
                 }
             }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && backend == GraphicsBackend.OpenGLES)
+            {
+                return false;
+            }
             else
             {
                 return true;
@@ -1159,6 +1167,11 @@ namespace Veldrid.OpenGL
             _executionThread.FlushAndFinish();
         }
 
+        internal void EnsureResourceInitialized(OpenGLDeferredResource deferredResource)
+        {
+            _executionThread.InitializeResource(deferredResource);
+        }
+
         internal override uint GetUniformBufferMinOffsetAlignmentCore() => _minUboOffsetAlignment;
 
         internal override uint GetStructuredBufferMinOffsetAlignmentCore() => _minSsboOffsetAlignment;
@@ -1173,14 +1186,32 @@ namespace Veldrid.OpenGL
             _executionThread.ExecuteCommands(glCB, fence);
         }
 
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore[] waits, Semaphore[] signals, Fence fence)
+        {
+            _executionThread.ExecuteCommands(commandBuffers, fence);
+        }
+
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore wait, Semaphore signal, Fence fence)
+        {
+            _executionThread.ExecuteCommands(commandBuffers, fence);
+        }
+
         private protected override void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index)
         {
             _executionThread.SwapBuffers(swapchain);
         }
 
-        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        private protected override AcquireResult AcquireNextImageCore(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex)
         {
-            return 0;
+            OpenGLSwapchain glSC = Util.AssertSubtype<Swapchain, OpenGLSwapchain>(swapchain);
+            glSC.AcquireNextImage();
+            imageIndex = glSC.LastAcquiredImage;
+            (fence as OpenGLFence)?.Set();
+            return AcquireResult.Success;
         }
 
         private class ExecutionThread
@@ -1246,23 +1277,49 @@ namespace Veldrid.OpenGL
                         break;
                         case WorkItemType.ExecuteCommandBuffer:
                         {
-                            OpenGLCommandBuffer cb = (OpenGLCommandBuffer)workItem.Object0;
-                            try
+                            if (workItem.Object0 is OpenGLCommandBuffer cb)
                             {
-                                cb.BeginExecuting();
-                                cb.GetEntryList().ExecuteAll(_gd._commandExecutor);
-                                cb.EndExecuting();
-                                if (workItem.Object1 != null)
+                                try
                                 {
-                                    ((OpenGLFence)workItem.Object1).Set();
+                                    cb.BeginExecuting();
+                                    cb.GetEntryList().ExecuteAll(_gd._commandExecutor);
+                                    cb.EndExecuting();
+                                    (workItem.Object1 as OpenGLFence)?.Set();
+                                }
+                                finally
+                                {
+                                    // if (!_gd.CheckCommandListDisposal(list.Parent))
+                                    // {
+                                    //     list.Parent.OnCompleted(list);
+                                    // }
                                 }
                             }
-                            finally
+                            else
                             {
-                                // if (!_gd.CheckCommandListDisposal(list.Parent))
-                                // {
-                                //     list.Parent.OnCompleted(list);
-                                // }
+                                CommandBuffer[] cbs = (CommandBuffer[])workItem.Object0;
+
+                                try
+                                {
+                                    for (uint i = 0; i < workItem.UInt0; i++)
+                                    {
+                                        CommandBuffer commandBuff = cbs[i];
+                                        OpenGLCommandBuffer glCB =
+                                            Util.AssertSubtype<CommandBuffer, OpenGLCommandBuffer>(commandBuff);
+                                        glCB.BeginExecuting();
+                                        glCB.GetEntryList().ExecuteAll(_gd._commandExecutor);
+                                        glCB.EndExecuting();
+                                    }
+
+                                    (workItem.Object1 as OpenGLFence)?.Set();
+                                }
+                                finally
+                                {
+                                    ArrayPool<CommandBuffer>.Shared.Return(cbs);
+                                    // if (!_gd.CheckCommandListDisposal(list.Parent))
+                                    // {
+                                    //     list.Parent.OnCompleted(list);
+                                    // }
+                                }
                             }
                         }
                         break;
@@ -1386,6 +1443,23 @@ namespace Veldrid.OpenGL
                                 glFinish();
                             }
                             ((ManualResetEventSlim)workItem.Object0).Set();
+                        }
+                        break;
+                        case WorkItemType.InitializeResource:
+                        {
+                            InitializeResourceInfo info = (InitializeResourceInfo)workItem.Object0;
+                            try
+                            {
+                                info.DeferredResource.EnsureResourcesCreated();
+                            }
+                            catch (Exception e)
+                            {
+                                info.Exception = e;
+                            }
+                            finally
+                            {
+                                info.ResetEvent.Set();
+                            }
                         }
                         break;
                         default:
@@ -1779,6 +1853,17 @@ namespace Veldrid.OpenGL
                 _workItems.Add(new ExecutionThreadWorkItem(cb, fence));
             }
 
+            public void ExecuteCommands(CommandBuffer[] cbs, Fence fence)
+            {
+                if (fence.Signaled)
+                {
+                    throw new VeldridException("Fence must not be signaled when submitted.");
+                }
+
+                CheckExceptions();
+                _workItems.Add(new ExecutionThreadWorkItem(cbs, fence));
+            }
+
             internal void UpdateBuffer(DeviceBuffer buffer, uint offsetInBytes, StagingBlock stagingBlock)
             {
                 CheckExceptions();
@@ -1847,6 +1932,19 @@ namespace Veldrid.OpenGL
 
                 CheckExceptions();
             }
+
+            internal void InitializeResource(OpenGLDeferredResource deferredResource)
+            {
+                InitializeResourceInfo info = new InitializeResourceInfo(deferredResource, new ManualResetEventSlim());
+                _workItems.Add(new ExecutionThreadWorkItem(info));
+                info.ResetEvent.Wait();
+                info.ResetEvent.Dispose();
+
+                if (info.Exception != null)
+                {
+                    throw info.Exception;
+                }
+            }
         }
 
         public enum WorkItemType : byte
@@ -1863,6 +1961,7 @@ namespace Veldrid.OpenGL
             WaitForIdle,
             ShareContext,
             ExecuteCommandBuffer,
+            InitializeResource,
         }
 
         private unsafe struct ExecutionThreadWorkItem
@@ -1905,6 +2004,20 @@ namespace Veldrid.OpenGL
                 Object1 = fence;
 
                 UInt0 = 0;
+                UInt1 = 0;
+                UInt2 = 0;
+            }
+
+            public ExecutionThreadWorkItem(CommandBuffer[] cbs, Fence fence)
+            {
+                Type = WorkItemType.ExecuteCommandBuffer;
+                CommandBuffer[] rentedArray = ArrayPool<CommandBuffer>.Shared.Rent(cbs.Length);
+                Array.Copy(cbs, rentedArray, cbs.Length);
+                Object0 = rentedArray;
+                UInt0 = (uint)cbs.Length;
+
+                Object1 = fence;
+
                 UInt1 = 0;
                 UInt2 = 0;
             }
@@ -1997,6 +2110,17 @@ namespace Veldrid.OpenGL
                 UInt2 = 0;
             }
 
+            public ExecutionThreadWorkItem(InitializeResourceInfo info)
+            {
+                Type = WorkItemType.InitializeResource;
+                Object0 = info;
+                Object1 = null;
+
+                UInt0 = 0;
+                UInt1 = 0;
+                UInt2 = 0;
+            }
+
             public ExecutionThreadWorkItem(ManualResetEventSlim mre, IntPtr shareContext)
             {
                 Type = WorkItemType.ShareContext;
@@ -2027,6 +2151,19 @@ namespace Veldrid.OpenGL
             public MapMode Mode;
             public MappedResource MappedResource;
             public StagingBlock StagingBlock;
+        }
+
+        private class InitializeResourceInfo
+        {
+            public OpenGLDeferredResource DeferredResource;
+            public ManualResetEventSlim ResetEvent;
+            public Exception Exception;
+
+            public InitializeResourceInfo(OpenGLDeferredResource deferredResource, ManualResetEventSlim mre)
+            {
+                DeferredResource = deferredResource;
+                ResetEvent = mre;
+            }
         }
     }
 }

@@ -764,10 +764,14 @@ namespace Veldrid.OpenGL
 
             if (rpd.LoadAction == LoadAction.Clear)
             {
-                glClearDepth(rpd.ClearDepth);
+                glClearDepth_Compat(rpd.ClearDepth);
+                CheckLastError();
                 glClearColor(rpd.ClearColor.R, rpd.ClearColor.G, rpd.ClearColor.B, rpd.ClearColor.A);
+                CheckLastError();
                 glDepthMask(true);
+                CheckLastError();
                 glClear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+                CheckLastError();
             }
         }
 
@@ -1270,7 +1274,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public override void UpdateTexture(
+        public void UpdateTexture(
             Texture texture,
             IntPtr dataPtr,
             uint x,

@@ -61,8 +61,10 @@ namespace Veldrid.NeoDemo
                 windowCI,
                 gdOptions,
                 //VeldridStartup.GetPlatformDefaultBackend(),
-                //GraphicsBackend.Metal,
-                GraphicsBackend.Vulkan,
+                GraphicsBackend.Metal,
+                // GraphicsBackend.Vulkan,
+                // GraphicsBackend.OpenGL,
+                // GraphicsBackend.Vulkan,
                 // GraphicsBackend.OpenGL,
                 //GraphicsBackend.OpenGLES,
                 out _window,
@@ -522,11 +524,14 @@ namespace Veldrid.NeoDemo
 
         private void RefreshDeviceObjects(int numTimes)
         {
+            Stopwatch sw = Stopwatch.StartNew();
             for (int i = 0; i < numTimes; i++)
             {
                 DestroyAllObjects();
                 CreateAllObjects();
             }
+            sw.Stop();
+            Console.WriteLine($"Refreshing resources {numTimes} times took {sw.Elapsed.TotalSeconds} seconds.");
         }
 
         private void DrawIndexedMaterialMenu(MaterialPropsAndBuffer propsAndBuffer)

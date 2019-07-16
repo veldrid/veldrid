@@ -14,6 +14,30 @@ namespace Veldrid
 
         public uint Get(uint i) => Count > MaxFixedValues ? Data[i] : FixedData[i];
 
+        public SmallFixedOrDynamicArray(Span<uint> offsets)
+        {
+            uint count = (uint)offsets.Length;
+            if (count > MaxFixedValues)
+            {
+                Data = ArrayPool<uint>.Shared.Rent((int)count);
+                for (int i = 0; i < count; i++)
+                {
+                    Data[i] = offsets[i];
+                }
+            }
+            else
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    FixedData[i] = offsets[i];
+                }
+
+                Data = null;
+            }
+
+            Count = count;
+        }
+
         public SmallFixedOrDynamicArray(uint count, ref uint data)
         {
             if (count > MaxFixedValues)

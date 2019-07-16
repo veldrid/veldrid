@@ -51,7 +51,7 @@ namespace Veldrid
                 new RenderPassDescription(framebuffer, loadAction, storeAction, clearColor, clearDepth, resolveTextures));
         }
 
-        internal abstract void BeginRenderPassCore(in RenderPassDescription rpi);
+        internal abstract void BeginRenderPassCore(in RenderPassDescription rpd);
 
         public void BindVertexBuffer(uint index, DeviceBuffer buffer) => BindVertexBuffer(index, buffer, 0);
         public void BindVertexBuffer(uint index, DeviceBuffer buffer, uint offset)
@@ -247,7 +247,7 @@ namespace Veldrid
             DispatchIndirectCore(indirectBuffer, offset);
         }
 
-        internal abstract void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset);
+        private protected abstract void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset);
 
         public void CopyBuffer(
             DeviceBuffer source, uint sourceOffset,
@@ -559,32 +559,6 @@ namespace Veldrid
                 throw new VeldridException("This method must not be called within an active render pass.");
             }
 #endif
-        }
-    }
-
-    internal readonly struct RenderPassDescription
-    {
-        public readonly Framebuffer Framebuffer;
-        public readonly StoreAction StoreAction;
-        public readonly LoadAction LoadAction;
-        public readonly RgbaFloat ClearColor;
-        public readonly float ClearDepth;
-        public readonly SmallFixedOrDynamicArray<Texture> ResolveTextures;
-
-        public RenderPassDescription(
-            Framebuffer framebuffer,
-            LoadAction loadAction,
-            StoreAction storeAction,
-            RgbaFloat clearColor,
-            float clearDepth,
-            Span<Texture> resolveTextures)
-        {
-            Framebuffer = framebuffer;
-            LoadAction = loadAction;
-            StoreAction = storeAction;
-            ClearColor = clearColor;
-            ClearDepth = clearDepth;
-            ResolveTextures = new SmallFixedOrDynamicArray<Texture>(resolveTextures);
         }
     }
 }

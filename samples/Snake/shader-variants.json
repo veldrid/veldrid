@@ -1,0 +1,29 @@
+[
+  {
+    "Name": "Sprite",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "sprite.vert"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "sprite.frag"
+      }
+    ],
+    "Macros": [
+    ],
+    "CrossCompileOptions": {
+      "FixClipSpaceZ": false,
+      "InvertVertexOutputY": false,
+      "Specializations": [
+      ]
+    },
+    "Targets": [
+      "ESSL",
+      "GLSL",
+      "MSL",
+      "HLSL"
+    ]
+  }
+]

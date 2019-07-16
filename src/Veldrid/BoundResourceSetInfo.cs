@@ -8,6 +8,12 @@ namespace Veldrid
         public ResourceSet Set;
         public SmallFixedOrDynamicArray Offsets;
 
+        public BoundResourceSetInfo(ResourceSet set, Span<uint> offsets)
+        {
+            Set = set;
+            Offsets = new SmallFixedOrDynamicArray(offsets);
+        }
+
         public BoundResourceSetInfo(ResourceSet set, uint offsetsCount, ref uint offsets)
         {
             Set = set;
@@ -21,6 +27,18 @@ namespace Veldrid
             for (uint i = 0; i < Offsets.Count; i++)
             {
                 if (Unsafe.Add(ref offsets, (int)i) != Offsets.Get(i)) { return false; }
+            }
+
+            return true;
+        }
+
+        public bool Equals(ResourceSet set, Span<uint> offsets)
+        {
+            if (set != Set || (uint)offsets.Length != Offsets.Count) { return false; }
+
+            for (uint i = 0; i < Offsets.Count; i++)
+            {
+                if (offsets[(int)i] != Offsets.Get(i)) { return false; }
             }
 
             return true;

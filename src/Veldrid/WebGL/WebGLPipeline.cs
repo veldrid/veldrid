@@ -89,7 +89,7 @@ namespace Veldrid.WebGL
             _gd.Ctx.LinkProgram(_program);
             _gd.CheckError();
 
-#if TRUE || DEBUG && GL_VALIDATE_VERTEX_INPUT_ELEMENTS
+#if DEBUG && GL_VALIDATE_VERTEX_INPUT_ELEMENTS
             slot = 0;
             foreach (VertexLayoutDescription layoutDesc in VertexLayouts)
             {

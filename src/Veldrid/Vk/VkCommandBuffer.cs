@@ -20,6 +20,7 @@ namespace Veldrid.Vk
         private VkPipeline _currentGraphicsPipeline;
         private VkFramebuffer _currentFB;
         private VkPipeline _currentComputePipeline;
+        private bool _disposed;
 
         public override string Name
         {
@@ -76,7 +77,11 @@ namespace Veldrid.Vk
         public override void Dispose()
         {
             // TODO: Ref-counted disposal.
-            vkDestroyCommandPool(_gd.Device, _pool, null);
+            if (!_disposed)
+            {
+                _disposed = true;
+                vkDestroyCommandPool(_gd.Device, _pool, null);
+            }
         }
 
         internal override void BeginRenderPassCore(in RenderPassDescription rpi)
@@ -134,7 +139,6 @@ namespace Veldrid.Vk
         private protected override void EndRenderPassCore()
         {
             vkCmdEndRenderPass(_cb);
-            DebugFullPipelineBarrier();
         }
 
         private protected override void MemoryBarrierCore(
@@ -152,7 +156,7 @@ namespace Veldrid.Vk
             ShaderStages sourceStage,
             ShaderStages destinationStage)
         {
-            DebugFullPipelineBarrier();
+            BeginIfNeeded();
             VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(texture);
             VkImageMemoryBarrier barrier = VkImageMemoryBarrier.New();
             barrier.srcAccessMask = VkFormats.GetConservativeSrcAccessFlags(texture, sourceStage);
@@ -435,7 +439,7 @@ namespace Veldrid.Vk
             vkCmdDispatch(_cb, groupCountX, groupCountY, groupCountZ);
         }
 
-        internal override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
+        private protected override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             vkCmdDispatchIndirect(_cb, vkBuffer.DeviceBuffer, offset);

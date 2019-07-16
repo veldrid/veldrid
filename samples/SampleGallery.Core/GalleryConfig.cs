@@ -1,4 +1,6 @@
-﻿namespace Veldrid.SampleGallery
+﻿using System.Runtime.InteropServices;
+
+namespace Veldrid.SampleGallery
 {
     public class GalleryConfig
     {
@@ -30,6 +32,7 @@
         public float ViewHeight { get; set; }
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct FBInfo
     {
         public uint Width;

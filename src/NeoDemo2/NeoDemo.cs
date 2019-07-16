@@ -57,19 +57,17 @@ namespace Veldrid.NeoDemo
                 WindowInitialState = WindowState.Normal,
                 WindowTitle = "Veldrid NeoDemo"
             };
-            // _window = VeldridStartup.CreateWindow(windowCI);
 
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true, _colorSrgb);
+            GraphicsDeviceOptions gdOptions = GraphicsDeviceOptions.Recommended_4_7_0;
+            gdOptions.SwapchainSrgbFormat = _colorSrgb;
 #if DEBUG
             gdOptions.Debug = true;
 #endif
             VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, GraphicsBackend.Metal, out _window, out _gd);
             _swapchain = _gd.MainSwapchain;
-            // _gd = GraphicsDevice.CreateOpenGL(gdOptions);
-            // SwapchainSource ss = VeldridStartup.GetSwapchainSource(_window);
-            // _swapchain = _gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(ss, null, false, _colorSrgb));
             SwapchainFormat = _swapchain.Framebuffers[0].ColorTargets[0].Target.Format;
             SwapchainBufferCount = _swapchain.BufferCount;
+
             _window.Resized += () => _windowResized = true;
 
             _frameLoop = new StandardFrameLoop(_gd, _swapchain);
@@ -240,6 +238,7 @@ namespace Veldrid.NeoDemo
             }
 
             DestroyAllObjects();
+            _frameLoop.Dispose();
             _gd.Dispose();
         }
 
@@ -563,8 +562,7 @@ namespace Veldrid.NeoDemo
             if (_windowResized)
             {
                 _windowResized = false;
-
-                _frameLoop.ResizeSwapchain();
+                _swapchain.Resize((uint)width, (uint)height);
 
                 _scene.Camera.WindowResized(width, height);
                 _resizeHandled?.Invoke(width, height);
@@ -591,6 +589,7 @@ namespace Veldrid.NeoDemo
         {
             DestroyAllObjects();
             bool syncToVBlank = _gd.SyncToVerticalBlank;
+            _frameLoop.Dispose();
             _gd.Dispose();
 
             if (_recreateWindow)
@@ -612,15 +611,21 @@ namespace Veldrid.NeoDemo
                 _window.Resized += () => _windowResized = true;
             }
 
-            GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, syncToVBlank, ResourceBindingModel.Improved, true, true, _colorSrgb);
+            GraphicsDeviceOptions gdOptions = GraphicsDeviceOptions.Recommended_4_7_0;
+            gdOptions.SwapchainSrgbFormat = _colorSrgb;
 #if DEBUG
             gdOptions.Debug = true;
 #endif
             _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend);
+            _swapchain = _gd.MainSwapchain;
+            SwapchainFormat = _swapchain.Framebuffers[0].ColorTargets[0].Target.Format;
+            SwapchainBufferCount = _swapchain.BufferCount;
+            _frameLoop = new StandardFrameLoop(_gd, _swapchain);
 
             _scene.Camera.UpdateBackend(_gd);
 
             CreateAllObjects();
+            FrameIndex = _frameLoop.FrameIndex;
         }
 
         private void DestroyAllObjects()

@@ -1,4 +1,6 @@
-﻿namespace Veldrid.WebGL
+﻿using System;
+
+namespace Veldrid.WebGL
 {
     /// <summary>
     /// A utility class managing the relationships between textures, samplers, and their binding locations.
@@ -15,7 +17,7 @@
         public WebGLTextureSamplerManager(WebGLGraphicsDevice gd)
         {
             _gd = gd;
-            _maxTextureUnits = 8; // TODO
+            _maxTextureUnits = (int)_gd.Ctx.GetParameter(WebGLConstants.MAX_TEXTURE_IMAGE_UNITS);
             _textureUnitTextures = new WebGLTextureView[_maxTextureUnits];
             _textureUnitSamplers = new BoundSamplerStateInfo[_maxTextureUnits];
 
@@ -45,6 +47,7 @@
 
         public void SetSampler(uint textureUnit, WebGLSampler sampler)
         {
+            Console.WriteLine($"SetSampler({textureUnit}, {sampler})");
             if (_textureUnitSamplers[textureUnit].Sampler != sampler)
             {
                 bool mipmapped = false;
@@ -55,6 +58,7 @@
                 }
 
                 var wglSampler = mipmapped ? sampler.MipmapSampler : sampler.NoMipmapSampler;
+                Console.WriteLine($"Binding sampler {wglSampler} to unit {textureUnit}.");
                 _gd.Ctx.BindSampler(textureUnit, wglSampler);
                 _gd.CheckError();
 
@@ -82,6 +86,7 @@
             {
                 WebGLSampler sampler = _textureUnitSamplers[textureUnit].Sampler;
                 WebGLDotNET.WebGLSampler wglSampler = mipmapped ? sampler.MipmapSampler : sampler.NoMipmapSampler;
+                Console.WriteLine($"Binding sampler {wglSampler} to unit {textureUnit}.");
                 _gd.Ctx.BindSampler(textureUnit, wglSampler);
                 _gd.CheckError();
                 _textureUnitSamplers[textureUnit].Mipmapped = mipmapped;

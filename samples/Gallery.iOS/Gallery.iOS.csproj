@@ -152,9 +152,9 @@
       <Project>{cb46fb8d-050d-46dc-94f8-25aeb0a2a955}</Project>
       <Name>AssetPrimitives</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SampleGallery.Core\SampleGallery.Core.csproj">
+    <ProjectReference Include="..\SampleGallery.Core\Gallery.Core.csproj">
       <Project>{c359c613-466f-41ad-a150-e1b6cfe785a5}</Project>
-      <Name>SampleGallery.Core</Name>
+      <Name>Gallery.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\SimpleMeshRender\SimpleMeshRender.csproj">
       <Project>{ba16808b-fbb7-4051-ac23-aafb3422d2ab}</Project>

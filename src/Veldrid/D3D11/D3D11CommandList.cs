@@ -69,9 +69,9 @@ namespace Veldrid.D3D11
         private readonly D3D11Sampler[] _vertexBoundSamplers = new D3D11Sampler[MaxCachedSamplers];
         private readonly D3D11Sampler[] _fragmentBoundSamplers = new D3D11Sampler[MaxCachedSamplers];
 
-        private readonly Dictionary<Texture, List<BoundTextureInfo>> _boundSRVs = new Dictionary<Texture, List<BoundTextureInfo>>();
-        private readonly Dictionary<Texture, List<BoundTextureInfo>> _boundUAVs = new Dictionary<Texture, List<BoundTextureInfo>>();
-        private readonly List<List<BoundTextureInfo>> _boundTextureInfoPool = new List<List<BoundTextureInfo>>(20);
+        private readonly Dictionary<Texture, List<D3D11BoundTextureInfo>> _boundSRVs = new Dictionary<Texture, List<D3D11BoundTextureInfo>>();
+        private readonly Dictionary<Texture, List<D3D11BoundTextureInfo>> _boundUAVs = new Dictionary<Texture, List<D3D11BoundTextureInfo>>();
+        private readonly List<List<D3D11BoundTextureInfo>> _boundTextureInfoPool = new List<List<D3D11BoundTextureInfo>>(20);
 
         private const int MaxUAVs = 8;
         private readonly List<(DeviceBuffer, int)> _boundComputeUAVBuffers = new List<(DeviceBuffer, int)>(MaxUAVs);
@@ -152,17 +152,17 @@ namespace Veldrid.D3D11
             _computePipeline = null;
             ClearSets(_computeResourceSets);
 
-            foreach (KeyValuePair<Texture, List<BoundTextureInfo>> kvp in _boundSRVs)
+            foreach (KeyValuePair<Texture, List<D3D11BoundTextureInfo>> kvp in _boundSRVs)
             {
-                List<BoundTextureInfo> list = kvp.Value;
+                List<D3D11BoundTextureInfo> list = kvp.Value;
                 list.Clear();
                 PoolBoundTextureList(list);
             }
             _boundSRVs.Clear();
 
-            foreach (KeyValuePair<Texture, List<BoundTextureInfo>> kvp in _boundUAVs)
+            foreach (KeyValuePair<Texture, List<D3D11BoundTextureInfo>> kvp in _boundUAVs)
             {
-                List<BoundTextureInfo> list = kvp.Value;
+                List<D3D11BoundTextureInfo> list = kvp.Value;
                 list.Clear();
                 PoolBoundTextureList(list);
             }
@@ -436,9 +436,9 @@ namespace Veldrid.D3D11
 
         private void UnbindSRVTexture(Texture target)
         {
-            if (_boundSRVs.TryGetValue(target, out List<BoundTextureInfo> btis))
+            if (_boundSRVs.TryGetValue(target, out List<D3D11BoundTextureInfo> btis))
             {
-                foreach (BoundTextureInfo bti in btis)
+                foreach (D3D11BoundTextureInfo bti in btis)
                 {
                     BindTextureView(null, bti.Slot, bti.Stages, 0);
 
@@ -460,16 +460,16 @@ namespace Veldrid.D3D11
             }
         }
 
-        private void PoolBoundTextureList(List<BoundTextureInfo> btis)
+        private void PoolBoundTextureList(List<D3D11BoundTextureInfo> btis)
         {
             _boundTextureInfoPool.Add(btis);
         }
 
         private void UnbindUAVTexture(Texture target)
         {
-            if (_boundUAVs.TryGetValue(target, out List<BoundTextureInfo> btis))
+            if (_boundUAVs.TryGetValue(target, out List<D3D11BoundTextureInfo> btis))
             {
-                foreach (BoundTextureInfo bti in btis)
+                foreach (D3D11BoundTextureInfo bti in btis)
                 {
                     BindUnorderedAccessView(null, null, null, bti.Slot, bti.Stages, bti.ResourceSet);
                     if ((bti.Stages & ShaderStages.Compute) == ShaderStages.Compute)
@@ -739,12 +739,12 @@ namespace Veldrid.D3D11
             ShaderResourceView srv = texView?.ShaderResourceView ?? null;
             if (srv != null)
             {
-                if (!_boundSRVs.TryGetValue(texView.Target, out List<BoundTextureInfo> list))
+                if (!_boundSRVs.TryGetValue(texView.Target, out List<D3D11BoundTextureInfo> list))
                 {
                     list = GetNewOrCachedBoundTextureInfoList();
                     _boundSRVs.Add(texView.Target, list);
                 }
-                list.Add(new BoundTextureInfo { Slot = slot, Stages = stages, ResourceSet = resourceSet });
+                list.Add(new D3D11BoundTextureInfo { Slot = slot, Stages = stages, ResourceSet = resourceSet });
             }
 
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
@@ -805,17 +805,17 @@ namespace Veldrid.D3D11
             }
         }
 
-        private List<BoundTextureInfo> GetNewOrCachedBoundTextureInfoList()
+        private List<D3D11BoundTextureInfo> GetNewOrCachedBoundTextureInfoList()
         {
             if (_boundTextureInfoPool.Count > 0)
             {
                 int index = _boundTextureInfoPool.Count - 1;
-                List<BoundTextureInfo> ret = _boundTextureInfoPool[index];
+                List<D3D11BoundTextureInfo> ret = _boundTextureInfoPool[index];
                 _boundTextureInfoPool.RemoveAt(index);
                 return ret;
             }
 
-            return new List<BoundTextureInfo>();
+            return new List<D3D11BoundTextureInfo>();
         }
 
         private void BindStorageBufferView(D3D11BufferRange range, int slot, ShaderStages stages)
@@ -981,12 +981,12 @@ namespace Veldrid.D3D11
 
             if (texture != null && uav != null)
             {
-                if (!_boundUAVs.TryGetValue(texture, out List<BoundTextureInfo> list))
+                if (!_boundUAVs.TryGetValue(texture, out List<D3D11BoundTextureInfo> list))
                 {
                     list = GetNewOrCachedBoundTextureInfoList();
                     _boundUAVs.Add(texture, list);
                 }
-                list.Add(new BoundTextureInfo { Slot = slot, Stages = stages, ResourceSet = resourceSet });
+                list.Add(new D3D11BoundTextureInfo { Slot = slot, Stages = stages, ResourceSet = resourceSet });
             }
 
             int baseSlot = 0;
@@ -1371,32 +1371,5 @@ namespace Veldrid.D3D11
             }
         }
 
-        private struct BoundTextureInfo
-        {
-            public int Slot;
-            public ShaderStages Stages;
-            public uint ResourceSet;
-        }
-
-        private struct D3D11BufferRange : IEquatable<D3D11BufferRange>
-        {
-            public readonly D3D11Buffer Buffer;
-            public readonly uint Offset;
-            public readonly uint Size;
-
-            public bool IsFullRange => Offset == 0 && Size == Buffer.SizeInBytes;
-
-            public D3D11BufferRange(D3D11Buffer buffer, uint offset, uint size)
-            {
-                Buffer = buffer;
-                Offset = offset;
-                Size = size;
-            }
-
-            public bool Equals(D3D11BufferRange other)
-            {
-                return Buffer == other.Buffer && Offset.Equals(other.Offset) && Size.Equals(other.Size);
-            }
-        }
     }
 }

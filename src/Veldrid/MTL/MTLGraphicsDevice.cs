@@ -23,6 +23,7 @@ namespace Veldrid.MTL
 
         private readonly object _submittedCommandsLock = new object();
         private readonly Dictionary<MetalBindings.MTLCommandBuffer, MTLFence> _submittedCBs = new Dictionary<MetalBindings.MTLCommandBuffer, MTLFence>();
+        private readonly Dictionary<MetalBindings.MTLCommandBuffer, MTLCommandBuffer> _submittedCBsMap = new Dictionary<MetalBindings.MTLCommandBuffer, MTLCommandBuffer>();
         private MetalBindings.MTLCommandBuffer _latestSubmittedCB;
 
         private readonly object _resetEventsLock = new object();
@@ -48,6 +49,7 @@ namespace Veldrid.MTL
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
             SwapchainDescription? swapchainDesc)
+            : base(ref options)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
             MetalFeatures = new MTLFeatureSupport(_device);
@@ -149,6 +151,11 @@ namespace Veldrid.MTL
                 {
                     fence.Set();
                     _submittedCBs.Remove(cb);
+                }
+                if (_submittedCBsMap.TryGetValue(cb, out MTLCommandBuffer mtlCB))
+                {
+                    mtlCB.ExecutionCompleted();
+                    _submittedCBsMap.Remove(cb);
                 }
 
                 if (_latestSubmittedCB.NativePtr == cb.NativePtr)
@@ -290,7 +297,7 @@ namespace Veldrid.MTL
                 }
             }
 
-            AcquireNextImageCore(swapchain, null, null);
+            AcquireNextImageCore(swapchain, null, null, out uint imageIndex);
         }
 
         private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
@@ -571,6 +578,30 @@ namespace Veldrid.MTL
             Semaphore signal,
             Fence fence)
         {
+            MTLCommandBuffer mtlCB = Util.AssertSubtype<CommandBuffer, MTLCommandBuffer>(commandBuffer);
+
+            lock (_submittedCommandsLock)
+            {
+                var submissionCB = mtlCB.PrepareForSubmission();
+                if (fence != null)
+                {
+                    MTLFence mtlFence = Util.AssertSubtype<Fence, MTLFence>(fence);
+                    _submittedCBs.Add(submissionCB, mtlFence);
+                    _submittedCBsMap.Add(submissionCB, mtlCB);
+                }
+
+                submissionCB.addCompletedHandler(_completionBlockLiteral);
+                submissionCB.commit();
+            }
+        }
+
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore[] waits, Semaphore[] signals, Fence fence)
+        {
+            throw new NotImplementedException();
+        }
+
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore wait, Semaphore signal, Fence fence)
+        {
             throw new NotImplementedException();
         }
 
@@ -591,15 +622,20 @@ namespace Veldrid.MTL
             }
         }
 
-        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        private protected override AcquireResult AcquireNextImageCore(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex)
         {
             MTLSwapchain mtlSC = Util.AssertSubtype<Swapchain, MTLSwapchain>(swapchain);
-            uint result = mtlSC.AcquireNextImage();
+            imageIndex = mtlSC.AcquireNextImage();
             if (fence != null)
             {
                 Util.AssertSubtype<Fence, MTLFence>(fence).Set();
             }
-            return result;
+
+            return AcquireResult.Success;
         }
     }
 

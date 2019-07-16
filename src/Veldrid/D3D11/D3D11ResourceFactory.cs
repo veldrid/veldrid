@@ -79,7 +79,7 @@ namespace Veldrid.D3D11
         protected override DeviceBuffer CreateBufferCore(ref BufferDescription description)
         {
             return new D3D11Buffer(
-                _device,
+                _gd,
                 description.SizeInBytes,
                 description.Usage,
                 description.StructureByteStride,
@@ -88,7 +88,7 @@ namespace Veldrid.D3D11
 
         public override Fence CreateFence(bool signaled)
         {
-            return new D3D11Fence(signaled);
+            return new D3D11Fence(_gd, signaled);
         }
 
         public override Swapchain CreateSwapchain(ref SwapchainDescription description)
@@ -99,6 +99,16 @@ namespace Veldrid.D3D11
         public void Dispose()
         {
             _cache.Dispose();
+        }
+
+        protected override CommandBuffer CreateCommandBufferCore(ref CommandBufferDescription description)
+        {
+            return new D3D11CommandBuffer(_gd, ref description);
+        }
+
+        protected override Semaphore CreateSemaphoreCore()
+        {
+            return new D3D11Semaphore();
         }
     }
 }

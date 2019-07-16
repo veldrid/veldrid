@@ -18,7 +18,7 @@ namespace Veldrid.MTL
         public override OutputDescription OutputDescription { get; }
 
         private readonly FramebufferAttachment[] _colorTargets;
-        private readonly FramebufferAttachment? _depthTarget;
+        private FramebufferAttachment? _depthTarget;
         private readonly PixelFormat? _depthFormat;
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
@@ -45,7 +45,6 @@ namespace Veldrid.MTL
                 _depthFormat = depthFormat;
                 depthAttachment = new OutputAttachmentDescription(depthFormat.Value);
                 RecreateDepthTexture(width, height);
-                _depthTarget = new FramebufferAttachment(_depthTexture, 0);
             }
             OutputAttachmentDescription colorAttachment = new OutputAttachmentDescription(colorFormat);
 
@@ -66,6 +65,7 @@ namespace Veldrid.MTL
             _depthTexture = Util.AssertSubtype<Texture, MTLTexture>(
                 _gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
                     width, height, 1, 1, _depthFormat.Value, TextureUsage.DepthStencil)));
+            _depthTarget = new FramebufferAttachment(_depthTexture, 0);
         }
 
         public void Resize(uint width, uint height)
@@ -88,23 +88,6 @@ namespace Veldrid.MTL
             _drawable = drawable;
         }
 
-        public override MTLRenderPassDescriptor CreateRenderPassDescriptor(in RenderPassDescription rpd)
-        {
-            MTLRenderPassDescriptor ret = MTLRenderPassDescriptor.New();
-            var color0 = ret.colorAttachments[0];
-            color0.texture = _drawable.texture;
-            color0.loadAction = MTLLoadAction.Load;
-
-            if (_depthTarget != null)
-            {
-                var depthAttachment = ret.depthAttachment;
-                depthAttachment.texture = _depthTexture.DeviceTexture;
-                depthAttachment.loadAction = MTLLoadAction.Load;
-            }
-
-            return ret;
-        }
-
         public override void Dispose()
         {
             if (!_drawable.IsNull)
@@ -113,5 +96,7 @@ namespace Veldrid.MTL
             }
             _depthTexture?.Dispose();
         }
+
+        protected override MetalBindings.MTLTexture GetMtlTexture(uint target) => _drawable.texture;
     }
 }

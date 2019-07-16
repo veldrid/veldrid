@@ -147,9 +147,9 @@
       <Project>{60D56E4A-FA7A-4664-BEF0-0A29F41518BF}</Project>
       <Name>Veldrid</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SampleGallery.Core\SampleGallery.Core.csproj">
+    <ProjectReference Include="..\SampleGallery.Core\Gallery.Core.csproj">
       <Project>{C359C613-466F-41AD-A150-E1B6CFE785A5}</Project>
-      <Name>SampleGallery.Core</Name>
+      <Name>Gallery.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\SimpleMeshRender\SimpleMeshRender.csproj">
       <Project>{ba16808b-fbb7-4051-ac23-aafb3422d2ab}</Project>

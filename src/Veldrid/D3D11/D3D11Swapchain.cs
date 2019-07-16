@@ -13,14 +13,16 @@ namespace Veldrid.D3D11
         private readonly SwapChain _dxgiSwapChain;
         private bool _vsync;
         private int _syncInterval;
-        private D3D11Framebuffer _framebuffer;
+        private D3D11Framebuffer[] _framebuffers;
         private D3D11Texture _depthTexture;
         private float _pixelScale = 1f;
+        private uint _imageIndex;
 
-        private readonly object _referencedCLsLock = new object();
+        private readonly object _referencedCommandsLock = new object();
         private HashSet<D3D11CommandList> _referencedCLs = new HashSet<D3D11CommandList>();
+        private HashSet<D3D11CommandBuffer> _referencedCBs = new HashSet<D3D11CommandBuffer>();
 
-        public override Framebuffer Framebuffer => _framebuffer;
+        public override Framebuffer Framebuffer => _framebuffers[0];
 
         public override string Name { get => _dxgiSwapChain.DebugName; set => _dxgiSwapChain.DebugName = value; }
 
@@ -34,10 +36,15 @@ namespace Veldrid.D3D11
         }
 
         private readonly Format _colorFormat;
+        private readonly uint _bufferCount;
 
         public SwapChain DxgiSwapChain => _dxgiSwapChain;
 
         public int SyncInterval => _syncInterval;
+
+        public override Framebuffer[] Framebuffers => _framebuffers;
+
+        public override uint LastAcquiredImage => _imageIndex;
 
         public D3D11Swapchain(SharpDX.Direct3D11.Device device, ref SwapchainDescription description)
         {
@@ -120,24 +127,32 @@ namespace Veldrid.D3D11
                 }
             }
 
+            _bufferCount = (uint)_dxgiSwapChain.Description.BufferCount;
+            _imageIndex = _bufferCount - 1;
+
             Resize(description.Width, description.Height);
         }
 
         public override void Resize(uint width, uint height)
         {
-            lock (_referencedCLsLock)
+            lock (_referencedCommandsLock)
             {
                 foreach (D3D11CommandList cl in _referencedCLs)
                 {
                     cl.Reset();
                 }
-
                 _referencedCLs.Clear();
+
+                foreach (D3D11CommandBuffer cb in _referencedCBs)
+                {
+                    cb.Reset();
+                }
+                _referencedCBs.Clear();
             }
 
             bool resizeBuffers = false;
 
-            if (_framebuffer != null)
+            if (_framebuffers != null)
             {
                 resizeBuffers = true;
                 if (_depthTexture != null)
@@ -145,42 +160,52 @@ namespace Veldrid.D3D11
                     _depthTexture.Dispose();
                 }
 
-                _framebuffer.Dispose();
+                foreach (D3D11Framebuffer fb in _framebuffers)
+                {
+                    fb.Dispose();
+                }
             }
 
             uint actualWidth = (uint)(width * _pixelScale);
             uint actualHeight = (uint)(height * _pixelScale);
             if (resizeBuffers)
             {
-                _dxgiSwapChain.ResizeBuffers(2, (int)actualWidth, (int)actualHeight, _colorFormat, SwapChainFlags.None);
+                _dxgiSwapChain.ResizeBuffers(_dxgiSwapChain.Description.BufferCount, (int)actualWidth, (int)actualHeight, _colorFormat, SwapChainFlags.None);
             }
 
-            // Get the backbuffer from the swapchain
-            using (Texture2D backBufferTexture = _dxgiSwapChain.GetBackBuffer<Texture2D>(0))
+            if (_depthFormat != null)
             {
-                if (_depthFormat != null)
-                {
-                    TextureDescription depthDesc = new TextureDescription(
-                        actualWidth, actualHeight, 1, 1, 1,
-                        _depthFormat.Value,
-                        TextureUsage.DepthStencil,
-                        TextureType.Texture2D);
-                    _depthTexture = new D3D11Texture(_device, ref depthDesc);
-                }
-
-                D3D11Texture backBufferVdTexture = new D3D11Texture(
-                    backBufferTexture,
-                    TextureType.Texture2D,
-                    D3D11Formats.ToVdFormat(_colorFormat));
-                FramebufferDescription desc = new FramebufferDescription(_depthTexture, backBufferVdTexture);
-                _framebuffer = new D3D11Framebuffer(_device, ref desc);
-                _framebuffer.Swapchain = this;
+                TextureDescription depthDesc = new TextureDescription(
+                    actualWidth, actualHeight, 1, 1, 1,
+                    _depthFormat.Value,
+                    TextureUsage.DepthStencil,
+                    TextureType.Texture2D);
+                _depthTexture = new D3D11Texture(_device, ref depthDesc);
             }
+
+            _framebuffers = new D3D11Framebuffer[_bufferCount];
+            for (uint i = 0; i < _bufferCount; i++)
+            {
+                // Get the backbuffer from the swapchain
+                using (Texture2D backBufferTexture = _dxgiSwapChain.GetBackBuffer<Texture2D>(0))
+                {
+                    D3D11Texture backBufferVdTexture = new D3D11Texture(
+                        backBufferTexture,
+                        TextureType.Texture2D,
+                        D3D11Formats.ToVdFormat(_colorFormat));
+                    FramebufferDescription desc = new FramebufferDescription(_depthTexture, backBufferVdTexture);
+
+                    _framebuffers[i] = new D3D11Framebuffer(_device, ref desc);
+                    _framebuffers[i].Swapchain = this;
+                }
+            }
+
+            _imageIndex = _bufferCount - 1;
         }
 
         public void AddCommandListReference(D3D11CommandList cl)
         {
-            lock (_referencedCLsLock)
+            lock (_referencedCommandsLock)
             {
                 _referencedCLs.Add(cl);
             }
@@ -188,10 +213,31 @@ namespace Veldrid.D3D11
 
         public void RemoveCommandListReference(D3D11CommandList cl)
         {
-            lock (_referencedCLsLock)
+            lock (_referencedCommandsLock)
             {
                 _referencedCLs.Remove(cl);
             }
+        }
+
+        public void AddCommandBufferReference(D3D11CommandBuffer cb)
+        {
+            lock (_referencedCommandsLock)
+            {
+                _referencedCBs.Add(cb);
+            }
+        }
+
+        public void RemoveCommandBufferReference(D3D11CommandBuffer cb)
+        {
+            lock (_referencedCommandsLock)
+            {
+                _referencedCBs.Remove(cb);
+            }
+        }
+
+        public void AcquireNextImage()
+        {
+            _imageIndex = (_imageIndex + 1) % (uint)_dxgiSwapChain.Description.BufferCount;
         }
 
         private static int GetSyncInterval(bool syncToVBlank)
@@ -202,7 +248,10 @@ namespace Veldrid.D3D11
         public override void Dispose()
         {
             _depthTexture?.Dispose();
-            _framebuffer.Dispose();
+            foreach (D3D11Framebuffer fb in _framebuffers)
+            {
+                fb.Dispose();
+            }
             _dxgiSwapChain.Dispose();
         }
     }

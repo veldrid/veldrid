@@ -32,10 +32,8 @@ namespace Veldrid.SampleGallery
                 new SpecializationConstant(1, gd.BackendType == GraphicsBackend.OpenGL || gd.BackendType == GraphicsBackend.OpenGLES)
             };
 
-            Shader[] shaders = factory.CreateFromSpirv(
-                new ShaderDescription(ShaderStages.Vertex, Encoding.ASCII.GetBytes(vertexGlsl), "main"),
-                new ShaderDescription(ShaderStages.Fragment, Encoding.ASCII.GetBytes(fragmentGlsl), "main"),
-                new CrossCompileOptions(false, false, specConstants));
+            string setName = srgbOutput ? "TextureBlitter_SRGB" : "TextureBlitter";
+            Shader[] shaders = ShaderUtil.LoadEmbeddedShaderSet(typeof(TextureBlitter).Assembly, factory, setName);
 
             _rl = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Input", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
@@ -86,68 +84,5 @@ namespace Veldrid.SampleGallery
             _sampleRegionSet.Dispose();
             _sampleRegionLayout.Dispose();
         }
-
-        private const string vertexGlsl =
-@"
-#version 450
-#extension GL_KHR_vulkan_glsl : enable
-
-layout (location = 0) out vec2 fsin_UV;
-
-const vec4 QuadInfos[4] = 
-{
-    vec4(-1, 1, 0, 0),
-    vec4(1, 1, 1, 0),
-    vec4(-1, -1, 0, 1),
-    vec4(1, -1, 1, 1),
-};
-
-void main()
-{
-    gl_Position = vec4(QuadInfos[gl_VertexIndex].xy, 0, 1);
-    fsin_UV = QuadInfos[gl_VertexIndex].zw;
-}
-";
-        private const string fragmentGlsl =
-@"
-#version 450
-
-layout(set = 0, binding = 0) uniform texture2D Input;
-layout(set = 0, binding = 1) uniform sampler InputSampler;
-
-layout(set = 1, binding = 0) uniform SampleRegionInfo
-{
-    vec2 MinUV;
-    vec2 MaxUV;
-};
-
-layout(location = 0) in vec2 fsin_UV;
-layout(location = 0) out vec4 fsout_Color0;
-
-layout (constant_id = 0) const bool OutputSrgb = false;
-layout (constant_id = 1) const bool InvertTexY = false;
-
-// http://chilliant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html
-vec3 LinearToSrgb(vec3 linear)
-{
-  vec3 S1 = sqrt(linear);
-  vec3 S2 = sqrt(S1);
-  vec3 S3 = sqrt(S2);
-  return 0.585122381 * S1 + 0.783140355 * S2 - 0.368262736 * S3;
-}
-
-void main()
-{
-    vec2 uv = fsin_UV;
-    if (InvertTexY) { uv.y = 1 - uv.y; }
-    uv = mix(MinUV, MaxUV, uv);
-
-    fsout_Color0 = texture(sampler2D(Input, InputSampler), uv);
-    if (OutputSrgb)
-    {
-        fsout_Color0 = vec4(LinearToSrgb(fsout_Color0.rgb), fsout_Color0.a);
-    }
-}
-";
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
@@ -11,9 +10,10 @@ namespace Veldrid.MTL
         private readonly MTLGraphicsDevice _gd;
         private UIView _uiView; // Valid only when a UIViewSwapchainSource is used.
         private bool _syncToVerticalBlank;
-        public uint ImageIndex { get; private set; } = 0;
+        public uint ImageIndex { get; private set; }
 
-        public override Framebuffer Framebuffer => _framebuffers[0];
+        public override Framebuffer Framebuffer => _framebuffers[ImageIndex];
+
         public override bool SyncToVerticalBlank
         {
             get => _syncToVerticalBlank;
@@ -29,6 +29,9 @@ namespace Veldrid.MTL
         public override string Name { get; set; }
 
         public override Framebuffer[] Framebuffers => _framebuffers;
+
+        // TODO: Just rename the other property.
+        public override uint LastAcquiredImage => ImageIndex;
 
         public MTLSwapchain(MTLGraphicsDevice gd, ref SwapchainDescription description)
         {
@@ -100,7 +103,6 @@ namespace Veldrid.MTL
 
             SetSyncToVerticalBlank(_syncToVerticalBlank);
 
-            AcquireNextImage();
         }
 
         public override void Resize(uint width, uint height)
@@ -125,13 +127,8 @@ namespace Veldrid.MTL
                 _metalLayer.frame = _uiView.frame;
             }
 
-            ImageIndex = 0;
+            ImageIndex = (uint)_framebuffers.Length - 1;
             AcquireNextImage();
-        }
-
-        public override void Resize()
-        {
-            throw new NotImplementedException();
         }
 
         private void SetSyncToVerticalBlank(bool value)

@@ -21,6 +21,7 @@ namespace Veldrid.WebGL
         public override GraphicsDeviceFeatures Features { get; }
 
         public WebGLGraphicsDevice(GraphicsDeviceOptions options, object canvas)
+            : base(ref options)
         {
             Features = new GraphicsDeviceFeatures(
                 computeShader: false,
@@ -46,8 +47,10 @@ namespace Veldrid.WebGL
             Ctx = new WebGL2RenderingContext(Canvas);
             MainSwapchain = new WebGLSwapchain(this);
 
-            _executor = new WebGLCommandExecutor(this);
             TextureSamplerManager = new WebGLTextureSamplerManager(this);
+            _executor = new WebGLCommandExecutor(this);
+
+            PostDeviceCreated();
         }
 
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
@@ -88,10 +91,15 @@ namespace Veldrid.WebGL
             throw new NotImplementedException();
         }
 
-        private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
+        private protected override AcquireResult AcquireNextImageCore(
+            Swapchain swapchain,
+            Semaphore semaphore,
+            Fence fence,
+            out uint imageIndex)
         {
-            Util.AssertSubtype<Fence, WebGLFence>(fence).Set();
-            return 0;
+            (fence as WebGLFence)?.Set();
+            imageIndex = 0;
+            return AcquireResult.Success;
         }
 
         private protected override bool GetPixelFormatSupportCore(
@@ -121,6 +129,30 @@ namespace Veldrid.WebGL
             Util.AssertSubtype<Fence, WebGLFence>(fence).Set();
         }
 
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore[] waits, Semaphore[] signals, Fence fence)
+        {
+            foreach (CommandBuffer commandBuffer in commandBuffers)
+            {
+                WebGLCommandBuffer wglCB = Util.AssertSubtype<CommandBuffer, WebGLCommandBuffer>(commandBuffer);
+                wglCB.BeginExecuting();
+                wglCB.GetEntryList().ExecuteAll(_executor);
+                wglCB.EndExecuting();
+            }
+            Util.AssertSubtype<Fence, WebGLFence>(fence).Set();
+        }
+
+        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore wait, Semaphore signal, Fence fence)
+        {
+            foreach (CommandBuffer commandBuffer in commandBuffers)
+            {
+                WebGLCommandBuffer wglCB = Util.AssertSubtype<CommandBuffer, WebGLCommandBuffer>(commandBuffer);
+                wglCB.BeginExecuting();
+                wglCB.GetEntryList().ExecuteAll(_executor);
+                wglCB.EndExecuting();
+            }
+            Util.AssertSubtype<Fence, WebGLFence>(fence).Set();
+        }
+
         private protected override void SwapBuffersCore(Swapchain swapchain)
         {
         }
@@ -140,7 +172,7 @@ namespace Veldrid.WebGL
             uint mipLevel,
             uint arrayLayer)
         {
-            throw new NotImplementedException();
+            _executor.UpdateTexture(texture, source, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
         }
 
         private protected override void WaitForIdleCore()

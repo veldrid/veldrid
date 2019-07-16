@@ -68,6 +68,8 @@ namespace Veldrid.OpenGL
 
         public override Framebuffer[] Framebuffers => _framebuffers;
 
+        public override uint LastAcquiredImage => throw new NotImplementedException();
+
         public void DestroyGLResources()
         {
             if (!_disposed)
@@ -80,12 +82,6 @@ namespace Veldrid.OpenGL
         public override void Dispose()
         {
             _gd.EnqueueDisposal(this);
-        }
-
-        public override void Resize()
-        {
-            _swapchainSource.GetSize(out uint width, out uint height);
-            Resize(width, height);
         }
 
         public override void Resize(uint width, uint height)

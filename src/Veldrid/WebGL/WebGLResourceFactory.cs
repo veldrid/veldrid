@@ -56,7 +56,7 @@ namespace Veldrid.WebGL
 
         protected override CommandBuffer CreateCommandBufferCore(ref CommandBufferDescription description)
         {
-            return new WebGLCommandBuffer(_gd, ref description);
+            return new WebGLCommandBuffer(_gd.Features);
         }
 
         protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)

@@ -28,7 +28,7 @@ namespace CommandBufferDemo
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            GraphicsDevice gd = GraphicsDevice.Create(gdOptions, GraphicsBackend.Vulkan);
+            GraphicsDevice gd = GraphicsDevice.Create(gdOptions, GraphicsBackend.Metal);
             SwapchainSource ss = VeldridStartup.GetSwapchainSource(window);
             Swapchain sc = gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(ss, PixelFormat.R32_Float, false, true));
             bool windowResized = false;

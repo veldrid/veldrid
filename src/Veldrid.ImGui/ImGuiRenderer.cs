@@ -387,7 +387,6 @@ namespace Veldrid
             _inputState.WheelDelta = 0f;
 
             Update(deltaSeconds, _inputState.View);
-
         }
 
         public void Update(float deltaSeconds, InputStateView inputState)

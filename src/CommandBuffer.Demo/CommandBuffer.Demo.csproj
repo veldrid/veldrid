@@ -17,4 +17,10 @@
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.SDL2\native\osx-x64\libsdl2.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

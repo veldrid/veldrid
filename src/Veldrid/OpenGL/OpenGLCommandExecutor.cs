@@ -4,10 +4,11 @@ using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
 using System.Text;
 using System.Diagnostics;
+using Veldrid.CommandRecording;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLCommandExecutor : GLCommandExecutor
+    internal unsafe class OpenGLCommandExecutor : RecordedCommandExecutor
     {
         private readonly OpenGLGraphicsDevice _gd;
         private readonly GraphicsBackend _backend;
@@ -678,7 +679,10 @@ namespace Veldrid.OpenGL
             ShaderStages sourceStage,
             ShaderStages destinationStage)
         {
-            glMemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+            if ((texture.Usage & TextureUsage.Storage) != 0)
+            {
+                glMemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+            }
         }
 
         public override void EndRenderPass()
@@ -1210,7 +1214,6 @@ namespace Veldrid.OpenGL
             _vbOffsets[index] = offset;
         }
 
-        public override void SetViewport(uint index, Viewport viewport) => SetViewport(index, ref viewport);
         public override void SetViewport(uint index, ref Viewport viewport)
         {
             _viewports[(int)index] = viewport;

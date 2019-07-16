@@ -6,6 +6,7 @@
     <RootNamespace>Veldrid.NeoDemo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssetsDir>$(MSBuildThisFileDirectory)..\NeoDemo\Assets</AssetsDir>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

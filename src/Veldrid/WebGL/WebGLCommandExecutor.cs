@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Text;
+using Veldrid.CommandRecording;
 using WebGLDotNET;
 using static Veldrid.WebGL.WebGLConstants;
 using static Veldrid.WebGL.WebGLUtil;
 
 namespace Veldrid.WebGL
 {
-    internal unsafe class WebGLCommandExecutor : OpenGL.GLCommandExecutor
+    internal unsafe class WebGLCommandExecutor : RecordedCommandExecutor
     {
         private readonly WebGLGraphicsDevice _gd;
         private readonly WebGL2RenderingContext _ctx;
@@ -755,7 +756,6 @@ namespace Veldrid.WebGL
             _vbOffsets[index] = offset;
         }
 
-        public override void SetViewport(uint index, Viewport viewport) => SetViewport(index, ref viewport);
         public override void SetViewport(uint index, ref Viewport viewport)
         {
             _viewports[(int)index] = viewport;

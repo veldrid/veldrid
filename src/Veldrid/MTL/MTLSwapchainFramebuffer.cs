@@ -23,6 +23,9 @@ namespace Veldrid.MTL
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
         public override FramebufferAttachment? DepthTarget => _depthTarget;
+        private CAMetalDrawable _drawable;
+
+        public CAMetalDrawable Drawable => _drawable;
 
         public MTLSwapchainFramebuffer(
             MTLGraphicsDevice gd,
@@ -75,13 +78,21 @@ namespace Veldrid.MTL
             }
         }
 
-        public override bool IsRenderable => !_parentSwapchain.CurrentDrawable.IsNull;
+        public override bool IsRenderable => !_drawable.IsNull;
+        public void SetDrawable(CAMetalDrawable drawable)
+        {
+            if (!_drawable.IsNull)
+            {
+                ObjectiveCRuntime.objc_msgSend(_drawable.NativePtr, "release");
+            }
+            _drawable = drawable;
+        }
 
-        public override MTLRenderPassDescriptor CreateRenderPassDescriptor()
+        public override MTLRenderPassDescriptor CreateRenderPassDescriptor(in RenderPassDescription rpd)
         {
             MTLRenderPassDescriptor ret = MTLRenderPassDescriptor.New();
             var color0 = ret.colorAttachments[0];
-            color0.texture = _parentSwapchain.CurrentDrawable.texture;
+            color0.texture = _drawable.texture;
             color0.loadAction = MTLLoadAction.Load;
 
             if (_depthTarget != null)
@@ -96,6 +107,10 @@ namespace Veldrid.MTL
 
         public override void Dispose()
         {
+            if (!_drawable.IsNull)
+            {
+                ObjectiveCRuntime.objc_msgSend(_drawable.NativePtr, "release");
+            }
             _depthTexture?.Dispose();
         }
     }

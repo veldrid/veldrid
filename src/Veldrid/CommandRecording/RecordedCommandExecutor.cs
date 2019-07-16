@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Veldrid.OpenGL
+namespace Veldrid.CommandRecording
 {
-    internal abstract class GLCommandExecutor
+    internal abstract class RecordedCommandExecutor
     {
         public abstract void Begin();
         public abstract void ClearColorTarget(uint index, RgbaFloat clearColor);
@@ -33,7 +33,7 @@ namespace Veldrid.OpenGL
         public abstract void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
         public abstract void SetVertexBuffer(uint index, DeviceBuffer vb, uint offset);
         public abstract void SetViewport(uint index, ref Viewport viewport);
-        public abstract void SetViewport(uint index, Viewport viewport);
+        public void SetViewport(uint index, Viewport viewport) => SetViewport(index, ref viewport);
         public abstract void UpdateBuffer(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr dataPtr, uint sizeInBytes);
         public abstract void UpdateTexture(Texture texture, IntPtr dataPtr, uint x, uint y, uint z, uint width, uint height, uint depth, uint mipLevel, uint arrayLayer);
         public abstract void MemoryBarrier(

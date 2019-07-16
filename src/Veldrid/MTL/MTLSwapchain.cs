@@ -6,15 +6,14 @@ namespace Veldrid.MTL
 {
     internal class MTLSwapchain : Swapchain
     {
-        private readonly MTLSwapchainFramebuffer _framebuffer;
+        private readonly MTLSwapchainFramebuffer[] _framebuffers;
         private CAMetalLayer _metalLayer;
         private readonly MTLGraphicsDevice _gd;
         private UIView _uiView; // Valid only when a UIViewSwapchainSource is used.
         private bool _syncToVerticalBlank;
+        public uint ImageIndex { get; private set; } = 0;
 
-        private CAMetalDrawable _drawable;
-
-        public override Framebuffer Framebuffer => _framebuffer;
+        public override Framebuffer Framebuffer => _framebuffers[0];
         public override bool SyncToVerticalBlank
         {
             get => _syncToVerticalBlank;
@@ -29,9 +28,7 @@ namespace Veldrid.MTL
 
         public override string Name { get; set; }
 
-        public CAMetalDrawable CurrentDrawable => _drawable;
-
-        public override Framebuffer[] Framebuffers => throw new NotImplementedException();
+        public override Framebuffer[] Framebuffers => _framebuffers;
 
         public MTLSwapchain(MTLGraphicsDevice gd, ref SwapchainDescription description)
         {
@@ -81,40 +78,29 @@ namespace Veldrid.MTL
                 throw new VeldridException($"A Metal Swapchain can only be created from an NSWindow, NSView, or UIView.");
             }
 
-            PixelFormat format = description.ColorSrgb
+            PixelFormat colorFormat = description.ColorSrgb
                 ? PixelFormat.B8_G8_R8_A8_UNorm_SRgb
                 : PixelFormat.B8_G8_R8_A8_UNorm;
 
             _metalLayer.device = _gd.Device;
-            _metalLayer.pixelFormat = MTLFormats.VdToMTLPixelFormat(format, false);
+            _metalLayer.pixelFormat = MTLFormats.VdToMTLPixelFormat(colorFormat, false);
             _metalLayer.framebufferOnly = true;
             _metalLayer.drawableSize = new CGSize(width, height);
 
+            _framebuffers = new MTLSwapchainFramebuffer[(int)_metalLayer.maximumDrawableCount];
+            for (int i = 0; i < _framebuffers.Length; i++)
+            {
+                _framebuffers[i] = new MTLSwapchainFramebuffer(
+                    gd,
+                    this,
+                    width, height,
+                    description.DepthFormat,
+                    colorFormat);
+            }
+
             SetSyncToVerticalBlank(_syncToVerticalBlank);
 
-            GetNextDrawable();
-
-            _framebuffer = new MTLSwapchainFramebuffer(
-                gd,
-                this,
-                width,
-                height,
-                description.DepthFormat,
-                format);
-        }
-
-        public void GetNextDrawable()
-        {
-            if (!_drawable.IsNull)
-            {
-                ObjectiveCRuntime.release(_drawable.NativePtr);
-            }
-
-            using (NSAutoreleasePool.Begin())
-            {
-                _drawable = _metalLayer.nextDrawable();
-                ObjectiveCRuntime.retain(_drawable.NativePtr);
-            }
+            AcquireNextImage();
         }
 
         public override void Resize(uint width, uint height)
@@ -129,13 +115,18 @@ namespace Veldrid.MTL
                 _metalLayer.frame = _uiView.frame;
             }
 
-            _framebuffer.Resize(width, height);
+            foreach (MTLSwapchainFramebuffer fb in _framebuffers)
+            {
+                fb.Resize(width, height);
+            }
             _metalLayer.drawableSize = new CGSize(width, height);
             if (_uiView.NativePtr != IntPtr.Zero)
             {
                 _metalLayer.frame = _uiView.frame;
             }
-            GetNextDrawable();
+
+            ImageIndex = 0;
+            AcquireNextImage();
         }
 
         public override void Resize()
@@ -157,12 +148,24 @@ namespace Veldrid.MTL
 
         public override void Dispose()
         {
-            if (_drawable.NativePtr != IntPtr.Zero)
+            foreach (MTLSwapchainFramebuffer fb in _framebuffers)
             {
-                ObjectiveCRuntime.objc_msgSend(_drawable.NativePtr, "release");
+                fb.Dispose();
             }
-            _framebuffer.Dispose();
             ObjectiveCRuntime.release(_metalLayer.NativePtr);
+        }
+
+        internal uint AcquireNextImage()
+        {
+            ImageIndex = (ImageIndex + 1) % BufferCount;
+            using (NSAutoreleasePool.Begin())
+            {
+                CAMetalDrawable drawable = _metalLayer.nextDrawable();
+                ObjectiveCRuntime.retain(drawable.NativePtr);
+                _framebuffers[ImageIndex].SetDrawable(drawable);
+            }
+
+            return ImageIndex;
         }
     }
 }

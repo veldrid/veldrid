@@ -59,6 +59,12 @@ namespace Veldrid.MetalBindings
             set => objc_msgSend(NativePtr, "setDisplaySyncEnabled:", value);
         }
 
+        public UIntPtr maximumDrawableCount
+        {
+            get => UIntPtr_objc_msgSend(NativePtr, sel_maximumDrawableCount);
+            set => objc_msgSend(NativePtr, sel_setMaximumDrawableCount, value);
+        }
+
         private static readonly Selector sel_device = "device";
         private static readonly Selector sel_setDevice = "setDevice:";
         private static readonly Selector sel_pixelFormat = "pixelFormat";
@@ -68,5 +74,7 @@ namespace Veldrid.MetalBindings
         private static readonly Selector sel_drawableSize = "drawableSize";
         private static readonly Selector sel_setDrawableSize = "setDrawableSize:";
         private static readonly Selector sel_nextDrawable = "nextDrawable";
+        private static readonly Selector sel_maximumDrawableCount = "maximumDrawableCount";
+        private static readonly Selector sel_setMaximumDrawableCount = "setMaximumDrawableCount:";
     }
 }

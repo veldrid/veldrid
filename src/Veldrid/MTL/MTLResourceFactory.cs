@@ -87,12 +87,19 @@ namespace Veldrid.MTL
 
         protected override CommandBuffer CreateCommandBufferCore(ref CommandBufferDescription description)
         {
-            throw new System.NotImplementedException();
+            if ((description.Flags & CommandBufferFlags.Reusable) != 0)
+            {
+                return new MTLReusableCommandBuffer(_gd.Features);
+            }
+            else
+            {
+                return new MTLCommandBuffer(_gd, ref description);
+            }
         }
 
         protected override Semaphore CreateSemaphoreCore()
         {
-            throw new System.NotImplementedException();
+            return new MTLSemaphore();
         }
     }
 }

@@ -680,5 +680,37 @@ namespace Veldrid.MTL
         {
             return 2048;
         }
+
+        internal static MTLLoadAction VdToMTLLoadAction(LoadAction la)
+        {
+            switch (la)
+            {
+                case LoadAction.Clear:
+                    return MTLLoadAction.Clear;
+                case LoadAction.DontCare:
+                    return MTLLoadAction.DontCare;
+                case LoadAction.Load:
+                    return MTLLoadAction.Load;
+                default:
+                    throw Illegal.Value<LoadAction>();
+            }
+        }
+
+        internal static MTLStoreAction VdToMTLStoreAction(StoreAction sa)
+        {
+            switch (sa)
+            {
+                case StoreAction.DontCare:
+                    return MTLStoreAction.DontCare;
+                case StoreAction.Store:
+                    return MTLStoreAction.Store;
+                case StoreAction.Resolve:
+                    return MTLStoreAction.MultisampleResolve;
+                case StoreAction.StoreAndResolve:
+                    return MTLStoreAction.StoreAndMultisampleResolve;
+                default:
+                    throw Illegal.Value<LoadAction>();
+            }
+        }
     }
 }

@@ -217,7 +217,7 @@ namespace Veldrid.CommandRecording
             _totalEntries += 1;
         }
 
-        public void ExecuteAll(GLCommandExecutor executor)
+        public void ExecuteAll(RecordedCommandExecutor executor)
         {
             int currentBlockIndex = 0;
             EntryStorageBlock block = _blocks[currentBlockIndex];

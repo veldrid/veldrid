@@ -22,8 +22,8 @@ namespace Veldrid.MTL
         private readonly bool[] _supportedSampleCounts;
 
         private readonly object _submittedCommandsLock = new object();
-        private readonly Dictionary<MTLCommandBuffer, MTLFence> _submittedCBs = new Dictionary<MTLCommandBuffer, MTLFence>();
-        private MTLCommandBuffer _latestSubmittedCB;
+        private readonly Dictionary<MetalBindings.MTLCommandBuffer, MTLFence> _submittedCBs = new Dictionary<MetalBindings.MTLCommandBuffer, MTLFence>();
+        private MetalBindings.MTLCommandBuffer _latestSubmittedCB;
 
         private readonly object _resetEventsLock = new object();
         private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
@@ -141,7 +141,7 @@ namespace Veldrid.MTL
 
         public override GraphicsDeviceFeatures Features { get; }
 
-        private void OnCommandBufferCompleted(IntPtr block, MTLCommandBuffer cb)
+        private void OnCommandBufferCompleted(IntPtr block, MetalBindings.MTLCommandBuffer cb)
         {
             lock (_submittedCommandsLock)
             {
@@ -153,7 +153,7 @@ namespace Veldrid.MTL
 
                 if (_latestSubmittedCB.NativePtr == cb.NativePtr)
                 {
-                    _latestSubmittedCB = default(MTLCommandBuffer);
+                    _latestSubmittedCB = default(MetalBindings.MTLCommandBuffer);
                 }
             }
 
@@ -162,7 +162,7 @@ namespace Veldrid.MTL
 
         // Xamarin AOT requires native callbacks be static.
         [MonoPInvokeCallback(typeof(MTLCommandBufferHandler))]
-        private static void OnCommandBufferCompleted_Static(IntPtr block, MTLCommandBuffer cb)
+        private static void OnCommandBufferCompleted_Static(IntPtr block, MetalBindings.MTLCommandBuffer cb)
         {
             lock (s_aotRegisteredBlocks)
             {
@@ -277,18 +277,20 @@ namespace Veldrid.MTL
         private protected override void SwapBuffersCore(Swapchain swapchain)
         {
             MTLSwapchain mtlSC = Util.AssertSubtype<Swapchain, MTLSwapchain>(swapchain);
-            IntPtr currentDrawablePtr = mtlSC.CurrentDrawable.NativePtr;
+            MTLSwapchainFramebuffer mtlSCFB = Util.AssertSubtype<Framebuffer, MTLSwapchainFramebuffer>(
+                mtlSC.Framebuffers[mtlSC.ImageIndex]);
+            var currentDrawablePtr = mtlSCFB.Drawable.NativePtr;
             if (currentDrawablePtr != IntPtr.Zero)
             {
                 using (NSAutoreleasePool.Begin())
                 {
-                    MTLCommandBuffer submitCB = _commandQueue.commandBuffer();
+                    MetalBindings.MTLCommandBuffer submitCB = _commandQueue.commandBuffer();
                     submitCB.presentDrawable(currentDrawablePtr);
                     submitCB.commit();
                 }
             }
 
-            mtlSC.GetNextDrawable();
+            AcquireNextImageCore(swapchain, null, null);
         }
 
         private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
@@ -350,7 +352,7 @@ namespace Veldrid.MTL
 
         private protected override void WaitForIdleCore()
         {
-            MTLCommandBuffer lastCB = default(MTLCommandBuffer);
+            MetalBindings.MTLCommandBuffer lastCB = default;
             lock (_submittedCommandsLock)
             {
                 lastCB = _latestSubmittedCB;
@@ -563,19 +565,41 @@ namespace Veldrid.MTL
         internal override uint GetUniformBufferMinOffsetAlignmentCore() => MetalFeatures.IsMacOS ? 16u : 256u;
         internal override uint GetStructuredBufferMinOffsetAlignmentCore() => 16u;
 
-        private protected override void SubmitCommandsCore(CommandBuffer commandBuffer, Semaphore wait, Semaphore signal, Fence fence)
+        private protected override void SubmitCommandsCore(
+            CommandBuffer commandBuffer,
+            Semaphore wait,
+            Semaphore signal,
+            Fence fence)
         {
             throw new NotImplementedException();
         }
 
         private protected override void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index)
         {
-            throw new NotImplementedException();
+            MTLSwapchain mtlSC = Util.AssertSubtype<Swapchain, MTLSwapchain>(swapchain);
+            MTLSwapchainFramebuffer mtlSCFB = Util.AssertSubtype<Framebuffer, MTLSwapchainFramebuffer>(
+                mtlSC.Framebuffers[index]);
+            IntPtr currentDrawablePtr = mtlSCFB.Drawable.NativePtr;
+            if (currentDrawablePtr != IntPtr.Zero)
+            {
+                using (NSAutoreleasePool.Begin())
+                {
+                    MetalBindings.MTLCommandBuffer submitCB = _commandQueue.commandBuffer();
+                    submitCB.presentDrawable(currentDrawablePtr);
+                    submitCB.commit();
+                }
+            }
         }
 
         private protected override uint AcquireNextImageCore(Swapchain swapchain, Semaphore semaphore, Fence fence)
         {
-            throw new NotImplementedException();
+            MTLSwapchain mtlSC = Util.AssertSubtype<Swapchain, MTLSwapchain>(swapchain);
+            uint result = mtlSC.AcquireNextImage();
+            if (fence != null)
+            {
+                Util.AssertSubtype<Fence, MTLFence>(fence).Set();
+            }
+            return result;
         }
     }
 

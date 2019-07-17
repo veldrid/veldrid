@@ -110,8 +110,6 @@ namespace Veldrid.SampleGallery
             if (!InputTracker.WantCaptureMouse
                 && (InputTracker.GetMouseButton(MouseButton.Left) || InputTracker.GetMouseButton(MouseButton.Right)))
             {
-                Console.WriteLine($"Camera detecting mouse movement.");
-
                 if (!_mousePressed)
                 {
                     _mousePressed = true;

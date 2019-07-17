@@ -36,17 +36,13 @@ namespace Veldrid.SampleGallery
         public void Run(string[] args)
         {
             GraphicsDeviceOptions options = Gallery.GetPreferredOptions();
-            GraphicsBackend backend = GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)
-                ? GraphicsBackend.Vulkan
-                : VeldridStartup.GetPlatformDefaultBackend();
+            GraphicsBackend backend = VeldridStartup.GetPlatformDefaultBackend();
 
             WindowCreateInfo windowCI = new WindowCreateInfo(
                 Sdl2Native.SDL_WINDOWPOS_CENTERED, Sdl2Native.SDL_WINDOWPOS_CENTERED,
                 1280, 720,
                 WindowState.Normal,
                 "Veldrid Sample Gallery");
-
-            backend = GraphicsBackend.Direct3D11;
 
             VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, options, backend, out _window, out _gd);
             _frameLoop = new AdvancedFrameLoop(_gd, _gd.MainSwapchain);

@@ -23,6 +23,17 @@ namespace Veldrid.MetalBindings
         public void removeAllDebugMarkers()
             => ObjectiveCRuntime.objc_msgSend(NativePtr, sel_removeAllDebugMarkers);
 
+        public string label
+        {
+            get => ObjectiveCRuntime.string_objc_msgSend(NativePtr, Selectors.label);
+            set
+            {
+                NSString valueNSS = NSString.New(value);
+                ObjectiveCRuntime.objc_msgSend(NativePtr, Selectors.setLabel, valueNSS.NativePtr);
+                ObjectiveCRuntime.release(valueNSS.NativePtr);
+            }
+        }
+
         private static readonly Selector sel_contents = "contents";
         private static readonly Selector sel_length = "length";
         private static readonly Selector sel_didModifyRange = "didModifyRange:";

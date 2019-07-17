@@ -89,7 +89,7 @@ namespace Veldrid.MTL
         {
             if ((description.Flags & CommandBufferFlags.Reusable) != 0)
             {
-                return new MTLReusableCommandBuffer(_gd.Features);
+                return new MTLReusableCommandBuffer(_gd);
             }
             else
             {

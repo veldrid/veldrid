@@ -40,6 +40,17 @@ namespace Veldrid.MetalBindings
             return new MTLTexture(ret);
         }
 
+        public string label
+        {
+            get => string_objc_msgSend(NativePtr, Selectors.label);
+            set
+            {
+                NSString valueNSS = NSString.New(value);
+                objc_msgSend(NativePtr, Selectors.setLabel, valueNSS.NativePtr);
+                release(valueNSS.NativePtr);
+            }
+        }
+
         private static readonly Selector sel_replaceRegion = "replaceRegion:mipmapLevel:slice:withBytes:bytesPerRow:bytesPerImage:";
         private static readonly Selector sel_newTextureView = "newTextureViewWithPixelFormat:textureType:levels:slices:";
     }

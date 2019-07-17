@@ -114,7 +114,6 @@ namespace Veldrid.MTL
                         (UIntPtr)vertexCount,
                         (UIntPtr)instanceCount,
                         (UIntPtr)instanceStart);
-
                 }
             }
         }

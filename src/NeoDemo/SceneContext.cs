@@ -263,11 +263,13 @@ namespace Veldrid.NeoDemo
                 new FramebufferAttachmentDescription(NearShadowMap, 0), Array.Empty<FramebufferAttachmentDescription>()));
 
             MidShadowMap = factory.CreateTexture(desc);
+            MidShadowMap.Name = "Mid Shadow Map";
             MidShadowMapView = factory.CreateTextureView(new TextureViewDescription(MidShadowMap, 0, 1, 0, 1));
             MidShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
                 new FramebufferAttachmentDescription(MidShadowMap, 0), Array.Empty<FramebufferAttachmentDescription>()));
 
             FarShadowMap = factory.CreateTexture(desc);
+            FarShadowMap.Name = "Far Shadow Map";
             FarShadowMapView = factory.CreateTextureView(new TextureViewDescription(FarShadowMap, 0, 1, 0, 1));
             FarShadowMapFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
                 new FramebufferAttachmentDescription(FarShadowMap, 0), Array.Empty<FramebufferAttachmentDescription>()));

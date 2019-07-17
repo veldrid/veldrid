@@ -4,7 +4,7 @@ namespace Veldrid.CommandRecording
 {
     internal class ReusableCommandBuffer : CommandBuffer
     {
-        private readonly NoAllocCommandEntryList _entryList;
+        private readonly NoAllocCommandEntryList _entryList = new NoAllocCommandEntryList();
         private readonly object _stateLock = new object();
         private RecordingState _state = RecordingState.Recording;
 
@@ -27,7 +27,11 @@ namespace Veldrid.CommandRecording
                 _entryList.Dispose();
                 _state = RecordingState.Disposed;
             }
+
+            DisposeCore();
         }
+
+        protected virtual void DisposeCore() { }
 
         public override void InsertDebugMarker(string name)
         {

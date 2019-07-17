@@ -6,6 +6,11 @@ namespace Veldrid.MetalBindings
     {
         public static unsafe string GetUtf8String(byte* stringStart)
         {
+            if (stringStart == null)
+            {
+                return null;
+            }
+            
             int characters = 0;
             while (stringStart[characters] != 0)
             {

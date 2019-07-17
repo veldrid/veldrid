@@ -1,4 +1,5 @@
 using System;
+using static Veldrid.MetalBindings.ObjectiveCRuntime;
 
 namespace Veldrid.MetalBindings
 {

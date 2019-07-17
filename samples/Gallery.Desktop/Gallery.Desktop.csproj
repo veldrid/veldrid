@@ -19,4 +19,13 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="$(RepositoryRootDirectory)\src\Veldrid.SDL2\native\win-x64\SDL2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(RepositoryRootDirectory)\src\Veldrid.SDL2\native\osx-x64\libsdl2.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

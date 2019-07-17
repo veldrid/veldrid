@@ -6,11 +6,12 @@ namespace Veldrid.MTL
     internal class MTLTexture : Texture
     {
         private bool _disposed;
+        private MetalBindings.MTLTexture _deviceTexture;
 
         /// <summary>
         /// The native MTLTexture object. This property is only valid for non-staging Textures.
         /// </summary>
-        public MetalBindings.MTLTexture DeviceTexture { get; }
+        public MetalBindings.MTLTexture DeviceTexture => _deviceTexture;
         /// <summary>
         /// The staging MTLBuffer object. This property is only valid for staging Textures.
         /// </summary>
@@ -33,7 +34,11 @@ namespace Veldrid.MTL
         public override TextureType Type { get; }
 
         public override TextureSampleCount SampleCount { get; }
-        public override string Name { get; set; }
+        public override string Name
+        {
+            get => _deviceTexture.label;
+            set => _deviceTexture.label = value;
+        }
         public MTLPixelFormat MTLPixelFormat { get; }
         public MTLTextureType MTLTextureType { get; }
 
@@ -70,7 +75,7 @@ namespace Veldrid.MTL
                 texDescriptor.textureUsage = MTLFormats.VdToMTLTextureUsage(Usage);
                 texDescriptor.storageMode = MTLStorageMode.Private;
 
-                DeviceTexture = _gd.Device.newTextureWithDescriptor(texDescriptor);
+                _deviceTexture = _gd.Device.newTextureWithDescriptor(texDescriptor);
                 ObjectiveCRuntime.release(texDescriptor.NativePtr);
             }
             else
@@ -97,7 +102,7 @@ namespace Veldrid.MTL
 
         public MTLTexture(ulong nativeTexture, ref TextureDescription description)
         {
-            DeviceTexture = new MetalBindings.MTLTexture((IntPtr)nativeTexture);
+            _deviceTexture = new MetalBindings.MTLTexture((IntPtr)nativeTexture);
             Width = description.Width;
             Height = description.Height;
             Depth = description.Depth;

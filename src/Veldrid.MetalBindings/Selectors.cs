@@ -23,5 +23,7 @@ namespace Veldrid.MetalBindings
         internal static readonly Selector pushDebugGroup = "pushDebugGroup:";
         internal static readonly Selector popDebugGroup = "popDebugGroup";
         internal static readonly Selector insertDebugSignpost = "insertDebugSignpost:";
+        internal static readonly Selector label = "label";
+        internal static readonly Selector setLabel = "setLabel:";
     }
 }

@@ -58,7 +58,9 @@ namespace Veldrid.MTL
                 {
                     // Need to create specialized MTLFunction.
                     MTLFunctionConstantValues constantValues = CreateConstantValues(description.ShaderSet.Specializations);
-                    specializedFunction = mtlShader.Library.newFunctionWithNameConstantValues(mtlShader.EntryPoint, constantValues);
+                    string entryPoint = mtlShader.EntryPoint == "main" ? "main0" : mtlShader.EntryPoint;
+                    specializedFunction = mtlShader.Library.newFunctionWithNameConstantValues(entryPoint, constantValues);
+                    specializedFunction.label = mtlShader.Name;
                     AddSpecializedFunction(specializedFunction);
                     ObjectiveCRuntime.release(constantValues.NativePtr);
 
@@ -224,7 +226,9 @@ namespace Veldrid.MTL
             {
                 // Need to create specialized MTLFunction.
                 MTLFunctionConstantValues constantValues = CreateConstantValues(description.Specializations);
-                specializedFunction = mtlShader.Library.newFunctionWithNameConstantValues(mtlShader.EntryPoint, constantValues);
+                string entryPoint = mtlShader.EntryPoint == "main" ? "main0" : mtlShader.EntryPoint;
+                specializedFunction = mtlShader.Library.newFunctionWithNameConstantValues(entryPoint, constantValues);
+                specializedFunction.label = mtlShader.Name;
                 AddSpecializedFunction(specializedFunction);
                 ObjectiveCRuntime.release(constantValues.NativePtr);
 

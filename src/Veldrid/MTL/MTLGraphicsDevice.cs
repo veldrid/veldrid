@@ -23,7 +23,8 @@ namespace Veldrid.MTL
 
         private readonly object _submittedCommandsLock = new object();
         private readonly Dictionary<MetalBindings.MTLCommandBuffer, MTLFence> _submittedCBs = new Dictionary<MetalBindings.MTLCommandBuffer, MTLFence>();
-        private readonly Dictionary<MetalBindings.MTLCommandBuffer, MTLCommandBuffer> _submittedCBsMap = new Dictionary<MetalBindings.MTLCommandBuffer, MTLCommandBuffer>();
+        private readonly Dictionary<MetalBindings.MTLCommandBuffer, SmallFixedOrDynamicArray<MTLCommandBuffer>> _submittedCBsMap
+            = new Dictionary<MetalBindings.MTLCommandBuffer, SmallFixedOrDynamicArray<MTLCommandBuffer>>();
         private MetalBindings.MTLCommandBuffer _latestSubmittedCB;
 
         private readonly object _resetEventsLock = new object();
@@ -147,15 +148,18 @@ namespace Veldrid.MTL
         {
             lock (_submittedCommandsLock)
             {
+                if (_submittedCBsMap.TryGetValue(cb, out SmallFixedOrDynamicArray<MTLCommandBuffer> mtlCBs))
+                {
+                    for (uint i = 0; i < mtlCBs.Count; i++)
+                    {
+                        mtlCBs.Get(i).ExecutionCompleted();
+                    }
+                    _submittedCBsMap.Remove(cb);
+                }
                 if (_submittedCBs.TryGetValue(cb, out MTLFence fence))
                 {
                     fence.Set();
                     _submittedCBs.Remove(cb);
-                }
-                if (_submittedCBsMap.TryGetValue(cb, out MTLCommandBuffer mtlCB))
-                {
-                    mtlCB.ExecutionCompleted();
-                    _submittedCBsMap.Remove(cb);
                 }
 
                 if (_latestSubmittedCB.NativePtr == cb.NativePtr)
@@ -583,11 +587,13 @@ namespace Veldrid.MTL
             lock (_submittedCommandsLock)
             {
                 var submissionCB = mtlCB.PrepareForSubmission();
+                SmallFixedOrDynamicArray<MTLCommandBuffer> arr = new SmallFixedOrDynamicArray<MTLCommandBuffer>(mtlCB);
+                _submittedCBsMap.Add(submissionCB, arr);
+
                 if (fence != null)
                 {
                     MTLFence mtlFence = Util.AssertSubtype<Fence, MTLFence>(fence);
                     _submittedCBs.Add(submissionCB, mtlFence);
-                    _submittedCBsMap.Add(submissionCB, mtlCB);
                 }
 
                 submissionCB.addCompletedHandler(_completionBlockLiteral);
@@ -597,12 +603,52 @@ namespace Veldrid.MTL
 
         private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore[] waits, Semaphore[] signals, Fence fence)
         {
-            throw new NotImplementedException();
+            if (commandBuffers.Length > 0)
+            {
+                SmallFixedOrDynamicArray<MTLCommandBuffer> arr
+                            = new SmallFixedOrDynamicArray<MTLCommandBuffer>((uint)commandBuffers.Length);
+
+                for (int i = 0; i < commandBuffers.Length - 1; i++)
+                {
+                    MTLCommandBuffer mtlCB = commandBuffers[i] as MTLCommandBuffer;
+                    if (mtlCB == null)
+                    {
+                        MTLReusableCommandBuffer reusableCB
+                            = Util.AssertSubtype<CommandBuffer, MTLReusableCommandBuffer>(commandBuffers[i]);
+                        mtlCB = reusableCB.RecordAndGetCommandBuffer();
+                    }
+
+                    var submissionCB = mtlCB.PrepareForSubmission();
+                    arr.Set((uint)i, mtlCB);
+                    submissionCB.commit();
+                }
+
+                MTLCommandBuffer finalCB = commandBuffers[commandBuffers.Length - 1] as MTLCommandBuffer;
+                if (finalCB == null)
+                {
+                    var reusableCB = (MTLReusableCommandBuffer)commandBuffers[commandBuffers.Length - 1];
+                    finalCB = reusableCB.RecordAndGetCommandBuffer();
+                }
+                lock (_submittedCommandsLock)
+                {
+                    var finalSubmissionCB = finalCB.PrepareForSubmission();
+                    arr.Set((uint)commandBuffers.Length - 1, finalCB);
+                    _submittedCBsMap.Add(finalSubmissionCB, arr);
+                    if (fence != null)
+                    {
+                        MTLFence mtlFence = Util.AssertSubtype<Fence, MTLFence>(fence);
+                        _submittedCBs.Add(finalSubmissionCB, mtlFence);
+                    }
+
+                    finalSubmissionCB.addCompletedHandler(_completionBlockLiteral);
+                    finalSubmissionCB.commit();
+                }
+            }
         }
 
         private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore wait, Semaphore signal, Fence fence)
         {
-            throw new NotImplementedException();
+            SubmitCommandsCore(commandBuffers, (Semaphore[])null, null, fence);
         }
 
         private protected override void PresentCore(Swapchain swapchain, Semaphore waitSemaphore, uint index)

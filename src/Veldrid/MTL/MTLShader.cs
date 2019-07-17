@@ -9,11 +9,17 @@ namespace Veldrid.MTL
     {
         private readonly MTLGraphicsDevice _device;
         private bool _disposed;
+        private MTLFunction _function;
 
         public MTLLibrary Library { get; private set; }
-        public MTLFunction Function { get; private set; }
-        public override string Name { get; set; }
+        public MTLFunction Function => _function;
         public bool HasFunctionConstants { get; }
+
+        public override string Name
+        {
+            get => _function.label;
+            set => _function.label = value;
+        }
 
         public unsafe MTLShader(ref ShaderDescription description, MTLGraphicsDevice gd)
             : base(description.Stage, description.EntryPoint)
@@ -52,7 +58,8 @@ namespace Veldrid.MTL
                 ObjectiveCRuntime.release(compileOptions);
             }
 
-            Function = Library.newFunctionWithName(description.EntryPoint);
+            string entryPoint = description.EntryPoint == "main" ? "main0" : description.EntryPoint;
+            _function = Library.newFunctionWithName(entryPoint);
             if (Function.NativePtr == IntPtr.Zero)
             {
                 throw new VeldridException(

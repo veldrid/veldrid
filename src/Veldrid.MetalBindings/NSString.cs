@@ -11,6 +11,11 @@ namespace Veldrid.MetalBindings
 
         public static NSString New(string s)
         {
+            if (s == null)
+            {
+                return new NSString(IntPtr.Zero);
+            }
+            
             var nss = s_class.Alloc<NSString>();
 
             fixed (char* utf16Ptr = s)

@@ -65,7 +65,6 @@ namespace Veldrid.SampleGallery
                 int mX = (int)mouseEvent.GetObjectProperty("clientX");
                 int mY = (int)mouseEvent.GetObjectProperty("clientY");
                 _inputState.MousePosition = new Vector2(mX, mY);
-                Console.WriteLine($"New mouse position: {mX}, {mY}");
 
                 mouseEvent.Dispose();
             }), false);
@@ -73,7 +72,6 @@ namespace Veldrid.SampleGallery
             {
                 int button = (int)mouseEvent.GetObjectProperty("button");
                 _inputState.MouseDown[button] = true;
-                Console.WriteLine($"Mouse down: {button}");
 
                 mouseEvent.Dispose();
             }), false);
@@ -81,7 +79,6 @@ namespace Veldrid.SampleGallery
             {
                 int button = (int)mouseEvent.GetObjectProperty("button");
                 _inputState.MouseDown[button] = false;
-                Console.WriteLine($"Mouse up: {button}");
 
                 mouseEvent.Dispose();
             }), false);
@@ -94,7 +91,6 @@ namespace Veldrid.SampleGallery
                     {
                         _inputState.KeyEvents.Add(new KeyEvent(key, true, ModifierKeys.None));
                     }
-                    Console.WriteLine($"Key down: {key}");
 
                     keyEvent.Dispose();
                 }), false);
@@ -105,7 +101,6 @@ namespace Veldrid.SampleGallery
                     {
                         _inputState.KeyEvents.Add(new KeyEvent(key, false, ModifierKeys.None));
                     }
-                    Console.WriteLine($"Key up: {key}");
 
                     keyEvent.Dispose();
                 }), false);

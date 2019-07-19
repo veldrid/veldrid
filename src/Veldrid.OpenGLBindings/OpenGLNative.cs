@@ -788,6 +788,12 @@ namespace Veldrid.OpenGLBinding
         public static void glObjectLabel(ObjectLabelIdentifier identifier, uint name, uint length, byte* label)
             => p_glObjectLabel(identifier, name, length, label);
 
+        /// <summary>
+        /// Indicates whether the glObjectLabel function was successfully loaded.
+        /// Some drivers advertise KHR_Debug support, but return null for this function pointer.
+        /// </summary>
+        public static bool HasGlObjectLabel => p_glObjectLabel != null;
+
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glTexImage2DMultisample_t(
             TextureTarget target,

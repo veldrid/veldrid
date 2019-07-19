@@ -25,13 +25,16 @@ namespace Veldrid.OpenGL
 
         internal static unsafe void SetObjectLabel(ObjectLabelIdentifier identifier, uint target, string name)
         {
-            int byteCount = Encoding.UTF8.GetByteCount(name);
-            byte* utf8Ptr = stackalloc byte[byteCount];
-            fixed (char* namePtr = name)
+            if (HasGlObjectLabel)
             {
-                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
-                glObjectLabel(identifier, target, (uint)byteCount, utf8Ptr);
-                CheckLastError();
+                int byteCount = Encoding.UTF8.GetByteCount(name);
+                byte* utf8Ptr = stackalloc byte[byteCount];
+                fixed (char* namePtr = name)
+                {
+                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                    glObjectLabel(identifier, target, (uint)byteCount, utf8Ptr);
+                    CheckLastError();
+                }
             }
         }
 

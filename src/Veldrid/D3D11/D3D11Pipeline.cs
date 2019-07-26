@@ -20,8 +20,8 @@ namespace Veldrid.D3D11
         public DomainShader DomainShader { get; } // May be null.
         public PixelShader PixelShader { get; }
         public ComputeShader ComputeShader { get; }
-        public new D3D11ResourceLayout[] ResourceLayouts { get; }
         public int[] VertexStrides { get; }
+        public D3D11ResourceSlots[] ResourceSlots { get; }
 
         public override bool IsComputePipeline { get; }
 
@@ -79,10 +79,13 @@ namespace Veldrid.D3D11
             PrimitiveTopology = D3D11Formats.VdToD3D11PrimitiveTopology(description.PrimitiveTopology);
 
             ResourceLayout[] genericLayouts = description.ResourceLayouts;
-            ResourceLayouts = new D3D11ResourceLayout[genericLayouts.Length];
+            ResourceSlots = new D3D11ResourceSlots[genericLayouts.Length];
             for (int i = 0; i < ResourceLayouts.Length; i++)
             {
-                ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(genericLayouts[i]);
+                ResourceLayoutElementDescription[] elements = description.ReflectedResourceLayouts != null
+                    ? description.ReflectedResourceLayouts[i].Elements
+                    : Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(genericLayouts[i]).Elements;
+                ResourceSlots[i] = new D3D11ResourceSlots(elements);
             }
 
             Debug.Assert(vsBytecode != null || ComputeShader != null);
@@ -108,10 +111,13 @@ namespace Veldrid.D3D11
             IsComputePipeline = true;
             ComputeShader = (ComputeShader)((D3D11Shader)description.ComputeShader).DeviceShader;
             ResourceLayout[] genericLayouts = description.ResourceLayouts;
-            ResourceLayouts = new D3D11ResourceLayout[genericLayouts.Length];
+            ResourceSlots = new D3D11ResourceSlots[genericLayouts.Length];
             for (int i = 0; i < ResourceLayouts.Length; i++)
             {
-                ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(genericLayouts[i]);
+                ResourceLayoutElementDescription[] elements = description.ReflectedResourceLayouts != null
+                    ? description.ReflectedResourceLayouts[i].Elements
+                    : Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(genericLayouts[i]).Elements;
+                ResourceSlots[i] = new D3D11ResourceSlots(elements);
             }
         }
 

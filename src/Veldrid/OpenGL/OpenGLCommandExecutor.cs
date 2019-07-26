@@ -24,7 +24,6 @@ namespace Veldrid.OpenGL
         private OpenGLBuffer[] _vertexBuffers = Array.Empty<OpenGLBuffer>();
         private uint[] _vbOffsets = Array.Empty<uint>();
         private uint[] _vertexAttribDivisors = Array.Empty<uint>();
-        private uint _vertexAttributesBound;
         private readonly Viewport[] _viewports = new Viewport[20];
         private DrawElementsType _drawElementsType;
         private uint _ibOffset;
@@ -275,11 +274,10 @@ namespace Veldrid.OpenGL
                 for (uint slot = 0; slot < input.Elements.Length; slot++)
                 {
                     ref VertexElementDescription element = ref input.Elements[slot]; // Large structure -- use by reference.
-                    uint actualSlot = totalSlotsBound + slot;
-                    if (actualSlot >= _vertexAttributesBound)
-                    {
-                        glEnableVertexAttribArray(actualSlot);
-                    }
+                    uint actualSlot = _graphicsPipeline.VertexAttributeLocations[totalSlotsBound];
+                    if (actualSlot == uint.MaxValue) { continue; }
+
+                    glEnableVertexAttribArray(actualSlot);
                     VertexAttribPointerType type = OpenGLFormats.VdToGLVertexAttribPointerType(
                         element.Format,
                         out bool normalized,
@@ -311,24 +309,16 @@ namespace Veldrid.OpenGL
                     }
 
                     uint stepRate = input.InstanceStepRate;
-                    if (_vertexAttribDivisors[actualSlot] != stepRate)
+                    if (_vertexAttribDivisors[totalSlotsBound] != stepRate)
                     {
                         glVertexAttribDivisor(actualSlot, stepRate);
-                        _vertexAttribDivisors[actualSlot] = stepRate;
+                        _vertexAttribDivisors[totalSlotsBound] = stepRate;
                     }
 
                     offset += FormatHelpers.GetSizeInBytes(element.Format);
+                    totalSlotsBound += 1;
                 }
-
-                totalSlotsBound += (uint)input.Elements.Length;
             }
-
-            for (uint extraSlot = totalSlotsBound; extraSlot < _vertexAttributesBound; extraSlot++)
-            {
-                glDisableVertexAttribArray(extraSlot);
-            }
-
-            _vertexAttributesBound = totalSlotsBound;
         }
 
         internal void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
@@ -807,6 +797,7 @@ namespace Veldrid.OpenGL
             uint dynamicOffsetIndex = 0;
             for (uint element = 0; element < glResourceSet.Resources.Length; element++)
             {
+                if (layoutElements[element].IsUnused) { continue; }
                 ResourceKind kind = layoutElements[element].Kind;
                 BindableResource resource = glResourceSet.Resources[(int)element];
 
@@ -823,12 +814,12 @@ namespace Veldrid.OpenGL
                     {
                         if (!isNew) { continue; }
 
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        OpenGLBuffer glUB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
-
-                        glUB.EnsureResourcesCreated();
                         if (pipeline.GetUniformBindingForSlot(slot, element, out OpenGLUniformBinding uniformBindingInfo))
                         {
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            OpenGLBuffer glUB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
+                            glUB.EnsureResourcesCreated();
+
                             if (range.SizeInBytes < uniformBindingInfo.BlockSize)
                             {
                                 string name = glResourceSet.Layout.Elements[element].Name;
@@ -855,12 +846,12 @@ namespace Veldrid.OpenGL
                     {
                         if (!isNew) { continue; }
 
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
-
-                        glBuffer.EnsureResourcesCreated();
                         if (pipeline.GetStorageBufferBindingForSlot(slot, element, out OpenGLShaderStorageBinding shaderStorageBinding))
                         {
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
+                            glBuffer.EnsureResourcesCreated();
+
                             if (_backend == GraphicsBackend.OpenGL)
                             {
                                 glShaderStorageBlockBinding(
@@ -892,22 +883,24 @@ namespace Veldrid.OpenGL
                         break;
                     }
                     case ResourceKind.TextureReadOnly:
-                        TextureView texView = Util.GetTextureView(_gd, resource);
-                        OpenGLTextureView glTexView = Util.AssertSubtype<TextureView, OpenGLTextureView>(texView);
-                        glTexView.EnsureResourcesCreated();
                         if (pipeline.GetTextureBindingInfo(slot, element, out OpenGLTextureBindingSlotInfo textureBindingInfo))
                         {
+                            TextureView texView = Util.GetTextureView(_gd, resource);
+                            OpenGLTextureView glTexView = Util.AssertSubtype<TextureView, OpenGLTextureView>(texView);
+                            glTexView.EnsureResourcesCreated();
+
                             _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
                             glUniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
                             CheckLastError();
                         }
                         break;
                     case ResourceKind.TextureReadWrite:
-                        TextureView texViewRW = Util.GetTextureView(_gd, resource);
-                        OpenGLTextureView glTexViewRW = Util.AssertSubtype<TextureView, OpenGLTextureView>(texViewRW);
-                        glTexViewRW.EnsureResourcesCreated();
                         if (pipeline.GetTextureBindingInfo(slot, element, out OpenGLTextureBindingSlotInfo imageBindingInfo))
                         {
+                            TextureView texViewRW = Util.GetTextureView(_gd, resource);
+                            OpenGLTextureView glTexViewRW = Util.AssertSubtype<TextureView, OpenGLTextureView>(texViewRW);
+                            glTexViewRW.EnsureResourcesCreated();
+
                             if (_backend == GraphicsBackend.OpenGL)
                             {
                                 glBindImageTexture(
@@ -937,10 +930,11 @@ namespace Veldrid.OpenGL
                         }
                         break;
                     case ResourceKind.Sampler:
-                        OpenGLSampler glSampler = Util.AssertSubtype<BindableResource, OpenGLSampler>(resource);
-                        glSampler.EnsureResourcesCreated();
                         if (pipeline.GetSamplerBindingInfo(slot, element, out OpenGLSamplerBindingSlotInfo samplerBindingInfo))
                         {
+                            OpenGLSampler glSampler = Util.AssertSubtype<BindableResource, OpenGLSampler>(resource);
+                            glSampler.EnsureResourcesCreated();
+
                             foreach (int index in samplerBindingInfo.RelativeIndices)
                             {
                                 _textureSamplerManager.SetSampler((uint)index, glSampler);

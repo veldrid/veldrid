@@ -10,7 +10,7 @@ foreach ($file in $fileNames)
         if (-not [System.IO.File]::Exists($outPath) -or (Get-ChildItem $outPath).LastWriteTime -le $inputLastWrite)
         {
             Write-Host "Compiling $file" -> $outPath
-            glslangvalidator -V $inPath -o $outPath
+            glslc $inPath -o $outPath -O
         }
     }
 }

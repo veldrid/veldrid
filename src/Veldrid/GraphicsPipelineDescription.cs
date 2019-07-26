@@ -41,6 +41,14 @@ namespace Veldrid
         /// If <code>null</code>, the pipeline will use the value specified in <see cref="GraphicsDeviceOptions"/>.
         /// </summary>
         public ResourceBindingModel? ResourceBindingModel;
+        /// <summary>
+        ///
+        /// </summary>
+        public VertexElementDescription[] ReflectedVertexElements;
+        /// <summary>
+        ///
+        /// </summary>
+        public ResourceLayoutDescription[] ReflectedResourceLayouts;
 
         /// <summary>
         /// Constructs a new <see cref="GraphicsPipelineDescription"/>.
@@ -74,6 +82,8 @@ namespace Veldrid
             ResourceLayouts = resourceLayouts;
             Outputs = outputs;
             ResourceBindingModel = null;
+            ReflectedVertexElements = null;
+            ReflectedResourceLayouts = null;
         }
 
         /// <summary>
@@ -108,6 +118,8 @@ namespace Veldrid
             ResourceLayouts = new[] { resourceLayout };
             Outputs = outputs;
             ResourceBindingModel = null;
+            ReflectedVertexElements = null;
+            ReflectedResourceLayouts = null;
         }
 
         /// <summary>
@@ -145,6 +157,8 @@ namespace Veldrid
             ResourceLayouts = resourceLayouts;
             Outputs = outputs;
             ResourceBindingModel = resourceBindingModel;
+            ReflectedVertexElements = null;
+            ReflectedResourceLayouts = null;
         }
 
         /// <summary>
@@ -163,7 +177,9 @@ namespace Veldrid
                 && (ResourceBindingModel.HasValue && other.ResourceBindingModel.HasValue
                     ? ResourceBindingModel.Value == other.ResourceBindingModel.Value
                     : ResourceBindingModel.HasValue == other.ResourceBindingModel.HasValue)
-                && Outputs.Equals(other.Outputs);
+                && Outputs.Equals(other.Outputs)
+                && Util.ArrayEqualsEquatable(ReflectedVertexElements, other.ReflectedVertexElements)
+                && Util.ArrayEqualsEquatable(ReflectedResourceLayouts, other.ReflectedResourceLayouts);
         }
 
         /// <summary>
@@ -180,7 +196,9 @@ namespace Veldrid
                 ShaderSet.GetHashCode(),
                 HashHelper.Array(ResourceLayouts),
                 ResourceBindingModel.GetHashCode(),
-                Outputs.GetHashCode());
+                Outputs.GetHashCode(),
+                HashHelper.Array(ReflectedVertexElements),
+                HashHelper.Array(ReflectedResourceLayouts));
         }
     }
 }

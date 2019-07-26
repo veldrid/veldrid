@@ -75,6 +75,14 @@ namespace Veldrid
         {
             return HashHelper.Combine(Name.GetHashCode(), (int)Kind, (int)Stages, (int)Options);
         }
+
+        public static ResourceLayoutElementDescription Unused => new ResourceLayoutElementDescription(
+            string.Empty,
+            ResourceKind.UniformBuffer,
+            ShaderStages.None,
+            ResourceLayoutElementOptions.Unused);
+
+        public bool IsUnused => (Options & ResourceLayoutElementOptions.Unused) != 0;
     }
 
     /// <summary>
@@ -95,5 +103,9 @@ namespace Veldrid
         /// <see cref="GraphicsDevice.StructuredBufferMinOffsetAlignment"/>.
         /// </summary>
         DynamicBinding = 1 << 0,
+        /// <summary>
+        /// Indicates that a slot in a ResourceLayout is not used.
+        /// </summary>
+        Unused = 1 << 1,
     }
 }

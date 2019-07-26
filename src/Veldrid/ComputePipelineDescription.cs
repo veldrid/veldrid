@@ -34,6 +34,10 @@ namespace Veldrid
         /// constants specified in the <see cref="Shader"/>.
         /// </summary>
         public SpecializationConstant[] Specializations;
+        /// <summary>
+        ///
+        /// </summary>
+        public ResourceLayoutDescription[] ReflectedResourceLayouts;
 
         /// <summary>
         /// Constructs a new ComputePipelineDescription.
@@ -57,6 +61,7 @@ namespace Veldrid
             ThreadGroupSizeY = threadGroupSizeY;
             ThreadGroupSizeZ = threadGroupSizeZ;
             Specializations = null;
+            ReflectedResourceLayouts = null;
         }
 
         /// <summary>
@@ -81,6 +86,7 @@ namespace Veldrid
             ThreadGroupSizeY = threadGroupSizeY;
             ThreadGroupSizeZ = threadGroupSizeZ;
             Specializations = null;
+            ReflectedResourceLayouts = null;
         }
 
         /// <summary>
@@ -109,6 +115,7 @@ namespace Veldrid
             ThreadGroupSizeY = threadGroupSizeY;
             ThreadGroupSizeZ = threadGroupSizeZ;
             Specializations = specializations;
+            ReflectedResourceLayouts = null;
         }
 
         /// <summary>
@@ -122,7 +129,8 @@ namespace Veldrid
                 && Util.ArrayEquals(ResourceLayouts, other.ResourceLayouts)
                 && ThreadGroupSizeX.Equals(other.ThreadGroupSizeX)
                 && ThreadGroupSizeY.Equals(other.ThreadGroupSizeY)
-                && ThreadGroupSizeZ.Equals(other.ThreadGroupSizeZ);
+                && ThreadGroupSizeZ.Equals(other.ThreadGroupSizeZ)
+                && Util.ArrayEqualsEquatable(ReflectedResourceLayouts, other.ReflectedResourceLayouts);
         }
 
         /// <summary>
@@ -136,7 +144,8 @@ namespace Veldrid
                 HashHelper.Array(ResourceLayouts),
                 ThreadGroupSizeX.GetHashCode(),
                 ThreadGroupSizeY.GetHashCode(),
-                ThreadGroupSizeZ.GetHashCode());
+                ThreadGroupSizeZ.GetHashCode(),
+                HashHelper.Array(ReflectedResourceLayouts));
         }
     }
 }

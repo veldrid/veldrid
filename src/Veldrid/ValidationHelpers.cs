@@ -19,12 +19,15 @@ namespace Veldrid
 
             for (uint i = 0; i < elements.Length; i++)
             {
+                if (elements[i].IsUnused) { continue; }
                 ValidateResourceKind(elements[i].Kind, resources[i], i);
             }
 
-            for (int i = 0; i < description.Layout.Description.Elements.Length; i++)
+            for (int i = 0; i < elements.Length; i++)
             {
-                ResourceLayoutElementDescription element = description.Layout.Description.Elements[i];
+                ResourceLayoutElementDescription element = elements[i];
+                if (element.IsUnused) { continue; }
+
                 if (element.Kind == ResourceKind.UniformBuffer
                     || element.Kind == ResourceKind.StructuredBufferReadOnly
                     || element.Kind == ResourceKind.StructuredBufferReadWrite)

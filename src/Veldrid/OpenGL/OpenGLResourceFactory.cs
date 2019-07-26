@@ -31,7 +31,9 @@ namespace Veldrid.OpenGL
 
         protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
         {
-            return new OpenGLPipeline(_gd, ref description);
+            OpenGLPipeline pipeline = new OpenGLPipeline(_gd, ref description);
+            _gd.EnsureResourceInitialized(pipeline);
+            return pipeline;
         }
 
         public override Pipeline CreateComputePipeline(ref ComputePipelineDescription description)

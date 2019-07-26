@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Veldrid.WebGL
 {
@@ -20,6 +21,7 @@ namespace Veldrid.WebGL
         private readonly FramebufferAttachment? _depthTarget;
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
+        public override IReadOnlyList<FramebufferAttachment> ResolveTargets => Array.Empty<FramebufferAttachment>();
         public override FramebufferAttachment? DepthTarget => _depthTarget;
 
         public bool DisableSrgbConversion { get; }

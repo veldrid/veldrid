@@ -454,8 +454,6 @@ namespace Veldrid.Vk
                     return VkAttachmentStoreOp.DontCare;
                 case StoreAction.Store:
                     return VkAttachmentStoreOp.Store;
-                case StoreAction.Resolve:
-                    return VkAttachmentStoreOp.DontCare;
                 default:
                     throw Illegal.Value<StoreAction>();
             }

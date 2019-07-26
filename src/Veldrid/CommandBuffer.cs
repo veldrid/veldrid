@@ -34,21 +34,25 @@ namespace Veldrid
             StoreAction storeAction,
             RgbaFloat clearColor,
             float clearDepth)
-            => BeginRenderPass(
-                framebuffer, loadAction, storeAction, clearColor, clearDepth, Span<Texture>.Empty);
+        {
+            BeginRenderPass(
+                new RenderPassDescription(
+                    framebuffer,
+                    loadAction,
+                    clearColor,
+                    loadAction,
+                    clearDepth,
+                    storeAction,
+                    storeAction));
+        }
 
-        public void BeginRenderPass(
-            Framebuffer framebuffer,
-            LoadAction loadAction,
-            StoreAction storeAction,
-            RgbaFloat clearColor,
-            float clearDepth,
-            Span<Texture> resolveTextures)
+        public void BeginRenderPass(in RenderPassDescription rpd)
         {
             RequireNoRenderPass();
-            _framebuffer = framebuffer;
-            BeginRenderPassCore(
-                new RenderPassDescription(framebuffer, loadAction, storeAction, clearColor, clearDepth, resolveTextures));
+            _framebuffer = rpd.Framebuffer;
+
+            // TODO: Validate size of arrays, etc.
+            BeginRenderPassCore(rpd);
         }
 
         internal abstract void BeginRenderPassCore(in RenderPassDescription rpd);

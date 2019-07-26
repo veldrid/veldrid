@@ -56,6 +56,7 @@ namespace Veldrid.D3D11
         private Framebuffer _currentFB;
         private bool _disposed;
         private SharpDX.Direct3D11.CommandList _commandList;
+        private RenderPassDescription _rpd;
 
         // Cached resources
         private const int MaxCachedUniformBuffers = 15;
@@ -132,10 +133,12 @@ namespace Veldrid.D3D11
             CreateNewDeferredContext();
         }
 
-        internal override void BeginRenderPassCore(in RenderPassDescription rpi)
+        internal override void BeginRenderPassCore(in RenderPassDescription rpd)
         {
             BeginRecording();
-            D3D11Framebuffer d3d11FB = (D3D11Framebuffer)rpi.Framebuffer;
+
+            _rpd = rpd;
+            D3D11Framebuffer d3d11FB = (D3D11Framebuffer)rpd.Framebuffer;
             _ctx.OutputMerger.SetRenderTargets(d3d11FB.DepthStencilView, d3d11FB.RenderTargetViews);
 
             if (d3d11FB.Swapchain != null)
@@ -144,32 +147,57 @@ namespace Veldrid.D3D11
                 d3d11FB.Swapchain.AddCommandBufferReference(this);
             }
 
-            if (rpi.LoadAction == LoadAction.Clear)
+            for (uint attach = 0; attach < rpd.Framebuffer.ColorTargets.Count; attach++)
             {
-                SharpDX.Mathematics.Interop.RawColor4 color = new SharpDX.Mathematics.Interop.RawColor4(
-                    rpi.ClearColor.R, rpi.ClearColor.G, rpi.ClearColor.B, rpi.ClearColor.A);
-                foreach (RenderTargetView rtv in d3d11FB.RenderTargetViews)
+                rpd.GetColorAttachment(attach, out LoadAction loadAction, out _, out RgbaFloat color);
+                if (loadAction == LoadAction.Clear)
                 {
-                    _ctx.ClearRenderTargetView(rtv, color);
-                }
-
-                if (d3d11FB.DepthStencilView != null)
-                {
-                    _ctx.ClearDepthStencilView(
-                        d3d11FB.DepthStencilView,
-                        DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil,
-                        rpi.ClearDepth,
-                        0); // TODO: Stencil clear
+                    RawColor4 rawColor = new RawColor4(color.R, color.G, color.B, color.A);
+                    _ctx.ClearRenderTargetView(d3d11FB.RenderTargetViews[attach], rawColor);
                 }
             }
 
-            _currentFB = rpi.Framebuffer;
+            if (d3d11FB.DepthStencilView != null &&
+                (rpd.DepthLoadAction == LoadAction.Clear || rpd.StencilLoadAction == LoadAction.Clear))
+            {
+                DepthStencilClearFlags flags = 0;
+                if (rpd.DepthLoadAction == LoadAction.Clear) { flags |= DepthStencilClearFlags.Depth; }
+                if (rpd.StencilLoadAction == LoadAction.Clear) { flags |= DepthStencilClearFlags.Stencil; }
+
+                _ctx.ClearDepthStencilView(
+                    d3d11FB.DepthStencilView,
+                    flags,
+                    rpd.ClearDepth,
+                    rpd.ClearStencil);
+            }
+
+            _currentFB = rpd.Framebuffer;
             SetFullViewports();
             SetFullScissorRects();
         }
 
         private protected override void EndRenderPassCore()
         {
+            for (uint i = 0; i < _rpd.Framebuffer.ColorTargets.Count; i++)
+            {
+                if (_rpd.Framebuffer.ResolveTargets.Count > i)
+                {
+                    FramebufferAttachment srcAttachment = _rpd.Framebuffer.ColorTargets[(int)i];
+                    FramebufferAttachment resolveTarget = _rpd.Framebuffer.ResolveTargets[(int)i];
+                    if (resolveTarget.Target != null)
+                    {
+                        D3D11Texture d3d11Source = Util.AssertSubtype<Texture, D3D11Texture>(srcAttachment.Target);
+                        D3D11Texture d3d11Destination = Util.AssertSubtype<Texture, D3D11Texture>(resolveTarget.Target);
+                        _ctx.ResolveSubresource(
+                            d3d11Source.DeviceTexture,
+                            D3D11Util.ComputeSubresource(srcAttachment.MipLevel, srcAttachment.Target.MipLevels, srcAttachment.ArrayLayer),
+                            d3d11Destination.DeviceTexture,
+                            D3D11Util.ComputeSubresource(resolveTarget.MipLevel, resolveTarget.Target.MipLevels, resolveTarget.ArrayLayer),
+                            d3d11Destination.DxgiFormat);
+                    }
+                }
+            }
+
             _currentFB = null;
         }
 

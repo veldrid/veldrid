@@ -71,7 +71,7 @@ namespace Veldrid.OpenGL
                     srgb,
                     major,
                     minor,
-                    shareContext,
+                    IntPtr.Zero,
                     out glContext))
                 {
                     throw new VeldridException($"Failed to create OpenGL context.");

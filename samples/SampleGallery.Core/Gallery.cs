@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
@@ -15,6 +16,9 @@ namespace Veldrid.SampleGallery
         private TextureBlitter _blitter;
         private CommandBuffer[] _cbs = Array.Empty<CommandBuffer>();
         private CommandBuffer[] _postProcessCBs;
+        private string _loadedExampleName;
+        private readonly Dictionary<string, Func<Example>> _availableExamples
+            = new Dictionary<string, Func<Example>>();
 
         public Gallery(IGalleryDriver driver)
         {
@@ -56,13 +60,28 @@ namespace Veldrid.SampleGallery
             }
         }
 
-        public void LoadExample(Example example)
+        public void RegisterExample(string name, Func<Example> load)
+            => _availableExamples.Add(name, load);
+
+        public void LoadExample(string name)
         {
-            _example = example;
-            _example.Initialize(_driver);
-            Console.WriteLine("Loading resources async.");
-            _example.LoadResourcesAsync().Wait();
-            Console.WriteLine("Done loading resources async.");
+            if (_loadedExampleName != name
+                &&_availableExamples.TryGetValue(name, out Func<Example> load))
+            {
+                if (_example != null)
+                {
+                    _example.Shutdown();
+                }
+
+                _example = load();
+                _example.Initialize(_driver);
+                _example.LoadResourcesAsync().Wait();
+                _loadedExampleName = name;
+            }
+            else
+            {
+                // TODO: Show error message
+            }
         }
 
         private void Update(double deltaSeconds)
@@ -75,6 +94,18 @@ namespace Veldrid.SampleGallery
                 ImGui.Text($"Framerate: {ImGui.GetIO().Framerate}");
                 ImGui.Text($"Mouse pos: {ImGui.GetIO().MousePos}");
                 ImGui.Text($"Backend: {_driver.Device.BackendType}");
+
+                if (ImGui.BeginCombo("Examples", _loadedExampleName))
+                {
+                    foreach (KeyValuePair<string, Func<Example>> kvp in _availableExamples)
+                    {
+                        if (ImGui.Selectable(kvp.Key, _loadedExampleName == kvp.Key))
+                        {
+                            LoadExample(kvp.Key);
+                        }
+                    }
+                    ImGui.EndCombo();
+                }
             }
         }
 
@@ -122,7 +153,9 @@ namespace Veldrid.SampleGallery
                 resourceBindingModel: ResourceBindingModel.Improved,
                 preferDepthRangeZeroToOne: true,
                 preferStandardClipSpaceYDirection: true,
-                swapchainSrgbFormat: true);
+                swapchainSrgbFormat: true,
+                enableCommandBuffers: true);
+
         }
     }
 }

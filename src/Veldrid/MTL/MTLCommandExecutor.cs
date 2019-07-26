@@ -29,13 +29,7 @@ namespace Veldrid.MTL
             return _cb.PrepareForSubmission();
         }
 
-        public override void BeginRenderPass(in RenderPassDescription rpd)
-            => _cb.BeginRenderPass(
-                rpd.Framebuffer,
-                rpd.LoadAction,
-                rpd.StoreAction,
-                rpd.ClearColor,
-                rpd.ClearDepth);
+        public override void BeginRenderPass(in RenderPassDescription rpd) => _cb.BeginRenderPass(rpd);
 
         public override void EndRenderPass() => _cb.EndRenderPass();
         public override void BlitTexture(

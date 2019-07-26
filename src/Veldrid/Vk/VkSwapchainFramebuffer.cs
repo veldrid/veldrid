@@ -37,6 +37,7 @@ namespace Veldrid.Vk
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _scColorTextures[(int)_currentImageIndex];
 
+        public override IReadOnlyList<FramebufferAttachment> ResolveTargets => Array.Empty<FramebufferAttachment>();
         public override FramebufferAttachment? DepthTarget => _depthAttachment;
 
         public override uint RenderableWidth => _scExtent.width;

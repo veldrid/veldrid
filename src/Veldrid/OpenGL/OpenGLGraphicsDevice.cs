@@ -184,7 +184,8 @@ namespace Veldrid.OpenGL
                 structuredBuffer: _extensions.StorageBuffers,
                 subsetTextureView: _extensions.ARB_TextureView,
                 commandListDebugMarkers: _extensions.KHR_Debug || _extensions.EXT_DebugMarker,
-                bufferRangeBinding: true);
+                bufferRangeBinding: true,
+                commandBuffers: options.EnableCommandBuffers);
 
             int uboAlignment;
             glGetIntegerv(GetPName.UniformBufferOffsetAlignment, &uboAlignment);

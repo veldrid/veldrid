@@ -22,6 +22,7 @@ namespace Veldrid.MTL
         private readonly PixelFormat? _depthFormat;
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
+        public override IReadOnlyList<FramebufferAttachment> ResolveTargets => Array.Empty<FramebufferAttachment>();
         public override FramebufferAttachment? DepthTarget => _depthTarget;
         private CAMetalDrawable _drawable;
 

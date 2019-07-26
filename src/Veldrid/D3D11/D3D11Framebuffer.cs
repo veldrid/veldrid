@@ -14,7 +14,7 @@ namespace Veldrid.D3D11
         internal D3D11Swapchain Swapchain { get; set; }
 
         public D3D11Framebuffer(Device device, ref FramebufferDescription description)
-            : base(description.DepthTarget, description.ColorTargets)
+            : base(description.DepthTarget, description.ColorTargets, description.ResolveTargetsOrEmpty())
         {
             if (description.DepthTarget != null)
             {

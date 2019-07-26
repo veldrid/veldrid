@@ -377,6 +377,16 @@ namespace Veldrid
         {
             if (_framebuffer != fb)
             {
+#if VALIDATE_USAGE
+                foreach (FramebufferAttachment resolveTarget in fb.ResolveTargets)
+                {
+                    if (resolveTarget.Target != null)
+                    {
+                        throw new VeldridException($"Framebuffers with resolve targets can only be used with the CommandBuffer API.");
+                    }
+                }
+#endif
+
                 _framebuffer = fb;
                 SetFramebufferCore(fb);
                 SetFullViewports();

@@ -12,7 +12,7 @@ namespace Veldrid
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> representing the render targets of this instance.
         /// This property cannot be used with
-        /// <see cref="CommandBuffer.BeginRenderPass(Framebuffer, LoadAction, StoreAction, RgbaFloat, float, Span{Texture})"/>.
+        /// <see cref="CommandBuffer.BeginRenderPass(in RenderPassDescription)"/>.
         /// Instead, use one of the Framebuffers from <see cref="Framebuffers"/>.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]

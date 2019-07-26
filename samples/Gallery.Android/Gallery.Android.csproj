@@ -155,6 +155,10 @@
       <Project>{ba16808b-fbb7-4051-ac23-aafb3422d2ab}</Project>
       <Name>SimpleMeshRender</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Snake\Snake.csproj">
+      <Project>{F4744A83-4D55-4C12-A635-72C981855147}</Project>
+      <Name>Snake</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

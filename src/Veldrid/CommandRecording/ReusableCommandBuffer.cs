@@ -51,10 +51,10 @@ namespace Veldrid.CommandRecording
             _entryList.PushDebugGroup(name);
         }
 
-        internal override void BeginRenderPassCore(in RenderPassDescription rpi)
+        internal override void BeginRenderPassCore(in RenderPassDescription rpd)
         {
             BeginRecording();
-            _entryList.BeginRenderPass(rpi);
+            _entryList.BeginRenderPass(rpd);
         }
 
         private protected override void EndRenderPassCore()

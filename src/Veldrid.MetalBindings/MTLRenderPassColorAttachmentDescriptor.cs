@@ -32,6 +32,24 @@ namespace Veldrid.MetalBindings
             set => objc_msgSend(NativePtr, Selectors.setResolveTexture, value.NativePtr);
         }
 
+        public UIntPtr resolveLevel
+        {
+            get => UIntPtr_objc_msgSend(NativePtr, "resolveLevel");
+            set => objc_msgSend(NativePtr, "setResolveLevel:", value);
+        }
+
+        public UIntPtr resolveSlice
+        {
+            get => UIntPtr_objc_msgSend(NativePtr, "resolveSlice");
+            set => objc_msgSend(NativePtr, "setResolveSlice:", value);
+        }
+
+        public UIntPtr resolveDepthPlane
+        {
+            get => UIntPtr_objc_msgSend(NativePtr, "resolveDepthPlane");
+            set => objc_msgSend(NativePtr, "setResolveDepthPlane:", value);
+        }
+
         public MTLClearColor clearColor
         {
             get

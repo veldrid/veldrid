@@ -944,10 +944,11 @@ namespace Veldrid.MTL
             RenderPassDescription rpd = new RenderPassDescription(
                 _mtlFramebuffer,
                 LoadAction.Load,
+                default,
+                LoadAction.Load,
+                default,
                 StoreAction.Store,
-                default,
-                default,
-                Span<Texture>.Empty);
+                StoreAction.Store);
 
             MTLRenderPassDescriptor rpDesc = _mtlFramebuffer.CreateRenderPassDescriptor(rpd);
             for (uint i = 0; i < _clearColors.Length; i++)

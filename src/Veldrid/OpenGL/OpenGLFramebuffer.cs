@@ -20,7 +20,7 @@ namespace Veldrid.OpenGL
         public bool Created { get; private set; }
 
         public OpenGLFramebuffer(OpenGLGraphicsDevice gd, ref FramebufferDescription description)
-            : base(description.DepthTarget, description.ColorTargets)
+            : base(description.DepthTarget, description.ColorTargets, description.ResolveTargets)
         {
             _gd = gd;
         }

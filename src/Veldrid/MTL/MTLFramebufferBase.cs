@@ -7,26 +7,49 @@ namespace Veldrid.MTL
     {
         protected abstract MetalBindings.MTLTexture GetMtlTexture(uint target);
 
-        public MTLRenderPassDescriptor CreateRenderPassDescriptor(in RenderPassDescription rpi)
+        public MTLRenderPassDescriptor CreateRenderPassDescriptor(in RenderPassDescription rpd)
         {
-             MTLRenderPassDescriptor ret = MTLRenderPassDescriptor.New();
-            for (int i = 0; i < ColorTargets.Count; i++)
+            MTLRenderPassDescriptor ret = MTLRenderPassDescriptor.New();
+            for (uint i = 0; i < ColorTargets.Count; i++)
             {
-                FramebufferAttachment colorTarget = ColorTargets[i];
-                MTLRenderPassColorAttachmentDescriptor colorDescriptor = ret.colorAttachments[(uint)i];
-                colorDescriptor.texture = GetMtlTexture((uint)i);
-                colorDescriptor.loadAction = MTLFormats.VdToMTLLoadAction(rpi.LoadAction);
-                colorDescriptor.storeAction = MTLFormats.VdToMTLStoreAction(rpi.StoreAction);
+                rpd.GetColorAttachment(
+                    i,
+                    out LoadAction loadAction,
+                    out StoreAction storeAction,
+                    out RgbaFloat clearColor);
+
+                bool hasResolveTex = ResolveTargets.Count > i && ResolveTargets[(int)i].Target != null;
+                FramebufferAttachment colorTarget = ColorTargets[(int)i];
+                MTLRenderPassColorAttachmentDescriptor colorDescriptor = ret.colorAttachments[i];
+                colorDescriptor.texture = GetMtlTexture(i);
+                colorDescriptor.loadAction = MTLFormats.VdToMTLLoadAction(loadAction);
+                colorDescriptor.storeAction = MTLFormats.VdToMTLStoreAction(storeAction, hasResolveTex);
                 colorDescriptor.slice = (UIntPtr)colorTarget.ArrayLayer;
                 colorDescriptor.level = (UIntPtr)colorTarget.MipLevel;
 
-                if (rpi.LoadAction == LoadAction.Clear)
+                if (hasResolveTex)
+                {
+                    FramebufferAttachment resolveAttachment = ResolveTargets[(int)i];
+                    MTLTexture mtlResolveTex = Util.AssertSubtype<Texture, MTLTexture>(resolveAttachment.Target);
+                    colorDescriptor.resolveTexture = mtlResolveTex.DeviceTexture;
+                    colorDescriptor.resolveLevel = (UIntPtr)resolveAttachment.MipLevel;
+                    if (mtlResolveTex.Type == TextureType.Texture2D)
+                    {
+                        colorDescriptor.resolveSlice = (UIntPtr)resolveAttachment.ArrayLayer;
+                    }
+                    else
+                    {
+                        colorDescriptor.resolveDepthPlane = (UIntPtr)resolveAttachment.ArrayLayer;
+                    }
+                }
+
+                if (loadAction == LoadAction.Clear)
                 {
                     colorDescriptor.clearColor = new MTLClearColor(
-                        rpi.ClearColor.R,
-                        rpi.ClearColor.G,
-                        rpi.ClearColor.B,
-                        rpi.ClearColor.A);
+                        clearColor.R,
+                        clearColor.G,
+                        clearColor.B,
+                        clearColor.A);
                 }
             }
 
@@ -34,24 +57,29 @@ namespace Veldrid.MTL
             {
                 MTLTexture mtlDepthTarget = Util.AssertSubtype<Texture, MTLTexture>(DepthTarget.Value.Target);
                 MTLRenderPassDepthAttachmentDescriptor depthDescriptor = ret.depthAttachment;
-                depthDescriptor.loadAction = MTLFormats.VdToMTLLoadAction(rpi.LoadAction);
-                depthDescriptor.storeAction = MTLFormats.VdToMTLStoreAction(rpi.StoreAction);
+                depthDescriptor.loadAction = MTLFormats.VdToMTLLoadAction(rpd.DepthLoadAction);
+                depthDescriptor.storeAction = MTLFormats.VdToMTLStoreAction(rpd.DepthStoreAction, false);
                 depthDescriptor.texture = mtlDepthTarget.DeviceTexture;
                 depthDescriptor.slice = (UIntPtr)DepthTarget.Value.ArrayLayer;
                 depthDescriptor.level = (UIntPtr)DepthTarget.Value.MipLevel;
 
-                if (rpi.LoadAction == LoadAction.Clear)
+                if (rpd.DepthLoadAction == LoadAction.Clear)
                 {
-                    depthDescriptor.clearDepth = rpi.ClearDepth;
+                    depthDescriptor.clearDepth = rpd.ClearDepth;
                 }
 
                 if (FormatHelpers.IsStencilFormat(mtlDepthTarget.Format))
                 {
                     MTLRenderPassStencilAttachmentDescriptor stencilDescriptor = ret.stencilAttachment;
-                    stencilDescriptor.loadAction = MTLFormats.VdToMTLLoadAction(rpi.LoadAction);
-                    stencilDescriptor.storeAction = MTLFormats.VdToMTLStoreAction(rpi.StoreAction);
+                    stencilDescriptor.loadAction = MTLFormats.VdToMTLLoadAction(rpd.StencilLoadAction);
+                    stencilDescriptor.storeAction = MTLFormats.VdToMTLStoreAction(rpd.StencilStoreAction, false);
                     stencilDescriptor.texture = mtlDepthTarget.DeviceTexture;
                     stencilDescriptor.slice = (UIntPtr)DepthTarget.Value.ArrayLayer;
+
+                    if (rpd.StencilLoadAction == LoadAction.Clear)
+                    {
+                        stencilDescriptor.clearStencil = rpd.ClearStencil;
+                    }
                 }
             }
 
@@ -63,7 +91,7 @@ namespace Veldrid.MTL
         public override string Name { get; set; }
 
         public MTLFramebufferBase(MTLGraphicsDevice gd, ref FramebufferDescription description)
-            : base(description.DepthTarget, description.ColorTargets)
+            : base(description.DepthTarget, description.ColorTargets, description.ResolveTargets)
         {
         }
 

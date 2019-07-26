@@ -12,6 +12,7 @@ namespace Veldrid.OpenGL
         private bool _syncToVerticalBlank;
         private OpenGLSwapchainFramebuffer _fb;
         private bool _disposed;
+        private uint _lastAcquiredImage;
 
         public OpenGLSecondarySwapchain(OpenGLGraphicsDevice gd, ref SwapchainDescription scDesc)
         {
@@ -50,6 +51,7 @@ namespace Veldrid.OpenGL
             _subordinateContext.Resize(width, height);
 
             _framebuffers = new[] { _fb, _fb };
+            _lastAcquiredImage = (uint)_framebuffers.Length - 1;
 
             _gd.RegisterSecondarySwapchain(this);
         }
@@ -68,7 +70,7 @@ namespace Veldrid.OpenGL
 
         public override Framebuffer[] Framebuffers => _framebuffers;
 
-        public override uint LastAcquiredImage => throw new NotImplementedException();
+        public override uint LastAcquiredImage => _lastAcquiredImage;
 
         public void DestroyGLResources()
         {

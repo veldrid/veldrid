@@ -216,8 +216,16 @@ namespace Veldrid.NeoDemo
                 PixelFormat.R32_Float,
                 TextureUsage.DepthStencil,
                 sampleCount));
-            MainSceneFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(MainSceneDepthTexture, MainSceneColorTexture));
-            MainSceneViewResourceSet = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, MainSceneResolvedColorView, gd.PointSampler));
+            Texture[] resolveTargets = sampleCount != TextureSampleCount.Count1
+                ? new[] { MainSceneResolvedColorTexture }
+                : Array.Empty<Texture>();
+            MainSceneFramebuffer = factory.CreateFramebuffer(
+                new FramebufferDescription(
+                    MainSceneDepthTexture,
+                    new[] { MainSceneColorTexture },
+                    resolveTargets));
+            MainSceneViewResourceSet = factory.CreateResourceSet(
+                new ResourceSetDescription(TextureSamplerResourceLayout, MainSceneResolvedColorView, gd.PointSampler));
 
             TextureDescription colorTargetDesc = TextureDescription.Texture2D(
                 swapchain.Width,

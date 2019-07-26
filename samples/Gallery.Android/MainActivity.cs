@@ -2,6 +2,7 @@
 using Android.OS;
 using Android.Support.V7.App;
 using Android.Content.PM;
+using Snake;
 
 namespace Veldrid.SampleGallery
 {
@@ -22,6 +23,7 @@ namespace Veldrid.SampleGallery
             GraphicsBackend backend = GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)
                 ? GraphicsBackend.Vulkan
                 : GraphicsBackend.OpenGLES;
+            backend = GraphicsBackend.OpenGLES;
             _view = new VeldridSurfaceView(this, backend, options);
             _view.DeviceCreated += OnDeviceCreated;
             SetContentView(_view);
@@ -30,7 +32,10 @@ namespace Veldrid.SampleGallery
         private void OnDeviceCreated()
         {
             Gallery gallery = new Gallery(_view);
-            gallery.LoadExample(new SimpleMeshRender());
+            gallery.RegisterExample("Simple Mesh Render", () => new SimpleMeshRender());
+            gallery.RegisterExample("Snake", () => new SnakeExample());
+            gallery.LoadExample("Snake");
+
             _view.RunContinuousRenderLoop();
         }
     }

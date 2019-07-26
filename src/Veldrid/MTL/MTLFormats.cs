@@ -696,18 +696,14 @@ namespace Veldrid.MTL
             }
         }
 
-        internal static MTLStoreAction VdToMTLStoreAction(StoreAction sa)
+        internal static MTLStoreAction VdToMTLStoreAction(StoreAction sa, bool hasResolve)
         {
             switch (sa)
             {
                 case StoreAction.DontCare:
-                    return MTLStoreAction.DontCare;
+                    return hasResolve ? MTLStoreAction.MultisampleResolve : MTLStoreAction.DontCare;
                 case StoreAction.Store:
-                    return MTLStoreAction.Store;
-                case StoreAction.Resolve:
-                    return MTLStoreAction.MultisampleResolve;
-                case StoreAction.StoreAndResolve:
-                    return MTLStoreAction.StoreAndMultisampleResolve;
+                    return hasResolve ? MTLStoreAction.StoreAndMultisampleResolve : MTLStoreAction.Store;
                 default:
                     throw Illegal.Value<LoadAction>();
             }

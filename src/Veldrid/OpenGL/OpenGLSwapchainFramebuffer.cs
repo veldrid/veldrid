@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Veldrid.OpenGL
@@ -23,6 +24,7 @@ namespace Veldrid.OpenGL
         private bool _needsResize;
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
+        public override IReadOnlyList<FramebufferAttachment> ResolveTargets => Array.Empty<FramebufferAttachment>();
         public override FramebufferAttachment? DepthTarget => _depthTarget;
 
         public bool DisableSrgbConversion { get; }

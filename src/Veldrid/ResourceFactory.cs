@@ -494,6 +494,13 @@ namespace Veldrid
 
         public CommandBuffer CreateCommandBuffer(ref CommandBufferDescription description)
         {
+            if (!Features.CommandBuffers)
+            {
+                throw new VeldridException(
+                    $"CommandBuffer objects can only be created from a GraphicsDevice with " +
+                    $"GraphicsDeviceOptions.EnableCommandBuffers set to true.");
+            }
+
             return CreateCommandBufferCore(ref description);
         }
 

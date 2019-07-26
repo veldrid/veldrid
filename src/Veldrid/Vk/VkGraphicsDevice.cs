@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -144,7 +145,8 @@ namespace Veldrid.Vk
                 structuredBuffer: true,
                 subsetTextureView: true,
                 commandListDebugMarkers: _debugMarkerEnabled,
-                bufferRangeBinding: true);
+                bufferRangeBinding: true,
+                commandBuffers: options.EnableCommandBuffers);
 
             ResourceFactory = new VkResourceFactory(this);
 

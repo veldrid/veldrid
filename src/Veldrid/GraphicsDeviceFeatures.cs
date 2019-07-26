@@ -91,6 +91,12 @@
         /// must be bound with their full range.
         /// </summary>
         public bool BufferRangeBinding { get; }
+        /// <summary>
+        /// Indicates whether <see cref="CommandBuffer"/> objects can be created. This property only depends on whether
+        /// <see cref="GraphicsDeviceOptions.EnableCommandBuffers"/> was set to true when the device was created, and
+        /// is otherwise available on all systems.
+        /// </summary>
+        public bool CommandBuffers { get; }
 
         internal GraphicsDeviceFeatures(
             bool computeShader,
@@ -110,7 +116,8 @@
             bool structuredBuffer,
             bool subsetTextureView,
             bool commandListDebugMarkers,
-            bool bufferRangeBinding)
+            bool bufferRangeBinding,
+            bool commandBuffers)
         {
             ComputeShader = computeShader;
             GeometryShader = geometryShader;
@@ -130,6 +137,7 @@
             SubsetTextureView = subsetTextureView;
             CommandListDebugMarkers = commandListDebugMarkers;
             BufferRangeBinding = bufferRangeBinding;
+            CommandBuffers = commandBuffers;
         }
     }
 }

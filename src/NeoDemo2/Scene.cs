@@ -187,7 +187,15 @@ namespace Veldrid.NeoDemo
             // Main scene
             sc.UpdateCameraBuffers(cb); // Re-set because reflection step changed it.
             cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);
-            cb.BeginRenderPass(sc.MainSceneFramebuffer, LoadAction.Clear, StoreAction.Store, RgbaFloat.Clear, clearDepth);
+
+            RenderPassDescription rpd = RenderPassDescription.Create(sc.MainSceneFramebuffer);
+            rpd.SetDepthAttachment(LoadAction.Clear, StoreAction.DontCare, clearDepth);
+            rpd.SetColorAttachment(
+                0,
+                LoadAction.DontCare,
+                sc.MainSceneSampleCount == TextureSampleCount.Count1 ? StoreAction.Store : StoreAction.DontCare,
+                default);
+            cb.BeginRenderPass(rpd);
 
             cb.PushDebugGroup("Main Scene Pass");
             Render(gd, cb, sc, RenderPasses.Standard, cameraFrustum, _camera.Position, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
@@ -202,12 +210,6 @@ namespace Veldrid.NeoDemo
             cb.PopDebugGroup();
 
             cb.EndRenderPass();
-
-            if (sc.MainSceneColorTexture.SampleCount != TextureSampleCount.Count1)
-            {
-                throw new NotImplementedException();
-                // cb.ResolveTexture(sc.MainSceneColorTexture, sc.MainSceneResolvedColorTexture);
-            }
 
             cb.MemoryBarrier(sc.MainSceneColorTexture, 0, 1, 0, 1, ShaderStages.Fragment, ShaderStages.Fragment);
 

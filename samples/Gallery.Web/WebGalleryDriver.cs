@@ -54,7 +54,7 @@ namespace Veldrid.SampleGallery
             string divCanvasName = $"div_canvas";
             string canvasName = $"canvas";
             JSObject canvas = HtmlHelper.AddCanvas(divCanvasName, canvasName, CanvasWidth, CanvasHeight);
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions();
+            GraphicsDeviceOptions options = Gallery.GetPreferredOptions();
             Device = GraphicsDevice.CreateWebGL(options, canvas);
             _loop = new Action<double>(Loop);
             _frameLoop = new AdvancedFrameLoop(Device, MainSwapchain);

@@ -72,7 +72,8 @@ namespace Veldrid.MTL
                 structuredBuffer: true,
                 subsetTextureView: true,
                 commandListDebugMarkers: true,
-                bufferRangeBinding: true);
+                bufferRangeBinding: true,
+                options.EnableCommandBuffers);
             ResourceBindingModel = options.ResourceBindingModel;
 
             _libSystem = new NativeLibrary("libSystem.dylib");

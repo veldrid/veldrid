@@ -4,7 +4,5 @@
     {
         DontCare,
         Store,
-        Resolve,
-        StoreAndResolve
     }
 }

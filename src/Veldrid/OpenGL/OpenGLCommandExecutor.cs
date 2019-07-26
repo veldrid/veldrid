@@ -17,7 +17,7 @@ namespace Veldrid.OpenGL
         private readonly OpenGLExtensions _extensions;
         private readonly OpenGLPlatformInfo _platformInfo;
         private readonly GraphicsDeviceFeatures _features;
-
+        private RenderPassDescription _rpd;
         private Framebuffer _fb;
         private bool _isSwapchainFB;
         private OpenGLPipeline _graphicsPipeline;
@@ -687,10 +687,22 @@ namespace Veldrid.OpenGL
 
         public override void EndRenderPass()
         {
+            for (uint i = 0; i < _rpd.Framebuffer.ColorTargets.Count; i++)
+            {
+                if (_rpd.Framebuffer.ResolveTargets.Count > i)
+                {
+                    FramebufferAttachment attachment = _rpd.Framebuffer.ResolveTargets[(int)i];
+                    if (attachment.Target != null)
+                    {
+                        ResolveTexture(_rpd.Framebuffer.ColorTargets[(int)i].Target, attachment.Target);
+                    }
+                }
+            }
         }
 
         public override void BeginRenderPass(in RenderPassDescription rpd)
         {
+            _rpd = rpd;
             _fb = rpd.Framebuffer;
             if (_fb is OpenGLFramebuffer glFB)
             {
@@ -762,15 +774,46 @@ namespace Veldrid.OpenGL
                 SetScissorRect(index, 0, 0, _fb.Width, _fb.Height);
             }
 
-            if (rpd.LoadAction == LoadAction.Clear)
+            for (uint attach = 0; attach < rpd.Framebuffer.ColorTargets.Count; attach++)
             {
-                glClearDepth_Compat(rpd.ClearDepth);
-                CheckLastError();
-                glClearColor(rpd.ClearColor.R, rpd.ClearColor.G, rpd.ClearColor.B, rpd.ClearColor.A);
-                CheckLastError();
-                glDepthMask(true);
-                CheckLastError();
-                glClear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+                rpd.GetColorAttachment(attach, out LoadAction loadAction, out _, out RgbaFloat color);
+                if (loadAction == LoadAction.Clear)
+                {
+                    bool isSC = rpd.Framebuffer is OpenGLSwapchainFramebuffer;
+                    if (!isSC)
+                    {
+                        DrawBuffersEnum bufs = DrawBuffersEnum.ColorAttachment0 + (int)attach;
+                        glDrawBuffers(1, &bufs);
+                        CheckLastError();
+                    }
+
+                    glClearColor(color.R, color.G, color.B, color.A);
+                    CheckLastError();
+
+                    glClear(ClearBufferMask.ColorBufferBit);
+                }
+            }
+
+            if (rpd.DepthLoadAction == LoadAction.Clear || rpd.StencilLoadAction == LoadAction.Clear)
+            {
+                ClearBufferMask mask = ClearBufferMask.None;
+
+                if (rpd.DepthLoadAction == LoadAction.Clear)
+                {
+                    mask |= ClearBufferMask.DepthBufferBit;
+                    glClearDepth_Compat(rpd.ClearDepth);
+                    CheckLastError();
+                    glDepthMask(true);
+                    CheckLastError();
+                }
+                if (rpd.StencilLoadAction == LoadAction.Clear)
+                {
+                    mask |= ClearBufferMask.StencilBufferBit;
+                    glClearStencil(rpd.ClearStencil);
+                    CheckLastError();
+                }
+
+                glClear(mask);
                 CheckLastError();
             }
         }
@@ -1124,6 +1167,7 @@ namespace Veldrid.OpenGL
             }
         }
 
+        // TODO: This doesn't take into account non-zero mip levels / array layers.
         public override void ResolveTexture(Texture source, Texture destination)
         {
             OpenGLTexture glSourceTex = Util.AssertSubtype<Texture, OpenGLTexture>(source);

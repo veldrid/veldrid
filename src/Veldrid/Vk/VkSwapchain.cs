@@ -81,7 +81,7 @@ namespace Veldrid.Vk
 
             RefCount = new ResourceRefCount(DisposeCore);
 
-            if (!_gd.EnableCommandBuffers)
+            if (!_gd.Features.CommandBuffers)
             {
                 AcquireNextImage(null, _imageAvailableFence);
                 _imageAvailableFence.Wait();
@@ -92,7 +92,7 @@ namespace Veldrid.Vk
         public override void Resize(uint width, uint height)
         {
             CreateSwapchain(width, height);
-            if (!_gd.EnableCommandBuffers)
+            if (!_gd.Features.CommandBuffers)
             {
                 AcquireNextImage(null, _imageAvailableFence);
                 _imageAvailableFence.Wait();

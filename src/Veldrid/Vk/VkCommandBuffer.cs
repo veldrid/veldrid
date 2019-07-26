@@ -84,48 +84,45 @@ namespace Veldrid.Vk
             }
         }
 
-        internal override void BeginRenderPassCore(in RenderPassDescription rpi)
+        internal override void BeginRenderPassCore(in RenderPassDescription rpd)
         {
-            if (rpi.Framebuffer is VkSwapchainFramebuffer)
+            if (rpd.Framebuffer is VkSwapchainFramebuffer)
             {
                 throw new VeldridException(
                     "BeginRenderPass cannot be called on a Swapchain's Framebuffer directly.");
             }
-            _currentFB = Util.AssertSubtype<Framebuffer, VkFramebuffer>(rpi.Framebuffer);
+            _currentFB = Util.AssertSubtype<Framebuffer, VkFramebuffer>(rpd.Framebuffer);
 
             BeginIfNeeded();
 
             VkRenderPassBeginInfo rpBI = VkRenderPassBeginInfo.New();
-            rpBI.renderPass = _currentFB.GetRenderPass(rpi);
+            rpBI.renderPass = _currentFB.GetRenderPass(rpd);
             rpBI.framebuffer = _currentFB.CurrentFramebuffer;
-            rpBI.renderArea = new VkRect2D(0, 0, rpi.Framebuffer.Width, rpi.Framebuffer.Height);
+            rpBI.renderArea = new VkRect2D(0, 0, rpd.Framebuffer.Width, rpd.Framebuffer.Height);
 
-            if (rpi.LoadAction == LoadAction.Clear)
-            {
-                rpBI.clearValueCount += (uint)rpi.Framebuffer.ColorTargets.Count;
-                if (rpi.Framebuffer.DepthTarget != null) { rpBI.clearValueCount += 1; }
-            }
-
+            rpBI.clearValueCount += (uint)rpd.Framebuffer.ColorTargets.Count;
+            if (rpd.Framebuffer.DepthTarget != null) { rpBI.clearValueCount += 1; }
             VkClearValue* clears = stackalloc VkClearValue[(int)rpBI.clearValueCount];
+            rpBI.pClearValues = clears;
 
-            if (rpi.LoadAction == LoadAction.Clear)
+            for (uint i = 0; i < rpd.Framebuffer.ColorTargets.Count; i++)
             {
-                for (uint i = 0; i < rpi.Framebuffer.ColorTargets.Count; i++)
+                rpd.GetColorAttachment(i, out LoadAction loadAction, out _, out RgbaFloat clearRgba);
+                if (loadAction == LoadAction.Clear)
                 {
                     VkClearValue clearColor = new VkClearValue
                     {
-                        color = new VkClearColorValue(rpi.ClearColor.R, rpi.ClearColor.G, rpi.ClearColor.B, rpi.ClearColor.A)
+                        color = new VkClearColorValue(clearRgba.R, clearRgba.G, clearRgba.B, clearRgba.A)
                     };
                     clears[i] = clearColor;
                 }
-                if (rpi.Framebuffer.DepthTarget != null)
+            }
+            if (rpd.Framebuffer.DepthTarget != null)
+            {
+                clears[rpd.Framebuffer.ColorTargets.Count] = new VkClearValue
                 {
-                    clears[rpi.Framebuffer.ColorTargets.Count] = new VkClearValue
-                    {
-                        depthStencil = new VkClearDepthStencilValue(rpi.ClearDepth, 0)
-                    };
-                    rpBI.pClearValues = clears;
-                }
+                    depthStencil = new VkClearDepthStencilValue(rpd.ClearDepth, rpd.ClearStencil)
+                };
             }
 
             vkCmdBeginRenderPass(_cb, &rpBI, VkSubpassContents.Inline);

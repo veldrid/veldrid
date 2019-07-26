@@ -14,7 +14,7 @@ namespace Veldrid.WebGL
         public bool IsSwapchainFramebuffer => _swapchain != null;
 
         public WebGLFramebuffer(WebGLGraphicsDevice gd, ref FramebufferDescription description)
-            : base(description.DepthTarget, description.ColorTargets)
+            : base(description.DepthTarget, description.ColorTargets, description.ResolveTargets)
         {
             _gd = gd;
             WglFramebuffer = gd.Ctx.CreateFramebuffer();

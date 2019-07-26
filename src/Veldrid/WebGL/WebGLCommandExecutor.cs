@@ -15,7 +15,7 @@ namespace Veldrid.WebGL
         private readonly WebGLTextureSamplerManager _textureSamplerManager;
         private readonly StagingMemoryPool _stagingMemoryPool;
         private readonly GraphicsDeviceFeatures _features;
-
+        private RenderPassDescription _rpd;
         private Framebuffer _fb;
         private bool _isSwapchainFB;
         private WebGLPipeline _graphicsPipeline;
@@ -434,10 +434,22 @@ namespace Veldrid.WebGL
 
         public override void EndRenderPass()
         {
+            for (uint i = 0; i < _rpd.Framebuffer.ColorTargets.Count; i++)
+            {
+                if (_rpd.Framebuffer.ResolveTargets.Count > i)
+                {
+                    FramebufferAttachment resolveAttachment = _rpd.Framebuffer.ResolveTargets[(int)i];
+                    if (resolveAttachment.Target != null)
+                    {
+                        ResolveTexture(_rpd.Framebuffer.ColorTargets[(int)i].Target, resolveAttachment.Target);
+                    }
+                }
+            }
         }
 
         public override void BeginRenderPass(in RenderPassDescription rpd)
         {
+            _rpd = rpd;
             _fb = rpd.Framebuffer;
 
             if (_fb is WebGLFramebuffer wglFB)
@@ -467,12 +479,33 @@ namespace Veldrid.WebGL
                 SetScissorRect(index, 0, 0, _fb.Width, _fb.Height);
             }
 
-            if (rpd.LoadAction == LoadAction.Clear)
+            if (rpd.Framebuffer.ColorTargets.Count > 0)
             {
-                _ctx.ClearDepth(rpd.ClearDepth);
-                _ctx.ClearColor(rpd.ClearColor.R, rpd.ClearColor.G, rpd.ClearColor.B, rpd.ClearColor.A);
-                _ctx.DepthMask(true);
-                _ctx.Clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
+                rpd.GetColorAttachment(0, out LoadAction loadAction, out _, out RgbaFloat color);
+                if (loadAction == LoadAction.Clear)
+                {
+                    _ctx.ClearColor(color.R, color.G, color.B, color.A);
+                    _ctx.Clear(COLOR_BUFFER_BIT);
+                }
+            }
+
+            if (rpd.DepthLoadAction == LoadAction.Clear || rpd.StencilLoadAction == LoadAction.Clear)
+            {
+                uint mask = 0;
+
+                if (rpd.DepthLoadAction == LoadAction.Clear)
+                {
+                    mask |= DEPTH_BUFFER_BIT;
+                    _ctx.ClearDepth(rpd.ClearDepth);
+                    _ctx.DepthMask(true);
+                }
+                if (rpd.StencilLoadAction == LoadAction.Clear)
+                {
+                    mask |= STENCIL_BUFFER_BIT;
+                    _ctx.ClearStencil(rpd.ClearStencil);
+                }
+
+                _ctx.Clear(mask);
             }
         }
 

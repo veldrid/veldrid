@@ -21,8 +21,15 @@ namespace Veldrid
         public virtual IReadOnlyList<FramebufferAttachment> ColorTargets { get; }
 
         /// <summary>
-        /// Gets an <see cref="Veldrid.OutputDescription"/> which describes the number and formats of the depth and color targets
-        /// in this instance.
+        /// Gets the collection of resolve attachments associated with this instance. May be empty.
+        /// If non-empty, this list will be the same size as <see cref="ColorTargets"/>, but some elements may be null,
+        /// indicating that the corresponding color attachment is not to be resolved.
+        /// </summary>
+        public virtual IReadOnlyList<FramebufferAttachment> ResolveTargets { get; }
+
+        /// <summary>
+        /// Gets an <see cref="Veldrid.OutputDescription"/> which describes the number and formats of the depth, color,
+        /// and resolve targets in this instance.
         /// </summary>
         public virtual OutputDescription OutputDescription { get; }
 
@@ -41,6 +48,14 @@ namespace Veldrid
         internal Framebuffer(
             FramebufferAttachmentDescription? depthTargetDesc,
             IReadOnlyList<FramebufferAttachmentDescription> colorTargetDescs)
+            : this(depthTargetDesc, colorTargetDescs, Array.Empty<FramebufferAttachmentDescription>())
+        { }
+
+        internal Framebuffer(
+            FramebufferAttachmentDescription? depthTargetDesc,
+            IReadOnlyList<FramebufferAttachmentDescription> colorTargetDescs,
+            IReadOnlyList<FramebufferAttachmentDescription> resolveTargetDescs)
+
         {
             if (depthTargetDesc != null)
             {
@@ -50,6 +65,7 @@ namespace Veldrid
                     depthAttachment.ArrayLayer,
                     depthAttachment.MipLevel);
             }
+
             FramebufferAttachment[] colorTargets = new FramebufferAttachment[colorTargetDescs.Count];
             for (int i = 0; i < colorTargets.Length; i++)
             {
@@ -58,8 +74,17 @@ namespace Veldrid
                     colorTargetDescs[i].ArrayLayer,
                     colorTargetDescs[i].MipLevel);
             }
-
             ColorTargets = colorTargets;
+
+            FramebufferAttachment[] resolveTargets = new FramebufferAttachment[resolveTargetDescs?.Count ?? 0];
+            for (int i = 0; i < resolveTargets.Length; i++)
+            {
+                resolveTargets[i] = new FramebufferAttachment(
+                    resolveTargetDescs[i].Target,
+                    resolveTargetDescs[i].ArrayLayer,
+                    resolveTargetDescs[i].MipLevel);
+            }
+            ResolveTargets = resolveTargets;
 
             Texture dimTex;
             uint mipLevel;

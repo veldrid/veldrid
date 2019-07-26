@@ -37,6 +37,7 @@ namespace Veldrid.SampleGallery
         {
             GraphicsDeviceOptions options = Gallery.GetPreferredOptions();
             GraphicsBackend backend = VeldridStartup.GetPlatformDefaultBackend();
+            backend = GraphicsBackend.Vulkan;
 
             WindowCreateInfo windowCI = new WindowCreateInfo(
                 Sdl2Native.SDL_WINDOWPOS_CENTERED, Sdl2Native.SDL_WINDOWPOS_CENTERED,
@@ -52,7 +53,9 @@ namespace Veldrid.SampleGallery
             };
 
             Gallery gallery = new Gallery(this);
-            gallery.LoadExample(new SnakeExample());
+            gallery.RegisterExample("Simple Mesh Render", () => new SimpleMeshRender());
+            gallery.RegisterExample("Snake", () => new SnakeExample());
+            gallery.LoadExample("Simple Mesh Render");
 
             _sw = Stopwatch.StartNew();
             _previousTime = _sw.Elapsed.TotalSeconds;

@@ -22,16 +22,21 @@ namespace CommandBufferDemo
                 WindowInitialState = WindowState.Normal,
                 WindowTitle = "Veldrid NeoDemo"
             };
-            Sdl2Window window = VeldridStartup.CreateWindow(windowCI);
+            // Sdl2Window window = VeldridStartup.CreateWindow(windowCI);
 
             GraphicsDeviceOptions gdOptions = GraphicsDeviceOptions.Recommended_4_7_0;
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            GraphicsDevice gd = GraphicsDevice.Create(gdOptions, GraphicsBackend.Metal);
-            SwapchainSource ss = VeldridStartup.GetSwapchainSource(window);
-            Swapchain sc = gd.ResourceFactory.CreateSwapchain(
-                new SwapchainDescription(ss, (uint)window.Width, (uint)window.Height, PixelFormat.R16_UNorm, false, true));
+
+            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, GraphicsBackend.OpenGL, out var window, out var gd);
+            Swapchain sc = gd.MainSwapchain;
+
+//             GraphicsDevice gd = GraphicsDevice.Create(gdOptions, GraphicsBackend.OpenGL);
+//             SwapchainSource ss = VeldridStartup.GetSwapchainSource(window);
+//             Swapchain sc = gd.ResourceFactory.CreateSwapchain(
+//                 new SwapchainDescription(ss, (uint)window.Width, (uint)window.Height, PixelFormat.R16_UNorm, false, true));
+
             window.Resized += () => sc.Resize((uint)window.Width, (uint)window.Height);
 
             (Pipeline p, ResourceLayout layout) = CreateQuadPipeline(gd.ResourceFactory, sc.Framebuffers[0].OutputDescription);
@@ -112,7 +117,7 @@ void main()
 }
 ";
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
-                new ResourceLayoutElementDescription("OffsetsInfo", ResourceKind.UniformBuffer, ShaderStages.Vertex, ResourceLayoutElementOptions.DynamicBinding)));
+                new ResourceLayoutElementDescription("OffsetInfo", ResourceKind.UniformBuffer, ShaderStages.Vertex, ResourceLayoutElementOptions.DynamicBinding)));
 
             Pipeline pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,

@@ -18,7 +18,6 @@ namespace Veldrid
 
         internal GraphicsDevice(ref GraphicsDeviceOptions options)
         {
-            EnableCommandBuffers = options.EnableCommandBuffers;
         }
 
         /// <summary>
@@ -801,8 +800,6 @@ namespace Veldrid
                 return _aniso4xSampler;
             }
         }
-
-        public bool EnableCommandBuffers { get; }
 
         /// <summary>
         /// Frees unmanaged resources controlled by this device.

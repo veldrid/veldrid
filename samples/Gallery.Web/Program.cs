@@ -8,7 +8,9 @@ namespace Veldrid.SampleGallery
         {
             WebGalleryDriver driver = new WebGalleryDriver();
             Gallery gallery = new Gallery(driver);
-            gallery.LoadExample(new SnakeExample());
+            gallery.RegisterExample("Simple Mesh Render", () => new SimpleMeshRender());
+            gallery.RegisterExample("Snake", () => new SnakeExample());
+            gallery.LoadExample("Simple Mesh Render");
             driver.Run();
         }
     }

@@ -7,8 +7,9 @@ namespace Veldrid.Vk
     {
         public VkFramebufferBase(
             FramebufferAttachmentDescription? depthTexture,
-            IReadOnlyList<FramebufferAttachmentDescription> colorTextures)
-            : base(depthTexture, colorTextures)
+            IReadOnlyList<FramebufferAttachmentDescription> colorTextures,
+            IReadOnlyList<FramebufferAttachmentDescription> resolveTargets)
+            : base(depthTexture, colorTextures, resolveTargets)
         {
             RefCount = new ResourceRefCount(DisposeCore);
         }

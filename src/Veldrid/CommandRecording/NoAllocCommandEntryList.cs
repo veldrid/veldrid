@@ -15,6 +15,8 @@ namespace Veldrid.CommandRecording
         private uint _totalEntries;
         private readonly List<object> _resourceList = new List<object>();
         private readonly List<StagingBlock> _stagingBlocks = new List<StagingBlock>();
+        private readonly List<RecordedAttachmentInfo> _attachmentInfos = new List<RecordedAttachmentInfo>();
+        private uint _lastUsedAttachmentIndex = 0;
 
         // Entry IDs
         private const byte BeginEntryID = 1;
@@ -137,6 +139,9 @@ namespace Veldrid.CommandRecording
             {
                 block.Clear();
             }
+
+            _attachmentInfos.Clear();
+            _lastUsedAttachmentIndex = 0;
         }
 
         public void Dispose()
@@ -419,13 +424,17 @@ namespace Veldrid.CommandRecording
                         break;
                     case BeginRenderPassEntryID:
                         NoAllocBeginRenderPassEntry brpe = Unsafe.ReadUnaligned<NoAllocBeginRenderPassEntry>(entryBasePtr);
-                        RenderPassDescription rpd = new RenderPassDescription(
-                            brpe.Framebuffer.Get(_resourceList),
-                            brpe.LoadAction,
-                            brpe.StoreAction,
-                            brpe.ClearColor,
-                            brpe.ClearDepth,
-                            Span<Texture>.Empty);
+
+                        RenderPassDescription rpd = RenderPassDescription.Create(brpe.Framebuffer.Get(_resourceList));
+                        for (uint attach = 0; attach < rpd.Framebuffer.ColorTargets.Count; attach++)
+                        {
+                            RecordedAttachmentInfo ri = _attachmentInfos[(int)(brpe.AttachmentInfoStartIndex + attach)];
+                            rpd.SetColorAttachment(attach, ri.Load, ri.Store, ri.ClearColor);
+                        }
+
+                        rpd.SetDepthAttachment(brpe.DepthLoad, brpe.DepthStore, brpe.ClearDepth);
+                        rpd.SetStencilAttachment(brpe.StencilLoad, brpe.StencilStore, brpe.ClearStencil);
+
                         executor.BeginRenderPass(rpd);
                         currentOffset += BeginRenderPassEntrySize;
                         break;
@@ -505,17 +514,25 @@ namespace Veldrid.CommandRecording
 
         public void BeginRenderPass(in RenderPassDescription rpd)
         {
+            uint attachmentStartIndex = _lastUsedAttachmentIndex;
+
+            for (uint i = 0; i < rpd.Framebuffer.ColorTargets.Count; i++)
+            {
+                RecordedAttachmentInfo ai = new RecordedAttachmentInfo();
+                rpd.GetColorAttachment(i, out ai.Load, out ai.Store, out ai.ClearColor);
+                _attachmentInfos.Add(ai);
+                _lastUsedAttachmentIndex += 1;
+            }
+
             NoAllocBeginRenderPassEntry entry = new NoAllocBeginRenderPassEntry(
                 Track(rpd.Framebuffer),
-                rpd.StoreAction,
-                rpd.LoadAction,
-                rpd.ClearColor,
-                rpd.ClearDepth);
-
-            if (rpd.ResolveTextures.Count > 0)
-            {
-                throw new NotImplementedException();
-            }
+                attachmentStartIndex,
+                rpd.DepthLoadAction,
+                rpd.ClearDepth,
+                rpd.DepthStoreAction,
+                rpd.StencilLoadAction,
+                rpd.ClearStencil,
+                rpd.StencilStoreAction);
 
             AddEntry(BeginRenderPassEntryID, ref entry);
         }

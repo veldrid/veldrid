@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 
 namespace Veldrid
 {
@@ -17,6 +16,10 @@ namespace Veldrid
         /// </summary>
         public OutputAttachmentDescription[] ColorAttachments;
         /// <summary>
+        /// An array of attachment descriptions, one for each resolve attachment. May be empty.
+        /// </summary>
+        public OutputAttachmentDescription[] ResolveAttachments;
+        /// <summary>
         /// The number of samples in each target attachment.
         /// </summary>
         public TextureSampleCount SampleCount;
@@ -26,12 +29,15 @@ namespace Veldrid
         /// </summary>
         /// <param name="depthAttachment">A description of the depth attachment.</param>
         /// <param name="colorAttachments">An array of descriptions of each color attachment.</param>
-        public OutputDescription(OutputAttachmentDescription? depthAttachment, params OutputAttachmentDescription[] colorAttachments)
-        {
-            DepthAttachment = depthAttachment;
-            ColorAttachments = colorAttachments ?? Array.Empty<OutputAttachmentDescription>();
-            SampleCount = TextureSampleCount.Count1;
-        }
+        public OutputDescription(
+            OutputAttachmentDescription? depthAttachment,
+            params OutputAttachmentDescription[] colorAttachments)
+            : this(
+                  depthAttachment,
+                  colorAttachments,
+                  Array.Empty<OutputAttachmentDescription>(),
+                  TextureSampleCount.Count1)
+        { }
 
         /// <summary>
         /// Constructs a new <see cref="OutputDescription"/>.
@@ -43,9 +49,29 @@ namespace Veldrid
             OutputAttachmentDescription? depthAttachment,
             OutputAttachmentDescription[] colorAttachments,
             TextureSampleCount sampleCount)
+            : this(
+                  depthAttachment,
+                  colorAttachments,
+                  Array.Empty<OutputAttachmentDescription>(),
+                  sampleCount)
+        { }
+
+        /// <summary>
+        /// Constructs a new <see cref="OutputDescription"/>.
+        /// </summary>
+        /// <param name="depthAttachment">A description of the depth attachment.</param>
+        /// <param name="colorAttachments">An array of descriptions of each color attachment.</param>
+        /// <param name="resolveAttachments">An array of descriptions of each resolve attachment.</param>
+        /// <param name="sampleCount">The number of samples in each target attachment.</param>
+        public OutputDescription(
+            OutputAttachmentDescription? depthAttachment,
+            OutputAttachmentDescription[] colorAttachments,
+            OutputAttachmentDescription[] resolveAttachments,
+            TextureSampleCount sampleCount)
         {
             DepthAttachment = depthAttachment;
             ColorAttachments = colorAttachments ?? Array.Empty<OutputAttachmentDescription>();
+            ResolveAttachments = resolveAttachments;
             SampleCount = sampleCount;
         }
 
@@ -64,8 +90,13 @@ namespace Veldrid
                 colorAttachments[i] = new OutputAttachmentDescription(fb.ColorTargets[i].Target.Format);
                 sampleCount = fb.ColorTargets[i].Target.SampleCount;
             }
+            OutputAttachmentDescription[] resolveAttachments = new OutputAttachmentDescription[fb.ResolveTargets.Count];
+            for (int i = 0; i < resolveAttachments.Length; i++)
+            {
+                resolveAttachments[i] = new OutputAttachmentDescription(fb.ResolveTargets[i].Target.Format);
+            }
 
-            return new OutputDescription(depthAttachment, colorAttachments, sampleCount);
+            return new OutputDescription(depthAttachment, colorAttachments, resolveAttachments, sampleCount);
         }
 
         /// <summary>
@@ -77,6 +108,7 @@ namespace Veldrid
         {
             return DepthAttachment.GetValueOrDefault().Equals(other.DepthAttachment.GetValueOrDefault())
                 && Util.ArrayEqualsEquatable(ColorAttachments, other.ColorAttachments)
+                && Util.ArrayEqualsEquatable(ResolveAttachments, other.ResolveAttachments)
                 && SampleCount == other.SampleCount;
         }
 
@@ -89,6 +121,7 @@ namespace Veldrid
             return HashHelper.Combine(
                 DepthAttachment.GetHashCode(),
                 HashHelper.Array(ColorAttachments),
+                HashHelper.Array(ResolveAttachments),
                 (int)SampleCount);
         }
     }

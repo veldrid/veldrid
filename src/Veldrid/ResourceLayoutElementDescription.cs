@@ -64,7 +64,10 @@ namespace Veldrid
         /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(ResourceLayoutElementDescription other)
         {
-            return Name.Equals(other.Name) && Kind == other.Kind && Stages == other.Stages && Options == other.Options;
+            return string.Equals(Name, other.Name)
+                && Kind == other.Kind
+                && Stages == other.Stages
+                && Options == other.Options;
         }
 
         /// <summary>
@@ -73,8 +76,16 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(Name.GetHashCode(), (int)Kind, (int)Stages, (int)Options);
+            return HashHelper.Combine(Name?.GetHashCode() ?? 0, (int)Kind, (int)Stages, (int)Options);
         }
+
+        public static ResourceLayoutElementDescription Unused => new ResourceLayoutElementDescription(
+            string.Empty,
+            ResourceKind.UniformBuffer,
+            ShaderStages.None,
+            ResourceLayoutElementOptions.Unused);
+
+        public bool IsUnused => (Options & ResourceLayoutElementOptions.Unused) != 0;
     }
 
     /// <summary>
@@ -95,5 +106,9 @@ namespace Veldrid
         /// <see cref="GraphicsDevice.StructuredBufferMinOffsetAlignment"/>.
         /// </summary>
         DynamicBinding = 1 << 0,
+        /// <summary>
+        /// Indicates that a slot in a ResourceLayout is not used.
+        /// </summary>
+        Unused = 1 << 1,
     }
 }

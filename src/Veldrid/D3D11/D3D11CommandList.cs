@@ -360,6 +360,9 @@ namespace Veldrid.D3D11
             int textureBase = GetTextureBase(slot, graphics);
             int samplerBase = GetSamplerBase(slot, graphics);
 
+            D3D11ResourceSlots d3d11Slots = graphics
+                ? _graphicsPipeline.ResourceSlots[slot]
+                : _computePipeline.ResourceSlots[slot];
             D3D11ResourceLayout layout = d3d11RS.Layout;
             BindableResource[] resources = d3d11RS.Resources;
             uint dynamicOffsetIndex = 0;
@@ -367,12 +370,16 @@ namespace Veldrid.D3D11
             {
                 BindableResource resource = resources[i];
                 uint bufferOffset = 0;
-                if (layout.IsDynamicBuffer(i))
+                if (d3d11Slots.IsDynamicBuffer(i))
                 {
                     bufferOffset = brsi.Offsets.Get(dynamicOffsetIndex);
                     dynamicOffsetIndex += 1;
                 }
-                D3D11ResourceLayout.ResourceBindingInfo rbi = layout.GetDeviceSlotIndex(i);
+                D3D11ResourceSlots.ResourceBindingInfo rbi = d3d11Slots.GetDeviceSlotIndex(i);
+                if (rbi.IsUnused)
+                {
+                    continue;
+                }
                 switch (rbi.Kind)
                 {
                     case ResourceKind.UniformBuffer:
@@ -492,12 +499,12 @@ namespace Veldrid.D3D11
 
         private int GetConstantBufferBase(uint slot, bool graphics)
         {
-            D3D11ResourceLayout[] layouts = graphics ? _graphicsPipeline.ResourceLayouts : _computePipeline.ResourceLayouts;
+            D3D11ResourceSlots[] slots = graphics ? _graphicsPipeline.ResourceSlots : _computePipeline.ResourceSlots;
             int ret = 0;
             for (int i = 0; i < slot; i++)
             {
-                Debug.Assert(layouts[i] != null);
-                ret += layouts[i].UniformBufferCount;
+                Debug.Assert(slots[i] != null);
+                ret += slots[i].UniformBufferCount;
             }
 
             return ret;
@@ -505,12 +512,12 @@ namespace Veldrid.D3D11
 
         private int GetUnorderedAccessBase(uint slot, bool graphics)
         {
-            D3D11ResourceLayout[] layouts = graphics ? _graphicsPipeline.ResourceLayouts : _computePipeline.ResourceLayouts;
+            D3D11ResourceSlots[] slots = graphics ? _graphicsPipeline.ResourceSlots : _computePipeline.ResourceSlots;
             int ret = 0;
             for (int i = 0; i < slot; i++)
             {
-                Debug.Assert(layouts[i] != null);
-                ret += layouts[i].StorageBufferCount;
+                Debug.Assert(slots[i] != null);
+                ret += slots[i].StorageBufferCount;
             }
 
             return ret;
@@ -518,12 +525,12 @@ namespace Veldrid.D3D11
 
         private int GetTextureBase(uint slot, bool graphics)
         {
-            D3D11ResourceLayout[] layouts = graphics ? _graphicsPipeline.ResourceLayouts : _computePipeline.ResourceLayouts;
+            D3D11ResourceSlots[] slots = graphics ? _graphicsPipeline.ResourceSlots : _computePipeline.ResourceSlots;
             int ret = 0;
             for (int i = 0; i < slot; i++)
             {
-                Debug.Assert(layouts[i] != null);
-                ret += layouts[i].TextureCount;
+                Debug.Assert(slots[i] != null);
+                ret += slots[i].TextureCount;
             }
 
             return ret;
@@ -531,12 +538,12 @@ namespace Veldrid.D3D11
 
         private int GetSamplerBase(uint slot, bool graphics)
         {
-            D3D11ResourceLayout[] layouts = graphics ? _graphicsPipeline.ResourceLayouts : _computePipeline.ResourceLayouts;
+            D3D11ResourceSlots[] slots = graphics ? _graphicsPipeline.ResourceSlots : _computePipeline.ResourceSlots;
             int ret = 0;
             for (int i = 0; i < slot; i++)
             {
-                Debug.Assert(layouts[i] != null);
-                ret += layouts[i].SamplerCount;
+                Debug.Assert(slots[i] != null);
+                ret += slots[i].SamplerCount;
             }
 
             return ret;

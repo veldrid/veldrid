@@ -20,6 +20,7 @@ namespace Veldrid.OpenGL
         // Graphics Pipeline
         public Shader[] GraphicsShaders { get; }
         public VertexLayoutDescription[] VertexLayouts { get; }
+        public VertexElementDescription[] ReflectedVertexElements { get; }
         public BlendStateDescription BlendState { get; }
         public DepthStencilStateDescription DepthStencilState { get; }
         public RasterizerStateDescription RasterizerState { get; }
@@ -35,6 +36,7 @@ namespace Veldrid.OpenGL
         private SetBindingsInfo[] _setInfos;
 
         public int[] VertexStrides { get; }
+        public uint[] VertexAttributeLocations { get; }
 
         public uint Program => _program;
 
@@ -49,6 +51,19 @@ namespace Veldrid.OpenGL
             _gd = gd;
             GraphicsShaders = Util.ShallowClone(description.ShaderSet.Shaders);
             VertexLayouts = Util.ShallowClone(description.ShaderSet.VertexLayouts);
+            if (description.ReflectedVertexElements != null)
+            {
+                ReflectedVertexElements = Util.ShallowClone(description.ReflectedVertexElements);
+            }
+            if (description.ReflectedResourceLayouts != null)
+            {
+                ReflectedResourceLayouts = new ResourceLayoutDescription[description.ReflectedResourceLayouts.Length];
+                for (uint i = 0; i < ReflectedResourceLayouts.Length; i++)
+                {
+                    ReflectedResourceLayouts[i] = new ResourceLayoutDescription(
+                        Util.ShallowClone(description.ReflectedResourceLayouts[i].Elements));
+                }
+            }
             BlendState = description.BlendState.ShallowClone();
             DepthStencilState = description.DepthStencilState;
             RasterizerState = description.RasterizerState;
@@ -56,10 +71,14 @@ namespace Veldrid.OpenGL
 
             int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
             VertexStrides = new int[numVertexBuffers];
+            int numVertexAttributes = 0;
             for (int i = 0; i < numVertexBuffers; i++)
             {
                 VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
+                numVertexAttributes += description.ShaderSet.VertexLayouts[i].Elements.Length;
             }
+
+            VertexAttributeLocations = new uint[numVertexAttributes];
 
 #if !VALIDATE_USAGE
             ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
@@ -79,6 +98,7 @@ namespace Veldrid.OpenGL
         }
 
         public bool Created { get; private set; }
+        public ResourceLayoutDescription[] ReflectedResourceLayouts { get; }
 
         public void EnsureResourcesCreated()
         {
@@ -114,30 +134,39 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
+            glLinkProgram(_program);
+            CheckLastError();
+
             uint slot = 0;
             foreach (VertexLayoutDescription layoutDesc in VertexLayouts)
             {
                 for (int i = 0; i < layoutDesc.Elements.Length; i++)
                 {
                     string elementName = layoutDesc.Elements[i].Name;
-                    int byteCount = Encoding.UTF8.GetByteCount(elementName) + 1;
-                    byte* elementNamePtr = stackalloc byte[byteCount];
-                    fixed (char* charPtr = elementName)
+                    if (ReflectedVertexElements != null)
                     {
-                        int bytesWritten = Encoding.UTF8.GetBytes(charPtr, elementName.Length, elementNamePtr, byteCount);
-                        Debug.Assert(bytesWritten == byteCount - 1);
+                        elementName = ReflectedVertexElements[slot].Name;
                     }
-                    elementNamePtr[byteCount - 1] = 0; // Add null terminator.
 
-                    glBindAttribLocation(_program, slot, elementNamePtr);
-                    CheckLastError();
+                    if (elementName != null)
+                    {
+                        int byteCount = Encoding.UTF8.GetByteCount(elementName) + 1;
+                        byte* elementNamePtr = stackalloc byte[byteCount];
+                        fixed (char* charPtr = elementName)
+                        {
+                            int bytesWritten = Encoding.UTF8.GetBytes(charPtr, elementName.Length, elementNamePtr, byteCount);
+                            Debug.Assert(bytesWritten == byteCount - 1);
+                        }
+                        elementNamePtr[byteCount - 1] = 0; // Add null terminator.
+
+                        int location = glGetAttribLocation(_program, elementNamePtr);
+                        CheckLastError();
+                        VertexAttributeLocations[slot] = (uint)location;
+                    }
 
                     slot += 1;
                 }
             }
-
-            glLinkProgram(_program);
-            CheckLastError();
 
 #if DEBUG && GL_VALIDATE_VERTEX_INPUT_ELEMENTS
             slot = 0;
@@ -146,6 +175,11 @@ namespace Veldrid.OpenGL
                 for (int i = 0; i < layoutDesc.Elements.Length; i++)
                 {
                     string elementName = layoutDesc.Elements[i].Name;
+                    if (ReflectedVertexElements != null)
+                    {
+                        elementName = ReflectedVertexElements[slot].Name;
+                    }
+
                     int byteCount = Encoding.UTF8.GetByteCount(elementName) + 1;
                     byte* elementNamePtr = stackalloc byte[byteCount];
                     fixed (char* charPtr = elementName)
@@ -158,7 +192,7 @@ namespace Veldrid.OpenGL
                     int location = glGetAttribLocation(_program, elementNamePtr);
                     if (location == -1)
                     {
-                        throw new VeldridException("There was no attribute variable with the name " + layoutDesc.Elements[i].Name);
+                        throw new VeldridException("There was no attribute variable with the name " + elementName);
                     }
                     slot += 1;
                 }
@@ -204,9 +238,21 @@ namespace Veldrid.OpenGL
                 for (uint i = 0; i < resources.Length; i++)
                 {
                     ResourceLayoutElementDescription resource = resources[i];
+                    string resourceName = resource.Name;
+                    if (ReflectedResourceLayouts != null)
+                    {
+                        if (ReflectedResourceLayouts[setSlot].Elements[i].IsUnused)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            resourceName = ReflectedResourceLayouts[setSlot].Elements[i].Name;
+                        }
+                    }
+
                     if (resource.Kind == ResourceKind.UniformBuffer)
                     {
-                        string resourceName = resource.Name;
                         int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;
                         byte* resourceNamePtr = stackalloc byte[byteCount];
                         fixed (char* charPtr = resourceName)
@@ -228,7 +274,6 @@ namespace Veldrid.OpenGL
                     }
                     else if (resource.Kind == ResourceKind.TextureReadOnly)
                     {
-                        string resourceName = resource.Name;
                         int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;
                         byte* resourceNamePtr = stackalloc byte[byteCount];
                         fixed (char* charPtr = resourceName)
@@ -246,7 +291,6 @@ namespace Veldrid.OpenGL
                     }
                     else if (resource.Kind == ResourceKind.TextureReadWrite)
                     {
-                        string resourceName = resource.Name;
                         int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;
                         byte* resourceNamePtr = stackalloc byte[byteCount];
                         fixed (char* charPtr = resourceName)
@@ -266,7 +310,6 @@ namespace Veldrid.OpenGL
                         uint storageBlockBinding;
                         if (_gd.BackendType == GraphicsBackend.OpenGL)
                         {
-                            string resourceName = resource.Name;
                             int byteCount = Encoding.UTF8.GetByteCount(resourceName) + 1;
                             byte* resourceNamePtr = stackalloc byte[byteCount];
                             fixed (char* charPtr = resourceName)

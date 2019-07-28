@@ -8,12 +8,12 @@ namespace Veldrid.Vk
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkDescriptorSetLayout _dsl;
-        private readonly VkDescriptorType[] _descriptorTypes;
+        private readonly VkDescriptorType?[] _descriptorTypes;
         private bool _disposed;
         private string _name;
 
         public VkDescriptorSetLayout DescriptorSetLayout => _dsl;
-        public VkDescriptorType[] DescriptorTypes => _descriptorTypes;
+        public VkDescriptorType?[] DescriptorTypes => _descriptorTypes;
         public DescriptorResourceCounts DescriptorResourceCounts { get; }
         public new int DynamicBufferCount { get; }
 
@@ -23,7 +23,7 @@ namespace Veldrid.Vk
             _gd = gd;
             VkDescriptorSetLayoutCreateInfo dslCI = VkDescriptorSetLayoutCreateInfo.New();
             ResourceLayoutElementDescription[] elements = description.Elements;
-            _descriptorTypes = new VkDescriptorType[elements.Length];
+            _descriptorTypes = new VkDescriptorType?[elements.Length];
             VkDescriptorSetLayoutBinding* bindings = stackalloc VkDescriptorSetLayoutBinding[elements.Length];
 
             uint uniformBufferCount = 0;
@@ -32,13 +32,20 @@ namespace Veldrid.Vk
             uint storageBufferCount = 0;
             uint storageImageCount = 0;
 
+            uint usedCount = 0;
             for (uint i = 0; i < elements.Length; i++)
             {
-                bindings[i].binding = i;
-                bindings[i].descriptorCount = 1;
+                if (elements[i].IsUnused)
+                {
+                    _descriptorTypes[i] = null;
+                    continue;
+                }
+
+                bindings[usedCount].binding = i;
+                bindings[usedCount].descriptorCount = 1;
                 VkDescriptorType descriptorType = VkFormats.VdToVkDescriptorType(elements[i].Kind, elements[i].Options);
-                bindings[i].descriptorType = descriptorType;
-                bindings[i].stageFlags = VkFormats.VdToVkShaderStages(elements[i].Stages);
+                bindings[usedCount].descriptorType = descriptorType;
+                bindings[usedCount].stageFlags = VkFormats.VdToVkShaderStages(elements[i].Stages);
                 if ((elements[i].Options & ResourceLayoutElementOptions.DynamicBinding) != 0)
                 {
                     DynamicBufferCount += 1;
@@ -64,6 +71,8 @@ namespace Veldrid.Vk
                         storageBufferCount += 1;
                         break;
                 }
+
+                usedCount += 1;
             }
 
             DescriptorResourceCounts = new DescriptorResourceCounts(
@@ -73,7 +82,7 @@ namespace Veldrid.Vk
                 storageBufferCount,
                 storageImageCount);
 
-            dslCI.bindingCount = (uint)elements.Length;
+            dslCI.bindingCount = usedCount;
             dslCI.pBindings = bindings;
 
             VkResult result = vkCreateDescriptorSetLayout(_gd.Device, ref dslCI, null, out _dsl);

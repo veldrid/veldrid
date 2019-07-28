@@ -80,7 +80,7 @@ namespace Veldrid
         /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(VertexElementDescription other)
         {
-            return Name.Equals(other.Name)
+            return string.Equals(Name, other.Name)
                 && Format == other.Format
                 && Semantic == other.Semantic
                 && Offset == other.Offset;
@@ -93,7 +93,7 @@ namespace Veldrid
         public override int GetHashCode()
         {
             return HashHelper.Combine(
-                Name.GetHashCode(),
+                Name?.GetHashCode() ?? 0,
                 (int)Format,
                 (int)Semantic,
                 (int)Offset);

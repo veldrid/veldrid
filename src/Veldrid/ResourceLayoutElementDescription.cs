@@ -64,7 +64,10 @@ namespace Veldrid
         /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(ResourceLayoutElementDescription other)
         {
-            return Name.Equals(other.Name) && Kind == other.Kind && Stages == other.Stages && Options == other.Options;
+            return string.Equals(Name, other.Name)
+                && Kind == other.Kind
+                && Stages == other.Stages
+                && Options == other.Options;
         }
 
         /// <summary>
@@ -73,7 +76,7 @@ namespace Veldrid
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return HashHelper.Combine(Name.GetHashCode(), (int)Kind, (int)Stages, (int)Options);
+            return HashHelper.Combine(Name?.GetHashCode() ?? 0, (int)Kind, (int)Stages, (int)Options);
         }
 
         public static ResourceLayoutElementDescription Unused => new ResourceLayoutElementDescription(

@@ -2,6 +2,11 @@
 {
     internal class D3D11ResourceSlots
     {
+        private static readonly ResourceBindingInfo s_unusedBinding = new ResourceBindingInfo()
+        {
+            IsUnused = true
+        };
+
         private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
 
         public int UniformBufferCount { get; }
@@ -67,7 +72,7 @@
         {
             if (resourceLayoutIndex >= _bindingInfosByVdIndex.Length)
             {
-                throw new VeldridException($"Invalid resource index: {resourceLayoutIndex}. Maximum is: {_bindingInfosByVdIndex.Length - 1}.");
+                return s_unusedBinding;
             }
 
             return _bindingInfosByVdIndex[resourceLayoutIndex];

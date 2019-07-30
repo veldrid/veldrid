@@ -363,22 +363,19 @@ namespace Veldrid.D3D11
             D3D11ResourceSlots d3d11Slots = graphics
                 ? _graphicsPipeline.ResourceSlots[slot]
                 : _computePipeline.ResourceSlots[slot];
-            D3D11ResourceLayout layout = d3d11RS.Layout;
             BindableResource[] resources = d3d11RS.Resources;
             uint dynamicOffsetIndex = 0;
             for (int i = 0; i < resources.Length; i++)
             {
+                D3D11ResourceSlots.ResourceBindingInfo rbi = d3d11Slots.GetDeviceSlotIndex(i);
+                if (rbi.IsUnused) { continue; }
+
                 BindableResource resource = resources[i];
                 uint bufferOffset = 0;
                 if (d3d11Slots.IsDynamicBuffer(i))
                 {
                     bufferOffset = brsi.Offsets.Get(dynamicOffsetIndex);
                     dynamicOffsetIndex += 1;
-                }
-                D3D11ResourceSlots.ResourceBindingInfo rbi = d3d11Slots.GetDeviceSlotIndex(i);
-                if (rbi.IsUnused)
-                {
-                    continue;
                 }
                 switch (rbi.Kind)
                 {

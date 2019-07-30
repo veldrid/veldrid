@@ -2,11 +2,15 @@
 {
     internal class MTLResourceSlots
     {
+        private static readonly ResourceBindingInfo s_unusedBinding = new ResourceBindingInfo()
+        {
+            IsUnused = true
+        };
+
         private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
         public uint BufferCount { get; }
         public uint TextureCount { get; }
         public uint SamplerCount { get; }
-        public ResourceBindingInfo GetBindingInfo(int index) => _bindingInfosByVdIndex[index];
 
         public MTLResourceSlots(ResourceLayoutElementDescription[] elements)
         {
@@ -58,6 +62,16 @@
             BufferCount = bufferIndex;
             TextureCount = texIndex;
             SamplerCount = samplerIndex;
+        }
+
+        public ResourceBindingInfo GetBindingInfo(int index)
+        {
+            if (index >= _bindingInfosByVdIndex.Length)
+            {
+                return s_unusedBinding;
+            }
+
+            return _bindingInfosByVdIndex[index];
         }
 
         internal struct ResourceBindingInfo

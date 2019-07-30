@@ -780,6 +780,8 @@ namespace Veldrid.MTL
             for (int i = 0; i < mtlRS.Resources.Length; i++)
             {
                 MTLResourceSlots.ResourceBindingInfo bindingInfo = mtlSlots.GetBindingInfo(i);
+                if (bindingInfo.IsUnused) { continue; }
+
                 BindableResource resource = mtlRS.Resources[i];
                 uint bufferOffset = 0;
                 if (bindingInfo.DynamicBuffer)

@@ -324,12 +324,15 @@ namespace Veldrid.MTL
         {
             Debug.Assert(RenderEncoderActive);
             MTLResourceSet mtlRS = Util.AssertSubtype<ResourceSet, MTLResourceSet>(brsi.Set);
-            MTLResourceLayout layout = mtlRS.Layout;
+            MTLResourceSlots mtlSlots = _graphicsPipeline.ResourceSlots[slot];
+
             uint dynamicOffsetIndex = 0;
 
             for (int i = 0; i < mtlRS.Resources.Length; i++)
             {
-                MTLResourceLayout.ResourceBindingInfo bindingInfo = layout.GetBindingInfo(i);
+                MTLResourceSlots.ResourceBindingInfo bindingInfo = mtlSlots.GetBindingInfo(i);
+                if (bindingInfo.IsUnused) { continue; }
+
                 BindableResource resource = mtlRS.Resources[i];
                 uint bufferOffset = 0;
                 if (bindingInfo.DynamicBuffer)
@@ -437,12 +440,12 @@ namespace Veldrid.MTL
 
         private uint GetBufferBase(uint set, bool graphics)
         {
-            MTLResourceLayout[] layouts = graphics ? _graphicsPipeline.ResourceLayouts : _computePipeline.ResourceLayouts;
+            MTLResourceSlots[] slots = graphics ? _graphicsPipeline.ResourceSlots : _computePipeline.ResourceSlots;
             uint ret = 0;
             for (int i = 0; i < set; i++)
             {
-                Debug.Assert(layouts[i] != null);
-                ret += layouts[i].BufferCount;
+                Debug.Assert(slots[i] != null);
+                ret += slots[i].BufferCount;
             }
 
             return ret;
@@ -450,12 +453,12 @@ namespace Veldrid.MTL
 
         private uint GetTextureBase(uint set, bool graphics)
         {
-            MTLResourceLayout[] layouts = graphics ? _graphicsPipeline.ResourceLayouts : _computePipeline.ResourceLayouts;
+            MTLResourceSlots[] slots = graphics ? _graphicsPipeline.ResourceSlots : _computePipeline.ResourceSlots;
             uint ret = 0;
             for (int i = 0; i < set; i++)
             {
-                Debug.Assert(layouts[i] != null);
-                ret += layouts[i].TextureCount;
+                Debug.Assert(slots[i] != null);
+                ret += slots[i].TextureCount;
             }
 
             return ret;
@@ -463,12 +466,12 @@ namespace Veldrid.MTL
 
         private uint GetSamplerBase(uint set, bool graphics)
         {
-            MTLResourceLayout[] layouts = graphics ? _graphicsPipeline.ResourceLayouts : _computePipeline.ResourceLayouts;
+            MTLResourceSlots[] slots = graphics ? _graphicsPipeline.ResourceSlots : _computePipeline.ResourceSlots;
             uint ret = 0;
             for (int i = 0; i < set; i++)
             {
-                Debug.Assert(layouts[i] != null);
-                ret += layouts[i].SamplerCount;
+                Debug.Assert(slots[i] != null);
+                ret += slots[i].SamplerCount;
             }
 
             return ret;

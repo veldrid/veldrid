@@ -134,6 +134,86 @@ namespace Veldrid
         /// <param name="primitiveTopology">The <see cref="PrimitiveTopology"/> to use, which controls how a series of input
         /// vertices is interpreted by the <see cref="Pipeline"/>.</param>
         /// <param name="shaderSet">A description of the shader set to be used.</param>
+        /// <param name="resourceLayout">A <see cref="ResourceLayout"/>, which controls the layout of shader resoruces in the
+        /// <see cref="Pipeline"/>.</param>
+        /// <param name="outputs">A description of the output attachments used by the <see cref="Pipeline"/>.</param>
+        /// <param name="reflectedVertexElements"></param>
+        /// <param name="reflectedResourceLayouts"></param>
+        public GraphicsPipelineDescription(
+            BlendStateDescription blendState,
+            DepthStencilStateDescription depthStencilStateDescription,
+            RasterizerStateDescription rasterizerState,
+            PrimitiveTopology primitiveTopology,
+            ShaderSetDescription shaderSet,
+            ResourceLayout resourceLayout,
+            OutputDescription outputs,
+            VertexElementDescription[] reflectedVertexElements,
+            ResourceLayoutDescription[] reflectedResourceLayouts)
+        {
+            BlendState = blendState;
+            DepthStencilState = depthStencilStateDescription;
+            RasterizerState = rasterizerState;
+            PrimitiveTopology = primitiveTopology;
+            ShaderSet = shaderSet;
+            ResourceLayouts = new[] { resourceLayout };
+            Outputs = outputs;
+            ResourceBindingModel = null;
+            ReflectedVertexElements = reflectedVertexElements;
+            ReflectedResourceLayouts = reflectedResourceLayouts;
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="GraphicsPipelineDescription"/>.
+        /// </summary>
+        /// <param name="blendState">A description of the blend state, which controls how color values are blended into each
+        /// color target.</param>
+        /// <param name="depthStencilStateDescription">A description of the depth stencil state, which controls depth tests,
+        /// writing, and comparisons.</param>
+        /// <param name="rasterizerState">A description of the rasterizer state, which controls culling, clipping, scissor, and
+        /// polygon-fill behavior.</param>
+        /// <param name="primitiveTopology">The <see cref="PrimitiveTopology"/> to use, which controls how a series of input
+        /// vertices is interpreted by the <see cref="Pipeline"/>.</param>
+        /// <param name="shaderSet">A description of the shader set to be used.</param>
+        /// <param name="resourceLayouts">An array of <see cref="ResourceLayout"/>, which controls the layout of shader resoruces
+        /// in the <see cref="Pipeline"/>.</param>
+        /// <param name="outputs">A description of the output attachments used by the <see cref="Pipeline"/>.</param>
+        /// <param name="reflectedVertexElements"></param>
+        /// <param name="reflectedResourceLayouts"></param>
+        public GraphicsPipelineDescription(
+            BlendStateDescription blendState,
+            DepthStencilStateDescription depthStencilStateDescription,
+            RasterizerStateDescription rasterizerState,
+            PrimitiveTopology primitiveTopology,
+            ShaderSetDescription shaderSet,
+            ResourceLayout[] resourceLayouts,
+            OutputDescription outputs,
+            VertexElementDescription[] reflectedVertexElements,
+            ResourceLayoutDescription[] reflectedResourceLayouts)
+        {
+            BlendState = blendState;
+            DepthStencilState = depthStencilStateDescription;
+            RasterizerState = rasterizerState;
+            PrimitiveTopology = primitiveTopology;
+            ShaderSet = shaderSet;
+            ResourceLayouts = resourceLayouts;
+            Outputs = outputs;
+            ResourceBindingModel = null;
+            ReflectedVertexElements = reflectedVertexElements;
+            ReflectedResourceLayouts = reflectedResourceLayouts;
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="GraphicsPipelineDescription"/>.
+        /// </summary>
+        /// <param name="blendState">A description of the blend state, which controls how color values are blended into each
+        /// color target.</param>
+        /// <param name="depthStencilStateDescription">A description of the depth stencil state, which controls depth tests,
+        /// writing, and comparisons.</param>
+        /// <param name="rasterizerState">A description of the rasterizer state, which controls culling, clipping, scissor, and
+        /// polygon-fill behavior.</param>
+        /// <param name="primitiveTopology">The <see cref="PrimitiveTopology"/> to use, which controls how a series of input
+        /// vertices is interpreted by the <see cref="Pipeline"/>.</param>
+        /// <param name="shaderSet">A description of the shader set to be used.</param>
         /// <param name="resourceLayouts">An array of <see cref="ResourceLayout"/>, which controls the layout of shader resoruces
         /// in the <see cref="Pipeline"/>.</param>
         /// <param name="outputs">A description of the output attachments used by the <see cref="Pipeline"/>.</param>

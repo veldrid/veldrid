@@ -241,7 +241,9 @@ namespace Veldrid.OpenGL
                     string resourceName = resource.Name;
                     if (ReflectedResourceLayouts != null)
                     {
-                        if (ReflectedResourceLayouts[setSlot].Elements[i].IsUnused)
+                        if (ReflectedResourceLayouts.Length <= setSlot
+                            || ReflectedResourceLayouts[setSlot].Elements.Length <= i
+                            || ReflectedResourceLayouts[setSlot].Elements[i].IsUnused)
                         {
                             continue;
                         }

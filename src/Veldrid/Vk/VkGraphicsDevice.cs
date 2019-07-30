@@ -1,5 +1,5 @@
-﻿
-using System;
+﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -201,7 +201,6 @@ namespace Veldrid.Vk
         {
             CheckSubmittedFences();
 
-            bool useExtraFence = fence != null;
             VkSubmitInfo si = VkSubmitInfo.New();
             si.commandBufferCount = 1;
             si.pCommandBuffers = &vkCB;
@@ -213,6 +212,7 @@ namespace Veldrid.Vk
             si.pSignalSemaphores = signalSemaphoresPtr;
             si.signalSemaphoreCount = signalSemaphoreCount;
 
+            bool useExtraFence = fence != null;
             Vulkan.VkFence vkFence = Vulkan.VkFence.Null;
             Vulkan.VkFence submissionFence = Vulkan.VkFence.Null;
             if (useExtraFence)
@@ -256,10 +256,6 @@ namespace Veldrid.Vk
                         _submittedFences.RemoveAt(i);
                         i -= 1;
                     }
-                    else
-                    {
-                        break; // Submissions are in order; later submissions cannot complete if this one hasn't.
-                    }
                 }
             }
         }
@@ -267,42 +263,57 @@ namespace Veldrid.Vk
         private void CompleteFenceSubmission(FenceSubmissionInfo fsi)
         {
             Vulkan.VkFence fence = fsi.Fence;
-            VkCommandBuffer completedCB = fsi.CommandBuffer;
-            fsi.CommandList?.CommandBufferCompleted(completedCB);
-            VkResult resetResult = vkResetFences(_device, 1, ref fence);
-            CheckResult(resetResult);
+            bool hasCommandBuffer = fsi.VdCommandBufferCount > 0;
             ReturnSubmissionFence(fence);
-            lock (_stagingResourcesLock)
+            if (hasCommandBuffer)
             {
-                if (_submittedStagingTextures.TryGetValue(completedCB, out VkTexture stagingTex))
+                for (int i = 0; i < fsi.VdCommandBufferCount; i++)
                 {
-                    _submittedStagingTextures.Remove(completedCB);
-                    _availableStagingTextures.Add(stagingTex);
+                    VulkanCommandBuffer vkCB = fsi.VdCommandBuffers[i];
+                    vkCB.OnCompleted();
                 }
-                if (_submittedStagingBuffers.TryGetValue(completedCB, out VkBuffer stagingBuffer))
+
+                ArrayPool<VulkanCommandBuffer>.Shared.Return(fsi.VdCommandBuffers);
+            }
+            else
+            {
+                VkCommandBuffer completedCB = fsi.CommandBuffer;
+                if (fsi.CommandList != null)
                 {
-                    _submittedStagingBuffers.Remove(completedCB);
-                    if (stagingBuffer.SizeInBytes <= MaxStagingBufferSize)
-                    {
-                        _availableStagingBuffers.Add(stagingBuffer);
-                    }
-                    else
-                    {
-                        stagingBuffer.Dispose();
-                    }
+                    fsi.CommandList.CommandBufferCompleted(completedCB);
                 }
-                if (_submittedSharedCommandPools.TryGetValue(completedCB, out SharedCommandPool sharedPool))
+                lock (_stagingResourcesLock)
                 {
-                    _submittedSharedCommandPools.Remove(completedCB);
-                    lock (_graphicsCommandPoolLock)
+                    if (_submittedStagingTextures.TryGetValue(completedCB, out VkTexture stagingTex))
                     {
-                        if (sharedPool.IsCached)
+                        _submittedStagingTextures.Remove(completedCB);
+                        _availableStagingTextures.Add(stagingTex);
+                    }
+                    if (_submittedStagingBuffers.TryGetValue(completedCB, out VkBuffer stagingBuffer))
+                    {
+                        _submittedStagingBuffers.Remove(completedCB);
+                        if (stagingBuffer.SizeInBytes <= MaxStagingBufferSize)
                         {
-                            _sharedGraphicsCommandPools.Push(sharedPool);
+                            _availableStagingBuffers.Add(stagingBuffer);
                         }
                         else
                         {
-                            sharedPool.Destroy();
+                            stagingBuffer.Dispose();
+                        }
+                    }
+                    if (_submittedSharedCommandPools.TryGetValue(completedCB, out SharedCommandPool sharedPool))
+                    {
+                        _submittedSharedCommandPools.Remove(completedCB);
+                        lock (_graphicsCommandPoolLock)
+                        {
+                            if (sharedPool.IsCached)
+                            {
+                                _sharedGraphicsCommandPools.Push(sharedPool);
+                            }
+                            else
+                            {
+                                sharedPool.Destroy();
+                            }
                         }
                     }
                 }
@@ -311,6 +322,8 @@ namespace Veldrid.Vk
 
         private void ReturnSubmissionFence(Vulkan.VkFence fence)
         {
+            VkResult resetResult = vkResetFences(_device, 1, ref fence);
+            CheckResult(resetResult);
             _availableSubmissionFences.Enqueue(fence);
         }
 
@@ -1434,7 +1447,7 @@ namespace Veldrid.Vk
             Fence fence)
         {
             VulkanCommandBuffer vkCB = Util.AssertSubtype<CommandBuffer, VulkanCommandBuffer>(commandBuffer);
-            VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
+            vkCB.OnSubmitted();
             VkCommandBuffer nativeCB = vkCB.GetSubmissionCB();
             VkSubmitInfo si = VkSubmitInfo.New();
             si.commandBufferCount = 1;
@@ -1452,10 +1465,36 @@ namespace Veldrid.Vk
             VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             si.pWaitDstStageMask = &waitDstStageMask;
 
+            bool useExtraFence = fence != null;
+            Vulkan.VkFence vkFence = Vulkan.VkFence.Null;
+            Vulkan.VkFence submissionFence = Vulkan.VkFence.Null;
+            if (useExtraFence)
+            {
+                vkFence = Util.AssertSubtype<Fence, VkFence>(fence).DeviceFence;
+                submissionFence = GetFreeSubmissionFence();
+            }
+            else
+            {
+                vkFence = GetFreeSubmissionFence();
+                submissionFence = vkFence;
+            }
+
             lock (_universalQueueLock)
             {
-                VkResult result = vkQueueSubmit(_universalQueue, 1, &si, vkFence?.DeviceFence ?? Vulkan.VkFence.Null);
+                VkResult result = vkQueueSubmit(_universalQueue, 1, &si, vkFence);
                 CheckResult(result);
+                if (useExtraFence)
+                {
+                    result = vkQueueSubmit(_universalQueue, 0, null, submissionFence);
+                    CheckResult(result);
+                }
+
+                lock (_submittedFencesLock)
+                {
+                    VulkanCommandBuffer[] arr = ArrayPool<VulkanCommandBuffer>.Shared.Rent(1);
+                    arr[0] = vkCB;
+                    _submittedFences.Add(new FenceSubmissionInfo(submissionFence, 1, arr));
+                }
             }
         }
 
@@ -1465,8 +1504,6 @@ namespace Veldrid.Vk
             Semaphore[] signals,
             Fence fence)
         {
-            VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
-
             VkSubmitInfo si = VkSubmitInfo.New();
 
             VkCommandBuffer* nativeCBs = stackalloc VkCommandBuffer[commandBuffers.Length];
@@ -1475,6 +1512,7 @@ namespace Veldrid.Vk
             {
                 CommandBuffer commandBuffer = commandBuffers[i];
                 VulkanCommandBuffer vkCB = Util.AssertSubtype<CommandBuffer, VulkanCommandBuffer>(commandBuffer);
+                vkCB.OnSubmitted();
                 VkCommandBuffer nativeCB = vkCB.GetSubmissionCB();
                 si.pCommandBuffers[i] = nativeCB;
             }
@@ -1499,10 +1537,36 @@ namespace Veldrid.Vk
             VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             si.pWaitDstStageMask = &waitDstStageMask;
 
+            bool useExtraFence = fence != null;
+            Vulkan.VkFence vkFence = Vulkan.VkFence.Null;
+            Vulkan.VkFence submissionFence = Vulkan.VkFence.Null;
+            if (useExtraFence)
+            {
+                vkFence = Util.AssertSubtype<Fence, VkFence>(fence).DeviceFence;
+                submissionFence = GetFreeSubmissionFence();
+            }
+            else
+            {
+                vkFence = GetFreeSubmissionFence();
+                submissionFence = vkFence;
+            }
+
             lock (_universalQueueLock)
             {
-                VkResult result = vkQueueSubmit(_universalQueue, 1, &si, vkFence?.DeviceFence ?? Vulkan.VkFence.Null);
+                VkResult result = vkQueueSubmit(_universalQueue, 1, &si, vkFence);
                 CheckResult(result);
+                if (useExtraFence)
+                {
+                    result = vkQueueSubmit(_universalQueue, 0, null, submissionFence);
+                    CheckResult(result);
+                }
+
+                lock (_submittedFencesLock)
+                {
+                    VulkanCommandBuffer[] arr = ArrayPool<VulkanCommandBuffer>.Shared.Rent(commandBuffers.Length);
+                    Array.Copy(commandBuffers, 0, arr, 0, commandBuffers.Length);
+                    _submittedFences.Add(new FenceSubmissionInfo(submissionFence, commandBuffers.Length, arr));
+                }
             }
         }
 
@@ -1512,8 +1576,6 @@ namespace Veldrid.Vk
             Semaphore signal,
             Fence fence)
         {
-            VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
-
             VkSubmitInfo si = VkSubmitInfo.New();
 
             VkCommandBuffer* nativeCBs = stackalloc VkCommandBuffer[commandBuffers.Length];
@@ -1523,6 +1585,7 @@ namespace Veldrid.Vk
             {
                 CommandBuffer commandBuffer = commandBuffers[i];
                 VulkanCommandBuffer vkCB = Util.AssertSubtype<CommandBuffer, VulkanCommandBuffer>(commandBuffer);
+                vkCB.OnSubmitted();
                 VkCommandBuffer nativeCB = vkCB.GetSubmissionCB();
                 si.pCommandBuffers[i] = nativeCB;
             }
@@ -1539,10 +1602,36 @@ namespace Veldrid.Vk
             VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
             si.pWaitDstStageMask = &waitDstStageMask;
 
+            bool useExtraFence = fence != null;
+            Vulkan.VkFence vkFence = Vulkan.VkFence.Null;
+            Vulkan.VkFence submissionFence = Vulkan.VkFence.Null;
+            if (useExtraFence)
+            {
+                vkFence = Util.AssertSubtype<Fence, VkFence>(fence).DeviceFence;
+                submissionFence = GetFreeSubmissionFence();
+            }
+            else
+            {
+                vkFence = GetFreeSubmissionFence();
+                submissionFence = vkFence;
+            }
+
             lock (_universalQueueLock)
             {
-                VkResult result = vkQueueSubmit(_universalQueue, 1, &si, vkFence?.DeviceFence ?? Vulkan.VkFence.Null);
+                VkResult result = vkQueueSubmit(_universalQueue, 1, &si, vkFence);
                 CheckResult(result);
+                if (useExtraFence)
+                {
+                    result = vkQueueSubmit(_universalQueue, 0, null, submissionFence);
+                    CheckResult(result);
+                }
+
+                lock (_submittedFencesLock)
+                {
+                    VulkanCommandBuffer[] arr = ArrayPool<VulkanCommandBuffer>.Shared.Rent(commandBuffers.Length);
+                    Array.Copy(commandBuffers, 0, arr, 0, commandBuffers.Length);
+                    _submittedFences.Add(new FenceSubmissionInfo(submissionFence, commandBuffers.Length, arr));
+                }
             }
         }
 
@@ -1604,12 +1693,31 @@ namespace Veldrid.Vk
         {
             public Vulkan.VkFence Fence;
             public VkCommandList CommandList;
+            public int VdCommandBufferCount;
+            public VulkanCommandBuffer[] VdCommandBuffers;
             public VkCommandBuffer CommandBuffer;
+
             public FenceSubmissionInfo(Vulkan.VkFence fence, VkCommandList commandList, VkCommandBuffer commandBuffer)
             {
                 Fence = fence;
                 CommandList = commandList;
                 CommandBuffer = commandBuffer;
+
+                VdCommandBufferCount = 0;
+                VdCommandBuffers = default;
+            }
+
+            public FenceSubmissionInfo(
+                Vulkan.VkFence fence,
+                int vdCommandBufferCount,
+                VulkanCommandBuffer[] vdCommandBuffers)
+            {
+                Fence = fence;
+                VdCommandBufferCount = vdCommandBufferCount;
+                VdCommandBuffers = vdCommandBuffers;
+
+                CommandBuffer = default;
+                CommandList = default;
             }
         }
     }

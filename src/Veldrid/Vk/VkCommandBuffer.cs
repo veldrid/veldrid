@@ -5,6 +5,7 @@ using Vulkan;
 using static Veldrid.Vk.VulkanUtil;
 using static Vulkan.VulkanNative;
 using static Vulkan.RawConstants;
+using System.Collections.Generic;
 
 namespace Veldrid.Vk
 {
@@ -13,6 +14,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly CommandBufferFlags _flags;
         private readonly VkCommandPool _pool;
+        private readonly List<ResourceRefCount> _refCounts = new List<ResourceRefCount>();
         private string _name;
         private RecordingState _state = RecordingState.Initial;
         private VkCommandBuffer _cb;
@@ -21,6 +23,8 @@ namespace Veldrid.Vk
         private VkFramebuffer _currentFB;
         private VkPipeline _currentComputePipeline;
         private bool _disposed;
+
+        public ResourceRefCount RefCount { get; }
 
         public override string Name
         {
@@ -43,6 +47,53 @@ namespace Veldrid.Vk
             poolCI.queueFamilyIndex = _gd.UniversalQueueIndex;
             VkResult result = vkCreateCommandPool(_gd.Device, ref poolCI, null, out _pool);
             CheckResult(result);
+
+            RefCount = new ResourceRefCount(DisposeCore);
+        }
+
+        public void OnSubmitted()
+        {
+            RefCount.Increment();
+        }
+
+        public void OnCompleted()
+        {
+            RefCount.Decrement();
+            if ((_flags & CommandBufferFlags.Reusable) == 0)
+            {
+                // ClearRefCounts();
+            }
+        }
+
+        private void IncrementRef(ResourceRefCount refCount)
+        {
+            refCount.Increment();
+            _refCounts.Add(refCount);
+        }
+
+        private void ClearRefCounts()
+        {
+            foreach (ResourceRefCount rc in _refCounts)
+            {
+                rc.Decrement();
+            }
+            _refCounts.Clear();
+        }
+
+        public override void Dispose()
+        {
+            RefCount.Decrement();
+        }
+
+        private void DisposeCore()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                vkDestroyCommandPool(_gd.Device, _pool, null);
+
+                ClearRefCounts();
+            }
         }
 
         private void BeginIfNeeded()
@@ -71,29 +122,30 @@ namespace Veldrid.Vk
             VkResult beginResult = vkBeginCommandBuffer(_cb, ref bi);
             CheckResult(beginResult);
 
-            _state = RecordingState.Recording;
-        }
+            ClearRefCounts();
 
-        public override void Dispose()
-        {
-            // TODO: Ref-counted disposal.
-            if (!_disposed)
-            {
-                _disposed = true;
-                vkDestroyCommandPool(_gd.Device, _pool, null);
-            }
+            _state = RecordingState.Recording;
         }
 
         internal override void BeginRenderPassCore(in RenderPassDescription rpd)
         {
+            BeginIfNeeded();
+
             if (rpd.Framebuffer is VkSwapchainFramebuffer)
             {
                 throw new VeldridException(
                     "BeginRenderPass cannot be called on a Swapchain's Framebuffer directly.");
             }
             _currentFB = Util.AssertSubtype<Framebuffer, VkFramebuffer>(rpd.Framebuffer);
-
-            BeginIfNeeded();
+            IncrementRef(_currentFB.RefCount);
+            foreach (FramebufferAttachment colorTarget in _currentFB.ColorTargets)
+            {
+                IncrementRef(Util.AssertSubtype<Texture, VkTexture>(colorTarget.Target).RefCount);
+            }
+            if (_currentFB.DepthTarget != null)
+            {
+                IncrementRef(Util.AssertSubtype<Texture, VkTexture>(_currentFB.DepthTarget.Value.Target).RefCount);
+            }
 
             VkRenderPassBeginInfo rpBI = VkRenderPassBeginInfo.New();
             rpBI.renderPass = _currentFB.GetRenderPass(rpd);
@@ -155,6 +207,7 @@ namespace Veldrid.Vk
         {
             BeginIfNeeded();
             VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(texture);
+            IncrementRef(vkTex.RefCount);
             VkImageMemoryBarrier barrier = VkImageMemoryBarrier.New();
             barrier.srcAccessMask = VkFormats.GetConservativeSrcAccessFlags(texture, sourceStage);
             barrier.dstAccessMask = VkFormats.GetConservativeDstAccessFlags(texture, sourceStage);
@@ -229,6 +282,7 @@ namespace Veldrid.Vk
         private protected override void BindIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
+            IncrementRef(vkBuffer.RefCount);
             vkCmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, offset, VkFormats.VdToVkIndexFormat(format));
         }
 
@@ -244,6 +298,7 @@ namespace Veldrid.Vk
             {
                 vkPipeline = _currentGraphicsPipeline = Util.AssertSubtype<Pipeline, VkPipeline>(pipeline);
             }
+            IncrementRef(vkPipeline.RefCount);
 
             vkCmdBindPipeline(
                 _cb,
@@ -257,6 +312,12 @@ namespace Veldrid.Vk
             Span<uint> dynamicOffsets)
         {
             VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(resourceSet);
+            IncrementRef(vkSet.RefCount);
+            foreach (ResourceRefCount refCount in vkSet.RefCounts)
+            {
+                IncrementRef(refCount);
+            }
+
             VkDescriptorSet descriptorSet = vkSet.DescriptorSet;
             fixed (uint* dynamicOffsetsPtr = dynamicOffsets)
             {
@@ -273,6 +334,7 @@ namespace Veldrid.Vk
         private protected override void BindVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
+            IncrementRef(vkBuffer.RefCount);
             Vulkan.VkBuffer deviceBuffer = vkBuffer.DeviceBuffer;
             ulong offset64 = offset;
             vkCmdBindVertexBuffers(_cb, index, 1, &deviceBuffer, &offset64);
@@ -294,6 +356,7 @@ namespace Veldrid.Vk
             uint stride)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
+            IncrementRef(vkBuffer.RefCount);
             vkCmdDrawIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
         }
 
@@ -304,6 +367,7 @@ namespace Veldrid.Vk
             uint stride)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
+            IncrementRef(vkBuffer.RefCount);
             vkCmdDrawIndexedIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
         }
 
@@ -418,6 +482,12 @@ namespace Veldrid.Vk
         {
             BeginIfNeeded();
             VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(resourceSet);
+            IncrementRef(vkSet.RefCount);
+            foreach (ResourceRefCount refCount in vkSet.RefCounts)
+            {
+                IncrementRef(refCount);
+            }
+
             VkDescriptorSet descriptorSet = vkSet.DescriptorSet;
             fixed (uint* dynamicOffsetsPtr = &dynamicOffsets[0])
             {
@@ -439,6 +509,7 @@ namespace Veldrid.Vk
         private protected override void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
+            IncrementRef(vkBuffer.RefCount);
             vkCmdDispatchIndirect(_cb, vkBuffer.DeviceBuffer, offset);
         }
 
@@ -449,7 +520,9 @@ namespace Veldrid.Vk
         {
             BeginIfNeeded();
             VkBuffer vkSrc = (VkBuffer)source;
+            IncrementRef(vkSrc.RefCount);
             VkBuffer vkDst = (VkBuffer)destination;
+            IncrementRef(vkDst.RefCount);
             VkBufferCopy region = new VkBufferCopy();
             region.srcOffset = sourceOffset;
             region.dstOffset = destinationOffset;
@@ -464,6 +537,12 @@ namespace Veldrid.Vk
             uint layerCount)
         {
             BeginIfNeeded();
+
+            VkTexture vkSrc = Util.AssertSubtype<Texture, VkTexture>(source);
+            IncrementRef(vkSrc.RefCount);
+            VkTexture vkDst = Util.AssertSubtype<Texture, VkTexture>(destination);
+            IncrementRef(vkDst.RefCount);
+
             VkCommandList.CopyTextureCore_VkCommandBuffer(
                 _cb,
                 source, srcX, srcY, srcZ, srcMipLevel, srcBaseArrayLayer,
@@ -475,6 +554,7 @@ namespace Veldrid.Vk
         {
             BeginIfNeeded();
             VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(texture);
+            IncrementRef(vkTex.RefCount);
             vkTex.TransitionImageLayout(_cb, 0, 1, 0, vkTex.ArrayLayers, VkImageLayout.TransferSrcOptimal);
             vkTex.TransitionImageLayout(_cb, 1, vkTex.MipLevels - 1, 0, vkTex.ArrayLayers, VkImageLayout.TransferDstOptimal);
 
@@ -532,8 +612,9 @@ namespace Veldrid.Vk
             uint sizeInBytes)
         {
             BeginIfNeeded();
-            VkBuffer vkbuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
-            vkCmdUpdateBuffer(_cb, vkbuffer.DeviceBuffer, bufferOffsetInBytes, sizeInBytes, source.ToPointer());
+            VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
+            IncrementRef(vkBuffer.RefCount);
+            vkCmdUpdateBuffer(_cb, vkBuffer.DeviceBuffer, bufferOffsetInBytes, sizeInBytes, source.ToPointer());
         }
 
         private protected override void BlitTextureCore(
@@ -543,7 +624,9 @@ namespace Veldrid.Vk
         {
             BeginIfNeeded();
             VkTexture vkSrc = Util.AssertSubtype<Texture, VkTexture>(source);
+            IncrementRef(vkSrc.RefCount);
             VkTexture vkDst = Util.AssertSubtype<Texture, VkTexture>(destination.ColorTargets[0].Target);
+            IncrementRef(vkDst.RefCount);
 
             vkSrc.TransitionImageLayout(_cb, 0, 1, 0, 1, VkImageLayout.TransferSrcOptimal);
             vkDst.TransitionImageLayout(_cb, 0, 1, destination.ColorTargets[0].ArrayLayer, 1, VkImageLayout.TransferDstOptimal);

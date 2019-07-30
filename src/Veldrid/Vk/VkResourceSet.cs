@@ -74,6 +74,7 @@ namespace Veldrid.Vk
                     descriptorWrites[writeIndex].pImageInfo = &imageInfos[writeIndex];
                     _sampledTextures.Add(Util.AssertSubtype<Texture, VkTexture>(texView.Target));
                     _refCounts.Add(vkTexView.RefCount);
+                    _refCounts.Add(vkTexView.Target.RefCount);
                 }
                 else if (type == VkDescriptorType.StorageImage)
                 {
@@ -84,6 +85,7 @@ namespace Veldrid.Vk
                     descriptorWrites[writeIndex].pImageInfo = &imageInfos[writeIndex];
                     _storageImages.Add(Util.AssertSubtype<Texture, VkTexture>(texView.Target));
                     _refCounts.Add(vkTexView.RefCount);
+                    _refCounts.Add(vkTexView.Target.RefCount);
                 }
                 else if (type == VkDescriptorType.Sampler)
                 {

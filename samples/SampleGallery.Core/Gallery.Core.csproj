@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Veldrid.SPIRV" Version="1.0.11" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.12" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,7 +26,7 @@
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.InputPrimitives\Veldrid.InputPrimitives.csproj" />
     <ProjectReference Include="..\AssetProcessor\AssetProcessor.csproj" />
 
-    <PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.11" PrivateAssets="All" />
+    <PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.12" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

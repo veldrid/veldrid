@@ -33,7 +33,8 @@ namespace Veldrid.SampleGallery
             };
 
             string setName = srgbOutput ? "TextureBlitter_SRGB" : "TextureBlitter";
-            Shader[] shaders = ShaderUtil.LoadEmbeddedShaderSet(typeof(TextureBlitter).Assembly, factory, setName);
+            (Shader[] shaders, SpirvReflection reflection) = ShaderUtil.LoadEmbeddedShaderSet(
+                typeof(TextureBlitter).Assembly, factory, setName);
 
             _rl = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Input", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
@@ -42,17 +43,21 @@ namespace Veldrid.SampleGallery
             _sampleRegionLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("SampleRegionInfo", ResourceKind.UniformBuffer, ShaderStages.Fragment)));
 
-            _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.CullNone,
                 PrimitiveTopology.TriangleStrip,
                 new ShaderSetDescription(
                     Array.Empty<VertexLayoutDescription>(),
-                    new[] { shaders[0], shaders[1] },
+                    shaders,
                     specConstants),
                 new[] { _rl, _sampleRegionLayout },
-                outputDesc));
+                outputDesc,
+                reflection.VertexElements,
+                reflection.ResourceLayouts);
+
+            _pipeline = factory.CreateGraphicsPipeline(gpd);
 
             _sampleRegionUB = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
             _sampleRegionSet = factory.CreateResourceSet(new ResourceSetDescription(_sampleRegionLayout, _sampleRegionUB));

@@ -1,12 +1,16 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using Veldrid.SPIRV;
 
 namespace Veldrid.SampleGallery
 {
     public static class ShaderUtil
     {
-        public static Shader[] LoadEmbeddedShaderSet(Assembly assembly, ResourceFactory factory, string name)
+        public static (Shader[], SpirvReflection) LoadEmbeddedShaderSet(
+            Assembly assembly,
+            ResourceFactory factory,
+            string name)
         {
             string extension;
             switch (factory.BackendType)
@@ -34,11 +38,17 @@ namespace Veldrid.SampleGallery
             byte[] vsBytes = ReadEmbeddedBytes(assembly, $"{name}_Vertex.{extension}");
             byte[] fsBytes = ReadEmbeddedBytes(assembly, $"{name}_Fragment.{extension}");
 
-            return new[]
+            SpirvReflection reflection;
+            using (Stream embeddedStream = assembly.GetManifestResourceStream($"{name}_ReflectionInfo.json"))
+            {
+                reflection = SpirvReflection.LoadFromJson(embeddedStream);
+            }
+
+            return (new[]
             {
                 factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vsBytes, "main")),
                 factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fsBytes, "main")),
-            };
+            }, reflection);
         }
 
         private static byte[] ReadEmbeddedBytes(Assembly assembly, string name)

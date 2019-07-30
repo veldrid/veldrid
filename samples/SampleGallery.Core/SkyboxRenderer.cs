@@ -14,9 +14,11 @@ namespace Veldrid.SampleGallery
         public SkyboxRenderer(GraphicsDevice gd, Stream[] imageStreams)
             : base(gd)
         {
+            (Shader[] shaders, SpirvReflection reflection) = ShaderUtil.LoadEmbeddedShaderSet(
+                typeof(SkyboxRenderer).Assembly, Factory, "Skybox");
             ShaderSetDescription shaderSet = new ShaderSetDescription(
                 Array.Empty<VertexLayoutDescription>(),
-                ShaderUtil.LoadEmbeddedShaderSet(typeof(SkyboxRenderer).Assembly, Factory, "Skybox"));
+                shaders);
 
             ResourceLayout layout = Factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("SkyTex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
@@ -30,8 +32,11 @@ namespace Veldrid.SampleGallery
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleStrip,
                 shaderSet,
-                new[] { GalleryConfig.Global.CameraInfoLayout, GalleryConfig.Global.MainFBInfoLayout, layout },
+                new[] { GalleryConfig.Global.CameraInfoLayout, layout },
                 GalleryConfig.Global.MainFBOutput);
+
+            gpd.ReflectedVertexElements = reflection.VertexElements;
+            gpd.ReflectedResourceLayouts = reflection.ResourceLayouts;
 
             _pipeline = Factory.CreateGraphicsPipeline(gpd);
 
@@ -49,8 +54,7 @@ namespace Veldrid.SampleGallery
 
             cb.BindPipeline(_pipeline);
             cb.BindGraphicsResourceSet(0, GalleryConfig.Global.CameraInfoSets[frameIndex]);
-            cb.BindGraphicsResourceSet(1, GalleryConfig.Global.MainFBInfoSet);
-            cb.BindGraphicsResourceSet(2, _set);
+            cb.BindGraphicsResourceSet(1, _set);
             cb.Draw(4);
         }
     }

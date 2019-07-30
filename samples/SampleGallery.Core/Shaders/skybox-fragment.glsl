@@ -12,16 +12,8 @@ layout (set = 0, binding = 0) uniform CameraInfo
     float _padding2;
 };
 
-layout (set = 1, binding = 0) uniform FBInfo
-{
-    uint FB_Width;
-    uint FB_Height;
-    uint _FBInfo_padding0;
-    uint _FBInfo_padding1;
-};
-
-layout (set = 2, binding = 0) uniform textureCube SkyTex;
-layout (set = 2, binding = 1) uniform sampler SkySamp;
+layout (set = 1, binding = 0) uniform textureCube SkyTex;
+layout (set = 1, binding = 1) uniform sampler SkySamp;
 
 layout (location = 0) in vec2 fsin_UV;
 layout (location = 0) out vec4 fsout_color;

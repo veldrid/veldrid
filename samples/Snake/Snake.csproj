@@ -21,7 +21,7 @@
     <ProjectReference Include="..\AssetPrimitives\AssetPrimitives.csproj" />
     <ProjectReference Include="..\SampleGallery.Core\Gallery.Core.csproj" />
 
-    <PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.11" PrivateAssets="All" />
+    <PackageReference Include="Veldrid.SPIRV.BuildTools" Version="1.0.12" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

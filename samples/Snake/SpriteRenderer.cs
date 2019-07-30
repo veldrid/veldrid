@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Veldrid;
 using Veldrid.SampleGallery;
+using Veldrid.SPIRV;
 using Veldrid.StbImage;
 
 namespace Snake
@@ -41,6 +42,8 @@ namespace Snake
                     new ResourceLayoutElementDescription("SpriteTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                     new ResourceLayoutElementDescription("SpriteSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
+            (Shader[] shaders, SpirvReflection reflection) = ShaderUtil.LoadEmbeddedShaderSet(
+                typeof(SpriteRenderer).Assembly, factory, "Sprite");
             _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleAlphaBlend,
                 DepthStencilStateDescription.Disabled,
@@ -57,9 +60,11 @@ namespace Snake
                             new VertexElementDescription("Tint", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Byte4_Norm),
                             new VertexElementDescription("Rotation", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float1))
                     },
-                    ShaderUtil.LoadEmbeddedShaderSet(typeof(SpriteRenderer).Assembly, factory, "Sprite")),
+                    shaders),
                 new[] { _orthoLayout, _texLayout },
-                GalleryConfig.Global.MainFBOutput));
+                GalleryConfig.Global.MainFBOutput,
+                reflection.VertexElements,
+                reflection.ResourceLayouts));
         }
 
         public void AddSprite(Vector2 position, Vector2 size, string spriteName)

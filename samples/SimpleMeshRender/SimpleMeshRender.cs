@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Veldrid.SPIRV;
 using Veldrid.StbImage;
 using Veldrid.Utilities;
 
@@ -60,9 +61,11 @@ namespace Veldrid.SampleGallery
                 new VertexElementDescription("vsin_position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3, 0),
                 new VertexElementDescription("vsin_uv", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2, 24));
 
+            (Shader[] shaders, SpirvReflection reflection) = ShaderUtil.LoadEmbeddedShaderSet(
+                typeof(SimpleMeshRender).Assembly, Factory, "SimpleMeshRender");
             ShaderSetDescription shadersDesc = new ShaderSetDescription(
                 new[] { vertexLayout },
-                ShaderUtil.LoadEmbeddedShaderSet(typeof(SimpleMeshRender).Assembly, Factory, "SimpleMeshRender"));
+                shaders);
 
             _pipeline = Factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
@@ -73,7 +76,9 @@ namespace Veldrid.SampleGallery
                 PrimitiveTopology.TriangleList,
                 shadersDesc,
                 layout,
-                Framebuffers[0].OutputDescription));
+                Framebuffers[0].OutputDescription,
+                reflection.VertexElements,
+                reflection.ResourceLayouts));
             _camera = new Camera(Device, Framebuffers[0].Width, Framebuffers[0].Height);
             _camera.Position = new Vector3(0, 1, 3);
 

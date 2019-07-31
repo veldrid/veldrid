@@ -69,8 +69,6 @@ namespace Veldrid.OpenGL
             int length = (int)_stagingBlock.SizeInBytes;
             byte** textsPtr = &textPtr;
 
-            string txttxt = Util.GetString(textPtr);
-
             glShaderSource(_shader, 1, textsPtr, &length);
             CheckLastError();
 

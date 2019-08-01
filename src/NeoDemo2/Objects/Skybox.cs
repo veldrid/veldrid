@@ -54,7 +54,7 @@ namespace Veldrid.NeoDemo.Objects
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
                 new VertexLayoutDescription(
-                    new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3))
+                    new VertexElementDescription("vsin_Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3))
             };
 
             (Shader vs, Shader fs) = StaticResourceCache.GetShaders(gd, gd.ResourceFactory, "Skybox");

@@ -71,7 +71,8 @@ namespace Veldrid.Vk
                 VkFormats.VdToVkPixelFormat(description.Format, (description.Usage & TextureUsage.DepthStencil) != 0),
                 description.Usage,
                 description.SampleCount,
-                nativeTexture);
+                nativeTexture,
+                isSwapchainTexture: false);
         }
 
         protected override TextureView CreateTextureViewCore(ref TextureViewDescription description)

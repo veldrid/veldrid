@@ -160,7 +160,8 @@ namespace Veldrid.Vk
                     _scImageFormat,
                     TextureUsage.RenderTarget,
                     TextureSampleCount.Count1,
-                    _scImages[i]);
+                    _scImages[i],
+                    isSwapchainTexture: true);
                 FramebufferDescription desc = new FramebufferDescription(_depthAttachment?.Target, colorTex);
                 VkFramebuffer fb = new VkFramebuffer(_gd, ref desc, true);
                 _scFramebuffers[i] = fb;

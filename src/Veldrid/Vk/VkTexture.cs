@@ -214,7 +214,8 @@ namespace Veldrid.Vk
             VkFormat vkFormat,
             TextureUsage usage,
             TextureSampleCount sampleCount,
-            VkImage existingImage)
+            VkImage existingImage,
+            bool isSwapchainTexture)
         {
             Debug.Assert(width > 0 && height > 0);
             _gd = gd;
@@ -231,7 +232,7 @@ namespace Veldrid.Vk
             VkSampleCount = VkFormats.VdToVkSampleCount(sampleCount);
             _optimalImage = existingImage;
             _imageLayouts = new[] { VkImageLayout.Undefined };
-            IsSwapchainTexture = true;
+            IsSwapchainTexture = isSwapchainTexture;
 
             ClearIfRenderTarget(VkImageLayout.PresentSrcKHR);
             RefCount = new ResourceRefCount(DisposeCore);

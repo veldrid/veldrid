@@ -13,7 +13,6 @@ namespace Veldrid.Vk
         private readonly VkSwapchain _swapchain;
         private readonly VkSurfaceKHR _surface;
         private readonly PixelFormat? _depthFormat;
-        private uint _currentImageIndex;
 
         private VkFramebuffer[] _scFramebuffers;
         private VkImage[] _scImages;
@@ -28,14 +27,14 @@ namespace Veldrid.Vk
         private string _name;
         private OutputDescription _outputDescription;
 
-        public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
+        public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_swapchain.ImageIndex].CurrentFramebuffer;
         public VkFramebuffer[] Framebuffers => _scFramebuffers;
 
         public override VkRenderPass RenderPassNoClear_Init => _scFramebuffers[0].RenderPassNoClear_Init;
         public override VkRenderPass RenderPassNoClear_Load => _scFramebuffers[0].RenderPassNoClear_Load;
         public override VkRenderPass RenderPassClear => _scFramebuffers[0].RenderPassClear;
 
-        public override IReadOnlyList<FramebufferAttachment> ColorTargets => _scColorTextures[(int)_currentImageIndex];
+        public override IReadOnlyList<FramebufferAttachment> ColorTargets => _scColorTextures[(int)_swapchain.ImageIndex];
 
         public override IReadOnlyList<FramebufferAttachment> ResolveTargets => Array.Empty<FramebufferAttachment>();
         public override FramebufferAttachment? DepthTarget => _depthAttachment;
@@ -45,8 +44,6 @@ namespace Veldrid.Vk
 
         public override uint Width => _desiredWidth;
         public override uint Height => _desiredHeight;
-
-        public uint ImageIndex => _currentImageIndex;
 
         public override OutputDescription OutputDescription => _outputDescription;
 
@@ -69,11 +66,6 @@ namespace Veldrid.Vk
             _depthFormat = depthFormat;
 
             AttachmentCount = depthFormat.HasValue ? 2u : 1u; // 1 Color + 1 Depth
-        }
-
-        internal void SetImageIndex(uint index)
-        {
-            _currentImageIndex = index;
         }
 
         internal void SetNewSwapchain(

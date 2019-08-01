@@ -112,7 +112,6 @@ namespace Veldrid.Vk
                 : null;
             VkFence vkFence = fence != null ? Util.AssertSubtype<Fence, VkFence>(fence) : null;
 
-
             AcquireResult acquireResult = AcquireResult.Success;
             _currentImageIndex = 0;
             VkResult result = vkAcquireNextImageKHR(

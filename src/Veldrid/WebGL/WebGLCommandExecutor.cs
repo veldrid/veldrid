@@ -24,7 +24,6 @@ namespace Veldrid.WebGL
         private WebGLBuffer[] _vertexBuffers = Array.Empty<WebGLBuffer>();
         private uint[] _vbOffsets = Array.Empty<uint>();
         private uint[] _vertexAttribDivisors = Array.Empty<uint>();
-        private uint _vertexAttributesBound;
         private readonly Viewport[] _viewports = new Viewport[20];
         private uint _drawElementsType;
         private uint _ibOffset;
@@ -173,12 +172,11 @@ namespace Veldrid.WebGL
                 for (uint slot = 0; slot < input.Elements.Length; slot++)
                 {
                     ref VertexElementDescription element = ref input.Elements[slot]; // Large structure -- use by reference.
-                    uint actualSlot = totalSlotsBound + slot;
-                    if (actualSlot >= _vertexAttributesBound)
-                    {
-                        _ctx.EnableVertexAttribArray(actualSlot);
-                        _gd.CheckError();
-                    }
+                    uint actualSlot = _graphicsPipeline.VertexAttributeLocations[totalSlotsBound];
+                    if (actualSlot == uint.MaxValue) { continue; }
+
+                    _ctx.EnableVertexAttribArray(actualSlot);
+                    _gd.CheckError();
                     uint type = VdToGLVertexAttribPointerType(
                         element.Format,
                         out bool normalized,
@@ -210,24 +208,16 @@ namespace Veldrid.WebGL
                     }
 
                     uint stepRate = input.InstanceStepRate;
-                    if (_vertexAttribDivisors[actualSlot] != stepRate)
+                    if (_vertexAttribDivisors[totalSlotsBound] != stepRate)
                     {
                         _ctx.VertexAttribDivisor(actualSlot, stepRate);
-                        _vertexAttribDivisors[actualSlot] = stepRate;
+                        _vertexAttribDivisors[totalSlotsBound] = stepRate;
                     }
 
                     offset += FormatHelpers.GetSizeInBytes(element.Format);
+                    totalSlotsBound += 1;
                 }
-
-                totalSlotsBound += (uint)input.Elements.Length;
             }
-
-            for (uint extraSlot = totalSlotsBound; extraSlot < _vertexAttributesBound; extraSlot++)
-            {
-                _ctx.DisableVertexAttribArray(extraSlot);
-            }
-
-            _vertexAttributesBound = totalSlotsBound;
         }
 
         public override void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
@@ -626,10 +616,11 @@ namespace Veldrid.WebGL
             uint ssboBaseIndex = GetShaderStorageBaseIndex(slot, graphics);
 
             uint ubOffset = 0;
-            uint ssboOffset = 0;
             uint dynamicOffsetIndex = 0;
             for (uint element = 0; element < glResourceSet.Resources.Length; element++)
             {
+                if (layoutElements[element].IsUnused) { continue; }
+
                 ResourceKind kind = layoutElements[element].Kind;
                 BindableResource resource = glResourceSet.Resources[(int)element];
 
@@ -646,11 +637,11 @@ namespace Veldrid.WebGL
                     {
                         if (!isNew) { continue; }
 
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        WebGLBuffer glUB = Util.AssertSubtype<DeviceBuffer, WebGLBuffer>(range.Buffer);
-
                         if (pipeline.GetUniformBindingForSlot(slot, element, out WebGLUniformBinding uniformBindingInfo))
                         {
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            WebGLBuffer glUB = Util.AssertSubtype<DeviceBuffer, WebGLBuffer>(range.Buffer);
+
                             if (range.SizeInBytes < uniformBindingInfo.BlockSize)
                             {
                                 string name = glResourceSet.Layout.Elements[element].Name;
@@ -679,10 +670,10 @@ namespace Veldrid.WebGL
                         throw new NotSupportedException();
                     }
                     case ResourceKind.TextureReadOnly:
-                        TextureView texView = Util.GetTextureView(_gd, resource);
-                        WebGLTextureView glTexView = Util.AssertSubtype<TextureView, WebGLTextureView>(texView);
                         if (pipeline.GetTextureBindingInfo(slot, element, out WebGLTextureBindingSlotInfo textureBindingInfo))
                         {
+                            TextureView texView = Util.GetTextureView(_gd, resource);
+                            WebGLTextureView glTexView = Util.AssertSubtype<TextureView, WebGLTextureView>(texView);
                             _textureSamplerManager.SetTexture((uint)textureBindingInfo.RelativeIndex, glTexView);
                             _ctx.Uniform1i(textureBindingInfo.UniformLocation, textureBindingInfo.RelativeIndex);
                             _gd.CheckError();
@@ -693,9 +684,9 @@ namespace Veldrid.WebGL
                         throw new NotSupportedException();
                     }
                     case ResourceKind.Sampler:
-                        WebGLSampler glSampler = Util.AssertSubtype<BindableResource, WebGLSampler>(resource);
                         if (pipeline.GetSamplerBindingInfo(slot, element, out WebGLSamplerBindingSlotInfo samplerBindingInfo))
                         {
+                            WebGLSampler glSampler = Util.AssertSubtype<BindableResource, WebGLSampler>(resource);
                             foreach (int index in samplerBindingInfo.RelativeIndices)
                             {
                                 _textureSamplerManager.SetSampler((uint)index, glSampler);

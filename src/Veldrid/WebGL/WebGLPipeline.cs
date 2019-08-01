@@ -16,9 +16,12 @@ namespace Veldrid.WebGL
         public ResourceLayout[] ResourceLayouts { get; }
 #endif
 
+        public ResourceLayoutDescription[] ReflectedResourceLayouts { get; }
+
         // Graphics Pipeline
         public Shader[] GraphicsShaders { get; }
         public VertexLayoutDescription[] VertexLayouts { get; }
+        public VertexElementDescription[] ReflectedVertexElements { get; }
         public BlendStateDescription BlendState { get; }
         public DepthStencilStateDescription DepthStencilState { get; }
         public RasterizerStateDescription RasterizerState { get; }
@@ -34,6 +37,7 @@ namespace Veldrid.WebGL
         private SetBindingsInfo[] _setInfos;
 
         public int[] VertexStrides { get; }
+        public uint[] VertexAttributeLocations { get; }
 
         public WebGLDotNET.WebGLProgram Program => _program;
 
@@ -48,6 +52,19 @@ namespace Veldrid.WebGL
             _gd = gd;
             GraphicsShaders = Util.ShallowClone(description.ShaderSet.Shaders);
             VertexLayouts = Util.ShallowClone(description.ShaderSet.VertexLayouts);
+            if (description.ReflectedVertexElements != null)
+            {
+                ReflectedVertexElements = Util.ShallowClone(description.ReflectedVertexElements);
+            }
+            if (description.ReflectedResourceLayouts != null)
+            {
+                ReflectedResourceLayouts = new ResourceLayoutDescription[description.ReflectedResourceLayouts.Length];
+                for (uint i = 0; i < ReflectedResourceLayouts.Length; i++)
+                {
+                    ReflectedResourceLayouts[i] = new ResourceLayoutDescription(
+                        Util.ShallowClone(description.ReflectedResourceLayouts[i].Elements));
+                }
+            }
             BlendState = description.BlendState.ShallowClone();
             DepthStencilState = description.DepthStencilState;
             RasterizerState = description.RasterizerState;
@@ -55,10 +72,14 @@ namespace Veldrid.WebGL
 
             int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
             VertexStrides = new int[numVertexBuffers];
+            int numVertexAttributes = 0;
             for (int i = 0; i < numVertexBuffers; i++)
             {
                 VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
+                numVertexAttributes += description.ShaderSet.VertexLayouts[i].Elements.Length;
             }
+
+            VertexAttributeLocations = new uint[numVertexAttributes];
 
 #if !VALIDATE_USAGE
             ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
@@ -73,38 +94,30 @@ namespace Veldrid.WebGL
                 _gd.CheckError();
             }
 
+            _gd.Ctx.LinkProgram(_program);
+            _gd.CheckError();
+
             uint slot = 0;
             foreach (VertexLayoutDescription layoutDesc in VertexLayouts)
             {
                 for (int i = 0; i < layoutDesc.Elements.Length; i++)
                 {
                     string elementName = layoutDesc.Elements[i].Name;
-                    _gd.Ctx.BindAttribLocation(_program, slot, elementName);
-                    _gd.CheckError();
-
-                    slot += 1;
-                }
-            }
-
-            _gd.Ctx.LinkProgram(_program);
-            _gd.CheckError();
-
-#if DEBUG && GL_VALIDATE_VERTEX_INPUT_ELEMENTS
-            slot = 0;
-            foreach (VertexLayoutDescription layoutDesc in VertexLayouts)
-            {
-                for (int i = 0; i < layoutDesc.Elements.Length; i++)
-                {
-                    string elementName = layoutDesc.Elements[i].Name;
-                    int location = _gd.Ctx.GetAttribLocation(_program, elementName);
-                    if (location == -1)
+                    if (ReflectedVertexElements != null)
                     {
-                        throw new VeldridException("There was no attribute variable with the name " + layoutDesc.Elements[i].Name);
+                        elementName = ReflectedVertexElements[slot].Name;
                     }
+
+                    if (elementName != null)
+                    {
+                        int location = _gd.Ctx.GetAttribLocation(_program, elementName);
+                        _gd.CheckError();
+                        VertexAttributeLocations[slot] = (uint)location;
+                    }
+
                     slot += 1;
                 }
             }
-#endif
 
             bool linkSuccess = (bool)_gd.Ctx.GetProgramParameter(_program, LINK_STATUS);
             _gd.CheckError();
@@ -139,9 +152,21 @@ namespace Veldrid.WebGL
                 for (uint i = 0; i < resources.Length; i++)
                 {
                     ResourceLayoutElementDescription resource = resources[i];
+                    string resourceName = resource.Name;
+                    if (ReflectedResourceLayouts != null)
+                    {
+                        if (ReflectedResourceLayouts[setSlot].Elements[i].IsUnused)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            resourceName = ReflectedResourceLayouts[setSlot].Elements[i].Name;
+                        }
+                    }
+
                     if (resource.Kind == ResourceKind.UniformBuffer)
                     {
-                        string resourceName = resource.Name;
                         uint blockIndex = _gd.Ctx.GetUniformBlockIndex(_program, resourceName);
                         _gd.CheckError();
                         if (blockIndex != GL_INVALID_INDEX)
@@ -153,7 +178,6 @@ namespace Veldrid.WebGL
                     }
                     else if (resource.Kind == ResourceKind.TextureReadOnly)
                     {
-                        string resourceName = resource.Name;
                         WebGLDotNET.WebGLUniformLocation location = _gd.Ctx.GetUniformLocation(_program, resourceName);
                         _gd.CheckError();
                         relativeTextureIndex += 1;
@@ -163,7 +187,6 @@ namespace Veldrid.WebGL
                     }
                     else if (resource.Kind == ResourceKind.TextureReadWrite)
                     {
-                        string resourceName = resource.Name;
                         WebGLDotNET.WebGLUniformLocation location = _gd.Ctx.GetUniformLocation(_program, resourceName);
                         _gd.CheckError();
                         relativeImageIndex += 1;

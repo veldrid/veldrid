@@ -82,6 +82,8 @@ namespace Veldrid.MTL
 
         public MetalBindings.MTLCommandBuffer PrepareForSubmission()
         {
+            BeginRecording();
+
             EnsureNoBlitEncoder();
             EnsureNoComputeEncoder();
 

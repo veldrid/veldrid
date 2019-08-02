@@ -938,6 +938,23 @@ namespace Veldrid.Tests
             Assert.Equal(1u, tex.Height);
         }
 
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(10)]
+        public void TextureView_OfMultisampledTexture(uint arrayLayers)
+        {
+            Texture texture = RF.CreateTexture(
+                TextureDescription.Texture2D(
+                    512, 512,
+                    1, arrayLayers,
+                    PixelFormat.R8_G8_B8_A8_UNorm,
+                    TextureUsage.Sampled,
+                    TextureSampleCount.Count4));
+            TextureView view = RF.CreateTextureView(texture);
+            Assert.Equal(texture, view.Target);
+        }
+
         private static readonly FormatProps[] s_allFormatProps =
         {
             new FormatProps(PixelFormat.R8_UNorm, 8, 0, 0, 0),

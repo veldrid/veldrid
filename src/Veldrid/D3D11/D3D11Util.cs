@@ -50,9 +50,16 @@ namespace Veldrid.D3D11
                     }
                     else
                     {
-                        srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
-                        srvDesc.Texture2D.MostDetailedMip = (int)baseMipLevel;
-                        srvDesc.Texture2D.MipLevels = (int)levelCount;
+                        if (tex.SampleCount == TextureSampleCount.Count1)
+                        {
+                            srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
+                            srvDesc.Texture2D.MostDetailedMip = (int)baseMipLevel;
+                            srvDesc.Texture2D.MipLevels = (int)levelCount;
+                        }
+                        else
+                        {
+                            srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2DMultisampled;
+                        }
                     }
                 }
                 else
@@ -67,11 +74,20 @@ namespace Veldrid.D3D11
                     }
                     else
                     {
-                        srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2DArray;
-                        srvDesc.Texture2DArray.MostDetailedMip = (int)baseMipLevel;
-                        srvDesc.Texture2DArray.MipLevels = (int)levelCount;
-                        srvDesc.Texture2DArray.FirstArraySlice = (int)baseArrayLayer;
-                        srvDesc.Texture2DArray.ArraySize = (int)layerCount;
+                        if (tex.SampleCount == TextureSampleCount.Count1)
+                        {
+                            srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2DArray;
+                            srvDesc.Texture2DArray.MostDetailedMip = (int)baseMipLevel;
+                            srvDesc.Texture2DArray.MipLevels = (int)levelCount;
+                            srvDesc.Texture2DArray.FirstArraySlice = (int)baseArrayLayer;
+                            srvDesc.Texture2DArray.ArraySize = (int)layerCount;
+                        }
+                        else
+                        {
+                            srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2DMultisampledArray;
+                            srvDesc.Texture2DMSArray.FirstArraySlice = (int)baseArrayLayer;
+                            srvDesc.Texture2DMSArray.ArraySize = (int)layerCount;
+                        }
                     }
                 }
             }

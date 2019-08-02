@@ -11,6 +11,7 @@ namespace Veldrid.OpenGL
         private readonly OpenGLGraphicsDevice _gd;
         private uint _buffer;
         private bool _dynamic;
+        private bool _disposed;
 
         private string _name;
         private bool _nameChanged;
@@ -22,6 +23,7 @@ namespace Veldrid.OpenGL
         public uint Buffer => _buffer;
 
         public bool Created { get; private set; }
+        public ResourceRefCount RefCount { get; }
 
         public OpenGLBuffer(OpenGLGraphicsDevice gd, uint sizeInBytes, BufferUsage usage)
             : base(gd)
@@ -30,6 +32,7 @@ namespace Veldrid.OpenGL
             SizeInBytes = sizeInBytes;
             _dynamic = (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
             Usage = usage;
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         public void EnsureResourcesCreated()
@@ -85,16 +88,22 @@ namespace Veldrid.OpenGL
             Created = true;
         }
 
-        public override void Dispose()
+        public override void Dispose() => RefCount.Decrement();
+
+        private void DisposeCore()
         {
             _gd.EnqueueDisposal(this);
         }
 
         public void DestroyGLResources()
         {
-            uint buffer = _buffer;
-            glDeleteBuffers(1, ref buffer);
-            CheckLastError();
+            if (!_disposed)
+            {
+                _disposed = true;
+                uint buffer = _buffer;
+                glDeleteBuffers(1, ref buffer);
+                CheckLastError();
+            }
         }
     }
 }

@@ -19,10 +19,22 @@ namespace Veldrid.OpenGL
 
         public bool Created { get; private set; }
 
+        public ResourceRefCount RefCount { get; }
+
         public OpenGLFramebuffer(OpenGLGraphicsDevice gd, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets, description.ResolveTargets)
         {
             _gd = gd;
+            RefCount = new ResourceRefCount(DisposeCore);
+
+            foreach (FramebufferAttachmentDescription colorTarget in description.ColorTargets)
+            {
+                ((OpenGLTexture)colorTarget.Target).RefCount.Increment();
+            }
+            if (description.DepthTarget != null)
+            {
+                ((OpenGLTexture)description.DepthTarget.Value.Target).RefCount.Increment();
+            }
         }
 
         public void EnsureResourcesCreated()
@@ -143,7 +155,9 @@ namespace Veldrid.OpenGL
             Created = true;
         }
 
-        public override void Dispose()
+        public override void Dispose() => RefCount.Decrement();
+
+        private void DisposeCore()
         {
             _gd.EnqueueDisposal(this);
         }
@@ -153,6 +167,17 @@ namespace Veldrid.OpenGL
             if (!_disposed)
             {
                 _disposed = true;
+
+                for (int i = 0; i < ColorTargets.Count; i++)
+                {
+                    ((OpenGLTexture)ColorTargets[i].Target).RefCount.Decrement();
+                }
+                if (DepthTarget != null)
+                {
+                    ((OpenGLTexture)DepthTarget.Value.Target).RefCount.Decrement();
+                }
+
+
                 uint framebuffer = _framebuffer;
                 glDeleteFramebuffers(1, ref framebuffer);
                 CheckLastError();

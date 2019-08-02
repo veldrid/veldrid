@@ -21,6 +21,8 @@ namespace Veldrid.OpenGL
 
         public uint Texture => _texture;
 
+        public ResourceRefCount RefCount { get; }
+
         public OpenGLTexture(OpenGLGraphicsDevice gd, ref TextureDescription description)
         {
             _gd = gd;
@@ -82,6 +84,8 @@ namespace Veldrid.OpenGL
                 Debug.Assert(Type == TextureType.Texture3D);
                 TextureTarget = TextureTarget.Texture3D;
             }
+
+            RefCount = new ResourceRefCount(RefCountedDispose);
         }
 
         public OpenGLTexture(OpenGLGraphicsDevice gd, uint nativeTexture, ref TextureDescription description)
@@ -147,6 +151,7 @@ namespace Veldrid.OpenGL
             }
 
             Created = true;
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         public override uint Width { get; }
@@ -678,6 +683,11 @@ namespace Veldrid.OpenGL
         }
 
         private protected override void DisposeCore()
+        {
+            RefCount.Decrement();
+        }
+
+        private void RefCountedDispose()
         {
             _gd.EnqueueDisposal(this);
         }

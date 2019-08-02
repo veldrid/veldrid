@@ -203,11 +203,16 @@ namespace Veldrid.CommandRecording
                 {
                     _entryList.Reset();
                     _state = RecordingState.Recording;
+                    RecordingStarted();
                 }
             }
         }
 
-        public void BeginExecuting()
+        protected virtual void RecordingStarted() { }
+
+        public virtual void SubmittedToGraphicsDevice() { }
+
+        public virtual void BeginExecuting()
         {
             lock (_stateLock)
             {
@@ -215,7 +220,7 @@ namespace Veldrid.CommandRecording
             }
         }
 
-        public void EndExecuting()
+        public virtual void EndExecuting()
         {
             lock (_stateLock)
             {

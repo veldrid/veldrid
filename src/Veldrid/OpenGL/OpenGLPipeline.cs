@@ -83,6 +83,8 @@ namespace Veldrid.OpenGL
 #if !VALIDATE_USAGE
             ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
 #endif
+
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref ComputePipelineDescription description)
@@ -95,10 +97,13 @@ namespace Veldrid.OpenGL
 #if !VALIDATE_USAGE
             ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
 #endif
+
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         public bool Created { get; private set; }
         public ResourceLayoutDescription[] ReflectedResourceLayouts { get; }
+        public ResourceRefCount RefCount { get; internal set; }
 
         public void EnsureResourcesCreated()
         {
@@ -408,7 +413,9 @@ namespace Veldrid.OpenGL
 
         }
 
-        public override void Dispose()
+        public override void Dispose() => RefCount.Decrement();
+
+        private void DisposeCore()
         {
             _gd.EnqueueDisposal(this);
         }

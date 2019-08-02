@@ -25,9 +25,12 @@ namespace Veldrid.OpenGL
 
             _mipmapState = new InternalSamplerState();
             _noMipmapState = new InternalSamplerState();
+
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         public bool Created { get; private set; }
+        public ResourceRefCount RefCount { get; internal set; }
 
         public void EnsureResourcesCreated()
         {
@@ -54,7 +57,9 @@ namespace Veldrid.OpenGL
             Created = true;
         }
 
-        public override void Dispose()
+        public override void Dispose() => RefCount.Decrement();
+
+        private void DisposeCore()
         {
             _gd.EnqueueDisposal(this);
         }

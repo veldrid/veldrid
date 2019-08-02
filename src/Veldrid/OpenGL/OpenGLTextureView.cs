@@ -38,6 +38,8 @@ namespace Veldrid.OpenGL
 
         public bool Created { get; private set; }
 
+        public ResourceRefCount RefCount { get; }
+
         public OpenGLTextureView(OpenGLGraphicsDevice gd, ref TextureViewDescription description)
             : base(ref description)
         {
@@ -65,6 +67,8 @@ namespace Veldrid.OpenGL
                 }
                 _needsTextureView = true;
             }
+
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         public SizedInternalFormat GetReadWriteSizedInternalFormat()
@@ -275,7 +279,9 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public override void Dispose()
+        public override void Dispose() => RefCount.Decrement();
+
+        private void DisposeCore()
         {
             _gd.EnqueueDisposal(this);
         }

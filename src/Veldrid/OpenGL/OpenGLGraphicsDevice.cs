@@ -1184,16 +1184,33 @@ namespace Veldrid.OpenGL
             Fence fence)
         {
             OpenGLCommandBuffer glCB = Util.AssertSubtype<CommandBuffer, OpenGLCommandBuffer>(commandBuffer);
+            glCB.SubmittedToGraphicsDevice();
             _executionThread.ExecuteCommands(glCB, fence);
         }
 
-        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore[] waits, Semaphore[] signals, Fence fence)
+        private protected override void SubmitCommandsCore(
+            CommandBuffer[] commandBuffers,
+            Semaphore[] waits,
+            Semaphore[] signals,
+            Fence fence)
         {
+            foreach (CommandBuffer cb in commandBuffers)
+            {
+                ((OpenGLCommandBuffer)cb).SubmittedToGraphicsDevice();
+            }
             _executionThread.ExecuteCommands(commandBuffers, fence);
         }
 
-        private protected override void SubmitCommandsCore(CommandBuffer[] commandBuffers, Semaphore wait, Semaphore signal, Fence fence)
+        private protected override void SubmitCommandsCore(
+            CommandBuffer[] commandBuffers,
+            Semaphore wait,
+            Semaphore signal,
+            Fence fence)
         {
+            foreach (CommandBuffer cb in commandBuffers)
+            {
+                ((OpenGLCommandBuffer)cb).SubmittedToGraphicsDevice();
+            }
             _executionThread.ExecuteCommands(commandBuffers, fence);
         }
 
@@ -1860,8 +1877,8 @@ namespace Veldrid.OpenGL
                 {
                     throw new VeldridException("Fence must not be signaled when submitted.");
                 }
-
                 CheckExceptions();
+
                 _workItems.Add(new ExecutionThreadWorkItem(cbs, fence));
             }
 

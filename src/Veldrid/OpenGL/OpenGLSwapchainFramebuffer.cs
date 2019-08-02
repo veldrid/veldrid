@@ -31,6 +31,7 @@ namespace Veldrid.OpenGL
 
         // Only valid for secondary swapchains.
         public OpenGLFramebuffer Framebuffer { get; private set; }
+        public ResourceRefCount RefCount { get; }
 
         internal OpenGLSwapchainFramebuffer(
             GraphicsDevice gd,
@@ -74,6 +75,8 @@ namespace Veldrid.OpenGL
             DisableSrgbConversion = disableSrgbConversion;
             IsSecondarySwapchain = isSecondary;
             _needsResize = IsSecondarySwapchain;
+
+            RefCount = new ResourceRefCount(DisposeCore);
         }
 
         public void Resize(uint width, uint height)
@@ -119,7 +122,9 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public override void Dispose()
+        public override void Dispose() => RefCount.Decrement();
+
+        private void DisposeCore()
         {
             Debug.Assert(IsSecondarySwapchain);
             DestroyFramebuffer();

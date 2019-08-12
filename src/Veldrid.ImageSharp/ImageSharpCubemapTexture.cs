@@ -128,7 +128,35 @@ namespace Veldrid.ImageSharp
                 CubemapTextures[4] = new Image<Rgba32>[1] { positiveZ };
                 CubemapTextures[5] = new Image<Rgba32>[1] { negativeZ };
             }
+        }
 
+        public ImageSharpCubemapTexture(
+            Image<Rgba32>[] positiveX,
+            Image<Rgba32>[] negativeX,
+            Image<Rgba32>[] positiveY,
+            Image<Rgba32>[] negativeY,
+            Image<Rgba32>[] positiveZ,
+            Image<Rgba32>[] negativeZ)
+        {
+            CubemapTextures = new Image<Rgba32>[6][];
+            if (positiveX.Length == 0)
+            {
+                throw new ArgumentException("Texture should have at least one mip level.");
+            }
+            if (positiveX.Length != negativeX.Length ||
+                positiveX.Length != positiveY.Length ||
+                positiveX.Length != negativeY.Length ||
+                positiveX.Length != positiveZ.Length ||
+                positiveX.Length != negativeZ.Length)
+            {
+                throw new ArgumentException("Mip count doesn't match.");
+            }
+            CubemapTextures[0] = positiveX;
+            CubemapTextures[1] = negativeX;
+            CubemapTextures[2] = positiveY;
+            CubemapTextures[3] = negativeY;
+            CubemapTextures[4] = positiveZ;
+            CubemapTextures[5] = negativeZ;
         }
 
         public unsafe Texture CreateDeviceTexture(GraphicsDevice gd, ResourceFactory factory)

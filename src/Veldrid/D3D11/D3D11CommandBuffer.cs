@@ -975,6 +975,10 @@ namespace Veldrid.D3D11
                     else
                     {
                         PackRangeParams(range);
+                        if (_gd.SupportsCommandLists)
+                        {
+                            _ctx.VertexShader.SetConstantBuffer(slot, null);
+                        }
                         _ctx1.VSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
                 }
@@ -988,6 +992,10 @@ namespace Veldrid.D3D11
                 else
                 {
                     PackRangeParams(range);
+                    if (_gd.SupportsCommandLists)
+                    {
+                        _ctx.GeometryShader.SetConstantBuffer(slot, null);
+                    }
                     _ctx1.GSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }
@@ -1000,6 +1008,10 @@ namespace Veldrid.D3D11
                 else
                 {
                     PackRangeParams(range);
+                    if (_gd.SupportsCommandLists)
+                    {
+                        _ctx.HullShader.SetConstantBuffer(slot, null);
+                    }
                     _ctx1.HSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }
@@ -1012,6 +1024,10 @@ namespace Veldrid.D3D11
                 else
                 {
                     PackRangeParams(range);
+                    if (_gd.SupportsCommandLists)
+                    {
+                        _ctx.DomainShader.SetConstantBuffer(slot, null);
+                    }
                     _ctx1.DSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }
@@ -1039,6 +1055,10 @@ namespace Veldrid.D3D11
                     else
                     {
                         PackRangeParams(range);
+                        if (_gd.SupportsCommandLists)
+                        {
+                            _ctx.PixelShader.SetConstantBuffer(slot, null);
+                        }
                         _ctx1.PSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
                 }
@@ -1052,6 +1072,10 @@ namespace Veldrid.D3D11
                 else
                 {
                     PackRangeParams(range);
+                    if (_gd.SupportsCommandLists)
+                    {
+                        _ctx.ComputeShader.SetConstantBuffer(slot, null);
+                    }
                     _ctx1.CSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }

@@ -881,6 +881,10 @@ namespace Veldrid.D3D11
                     else
                     {
                         PackRangeParams(range);
+                        if (!_gd.SupportsCommandLists)
+                        {
+                            _context.VertexShader.SetConstantBuffer(slot, null);
+                        }
                         _context1.VSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
                 }
@@ -894,6 +898,10 @@ namespace Veldrid.D3D11
                 else
                 {
                     PackRangeParams(range);
+                    if (!_gd.SupportsCommandLists)
+                    {
+                        _context.GeometryShader.SetConstantBuffer(slot, null);
+                    }
                     _context1.GSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }
@@ -906,6 +914,10 @@ namespace Veldrid.D3D11
                 else
                 {
                     PackRangeParams(range);
+                    if (!_gd.SupportsCommandLists)
+                    {
+                        _context.HullShader.SetConstantBuffer(slot, null);
+                    }
                     _context1.HSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }
@@ -918,6 +930,10 @@ namespace Veldrid.D3D11
                 else
                 {
                     PackRangeParams(range);
+                    if (!_gd.SupportsCommandLists)
+                    {
+                        _context.DomainShader.SetConstantBuffer(slot, null);
+                    }
                     _context1.DSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }
@@ -945,6 +961,10 @@ namespace Veldrid.D3D11
                     else
                     {
                         PackRangeParams(range);
+                        if (!_gd.SupportsCommandLists)
+                        {
+                            _context.PixelShader.SetConstantBuffer(slot, null);
+                        }
                         _context1.PSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
                 }
@@ -958,6 +978,10 @@ namespace Veldrid.D3D11
                 else
                 {
                     PackRangeParams(range);
+                    if (!_gd.SupportsCommandLists)
+                    {
+                        _context.ComputeShader.SetConstantBuffer(slot, null);
+                    }
                     _context1.CSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }

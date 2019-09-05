@@ -19,7 +19,7 @@ namespace Veldrid.Utilities
         {
             if (Max.X < other.Min.X || Min.X > other.Max.X
                 || Max.Y < other.Min.Y || Min.Y > other.Max.Y
-                || Max.Z < other.Min.Z || Min.Z > other.Min.Z)
+                || Max.Z < other.Min.Z || Min.Z > other.Max.Z)
             {
                 return ContainmentType.Disjoint;
             }

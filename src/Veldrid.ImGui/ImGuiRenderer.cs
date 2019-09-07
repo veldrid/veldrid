@@ -372,14 +372,31 @@ namespace Veldrid
         /// </summary>
         public void Update(float deltaSeconds, InputSnapshot snapshot)
         {
+            BeginUpdate(deltaSeconds);
+            UpdateImGuiInput(snapshot);
+            EndUpdate();
+        }
+
+        /// <summary>
+        /// Called before we handle the input in <see cref="Update(float, InputSnapshot)"/>.
+        /// This render ImGui and update the state.
+        /// </summary>
+        protected void BeginUpdate(float deltaSeconds)
+        {
             if (_frameBegun)
             {
                 ImGui.Render();
             }
 
             SetPerFrameImGuiData(deltaSeconds);
-            UpdateImGuiInput(snapshot);
+        }
 
+        /// <summary>
+        /// Called at the end of <see cref="Update(float, InputSnapshot)"/>.
+        /// This tells ImGui that we are on the next frame.
+        /// </summary>
+        protected void EndUpdate()
+        {
             _frameBegun = true;
             ImGui.NewFrame();
         }

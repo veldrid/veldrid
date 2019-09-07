@@ -11,7 +11,7 @@ namespace Veldrid.StartupUtilities
     {
         public static void CreateWindowAndGraphicsDevice(
             WindowCreateInfo windowCI,
-            out Sdl2Window window,
+            out IWindow window,
             out GraphicsDevice gd)
             => CreateWindowAndGraphicsDevice(
                 windowCI,
@@ -23,7 +23,7 @@ namespace Veldrid.StartupUtilities
         public static void CreateWindowAndGraphicsDevice(
             WindowCreateInfo windowCI,
             GraphicsDeviceOptions deviceOptions,
-            out Sdl2Window window,
+            out IWindow window,
             out GraphicsDevice gd)
             => CreateWindowAndGraphicsDevice(windowCI, deviceOptions, GetPlatformDefaultBackend(), out window, out gd);
 
@@ -31,7 +31,7 @@ namespace Veldrid.StartupUtilities
             WindowCreateInfo windowCI,
             GraphicsDeviceOptions deviceOptions,
             GraphicsBackend preferredBackend,
-            out Sdl2Window window,
+            out IWindow window,
             out GraphicsDevice gd)
         {
             Sdl2Native.SDL_Init(SDLInitFlags.Video);
@@ -88,14 +88,14 @@ namespace Veldrid.StartupUtilities
             }
         }
 
-        public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window)
+        public static GraphicsDevice CreateGraphicsDevice(IWindow window)
             => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), GetPlatformDefaultBackend());
-        public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsDeviceOptions options)
+        public static GraphicsDevice CreateGraphicsDevice(IWindow window, GraphicsDeviceOptions options)
             => CreateGraphicsDevice(window, options, GetPlatformDefaultBackend());
-        public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsBackend preferredBackend)
+        public static GraphicsDevice CreateGraphicsDevice(IWindow window, GraphicsBackend preferredBackend)
             => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), preferredBackend);
         public static GraphicsDevice CreateGraphicsDevice(
-            Sdl2Window window,
+            IWindow window,
             GraphicsDeviceOptions options,
             GraphicsBackend preferredBackend)
         {
@@ -136,7 +136,7 @@ namespace Veldrid.StartupUtilities
             }
         }
 
-        public static unsafe SwapchainSource GetSwapchainSource(Sdl2Window window)
+        public static unsafe SwapchainSource GetSwapchainSource(IWindow window)
         {
             IntPtr sdlHandle = window.SdlWindowHandle;
             SDL_SysWMinfo sysWmInfo;
@@ -165,11 +165,11 @@ namespace Veldrid.StartupUtilities
         }
 
 #if !EXCLUDE_METAL_BACKEND
-        private static unsafe GraphicsDevice CreateMetalGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
+        private static unsafe GraphicsDevice CreateMetalGraphicsDevice(GraphicsDeviceOptions options, IWindow window)
             => CreateMetalGraphicsDevice(options, window, false);
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(
             GraphicsDeviceOptions options,
-            Sdl2Window window,
+            IWindow window,
             bool colorSrgb)
         {
             SwapchainSource source = GetSwapchainSource(window);
@@ -205,11 +205,11 @@ namespace Veldrid.StartupUtilities
         }
 
 #if !EXCLUDE_VULKAN_BACKEND
-        public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
+        public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(GraphicsDeviceOptions options, IWindow window)
             => CreateVulkanGraphicsDevice(options, window, false);
         public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(
             GraphicsDeviceOptions options,
-            Sdl2Window window,
+            IWindow window,
             bool colorSrgb)
         {
             SwapchainDescription scDesc = new SwapchainDescription(
@@ -245,7 +245,7 @@ namespace Veldrid.StartupUtilities
 #if !EXCLUDE_OPENGL_BACKEND
         public static unsafe GraphicsDevice CreateDefaultOpenGLGraphicsDevice(
             GraphicsDeviceOptions options,
-            Sdl2Window window,
+            IWindow window,
             GraphicsBackend backend)
         {
             Sdl2Native.SDL_ClearError();
@@ -364,7 +364,7 @@ namespace Veldrid.StartupUtilities
 #if !EXCLUDE_D3D11_BACKEND
         public static GraphicsDevice CreateDefaultD3D11GraphicsDevice(
             GraphicsDeviceOptions options,
-            Sdl2Window window)
+            IWindow window)
         {
             SwapchainSource source = GetSwapchainSource(window);
             SwapchainDescription swapchainDesc = new SwapchainDescription(

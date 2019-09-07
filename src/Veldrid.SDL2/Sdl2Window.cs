@@ -13,7 +13,7 @@ using Veldrid;
 
 namespace Veldrid.Sdl2
 {
-    public unsafe class Sdl2Window
+    public unsafe class Sdl2Window : IWindow
     {
         private readonly List<SDL_Event> _events = new List<SDL_Event>();
         private IntPtr _window;

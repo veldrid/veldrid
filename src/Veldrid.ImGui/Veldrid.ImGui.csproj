@@ -50,7 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="1.70.0" />
+    <PackageReference Include="ImGui.NET" Version="1.72.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseStableVersions)' == 'true'" >

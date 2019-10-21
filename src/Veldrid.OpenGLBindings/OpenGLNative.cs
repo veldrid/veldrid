@@ -1480,6 +1480,40 @@ namespace Veldrid.OpenGLBinding
             int* @params) => p_glGetActiveUniformBlockiv(program, uniformBlockIndex, pname, @params);
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glGetActiveUniformBlockName_t(
+            uint program,
+            uint uniformBlockIndex,
+            uint bufSize,
+            uint* length,
+            byte* uniformBlockName);
+        private static glGetActiveUniformBlockName_t p_glGetActiveUniformBlockName;
+        public static void glGetActiveUniformBlockName(
+            uint program,
+            uint uniformBlockIndex,
+            uint bufSize,
+            uint* length,
+            byte* uniformBlockName) => p_glGetActiveUniformBlockName(program, uniformBlockIndex, bufSize, length, uniformBlockName);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glGetActiveUniform_t(
+            uint program,
+            uint index,
+            uint bufSize,
+            uint* length,
+            int* size,
+            uint* type,
+            byte* name);
+        private static glGetActiveUniform_t p_glGetActiveUniform;
+        public static void glGetActiveUniform(
+            uint program,
+            uint index,
+            uint bufSize,
+            uint* length,
+            int* size,
+            uint* type,
+            byte* name) => p_glGetActiveUniform(program, index, bufSize, length, size, type, name);
+
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate void glGetCompressedTexImage_t(TextureTarget target, int level, void* pixels);
         private static glGetCompressedTexImage_t p_glGetCompressedTexImage;
         public static void glGetCompressedTexImage(TextureTarget target, int level, void* pixels)
@@ -1674,6 +1708,8 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glStencilMask", out p_glStencilMask);
             LoadFunction("glClearStencil", out p_glClearStencil);
             LoadFunction("glGetActiveUniformBlockiv", out p_glGetActiveUniformBlockiv);
+            LoadFunction("glGetActiveUniformBlockName", out p_glGetActiveUniformBlockName);
+            LoadFunction("glGetActiveUniform", out p_glGetActiveUniform);
             LoadFunction("glGetCompressedTexImage", out p_glGetCompressedTexImage);
             LoadFunction("glGetCompressedTextureImage", out p_glGetCompressedTextureImage);
             LoadFunction("glGetTexLevelParameteriv", out p_glGetTexLevelParameteriv);

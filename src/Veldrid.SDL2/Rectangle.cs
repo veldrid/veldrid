@@ -36,8 +36,8 @@ namespace Veldrid
         public bool Contains(Point p) => Contains(p.X, p.Y);
         public bool Contains(int x, int y)
         {
-            return (X <= x && (X + Width) >= x)
-                && (Y <= y && (Y + Height) >= y);
+            return (X <= x && (X + Width) > x)
+                && (Y <= y && (Y + Height) > y);
         }
 
         public bool Equals(Rectangle other) => X.Equals(other.X) && Y.Equals(other.Y) && Width.Equals(other.Width) && Height.Equals(other.Height);

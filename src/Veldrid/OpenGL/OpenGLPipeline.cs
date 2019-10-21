@@ -225,6 +225,26 @@ namespace Veldrid.OpenGL
                             CheckLastError();
                             uniformBindings[i] = new OpenGLUniformBinding(_program, blockIndex, (uint)blockSize);
                         }
+#if DEBUG
+                        else
+                        {
+                            uint uniformBufferIndex = 0;
+                            var names = new List<string>();
+                            do
+                            {
+                                uint bufferNameByteCount = 64;
+                                byte* bufferNamePtr = stackalloc byte[(int) bufferNameByteCount];
+                                uint actualLength;
+                                glGetActiveUniformBlockName(_program, uniformBufferIndex, bufferNameByteCount,
+                                    &actualLength, bufferNamePtr);
+                                string name = Encoding.UTF8.GetString(bufferNamePtr, (int) actualLength);
+                                names.Add(name);
+                                uniformBufferIndex++;
+                            } while (glGetError() == 0);
+
+                            throw new InvalidOperationException($"Unable to bind uniform buffer \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names)}");
+                        }
+#endif
                     }
                     else if (resource.Kind == ResourceKind.TextureReadOnly)
                     {
@@ -239,6 +259,27 @@ namespace Veldrid.OpenGL
                         resourceNamePtr[byteCount - 1] = 0; // Add null terminator.
                         int location = glGetUniformLocation(_program, resourceNamePtr);
                         CheckLastError();
+#if DEBUG
+                        if (location == -1)
+                        {
+                            uint uniformIndex = 0;
+                            var names = new List<string>();
+                            do
+                            {
+                                uint bufferNameByteCount = 64;
+                                byte* bufferNamePtr = stackalloc byte[(int) bufferNameByteCount];
+                                uint actualLength;
+                                int size;
+                                uint type;
+                                glGetActiveUniform(_program, uniformIndex, bufferNameByteCount,
+                                    &actualLength, &size, &type, bufferNamePtr);
+                                string name = Encoding.UTF8.GetString(bufferNamePtr, (int) actualLength);
+                                names.Add(name);
+                                uniformIndex++;
+                            } while (glGetError() == 0);
+                            throw new InvalidOperationException($"Unable to bind uniform texture \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names)}");
+                        }
+#endif
                         relativeTextureIndex += 1;
                         textureBindings[i] = new OpenGLTextureBindingSlotInfo() { RelativeIndex = relativeTextureIndex, UniformLocation = location };
                         lastTextureLocation = location;
@@ -257,6 +298,28 @@ namespace Veldrid.OpenGL
                         resourceNamePtr[byteCount - 1] = 0; // Add null terminator.
                         int location = glGetUniformLocation(_program, resourceNamePtr);
                         CheckLastError();
+#if DEBUG
+                        if (location == -1)
+                        {
+                            uint uniformIndex = 0;
+                            var names = new List<string>();
+                            do
+                            {
+                                uint bufferNameByteCount = 64;
+                                byte* bufferNamePtr = stackalloc byte[(int) bufferNameByteCount];
+                                uint actualLength;
+                                int size;
+                                uint type;
+                                glGetActiveUniform(_program, uniformIndex, bufferNameByteCount,
+                                    &actualLength, &size, &type, bufferNamePtr);
+                                string name = Encoding.UTF8.GetString(bufferNamePtr, (int) actualLength);
+                                names.Add(name);
+                                uniformIndex++;
+                            } while (glGetError() == 0);
+                            throw new InvalidOperationException($"Unable to bind uniform texture \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names)}");
+                        }
+#endif
+
                         relativeImageIndex += 1;
                         textureBindings[i] = new OpenGLTextureBindingSlotInfo() { RelativeIndex = relativeImageIndex, UniformLocation = location };
                     }

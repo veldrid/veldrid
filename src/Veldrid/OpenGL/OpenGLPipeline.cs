@@ -5,6 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace Veldrid.OpenGL
 {
@@ -225,24 +226,24 @@ namespace Veldrid.OpenGL
                             CheckLastError();
                             uniformBindings[i] = new OpenGLUniformBinding(_program, blockIndex, (uint)blockSize);
                         }
-#if DEBUG
+#if DEBUG && GL_VALIDATE_SHADER_RESOURCE_NAMES
                         else
                         {
                             uint uniformBufferIndex = 0;
+                            uint bufferNameByteCount = 64;
+                            byte* bufferNamePtr = stackalloc byte[(int)bufferNameByteCount];
                             var names = new List<string>();
                             do
                             {
-                                uint bufferNameByteCount = 64;
-                                byte* bufferNamePtr = stackalloc byte[(int) bufferNameByteCount];
                                 uint actualLength;
                                 glGetActiveUniformBlockName(_program, uniformBufferIndex, bufferNameByteCount,
                                     &actualLength, bufferNamePtr);
-                                string name = Encoding.UTF8.GetString(bufferNamePtr, (int) actualLength);
+                                string name = Encoding.UTF8.GetString(bufferNamePtr, (int)actualLength);
                                 names.Add(name);
                                 uniformBufferIndex++;
                             } while (glGetError() == 0);
 
-                            throw new InvalidOperationException($"Unable to bind uniform buffer \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names)}");
+                            throw new VeldridException($"Unable to bind uniform buffer \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names.Distinct())}");
                         }
 #endif
                     }
@@ -259,26 +260,9 @@ namespace Veldrid.OpenGL
                         resourceNamePtr[byteCount - 1] = 0; // Add null terminator.
                         int location = glGetUniformLocation(_program, resourceNamePtr);
                         CheckLastError();
-#if DEBUG
-                        if (location == -1)
-                        {
-                            uint uniformIndex = 0;
-                            var names = new List<string>();
-                            do
-                            {
-                                uint bufferNameByteCount = 64;
-                                byte* bufferNamePtr = stackalloc byte[(int) bufferNameByteCount];
-                                uint actualLength;
-                                int size;
-                                uint type;
-                                glGetActiveUniform(_program, uniformIndex, bufferNameByteCount,
-                                    &actualLength, &size, &type, bufferNamePtr);
-                                string name = Encoding.UTF8.GetString(bufferNamePtr, (int) actualLength);
-                                names.Add(name);
-                                uniformIndex++;
-                            } while (glGetError() == 0);
-                            throw new InvalidOperationException($"Unable to bind uniform texture \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names)}");
-                        }
+#if DEBUG && GL_VALIDATE_SHADER_RESOURCE_NAMES
+                        if(location == -1)
+                            ReportInvalidResourceName(resourceName);
 #endif
                         relativeTextureIndex += 1;
                         textureBindings[i] = new OpenGLTextureBindingSlotInfo() { RelativeIndex = relativeTextureIndex, UniformLocation = location };
@@ -298,28 +282,10 @@ namespace Veldrid.OpenGL
                         resourceNamePtr[byteCount - 1] = 0; // Add null terminator.
                         int location = glGetUniformLocation(_program, resourceNamePtr);
                         CheckLastError();
-#if DEBUG
-                        if (location == -1)
-                        {
-                            uint uniformIndex = 0;
-                            var names = new List<string>();
-                            do
-                            {
-                                uint bufferNameByteCount = 64;
-                                byte* bufferNamePtr = stackalloc byte[(int) bufferNameByteCount];
-                                uint actualLength;
-                                int size;
-                                uint type;
-                                glGetActiveUniform(_program, uniformIndex, bufferNameByteCount,
-                                    &actualLength, &size, &type, bufferNamePtr);
-                                string name = Encoding.UTF8.GetString(bufferNamePtr, (int) actualLength);
-                                names.Add(name);
-                                uniformIndex++;
-                            } while (glGetError() == 0);
-                            throw new InvalidOperationException($"Unable to bind uniform texture \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names)}");
-                        }
+#if DEBUG && GL_VALIDATE_SHADER_RESOURCE_NAMES
+                        if(location == -1)
+                            ReportInvalidResourceName(resourceName);
 #endif
-
                         relativeImageIndex += 1;
                         textureBindings[i] = new OpenGLTextureBindingSlotInfo() { RelativeIndex = relativeImageIndex, UniformLocation = location };
                     }
@@ -367,6 +333,29 @@ namespace Veldrid.OpenGL
 
                 _setInfos[setSlot] = new SetBindingsInfo(uniformBindings, textureBindings, samplerBindings, storageBufferBindings);
             }
+        }
+
+        void ReportInvalidResourceName(string resourceName)
+        {
+            uint uniformIndex = 0;
+            uint resourceNameByteCount = 64;
+            byte* resourceNamePtr = stackalloc byte[(int)resourceNameByteCount];
+
+            var names = new List<string>();
+            do
+            {
+                uint actualLength;
+                int size;
+                uint type;
+                glGetActiveUniform(_program, uniformIndex, resourceNameByteCount,
+                    &actualLength, &size, &type, resourceNamePtr);
+
+                string name = Encoding.UTF8.GetString(resourceNamePtr, (int)actualLength);
+                names.Add(name);
+                uniformIndex++;
+            } while (glGetError() == 0);
+
+            throw new VeldridException($"Unable to bind uniform \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names.Distinct())}");
         }
 
         private void CreateComputeGLResources()

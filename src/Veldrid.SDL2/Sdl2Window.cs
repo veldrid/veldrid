@@ -244,6 +244,7 @@ namespace Veldrid.Sdl2
         public IntPtr SdlWindowHandle => _window;
 
         public event Action Resized;
+        public event Func<bool> CloseRequested;
         public event Action Closing;
         public event Action Closed;
         public event Action FocusLost;
@@ -293,13 +294,21 @@ namespace Veldrid.Sdl2
             }
         }
 
-        private void CloseCore()
+        private bool CloseCore()
         {
+            if (CloseRequested?.Invoke() ?? false)
+            {
+                _shouldClose = false;
+                return false;
+            }
+
             Sdl2WindowRegistry.RemoveWindow(this);
             Closing?.Invoke();
             SDL_DestroyWindow(_window);
             _exists = false;
             Closed?.Invoke();
+
+            return true;
         }
 
         private void WindowOwnerRoutine(object state)
@@ -317,9 +326,8 @@ namespace Veldrid.Sdl2
 
             while (_exists)
             {
-                if (_shouldClose)
+                if (_shouldClose && CloseCore())
                 {
-                    CloseCore();
                     return;
                 }
 

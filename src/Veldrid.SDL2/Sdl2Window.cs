@@ -803,6 +803,10 @@ namespace Veldrid.Sdl2
                     return Key.ShiftRight;
                 case SDL_Scancode.SDL_SCANCODE_RALT:
                     return Key.AltRight;
+                case SDL_Scancode.SDL_SCANCODE_LGUI:
+                    return Key.LWin;
+                case SDL_Scancode.SDL_SCANCODE_RGUI:
+                    return Key.RWin;
                 default:
                     return Key.Unknown;
             }
@@ -822,6 +826,10 @@ namespace Veldrid.Sdl2
             if ((mod & (SDL_Keymod.LeftControl | SDL_Keymod.RightControl)) != 0)
             {
                 mods |= ModifierKeys.Control;
+            }
+            if ((mod & (SDL_Keymod.LeftGui | SDL_Keymod.RightGui)) != 0)
+            {
+                mods |= ModifierKeys.Gui;
             }
 
             return mods;

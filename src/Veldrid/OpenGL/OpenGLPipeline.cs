@@ -5,7 +5,6 @@ using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System;
-using System.Linq;
 
 namespace Veldrid.OpenGL
 {
@@ -246,7 +245,7 @@ namespace Veldrid.OpenGL
                                 uniformBufferIndex++;
                             }
 
-                            throw new VeldridException($"Unable to bind uniform buffer \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names.Distinct())}");
+                            throw new VeldridException($"Unable to bind uniform buffer \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names)}");
                         }
 #endif
                     }
@@ -362,7 +361,7 @@ namespace Veldrid.OpenGL
                 uniformIndex++;
             }
 
-            throw new VeldridException($"Unable to bind uniform \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names.Distinct())}");
+            throw new VeldridException($"Unable to bind uniform \"{resourceName}\" by name. Valid names for this pipeline are: {string.Join(", ", names)}");
         }
 #endif
 

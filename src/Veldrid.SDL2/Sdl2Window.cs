@@ -43,6 +43,7 @@ namespace Veldrid.Sdl2
         private string _cachedWindowTitle;
         private bool _newWindowTitleReceived;
         private bool _firstMouseEvent = true;
+        private Func<bool> _closeRequestedHandler;
 
         public Sdl2Window(string title, int x, int y, int width, int height, SDL_WindowFlags flags, bool threadedProcessing)
         {
@@ -244,7 +245,6 @@ namespace Veldrid.Sdl2
         public IntPtr SdlWindowHandle => _window;
 
         public event Action Resized;
-        public event Func<bool> CloseRequested;
         public event Action Closing;
         public event Action Closed;
         public event Action FocusLost;
@@ -282,6 +282,11 @@ namespace Veldrid.Sdl2
 
         public Vector2 MouseDelta => _currentMouseDelta;
 
+        public void SetCloseRequestedHandler(Func<bool> handler)
+        {
+            _closeRequestedHandler = handler;
+        }
+
         public void Close()
         {
             if (_threadedProcessing)
@@ -296,7 +301,7 @@ namespace Veldrid.Sdl2
 
         private bool CloseCore()
         {
-            if (CloseRequested?.Invoke() ?? false)
+            if (_closeRequestedHandler?.Invoke() ?? false)
             {
                 _shouldClose = false;
                 return false;

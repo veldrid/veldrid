@@ -829,7 +829,7 @@ namespace Veldrid.Sdl2
             }
             if ((mod & (SDL_Keymod.LeftGui | SDL_Keymod.RightGui)) != 0)
             {
-                mods |= ModifierKeys.Gui;
+                mods |= ModifierKeys.Super;
             }
 
             return mods;

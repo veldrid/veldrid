@@ -227,6 +227,7 @@ namespace Veldrid.OpenGLBinding
         Texture2DArray = 35866,
         ProxyTexture2DArray = 35867,
         TextureBuffer = 35882,
+        TextureExternalOes = 36197,
         TextureCubeMapArray = 36873,
         ProxyTextureCubeMapArray = 36875,
         Texture2DMultisample = 37120,

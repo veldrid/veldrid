@@ -171,7 +171,6 @@ namespace Veldrid.OpenGL
         public GLPixelFormat GLPixelFormat { get; }
         public GLPixelType GLPixelType { get; }
         public PixelInternalFormat GLInternalFormat { get; }
-
         public TextureTarget TextureTarget { get; internal set; }
 
         public bool Created { get; private set; }

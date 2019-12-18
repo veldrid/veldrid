@@ -1,8 +1,8 @@
 ﻿
-using Veldrid.OpenGLBinding;
 #if !EXCLUDE_OPENGL_BACKEND
 using System;
 using Veldrid.OpenGL;
+using Veldrid.OpenGLBinding;
 
 namespace Veldrid
 {
@@ -40,7 +40,7 @@ namespace Veldrid
         /// Sets the texture target of the OpenGL texture object wrapped by the given Veldrid Texture to to a custom value.
         /// This could be used to set platform specific texture target values like Veldrid.OpenGLBinding.TextureTarget.TextureExternalOes.
         /// </summary>
-        public void SetTextureTarget(Texture texture, uint textureTarget) => Util.AssertSubtype<Texture, OpenGLTexture>(texture).TextureTarget = (Veldrid.OpenGLBinding.TextureTarget)textureTarget;
+        public void SetTextureTarget(Texture texture, uint textureTarget) => Util.AssertSubtype<Texture, OpenGLTexture>(texture).TextureTarget = (TextureTarget)textureTarget;
 
     }
 }

@@ -1,5 +1,4 @@
-﻿
-#if !EXCLUDE_OPENGL_BACKEND
+﻿#if !EXCLUDE_OPENGL_BACKEND
 using System;
 using Veldrid.OpenGL;
 using Veldrid.OpenGLBinding;

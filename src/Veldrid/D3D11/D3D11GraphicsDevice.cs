@@ -11,6 +11,7 @@ namespace Veldrid.D3D11
 {
     internal class D3D11GraphicsDevice : GraphicsDevice
     {
+        private readonly SharpDX.DXGI.Adapter _dxgiAdapter;
         private readonly SharpDX.Direct3D11.Device _device;
         private readonly DeviceContext _immediateContext;
         private readonly D3D11ResourceFactory _d3d11ResourceFactory;
@@ -39,6 +40,8 @@ namespace Veldrid.D3D11
 
         public SharpDX.Direct3D11.Device Device => _device;
 
+        public SharpDX.DXGI.Adapter Adapter => _dxgiAdapter;
+
         public bool SupportsConcurrentResources => _supportsConcurrentResources;
 
         public bool SupportsCommandLists => _supportsCommandLists;
@@ -48,35 +51,48 @@ namespace Veldrid.D3D11
         public override GraphicsDeviceFeatures Features { get; }
 
         public D3D11GraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDesc)
+            :this(IntPtr.Zero, options.Debug ? DeviceCreationFlags.Debug : DeviceCreationFlags.None, swapchainDesc)
         {
-            DeviceCreationFlags flags = DeviceCreationFlags.None;
-            bool debug = options.Debug;
+        }
+
+        public D3D11GraphicsDevice(IntPtr adapterPtr, DeviceCreationFlags flags, SwapchainDescription? swapchainDesc)
+        {
 #if DEBUG
-            debug = true;
+            flags |= DeviceCreationFlags.Debug;
 #endif
-            if (debug)
+            // If debug flag set but SDK layers aren't available we can't enable debug.
+            if (0 != (flags & DeviceCreationFlags.Debug) && !SdkLayersAvailable())
             {
-                flags = DeviceCreationFlags.Debug;
+                flags &= ~DeviceCreationFlags.Debug;
             }
 
             try
             {
-                _device = new SharpDX.Direct3D11.Device(
-                    SharpDX.Direct3D.DriverType.Hardware,
-                    flags,
-                    SharpDX.Direct3D.FeatureLevel.Level_11_1);
+                if (adapterPtr != IntPtr.Zero)
+                {
+                    _dxgiAdapter = new Adapter(adapterPtr);
+                    _device = new SharpDX.Direct3D11.Device(_dxgiAdapter,
+                        flags,
+                        SharpDX.Direct3D.FeatureLevel.Level_11_1);
+                }
+                else
+                {
+                    _device = new SharpDX.Direct3D11.Device(
+                        SharpDX.Direct3D.DriverType.Hardware,
+                        flags,
+                        SharpDX.Direct3D.FeatureLevel.Level_11_1);
+                }
             }
             catch (SharpDXException)
             {
-                try
-                {
-                    _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, flags);
-                }
-                catch (SharpDXException ex) when (debug && (uint)ex.HResult == 0x887A002D)
-                {
-                    // The D3D11 debug layer is not installed. Create a normal device without debug support, instead.
-                    _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.None);
-                }
+                _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, flags);
+            }
+
+            using (var dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device>())
+            {
+                // Store a pointer to the DXGI adapter.
+                // This is for the case of no preferred DXGI adapter, or fallback to WARP.
+                _dxgiAdapter = dxgiDevice.Adapter;
             }
 
             if (swapchainDesc != null)
@@ -111,6 +127,21 @@ namespace Veldrid.D3D11
             _d3d11Info = new BackendInfoD3D11(this);
 
             PostDeviceCreated();
+        }
+
+        private static bool SdkLayersAvailable()
+        {
+            try
+            {
+                using (var device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Null, SharpDX.Direct3D11.DeviceCreationFlags.Debug))
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private protected override void SubmitCommandsCore(CommandList cl, Fence fence)
@@ -555,6 +586,7 @@ namespace Veldrid.D3D11
             DeviceDebug deviceDebug = _device.QueryInterfaceOrNull<DeviceDebug>();
 
             _device.Dispose();
+            _dxgiAdapter?.Dispose();
 
             if (deviceDebug != null)
             {

@@ -18,22 +18,13 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
-        /// </summary>
-        /// <param name="adapter">DXGI adapter instance or null for default adapter.</param>
-        /// <param name="flags">Describes properties of the Direct3D 11 graphics device.</param>
-        /// <param name="swapchainDesc">Swapchain description.</param>
-        /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
-        public static GraphicsDevice CreateD3D11(IntPtr adapterPtr, SharpDX.Direct3D11.DeviceCreationFlags flags, SwapchainDescription? swapchainDesc = null)
-        {
-            return new D3D11.D3D11GraphicsDevice(adapterPtr, flags, swapchainDesc);
-        }
-
-        /// <summary>
         /// Gets a pointer to the ID3D11Device controlled by the GraphicsDevice.
         /// </summary>
         public IntPtr Device => _gd.Device.NativePointer;
 
+        /// <summary>
+        /// Gets a pointer to the IAdapter used to create the GraphicsDevice.
+        /// </summary>
         public IntPtr Adapter => _gd.Adapter.NativePointer;
 
         /// <summary>

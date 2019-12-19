@@ -50,13 +50,14 @@ namespace Veldrid.D3D11
 
         public override GraphicsDeviceFeatures Features { get; }
 
-        public D3D11GraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDesc)
-            :this(IntPtr.Zero, options.Debug ? DeviceCreationFlags.Debug : DeviceCreationFlags.None, swapchainDesc)
+        public D3D11GraphicsDevice(GraphicsDeviceOptions options, D3D11DeviceOptions d3D11DeviceOptions, SwapchainDescription? swapchainDesc)
+            :this(MergeOptions(d3D11DeviceOptions, options), swapchainDesc)
         {
         }
 
-        public D3D11GraphicsDevice(IntPtr adapterPtr, DeviceCreationFlags flags, SwapchainDescription? swapchainDesc)
+        public D3D11GraphicsDevice(D3D11DeviceOptions options, SwapchainDescription? swapchainDesc)
         {
+            var flags = (DeviceCreationFlags)options.DeviceCreationFlags;
 #if DEBUG
             flags |= DeviceCreationFlags.Debug;
 #endif
@@ -68,9 +69,9 @@ namespace Veldrid.D3D11
 
             try
             {
-                if (adapterPtr != IntPtr.Zero)
+                if (options.AdapterPtr != IntPtr.Zero)
                 {
-                    _dxgiAdapter = new Adapter(adapterPtr);
+                    _dxgiAdapter = new Adapter(options.AdapterPtr);
                     _device = new SharpDX.Direct3D11.Device(_dxgiAdapter,
                         flags,
                         SharpDX.Direct3D.FeatureLevel.Level_11_1);
@@ -142,6 +143,16 @@ namespace Veldrid.D3D11
             {
                 return false;
             }
+        }
+
+        private static D3D11DeviceOptions MergeOptions(D3D11DeviceOptions d3D11DeviceOptions, GraphicsDeviceOptions options)
+        {
+            if (options.Debug)
+            {
+                d3D11DeviceOptions.DeviceCreationFlags |= (uint)SharpDX.Direct3D11.DeviceCreationFlags.Debug;
+            }
+
+            return d3D11DeviceOptions;
         }
 
         private protected override void SubmitCommandsCore(CommandList cl, Fence fence)

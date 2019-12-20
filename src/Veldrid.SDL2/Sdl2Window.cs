@@ -43,6 +43,7 @@ namespace Veldrid.Sdl2
         private string _cachedWindowTitle;
         private bool _newWindowTitleReceived;
         private bool _firstMouseEvent = true;
+        private Func<bool> _closeRequestedHandler;
 
         public Sdl2Window(string title, int x, int y, int width, int height, SDL_WindowFlags flags, bool threadedProcessing)
         {
@@ -281,6 +282,11 @@ namespace Veldrid.Sdl2
 
         public Vector2 MouseDelta => _currentMouseDelta;
 
+        public void SetCloseRequestedHandler(Func<bool> handler)
+        {
+            _closeRequestedHandler = handler;
+        }
+
         public void Close()
         {
             if (_threadedProcessing)
@@ -293,13 +299,21 @@ namespace Veldrid.Sdl2
             }
         }
 
-        private void CloseCore()
+        private bool CloseCore()
         {
+            if (_closeRequestedHandler?.Invoke() ?? false)
+            {
+                _shouldClose = false;
+                return false;
+            }
+
             Sdl2WindowRegistry.RemoveWindow(this);
             Closing?.Invoke();
             SDL_DestroyWindow(_window);
             _exists = false;
             Closed?.Invoke();
+
+            return true;
         }
 
         private void WindowOwnerRoutine(object state)
@@ -317,9 +331,8 @@ namespace Veldrid.Sdl2
 
             while (_exists)
             {
-                if (_shouldClose)
+                if (_shouldClose && CloseCore())
                 {
-                    CloseCore();
                     return;
                 }
 

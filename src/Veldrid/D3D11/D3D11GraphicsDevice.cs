@@ -59,23 +59,31 @@ namespace Veldrid.D3D11
                 flags = DeviceCreationFlags.Debug;
             }
 
+            SharpDX.Direct3D.FeatureLevel[] featureLevels = new[]
+            {
+                SharpDX.Direct3D.FeatureLevel.Level_11_1,
+                SharpDX.Direct3D.FeatureLevel.Level_11_0,
+                SharpDX.Direct3D.FeatureLevel.Level_10_1,
+                SharpDX.Direct3D.FeatureLevel.Level_10_0
+            };
+
             try
             {
                 _device = new SharpDX.Direct3D11.Device(
                     SharpDX.Direct3D.DriverType.Hardware,
                     flags,
-                    SharpDX.Direct3D.FeatureLevel.Level_11_1);
+                    featureLevels);
             }
             catch (SharpDXException)
             {
                 try
                 {
-                    _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, flags);
+                    _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, flags, featureLevels);
                 }
-                catch (SharpDXException ex) when (debug && (uint)ex.HResult == 0x887A002D)
+                catch (SharpDXException) when (debug)
                 {
                     // The D3D11 debug layer is not installed. Create a normal device without debug support, instead.
-                    _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.None);
+                    _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.None, featureLevels);
                 }
             }
 

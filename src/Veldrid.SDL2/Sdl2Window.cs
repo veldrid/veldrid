@@ -43,6 +43,7 @@ namespace Veldrid.Sdl2
         private string _cachedWindowTitle;
         private bool _newWindowTitleReceived;
         private bool _firstMouseEvent = true;
+        private Func<bool> _closeRequestedHandler;
 
         public Sdl2Window(string title, int x, int y, int width, int height, SDL_WindowFlags flags, bool threadedProcessing)
         {
@@ -281,6 +282,11 @@ namespace Veldrid.Sdl2
 
         public Vector2 MouseDelta => _currentMouseDelta;
 
+        public void SetCloseRequestedHandler(Func<bool> handler)
+        {
+            _closeRequestedHandler = handler;
+        }
+
         public void Close()
         {
             if (_threadedProcessing)
@@ -293,13 +299,21 @@ namespace Veldrid.Sdl2
             }
         }
 
-        private void CloseCore()
+        private bool CloseCore()
         {
+            if (_closeRequestedHandler?.Invoke() ?? false)
+            {
+                _shouldClose = false;
+                return false;
+            }
+
             Sdl2WindowRegistry.RemoveWindow(this);
             Closing?.Invoke();
             SDL_DestroyWindow(_window);
             _exists = false;
             Closed?.Invoke();
+
+            return true;
         }
 
         private void WindowOwnerRoutine(object state)
@@ -317,9 +331,8 @@ namespace Veldrid.Sdl2
 
             while (_exists)
             {
-                if (_shouldClose)
+                if (_shouldClose && CloseCore())
                 {
-                    CloseCore();
                     return;
                 }
 
@@ -803,6 +816,10 @@ namespace Veldrid.Sdl2
                     return Key.ShiftRight;
                 case SDL_Scancode.SDL_SCANCODE_RALT:
                     return Key.AltRight;
+                case SDL_Scancode.SDL_SCANCODE_LGUI:
+                    return Key.LWin;
+                case SDL_Scancode.SDL_SCANCODE_RGUI:
+                    return Key.RWin;
                 default:
                     return Key.Unknown;
             }
@@ -822,6 +839,10 @@ namespace Veldrid.Sdl2
             if ((mod & (SDL_Keymod.LeftControl | SDL_Keymod.RightControl)) != 0)
             {
                 mods |= ModifierKeys.Control;
+            }
+            if ((mod & (SDL_Keymod.LeftGui | SDL_Keymod.RightGui)) != 0)
+            {
+                mods |= ModifierKeys.Gui;
             }
 
             return mods;

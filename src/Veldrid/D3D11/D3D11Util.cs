@@ -50,7 +50,10 @@ namespace Veldrid.D3D11
                     }
                     else
                     {
-                        srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
+                        if (tex.SampleCount == TextureSampleCount.Count1)
+                            srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D;
+                        else
+                            srvDesc.Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2DMultisampled;
                         srvDesc.Texture2D.MostDetailedMip = (int)baseMipLevel;
                         srvDesc.Texture2D.MipLevels = (int)levelCount;
                     }

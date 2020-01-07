@@ -143,12 +143,6 @@ namespace Veldrid.D3D11
             }
         }
 
-        public D3D11Texture(Texture2D existingTexture, TextureType type):
-            this(existingTexture, type, D3D11Formats.DxgiFormatToPixelFromat(existingTexture.Description.Format))
-        {
-
-        }
-
         public D3D11Texture(Texture2D existingTexture, TextureType type, PixelFormat format)
         {
             _device = existingTexture.Device;

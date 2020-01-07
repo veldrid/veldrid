@@ -20,6 +20,7 @@ namespace Veldrid.D3D11
         private readonly bool _supportsCommandLists;
         private readonly object _immediateContextLock = new object();
         private readonly BackendInfoD3D11 _d3d11Info;
+        private static bool? _sdkLayersAvailable;
 
         private readonly object _mappedResourceLock = new object();
         private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
@@ -62,7 +63,7 @@ namespace Veldrid.D3D11
             flags |= DeviceCreationFlags.Debug;
 #endif
             // If debug flag set but SDK layers aren't available we can't enable debug.
-            if (0 != (flags & DeviceCreationFlags.Debug) && !SdkLayersAvailable())
+            if (0 != (flags & DeviceCreationFlags.Debug) && !SdkLayersAvailable)
             {
                 flags &= ~DeviceCreationFlags.Debug;
             }
@@ -130,18 +131,26 @@ namespace Veldrid.D3D11
             PostDeviceCreated();
         }
 
-        private static bool SdkLayersAvailable()
+        private static bool SdkLayersAvailable
         {
-            try
+            get
             {
-                using (var device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Null, SharpDX.Direct3D11.DeviceCreationFlags.Debug))
+                if (!_sdkLayersAvailable.HasValue)
                 {
-                    return true;
+                    try
+                    {
+                        using (var device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Null,
+                            SharpDX.Direct3D11.DeviceCreationFlags.Debug))
+                        {
+                            _sdkLayersAvailable = true;
+                        }
+                    }
+                    catch
+                    {
+                        _sdkLayersAvailable = false;
+                    }
                 }
-            }
-            catch
-            {
-                return false;
+                return _sdkLayersAvailable.Value;
             }
         }
 

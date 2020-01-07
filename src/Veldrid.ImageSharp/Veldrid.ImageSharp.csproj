@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0007" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
+using SixLabors.ImageSharp.PixelFormats;
 using Veldrid.NeoDemo;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
@@ -73,12 +74,12 @@ namespace Veldrid.VirtualReality.Sample
                 Path.Combine(AppContext.BaseDirectory, "cat", "cat_diff.png"));
 
             Skybox skybox = new Skybox(
-                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_ft.png")),
-                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_bk.png")),
-                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_lf.png")),
-                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_rt.png")),
-                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_up.png")),
-                Image.Load(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_dn.png")));
+                Image.Load<Rgba32>(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_ft.png")),
+                Image.Load<Rgba32>(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_bk.png")),
+                Image.Load<Rgba32>(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_lf.png")),
+                Image.Load<Rgba32>(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_rt.png")),
+                Image.Load<Rgba32>(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_up.png")),
+                Image.Load<Rgba32>(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_dn.png")));
             skybox.CreateDeviceObjects(gd, vrContext.LeftEyeFramebuffer.OutputDescription);
 
             CommandList windowCL = gd.ResourceFactory.CreateCommandList();

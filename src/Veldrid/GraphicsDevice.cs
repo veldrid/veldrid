@@ -877,7 +877,7 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options)
         {
-            return new D3D11.D3D11GraphicsDevice(options, null);
+            return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(),  null);
         }
 
         /// <summary>
@@ -888,7 +888,30 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
-            return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
+            return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(), swapchainDescription);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="d3d11Options">The Direct3D11-specific options used to create the device.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
+        public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, D3D11DeviceOptions d3d11Options)
+        {
+            return new D3D11.D3D11GraphicsDevice(options, d3d11Options, null);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="d3d11Options">The Direct3D11-specific options used to create the device.</param>
+        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
+        public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, D3D11DeviceOptions d3d11Options, SwapchainDescription swapchainDescription)
+        {
+            return new D3D11.D3D11GraphicsDevice(options, d3d11Options, swapchainDescription);
         }
 
         /// <summary>
@@ -908,7 +931,7 @@ namespace Veldrid
                 options.SyncToVerticalBlank,
                 options.SwapchainSrgbFormat);
 
-            return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
+            return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(), swapchainDescription);
         }
 
         /// <summary>
@@ -937,7 +960,7 @@ namespace Veldrid
                 options.SyncToVerticalBlank,
                 options.SwapchainSrgbFormat);
 
-            return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
+            return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(), swapchainDescription);
         }
 #endif
 

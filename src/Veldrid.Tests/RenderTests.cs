@@ -929,8 +929,12 @@ namespace Veldrid.Tests
         [Fact]
         public void BindTextureAcrossMultipleDrawCalls()
         {
-            Texture target = RF.CreateTexture(TextureDescription.Texture2D(
+            Texture target1 = RF.CreateTexture(TextureDescription.Texture2D(
                 50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            Texture target2 = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget | TextureUsage.Sampled));
+            TextureView textureView = RF.CreateTextureView(target2);
+
             Texture staging1 = RF.CreateTexture(TextureDescription.Texture2D(
                 50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
             Texture staging2 = RF.CreateTexture(TextureDescription.Texture2D(
@@ -938,11 +942,14 @@ namespace Veldrid.Tests
             Texture staging3 = RF.CreateTexture(TextureDescription.Texture2D(
                 50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
 
-            Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, target));
+            Framebuffer framebuffer1 = RF.CreateFramebuffer(new FramebufferDescription(null, target1));
+            Framebuffer framebuffer2 = RF.CreateFramebuffer(new FramebufferDescription(null, target2));
 
+            // This shader doesn't really matter, just as long as it is different to the first
+            // and third render pass and also doesn't use any texture bindings
             ShaderSetDescription textureShaderSet = new ShaderSetDescription(
                 Array.Empty<VertexLayoutDescription>(),
-                TestShaders.LoadVertexFragment(RF, "FullScreenTriSampleTexture"));
+                TestShaders.LoadVertexFragment(RF, "FullScreenTriSampleTexture2D"));
             ShaderSetDescription quadShaderSet = new ShaderSetDescription(
                 new VertexLayoutDescription[]
                 {
@@ -964,17 +971,16 @@ namespace Veldrid.Tests
                 new TestVertex()
             });
 
-            Texture tex1D = RF.CreateTexture(
-                TextureDescription.Texture1D(128, 1, 1u, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
-            RgbaFloat[] colors = new RgbaFloat[tex1D.Width];
+            // Fill the second target with a known color
+            RgbaFloat[] colors = new RgbaFloat[target2.Width * target2.Height];
             for (int i = 0; i < colors.Length; i++) { colors[i] = RgbaFloat.Pink; }
-            GD.UpdateTexture(tex1D, colors, 0, 0, 0, tex1D.Width, 1, 1, 0, 0);
+            GD.UpdateTexture(target2, colors, 0, 0, 0, target2.Width, target2.Height, 1, 0, 0);
 
             ResourceLayout textureLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("Smp", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            ResourceSet textureSet = RF.CreateResourceSet(new ResourceSetDescription(textureLayout, tex1D, GD.PointSampler));
+            ResourceSet textureSet = RF.CreateResourceSet(new ResourceSetDescription(textureLayout, textureView, GD.PointSampler));
 
             Pipeline texturePipeline = RF.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
@@ -983,7 +989,7 @@ namespace Veldrid.Tests
                 PrimitiveTopology.TriangleList,
                 textureShaderSet,
                 textureLayout,
-                framebuffer.OutputDescription));
+                framebuffer1.OutputDescription));
             Pipeline quadPipeline = RF.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
@@ -991,34 +997,37 @@ namespace Veldrid.Tests
                 PrimitiveTopology.TriangleList,
                 quadShaderSet,
                 Array.Empty<ResourceLayout>(),
-                framebuffer.OutputDescription));
+                framebuffer2.OutputDescription));
 
             CommandList cl = RF.CreateCommandList();
 
             cl.Begin();
-            cl.SetFramebuffer(framebuffer);
+            cl.SetFramebuffer(framebuffer1);
             cl.SetFullViewports();
             cl.SetFullScissorRects();
-            cl.ClearColorTarget(0, RgbaFloat.Black);
 
             // First pass using texture shader
             cl.SetPipeline(texturePipeline);
+            cl.ClearColorTarget(0, RgbaFloat.Black);
             cl.SetGraphicsResourceSet(0, textureSet);
             cl.Draw(3);
-            cl.CopyTexture(target, staging1);
+            cl.CopyTexture(target1, staging1);
 
             //  Second pass using dummy shader
-            cl.ClearColorTarget(0, RgbaFloat.Black);
             cl.SetPipeline(quadPipeline);
+            cl.SetFramebuffer(framebuffer2);
+            cl.ClearColorTarget(0, RgbaFloat.Blue);
             cl.SetVertexBuffer(0, vertexBuffer);
             cl.Draw(3);
-            cl.CopyTexture(target, staging2);
+            cl.CopyTexture(target2, staging2);
 
             // Third pass using texture shader again
             cl.SetPipeline(texturePipeline);
+            cl.SetFramebuffer(framebuffer1);
+            cl.ClearColorTarget(0, RgbaFloat.Black);
             cl.SetGraphicsResourceSet(0, textureSet);
             cl.Draw(3);
-            cl.CopyTexture(target, staging3);
+            cl.CopyTexture(target1, staging3);
 
             cl.End();
             GD.SubmitCommands(cl);
@@ -1030,8 +1039,8 @@ namespace Veldrid.Tests
             for (int x = 0; x < staging1.Width; x++)
             {
                 Assert.Equal(RgbaFloat.Pink, readView1[x, 0]);
-                Assert.Equal(RgbaFloat.Black, readView2[x, 0]);
-                Assert.Equal(RgbaFloat.Pink, readView3[x, 0]);
+                Assert.Equal(RgbaFloat.Blue, readView2[x, 0]);
+                Assert.Equal(RgbaFloat.Blue, readView3[x, 0]);
             }
             GD.Unmap(staging1);
             GD.Unmap(staging2);

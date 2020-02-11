@@ -319,9 +319,9 @@ namespace Veldrid.Vk
 
                     // Increment ref count on first use of a set.
                     _currentStagingInfo.Resources.Add(vkSet.RefCount);
-                    foreach (ResourceRefCount refCount in vkSet.RefCounts)
+                    for (int i = 0; i < vkSet.RefCounts.Count; i++)
                     {
-                        _currentStagingInfo.Resources.Add(refCount);
+                        _currentStagingInfo.Resources.Add(vkSet.RefCounts[i]);
                     }
                 }
 

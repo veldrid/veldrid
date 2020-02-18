@@ -77,6 +77,18 @@ namespace Veldrid.OpenGL
             {
                 glEnable(EnableCap.ScissorTest);
             }
+
+            if (!_isSwapchainFB)
+            {
+                int colorCount = _fb.ColorTargets.Count;
+                DrawBuffersEnum* bufs = stackalloc DrawBuffersEnum[colorCount];
+                for (int i = 0; i < colorCount; i++)
+                {
+                    bufs[i] = DrawBuffersEnum.ColorAttachment0 + i;
+                }
+                glDrawBuffers((uint)colorCount, bufs);
+                CheckLastError();
+            }
         }
 
         public void ClearDepthStencil(float depth, byte stencil)

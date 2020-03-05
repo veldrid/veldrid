@@ -1135,9 +1135,9 @@ namespace Veldrid.D3D11
                 _referencedSwapchains.Add(d3dFB.Swapchain);
             }
 
-            foreach (var target in fb.ColorTargets)
+            for (int i = 0; i < fb.ColorTargets.Count; i++)
             {
-                UnbindSRVTexture(target.Target);
+                UnbindSRVTexture(fb.ColorTargets[i].Target);
             }
 
             _context.OutputMerger.SetRenderTargets(d3dFB.DepthStencilView, d3dFB.RenderTargetViews);

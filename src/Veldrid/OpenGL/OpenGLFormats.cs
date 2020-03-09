@@ -819,6 +819,31 @@ namespace Veldrid.OpenGL
             }
         }
 
+        internal static StencilOp VdToGLStencilOp(StencilOperation op)
+        {
+            switch (op)
+            {
+                case StencilOperation.Keep:
+                    return StencilOp.Keep;
+                case StencilOperation.Zero:
+                    return StencilOp.Zero;
+                case StencilOperation.Replace:
+                    return StencilOp.Replace;
+                case StencilOperation.IncrementAndClamp:
+                    return StencilOp.Incr;
+                case StencilOperation.DecrementAndClamp:
+                    return StencilOp.Decr;
+                case StencilOperation.Invert:
+                    return StencilOp.Invert;
+                case StencilOperation.IncrementAndWrap:
+                    return StencilOp.IncrWrap;
+                case StencilOperation.DecrementAndWrap:
+                    return StencilOp.DecrWrap;
+                default:
+                    throw Illegal.Value<StencilOperation>();
+            }
+        }
+
         internal static CullFaceMode VdToGLCullFaceMode(FaceCullMode cullMode)
         {
             switch (cullMode)

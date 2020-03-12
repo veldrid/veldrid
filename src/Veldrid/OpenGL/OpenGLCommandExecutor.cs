@@ -586,11 +586,25 @@ namespace Veldrid.OpenGL
                     dss.StencilReadMask);
                 CheckLastError();
 
+                glStencilOpSeparate(
+                    CullFaceMode.Front,
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilFront.Fail),
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilFront.DepthFail),
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilFront.Pass));
+                CheckLastError();
+
                 glStencilFuncSeparate(
                     CullFaceMode.Back,
                     OpenGLFormats.VdToGLStencilFunction(dss.StencilBack.Comparison),
                     (int)dss.StencilReference,
                     dss.StencilReadMask);
+                CheckLastError();
+
+                glStencilOpSeparate(
+                    CullFaceMode.Back,
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilBack.Fail),
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilBack.DepthFail),
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilBack.Pass));
                 CheckLastError();
 
                 glStencilMask(dss.StencilWriteMask);

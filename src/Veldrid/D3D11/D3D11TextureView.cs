@@ -21,13 +21,17 @@ namespace Veldrid.D3D11
                 description.MipLevels,
                 description.BaseArrayLayer,
                 description.ArrayLayers,
-                Format);
+                Format,
+                description.Options);
             ShaderResourceView = new ShaderResourceView(device, d3dTex.DeviceTexture, srvDesc);
 
             if ((d3dTex.Usage & TextureUsage.Storage) == TextureUsage.Storage)
             {
                 UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription();
-                uavDesc.Format = D3D11Formats.GetViewFormat(d3dTex.DxgiFormat);
+                uavDesc.Format = D3D11Formats.GetViewFormat(
+                    D3D11Formats.ToDxgiFormat(Format, (d3dTex.Usage & TextureUsage.DepthStencil) != 0),
+                    d3dTex.DxgiFormat,
+                    (description.Options & TextureViewOptions.Stencil) != 0);
 
                 if ((d3dTex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
                 {

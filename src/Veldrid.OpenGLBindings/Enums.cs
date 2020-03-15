@@ -1721,7 +1721,8 @@ namespace Veldrid.OpenGLBinding
         TextureSwizzleG = 36419,
         TextureSwizzleB = 36420,
         TextureSwizzleA = 36421,
-        TextureSwizzleRgba = 36422
+        TextureSwizzleRgba = 36422,
+        DepthStencilTextureMode = 37098,
     }
 
     public enum StringName

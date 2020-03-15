@@ -296,6 +296,10 @@ namespace Veldrid
             {
                 return IsSrgbCounterpart(viewFormat, realFormat);
             }
+            else if (IsStencilFormat(realFormat))
+            {
+                return viewFormat == PixelFormat.R8_UInt;
+            }
             else
             {
                 return GetViewFamilyFormat(viewFormat) == GetViewFamilyFormat(realFormat);

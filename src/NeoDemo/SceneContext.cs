@@ -39,9 +39,11 @@ namespace Veldrid.NeoDemo
         public Texture MainSceneColorTexture { get; private set; }
         public Texture MainSceneDepthTexture { get; private set; }
         public Framebuffer MainSceneFramebuffer { get; private set; }
+        public Framebuffer MainSceneColorOnlyFramebuffer { get; private set; }
         public Texture MainSceneResolvedColorTexture { get; private set; }
         public TextureView MainSceneResolvedColorView { get; private set; }
         public ResourceSet MainSceneViewResourceSet { get; private set; }
+        public TextureView MainSceneStencilView { get; private set; }
 
         public Texture DuplicatorTarget0 { get; private set; }
         public TextureView DuplicatorTargetView0 { get; private set; }
@@ -126,7 +128,9 @@ namespace Veldrid.NeoDemo
             MainSceneResolvedColorTexture.Dispose();
             MainSceneResolvedColorView.Dispose();
             MainSceneDepthTexture.Dispose();
+            MainSceneStencilView.Dispose();
             MainSceneFramebuffer.Dispose();
+            MainSceneColorOnlyFramebuffer.Dispose();
             MainSceneViewResourceSet.Dispose();
             DuplicatorTarget0.Dispose();
             DuplicatorTarget1.Dispose();
@@ -166,6 +170,8 @@ namespace Veldrid.NeoDemo
             MainSceneResolvedColorView?.Dispose();
             MainSceneViewResourceSet?.Dispose();
             MainSceneFramebuffer?.Dispose();
+            MainSceneColorOnlyFramebuffer?.Dispose();
+            MainSceneStencilView?.Dispose();
             DuplicatorTarget0?.Dispose();
             DuplicatorTarget1?.Dispose();
             DuplicatorTargetView0?.Dispose();
@@ -213,10 +219,15 @@ namespace Veldrid.NeoDemo
                 gd.SwapchainFramebuffer.Height,
                 1,
                 1,
-                PixelFormat.R32_Float,
-                TextureUsage.DepthStencil,
+                PixelFormat.D32_Float_S8_UInt,
+                TextureUsage.DepthStencil | TextureUsage.Sampled,
                 sampleCount));
+            var stencilDesc = new TextureViewDescription(MainSceneDepthTexture);
+            stencilDesc.Options = TextureViewOptions.Stencil;
+            stencilDesc.Format = PixelFormat.R8_UInt;
+            MainSceneStencilView = factory.CreateTextureView(ref stencilDesc);
             MainSceneFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(MainSceneDepthTexture, MainSceneColorTexture));
+            MainSceneColorOnlyFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(null, MainSceneColorTexture));
             MainSceneViewResourceSet = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, MainSceneResolvedColorView, gd.PointSampler));
 
             TextureDescription colorTargetDesc = TextureDescription.Texture2D(

@@ -15,11 +15,14 @@ namespace Veldrid.D3D11
             uint levelCount,
             uint baseArrayLayer,
             uint layerCount,
-            PixelFormat format)
+            PixelFormat format,
+            TextureViewOptions options)
         {
             ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription();
             srvDesc.Format = D3D11Formats.GetViewFormat(
-                D3D11Formats.ToDxgiFormat(format, (tex.Usage & TextureUsage.DepthStencil) != 0));
+                D3D11Formats.ToDxgiFormat(format, (tex.Usage & TextureUsage.DepthStencil) != 0),
+                tex.DxgiFormat,
+                (options & TextureViewOptions.Stencil) != 0);
 
             if ((tex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
             {

@@ -9,6 +9,8 @@ namespace Veldrid.NeoDemo.Objects
 {
     public class TexturedMesh : CullRenderable
     {
+        private static readonly Random s_rand = new Random();
+
         // Useful for testing uniform bindings with an offset.
         private static readonly bool s_useUniformOffset = false;
         private uint _uniformOffset = 0;
@@ -181,9 +183,23 @@ namespace Veldrid.NeoDemo.Objects
             BlendStateDescription alphaBlendDesc = BlendStateDescription.SingleAlphaBlend;
             alphaBlendDesc.AlphaToCoverageEnabled = true;
 
+            DepthStencilStateDescription dssDesc = gd.IsDepthRangeZeroToOne
+                ? DepthStencilStateDescription.DepthOnlyGreaterEqual
+                : DepthStencilStateDescription.DepthOnlyLessEqual;
+            dssDesc.StencilTestEnabled = true;
+            dssDesc.StencilReference = (byte)s_rand.Next(0, 255);
+            dssDesc.StencilWriteMask = 0xFF;
+            dssDesc.StencilReadMask = dssDesc.StencilWriteMask = 0xFF;
+            dssDesc.StencilBack = dssDesc.StencilFront = new StencilBehaviorDescription(
+                StencilOperation.Keep,
+                StencilOperation.Replace,
+                StencilOperation.Keep,
+                ComparisonKind.Always);
+
+
             GraphicsPipelineDescription mainPD = new GraphicsPipelineDescription(
                 _alphamapTexture != null ? alphaBlendDesc : BlendStateDescription.SingleOverrideBlend,
-                gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
+                dssDesc,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(mainVertexLayouts, new[] { mainVS, mainFS }, new[] { new SpecializationConstant(100, gd.IsClipSpaceYInverted) }),

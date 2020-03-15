@@ -33,6 +33,10 @@ namespace Veldrid
         /// true storage format, but it will be the same size.
         /// </summary>
         public PixelFormat Format { get; }
+        /// <summary>
+        /// Miscellaneous option flags.
+        /// </summary>
+        public TextureViewOptions Options { get; }
 
         internal TextureView(ref TextureViewDescription description)
         {
@@ -41,7 +45,27 @@ namespace Veldrid
             MipLevels = description.MipLevels;
             BaseArrayLayer = description.BaseArrayLayer;
             ArrayLayers = description.ArrayLayers;
-            Format = description.Format ?? description.Target.Format;
+            if (description.Format.HasValue)
+            {
+                Format = description.Format.Value;
+            }
+            else
+            {
+                if ((description.Options & TextureViewOptions.Stencil) != 0)
+                {
+                    if (!FormatHelpers.IsStencilFormat(description.Target.Format))
+                    {
+                        throw new VeldridException(
+                            $"{nameof(TextureViewOptions)} can only be used with a depth-stencil texture.");
+                    }
+                    Format = PixelFormat.R8_UInt;
+                }
+                else
+                {
+                    Format = description.Target.Format;
+                }
+            }
+            Options = description.Options;
         }
 
         /// <summary>

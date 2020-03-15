@@ -61,7 +61,12 @@ namespace Veldrid.NeoDemo.Objects
                     new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate,  VertexElementFormat.Float2))
             };
 
-            (Shader vs, Shader fs) = StaticResourceCache.GetShaders(gd, gd.ResourceFactory, "ShadowmapPreviewShader");
+            TextureView textureView = _bindingGetter();
+            string set = textureView.Format == PixelFormat.R8_UInt
+                ? "ShadowmapPreviewShader_UInt"
+                : "ShadowmapPreviewShader";
+
+            (Shader vs, Shader fs) = StaticResourceCache.GetShaders(gd, gd.ResourceFactory, set);
 
             ResourceLayout layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
@@ -79,7 +84,7 @@ namespace Veldrid.NeoDemo.Objects
                     new[] { vs, fs },
                     ShaderHelper.GetSpecializations(gd)),
                 new ResourceLayout[] { layout },
-                sc.MainSceneFramebuffer.OutputDescription);
+                sc.MainSceneColorOnlyFramebuffer.OutputDescription);
 
             _pipeline = factory.CreateGraphicsPipeline(ref pd);
 
@@ -91,7 +96,7 @@ namespace Veldrid.NeoDemo.Objects
                 layout,
                 _orthographicBuffer,
                 _sizeInfoBuffer,
-                _bindingGetter(),
+                textureView,
                 gd.PointSampler));
 
             OnWindowResized();

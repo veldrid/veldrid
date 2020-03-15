@@ -203,6 +203,7 @@ namespace Veldrid.NeoDemo
             Render(gd, cl, sc, RenderPasses.AlphaBlend, cameraFrustum, _camera.Position, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
             cl.PopDebugGroup();
             cl.PushDebugGroup("Overlay");
+            cl.SetFramebuffer(sc.MainSceneColorOnlyFramebuffer);
             Render(gd, cl, sc, RenderPasses.Overlay, cameraFrustum, _camera.Position, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
             cl.PopDebugGroup();
 

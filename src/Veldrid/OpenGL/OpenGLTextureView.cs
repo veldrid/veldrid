@@ -262,6 +262,10 @@ namespace Veldrid.OpenGL
             PixelInternalFormat internalFormat = (PixelInternalFormat)OpenGLFormats.VdToGLSizedInternalFormat(
                 Format,
                 (Target.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
+            if ((Options & TextureViewOptions.Stencil) != 0)
+            {
+                internalFormat = Target.GLInternalFormat;
+            }
             Debug.Assert(Target.Created);
             glTextureView(
                 _textureView,
@@ -273,6 +277,12 @@ namespace Veldrid.OpenGL
                 BaseArrayLayer,
                 ArrayLayers);
             CheckLastError();
+            if ((Options & TextureViewOptions.Stencil) != 0)
+            {
+                _gd.TextureSamplerManager.SetTextureTransient(TextureTarget, _textureView);
+                glTexParameteri(TextureTarget, TextureParameterName.DepthStencilTextureMode, (int)GLPixelFormat.StencilIndex);
+                CheckLastError();
+            }
         }
 
         public override void Dispose()

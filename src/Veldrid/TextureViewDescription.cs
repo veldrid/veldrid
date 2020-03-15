@@ -35,6 +35,10 @@ namespace Veldrid
         /// compressed formats, it is only possible to use the same PixelFormat or its sRGB/non-sRGB counterpart.
         /// </summary>
         public PixelFormat? Format;
+        /// <summary>
+        /// Miscellaneous option flags for the view.
+        /// </summary>
+        public TextureViewOptions Options;
 
         /// <summary>
         /// Constructs a new TextureViewDescription.
@@ -49,6 +53,7 @@ namespace Veldrid
             BaseArrayLayer = 0;
             ArrayLayers = target.ArrayLayers;
             Format = target.Format;
+            Options = TextureViewOptions.None;
         }
 
         /// <summary>
@@ -68,6 +73,7 @@ namespace Veldrid
             BaseArrayLayer = 0;
             ArrayLayers = target.ArrayLayers;
             Format = format;
+            Options = TextureViewOptions.None;
         }
 
         /// <summary>
@@ -87,6 +93,7 @@ namespace Veldrid
             BaseArrayLayer = baseArrayLayer;
             ArrayLayers = arrayLayers;
             Format = target.Format;
+            Options = TextureViewOptions.None;
         }
 
         /// <summary>
@@ -109,7 +116,40 @@ namespace Veldrid
             MipLevels = mipLevels;
             BaseArrayLayer = baseArrayLayer;
             ArrayLayers = arrayLayers;
-            Format = target.Format;
+            Format = format;
+            Options = TextureViewOptions.None;
+        }
+
+        /// <summary>
+        /// Constructs a new TextureViewDescription.
+        /// </summary>
+        /// <param name="target">The desired target <see cref="Texture"/>.</param>
+        /// <param name="format">Specifies how the data within the target Texture will be viewed.
+        /// This format must be "compatible" with the target Texture's. For uncompressed formats, the overall size and number of
+        /// components in this format must be equal to the underlying format. For compressed formats, it is only possible to use
+        /// the same PixelFormat or its sRGB/non-sRGB counterpart.</param>
+        /// <param name="baseMipLevel">The base mip level visible in the view. Must be less than <see cref="Texture.MipLevels"/>.
+        /// </param>
+        /// <param name="mipLevels">The number of mip levels visible in the view.</param>
+        /// <param name="baseArrayLayer">The base array layer visible in the view.</param>
+        /// <param name="arrayLayers">The number of array layers visible in the view.</param>
+        /// <param name="options">Miscellaneous option flags for the view.</param>
+        public TextureViewDescription(
+            Texture target,
+            PixelFormat format,
+            uint baseMipLevel,
+            uint mipLevels,
+            uint baseArrayLayer,
+            uint arrayLayers,
+            TextureViewOptions options)
+        {
+            Target = target;
+            BaseMipLevel = baseMipLevel;
+            MipLevels = mipLevels;
+            BaseArrayLayer = baseArrayLayer;
+            ArrayLayers = arrayLayers;
+            Format = format;
+            Options = options;
         }
 
         /// <summary>
@@ -124,7 +164,8 @@ namespace Veldrid
                 && MipLevels.Equals(other.MipLevels)
                 && BaseArrayLayer.Equals(other.BaseArrayLayer)
                 && ArrayLayers.Equals(other.ArrayLayers)
-                && Format == other.Format;
+                && Format == other.Format
+                && Options == other.Options;
         }
 
         /// <summary>
@@ -139,7 +180,8 @@ namespace Veldrid
                 MipLevels.GetHashCode(),
                 BaseArrayLayer.GetHashCode(),
                 ArrayLayers.GetHashCode(),
-                Format?.GetHashCode() ?? 0);
+                Format?.GetHashCode() ?? 0,
+                Options.GetHashCode());
         }
     }
 }

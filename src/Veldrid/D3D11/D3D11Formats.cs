@@ -326,8 +326,22 @@ namespace Veldrid.D3D11
                 || format == PixelFormat.ETC2_R8_G8_B8_A8_UNorm;
         }
 
-        internal static Format GetViewFormat(Format format)
+        internal static Format GetViewFormat(Format format, Format textureFormat, bool stencil)
         {
+            if (stencil)
+            {
+                switch (textureFormat)
+                {
+                    case Format.R32G8X24_Typeless:
+                        return Format.X32_Typeless_G8X24_UInt;
+                    case Format.R24G8_Typeless:
+                        return Format.X24_Typeless_G8_UInt;
+                    default:
+                        throw new VeldridException(
+                            $"Cannot create a stencil view on a Texture with format {textureFormat}");
+                }
+            }
+
             switch (format)
             {
                 case Format.R16_Typeless:

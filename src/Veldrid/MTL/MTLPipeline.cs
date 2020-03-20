@@ -29,6 +29,7 @@ namespace Veldrid.MTL
         public override string Name { get; set; }
         public uint StencilReference { get; }
         public RgbaFloat BlendColor { get; }
+        public override bool IsDisposed => _disposed;
 
         public MTLPipeline(ref GraphicsPipelineDescription description, MTLGraphicsDevice gd)
             : base(ref description)

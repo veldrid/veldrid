@@ -27,6 +27,7 @@ namespace Veldrid.Vk
         }
 
         public override bool Signaled => vkGetFenceStatus(_gd.Device, _fence) == VkResult.Success;
+        public override bool IsDisposed => _destroyed;
 
         public override string Name
         {

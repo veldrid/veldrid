@@ -41,6 +41,8 @@ namespace Veldrid.MTL
 
         public override string Name { get; set; }
 
+        public override bool IsDisposed => _disposed;
+
         public override void Dispose()
         {
             if (!_disposed)

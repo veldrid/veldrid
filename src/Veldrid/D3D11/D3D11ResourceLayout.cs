@@ -4,6 +4,7 @@
     {
         private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
         private string _name;
+        private bool _disposed;
 
         public int UniformBufferCount { get; }
         public int StorageBufferCount { get; }
@@ -78,8 +79,11 @@
             set => _name = value;
         }
 
+        public override bool IsDisposed => _disposed;
+
         public override void Dispose()
         {
+            _disposed = true;
         }
 
         internal struct ResourceBindingInfo

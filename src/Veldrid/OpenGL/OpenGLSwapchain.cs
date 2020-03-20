@@ -7,10 +7,12 @@ namespace Veldrid.OpenGL
         private readonly OpenGLGraphicsDevice _gd;
         private readonly OpenGLSwapchainFramebuffer _framebuffer;
         private readonly Action<uint, uint> _resizeAction;
+        private bool _disposed;
 
         public override Framebuffer Framebuffer => _framebuffer;
         public override bool SyncToVerticalBlank { get => _gd.SyncToVerticalBlank; set => _gd.SyncToVerticalBlank = value; }
         public override string Name { get; set; } = "OpenGL Context Swapchain";
+        public override bool IsDisposed => _disposed;
 
         public OpenGLSwapchain(
             OpenGLGraphicsDevice gd,
@@ -30,6 +32,7 @@ namespace Veldrid.OpenGL
 
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

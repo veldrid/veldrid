@@ -6,6 +6,7 @@ namespace Veldrid.MTL
     internal class MTLFramebuffer : MTLFramebufferBase
     {
         public override bool IsRenderable => true;
+        private bool _disposed;
 
         public MTLFramebuffer(MTLGraphicsDevice gd, ref FramebufferDescription description)
             : base(gd, ref description)
@@ -49,8 +50,11 @@ namespace Veldrid.MTL
             return ret;
         }
 
+        public override bool IsDisposed => _disposed;
+
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

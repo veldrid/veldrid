@@ -11,6 +11,7 @@ namespace Veldrid.OpenGL
         private bool _needsTextureView;
         private uint _textureView;
         private bool _disposed;
+        public override bool IsDisposed => _disposed;
 
         private string _name;
         private bool _nameChanged;

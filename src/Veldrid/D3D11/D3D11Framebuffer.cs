@@ -6,12 +6,15 @@ namespace Veldrid.D3D11
     internal class D3D11Framebuffer : Framebuffer
     {
         private string _name;
+        private bool _disposed;
 
         public RenderTargetView[] RenderTargetViews { get; }
         public DepthStencilView DepthStencilView { get; }
 
         // Only non-null if this is the Framebuffer for a Swapchain.
         internal D3D11Swapchain Swapchain { get; set; }
+
+        public override bool IsDisposed => _disposed;
 
         public D3D11Framebuffer(Device device, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)
@@ -127,10 +130,15 @@ namespace Veldrid.D3D11
 
         public override void Dispose()
         {
-            DepthStencilView?.Dispose();
-            foreach (RenderTargetView rtv in RenderTargetViews)
+            if (!_disposed)
             {
-                rtv.Dispose();
+                DepthStencilView?.Dispose();
+                foreach (RenderTargetView rtv in RenderTargetViews)
+                {
+                    rtv.Dispose();
+                }
+
+                _disposed = true;
             }
         }
     }

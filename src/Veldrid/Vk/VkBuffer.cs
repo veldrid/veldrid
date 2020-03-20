@@ -14,6 +14,7 @@ namespace Veldrid.Vk
         public ResourceRefCount RefCount { get; }
         private bool _destroyed;
         private string _name;
+        public override bool IsDisposed => _destroyed;
 
         public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }

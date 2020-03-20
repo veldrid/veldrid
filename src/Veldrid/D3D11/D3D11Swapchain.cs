@@ -16,6 +16,7 @@ namespace Veldrid.D3D11
         private D3D11Framebuffer _framebuffer;
         private D3D11Texture _depthTexture;
         private float _pixelScale = 1f;
+        private bool _disposed;
 
         private readonly object _referencedCLsLock = new object();
         private HashSet<D3D11CommandList> _referencedCLs = new HashSet<D3D11CommandList>();
@@ -199,11 +200,18 @@ namespace Veldrid.D3D11
             return syncToVBlank ? 1 : 0;
         }
 
+        public override bool IsDisposed => _disposed;
+
         public override void Dispose()
         {
-            _depthTexture?.Dispose();
-            _framebuffer.Dispose();
-            _dxgiSwapChain.Dispose();
+            if (!_disposed)
+            {
+                _depthTexture?.Dispose();
+                _framebuffer.Dispose();
+                _dxgiSwapChain.Dispose();
+
+                _disposed = true;
+            }
         }
     }
 }

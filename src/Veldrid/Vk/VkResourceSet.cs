@@ -24,6 +24,8 @@ namespace Veldrid.Vk
         public ResourceRefCount RefCount { get; }
         public IReadOnlyList<ResourceRefCount> RefCounts => _refCounts;
 
+        public override bool IsDisposed => _destroyed;
+
         public VkResourceSet(VkGraphicsDevice gd, ref ResourceSetDescription description)
             : base(ref description)
         {

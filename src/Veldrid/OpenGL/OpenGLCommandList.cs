@@ -9,6 +9,7 @@ namespace Veldrid.OpenGL
     {
         private readonly OpenGLGraphicsDevice _gd;
         private OpenGLCommandEntryList _currentCommands;
+        private bool _disposed;
 
         internal OpenGLCommandEntryList CurrentCommands => _currentCommands;
         internal OpenGLGraphicsDevice Device => _gd;
@@ -18,6 +19,8 @@ namespace Veldrid.OpenGL
         private readonly List<OpenGLCommandEntryList> _submittedLists = new List<OpenGLCommandEntryList>();
 
         public override string Name { get; set; }
+
+        public override bool IsDisposed => _disposed;
 
         public OpenGLCommandList(OpenGLGraphicsDevice gd, ref CommandListDescription description)
             : base(ref description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
@@ -253,6 +256,8 @@ namespace Veldrid.OpenGL
                 {
                     list.Dispose();
                 }
+
+                _disposed = true;
             }
         }
     }

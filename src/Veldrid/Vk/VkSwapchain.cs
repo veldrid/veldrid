@@ -22,6 +22,7 @@ namespace Veldrid.Vk
         private bool? _newSyncToVBlank;
         private uint _currentImageIndex;
         private string _name;
+        private bool _disposed;
 
         public override string Name { get => _name; set { _name = value; _gd.SetResourceName(this, value); } }
         public override Framebuffer Framebuffer => _framebuffer;
@@ -36,6 +37,8 @@ namespace Veldrid.Vk
                 }
             }
         }
+
+        public override bool IsDisposed => _disposed;
 
         public VkSwapchainKHR DeviceSwapchain => _deviceSwapchain;
         public uint ImageIndex => _currentImageIndex;
@@ -307,6 +310,8 @@ namespace Veldrid.Vk
             _framebuffer.Dispose();
             vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
             vkDestroySurfaceKHR(_gd.Instance, _surface, null);
+
+            _disposed = true;
         }
     }
 }

@@ -53,6 +53,8 @@ namespace Veldrid.MTL
 
         public override string Name { get; set; }
 
+        public override bool IsDisposed => _disposed;
+
         public MTLCommandBuffer Commit()
         {
             _cb.commit();

@@ -12,6 +12,8 @@ namespace Veldrid.MTL
 
         public override string Name { get; set; }
 
+        public override bool IsDisposed => _disposed;
+
         public MTLTextureView(ref TextureViewDescription description, MTLGraphicsDevice gd)
             : base(ref description)
         {

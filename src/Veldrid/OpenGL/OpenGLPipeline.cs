@@ -43,6 +43,8 @@ namespace Veldrid.OpenGL
 
         public override string Name { get; set; }
 
+        public override bool IsDisposed => _disposed;
+
         public OpenGLPipeline(OpenGLGraphicsDevice gd, ref GraphicsPipelineDescription description)
             : base(ref description)
         {

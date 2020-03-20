@@ -3,6 +3,7 @@ namespace Veldrid.MTL
     internal class MTLResourceLayout : ResourceLayout
     {
         private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
+        private bool _disposed;
         public uint BufferCount { get; }
         public uint TextureCount { get; }
         public uint SamplerCount { get; }
@@ -77,8 +78,11 @@ namespace Veldrid.MTL
 
         public override string Name { get; set; }
 
+        public override bool IsDisposed => _disposed;
+
         public override void Dispose()
         {
+            _disposed = true;
         }
 
         internal struct ResourceBindingInfo

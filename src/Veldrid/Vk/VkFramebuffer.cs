@@ -28,6 +28,8 @@ namespace Veldrid.Vk
 
         public override uint AttachmentCount { get; }
 
+        public override bool IsDisposed => _destroyed;
+
         public VkFramebuffer(VkGraphicsDevice gd, ref FramebufferDescription description, bool isPresented)
             : base(description.DepthTarget, description.ColorTargets)
         {

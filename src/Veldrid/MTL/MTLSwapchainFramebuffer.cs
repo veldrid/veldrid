@@ -11,6 +11,7 @@ namespace Veldrid.MTL
         private readonly MTLPlaceholderTexture _placeholderTexture;
         private MTLTexture _depthTexture;
         private readonly MTLSwapchain _parentSwapchain;
+        private bool _disposed;
 
         public override uint Width => _placeholderTexture.Width;
         public override uint Height => _placeholderTexture.Height;
@@ -23,6 +24,8 @@ namespace Veldrid.MTL
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
         public override FramebufferAttachment? DepthTarget => _depthTarget;
+
+        public override bool IsDisposed => _disposed;
 
         public MTLSwapchainFramebuffer(
             MTLGraphicsDevice gd,
@@ -97,6 +100,7 @@ namespace Veldrid.MTL
         public override void Dispose()
         {
             _depthTexture?.Dispose();
+            _disposed = true;
         }
     }
 }

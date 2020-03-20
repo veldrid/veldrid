@@ -14,6 +14,7 @@ namespace Veldrid.MTL
         public MTLFunction Function { get; private set; }
         public override string Name { get; set; }
         public bool HasFunctionConstants { get; }
+        public override bool IsDisposed => _disposed;
 
         public unsafe MTLShader(ref ShaderDescription description, MTLGraphicsDevice gd)
             : base(description.Stage, description.EntryPoint)

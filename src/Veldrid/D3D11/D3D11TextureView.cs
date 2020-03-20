@@ -6,6 +6,7 @@ namespace Veldrid.D3D11
     internal class D3D11TextureView : TextureView
     {
         private string _name;
+        private bool _disposed;
 
         public ShaderResourceView ShaderResourceView { get; }
         public UnorderedAccessView UnorderedAccessView { get; }
@@ -95,10 +96,16 @@ namespace Veldrid.D3D11
             }
         }
 
+        public override bool IsDisposed => _disposed;
+
         public override void Dispose()
         {
-            ShaderResourceView?.Dispose();
-            UnorderedAccessView?.Dispose();
+            if (!_disposed)
+            {
+                ShaderResourceView?.Dispose();
+                UnorderedAccessView?.Dispose();
+                _disposed = true;
+            }
         }
     }
 }

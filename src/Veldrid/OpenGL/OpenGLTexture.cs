@@ -168,6 +168,8 @@ namespace Veldrid.OpenGL
 
         public override TextureSampleCount SampleCount { get; }
 
+        public override bool IsDisposed => _disposed;
+
         public GLPixelFormat GLPixelFormat { get; }
         public GLPixelType GLPixelType { get; }
         public PixelInternalFormat GLInternalFormat { get; }

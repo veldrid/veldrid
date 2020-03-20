@@ -10,10 +10,13 @@ namespace Veldrid.OpenGL
         private readonly SamplerDescription _description;
         private readonly InternalSamplerState _noMipmapState;
         private readonly InternalSamplerState _mipmapState;
+        private bool _disposed;
 
         private string _name;
         private bool _nameChanged;
         public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
+
+        public override bool IsDisposed => _disposed;
 
         public uint NoMipmapSampler => _noMipmapState.Sampler;
         public uint MipmapSampler => _mipmapState.Sampler;
@@ -63,6 +66,7 @@ namespace Veldrid.OpenGL
         {
             _mipmapState.DestroyGLResources();
             _noMipmapState.DestroyGLResources();
+            _disposed = true;
         }
 
         private class InternalSamplerState

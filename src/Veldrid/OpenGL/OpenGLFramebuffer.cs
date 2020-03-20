@@ -19,6 +19,8 @@ namespace Veldrid.OpenGL
 
         public bool Created { get; private set; }
 
+        public override bool IsDisposed => _disposed;
+
         public OpenGLFramebuffer(OpenGLGraphicsDevice gd, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)
         {

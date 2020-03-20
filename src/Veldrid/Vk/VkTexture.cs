@@ -39,6 +39,8 @@ namespace Veldrid.Vk
 
         public override TextureSampleCount SampleCount { get; }
 
+        public override bool IsDisposed => _destroyed;
+
         public VkImage OptimalDeviceImage => _optimalImage;
         public Vulkan.VkBuffer StagingBuffer => _stagingBuffer;
         public VkMemoryBlock Memory => _memoryBlock;

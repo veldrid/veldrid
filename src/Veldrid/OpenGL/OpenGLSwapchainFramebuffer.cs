@@ -6,12 +6,14 @@ namespace Veldrid.OpenGL
     internal class OpenGLSwapchainFramebuffer : Framebuffer
     {
         private readonly PixelFormat? _depthFormat;
+        private bool _disposed;
 
         public override uint Width => _colorTexture.Width;
         public override uint Height => _colorTexture.Height;
 
         public override OutputDescription OutputDescription { get; }
         public override string Name { get; set; }
+        public override bool IsDisposed => _disposed;
 
         private readonly OpenGLPlaceholderTexture _colorTexture;
         private readonly OpenGLPlaceholderTexture _depthTexture;
@@ -71,6 +73,7 @@ namespace Veldrid.OpenGL
 
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

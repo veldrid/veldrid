@@ -11,6 +11,7 @@ namespace Veldrid.MTL
         private readonly MTLGraphicsDevice _gd;
         private UIView _uiView; // Valid only when a UIViewSwapchainSource is used.
         private bool _syncToVerticalBlank;
+        private bool _disposed;
 
         private CAMetalDrawable _drawable;
 
@@ -28,6 +29,8 @@ namespace Veldrid.MTL
         }
 
         public override string Name { get; set; }
+
+        public override bool IsDisposed => _disposed;
 
         public CAMetalDrawable CurrentDrawable => _drawable;
 
@@ -156,6 +159,8 @@ namespace Veldrid.MTL
             }
             _framebuffer.Dispose();
             ObjectiveCRuntime.release(_metalLayer.NativePtr);
+
+            _disposed = true;
         }
     }
 }

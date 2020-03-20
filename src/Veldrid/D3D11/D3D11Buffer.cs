@@ -22,6 +22,8 @@ namespace Veldrid.D3D11
 
         public override BufferUsage Usage { get; }
 
+        public override bool IsDisposed => _buffer.IsDisposed;
+
         public SharpDX.Direct3D11.Buffer Buffer => _buffer;
 
         public D3D11Buffer(Device device, uint sizeInBytes, BufferUsage usage, uint structureByteStride, bool rawBuffer)

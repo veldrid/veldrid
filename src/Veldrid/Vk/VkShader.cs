@@ -14,6 +14,8 @@ namespace Veldrid.Vk
 
         public VkShaderModule ShaderModule => _shaderModule;
 
+        public override bool IsDisposed => _disposed;
+
         public VkShader(VkGraphicsDevice gd, ref ShaderDescription description)
             : base(description.Stage, description.EntryPoint)
         {

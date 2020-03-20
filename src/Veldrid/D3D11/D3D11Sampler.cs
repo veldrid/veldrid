@@ -54,6 +54,8 @@ namespace Veldrid.D3D11
             }
         }
 
+        public override bool IsDisposed => DeviceSampler.IsDisposed;
+
         public override void Dispose()
         {
             DeviceSampler.Dispose();

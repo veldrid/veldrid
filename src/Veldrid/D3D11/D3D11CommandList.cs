@@ -97,6 +97,8 @@ namespace Veldrid.D3D11
 
         private D3D11Framebuffer D3D11Framebuffer => Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(_framebuffer);
 
+        public override bool IsDisposed => _disposed;
+
         public override void Begin()
         {
             DeviceCommandList?.Dispose();

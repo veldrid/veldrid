@@ -17,6 +17,8 @@ namespace Veldrid.Vk
         public DescriptorResourceCounts DescriptorResourceCounts { get; }
         public new int DynamicBufferCount { get; }
 
+        public override bool IsDisposed => _disposed;
+
         public VkResourceLayout(VkGraphicsDevice gd, ref ResourceLayoutDescription description)
             : base(ref description)
         {

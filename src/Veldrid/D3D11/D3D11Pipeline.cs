@@ -7,6 +7,7 @@ namespace Veldrid.D3D11
     internal class D3D11Pipeline : Pipeline
     {
         private string _name;
+        private bool _disposed;
 
         public BlendState BlendState { get; }
         public DepthStencilState DepthStencilState { get; }
@@ -121,8 +122,11 @@ namespace Veldrid.D3D11
             set => _name = value;
         }
 
+        public override bool IsDisposed => _disposed;
+
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

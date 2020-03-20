@@ -104,6 +104,8 @@ namespace Veldrid.D3D11
             }
         }
 
+        public override bool IsDisposed => DeviceShader.IsDisposed;
+
         public override void Dispose()
         {
             DeviceShader.Dispose();

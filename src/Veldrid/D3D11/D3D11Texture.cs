@@ -18,6 +18,7 @@ namespace Veldrid.D3D11
         public override TextureUsage Usage { get; }
         public override TextureType Type { get; }
         public override TextureSampleCount SampleCount { get; }
+        public override bool IsDisposed => DeviceTexture.IsDisposed;
 
         public Resource DeviceTexture { get; }
         public SharpDX.DXGI.Format DxgiFormat { get; }

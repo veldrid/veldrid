@@ -62,12 +62,39 @@ namespace Veldrid.OpenGL
                     _gd.TextureSamplerManager.SetTextureTransient(glTex.TextureTarget, glTex.Texture);
                     CheckLastError();
 
+                    var textureTarget = glTex.TextureTarget;
+
+                    if ((glTex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+                    {
+                        switch (colorAttachment.ArrayLayer % 6)
+                        {
+                            case 0:
+                                textureTarget = TextureTarget.TextureCubeMapPositiveX;
+                                break;
+                            case 1:
+                                textureTarget = TextureTarget.TextureCubeMapNegativeX;
+                                break;
+                            case 2:
+                                textureTarget = TextureTarget.TextureCubeMapPositiveY;
+                                break;
+                            case 3:
+                                textureTarget = TextureTarget.TextureCubeMapNegativeY;
+                                break;
+                            case 4:
+                                textureTarget = TextureTarget.TextureCubeMapPositiveZ;
+                                break;
+                            case 5:
+                                textureTarget = TextureTarget.TextureCubeMapNegativeZ;
+                                break;
+                        }
+                    }
+
                     if (glTex.ArrayLayers == 1)
                     {
                         glFramebufferTexture2D(
                             FramebufferTarget.Framebuffer,
                             GLFramebufferAttachment.ColorAttachment0 + i,
-                            glTex.TextureTarget,
+                            textureTarget,
                             glTex.Texture,
                             (int)colorAttachment.MipLevel);
                         CheckLastError();
@@ -77,9 +104,9 @@ namespace Veldrid.OpenGL
                         glFramebufferTextureLayer(
                             FramebufferTarget.Framebuffer,
                             GLFramebufferAttachment.ColorAttachment0 + i,
-                            glTex.Texture,
+                            (uint)textureTarget,
                             (int)colorAttachment.MipLevel,
-                            (int)colorAttachment.ArrayLayer);
+                            (int)colorAttachment.ArrayLayer / 6);
                     }
                 }
 

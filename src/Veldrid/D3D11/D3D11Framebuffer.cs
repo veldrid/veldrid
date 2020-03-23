@@ -23,7 +23,13 @@ namespace Veldrid.D3D11
                 {
                     Format = D3D11Formats.GetDepthFormat(d3dDepthTarget.Format),
                 };
-                if (d3dDepthTarget.ArrayLayers == 1)
+                uint effectiveArrayLayers = d3dDepthTarget.ArrayLayers;
+                if ((d3dDepthTarget.Usage & TextureUsage.Cubemap) != 0)
+                {
+                    effectiveArrayLayers *= 6;
+                }
+
+                if (effectiveArrayLayers == 1)
                 {
                     if (d3dDepthTarget.SampleCount == TextureSampleCount.Count1)
                     {
@@ -65,7 +71,12 @@ namespace Veldrid.D3D11
                     {
                         Format = D3D11Formats.ToDxgiFormat(d3dColorTarget.Format, false),
                     };
-                    if (d3dColorTarget.ArrayLayers == 1)
+                    uint effectiveArrayLayers = d3dColorTarget.ArrayLayers;
+                    if ((d3dColorTarget.Usage & TextureUsage.Cubemap) != 0)
+                    {
+                        effectiveArrayLayers *= 6;
+                    }
+                    if (effectiveArrayLayers == 1)
                     {
                         if (d3dColorTarget.SampleCount == TextureSampleCount.Count1)
                         {

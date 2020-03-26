@@ -490,7 +490,7 @@ namespace Veldrid.OpenGL
                         OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
                         Height,
-                        ArrayLayers);
+                        ArrayLayers * 6);
                     CheckLastError();
                 }
                 else if (_gd.Extensions.TextureStorage)
@@ -501,7 +501,7 @@ namespace Veldrid.OpenGL
                         OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
                         Height,
-                        ArrayLayers);
+                        ArrayLayers * 6);
                     CheckLastError();
                 }
                 else

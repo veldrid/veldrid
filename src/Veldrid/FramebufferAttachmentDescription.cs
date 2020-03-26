@@ -49,7 +49,13 @@ namespace Veldrid
         public FramebufferAttachmentDescription(Texture target, uint arrayLayer, uint mipLevel)
         {
 #if VALIDATE_USAGE
-            if (arrayLayer >= target.ArrayLayers)
+            uint effectiveArrayLayers = target.ArrayLayers;
+            if ((target.Usage & TextureUsage.Cubemap) != 0)
+            {
+                effectiveArrayLayers *= 6;
+            }
+
+            if (arrayLayer >= effectiveArrayLayers)
             {
                 throw new VeldridException(
                     $"{nameof(arrayLayer)} must be less than {nameof(target)}.{nameof(Texture.ArrayLayers)}.");

@@ -13,6 +13,7 @@ namespace Veldrid.OpenGL
         private uint[] _framebuffers;
         private uint[] _pbos;
         private uint[] _pboSizes;
+        private bool _disposeRequested;
         private bool _disposed;
 
         private string _name;
@@ -168,7 +169,7 @@ namespace Veldrid.OpenGL
 
         public override TextureSampleCount SampleCount { get; }
 
-        public override bool IsDisposed => _disposed;
+        public override bool IsDisposed => _disposeRequested;
 
         public GLPixelFormat GLPixelFormat { get; }
         public GLPixelType GLPixelType { get; }
@@ -682,7 +683,11 @@ namespace Veldrid.OpenGL
 
         private protected override void DisposeCore()
         {
-            _gd.EnqueueDisposal(this);
+            if (!_disposeRequested)
+            {
+                _disposeRequested = true;
+                _gd.EnqueueDisposal(this);
+            }
         }
 
         public void DestroyGLResources()

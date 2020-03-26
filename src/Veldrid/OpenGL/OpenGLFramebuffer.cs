@@ -11,6 +11,7 @@ namespace Veldrid.OpenGL
 
         private string _name;
         private bool _nameChanged;
+        private bool _disposeRequested;
         private bool _disposed;
 
         public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
@@ -19,7 +20,7 @@ namespace Veldrid.OpenGL
 
         public bool Created { get; private set; }
 
-        public override bool IsDisposed => _disposed;
+        public override bool IsDisposed => _disposeRequested;
 
         public OpenGLFramebuffer(OpenGLGraphicsDevice gd, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)
@@ -176,7 +177,11 @@ namespace Veldrid.OpenGL
 
         public override void Dispose()
         {
-            _gd.EnqueueDisposal(this);
+            if (!_disposeRequested)
+            {
+                _disposeRequested = true;
+                _gd.EnqueueDisposal(this);
+            }
         }
 
         public void DestroyGLResources()

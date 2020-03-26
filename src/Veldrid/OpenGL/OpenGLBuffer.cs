@@ -11,10 +11,11 @@ namespace Veldrid.OpenGL
         private readonly OpenGLGraphicsDevice _gd;
         private uint _buffer;
         private bool _dynamic;
-        private bool _disposed;
+        private bool _disposeRequested;
 
         private string _name;
         private bool _nameChanged;
+
         public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public override uint SizeInBytes { get; }
@@ -24,7 +25,7 @@ namespace Veldrid.OpenGL
 
         public bool Created { get; private set; }
 
-        public override bool IsDisposed => _disposed;
+        public override bool IsDisposed => _disposeRequested;
 
         public OpenGLBuffer(OpenGLGraphicsDevice gd, uint sizeInBytes, BufferUsage usage)
         {
@@ -89,7 +90,11 @@ namespace Veldrid.OpenGL
 
         public override void Dispose()
         {
-            _gd.EnqueueDisposal(this);
+            if (!_disposeRequested)
+            {
+                _disposeRequested = true;
+                _gd.EnqueueDisposal(this);
+            }
         }
 
         public void DestroyGLResources()
@@ -97,7 +102,6 @@ namespace Veldrid.OpenGL
             uint buffer = _buffer;
             glDeleteBuffers(1, ref buffer);
             CheckLastError();
-            _disposed = true;
         }
     }
 }

@@ -209,9 +209,14 @@ namespace Veldrid.Tests
             }
             else
             {
+                uint layers = texture.ArrayLayers;
+                if ((texture.Usage & TextureUsage.Cubemap) != 0)
+                {
+                    layers *= 6;
+                }
                 TextureDescription desc = new TextureDescription(
                     texture.Width, texture.Height, texture.Depth,
-                    texture.MipLevels, texture.ArrayLayers,
+                    texture.MipLevels, layers,
                     texture.Format,
                     TextureUsage.Staging, texture.Type);
                 Texture readback = RF.CreateTexture(ref desc);

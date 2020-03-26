@@ -1646,7 +1646,8 @@ namespace Veldrid.OpenGL
                         glBindFramebuffer(FramebufferTarget.ReadFramebuffer, readFB);
                         CheckLastError();
 
-                        if (srcGLTexture.ArrayLayers > 1 || srcGLTexture.Type == TextureType.Texture3D)
+                        if (srcGLTexture.ArrayLayers > 1 || srcGLTexture.Type == TextureType.Texture3D
+                            || (srcGLTexture.Usage & TextureUsage.Cubemap) != 0)
                         {
                             glFramebufferTextureLayer(
                                 FramebufferTarget.ReadFramebuffer,

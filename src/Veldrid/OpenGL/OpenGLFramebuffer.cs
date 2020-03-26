@@ -104,9 +104,10 @@ namespace Veldrid.OpenGL
                         glFramebufferTextureLayer(
                             FramebufferTarget.Framebuffer,
                             GLFramebufferAttachment.ColorAttachment0 + i,
-                            (uint)textureTarget,
+                            (uint)glTex.Texture,
                             (int)colorAttachment.MipLevel,
-                            (int)colorAttachment.ArrayLayer / 6);
+                            (int)colorAttachment.ArrayLayer);
+                        CheckLastError();
                     }
                 }
 

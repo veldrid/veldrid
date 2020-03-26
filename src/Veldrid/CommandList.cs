@@ -922,7 +922,7 @@ namespace Veldrid
                     source, 0, 0, 0, level, 0,
                     destination, 0, 0, 0, level, 0,
                     mipWidth, mipHeight, mipDepth,
-                    source.ArrayLayers);
+                    effectiveSrcArrayLayers);
             }
         }
 

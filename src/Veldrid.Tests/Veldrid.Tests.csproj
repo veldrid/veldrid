@@ -46,6 +46,8 @@
     <None Remove="Shaders\FullScreenTriSampleTexture2D.frag" />
     <None Remove="Shaders\FullScreenTriSampleTexture2D.vert" />
     <None Remove="Shaders\FullScreenTriSampleTextureArray.vert" />
+    <None Remove="Shaders\FullScreenWriteDepth.frag" />
+    <None Remove="Shaders\FullScreenWriteDepth.vert" />
     <None Remove="Shaders\VertexLayoutTestShader.frag" />
     <None Remove="Shaders\VertexLayoutTestShader.vert" />
   </ItemGroup>

@@ -174,6 +174,7 @@ namespace Veldrid.Tests
             if (Environment.GetEnvironmentVariable("VELDRID_TESTS_ENABLE_RENDERDOC") == "1"
                 && RenderDoc.Load(out _renderDoc))
             {
+                _renderDoc.APIValidation = true;
                 _renderDoc.DebugOutputMute = false;
             }
             Activator.CreateInstance<T>().CreateGraphicsDevice(out _window, out _gd);

@@ -1180,6 +1180,67 @@ namespace Veldrid.Tests
             }
             GD.Unmap(staging, (targetLayer * 6) + targetFace);
         }
+
+        [Fact]
+        public void WriteFragmentDepth()
+        {
+            Texture depthTarget = RF.CreateTexture(
+                TextureDescription.Texture2D(64, 64, 1, 1, PixelFormat.R32_Float, TextureUsage.DepthStencil | TextureUsage.Sampled));
+            Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(depthTarget));
+
+            string setName = "FullScreenWriteDepth";
+            ShaderSetDescription shaderSet = new ShaderSetDescription(
+                Array.Empty<VertexLayoutDescription>(),
+                TestShaders.LoadVertexFragment(RF, setName));
+
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("FramebufferInfo", ResourceKind.UniformBuffer, ShaderStages.Fragment)));
+
+            DeviceBuffer ub = RF.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
+            GD.UpdateBuffer(ub, 0, new Vector4(depthTarget.Width, depthTarget.Height, 0, 0));
+            ResourceSet rs = RF.CreateResourceSet(new ResourceSetDescription(layout, ub));
+
+            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                new DepthStencilStateDescription(true, true, ComparisonKind.Always),
+                RasterizerStateDescription.CullNone,
+                PrimitiveTopology.TriangleList,
+                shaderSet,
+                layout,
+                framebuffer.OutputDescription);
+
+            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+
+            CommandList cl = RF.CreateCommandList();
+
+            cl.Begin();
+            cl.SetFramebuffer(framebuffer);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
+            cl.ClearDepthStencil(0f);
+            cl.SetPipeline(pipeline);
+            cl.SetGraphicsResourceSet(0, rs);
+            cl.Draw(3);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            Texture readback = GetReadback(depthTarget);
+
+            MappedResourceView<float> readView = GD.Map<float>(readback, MapMode.Read);
+            for (uint y = 0; y < readback.Height; y++)
+            {
+                for (uint x = 0; x < readback.Width; x++)
+                {
+                    float xComp = x;
+                    float yComp = y * readback.Width;
+                    float val = (yComp + xComp) / (readback.Width * readback.Height);
+
+                    Assert.Equal(val, readView[x, y], 2);
+                }
+            }
+            GD.Unmap(readback);
+        }
     }
 
 #if TEST_OPENGL

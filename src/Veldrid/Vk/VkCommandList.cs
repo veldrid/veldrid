@@ -922,7 +922,7 @@ namespace Veldrid.Vk
                 uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, srcVkTexture.Format);
 
                 uint copyWidth = Math.Min(width, mipWidth);
-                uint copyheight= Math.Min(height, mipHeight);
+                uint copyheight = Math.Min(height, mipHeight);
 
                 VkBufferImageCopy regions = new VkBufferImageCopy
                 {
@@ -964,9 +964,13 @@ namespace Veldrid.Vk
                 Vulkan.VkBuffer dstBuffer = dstVkTexture.StagingBuffer;
                 VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
                     dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer));
+
+                VkImageAspectFlags aspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
+                    ? VkImageAspectFlags.Depth
+                    : VkImageAspectFlags.Color;
                 VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
                 {
-                    aspectMask = VkImageAspectFlags.Color,
+                    aspectMask = aspect,
                     layerCount = layerCount,
                     mipLevel = srcMipLevel,
                     baseArrayLayer = srcBaseArrayLayer

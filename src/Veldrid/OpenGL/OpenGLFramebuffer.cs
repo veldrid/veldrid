@@ -65,32 +65,7 @@ namespace Veldrid.OpenGL
                     _gd.TextureSamplerManager.SetTextureTransient(glTex.TextureTarget, glTex.Texture);
                     CheckLastError();
 
-                    var textureTarget = glTex.TextureTarget;
-
-                    if ((glTex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
-                    {
-                        switch (colorAttachment.ArrayLayer % 6)
-                        {
-                            case 0:
-                                textureTarget = TextureTarget.TextureCubeMapPositiveX;
-                                break;
-                            case 1:
-                                textureTarget = TextureTarget.TextureCubeMapNegativeX;
-                                break;
-                            case 2:
-                                textureTarget = TextureTarget.TextureCubeMapPositiveY;
-                                break;
-                            case 3:
-                                textureTarget = TextureTarget.TextureCubeMapNegativeY;
-                                break;
-                            case 4:
-                                textureTarget = TextureTarget.TextureCubeMapPositiveZ;
-                                break;
-                            case 5:
-                                textureTarget = TextureTarget.TextureCubeMapNegativeZ;
-                                break;
-                        }
-                    }
+                    TextureTarget textureTarget = GetTextureTarget (glTex, colorAttachment.ArrayLayer);
 
                     if (glTex.ArrayLayers == 1)
                     {
@@ -135,6 +110,8 @@ namespace Veldrid.OpenGL
 
                 _gd.TextureSamplerManager.SetTextureTransient(depthTarget, glDepthTex.Texture);
                 CheckLastError();
+
+                depthTarget = GetTextureTarget (glDepthTex, DepthTarget.Value.ArrayLayer);
 
                 GLFramebufferAttachment framebufferAttachment = GLFramebufferAttachment.DepthAttachment;
                 if (FormatHelpers.IsStencilFormat(glDepthTex.Format))

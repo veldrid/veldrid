@@ -37,5 +37,29 @@ namespace Veldrid.OpenGL
                 }
             }
         }
+
+        internal static TextureTarget GetTextureTarget(OpenGLTexture glTex, uint arrayLayer)
+        {
+            if ((glTex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+            {
+                switch (arrayLayer % 6)
+                {
+                    case 0:
+                        return TextureTarget.TextureCubeMapPositiveX;
+                    case 1:
+                        return TextureTarget.TextureCubeMapNegativeX;
+                    case 2:
+                        return TextureTarget.TextureCubeMapPositiveY;
+                    case 3:
+                        return TextureTarget.TextureCubeMapNegativeY;
+                    case 4:
+                        return TextureTarget.TextureCubeMapPositiveZ;
+                    case 5:
+                        return TextureTarget.TextureCubeMapNegativeZ;
+                }
+            }
+
+            return glTex.TextureTarget;
+        }
     }
 }

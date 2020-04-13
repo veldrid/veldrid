@@ -870,6 +870,19 @@ namespace Veldrid.OpenGLBinding
             => p_glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glFramebufferTexture_t(
+            FramebufferTarget target,
+            GLFramebufferAttachment attachment,
+            uint texture,
+            int level);
+        private static glFramebufferTexture_t p_glFramebufferTexture;
+        public static void glFramebufferTexture(
+            FramebufferTarget target,
+            GLFramebufferAttachment attachment,
+            uint texture,
+            int level) => p_glFramebufferTexture(target, attachment, texture, level);
+
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate void glFramebufferTextureLayer_t(
             FramebufferTarget target,
             GLFramebufferAttachment attachment,
@@ -1813,6 +1826,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTexImage3DMultisample", out p_glTexImage3DMultisample);
             LoadFunction("glBlitFramebuffer", out p_glBlitFramebuffer);
             LoadFunction("glFramebufferTextureLayer", out p_glFramebufferTextureLayer);
+            LoadFunction("glFramebufferTexture", out p_glFramebufferTexture);
             LoadFunction("glDispatchCompute", out p_glDispatchCompute);
             LoadFunction("glGetProgramResourceIndex", out p_glGetProgramResourceIndex);
             LoadFunction("glShaderStorageBlockBinding", out p_glShaderStorageBlockBinding);

@@ -119,7 +119,17 @@ namespace Veldrid.OpenGL
                     framebufferAttachment = GLFramebufferAttachment.DepthStencilAttachment;
                 }
 
-                if (glDepthTex.ArrayLayers == 1)
+                if (glDepthTex.TextureTarget == TextureTarget.TextureCubeMap)
+                {
+                    glFramebufferTexture(
+                      FramebufferTarget.Framebuffer,
+                      framebufferAttachment,
+                      glDepthTex.Texture,
+                      (int)DepthTarget.Value.MipLevel);
+                    CheckLastError();
+                }
+
+                else if (glDepthTex.ArrayLayers == 1)
                 {
                     glFramebufferTexture2D(
                         FramebufferTarget.Framebuffer,

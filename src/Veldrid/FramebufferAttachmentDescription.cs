@@ -23,6 +23,29 @@ namespace Veldrid
         /// <see cref="Texture"/>.
         /// </summary>
         public uint MipLevel;
+        /// <summary>
+        /// Indicates whether the target should be bound as a layered target. Used for texture arrays and cubemaps.
+        /// </summary>
+        public bool LayeredTarget;
+
+        /// <summary>
+        /// Constructs a new FramebufferAttachmentDescription.
+        /// </summary>
+        /// <param name="target">The target texture to render into. For color attachments, this resource must have been created
+        /// with the <see cref="TextureUsage.RenderTarget"/> flag. For depth attachments, this resource must have been created
+        /// with the <see cref="TextureUsage.DepthStencil"/> flag.</param>
+        public FramebufferAttachmentDescription(Texture target)
+            : this(target, 0, 0)
+        {
+            if ((target.Usage & TextureUsage.Cubemap) != 0)
+            {
+                LayeredTarget = true;
+            }
+            else if (target.ArrayLayers > 1)
+            {
+                LayeredTarget = true;
+            }
+        }
 
         /// <summary>
         /// Constructs a new FramebufferAttachmentDescription.
@@ -69,6 +92,7 @@ namespace Veldrid
             Target = target;
             ArrayLayer = arrayLayer;
             MipLevel = mipLevel;
+            LayeredTarget = false;
         }
 
         /// <summary>

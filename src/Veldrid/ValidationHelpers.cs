@@ -124,5 +124,31 @@ namespace Veldrid
                     throw Illegal.Value<ResourceKind>();
             }
         }
+
+        [Conditional ("VALIDATE_USAGE")]
+        internal static void ValidateFramebufferDescription(FramebufferDescription description)
+        {
+            bool hasSingleTargets = false;
+            bool hasLayeredTargets = false;
+
+            for (int i = 0; i < description.ColorTargets.Length; i++)
+            {
+                bool isLayeredTarget = description.ColorTargets[i].LayeredTarget;
+                hasSingleTargets |= !isLayeredTarget;
+                hasLayeredTargets |= isLayeredTarget;
+            }
+
+            if (description.DepthTarget != null)
+            {
+                bool isLayeredTarget = description.DepthTarget.Value.LayeredTarget;
+                hasSingleTargets |= !isLayeredTarget;
+                hasLayeredTargets |= isLayeredTarget;
+            }
+
+            if (hasSingleTargets && hasLayeredTargets)
+            {
+                throw new VeldridException ("Non-layered and layered attachments cannot be used in a single framebuffer.");
+            }
+        }
     }
 }

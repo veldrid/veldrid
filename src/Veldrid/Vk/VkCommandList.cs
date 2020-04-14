@@ -185,11 +185,14 @@ namespace Veldrid.Vk
                     clearValue = clearValue
                 };
 
-                Texture colorTex = _currentFramebuffer.ColorTargets[(int)index].Target;
+                FramebufferAttachment ca = _currentFramebuffer.ColorTargets[(int)index];
+                Texture colorTex = ca.Target;
+
+                GetTextureArrayAttachmentData(ca, out uint arraySize, out uint arrayLayer);
                 VkClearRect clearRect = new VkClearRect
                 {
-                    baseArrayLayer = 0,
-                    layerCount = 1,
+                    baseArrayLayer = arrayLayer,
+                    layerCount = arraySize,
                     rect = new VkRect2D(0, 0, colorTex.Width, colorTex.Height)
                 };
 
@@ -222,10 +225,11 @@ namespace Veldrid.Vk
                 uint renderableHeight = _currentFramebuffer.RenderableHeight;
                 if (renderableWidth > 0 && renderableHeight > 0)
                 {
+                    GetTextureArrayAttachmentData(_currentFramebuffer.DepthTarget.Value, out uint arraySize, out uint arrayLayer);
                     VkClearRect clearRect = new VkClearRect
                     {
-                        baseArrayLayer = 0,
-                        layerCount = 1,
+                        baseArrayLayer = arrayLayer,
+                        layerCount = arraySize,
                         rect = new VkRect2D(0, 0, renderableWidth, renderableHeight)
                     };
 

@@ -962,6 +962,13 @@ namespace Veldrid
 
             return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(), swapchainDescription);
         }
+
+        public static GraphicsDevice CreateD3D11(SharpDX.Direct3D11.Device device)
+        {
+            if (device == null) return null;
+            return new D3D11.D3D11GraphicsDevice(device);
+        }
+
 #endif
 
 #if !EXCLUDE_VULKAN_BACKEND

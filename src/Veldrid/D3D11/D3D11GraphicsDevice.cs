@@ -9,7 +9,7 @@ using System.Threading;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11GraphicsDevice : GraphicsDevice
+    public class D3D11GraphicsDevice : GraphicsDevice
     {
         private readonly SharpDX.DXGI.Adapter _dxgiAdapter;
         private readonly SharpDX.Direct3D11.Device _device;
@@ -102,6 +102,46 @@ namespace Veldrid.D3D11
                 SwapchainDescription desc = swapchainDesc.Value;
                 _mainSwapchain = new D3D11Swapchain(_device, ref desc);
             }
+            _immediateContext = _device.ImmediateContext;
+            _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
+
+            Features = new GraphicsDeviceFeatures(
+                computeShader: true,
+                geometryShader: true,
+                tessellationShaders: true,
+                multipleViewports: true,
+                samplerLodBias: true,
+                drawBaseVertex: true,
+                drawBaseInstance: true,
+                drawIndirect: true,
+                drawIndirectBaseInstance: true,
+                fillModeWireframe: true,
+                samplerAnisotropy: true,
+                depthClipDisable: true,
+                texture1D: true,
+                independentBlend: true,
+                structuredBuffer: true,
+                subsetTextureView: true,
+                commandListDebugMarkers: _device.FeatureLevel >= SharpDX.Direct3D.FeatureLevel.Level_11_1,
+                bufferRangeBinding: _device.FeatureLevel >= SharpDX.Direct3D.FeatureLevel.Level_11_1);
+
+            _d3d11ResourceFactory = new D3D11ResourceFactory(this);
+            _d3d11Info = new BackendInfoD3D11(this);
+
+            PostDeviceCreated();
+        }
+
+        public D3D11GraphicsDevice(SharpDX.Direct3D11.Device device)
+        {
+            _device = device;
+
+            using (var dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device>())
+            {
+                // Store a pointer to the DXGI adapter.
+                // This is for the case of no preferred DXGI adapter, or fallback to WARP.
+                _dxgiAdapter = dxgiDevice.Adapter;
+            }
+
             _immediateContext = _device.ImmediateContext;
             _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
 

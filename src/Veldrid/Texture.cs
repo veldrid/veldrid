@@ -102,5 +102,20 @@ namespace Veldrid
         }
 
         private protected abstract void DisposeCore();
+
+        #region --- public static
+
+#if !EXCLUDE_D3D11_BACKEND
+
+        public static Texture CreateD3D11(SharpDX.Direct3D11.Texture2D texture)
+        {
+            if (texture == null) return null;
+            return new Veldrid.D3D11.D3D11Texture(texture);
+        }
+
+#endif
+
+        #endregion
+
     }
 }

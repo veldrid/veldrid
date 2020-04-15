@@ -167,6 +167,26 @@ namespace Veldrid.D3D11
             TypelessDxgiFormat = D3D11Formats.GetTypelessFormat(DxgiFormat);
         }
 
+        public D3D11Texture(Texture2D existingTexture)
+        {
+            _device = existingTexture.Device;
+            DeviceTexture = existingTexture;
+            Width = (uint)existingTexture.Description.Width;
+            Height = (uint)existingTexture.Description.Height;
+            Depth = 1;
+            MipLevels = (uint)existingTexture.Description.MipLevels;
+            ArrayLayers = (uint)existingTexture.Description.ArraySize;
+            Format = D3D11Formats.ToVdFormat(existingTexture.Description.Format);
+            SampleCount = FormatHelpers.GetSampleCount((uint)existingTexture.Description.SampleDescription.Count);
+            Type = TextureType.Texture2D;
+            Usage = D3D11Formats.GetVdUsage(
+                existingTexture.Description.BindFlags,
+                existingTexture.Description.CpuAccessFlags,
+                existingTexture.Description.OptionFlags);
+            DxgiFormat = existingTexture.Description.Format;
+            TypelessDxgiFormat = D3D11Formats.GetTypelessFormat(DxgiFormat);
+        }
+
         private protected override TextureView CreateFullTextureView(GraphicsDevice gd)
         {
             TextureViewDescription desc = new TextureViewDescription(this);

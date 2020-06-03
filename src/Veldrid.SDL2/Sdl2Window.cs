@@ -568,7 +568,7 @@ namespace Veldrid.Sdl2
         private void HandleKeyboardEvent(SDL_KeyboardEvent keyboardEvent)
         {
             SimpleInputSnapshot snapshot = _privateSnapshot;
-            KeyEvent keyEvent = new KeyEvent(MapKey(keyboardEvent.keysym), keyboardEvent.state == 1, MapModifierKeys(keyboardEvent.keysym.mod));
+            KeyEvent keyEvent = new KeyEvent(MapKey(keyboardEvent.keysym), keyboardEvent.state == 1, MapModifierKeys(keyboardEvent.keysym.mod), keyboardEvent.repeat == 1);
             snapshot.KeyEventsList.Add(keyEvent);
             if (keyboardEvent.state == 1)
             {

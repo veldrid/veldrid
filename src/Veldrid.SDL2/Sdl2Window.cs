@@ -282,6 +282,19 @@ namespace Veldrid.Sdl2
 
         public Vector2 MouseDelta => _currentMouseDelta;
 
+        public bool IsKeyLocked(LockKey key)
+        {
+            switch (key)
+            {
+                case LockKey.CapsLock:
+                    return (SDL_GetModState() & SDL_Keymod.Caps) == SDL_Keymod.Caps;
+                case LockKey.NumLock:
+                    return (SDL_GetModState() & SDL_Keymod.Num) == SDL_Keymod.Num;
+                default:
+                    return false;
+            }
+        }
+
         public void SetCloseRequestedHandler(Func<bool> handler)
         {
             _closeRequestedHandler = handler;

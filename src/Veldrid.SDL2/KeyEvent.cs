@@ -6,7 +6,13 @@
         public bool Down { get; }
         public ModifierKeys Modifiers { get; }
         public bool Repeat { get; }
-        public KeyEvent(Key key, bool down, ModifierKeys modifiers, bool repeat = false)
+
+        public KeyEvent(Key key, bool down, ModifierKeys modifiers)
+        : this(key, down, modifiers, false)
+        {
+        }
+
+        public KeyEvent(Key key, bool down, ModifierKeys modifiers, bool repeat)
         {
             Key = key;
             Down = down;

@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text;
 
+using static Vulkan.RawConstants;
+
 namespace Veldrid.Vk
 {
     internal unsafe class VkCommandList : CommandList
@@ -529,7 +531,6 @@ namespace Veldrid.Vk
                 if (!_validColorClearValues[i])
                 {
                     haveAllClearValues = false;
-                    haveAnyClearValues = true;
                 }
                 else
                 {
@@ -1137,6 +1138,52 @@ namespace Veldrid.Vk
                 vkTex.TransitionImageLayout(_cb, 0, 1, 0, vkTex.ArrayLayers, VkImageLayout.ShaderReadOnlyOptimal);
                 vkTex.TransitionImageLayout(_cb, 1, vkTex.MipLevels - 1, 0, vkTex.ArrayLayers, VkImageLayout.ShaderReadOnlyOptimal);
             }
+        }
+
+        [Conditional("DEBUG")]
+        private void DebugFullPipelineBarrier()
+        {
+            VkMemoryBarrier memoryBarrier = VkMemoryBarrier.New();
+            memoryBarrier.srcAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT |
+                   VK_ACCESS_INDEX_READ_BIT |
+                   VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT |
+                   VK_ACCESS_UNIFORM_READ_BIT |
+                   VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_SHADER_READ_BIT |
+                   VK_ACCESS_SHADER_WRITE_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_TRANSFER_READ_BIT |
+                   VK_ACCESS_TRANSFER_WRITE_BIT |
+                   VK_ACCESS_HOST_READ_BIT |
+                   VK_ACCESS_HOST_WRITE_BIT;
+            memoryBarrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT |
+                   VK_ACCESS_INDEX_READ_BIT |
+                   VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT |
+                   VK_ACCESS_UNIFORM_READ_BIT |
+                   VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_SHADER_READ_BIT |
+                   VK_ACCESS_SHADER_WRITE_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT |
+                   VK_ACCESS_TRANSFER_READ_BIT |
+                   VK_ACCESS_TRANSFER_WRITE_BIT |
+                   VK_ACCESS_HOST_READ_BIT |
+                   VK_ACCESS_HOST_WRITE_BIT;
+
+            vkCmdPipelineBarrier(
+                _cb,
+                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // srcStageMask
+                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // dstStageMask
+                VkDependencyFlags.None,
+                1,                                  // memoryBarrierCount
+                &memoryBarrier,                     // pMemoryBarriers
+                0, null,
+                0, null);
         }
 
         public override string Name

@@ -33,10 +33,10 @@ namespace Veldrid.ImageSharp
             return Math.Max(1, ret);
         }
 
-        internal static Image<T>[] GenerateMipmaps<T>(Image<T> baseImage) where T : struct, IPixel<T>
+        internal static Image<Rgba32>[] GenerateMipmaps(Image<Rgba32> baseImage) 
         {
             int mipLevelCount = MipmapHelper.ComputeMipLevels(baseImage.Width, baseImage.Height);
-            Image<T>[] mipLevels = new Image<T>[mipLevelCount];
+            Image<Rgba32>[] mipLevels = new Image<Rgba32>[mipLevelCount];
             mipLevels[0] = baseImage;
             int i = 1;
 
@@ -46,7 +46,7 @@ namespace Veldrid.ImageSharp
             {
                 int newWidth = Math.Max(1, currentWidth / 2);
                 int newHeight = Math.Max(1, currentHeight / 2);
-                Image<T> newImage = baseImage.Clone(context => context.Resize(newWidth, newHeight, KnownResamplers.Lanczos3));
+                Image<Rgba32> newImage = baseImage.Clone(context => context.Resize(newWidth, newHeight, KnownResamplers.Lanczos3));
                 Debug.Assert(i < mipLevelCount);
                 mipLevels[i] = newImage;
 

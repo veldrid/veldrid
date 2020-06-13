@@ -33,6 +33,8 @@ namespace Veldrid.Vk
         public VkFramebuffer(VkGraphicsDevice gd, ref FramebufferDescription description, bool isPresented)
             : base(description.DepthTarget, description.ColorTargets)
         {
+            ValidationHelpers.ValidateFramebufferDescription(description);
+
             _gd = gd;
 
             VkRenderPassCreateInfo renderPassCI = VkRenderPassCreateInfo.New();
@@ -159,20 +161,31 @@ namespace Veldrid.Vk
                 fbAttachmentsCount += 1;
             }
 
+            uint fbArraySize;
+
             VkImageView* fbAttachments = stackalloc VkImageView[(int)fbAttachmentsCount];
             for (int i = 0; i < colorAttachmentCount; i++)
             {
                 VkTexture vkColorTarget = Util.AssertSubtype<Texture, VkTexture>(description.ColorTargets[i].Target);
+                GetTextureArrayAttachmentData(description.ColorTargets[i], out uint arraySize, out uint arrayLayer);
+
+                VkImageViewType imageViewType = VkImageViewType.Image2D;
+
+                if (arraySize > 1)
+                {
+                    imageViewType = VkImageViewType.Image2DArray;
+                }
+
                 VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();
                 imageViewCI.image = vkColorTarget.OptimalDeviceImage;
                 imageViewCI.format = vkColorTarget.VkFormat;
-                imageViewCI.viewType = VkImageViewType.Image2D;
+                imageViewCI.viewType = imageViewType;
                 imageViewCI.subresourceRange = new VkImageSubresourceRange(
                     VkImageAspectFlags.Color,
                     description.ColorTargets[i].MipLevel,
                     1,
-                    description.ColorTargets[i].ArrayLayer,
-                    1);
+                    arrayLayer,
+                    arraySize);
                 VkImageView* dest = (fbAttachments + i);
                 VkResult result = vkCreateImageView(_gd.Device, ref imageViewCI, null, dest);
                 CheckResult(result);
@@ -183,21 +196,35 @@ namespace Veldrid.Vk
             if (description.DepthTarget != null)
             {
                 VkTexture vkDepthTarget = Util.AssertSubtype<Texture, VkTexture>(description.DepthTarget.Value.Target);
+                GetTextureArrayAttachmentData(description.DepthTarget.Value, out uint arraySize, out uint arrayLayer);
+                fbArraySize = arraySize;
+
+                VkImageViewType imageViewType = VkImageViewType.Image2D;
+
+                if (arraySize > 1)
+                {
+                    imageViewType = VkImageViewType.Image2DArray;
+                }
+
                 bool hasStencil = FormatHelpers.IsStencilFormat(vkDepthTarget.Format);
                 VkImageViewCreateInfo depthViewCI = VkImageViewCreateInfo.New();
                 depthViewCI.image = vkDepthTarget.OptimalDeviceImage;
                 depthViewCI.format = vkDepthTarget.VkFormat;
-                depthViewCI.viewType = description.DepthTarget.Value.Target.ArrayLayers == 1 ? VkImageViewType.Image2D : VkImageViewType.Image2DArray;
+                depthViewCI.viewType = imageViewType;
                 depthViewCI.subresourceRange = new VkImageSubresourceRange(
                     hasStencil ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil : VkImageAspectFlags.Depth,
                     description.DepthTarget.Value.MipLevel,
                     1,
-                    description.DepthTarget.Value.ArrayLayer,
-                    1);
+                    arrayLayer,
+                    arraySize);
                 VkImageView* dest = (fbAttachments + (fbAttachmentsCount - 1));
                 VkResult result = vkCreateImageView(_gd.Device, ref depthViewCI, null, dest);
                 CheckResult(result);
                 _attachmentViews.Add(*dest);
+            }
+            else
+            {
+                GetTextureArrayAttachmentData(description.ColorTargets[0], out fbArraySize, out _);
             }
 
             Texture dimTex;
@@ -226,7 +253,7 @@ namespace Veldrid.Vk
 
             fbCI.attachmentCount = fbAttachmentsCount;
             fbCI.pAttachments = fbAttachments;
-            fbCI.layers = 1;
+            fbCI.layers = fbArraySize;
             fbCI.renderPass = _renderPassNoClear;
 
             creationResult = vkCreateFramebuffer(_gd.Device, ref fbCI, null, out _deviceFramebuffer);
@@ -244,16 +271,24 @@ namespace Veldrid.Vk
             for (int i = 0; i < ColorTargets.Count; i++)
             {
                 FramebufferAttachment ca = ColorTargets[i];
+                GetTextureArrayAttachmentData(ca, out uint arraySize, out uint arrayLayer);
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
-                vkTex.SetImageLayout(ca.MipLevel, ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
+                for (uint j = 0; j < arraySize; j++)
+                {
+                    vkTex.SetImageLayout(ca.MipLevel, arrayLayer + j, VkImageLayout.ColorAttachmentOptimal);
+                }
             }
             if (DepthTarget != null)
             {
+                GetTextureArrayAttachmentData(DepthTarget.Value, out uint arraySize, out uint arrayLayer);
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
-                vkTex.SetImageLayout(
-                    DepthTarget.Value.MipLevel,
-                    DepthTarget.Value.ArrayLayer,
-                    VkImageLayout.DepthStencilAttachmentOptimal);
+                for (uint i = 0; i < arraySize; i++)
+                {
+                    vkTex.SetImageLayout(
+                        DepthTarget.Value.MipLevel,
+                        arrayLayer + i,
+                        VkImageLayout.DepthStencilAttachmentOptimal);
+                }
             }
         }
 
@@ -262,25 +297,27 @@ namespace Veldrid.Vk
             for (int i = 0; i < ColorTargets.Count; i++)
             {
                 FramebufferAttachment ca = ColorTargets[i];
+                GetTextureArrayAttachmentData(ca, out uint arraySize, out uint arrayLayer);
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
                 if ((vkTex.Usage & TextureUsage.Sampled) != 0)
                 {
                     vkTex.TransitionImageLayout(
                         cb,
                         ca.MipLevel, 1,
-                        ca.ArrayLayer, 1,
+                        arrayLayer, arraySize,
                         VkImageLayout.ShaderReadOnlyOptimal);
                 }
             }
             if (DepthTarget != null)
             {
+                GetTextureArrayAttachmentData(DepthTarget.Value, out uint arraySize, out uint arrayLayer);
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
                 if ((vkTex.Usage & TextureUsage.Sampled) != 0)
                 {
                     vkTex.TransitionImageLayout(
                         cb,
                         DepthTarget.Value.MipLevel, 1,
-                        DepthTarget.Value.ArrayLayer, 1,
+                        arrayLayer, arraySize,
                         VkImageLayout.ShaderReadOnlyOptimal);
                 }
             }

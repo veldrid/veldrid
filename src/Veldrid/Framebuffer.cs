@@ -48,7 +48,8 @@ namespace Veldrid
                 DepthTarget = new FramebufferAttachment(
                     depthAttachment.Target,
                     depthAttachment.ArrayLayer,
-                    depthAttachment.MipLevel);
+                    depthAttachment.MipLevel,
+                    depthAttachment.LayeredTarget);
             }
             FramebufferAttachment[] colorTargets = new FramebufferAttachment[colorTargetDescs.Count];
             for (int i = 0; i < colorTargets.Length; i++)
@@ -56,7 +57,8 @@ namespace Veldrid
                 colorTargets[i] = new FramebufferAttachment(
                     colorTargetDescs[i].Target,
                     colorTargetDescs[i].ArrayLayer,
-                    colorTargetDescs[i].MipLevel);
+                    colorTargetDescs[i].MipLevel,
+                    colorTargetDescs[i].LayeredTarget);
             }
 
             ColorTargets = colorTargets;

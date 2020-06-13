@@ -25,6 +25,8 @@ namespace Veldrid.OpenGL
         public OpenGLFramebuffer(OpenGLGraphicsDevice gd, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)
         {
+            ValidationHelpers.ValidateFramebufferDescription(description);
+
             _gd = gd;
         }
 
@@ -66,8 +68,19 @@ namespace Veldrid.OpenGL
                     CheckLastError();
 
                     TextureTarget textureTarget = GetTextureTarget (glTex, colorAttachment.ArrayLayer);
+                    bool isCubemap = (glTex.Usage & TextureUsage.Cubemap) != 0;
+                    bool isTextureArray = glTex.ArrayLayers != 1;
 
-                    if (glTex.ArrayLayers == 1)
+                    if (colorAttachment.LayeredTarget && (isCubemap || isTextureArray))
+                    {
+                        glFramebufferTexture(
+                          FramebufferTarget.Framebuffer,
+                          GLFramebufferAttachment.ColorAttachment0 + i,
+                          glTex.Texture,
+                          (int)DepthTarget.Value.MipLevel);
+                        CheckLastError();
+                    }
+                    else if (!isTextureArray)
                     {
                         glFramebufferTexture2D(
                             FramebufferTarget.Framebuffer,
@@ -111,7 +124,9 @@ namespace Veldrid.OpenGL
                 _gd.TextureSamplerManager.SetTextureTransient(depthTarget, glDepthTex.Texture);
                 CheckLastError();
 
-                depthTarget = GetTextureTarget (glDepthTex, DepthTarget.Value.ArrayLayer);
+                bool isCubemap = (glDepthTex.Usage & TextureUsage.Cubemap) != 0;
+                bool isTextureArray = glDepthTex.ArrayLayers != 1;
+                depthTarget = GetTextureTarget(glDepthTex, DepthTarget.Value.ArrayLayer);
 
                 GLFramebufferAttachment framebufferAttachment = GLFramebufferAttachment.DepthAttachment;
                 if (FormatHelpers.IsStencilFormat(glDepthTex.Format))
@@ -119,7 +134,16 @@ namespace Veldrid.OpenGL
                     framebufferAttachment = GLFramebufferAttachment.DepthStencilAttachment;
                 }
 
-                if (glDepthTex.ArrayLayers == 1)
+                if (DepthTarget.Value.LayeredTarget && (isCubemap || isTextureArray))
+                {
+                    glFramebufferTexture(
+                      FramebufferTarget.Framebuffer,
+                      framebufferAttachment,
+                      glDepthTex.Texture,
+                      (int)DepthTarget.Value.MipLevel);
+                    CheckLastError();
+                }
+                else if (glDepthTex.ArrayLayers == 1)
                 {
                     glFramebufferTexture2D(
                         FramebufferTarget.Framebuffer,
@@ -139,7 +163,6 @@ namespace Veldrid.OpenGL
                         (int)DepthTarget.Value.ArrayLayer);
                     CheckLastError();
                 }
-
             }
 
             FramebufferErrorCode errorCode = glCheckFramebufferStatus(FramebufferTarget.Framebuffer);

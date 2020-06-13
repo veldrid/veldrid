@@ -281,6 +281,46 @@ namespace Veldrid.Vk
                 0, null,
                 1, &barrier);
         }
+
+        public static void GetTextureArrayAttachmentData(FramebufferAttachmentDescription fbAttachment, out uint arraySize, out uint arrayLayer)
+        {
+            VkTexture vkTexture = Util.AssertSubtype<Texture, VkTexture>(fbAttachment.Target);
+            bool isCubemap = (vkTexture.Usage & TextureUsage.Cubemap) != 0;
+
+            arraySize = 1;
+            arrayLayer = fbAttachment.ArrayLayer;
+
+            if (fbAttachment.LayeredTarget)
+            {
+                arraySize = vkTexture.ArrayLayers;
+                arrayLayer = 0;
+
+                if (isCubemap)
+                {
+                    arraySize *= 6;
+                }
+            }
+        }
+
+        public static void GetTextureArrayAttachmentData (FramebufferAttachment fbAttachment, out uint arraySize, out uint arrayLayer)
+        {
+            VkTexture vkTexture = Util.AssertSubtype<Texture, VkTexture>(fbAttachment.Target);
+            bool isCubemap = (vkTexture.Usage & TextureUsage.Cubemap) != 0;
+
+            arraySize = 1;
+            arrayLayer = fbAttachment.ArrayLayer;
+
+            if (fbAttachment.LayeredTarget)
+            {
+                arraySize = vkTexture.ArrayLayers;
+                arrayLayer = 0;
+
+                if (isCubemap)
+                {
+                    arraySize *= 6;
+                }
+            }
+        }
     }
 
     internal unsafe static class VkPhysicalDeviceMemoryPropertiesEx

@@ -118,10 +118,10 @@ namespace Veldrid.D3D11
                     Usage = Vortice.DXGI.Usage.Backbuffer | Vortice.DXGI.Usage.RenderTargetOutput,
                 };
 
-                // Retrive the SharpDX.DXGI device associated to the Direct3D device.
+                // Retrive the Vortice.DXGI device associated to the Direct3D device.
                 using (IDXGIDevice3 dxgiDevice = _device.QueryInterface<IDXGIDevice3>())
                 {
-                    // Get the SharpDX.DXGI factory automatically created when initializing the Direct3D device.
+                    // Get the Vortice.DXGI factory automatically created when initializing the Direct3D device.
                     using (IDXGIFactory2 dxgiFactory = dxgiDevice.Adapter.GetParent<IDXGIFactory2>())
                     {
                         // Create the swap chain and get the highest version available.

@@ -938,8 +938,8 @@ namespace Veldrid
         /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
-        /// <param name="swapChainPanel">A COM object which must implement the <see cref="SharpDX.DXGI.ISwapChainPanelNative"/>
-        /// or <see cref="SharpDX.DXGI.ISwapChainBackgroundPanelNative"/> interface. Generally, this should be a SwapChainPanel
+        /// <param name="swapChainPanel">A COM object which must implement the <see cref="Vortice.DXGI.ISwapChainPanelNative"/>
+        /// or <see cref="Vortice.DXGI.ISwapChainBackgroundPanelNative"/> interface. Generally, this should be a SwapChainPanel
         /// or SwapChainBackgroundPanel contained in your application window.</param>
         /// <param name="renderWidth">The renderable width of the swapchain panel.</param>
         /// <param name="renderHeight">The renderable height of the swapchain panel.</param>

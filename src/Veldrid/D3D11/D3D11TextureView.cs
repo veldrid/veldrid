@@ -1,4 +1,4 @@
-﻿using SharpDX.Direct3D11;
+﻿using Vortice.Direct3D11;
 using System;
 
 namespace Veldrid.D3D11
@@ -8,13 +8,13 @@ namespace Veldrid.D3D11
         private string _name;
         private bool _disposed;
 
-        public ShaderResourceView ShaderResourceView { get; }
-        public UnorderedAccessView UnorderedAccessView { get; }
+        public ID3D11ShaderResourceView ShaderResourceView { get; }
+        public ID3D11UnorderedAccessView UnorderedAccessView { get; }
 
         public D3D11TextureView(D3D11GraphicsDevice gd, ref TextureViewDescription description)
             : base(ref description)
         {
-            Device device = gd.Device;
+            ID3D11Device device = gd.Device;
             D3D11Texture d3dTex = Util.AssertSubtype<Texture, D3D11Texture>(description.Target);
             ShaderResourceViewDescription srvDesc = D3D11Util.GetSrvDesc(
                 d3dTex,
@@ -23,7 +23,7 @@ namespace Veldrid.D3D11
                 description.BaseArrayLayer,
                 description.ArrayLayers,
                 Format);
-            ShaderResourceView = new ShaderResourceView(device, d3dTex.DeviceTexture, srvDesc);
+            ShaderResourceView = device.CreateShaderResourceView(d3dTex.DeviceTexture, srvDesc);
 
             if ((d3dTex.Usage & TextureUsage.Storage) == TextureUsage.Storage)
             {
@@ -40,12 +40,12 @@ namespace Veldrid.D3D11
                     {
                         if (d3dTex.Type == TextureType.Texture1D)
                         {
-                            uavDesc.Dimension = UnorderedAccessViewDimension.Texture1D;
+                            uavDesc.ViewDimension = UnorderedAccessViewDimension.Texture1D;
                             uavDesc.Texture1D.MipSlice = (int)description.BaseMipLevel;
                         }
                         else
                         {
-                            uavDesc.Dimension = UnorderedAccessViewDimension.Texture2D;
+                            uavDesc.ViewDimension = UnorderedAccessViewDimension.Texture2D;
                             uavDesc.Texture2D.MipSlice = (int)description.BaseMipLevel;
                         }
                     }
@@ -53,14 +53,14 @@ namespace Veldrid.D3D11
                     {
                         if (d3dTex.Type == TextureType.Texture1D)
                         {
-                            uavDesc.Dimension = UnorderedAccessViewDimension.Texture1DArray;
+                            uavDesc.ViewDimension = UnorderedAccessViewDimension.Texture1DArray;
                             uavDesc.Texture1DArray.MipSlice = (int)description.BaseMipLevel;
                             uavDesc.Texture1DArray.FirstArraySlice = (int)description.BaseArrayLayer;
                             uavDesc.Texture1DArray.ArraySize = (int)description.ArrayLayers;
                         }
                         else
                         {
-                            uavDesc.Dimension = UnorderedAccessViewDimension.Texture2DArray;
+                            uavDesc.ViewDimension = UnorderedAccessViewDimension.Texture2DArray;
                             uavDesc.Texture2DArray.MipSlice = (int)description.BaseMipLevel;
                             uavDesc.Texture2DArray.FirstArraySlice = (int)description.BaseArrayLayer;
                             uavDesc.Texture2DArray.ArraySize = (int)description.ArrayLayers;
@@ -69,13 +69,13 @@ namespace Veldrid.D3D11
                 }
                 else
                 {
-                    uavDesc.Dimension = UnorderedAccessViewDimension.Texture3D;
+                    uavDesc.ViewDimension = UnorderedAccessViewDimension.Texture3D;
                     uavDesc.Texture3D.MipSlice = (int)description.BaseMipLevel;
                     uavDesc.Texture3D.FirstWSlice = (int)description.BaseArrayLayer;
                     uavDesc.Texture3D.WSize = (int)description.ArrayLayers;
                 }
 
-                UnorderedAccessView = new UnorderedAccessView(device, d3dTex.DeviceTexture, uavDesc);
+                UnorderedAccessView = device.CreateUnorderedAccessView(d3dTex.DeviceTexture, uavDesc);
             }
         }
 

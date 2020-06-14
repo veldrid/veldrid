@@ -15,16 +15,19 @@
 
   <ItemGroup>
     <PackageReference Include="System.Buffers" Version="4.4.0" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0" />
-    <PackageReference Include="NativeLibraryLoader" Version="$(NativeLibraryLoaderVersion)" />
-
-    <PackageReference Include="SharpDX" Version="4.0.1" Condition="'$(ExcludeD3D11)' != 'true'" />
-    <PackageReference Include="SharpDX.D3DCompiler" Version="4.0.1" Condition="'$(ExcludeD3D11)' != 'true'" />
-    <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" Condition="'$(ExcludeD3D11)' != 'true'" />
-    <PackageReference Include="SharpDX.DXGI" Version="4.0.1" Condition="'$(ExcludeD3D11)' != 'true'" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.0" />
+    <PackageReference Include="NativeLibraryLoader" Version="1.0.12" />
 
     <PackageReference Include="Vk" Version="1.0.22" Condition="'$(ExcludeVulkan)' != 'true'" />
+
+    <PackageReference Include="Vortice.D3DCompiler" Version="1.6.0" />
+
+    <PackageReference Include="Vortice.Direct3D11" Version="1.6.0" />
+
+    <PackageReference Include="Vortice.Dxc" Version="1.6.0" />
+
+    <PackageReference Include="Vortice.DXGI" Version="1.6.0" />
 
     <ProjectReference Include="..\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj" Condition="'$(ExcludeMetal)' != 'true'" />
 

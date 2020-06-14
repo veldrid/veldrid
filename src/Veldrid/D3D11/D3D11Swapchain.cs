@@ -1,16 +1,18 @@
-﻿using SharpDX;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
+﻿using Vortice;
+using Vortice.Direct3D11;
+using Vortice.DXGI;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using SharpGen.Runtime;
 
 namespace Veldrid.D3D11
 {
     internal class D3D11Swapchain : Swapchain
     {
-        private readonly SharpDX.Direct3D11.Device _device;
+        private readonly ID3D11Device _device;
         private readonly PixelFormat? _depthFormat;
-        private readonly SwapChain _dxgiSwapChain;
+        private readonly IDXGISwapChain _dxgiSwapChain;
         private bool _vsync;
         private int _syncInterval;
         private D3D11Framebuffer _framebuffer;
@@ -23,7 +25,33 @@ namespace Veldrid.D3D11
 
         public override Framebuffer Framebuffer => _framebuffer;
 
-        public override string Name { get => _dxgiSwapChain.DebugName; set => _dxgiSwapChain.DebugName = value; }
+        public override string Name
+        {
+            get
+            {
+                unsafe
+                {
+                    byte* pname = stackalloc byte[1024];
+                    int size = 1024 - 1;
+                    _dxgiSwapChain.GetPrivateData(CommonGuid.DebugObjectName, ref size, new IntPtr(pname));
+                    pname[size] = 0;
+                    return Marshal.PtrToStringAnsi(new IntPtr(pname));
+                }
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    _dxgiSwapChain.SetPrivateData(CommonGuid.DebugObjectName, 0, IntPtr.Zero);
+                }
+                else
+                {
+                    var namePtr = Marshal.StringToHGlobalAnsi(value);
+                    _dxgiSwapChain.SetPrivateData(CommonGuid.DebugObjectName, value.Length, namePtr);
+                    Marshal.FreeHGlobal(namePtr);
+                }
+            }
+        }
 
         public override bool SyncToVerticalBlank
         {
@@ -36,11 +64,11 @@ namespace Veldrid.D3D11
 
         private readonly Format _colorFormat;
 
-        public SwapChain DxgiSwapChain => _dxgiSwapChain;
+        public IDXGISwapChain DxgiSwapChain => _dxgiSwapChain;
 
         public int SyncInterval => _syncInterval;
 
-        public D3D11Swapchain(SharpDX.Direct3D11.Device device, ref SwapchainDescription description)
+        public D3D11Swapchain(ID3D11Device device, ref SwapchainDescription description)
         {
             _device = device;
             _depthFormat = description.DepthFormat;
@@ -56,19 +84,19 @@ namespace Veldrid.D3D11
                 {
                     BufferCount = 2,
                     IsWindowed = true,
-                    ModeDescription = new ModeDescription(
-                        (int)description.Width, (int)description.Height, new Rational(60, 1), _colorFormat),
-                    OutputHandle = win32Source.Hwnd,
+                    BufferDescription = new ModeDescription(
+                        (int)description.Width, (int)description.Height, _colorFormat),
+                    OutputWindow = win32Source.Hwnd,
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.Discard,
-                    Usage = Usage.RenderTargetOutput
+                    Usage = Vortice.DXGI.Usage.RenderTargetOutput
                 };
 
-                using (SharpDX.DXGI.Device dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device>())
+                using (IDXGIDevice dxgiDevice = _device.QueryInterface<IDXGIDevice>())
                 {
-                    using (Factory dxgiFactory = dxgiDevice.Adapter.GetParent<Factory>())
+                    using (IDXGIFactory dxgiFactory = dxgiDevice.Adapter.GetParent<IDXGIFactory>())
                     {
-                        _dxgiSwapChain = new SwapChain(dxgiFactory, _device, dxgiSCDesc);
+                        _dxgiSwapChain = dxgiFactory.CreateSwapChain(_device, dxgiSCDesc);
                         dxgiFactory.MakeWindowAssociation(win32Source.Hwnd, WindowAssociationFlags.IgnoreAltEnter);
                     }
                 }
@@ -87,38 +115,38 @@ namespace Veldrid.D3D11
                     Width = (int)(description.Width * _pixelScale),
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.FlipSequential,
-                    Usage = Usage.BackBuffer | Usage.RenderTargetOutput,
+                    Usage = Vortice.DXGI.Usage.Backbuffer | Vortice.DXGI.Usage.RenderTargetOutput,
                 };
 
                 // Retrive the SharpDX.DXGI device associated to the Direct3D device.
-                using (SharpDX.DXGI.Device3 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device3>())
+                using (IDXGIDevice3 dxgiDevice = _device.QueryInterface<IDXGIDevice3>())
                 {
                     // Get the SharpDX.DXGI factory automatically created when initializing the Direct3D device.
-                    using (Factory2 dxgiFactory = dxgiDevice.Adapter.GetParent<Factory2>())
+                    using (IDXGIFactory2 dxgiFactory = dxgiDevice.Adapter.GetParent<IDXGIFactory2>())
                     {
                         // Create the swap chain and get the highest version available.
-                        using (SwapChain1 swapChain1 = new SwapChain1(dxgiFactory, _device, ref swapChainDescription))
+                        using (IDXGISwapChain1 swapChain1 = dxgiFactory.CreateSwapChainForComposition(_device, swapChainDescription))
                         {
-                            _dxgiSwapChain = swapChain1.QueryInterface<SwapChain2>();
+                            _dxgiSwapChain = swapChain1.QueryInterface<IDXGISwapChain2>();
                         }
                     }
                 }
 
                 ComObject co = new ComObject(uwpSource.SwapChainPanelNative);
 
-                ISwapChainPanelNative swapchainPanelNative = co.QueryInterfaceOrNull<ISwapChainPanelNative>();
-                if (swapchainPanelNative != null)
-                {
-                    swapchainPanelNative.SwapChain = _dxgiSwapChain;
-                }
-                else
-                {
-                    ISwapChainBackgroundPanelNative bgPanelNative = co.QueryInterfaceOrNull<ISwapChainBackgroundPanelNative>();
-                    if (bgPanelNative != null)
-                    {
-                        bgPanelNative.SwapChain = _dxgiSwapChain;
-                    }
-                }
+                //ISwapChainPanelNative swapchainPanelNative = co.QueryInterfaceOrNull<Vortice.DXGI.SwapC ISwapChainPanelNative>();
+                //if (swapchainPanelNative != null)
+                //{
+                //    swapchainPanelNative.SwapChain = _dxgiSwapChain;
+                //}
+                //else
+                //{
+                //    ISwapChainBackgroundPanelNative bgPanelNative = co.QueryInterfaceOrNull<ISwapChainBackgroundPanelNative>();
+                //    if (bgPanelNative != null)
+                //    {
+                //        bgPanelNative.SwapChain = _dxgiSwapChain;
+                //    }
+                //}
             }
 
             Resize(description.Width, description.Height);
@@ -157,7 +185,7 @@ namespace Veldrid.D3D11
             }
 
             // Get the backbuffer from the swapchain
-            using (Texture2D backBufferTexture = _dxgiSwapChain.GetBackBuffer<Texture2D>(0))
+            using (ID3D11Texture2D backBufferTexture = _dxgiSwapChain.GetBuffer<ID3D11Texture2D>(0))
             {
                 if (_depthFormat != null)
                 {

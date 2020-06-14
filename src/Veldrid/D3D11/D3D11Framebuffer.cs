@@ -1,5 +1,5 @@
-﻿using SharpDX.Direct3D11;
-using System;
+﻿using System;
+using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {
@@ -8,15 +8,15 @@ namespace Veldrid.D3D11
         private string _name;
         private bool _disposed;
 
-        public RenderTargetView[] RenderTargetViews { get; }
-        public DepthStencilView DepthStencilView { get; }
+        public ID3D11RenderTargetView[] RenderTargetViews { get; }
+        public ID3D11DepthStencilView DepthStencilView { get; }
 
         // Only non-null if this is the Framebuffer for a Swapchain.
         internal D3D11Swapchain Swapchain { get; set; }
 
         public override bool IsDisposed => _disposed;
 
-        public D3D11Framebuffer(Device device, ref FramebufferDescription description)
+        public D3D11Framebuffer(ID3D11Device device, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)
         {
             if (description.DepthTarget != null)
@@ -30,37 +30,37 @@ namespace Veldrid.D3D11
                 {
                     if (d3dDepthTarget.SampleCount == TextureSampleCount.Count1)
                     {
-                        dsvDesc.Dimension = DepthStencilViewDimension.Texture2D;
+                        dsvDesc.ViewDimension = DepthStencilViewDimension.Texture2D;
                         dsvDesc.Texture2D.MipSlice = (int)description.DepthTarget.Value.MipLevel;
                     }
                     else
                     {
-                        dsvDesc.Dimension = DepthStencilViewDimension.Texture2DMultisampled;
+                        dsvDesc.ViewDimension = DepthStencilViewDimension.Texture2DMultisampled;
                     }
                 }
                 else
                 {
                     if (d3dDepthTarget.SampleCount == TextureSampleCount.Count1)
                     {
-                        dsvDesc.Dimension = DepthStencilViewDimension.Texture2DArray;
+                        dsvDesc.ViewDimension = DepthStencilViewDimension.Texture2DArray;
                         dsvDesc.Texture2DArray.FirstArraySlice = (int)description.DepthTarget.Value.ArrayLayer;
                         dsvDesc.Texture2DArray.ArraySize = 1;
                         dsvDesc.Texture2DArray.MipSlice = (int)description.DepthTarget.Value.MipLevel;
                     }
                     else
                     {
-                        dsvDesc.Dimension = DepthStencilViewDimension.Texture2DMultisampledArray;
+                        dsvDesc.ViewDimension = DepthStencilViewDimension.Texture2DMultisampledArray;
                         dsvDesc.Texture2DMSArray.FirstArraySlice = (int)description.DepthTarget.Value.ArrayLayer;
                         dsvDesc.Texture2DMSArray.ArraySize = 1;
                     }
                 }
 
-                DepthStencilView = new DepthStencilView(device, d3dDepthTarget.DeviceTexture, dsvDesc);
+                DepthStencilView = device.CreateDepthStencilView(d3dDepthTarget.DeviceTexture, dsvDesc);
             }
 
             if (description.ColorTargets != null && description.ColorTargets.Length > 0)
             {
-                RenderTargetViews = new RenderTargetView[description.ColorTargets.Length];
+                RenderTargetViews = new ID3D11RenderTargetView[description.ColorTargets.Length];
                 for (int i = 0; i < RenderTargetViews.Length; i++)
                 {
                     D3D11Texture d3dColorTarget = Util.AssertSubtype<Texture, D3D11Texture>(description.ColorTargets[i].Target);
@@ -72,8 +72,8 @@ namespace Veldrid.D3D11
                     {
                         if (d3dColorTarget.SampleCount == TextureSampleCount.Count1)
                         {
-                            rtvDesc.Dimension = RenderTargetViewDimension.Texture2DArray;
-                            rtvDesc.Texture2DArray = new RenderTargetViewDescription.Texture2DArrayResource
+                            rtvDesc.ViewDimension = RenderTargetViewDimension.Texture2DArray;
+                            rtvDesc.Texture2DArray = new Texture2DArrayRenderTargetView
                             {
                                 ArraySize = 1,
                                 FirstArraySlice = (int)description.ColorTargets[i].ArrayLayer,
@@ -82,8 +82,8 @@ namespace Veldrid.D3D11
                         }
                         else
                         {
-                            rtvDesc.Dimension = RenderTargetViewDimension.Texture2DMultisampledArray;
-                            rtvDesc.Texture2DMSArray = new RenderTargetViewDescription.Texture2DMultisampledArrayResource
+                            rtvDesc.ViewDimension = RenderTargetViewDimension.Texture2DMultisampledArray;
+                            rtvDesc.Texture2DMSArray = new Texture2DMultisampledArrayRenderTargetView
                             {
                                 ArraySize = 1,
                                 FirstArraySlice = (int)description.ColorTargets[i].ArrayLayer
@@ -94,20 +94,20 @@ namespace Veldrid.D3D11
                     {
                         if (d3dColorTarget.SampleCount == TextureSampleCount.Count1)
                         {
-                            rtvDesc.Dimension = RenderTargetViewDimension.Texture2D;
+                            rtvDesc.ViewDimension = RenderTargetViewDimension.Texture2D;
                             rtvDesc.Texture2D.MipSlice = (int)description.ColorTargets[i].MipLevel;
                         }
                         else
                         {
-                            rtvDesc.Dimension = RenderTargetViewDimension.Texture2DMultisampled;
+                            rtvDesc.ViewDimension = RenderTargetViewDimension.Texture2DMultisampled;
                         }
                     }
-                    RenderTargetViews[i] = new RenderTargetView(device, d3dColorTarget.DeviceTexture, rtvDesc);
+                    RenderTargetViews[i] = device.CreateRenderTargetView(d3dColorTarget.DeviceTexture, rtvDesc);
                 }
             }
             else
             {
-                RenderTargetViews = Array.Empty<RenderTargetView>();
+                RenderTargetViews = Array.Empty<ID3D11RenderTargetView>();
             }
         }
 
@@ -133,7 +133,7 @@ namespace Veldrid.D3D11
             if (!_disposed)
             {
                 DepthStencilView?.Dispose();
-                foreach (RenderTargetView rtv in RenderTargetViews)
+                foreach (ID3D11RenderTargetView rtv in RenderTargetViews)
                 {
                     rtv.Dispose();
                 }

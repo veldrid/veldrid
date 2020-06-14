@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using SharpDX.Direct3D;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
+using Vortice.Direct3D11;
+using Vortice.DXGI;
 
 namespace Veldrid.D3D11
 {
@@ -311,7 +310,7 @@ namespace Veldrid.D3D11
             {
                 usage |= TextureUsage.Cubemap;
             }
-            if ((optionFlags & ResourceOptionFlags.GenerateMipMaps) != 0)
+            if ((optionFlags & ResourceOptionFlags.GenerateMips) != 0)
             {
                 usage |= TextureUsage.GenerateMipmaps;
             }
@@ -343,34 +342,34 @@ namespace Veldrid.D3D11
             }
         }
 
-        internal static BlendOption VdToD3D11BlendOption(BlendFactor factor)
+        internal static Blend VdToD3D11Blend(BlendFactor factor)
         {
             switch (factor)
             {
                 case BlendFactor.Zero:
-                    return BlendOption.Zero;
+                    return Blend.Zero;
                 case BlendFactor.One:
-                    return BlendOption.One;
+                    return Blend.One;
                 case BlendFactor.SourceAlpha:
-                    return BlendOption.SourceAlpha;
+                    return Blend.SourceAlpha;
                 case BlendFactor.InverseSourceAlpha:
-                    return BlendOption.InverseSourceAlpha;
+                    return Blend.InverseSourceAlpha;
                 case BlendFactor.DestinationAlpha:
-                    return BlendOption.DestinationAlpha;
+                    return Blend.DestinationAlpha;
                 case BlendFactor.InverseDestinationAlpha:
-                    return BlendOption.InverseDestinationAlpha;
+                    return Blend.InverseDestinationAlpha;
                 case BlendFactor.SourceColor:
-                    return BlendOption.SourceColor;
+                    return Blend.SourceColor;
                 case BlendFactor.InverseSourceColor:
-                    return BlendOption.InverseSourceColor;
+                    return Blend.InverseSourceColor;
                 case BlendFactor.DestinationColor:
-                    return BlendOption.DestinationColor;
+                    return Blend.DestinationColor;
                 case BlendFactor.InverseDestinationColor:
-                    return BlendOption.InverseDestinationColor;
+                    return Blend.InverseDestinationColor;
                 case BlendFactor.BlendFactor:
-                    return BlendOption.BlendFactor;
+                    return Blend.BlendFactor;
                 case BlendFactor.InverseBlendFactor:
-                    return BlendOption.BlendFactor;
+                    return Blend.BlendFactor;
                 default:
                     throw Illegal.Value<BlendFactor>();
             }
@@ -389,26 +388,26 @@ namespace Veldrid.D3D11
             }
         }
 
-        internal static SharpDX.Direct3D11.StencilOperation VdToD3D11StencilOperation(StencilOperation op)
+        internal static Vortice.Direct3D11.StencilOperation VdToD3D11StencilOperation(StencilOperation op)
         {
             switch (op)
             {
                 case StencilOperation.Keep:
-                    return SharpDX.Direct3D11.StencilOperation.Keep;
+                    return Vortice.Direct3D11.StencilOperation.Keep;
                 case StencilOperation.Zero:
-                    return SharpDX.Direct3D11.StencilOperation.Zero;
+                    return Vortice.Direct3D11.StencilOperation.Zero;
                 case StencilOperation.Replace:
-                    return SharpDX.Direct3D11.StencilOperation.Replace;
+                    return Vortice.Direct3D11.StencilOperation.Replace;
                 case StencilOperation.IncrementAndClamp:
-                    return SharpDX.Direct3D11.StencilOperation.IncrementAndClamp;
+                    return Vortice.Direct3D11.StencilOperation.IncrSat;
                 case StencilOperation.DecrementAndClamp:
-                    return SharpDX.Direct3D11.StencilOperation.DecrementAndClamp;
+                    return Vortice.Direct3D11.StencilOperation.DecrSat;
                 case StencilOperation.Invert:
-                    return SharpDX.Direct3D11.StencilOperation.Invert;
+                    return Vortice.Direct3D11.StencilOperation.InverseErt;
                 case StencilOperation.IncrementAndWrap:
-                    return SharpDX.Direct3D11.StencilOperation.Increment;
+                    return Vortice.Direct3D11.StencilOperation.Incr;
                 case StencilOperation.DecrementAndWrap:
-                    return SharpDX.Direct3D11.StencilOperation.Decrement;
+                    return Vortice.Direct3D11.StencilOperation.Decr;
                 default:
                     throw Illegal.Value<StencilOperation>();
             }
@@ -553,9 +552,9 @@ namespace Veldrid.D3D11
                 case BlendFunction.ReverseSubtract:
                     return BlendOperation.ReverseSubtract;
                 case BlendFunction.Minimum:
-                    return BlendOperation.Minimum;
+                    return BlendOperation.Min;
                 case BlendFunction.Maximum:
-                    return BlendOperation.Maximum;
+                    return BlendOperation.Max;
                 default:
                     throw Illegal.Value<BlendFunction>();
             }
@@ -588,35 +587,35 @@ namespace Veldrid.D3D11
             }
         }
 
-        internal static SharpDX.Direct3D11.MapMode VdToD3D11MapMode(bool isDynamic, MapMode mode)
+        internal static Vortice.Direct3D11.MapMode VdToD3D11MapMode(bool isDynamic, MapMode mode)
         {
             switch (mode)
             {
                 case MapMode.Read:
-                    return SharpDX.Direct3D11.MapMode.Read;
+                    return Vortice.Direct3D11.MapMode.Read;
                 case MapMode.Write:
-                    return isDynamic ? SharpDX.Direct3D11.MapMode.WriteDiscard : SharpDX.Direct3D11.MapMode.Write;
+                    return isDynamic ? Vortice.Direct3D11.MapMode.WriteDiscard : Vortice.Direct3D11.MapMode.Write;
                 case MapMode.ReadWrite:
-                    return SharpDX.Direct3D11.MapMode.ReadWrite;
+                    return Vortice.Direct3D11.MapMode.ReadWrite;
                 default:
                     throw Illegal.Value<MapMode>();
             }
         }
 
-        internal static SharpDX.Direct3D.PrimitiveTopology VdToD3D11PrimitiveTopology(PrimitiveTopology primitiveTopology)
+        internal static Vortice.Direct3D.PrimitiveTopology VdToD3D11PrimitiveTopology(PrimitiveTopology primitiveTopology)
         {
             switch (primitiveTopology)
             {
                 case PrimitiveTopology.TriangleList:
-                    return SharpDX.Direct3D.PrimitiveTopology.TriangleList;
+                    return Vortice.Direct3D.PrimitiveTopology.TriangleList;
                 case PrimitiveTopology.TriangleStrip:
-                    return SharpDX.Direct3D.PrimitiveTopology.TriangleStrip;
+                    return Vortice.Direct3D.PrimitiveTopology.TriangleStrip;
                 case PrimitiveTopology.LineList:
-                    return SharpDX.Direct3D.PrimitiveTopology.LineList;
+                    return Vortice.Direct3D.PrimitiveTopology.LineList;
                 case PrimitiveTopology.LineStrip:
-                    return SharpDX.Direct3D.PrimitiveTopology.LineStrip;
+                    return Vortice.Direct3D.PrimitiveTopology.LineStrip;
                 case PrimitiveTopology.PointList:
-                    return SharpDX.Direct3D.PrimitiveTopology.PointList;
+                    return Vortice.Direct3D.PrimitiveTopology.PointList;
                 default:
                     throw Illegal.Value<PrimitiveTopology>();
             }
@@ -722,26 +721,26 @@ namespace Veldrid.D3D11
             }
         }
 
-        internal static Comparison VdToD3D11Comparison(ComparisonKind comparisonKind)
+        internal static ComparisonFunction VdToD3D11ComparisonFunc(ComparisonKind comparisonKind)
         {
             switch (comparisonKind)
             {
                 case ComparisonKind.Never:
-                    return Comparison.Never;
+                    return ComparisonFunction.Never;
                 case ComparisonKind.Less:
-                    return Comparison.Less;
+                    return ComparisonFunction.Less;
                 case ComparisonKind.Equal:
-                    return Comparison.Equal;
+                    return ComparisonFunction.Equal;
                 case ComparisonKind.LessEqual:
-                    return Comparison.LessEqual;
+                    return ComparisonFunction.LessEqual;
                 case ComparisonKind.Greater:
-                    return Comparison.Greater;
+                    return ComparisonFunction.Greater;
                 case ComparisonKind.NotEqual:
-                    return Comparison.NotEqual;
+                    return ComparisonFunction.NotEqual;
                 case ComparisonKind.GreaterEqual:
-                    return Comparison.GreaterEqual;
+                    return ComparisonFunction.GreaterEqual;
                 case ComparisonKind.Always:
-                    return Comparison.Always;
+                    return ComparisonFunction.Always;
                 default:
                     throw Illegal.Value<ComparisonKind>();
             }

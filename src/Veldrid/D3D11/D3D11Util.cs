@@ -1,4 +1,5 @@
-﻿using Vortice.Direct3D11;
+﻿using System;
+using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {
@@ -86,6 +87,28 @@ namespace Veldrid.D3D11
             }
 
             return srvDesc;
+        }
+
+        internal static void SetUnorderedAccessViewsKeepRTV(this ID3D11DeviceContext context, int startSlot, int numBuffers, IntPtr unorderedAccessBuffer, IntPtr uavCount)
+        {
+            context.OMSetRenderTargetsAndUnorderedAccessViews(
+                ID3D11DeviceContext.KeepRenderTargetsAndDepthStencil,
+                IntPtr.Zero, null, startSlot, numBuffers,
+                unorderedAccessBuffer, uavCount);
+        }
+
+        internal static unsafe void SetUnorderedAccessViews(this ID3D11DeviceContext context, int startSlot, ID3D11UnorderedAccessView[] unorderedAccessViews, int[] uavInitialCounts)
+        {
+            IntPtr* unorderedAccessViewsOut_ = (IntPtr*)0;
+            if (unorderedAccessViews != null)
+            {
+                IntPtr* unorderedAccessViewsOut__ = stackalloc IntPtr[unorderedAccessViews.Length];
+                unorderedAccessViewsOut_ = unorderedAccessViewsOut__;
+                for (int i = 0; i < unorderedAccessViews.Length; i++)
+                    unorderedAccessViewsOut_[i] = (unorderedAccessViews[i] == null) ? IntPtr.Zero : unorderedAccessViews[i].NativePointer;
+            }
+            fixed (void* puav = uavInitialCounts)
+                context.SetUnorderedAccessViewsKeepRTV(startSlot, unorderedAccessViews != null ? unorderedAccessViews.Length : 0, (IntPtr)unorderedAccessViewsOut_, (IntPtr)puav);
         }
     }
 }

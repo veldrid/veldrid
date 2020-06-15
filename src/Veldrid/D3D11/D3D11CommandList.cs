@@ -1026,8 +1026,7 @@ namespace Veldrid.D3D11
             }
             else
             {
-                //TODO:
-                //_context.OMSetRenderTargetsAndUnorderedAccessViews(actualSlot, uav);
+                _context.SetUnorderedAccessViews(actualSlot, new[] { uav }, null);
             }
         }
 
@@ -1057,8 +1056,7 @@ namespace Veldrid.D3D11
                     }
                     else
                     {
-                        //TODO:
-                        //_context.OMSetRenderTargetsAndUnorderedAccessViews(slot, null);
+                        _context.SetUnorderedAccessViews(slot, new ID3D11UnorderedAccessView[] { null }, new[] { -1 });
                     }
 
                     list.RemoveAt(i);

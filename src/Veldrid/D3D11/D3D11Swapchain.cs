@@ -134,19 +134,19 @@ namespace Veldrid.D3D11
 
                 ComObject co = new ComObject(uwpSource.SwapChainPanelNative);
 
-                //ISwapChainPanelNative swapchainPanelNative = co.QueryInterfaceOrNull<Vortice.DXGI.SwapC ISwapChainPanelNative>();
-                //if (swapchainPanelNative != null)
-                //{
-                //    swapchainPanelNative.SwapChain = _dxgiSwapChain;
-                //}
-                //else
-                //{
-                //    ISwapChainBackgroundPanelNative bgPanelNative = co.QueryInterfaceOrNull<ISwapChainBackgroundPanelNative>();
-                //    if (bgPanelNative != null)
-                //    {
-                //        bgPanelNative.SwapChain = _dxgiSwapChain;
-                //    }
-                //}
+                ISwapChainPanelNative swapchainPanelNative = co.QueryInterfaceOrNull<ISwapChainPanelNative>();
+                if (swapchainPanelNative != null)
+                {
+                    swapchainPanelNative.SetSwapChain(_dxgiSwapChain);
+                }
+                else
+                {
+                    ISwapChainBackgroundPanelNative bgPanelNative = co.QueryInterfaceOrNull<ISwapChainBackgroundPanelNative>();
+                    if (bgPanelNative != null)
+                    {
+                        bgPanelNative.SetSwapChain(_dxgiSwapChain);
+                    }
+                }
             }
 
             Resize(description.Width, description.Height);

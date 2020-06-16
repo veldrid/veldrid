@@ -420,7 +420,7 @@ namespace Veldrid.D3D11
                 }
                 else
                 {
-                    System.Buffer.MemoryCopy(
+                    Buffer.MemoryCopy(
                         source.ToPointer(),
                         (byte*)mr.Data + bufferOffsetInBytes,
                         buffer.SizeInBytes,
@@ -436,8 +436,8 @@ namespace Veldrid.D3D11
                 lock (_immediateContextLock)
                 {
                     _immediateContext.CopySubresourceRegion(
-                        staging.Buffer, 0, (int)bufferOffsetInBytes, 0, 0,
-                        d3dBuffer.Buffer, 0,
+                        d3dBuffer.Buffer, 0, (int)bufferOffsetInBytes, 0, 0,
+                        staging.Buffer, 0,
                         sourceRegion);
                 }
 

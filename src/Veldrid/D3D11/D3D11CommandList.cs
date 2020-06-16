@@ -1199,7 +1199,7 @@ namespace Veldrid.D3D11
                 }
                 else
                 {
-                    System.Buffer.MemoryCopy(source.ToPointer(), msb.DataPointer.ToPointer(), buffer.SizeInBytes, sizeInBytes);
+                    Buffer.MemoryCopy(source.ToPointer(), msb.DataPointer.ToPointer(), buffer.SizeInBytes, sizeInBytes);
                 }
                 _context.Unmap(d3dBuffer.Buffer, 0);
             }
@@ -1254,7 +1254,7 @@ namespace Veldrid.D3D11
 
             Box region = new Box((int)sourceOffset, 0, 0, (int)(sourceOffset + sizeInBytes), 1, 1);
 
-            _context.CopySubresourceRegion(srcD3D11Buffer.Buffer, 0, (int)destinationOffset, 0, 0, dstD3D11Buffer.Buffer, 0, region);
+            _context.CopySubresourceRegion(dstD3D11Buffer.Buffer, 0, (int)destinationOffset, 0, 0, srcD3D11Buffer.Buffer, 0, region);
         }
 
         protected override void CopyTextureCore(
@@ -1295,13 +1295,13 @@ namespace Veldrid.D3D11
                 int dstSubresource = D3D11Util.ComputeSubresource(dstMipLevel, destination.MipLevels, dstBaseArrayLayer + i);
 
                 _context.CopySubresourceRegion(
-                    srcD3D11Texture.DeviceTexture,
-                    srcSubresource,
+                    dstD3D11Texture.DeviceTexture,
+                    dstSubresource,
                     (int)dstX,
                     (int)dstY,
                     (int)dstZ,
-                    dstD3D11Texture.DeviceTexture,
-                    dstSubresource,
+                    srcD3D11Texture.DeviceTexture,
+                    srcSubresource,
                     region);
             }
         }

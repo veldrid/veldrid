@@ -82,26 +82,9 @@ namespace Veldrid.D3D11
             }
 
             ShaderFlags flags = description.Debug ? ShaderFlags.Debug : ShaderFlags.OptimizationLevel3;
-            Blob result = null, error = null;
-
-            unsafe
-            {
-                fixed (byte* pArr = description.ShaderBytes)
-                {
-                    Compiler.Compile(
-                        (IntPtr)pArr,
-                        description.ShaderBytes.Length,
-                        null, null, null,
-                        description.EntryPoint, profile,
-                        flags,
-                        EffectFlags.None,
-                        out result,
-                        out error
-                        );
-
-                }
-            }
-
+            Compiler.Compile(description.ShaderBytes,
+                             description.EntryPoint, null,
+                             profile, out Blob result, out Blob error);
 
             if (result == null)
             {

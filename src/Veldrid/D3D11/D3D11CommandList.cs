@@ -1355,10 +1355,7 @@ namespace Veldrid.D3D11
 
         private protected override void InsertDebugMarkerCore(string name)
         {
-            if (_uda != null)
-            {
-                _uda.Marker = name;
-            }
+            _uda?.SetMarker(name);
         }
 
         public override void Dispose()

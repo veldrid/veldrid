@@ -83,7 +83,7 @@ namespace Veldrid.MTL
             }
 
             PixelFormat format = description.ColorSrgb
-                ? PixelFormat.B8_G8_R8_A8_UNorm_SRgb
+                ? PixelFormat.R16_G16_B16_A16_Float;
                 : PixelFormat.B8_G8_R8_A8_UNorm;
 
             _metalLayer.device = _gd.Device;

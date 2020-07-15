@@ -99,14 +99,6 @@ namespace Veldrid.Sdl2
         public static void SDL_SetWindowGrab(SDL_Window window, bool grabbed) => s_sdl_setWindowGrabbed(window, grabbed);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate SDL_Cursor SDL_GetDefaultCursor_t();
-        private static SDL_GetDefaultCursor_t s_sdl_getDefaultCursor = LoadFunction<SDL_GetDefaultCursor_t>("SDL_GetDefaultCursor");
-        /// <summary>
-        /// Get the default cursor.
-        /// </summary>
-        public static SDL_Cursor SDL_GetDefaultCursor() => s_sdl_getDefaultCursor();
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate SDL_Cursor SDL_CreateSystemCursor_t(SDL_SystemCursor id);
         private static SDL_CreateSystemCursor_t s_sdl_createSystemCursor = LoadFunction<SDL_CreateSystemCursor_t>("SDL_CreateSystemCursor");
         /// <summary>
@@ -121,5 +113,21 @@ namespace Veldrid.Sdl2
         /// Free a cursor created with SDL_CreateCursor(), SDL_CreateColorCursor() or SDL_CreateSystemCursor().
         /// </summary>
         public static void SDL_FreeCursor(SDL_Cursor cursor) => s_sdl_freeCursor(cursor);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate SDL_Cursor SDL_GetDefaultCursor_t();
+        private static SDL_GetDefaultCursor_t s_sdl_getDefaultCursor = LoadFunction<SDL_GetDefaultCursor_t>("SDL_GetDefaultCursor");
+        /// <summary>
+        /// Get the default cursor.
+        /// </summary>
+        public static SDL_Cursor SDL_GetDefaultCursor() => s_sdl_getDefaultCursor();
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void SDL_SetCursor_t(SDL_Cursor cursor);
+        private static SDL_SetCursor_t s_sdl_setCursor = LoadFunction<SDL_SetCursor_t>("SDL_SetCursor");
+        /// <summary>
+        /// Set the active cursor.
+        /// </summary>
+        public static void SDL_SetCursor(SDL_Cursor cursor) => s_sdl_setCursor();
     }
 }

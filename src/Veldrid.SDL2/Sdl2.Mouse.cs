@@ -3,6 +3,44 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.Sdl2
 {
+    /// <summary>
+    /// A transparent wrapper over a pointer representing an SDL Sdl2Cursor object.
+    /// </summary>
+    public struct SDL_Cursor
+    {
+        /// <summary>
+        /// The native SDL_Cursor pointer.
+        /// </summary>
+        public readonly IntPtr NativePointer;
+
+        public SDL_Cursor(IntPtr pointer)
+        {
+            NativePointer = pointer;
+        }
+
+        public static implicit operator IntPtr(SDL_Cursor Sdl2Cursor) => Sdl2Cursor.NativePointer;
+        public static implicit operator SDL_Cursor(IntPtr pointer) => new SDL_Cursor(pointer);
+    }
+
+    /// <summary>
+    /// Cursor types for SDL_CreateSystemCursor().
+    /// </summary>
+    public enum SDL_SystemCursor
+    {
+        Arrow,
+        IBeam,
+        Wait,
+        Crosshair,
+        WaitArrow,
+        SizeNWSE,
+        SizeNESW,
+        SizeWE,
+        SizeNS,
+        SizeAll,
+        No,
+        Hand
+    }
+
     public static unsafe partial class Sdl2Native
     {
         public const int SDL_QUERY = -1;
@@ -59,5 +97,29 @@ namespace Veldrid.Sdl2
         /// If enabled mouse will be contained inside of window.
         /// </summary>
         public static void SDL_SetWindowGrab(SDL_Window window, bool grabbed) => s_sdl_setWindowGrabbed(window, grabbed);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate SDL_Cursor SDL_GetDefaultCursor_t();
+        private static SDL_GetDefaultCursor_t s_sdl_getDefaultCursor = LoadFunction<SDL_GetDefaultCursor_t>("SDL_GetDefaultCursor");
+        /// <summary>
+        /// Get the default cursor.
+        /// </summary>
+        public static SDL_Cursor SDL_GetDefaultCursor() => s_sdl_getDefaultCursor();
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate SDL_Cursor SDL_CreateSystemCursor_t(SDL_SystemCursor id);
+        private static SDL_CreateSystemCursor_t s_sdl_createSystemCursor = LoadFunction<SDL_CreateSystemCursor_t>("SDL_CreateSystemCursor");
+        /// <summary>
+        /// Create a system cursor.
+        /// </summary>
+        public static SDL_Cursor SDL_CreateSystemCursor(SDL_SystemCursor id) => s_sdl_createSystemCursor(id);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void SDL_FreeCursor_t(SDL_Cursor cursor);
+        private static SDL_FreeCursor_t s_sdl_freeCursor = LoadFunction<SDL_FreeCursor_t>("SDL_FreeCursor");
+        /// <summary>
+        /// Free a cursor created with SDL_CreateCursor(), SDL_CreateColorCursor() or SDL_CreateSystemCursor().
+        /// </summary>
+        public static void SDL_FreeCursor(SDL_Cursor cursor) => s_sdl_freeCursor(cursor);
     }
 }

@@ -128,6 +128,6 @@ namespace Veldrid.Sdl2
         /// <summary>
         /// Set the active cursor.
         /// </summary>
-        public static void SDL_SetCursor(SDL_Cursor cursor) => s_sdl_setCursor();
+        public static void SDL_SetCursor(SDL_Cursor cursor) => s_sdl_setCursor(cursor);
     }
 }

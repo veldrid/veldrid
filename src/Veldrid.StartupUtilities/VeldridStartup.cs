@@ -166,7 +166,7 @@ namespace Veldrid.StartupUtilities
 
 #if !EXCLUDE_METAL_BACKEND
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
-            => CreateMetalGraphicsDevice(options, window, false);
+            => CreateMetalGraphicsDevice(options, window, options.SwapchainSrgbFormat);
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(
             GraphicsDeviceOptions options,
             Sdl2Window window,

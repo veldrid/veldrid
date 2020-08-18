@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Veldrid.Vk
@@ -35,6 +36,29 @@ namespace Veldrid.Vk
             }
 
             return ret;
+        }
+
+        public class EqualityComparer : IEqualityComparer<ResourceRefCount>
+        {
+            public bool Equals(ResourceRefCount x, ResourceRefCount y)
+            {
+                if (x != null && y != null)
+                {
+                    return x.Equals(y);
+                }
+
+                return false;
+            }
+
+            public int GetHashCode(ResourceRefCount obj)
+            {
+                if (obj == null)
+                {
+                    return 0;
+                }
+
+                return obj.GetHashCode ();
+            }
         }
     }
 }

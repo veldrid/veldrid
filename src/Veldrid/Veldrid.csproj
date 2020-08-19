@@ -21,10 +21,10 @@
 
     <PackageReference Include="Vk" Version="1.0.22" Condition="'$(ExcludeVulkan)' != 'true'" />
 
-    <PackageReference Include="Vortice.D3DCompiler" Version="1.7.17-beta" />
-    <PackageReference Include="Vortice.Direct3D11" Version="1.7.17-beta" />
-    <PackageReference Include="Vortice.Dxc" Version="1.7.17-beta" />
-    <PackageReference Include="Vortice.DXGI" Version="1.7.17-beta" />
+    <PackageReference Include="Vortice.D3DCompiler" Version="1.7.33-beta" />
+    <PackageReference Include="Vortice.Direct3D11" Version="1.7.33-beta" />
+    <PackageReference Include="Vortice.Dxc" Version="1.7.33-beta" />
+    <PackageReference Include="Vortice.DXGI" Version="1.7.33-beta" />
 
     <ProjectReference Include="..\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj" Condition="'$(ExcludeMetal)' != 'true'" />
 

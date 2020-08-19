@@ -326,7 +326,7 @@ namespace Veldrid.D3D11
                                 resource,
                                 mode,
                                 msr.DataPointer,
-                                (uint)mipSize,
+                                texture.Height * (uint)msr.RowPitch,
                                 subresource,
                                 (uint)msr.RowPitch,
                                 (uint)msr.DepthPitch);

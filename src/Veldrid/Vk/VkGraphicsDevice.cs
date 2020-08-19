@@ -145,7 +145,8 @@ namespace Veldrid.Vk
                 structuredBuffer: true,
                 subsetTextureView: true,
                 commandListDebugMarkers: _debugMarkerEnabled,
-                bufferRangeBinding: true);
+                bufferRangeBinding: true,
+                shaderFloat64: _physicalDeviceFeatures.shaderFloat64);
 
             ResourceFactory = new VkResourceFactory(this);
 
@@ -665,18 +666,7 @@ namespace Veldrid.Vk
                 i += 1;
             }
 
-            VkPhysicalDeviceFeatures deviceFeatures = new VkPhysicalDeviceFeatures();
-            deviceFeatures.samplerAnisotropy = _physicalDeviceFeatures.samplerAnisotropy;
-            deviceFeatures.fillModeNonSolid = _physicalDeviceFeatures.fillModeNonSolid;
-            deviceFeatures.geometryShader = _physicalDeviceFeatures.geometryShader;
-            deviceFeatures.depthClamp = _physicalDeviceFeatures.depthClamp;
-            deviceFeatures.multiViewport = _physicalDeviceFeatures.multiViewport;
-            deviceFeatures.textureCompressionBC = _physicalDeviceFeatures.textureCompressionBC;
-            deviceFeatures.textureCompressionETC2 = _physicalDeviceFeatures.textureCompressionETC2;
-            deviceFeatures.multiDrawIndirect = _physicalDeviceFeatures.multiDrawIndirect;
-            deviceFeatures.drawIndirectFirstInstance = _physicalDeviceFeatures.drawIndirectFirstInstance;
-            deviceFeatures.shaderStorageImageMultisample = _physicalDeviceFeatures.shaderStorageImageMultisample;
-            deviceFeatures.independentBlend = _physicalDeviceFeatures.independentBlend;
+            VkPhysicalDeviceFeatures deviceFeatures = _physicalDeviceFeatures;
 
             uint propertyCount = 0;
             VkResult result = vkEnumerateDeviceExtensionProperties(_physicalDevice, (byte*)null, &propertyCount, null);

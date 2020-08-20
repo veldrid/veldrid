@@ -77,7 +77,7 @@ namespace Veldrid.D3D11
                     Vortice.Direct3D11.D3D11.D3D11CreateDevice(_dxgiAdapter,
                         Vortice.Direct3D.DriverType.Hardware,
                         flags,
-                        new [] { Vortice.Direct3D.FeatureLevel.Level_11_1, },
+                        new [] { Vortice.Direct3D.FeatureLevel.Level_11_0, Vortice.Direct3D.FeatureLevel.Level_11_1, },
                         out _device).CheckError();
                 }
                 else
@@ -85,7 +85,7 @@ namespace Veldrid.D3D11
                     Vortice.Direct3D11.D3D11.D3D11CreateDevice(null,
                         Vortice.Direct3D.DriverType.Hardware,
                         flags,
-                        new[] { Vortice.Direct3D.FeatureLevel.Level_11_1, },
+                        new[] { Vortice.Direct3D.FeatureLevel.Level_11_0, Vortice.Direct3D.FeatureLevel.Level_11_1, },
                         out _device).CheckError();
                 }
             }

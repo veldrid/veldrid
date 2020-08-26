@@ -91,6 +91,10 @@
         /// must be bound with their full range.
         /// </summary>
         public bool BufferRangeBinding { get; }
+        /// <summary>
+        /// Indicates whether 64-bit floating point integers can be used in shaders.
+        /// </summary>
+        public bool ShaderFloat64 { get; }
 
         internal GraphicsDeviceFeatures(
             bool computeShader,
@@ -110,7 +114,8 @@
             bool structuredBuffer,
             bool subsetTextureView,
             bool commandListDebugMarkers,
-            bool bufferRangeBinding)
+            bool bufferRangeBinding,
+            bool shaderFloat64)
         {
             ComputeShader = computeShader;
             GeometryShader = geometryShader;
@@ -130,6 +135,7 @@
             SubsetTextureView = subsetTextureView;
             CommandListDebugMarkers = commandListDebugMarkers;
             BufferRangeBinding = bufferRangeBinding;
+            ShaderFloat64 = shaderFloat64;
         }
     }
 }

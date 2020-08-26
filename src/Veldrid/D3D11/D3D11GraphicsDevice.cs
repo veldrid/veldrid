@@ -21,7 +21,6 @@ namespace Veldrid.D3D11
         private readonly bool _supportsCommandLists;
         private readonly object _immediateContextLock = new object();
         private readonly BackendInfoD3D11 _d3d11Info;
-        private static bool? _sdkLayersAvailable;
 
         private readonly object _mappedResourceLock = new object();
         private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
@@ -64,7 +63,7 @@ namespace Veldrid.D3D11
             flags |= DeviceCreationFlags.Debug;
 #endif
             // If debug flag set but SDK layers aren't available we can't enable debug.
-            if (0 != (flags & DeviceCreationFlags.Debug) && !SdkLayersAvailable)
+            if (0 != (flags & DeviceCreationFlags.Debug) && !Vortice.Direct3D11.D3D11.SdkLayersAvailable())
             {
                 flags &= ~DeviceCreationFlags.Debug;
             }
@@ -97,7 +96,7 @@ namespace Veldrid.D3D11
                         out _device).CheckError();
                 }
             }
-            catch (Exception e)
+            catch
             {
                 Vortice.Direct3D11.D3D11.D3D11CreateDevice(null,
                     Vortice.Direct3D.DriverType.Hardware,
@@ -145,26 +144,6 @@ namespace Veldrid.D3D11
             _d3d11Info = new BackendInfoD3D11(this);
 
             PostDeviceCreated();
-        }
-
-        private static bool SdkLayersAvailable
-        {
-            get
-            {
-                if (!_sdkLayersAvailable.HasValue)
-                {
-                    try
-                    {
-                        Vortice.Direct3D11.D3D11.D3D11CreateDevice(null, Vortice.Direct3D.DriverType.Null, DeviceCreationFlags.Debug, null, out var device);
-                        _sdkLayersAvailable = true;                      
-                    }
-                    catch
-                    {
-                        _sdkLayersAvailable = false;
-                    }
-                }
-                return _sdkLayersAvailable.Value;
-            }
         }
 
         private static D3D11DeviceOptions MergeOptions(D3D11DeviceOptions d3D11DeviceOptions, GraphicsDeviceOptions options)

@@ -19,6 +19,7 @@ namespace Veldrid.D3D11
         private readonly ID3DUserDefinedAnnotation _uda;
         private bool _begun;
         private bool _disposed;
+        private bool _validCommandList;
 
         private Vortice.Mathematics.Viewport[] _viewports = new Vortice.Mathematics.Viewport[0];
         private RawRect[] _scissors = new RawRect[0];
@@ -93,7 +94,7 @@ namespace Veldrid.D3D11
             _uda = _context.QueryInterfaceOrNull<ID3DUserDefinedAnnotation>();
         }
 
-        public ID3D11CommandList DeviceCommandList { get; private set; }
+        public ID3D11CommandList DeviceCommandList { get; private set; } = new ID3D11CommandList(IntPtr.Zero);
 
         internal ID3D11DeviceContext DeviceContext => _context;
 
@@ -104,7 +105,7 @@ namespace Veldrid.D3D11
         public override void Begin()
         {
             DeviceCommandList?.Dispose();
-            DeviceCommandList = null;
+            _validCommandList = false;
             ClearState();
             _begun = true;
         }
@@ -184,29 +185,31 @@ namespace Veldrid.D3D11
 
         public override void End()
         {
-            if (DeviceCommandList != null)
+            if (_validCommandList)
             {
                 throw new VeldridException("Invalid use of End().");
             }
 
-            DeviceCommandList = _context.FinishCommandList(false);
+            _context.FinishCommandList(false, DeviceCommandList);
             DeviceCommandList.DebugName = _name;
             ResetManagedState();
             _begun = false;
+            _validCommandList = true;
         }
 
         public void Reset()
         {
-            if (DeviceCommandList != null)
+            if (_validCommandList)
             {
                 DeviceCommandList.Dispose();
-                DeviceCommandList = null;
+                _validCommandList = false;
             }
             else if (_begun)
             {
                 _context.ClearState();
-                ID3D11CommandList cl = _context.FinishCommandList(false);
-                cl.Dispose();
+                _context.FinishCommandList(false, DeviceCommandList);
+                DeviceCommandList.Dispose();
+                _validCommandList = false;
             }
 
             ResetManagedState();
@@ -1327,7 +1330,7 @@ namespace Veldrid.D3D11
         internal void OnCompleted()
         {
             DeviceCommandList.Dispose();
-            DeviceCommandList = null;
+            _validCommandList = false;
 
             foreach (D3D11Swapchain sc in _referencedSwapchains)
             {

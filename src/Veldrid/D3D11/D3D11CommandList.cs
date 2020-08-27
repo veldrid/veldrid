@@ -947,7 +947,7 @@ namespace Veldrid.D3D11
                 {
                     if (range.IsFullRange)
                     {
-                        _context.PSSetConstantBuffers(slot, range.Buffer.Buffer);
+                        _context.PSSetConstantBuffer(slot, range.Buffer.Buffer);
                     }
                     else
                     {

@@ -232,6 +232,15 @@ namespace Veldrid.MetalBindings
             return ret;
         }
 
+        [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend_stret")]
+        public static extern void objc_msgSend_stret(void* retPtr, IntPtr receiver, Selector selector, CGRect rect);
+        public static T objc_msgSend_stret<T>(IntPtr receiver, Selector selector, CGRect rect) where T : struct
+        {
+            T ret = default(T);
+            objc_msgSend_stret(Unsafe.AsPointer(ref ret), receiver, selector, rect);
+            return ret;
+        }
+
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern MTLClearColor MTLClearColor_objc_msgSend(IntPtr receiver, Selector selector);
 

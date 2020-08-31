@@ -55,6 +55,15 @@ namespace Veldrid.StartupUtilities
             {
                 flags |= SDL_WindowFlags.Shown;
             }
+            if (windowCI.HiDpi)
+            {
+                flags |= SDL_WindowFlags.AllowHighDpi;
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    ShcoreNative.SetProcessDpiAwareness(PROCESS_DPI_AWARENESS.PROCESS_SYSTEM_DPI_AWARE);
+                }
+            }
             Sdl2Window window = new Sdl2Window(
                 windowCI.WindowTitle,
                 windowCI.X,

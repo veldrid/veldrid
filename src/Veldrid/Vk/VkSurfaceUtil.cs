@@ -128,6 +128,7 @@ namespace Veldrid.Vk
         {
             CAMetalLayer metalLayer = CAMetalLayer.New();
             NSWindow nswindow = new NSWindow(nsWindowSource.NSWindow);
+            metalLayer.contentsScale = nswindow.backingScaleFactor;
             NSView contentView = nswindow.contentView;
             contentView.wantsLayer = true;
             contentView.layer = metalLayer.NativePtr;

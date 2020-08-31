@@ -5,6 +5,7 @@ namespace Veldrid.OpenGL
 {
     internal class OpenGLSwapchainFramebuffer : Framebuffer
     {
+        private readonly double _dpiScale;
         private readonly PixelFormat? _depthFormat;
         private bool _disposed;
 
@@ -28,10 +29,12 @@ namespace Veldrid.OpenGL
 
         internal OpenGLSwapchainFramebuffer(
             uint width, uint height,
+            double dpiScale,
             PixelFormat colorFormat,
             PixelFormat? depthFormat,
             bool disableSrgbConversion)
         {
+            _dpiScale = dpiScale;
             _depthFormat = depthFormat;
             // This is wrong, but it's not really used.
             OutputAttachmentDescription? depthDesc = _depthFormat != null
@@ -42,8 +45,8 @@ namespace Veldrid.OpenGL
                 new OutputAttachmentDescription(colorFormat));
 
             _colorTexture = new OpenGLPlaceholderTexture(
-                width,
-                height,
+                (uint)(width * _dpiScale),
+                (uint)(height * _dpiScale),
                 colorFormat,
                 TextureUsage.RenderTarget,
                 TextureSampleCount.Count1);
@@ -52,8 +55,8 @@ namespace Veldrid.OpenGL
             if (_depthFormat != null)
             {
                 _depthTexture = new OpenGLPlaceholderTexture(
-                    width,
-                    height,
+                    (uint)(width * _dpiScale),
+                    (uint)(height * _dpiScale),
                     depthFormat.Value,
                     TextureUsage.DepthStencil,
                     TextureSampleCount.Count1);
@@ -67,8 +70,8 @@ namespace Veldrid.OpenGL
 
         public void Resize(uint width, uint height)
         {
-            _colorTexture.Resize(width, height);
-            _depthTexture?.Resize(width, height);
+            _colorTexture.Resize((uint)(width * _dpiScale), (uint)(height * _dpiScale));
+            _depthTexture?.Resize((uint)(width * _dpiScale), (uint)(height * _dpiScale));
         }
 
         public override void Dispose()

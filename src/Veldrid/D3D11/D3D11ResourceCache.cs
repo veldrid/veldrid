@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 
 namespace Veldrid.D3D11
@@ -161,11 +162,11 @@ namespace Veldrid.D3D11
 
             if (vsBytecode == null || vertexLayouts == null || vertexLayouts.Length == 0) { return null; }
 
-            InputLayoutCacheKey tempKey = InputLayoutCacheKey.CreateTempKey(vertexLayouts);
+            InputLayoutCacheKey tempKey = InputLayoutCacheKey.CreateTempKey(vertexLayouts, vsBytecode);
             if (!_inputLayouts.TryGetValue(tempKey, out InputLayout inputLayout))
             {
                 inputLayout = CreateNewInputLayout(vertexLayouts, vsBytecode);
-                InputLayoutCacheKey permanentKey = InputLayoutCacheKey.CreatePermanentKey(vertexLayouts);
+                InputLayoutCacheKey permanentKey = InputLayoutCacheKey.CreatePermanentKey(vertexLayouts, vsBytecode);
                 _inputLayouts.Add(permanentKey, inputLayout);
             }
 
@@ -273,11 +274,21 @@ namespace Veldrid.D3D11
         private struct InputLayoutCacheKey : IEquatable<InputLayoutCacheKey>
         {
             public VertexLayoutDescription[] VertexLayouts;
+            public byte[] Bytecode;
 
-            public static InputLayoutCacheKey CreateTempKey(VertexLayoutDescription[] original)
-                => new InputLayoutCacheKey { VertexLayouts = original };
+            private int _hashcode;
 
-            public static InputLayoutCacheKey CreatePermanentKey(VertexLayoutDescription[] original)
+            private InputLayoutCacheKey(VertexLayoutDescription[] original, byte[] bytecode)
+            {
+                VertexLayouts = original;
+                Bytecode = bytecode;
+                _hashcode = HashHelper.Combine(HashHelper.Array(VertexLayouts), HashHelper.Array(bytecode));
+            }
+
+            public static InputLayoutCacheKey CreateTempKey(VertexLayoutDescription[] original, byte[] bytecode)
+                => new InputLayoutCacheKey(original, bytecode);
+
+            public static InputLayoutCacheKey CreatePermanentKey(VertexLayoutDescription[] original, byte[] bytecode)
             {
                 VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[original.Length];
                 for (int i = 0; i < original.Length; i++)
@@ -287,18 +298,16 @@ namespace Veldrid.D3D11
                     vertexLayouts[i].Elements = (VertexElementDescription[])original[i].Elements.Clone();
                 }
 
-                return new InputLayoutCacheKey { VertexLayouts = vertexLayouts };
+                return new InputLayoutCacheKey(vertexLayouts, (byte[])bytecode.Clone());
             }
 
             public bool Equals(InputLayoutCacheKey other)
             {
-                return Util.ArrayEqualsEquatable(VertexLayouts, other.VertexLayouts);
+                return Util.ArrayEqualsEquatable(VertexLayouts, other.VertexLayouts)
+                    && Util.ArrayEqualsEquatable(Bytecode, other.Bytecode);
             }
 
-            public override int GetHashCode()
-            {
-                return HashHelper.Array(VertexLayouts);
-            }
+            public override int GetHashCode() => _hashcode;
         }
 
         private struct D3D11RasterizerStateCacheKey : IEquatable<D3D11RasterizerStateCacheKey>

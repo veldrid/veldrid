@@ -1054,11 +1054,11 @@ namespace Veldrid.D3D11
                     int slot = list[i].Item2;
                     if (compute)
                     {
-                        _context.CSResetUnorderedAccessView(slot);
+                        _context.CSUnsetUnorderedAccessView(slot);
                     }
                     else
                     {
-                        _context.OMResetUnorderedAccessView(slot);
+                        _context.OMUnsetUnorderedAccessView(slot);
                     }
 
                     list.RemoveAt(i);
@@ -1377,6 +1377,12 @@ namespace Veldrid.D3D11
                 {
                     boundComputeSet.Offsets.Dispose();
                 }
+
+                foreach (D3D11Buffer buffer in _availableStagingBuffers)
+                {
+                    buffer.Dispose();
+                }
+                _availableStagingBuffers.Clear();
 
                 _disposed = true;
             }

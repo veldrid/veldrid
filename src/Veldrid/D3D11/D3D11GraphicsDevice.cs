@@ -594,6 +594,13 @@ namespace Veldrid.D3D11
 
         protected override void PlatformDispose()
         {
+            // Dispose staging buffers
+            foreach (DeviceBuffer buffer in _availableStagingBuffers)
+            {
+                buffer.Dispose();
+            }
+            _availableStagingBuffers.Clear();
+
             _d3d11ResourceFactory.Dispose();
             _mainSwapchain?.Dispose();
             _immediateContext.Dispose();
@@ -603,6 +610,7 @@ namespace Veldrid.D3D11
             _device.Dispose();
             _dxgiAdapter?.Dispose();
 
+            // Need to enable native debugging to see live objects in VisualStudio console.
             if (deviceDebug != null)
             {
                 deviceDebug.ReportLiveDeviceObjects(ReportLiveDeviceObjectFlags.Summary | ReportLiveDeviceObjectFlags.Detail | ReportLiveDeviceObjectFlags.IgnoreInternal);

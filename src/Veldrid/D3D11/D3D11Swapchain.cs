@@ -201,9 +201,12 @@ namespace Veldrid.D3D11
                     backBufferTexture,
                     TextureType.Texture2D,
                     D3D11Formats.ToVdFormat(_colorFormat));
+
                 FramebufferDescription desc = new FramebufferDescription(_depthTexture, backBufferVdTexture);
-                _framebuffer = new D3D11Framebuffer(_device, ref desc);
-                _framebuffer.Swapchain = this;
+                _framebuffer = new D3D11Framebuffer(_device, ref desc)
+                {
+                    Swapchain = this
+                };
             }
         }
 

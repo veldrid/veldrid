@@ -115,7 +115,7 @@ namespace Veldrid.D3D11
                     Width = (int)(description.Width * _pixelScale),
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.FlipSequential,
-                    Usage = Vortice.DXGI.Usage.Backbuffer | Vortice.DXGI.Usage.RenderTargetOutput,
+                    Usage = Vortice.DXGI.Usage.RenderTargetOutput,
                 };
 
                 // Retrive the Vortice.DXGI device associated to the Direct3D device.
@@ -181,7 +181,7 @@ namespace Veldrid.D3D11
             uint actualHeight = (uint)(height * _pixelScale);
             if (resizeBuffers)
             {
-                _dxgiSwapChain.ResizeBuffers(2, (int)actualWidth, (int)actualHeight, _colorFormat, SwapChainFlags.None);
+                _dxgiSwapChain.ResizeBuffers(2, (int)actualWidth, (int)actualHeight, _colorFormat, SwapChainFlags.None).CheckError();
             }
 
             // Get the backbuffer from the swapchain

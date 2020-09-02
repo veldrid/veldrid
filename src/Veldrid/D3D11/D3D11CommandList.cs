@@ -19,7 +19,7 @@ namespace Veldrid.D3D11
         private readonly ID3DUserDefinedAnnotation _uda;
         private bool _begun;
         private bool _disposed;
-        private bool _validCommandList;
+        private ID3D11CommandList _commandList;
 
         private Vortice.Mathematics.Viewport[] _viewports = new Vortice.Mathematics.Viewport[0];
         private RawRect[] _scissors = new RawRect[0];
@@ -94,7 +94,7 @@ namespace Veldrid.D3D11
             _uda = _context.QueryInterfaceOrNull<ID3DUserDefinedAnnotation>();
         }
 
-        public ID3D11CommandList DeviceCommandList { get; private set; } = new ID3D11CommandList(IntPtr.Zero);
+        public ID3D11CommandList DeviceCommandList => _commandList;
 
         internal ID3D11DeviceContext DeviceContext => _context;
 
@@ -104,8 +104,8 @@ namespace Veldrid.D3D11
 
         public override void Begin()
         {
-            DeviceCommandList?.Dispose();
-            _validCommandList = false;
+            _commandList?.Dispose();
+            _commandList = null;
             ClearState();
             _begun = true;
         }
@@ -185,31 +185,30 @@ namespace Veldrid.D3D11
 
         public override void End()
         {
-            if (_validCommandList)
+            if (_commandList != null)
             {
                 throw new VeldridException("Invalid use of End().");
             }
 
-            _context.FinishCommandList(false, DeviceCommandList);
-            DeviceCommandList.DebugName = _name;
+            _context.FinishCommandList(false, out _commandList).CheckError();
+            _commandList.DebugName = _name;
             ResetManagedState();
             _begun = false;
-            _validCommandList = true;
         }
 
         public void Reset()
         {
-            if (_validCommandList)
+            if (_commandList != null)
             {
-                DeviceCommandList.Dispose();
-                _validCommandList = false;
+                _commandList.Dispose();
+                _commandList = null;
             }
             else if (_begun)
             {
                 _context.ClearState();
-                _context.FinishCommandList(false, DeviceCommandList);
-                DeviceCommandList.Dispose();
-                _validCommandList = false;
+                _context.FinishCommandList(false, out _commandList);
+                _commandList.Dispose();
+                _commandList = null;
             }
 
             ResetManagedState();
@@ -877,7 +876,7 @@ namespace Veldrid.D3D11
                         PackRangeParams(range);
                         if (!_gd.SupportsCommandLists)
                         {
-                            _context.VSSetConstantBuffer(slot, null);
+                            _context.VSUnsetConstantBuffer(slot);
                         }
                         _context1.VSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
@@ -894,7 +893,7 @@ namespace Veldrid.D3D11
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.GSSetConstantBuffer(slot, (ID3D11Buffer)null);
+                        _context.GSUnsetConstantBuffer(slot);
                     }
                     _context1.GSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -910,7 +909,7 @@ namespace Veldrid.D3D11
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.HSSetConstantBuffer(slot, (ID3D11Buffer)null);
+                        _context.HSUnsetConstantBuffer(slot);
                     }
                     _context1.HSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -926,7 +925,7 @@ namespace Veldrid.D3D11
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.DSSetConstantBuffer(slot, (ID3D11Buffer)null);
+                        _context.DSUnsetConstantBuffer(slot);
                     }
                     _context1.DSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -957,7 +956,7 @@ namespace Veldrid.D3D11
                         PackRangeParams(range);
                         if (!_gd.SupportsCommandLists)
                         {
-                            _context.PSSetConstantBuffer(slot, (ID3D11Buffer)null);
+                            _context.PSUnsetConstantBuffer(slot);
                         }
                         _context1.PSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
@@ -1025,7 +1024,7 @@ namespace Veldrid.D3D11
 
             if (compute)
             {
-                _context.CSSetUnorderedAccessViews(actualSlot, 1, new[] { uav }, null);
+                _context.CSSetUnorderedAccessView(actualSlot, uav);
             }
             else
             {
@@ -1055,11 +1054,11 @@ namespace Veldrid.D3D11
                     int slot = list[i].Item2;
                     if (compute)
                     {
-                        _context.CSSetUnorderedAccessViews(slot, 0, new ID3D11UnorderedAccessView[] { null }, new[] { -1 });
+                        _context.CSResetUnorderedAccessView(slot);
                     }
                     else
                     {
-                        _context.OMSetUnorderedAccessView(slot, null);
+                        _context.OMResetUnorderedAccessView(slot);
                     }
 
                     list.RemoveAt(i);
@@ -1329,8 +1328,8 @@ namespace Veldrid.D3D11
 
         internal void OnCompleted()
         {
-            DeviceCommandList.Dispose();
-            _validCommandList = false;
+            _commandList.Dispose();
+            _commandList = null;
 
             foreach (D3D11Swapchain sc in _referencedSwapchains)
             {

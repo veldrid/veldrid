@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Vortice.Mathematics;
+using Vortice.Direct3D11.Debug;
 
 namespace Veldrid.D3D11
 {
@@ -52,7 +53,7 @@ namespace Veldrid.D3D11
         public override GraphicsDeviceFeatures Features { get; }
 
         public D3D11GraphicsDevice(GraphicsDeviceOptions options, D3D11DeviceOptions d3D11DeviceOptions, SwapchainDescription? swapchainDesc)
-            :this(MergeOptions(d3D11DeviceOptions, options), swapchainDesc)
+            : this(MergeOptions(d3D11DeviceOptions, options), swapchainDesc)
         {
         }
 
@@ -76,10 +77,10 @@ namespace Veldrid.D3D11
                     Vortice.Direct3D11.D3D11.D3D11CreateDevice(_dxgiAdapter,
                         Vortice.Direct3D.DriverType.Hardware,
                         flags,
-                        new[] 
-                        { 
-                            Vortice.Direct3D.FeatureLevel.Level_11_1, 
-                            Vortice.Direct3D.FeatureLevel.Level_11_0, 
+                        new[]
+                        {
+                            Vortice.Direct3D.FeatureLevel.Level_11_1,
+                            Vortice.Direct3D.FeatureLevel.Level_11_0,
                         },
                         out _device).CheckError();
                 }
@@ -88,10 +89,10 @@ namespace Veldrid.D3D11
                     Vortice.Direct3D11.D3D11.D3D11CreateDevice(null,
                         Vortice.Direct3D.DriverType.Hardware,
                         flags,
-                        new[] 
-                        { 
-                            Vortice.Direct3D.FeatureLevel.Level_11_1, 
-                            Vortice.Direct3D.FeatureLevel.Level_11_0, 
+                        new[]
+                        {
+                            Vortice.Direct3D.FeatureLevel.Level_11_1,
+                            Vortice.Direct3D.FeatureLevel.Level_11_0,
                         },
                         out _device).CheckError();
                 }
@@ -597,15 +598,14 @@ namespace Veldrid.D3D11
             _mainSwapchain?.Dispose();
             _immediateContext.Dispose();
 
-            IDXGIDebug deviceDebug = _device.QueryInterfaceOrNull<IDXGIDebug>();
+            ID3D11Debug deviceDebug = _device.QueryInterfaceOrNull<ID3D11Debug>();
 
             _device.Dispose();
             _dxgiAdapter?.Dispose();
 
             if (deviceDebug != null)
             {
-                deviceDebug.ReportLiveObjects(DXGI.All, ReportLiveObjectFlags.Summary);
-                deviceDebug.ReportLiveObjects(DXGI.All, ReportLiveObjectFlags.Detail);
+                deviceDebug.ReportLiveDeviceObjects(ReportLiveDeviceObjectFlags.Summary | ReportLiveDeviceObjectFlags.Detail | ReportLiveDeviceObjectFlags.IgnoreInternal);
                 deviceDebug.Dispose();
             }
         }

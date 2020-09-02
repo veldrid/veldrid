@@ -383,24 +383,24 @@ namespace Veldrid.D3D11
                 switch (rbi.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                    {
-                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                        BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
-                        break;
-                    }
+                        {
+                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                            BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
+                            break;
+                        }
                     case ResourceKind.StructuredBufferReadOnly:
-                    {
-                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                        BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
-                        break;
-                    }
+                        {
+                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                            BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
+                            break;
+                        }
                     case ResourceKind.StructuredBufferReadWrite:
-                    {
-                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                        ID3D11UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
-                        BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
-                        break;
-                    }
+                        {
+                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                            ID3D11UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
+                            BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
+                            break;
+                        }
                     case ResourceKind.TextureReadOnly:
                         TextureView texView = Util.GetTextureView(_gd, resource);
                         D3D11TextureView d3d11TexView = Util.AssertSubtype<TextureView, D3D11TextureView>(texView);
@@ -705,7 +705,7 @@ namespace Veldrid.D3D11
                     _vertexBindings,
                     _vertexStrides,
                     _vertexOffsets);
-            
+
                 _vertexBindingsChanged = false;
             }
         }
@@ -887,14 +887,14 @@ namespace Veldrid.D3D11
             {
                 if (range.IsFullRange)
                 {
-                    _context.GSSetConstantBuffers(slot, range.Buffer.Buffer);
+                    _context.GSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
                 else
                 {
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.GSSetConstantBuffers(slot, (ID3D11Buffer)null);
+                        _context.GSSetConstantBuffer(slot, (ID3D11Buffer)null);
                     }
                     _context1.GSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -903,14 +903,14 @@ namespace Veldrid.D3D11
             {
                 if (range.IsFullRange)
                 {
-                    _context.HSSetConstantBuffers(slot, range.Buffer.Buffer);
+                    _context.HSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
                 else
                 {
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.HSSetConstantBuffers(slot, (ID3D11Buffer)null);
+                        _context.HSSetConstantBuffer(slot, (ID3D11Buffer)null);
                     }
                     _context1.HSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -919,14 +919,14 @@ namespace Veldrid.D3D11
             {
                 if (range.IsFullRange)
                 {
-                    _context.DSSetConstantBuffers(slot, range.Buffer.Buffer);
+                    _context.DSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
                 else
                 {
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.DSSetConstantBuffers(slot, (ID3D11Buffer)null);
+                        _context.DSSetConstantBuffer(slot, (ID3D11Buffer)null);
                     }
                     _context1.DSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -957,7 +957,7 @@ namespace Veldrid.D3D11
                         PackRangeParams(range);
                         if (!_gd.SupportsCommandLists)
                         {
-                            _context.PSSetConstantBuffers(slot, (ID3D11Buffer)null);
+                            _context.PSSetConstantBuffer(slot, (ID3D11Buffer)null);
                         }
                         _context1.PSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
@@ -967,14 +967,14 @@ namespace Veldrid.D3D11
             {
                 if (range.IsFullRange)
                 {
-                    _context.CSSetConstantBuffers(slot, range.Buffer.Buffer);
+                    _context.CSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
                 else
                 {
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.CSSetConstantBuffers(slot, (ID3D11Buffer)null);
+                        _context.CSSetConstantBuffer(slot, (ID3D11Buffer)null);
                     }
                     _context1.CSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -1029,7 +1029,7 @@ namespace Veldrid.D3D11
             }
             else
             {
-                _context.SetUnorderedAccessViews(actualSlot, new[] { uav }, null);
+                _context.OMSetUnorderedAccessView(actualSlot, uav);
             }
         }
 
@@ -1059,7 +1059,7 @@ namespace Veldrid.D3D11
                     }
                     else
                     {
-                        _context.SetUnorderedAccessViews(slot, new ID3D11UnorderedAccessView[] { null }, new[] { -1 });
+                        _context.OMSetUnorderedAccessView(slot, null);
                     }
 
                     list.RemoveAt(i);
@@ -1191,11 +1191,11 @@ namespace Veldrid.D3D11
             }
             else if (useMap && updateFullBuffer) // Can only update full buffer with WriteDiscard.
             {
-               MappedSubresource msb = _context.Map(
-                    d3dBuffer.Buffer,
-                    0,
-                    D3D11Formats.VdToD3D11MapMode(isDynamic, MapMode.Write),
-                    MapFlags.None);
+                MappedSubresource msb = _context.Map(
+                     d3dBuffer.Buffer,
+                     0,
+                     D3D11Formats.VdToD3D11MapMode(isDynamic, MapMode.Write),
+                     MapFlags.None);
                 if (sizeInBytes < 1024)
                 {
                     Unsafe.CopyBlock(msb.DataPointer.ToPointer(), source.ToPointer(), sizeInBytes);

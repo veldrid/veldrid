@@ -665,9 +665,9 @@ namespace Veldrid.D3D11
             D3D11Texture d3d11Source = Util.AssertSubtype<Texture, D3D11Texture>(source);
             D3D11Texture d3d11Destination = Util.AssertSubtype<Texture, D3D11Texture>(destination);
             _context.ResolveSubresource(
-                d3d11Source.DeviceTexture,
-                0,
                 d3d11Destination.DeviceTexture,
+                0,
+                d3d11Source.DeviceTexture,
                 0,
                 d3d11Destination.DxgiFormat);
         }

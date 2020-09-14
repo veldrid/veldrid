@@ -93,7 +93,7 @@ namespace Veldrid.D3D11
 
         public override Swapchain CreateSwapchain(ref SwapchainDescription description)
         {
-            return new D3D11Swapchain(_device, ref description);
+            return new D3D11Swapchain(_gd, ref description);
         }
 
         public void Dispose()

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharpGen.Runtime;
+using System;
 using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
@@ -87,6 +88,11 @@ namespace Veldrid.D3D11
             }
 
             return srvDesc;
+        }
+
+        internal static int GetSyncInterval(bool syncToVBlank)
+        {
+            return syncToVBlank ? 1 : 0;
         }
     }
 }

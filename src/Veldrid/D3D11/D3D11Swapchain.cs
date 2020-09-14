@@ -10,7 +10,7 @@ namespace Veldrid.D3D11
 {
     internal class D3D11Swapchain : Swapchain
     {
-        private readonly ID3D11Device _device;
+        private readonly D3D11GraphicsDevice _gd;
         private readonly PixelFormat? _depthFormat;
         private readonly IDXGISwapChain _dxgiSwapChain;
         private bool _vsync;
@@ -58,7 +58,7 @@ namespace Veldrid.D3D11
             get => _vsync; set
             {
                 _vsync = value;
-                _syncInterval = GetSyncInterval(value);
+                _syncInterval = D3D11Util.GetSyncInterval(value);
             }
         }
 
@@ -68,9 +68,9 @@ namespace Veldrid.D3D11
 
         public int SyncInterval => _syncInterval;
 
-        public D3D11Swapchain(ID3D11Device device, ref SwapchainDescription description)
+        public D3D11Swapchain(D3D11GraphicsDevice gd, ref SwapchainDescription description)
         {
-            _device = device;
+            _gd = gd;
             _depthFormat = description.DepthFormat;
             SyncToVerticalBlank = description.SyncToVerticalBlank;
 
@@ -92,13 +92,10 @@ namespace Veldrid.D3D11
                     Usage = Vortice.DXGI.Usage.RenderTargetOutput
                 };
 
-                using (IDXGIDevice dxgiDevice = _device.QueryInterface<IDXGIDevice>())
+                using (IDXGIFactory dxgiFactory = _gd.Adapter.GetParent<IDXGIFactory>())
                 {
-                    using (IDXGIFactory dxgiFactory = dxgiDevice.Adapter.GetParent<IDXGIFactory>())
-                    {
-                        _dxgiSwapChain = dxgiFactory.CreateSwapChain(_device, dxgiSCDesc);
-                        dxgiFactory.MakeWindowAssociation(win32Source.Hwnd, WindowAssociationFlags.IgnoreAltEnter);
-                    }
+                    _dxgiSwapChain = dxgiFactory.CreateSwapChain(_gd.Device, dxgiSCDesc);
+                    dxgiFactory.MakeWindowAssociation(win32Source.Hwnd, WindowAssociationFlags.IgnoreAltEnter);
                 }
             }
             else if (description.Source is UwpSwapchainSource uwpSource)
@@ -118,17 +115,13 @@ namespace Veldrid.D3D11
                     Usage = Vortice.DXGI.Usage.RenderTargetOutput,
                 };
 
-                // Retrive the Vortice.DXGI device associated to the Direct3D device.
-                using (IDXGIDevice3 dxgiDevice = _device.QueryInterface<IDXGIDevice3>())
+                // Get the Vortice.DXGI factory automatically created when initializing the Direct3D device.
+                using (IDXGIFactory2 dxgiFactory = _gd.Adapter.GetParent<IDXGIFactory2>())
                 {
-                    // Get the Vortice.DXGI factory automatically created when initializing the Direct3D device.
-                    using (IDXGIFactory2 dxgiFactory = dxgiDevice.Adapter.GetParent<IDXGIFactory2>())
+                    // Create the swap chain and get the highest version available.
+                    using (IDXGISwapChain1 swapChain1 = dxgiFactory.CreateSwapChainForComposition(_gd.Device, swapChainDescription))
                     {
-                        // Create the swap chain and get the highest version available.
-                        using (IDXGISwapChain1 swapChain1 = dxgiFactory.CreateSwapChainForComposition(_device, swapChainDescription))
-                        {
-                            _dxgiSwapChain = swapChain1.QueryInterface<IDXGISwapChain2>();
-                        }
+                        _dxgiSwapChain = swapChain1.QueryInterface<IDXGISwapChain2>();
                     }
                 }
 
@@ -194,7 +187,7 @@ namespace Veldrid.D3D11
                         _depthFormat.Value,
                         TextureUsage.DepthStencil,
                         TextureType.Texture2D);
-                    _depthTexture = new D3D11Texture(_device, ref depthDesc);
+                    _depthTexture = new D3D11Texture(_gd.Device, ref depthDesc);
                 }
 
                 D3D11Texture backBufferVdTexture = new D3D11Texture(
@@ -203,7 +196,7 @@ namespace Veldrid.D3D11
                     D3D11Formats.ToVdFormat(_colorFormat));
 
                 FramebufferDescription desc = new FramebufferDescription(_depthTexture, backBufferVdTexture);
-                _framebuffer = new D3D11Framebuffer(_device, ref desc)
+                _framebuffer = new D3D11Framebuffer(_gd.Device, ref desc)
                 {
                     Swapchain = this
                 };
@@ -224,11 +217,6 @@ namespace Veldrid.D3D11
             {
                 _referencedCLs.Remove(cl);
             }
-        }
-
-        private static int GetSyncInterval(bool syncToVBlank)
-        {
-            return syncToVBlank ? 1 : 0;
         }
 
         public override bool IsDisposed => _disposed;

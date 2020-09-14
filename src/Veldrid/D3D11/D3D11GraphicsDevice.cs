@@ -8,6 +8,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Vortice.Mathematics;
 using Vortice.Direct3D11.Debug;
+using static Vortice.DXGI.DXGI;
+using static Vortice.Direct3D11.D3D11;
 
 namespace Veldrid.D3D11
 {
@@ -73,8 +75,7 @@ namespace Veldrid.D3D11
             {
                 if (options.AdapterPtr != IntPtr.Zero)
                 {
-                    _dxgiAdapter = new IDXGIAdapter(options.AdapterPtr);
-                    Vortice.Direct3D11.D3D11.D3D11CreateDevice(_dxgiAdapter,
+                    D3D11CreateDevice(options.AdapterPtr,
                         Vortice.Direct3D.DriverType.Hardware,
                         flags,
                         new[]
@@ -86,7 +87,7 @@ namespace Veldrid.D3D11
                 }
                 else
                 {
-                    Vortice.Direct3D11.D3D11.D3D11CreateDevice(null,
+                    D3D11CreateDevice(IntPtr.Zero,
                         Vortice.Direct3D.DriverType.Hardware,
                         flags,
                         new[]
@@ -99,24 +100,24 @@ namespace Veldrid.D3D11
             }
             catch
             {
-                Vortice.Direct3D11.D3D11.D3D11CreateDevice(null,
+                D3D11CreateDevice(IntPtr.Zero,
                     Vortice.Direct3D.DriverType.Hardware,
                     flags,
                     null,
                     out _device).CheckError();
             }
 
-            using (var dxgiDevice = _device.QueryInterface<Vortice.DXGI.IDXGIDevice>())
+            using (IDXGIDevice dxgiDevice = _device.QueryInterface<IDXGIDevice>())
             {
                 // Store a pointer to the DXGI adapter.
                 // This is for the case of no preferred DXGI adapter, or fallback to WARP.
-                _dxgiAdapter = dxgiDevice.Adapter;
+                dxgiDevice.GetAdapter(out _dxgiAdapter).CheckError();
             }
 
             if (swapchainDesc != null)
             {
                 SwapchainDescription desc = swapchainDesc.Value;
-                _mainSwapchain = new D3D11Swapchain(_device, ref desc);
+                _mainSwapchain = new D3D11Swapchain(this, ref desc);
             }
             _immediateContext = _device.ImmediateContext;
             _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
@@ -587,11 +588,6 @@ namespace Veldrid.D3D11
 
         internal override uint GetStructuredBufferMinOffsetAlignmentCore() => 16;
 
-        private static int GetSyncInterval(bool syncToVBlank)
-        {
-            return syncToVBlank ? 1 : 0;
-        }
-
         protected override void PlatformDispose()
         {
             // Dispose staging buffers
@@ -608,13 +604,23 @@ namespace Veldrid.D3D11
             ID3D11Debug deviceDebug = _device.QueryInterfaceOrNull<ID3D11Debug>();
 
             _device.Dispose();
-            _dxgiAdapter?.Dispose();
+            _dxgiAdapter.Dispose();
 
-            // Need to enable native debugging to see live objects in VisualStudio console.
-            if (deviceDebug != null)
+            // Report live objects using DXGI if available (DXGIGetDebugInterface1 will fail on pre Windows 8 OS).
+            if (DXGIGetDebugInterface1(out IDXGIDebug1 dxgiDebug).Success)
             {
-                deviceDebug.ReportLiveDeviceObjects(ReportLiveDeviceObjectFlags.Summary | ReportLiveDeviceObjectFlags.Detail | ReportLiveDeviceObjectFlags.IgnoreInternal);
-                deviceDebug.Dispose();
+                deviceDebug?.Dispose();
+                dxgiDebug.ReportLiveObjects(All, ReportLiveObjectFlags.Summary | ReportLiveObjectFlags.IgnoreInternal);
+                dxgiDebug.Dispose();
+            }
+            else
+            {
+                // Need to enable native debugging to see live objects in VisualStudio console.
+                if (deviceDebug != null)
+                {
+                    deviceDebug.ReportLiveDeviceObjects(ReportLiveDeviceObjectFlags.Summary | ReportLiveDeviceObjectFlags.Detail | ReportLiveDeviceObjectFlags.IgnoreInternal);
+                    deviceDebug.Dispose();
+                }
             }
         }
 

@@ -1437,6 +1437,7 @@ namespace Veldrid.OpenGLBinding
         ViewportBoundsRange = 33373,
         LayerProvokingVertex = 33374,
         ViewportIndexProvokingVertex = 33375,
+        MaxLabelLength = 33512,
         MaxCullDistances = 33529,
         MaxCombinedClipAndCullDistances = 33530,
         ContextReleaseBehavior = 33531,

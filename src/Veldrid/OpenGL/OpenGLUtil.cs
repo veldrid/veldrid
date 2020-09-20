@@ -7,6 +7,8 @@ namespace Veldrid.OpenGL
 {
     internal static class OpenGLUtil
     {
+        private static int? MaxLabelLength;
+
         [Conditional("DEBUG")]
         [DebuggerNonUserCode]
         internal static void CheckLastError()
@@ -28,6 +30,19 @@ namespace Veldrid.OpenGL
             if (HasGlObjectLabel)
             {
                 int byteCount = Encoding.UTF8.GetByteCount(name);
+                if (MaxLabelLength == null)
+                {
+                    int maxLabelLength = -1;
+                    glGetIntegerv(GetPName.MaxLabelLength, &maxLabelLength);
+                    CheckLastError();
+                    MaxLabelLength = maxLabelLength;
+                }
+                if (byteCount >= MaxLabelLength)
+                {
+                    name = name.Substring(0, MaxLabelLength.Value - 4) + "...";
+                    byteCount = Encoding.UTF8.GetByteCount(name);
+                }
+
                 byte* utf8Ptr = stackalloc byte[byteCount];
                 fixed (char* namePtr = name)
                 {

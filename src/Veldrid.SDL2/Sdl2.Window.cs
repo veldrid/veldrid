@@ -76,6 +76,11 @@ namespace Veldrid.Sdl2
         public static void SDL_MinimizeWindow(SDL_Window Sdl2Window) => s_minimizeWindow(Sdl2Window);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void SDL_RaiseWindow_t(SDL_Window SDL2Window);
+        private static SDL_RaiseWindow_t s_raiseWindow = LoadFunction<SDL_RaiseWindow_t>("SDL_RaiseWindow");
+        public static void SDL_RaiseWindow(SDL_Window Sdl2Window) => s_raiseWindow(Sdl2Window);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate int SDL_SetWindowFullscreen_t(SDL_Window Sdl2Window, SDL_FullscreenMode mode);
         private static SDL_SetWindowFullscreen_t s_setWindowFullscreen = LoadFunction<SDL_SetWindowFullscreen_t>("SDL_SetWindowFullscreen");
         public static int SDL_SetWindowFullscreen(SDL_Window Sdl2Window, SDL_FullscreenMode mode) => s_setWindowFullscreen(Sdl2Window, mode);

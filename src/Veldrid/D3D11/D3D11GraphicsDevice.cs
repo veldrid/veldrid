@@ -8,8 +8,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Vortice.Mathematics;
 using Vortice.Direct3D11.Debug;
-using static Vortice.DXGI.DXGI;
-using static Vortice.Direct3D11.D3D11;
+using VorticeDXGI = Vortice.DXGI.DXGI;
+using VorticeD3D11 = Vortice.Direct3D11.D3D11;
 
 namespace Veldrid.D3D11
 {
@@ -75,7 +75,7 @@ namespace Veldrid.D3D11
             {
                 if (options.AdapterPtr != IntPtr.Zero)
                 {
-                    D3D11CreateDevice(options.AdapterPtr,
+                    VorticeD3D11.D3D11CreateDevice(options.AdapterPtr,
                         Vortice.Direct3D.DriverType.Hardware,
                         flags,
                         new[]
@@ -87,7 +87,7 @@ namespace Veldrid.D3D11
                 }
                 else
                 {
-                    D3D11CreateDevice(IntPtr.Zero,
+                    VorticeD3D11.D3D11CreateDevice(IntPtr.Zero,
                         Vortice.Direct3D.DriverType.Hardware,
                         flags,
                         new[]
@@ -100,7 +100,7 @@ namespace Veldrid.D3D11
             }
             catch
             {
-                D3D11CreateDevice(IntPtr.Zero,
+                VorticeD3D11.D3D11CreateDevice(IntPtr.Zero,
                     Vortice.Direct3D.DriverType.Hardware,
                     flags,
                     null,
@@ -607,10 +607,10 @@ namespace Veldrid.D3D11
             _dxgiAdapter.Dispose();
 
             // Report live objects using DXGI if available (DXGIGetDebugInterface1 will fail on pre Windows 8 OS).
-            if (DXGIGetDebugInterface1(out IDXGIDebug1 dxgiDebug).Success)
+            if (VorticeDXGI.DXGIGetDebugInterface1(out IDXGIDebug1 dxgiDebug).Success)
             {
                 deviceDebug?.Dispose();
-                dxgiDebug.ReportLiveObjects(All, ReportLiveObjectFlags.Summary | ReportLiveObjectFlags.IgnoreInternal);
+                dxgiDebug.ReportLiveObjects(VorticeDXGI.All, ReportLiveObjectFlags.Summary | ReportLiveObjectFlags.IgnoreInternal);
                 dxgiDebug.Dispose();
             }
             else

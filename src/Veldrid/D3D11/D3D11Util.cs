@@ -1,6 +1,4 @@
-﻿using SharpGen.Runtime;
-using System;
-using Vortice.Direct3D11;
+﻿using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {

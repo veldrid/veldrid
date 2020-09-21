@@ -1,4 +1,4 @@
-﻿using SharpDX.Direct3D11;
+﻿using Vortice.Direct3D11;
 using System;
 
 namespace Veldrid.D3D11
@@ -6,7 +6,7 @@ namespace Veldrid.D3D11
     internal class D3D11ResourceFactory : ResourceFactory, IDisposable
     {
         private readonly D3D11GraphicsDevice _gd;
-        private readonly Device _device;
+        private readonly ID3D11Device _device;
         private readonly D3D11ResourceCache _cache;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
@@ -67,7 +67,7 @@ namespace Veldrid.D3D11
 
         protected override Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description)
         {
-            Texture2D existingTexture = new Texture2D((IntPtr)nativeTexture);
+            ID3D11Texture2D existingTexture = new ID3D11Texture2D((IntPtr)nativeTexture);
             return new D3D11Texture(existingTexture, description.Type, description.Format);
         }
 
@@ -93,7 +93,7 @@ namespace Veldrid.D3D11
 
         public override Swapchain CreateSwapchain(ref SwapchainDescription description)
         {
-            return new D3D11Swapchain(_device, ref description);
+            return new D3D11Swapchain(_gd, ref description);
         }
 
         public void Dispose()

@@ -78,6 +78,18 @@ namespace Veldrid.OpenGL
             {
                 glEnable(EnableCap.ScissorTest);
             }
+
+            if (!_isSwapchainFB)
+            {
+                int colorCount = _fb.ColorTargets.Count;
+                DrawBuffersEnum* bufs = stackalloc DrawBuffersEnum[colorCount];
+                for (int i = 0; i < colorCount; i++)
+                {
+                    bufs[i] = DrawBuffersEnum.ColorAttachment0 + i;
+                }
+                glDrawBuffers((uint)colorCount, bufs);
+                CheckLastError();
+            }
         }
 
         public override void ClearDepthStencil(float depth, byte stencil)
@@ -576,11 +588,25 @@ namespace Veldrid.OpenGL
                     dss.StencilReadMask);
                 CheckLastError();
 
+                glStencilOpSeparate(
+                    CullFaceMode.Front,
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilFront.Fail),
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilFront.DepthFail),
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilFront.Pass));
+                CheckLastError();
+
                 glStencilFuncSeparate(
                     CullFaceMode.Back,
                     OpenGLFormats.VdToGLStencilFunction(dss.StencilBack.Comparison),
                     (int)dss.StencilReference,
                     dss.StencilReadMask);
+                CheckLastError();
+
+                glStencilOpSeparate(
+                    CullFaceMode.Back,
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilBack.Fail),
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilBack.DepthFail),
+                    OpenGLFormats.VdToGLStencilOp(dss.StencilBack.Pass));
                 CheckLastError();
 
                 glStencilMask(dss.StencilWriteMask);
@@ -1041,7 +1067,7 @@ namespace Veldrid.OpenGL
                             {
                                 string name = glResourceSet.Layout.Elements[element].Name;
                                 throw new VeldridException(
-                                    $"Not enough data in uniform buffer \"{name}\" (slot {slot}, element {element}). Shader expects at least {uniformBindingInfo.BlockSize} bytes, but buffer only contains {glUB.SizeInBytes} bytes");
+                                    $"Not enough data in uniform buffer \"{name}\" (slot {slot}, element {element}). Shader expects at least {uniformBindingInfo.BlockSize} bytes, but buffer only contains {range.SizeInBytes} bytes");
                             }
                             glUniformBlockBinding(pipeline.Program, uniformBindingInfo.BlockLocation, ubBaseIndex + ubOffset);
                             CheckLastError();
@@ -1831,7 +1857,8 @@ namespace Veldrid.OpenGL
                         glBindFramebuffer(FramebufferTarget.ReadFramebuffer, readFB);
                         CheckLastError();
 
-                        if (srcGLTexture.ArrayLayers > 1 || srcGLTexture.Type == TextureType.Texture3D)
+                        if (srcGLTexture.ArrayLayers > 1 || srcGLTexture.Type == TextureType.Texture3D
+                            || (srcGLTexture.Usage & TextureUsage.Cubemap) != 0)
                         {
                             glFramebufferTextureLayer(
                                 FramebufferTarget.ReadFramebuffer,

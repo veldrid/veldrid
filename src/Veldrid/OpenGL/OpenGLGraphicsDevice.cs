@@ -185,6 +185,7 @@ namespace Veldrid.OpenGL
                 subsetTextureView: _extensions.ARB_TextureView,
                 commandListDebugMarkers: _extensions.KHR_Debug || _extensions.EXT_DebugMarker,
                 bufferRangeBinding: true,
+                shaderFloat64: _extensions.ARB_GpuShaderFp64,
                 commandBuffers: options.EnableCommandBuffers);
 
             int uboAlignment;

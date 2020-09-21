@@ -76,6 +76,11 @@ namespace Veldrid.Sdl2
         public static void SDL_MinimizeWindow(SDL_Window Sdl2Window) => s_minimizeWindow(Sdl2Window);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void SDL_RaiseWindow_t(SDL_Window SDL2Window);
+        private static SDL_RaiseWindow_t s_raiseWindow = LoadFunction<SDL_RaiseWindow_t>("SDL_RaiseWindow");
+        public static void SDL_RaiseWindow(SDL_Window Sdl2Window) => s_raiseWindow(Sdl2Window);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate int SDL_SetWindowFullscreen_t(SDL_Window Sdl2Window, SDL_FullscreenMode mode);
         private static SDL_SetWindowFullscreen_t s_setWindowFullscreen = LoadFunction<SDL_SetWindowFullscreen_t>("SDL_SetWindowFullscreen");
         public static int SDL_SetWindowFullscreen(SDL_Window Sdl2Window, SDL_FullscreenMode mode) => s_setWindowFullscreen(Sdl2Window, mode);
@@ -109,6 +114,16 @@ namespace Veldrid.Sdl2
         private delegate void SDL_SetWindowResizable_t(SDL_Window window, uint resizable);
         private static SDL_SetWindowResizable_t s_setWindowResizable = LoadFunction<SDL_SetWindowResizable_t>("SDL_SetWindowResizable");
         public static void SDL_SetWindowResizable(SDL_Window window, uint resizable) => s_setWindowResizable(window, resizable);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int SDL_GetDesktopDisplayMode_t(int displayIndex, SDL_DisplayMode* mode);
+        private static SDL_GetDesktopDisplayMode_t s_sdl_getDesktopDisplayMode = LoadFunction<SDL_GetDesktopDisplayMode_t>("SDL_GetDesktopDisplayMode");
+        public static int SDL_GetDesktopDisplayMode(int displayIndex, SDL_DisplayMode* mode) => s_sdl_getDesktopDisplayMode(displayIndex, mode);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int SDL_GetNumVideoDisplays_t();
+        private static SDL_GetNumVideoDisplays_t s_sdl_getNumVideoDisplays = LoadFunction<SDL_GetNumVideoDisplays_t>("SDL_GetNumVideoDisplays");
+        public static int SDL_GetNumVideoDisplays() => s_sdl_getNumVideoDisplays();
     }
 
     [Flags]
@@ -198,5 +213,14 @@ namespace Veldrid.Sdl2
         Windowed = 0,
         Fullscreen = 0x00000001,
         FullScreenDesktop = (Fullscreen | 0x00001000),
+    }
+
+    public unsafe struct SDL_DisplayMode
+    {
+        public uint format;
+        public int w;
+        public int h;
+        public int refresh_rate;
+        public void* driverdata;
     }
 }

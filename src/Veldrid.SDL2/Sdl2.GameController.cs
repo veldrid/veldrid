@@ -79,7 +79,7 @@ namespace Veldrid.Sdl2
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct SDL_ControllerDeviceEvent
+    public struct SDL_ControllerDeviceEvent
     {
         /// <summary>
         /// SDL_CONTROLLERDEVICEADDED, SDL_CONTROLLERDEVICEREMOVED, or SDL_CONTROLLERDEVICEREMAPPED.

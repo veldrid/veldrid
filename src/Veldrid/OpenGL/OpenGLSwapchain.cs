@@ -10,10 +10,12 @@ namespace Veldrid.OpenGL
         private readonly SwapchainSource _swapchainSource;
 
         private uint _lastAcquiredImage;
+        private bool _disposed;
 
         public override Framebuffer Framebuffer => _framebuffer;
         public override bool SyncToVerticalBlank { get => _gd.SyncToVerticalBlank; set => _gd.SyncToVerticalBlank = value; }
         public override string Name { get; set; } = "OpenGL Context Swapchain";
+        public override bool IsDisposed => _disposed;
 
         public override Framebuffer[] Framebuffers { get; }
         public override uint LastAcquiredImage => _lastAcquiredImage;
@@ -45,6 +47,7 @@ namespace Veldrid.OpenGL
 
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

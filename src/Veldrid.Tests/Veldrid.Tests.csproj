@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
@@ -43,7 +43,11 @@
     <None Remove="Shaders\F16VertexAttribs.vert" />
     <None Remove="Shaders\FullScreenBlit.frag" />
     <None Remove="Shaders\FullScreenBlit.vert" />
+    <None Remove="Shaders\FullScreenTriSampleTexture2D.frag" />
+    <None Remove="Shaders\FullScreenTriSampleTexture2D.vert" />
     <None Remove="Shaders\FullScreenTriSampleTextureArray.vert" />
+    <None Remove="Shaders\FullScreenWriteDepth.frag" />
+    <None Remove="Shaders\FullScreenWriteDepth.vert" />
     <None Remove="Shaders\VertexLayoutTestShader.frag" />
     <None Remove="Shaders\VertexLayoutTestShader.vert" />
   </ItemGroup>

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using SharpDX.Direct3D11;
+using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {
     internal class D3D11Texture : Texture
     {
-        private readonly Device _device;
+        private readonly ID3D11Device _device;
         private string _name;
 
         public override uint Width { get; }
@@ -18,12 +18,13 @@ namespace Veldrid.D3D11
         public override TextureUsage Usage { get; }
         public override TextureType Type { get; }
         public override TextureSampleCount SampleCount { get; }
+        public override bool IsDisposed => DeviceTexture.IsDisposed;
 
-        public Resource DeviceTexture { get; }
-        public SharpDX.DXGI.Format DxgiFormat { get; }
-        public SharpDX.DXGI.Format TypelessDxgiFormat { get; }
+        public ID3D11Resource DeviceTexture { get; }
+        public Vortice.DXGI.Format DxgiFormat { get; }
+        public Vortice.DXGI.Format TypelessDxgiFormat { get; }
 
-        public D3D11Texture(Device device, ref TextureDescription description)
+        public D3D11Texture(ID3D11Device device, ref TextureDescription description)
         {
             _device = device;
             Width = description.Width;
@@ -42,7 +43,7 @@ namespace Veldrid.D3D11
             TypelessDxgiFormat = D3D11Formats.GetTypelessFormat(DxgiFormat);
 
             CpuAccessFlags cpuFlags = CpuAccessFlags.None;
-            ResourceUsage resourceUsage = ResourceUsage.Default;
+            Usage resourceUsage = Vortice.Direct3D11.Usage.Default;
             BindFlags bindFlags = BindFlags.None;
             ResourceOptionFlags optionFlags = ResourceOptionFlags.None;
 
@@ -65,13 +66,13 @@ namespace Veldrid.D3D11
             if ((description.Usage & TextureUsage.Staging) == TextureUsage.Staging)
             {
                 cpuFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
-                resourceUsage = ResourceUsage.Staging;
+                resourceUsage = Vortice.Direct3D11.Usage.Staging;
             }
 
             if ((description.Usage & TextureUsage.GenerateMipmaps) != 0)
             {
                 bindFlags |= BindFlags.RenderTarget | BindFlags.ShaderResource;
-                optionFlags |= ResourceOptionFlags.GenerateMipMaps;
+                optionFlags |= ResourceOptionFlags.GenerateMips;
             }
 
             int arraySize = (int)description.ArrayLayers;
@@ -103,7 +104,7 @@ namespace Veldrid.D3D11
                     OptionFlags = optionFlags,
                 };
 
-                DeviceTexture = new Texture1D(device, desc1D);
+                DeviceTexture = device.CreateTexture1D(desc1D);
             }
             else if (Type == TextureType.Texture2D)
             {
@@ -117,11 +118,11 @@ namespace Veldrid.D3D11
                     BindFlags = bindFlags,
                     CpuAccessFlags = cpuFlags,
                     Usage = resourceUsage,
-                    SampleDescription = new SharpDX.DXGI.SampleDescription((int)FormatHelpers.GetSampleCountUInt32(SampleCount), 0),
+                    SampleDescription = new Vortice.DXGI.SampleDescription((int)FormatHelpers.GetSampleCountUInt32(SampleCount), 0),
                     OptionFlags = optionFlags,
                 };
 
-                DeviceTexture = new Texture2D(device, deviceDescription);
+                DeviceTexture = device.CreateTexture2D(deviceDescription);
             }
             else
             {
@@ -139,11 +140,11 @@ namespace Veldrid.D3D11
                     OptionFlags = optionFlags,
                 };
 
-                DeviceTexture = new Texture3D(device, desc3D);
+                DeviceTexture = device.CreateTexture3D(desc3D);
             }
         }
 
-        public D3D11Texture(Texture2D existingTexture, TextureType type, PixelFormat format)
+        public D3D11Texture(ID3D11Texture2D existingTexture, TextureType type, PixelFormat format)
         {
             _device = existingTexture.Device;
             DeviceTexture = existingTexture;

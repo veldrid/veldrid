@@ -30,6 +30,7 @@ namespace Veldrid.MTL
         }
 
         public MetalBindings.MTLBuffer DeviceBuffer => _deviceBuffer;
+        public override bool IsDisposed => _disposed;
 
         public MTLBuffer(ref BufferDescription bd, MTLGraphicsDevice gd)
             : base(gd)

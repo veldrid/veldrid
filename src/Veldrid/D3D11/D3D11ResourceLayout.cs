@@ -3,6 +3,7 @@
     internal class D3D11ResourceLayout : ResourceLayout
     {
         private string _name;
+        private bool _disposed;
 
         public ResourceLayoutElementDescription[] Elements { get; }
 
@@ -18,8 +19,11 @@
             set => _name = value;
         }
 
+        public override bool IsDisposed => _disposed;
+
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

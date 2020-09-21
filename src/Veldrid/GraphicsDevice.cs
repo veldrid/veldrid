@@ -941,7 +941,7 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options)
         {
-            return new D3D11.D3D11GraphicsDevice(options, null);
+            return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(),  null);
         }
 
         /// <summary>
@@ -952,7 +952,30 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
-            return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
+            return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(), swapchainDescription);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="d3d11Options">The Direct3D11-specific options used to create the device.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
+        public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, D3D11DeviceOptions d3d11Options)
+        {
+            return new D3D11.D3D11GraphicsDevice(options, d3d11Options, null);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="d3d11Options">The Direct3D11-specific options used to create the device.</param>
+        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
+        public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, D3D11DeviceOptions d3d11Options, SwapchainDescription swapchainDescription)
+        {
+            return new D3D11.D3D11GraphicsDevice(options, d3d11Options, swapchainDescription);
         }
 
         /// <summary>
@@ -972,15 +995,15 @@ namespace Veldrid
                 options.SyncToVerticalBlank,
                 options.SwapchainSrgbFormat);
 
-            return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
+            return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(), swapchainDescription);
         }
 
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
-        /// <param name="swapChainPanel">A COM object which must implement the <see cref="SharpDX.DXGI.ISwapChainPanelNative"/>
-        /// or <see cref="SharpDX.DXGI.ISwapChainBackgroundPanelNative"/> interface. Generally, this should be a SwapChainPanel
+        /// <param name="swapChainPanel">A COM object which must implement the <see cref="Vortice.DXGI.ISwapChainPanelNative"/>
+        /// or <see cref="Vortice.DXGI.ISwapChainBackgroundPanelNative"/> interface. Generally, this should be a SwapChainPanel
         /// or SwapChainBackgroundPanel contained in your application window.</param>
         /// <param name="renderWidth">The renderable width of the swapchain panel.</param>
         /// <param name="renderHeight">The renderable height of the swapchain panel.</param>
@@ -1001,7 +1024,7 @@ namespace Veldrid
                 options.SyncToVerticalBlank,
                 options.SwapchainSrgbFormat);
 
-            return new D3D11.D3D11GraphicsDevice(options, swapchainDescription);
+            return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(), swapchainDescription);
         }
 #endif
 

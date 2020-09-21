@@ -1,6 +1,5 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System;
 using System.Numerics;
 using Veldrid.Utilities;
 using Veldrid.ImageSharp;
@@ -95,12 +94,12 @@ namespace Veldrid.NeoDemo.Objects
         public static Skybox LoadDefaultSkybox()
         {
             return new Skybox(
-                Image.Load(AssetHelper.GetPath("Textures/cloudtop/cloudtop_ft.png")),
-                Image.Load(AssetHelper.GetPath("Textures/cloudtop/cloudtop_bk.png")),
-                Image.Load(AssetHelper.GetPath("Textures/cloudtop/cloudtop_lf.png")),
-                Image.Load(AssetHelper.GetPath("Textures/cloudtop/cloudtop_rt.png")),
-                Image.Load(AssetHelper.GetPath("Textures/cloudtop/cloudtop_up.png")),
-                Image.Load(AssetHelper.GetPath("Textures/cloudtop/cloudtop_dn.png")));
+                Image.Load<Rgba32>(AssetHelper.GetPath("Textures/cloudtop/cloudtop_ft.png")),
+                Image.Load<Rgba32>(AssetHelper.GetPath("Textures/cloudtop/cloudtop_bk.png")),
+                Image.Load<Rgba32>(AssetHelper.GetPath("Textures/cloudtop/cloudtop_lf.png")),
+                Image.Load<Rgba32>(AssetHelper.GetPath("Textures/cloudtop/cloudtop_rt.png")),
+                Image.Load<Rgba32>(AssetHelper.GetPath("Textures/cloudtop/cloudtop_up.png")),
+                Image.Load<Rgba32>(AssetHelper.GetPath("Textures/cloudtop/cloudtop_dn.png")));
         }
 
         public override void DestroyDeviceObjects()

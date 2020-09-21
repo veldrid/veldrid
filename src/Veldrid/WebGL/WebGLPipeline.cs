@@ -46,6 +46,8 @@ namespace Veldrid.WebGL
 
         public override string Name { get; set; }
 
+        public override bool IsDisposed => _disposed;
+
         public WebGLPipeline(WebGLGraphicsDevice gd, ref GraphicsPipelineDescription description)
             : base(ref description)
         {
@@ -246,6 +248,7 @@ namespace Veldrid.WebGL
         public override void Dispose()
         {
             Program.Dispose();
+            _disposed = true;
         }
     }
 

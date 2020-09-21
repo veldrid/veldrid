@@ -1,9 +1,7 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -44,12 +42,12 @@ namespace Veldrid.ImageSharp
         /// </summary>
         public uint MipLevels => (uint)Images.Length;
 
-        public ImageSharpTexture(string path) : this(Image.Load(path), true) { }
-        public ImageSharpTexture(string path, bool mipmap) : this(Image.Load(path), mipmap) { }
-        public ImageSharpTexture(string path, bool mipmap, bool srgb) : this(Image.Load(path), mipmap, srgb) { }
-        public ImageSharpTexture(Stream stream) : this(Image.Load(stream), true) { }
-        public ImageSharpTexture(Stream stream, bool mipmap) : this(Image.Load(stream), mipmap) { }
-        public ImageSharpTexture(Stream stream, bool mipmap, bool srgb) : this(Image.Load(stream), mipmap, srgb) { }
+        public ImageSharpTexture(string path) : this(Image.Load<Rgba32>(path), true) { }
+        public ImageSharpTexture(string path, bool mipmap) : this(Image.Load<Rgba32>(path), mipmap) { }
+        public ImageSharpTexture(string path, bool mipmap, bool srgb) : this(Image.Load<Rgba32>(path), mipmap, srgb) { }
+        public ImageSharpTexture(Stream stream) : this(Image.Load<Rgba32>(stream), true) { }
+        public ImageSharpTexture(Stream stream, bool mipmap) : this(Image.Load<Rgba32>(stream), mipmap) { }
+        public ImageSharpTexture(Stream stream, bool mipmap, bool srgb) : this(Image.Load<Rgba32>(stream), mipmap, srgb) { }
         public ImageSharpTexture(Image<Rgba32> image, bool mipmap = true) : this(image, mipmap, false) { }
         public ImageSharpTexture(Image<Rgba32> image, bool mipmap, bool srgb)
         {
@@ -82,7 +80,11 @@ namespace Veldrid.ImageSharp
             for (uint level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                fixed (void* pin = &MemoryMarshal.GetReference(image.GetPixelSpan()))
+                if (!image.TryGetSinglePixelSpan(out Span<Rgba32> pixelSpan))
+                {
+                    throw new VeldridException("Unable to get image pixelspan.");
+                }
+                fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
                 {
                     MappedResource map = gd.Map(staging, MapMode.Write, level);
                     uint rowWidth = (uint)(image.Width * 4);
@@ -124,7 +126,11 @@ namespace Veldrid.ImageSharp
             for (int level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                fixed (void* pin = &MemoryMarshal.GetReference(image.GetPixelSpan()))
+                if (!image.TryGetSinglePixelSpan(out Span<Rgba32> pixelSpan))
+                {
+                    throw new VeldridException("Unable to get image pixelspan.");
+                }
+                fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
                 {
                     gd.UpdateTexture(
                         tex,

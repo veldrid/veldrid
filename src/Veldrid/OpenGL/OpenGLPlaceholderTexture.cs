@@ -4,6 +4,7 @@
     {
         private uint _height;
         private uint _width;
+        private bool _disposed;
 
         public OpenGLPlaceholderTexture(
             uint width,
@@ -45,6 +46,11 @@
 
         public override string Name { get; set; }
 
-        private protected override void DisposeCore() { }
+        public override bool IsDisposed => _disposed;
+
+        private protected override void DisposeCore()
+        {
+            _disposed = true;
+        }
     }
 }

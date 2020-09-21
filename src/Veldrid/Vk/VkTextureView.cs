@@ -17,6 +17,8 @@ namespace Veldrid.Vk
 
         public ResourceRefCount RefCount { get; }
 
+        public override bool IsDisposed => _destroyed;
+
         public VkTextureView(VkGraphicsDevice gd, ref TextureViewDescription description)
             : base(ref description)
         {

@@ -9,9 +9,12 @@ namespace Veldrid.WebGL
         public override string Name { get; set; }
 
         private readonly WebGLGraphicsDevice _gd;
+        private bool _disposed;
 
         public WebGLDotNET.WebGLFramebuffer WglFramebuffer { get; }
         public bool IsSwapchainFramebuffer => _swapchain != null;
+
+        public override bool IsDisposed => _disposed;
 
         public WebGLFramebuffer(WebGLGraphicsDevice gd, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets, description.ResolveTargets)
@@ -107,6 +110,7 @@ namespace Veldrid.WebGL
         public override void Dispose()
         {
             WglFramebuffer.Dispose();
+            _disposed = true;
         }
     }
 }

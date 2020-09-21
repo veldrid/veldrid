@@ -23,6 +23,11 @@ namespace Veldrid
         public IntPtr Device => _gd.Device.NativePointer;
 
         /// <summary>
+        /// Gets a pointer to the IAdapter used to create the GraphicsDevice.
+        /// </summary>
+        public IntPtr Adapter => _gd.Adapter.NativePointer;
+
+        /// <summary>
         /// Gets a pointer to the native texture wrapped by the given Veldrid Texture. Depending on the instance's TextureType,
         /// this will be a pointer to an ID3D11Texture1D, an ID3D11Texture2D, or an ID3D11Texture3D.
         /// </summary>

@@ -14,6 +14,7 @@ namespace Veldrid.MTL
         public MTLLibrary Library { get; private set; }
         public MTLFunction Function => _function;
         public bool HasFunctionConstants { get; }
+        public override bool IsDisposed => _disposed;
 
         public override string Name
         {

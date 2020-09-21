@@ -6,6 +6,7 @@ namespace Veldrid.WebGL
     {
         private readonly WebGLGraphicsDevice _gd;
         private readonly SamplerDescription _description;
+        private bool _disposed;
 
         public WebGLSampler(WebGLGraphicsDevice gd, ref SamplerDescription description)
         {
@@ -20,10 +21,13 @@ namespace Veldrid.WebGL
         public WebGLDotNET.WebGLSampler MipmapSampler { get; }
         public override string Name { get; set; }
 
+        public override bool IsDisposed => _disposed;
+
         public override void Dispose()
         {
             NoMipmapSampler.Dispose();
             MipmapSampler.Dispose();
+            _disposed = true;
         }
 
         private WebGLDotNET.WebGLSampler CreateSampler(bool mipmapped)

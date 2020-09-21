@@ -6,6 +6,7 @@ namespace Veldrid.WebGL
     internal class WebGLBuffer : DeviceBuffer
     {
         private readonly WebGLGraphicsDevice _gd;
+        private bool _disposed;
 
         public WebGLDotNET.WebGLBuffer WglBuffer { get; }
 
@@ -14,6 +15,8 @@ namespace Veldrid.WebGL
         public override BufferUsage Usage { get; }
 
         public override string Name { get; set; }
+
+        public override bool IsDisposed => _disposed;
 
         public WebGLBuffer(WebGLGraphicsDevice gd, ref BufferDescription description)
             : base(gd)
@@ -52,6 +55,7 @@ namespace Veldrid.WebGL
         public override void Dispose()
         {
             _gd.Ctx.DeleteBuffer(WglBuffer);
+            _disposed = true;
         }
     }
 }

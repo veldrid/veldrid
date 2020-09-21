@@ -51,6 +51,8 @@ namespace Veldrid.Vk
 
         public VkSwapchain Swapchain => _swapchain;
 
+        public override bool IsDisposed => _destroyed;
+
         public VkSwapchainFramebuffer(
             VkGraphicsDevice gd,
             VkSwapchain swapchain,

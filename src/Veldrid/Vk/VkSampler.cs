@@ -14,6 +14,8 @@ namespace Veldrid.Vk
 
         public ResourceRefCount RefCount { get; }
 
+        public override bool IsDisposed => _disposed;
+
         public VkSampler(VkGraphicsDevice gd, ref SamplerDescription description)
         {
             _gd = gd;

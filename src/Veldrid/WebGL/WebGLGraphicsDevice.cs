@@ -42,6 +42,7 @@ namespace Veldrid.WebGL
                 subsetTextureView: false,
                 commandListDebugMarkers: false,
                 bufferRangeBinding: false,
+                shaderFloat64: false,
                 commandBuffers: options.EnableCommandBuffers);
             Canvas = (JSObject)canvas;
             ResourceFactory = new WebGLResourceFactory(this);

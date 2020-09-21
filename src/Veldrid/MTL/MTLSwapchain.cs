@@ -11,6 +11,7 @@ namespace Veldrid.MTL
         private UIView _uiView; // Valid only when a UIViewSwapchainSource is used.
         private bool _syncToVerticalBlank;
         public uint ImageIndex { get; private set; }
+        private bool _disposed;
 
         public override Framebuffer Framebuffer => _framebuffers[ImageIndex];
 
@@ -32,6 +33,7 @@ namespace Veldrid.MTL
 
         // TODO: Just rename the other property.
         public override uint LastAcquiredImage => ImageIndex;
+        public override bool IsDisposed => _disposed;
 
         public MTLSwapchain(MTLGraphicsDevice gd, ref SwapchainDescription description)
         {
@@ -150,6 +152,8 @@ namespace Veldrid.MTL
                 fb.Dispose();
             }
             ObjectiveCRuntime.release(_metalLayer.NativePtr);
+
+            _disposed = true;
         }
 
         internal uint AcquireNextImage()

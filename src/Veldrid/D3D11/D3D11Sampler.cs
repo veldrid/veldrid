@@ -1,5 +1,5 @@
-﻿using SharpDX.Direct3D11;
-using SharpDX.Mathematics.Interop;
+﻿using Vortice.Direct3D11;
+using Vortice.Mathematics;
 
 namespace Veldrid.D3D11
 {
@@ -7,38 +7,38 @@ namespace Veldrid.D3D11
     {
         private string _name;
 
-        public SamplerState DeviceSampler { get; }
+        public ID3D11SamplerState DeviceSampler { get; }
 
-        public D3D11Sampler(Device device, ref SamplerDescription description)
+        public D3D11Sampler(ID3D11Device device, ref SamplerDescription description)
         {
-            Comparison comparision = description.ComparisonKind == null ? Comparison.Never : D3D11Formats.VdToD3D11Comparison(description.ComparisonKind.Value);
-            SamplerStateDescription samplerStateDesc = new SamplerStateDescription
+            ComparisonFunction comparision = description.ComparisonKind == null ? ComparisonFunction.Never : D3D11Formats.VdToD3D11ComparisonFunc(description.ComparisonKind.Value);
+            Vortice.Direct3D11.SamplerDescription samplerStateDesc = new Vortice.Direct3D11.SamplerDescription
             {
                 AddressU = D3D11Formats.VdToD3D11AddressMode(description.AddressModeU),
                 AddressV = D3D11Formats.VdToD3D11AddressMode(description.AddressModeV),
                 AddressW = D3D11Formats.VdToD3D11AddressMode(description.AddressModeW),
                 Filter = D3D11Formats.ToD3D11Filter(description.Filter, description.ComparisonKind.HasValue),
-                MinimumLod = description.MinimumLod,
-                MaximumLod = description.MaximumLod,
-                MaximumAnisotropy = (int)description.MaximumAnisotropy,
+                MinLOD = description.MinimumLod,
+                MaxLOD = description.MaximumLod,
+                MaxAnisotropy = (int)description.MaximumAnisotropy,
                 ComparisonFunction = comparision,
-                MipLodBias = description.LodBias,
+                MipLODBias = description.LodBias,
                 BorderColor = ToRawColor4(description.BorderColor)
             };
 
-            DeviceSampler = new SamplerState(device, samplerStateDesc);
+            DeviceSampler = device.CreateSamplerState(samplerStateDesc);
         }
 
-        private static RawColor4 ToRawColor4(SamplerBorderColor borderColor)
+        private static Color4 ToRawColor4(SamplerBorderColor borderColor)
         {
             switch (borderColor)
             {
                 case SamplerBorderColor.TransparentBlack:
-                    return new RawColor4(0, 0, 0, 0);
+                    return new Color4(0, 0, 0, 0);
                 case SamplerBorderColor.OpaqueBlack:
-                    return new RawColor4(0, 0, 0, 1);
+                    return new Color4(0, 0, 0, 1);
                 case SamplerBorderColor.OpaqueWhite:
-                    return new RawColor4(1, 1, 1, 1);
+                    return new Color4(1, 1, 1, 1);
                 default:
                     throw Illegal.Value<SamplerBorderColor>();
             }
@@ -53,6 +53,8 @@ namespace Veldrid.D3D11
                 DeviceSampler.DebugName = value;
             }
         }
+
+        public override bool IsDisposed => DeviceSampler.IsDisposed;
 
         public override void Dispose()
         {

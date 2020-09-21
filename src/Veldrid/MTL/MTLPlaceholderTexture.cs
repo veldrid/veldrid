@@ -5,6 +5,7 @@ namespace Veldrid.MTL
     {
         private uint _width;
         private uint _height;
+        private bool _disposed;
 
         public override PixelFormat Format { get; }
 
@@ -26,6 +27,8 @@ namespace Veldrid.MTL
 
         public override string Name { get; set; }
 
+        public override bool IsDisposed => _disposed;
+
         public MTLPlaceholderTexture(PixelFormat format)
         {
             Format = format;
@@ -39,6 +42,7 @@ namespace Veldrid.MTL
 
         private protected override void DisposeCore()
         {
+            _disposed = true;
         }
     }
 }

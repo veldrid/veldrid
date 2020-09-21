@@ -39,6 +39,8 @@ namespace Veldrid.Vk
 
         public override TextureSampleCount SampleCount { get; }
 
+        public override bool IsDisposed => _destroyed;
+
         public VkImage OptimalDeviceImage => _optimalImage;
         public Vulkan.VkBuffer StagingBuffer => _stagingBuffer;
         public VkMemoryBlock Memory => _memoryBlock;
@@ -48,11 +50,11 @@ namespace Veldrid.Vk
 
         private VkImageLayout[] _imageLayouts;
 
-        public bool IsSwapchainTexture { get; }
-
+        private bool _isSwapchainTexture;
         private string _name;
 
         public ResourceRefCount RefCount { get; }
+        public bool IsSwapchainTexture => _isSwapchainTexture;
 
         internal VkTexture(VkGraphicsDevice gd, ref TextureDescription description)
         {
@@ -232,7 +234,7 @@ namespace Veldrid.Vk
             VkSampleCount = VkFormats.VdToVkSampleCount(sampleCount);
             _optimalImage = existingImage;
             _imageLayouts = new[] { VkImageLayout.Undefined };
-            IsSwapchainTexture = isSwapchainTexture;
+            _isSwapchainTexture = isSwapchainTexture;
 
             ClearIfRenderTarget(VkImageLayout.PresentSrcKHR);
             RefCount = new ResourceRefCount(DisposeCore);

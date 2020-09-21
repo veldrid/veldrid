@@ -9,12 +9,14 @@ namespace Veldrid.OpenGL
         private readonly GraphicsDevice _gd;
         private readonly PixelFormat? _depthFormat;
         public bool IsSecondarySwapchain { get; }
+        private bool _disposed;
 
         public override uint Width => _colorTexture.Width;
         public override uint Height => _colorTexture.Height;
 
         public override OutputDescription OutputDescription { get; }
         public override string Name { get; set; }
+        public override bool IsDisposed => _disposed;
 
         private readonly OpenGLPlaceholderTexture _colorTexture;
         private readonly OpenGLPlaceholderTexture _depthTexture;
@@ -138,6 +140,7 @@ namespace Veldrid.OpenGL
             }
             Framebuffer.DepthTarget?.Target.Dispose();
             Framebuffer.Dispose();
+            _disposed = true;
         }
     }
 }

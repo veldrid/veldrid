@@ -19,6 +19,7 @@ namespace Veldrid.WebGL
 
         private readonly FramebufferAttachment[] _colorTargets;
         private readonly FramebufferAttachment? _depthTarget;
+        private bool _disposed;
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
         public override IReadOnlyList<FramebufferAttachment> ResolveTargets => Array.Empty<FramebufferAttachment>();
@@ -28,6 +29,8 @@ namespace Veldrid.WebGL
 
         // Only valid for secondary swapchains.
         public WebGLFramebuffer Framebuffer { get; private set; }
+
+        public override bool IsDisposed => _disposed;
 
         internal WebGLSwapchainFramebuffer(
             GraphicsDevice gd,
@@ -78,6 +81,7 @@ namespace Veldrid.WebGL
 
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

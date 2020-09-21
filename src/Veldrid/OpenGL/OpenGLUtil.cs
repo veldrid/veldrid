@@ -7,6 +7,8 @@ namespace Veldrid.OpenGL
 {
     internal static class OpenGLUtil
     {
+        private static int? MaxLabelLength;
+
         [Conditional("DEBUG")]
         [DebuggerNonUserCode]
         internal static void CheckLastError()
@@ -28,6 +30,19 @@ namespace Veldrid.OpenGL
             if (HasGlObjectLabel)
             {
                 int byteCount = Encoding.UTF8.GetByteCount(name);
+                if (MaxLabelLength == null)
+                {
+                    int maxLabelLength = -1;
+                    glGetIntegerv(GetPName.MaxLabelLength, &maxLabelLength);
+                    CheckLastError();
+                    MaxLabelLength = maxLabelLength;
+                }
+                if (byteCount >= MaxLabelLength)
+                {
+                    name = name.Substring(0, MaxLabelLength.Value - 4) + "...";
+                    byteCount = Encoding.UTF8.GetByteCount(name);
+                }
+
                 byte* utf8Ptr = stackalloc byte[byteCount];
                 fixed (char* namePtr = name)
                 {
@@ -111,6 +126,30 @@ namespace Veldrid.OpenGL
             glDeleteTextures(1, ref copySrc);
 
             return data[0] > 0.6f;
+        }
+
+        internal static TextureTarget GetTextureTarget(OpenGLTexture glTex, uint arrayLayer)
+        {
+            if ((glTex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+            {
+                switch (arrayLayer % 6)
+                {
+                    case 0:
+                        return TextureTarget.TextureCubeMapPositiveX;
+                    case 1:
+                        return TextureTarget.TextureCubeMapNegativeX;
+                    case 2:
+                        return TextureTarget.TextureCubeMapPositiveY;
+                    case 3:
+                        return TextureTarget.TextureCubeMapNegativeY;
+                    case 4:
+                        return TextureTarget.TextureCubeMapPositiveZ;
+                    case 5:
+                        return TextureTarget.TextureCubeMapNegativeZ;
+                }
+            }
+
+            return glTex.TextureTarget;
         }
     }
 }

@@ -34,12 +34,17 @@ namespace Veldrid.MTL
         public override TextureType Type { get; }
 
         public override TextureSampleCount SampleCount { get; }
+
         public override string Name
         {
             get => _deviceTexture.label;
             set => _deviceTexture.label = value;
         }
+
+        public override bool IsDisposed => _disposed;
+
         public MTLPixelFormat MTLPixelFormat { get; }
+
         public MTLTextureType MTLTextureType { get; }
 
         public MTLTexture(ref TextureDescription description, MTLGraphicsDevice _gd)

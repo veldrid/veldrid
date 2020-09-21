@@ -72,6 +72,8 @@ namespace Veldrid.OpenGL
 
         public override uint LastAcquiredImage => _lastAcquiredImage;
 
+        public override bool IsDisposed => _disposed;
+
         public void DestroyGLResources()
         {
             if (!_disposed)

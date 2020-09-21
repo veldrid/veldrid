@@ -4,6 +4,7 @@
     {
         private WebGLGraphicsDevice _gd;
         private uint _lastAcquiredImage;
+        private bool _disposed;
 
         public WebGLSwapchain(WebGLGraphicsDevice gd)
         {
@@ -27,6 +28,7 @@
 
         public override uint LastAcquiredImage => _lastAcquiredImage;
 
+        public override bool IsDisposed => _disposed;
 
         public override void Resize(uint width, uint height)
         {
@@ -34,6 +36,7 @@
 
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

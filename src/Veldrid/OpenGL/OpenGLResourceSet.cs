@@ -4,10 +4,14 @@ namespace Veldrid.OpenGL
 {
     internal class OpenGLResourceSet : ResourceSet
     {
+        private bool _disposed;
+
         public new OpenGLResourceLayout Layout { get; }
         public new BindableResource[] Resources { get; }
         public override string Name { get; set; }
         public ResourceRefCount[] RefCounts { get; }
+
+        public override bool IsDisposed => _disposed;
 
         public OpenGLResourceSet(ref ResourceSetDescription description) : base(ref description)
         {
@@ -50,6 +54,7 @@ namespace Veldrid.OpenGL
 
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

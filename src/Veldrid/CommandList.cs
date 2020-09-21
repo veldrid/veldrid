@@ -932,7 +932,7 @@ namespace Veldrid
                     source, 0, 0, 0, level, 0,
                     destination, 0, 0, 0, level, 0,
                     mipWidth, mipHeight, mipDepth,
-                    source.ArrayLayers);
+                    effectiveSrcArrayLayers);
             }
         }
 
@@ -1179,6 +1179,11 @@ namespace Veldrid
         /// tools.
         /// </summary>
         public abstract string Name { get; set; }
+
+        /// <summary>
+        /// A bool indicating whether this instance has been disposed.
+        /// </summary>
+        public abstract bool IsDisposed { get; }
 
         /// <summary>
         /// Frees unmanaged device resources controlled by this instance.

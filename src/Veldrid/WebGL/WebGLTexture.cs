@@ -7,6 +7,7 @@ namespace Veldrid.WebGL
     internal class WebGLTexture : Texture
     {
         private readonly WebGLGraphicsDevice _gd;
+        private bool _disposed;
 
         public override PixelFormat Format { get; }
         public override uint Width { get; }
@@ -23,6 +24,8 @@ namespace Veldrid.WebGL
         public int GLInternalFormat { get; }
         public uint GLPixelFormat { get; }
         public uint GLPixelType { get; }
+
+        public override bool IsDisposed => _disposed;
 
         public WebGLTexture(WebGLGraphicsDevice gd, ref TextureDescription description)
         {
@@ -121,6 +124,7 @@ namespace Veldrid.WebGL
         private protected override void DisposeCore()
         {
             WglTexture.Dispose();
+            _disposed = true;
         }
     }
 }

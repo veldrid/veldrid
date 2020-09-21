@@ -2,9 +2,13 @@
 {
     internal class WebGLResourceLayout : ResourceLayout
     {
+        private bool _disposed;
+
         public ResourceLayoutElementDescription[] Elements { get; }
 
         public override string Name { get; set; }
+
+        public override bool IsDisposed => _disposed;
 
         public WebGLResourceLayout(ref ResourceLayoutDescription description)
             : base(ref description)
@@ -19,6 +23,7 @@
 
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

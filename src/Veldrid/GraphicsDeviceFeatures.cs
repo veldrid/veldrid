@@ -92,6 +92,10 @@
         /// </summary>
         public bool BufferRangeBinding { get; }
         /// <summary>
+        /// Indicates whether 64-bit floating point integers can be used in shaders.
+        /// </summary>
+        public bool ShaderFloat64 { get; }
+        /// <summary>
         /// Indicates whether <see cref="CommandBuffer"/> objects can be created. This property only depends on whether
         /// <see cref="GraphicsDeviceOptions.EnableCommandBuffers"/> was set to true when the device was created, and
         /// is otherwise available on all systems.
@@ -117,6 +121,7 @@
             bool subsetTextureView,
             bool commandListDebugMarkers,
             bool bufferRangeBinding,
+            bool shaderFloat64,
             bool commandBuffers)
         {
             ComputeShader = computeShader;
@@ -137,6 +142,7 @@
             SubsetTextureView = subsetTextureView;
             CommandListDebugMarkers = commandListDebugMarkers;
             BufferRangeBinding = bufferRangeBinding;
+            ShaderFloat64 = shaderFloat64;
             CommandBuffers = commandBuffers;
         }
     }

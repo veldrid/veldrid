@@ -65,6 +65,10 @@ namespace Veldrid
         /// tools.
         /// </summary>
         public abstract string Name { get; set; }
+        /// <summary>
+        /// A bool indicating whether this instance has been disposed.
+        /// </summary>
+        public abstract bool IsDisposed { get; }
 
         internal TextureView GetFullTextureView(GraphicsDevice gd)
         {

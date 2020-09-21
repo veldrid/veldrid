@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 
 namespace Veldrid
 {
@@ -33,11 +34,14 @@ namespace Veldrid
         public int Top => Y;
         public int Bottom => Y + Height;
 
+        public Vector2 Position => new Vector2(X, Y);
+        public Vector2 Size => new Vector2(Width, Height);
+
         public bool Contains(Point p) => Contains(p.X, p.Y);
         public bool Contains(int x, int y)
         {
-            return (X <= x && (X + Width) >= x)
-                && (Y <= y && (Y + Height) >= y);
+            return (X <= x && (X + Width) > x)
+                && (Y <= y && (Y + Height) > y);
         }
 
         public bool Equals(Rectangle other) => X.Equals(other.X) && Y.Equals(other.Y) && Width.Equals(other.Width) && Height.Equals(other.Height);

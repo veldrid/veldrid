@@ -63,7 +63,7 @@ namespace Veldrid.NeoDemo
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, GraphicsBackend.OpenGL, out _window, out _gd);
+            VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, gdOptions, out _window, out _gd);
             _swapchain = _gd.MainSwapchain;
             SwapchainFormat = _swapchain.Framebuffers[0].ColorTargets[0].Target.Format;
             SwapchainBufferCount = _swapchain.BufferCount;

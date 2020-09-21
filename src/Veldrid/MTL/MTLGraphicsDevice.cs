@@ -73,6 +73,7 @@ namespace Veldrid.MTL
                 subsetTextureView: true,
                 commandListDebugMarkers: true,
                 bufferRangeBinding: true,
+                shaderFloat64: false,
                 options.EnableCommandBuffers);
             ResourceBindingModel = options.ResourceBindingModel;
 

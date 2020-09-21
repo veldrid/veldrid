@@ -29,7 +29,7 @@ namespace Veldrid
         /// </summary>
         public ShaderSetDescription ShaderSet;
         /// <summary>
-        /// An array of <see cref="ResourceLayout"/>, which controls the layout of shader resoruces in the <see cref="Pipeline"/>.
+        /// An array of <see cref="ResourceLayout"/>, which controls the layout of shader resources in the <see cref="Pipeline"/>.
         /// </summary>
         public ResourceLayout[] ResourceLayouts;
         /// <summary>

@@ -47,6 +47,7 @@ namespace Veldrid.Vk
         private bool _standardClipYDirection;
         private vkGetBufferMemoryRequirements2_t _getBufferMemoryRequirements2;
         private vkGetImageMemoryRequirements2_t _getImageMemoryRequirements2;
+        private vkCreateMetalSurfaceEXT_t _createMetalSurfaceEXT;
 
         // Staging Resources
         private const uint MinStagingBufferSize = 64;
@@ -95,6 +96,7 @@ namespace Veldrid.Vk
         public vkCmdDebugMarkerInsertEXT_t MarkerInsert => _markerInsert;
         public vkGetBufferMemoryRequirements2_t GetBufferMemoryRequirements2 => _getBufferMemoryRequirements2;
         public vkGetImageMemoryRequirements2_t GetImageMemoryRequirements2 => _getImageMemoryRequirements2;
+        public vkCreateMetalSurfaceEXT_t CreateMetalSurfaceEXT => _createMetalSurfaceEXT;
 
         private readonly object _submittedFencesLock = new object();
         private readonly ConcurrentQueue<Vulkan.VkFence> _availableSubmissionFences = new ConcurrentQueue<Vulkan.VkFence>();
@@ -146,6 +148,7 @@ namespace Veldrid.Vk
                 subsetTextureView: true,
                 commandListDebugMarkers: _debugMarkerEnabled,
                 bufferRangeBinding: true,
+                shaderFloat64: _physicalDeviceFeatures.shaderFloat64,
                 commandBuffers: options.EnableCommandBuffers);
 
             ResourceFactory = new VkResourceFactory(this);
@@ -495,13 +498,20 @@ namespace Veldrid.Vk
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                if (availableInstanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
+                if (availableInstanceExtensions.Contains(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME))
                 {
-                    _surfaceExtensions.Add(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+                    _surfaceExtensions.Add(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME);
                 }
-                if (availableInstanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME))
+                else // Legacy MoltenVK extensions
                 {
-                    _surfaceExtensions.Add(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME);
+                    if (availableInstanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
+                    {
+                        _surfaceExtensions.Add(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+                    }
+                    if (availableInstanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME))
+                    {
+                        _surfaceExtensions.Add(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME);
+                    }
                 }
             }
 
@@ -550,6 +560,11 @@ namespace Veldrid.Vk
 
             VkResult result = vkCreateInstance(ref instanceCI, null, out _instance);
             CheckResult(result);
+
+            if (HasSurfaceExtension(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME))
+            {
+                _createMetalSurfaceEXT = GetInstanceProcAddr<vkCreateMetalSurfaceEXT_t>("vkCreateMetalSurfaceEXT");
+            }
 
             if (debug && debugReportExtensionAvailable)
             {
@@ -667,17 +682,7 @@ namespace Veldrid.Vk
                 i += 1;
             }
 
-            VkPhysicalDeviceFeatures deviceFeatures = new VkPhysicalDeviceFeatures();
-            deviceFeatures.samplerAnisotropy = _physicalDeviceFeatures.samplerAnisotropy;
-            deviceFeatures.fillModeNonSolid = _physicalDeviceFeatures.fillModeNonSolid;
-            deviceFeatures.geometryShader = _physicalDeviceFeatures.geometryShader;
-            deviceFeatures.depthClamp = _physicalDeviceFeatures.depthClamp;
-            deviceFeatures.multiViewport = _physicalDeviceFeatures.multiViewport;
-            deviceFeatures.textureCompressionBC = _physicalDeviceFeatures.textureCompressionBC;
-            deviceFeatures.textureCompressionETC2 = _physicalDeviceFeatures.textureCompressionETC2;
-            deviceFeatures.multiDrawIndirect = _physicalDeviceFeatures.multiDrawIndirect;
-            deviceFeatures.drawIndirectFirstInstance = _physicalDeviceFeatures.drawIndirectFirstInstance;
-            deviceFeatures.shaderStorageImageMultisample = _physicalDeviceFeatures.shaderStorageImageMultisample;
+            VkPhysicalDeviceFeatures deviceFeatures = _physicalDeviceFeatures;
 
             uint propertyCount = 0;
             VkResult result = vkEnumerateDeviceExtensionProperties(_physicalDevice, (byte*)null, &propertyCount, null);
@@ -792,6 +797,13 @@ namespace Veldrid.Vk
             return vkGetInstanceProcAddr(_instance, utf8Ptr);
         }
 
+        private T GetInstanceProcAddr<T>(string name)
+        {
+            IntPtr funcPtr = GetInstanceProcAddr(name);
+            if (funcPtr != IntPtr.Zero) { return Marshal.GetDelegateForFunctionPointer<T>(funcPtr); }
+            else { return default; }
+        }
+
         private IntPtr GetDeviceProcAddr(string name)
         {
             int byteCount = Encoding.UTF8.GetByteCount(name);
@@ -828,6 +840,7 @@ namespace Veldrid.Vk
                 if ((qfp[i].queueFlags & VkQueueFlags.Graphics) != 0)
                 {
                     _universalQueueIndex = i;
+                    foundGraphics = true;
                 }
 
                 if (!foundPresent)
@@ -1349,22 +1362,34 @@ namespace Veldrid.Vk
 
         internal void ClearColorTexture(VkTexture texture, VkClearColorValue color, VkImageLayout finalLayout)
         {
+            uint effectiveLayers = texture.ArrayLayers;
+            if ((texture.Usage & TextureUsage.Cubemap) != 0)
+            {
+                effectiveLayers *= 6;
+            }
             VkImageSubresourceRange range = new VkImageSubresourceRange(
                  VkImageAspectFlags.Color,
                  0,
                  texture.MipLevels,
                  0,
-                 texture.ArrayLayers);
+                 effectiveLayers);
             SharedCommandPool pool = GetFreeCommandPool();
             VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.TransferDstOptimal);
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, effectiveLayers, VkImageLayout.TransferDstOptimal);
             vkCmdClearColorImage(cb, texture.OptimalDeviceImage, VkImageLayout.TransferDstOptimal, &color, 1, &range);
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, finalLayout);
+            VkImageLayout colorLayout = texture.IsSwapchainTexture ? VkImageLayout.PresentSrcKHR : VkImageLayout.ColorAttachmentOptimal;
+            Debug.Assert(finalLayout == colorLayout); // TODO: Is this right?
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, effectiveLayers, colorLayout);
             pool.EndAndSubmit(cb);
         }
 
         internal void ClearDepthTexture(VkTexture texture, VkClearDepthStencilValue clearValue)
         {
+            uint effectiveLayers = texture.ArrayLayers;
+            if ((texture.Usage & TextureUsage.Cubemap) != 0)
+            {
+                effectiveLayers *= 6;
+            }
             VkImageAspectFlags aspect = FormatHelpers.IsStencilFormat(texture.Format)
                 ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
                 : VkImageAspectFlags.Depth;
@@ -1373,10 +1398,10 @@ namespace Veldrid.Vk
                 0,
                 texture.MipLevels,
                 0,
-                texture.ArrayLayers);
+                effectiveLayers);
             SharedCommandPool pool = GetFreeCommandPool();
             VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.TransferDstOptimal);
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, effectiveLayers, VkImageLayout.TransferDstOptimal);
             vkCmdClearDepthStencilImage(
                 cb,
                 texture.OptimalDeviceImage,
@@ -1384,7 +1409,7 @@ namespace Veldrid.Vk
                 &clearValue,
                 1,
                 &range);
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, VkImageLayout.DepthStencilAttachmentOptimal);
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, effectiveLayers, VkImageLayout.DepthStencilAttachmentOptimal);
             pool.EndAndSubmit(cb);
         }
 
@@ -1741,4 +1766,21 @@ namespace Veldrid.Vk
     internal unsafe delegate void vkGetBufferMemoryRequirements2_t(VkDevice device, VkBufferMemoryRequirementsInfo2KHR* pInfo, VkMemoryRequirements2KHR* pMemoryRequirements);
     internal unsafe delegate void vkGetImageMemoryRequirements2_t(VkDevice device, VkImageMemoryRequirementsInfo2KHR* pInfo, VkMemoryRequirements2KHR* pMemoryRequirements);
 
+    // VK_EXT_metal_surface
+
+    internal unsafe delegate VkResult vkCreateMetalSurfaceEXT_t(
+        VkInstance instance,
+        VkMetalSurfaceCreateInfoEXT* pCreateInfo,
+        VkAllocationCallbacks* pAllocator,
+        VkSurfaceKHR* pSurface);
+
+    internal unsafe struct VkMetalSurfaceCreateInfoEXT
+    {
+        public const VkStructureType VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT = (VkStructureType)1000217000;
+
+        public VkStructureType sType;
+        public void* pNext;
+        public uint flags;
+        public void* pLayer;
+    }
 }

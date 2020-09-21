@@ -13,10 +13,12 @@ namespace Veldrid.OpenGL
         private uint[] _framebuffers;
         private uint[] _pbos;
         private uint[] _pboSizes;
+        private bool _disposeRequested;
         private bool _disposed;
 
         private string _name;
         private bool _nameChanged;
+        
         public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public uint Texture => _texture;
@@ -172,10 +174,12 @@ namespace Veldrid.OpenGL
 
         public override TextureSampleCount SampleCount { get; }
 
+        public override bool IsDisposed => _disposeRequested;
+
         public GLPixelFormat GLPixelFormat { get; }
         public GLPixelType GLPixelType { get; }
         public PixelInternalFormat GLInternalFormat { get; }
-        public TextureTarget TextureTarget { get; }
+        public TextureTarget TextureTarget { get; internal set; }
 
         public bool Created { get; private set; }
 
@@ -494,7 +498,7 @@ namespace Veldrid.OpenGL
                         OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
                         Height,
-                        ArrayLayers);
+                        ArrayLayers * 6);
                     CheckLastError();
                 }
                 else if (_gd.Extensions.TextureStorage)
@@ -505,7 +509,7 @@ namespace Veldrid.OpenGL
                         OpenGLFormats.VdToGLSizedInternalFormat(Format, isDepthTex),
                         Width,
                         Height,
-                        ArrayLayers);
+                        ArrayLayers * 6);
                     CheckLastError();
                 }
                 else
@@ -684,6 +688,7 @@ namespace Veldrid.OpenGL
 
         private protected override void DisposeCore()
         {
+            _disposeRequested = true;
             RefCount.Decrement();
         }
 

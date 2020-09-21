@@ -6,9 +6,12 @@ namespace Veldrid.WebGL
     internal class WebGLShader : Shader
     {
         private readonly WebGLGraphicsDevice _gd;
+        private bool _disposed;
 
         public WebGLDotNET.WebGLShader WglShader { get; }
         public override string Name { get; set; }
+
+        public override bool IsDisposed => _disposed;
 
         public WebGLShader(WebGLGraphicsDevice gd, ref ShaderDescription description)
             : base(description.Stage, description.EntryPoint)
@@ -36,6 +39,7 @@ namespace Veldrid.WebGL
         public override void Dispose()
         {
             WglShader.Dispose();
+            _disposed = true;
         }
     }
 }

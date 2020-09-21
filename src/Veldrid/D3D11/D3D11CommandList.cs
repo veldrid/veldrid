@@ -1,47 +1,50 @@
 ﻿using System;
-using SharpDX.Direct3D11;
-using SharpDX.Mathematics.Interop;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Buffers;
+using Vortice.Direct3D11;
+using Vortice;
+using System.Drawing;
+using Vortice.Mathematics;
 
 namespace Veldrid.D3D11
 {
     internal class D3D11CommandList : CommandList
     {
         private readonly D3D11GraphicsDevice _gd;
-        private readonly DeviceContext _context;
-        private readonly DeviceContext1 _context1;
-        private readonly UserDefinedAnnotation _uda;
+        private readonly ID3D11DeviceContext _context;
+        private readonly ID3D11DeviceContext1 _context1;
+        private readonly ID3DUserDefinedAnnotation _uda;
         private bool _begun;
         private bool _disposed;
+        private ID3D11CommandList _commandList;
 
-        private RawViewportF[] _viewports = new RawViewportF[0];
-        private RawRectangle[] _scissors = new RawRectangle[0];
+        private Vortice.Mathematics.Viewport[] _viewports = new Vortice.Mathematics.Viewport[0];
+        private RawRect[] _scissors = new RawRect[0];
         private bool _viewportsChanged;
         private bool _scissorRectsChanged;
 
         private uint _numVertexBindings = 0;
-        private SharpDX.Direct3D11.Buffer[] _vertexBindings = new SharpDX.Direct3D11.Buffer[1];
+        private ID3D11Buffer[] _vertexBindings = new ID3D11Buffer[1];
         private int[] _vertexStrides;
         private int[] _vertexOffsets = new int[1];
 
         // Cached pipeline State
         private DeviceBuffer _ib;
         private uint _ibOffset;
-        private BlendState _blendState;
-        private DepthStencilState _depthStencilState;
+        private ID3D11BlendState _blendState;
+        private ID3D11DepthStencilState _depthStencilState;
         private uint _stencilReference;
-        private RasterizerState _rasterizerState;
-        private SharpDX.Direct3D.PrimitiveTopology _primitiveTopology;
-        private InputLayout _inputLayout;
-        private VertexShader _vertexShader;
-        private GeometryShader _geometryShader;
-        private HullShader _hullShader;
-        private DomainShader _domainShader;
-        private PixelShader _pixelShader;
+        private ID3D11RasterizerState _rasterizerState;
+        private Vortice.Direct3D.PrimitiveTopology _primitiveTopology;
+        private ID3D11InputLayout _inputLayout;
+        private ID3D11VertexShader _vertexShader;
+        private ID3D11GeometryShader _geometryShader;
+        private ID3D11HullShader _hullShader;
+        private ID3D11DomainShader _domainShader;
+        private ID3D11PixelShader _pixelShader;
 
         private new D3D11Pipeline _graphicsPipeline;
         private BoundResourceSetInfo[] _graphicsResourceSets = new BoundResourceSetInfo[1];
@@ -54,7 +57,7 @@ namespace Veldrid.D3D11
         private bool[] _invalidatedComputeResourceSets = new bool[1];
         private string _name;
         private bool _vertexBindingsChanged;
-        private SharpDX.Direct3D11.Buffer[] _cbOut = new SharpDX.Direct3D11.Buffer[1];
+        private ID3D11Buffer[] _cbOut = new ID3D11Buffer[1];
         private int[] _firstConstRef = new int[1];
         private int[] _numConstsRef = new int[1];
 
@@ -86,21 +89,23 @@ namespace Veldrid.D3D11
             : base(ref description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
         {
             _gd = gd;
-            _context = new DeviceContext(gd.Device);
-            _context1 = _context.QueryInterfaceOrNull<DeviceContext1>();
-            _uda = _context.QueryInterfaceOrNull<UserDefinedAnnotation>();
+            _context = gd.Device.CreateDeferredContext();
+            _context1 = _context.QueryInterfaceOrNull<ID3D11DeviceContext1>();
+            _uda = _context.QueryInterfaceOrNull<ID3DUserDefinedAnnotation>();
         }
 
-        public SharpDX.Direct3D11.CommandList DeviceCommandList { get; private set; }
+        public ID3D11CommandList DeviceCommandList => _commandList;
 
-        internal DeviceContext DeviceContext => _context;
+        internal ID3D11DeviceContext DeviceContext => _context;
 
         private D3D11Framebuffer D3D11Framebuffer => Util.AssertSubtype<Framebuffer, D3D11Framebuffer>(_framebuffer);
 
+        public override bool IsDisposed => _disposed;
+
         public override void Begin()
         {
-            DeviceCommandList?.Dispose();
-            DeviceCommandList = null;
+            _commandList?.Dispose();
+            _commandList = null;
             ClearState();
             _begun = true;
         }
@@ -131,7 +136,7 @@ namespace Veldrid.D3D11
             _blendState = null;
             _depthStencilState = null;
             _rasterizerState = null;
-            _primitiveTopology = SharpDX.Direct3D.PrimitiveTopology.Undefined;
+            _primitiveTopology = Vortice.Direct3D.PrimitiveTopology.Undefined;
             _inputLayout = null;
             _vertexShader = null;
             _geometryShader = null;
@@ -180,29 +185,30 @@ namespace Veldrid.D3D11
 
         public override void End()
         {
-            if (DeviceCommandList != null)
+            if (_commandList != null)
             {
                 throw new VeldridException("Invalid use of End().");
             }
 
-            DeviceCommandList = _context.FinishCommandList(false);
-            DeviceCommandList.DebugName = _name;
+            _context.FinishCommandList(false, out _commandList).CheckError();
+            _commandList.DebugName = _name;
             ResetManagedState();
             _begun = false;
         }
 
         public void Reset()
         {
-            if (DeviceCommandList != null)
+            if (_commandList != null)
             {
-                DeviceCommandList.Dispose();
-                DeviceCommandList = null;
+                _commandList.Dispose();
+                _commandList = null;
             }
             else if (_begun)
             {
                 _context.ClearState();
-                SharpDX.Direct3D11.CommandList cl = _context.FinishCommandList(false);
-                cl.Dispose();
+                _context.FinishCommandList(false, out _commandList);
+                _commandList.Dispose();
+                _commandList = null;
             }
 
             ResetManagedState();
@@ -217,7 +223,7 @@ namespace Veldrid.D3D11
                 _ibOffset = offset;
                 D3D11Buffer d3d11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
                 UnbindUAVBuffer(buffer);
-                _context.InputAssembler.SetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(format), (int)offset);
+                _context.IASetIndexBuffer(d3d11Buffer.Buffer, D3D11Formats.ToDxgiFormat(format), (int)offset);
             }
         }
 
@@ -230,76 +236,76 @@ namespace Veldrid.D3D11
                 ClearSets(_graphicsResourceSets); // Invalidate resource set bindings -- they may be invalid.
                 Util.ClearArray(_invalidatedGraphicsResourceSets);
 
-                BlendState blendState = d3dPipeline.BlendState;
+                ID3D11BlendState blendState = d3dPipeline.BlendState;
                 if (_blendState != blendState)
                 {
                     _blendState = blendState;
-                    _context.OutputMerger.SetBlendState(blendState);
+                    _context.OMSetBlendState(blendState);
                 }
 
-                DepthStencilState depthStencilState = d3dPipeline.DepthStencilState;
+                ID3D11DepthStencilState depthStencilState = d3dPipeline.DepthStencilState;
                 uint stencilReference = d3dPipeline.StencilReference;
                 if (_depthStencilState != depthStencilState || _stencilReference != stencilReference)
                 {
                     _depthStencilState = depthStencilState;
                     _stencilReference = stencilReference;
-                    _context.OutputMerger.SetDepthStencilState(depthStencilState, (int)stencilReference);
+                    _context.OMSetDepthStencilState(depthStencilState, (int)stencilReference);
                 }
 
-                RasterizerState rasterizerState = d3dPipeline.RasterizerState;
+                ID3D11RasterizerState rasterizerState = d3dPipeline.RasterizerState;
                 if (_rasterizerState != rasterizerState)
                 {
                     _rasterizerState = rasterizerState;
-                    _context.Rasterizer.State = rasterizerState;
+                    _context.RSSetState(rasterizerState);
                 }
 
-                SharpDX.Direct3D.PrimitiveTopology primitiveTopology = d3dPipeline.PrimitiveTopology;
+                Vortice.Direct3D.PrimitiveTopology primitiveTopology = d3dPipeline.PrimitiveTopology;
                 if (_primitiveTopology != primitiveTopology)
                 {
                     _primitiveTopology = primitiveTopology;
-                    _context.InputAssembler.PrimitiveTopology = primitiveTopology;
+                    _context.IASetPrimitiveTopology(primitiveTopology);
                 }
 
-                InputLayout inputLayout = d3dPipeline.InputLayout;
+                ID3D11InputLayout inputLayout = d3dPipeline.InputLayout;
                 if (_inputLayout != inputLayout)
                 {
                     _inputLayout = inputLayout;
-                    _context.InputAssembler.InputLayout = inputLayout;
+                    _context.IASetInputLayout(inputLayout);
                 }
 
-                VertexShader vertexShader = d3dPipeline.VertexShader;
+                ID3D11VertexShader vertexShader = d3dPipeline.VertexShader;
                 if (_vertexShader != vertexShader)
                 {
                     _vertexShader = vertexShader;
-                    _context.VertexShader.Set(vertexShader);
+                    _context.VSSetShader(vertexShader);
                 }
 
-                GeometryShader geometryShader = d3dPipeline.GeometryShader;
+                ID3D11GeometryShader geometryShader = d3dPipeline.GeometryShader;
                 if (_geometryShader != geometryShader)
                 {
                     _geometryShader = geometryShader;
-                    _context.GeometryShader.Set(geometryShader);
+                    _context.GSSetShader(geometryShader);
                 }
 
-                HullShader hullShader = d3dPipeline.HullShader;
+                ID3D11HullShader hullShader = d3dPipeline.HullShader;
                 if (_hullShader != hullShader)
                 {
                     _hullShader = hullShader;
-                    _context.HullShader.Set(hullShader);
+                    _context.HSSetShader(hullShader);
                 }
 
-                DomainShader domainShader = d3dPipeline.DomainShader;
+                ID3D11DomainShader domainShader = d3dPipeline.DomainShader;
                 if (_domainShader != domainShader)
                 {
                     _domainShader = domainShader;
-                    _context.DomainShader.Set(domainShader);
+                    _context.DSSetShader(domainShader);
                 }
 
-                PixelShader pixelShader = d3dPipeline.PixelShader;
+                ID3D11PixelShader pixelShader = d3dPipeline.PixelShader;
                 if (_pixelShader != pixelShader)
                 {
                     _pixelShader = pixelShader;
-                    _context.PixelShader.Set(pixelShader);
+                    _context.PSSetShader(pixelShader);
                 }
 
                 _vertexStrides = d3dPipeline.VertexStrides;
@@ -320,8 +326,8 @@ namespace Veldrid.D3D11
                 ClearSets(_computeResourceSets); // Invalidate resource set bindings -- they may be invalid.
                 Util.ClearArray(_invalidatedComputeResourceSets);
 
-                ComputeShader computeShader = d3dPipeline.ComputeShader;
-                _context.ComputeShader.Set(computeShader);
+                ID3D11ComputeShader computeShader = d3dPipeline.ComputeShader;
+                _context.CSSetShader(computeShader);
                 Util.EnsureArrayMinimumSize(ref _computeResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
                 Util.EnsureArrayMinimumSize(ref _invalidatedComputeResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
             }
@@ -380,24 +386,24 @@ namespace Veldrid.D3D11
                 switch (rbi.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                    {
-                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                        BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
-                        break;
-                    }
+                        {
+                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                            BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
+                            break;
+                        }
                     case ResourceKind.StructuredBufferReadOnly:
-                    {
-                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                        BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
-                        break;
-                    }
+                        {
+                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                            BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
+                            break;
+                        }
                     case ResourceKind.StructuredBufferReadWrite:
-                    {
-                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                        UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
-                        BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
-                        break;
-                    }
+                        {
+                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                            ID3D11UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
+                            BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
+                            break;
+                        }
                     case ResourceKind.TextureReadOnly:
                         TextureView texView = Util.GetTextureView(_gd, resource);
                         D3D11TextureView d3d11TexView = Util.AssertSubtype<TextureView, D3D11TextureView>(texView);
@@ -663,9 +669,9 @@ namespace Veldrid.D3D11
             D3D11Texture d3d11Source = Util.AssertSubtype<Texture, D3D11Texture>(source);
             D3D11Texture d3d11Destination = Util.AssertSubtype<Texture, D3D11Texture>(destination);
             _context.ResolveSubresource(
-                d3d11Source.DeviceTexture,
-                0,
                 d3d11Destination.DeviceTexture,
+                0,
+                d3d11Source.DeviceTexture,
                 0,
                 d3d11Destination.DxgiFormat);
         }
@@ -675,7 +681,7 @@ namespace Veldrid.D3D11
             if (_viewportsChanged)
             {
                 _viewportsChanged = false;
-                _context.Rasterizer.SetViewports(_viewports, _viewports.Length);
+                _context.RSSetViewports(_viewports);
             }
         }
 
@@ -688,7 +694,7 @@ namespace Veldrid.D3D11
                 {
                     // Because this array is resized using Util.EnsureMinimumArraySize, this might set more scissor rectangles
                     // than are actually needed, but this is okay -- extras are essentially ignored and should be harmless.
-                    _context.Rasterizer.SetScissorRectangles(_scissors);
+                    _context.RSSetScissorRects(_scissors);
                 }
             }
         }
@@ -697,20 +703,11 @@ namespace Veldrid.D3D11
         {
             if (_vertexBindingsChanged)
             {
-                IntPtr* buffersPtr = stackalloc IntPtr[(int)_numVertexBindings];
-                for (int i = 0; i < _numVertexBindings; i++)
-                {
-                    buffersPtr[i] = _vertexBindings[i].NativePointer;
-                }
-                fixed (int* stridesPtr = _vertexStrides)
-                fixed (int* offsetsPtr = _vertexOffsets)
-                {
-                    _context.InputAssembler.SetVertexBuffers(
-                        0, (int)_numVertexBindings,
-                        (IntPtr)buffersPtr,
-                        (IntPtr)stridesPtr,
-                        (IntPtr)offsetsPtr);
-                }
+                _context.IASetVertexBuffers(
+                    0, (int)_numVertexBindings,
+                    _vertexBindings,
+                    _vertexStrides,
+                    _vertexOffsets);
 
                 _vertexBindingsChanged = false;
             }
@@ -720,14 +717,14 @@ namespace Veldrid.D3D11
         {
             _scissorRectsChanged = true;
             Util.EnsureArrayMinimumSize(ref _scissors, index + 1);
-            _scissors[index] = new RawRectangle((int)x, (int)y, (int)(x + width), (int)(y + height));
+            _scissors[index] = new RawRect((int)x, (int)y, (int)(x + width), (int)(y + height));
         }
 
         public override void SetViewport(uint index, ref Viewport viewport)
         {
             _viewportsChanged = true;
             Util.EnsureArrayMinimumSize(ref _viewports, index + 1);
-            _viewports[index] = new RawViewportF
+            _viewports[index] = new Vortice.Mathematics.Viewport
             {
                 X = viewport.X,
                 Y = viewport.Y,
@@ -740,7 +737,7 @@ namespace Veldrid.D3D11
 
         private void BindTextureView(D3D11TextureView texView, int slot, ShaderStages stages, uint resourceSet)
         {
-            ShaderResourceView srv = texView?.ShaderResourceView ?? null;
+            ID3D11ShaderResourceView srv = texView?.ShaderResourceView ?? null;
             if (srv != null)
             {
                 if (!_boundSRVs.TryGetValue(texView.Target, out List<D3D11BoundTextureInfo> list))
@@ -768,20 +765,20 @@ namespace Veldrid.D3D11
                 }
                 if (bind)
                 {
-                    _context.VertexShader.SetShaderResource(slot, srv);
+                    _context.VSSetShaderResource(slot, srv);
                 }
             }
             if ((stages & ShaderStages.Geometry) == ShaderStages.Geometry)
             {
-                _context.GeometryShader.SetShaderResource(slot, srv);
+                _context.GSSetShaderResource(slot, srv);
             }
             if ((stages & ShaderStages.TessellationControl) == ShaderStages.TessellationControl)
             {
-                _context.HullShader.SetShaderResource(slot, srv);
+                _context.HSSetShaderResource(slot, srv);
             }
             if ((stages & ShaderStages.TessellationEvaluation) == ShaderStages.TessellationEvaluation)
             {
-                _context.DomainShader.SetShaderResource(slot, srv);
+                _context.DSSetShaderResource(slot, srv);
             }
             if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
             {
@@ -800,12 +797,12 @@ namespace Veldrid.D3D11
                 }
                 if (bind)
                 {
-                    _context.PixelShader.SetShaderResource(slot, srv);
+                    _context.PSSetShaderResource(slot, srv);
                 }
             }
             if ((stages & ShaderStages.Compute) == ShaderStages.Compute)
             {
-                _context.ComputeShader.SetShaderResource(slot, srv);
+                _context.CSSetShaderResource(slot, srv);
             }
         }
 
@@ -827,31 +824,31 @@ namespace Veldrid.D3D11
             bool compute = (stages & ShaderStages.Compute) != 0;
             UnbindUAVBuffer(range.Buffer);
 
-            ShaderResourceView srv = range.Buffer.GetShaderResourceView(range.Offset, range.Size);
+            ID3D11ShaderResourceView srv = range.Buffer.GetShaderResourceView(range.Offset, range.Size);
 
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
-                _context.VertexShader.SetShaderResource(slot, srv);
+                _context.VSSetShaderResource(slot, srv);
             }
             if ((stages & ShaderStages.Geometry) == ShaderStages.Geometry)
             {
-                _context.GeometryShader.SetShaderResource(slot, srv);
+                _context.GSSetShaderResource(slot, srv);
             }
             if ((stages & ShaderStages.TessellationControl) == ShaderStages.TessellationControl)
             {
-                _context.HullShader.SetShaderResource(slot, srv);
+                _context.HSSetShaderResource(slot, srv);
             }
             if ((stages & ShaderStages.TessellationEvaluation) == ShaderStages.TessellationEvaluation)
             {
-                _context.DomainShader.SetShaderResource(slot, srv);
+                _context.DSSetShaderResource(slot, srv);
             }
             if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
             {
-                _context.PixelShader.SetShaderResource(slot, srv);
+                _context.PSSetShaderResource(slot, srv);
             }
             if (compute)
             {
-                _context.ComputeShader.SetShaderResource(slot, srv);
+                _context.CSSetShaderResource(slot, srv);
             }
         }
 
@@ -876,14 +873,14 @@ namespace Veldrid.D3D11
                 {
                     if (range.IsFullRange)
                     {
-                        _context.VertexShader.SetConstantBuffer(slot, range.Buffer.Buffer);
+                        _context.VSSetConstantBuffer(slot, range.Buffer.Buffer);
                     }
                     else
                     {
                         PackRangeParams(range);
                         if (!_gd.SupportsCommandLists)
                         {
-                            _context.VertexShader.SetConstantBuffer(slot, null);
+                            _context.VSUnsetConstantBuffer(slot);
                         }
                         _context1.VSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
@@ -893,14 +890,14 @@ namespace Veldrid.D3D11
             {
                 if (range.IsFullRange)
                 {
-                    _context.GeometryShader.SetConstantBuffer(slot, range.Buffer.Buffer);
+                    _context.GSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
                 else
                 {
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.GeometryShader.SetConstantBuffer(slot, null);
+                        _context.GSUnsetConstantBuffer(slot);
                     }
                     _context1.GSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -909,14 +906,14 @@ namespace Veldrid.D3D11
             {
                 if (range.IsFullRange)
                 {
-                    _context.HullShader.SetConstantBuffer(slot, range.Buffer.Buffer);
+                    _context.HSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
                 else
                 {
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.HullShader.SetConstantBuffer(slot, null);
+                        _context.HSUnsetConstantBuffer(slot);
                     }
                     _context1.HSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -925,14 +922,14 @@ namespace Veldrid.D3D11
             {
                 if (range.IsFullRange)
                 {
-                    _context.DomainShader.SetConstantBuffer(slot, range.Buffer.Buffer);
+                    _context.DSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
                 else
                 {
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.DomainShader.SetConstantBuffer(slot, null);
+                        _context.DSUnsetConstantBuffer(slot);
                     }
                     _context1.DSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -956,14 +953,14 @@ namespace Veldrid.D3D11
                 {
                     if (range.IsFullRange)
                     {
-                        _context.PixelShader.SetConstantBuffer(slot, range.Buffer.Buffer);
+                        _context.PSSetConstantBuffer(slot, range.Buffer.Buffer);
                     }
                     else
                     {
                         PackRangeParams(range);
                         if (!_gd.SupportsCommandLists)
                         {
-                            _context.PixelShader.SetConstantBuffer(slot, null);
+                            _context.PSUnsetConstantBuffer(slot);
                         }
                         _context1.PSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
@@ -973,14 +970,14 @@ namespace Veldrid.D3D11
             {
                 if (range.IsFullRange)
                 {
-                    _context.ComputeShader.SetConstantBuffer(slot, range.Buffer.Buffer);
+                    _context.CSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
                 else
                 {
                     PackRangeParams(range);
                     if (!_gd.SupportsCommandLists)
                     {
-                        _context.ComputeShader.SetConstantBuffer(slot, null);
+                        _context.CSSetConstantBuffer(slot, (ID3D11Buffer)null);
                     }
                     _context1.CSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
@@ -998,7 +995,7 @@ namespace Veldrid.D3D11
         private void BindUnorderedAccessView(
             Texture texture,
             DeviceBuffer buffer,
-            UnorderedAccessView uav,
+            ID3D11UnorderedAccessView uav,
             int slot,
             ShaderStages stages,
             uint resourceSet)
@@ -1031,11 +1028,11 @@ namespace Veldrid.D3D11
 
             if (compute)
             {
-                _context.ComputeShader.SetUnorderedAccessView(actualSlot, uav);
+                _context.CSSetUnorderedAccessView(actualSlot, uav);
             }
             else
             {
-                _context.OutputMerger.SetUnorderedAccessView(actualSlot, uav);
+                _context.OMSetUnorderedAccessView(actualSlot, uav);
             }
         }
 
@@ -1061,11 +1058,11 @@ namespace Veldrid.D3D11
                     int slot = list[i].Item2;
                     if (compute)
                     {
-                        _context.ComputeShader.SetUnorderedAccessView(slot, null);
+                        _context.CSUnsetUnorderedAccessView(slot);
                     }
                     else
                     {
-                        _context.OutputMerger.SetUnorderedAccessView(slot, null);
+                        _context.OMUnsetUnorderedAccessView(slot);
                     }
 
                     list.RemoveAt(i);
@@ -1093,20 +1090,20 @@ namespace Veldrid.D3D11
                 }
                 if (bind)
                 {
-                    _context.VertexShader.SetSampler(slot, sampler.DeviceSampler);
+                    _context.VSSetSampler(slot, sampler.DeviceSampler);
                 }
             }
             if ((stages & ShaderStages.Geometry) == ShaderStages.Geometry)
             {
-                _context.GeometryShader.SetSampler(slot, sampler.DeviceSampler);
+                _context.GSSetSampler(slot, sampler.DeviceSampler);
             }
             if ((stages & ShaderStages.TessellationControl) == ShaderStages.TessellationControl)
             {
-                _context.HullShader.SetSampler(slot, sampler.DeviceSampler);
+                _context.HSSetSampler(slot, sampler.DeviceSampler);
             }
             if ((stages & ShaderStages.TessellationEvaluation) == ShaderStages.TessellationEvaluation)
             {
-                _context.DomainShader.SetSampler(slot, sampler.DeviceSampler);
+                _context.DSSetSampler(slot, sampler.DeviceSampler);
             }
             if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
             {
@@ -1125,7 +1122,7 @@ namespace Veldrid.D3D11
                 }
                 if (bind)
                 {
-                    _context.PixelShader.SetSampler(slot, sampler.DeviceSampler);
+                    _context.PSSetSampler(slot, sampler.DeviceSampler);
                 }
             }
         }
@@ -1139,17 +1136,22 @@ namespace Veldrid.D3D11
                 _referencedSwapchains.Add(d3dFB.Swapchain);
             }
 
-            _context.OutputMerger.SetRenderTargets(d3dFB.DepthStencilView, d3dFB.RenderTargetViews);
+            for (int i = 0; i < fb.ColorTargets.Count; i++)
+            {
+                UnbindSRVTexture(fb.ColorTargets[i].Target);
+            }
+
+            _context.OMSetRenderTargets(d3dFB.RenderTargetViews, d3dFB.DepthStencilView);
         }
 
         private protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
         {
-            _context.ClearRenderTargetView(D3D11Framebuffer.RenderTargetViews[index], new RawColor4(clearColor.R, clearColor.G, clearColor.B, clearColor.A));
+            _context.ClearRenderTargetView(D3D11Framebuffer.RenderTargetViews[index], new Color4(clearColor.R, clearColor.G, clearColor.B, clearColor.A));
         }
 
         private protected override void ClearDepthStencilCore(float depth, byte stencil)
         {
-            _context.ClearDepthStencilView(D3D11Framebuffer.DepthStencilView, DepthStencilClearFlags.Depth, depth, stencil);
+            _context.ClearDepthStencilView(D3D11Framebuffer.DepthStencilView, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, depth, stencil);
         }
 
         private protected unsafe override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
@@ -1169,7 +1171,7 @@ namespace Veldrid.D3D11
 
             if (useUpdateSubresource)
             {
-                ResourceRegion? subregion = new ResourceRegion()
+                Box? subregion = new Box()
                 {
                     Left = (int)bufferOffsetInBytes,
                     Right = (int)(sizeInBytes + bufferOffsetInBytes),
@@ -1192,20 +1194,20 @@ namespace Veldrid.D3D11
             }
             else if (useMap && updateFullBuffer) // Can only update full buffer with WriteDiscard.
             {
-                SharpDX.DataBox db = _context.MapSubresource(
-                    d3dBuffer.Buffer,
-                    0,
-                    D3D11Formats.VdToD3D11MapMode(isDynamic, MapMode.Write),
-                    MapFlags.None);
+                MappedSubresource msb = _context.Map(
+                     d3dBuffer.Buffer,
+                     0,
+                     D3D11Formats.VdToD3D11MapMode(isDynamic, MapMode.Write),
+                     MapFlags.None);
                 if (sizeInBytes < 1024)
                 {
-                    Unsafe.CopyBlock(db.DataPointer.ToPointer(), source.ToPointer(), sizeInBytes);
+                    Unsafe.CopyBlock(msb.DataPointer.ToPointer(), source.ToPointer(), sizeInBytes);
                 }
                 else
                 {
-                    System.Buffer.MemoryCopy(source.ToPointer(), db.DataPointer.ToPointer(), buffer.SizeInBytes, sizeInBytes);
+                    Buffer.MemoryCopy(source.ToPointer(), msb.DataPointer.ToPointer(), buffer.SizeInBytes, sizeInBytes);
                 }
-                _context.UnmapSubresource(d3dBuffer.Buffer, 0);
+                _context.Unmap(d3dBuffer.Buffer, 0);
             }
             else
             {
@@ -1217,9 +1219,9 @@ namespace Veldrid.D3D11
         }
 
         private unsafe void UpdateSubresource_Workaround(
-            Resource resource,
+            ID3D11Resource resource,
             int subresource,
-            ResourceRegion region,
+            Box region,
             IntPtr data)
         {
             bool needWorkaround = !_gd.SupportsCommandLists;
@@ -1256,9 +1258,9 @@ namespace Veldrid.D3D11
             D3D11Buffer srcD3D11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(source);
             D3D11Buffer dstD3D11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(destination);
 
-            ResourceRegion region = new ResourceRegion((int)sourceOffset, 0, 0, (int)(sourceOffset + sizeInBytes), 1, 1);
+            Box region = new Box((int)sourceOffset, 0, 0, (int)(sourceOffset + sizeInBytes), 1, 1);
 
-            _context.CopySubresourceRegion(srcD3D11Buffer.Buffer, 0, region, dstD3D11Buffer.Buffer, 0, (int)destinationOffset, 0, 0);
+            _context.CopySubresourceRegion(dstD3D11Buffer.Buffer, 0, (int)destinationOffset, 0, 0, srcD3D11Buffer.Buffer, 0, region);
         }
 
         protected override void CopyTextureCore(
@@ -1280,13 +1282,18 @@ namespace Veldrid.D3D11
             uint clampedWidth = Math.Max(blockSize, width);
             uint clampedHeight = Math.Max(blockSize, height);
 
-            ResourceRegion region = new ResourceRegion(
-                (int)srcX,
-                (int)srcY,
-                (int)srcZ,
-                (int)(srcX + clampedWidth),
-                (int)(srcY + clampedHeight),
-                (int)(srcZ + depth));
+            Box? region = null;
+            if (srcX != 0 || srcY != 0 || srcZ != 0
+                || clampedWidth != source.Width || clampedHeight != source.Height || depth != source.Depth)
+            {
+                region = new Box(
+                    (int)srcX,
+                    (int)srcY,
+                    (int)srcZ,
+                    (int)(srcX + clampedWidth),
+                    (int)(srcY + clampedHeight),
+                    (int)(srcZ + depth));
+            }
 
             for (uint i = 0; i < layerCount; i++)
             {
@@ -1294,14 +1301,14 @@ namespace Veldrid.D3D11
                 int dstSubresource = D3D11Util.ComputeSubresource(dstMipLevel, destination.MipLevels, dstBaseArrayLayer + i);
 
                 _context.CopySubresourceRegion(
-                    srcD3D11Texture.DeviceTexture,
-                    srcSubresource,
-                    region,
                     dstD3D11Texture.DeviceTexture,
                     dstSubresource,
                     (int)dstX,
                     (int)dstY,
-                    (int)dstZ);
+                    (int)dstZ,
+                    srcD3D11Texture.DeviceTexture,
+                    srcSubresource,
+                    region);
             }
         }
 
@@ -1309,7 +1316,7 @@ namespace Veldrid.D3D11
         {
             TextureView fullTexView = texture.GetFullTextureView(_gd);
             D3D11TextureView d3d11View = Util.AssertSubtype<TextureView, D3D11TextureView>(fullTexView);
-            ShaderResourceView srv = d3d11View.ShaderResourceView;
+            ID3D11ShaderResourceView srv = d3d11View.ShaderResourceView;
             _context.GenerateMips(srv);
         }
 
@@ -1325,8 +1332,8 @@ namespace Veldrid.D3D11
 
         internal void OnCompleted()
         {
-            DeviceCommandList.Dispose();
-            DeviceCommandList = null;
+            _commandList.Dispose();
+            _commandList = null;
 
             foreach (D3D11Swapchain sc in _referencedSwapchains)
             {
@@ -1373,8 +1380,8 @@ namespace Veldrid.D3D11
 
             uint dstZ = destination.ColorTargets[0].ArrayLayer;
             _context.CopySubresourceRegion(
-                d3dSrc.DeviceTexture, 0, new ResourceRegion((int)srcX, (int)srcY, 0, (int)(srcX + srcWidth), (int)(srcY + srcHeight), 1),
-                d3dDst.DeviceTexture, 0, (int)dstX, (int)dstY, (int)dstZ);
+                d3dDst.DeviceTexture, 0, (int)dstX, (int)dstY, (int)dstZ,
+                d3dSrc.DeviceTexture, 0, new Box((int)srcX, (int)srcY, 0, (int)(srcX + srcWidth), (int)(srcY + srcHeight), 1));
         }
 
         public override void Dispose()
@@ -1394,6 +1401,12 @@ namespace Veldrid.D3D11
                 {
                     boundComputeSet.Offsets.Dispose();
                 }
+
+                foreach (D3D11Buffer buffer in _availableStagingBuffers)
+                {
+                    buffer.Dispose();
+                }
+                _availableStagingBuffers.Clear();
 
                 _disposed = true;
             }

@@ -28,6 +28,8 @@ namespace Veldrid.Vk
 
         public ResourceRefCount RefCount { get; }
 
+        public override bool IsDisposed => _destroyed;
+
         public VkPipeline(VkGraphicsDevice gd, ref GraphicsPipelineDescription description)
             : base(ref description)
         {
@@ -101,6 +103,7 @@ namespace Veldrid.Vk
             dssCI.front.failOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilFront.Fail);
             dssCI.front.passOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilFront.Pass);
             dssCI.front.depthFailOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilFront.DepthFail);
+            dssCI.front.compareOp = VkFormats.VdToVkCompareOp(vdDssDesc.StencilFront.Comparison);
             dssCI.front.compareMask = vdDssDesc.StencilReadMask;
             dssCI.front.writeMask = vdDssDesc.StencilWriteMask;
             dssCI.front.reference = vdDssDesc.StencilReference;
@@ -108,6 +111,7 @@ namespace Veldrid.Vk
             dssCI.back.failOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilBack.Fail);
             dssCI.back.passOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilBack.Pass);
             dssCI.back.depthFailOp = VkFormats.VdToVkStencilOp(vdDssDesc.StencilBack.DepthFail);
+            dssCI.back.compareOp = VkFormats.VdToVkCompareOp(vdDssDesc.StencilBack.Comparison);
             dssCI.back.compareMask = vdDssDesc.StencilReadMask;
             dssCI.back.writeMask = vdDssDesc.StencilWriteMask;
             dssCI.back.reference = vdDssDesc.StencilReference;

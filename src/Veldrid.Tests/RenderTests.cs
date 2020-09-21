@@ -30,6 +30,15 @@ namespace Veldrid.Tests
         private Vector2 _padding0;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TestVertex
+    {
+        public Vector3 A_V3;
+        public Vector4 B_V4;
+        public Vector2 C_V2;
+        public Vector4 D_V4;
+    }
+
     public abstract class RenderTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
         [Fact]
@@ -916,6 +925,322 @@ namespace Veldrid.Tests
             }
             GD.Unmap(staging);
         }
+
+        [Fact]
+        public void BindTextureAcrossMultipleDrawCalls()
+        {
+            Texture target1 = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            Texture target2 = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget | TextureUsage.Sampled));
+            TextureView textureView = RF.CreateTextureView(target2);
+
+            Texture staging1 = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
+            Texture staging2 = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
+            Texture staging3 = RF.CreateTexture(TextureDescription.Texture2D(
+                50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Staging));
+
+            Framebuffer framebuffer1 = RF.CreateFramebuffer(new FramebufferDescription(null, target1));
+            Framebuffer framebuffer2 = RF.CreateFramebuffer(new FramebufferDescription(null, target2));
+
+            // This shader doesn't really matter, just as long as it is different to the first
+            // and third render pass and also doesn't use any texture bindings
+            ShaderSetDescription textureShaderSet = new ShaderSetDescription(
+                Array.Empty<VertexLayoutDescription>(),
+                TestShaders.LoadVertexFragment(RF, "FullScreenTriSampleTexture2D"));
+            ShaderSetDescription quadShaderSet = new ShaderSetDescription(
+                new VertexLayoutDescription[]
+                {
+                    new VertexLayoutDescription(
+                        new VertexElementDescription("A_V3", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
+                        new VertexElementDescription("B_V4", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float4),
+                        new VertexElementDescription("C_V2", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                        new VertexElementDescription("D_V4", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float4)
+                    )
+                },
+                TestShaders.LoadVertexFragment(RF, "VertexLayoutTestShader"));
+
+            DeviceBuffer vertexBuffer = RF.CreateBuffer(new BufferDescription(
+                (uint)Unsafe.SizeOf<TestVertex>() * 3,
+                BufferUsage.VertexBuffer));
+            GD.UpdateBuffer(vertexBuffer, 0, new[] {
+                new TestVertex(),
+                new TestVertex(),
+                new TestVertex()
+            });
+
+            // Fill the second target with a known color
+            RgbaFloat[] colors = new RgbaFloat[target2.Width * target2.Height];
+            for (int i = 0; i < colors.Length; i++) { colors[i] = RgbaFloat.Pink; }
+            GD.UpdateTexture(target2, colors, 0, 0, 0, target2.Width, target2.Height, 1, 0, 0);
+
+            ResourceLayout textureLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("Smp", ResourceKind.Sampler, ShaderStages.Fragment)));
+
+            ResourceSet textureSet = RF.CreateResourceSet(new ResourceSetDescription(textureLayout, textureView, GD.PointSampler));
+
+            Pipeline texturePipeline = RF.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.CullNone,
+                PrimitiveTopology.TriangleList,
+                textureShaderSet,
+                textureLayout,
+                framebuffer1.OutputDescription));
+            Pipeline quadPipeline = RF.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.CullNone,
+                PrimitiveTopology.TriangleList,
+                quadShaderSet,
+                Array.Empty<ResourceLayout>(),
+                framebuffer2.OutputDescription));
+
+            CommandList cl = RF.CreateCommandList();
+
+            cl.Begin();
+            cl.SetFramebuffer(framebuffer1);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
+
+            // First pass using texture shader
+            cl.SetPipeline(texturePipeline);
+            cl.ClearColorTarget(0, RgbaFloat.Black);
+            cl.SetGraphicsResourceSet(0, textureSet);
+            cl.Draw(3);
+            cl.CopyTexture(target1, staging1);
+
+            //  Second pass using dummy shader
+            cl.SetPipeline(quadPipeline);
+            cl.SetFramebuffer(framebuffer2);
+            cl.ClearColorTarget(0, RgbaFloat.Blue);
+            cl.SetVertexBuffer(0, vertexBuffer);
+            cl.Draw(3);
+            cl.CopyTexture(target2, staging2);
+
+            // Third pass using texture shader again
+            cl.SetPipeline(texturePipeline);
+            cl.SetFramebuffer(framebuffer1);
+            cl.ClearColorTarget(0, RgbaFloat.Black);
+            cl.SetGraphicsResourceSet(0, textureSet);
+            cl.Draw(3);
+            cl.CopyTexture(target1, staging3);
+
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            MappedResourceView<RgbaFloat> readView1 = GD.Map<RgbaFloat>(staging1, MapMode.Read);
+            MappedResourceView<RgbaFloat> readView2 = GD.Map<RgbaFloat>(staging2, MapMode.Read);
+            MappedResourceView<RgbaFloat> readView3 = GD.Map<RgbaFloat>(staging3, MapMode.Read);
+            for (int x = 0; x < staging1.Width; x++)
+            {
+                Assert.Equal(RgbaFloat.Pink, readView1[x, 0]);
+                Assert.Equal(RgbaFloat.Blue, readView2[x, 0]);
+                Assert.Equal(RgbaFloat.Blue, readView3[x, 0]);
+            }
+            GD.Unmap(staging1);
+            GD.Unmap(staging2);
+            GD.Unmap(staging3);
+        }
+
+        [Theory]
+        [InlineData(2, 0)]
+        [InlineData(5, 3)]
+        [InlineData(32, 31)]
+        public void FramebufferArrayLayer(uint layerCount, uint targetLayer)
+        {
+            Texture target = RF.CreateTexture(TextureDescription.Texture2D(
+                16, 16, 1, layerCount, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            Framebuffer framebuffer = RF.CreateFramebuffer(
+                new FramebufferDescription(
+                    null,
+                    new[] { new FramebufferAttachmentDescription(target, targetLayer) }));
+
+            string setName = "FullScreenTriSampleTexture2D";
+            ShaderSetDescription shaderSet = new ShaderSetDescription(
+                Array.Empty<VertexLayoutDescription>(),
+                TestShaders.LoadVertexFragment(RF, setName));
+
+            Texture tex2D = RF.CreateTexture(
+                TextureDescription.Texture2D(128, 128, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
+            RgbaFloat[] colors = new RgbaFloat[tex2D.Width * tex2D.Height];
+            for (int i = 0; i < colors.Length; i++) { colors[i] = RgbaFloat.Pink; }
+            GD.UpdateTexture(tex2D, colors, 0, 0, 0, tex2D.Width, 1, 1, 0, 0);
+
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("Smp", ResourceKind.Sampler, ShaderStages.Fragment)));
+
+            ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, tex2D, GD.PointSampler));
+
+            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.CullNone,
+                PrimitiveTopology.TriangleList,
+                shaderSet,
+                layout,
+                framebuffer.OutputDescription);
+
+            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+
+            CommandList cl = RF.CreateCommandList();
+
+            cl.Begin();
+            cl.SetFramebuffer(framebuffer);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
+            cl.ClearColorTarget(0, RgbaFloat.Black);
+            cl.SetPipeline(pipeline);
+            cl.SetGraphicsResourceSet(0, set);
+            cl.Draw(3);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            Texture staging = GetReadback(target);
+            MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read, targetLayer);
+            for (int x = 0; x < staging.Width; x++)
+            {
+                Assert.Equal(RgbaFloat.Pink, readView[x, 0]);
+            }
+            GD.Unmap(staging, targetLayer);
+        }
+
+        [Theory]
+        [InlineData(1, 0, 0)]
+        [InlineData(1, 0, 3)]
+        [InlineData(1, 0, 5)]
+        [InlineData(4, 2, 0)]
+        [InlineData(4, 2, 3)]
+        [InlineData(4, 2, 5)]
+        public void RenderToCubemapFace(uint layerCount, uint targetLayer, uint targetFace)
+        {
+            Texture target = RF.CreateTexture(TextureDescription.Texture2D(
+                16, 16,
+                1, layerCount,
+                PixelFormat.R32_G32_B32_A32_Float,
+                TextureUsage.RenderTarget | TextureUsage.Cubemap));
+            Framebuffer framebuffer = RF.CreateFramebuffer(
+                new FramebufferDescription(
+                    null,
+                    new[] { new FramebufferAttachmentDescription(target, (targetLayer * 6) + targetFace) }));
+
+            string setName = "FullScreenTriSampleTexture2D";
+            ShaderSetDescription shaderSet = new ShaderSetDescription(
+                Array.Empty<VertexLayoutDescription>(),
+                TestShaders.LoadVertexFragment(RF, setName));
+
+            Texture tex2D = RF.CreateTexture(
+                TextureDescription.Texture2D(128, 128, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
+            RgbaFloat[] colors = new RgbaFloat[tex2D.Width * tex2D.Height];
+            for (int i = 0; i < colors.Length; i++) { colors[i] = RgbaFloat.Pink; }
+            GD.UpdateTexture(tex2D, colors, 0, 0, 0, tex2D.Width, 1, 1, 0, 0);
+
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                new ResourceLayoutElementDescription("Smp", ResourceKind.Sampler, ShaderStages.Fragment)));
+
+            ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, tex2D, GD.PointSampler));
+
+            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.CullNone,
+                PrimitiveTopology.TriangleList,
+                shaderSet,
+                layout,
+                framebuffer.OutputDescription);
+
+            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+
+            CommandList cl = RF.CreateCommandList();
+
+            cl.Begin();
+            cl.SetFramebuffer(framebuffer);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
+            cl.ClearColorTarget(0, RgbaFloat.Black);
+            cl.SetPipeline(pipeline);
+            cl.SetGraphicsResourceSet(0, set);
+            cl.Draw(3);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            Texture staging = GetReadback(target);
+            MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read, (targetLayer * 6) + targetFace);
+            for (int x = 0; x < staging.Width; x++)
+            {
+                Assert.Equal(RgbaFloat.Pink, readView[x, 0]);
+            }
+            GD.Unmap(staging, (targetLayer * 6) + targetFace);
+        }
+
+        [Fact]
+        public void WriteFragmentDepth()
+        {
+            Texture depthTarget = RF.CreateTexture(
+                TextureDescription.Texture2D(64, 64, 1, 1, PixelFormat.R32_Float, TextureUsage.DepthStencil | TextureUsage.Sampled));
+            Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(depthTarget));
+
+            string setName = "FullScreenWriteDepth";
+            ShaderSetDescription shaderSet = new ShaderSetDescription(
+                Array.Empty<VertexLayoutDescription>(),
+                TestShaders.LoadVertexFragment(RF, setName));
+
+            ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("FramebufferInfo", ResourceKind.UniformBuffer, ShaderStages.Fragment)));
+
+            DeviceBuffer ub = RF.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
+            GD.UpdateBuffer(ub, 0, new Vector4(depthTarget.Width, depthTarget.Height, 0, 0));
+            ResourceSet rs = RF.CreateResourceSet(new ResourceSetDescription(layout, ub));
+
+            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                new DepthStencilStateDescription(true, true, ComparisonKind.Always),
+                RasterizerStateDescription.CullNone,
+                PrimitiveTopology.TriangleList,
+                shaderSet,
+                layout,
+                framebuffer.OutputDescription);
+
+            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+
+            CommandList cl = RF.CreateCommandList();
+
+            cl.Begin();
+            cl.SetFramebuffer(framebuffer);
+            cl.SetFullViewports();
+            cl.SetFullScissorRects();
+            cl.ClearDepthStencil(0f);
+            cl.SetPipeline(pipeline);
+            cl.SetGraphicsResourceSet(0, rs);
+            cl.Draw(3);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            Texture readback = GetReadback(depthTarget);
+
+            MappedResourceView<float> readView = GD.Map<float>(readback, MapMode.Read);
+            for (uint y = 0; y < readback.Height; y++)
+            {
+                for (uint x = 0; x < readback.Width; x++)
+                {
+                    float xComp = x;
+                    float yComp = y * readback.Width;
+                    float val = (yComp + xComp) / (readback.Width * readback.Height);
+
+                    Assert.Equal(val, readView[x, y], 2);
+                }
+            }
+            GD.Unmap(readback);
+        }
     }
 
 #if TEST_OPENGL
@@ -931,6 +1256,6 @@ namespace Veldrid.Tests
     public class D3D11RenderTests : RenderTests<D3D11DeviceCreator> { }
 #endif
 #if TEST_METAL
-        public class MetalRenderTests : RenderTests<MetalDeviceCreator> { }
+    public class MetalRenderTests : RenderTests<MetalDeviceCreator> { }
 #endif
 }

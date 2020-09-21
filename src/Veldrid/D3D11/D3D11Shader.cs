@@ -1,6 +1,8 @@
 ﻿using System;
-using SharpDX.D3DCompiler;
-using SharpDX.Direct3D11;
+using System.Text;
+using Vortice.D3DCompiler;
+using Vortice.Direct3D;
+using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {
@@ -8,10 +10,10 @@ namespace Veldrid.D3D11
     {
         private string _name;
 
-        public DeviceChild DeviceShader { get; }
+        public ID3D11DeviceChild DeviceShader { get; }
         public byte[] Bytecode { get; internal set; }
 
-        public D3D11Shader(Device device, ShaderDescription description)
+        public D3D11Shader(ID3D11Device device, ShaderDescription description)
             : base(description.Stage, description.EntryPoint)
         {
             if (description.ShaderBytes.Length > 4
@@ -30,22 +32,22 @@ namespace Veldrid.D3D11
             switch (description.Stage)
             {
                 case ShaderStages.Vertex:
-                    DeviceShader = new VertexShader(device, Bytecode);
+                    DeviceShader = device.CreateVertexShader(Bytecode);
                     break;
                 case ShaderStages.Geometry:
-                    DeviceShader = new GeometryShader(device, Bytecode);
+                    DeviceShader = device.CreateGeometryShader(Bytecode);
                     break;
                 case ShaderStages.TessellationControl:
-                    DeviceShader = new HullShader(device, Bytecode);
+                    DeviceShader = device.CreateHullShader(Bytecode);
                     break;
                 case ShaderStages.TessellationEvaluation:
-                    DeviceShader = new DomainShader(device, Bytecode);
+                    DeviceShader = device.CreateDomainShader(Bytecode);
                     break;
                 case ShaderStages.Fragment:
-                    DeviceShader = new PixelShader(device, Bytecode);
+                    DeviceShader = device.CreatePixelShader(Bytecode);
                     break;
                 case ShaderStages.Compute:
-                    DeviceShader = new ComputeShader(device, Bytecode);
+                    DeviceShader = device.CreateComputeShader(Bytecode);
                     break;
                 default:
                     throw Illegal.Value<ShaderStages>();
@@ -80,18 +82,16 @@ namespace Veldrid.D3D11
             }
 
             ShaderFlags flags = description.Debug ? ShaderFlags.Debug : ShaderFlags.OptimizationLevel3;
-            CompilationResult result = ShaderBytecode.Compile(
-                description.ShaderBytes,
-                description.EntryPoint,
-                profile,
-                flags);
+            Compiler.Compile(description.ShaderBytes,
+                             description.EntryPoint, null,
+                             profile, out Blob result, out Blob error);
 
-            if (result.ResultCode.Failure)
+            if (result == null)
             {
-                throw new VeldridException($"Failed to compile HLSL code: {result.Message}");
+                throw new VeldridException($"Failed to compile HLSL code: {Encoding.ASCII.GetString(error.GetBytes())}");
             }
 
-            return result.Bytecode.Data;
+            return result.GetBytes();
         }
 
         public override string Name
@@ -103,6 +103,8 @@ namespace Veldrid.D3D11
                 DeviceShader.DebugName = value;
             }
         }
+
+        public override bool IsDisposed => DeviceShader.IsDisposed;
 
         public override void Dispose()
         {

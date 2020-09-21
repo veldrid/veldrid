@@ -41,6 +41,11 @@ namespace Veldrid
         public abstract string Name { get; set; }
 
         /// <summary>
+        /// A bool indicating whether this instance has been disposed.
+        /// </summary>
+        public abstract bool IsDisposed { get; }
+
+        /// <summary>
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
         public abstract void Dispose();

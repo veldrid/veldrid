@@ -3,10 +3,13 @@
     internal class WebGLTextureView : TextureView
     {
         private readonly WebGLGraphicsDevice _gd;
+        private bool _disposed;
 
         public uint WglTarget { get; }
         public WebGLDotNET.WebGLTexture WglTexture { get; }
         public override string Name { get; set; }
+
+        public override bool IsDisposed => _disposed;
 
         public WebGLTextureView(WebGLGraphicsDevice gd, TextureViewDescription description)
             : base(ref description)
@@ -19,6 +22,7 @@
 
         public override void Dispose()
         {
+            _disposed = true;
         }
     }
 }

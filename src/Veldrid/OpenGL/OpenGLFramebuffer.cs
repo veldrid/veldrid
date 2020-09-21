@@ -11,6 +11,7 @@ namespace Veldrid.OpenGL
 
         private string _name;
         private bool _nameChanged;
+        private bool _disposeRequested;
         private bool _disposed;
 
         public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
@@ -20,6 +21,8 @@ namespace Veldrid.OpenGL
         public bool Created { get; private set; }
 
         public ResourceRefCount RefCount { get; }
+
+        public override bool IsDisposed => _disposeRequested;
 
         public OpenGLFramebuffer(OpenGLGraphicsDevice gd, ref FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets, description.ResolveTargets)
@@ -74,12 +77,14 @@ namespace Veldrid.OpenGL
                     _gd.TextureSamplerManager.SetTextureTransient(glTex.TextureTarget, glTex.Texture);
                     CheckLastError();
 
+                    TextureTarget textureTarget = GetTextureTarget (glTex, colorAttachment.ArrayLayer);
+
                     if (glTex.ArrayLayers == 1)
                     {
                         glFramebufferTexture2D(
                             FramebufferTarget.Framebuffer,
                             GLFramebufferAttachment.ColorAttachment0 + i,
-                            glTex.TextureTarget,
+                            textureTarget,
                             glTex.Texture,
                             (int)colorAttachment.MipLevel);
                         CheckLastError();
@@ -89,9 +94,10 @@ namespace Veldrid.OpenGL
                         glFramebufferTextureLayer(
                             FramebufferTarget.Framebuffer,
                             GLFramebufferAttachment.ColorAttachment0 + i,
-                            glTex.Texture,
+                            (uint)glTex.Texture,
                             (int)colorAttachment.MipLevel,
                             (int)colorAttachment.ArrayLayer);
+                        CheckLastError();
                     }
                 }
 
@@ -116,6 +122,8 @@ namespace Veldrid.OpenGL
 
                 _gd.TextureSamplerManager.SetTextureTransient(depthTarget, glDepthTex.Texture);
                 CheckLastError();
+
+                depthTarget = GetTextureTarget (glDepthTex, DepthTarget.Value.ArrayLayer);
 
                 GLFramebufferAttachment framebufferAttachment = GLFramebufferAttachment.DepthAttachment;
                 if (FormatHelpers.IsStencilFormat(glDepthTex.Format))
@@ -159,7 +167,11 @@ namespace Veldrid.OpenGL
 
         private void DisposeCore()
         {
-            _gd.EnqueueDisposal(this);
+            if (!_disposeRequested)
+            {
+                _disposeRequested = true;
+                _gd.EnqueueDisposal(this);
+            }
         }
 
         public void DestroyGLResources()

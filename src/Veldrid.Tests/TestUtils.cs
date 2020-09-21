@@ -174,6 +174,7 @@ namespace Veldrid.Tests
             if (Environment.GetEnvironmentVariable("VELDRID_TESTS_ENABLE_RENDERDOC") == "1"
                 && RenderDoc.Load(out _renderDoc))
             {
+                _renderDoc.APIValidation = true;
                 _renderDoc.DebugOutputMute = false;
             }
             Activator.CreateInstance<T>().CreateGraphicsDevice(out _window, out _gd);
@@ -209,9 +210,14 @@ namespace Veldrid.Tests
             }
             else
             {
+                uint layers = texture.ArrayLayers;
+                if ((texture.Usage & TextureUsage.Cubemap) != 0)
+                {
+                    layers *= 6;
+                }
                 TextureDescription desc = new TextureDescription(
                     texture.Width, texture.Height, texture.Depth,
-                    texture.MipLevels, texture.ArrayLayers,
+                    texture.MipLevels, layers,
                     texture.Format,
                     TextureUsage.Staging, texture.Type);
                 Texture readback = RF.CreateTexture(ref desc);

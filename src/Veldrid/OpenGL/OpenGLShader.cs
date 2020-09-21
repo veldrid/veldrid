@@ -12,10 +12,12 @@ namespace Veldrid.OpenGL
         private readonly ShaderType _shaderType;
         private readonly StagingBlock _stagingBlock;
 
+        private bool _disposeRequested;
         private bool _disposed;
         private string _name;
         private bool _nameChanged;
         public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
+        public override bool IsDisposed => _disposeRequested;
 
         private uint _shader;
 
@@ -103,7 +105,11 @@ namespace Veldrid.OpenGL
 
         public override void Dispose()
         {
-            _gd.EnqueueDisposal(this);
+            if (!_disposeRequested)
+            {
+                _disposeRequested = true;
+                _gd.EnqueueDisposal(this);
+            }
         }
 
         public void DestroyGLResources()

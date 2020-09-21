@@ -10,7 +10,9 @@ namespace Veldrid.OpenGL
         private readonly OpenGLGraphicsDevice _gd;
         private bool _needsTextureView;
         private uint _textureView;
+        private bool _disposeRequested;
         private bool _disposed;
+        public override bool IsDisposed => _disposeRequested;
 
         private string _name;
         private bool _nameChanged;
@@ -283,7 +285,11 @@ namespace Veldrid.OpenGL
 
         private void DisposeCore()
         {
-            _gd.EnqueueDisposal(this);
+            if (!_disposeRequested)
+            {
+                _disposeRequested = true;
+                _gd.EnqueueDisposal(this);
+            }
         }
 
         public void DestroyGLResources()

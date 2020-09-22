@@ -116,6 +116,11 @@ namespace Veldrid.Sdl2
         public static void SDL_SetWindowResizable(SDL_Window window, uint resizable) => s_setWindowResizable(window, resizable);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int SDL_GetDisplayBounds_t(int displayIndex, SDL_Rect* rect);
+        private static SDL_GetDisplayBounds_t s_sdl_getDisplayBounds = LoadFunction<SDL_GetDisplayBounds_t>("SDL_GetDisplayBounds");
+        public static int SDL_GetDisplayBounds(int displayIndex, SDL_Rect* rect) => s_sdl_getDisplayBounds(displayIndex, rect);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate int SDL_GetWindowDisplayIndex_t(SDL_Window window);
         private static SDL_GetWindowDisplayIndex_t s_sdl_getWindowDisplayIndex = LoadFunction<SDL_GetWindowDisplayIndex_t>("SDL_GetWindowDisplayIndex");
         public static int SDL_GetWindowDisplayIndex(SDL_Window window) => s_sdl_getWindowDisplayIndex(window);

@@ -830,6 +830,26 @@ namespace Veldrid
 
         /// <summary>
         /// Updates a <see cref="DeviceBuffer"/> region with new data.
+        /// This function must be used with a blittable value type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of data to upload.</typeparam>
+        /// <param name="buffer">The resource to update.</param>
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.</param>
+        /// <param name="source">An readonly span containing the data to upload.</param>
+        public unsafe void UpdateBuffer<T>(
+            DeviceBuffer buffer,
+            uint bufferOffsetInBytes,
+            ReadOnlySpan<T> source) where T : unmanaged
+        {
+            fixed (void* pin = &MemoryMarshal.GetReference(source))
+            {
+                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)pin, (uint)(Unsafe.SizeOf<T>() * source.Length));
+            }
+        }
+
+        /// <summary>
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// </summary>
         /// <param name="buffer">The resource to update.</param>
         /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at

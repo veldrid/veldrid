@@ -29,6 +29,15 @@ namespace Veldrid.Tests
         }
 
         [Fact]
+        public void UpdateBuffer_Span_Succeeds()
+        {
+            DeviceBuffer buffer = CreateBuffer(64, BufferUsage.VertexBuffer);
+            float[] data = new float[16];
+            GD.UpdateBuffer(buffer, 0, (ReadOnlySpan<float>)data);
+            GD.WaitForIdle();
+        }
+
+        [Fact]
         public void UpdateBuffer_ThenMapRead_Succeeds()
         {
             DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.Staging);

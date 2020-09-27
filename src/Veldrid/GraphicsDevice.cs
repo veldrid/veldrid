@@ -330,7 +330,7 @@ namespace Veldrid
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
         /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
-        public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode) where T : struct
+        public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode) where T : unmanaged
             => Map<T>(resource, mode, 0);
         /// <summary>
         /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
@@ -341,7 +341,7 @@ namespace Veldrid
         /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.</param>
         /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
-        public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode, uint subresource) where T : struct
+        public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode, uint subresource) where T : unmanaged
         {
             MappedResource mappedResource = Map(resource, mode, subresource);
             return new MappedResourceView<T>(mappedResource);
@@ -423,21 +423,9 @@ namespace Veldrid
             T[] source,
             uint x, uint y, uint z,
             uint width, uint height, uint depth,
-            uint mipLevel, uint arrayLayer) where T : struct
+            uint mipLevel, uint arrayLayer) where T : unmanaged
         {
-            uint sizeInBytes = (uint)(Unsafe.SizeOf<T>() * source.Length);
-#if VALIDATE_USAGE
-            ValidateUpdateTextureParameters(texture, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
-#endif
-            GCHandle gch = GCHandle.Alloc(source, GCHandleType.Pinned);
-            UpdateTextureCore(
-                texture,
-                gch.AddrOfPinnedObject(),
-                sizeInBytes,
-                x, y, z,
-                width, height, depth,
-                mipLevel, arrayLayer);
-            gch.Free();
+            UpdateTexture(texture, (ReadOnlySpan<T>)source, x, y, z, width, height, depth, mipLevel, arrayLayer);
         }
 
         /// <summary>
@@ -463,7 +451,7 @@ namespace Veldrid
             uint width, uint height, uint depth,
             uint mipLevel, uint arrayLayer) where T : unmanaged
         {
-            uint sizeInBytes = (uint)(Unsafe.SizeOf<T>() * source.Length);
+            uint sizeInBytes = (uint)(sizeof(T) * source.Length);
 #if VALIDATE_USAGE
             ValidateUpdateTextureParameters(texture, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
 #endif
@@ -563,12 +551,12 @@ namespace Veldrid
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
-            T source) where T : struct
+            T source) where T : unmanaged
         {
             ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
             fixed (byte* ptr = &sourceByteRef)
             {
-                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)Unsafe.SizeOf<T>());
+                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)sizeof(T));
             }
         }
 
@@ -584,12 +572,12 @@ namespace Veldrid
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
-            ref T source) where T : struct
+            ref T source) where T : unmanaged
         {
             ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
             fixed (byte* ptr = &sourceByteRef)
             {
-                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, Util.USizeOf<T>());
+                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)sizeof(T));
             }
         }
 
@@ -607,7 +595,7 @@ namespace Veldrid
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             ref T source,
-            uint sizeInBytes) where T : struct
+            uint sizeInBytes) where T : unmanaged
         {
             ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
             fixed (byte* ptr = &sourceByteRef)
@@ -628,11 +616,9 @@ namespace Veldrid
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
-            T[] source) where T : struct
+            T[] source) where T : unmanaged
         {
-            GCHandle gch = GCHandle.Alloc(source, GCHandleType.Pinned);
-            UpdateBuffer(buffer, bufferOffsetInBytes, gch.AddrOfPinnedObject(), (uint)(Unsafe.SizeOf<T>() * source.Length));
-            gch.Free();
+            UpdateBuffer(buffer, bufferOffsetInBytes, (ReadOnlySpan<T>)source);
         }
 
         /// <summary>
@@ -651,7 +637,7 @@ namespace Veldrid
         {
             fixed (void* pin = &MemoryMarshal.GetReference(source))
             {
-                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)pin, (uint)(Unsafe.SizeOf<T>() * source.Length));
+                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)pin, (uint)(sizeof(T) * source.Length));
             }
         }
 
@@ -937,7 +923,7 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options)
         {
-            return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(),  null);
+            return new D3D11.D3D11GraphicsDevice(options, new D3D11DeviceOptions(), null);
         }
 
         /// <summary>

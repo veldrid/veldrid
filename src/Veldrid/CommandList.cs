@@ -589,12 +589,12 @@ namespace Veldrid
         /// <param name="drawCount">The number of draw commands to read and issue from the indirect Buffer.</param>
         /// <param name="stride">The stride, in bytes, between consecutive draw commands in the indirect Buffer. This value must
         /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawArguments"/>.</param>
-        public void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public unsafe void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             ValidateDrawIndirectSupport();
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
-            ValidateIndirectStride(stride, Unsafe.SizeOf<IndirectDrawArguments>());
+            ValidateIndirectStride(stride, sizeof(IndirectDrawArguments));
             PreDrawValidation();
 
             DrawIndirectCore(indirectBuffer, offset, drawCount, stride);
@@ -621,12 +621,12 @@ namespace Veldrid
         /// <param name="drawCount">The number of draw commands to read and issue from the indirect Buffer.</param>
         /// <param name="stride">The stride, in bytes, between consecutive draw commands in the indirect Buffer. This value must
         /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawIndexedArguments"/>.</param>
-        public void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
+        public unsafe void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             ValidateDrawIndirectSupport();
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
-            ValidateIndirectStride(stride, Unsafe.SizeOf<IndirectDrawIndexedArguments>());
+            ValidateIndirectStride(stride, sizeof(IndirectDrawIndexedArguments));
             PreDrawValidation();
 
             DrawIndexedIndirectCore(indirectBuffer, offset, drawCount, stride);
@@ -756,12 +756,12 @@ namespace Veldrid
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
-            T source) where T : struct
+            T source) where T : unmanaged
         {
             ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
             fixed (byte* ptr = &sourceByteRef)
             {
-                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)Unsafe.SizeOf<T>());
+                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)sizeof(T));
             }
         }
 
@@ -777,7 +777,7 @@ namespace Veldrid
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
-            ref T source) where T : struct
+            ref T source) where T : unmanaged
         {
             ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
             fixed (byte* ptr = &sourceByteRef)
@@ -800,7 +800,7 @@ namespace Veldrid
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             ref T source,
-            uint sizeInBytes) where T : struct
+            uint sizeInBytes) where T : unmanaged
         {
             ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
             fixed (byte* ptr = &sourceByteRef)
@@ -821,11 +821,29 @@ namespace Veldrid
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
-            T[] source) where T : struct
+            T[] source) where T : unmanaged
         {
-            GCHandle gch = GCHandle.Alloc(source, GCHandleType.Pinned);
-            UpdateBuffer(buffer, bufferOffsetInBytes, gch.AddrOfPinnedObject(), (uint)(Unsafe.SizeOf<T>() * source.Length));
-            gch.Free();
+            UpdateBuffer(buffer, bufferOffsetInBytes, (ReadOnlySpan<T>)source);
+        }
+
+        /// <summary>
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
+        /// This function must be used with a blittable value type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of data to upload.</typeparam>
+        /// <param name="buffer">The resource to update.</param>
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.</param>
+        /// <param name="source">An readonly span containing the data to upload.</param>
+        public unsafe void UpdateBuffer<T>(
+            DeviceBuffer buffer,
+            uint bufferOffsetInBytes,
+            ReadOnlySpan<T> source) where T : unmanaged
+        {
+            fixed (void* pin = &MemoryMarshal.GetReference(source))
+            {
+                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)pin, (uint)(sizeof(T) * source.Length));
+            }
         }
 
         /// <summary>

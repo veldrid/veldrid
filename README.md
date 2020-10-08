@@ -12,7 +12,9 @@ Supported backends:
 
 [Veldrid documentation site](https://mellinoe.github.io/veldrid-docs/)
 
-[![Gitter chat](https://badges.gitter.im/veldrid/Lobby.svg)](https://gitter.im/veldrid/Lobby)
+Join the Discord server:
+
+[![Join the Discord server](https://img.shields.io/discord/757148685321895936?label=Veldrid)](https://discord.gg/s5EvvWJ)
 
 Veldrid is available on NuGet:
 

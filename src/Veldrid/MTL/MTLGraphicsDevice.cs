@@ -17,6 +17,7 @@ namespace Veldrid.MTL
             = new Dictionary<IntPtr, MTLGraphicsDevice>();
 
         private readonly MTLDevice _device;
+        private readonly string _name;
         private readonly MTLCommandQueue _commandQueue;
         private readonly MTLSwapchain _mainSwapchain;
         private readonly bool[] _supportedSampleCounts;
@@ -50,6 +51,7 @@ namespace Veldrid.MTL
             SwapchainDescription? swapchainDesc)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
+            _name = _device.name;
             MetalFeatures = new MTLFeatureSupport(_device);
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
@@ -127,6 +129,8 @@ namespace Veldrid.MTL
 
             PostDeviceCreated();
         }
+
+        public override string Name => _name;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Metal;
 

@@ -17,7 +17,7 @@ namespace Veldrid.D3D11
     {
         private readonly IDXGIAdapter _dxgiAdapter;
         private readonly ID3D11Device _device;
-        private readonly string _name;
+        private readonly string _deviceName;
         private readonly ID3D11DeviceContext _immediateContext;
         private readonly D3D11ResourceFactory _d3d11ResourceFactory;
         private readonly D3D11Swapchain _mainSwapchain;
@@ -33,7 +33,7 @@ namespace Veldrid.D3D11
         private readonly object _stagingResourcesLock = new object();
         private readonly List<D3D11Buffer> _availableStagingBuffers = new List<D3D11Buffer>();
 
-        public override string Name => _name;
+        public override string DeviceName => _deviceName;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
@@ -115,7 +115,7 @@ namespace Veldrid.D3D11
                 // Store a pointer to the DXGI adapter.
                 // This is for the case of no preferred DXGI adapter, or fallback to WARP.
                 dxgiDevice.GetAdapter(out _dxgiAdapter).CheckError();
-                _name = _dxgiAdapter.Description.Description;
+                _deviceName = _dxgiAdapter.Description.Description;
             }
 
             if (swapchainDesc != null)

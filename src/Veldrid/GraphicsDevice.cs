@@ -20,7 +20,7 @@ namespace Veldrid
         /// <summary>
         /// Gets the name of the device.
         /// </summary>
-        public abstract string Name { get; }
+        public abstract string DeviceName { get; }
 
         /// <summary>
         /// Gets a value identifying the specific graphics API used by this instance.

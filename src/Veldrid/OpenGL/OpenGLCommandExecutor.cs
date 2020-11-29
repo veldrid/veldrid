@@ -35,6 +35,7 @@ namespace Veldrid.OpenGL
         private bool[] _newComputeResourceSets = Array.Empty<bool>();
 
         private bool _graphicsPipelineActive;
+        private bool _vertexLayoutFlushed;
 
         public OpenGLCommandExecutor(OpenGLGraphicsDevice gd, OpenGLPlatformInfo platformInfo)
         {
@@ -252,7 +253,11 @@ namespace Veldrid.OpenGL
             }
 
             FlushResourceSets(graphics: true);
-            FlushVertexLayouts();
+            if (!_vertexLayoutFlushed)
+            {
+                FlushVertexLayouts();
+                _vertexLayoutFlushed = true;
+            }
         }
 
         private void FlushResourceSets(bool graphics)
@@ -457,11 +462,13 @@ namespace Veldrid.OpenGL
             {
                 _graphicsPipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(pipeline);
                 ActivateGraphicsPipeline();
+                _vertexLayoutFlushed = false;
             }
             else if (pipeline.IsComputePipeline && _computePipeline != pipeline)
             {
                 _computePipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(pipeline);
                 ActivateComputePipeline();
+                _vertexLayoutFlushed = false;
             }
         }
 
@@ -1068,6 +1075,7 @@ namespace Veldrid.OpenGL
 
             Util.EnsureArrayMinimumSize(ref _vertexBuffers, index + 1);
             Util.EnsureArrayMinimumSize(ref _vbOffsets, index + 1);
+            _vertexLayoutFlushed = false;
             _vertexBuffers[index] = glVB;
             _vbOffsets[index] = offset;
         }

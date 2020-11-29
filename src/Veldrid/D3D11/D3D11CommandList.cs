@@ -1054,7 +1054,7 @@ namespace Veldrid.D3D11
                     int slot = list[i].Item2;
                     if (compute)
                     {
-                        _context.CSUnsetUnorderedAccessView(slot);
+                        _context.CSSetUnorderedAccessView(slot, null);
                     }
                     else
                     {

@@ -304,10 +304,11 @@ namespace Veldrid.D3D11
                         D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
                         lock (_immediateContextLock)
                         {
+                            Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
                             MappedSubresource msr = _immediateContext.Map(
                                 texture.DeviceTexture,
-                                0,
-                                (int)subresource,
+                                (int)mipLevel,
+                                (int)arrayLayer,
                                 D3D11Formats.VdToD3D11MapMode(false, mode),
                                 Vortice.Direct3D11.MapFlags.None,
                                 out int mipSize);

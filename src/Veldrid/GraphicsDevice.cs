@@ -183,7 +183,7 @@ namespace Veldrid
         /// <param name="fences">An array of <see cref="Fence"/> objects to wait on.</param>
         /// <param name="waitAll">If true, then this method blocks until all of the given Fences become signaled.
         /// If false, then this method only waits until one of the Fences become signaled.</param>
-        /// <param name="nanosecondTimeout">A value in nanoseconds, indicating the maximum time to wait on the Fence.</param>
+        /// <param name="nanosecondTimeout">A value in nanoseconds, indicating the maximum time to wait on the Fence.  Pass ulong.MaxValue to wait indefinitely.</param>
         /// <returns>True if the Fence was signaled. False if the timeout was reached instead.</returns>
         public abstract bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout);
 

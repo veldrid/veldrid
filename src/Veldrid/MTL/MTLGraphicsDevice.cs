@@ -442,7 +442,16 @@ namespace Veldrid.MTL
 
         public override bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout)
         {
-            int msTimeout = (int)(nanosecondTimeout / 1_000_000);
+            int msTimeout;
+            if (nanosecondTimeout == ulong.MaxValue)
+            {
+                msTimeout = -1;
+            }
+            else
+            {
+                msTimeout = (int)Math.Min(nanosecondTimeout / 1_000_000, int.MaxValue);
+            }
+
             ManualResetEvent[] events = GetResetEventArray(fences.Length);
             for (int i = 0; i < fences.Length; i++)
             {

@@ -18,6 +18,11 @@ namespace Veldrid
         internal GraphicsDevice() { }
 
         /// <summary>
+        /// Gets the name of the device.
+        /// </summary>
+        public abstract string DeviceName { get; }
+
+        /// <summary>
         /// Gets a value identifying the specific graphics API used by this instance.
         /// </summary>
         public abstract GraphicsBackend BackendType { get; }

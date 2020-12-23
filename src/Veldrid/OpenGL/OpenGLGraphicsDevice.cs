@@ -17,6 +17,7 @@ namespace Veldrid.OpenGL
     internal unsafe class OpenGLGraphicsDevice : GraphicsDevice
     {
         private ResourceFactory _resourceFactory;
+        private string _deviceName;
         private GraphicsBackend _backendType;
         private GraphicsDeviceFeatures _features;
         private uint _vao;
@@ -63,6 +64,8 @@ namespace Veldrid.OpenGL
 
         public int MajorVersion { get; private set; }
         public int MinorVersion { get; private set; }
+
+        public override string DeviceName => _deviceName;
 
         public override GraphicsBackend BackendType => _backendType;
 
@@ -122,6 +125,7 @@ namespace Veldrid.OpenGL
             _setSyncToVBlank = platformInfo.SetSyncToVerticalBlank;
             LoadGetString(_glContext, platformInfo.GetProcAddress);
             string version = Util.GetString(glGetString(StringName.Version));
+            _deviceName = Util.GetString(glGetString(StringName.Renderer));
             _backendType = version.StartsWith("OpenGL ES") ? GraphicsBackend.OpenGLES : GraphicsBackend.OpenGL;
 
             LoadAllFunctions(_glContext, platformInfo.GetProcAddress, _backendType == GraphicsBackend.OpenGLES);

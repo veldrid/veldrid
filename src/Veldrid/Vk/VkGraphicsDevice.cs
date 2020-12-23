@@ -18,6 +18,7 @@ namespace Veldrid.Vk
 
         private VkInstance _instance;
         private VkPhysicalDevice _physicalDevice;
+        private string _deviceName;
         private VkDeviceMemoryManager _memoryManager;
         private VkPhysicalDeviceProperties _physicalDeviceProperties;
         private VkPhysicalDeviceFeatures _physicalDeviceFeatures;
@@ -62,6 +63,8 @@ namespace Veldrid.Vk
             = new Dictionary<VkCommandBuffer, VkBuffer>();
         private readonly Dictionary<VkCommandBuffer, SharedCommandPool> _submittedSharedCommandPools
             = new Dictionary<VkCommandBuffer, SharedCommandPool>();
+
+        public override string DeviceName => _deviceName;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
 
@@ -635,10 +638,9 @@ namespace Veldrid.Vk
             _physicalDevice = physicalDevices[0];
 
             vkGetPhysicalDeviceProperties(_physicalDevice, out _physicalDeviceProperties);
-            string deviceName;
             fixed (byte* utf8NamePtr = _physicalDeviceProperties.deviceName)
             {
-                deviceName = Encoding.UTF8.GetString(utf8NamePtr, (int)MaxPhysicalDeviceNameSize);
+                _deviceName = Encoding.UTF8.GetString(utf8NamePtr, (int)MaxPhysicalDeviceNameSize).TrimEnd('\0');
             }
 
             vkGetPhysicalDeviceFeatures(_physicalDevice, out _physicalDeviceFeatures);

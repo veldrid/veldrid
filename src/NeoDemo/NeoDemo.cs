@@ -511,7 +511,7 @@ namespace Veldrid.NeoDemo
                 _window.Y -= 10;
             }
 
-            _window.Title = _gd.BackendType.ToString();
+            _window.Title = $"NeoDemo ({_gd.DeviceName}, {_gd.BackendType.ToString()})";
         }
 
         private void ChangeMsaa(int msaaOption)

@@ -13,11 +13,21 @@ namespace Veldrid.Utilities
     {
         private const int InitialReadBufferSize = 2048;
 
-        private static readonly char[] _whitespaceChar = new[] { ' ' };
-        private static readonly char _slashChar = '/';
+        private static readonly char[] s_whitespaceChar = new[] { ' ' };
+        private static readonly char s_slashChar = '/';
 
         private readonly ParseContext _pc = new ParseContext();
         private char[] _readBuffer;
+
+        /// <summary>
+        /// Parses an <see cref="ObjFile"/> from the given raw text lines.
+        /// </summary>
+        /// <param name="lines">The text lines of the OBJ file.</param>
+        /// <returns>A new <see cref="ObjFile"/>.</returns>
+        public ObjFile Parse(string[] lines)
+        {
+            return Parse((IEnumerable<string>)lines);
+        }
 
         /// <summary>
         /// Parses an <see cref="ObjFile"/> from the given raw text lines.
@@ -142,7 +152,7 @@ namespace Veldrid.Utilities
             {
                 _currentLine++;
 
-                ReadOnlySpanSplitter<char> splitter = new ReadOnlySpanSplitter<char>(line, _whitespaceChar, StringSplitOptions.RemoveEmptyEntries);
+                ReadOnlySpanSplitter<char> splitter = new ReadOnlySpanSplitter<char>(line, s_whitespaceChar, StringSplitOptions.RemoveEmptyEntries);
                 if (!splitter.MoveNext())
                     return;
 
@@ -256,11 +266,11 @@ namespace Veldrid.Utilities
                 if (faceComponents.IsEmpty)
                     throw CreateExceptionForWrongFaceCount();
 
-                int firstSlash = faceComponents.IndexOf(_slashChar);
+                int firstSlash = faceComponents.IndexOf(s_slashChar);
                 ReadOnlySpan<char> firstPart = faceComponents.Slice(firstSlash + 1);
-                int secondSlash = firstPart.IndexOf(_slashChar);
+                int secondSlash = firstPart.IndexOf(s_slashChar);
                 ReadOnlySpan<char> secondPart = firstPart.Slice(secondSlash + 1);
-                int thirdSlash = secondPart.IndexOf(_slashChar);
+                int thirdSlash = secondPart.IndexOf(s_slashChar);
 
                 ReadOnlySpan<char> firstSlice = firstSlash == -1 ? faceComponents : faceComponents.Slice(0, firstSlash);
                 ReadOnlySpan<char> secondSlice = secondSlash == -1 ? firstPart : firstPart.Slice(0, secondSlash);
@@ -355,22 +365,23 @@ namespace Veldrid.Utilities
                 ref ReadOnlySpanSplitter<char> pieces, string name, bool exact,
                 out ReadOnlySpan<char> piece0, out ReadOnlySpan<char> piece1, out ReadOnlySpan<char> piece2)
             {
-                if (!pieces.MoveNext())
-                    goto Fail;
-                piece0 = pieces.Current;
+                if (pieces.MoveNext())
+                {
+                    piece0 = pieces.Current;
 
-                if (!pieces.MoveNext())
-                    goto Fail;
-                piece1 = pieces.Current;
+                    if (pieces.MoveNext())
+                    {
+                        piece1 = pieces.Current;
 
-                if (!pieces.MoveNext())
-                    goto Fail;
-                piece2 = pieces.Current;
+                        if (pieces.MoveNext())
+                        {
+                            piece2 = pieces.Current;
 
-                if (!exact || !pieces.MoveNext())
-                    return;
-
-                Fail:
+                            if (!exact || !pieces.MoveNext())
+                                return;
+                        }
+                    }
+                }
                 throw CreateExpectPiecesException("three", name, exact);
             }
 
@@ -378,19 +389,19 @@ namespace Veldrid.Utilities
                 ref ReadOnlySpanSplitter<char> pieces, string name, bool exact,
                 out ReadOnlySpan<char> piece0, out ReadOnlySpan<char> piece1)
             {
-                if (!pieces.MoveNext())
-                    goto Fail;
-                piece0 = pieces.Current;
+                if (pieces.MoveNext())
+                {
+                    piece0 = pieces.Current;
 
-                if (!pieces.MoveNext())
-                    goto Fail;
-                piece1 = pieces.Current;
+                    if (!pieces.MoveNext())
+                    {
+                        piece1 = pieces.Current;
 
-                if (!exact || !pieces.MoveNext())
-                    return;
-
-                Fail:
-                throw CreateExpectPiecesException("three", name, exact);
+                        if (!exact || !pieces.MoveNext())
+                            return;
+                    }
+                }
+                throw CreateExpectPiecesException("two", name, exact);
             }
 
             private void ExpectPieces(
@@ -398,13 +409,12 @@ namespace Veldrid.Utilities
                 out ReadOnlySpan<char> piece)
             {
                 if (!pieces.MoveNext())
-                    goto Fail;
-                piece = pieces.Current;
+                {
+                    piece = pieces.Current;
 
-                if (!exact || !pieces.MoveNext())
-                    return;
-
-                Fail:
+                    if (!exact || !pieces.MoveNext())
+                        return;
+                }
                 throw CreateExpectPiecesException("one", name, exact);
             }
 
@@ -467,7 +477,7 @@ namespace Veldrid.Utilities
         /// <param name="group">The OBJ <see cref="MeshGroup"/> to construct.</param>
         /// <param name="reduce">Whether to simplify the mesh by sharing identical vertices.</param>
         /// <returns>A new <see cref="ConstructedMeshInfo"/>.</returns>
-        public ConstructedMeshInfo GetMesh(MeshGroup group, bool reduce = true)
+        public ConstructedMeshInfo GetMesh(MeshGroup group, bool reduce)
         {
             ushort[] indices = new ushort[group.Faces.Length * 3];
             Dictionary<FaceVertex, ushort> vertexMap = new Dictionary<FaceVertex, ushort>();
@@ -503,6 +513,17 @@ namespace Veldrid.Utilities
             }
 
             return new ConstructedMeshInfo(vertices.ToArray(), indices, group.Material);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="ConstructedMeshInfo"/> for the given OBJ <see cref="MeshGroup"/>.
+        /// The mesh is simplified by sharing identical vertices.
+        /// </summary>
+        /// <param name="group">The OBJ <see cref="MeshGroup"/> to construct.</param>
+        /// <returns>A new <see cref="ConstructedMeshInfo"/>.</returns>
+        public ConstructedMeshInfo GetMesh(MeshGroup group)
+        {
+            return GetMesh(group, true);
         }
 
         /// <summary>
@@ -597,22 +618,22 @@ namespace Veldrid.Utilities
         /// <summary>
         /// An OBJ file construct describing the indices of vertex components.
         /// </summary>
-        public readonly struct FaceVertex : IEquatable<FaceVertex>
+        public struct FaceVertex : IEquatable<FaceVertex>
         {
             /// <summary>
             /// The index of the position component.
             /// </summary>
-            public readonly int PositionIndex;
+            public int PositionIndex;
 
             /// <summary>
             /// The index of the normal component.
             /// </summary>
-            public readonly int NormalIndex;
+            public int NormalIndex;
 
             /// <summary>
             /// The index of the texture coordinate component.
             /// </summary>
-            public readonly int TexCoordIndex;
+            public int TexCoordIndex;
 
             public FaceVertex(int positionIndex, int normalIndex, int texCoordIndex)
             {
@@ -654,7 +675,7 @@ namespace Veldrid.Utilities
         /// <summary>
         /// An OBJ file construct describing an individual mesh face.
         /// </summary>
-        public readonly struct Face
+        public struct Face
         {
             /// <summary>
             /// The first vertex.

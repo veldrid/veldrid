@@ -4,7 +4,7 @@ namespace Veldrid.Utilities
 {
     public static class FastParse
     {
-        private static readonly long[] _powLookup = new[]
+        private static readonly long[] s_powLookup = new[]
         {
             1, // 10^0
             10, // 10^1
@@ -26,7 +26,7 @@ namespace Veldrid.Utilities
             100000000000000000, // 10^17,
         };
 
-        private static readonly double[] _doubleExpLookup = GetDoubleExponents();
+        private static readonly double[] s_doubleExpLookup = GetDoubleExponents();
 
         public static bool TryParseDouble(ReadOnlySpan<char> s, out double result, char decimalSeparator = '.')
         {
@@ -114,10 +114,10 @@ namespace Veldrid.Utilities
             ProcessFraction:
             double fraction = tmp;
 
-            if (length < _powLookup.Length)
-                fraction /= _powLookup[length];
+            if (length < s_powLookup.Length)
+                fraction /= s_powLookup[length];
             else
-                fraction /= _powLookup[_powLookup.Length - 1];
+                fraction /= s_powLookup[s_powLookup.Length - 1];
 
             r += fraction;
             r *= sign;
@@ -148,7 +148,7 @@ namespace Veldrid.Utilities
                 exp = 10 * exp + (c - '0');
             }
 
-            exponent = _doubleExpLookup[exp] * expSign;
+            exponent = s_doubleExpLookup[exp] * expSign;
             goto ProcessFraction;
 
             Finish:

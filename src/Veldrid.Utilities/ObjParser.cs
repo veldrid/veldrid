@@ -265,29 +265,35 @@ namespace Veldrid.Utilities
             private ObjFile.FaceVertex ParseFaceVertex(ReadOnlySpan<char> faceComponents)
             {
                 if (faceComponents.IsEmpty)
-                    throw CreateExceptionForWrongFaceCount();
+                    throw CreateExceptionForWrongFaceCount("There must be at least one face component");
 
                 int firstSlash = faceComponents.IndexOf(s_slashChar);
-                ReadOnlySpan<char> firstPart = faceComponents.Slice(firstSlash + 1);
-                int secondSlash = firstPart.IndexOf(s_slashChar);
-                ReadOnlySpan<char> secondPart = firstPart.Slice(secondSlash + 1);
-                int thirdSlash = secondPart.IndexOf(s_slashChar);
+                ReadOnlySpan<char> firstSlice = firstSlash == -1
+                    ? faceComponents
+                    : faceComponents.Slice(0, firstSlash);
 
-                ReadOnlySpan<char> firstSlice = firstSlash == -1 ? faceComponents : faceComponents.Slice(0, firstSlash);
-                ReadOnlySpan<char> secondSlice = secondSlash == -1 ? firstPart : firstPart.Slice(0, secondSlash);
-                ReadOnlySpan<char> thirdSlice = thirdSlash == -1 ? secondPart : throw CreateExceptionForWrongFaceCount();
+                ReadOnlySpan<char> afterFirstSlash = faceComponents.Slice(firstSlash + 1);
+                int secondSlash = afterFirstSlash.IndexOf(s_slashChar);
+                ReadOnlySpan<char> secondSlice = secondSlash == -1
+                    ? afterFirstSlash
+                    : afterFirstSlash.Slice(0, secondSlash);
 
-                int pos = ParseInt(firstSlice, "the first face position index");
+                ReadOnlySpan<char> afterSecondSlash = afterFirstSlash.Slice(secondSlash + 1);
+                int thirdSlash = afterSecondSlash.IndexOf(s_slashChar);
+                ReadOnlySpan<char> thirdSlice = thirdSlash == -1
+                    ? afterSecondSlash
+                    : throw CreateExceptionForWrongFaceCount("No more than three face components are allowed");
+
+                int position = ParseInt(firstSlice, "the first face position index");
                 int texCoord = firstSlash == -1 ? -1 : ParseInt(secondSlice, "the first face texture coordinate index");
                 int normal = secondSlash == -1 ? -1 : ParseInt(thirdSlice, "the first face normal index");
 
-                return new ObjFile.FaceVertex(pos, normal, texCoord);
+                return new ObjFile.FaceVertex(position, normal, texCoord);
             }
 
-            private ObjParseException CreateExceptionForWrongFaceCount()
+            private ObjParseException CreateExceptionForWrongFaceCount(string message)
             {
-                return new ObjParseException(
-                    $"Expected 1, 2, or 3 face components, on line {_currentLine}.");
+                return new ObjParseException($"{message}, on line {_currentLine}.");
             }
 
             public void DiscoverPosition(Vector3 position)

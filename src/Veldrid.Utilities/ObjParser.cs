@@ -162,8 +162,19 @@ namespace Veldrid.Utilities
                 }
                 else if (piece0.SequenceEqual("vt".AsSpan()))
                 {
-                    ExpectPieces(ref splitter, "vt", false, out ReadOnlySpan<char> piece1, out ReadOnlySpan<char> piece2);
-                    Vector2 texCoord = ParseVector2(piece1, piece2, "texture coordinate data");
+                    const string pieceName = "texture coordinate data";
+
+                    ReadOnlySpan<char> x;
+                    ReadOnlySpan<char> y = "0".AsSpan();
+
+                    if (!splitter.MoveNext())
+                        throw CreateExpectPiecesException("one", pieceName, false);
+                    x = splitter.Current;
+
+                    if (splitter.MoveNext())
+                        y = splitter.Current;
+
+                    Vector2 texCoord = ParseVector2(x, y, pieceName);
                     // Flip v coordinate
                     texCoord.Y = 1f - texCoord.Y;
                     DiscoverTexCoord(texCoord);

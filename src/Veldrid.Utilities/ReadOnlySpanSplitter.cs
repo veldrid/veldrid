@@ -5,90 +5,59 @@ namespace Veldrid.Utilities
     internal ref struct ReadOnlySpanSplitter<T>
         where T : IEquatable<T>
     {
-        private int _offset;
-        private bool _isLastSeparator;
+        private readonly ReadOnlySpan<T> _span;
+        private readonly ReadOnlySpan<T> _separators;
+        private readonly int _separatorLength;
+        private readonly bool _initialized;
+        private readonly StringSplitOptions _splitOptions;
 
-        public ReadOnlySpan<T> Value { get; }
-        public ReadOnlySpan<T> Separator { get; }
-        public StringSplitOptions SplitOptions { get; }
-        public int? MaxCount { get; }
+        private int _startCurrent;
+        private int _endCurrent;
+        private int _startNext;
 
-        public ReadOnlySpan<T> Current { get; private set; }
+        public ReadOnlySpan<T> Current => _span.Slice(_startCurrent, _endCurrent - _startCurrent);
 
-        public ReadOnlySpanSplitter(
-            ReadOnlySpan<T> value,
-            ReadOnlySpan<T> separator,
-            StringSplitOptions splitOptions,
-            int? maxCount = null)
-            : this()
+        public ReadOnlySpanSplitter(ReadOnlySpan<T> span, ReadOnlySpan<T> separators, StringSplitOptions splitOptions)
         {
-            Value = value;
-            Separator = separator;
-            SplitOptions = splitOptions;
-            MaxCount = maxCount;
-        }
+            _initialized = true;
+            _span = span;
+            _separators = separators;
+            _separatorLength = _separators.Length != 0 ? _separators.Length : 1;
+            _splitOptions = splitOptions;
 
-        public bool MoveNext()
-        {
-            if (_isLastSeparator)
-            {
-                _isLastSeparator = false;
-                Current = ReadOnlySpan<T>.Empty;
-                return true;
-            }
-
-            ReadOnlySpan<T> value = Value;
-            ReadOnlySpan<T> separator = Separator;
-            int start = _offset;
-
-            for (; _offset < value.Length; _offset++)
-            {
-                if (separator.IsEmpty)
-                {
-                    Current = value.Slice(start, _offset++ - start);
-                    return true;
-                }
-
-                if (value[_offset].Equals(separator[0]) &&
-                    separator.Length <= value.Length - _offset)
-                {
-                    if (separator.Length == 1 ||
-                        value.Slice(_offset, separator.Length).SequenceEqual(separator))
-                    {
-                        Current = value.Slice(start, _offset - start);
-                        _offset += separator.Length;
-
-                        if ((SplitOptions & StringSplitOptions.RemoveEmptyEntries) != 0)
-                        {
-                            if (_offset - start == 1)
-                            {
-                                start = _offset;
-                                continue;
-                            }
-                        }
-                        else
-                        {
-                            if (_offset == value.Length)
-                                _isLastSeparator = true;
-                        }
-                        return true;
-                    }
-                }
-            }
-
-            if (start != _offset)
-            {
-                Current = Value.Slice(start, _offset - start);
-                return Current.Length > 0;
-            }
-
-            Current = default;
-            return false;
+            _startCurrent = 0;
+            _endCurrent = 0;
+            _startNext = 0;
         }
 
         public ReadOnlySpanSplitter<T> GetEnumerator()
         {
             return this;
+        }
+
+        public bool MoveNext()
+        {
+            TrySlice:
+            if (!_initialized || _startNext > _span.Length)
+            {
+                return false;
+            }
+
+            ReadOnlySpan<T> slice = _span.Slice(_startNext);
+            _startCurrent = _startNext;
+
+            int separatorIndex = slice.IndexOfAny(_separators);
+            int elementLength = separatorIndex != -1 ? separatorIndex : slice.Length;
+
+            _endCurrent = _startCurrent + elementLength;
+            _startNext = _endCurrent + _separatorLength;
+
+            if ((_splitOptions & StringSplitOptions.RemoveEmptyEntries) != 0 &&
+                _endCurrent - _startCurrent == 0)
+            {
+                goto TrySlice;
+            }
+            return true;
         }
     }
 }

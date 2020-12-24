@@ -450,7 +450,7 @@ namespace Veldrid.Utilities
             {
                 string message = string.Format(
                     "Expected {0} {1} components to a line starting with {2}, on line {3}.",
-                    exact ? "exact" : "at least",
+                    exact ? "exactly" : "at least",
                     amount,
                     name,
                     _currentLine);

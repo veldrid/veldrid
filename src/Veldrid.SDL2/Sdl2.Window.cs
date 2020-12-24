@@ -116,9 +116,9 @@ namespace Veldrid.Sdl2
         public static void SDL_SetWindowResizable(SDL_Window window, uint resizable) => s_setWindowResizable(window, resizable);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate int SDL_GetDisplayBounds_t(int displayIndex, SDL_Rect* rect);
+        private delegate int SDL_GetDisplayBounds_t(int displayIndex, Rectangle* rect);
         private static SDL_GetDisplayBounds_t s_sdl_getDisplayBounds = LoadFunction<SDL_GetDisplayBounds_t>("SDL_GetDisplayBounds");
-        public static int SDL_GetDisplayBounds(int displayIndex, SDL_Rect* rect) => s_sdl_getDisplayBounds(displayIndex, rect);
+        public static int SDL_GetDisplayBounds(int displayIndex, Rectangle* rect) => s_sdl_getDisplayBounds(displayIndex, rect);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate int SDL_GetWindowDisplayIndex_t(SDL_Window window);
@@ -237,13 +237,5 @@ namespace Veldrid.Sdl2
         public int h;
         public int refresh_rate;
         public void* driverdata;
-    }
-
-    public struct SDL_Rect
-    {
-        public int x;
-        public int y;
-        public int w;
-        public int h;
     }
 }

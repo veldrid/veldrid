@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -334,31 +335,58 @@ namespace Veldrid.Utilities
                 return new ObjFile(_positions.ToArray(), _normals.ToArray(), _texCoords.ToArray(), _groups.ToArray(), _materialLibName);
             }
 
+            private float ParseFloat(ReadOnlySpan<char> span)
+            {
+#if NETSTANDARD2_1
+                return float.Parse(span, NumberStyles.Float, CultureInfo.InvariantCulture);
+#else
+                return float.Parse(span.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture);
+#endif
+            }
+
             private Vector3 ParseVector3(ReadOnlySpan<char> xStr, ReadOnlySpan<char> yStr, ReadOnlySpan<char> zStr, string location)
             {
-                if (FastParse.TryParseDouble(xStr, out double x) &&
-                    FastParse.TryParseDouble(yStr, out double y) &&
-                    FastParse.TryParseDouble(zStr, out double z))
-                    return new Vector3((float)x, (float)y, (float)z);
-
-                throw CreateParseException(location, new FormatException());
+                try
+                {
+                    float x = ParseFloat(xStr);
+                    float y = ParseFloat(yStr);
+                    float z = ParseFloat(zStr);
+                    return new Vector3(x, y, z);
+                }
+                catch (FormatException ex)
+                {
+                    throw CreateParseException(location, ex);
+                }
             }
 
             private Vector2 ParseVector2(ReadOnlySpan<char> xStr, ReadOnlySpan<char> yStr, string location)
             {
-                if (FastParse.TryParseDouble(xStr, out double x) &&
-                    FastParse.TryParseDouble(yStr, out double y))
-                    return new Vector2((float)x, (float)y);
-
-                throw CreateParseException(location, new FormatException());
+                try
+                {
+                    float x = ParseFloat(xStr);
+                    float y = ParseFloat(yStr);
+                    return new Vector2(x, y);
+                }
+                catch (FormatException ex)
+                {
+                    throw CreateParseException(location, ex);
+                }
             }
 
             private int ParseInt(ReadOnlySpan<char> intStr, string location)
             {
-                if (FastParse.TryParseDouble(intStr, out double result, out bool hasFraction) && !hasFraction)
-                    return (int)result;
-
-                throw CreateParseException(location, new FormatException());
+                try
+                {
+#if NETSTANDARD2_1
+                    return int.Parse(intStr, NumberStyles.None, CultureInfo.InvariantCulture);
+#else
+                    return int.Parse(intStr.ToString(), NumberStyles.None, CultureInfo.InvariantCulture);
+#endif
+                }
+                catch (FormatException ex)
+                {
+                    throw CreateParseException(location, ex);
+                }
             }
 
             private void ExpectPieces(
@@ -393,7 +421,7 @@ namespace Veldrid.Utilities
                 {
                     piece0 = pieces.Current;
 
-                    if (!pieces.MoveNext())
+                    if (pieces.MoveNext())
                     {
                         piece1 = pieces.Current;
 
@@ -408,7 +436,7 @@ namespace Veldrid.Utilities
                 ref ReadOnlySpanSplitter<char> pieces, string name, bool exact,
                 out ReadOnlySpan<char> piece)
             {
-                if (!pieces.MoveNext())
+                if (pieces.MoveNext())
                 {
                     piece = pieces.Current;
 

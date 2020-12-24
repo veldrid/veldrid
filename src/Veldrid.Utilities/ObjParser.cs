@@ -465,8 +465,9 @@ namespace Veldrid.Utilities
         /// Gets a <see cref="ConstructedMeshInfo"/> for the given OBJ <see cref="MeshGroup"/>.
         /// </summary>
         /// <param name="group">The OBJ <see cref="MeshGroup"/> to construct.</param>
+        /// <param name="reduce">Whether to simplify the mesh by sharing identical vertices.</param>
         /// <returns>A new <see cref="ConstructedMeshInfo"/>.</returns>
-        public ConstructedMeshInfo GetMesh(MeshGroup group)
+        public ConstructedMeshInfo GetMesh(MeshGroup group, bool reduce = true)
         {
             ushort[] indices = new ushort[group.Faces.Length * 3];
             Dictionary<FaceVertex, ushort> vertexMap = new Dictionary<FaceVertex, ushort>();
@@ -475,9 +476,25 @@ namespace Veldrid.Utilities
             for (int i = 0; i < group.Faces.Length; i++)
             {
                 Face face = group.Faces[i];
-                ushort index0 = GetOrCreate(vertexMap, vertices, face.Vertex0, face.Vertex1, face.Vertex2);
-                ushort index1 = GetOrCreate(vertexMap, vertices, face.Vertex1, face.Vertex2, face.Vertex0);
-                ushort index2 = GetOrCreate(vertexMap, vertices, face.Vertex2, face.Vertex0, face.Vertex1);
+                ushort index0;
+                ushort index1;
+                ushort index2;
+
+                if (reduce)
+                {
+                    index0 = GetOrCreate(vertexMap, vertices, face.Vertex0, face.Vertex1, face.Vertex2);
+                    index1 = GetOrCreate(vertexMap, vertices, face.Vertex1, face.Vertex2, face.Vertex0);
+                    index2 = GetOrCreate(vertexMap, vertices, face.Vertex2, face.Vertex0, face.Vertex1);
+                }
+                else
+                {
+                    index0 = checked((ushort)(i * 3 + 0));
+                    index1 = checked((ushort)(i * 3 + 1));
+                    index2 = checked((ushort)(i * 3 + 2));
+                    vertices.Add(ConstructVertex(face.Vertex0, face.Vertex1, face.Vertex2));
+                    vertices.Add(ConstructVertex(face.Vertex1, face.Vertex2, face.Vertex0));
+                    vertices.Add(ConstructVertex(face.Vertex2, face.Vertex0, face.Vertex1));
+                }
 
                 // Reverse winding order here.
                 indices[(i * 3) + 0] = index0;

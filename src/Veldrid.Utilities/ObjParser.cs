@@ -89,7 +89,11 @@ namespace Veldrid.Utilities
                 while ((lineEnd = text.IndexOf('\n')) != -1)
                 {
                     Span<char> line = text.Slice(0, lineEnd);
-                    if (line[line.Length - 1] == '\r')
+                    if (line.IsEmpty)
+                    {
+                        lineEnd++;
+                    }
+                    else if (line[line.Length - 1] == '\r')
                     {
                         lineEnd++;
                         line = line.Slice(0, line.Length - 1);

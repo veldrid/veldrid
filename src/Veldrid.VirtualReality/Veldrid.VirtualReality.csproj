@@ -14,11 +14,11 @@
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.2" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(UseStableVersions)' == 'true'" >
+  <ItemGroup Condition="'$(UseStableVersions)' == 'true'">
     <PackageReference Include="Veldrid" Version="4.5.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(UseStableVersions)' != 'true'" >
+  <ItemGroup Condition="'$(UseStableVersions)' != 'true'">
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
   </ItemGroup>
 
@@ -29,6 +29,18 @@
       <PackagePath>runtimes/win-x64/native</PackagePath>
       <Pack>true</Pack>
     </Content>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="native\win-x86\" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Update="native\win-x86\openvr_api.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <PropertyGroup>

@@ -954,13 +954,26 @@ namespace Veldrid.Sdl2
             SDL_SysWMinfo wmInfo;
             SDL_GetVersion(&wmInfo.version);
             SDL_GetWMWindowInfo(_window, &wmInfo);
-            if (wmInfo.subsystem == SysWMType.Windows)
+            switch (wmInfo.subsystem)
             {
-                Win32WindowInfo win32Info = Unsafe.Read<Win32WindowInfo>(&wmInfo.info);
-                return win32Info.Sdl2Window;
+                case SysWMType.Windows:
+                    Win32WindowInfo win32Info = Unsafe.Read<Win32WindowInfo>(&wmInfo.info);
+                    return win32Info.window;
+                case SysWMType.X11:
+                    X11WindowInfo x11Info = Unsafe.Read<X11WindowInfo>(&wmInfo.info);
+                    return x11Info.window;
+                case SysWMType.Wayland:
+                    WaylandWindowInfo waylandInfo = Unsafe.Read<WaylandWindowInfo>(&wmInfo.info);
+                    return waylandInfo.surface;
+                case SysWMType.Cocoa:
+                    CocoaWindowInfo cocoaInfo = Unsafe.Read<CocoaWindowInfo>(&wmInfo.info);
+                    return cocoaInfo.window;
+                case SysWMType.Android:
+                    AndroidWindowInfo androidInfo = Unsafe.Read<AndroidWindowInfo>(&wmInfo.info);
+                    return androidInfo.window;
+                default:
+                    return _window;
             }
-
-            return _window;
         }
 
         private class SimpleInputSnapshot : InputSnapshot

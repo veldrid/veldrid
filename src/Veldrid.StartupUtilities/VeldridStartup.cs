@@ -146,18 +146,18 @@ namespace Veldrid.StartupUtilities
             {
                 case SysWMType.Windows:
                     Win32WindowInfo w32Info = Unsafe.Read<Win32WindowInfo>(&sysWmInfo.info);
-                    return SwapchainSource.CreateWin32(w32Info.Sdl2Window, w32Info.hinstance);
+                    return SwapchainSource.CreateWin32(w32Info.window, w32Info.hinstance);
                 case SysWMType.X11:
                     X11WindowInfo x11Info = Unsafe.Read<X11WindowInfo>(&sysWmInfo.info);
                     return SwapchainSource.CreateXlib(
                         x11Info.display,
-                        x11Info.Sdl2Window);
+                        x11Info.window);
                 case SysWMType.Wayland:
                     WaylandWindowInfo wlInfo = Unsafe.Read<WaylandWindowInfo>(&sysWmInfo.info);
                     return SwapchainSource.CreateWayland(wlInfo.display, wlInfo.surface);
                 case SysWMType.Cocoa:
                     CocoaWindowInfo cocoaInfo = Unsafe.Read<CocoaWindowInfo>(&sysWmInfo.info);
-                    IntPtr nsWindow = cocoaInfo.Window;
+                    IntPtr nsWindow = cocoaInfo.window;
                     return SwapchainSource.CreateNSWindow(nsWindow);
                 default:
                     throw new PlatformNotSupportedException("Cannot create a SwapchainSource for " + sysWmInfo.subsystem + ".");
@@ -230,12 +230,12 @@ namespace Veldrid.StartupUtilities
             {
                 case SysWMType.Windows:
                     Win32WindowInfo w32Info = Unsafe.Read<Win32WindowInfo>(&sysWmInfo.info);
-                    return Vk.VkSurfaceSource.CreateWin32(w32Info.hinstance, w32Info.Sdl2Window);
+                    return Vk.VkSurfaceSource.CreateWin32(w32Info.hinstance, w32Info.window);
                 case SysWMType.X11:
                     X11WindowInfo x11Info = Unsafe.Read<X11WindowInfo>(&sysWmInfo.info);
                     return Vk.VkSurfaceSource.CreateXlib(
                         (Vulkan.Xlib.Display*)x11Info.display,
-                        new Vulkan.Xlib.Window() { Value = x11Info.Sdl2Window });
+                        new Vulkan.Xlib.Window() { Value = x11Info.window });
                 default:
                     throw new PlatformNotSupportedException("Cannot create a Vulkan surface for " + sysWmInfo.subsystem + ".");
             }

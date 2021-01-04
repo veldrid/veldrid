@@ -29,7 +29,7 @@ namespace Veldrid.Sdl2
         /// <summary>
         /// The Sdl2Window handle.
         /// </summary>
-        public IntPtr Sdl2Window;
+        public IntPtr window;
         /// <summary>
         /// The Sdl2Window device context.
         /// </summary>
@@ -43,7 +43,7 @@ namespace Veldrid.Sdl2
     public struct X11WindowInfo
     {
         public IntPtr display;
-        public IntPtr Sdl2Window;
+        public IntPtr window;
     }
 
     public struct WaylandWindowInfo
@@ -58,7 +58,13 @@ namespace Veldrid.Sdl2
         /// <summary>
         /// The NSWindow* Cocoa window.
         /// </summary>
-        public IntPtr Window;
+        public IntPtr window;
+    }
+
+    public struct AndroidWindowInfo
+    {
+        public IntPtr window;
+        public IntPtr surface;
     }
 
     public enum SysWMType

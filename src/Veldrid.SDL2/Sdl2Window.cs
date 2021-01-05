@@ -958,10 +958,10 @@ namespace Veldrid.Sdl2
             {
                 case SysWMType.Windows:
                     Win32WindowInfo win32Info = Unsafe.Read<Win32WindowInfo>(&wmInfo.info);
-                    return win32Info.window;
+                    return win32Info.Sdl2Window;
                 case SysWMType.X11:
                     X11WindowInfo x11Info = Unsafe.Read<X11WindowInfo>(&wmInfo.info);
-                    return x11Info.window;
+                    return x11Info.Sdl2Window;
                 case SysWMType.Wayland:
                     WaylandWindowInfo waylandInfo = Unsafe.Read<WaylandWindowInfo>(&wmInfo.info);
                     return waylandInfo.surface;

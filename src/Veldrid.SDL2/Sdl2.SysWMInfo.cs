@@ -29,7 +29,7 @@ namespace Veldrid.Sdl2
         /// <summary>
         /// The Sdl2Window handle.
         /// </summary>
-        public IntPtr window;
+        public IntPtr Sdl2Window;
         /// <summary>
         /// The Sdl2Window device context.
         /// </summary>
@@ -43,7 +43,7 @@ namespace Veldrid.Sdl2
     public struct X11WindowInfo
     {
         public IntPtr display;
-        public IntPtr window;
+        public IntPtr Sdl2Window;
     }
 
     public struct WaylandWindowInfo

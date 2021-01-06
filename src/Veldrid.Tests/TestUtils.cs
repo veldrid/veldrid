@@ -17,6 +17,7 @@ namespace Veldrid.Tests
             if (result != 0)
             {
                 InitializationFailedMessage = GetString(Sdl2Native.SDL_GetError());
+                Console.WriteLine($"Failed to initialize SDL2: {InitializationFailedMessage}");
                 InitializedSdl2 = false;
             }
             else

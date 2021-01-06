@@ -88,19 +88,18 @@ namespace Veldrid.Utilities
                 int lineEnd;
                 while ((lineEnd = text.IndexOf('\n')) != -1)
                 {
-                    Span<char> line = text.Slice(0, lineEnd);
-                    if (line.IsEmpty)
+                    Span<char> line;
+                    if (lineEnd != 0 && text[lineEnd - 1] == '\r')
                     {
-                        lineEnd++;
+                        line = text.Slice(0, lineEnd - 1);
                     }
-                    else if (line[line.Length - 1] == '\r')
+                    else
                     {
-                        lineEnd++;
-                        line = line.Slice(0, line.Length - 1);
+                        line = text.Slice(0, lineEnd);
                     }
 
                     _pc.Process(line);
-                    text = text.Slice(lineEnd);
+                    text = text.Slice(lineEnd + 1);
                 }
 
                 // Shift back remaining data.

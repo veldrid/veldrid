@@ -46,10 +46,13 @@ namespace Veldrid.NeoDemo
             UpdateViewMatrix();
         }
 
-        public void UpdateBackend(GraphicsDevice gd)
+        public void UpdateBackend(GraphicsDevice gd, Sdl2Window window)
         {
             _gd = gd;
             _useReverseDepth = gd.IsDepthRangeZeroToOne;
+            _window = window;
+            _windowWidth = window.Width;
+            _windowHeight = window.Height;
             UpdatePerspectiveMatrix();
         }
 

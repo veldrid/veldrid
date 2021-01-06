@@ -2,14 +2,39 @@ name: .NET
 
 on:
   push:
-    branches: [ master ]
+    branches: [ gh_actions ]
   pull_request:
-    branches: [ master ]
+    branches: [ gh_actions ]
 
 jobs:
-  build:
+  build_ubuntu:
 
     runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.301
+    - name: Install test runtime dependencies
+      run: sudo apt-get install libsdl2-dev libvulkan1 mesa-vulkan-drivers vulkan-utils mesa-utils
+    - uses: openrndr/setup-opengl@v1.1
+    - name: Display glxinfo
+      run: xvfb-run glxinfo
+    - name: Restore dependencies
+      run: dotnet restore src
+    - name: Build
+      run: dotnet build --no-restore src
+    - name: Test
+      run: xvfb-run dotnet test --no-build --verbosity normal src --filter "Backend=OpenGL"
+
+
+  build_windows:
+
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -23,3 +48,26 @@ jobs:
       run: dotnet restore src
     - name: Build
       run: dotnet build --no-restore src
+    - name: Test
+      run: dotnet test --no-build --verbosity normal src --filter "Backend=D3D11"
+
+  build_macos:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.301
+    - name: Install test runtime dependencies
+      run: brew install sdl2
+    - name: Restore dependencies
+      run: dotnet restore src
+    - name: Build
+      run: dotnet build --no-restore src
+    - name: Test
+      run: dotnet test --no-build --verbosity normal src --filter "Backend=Metal"

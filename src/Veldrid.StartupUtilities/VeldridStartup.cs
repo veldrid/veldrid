@@ -443,7 +443,7 @@ namespace Veldrid.StartupUtilities
             if (window.NativePointer == IntPtr.Zero || !string.IsNullOrEmpty(errorString))
             {
                 Sdl2Native.SDL_ClearError();
-                Debug.WriteLine($"Unable to create version {major}.{minor} {profileMask} context.");
+                Console.WriteLine($"Unable to create version {major}.{minor} {profileMask} context: {errorString}");
                 return false;
             }
 
@@ -455,7 +455,7 @@ namespace Veldrid.StartupUtilities
                 if (!string.IsNullOrEmpty(errorString))
                 {
                     Sdl2Native.SDL_ClearError();
-                    Debug.WriteLine($"Unable to create version {major}.{minor} {profileMask} context.");
+                    Console.WriteLine($"Unable to create version {major}.{minor} {profileMask} context: {errorString}");
                     Sdl2Native.SDL_DestroyWindow(window);
                     return false;
                 }

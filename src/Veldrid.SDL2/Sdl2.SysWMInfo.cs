@@ -58,7 +58,7 @@ namespace Veldrid.Sdl2
         /// <summary>
         /// The NSWindow* Cocoa window.
         /// </summary>
-        public IntPtr window;
+        public IntPtr Window;
     }
 
     public struct AndroidWindowInfo

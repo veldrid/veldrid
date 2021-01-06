@@ -157,7 +157,7 @@ namespace Veldrid.StartupUtilities
                     return SwapchainSource.CreateWayland(wlInfo.display, wlInfo.surface);
                 case SysWMType.Cocoa:
                     CocoaWindowInfo cocoaInfo = Unsafe.Read<CocoaWindowInfo>(&sysWmInfo.info);
-                    IntPtr nsWindow = cocoaInfo.window;
+                    IntPtr nsWindow = cocoaInfo.Window;
                     return SwapchainSource.CreateNSWindow(nsWindow);
                 default:
                     throw new PlatformNotSupportedException("Cannot create a SwapchainSource for " + sysWmInfo.subsystem + ".");

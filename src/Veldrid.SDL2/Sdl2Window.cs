@@ -967,7 +967,7 @@ namespace Veldrid.Sdl2
                     return waylandInfo.surface;
                 case SysWMType.Cocoa:
                     CocoaWindowInfo cocoaInfo = Unsafe.Read<CocoaWindowInfo>(&wmInfo.info);
-                    return cocoaInfo.window;
+                    return cocoaInfo.Window;
                 case SysWMType.Android:
                     AndroidWindowInfo androidInfo = Unsafe.Read<AndroidWindowInfo>(&wmInfo.info);
                     return androidInfo.window;

@@ -47,6 +47,7 @@ namespace Veldrid.Sdl2
 
         public Sdl2Window(string title, int x, int y, int width, int height, SDL_WindowFlags flags, bool threadedProcessing)
         {
+            SDL_SetHint("SDL_MOUSE_FOCUS_CLICKTHROUGH", "1");
             _threadedProcessing = threadedProcessing;
             if (threadedProcessing)
             {

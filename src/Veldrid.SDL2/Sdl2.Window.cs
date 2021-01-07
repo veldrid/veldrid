@@ -139,6 +139,12 @@ namespace Veldrid.Sdl2
         private delegate int SDL_GetNumVideoDisplays_t();
         private static SDL_GetNumVideoDisplays_t s_sdl_getNumVideoDisplays = LoadFunction<SDL_GetNumVideoDisplays_t>("SDL_GetNumVideoDisplays");
         public static int SDL_GetNumVideoDisplays() => s_sdl_getNumVideoDisplays();
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        private delegate bool SDL_SetHint_t(string name, string value);
+        private static SDL_SetHint_t s_sdl_setHint = LoadFunction<SDL_SetHint_t>("SDL_SetHint");
+        public static bool SDL_SetHint(string name, string value) => s_sdl_setHint(name, value);
+        
     }
 
     [Flags]

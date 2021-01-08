@@ -28,6 +28,8 @@ namespace Veldrid.OpenGL
         [Conditional("DEBUG")]
         internal unsafe static void ValidateProgram(uint program)
         {
+            glValidateProgram(program);
+
             int validateStatus;
             glGetProgramiv(program, GetProgramParameterName.ValidateStatus, &validateStatus);
             CheckLastError();

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.Utilities
 {
@@ -81,7 +82,7 @@ namespace Veldrid.Utilities
 
             int readIndex = 0;
 
-            // Tries to processes one or more lines inside the read buffer.
+            // Tries to process one or more lines inside the read buffer.
             void TryProcessLines()
             {
                 Span<char> text = _readBuffer.AsSpan(0, readIndex);
@@ -319,11 +320,43 @@ namespace Veldrid.Utilities
                 _currentGroupFaces.Add(face);
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void FinalizeFaceVertex(
+                int positionOffset, int normalOffset, int texCoordOffset,
+                ref ObjFile.FaceVertex vertex)
+            {
+                if (vertex.PositionIndex < 0)
+                {
+                    vertex.PositionIndex += positionOffset;
+                }
+
+                if (vertex.NormalIndex < 0)
+                {
+                    vertex.NormalIndex += normalOffset;
+                }
+
+                if (vertex.TexCoordIndex < 0)
+                {
+                    vertex.TexCoordIndex += texCoordOffset;
+                }
+            }
+
             public void FinalizeGroup()
             {
                 if (_currentGroupName != null)
                 {
+                    int positionOffset = _positions.Count + 1;
+                    int normalOffset = _normals.Count + 1;
+                    int texCoordOffset = _texCoords.Count + 1;
+
                     ObjFile.Face[] faces = _currentGroupFaces.ToArray();
+                    for (int i = 0; i < faces.Length; i++)
+                    {
+                        ref ObjFile.Face face = ref faces[i];
+                        FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, ref face.Vertex0);
+                        FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, ref face.Vertex1);
+                        FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, ref face.Vertex2);
+                    }
                     _groups.Add(new ObjFile.MeshGroup(_currentGroupName, _currentMaterial, faces));
 
                     _currentGroupName = null;
@@ -717,22 +750,22 @@ namespace Veldrid.Utilities
             /// <summary>
             /// The first vertex.
             /// </summary>
-            public readonly FaceVertex Vertex0;
+            public FaceVertex Vertex0;
 
             /// <summary>
             /// The second vertex.
             /// </summary>
-            public readonly FaceVertex Vertex1;
+            public FaceVertex Vertex1;
 
             /// <summary>
             /// The third vertex.
             /// </summary>
-            public readonly FaceVertex Vertex2;
+            public FaceVertex Vertex2;
 
             /// <summary>
             /// The smoothing group. Describes which kind of vertex smoothing should be applied.
             /// </summary>
-            public readonly int SmoothingGroup;
+            public int SmoothingGroup;
 
             public Face(FaceVertex v0, FaceVertex v1, FaceVertex v2, int smoothingGroup = -1)
             {
@@ -787,7 +820,7 @@ namespace Veldrid.Utilities
 
         public DeviceBuffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
         {
-            DeviceBuffer ib = factory.CreateBuffer(new BufferDescription((uint)(Indices.Length * sizeof(int)), BufferUsage.IndexBuffer));
+            DeviceBuffer ib = factory.CreateBuffer(new BufferDescription((uint)(Indices.Length * sizeof(ushort)), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(ib, 0, Indices);
             indexCount = Indices.Length;
             return ib;

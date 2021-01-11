@@ -147,6 +147,10 @@ namespace Veldrid.Utilities
                         ExpectExactly(pieces, 1, "map_kd");
                         _currentDefinition.DiffuseTexture = pieces[1];
                         break;
+                    case "map_ks":
+                        ExpectExactly (pieces, 1, "map_ks");
+                        _currentDefinition.SpecularColorTexture = pieces [1];
+                        break;
                     case "map_bump":
                     case "bump":
                         ExpectExactly(pieces, 1, "map_bump");
@@ -158,7 +162,7 @@ namespace Veldrid.Utilities
                         break;
                     case "map_ns":
                         ExpectExactly(pieces, 1, "map_ns");
-                        _currentDefinition.SpecularColorTexture = pieces[1];
+                        _currentDefinition.SpecularHighlightTexture = pieces[1];
                         break;
 
 

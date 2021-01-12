@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Numerics;
 using System.Text;
+using System.Numerics;
 using Valve.VR;
 using Veldrid.Vk;
 using OVR = Valve.VR.OpenVR;
@@ -30,24 +30,6 @@ namespace Veldrid.VirtualReality.OpenVR
         public override Framebuffer RightEyeFramebuffer => _rightEyeFB;
 
         internal GraphicsDevice GraphicsDevice => _gd;
-
-        // The relative directories for the native binaries
-        private const string LibDir64 = "native/win-x64";
-        private const string LibDir32 = "native/win-x86";
-
-        // DllImport to load OpenVR native binary, might need to reimplement using NativeLibraryLoader, but given that we're loading a VR API, and most VR users use Windows, it may not be worth it
-        // Then again, this API is OpenVR, which is the only VR API other than OpenXR available on Linux, so it may be worth it
-        // TODO: Reimplement using NativeLibraryLoader
-        [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto, SetLastError = true)]
-        static extern bool SetDllDirectory(string lpPathName);
-
-        //To try loading the OpenVR native binary from the native directory
-        static OpenVRContext()
-        {
-            string libName = Environment.Is64BitProcess ? LibDir64 : LibDir32;
-            // A lot of System.IO calls are used to ensure that the correct path to the native binaries folder is evaluated, and it shouldn't be that big a performance hit anyway given that we are doing this during startup
-            SetDllDirectory(System.IO.Path.GetFullPath(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), libName)));
-        }
 
         public OpenVRContext(VRContextOptions options)
         {

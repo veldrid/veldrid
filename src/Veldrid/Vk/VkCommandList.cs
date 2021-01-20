@@ -1091,53 +1091,63 @@ namespace Veldrid.Vk
             EnsureNoRenderPass();
             VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(texture);
             _currentStagingInfo.Resources.Add(vkTex.RefCount);
-            vkTex.TransitionImageLayout(_cb, 0, 1, 0, vkTex.ArrayLayers, VkImageLayout.TransferSrcOptimal);
-            vkTex.TransitionImageLayout(_cb, 1, vkTex.MipLevels - 1, 0, vkTex.ArrayLayers, VkImageLayout.TransferDstOptimal);
 
-            VkImage deviceImage = vkTex.OptimalDeviceImage;
+            uint layerCount = vkTex.ArrayLayers;
+            if ((vkTex.Usage & TextureUsage.Cubemap) != 0)
+            {
+                layerCount *= 6;
+            }
 
-            uint blitCount = vkTex.MipLevels - 1;
-            VkImageBlit* regions = stackalloc VkImageBlit[(int)blitCount];
+            VkImageBlit* region = stackalloc VkImageBlit[1];
 
+            uint width = vkTex.Width;
+            uint height = vkTex.Height;
+            uint depth = vkTex.Depth;
             for (uint level = 1; level < vkTex.MipLevels; level++)
             {
-                uint blitIndex = level - 1;
+                vkTex.TransitionImageLayoutNonmatching(_cb, level - 1, 1, 0, layerCount, VkImageLayout.TransferSrcOptimal);
+                vkTex.TransitionImageLayoutNonmatching(_cb, level, 1, 0, layerCount, VkImageLayout.TransferDstOptimal);
 
-                regions[blitIndex].srcSubresource = new VkImageSubresourceLayers
+                VkImage deviceImage = vkTex.OptimalDeviceImage;
+                uint mipWidth = Math.Max(width >> 1, 1);
+                uint mipHeight = Math.Max(height >> 1, 1);
+                uint mipDepth = Math.Max(depth >> 1, 1);
+
+                region->srcSubresource = new VkImageSubresourceLayers
                 {
                     aspectMask = VkImageAspectFlags.Color,
                     baseArrayLayer = 0,
-                    layerCount = vkTex.ArrayLayers,
-                    mipLevel = 0
+                    layerCount = layerCount,
+                    mipLevel = level - 1
                 };
-                regions[blitIndex].srcOffsets_0 = new VkOffset3D();
-                regions[blitIndex].srcOffsets_1 = new VkOffset3D { x = (int)vkTex.Width, y = (int)vkTex.Height, z = (int)vkTex.Depth };
-                regions[blitIndex].dstOffsets_0 = new VkOffset3D();
+                region->srcOffsets_0 = new VkOffset3D();
+                region->srcOffsets_1 = new VkOffset3D { x = (int)width, y = (int)height, z = (int)depth };
+                region->dstOffsets_0 = new VkOffset3D();
 
-                regions[blitIndex].dstSubresource = new VkImageSubresourceLayers
+                region->dstSubresource = new VkImageSubresourceLayers
                 {
                     aspectMask = VkImageAspectFlags.Color,
                     baseArrayLayer = 0,
-                    layerCount = vkTex.ArrayLayers,
+                    layerCount = layerCount,
                     mipLevel = level
                 };
 
-                Util.GetMipDimensions(vkTex, level, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                regions[blitIndex].dstOffsets_1 = new VkOffset3D { x = (int)mipWidth, y = (int)mipHeight, z = (int)mipDepth };
-            }
+                region->dstOffsets_1 = new VkOffset3D { x = (int)mipWidth, y = (int)mipHeight, z = (int)mipDepth };
+                vkCmdBlitImage(
+                    _cb,
+                    deviceImage, VkImageLayout.TransferSrcOptimal,
+                    deviceImage, VkImageLayout.TransferDstOptimal,
+                    1, region,
+                    _gd.GetFormatFilter(vkTex.VkFormat));
 
-            vkCmdBlitImage(
-                _cb,
-                deviceImage, VkImageLayout.TransferSrcOptimal,
-                deviceImage, VkImageLayout.TransferDstOptimal,
-                blitCount, regions,
-                _gd.GetFormatFilter(vkTex.VkFormat));
+                width = mipWidth;
+                height = mipHeight;
+                depth = mipDepth;
+            }
 
             if ((vkTex.Usage & TextureUsage.Sampled) != 0)
             {
-                // This is somewhat ugly -- the transition logic does not handle different source layouts, so we do two batches.
-                vkTex.TransitionImageLayout(_cb, 0, 1, 0, vkTex.ArrayLayers, VkImageLayout.ShaderReadOnlyOptimal);
-                vkTex.TransitionImageLayout(_cb, 1, vkTex.MipLevels - 1, 0, vkTex.ArrayLayers, VkImageLayout.ShaderReadOnlyOptimal);
+                vkTex.TransitionImageLayoutNonmatching(_cb, 0, vkTex.MipLevels, 0, layerCount, VkImageLayout.ShaderReadOnlyOptimal);
             }
         }
 

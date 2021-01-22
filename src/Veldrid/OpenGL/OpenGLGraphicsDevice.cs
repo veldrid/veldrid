@@ -169,14 +169,14 @@ namespace Veldrid.OpenGL
                 drawIndirect: drawIndirect,
                 drawIndirectBaseInstance: drawIndirect,
                 fillModeWireframe: _backendType == GraphicsBackend.OpenGL,
-                samplerAnisotropy: true,
+                samplerAnisotropy: _extensions.AnisotropicFilter,
                 depthClipDisable: _backendType == GraphicsBackend.OpenGL,
                 texture1D: _backendType == GraphicsBackend.OpenGL,
                 independentBlend: _extensions.IndependentBlend,
                 structuredBuffer: _extensions.StorageBuffers,
                 subsetTextureView: _extensions.ARB_TextureView,
                 commandListDebugMarkers: _extensions.KHR_Debug || _extensions.EXT_DebugMarker,
-                bufferRangeBinding: true,
+                bufferRangeBinding: _extensions.GL_ARB_uniform_buffer_object,
                 shaderFloat64: _extensions.ARB_GpuShaderFp64);
 
             int uboAlignment;

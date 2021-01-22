@@ -417,7 +417,7 @@ namespace Veldrid.Utilities
 
             protected virtual float ParseFloat(ReadOnlySpan<char> span)
             {
-#if NETSTANDARD2_1
+#if NETSTANDARD2_1 || NETCOREAPP
                 return float.Parse(span, NumberStyles.Float, CultureInfo.InvariantCulture);
 #else
                 return float.Parse(span.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture);
@@ -455,8 +455,8 @@ namespace Veldrid.Utilities
 
             protected virtual int ParseInt(ReadOnlySpan<char> intStr)
             {
-#if NETSTANDARD2_1
-                    return int.Parse(intStr, NumberStyles.None, CultureInfo.InvariantCulture);
+#if NETSTANDARD2_1 || NETCOREAPP
+                 return int.Parse(intStr, NumberStyles.None, CultureInfo.InvariantCulture);
 #else
                 return int.Parse(intStr.ToString(), NumberStyles.None, CultureInfo.InvariantCulture);
 #endif

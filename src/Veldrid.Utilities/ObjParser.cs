@@ -38,6 +38,8 @@ namespace Veldrid.Utilities
         /// <returns>A new <see cref="ObjFile"/>.</returns>
         public ObjFile Parse(IEnumerable<string> lines)
         {
+            _pc.Reset();
+
             foreach (string line in lines)
                 _pc.Process(line.AsSpan());
 
@@ -52,6 +54,8 @@ namespace Veldrid.Utilities
         /// <returns>A new <see cref="ObjFile"/>.</returns>
         public ObjFile Parse(IEnumerable<ReadOnlyMemory<char>> lines)
         {
+            _pc.Reset();
+
             foreach (ReadOnlyMemory<char> line in lines)
                 _pc.Process(line.Span);
 
@@ -77,6 +81,8 @@ namespace Veldrid.Utilities
         /// <returns>A new <see cref="ObjFile"/>.</returns>
         public ObjFile Parse(TextReader reader)
         {
+            _pc.Reset();
+
             if (_readBuffer == null)
                 _readBuffer = new char[InitialReadBufferSize];
 
@@ -374,7 +380,25 @@ namespace Veldrid.Utilities
 
             public ObjFile FinalizeFile()
             {
-                return new ObjFile(_positions.ToArray(), _normals.ToArray(), _texCoords.ToArray(), _groups.ToArray(), _materialLibName);
+                ObjFile file = new ObjFile(_positions.ToArray(), _normals.ToArray(), _texCoords.ToArray(), _groups.ToArray(), _materialLibName);
+
+                Reset();
+
+                return file;
+            }
+
+            public void Reset()
+            {
+                _positions.Clear();
+                _normals.Clear();
+                _texCoords.Clear();
+                _groups.Clear();
+                _currentGroupFaces.Clear();
+                _currentGroupName = null;
+                _currentMaterial = null;
+                _materialLibName = null;
+                _currentSmoothingGroup = -1;
+                _currentLine = 0;
             }
 
             private float ParseFloat(ReadOnlySpan<char> span)

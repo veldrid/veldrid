@@ -2,11 +2,11 @@
 
 namespace Veldrid.Utilities
 {
-    internal ref struct ReadOnlySpanSplitter<T>
+    public ref struct ReadOnlySpanSplitter<T>
         where T : IEquatable<T>
     {
         private readonly ReadOnlySpan<T> _span;
-        private readonly ReadOnlySpan<T> _separators;
+        private readonly ReadOnlySpan<T> _separator;
         private readonly int _separatorLength;
         private readonly bool _initialized;
         private readonly StringSplitOptions _splitOptions;
@@ -17,12 +17,12 @@ namespace Veldrid.Utilities
 
         public ReadOnlySpan<T> Current => _span.Slice(_startCurrent, _endCurrent - _startCurrent);
 
-        public ReadOnlySpanSplitter(ReadOnlySpan<T> span, ReadOnlySpan<T> separators, StringSplitOptions splitOptions)
+        public ReadOnlySpanSplitter(ReadOnlySpan<T> span, ReadOnlySpan<T> separator, StringSplitOptions splitOptions)
         {
             _initialized = true;
             _span = span;
-            _separators = separators;
-            _separatorLength = _separators.Length != 0 ? _separators.Length : 1;
+            _separator = separator;
+            _separatorLength = _separator.Length != 0 ? _separator.Length : 1;
             _splitOptions = splitOptions;
 
             _startCurrent = 0;
@@ -46,7 +46,7 @@ namespace Veldrid.Utilities
             ReadOnlySpan<T> slice = _span.Slice(_startNext);
             _startCurrent = _startNext;
 
-            int separatorIndex = slice.IndexOfAny(_separators);
+            int separatorIndex = slice.IndexOf(_separator);
             int elementLength = separatorIndex != -1 ? separatorIndex : slice.Length;
 
             _endCurrent = _startCurrent + elementLength;

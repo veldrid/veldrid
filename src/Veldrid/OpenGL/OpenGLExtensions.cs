@@ -57,6 +57,10 @@ namespace Veldrid.OpenGL
             EXT_DebugMarker = _backend == GraphicsBackend.OpenGLES && IsExtensionSupported("GL_EXT_debug_marker");
 
             ARB_GpuShaderFp64 = GLVersion(4, 0) || IsExtensionSupported("GL_ARB_gpu_shader_fp64");
+
+            GL_ARB_uniform_buffer_object = IsExtensionSupported("GL_ARB_uniform_buffer_object");
+
+            AnisotropicFilter = IsExtensionSupported("GL_EXT_texture_filter_anisotropic") || IsExtensionSupported("GL_ARB_texture_filter_anisotropic");
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -69,6 +73,7 @@ namespace Veldrid.OpenGL
         public readonly bool EXT_sRGBWriteControl;
         public readonly bool EXT_DebugMarker;
         public readonly bool ARB_GpuShaderFp64;
+        public readonly bool GL_ARB_uniform_buffer_object;
 
         // Differs between GL / GLES
         public readonly bool TextureStorage;
@@ -83,6 +88,7 @@ namespace Veldrid.OpenGL
         public readonly bool DrawIndirect;
         public readonly bool MultiDrawIndirect;
         public readonly bool StorageBuffers;
+        public readonly bool AnisotropicFilter;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.

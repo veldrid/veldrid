@@ -746,6 +746,10 @@ namespace Veldrid
         /// <param name="disposable">An object to dispose when this instance becomes idle.</param>
         public void DisposeWhenIdle(IDisposable disposable)
         {
+            if (disposable == null)
+            {
+                return;
+            }
             lock (_deferredDisposalLock)
             {
                 _disposables.Add(disposable);

@@ -32,22 +32,24 @@ namespace Veldrid.Tests
         [Fact]
         public void ComputeShader3dTexture()
         {
-            // Just a dumb compute shader that fills a 3D texture with the same value from a uniform.
+            // Just a dumb compute shader that fills a 3D texture with the same value from a uniform multiplied by the depth.
             string shaderText = @"
 #version 450
 layout(set = 0, binding = 0, rgba32f) uniform image3D TextureToFill;
 layout(set = 0, binding = 1) uniform FillValueBuffer
 {
     float FillValue;
-    vec3 Padding_;
+    float Padding1;
+    float Padding2;
+    float Padding3;
 };
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 void main()
 {
     ivec3 textureCoordinate = ivec3(gl_GlobalInvocationID.xyz);
-    vec4 dataToStore = vec4(FillValue);
+    float dataToStore = FillValue * (textureCoordinate.z + 1);
 
-    imageStore(TextureToFill, textureCoordinate, dataToStore);
+    imageStore(TextureToFill, textureCoordinate, vec4(dataToStore));
 }
 ";
 
@@ -102,9 +104,9 @@ void main()
             GD.WaitForIdle();
 
             // Read back from our texture and make sure it has been properly filled.
-            RgbaFloat expectedFillValue = new RgbaFloat(FillValue, FillValue, FillValue, FillValue);
             for (uint depth = 0; depth < computeTargetTexture.Depth; depth++)
             {
+                RgbaFloat expectedFillValue = new RgbaFloat(new System.Numerics.Vector4(FillValue * (depth + 1)));
                 int notFilledCount = CountTexelsNotFilledAtDepth(GD, computeTargetTexture, expectedFillValue, depth);
 
                 if (notFilledCount == 0)

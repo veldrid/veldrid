@@ -21,8 +21,9 @@ namespace Veldrid.Sdl2
                 return (byte*)0;
 
             var bytes = System.Text.Encoding.UTF8.GetBytes(str);
-            var mem = System.Runtime.InteropServices.Marshal.AllocHGlobal(bytes.Length);
+            var mem = System.Runtime.InteropServices.Marshal.AllocHGlobal(bytes.Length + 1);
             System.Runtime.InteropServices.Marshal.Copy(bytes, 0, mem, bytes.Length);
+            ((byte*)mem)[bytes.Length] = 0;
             return (byte*)mem;
         }
 

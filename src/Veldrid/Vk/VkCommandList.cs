@@ -377,8 +377,9 @@ namespace Veldrid.Vk
                     _currentComputeResourceSets[currentSlot].Set);
                 TransitionImages(vkSet.SampledTextures, VkImageLayout.ShaderReadOnlyOptimal);
                 TransitionImages(vkSet.StorageTextures, VkImageLayout.General);
-                foreach (VkTexture storageTex in vkSet.StorageTextures)
+                for (var texIdx = 0; texIdx < vkSet.StorageTextures.Count; texIdx++)
                 {
+                    VkTexture storageTex = vkSet.StorageTextures[texIdx];
                     if ((storageTex.Usage & TextureUsage.Sampled) != 0)
                     {
                         _preDrawSampledImages.Add(storageTex);

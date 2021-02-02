@@ -176,7 +176,7 @@ namespace Veldrid.OpenGL
                 structuredBuffer: _extensions.StorageBuffers,
                 subsetTextureView: _extensions.ARB_TextureView,
                 commandListDebugMarkers: _extensions.KHR_Debug || _extensions.EXT_DebugMarker,
-                bufferRangeBinding: _extensions.GL_ARB_uniform_buffer_object,
+                bufferRangeBinding: _extensions.ARB_uniform_buffer_object,
                 shaderFloat64: _extensions.ARB_GpuShaderFp64);
 
             int uboAlignment;

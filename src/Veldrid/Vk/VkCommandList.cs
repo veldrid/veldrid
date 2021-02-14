@@ -1098,7 +1098,7 @@ namespace Veldrid.Vk
                 layerCount *= 6;
             }
 
-            VkImageBlit* region = stackalloc VkImageBlit[1];
+            VkImageBlit region;
 
             uint width = vkTex.Width;
             uint height = vkTex.Height;
@@ -1113,18 +1113,18 @@ namespace Veldrid.Vk
                 uint mipHeight = Math.Max(height >> 1, 1);
                 uint mipDepth = Math.Max(depth >> 1, 1);
 
-                region->srcSubresource = new VkImageSubresourceLayers
+                region.srcSubresource = new VkImageSubresourceLayers
                 {
                     aspectMask = VkImageAspectFlags.Color,
                     baseArrayLayer = 0,
                     layerCount = layerCount,
                     mipLevel = level - 1
                 };
-                region->srcOffsets_0 = new VkOffset3D();
-                region->srcOffsets_1 = new VkOffset3D { x = (int)width, y = (int)height, z = (int)depth };
-                region->dstOffsets_0 = new VkOffset3D();
+                region.srcOffsets_0 = new VkOffset3D();
+                region.srcOffsets_1 = new VkOffset3D { x = (int)width, y = (int)height, z = (int)depth };
+                region.dstOffsets_0 = new VkOffset3D();
 
-                region->dstSubresource = new VkImageSubresourceLayers
+                region.dstSubresource = new VkImageSubresourceLayers
                 {
                     aspectMask = VkImageAspectFlags.Color,
                     baseArrayLayer = 0,
@@ -1132,12 +1132,12 @@ namespace Veldrid.Vk
                     mipLevel = level
                 };
 
-                region->dstOffsets_1 = new VkOffset3D { x = (int)mipWidth, y = (int)mipHeight, z = (int)mipDepth };
+                region.dstOffsets_1 = new VkOffset3D { x = (int)mipWidth, y = (int)mipHeight, z = (int)mipDepth };
                 vkCmdBlitImage(
                     _cb,
                     deviceImage, VkImageLayout.TransferSrcOptimal,
                     deviceImage, VkImageLayout.TransferDstOptimal,
-                    1, region,
+                    1, &region,
                     _gd.GetFormatFilter(vkTex.VkFormat));
 
                 width = mipWidth;

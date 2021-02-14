@@ -327,9 +327,9 @@ namespace Veldrid.Utilities
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void FinalizeFaceVertex(
+            private static ObjFile.FaceVertex FinalizeFaceVertex(
                 int positionOffset, int normalOffset, int texCoordOffset,
-                ref ObjFile.FaceVertex vertex)
+                ObjFile.FaceVertex vertex)
             {
                 if (vertex.PositionIndex < 0)
                 {
@@ -345,6 +345,8 @@ namespace Veldrid.Utilities
                 {
                     vertex.TexCoordIndex += texCoordOffset;
                 }
+
+                return vertex;
             }
 
             public void FinalizeGroup()
@@ -359,9 +361,10 @@ namespace Veldrid.Utilities
                     for (int i = 0; i < faces.Length; i++)
                     {
                         ref ObjFile.Face face = ref faces[i];
-                        FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, ref face.Vertex0);
-                        FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, ref face.Vertex1);
-                        FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, ref face.Vertex2);
+                        var vertex0 = FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, face.Vertex0);
+                        var vertex1 = FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, face.Vertex1);
+                        var vertex2 = FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, face.Vertex2);
+                        face = new ObjFile.Face(vertex0, vertex1, vertex2, face.SmoothingGroup);
                     }
                     _groups.Add(new ObjFile.MeshGroup(_currentGroupName, _currentMaterial, faces));
 
@@ -774,22 +777,22 @@ namespace Veldrid.Utilities
             /// <summary>
             /// The first vertex.
             /// </summary>
-            public FaceVertex Vertex0;
+            public readonly FaceVertex Vertex0;
 
             /// <summary>
             /// The second vertex.
             /// </summary>
-            public FaceVertex Vertex1;
+            public readonly FaceVertex Vertex1;
 
             /// <summary>
             /// The third vertex.
             /// </summary>
-            public FaceVertex Vertex2;
+            public readonly FaceVertex Vertex2;
 
             /// <summary>
             /// The smoothing group. Describes which kind of vertex smoothing should be applied.
             /// </summary>
-            public int SmoothingGroup;
+            public readonly int SmoothingGroup;
 
             public Face(FaceVertex v0, FaceVertex v1, FaceVertex v2, int smoothingGroup = -1)
             {

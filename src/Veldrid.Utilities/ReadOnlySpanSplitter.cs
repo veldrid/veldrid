@@ -2,7 +2,7 @@
 
 namespace Veldrid.Utilities
 {
-    public ref struct ReadOnlySpanSplitter<T>
+    internal ref struct ReadOnlySpanSplitter<T>
         where T : IEquatable<T>
     {
         private readonly ReadOnlySpan<T> _span;

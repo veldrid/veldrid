@@ -18,17 +18,8 @@ namespace Veldrid.Utilities
         private static readonly char[] s_whitespaceChar = new[] { ' ' };
         private static readonly char s_slashChar = '/';
 
-        private ParseContext _pc;
+        private readonly ParseContext _pc = new ParseContext();
         private char[] _readBuffer;
-
-        public ObjParser(ParseContext parseContext)
-        {
-            _pc = parseContext ?? throw new ArgumentNullException(nameof(parseContext));
-        }
-
-        public ObjParser() : this(new ParseContext())
-        {
-        }
 
         /// <summary>
         /// Parses an <see cref="ObjFile"/> from the given raw text lines.
@@ -152,7 +143,7 @@ namespace Veldrid.Utilities
             return _pc.FinalizeFile();
         }
 
-        public class ParseContext
+        private class ParseContext
         {
             private List<Vector3> _positions = new List<Vector3>();
             private List<Vector3> _normals = new List<Vector3>();
@@ -164,38 +155,33 @@ namespace Veldrid.Utilities
             private string _currentMaterial;
             private int _currentSmoothingGroup;
             private List<ObjFile.Face> _currentGroupFaces = new List<ObjFile.Face>();
-            private string _materialLibName;
 
-            public int CurrentLine { get; private set; }
+            private int _currentLine;
+            private string _materialLibName;
 
             public void Process(ReadOnlySpan<char> line)
             {
-                CurrentLine++;
+                _currentLine++;
 
                 ReadOnlySpanSplitter<char> splitter = new ReadOnlySpanSplitter<char>(line, s_whitespaceChar, StringSplitOptions.RemoveEmptyEntries);
                 if (!splitter.MoveNext())
                     return;
 
                 ReadOnlySpan<char> piece0 = splitter.Current;
-                Match(ref splitter, piece0);
-            }
-
-            public virtual void Match(ref ReadOnlySpanSplitter<char> splitter, ReadOnlySpan<char> piece)
-            {
-                if (piece.StartsWith("#".AsSpan()))
+                if (piece0.StartsWith("#".AsSpan()))
                     return;
 
-                if (piece.SequenceEqual("v".AsSpan()))
+                if (piece0.SequenceEqual("v".AsSpan()))
                 {
                     ExpectPieces(ref splitter, "v", true, out ReadOnlySpan<char> piece1, out ReadOnlySpan<char> piece2, out ReadOnlySpan<char> piece3);
                     DiscoverPosition(ParseVector3(piece1, piece2, piece3, "position data"));
                 }
-                else if (piece.SequenceEqual("vn".AsSpan()))
+                else if (piece0.SequenceEqual("vn".AsSpan()))
                 {
                     ExpectPieces(ref splitter, "vn", true, out ReadOnlySpan<char> piece1, out ReadOnlySpan<char> piece2, out ReadOnlySpan<char> piece3);
                     DiscoverNormal(ParseVector3(piece1, piece2, piece3, "normal data"));
                 }
-                else if (piece.SequenceEqual("vt".AsSpan()))
+                else if (piece0.SequenceEqual("vt".AsSpan()))
                 {
                     const string pieceName = "texture coordinate data";
 
@@ -214,13 +200,13 @@ namespace Veldrid.Utilities
                     texCoord.Y = 1f - texCoord.Y;
                     DiscoverTexCoord(texCoord);
                 }
-                else if (piece.SequenceEqual("g".AsSpan()))
+                else if (piece0.SequenceEqual("g".AsSpan()))
                 {
                     ExpectPieces(ref splitter, "g", false, out ReadOnlySpan<char> piece1);
                     FinalizeGroup();
                     _currentGroupName = piece1.ToString();
                 }
-                else if (piece.SequenceEqual("usemtl".AsSpan()))
+                else if (piece0.SequenceEqual("usemtl".AsSpan()))
                 {
                     ExpectPieces(ref splitter, "usematl", true, out ReadOnlySpan<char> piece1);
                     if (_currentMaterial != null)
@@ -231,7 +217,7 @@ namespace Veldrid.Utilities
                     }
                     _currentMaterial = piece1.ToString();
                 }
-                else if (piece.SequenceEqual("s".AsSpan()))
+                else if (piece0.SequenceEqual("s".AsSpan()))
                 {
                     ExpectPieces(ref splitter, "s", true, out ReadOnlySpan<char> piece1);
                     if (piece1.SequenceEqual("off".AsSpan()))
@@ -239,12 +225,12 @@ namespace Veldrid.Utilities
                     else
                         _currentSmoothingGroup = ParseInt(piece1, "smoothing group");
                 }
-                else if (piece.SequenceEqual("f".AsSpan()))
+                else if (piece0.SequenceEqual("f".AsSpan()))
                 {
                     ExpectPieces(ref splitter, "f", false, out ReadOnlySpan<char> piece1, out ReadOnlySpan<char> piece2);
                     ProcessFaceLine(ref splitter, piece1, piece2);
                 }
-                else if (piece.SequenceEqual("mtllib".AsSpan()))
+                else if (piece0.SequenceEqual("mtllib".AsSpan()))
                 {
                     ExpectPieces(ref splitter, "mtllib", true, out ReadOnlySpan<char> piece1);
                     DiscoverMaterialLib(piece1);
@@ -253,23 +239,23 @@ namespace Veldrid.Utilities
                 {
                     throw new ObjParseException(string.Format(
                         "An unsupported line-type specifier, '{0}', was used on line {1}.",
-                        piece.ToString(),
-                        CurrentLine));
+                        piece0.ToString(),
+                        _currentLine));
                 }
             }
 
-            public virtual void DiscoverMaterialLib(ReadOnlySpan<char> libName)
+            private void DiscoverMaterialLib(ReadOnlySpan<char> libName)
             {
                 if (_materialLibName != null)
                 {
                     throw new ObjParseException(
-                        $"mtllib appeared again in the file. It should only appear once. Line {CurrentLine}.");
+                        $"mtllib appeared again in the file. It should only appear once. Line {_currentLine}.");
                 }
 
                 _materialLibName = libName.ToString();
             }
 
-            public virtual void ProcessFaceLine(
+            private void ProcessFaceLine(
                 ref ReadOnlySpanSplitter<char> splitter,
                 ReadOnlySpan<char> piece1, ReadOnlySpan<char> piece2)
             {
@@ -286,10 +272,10 @@ namespace Veldrid.Utilities
                 }
             }
 
-            public virtual ObjFile.FaceVertex ParseFaceVertex(ReadOnlySpan<char> faceComponents)
+            private ObjFile.FaceVertex ParseFaceVertex(ReadOnlySpan<char> faceComponents)
             {
                 if (faceComponents.IsEmpty)
-                    throw CreateExceptionForCurrentLine("There must be at least one face component");
+                    throw CreateExceptionForWrongFaceCount("There must be at least one face component");
 
                 int firstSlash = faceComponents.IndexOf(s_slashChar);
                 ReadOnlySpan<char> firstSlice = firstSlash == -1
@@ -306,7 +292,7 @@ namespace Veldrid.Utilities
                 int thirdSlash = afterSecondSlash.IndexOf(s_slashChar);
                 ReadOnlySpan<char> thirdSlice = thirdSlash == -1
                     ? afterSecondSlash
-                    : throw CreateExceptionForCurrentLine("No more than three face components are allowed");
+                    : throw CreateExceptionForWrongFaceCount("No more than three face components are allowed");
 
                 int position = ParseInt(firstSlice, "the first face position index");
                 int texCoord = firstSlash == -1 ? -1 : ParseInt(secondSlice, "the first face texture coordinate index");
@@ -315,27 +301,27 @@ namespace Veldrid.Utilities
                 return new ObjFile.FaceVertex(position, normal, texCoord);
             }
 
-            protected ObjParseException CreateExceptionForCurrentLine(string message)
+            private ObjParseException CreateExceptionForWrongFaceCount(string message)
             {
-                return new ObjParseException($"{message}, on line {CurrentLine}.");
+                return new ObjParseException($"{message}, on line {_currentLine}.");
             }
 
-            public virtual void DiscoverPosition(Vector3 position)
+            public void DiscoverPosition(Vector3 position)
             {
                 _positions.Add(position);
             }
 
-            public virtual void DiscoverNormal(Vector3 normal)
+            public void DiscoverNormal(Vector3 normal)
             {
                 _normals.Add(normal);
             }
 
-            public virtual void DiscoverTexCoord(Vector2 texCoord)
+            public void DiscoverTexCoord(Vector2 texCoord)
             {
                 _texCoords.Add(texCoord);
             }
 
-            public virtual void DiscoverFace(ObjFile.Face face)
+            public void DiscoverFace(ObjFile.Face face)
             {
                 _currentGroupFaces.Add(face);
             }
@@ -361,7 +347,7 @@ namespace Veldrid.Utilities
                 }
             }
 
-            public virtual void FinalizeGroup()
+            public void FinalizeGroup()
             {
                 if (_currentGroupName != null)
                 {
@@ -386,13 +372,13 @@ namespace Veldrid.Utilities
                 }
             }
 
-            public virtual void EndOfFileReached()
+            public void EndOfFileReached()
             {
                 _currentGroupName = _currentGroupName ?? "GlobalFileGroup";
                 _groups.Add(new ObjFile.MeshGroup(_currentGroupName, _currentMaterial, _currentGroupFaces.ToArray()));
             }
 
-            public virtual ObjFile FinalizeFile()
+            public ObjFile FinalizeFile()
             {
                 ObjFile file = new ObjFile(_positions.ToArray(), _normals.ToArray(), _texCoords.ToArray(), _groups.ToArray(), _materialLibName);
 
@@ -401,7 +387,7 @@ namespace Veldrid.Utilities
                 return file;
             }
 
-            public virtual void Reset()
+            public void Reset()
             {
                 _positions.Clear();
                 _normals.Clear();
@@ -412,10 +398,10 @@ namespace Veldrid.Utilities
                 _currentMaterial = null;
                 _materialLibName = null;
                 _currentSmoothingGroup = -1;
-                CurrentLine = 0;
+                _currentLine = 0;
             }
 
-            protected virtual float ParseFloat(ReadOnlySpan<char> span)
+            private float ParseFloat(ReadOnlySpan<char> span)
             {
 #if NETSTANDARD2_1 || NETCOREAPP
                 return float.Parse(span, NumberStyles.Float, CultureInfo.InvariantCulture);
@@ -453,20 +439,15 @@ namespace Veldrid.Utilities
                 }
             }
 
-            protected virtual int ParseInt(ReadOnlySpan<char> intStr)
-            {
-#if NETSTANDARD2_1 || NETCOREAPP
-                 return int.Parse(intStr, NumberStyles.None, CultureInfo.InvariantCulture);
-#else
-                return int.Parse(intStr.ToString(), NumberStyles.None, CultureInfo.InvariantCulture);
-#endif
-            }
-
-            private int ParseInt(ReadOnlySpan<char> intStr, string location)
+            protected int ParseInt(ReadOnlySpan<char> intStr, string location)
             {
                 try
                 {
-                    return ParseInt(intStr);
+#if NETSTANDARD2_1 || NETCOREAPP
+                    return int.Parse(intStr, NumberStyles.None, CultureInfo.InvariantCulture);
+#else
+                    return int.Parse(intStr.ToString(), NumberStyles.None, CultureInfo.InvariantCulture);
+#endif
                 }
                 catch (FormatException ex)
                 {
@@ -531,20 +512,20 @@ namespace Veldrid.Utilities
                 throw CreateExpectPiecesException("one", name, exact);
             }
 
-            protected Exception CreateExpectPiecesException(string amount, string name, bool exact)
+            private Exception CreateExpectPiecesException(string amount, string name, bool exact)
             {
                 string message = string.Format(
                     "Expected {0} {1} components to a line starting with {2}, on line {3}.",
                     exact ? "exactly" : "at least",
                     amount,
                     name,
-                    CurrentLine);
+                    _currentLine);
                 throw new ObjParseException(message);
             }
 
-            protected ObjParseException CreateParseException(string location, Exception inner)
+            private ObjParseException CreateParseException(string location, Exception inner)
             {
-                string message = string.Format("An error ocurred while parsing {0} on line {1}", location, CurrentLine);
+                string message = string.Format("An error ocurred while parsing {0} on line {1}", location, _currentLine);
                 return new ObjParseException(message, inner);
             }
         }

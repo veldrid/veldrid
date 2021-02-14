@@ -357,7 +357,7 @@ namespace Veldrid.Tests
             }
 
             MappedResourceView<ushort> view = GD.Map<ushort>(tex1D, MapMode.Read);
-            for (int i = 0; i < view.Count; i++)
+            for (int i = 0; i < tex1D.Width; i++)
             {
                 Assert.Equal((ushort)(i * 2), view[i]);
             }
@@ -373,15 +373,14 @@ namespace Veldrid.Tests
                 TextureDescription.Texture1D(100, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
 
             MappedResourceView<ushort> writeView = GD.Map<ushort>(tex1D, MapMode.Write);
-            Assert.Equal(tex1D.Width, (uint)writeView.Count);
-            for (int i = 0; i < writeView.Count; i++)
+            for (int i = 0; i < tex1D.Width; i++)
             {
                 writeView[i] = (ushort)(i * 2);
             }
             GD.Unmap(tex1D);
 
             MappedResourceView<ushort> view = GD.Map<ushort>(tex1D, MapMode.Read);
-            for (int i = 0; i < view.Count; i++)
+            for (int i = 0; i < tex1D.Width; i++)
             {
                 Assert.Equal((ushort)(i * 2), view[i]);
             }
@@ -399,8 +398,7 @@ namespace Veldrid.Tests
                 TextureDescription.Texture2D(100, 10, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
 
             MappedResourceView<ushort> writeView = GD.Map<ushort>(tex1D, MapMode.Write);
-            Assert.Equal(tex1D.Width, (uint)writeView.Count);
-            for (int i = 0; i < writeView.Count; i++)
+            for (int i = 0; i < tex1D.Width; i++)
             {
                 writeView[i] = (ushort)(i * 2);
             }
@@ -465,8 +463,7 @@ namespace Veldrid.Tests
                 TextureDescription.Texture2D(100, 10, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
 
             MappedResourceView<ushort> writeView = GD.Map<ushort>(tex1D, MapMode.Write, 1);
-            Assert.Equal(tex2D.Width, (uint)writeView.Count);
-            for (int i = 0; i < writeView.Count; i++)
+            for (int i = 0; i < tex2D.Width; i++)
             {
                 writeView[i] = (ushort)(i * 2);
             }
@@ -1028,18 +1025,23 @@ namespace Veldrid.Tests
     }
 
 #if TEST_VULKAN
+    [Trait("Backend", "Vulkan")]
     public class VulkanTextureTests : TextureTestBase<VulkanDeviceCreator> { }
 #endif
 #if TEST_D3D11
+    [Trait("Backend", "D3D11")]
     public class D3D11TextureTests : TextureTestBase<D3D11DeviceCreator> { }
 #endif
 #if TEST_METAL
+    [Trait("Backend", "Metal")]
     public class MetalTextureTests : TextureTestBase<MetalDeviceCreator> { }
 #endif
 #if TEST_OPENGL
+    [Trait("Backend", "OpenGL")]
     public class OpenGLTextureTests : TextureTestBase<OpenGLDeviceCreator> { }
 #endif
 #if TEST_OPENGLES
+    [Trait("Backend", "OpenGLES")]
     public class OpenGLESTextureTests : TextureTestBase<OpenGLESDeviceCreator> { }
 #endif
 }

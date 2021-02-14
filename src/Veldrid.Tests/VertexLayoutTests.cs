@@ -56,18 +56,23 @@ namespace Veldrid.Tests
     }
 
 #if TEST_OPENGL
+    [Trait("Backend", "OpenGL")]
     public class OpenGLVertexLayoutTests : VertexLayoutTests<OpenGLDeviceCreator> { }
 #endif
 #if TEST_OPENGLES
+    [Trait("Backend", "OpenGLES")]
     public class OpenGLESVertexLayoutTests : VertexLayoutTests<OpenGLESDeviceCreator> { }
 #endif
 #if TEST_VULKAN
+    [Trait("Backend", "Vulkan")]
     public class VulkanVertexLayoutTests : VertexLayoutTests<VulkanDeviceCreatorWithMainSwapchain> { }
 #endif
 #if TEST_D3D11
+    [Trait("Backend", "D3D11")]
     public class D3D11VertexLayoutTests : VertexLayoutTests<D3D11DeviceCreator> { }
 #endif
 #if TEST_METAL
-        public class MetalVertexLayoutTests : RenderTests<MetalDeviceCreator> { }
+    [Trait("Backend", "Metal")]
+    public class MetalVertexLayoutTests : RenderTests<MetalDeviceCreator> { }
 #endif
 }

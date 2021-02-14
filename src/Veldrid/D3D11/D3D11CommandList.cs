@@ -21,7 +21,7 @@ namespace Veldrid.D3D11
         private bool _disposed;
         private ID3D11CommandList _commandList;
 
-        private Vortice.Mathematics.Viewport[] _viewports = new Vortice.Mathematics.Viewport[0];
+        private Viewport[] _viewports = new Viewport[0];
         private RawRect[] _scissors = new RawRect[0];
         private bool _viewportsChanged;
         private bool _scissorRectsChanged;
@@ -724,15 +724,7 @@ namespace Veldrid.D3D11
         {
             _viewportsChanged = true;
             Util.EnsureArrayMinimumSize(ref _viewports, index + 1);
-            _viewports[index] = new Vortice.Mathematics.Viewport
-            {
-                X = viewport.X,
-                Y = viewport.Y,
-                Width = viewport.Width,
-                Height = viewport.Height,
-                MinDepth = viewport.MinDepth,
-                MaxDepth = viewport.MaxDepth
-            };
+            _viewports[index] = viewport;
         }
 
         private void BindTextureView(D3D11TextureView texView, int slot, ShaderStages stages, uint resourceSet)
@@ -1171,13 +1163,7 @@ namespace Veldrid.D3D11
 
             if (useUpdateSubresource)
             {
-                Box? subregion = new Box()
-                {
-                    Left = (int)bufferOffsetInBytes,
-                    Right = (int)(sizeInBytes + bufferOffsetInBytes),
-                    Bottom = 1,
-                    Back = 1
-                };
+                Box? subregion = new Box((int)bufferOffsetInBytes, 0, 0, (int)(sizeInBytes + bufferOffsetInBytes), 1, 1);
                 if (isUniformBuffer)
                 {
                     subregion = null;

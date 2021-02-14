@@ -88,7 +88,7 @@ namespace Veldrid.VirtualReality.Sample
             }
         }
 
-        public DeviceBuffer CreateDeviceBuffer<T>(IList<T> list, BufferUsage usage) where T : struct
+        public DeviceBuffer CreateDeviceBuffer<T>(IList<T> list, BufferUsage usage) where T : unmanaged
         {
             DeviceBuffer buffer = _gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(Unsafe.SizeOf<T>() * list.Count), usage));
             _disposables.Add(buffer);

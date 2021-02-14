@@ -17,6 +17,7 @@ namespace Veldrid.Tests
             if (result != 0)
             {
                 InitializationFailedMessage = GetString(Sdl2Native.SDL_GetError());
+                Console.WriteLine($"Failed to initialize SDL2: {InitializationFailedMessage}");
                 InitializedSdl2 = false;
             }
             else
@@ -121,6 +122,11 @@ namespace Veldrid.Tests
 
         public static GraphicsDevice CreateMetalDevice()
         {
+            if (!GraphicsDevice.IsBackendSupported(GraphicsBackend.Metal))
+            {
+                Console.WriteLine("Metal is not supported on this system.");
+                return null;
+            }
             return GraphicsDevice.CreateMetal(new GraphicsDeviceOptions(true, null, false, ResourceBindingModel.Improved));
         }
 

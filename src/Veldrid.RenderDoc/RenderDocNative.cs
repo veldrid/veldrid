@@ -33,6 +33,8 @@ namespace Veldrid
         API_Version_1_1_2 = 10102,    // RENDERDOC_API_1_1_2 = 1 01 02
         API_Version_1_2_0 = 10200,    // RENDERDOC_API_1_2_0 = 1 02 00
         API_Version_1_3_0 = 10300,    // RENDERDOC_API_1_3_0 = 1 03 00
+        API_Version_1_4_0 = 10400,    // RENDERDOC_API_1_4_0 = 1 04 00
+        API_Version_1_4_1 = 10401,    // RENDERDOC_API_1_4_1 = 1 04 01
     }
 
     /// <summary>
@@ -445,12 +447,18 @@ namespace Veldrid
     // This will return 1 if the capture succeeded, and 0 if there was an error capturing.
     internal unsafe delegate uint pRENDERDOC_EndFrameCapture(void* device, void* wndHandle);
 
+    // Ends capturing immediately and discard any data stored without saving to disk.
+    //
+    // This will return 1 if the capture was discarded, and 0 if there was an error or no capture
+    // was in progress
+    internal unsafe delegate uint pRENDERDOC_DiscardFrameCapture(void* device, void* wndHandle);
+
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // RenderDoc API versions
     //
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct RENDERDOC_API_1_3_0
+    internal struct RENDERDOC_API_1_4_0
     {
         public pRENDERDOC_GetAPIVersion GetAPIVersion;
 
@@ -491,5 +499,7 @@ namespace Veldrid
 
         // new function in 1.2.0
         public pRENDERDOC_SetCaptureFileComments SetCaptureFileComments;
+        // new function in 1.4.0
+        public pRENDERDOC_DiscardFrameCapture DiscardFrameCapture;
     }
 }

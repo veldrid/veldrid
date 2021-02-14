@@ -17,6 +17,7 @@ namespace Veldrid.MTL
             = new Dictionary<IntPtr, MTLGraphicsDevice>();
 
         private readonly MTLDevice _device;
+        private readonly string _deviceName;
         private readonly MTLCommandQueue _commandQueue;
         private readonly MTLSwapchain _mainSwapchain;
         private readonly bool[] _supportedSampleCounts;
@@ -53,6 +54,7 @@ namespace Veldrid.MTL
             : base(ref options)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
+            _deviceName = _device.name;
             MetalFeatures = new MTLFeatureSupport(_device);
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
@@ -131,6 +133,8 @@ namespace Veldrid.MTL
 
             PostDeviceCreated();
         }
+
+        public override string DeviceName => _deviceName;
 
         public override GraphicsBackend BackendType => GraphicsBackend.Metal;
 
@@ -452,7 +456,16 @@ namespace Veldrid.MTL
 
         public override bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout)
         {
-            int msTimeout = (int)(nanosecondTimeout / 1_000_000);
+            int msTimeout;
+            if (nanosecondTimeout == ulong.MaxValue)
+            {
+                msTimeout = -1;
+            }
+            else
+            {
+                msTimeout = (int)Math.Min(nanosecondTimeout / 1_000_000, int.MaxValue);
+            }
+
             ManualResetEvent[] events = GetResetEventArray(fences.Length);
             for (int i = 0; i < fences.Length; i++)
             {

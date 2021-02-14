@@ -22,6 +22,7 @@ namespace Veldrid.OpenGL
     internal unsafe class OpenGLGraphicsDevice : GraphicsDevice
     {
         private ResourceFactory _resourceFactory;
+        private string _deviceName;
         private GraphicsBackend _backendType;
         private GraphicsDeviceFeatures _features;
         private uint _vao;
@@ -71,6 +72,8 @@ namespace Veldrid.OpenGL
 
         public int MajorVersion { get; private set; }
         public int MinorVersion { get; private set; }
+
+        public override string DeviceName => _deviceName;
 
         public override GraphicsBackend BackendType => _backendType;
 
@@ -134,6 +137,7 @@ namespace Veldrid.OpenGL
             _setSyncToVBlank = platformInfo.SetSyncToVerticalBlank;
             LoadGetString(_glContext, platformInfo.GetProcAddress);
             string version = Util.GetString(glGetString(StringName.Version));
+            _deviceName = Util.GetString(glGetString(StringName.Renderer));
             _backendType = version.StartsWith("OpenGL ES") ? GraphicsBackend.OpenGLES : GraphicsBackend.OpenGL;
 
             LoadAllFunctions(_glContext, platformInfo.GetProcAddress, _backendType == GraphicsBackend.OpenGLES);
@@ -332,7 +336,52 @@ namespace Veldrid.OpenGL
                 options.SyncToVerticalBlank = swapchainDescription.Value.SyncToVerticalBlank;
             }
 
-            if (swapchainDescription == null)
+            glGenTextures(1, out uint copySrc);
+            CheckLastError();
+
+            float* data = stackalloc float[4];
+            data[0] = 0.5f;
+            data[1] = 0.5f;
+            data[2] = 0.5f;
+            data[3] = 1f;
+
+            glActiveTexture(TextureUnit.Texture0);
+            CheckLastError();
+            glBindTexture(TextureTarget.Texture2D, copySrc);
+            CheckLastError();
+            glTexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, 1, 1, 0, GLPixelFormat.Rgba, GLPixelType.Float, data);
+            CheckLastError();
+            glGenFramebuffers(1, out uint copySrcFb);
+            CheckLastError();
+
+            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, copySrcFb);
+            CheckLastError();
+            glFramebufferTexture2D(FramebufferTarget.ReadFramebuffer, GLFramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, copySrc, 0);
+            CheckLastError();
+
+            glEnable(EnableCap.FramebufferSrgb);
+            CheckLastError();
+            glBlitFramebuffer(
+                0, 0, 1, 1,
+                0, 0, 1, 1,
+                ClearBufferMask.ColorBufferBit,
+                BlitFramebufferFilter.Nearest);
+            CheckLastError();
+
+            glDisable(EnableCap.FramebufferSrgb);
+            CheckLastError();
+
+            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
+            CheckLastError();
+            glBindFramebuffer(FramebufferTarget.DrawFramebuffer, copySrcFb);
+            CheckLastError();
+            glBlitFramebuffer(
+                0, 0, 1, 1,
+                0, 0, 1, 1,
+                ClearBufferMask.ColorBufferBit,
+                BlitFramebufferFilter.Nearest);
+            CheckLastError();
+            if (_backendType == GraphicsBackend.OpenGLES)
             {
                 if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
@@ -967,7 +1016,16 @@ namespace Veldrid.OpenGL
 
         public override bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout)
         {
-            int msTimeout = (int)(nanosecondTimeout / 1_000_000);
+            int msTimeout;
+            if (nanosecondTimeout == ulong.MaxValue)
+            {
+                msTimeout = -1;
+            }
+            else
+            {
+                msTimeout = (int)Math.Min(nanosecondTimeout / 1_000_000, int.MaxValue);
+            }
+
             ManualResetEvent[] events = GetResetEventArray(fences.Length);
             for (int i = 0; i < fences.Length; i++)
             {

@@ -13,7 +13,7 @@ namespace Veldrid
     /// </summary>
     public unsafe class RenderDoc
     {
-        private readonly RENDERDOC_API_1_3_0 _api;
+        private readonly RENDERDOC_API_1_4_0 _api;
         private readonly NativeLibrary _nativeLib;
 
         private unsafe RenderDoc(NativeLibrary lib)
@@ -27,7 +27,7 @@ namespace Veldrid
                 throw new InvalidOperationException("Failed to load RenderDoc API.");
             }
 
-            _api = Marshal.PtrToStructure<RENDERDOC_API_1_3_0>((IntPtr)apiPointers);
+            _api = Marshal.PtrToStructure<RENDERDOC_API_1_4_0>((IntPtr)apiPointers);
         }
 
         /// <summary>
@@ -211,6 +211,14 @@ namespace Veldrid
         /// </summary>
         /// <returns>The PID of the replay UI if successful, 0 if not successful.</returns>
         public uint LaunchReplayUI() => _api.LaunchReplayUI(1, null);
+
+        /// <summary>
+        /// This function will explicitly set which window is considered active.
+        ///  The active window is the one that will be captured when the keybind to trigger a capture is pressed.
+        /// </summary>
+        /// <param name="device"> is a handle to the API ‘device’ object that will be set active. Must be valid.</param>
+        /// <param name="wndHandle"> is a handle to the platform window handle that will be set active. Must be valid.</param>
+        public void SetActiveWindow(IntPtr device, IntPtr wndHandle) => _api.SetActiveWindow(device.ToPointer(), wndHandle.ToPointer());
 
         /// <summary>
         /// This function will launch the Replay UI associated with the RenderDoc library injected into the running application.

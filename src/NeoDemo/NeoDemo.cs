@@ -511,7 +511,7 @@ namespace Veldrid.NeoDemo
                 _window.Y -= 10;
             }
 
-            _window.Title = _gd.BackendType.ToString();
+            _window.Title = $"NeoDemo ({_gd.DeviceName}, {_gd.BackendType.ToString()})";
         }
 
         private void ChangeMsaa(int msaaOption)
@@ -621,7 +621,7 @@ namespace Veldrid.NeoDemo
 #endif
             _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend);
 
-            _scene.Camera.UpdateBackend(_gd);
+            _scene.Camera.UpdateBackend(_gd, _window);
 
             CreateAllObjects();
         }

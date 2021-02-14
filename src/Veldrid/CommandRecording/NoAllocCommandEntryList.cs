@@ -498,6 +498,7 @@ namespace Veldrid.CommandRecording
         public void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             NoAllocDrawIndexedIndirectEntry entry = new NoAllocDrawIndexedIndirectEntry(Track(indirectBuffer), offset, drawCount, stride);
+            AddEntry(DrawIndexedIndirectEntryID, ref entry);
         }
 
         public void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)

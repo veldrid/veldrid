@@ -20,6 +20,8 @@ namespace Veldrid.WebGL
         public override Swapchain MainSwapchain { get; }
         public override GraphicsDeviceFeatures Features { get; }
 
+        public override string DeviceName => "WebGL";
+
         public WebGLGraphicsDevice(GraphicsDeviceOptions options, object canvas)
             : base(ref options)
         {

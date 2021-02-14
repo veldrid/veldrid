@@ -42,7 +42,7 @@ namespace Veldrid
         /// <param name="source">The value to upload.</param>
         public unsafe void Update<T>(
             uint bufferOffsetInBytes,
-            T source) where T : struct
+            T source) where T : unmanaged
             => _gd.UpdateBuffer(this, bufferOffsetInBytes, source);
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Veldrid
         /// <param name="source">A reference to the single value to upload.</param>
         public unsafe void Update<T>(
             uint bufferOffsetInBytes,
-            ref T source) where T : struct
+            ref T source) where T : unmanaged
             => _gd.UpdateBuffer(this, bufferOffsetInBytes, ref source);
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Veldrid
         public unsafe void Update<T>(
             uint bufferOffsetInBytes,
             ref T source,
-            uint sizeInBytes) where T : struct
+            uint sizeInBytes) where T : unmanaged
             => _gd.UpdateBuffer(this, bufferOffsetInBytes, ref source, sizeInBytes);
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Veldrid
         /// <param name="source">An array containing the data to upload.</param>
         public unsafe void Update<T>(
             uint bufferOffsetInBytes,
-            T[] source) where T : struct
+            T[] source) where T : unmanaged
             => _gd.UpdateBuffer(this, bufferOffsetInBytes, source);
 
         /// <summary>

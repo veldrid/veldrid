@@ -195,6 +195,17 @@ namespace Veldrid
         public void StartFrameCapture() => _api.StartFrameCapture(null, null);
 
         /// <summary>
+        /// Immediately starts capturing API calls on the active device and window.
+        /// If there is no matching thing to capture (e.g. no supported API has been initialised), this will do nothing.
+        /// The results are undefined (including crashes) if two captures are started overlapping, even on separate devices
+        /// and/or windows.
+        /// </summary>
+        /// <param name="device"> is a handle to the API ‘device’ object that will be set active. May be null for wildcard match.</param>
+        /// <param name="wndHandle"> is a handle to the platform window handle that will be set active. May be null for wildcard match.</param>
+        public void StartFrameCapture(IntPtr device, IntPtr wndHandle) => _api.StartFrameCapture(device.ToPointer(), wndHandle.ToPointer());
+
+
+        /// <summary>
         /// Returns whether or not a frame capture is currently ongoing anywhere.
         /// </summary>
         /// <returns>True if a capture is ongoing, false if there is no capture running.</returns>
@@ -205,6 +216,14 @@ namespace Veldrid
         /// </summary>
         /// <returns>True if the capture succeeded, false if there was an error capturing.</returns>
         public bool EndFrameCapture() => _api.EndFrameCapture(null, null) != 0;
+
+        /// <summary>
+        /// Ends capturing immediately.
+        /// </summary>
+        /// <param name="device"> is a handle to the API ‘device’ object that will be set active. May be null for wildcard match.</param>
+        /// <param name="wndHandle"> is a handle to the platform window handle that will be set active. May be null for wildcard match.</param>
+        /// <returns>True if the capture succeeded, false if there was an error capturing.</returns>
+        public bool EndFrameCapture(IntPtr device, IntPtr wndHandle) => _api.EndFrameCapture(device.ToPointer(), wndHandle.ToPointer()) != 0;
 
         /// <summary>
         /// This function will launch the Replay UI associated with the RenderDoc library injected into the running application.

@@ -146,6 +146,41 @@ namespace Veldrid.Tests
             cl.ClearDepthStencil(1f);
             cl.End();
         }
+
+        [Fact]
+        public void ReadbackSwapchainFramebuffer_Succeedes()
+        {
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetFramebuffer(GD.SwapchainFramebuffer);
+            cl.ClearColorTarget(0, RgbaFloat.CornflowerBlue);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            Texture colorTarget = GD.SwapchainFramebuffer.ColorTargets[0].Target;
+            Texture readback = GetReadback(colorTarget);
+            BgraByte clearColor = new BgraByte(RgbaByte.CornflowerBlue);
+            MappedResourceView<BgraByte> readView = GD.Map<BgraByte>(readback, MapMode.Read);
+            (uint w, uint h) = (colorTarget.Width, colorTarget.Height);
+            for (uint y = 0; y < h; y++)
+            for (uint x = 0; x < w; x++)
+            {
+                Assert.Equal(clearColor, readView[x, y]);
+            }
+            GD.Unmap(readback);
+        }
+
+        private struct BgraByte
+        {
+            public byte B;
+            public byte G;
+            public byte R;
+            public byte A;
+
+            public BgraByte(RgbaByte rgbaByte)
+                => (B, G, R, A) = (rgbaByte.B, rgbaByte.G, rgbaByte.R, rgbaByte.A);
+        }
     }
 
 #if TEST_OPENGL

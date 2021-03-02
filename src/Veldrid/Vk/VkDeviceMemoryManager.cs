@@ -9,11 +9,10 @@ namespace Veldrid.Vk
 {
     internal unsafe class VkDeviceMemoryManager : IDisposable
     {
-        private const ulong MinDedicatedAllocationSizeDynamic = 1024 * 1024 * 64;
-        private const ulong MinDedicatedAllocationSizeNonDynamic = 1024 * 1024 * 256;
         private readonly VkDevice _device;
         private readonly VkPhysicalDevice _physicalDevice;
         private readonly ulong _bufferImageGranularity;
+        private readonly ulong _chunkGranularity;
         private readonly object _lock = new object();
         private ulong _totalAllocatedBytes;
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryTypeUnmapped = new Dictionary<uint, ChunkAllocatorSet>();
@@ -26,12 +25,14 @@ namespace Veldrid.Vk
             VkDevice device,
             VkPhysicalDevice physicalDevice,
             ulong bufferImageGranularity,
+            ulong chunkGranularity,
             vkGetBufferMemoryRequirements2_t getBufferMemoryRequirements2,
             vkGetImageMemoryRequirements2_t getImageMemoryRequirements2)
         {
             _device = device;
             _physicalDevice = physicalDevice;
             _bufferImageGranularity = bufferImageGranularity;
+            _chunkGranularity = chunkGranularity;
             _getBufferMemoryRequirements2 = getBufferMemoryRequirements2;
             _getImageMemoryRequirements2 = getImageMemoryRequirements2;
         }
@@ -67,20 +68,20 @@ namespace Veldrid.Vk
             VkImage dedicatedImage,
             Vulkan.VkBuffer dedicatedBuffer)
         {
-            // Round up to the nearest multiple of bufferImageGranularity.
-            size = ((size / _bufferImageGranularity) + 1) * _bufferImageGranularity;
-            _totalAllocatedBytes += size;
-
             lock (_lock)
             {
                 uint memoryTypeIndex = FindMemoryType(memProperties, memoryTypeBits, flags);
 
                 ulong minDedicatedAllocationSize = persistentMapped
-                    ? MinDedicatedAllocationSizeDynamic
-                    : MinDedicatedAllocationSizeNonDynamic;
+                    ? ChunkAllocator.PersistentMappedChunkSize
+                    : ChunkAllocator.UnmappedChunkSize;
 
                 if (dedicated || size >= minDedicatedAllocationSize)
                 {
+                    // Round up to the nearest multiple of bufferImageGranularity.
+                    size = ((size / _bufferImageGranularity) + 1) * _bufferImageGranularity;
+                    _totalAllocatedBytes += size;
+
                     VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.New();
                     allocateInfo.allocationSize = size;
                     allocateInfo.memoryTypeIndex = memoryTypeIndex;
@@ -114,6 +115,9 @@ namespace Veldrid.Vk
                 }
                 else
                 {
+                    size = ((size / _chunkGranularity) + 1) * _chunkGranularity;
+                    _totalAllocatedBytes += size;
+
                     ChunkAllocatorSet allocator = GetAllocator(memoryTypeIndex, persistentMapped);
                     bool result = allocator.Allocate(size, alignment, out VkMemoryBlock ret);
                     if (!result)
@@ -144,7 +148,8 @@ namespace Veldrid.Vk
 
         private ChunkAllocatorSet GetAllocator(uint memoryTypeIndex, bool persistentMapped)
         {
-            ChunkAllocatorSet ret = null;
+            ChunkAllocatorSet ret;
+
             if (persistentMapped)
             {
                 if (!_allocatorsByMemoryType.TryGetValue(memoryTypeIndex, out ret))
@@ -216,8 +221,9 @@ namespace Veldrid.Vk
 
         private class ChunkAllocator : IDisposable
         {
-            private const ulong PersistentMappedChunkSize = 1024 * 1024 * 64;
-            private const ulong UnmappedChunkSize = 1024 * 1024 * 256;
+            public const ulong PersistentMappedChunkSize = 1024 * 1024;
+            public const ulong UnmappedChunkSize = 1024 * 1024 * 4;
+
             private readonly VkDevice _device;
             private readonly uint _memoryTypeIndex;
             private readonly bool _persistentMapped;
@@ -370,7 +376,7 @@ namespace Veldrid.Vk
             }
 
 #if DEBUG
-            private List<VkMemoryBlock> _allocatedBlocks = new List<VkMemoryBlock>();
+            private HashSet<VkMemoryBlock> _allocatedBlocks = new HashSet<VkMemoryBlock>();
 
             private void CheckAllocatedBlock(VkMemoryBlock block)
             {
@@ -379,7 +385,7 @@ namespace Veldrid.Vk
                     Debug.Assert(!BlocksOverlap(block, oldBlock), "Allocated blocks have overlapped.");
                 }
 
-                _allocatedBlocks.Add(block);
+                Debug.Assert(_allocatedBlocks.Add(block), "Same block added twice.");
             }
 
             private bool BlocksOverlap(VkMemoryBlock first, VkMemoryBlock second)

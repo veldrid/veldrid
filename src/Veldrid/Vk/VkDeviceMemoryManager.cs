@@ -280,14 +280,16 @@ namespace Veldrid.Vk
             {
                 checked
                 {
+                    List<VkMemoryBlock> freeBlocks = _freeBlocks;
+
                     // Don't try merging blocks if there are none.
-                    bool hasMergedBlocks = _freeBlocks.Count == 0;
+                    bool hasMergedBlocks = freeBlocks.Count == 0;
 
                     do
                     {
-                        for (int i = 0; i < _freeBlocks.Count; i++)
+                        for (int i = 0; i < freeBlocks.Count; i++)
                         {
-                            VkMemoryBlock freeBlock = _freeBlocks[i];
+                            VkMemoryBlock freeBlock = freeBlocks[i];
                             ulong alignedBlockSize = freeBlock.Size;
                             ulong alignedOffsetRemainder = freeBlock.Offset % alignment;
                             if (alignedOffsetRemainder != 0)
@@ -319,12 +321,12 @@ namespace Veldrid.Vk
                                         block.BaseMappedPointer,
                                         false);
 
-                                    _freeBlocks[i] = splitBlock;
+                                    freeBlocks[i] = splitBlock;
                                     block.Size = size;
                                 }
                                 else
                                 {
-                                    _freeBlocks.RemoveAt(i);
+                                    freeBlocks.RemoveAt(i);
                                 }
 
 #if DEBUG
@@ -388,22 +390,24 @@ namespace Veldrid.Vk
 
             private bool MergeContiguousBlocks()
             {
+                List<VkMemoryBlock> freeBlocks = _freeBlocks;
                 bool hasMerged = false;
                 int contiguousLength = 1;
 
-                for (int i = 0; i < _freeBlocks.Count - 1; i++)
+                for (int i = 0; i < freeBlocks.Count - 1; i++)
                 {
-                    ulong blockStart = _freeBlocks[i].Offset;
-                    while (i + contiguousLength < _freeBlocks.Count
-                        && _freeBlocks[i + contiguousLength - 1].End == _freeBlocks[i + contiguousLength].Offset)
+                    ulong blockStart = freeBlocks[i].Offset;
+                    while (i + contiguousLength < freeBlocks.Count
+                        && freeBlocks[i + contiguousLength - 1].End == freeBlocks[i + contiguousLength].Offset)
                     {
                         contiguousLength += 1;
                     }
 
                     if (contiguousLength > 1)
                     {
-                        ulong blockEnd = _freeBlocks[i + contiguousLength - 1].End;
-                        _freeBlocks.RemoveRange(i, contiguousLength);
+                        ulong blockEnd = freeBlocks[i + contiguousLength - 1].End;
+                        freeBlocks.RemoveRange(i, contiguousLength);
+
                         VkMemoryBlock mergedBlock = new VkMemoryBlock(
                             Memory,
                             blockStart,
@@ -411,7 +415,7 @@ namespace Veldrid.Vk
                             _memoryTypeIndex,
                             _mappedPtr,
                             false);
-                        _freeBlocks.Insert(i, mergedBlock);
+                        freeBlocks.Insert(i, mergedBlock);
                         hasMerged = true;
                         contiguousLength = 0;
                     }

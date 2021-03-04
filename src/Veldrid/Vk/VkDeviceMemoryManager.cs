@@ -188,9 +188,18 @@ namespace Veldrid.Vk
             {
                 for (int i = 0; i < _allocators.Count; i++)
                 {
-                    if (_allocators[i].Allocate(size, alignment, out block))
+                    ChunkAllocator allocator = _allocators[i];
+                    if (allocator.Allocate(size, alignment, out block))
                     {
                         return true;
+                    }
+
+                    // Allocate may merge free blocks.
+                    if (allocator.IsFullFreeBlock())
+                    {
+                        allocator.Dispose();
+                        _allocators.RemoveAt(i);
+                        i--;
                     }
                 }
 
@@ -271,7 +280,9 @@ namespace Veldrid.Vk
             {
                 checked
                 {
-                    bool hasMergedBlocks = false;
+                    // Don't try merging blocks if there are none.
+                    bool hasMergedBlocks = _freeBlocks.Count == 0;
+
                     do
                     {
                         for (int i = 0; i < _freeBlocks.Count; i++)
@@ -440,6 +451,17 @@ namespace Veldrid.Vk
                 Debug.Assert(_allocatedBlocks.Remove(block), "Unable to remove a supposedly allocated block.");
             }
 #endif
+
+            public bool IsFullFreeBlock()
+            {
+                if (_freeBlocks.Count == 1)
+                {
+                    VkMemoryBlock freeBlock = _freeBlocks[0];
+                    return freeBlock.Offset == 0
+                        && freeBlock.Size == _totalMemorySize;
+                }
+                return false;
+            }
 
             public void Dispose()
             {

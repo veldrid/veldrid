@@ -186,9 +186,9 @@ namespace Veldrid.Vk
 
             public bool Allocate(ulong size, ulong alignment, out VkMemoryBlock block)
             {
-                foreach (ChunkAllocator allocator in _allocators)
+                for (int i = 0; i < _allocators.Count; i++)
                 {
-                    if (allocator.Allocate(size, alignment, out block))
+                    if (_allocators[i].Allocate(size, alignment, out block))
                     {
                         return true;
                     }
@@ -201,11 +201,12 @@ namespace Veldrid.Vk
 
             public void Free(VkMemoryBlock block)
             {
-                foreach (ChunkAllocator chunk in _allocators)
+                for (int i = 0; i < _allocators.Count; i++)
                 {
-                    if (chunk.Memory == block.DeviceMemory)
+                    ChunkAllocator allocator = _allocators[i];
+                    if (allocator.Memory == block.DeviceMemory)
                     {
-                        chunk.Free(block);
+                        allocator.Free(block);
                     }
                 }
             }
@@ -232,7 +233,6 @@ namespace Veldrid.Vk
             private readonly void* _mappedPtr;
 
             private ulong _totalMemorySize;
-            private ulong _totalAllocatedBytes = 0;
 
             public VkDeviceMemory Memory => _memory;
 
@@ -271,84 +271,115 @@ namespace Veldrid.Vk
             {
                 checked
                 {
-                    for (int i = 0; i < _freeBlocks.Count; i++)
+                    bool hasMergedBlocks = false;
+                    do
                     {
-                        VkMemoryBlock freeBlock = _freeBlocks[i];
-                        ulong alignedBlockSize = freeBlock.Size;
-                        if (freeBlock.Offset % alignment != 0)
+                        for (int i = 0; i < _freeBlocks.Count; i++)
                         {
-                            ulong alignmentCorrection = (alignment - freeBlock.Offset % alignment);
-                            if (alignedBlockSize <= alignmentCorrection)
+                            VkMemoryBlock freeBlock = _freeBlocks[i];
+                            ulong alignedBlockSize = freeBlock.Size;
+                            ulong alignedOffsetRemainder = freeBlock.Offset % alignment;
+                            if (alignedOffsetRemainder != 0)
                             {
-                                continue;
-                            }
-                            alignedBlockSize -= alignmentCorrection;
-                        }
-
-                        if (alignedBlockSize >= size) // Valid match -- split it and return.
-                        {
-                            _freeBlocks.RemoveAt(i);
-
-                            freeBlock.Size = alignedBlockSize;
-                            if ((freeBlock.Offset % alignment) != 0)
-                            {
-                                freeBlock.Offset += alignment - (freeBlock.Offset % alignment);
+                                ulong alignmentCorrection = alignment - alignedOffsetRemainder;
+                                if (alignedBlockSize <= alignmentCorrection)
+                                {
+                                    continue;
+                                }
+                                alignedBlockSize -= alignmentCorrection;
                             }
 
-                            block = freeBlock;
-
-                            if (alignedBlockSize != size)
+                            if (alignedBlockSize >= size) // Valid match -- split it and return.
                             {
-                                VkMemoryBlock splitBlock = new VkMemoryBlock(
-                                    freeBlock.DeviceMemory,
-                                    freeBlock.Offset + size,
-                                    freeBlock.Size - size,
-                                    _memoryTypeIndex,
-                                    freeBlock.BaseMappedPointer,
-                                    false);
-                                _freeBlocks.Insert(i, splitBlock);
                                 block = freeBlock;
-                                block.Size = size;
-                            }
+                                block.Size = alignedBlockSize;
+                                if (alignedOffsetRemainder != 0)
+                                {
+                                    block.Offset += alignment - alignedOffsetRemainder;
+                                }
+
+                                if (alignedBlockSize != size)
+                                {
+                                    VkMemoryBlock splitBlock = new VkMemoryBlock(
+                                        block.DeviceMemory,
+                                        block.Offset + size,
+                                        block.Size - size,
+                                        _memoryTypeIndex,
+                                        block.BaseMappedPointer,
+                                        false);
+
+                                    _freeBlocks[i] = splitBlock;
+                                    block.Size = size;
+                                }
+                                else
+                                {
+                                    _freeBlocks.RemoveAt(i);
+                                }
 
 #if DEBUG
-                            CheckAllocatedBlock(block);
+                                CheckAllocatedBlock(block);
 #endif
-                            _totalAllocatedBytes += alignedBlockSize;
-                            return true;
+                                return true;
+                            }
                         }
+
+                        if (hasMergedBlocks)
+                        {
+                            break;
+                        }
+                        hasMergedBlocks = MergeContiguousBlocks();
                     }
+                    while (hasMergedBlocks);
 
                     block = default(VkMemoryBlock);
                     return false;
                 }
             }
 
-            public void Free(VkMemoryBlock block)
+            private static int FindPrecedingBlockIndex(List<VkMemoryBlock> list, int length, ulong targetOffset)
             {
-                for (int i = 0; i < _freeBlocks.Count; i++)
+                int low = 0;
+                int high = length - 1;
+
+                if (length == 0 || list[high].Offset < targetOffset)
+                    return -1;
+
+                while (low <= high)
                 {
-                    if (_freeBlocks[i].Offset > block.Offset)
-                    {
-                        _freeBlocks.Insert(i, block);
-                        MergeContiguousBlocks();
-#if DEBUG
-                        RemoveAllocatedBlock(block);
-#endif
-                        return;
-                    }
+                    int mid = low + ((high - low) / 2);
+
+                    if (list[mid].Offset >= targetOffset)
+                        high = mid - 1;
+                    else
+                        low = mid + 1;
                 }
 
-                _freeBlocks.Add(block);
+                return high + 1;
+            }
+
+            public void Free(VkMemoryBlock block)
+            {
+                // Assume that _freeBlocks is always sorted.
+                int precedingBlock = FindPrecedingBlockIndex(_freeBlocks, _freeBlocks.Count, block.Offset);
+                if (precedingBlock != -1)
+                {
+                    _freeBlocks.Insert(precedingBlock, block);
+                }
+                else
+                {
+                    _freeBlocks.Add(block);
+                }
+
 #if DEBUG
                 RemoveAllocatedBlock(block);
 #endif
-                _totalAllocatedBytes -= block.Size;
             }
 
-            private void MergeContiguousBlocks()
+            private bool MergeContiguousBlocks()
             {
+                bool hasMerged = false;
                 int contiguousLength = 1;
+
                 for (int i = 0; i < _freeBlocks.Count - 1; i++)
                 {
                     ulong blockStart = _freeBlocks[i].Offset;
@@ -370,9 +401,12 @@ namespace Veldrid.Vk
                             _mappedPtr,
                             false);
                         _freeBlocks.Insert(i, mergedBlock);
+                        hasMerged = true;
                         contiguousLength = 0;
                     }
                 }
+
+                return hasMerged;
             }
 
 #if DEBUG

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
@@ -1490,6 +1491,19 @@ namespace Veldrid.OpenGL
             uint width, uint height, uint depth,
             uint layerCount)
         {
+            if (source is OpenGLPlaceholderTexture)
+            {
+                Debug.Assert(depth == 1 && layerCount == 1);
+                OpenGLTexture dst = Util.AssertSubtype<Texture, OpenGLTexture>(destination);
+                dst.EnsureResourcesCreated();
+                CopySwapchainFramebuffer(
+                    dst,
+                    srcX, srcY,
+                    dstX, dstY, dstZ, dstMipLevel, dstBaseArrayLayer,
+                    width, height);
+                return;
+            }
+
             OpenGLTexture srcGLTexture = Util.AssertSubtype<Texture, OpenGLTexture>(source);
             OpenGLTexture dstGLTexture = Util.AssertSubtype<Texture, OpenGLTexture>(destination);
 
@@ -1713,6 +1727,33 @@ namespace Veldrid.OpenGL
             }
 
             _stagingMemoryPool.Free(block);
+        }
+
+        private void CopySwapchainFramebuffer(
+            OpenGLTexture dst,
+            uint srcX, uint srcY,
+            uint dstX, uint dstY, uint dstZ, uint dstMipLevel, uint dstLayer,
+            uint width, uint height)
+        {
+            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
+            _textureSamplerManager.SetTextureTransient(dst.TextureTarget, dst.Texture);
+            if (dst.TextureTarget == TextureTarget.Texture2D)
+            {
+                glCopyTexSubImage2D(
+                    dst.TextureTarget,
+                    (int)dstMipLevel, (int)dstX, (int)dstY,
+                    (int)srcX, (int)srcY, width, height);
+                CheckLastError();
+            }
+            else
+            {
+                uint dstZOrLayer = Math.Max(dstLayer, dstZ);
+                glCopyTexSubImage3D(
+                    dst.TextureTarget,
+                    (int)dstMipLevel, (int)dstX, (int)dstY, (int)dstZOrLayer,
+                    (int)srcX, (int)srcY, width, height);
+                CheckLastError();
+            }
         }
 
         private static void CopyWithFBO(

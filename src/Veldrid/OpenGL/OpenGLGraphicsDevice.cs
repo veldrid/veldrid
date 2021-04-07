@@ -332,7 +332,7 @@ namespace Veldrid.OpenGL
             glGenFramebuffers(1, out uint copySrcFb);
             CheckLastError();
 
-            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, copySrc);
+            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, copySrcFb);
             CheckLastError();
             glFramebufferTexture2D(FramebufferTarget.ReadFramebuffer, GLFramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, copySrc, 0);
             CheckLastError();

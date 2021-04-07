@@ -1162,7 +1162,7 @@ namespace Veldrid.OpenGL
             uint blockSize = isCompressed ? 4u : 1u;
 
             uint blockAlignedWidth = Math.Max(width, blockSize);
-            uint blockAlignedHeight = Math.Max(width, blockSize);
+            uint blockAlignedHeight = Math.Max(height, blockSize);
 
             uint rowPitch = FormatHelpers.GetRowPitch(blockAlignedWidth, texture.Format);
             uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, blockAlignedHeight, texture.Format);

@@ -13,7 +13,7 @@ namespace Veldrid
     /// </summary>
     public unsafe class RenderDoc
     {
-        private readonly RENDERDOC_API_1_3_0 _api;
+        private readonly RENDERDOC_API_1_4_0 _api;
         private readonly NativeLibrary _nativeLib;
 
         private unsafe RenderDoc(NativeLibrary lib)
@@ -27,7 +27,7 @@ namespace Veldrid
                 throw new InvalidOperationException("Failed to load RenderDoc API.");
             }
 
-            _api = Marshal.PtrToStructure<RENDERDOC_API_1_3_0>((IntPtr)apiPointers);
+            _api = Marshal.PtrToStructure<RENDERDOC_API_1_4_0>((IntPtr)apiPointers);
         }
 
         /// <summary>
@@ -195,6 +195,17 @@ namespace Veldrid
         public void StartFrameCapture() => _api.StartFrameCapture(null, null);
 
         /// <summary>
+        /// Immediately starts capturing API calls on the active device and window.
+        /// If there is no matching thing to capture (e.g. no supported API has been initialised), this will do nothing.
+        /// The results are undefined (including crashes) if two captures are started overlapping, even on separate devices
+        /// and/or windows.
+        /// </summary>
+        /// <param name="device"> is a handle to the API ‘device’ object that will be set active. May be null for wildcard match.</param>
+        /// <param name="wndHandle"> is a handle to the platform window handle that will be set active. May be null for wildcard match.</param>
+        public void StartFrameCapture(IntPtr device, IntPtr wndHandle) => _api.StartFrameCapture(device.ToPointer(), wndHandle.ToPointer());
+
+
+        /// <summary>
         /// Returns whether or not a frame capture is currently ongoing anywhere.
         /// </summary>
         /// <returns>True if a capture is ongoing, false if there is no capture running.</returns>
@@ -207,10 +218,26 @@ namespace Veldrid
         public bool EndFrameCapture() => _api.EndFrameCapture(null, null) != 0;
 
         /// <summary>
+        /// Ends capturing immediately.
+        /// </summary>
+        /// <param name="device"> is a handle to the API ‘device’ object that will be set active. May be null for wildcard match.</param>
+        /// <param name="wndHandle"> is a handle to the platform window handle that will be set active. May be null for wildcard match.</param>
+        /// <returns>True if the capture succeeded, false if there was an error capturing.</returns>
+        public bool EndFrameCapture(IntPtr device, IntPtr wndHandle) => _api.EndFrameCapture(device.ToPointer(), wndHandle.ToPointer()) != 0;
+
+        /// <summary>
         /// This function will launch the Replay UI associated with the RenderDoc library injected into the running application.
         /// </summary>
         /// <returns>The PID of the replay UI if successful, 0 if not successful.</returns>
         public uint LaunchReplayUI() => _api.LaunchReplayUI(1, null);
+
+        /// <summary>
+        /// This function will explicitly set which window is considered active.
+        ///  The active window is the one that will be captured when the keybind to trigger a capture is pressed.
+        /// </summary>
+        /// <param name="device"> is a handle to the API ‘device’ object that will be set active. Must be valid.</param>
+        /// <param name="wndHandle"> is a handle to the platform window handle that will be set active. Must be valid.</param>
+        public void SetActiveWindow(IntPtr device, IntPtr wndHandle) => _api.SetActiveWindow(device.ToPointer(), wndHandle.ToPointer());
 
         /// <summary>
         /// This function will launch the Replay UI associated with the RenderDoc library injected into the running application.

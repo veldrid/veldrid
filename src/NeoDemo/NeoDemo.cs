@@ -621,7 +621,7 @@ namespace Veldrid.NeoDemo
 #endif
             _gd = VeldridStartup.CreateGraphicsDevice(_window, gdOptions, backend);
 
-            _scene.Camera.UpdateBackend(_gd);
+            _scene.Camera.UpdateBackend(_gd, _window);
 
             CreateAllObjects();
         }

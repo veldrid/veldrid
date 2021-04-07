@@ -388,13 +388,7 @@ namespace Veldrid.D3D11
 
             if (useUpdateSubresource)
             {
-                Box? subregion = new Box()
-                {
-                    Left = (int)bufferOffsetInBytes,
-                    Right = (int)(sizeInBytes + bufferOffsetInBytes),
-                    Bottom = 1,
-                    Back = 1
-                };
+                Box? subregion = new Box((int)bufferOffsetInBytes, 0, 0, (int)(sizeInBytes + bufferOffsetInBytes), 1, 1);
 
                 if (isUniformBuffer)
                 {

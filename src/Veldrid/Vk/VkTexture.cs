@@ -330,8 +330,8 @@ namespace Veldrid.Vk
                 if ((Usage & TextureUsage.DepthStencil) != 0)
                 {
                     aspectMask = FormatHelpers.IsStencilFormat(Format)
-                        ? aspectMask = VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
-                        : aspectMask = VkImageAspectFlags.Depth;
+                        ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
+                        : VkImageAspectFlags.Depth;
                 }
                 else
                 {
@@ -353,6 +353,56 @@ namespace Veldrid.Vk
                     for (uint layer = 0; layer < layerCount; layer++)
                     {
                         _imageLayouts[CalculateSubresource(baseMipLevel + level, baseArrayLayer + layer)] = newLayout;
+                    }
+                }
+            }
+        }
+
+        internal void TransitionImageLayoutNonmatching(
+            VkCommandBuffer cb,
+            uint baseMipLevel,
+            uint levelCount,
+            uint baseArrayLayer,
+            uint layerCount,
+            VkImageLayout newLayout)
+        {
+            if (_stagingBuffer != Vulkan.VkBuffer.Null)
+            {
+                return;
+            }
+
+            for (uint level = baseMipLevel; level < baseMipLevel + levelCount; level++)
+            {
+                for (uint layer = baseArrayLayer; layer < baseArrayLayer + layerCount; layer++)
+                {
+                    uint subresource = CalculateSubresource(level, layer);
+                    VkImageLayout oldLayout = _imageLayouts[subresource];
+
+                    if (oldLayout != newLayout)
+                    {
+                        VkImageAspectFlags aspectMask;
+                        if ((Usage & TextureUsage.DepthStencil) != 0)
+                        {
+                            aspectMask = FormatHelpers.IsStencilFormat(Format)
+                                ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
+                                : VkImageAspectFlags.Depth;
+                        }
+                        else
+                        {
+                            aspectMask = VkImageAspectFlags.Color;
+                        }
+                        VulkanUtil.TransitionImageLayout(
+                            cb,
+                            OptimalDeviceImage,
+                            level,
+                            1,
+                            layer,
+                            1,
+                            aspectMask,
+                            oldLayout,
+                            newLayout);
+
+                        _imageLayouts[subresource] = newLayout;
                     }
                 }
             }

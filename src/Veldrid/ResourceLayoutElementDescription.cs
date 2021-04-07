@@ -64,10 +64,7 @@ namespace Veldrid
         /// <returns>True if all elements are equal; false otherswise.</returns>
         public bool Equals(ResourceLayoutElementDescription other)
         {
-            return string.Equals(Name, other.Name)
-                && Kind == other.Kind
-                && Stages == other.Stages
-                && Options == other.Options;
+            return Name == other.Name && Kind == other.Kind && Stages == other.Stages && Options == other.Options;
         }
 
         /// <summary>

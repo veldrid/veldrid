@@ -20,7 +20,7 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
     <PackageReference Include="NativeLibraryLoader" Version="1.0.12" />
 
-    <PackageReference Include="Vk" Version="1.0.22" Condition="'$(ExcludeVulkan)' != 'true'" />
+    <PackageReference Include="Vk" Version="1.0.25" Condition="'$(ExcludeVulkan)' != 'true'" />
 
     <PackageReference Include="Vortice.D3DCompiler" Version="1.8.54" Condition="'$(ExcludeD3D11)' != 'true'" />
     <PackageReference Include="Vortice.Direct3D11" Version="1.8.54" Condition="'$(ExcludeD3D11)' != 'true'" />

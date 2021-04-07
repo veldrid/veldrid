@@ -373,11 +373,11 @@ namespace Veldrid.Vk
                 return;
             }
 
-            for (uint level = 0; level < levelCount; level++)
+            for (uint level = baseMipLevel; level < baseMipLevel + levelCount; level++)
             {
-                for (uint layer = 0; layer < layerCount; layer++)
+                for (uint layer = baseArrayLayer; layer < baseArrayLayer + layerCount; layer++)
                 {
-                    uint subresource = CalculateSubresource(baseMipLevel + level, baseArrayLayer + layer);
+                    uint subresource = CalculateSubresource(level, layer);
                     VkImageLayout oldLayout = _imageLayouts[subresource];
 
                     if (oldLayout != newLayout)
@@ -396,10 +396,10 @@ namespace Veldrid.Vk
                         VulkanUtil.TransitionImageLayout(
                             cb,
                             OptimalDeviceImage,
-                            baseMipLevel,
-                            levelCount,
-                            baseArrayLayer,
-                            layerCount,
+                            level,
+                            1,
+                            layer,
+                            1,
                             aspectMask,
                             oldLayout,
                             newLayout);

@@ -23,11 +23,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="native\win-x64\" />
+    <Content Include="$(MSBuildThisFileDirectory)native\win-x64\openvr_api.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackagePath>runtimes/win-x64/native</PackagePath>
+      <Pack>true</Pack>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="native\win-x86\" />
+    <Content Include="$(MSBuildThisFileDirectory)native\win-x86\openvr_api.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackagePath>runtimes/win-x86/native</PackagePath>
+      <Pack>true</Pack>
+    </Content>
   </ItemGroup>
 
   <PropertyGroup>

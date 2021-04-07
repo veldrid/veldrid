@@ -279,6 +279,7 @@ namespace Veldrid.Vk
             FlushNewResourceSets(
                 _currentGraphicsResourceSets,
                 _graphicsResourceSetsChanged,
+                _currentGraphicsPipeline.ResourceSetCount,
                 VkPipelineBindPoint.Graphics,
                 _currentGraphicsPipeline.PipelineLayout);
 
@@ -291,21 +292,22 @@ namespace Veldrid.Vk
         private void FlushNewResourceSets(
             BoundResourceSetInfo[] resourceSets,
             bool[] resourceSetsChanged,
+            uint resourceSetCount,
             VkPipelineBindPoint bindPoint,
             VkPipelineLayout pipelineLayout)
         {
             VkPipeline pipeline = bindPoint == VkPipelineBindPoint.Graphics ? _currentGraphicsPipeline : _currentComputePipeline;
 
-            int setCount = resourceSets.Length;
+            int setCount = (int)resourceSetCount;
             VkDescriptorSet* descriptorSets = stackalloc VkDescriptorSet[setCount];
             uint* dynamicOffsets = stackalloc uint[pipeline.DynamicOffsetsCount];
             uint currentBatchCount = 0;
             uint currentBatchFirstSet = 0;
             uint currentBatchDynamicOffsetCount = 0;
 
-            for (uint currentSlot = 0; currentSlot < resourceSets.Length; currentSlot++)
+            for (uint currentSlot = 0; currentSlot < resourceSetCount; currentSlot++)
             {
-                bool batchEnded = !resourceSetsChanged[currentSlot] || currentSlot == resourceSets.Length - 1;
+                bool batchEnded = !resourceSetsChanged[currentSlot] || currentSlot == resourceSetCount - 1;
 
                 if (resourceSetsChanged[currentSlot])
                 {
@@ -371,7 +373,7 @@ namespace Veldrid.Vk
         {
             EnsureNoRenderPass();
 
-            for (uint currentSlot = 0; currentSlot < _currentComputeResourceSets.Length; currentSlot++)
+            for (uint currentSlot = 0; currentSlot < _currentComputePipeline.ResourceSetCount; currentSlot++)
             {
                 VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(
                     _currentComputeResourceSets[currentSlot].Set);
@@ -390,6 +392,7 @@ namespace Veldrid.Vk
             FlushNewResourceSets(
                 _currentComputeResourceSets,
                 _computeResourceSetsChanged,
+                _currentComputePipeline.ResourceSetCount,
                 VkPipelineBindPoint.Compute,
                 _currentComputePipeline.PipelineLayout);
         }

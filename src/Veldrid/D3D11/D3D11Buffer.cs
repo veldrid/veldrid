@@ -54,7 +54,7 @@ namespace Veldrid.D3D11
             }
             if ((usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
             {
-                bd.OptionFlags = ResourceOptionFlags.DrawIndirectArgs;
+                bd.OptionFlags = ResourceOptionFlags.DrawIndirectArguments;
             }
 
             if ((usage & BufferUsage.Dynamic) == BufferUsage.Dynamic)
@@ -142,7 +142,7 @@ namespace Veldrid.D3D11
                     Format = Format.R32_Typeless
                 };
                 srvDesc.BufferEx.NumElements = (int)size / 4;
-                srvDesc.BufferEx.Flags = BufferExtendedShaderResourceViewFlag.Raw;
+                srvDesc.BufferEx.Flags = BufferExtendedShaderResourceViewFlags.Raw;
                 srvDesc.BufferEx.FirstElement = (int)offset / 4;
                 return _device.CreateShaderResourceView(_buffer, srvDesc);
             }
@@ -168,7 +168,7 @@ namespace Veldrid.D3D11
                 };
 
                 uavDesc.Buffer.NumElements = (int)size / 4;
-                uavDesc.Buffer.Flags = BufferUnorderedAccessViewFlag.Raw;
+                uavDesc.Buffer.Flags = BufferUnorderedAccessViewFlags.Raw;
                 uavDesc.Format = Format.R32_Typeless;
                 uavDesc.Buffer.FirstElement = (int)offset / 4;
 

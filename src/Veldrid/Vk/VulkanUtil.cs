@@ -19,7 +19,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public static uint FindMemoryType(VkPhysicalDeviceMemoryProperties memProperties, uint typeFilter, VkMemoryPropertyFlags properties)
+        public static uint? TryFindMemoryType(VkPhysicalDeviceMemoryProperties memProperties, uint typeFilter, VkMemoryPropertyFlags properties)
         {
             for (int i = 0; i < memProperties.memoryTypeCount; i++)
             {
@@ -30,7 +30,7 @@ namespace Veldrid.Vk
                 }
             }
 
-            throw new VeldridException("No suitable memory type.");
+            return null;
         }
 
         public static string[] EnumerateInstanceLayers()

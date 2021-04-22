@@ -77,13 +77,25 @@ namespace Veldrid.Vk
                 prefersDedicatedAllocation = false;
             }
 
-            bool hostVisible = (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic
-                || (usage & BufferUsage.Staging) == BufferUsage.Staging;
+            var isStaging = (usage & BufferUsage.Staging) == BufferUsage.Staging;
+            var hostVisible = isStaging || (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
 
             VkMemoryPropertyFlags memoryPropertyFlags =
                 hostVisible
                 ? VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent
                 : VkMemoryPropertyFlags.DeviceLocal;
+            if (isStaging)
+            {
+                // Use "host cached" memory for staging when available, for better performance of GPU -> CPU transfers
+                var hostCachedAvailable = TryFindMemoryType(
+                    gd.PhysicalDeviceMemProperties,
+                    _bufferMemoryRequirements.memoryTypeBits,
+                    memoryPropertyFlags | VkMemoryPropertyFlags.HostCached) != null;
+                if (hostCachedAvailable)
+                {
+                    memoryPropertyFlags |= VkMemoryPropertyFlags.HostCached;
+                }
+            }
 
             VkMemoryBlock memoryToken = gd.MemoryManager.Allocate(
                 gd.PhysicalDeviceMemProperties,

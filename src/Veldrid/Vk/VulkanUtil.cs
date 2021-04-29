@@ -19,18 +19,21 @@ namespace Veldrid.Vk
             }
         }
 
-        public static uint? TryFindMemoryType(VkPhysicalDeviceMemoryProperties memProperties, uint typeFilter, VkMemoryPropertyFlags properties)
+        public static bool TryFindMemoryType(VkPhysicalDeviceMemoryProperties memProperties, uint typeFilter, VkMemoryPropertyFlags properties, out uint typeIndex)
         {
+            typeIndex = 0;
+
             for (int i = 0; i < memProperties.memoryTypeCount; i++)
             {
                 if (((typeFilter & (1 << i)) != 0)
                     && (memProperties.GetMemoryType((uint)i).propertyFlags & properties) == properties)
                 {
-                    return (uint)i;
+                    typeIndex = (uint)i;
+                    return true;
                 }
             }
 
-            return null;
+            return false;
         }
 
         public static string[] EnumerateInstanceLayers()

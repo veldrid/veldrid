@@ -90,7 +90,8 @@ namespace Veldrid.Vk
                 var hostCachedAvailable = TryFindMemoryType(
                     gd.PhysicalDeviceMemProperties,
                     _bufferMemoryRequirements.memoryTypeBits,
-                    memoryPropertyFlags | VkMemoryPropertyFlags.HostCached) != null;
+                    memoryPropertyFlags | VkMemoryPropertyFlags.HostCached,
+                    out _);
                 if (hostCachedAvailable)
                 {
                     memoryPropertyFlags |= VkMemoryPropertyFlags.HostCached;

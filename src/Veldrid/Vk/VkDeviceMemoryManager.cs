@@ -73,8 +73,10 @@ namespace Veldrid.Vk
 
             lock (_lock)
             {
-                uint memoryTypeIndex = TryFindMemoryType(memProperties, memoryTypeBits, flags)
-                    ?? throw new VeldridException("No suitable memory type.");
+                if (!TryFindMemoryType(memProperties, memoryTypeBits, flags, out var memoryTypeIndex))
+                {
+                    throw new VeldridException("No suitable memory type.");
+                }
 
                 ulong minDedicatedAllocationSize = persistentMapped
                     ? MinDedicatedAllocationSizeDynamic

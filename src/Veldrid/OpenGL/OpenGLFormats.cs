@@ -576,7 +576,7 @@ namespace Veldrid.OpenGL
                 case MapMode.Read:
                     return BufferAccessMask.Read;
                 case MapMode.Write:
-                    return BufferAccessMask.Write | BufferAccessMask.InvalidateBuffer;
+                    return BufferAccessMask.Write | BufferAccessMask.InvalidateBuffer | BufferAccessMask.Coherent;
                 case MapMode.ReadWrite:
                     return BufferAccessMask.Read | BufferAccessMask.Write;
                 default:

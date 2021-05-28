@@ -22,6 +22,7 @@ namespace Veldrid.MTL
         private readonly MTLCommandQueue _commandQueue;
         private readonly MTLSwapchain _mainSwapchain;
         private readonly bool[] _supportedSampleCounts;
+        private BackendInfoMetal _metalInfo;
 
         private readonly object _submittedCommandsLock = new object();
         private readonly Dictionary<MTLCommandBuffer, MTLFence> _submittedCBs = new Dictionary<MTLCommandBuffer, MTLFence>();
@@ -80,7 +81,7 @@ namespace Veldrid.MTL
                 bufferRangeBinding: true,
                 shaderFloat64: false);
             ResourceBindingModel = options.ResourceBindingModel;
-            
+
             _libSystem = new NativeLibrary("libSystem.dylib");
             _concreteGlobalBlock = _libSystem.LoadFunction("_NSConcreteGlobalBlock");
             if (MetalFeatures.IsMacOS)
@@ -133,6 +134,8 @@ namespace Veldrid.MTL
                 _mainSwapchain = new MTLSwapchain(this, ref desc);
             }
 
+            _metalInfo = new BackendInfoMetal(this);
+
             PostDeviceCreated();
         }
 
@@ -141,7 +144,7 @@ namespace Veldrid.MTL
         public override string VendorName => "Apple";
 
         public override GraphicsApiVersion ApiVersion => _apiVersion;
-           
+
         public override GraphicsBackend BackendType => GraphicsBackend.Metal;
 
         public override bool IsUvOriginTopLeft => true;
@@ -439,6 +442,12 @@ namespace Veldrid.MTL
             _libSystem.Dispose();
             Marshal.FreeHGlobal(_completionBlockDescriptor);
             Marshal.FreeHGlobal(_completionBlockLiteral);
+        }
+
+        public override bool GetMetalInfo(out BackendInfoMetal info)
+        {
+            info = _metalInfo;
+            return true;
         }
 
         protected override void UnmapCore(MappableResource resource, uint subresource)

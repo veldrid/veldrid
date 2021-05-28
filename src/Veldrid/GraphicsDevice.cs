@@ -886,6 +886,31 @@ namespace Veldrid
         }
 #endif
 
+#if !EXCLUDE_METAL_BACKEND
+        /// <summary>
+        /// Tries to get a <see cref="BackendInfoMetal"/> for this instance.
+        /// This method will only succeed if this is a Metal GraphicsDevice.
+        /// </summary>
+        /// <param name="info">If successful, this will contain the <see cref="BackendInfoOpenGL"/> for this instance.</param>
+        /// <returns>True if this is an Metal GraphicsDevice and the operation was successful. False otherwise.</returns>
+        public virtual bool GetMetalInfo(out BackendInfoMetal info) { info = null; return false; }
+
+        /// <summary>
+        /// Gets a <see cref="BackendInfoMetal"/> for this instance. This method will only succeed if this is an OpenGL
+        /// GraphicsDevice. Otherwise, this method will throw an exception.
+        /// </summary>
+        /// <returns>The <see cref="BackendInfoMetal"/> for this instance.</returns>
+        public BackendInfoMetal GetMetalInfo()
+        {
+            if (!GetMetalInfo(out BackendInfoMetal info))
+            {
+                throw new VeldridException($"{nameof(GetMetalInfo)} can only be used on a Metal GraphicsDevice.");
+            }
+
+            return info;
+        }
+#endif
+
         /// <summary>
         /// Checks whether the given <see cref="GraphicsBackend"/> is supported on this system.
         /// </summary>

@@ -6,8 +6,9 @@ using Veldrid.OpenGLBinding;
 namespace Veldrid
 {
     /// <summary>
-    /// Exposes OpenGL-specific functionality, useful for interoperating with native components which interface directly with
-    /// OpenGL. Can only be used on a GraphicsDevice whose GraphicsBackend is OpenGL.
+    /// Exposes OpenGL-specific functionality,
+    /// useful for interoperating with native components which interface directly with OpenGL.
+    /// Can only be used on <see cref="GraphicsBackend.OpenGL"/> or <see cref="GraphicsBackend.OpenGLES"/>.
     /// </summary>
     public class BackendInfoOpenGL
     {

@@ -7,8 +7,9 @@ using Vulkan;
 namespace Veldrid
 {
     /// <summary>
-    /// Exposes Vulkan-specific functionality, useful for interoperating with native components which interface directly with
-    /// Vulkan. Can only be used on a GraphicsDevice whose GraphicsBackend is Vulkan.
+    /// Exposes Vulkan-specific functionality,
+    /// useful for interoperating with native components which interface directly with Vulkan.
+    /// Can only be used on <see cref="GraphicsBackend.Vulkan"/>.
     /// </summary>
     public class BackendInfoVulkan
     {

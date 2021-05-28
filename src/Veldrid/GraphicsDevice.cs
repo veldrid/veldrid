@@ -23,6 +23,16 @@ namespace Veldrid
         public abstract string DeviceName { get; }
 
         /// <summary>
+        /// Gets the name of the device vendor.
+        /// </summary>
+        public abstract string VendorName { get; }
+
+        /// <summary>
+        /// Gets the API version of the graphics backend.
+        /// </summary>
+        public abstract GraphicsApiVersion ApiVersion { get; }
+
+        /// <summary>
         /// Gets a value identifying the specific graphics API used by this instance.
         /// </summary>
         public abstract GraphicsBackend BackendType { get; }

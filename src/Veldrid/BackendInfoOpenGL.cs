@@ -19,6 +19,16 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// Gets the Version string of this OpenGL implementation.
+        /// </summary>
+        public string Version => _gd.Version;
+
+        /// <summary>
+        /// Gets a collection of available OpenGL extensions.
+        /// </summary>
+        public OpenGLExtensions Extensions => _gd.Extensions;
+
+        /// <summary>
         /// Executes the given delegate in the OpenGL device's main execution thread. In the delegate, OpenGL commands can be
         /// executed directly. This method does not return until the delegate's execution is fully completed.
         /// </summary>

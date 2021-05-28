@@ -18,6 +18,7 @@ namespace Veldrid.MTL
 
         private readonly MTLDevice _device;
         private readonly string _deviceName;
+        private readonly GraphicsApiVersion _apiVersion;
         private readonly MTLCommandQueue _commandQueue;
         private readonly MTLSwapchain _mainSwapchain;
         private readonly bool[] _supportedSampleCounts;
@@ -53,6 +54,11 @@ namespace Veldrid.MTL
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
             _deviceName = _device.name;
             MetalFeatures = new MTLFeatureSupport(_device);
+
+            int major = (int)MetalFeatures.MaxFeatureSet / 10000;
+            int minor = (int)MetalFeatures.MaxFeatureSet % 10000;
+            _apiVersion = new GraphicsApiVersion(major, minor, 0, 0);
+
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
                 geometryShader: false,
@@ -74,7 +80,7 @@ namespace Veldrid.MTL
                 bufferRangeBinding: true,
                 shaderFloat64: false);
             ResourceBindingModel = options.ResourceBindingModel;
-
+            
             _libSystem = new NativeLibrary("libSystem.dylib");
             _concreteGlobalBlock = _libSystem.LoadFunction("_NSConcreteGlobalBlock");
             if (MetalFeatures.IsMacOS)
@@ -132,6 +138,10 @@ namespace Veldrid.MTL
 
         public override string DeviceName => _deviceName;
 
+        public override string VendorName => "Apple";
+
+        public override GraphicsApiVersion ApiVersion => _apiVersion;
+           
         public override GraphicsBackend BackendType => GraphicsBackend.Metal;
 
         public override bool IsUvOriginTopLeft => true;

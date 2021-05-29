@@ -151,6 +151,7 @@ namespace Veldrid.OpenGL
             if (_apiVersion.Major != majorVersion ||
                 _apiVersion.Minor != minorVersion)
             {
+                // This mismatch should never be hit in valid OpenGL implementations.
                 _apiVersion = new GraphicsApiVersion(majorVersion, minorVersion, 0, 0);
             }
 

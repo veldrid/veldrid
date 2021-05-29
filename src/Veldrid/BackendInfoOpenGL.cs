@@ -22,7 +22,42 @@ namespace Veldrid
         /// <summary>
         /// Gets the Version string of this OpenGL implementation.
         /// </summary>
+        /// <remarks>
+        /// The string begins with a version number. The version number uses one of these forms:
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description>major_number.minor_number</description>
+        ///   </item>
+        ///   <item>
+        ///     <description>major_number.minor_number.release_number</description>
+        ///   </item>
+        /// </list>
+        /// <para>
+        /// Vendor-specific information may follow the version number.
+        /// Its format depends on the implementation, but a space always separates the version number and the vendor-specific information.
+        /// </para>
+        /// </remarks>
         public string Version => _gd.Version;
+
+        /// <summary>
+        /// Gets the Shader Language Version string of this OpenGL implementation.
+        /// </summary>
+        /// <remarks>
+        /// The string begins with a version number. The version number uses one of these forms:
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description>major_number.minor_number</description>
+        ///   </item>
+        ///   <item>
+        ///     <description>major_number.minor_number.release_number</description>
+        ///   </item>
+        /// </list>
+        /// <para>
+        /// Vendor-specific information may follow the version number.
+        /// Its format depends on the implementation, but a space always separates the version number and the vendor-specific information.
+        /// </para>
+        /// </remarks>
+        public string ShadingLanguageVersion => _gd.ShadingLanguageVersion;
 
         /// <summary>
         /// Gets a collection of available OpenGL extensions.
@@ -51,7 +86,6 @@ namespace Veldrid
         /// This could be used to set platform specific texture target values like Veldrid.OpenGLBinding.TextureTarget.TextureExternalOes.
         /// </summary>
         public void SetTextureTarget(Texture texture, uint textureTarget) => Util.AssertSubtype<Texture, OpenGLTexture>(texture).TextureTarget = (TextureTarget)textureTarget;
-
     }
 }
 #endif

@@ -20,6 +20,7 @@ namespace Veldrid.OpenGL
         private string _deviceName;
         private string _vendorName;
         private string _version;
+        private string _shadingLanguageVersion;
         private GraphicsApiVersion _apiVersion;
         private GraphicsBackend _backendType;
         private GraphicsDeviceFeatures _features;
@@ -100,6 +101,8 @@ namespace Veldrid.OpenGL
 
         public string Version => _version;
 
+        public string ShadingLanguageVersion => _shadingLanguageVersion;
+
         public OpenGLTextureSamplerManager TextureSamplerManager => _textureSamplerManager;
 
         public override GraphicsDeviceFeatures Features => _features;
@@ -131,6 +134,7 @@ namespace Veldrid.OpenGL
             _setSyncToVBlank = platformInfo.SetSyncToVerticalBlank;
             LoadGetString(_glContext, platformInfo.GetProcAddress);
             _version = Util.GetString(glGetString(StringName.Version));
+            _shadingLanguageVersion = Util.GetString(glGetString(StringName.ShadingLanguageVersion));
             _vendorName = Util.GetString(glGetString(StringName.Vendor));
             _deviceName = Util.GetString(glGetString(StringName.Renderer));
             _backendType = _version.StartsWith("OpenGL ES") ? GraphicsBackend.OpenGLES : GraphicsBackend.OpenGL;
@@ -143,7 +147,12 @@ namespace Veldrid.OpenGL
             glGetIntegerv(GetPName.MinorVersion, &minorVersion);
             CheckLastError();
 
-            _apiVersion = new GraphicsApiVersion(majorVersion, minorVersion, 0, 0);
+            GraphicsApiVersion.TryParseGLVersion(_version, out _apiVersion);
+            if (_apiVersion.Major != majorVersion ||
+                _apiVersion.Minor != minorVersion)
+            {
+                _apiVersion = new GraphicsApiVersion(majorVersion, minorVersion, 0, 0);
+            }
 
             int extensionCount;
             glGetIntegerv(GetPName.NumExtensions, &extensionCount);

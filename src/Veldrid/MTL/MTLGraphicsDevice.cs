@@ -8,6 +8,10 @@ using System.Threading;
 using NativeLibraryLoader;
 using Veldrid.MetalBindings;
 
+#if NET5_0_OR_GREATER
+using NativeLibrary = NativeLibraryLoader.NativeLibrary;
+#endif
+
 namespace Veldrid.MTL
 {
     internal unsafe class MTLGraphicsDevice : GraphicsDevice

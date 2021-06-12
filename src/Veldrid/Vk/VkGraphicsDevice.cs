@@ -468,11 +468,7 @@ namespace Veldrid.Vk
                     _surfaceExtensions.Add(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
                 }
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-                #if NET5_0
-                || OperatingSystem.IsAndroid()
-                #endif
-                )
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME))
                 {

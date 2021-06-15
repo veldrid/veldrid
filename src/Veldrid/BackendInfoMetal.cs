@@ -23,6 +23,8 @@ namespace Veldrid
         }
 
         public ReadOnlyCollection<MTLFeatureSet> FeatureSet => _featureSet;
+
+        public MTLFeatureSet MaxFeatureSet => _gd.MetalFeatures.MaxFeatureSet;
     }
 }
 #endif

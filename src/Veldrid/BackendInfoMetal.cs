@@ -1,4 +1,7 @@
 ﻿#if !EXCLUDE_METAL_BACKEND
+using System.Collections.ObjectModel;
+using System.Linq;
+using Veldrid.MetalBindings;
 using Veldrid.MTL;
 
 namespace Veldrid
@@ -11,13 +14,15 @@ namespace Veldrid
     public class BackendInfoMetal
     {
         private readonly MTLGraphicsDevice _gd;
+        private ReadOnlyCollection<MTLFeatureSet> _featureSet;
 
         internal BackendInfoMetal(MTLGraphicsDevice gd)
         {
             _gd = gd;
+            _featureSet = new ReadOnlyCollection<MTLFeatureSet>(_gd.MetalFeatures.ToArray());
         }
 
-        public MTLFeatureSupport FeatureSupport => _gd.MetalFeatures;
+        public ReadOnlyCollection<MTLFeatureSet> FeatureSet => _featureSet;
     }
 }
 #endif

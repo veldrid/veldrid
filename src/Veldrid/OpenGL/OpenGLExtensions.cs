@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Veldrid.OpenGL
 {
-    public class OpenGLExtensions : IReadOnlyCollection<string>
+    internal class OpenGLExtensions : IReadOnlyCollection<string>
     {
         private readonly HashSet<string> _extensions;
         private readonly GraphicsBackend _backend;

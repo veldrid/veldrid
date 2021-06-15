@@ -1,5 +1,7 @@
 ﻿#if !EXCLUDE_OPENGL_BACKEND
 using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Veldrid.OpenGL;
 using Veldrid.OpenGLBinding;
 
@@ -13,10 +15,12 @@ namespace Veldrid
     public class BackendInfoOpenGL
     {
         private readonly OpenGLGraphicsDevice _gd;
+        private readonly ReadOnlyCollection<string> _extensions;
 
         internal BackendInfoOpenGL(OpenGLGraphicsDevice gd)
         {
             _gd = gd;
+            _extensions = new ReadOnlyCollection<string>(gd.Extensions.ToArray());
         }
 
         /// <summary>
@@ -62,7 +66,7 @@ namespace Veldrid
         /// <summary>
         /// Gets a collection of available OpenGL extensions.
         /// </summary>
-        public OpenGLExtensions Extensions => _gd.Extensions;
+        public ReadOnlyCollection<string> Extensions => _extensions;
 
         /// <summary>
         /// Executes the given delegate in the OpenGL device's main execution thread. In the delegate, OpenGL commands can be

@@ -41,7 +41,7 @@ namespace Veldrid.Vk
         private readonly BackendInfoVulkan _vulkanInfo;
 
         private const int SharedCommandPoolCount = 4;
-        private ConcurrentStack<SharedCommandPool> _sharedGraphicsCommandPools = new ConcurrentStack<SharedCommandPool>();
+        private Stack<SharedCommandPool> _sharedGraphicsCommandPools = new Stack<SharedCommandPool>();
         private VkDescriptorPoolManager _descriptorPoolManager;
         private bool _standardValidationSupported;
         private bool _standardClipYDirection;
@@ -786,8 +786,11 @@ namespace Veldrid.Vk
         private T GetInstanceProcAddr<T>(string name)
         {
             IntPtr funcPtr = GetInstanceProcAddr(name);
-            if (funcPtr != IntPtr.Zero) { return Marshal.GetDelegateForFunctionPointer<T>(funcPtr); }
-            else { return default; }
+            if (funcPtr != IntPtr.Zero)
+            {
+                return Marshal.GetDelegateForFunctionPointer<T>(funcPtr);
+            }
+            return default;
         }
 
         private IntPtr GetDeviceProcAddr(string name)
@@ -807,8 +810,11 @@ namespace Veldrid.Vk
         private T GetDeviceProcAddr<T>(string name)
         {
             IntPtr funcPtr = GetDeviceProcAddr(name);
-            if (funcPtr != IntPtr.Zero) { return Marshal.GetDelegateForFunctionPointer<T>(funcPtr); }
-            else { return default; }
+            if (funcPtr != IntPtr.Zero)
+            {
+                return Marshal.GetDelegateForFunctionPointer<T>(funcPtr);
+            }
+            return default;
         }
 
         private void GetQueueFamilyIndices(VkSurfaceKHR surface)
@@ -960,9 +966,13 @@ namespace Veldrid.Vk
                 buffer.Dispose();
             }
 
-            while (_sharedGraphicsCommandPools.TryPop(out SharedCommandPool sharedPool))
+            lock (_graphicsCommandPoolLock)
             {
-                sharedPool.Destroy();
+                while (_sharedGraphicsCommandPools.Count > 0)
+                {
+                    SharedCommandPool sharedPool = _sharedGraphicsCommandPools.Pop();
+                    sharedPool.Destroy();
+                }
             }
 
             _memoryManager.Dispose();
@@ -1116,10 +1126,15 @@ namespace Veldrid.Vk
 
         private SharedCommandPool GetFreeCommandPool()
         {
-            if (!_sharedGraphicsCommandPools.TryPop(out SharedCommandPool sharedPool))
+            SharedCommandPool sharedPool = null;
+            lock (_graphicsCommandPoolLock)
             {
-                sharedPool = new SharedCommandPool(this, false);
+                if (_sharedGraphicsCommandPools.Count > 0)
+                    sharedPool = _sharedGraphicsCommandPools.Pop();
             }
+
+            if (sharedPool == null)
+                sharedPool = new SharedCommandPool(this, false);
 
             return sharedPool;
         }

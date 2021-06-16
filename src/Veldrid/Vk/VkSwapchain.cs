@@ -234,7 +234,7 @@ namespace Veldrid.Vk
             swapchainCI.imageExtent = new VkExtent2D { width = clampedWidth, height = clampedHeight };
             swapchainCI.minImageCount = imageCount;
             swapchainCI.imageArrayLayers = 1;
-            swapchainCI.imageUsage = VkImageUsageFlags.ColorAttachment | VkImageUsageFlags.TransferDst;
+            swapchainCI.imageUsage = VkImageUsageFlags.ColorAttachment | VkImageUsageFlags.TransferSrc | VkImageUsageFlags.TransferDst;
 
             FixedArray2<uint> queueFamilyIndices = new FixedArray2<uint>(_gd.GraphicsQueueIndex, _gd.PresentQueueIndex);
 

@@ -1,4 +1,4 @@
-using static Veldrid.OpenGLBinding.OpenGLNative;
+﻿using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using System;
 using Veldrid.OpenGLBinding;

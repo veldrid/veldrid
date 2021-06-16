@@ -9,12 +9,8 @@ using System.Diagnostics;
 using System.Threading;
 using Veldrid.OpenGL.EAGL;
 using static Veldrid.OpenGL.EGL.EGLNative;
-using NativeLibraryLoader;
-using System.Runtime.CompilerServices;
-
-#if NET5_0_OR_GREATER
 using NativeLibrary = NativeLibraryLoader.NativeLibrary;
-#endif
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.OpenGL
 {

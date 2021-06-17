@@ -16,5 +16,6 @@ jobs:
       - name: Run dotnet format
         uses: victor-alcazar/dotnet-format@v1.0.2
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           only-changed-files: "true"
           folder: "src"

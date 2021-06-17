@@ -75,7 +75,7 @@ namespace Veldrid.Sdl2
         /// and POUND SIGN in a Swiss German layout, NUMBER SIGN and APOSTROPHE in a German layout, GRAVE ACCENT and
         /// POUND SIGN in a French Mac layout, and ASTERISK and MICRO SIGN in a French Windows layout.
         /// </summary>
-        SDL_SCANCODE_BACKSLASH = 49, 
+        SDL_SCANCODE_BACKSLASH = 49,
         SDL_SCANCODE_NONUSHASH = 50, /* ISO USB keyboards actually use this code
                                   *   instead of 49 for the same key, but all
                                   *   OSes I've seen treat the two codes
@@ -358,4 +358,4 @@ namespace Veldrid.Sdl2
         SDL_NUM_SCANCODES = 512 /* not a key, just marks the number of scancodes
                                  for array bounds */
     }
- }
+}

@@ -147,14 +147,14 @@ namespace Veldrid.NeoDemo
                     _mousePressed = true;
                     _mousePressedPos = InputTracker.MousePosition;
                     Sdl2Native.SDL_ShowCursor(0);
-                    Sdl2Native.SDL_SetWindowGrab(_window.SdlWindowHandle, true); 
+                    Sdl2Native.SDL_SetWindowGrab(_window.SdlWindowHandle, true);
                 }
                 Vector2 mouseDelta = _mousePressedPos - InputTracker.MousePosition;
                 Sdl2Native.SDL_WarpMouseInWindow(_window.SdlWindowHandle, (int)_mousePressedPos.X, (int)_mousePressedPos.Y);
                 Yaw += mouseDelta.X * 0.002f;
                 Pitch += mouseDelta.Y * 0.002f;
             }
-            else if(_mousePressed)
+            else if (_mousePressed)
             {
                 Sdl2Native.SDL_WarpMouseInWindow(_window.SdlWindowHandle, (int)_mousePressedPos.X, (int)_mousePressedPos.Y);
                 Sdl2Native.SDL_SetWindowGrab(_window.SdlWindowHandle, false);

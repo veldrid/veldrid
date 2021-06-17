@@ -65,7 +65,7 @@ namespace Veldrid.OpenGL
                     _gd.TextureSamplerManager.SetTextureTransient(glTex.TextureTarget, glTex.Texture);
                     CheckLastError();
 
-                    TextureTarget textureTarget = GetTextureTarget (glTex, colorAttachment.ArrayLayer);
+                    TextureTarget textureTarget = GetTextureTarget(glTex, colorAttachment.ArrayLayer);
 
                     if (glTex.ArrayLayers == 1)
                     {
@@ -111,7 +111,7 @@ namespace Veldrid.OpenGL
                 _gd.TextureSamplerManager.SetTextureTransient(depthTarget, glDepthTex.Texture);
                 CheckLastError();
 
-                depthTarget = GetTextureTarget (glDepthTex, DepthTarget.Value.ArrayLayer);
+                depthTarget = GetTextureTarget(glDepthTex, DepthTarget.Value.ArrayLayer);
 
                 GLFramebufferAttachment framebufferAttachment = GLFramebufferAttachment.DepthAttachment;
                 if (FormatHelpers.IsStencilFormat(glDepthTex.Format))

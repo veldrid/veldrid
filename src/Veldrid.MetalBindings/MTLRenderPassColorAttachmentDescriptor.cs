@@ -42,7 +42,7 @@ namespace Veldrid.MetalBindings
                 }
                 else
                 {
-                    return MTLClearColor_objc_msgSend(NativePtr,sel_clearColor);
+                    return MTLClearColor_objc_msgSend(NativePtr, sel_clearColor);
                 }
             }
             set => objc_msgSend(NativePtr, sel_setClearColor, value);

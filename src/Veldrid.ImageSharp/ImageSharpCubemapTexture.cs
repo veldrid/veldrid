@@ -61,9 +61,10 @@ namespace Veldrid.ImageSharp
                 Image.Load<Rgba32>(negativeXPath),
                 Image.Load<Rgba32>(positiveYPath),
                 Image.Load<Rgba32>(negativeYPath),
-                Image.Load<Rgba32>(positiveZPath), 
+                Image.Load<Rgba32>(positiveZPath),
                 Image.Load<Rgba32>(negativeZPath),
-                true) { }
+                true)
+        { }
 
         public ImageSharpCubemapTexture(
             string positiveXPath,
@@ -189,7 +190,7 @@ namespace Veldrid.ImageSharp
                 }
                 if (!CubemapTextures[PositiveZArrayLayer][level].TryGetSinglePixelSpan(out Span<Rgba32> pixelSpanPosZ))
                 {
-                    throw new VeldridException("Unable to get positive z pixelspan."); 
+                    throw new VeldridException("Unable to get positive z pixelspan.");
                 }
                 if (!CubemapTextures[NegativeZArrayLayer][level].TryGetSinglePixelSpan(out Span<Rgba32> pixelSpanNegZ))
                 {

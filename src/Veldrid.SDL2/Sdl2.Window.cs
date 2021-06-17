@@ -144,7 +144,7 @@ namespace Veldrid.Sdl2
         private delegate bool SDL_SetHint_t(string name, string value);
         private static SDL_SetHint_t s_sdl_setHint = LoadFunction<SDL_SetHint_t>("SDL_SetHint");
         public static bool SDL_SetHint(string name, string value) => s_sdl_setHint(name, value);
-        
+
     }
 
     [Flags]

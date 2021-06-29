@@ -282,11 +282,6 @@ namespace Veldrid.Vk
                 _currentGraphicsPipeline.ResourceSetCount,
                 VkPipelineBindPoint.Graphics,
                 _currentGraphicsPipeline.PipelineLayout);
-
-            if (!_currentGraphicsPipeline.ScissorTestEnabled)
-            {
-                SetFullScissorRects();
-            }
         }
 
         private void FlushNewResourceSets(

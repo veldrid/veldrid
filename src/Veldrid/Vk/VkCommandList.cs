@@ -300,19 +300,17 @@ namespace Veldrid.Vk
             uint currentBatchDynamicOffsetCount = 0;
 
             for (uint currentSlot = 0; currentSlot < resourceSetCount; currentSlot++)
-            {
-                ref bool changed = ref resourceSetsChanged[currentSlot];
-                bool batchEnded = !changed || currentSlot == resourceSetCount - 1;
+            {   
+                bool batchEnded = !resourceSetsChanged[currentSlot] || currentSlot == resourceSetCount - 1;
 
-                if (changed)
+                if (resourceSetsChanged[currentSlot])
                 {
-                    changed = false;
-                    ref BoundResourceSetInfo boundSetInfo = ref resourceSets[currentSlot];
-                    VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(boundSetInfo.Set);
+                    resourceSetsChanged[currentSlot] = false;
+                    VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(resourceSets[currentSlot].Set);
                     descriptorSets[currentBatchCount] = vkSet.DescriptorSet;
                     currentBatchCount += 1;
 
-                    ref SmallFixedOrDynamicArray curSetOffsets = ref boundSetInfo.Offsets;
+                    ref SmallFixedOrDynamicArray curSetOffsets = ref resourceSets[currentSlot].Offsets;
                     for (uint i = 0; i < curSetOffsets.Count; i++)
                     {
                         dynamicOffsets[currentBatchDynamicOffsetCount] = curSetOffsets.Get(i);

@@ -298,8 +298,7 @@ namespace Veldrid.Vk
         {
             VkPipeline pipeline = bindPoint == VkPipelineBindPoint.Graphics ? _currentGraphicsPipeline : _currentComputePipeline;
 
-            int setCount = (int)resourceSetCount;
-            VkDescriptorSet* descriptorSets = stackalloc VkDescriptorSet[setCount];
+            VkDescriptorSet* descriptorSets = stackalloc VkDescriptorSet[(int)resourceSetCount];
             uint* dynamicOffsets = stackalloc uint[pipeline.DynamicOffsetsCount];
             uint currentBatchCount = 0;
             uint currentBatchFirstSet = 0;
@@ -307,16 +306,18 @@ namespace Veldrid.Vk
 
             for (uint currentSlot = 0; currentSlot < resourceSetCount; currentSlot++)
             {
-                bool batchEnded = !resourceSetsChanged[currentSlot] || currentSlot == resourceSetCount - 1;
+                ref bool changed = ref resourceSetsChanged[currentSlot];
+                bool batchEnded = !changed || currentSlot == resourceSetCount - 1;
 
-                if (resourceSetsChanged[currentSlot])
+                if (changed)
                 {
-                    resourceSetsChanged[currentSlot] = false;
-                    VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(resourceSets[currentSlot].Set);
+                    changed = false;
+                    ref BoundResourceSetInfo boundSetInfo = ref resourceSets[currentSlot];
+                    VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(boundSetInfo.Set);
                     descriptorSets[currentBatchCount] = vkSet.DescriptorSet;
                     currentBatchCount += 1;
 
-                    SmallFixedOrDynamicArray curSetOffsets = resourceSets[currentSlot].Offsets;
+                    ref SmallFixedOrDynamicArray curSetOffsets = ref boundSetInfo.Offsets;
                     for (uint i = 0; i < curSetOffsets.Count; i++)
                     {
                         dynamicOffsets[currentBatchDynamicOffsetCount] = curSetOffsets.Get(i);
@@ -353,7 +354,7 @@ namespace Veldrid.Vk
             }
         }
 
-        private void TransitionImages(IReadOnlyList<VkTexture> sampledTextures, VkImageLayout layout)
+        private void TransitionImages(List<VkTexture> sampledTextures, VkImageLayout layout)
         {
             for (int i = 0; i < sampledTextures.Count; i++)
             {
@@ -377,9 +378,10 @@ namespace Veldrid.Vk
             {
                 VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(
                     _currentComputeResourceSets[currentSlot].Set);
+
                 TransitionImages(vkSet.SampledTextures, VkImageLayout.ShaderReadOnlyOptimal);
                 TransitionImages(vkSet.StorageTextures, VkImageLayout.General);
-                for (var texIdx = 0; texIdx < vkSet.StorageTextures.Count; texIdx++)
+                for (int texIdx = 0; texIdx < vkSet.StorageTextures.Count; texIdx++)
                 {
                     VkTexture storageTex = vkSet.StorageTextures[texIdx];
                     if ((storageTex.Usage & TextureUsage.Sampled) != 0)
@@ -1221,7 +1223,7 @@ namespace Veldrid.Vk
                     {
                         ret = buffer;
                         _availableStagingBuffers.Remove(buffer);
-                        break; ;
+                        break;
                     }
                 }
                 if (ret == null)

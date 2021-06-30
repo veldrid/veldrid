@@ -52,7 +52,7 @@ namespace Veldrid.Vk
         private bool _isSwapchainTexture;
         private string _name;
 
-        public ResourceRefCount RefCount { get; }
+        public uint RefCountId { get; }
         public bool IsSwapchainTexture => _isSwapchainTexture;
 
         internal VkTexture(VkGraphicsDevice gd, ref TextureDescription description)
@@ -208,7 +208,7 @@ namespace Veldrid.Vk
 
             ClearIfRenderTarget();
             TransitionIfSampled();
-            RefCount = new ResourceRefCount(RefCountedDispose);
+            RefCountId = _gd.RefCountManager.Register(RefCountedDispose);
         }
 
         // Used to construct Swapchain textures.
@@ -241,7 +241,7 @@ namespace Veldrid.Vk
             _isSwapchainTexture = true;
 
             ClearIfRenderTarget();
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCountId = _gd.RefCountManager.Register(DisposeCore);
         }
 
         private void ClearIfRenderTarget()
@@ -441,7 +441,7 @@ namespace Veldrid.Vk
 
         private protected override void DisposeCore()
         {
-            RefCount.Decrement();
+            _gd.RefCountManager.Decrement(RefCountId);
         }
 
         private void RefCountedDispose()

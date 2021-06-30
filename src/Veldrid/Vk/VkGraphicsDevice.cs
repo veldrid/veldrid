@@ -20,6 +20,7 @@ namespace Veldrid.Vk
         private VkPhysicalDevice _physicalDevice;
         private string _deviceName;
         private VkDeviceMemoryManager _memoryManager;
+        private VkRefCountManager _refCountManager;
         private VkPhysicalDeviceProperties _physicalDeviceProperties;
         private VkPhysicalDeviceFeatures _physicalDeviceFeatures;
         private VkPhysicalDeviceMemoryProperties _physicalDeviceMemProperties;
@@ -92,6 +93,7 @@ namespace Veldrid.Vk
         public uint GraphicsQueueIndex => _graphicsQueueIndex;
         public uint PresentQueueIndex => _presentQueueIndex;
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
+        public VkRefCountManager RefCountManager => _refCountManager;
         public VkDescriptorPoolManager DescriptorPoolManager => _descriptorPoolManager;
         public vkCmdDebugMarkerBeginEXT_t MarkerBegin => _markerBegin;
         public vkCmdDebugMarkerEndEXT_t MarkerEnd => _markerEnd;
@@ -129,6 +131,8 @@ namespace Veldrid.Vk
                 _physicalDeviceProperties.limits.bufferImageGranularity,
                 _getBufferMemoryRequirements2,
                 _getImageMemoryRequirements2);
+
+            _refCountManager = new VkRefCountManager();
 
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,

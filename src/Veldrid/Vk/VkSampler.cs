@@ -12,7 +12,7 @@ namespace Veldrid.Vk
 
         public Vulkan.VkSampler DeviceSampler => _sampler;
 
-        public ResourceRefCount RefCount { get; }
+        public uint RefCountId { get; }
 
         public override bool IsDisposed => _disposed;
 
@@ -43,7 +43,7 @@ namespace Veldrid.Vk
             };
 
             vkCreateSampler(_gd.Device, ref samplerCI, null, out _sampler);
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCountId = _gd.RefCountManager.Register(DisposeCore);
         }
 
         public override string Name
@@ -58,7 +58,7 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            RefCount.Decrement();
+            _gd.RefCountManager.Decrement(RefCountId);
         }
 
         private void DisposeCore()

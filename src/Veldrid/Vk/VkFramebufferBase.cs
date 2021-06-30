@@ -5,27 +5,32 @@ namespace Veldrid.Vk
 {
     internal abstract class VkFramebufferBase : Framebuffer
     {
+        internal readonly VkGraphicsDevice _gd;
+
         public VkFramebufferBase(
+            VkGraphicsDevice gd,
             FramebufferAttachmentDescription? depthTexture,
             IReadOnlyList<FramebufferAttachmentDescription> colorTextures)
             : base(depthTexture, colorTextures)
         {
-            RefCount = new ResourceRefCount(DisposeCore);
+            _gd = gd;
+            RefCountId = _gd.RefCountManager.Register(DisposeCore);
         }
 
-        public VkFramebufferBase()
+        public VkFramebufferBase(VkGraphicsDevice gd)
         {
-            RefCount = new ResourceRefCount(DisposeCore);
+            _gd = gd;
+            RefCountId = _gd.RefCountManager.Register(DisposeCore);
         }
 
-        public ResourceRefCount RefCount { get; }
+        public uint RefCountId { get; }
 
         public abstract uint RenderableWidth { get; }
         public abstract uint RenderableHeight { get; }
 
         public override void Dispose()
         {
-            RefCount.Decrement();
+            _gd.RefCountManager.Decrement(RefCountId);
         }
 
         protected abstract void DisposeCore();

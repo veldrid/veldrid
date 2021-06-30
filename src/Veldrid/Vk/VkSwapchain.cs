@@ -46,7 +46,7 @@ namespace Veldrid.Vk
         public VkSurfaceKHR Surface => _surface;
         public VkQueue PresentQueue => _presentQueue;
         public uint PresentQueueIndex => _presentQueueIndex;
-        public ResourceRefCount RefCount { get; }
+        public uint RefCountId { get; }
 
         public VkSwapchain(VkGraphicsDevice gd, ref SwapchainDescription description) : this(gd, ref description, VkSurfaceKHR.Null) { }
 
@@ -84,7 +84,7 @@ namespace Veldrid.Vk
             vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
             vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
 
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCountId = _gd.RefCountManager.Register(DisposeCore);
         }
 
         public override void Resize(uint width, uint height)
@@ -301,7 +301,7 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            RefCount.Decrement();
+            _gd.RefCountManager.Decrement(RefCountId);
         }
 
         private void DisposeCore()

@@ -2,6 +2,7 @@
 using Vulkan;
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
+using System;
 
 namespace Veldrid.Vk
 {
@@ -10,7 +11,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly DescriptorResourceCounts _descriptorCounts;
         private readonly DescriptorAllocationToken _descriptorAllocationToken;
-        private readonly List<ResourceRefCount> _refCounts = new List<ResourceRefCount>();
+        private readonly uint[] _refCounts;
         private bool _destroyed;
         private string _name;
 
@@ -21,8 +22,8 @@ namespace Veldrid.Vk
         private readonly List<VkTexture> _storageImages = new List<VkTexture>();
         public IReadOnlyList<VkTexture> StorageTextures => _storageImages;
 
-        public ResourceRefCount RefCount { get; }
-        public IReadOnlyList<ResourceRefCount> RefCounts => _refCounts;
+        public uint RefCountId { get; }
+        public ReadOnlySpan<uint> AllRefCounts => _refCounts.AsSpan();
 
         public override bool IsDisposed => _destroyed;
 
@@ -30,7 +31,7 @@ namespace Veldrid.Vk
             : base(ref description)
         {
             _gd = gd;
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCountId = _gd.RefCountManager.Register(DisposeCore);
             VkResourceLayout vkLayout = Util.AssertSubtype<ResourceLayout, VkResourceLayout>(description.Layout);
 
             VkDescriptorSetLayout dsl = vkLayout.DescriptorSetLayout;
@@ -38,10 +39,14 @@ namespace Veldrid.Vk
             _descriptorAllocationToken = _gd.DescriptorPoolManager.Allocate(_descriptorCounts, dsl);
 
             BindableResource[] boundResources = description.BoundResources;
-            uint descriptorWriteCount = (uint)boundResources.Length;
-            VkWriteDescriptorSet* descriptorWrites = stackalloc VkWriteDescriptorSet[(int)descriptorWriteCount];
-            VkDescriptorBufferInfo* bufferInfos = stackalloc VkDescriptorBufferInfo[(int)descriptorWriteCount];
-            VkDescriptorImageInfo* imageInfos = stackalloc VkDescriptorImageInfo[(int)descriptorWriteCount];
+            int descriptorWriteCount = boundResources.Length;
+            VkWriteDescriptorSet* descriptorWrites = stackalloc VkWriteDescriptorSet[descriptorWriteCount];
+            VkDescriptorBufferInfo* bufferInfos = stackalloc VkDescriptorBufferInfo[descriptorWriteCount];
+            VkDescriptorImageInfo* imageInfos = stackalloc VkDescriptorImageInfo[descriptorWriteCount];
+
+            uint[] refCounts = new uint[descriptorWriteCount + 1];
+            int refCountOffset = 0;
+            refCounts[refCountOffset++] = RefCountId;
 
             for (int i = 0; i < descriptorWriteCount; i++)
             {
@@ -62,7 +67,7 @@ namespace Veldrid.Vk
                     bufferInfos[i].offset = range.Offset;
                     bufferInfos[i].range = range.SizeInBytes;
                     descriptorWrites[i].pBufferInfo = &bufferInfos[i];
-                    _refCounts.Add(rangedVkBuffer.RefCount);
+                    refCounts[refCountOffset++] = rangedVkBuffer.RefCountId;
                 }
                 else if (type == VkDescriptorType.SampledImage)
                 {
@@ -72,7 +77,7 @@ namespace Veldrid.Vk
                     imageInfos[i].imageLayout = VkImageLayout.ShaderReadOnlyOptimal;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
                     _sampledTextures.Add(Util.AssertSubtype<Texture, VkTexture>(texView.Target));
-                    _refCounts.Add(vkTexView.RefCount);
+                    refCounts[refCountOffset++] = vkTexView.RefCountId;
                 }
                 else if (type == VkDescriptorType.StorageImage)
                 {
@@ -82,18 +87,21 @@ namespace Veldrid.Vk
                     imageInfos[i].imageLayout = VkImageLayout.General;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
                     _storageImages.Add(Util.AssertSubtype<Texture, VkTexture>(texView.Target));
-                    _refCounts.Add(vkTexView.RefCount);
+                    refCounts[refCountOffset++] = vkTexView.RefCountId;
                 }
                 else if (type == VkDescriptorType.Sampler)
                 {
                     VkSampler sampler = Util.AssertSubtype<BindableResource, VkSampler>(boundResources[i]);
                     imageInfos[i].sampler = sampler.DeviceSampler;
                     descriptorWrites[i].pImageInfo = &imageInfos[i];
-                    _refCounts.Add(sampler.RefCount);
+                    refCounts[refCountOffset++] = sampler.RefCountId;
                 }
             }
 
-            vkUpdateDescriptorSets(_gd.Device, descriptorWriteCount, descriptorWrites, 0, null);
+            Array.Resize(ref refCounts, refCountOffset);
+            _refCounts = refCounts;
+
+            vkUpdateDescriptorSets(_gd.Device, (uint)descriptorWriteCount, descriptorWrites, 0, null);
         }
 
         public override string Name
@@ -108,7 +116,7 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            RefCount.Decrement();
+            _gd.RefCountManager.Decrement(RefCountId);
         }
 
         private void DisposeCore()

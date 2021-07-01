@@ -86,6 +86,7 @@ namespace Veldrid.Vk
                 if (count == 0)
                 {
                     refCounts.Values2[refCountId].Invoke();
+                    refCounts.Values2[refCountId] = null;
                     refCounts.Remove(refCountId);
                     idPool.Push(refCountId);
                 }
@@ -110,6 +111,7 @@ namespace Veldrid.Vk
                     if (count == 0)
                     {
                         actions[refCountId].Invoke();
+                        actions[refCountId] = null;
                         refCounts.Remove(refCountId);
                         idPool.Push(refCountId);
                     }

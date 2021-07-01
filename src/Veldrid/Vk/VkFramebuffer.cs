@@ -9,7 +9,6 @@ namespace Veldrid.Vk
 {
     internal unsafe class VkFramebuffer : VkFramebufferBase
     {
-        private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkFramebuffer _deviceFramebuffer;
         private readonly VkRenderPass _renderPassNoClearLoad;
         private readonly VkRenderPass _renderPassNoClear;
@@ -31,10 +30,8 @@ namespace Veldrid.Vk
         public override bool IsDisposed => _destroyed;
 
         public VkFramebuffer(VkGraphicsDevice gd, ref FramebufferDescription description, bool isPresented)
-            : base(description.DepthTarget, description.ColorTargets)
+            : base(gd, description.DepthTarget, description.ColorTargets)
         {
-            _gd = gd;
-
             VkRenderPassCreateInfo renderPassCI = VkRenderPassCreateInfo.New();
 
             StackList<VkAttachmentDescription> attachments = new StackList<VkAttachmentDescription>();

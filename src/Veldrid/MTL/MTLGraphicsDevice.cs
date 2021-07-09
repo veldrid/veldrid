@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using NativeLibraryLoader;
 using Veldrid.MetalBindings;
+using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 
 namespace Veldrid.MTL
 {

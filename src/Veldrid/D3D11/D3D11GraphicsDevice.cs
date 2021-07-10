@@ -49,6 +49,8 @@ namespace Veldrid.D3D11
 
         public IDXGIAdapter Adapter => _dxgiAdapter;
 
+        public bool IsDebugEnabled { get; }
+
         public bool SupportsConcurrentResources => _supportsConcurrentResources;
 
         public bool SupportsCommandLists => _supportsCommandLists;
@@ -125,6 +127,8 @@ namespace Veldrid.D3D11
             }
             _immediateContext = _device.ImmediateContext;
             _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
+
+            IsDebugEnabled = (flags & DeviceCreationFlags.Debug) != 0;
 
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
@@ -609,26 +613,32 @@ namespace Veldrid.D3D11
             _mainSwapchain?.Dispose();
             _immediateContext.Dispose();
 
-            ID3D11Debug deviceDebug = _device.QueryInterfaceOrNull<ID3D11Debug>();
-
-            _device.Dispose();
-            _dxgiAdapter.Dispose();
-
-            // Report live objects using DXGI if available (DXGIGetDebugInterface1 will fail on pre Windows 8 OS).
-            if (VorticeDXGI.DXGIGetDebugInterface1(out IDXGIDebug1 dxgiDebug).Success)
+            if (IsDebugEnabled)
             {
-                deviceDebug?.Dispose();
-                dxgiDebug.ReportLiveObjects(VorticeDXGI.All, ReportLiveObjectFlags.Summary | ReportLiveObjectFlags.IgnoreInternal);
-                dxgiDebug.Dispose();
+                uint refCount = _device.Release();
+                if (refCount > 0)
+                {
+                    ID3D11Debug deviceDebug = _device.QueryInterfaceOrNull<ID3D11Debug>();
+                    if (deviceDebug != null)
+                    {
+                        deviceDebug.ReportLiveDeviceObjects(ReportLiveDeviceObjectFlags.Summary | ReportLiveDeviceObjectFlags.Detail | ReportLiveDeviceObjectFlags.IgnoreInternal);
+                        deviceDebug.Dispose();
+                    }
+                }
+
+                _dxgiAdapter.Dispose();
+
+                // Report live objects using DXGI if available (DXGIGetDebugInterface1 will fail on pre Windows 8 OS).
+                if (VorticeDXGI.DXGIGetDebugInterface1(out IDXGIDebug1 dxgiDebug).Success)
+                {
+                    dxgiDebug.ReportLiveObjects(VorticeDXGI.All, ReportLiveObjectFlags.Summary | ReportLiveObjectFlags.IgnoreInternal);
+                    dxgiDebug.Dispose();
+                }
             }
             else
             {
-                // Need to enable native debugging to see live objects in VisualStudio console.
-                if (deviceDebug != null)
-                {
-                    deviceDebug.ReportLiveDeviceObjects(ReportLiveDeviceObjectFlags.Summary | ReportLiveDeviceObjectFlags.Detail | ReportLiveDeviceObjectFlags.IgnoreInternal);
-                    deviceDebug.Dispose();
-                }
+                _device.Dispose();
+                _dxgiAdapter.Dispose();
             }
         }
 

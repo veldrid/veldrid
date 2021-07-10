@@ -82,6 +82,7 @@ namespace Veldrid.D3D11
             }
 
             d3dBlendStateDesc.AlphaToCoverageEnable = description.AlphaToCoverageEnabled;
+            d3dBlendStateDesc.IndependentBlendEnable = true;
 
             return _device.CreateBlendState(d3dBlendStateDesc);
         }

@@ -1,11 +1,11 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocResolveTextureEntry
+    internal struct ResolveTextureEntry
     {
         public readonly Tracked<Texture> Source;
         public readonly Tracked<Texture> Destination;
 
-        public NoAllocResolveTextureEntry(Tracked<Texture> source, Tracked<Texture> destination)
+        public ResolveTextureEntry(Tracked<Texture> source, Tracked<Texture> destination)
         {
             Source = source;
             Destination = destination;

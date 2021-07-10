@@ -1,10 +1,10 @@
-namespace Veldrid.OpenGL.NoAllocEntryList
+namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocInsertDebugMarkerEntry
+    internal struct InsertDebugMarkerEntry
     {
         public Tracked<string> Name;
 
-        public NoAllocInsertDebugMarkerEntry(Tracked<string> name)
+        public InsertDebugMarkerEntry(Tracked<string> name)
         {
             Name = name;
         }

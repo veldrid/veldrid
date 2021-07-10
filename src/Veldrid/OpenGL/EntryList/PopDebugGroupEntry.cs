@@ -1,6 +1,6 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocPopDebugGroupEntry
+    internal struct PopDebugGroupEntry
     {
     }
 }

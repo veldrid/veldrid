@@ -1,11 +1,11 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocSetViewportEntry
+    internal struct SetViewportEntry
     {
         public readonly uint Index;
         public Viewport Viewport;
 
-        public NoAllocSetViewportEntry(uint index, ref Viewport viewport)
+        public SetViewportEntry(uint index, ref Viewport viewport)
         {
             Index = index;
             Viewport = viewport;

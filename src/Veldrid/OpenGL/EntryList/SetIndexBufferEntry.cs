@@ -1,12 +1,12 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocSetIndexBufferEntry
+    internal struct SetIndexBufferEntry
     {
         public readonly Tracked<DeviceBuffer> Buffer;
         public IndexFormat Format;
         public uint Offset;
 
-        public NoAllocSetIndexBufferEntry(Tracked<DeviceBuffer> ib, IndexFormat format, uint offset)
+        public SetIndexBufferEntry(Tracked<DeviceBuffer> ib, IndexFormat format, uint offset)
         {
             Buffer = ib;
             Format = format;

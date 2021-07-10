@@ -1,13 +1,13 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocDrawIndexedIndirectEntry
+    internal struct DrawIndexedIndirectEntry
     {
         public Tracked<DeviceBuffer> IndirectBuffer;
         public uint Offset;
         public uint DrawCount;
         public uint Stride;
 
-        public NoAllocDrawIndexedIndirectEntry(Tracked<DeviceBuffer> indirectBuffer, uint offset, uint drawCount, uint stride)
+        public DrawIndexedIndirectEntry(Tracked<DeviceBuffer> indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             IndirectBuffer = indirectBuffer;
             Offset = offset;

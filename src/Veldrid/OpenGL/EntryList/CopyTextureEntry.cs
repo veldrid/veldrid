@@ -1,6 +1,6 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocCopyTextureEntry
+    internal struct CopyTextureEntry
     {
         public readonly Tracked<Texture> Source;
         public readonly uint SrcX;
@@ -19,7 +19,7 @@
         public readonly uint Depth;
         public readonly uint LayerCount;
 
-        public NoAllocCopyTextureEntry(
+        public CopyTextureEntry(
             Tracked<Texture> source,
             uint srcX, uint srcY, uint srcZ,
             uint srcMipLevel,

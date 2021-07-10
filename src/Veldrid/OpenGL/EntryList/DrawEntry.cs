@@ -1,13 +1,13 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocDrawEntry
+    internal struct DrawEntry
     {
         public uint VertexCount;
         public uint InstanceCount;
         public uint VertexStart;
         public uint InstanceStart;
 
-        public NoAllocDrawEntry(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
+        public DrawEntry(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
             VertexCount = vertexCount;
             InstanceCount = instanceCount;

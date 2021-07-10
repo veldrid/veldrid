@@ -1,11 +1,11 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocClearColorTargetEntry
+    internal struct ClearColorTargetEntry
     {
         public readonly uint Index;
         public readonly RgbaFloat ClearColor;
 
-        public NoAllocClearColorTargetEntry(uint index, RgbaFloat clearColor)
+        public ClearColorTargetEntry(uint index, RgbaFloat clearColor)
         {
             Index = index;
             ClearColor = clearColor;

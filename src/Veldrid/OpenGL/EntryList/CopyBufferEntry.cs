@@ -1,6 +1,6 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocCopyBufferEntry
+    internal struct CopyBufferEntry
     {
         public readonly Tracked<DeviceBuffer> Source;
         public readonly uint SourceOffset;
@@ -8,7 +8,7 @@
         public readonly uint DestinationOffset;
         public readonly uint SizeInBytes;
 
-        public NoAllocCopyBufferEntry(Tracked<DeviceBuffer> source, uint sourceOffset, Tracked<DeviceBuffer> destination, uint destinationOffset, uint sizeInBytes)
+        public CopyBufferEntry(Tracked<DeviceBuffer> source, uint sourceOffset, Tracked<DeviceBuffer> destination, uint destinationOffset, uint sizeInBytes)
         {
             Source = source;
             SourceOffset = sourceOffset;

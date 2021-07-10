@@ -1,6 +1,6 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocSetScissorRectEntry
+    internal struct SetScissorRectEntry
     {
         public readonly uint Index;
         public readonly uint X;
@@ -8,7 +8,7 @@
         public readonly uint Width;
         public readonly uint Height;
 
-        public NoAllocSetScissorRectEntry(uint index, uint x, uint y, uint width, uint height)
+        public SetScissorRectEntry(uint index, uint x, uint y, uint width, uint height)
         {
             Index = index;
             X = x;

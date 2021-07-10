@@ -1,10 +1,10 @@
-﻿namespace Veldrid.OpenGL.NoAllocEntryList
+﻿namespace Veldrid.OpenGL.EntryList
 {
-    internal struct NoAllocSetFramebufferEntry
+    internal struct SetFramebufferEntry
     {
         public readonly Tracked<Framebuffer> Framebuffer;
 
-        public NoAllocSetFramebufferEntry(Tracked<Framebuffer> fb)
+        public SetFramebufferEntry(Tracked<Framebuffer> fb)
         {
             Framebuffer = fb;
         }

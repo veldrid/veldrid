@@ -670,23 +670,23 @@ namespace Veldrid.Vk
             Util.ClearArray(boundSets);
         }
 
-        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
+        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (!_currentGraphicsResourceSets[slot].Equals(rs, dynamicOffsetsCount, ref dynamicOffsets))
+            if (!_currentGraphicsResourceSets[slot].Equals(rs, dynamicOffsets))
             {
                 _currentGraphicsResourceSets[slot].Offsets.Dispose();
-                _currentGraphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsetsCount, ref dynamicOffsets);
+                _currentGraphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
                 _graphicsResourceSetsChanged[slot] = true;
                 VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
             }
         }
 
-        protected override void SetComputeResourceSetCore(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
+        protected override void SetComputeResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (!_currentComputeResourceSets[slot].Equals(rs, dynamicOffsetsCount, ref dynamicOffsets))
+            if (!_currentComputeResourceSets[slot].Equals(rs, dynamicOffsets))
             {
                 _currentComputeResourceSets[slot].Offsets.Dispose();
-                _currentComputeResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsetsCount, ref dynamicOffsets);
+                _currentComputeResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
                 _computeResourceSetsChanged[slot] = true;
                 VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
             }
@@ -1221,7 +1221,8 @@ namespace Veldrid.Vk
                     {
                         ret = buffer;
                         _availableStagingBuffers.Remove(buffer);
-                        break; ;
+                        break;
+                        ;
                     }
                 }
                 if (ret == null)
@@ -1238,7 +1239,8 @@ namespace Veldrid.Vk
         private protected override void PushDebugGroupCore(string name)
         {
             vkCmdDebugMarkerBeginEXT_t func = _gd.MarkerBegin;
-            if (func == null) { return; }
+            if (func == null)
+            { return; }
 
             VkDebugMarkerMarkerInfoEXT markerInfo = VkDebugMarkerMarkerInfoEXT.New();
 
@@ -1258,7 +1260,8 @@ namespace Veldrid.Vk
         private protected override void PopDebugGroupCore()
         {
             vkCmdDebugMarkerEndEXT_t func = _gd.MarkerEnd;
-            if (func == null) { return; }
+            if (func == null)
+            { return; }
 
             func(_cb);
         }
@@ -1266,7 +1269,8 @@ namespace Veldrid.Vk
         private protected override void InsertDebugMarkerCore(string name)
         {
             vkCmdDebugMarkerInsertEXT_t func = _gd.MarkerInsert;
-            if (func == null) { return; }
+            if (func == null)
+            { return; }
 
             VkDebugMarkerMarkerInfoEXT markerInfo = VkDebugMarkerMarkerInfoEXT.New();
 

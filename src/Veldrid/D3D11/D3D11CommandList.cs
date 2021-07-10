@@ -2,11 +2,8 @@
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Buffers;
 using Vortice.Direct3D11;
 using Vortice;
-using System.Drawing;
 using Vortice.Mathematics;
 
 namespace Veldrid.D3D11
@@ -333,27 +330,27 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
+        protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (_graphicsResourceSets[slot].Equals(rs, dynamicOffsetsCount, ref dynamicOffsets))
+            if (_graphicsResourceSets[slot].Equals(rs, dynamicOffsets))
             {
                 return;
             }
 
             _graphicsResourceSets[slot].Offsets.Dispose();
-            _graphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsetsCount, ref dynamicOffsets);
+            _graphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
             ActivateResourceSet(slot, _graphicsResourceSets[slot], true);
         }
 
-        protected override void SetComputeResourceSetCore(uint slot, ResourceSet set, uint dynamicOffsetsCount, ref uint dynamicOffsets)
+        protected override void SetComputeResourceSetCore(uint slot, ResourceSet set, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (_computeResourceSets[slot].Equals(set, dynamicOffsetsCount, ref dynamicOffsets))
+            if (_computeResourceSets[slot].Equals(set, dynamicOffsets))
             {
                 return;
             }
 
             _computeResourceSets[slot].Offsets.Dispose();
-            _computeResourceSets[slot] = new BoundResourceSetInfo(set, dynamicOffsetsCount, ref dynamicOffsets);
+            _computeResourceSets[slot] = new BoundResourceSetInfo(set, dynamicOffsets);
             ActivateResourceSet(slot, _computeResourceSets[slot], false);
         }
 
@@ -382,24 +379,24 @@ namespace Veldrid.D3D11
                 switch (rbi.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                        {
-                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                            BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
-                            break;
-                        }
+                    {
+                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                        BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
+                        break;
+                    }
                     case ResourceKind.StructuredBufferReadOnly:
-                        {
-                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                            BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
-                            break;
-                        }
+                    {
+                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                        BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
+                        break;
+                    }
                     case ResourceKind.StructuredBufferReadWrite:
-                        {
-                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                            ID3D11UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
-                            BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
-                            break;
-                        }
+                    {
+                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                        ID3D11UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
+                        BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
+                        break;
+                    }
                     case ResourceKind.TextureReadOnly:
                         TextureView texView = Util.GetTextureView(_gd, resource);
                         D3D11TextureView d3d11TexView = Util.AssertSubtype<TextureView, D3D11TextureView>(texView);
@@ -416,7 +413,8 @@ namespace Veldrid.D3D11
                         D3D11Sampler sampler = Util.AssertSubtype<BindableResource, D3D11Sampler>(resource);
                         BindSampler(sampler, samplerBase + rbi.Slot, rbi.Stages);
                         break;
-                    default: throw Illegal.Value<ResourceKind>();
+                    default:
+                        throw Illegal.Value<ResourceKind>();
                 }
             }
         }

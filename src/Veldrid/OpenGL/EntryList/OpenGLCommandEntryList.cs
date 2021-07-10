@@ -241,16 +241,14 @@ namespace Veldrid.OpenGL.EntryList
                             executor.SetGraphicsResourceSet(
                                 srse.Slot,
                                 rs,
-                                srse.DynamicOffsetCount,
-                                ref Unsafe.AsRef<uint>(dynamicOffsetsPtr));
+                                new ReadOnlySpan<uint>(dynamicOffsetsPtr, srse.DynamicOffsetCount));
                         }
                         else
                         {
                             executor.SetComputeResourceSet(
                                 srse.Slot,
                                 rs,
-                                srse.DynamicOffsetCount,
-                                ref Unsafe.AsRef<uint>(dynamicOffsetsPtr));
+                                new ReadOnlySpan<uint>(dynamicOffsetsPtr, srse.DynamicOffsetCount));
                         }
                         currentOffset += (uint)Unsafe.SizeOf<SetResourceSetEntry>();
                         break;

@@ -803,22 +803,22 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (!_graphicsResourceSets[slot].Equals(rs, dynamicOffsetCount, ref dynamicOffsets))
+            if (!_graphicsResourceSets[slot].Equals(rs, dynamicOffsets))
             {
                 _graphicsResourceSets[slot].Offsets.Dispose();
-                _graphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsetCount, ref dynamicOffsets);
+                _graphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
                 _newGraphicsResourceSets[slot] = true;
             }
         }
 
-        public void SetComputeResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetCount, ref uint dynamicOffsets)
+        public void SetComputeResourceSet(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (!_computeResourceSets[slot].Equals(rs, dynamicOffsetCount, ref dynamicOffsets))
+            if (!_computeResourceSets[slot].Equals(rs, dynamicOffsets))
             {
                 _computeResourceSets[slot].Offsets.Dispose();
-                _computeResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsetCount, ref dynamicOffsets);
+                _computeResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
                 _newComputeResourceSets[slot] = true;
             }
         }
@@ -854,7 +854,8 @@ namespace Veldrid.OpenGL
                 {
                     case ResourceKind.UniformBuffer:
                     {
-                        if (!isNew) { continue; }
+                        if (!isNew)
+                        { continue; }
 
                         DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         OpenGLBuffer glUB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
@@ -886,7 +887,8 @@ namespace Veldrid.OpenGL
                     case ResourceKind.StructuredBufferReadWrite:
                     case ResourceKind.StructuredBufferReadOnly:
                     {
-                        if (!isNew) { continue; }
+                        if (!isNew)
+                        { continue; }
 
                         DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
@@ -980,7 +982,8 @@ namespace Veldrid.OpenGL
                             }
                         }
                         break;
-                    default: throw Illegal.Value<ResourceKind>();
+                    default:
+                        throw Illegal.Value<ResourceKind>();
                 }
             }
         }
@@ -1148,7 +1151,8 @@ namespace Veldrid.OpenGL
             uint mipLevel,
             uint arrayLayer)
         {
-            if (width == 0 || height == 0 || depth == 0) { return; }
+            if (width == 0 || height == 0 || depth == 0)
+            { return; }
 
             OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(texture);
             glTex.EnsureResourcesCreated();

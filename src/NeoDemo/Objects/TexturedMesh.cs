@@ -4,6 +4,7 @@ using System;
 using Veldrid.ImageSharp;
 using Veldrid.Utilities;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.NeoDemo.Objects
 {
@@ -75,7 +76,8 @@ namespace Veldrid.NeoDemo.Objects
             _ib.Name = _name + "_IB";
 
             uint bufferSize = 128;
-            if (s_useUniformOffset) { bufferSize += _uniformOffset * 2; }
+            if (s_useUniformOffset)
+            { bufferSize += _uniformOffset * 2; }
 
             _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(bufferSize, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             if (_materialPropsOwned)
@@ -326,8 +328,8 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.SetPipeline(_shadowMapPipeline);
             cl.SetGraphicsResourceSet(0, _shadowMapResourceSets[shadowMapIndex * 2]);
-            uint offset = _uniformOffset;
-            cl.SetGraphicsResourceSet(1, _shadowMapResourceSets[shadowMapIndex * 2 + 1], 1, ref offset);
+            ReadOnlySpan<uint> offsets = MemoryMarshal.CreateReadOnlySpan(ref _uniformOffset, 1);
+            cl.SetGraphicsResourceSet(1, _shadowMapResourceSets[shadowMapIndex * 2 + 1], offsets);
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }
 
@@ -338,8 +340,8 @@ namespace Veldrid.NeoDemo.Objects
             cl.SetPipeline(reflectionPass ? _pipelineFrontCull : _pipeline);
             cl.SetGraphicsResourceSet(0, _mainProjViewRS);
             cl.SetGraphicsResourceSet(1, _mainSharedRS);
-            uint offset = _uniformOffset;
-            cl.SetGraphicsResourceSet(2, _mainPerObjectRS, 1, ref offset);
+            ReadOnlySpan<uint> offsets = MemoryMarshal.CreateReadOnlySpan(ref _uniformOffset, 1);
+            cl.SetGraphicsResourceSet(2, _mainPerObjectRS, offsets);
             cl.SetGraphicsResourceSet(3, reflectionPass ? _reflectionRS : _noReflectionRS);
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }

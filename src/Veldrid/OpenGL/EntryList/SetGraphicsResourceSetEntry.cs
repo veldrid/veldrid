@@ -9,7 +9,7 @@ namespace Veldrid.OpenGL.EntryList
         public readonly uint Slot;
         public readonly Tracked<ResourceSet> ResourceSet;
         public readonly bool IsGraphics;
-        public readonly uint DynamicOffsetCount;
+        public readonly int DynamicOffsetCount;
         public fixed uint DynamicOffsets_Inline[MaxInlineDynamicOffsets];
         public readonly StagingBlock DynamicOffsets_Block;
 
@@ -22,7 +22,7 @@ namespace Veldrid.OpenGL.EntryList
             Slot = slot;
             ResourceSet = rs;
             IsGraphics = isGraphics;
-            DynamicOffsetCount = (uint)dynamicOffsets.Length;
+            DynamicOffsetCount = dynamicOffsets.Length;
             for (int i = 0; i < dynamicOffsets.Length; i++)
             {
                 DynamicOffsets_Inline[i] = dynamicOffsets[i];
@@ -40,7 +40,7 @@ namespace Veldrid.OpenGL.EntryList
             Slot = slot;
             ResourceSet = rs;
             IsGraphics = isGraphics;
-            DynamicOffsetCount = dynamicOffsets.SizeInBytes / sizeof(uint);
+            DynamicOffsetCount = (int)(dynamicOffsets.SizeInBytes / sizeof(uint));
             DynamicOffsets_Block = dynamicOffsets;
         }
     }

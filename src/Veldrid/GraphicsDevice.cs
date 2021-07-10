@@ -461,7 +461,7 @@ namespace Veldrid
             ValidateUpdateTextureParameters(texture, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
 #endif
 
-            fixed (void* pin = &MemoryMarshal.GetReference(source))
+            fixed (T* pin = source)
             {
                 UpdateTextureCore(
                 texture,
@@ -558,11 +558,7 @@ namespace Veldrid
             uint bufferOffsetInBytes,
             T source) where T : unmanaged
         {
-            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
-            fixed (byte* ptr = &sourceByteRef)
-            {
-                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)sizeof(T));
-            }
+            UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)(&source), (uint)sizeof(T));
         }
 
         /// <summary>
@@ -579,8 +575,7 @@ namespace Veldrid
             uint bufferOffsetInBytes,
             ref T source) where T : unmanaged
         {
-            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
-            fixed (byte* ptr = &sourceByteRef)
+            fixed (T* ptr = &source)
             {
                 UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)sizeof(T));
             }
@@ -602,8 +597,7 @@ namespace Veldrid
             ref T source,
             uint sizeInBytes) where T : unmanaged
         {
-            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
-            fixed (byte* ptr = &sourceByteRef)
+            fixed (T* ptr = &source)
             {
                 UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, sizeInBytes);
             }
@@ -640,7 +634,7 @@ namespace Veldrid
             uint bufferOffsetInBytes,
             ReadOnlySpan<T> source) where T : unmanaged
         {
-            fixed (void* pin = &MemoryMarshal.GetReference(source))
+            fixed (T* pin = source)
             {
                 UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)pin, (uint)(sizeof(T) * source.Length));
             }

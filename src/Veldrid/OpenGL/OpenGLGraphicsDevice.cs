@@ -12,6 +12,7 @@ using static Veldrid.OpenGL.EGL.EGLNative;
 using NativeLibraryLoader;
 using System.Runtime.CompilerServices;
 using NativeLibrary = NativeLibraryLoader.NativeLibrary;
+using Veldrid.OpenGL.EntryList;
 
 namespace Veldrid.OpenGL
 {

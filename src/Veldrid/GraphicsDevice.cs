@@ -23,6 +23,16 @@ namespace Veldrid
         public abstract string DeviceName { get; }
 
         /// <summary>
+        /// Gets the name of the device vendor.
+        /// </summary>
+        public abstract string VendorName { get; }
+
+        /// <summary>
+        /// Gets the API version of the graphics backend.
+        /// </summary>
+        public abstract GraphicsApiVersion ApiVersion { get; }
+
+        /// <summary>
         /// Gets a value identifying the specific graphics API used by this instance.
         /// </summary>
         public abstract GraphicsBackend BackendType { get; }
@@ -907,6 +917,31 @@ namespace Veldrid
             if (!GetOpenGLInfo(out BackendInfoOpenGL info))
             {
                 throw new VeldridException($"{nameof(GetOpenGLInfo)} can only be used on an OpenGL GraphicsDevice.");
+            }
+
+            return info;
+        }
+#endif
+
+#if !EXCLUDE_METAL_BACKEND
+        /// <summary>
+        /// Tries to get a <see cref="BackendInfoMetal"/> for this instance.
+        /// This method will only succeed if this is a Metal GraphicsDevice.
+        /// </summary>
+        /// <param name="info">If successful, this will contain the <see cref="BackendInfoOpenGL"/> for this instance.</param>
+        /// <returns>True if this is an Metal GraphicsDevice and the operation was successful. False otherwise.</returns>
+        public virtual bool GetMetalInfo(out BackendInfoMetal info) { info = null; return false; }
+
+        /// <summary>
+        /// Gets a <see cref="BackendInfoMetal"/> for this instance. This method will only succeed if this is an OpenGL
+        /// GraphicsDevice. Otherwise, this method will throw an exception.
+        /// </summary>
+        /// <returns>The <see cref="BackendInfoMetal"/> for this instance.</returns>
+        public BackendInfoMetal GetMetalInfo()
+        {
+            if (!GetMetalInfo(out BackendInfoMetal info))
+            {
+                throw new VeldridException($"{nameof(GetMetalInfo)} can only be used on a Metal GraphicsDevice.");
             }
 
             return info;

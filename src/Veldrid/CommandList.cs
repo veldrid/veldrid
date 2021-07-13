@@ -262,6 +262,11 @@ namespace Veldrid
         }
 
         // TODO: private protected
+        /// <summary>
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <param name="rs"></param>
+        /// <param name="dynamicOffsets"></param>
         protected abstract void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets);
 
         /// <summary>
@@ -326,7 +331,11 @@ namespace Veldrid
         }
 
         // TODO: private protected
-
+        /// <summary>
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <param name="set"></param>
+        /// <param name="dynamicOffsets"></param>
         protected abstract void SetComputeResourceSetCore(uint slot, ResourceSet set, ReadOnlySpan<uint> dynamicOffsets);
 
         /// <summary>

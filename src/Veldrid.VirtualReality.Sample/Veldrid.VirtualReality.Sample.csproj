@@ -15,8 +15,8 @@
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
     <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
     <ProjectReference Include="..\Veldrid.VirtualReality\Veldrid.VirtualReality.csproj" />
-    <PackageReference Include="Veldrid.SPIRV" Version="$(VeldridSpirvVersion)" />
-    <PackageReference Include="AssimpNet" Version="4.1.0" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
+    <PackageReference Include="AssimpNet" Version="5.0.0-beta1" />
 
     <Content Include="cat\cat.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

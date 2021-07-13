@@ -43,7 +43,7 @@ namespace Veldrid.D3D11
             TypelessDxgiFormat = D3D11Formats.GetTypelessFormat(DxgiFormat);
 
             CpuAccessFlags cpuFlags = CpuAccessFlags.None;
-            Usage resourceUsage = Vortice.Direct3D11.Usage.Default;
+            ResourceUsage resourceUsage = ResourceUsage.Default;
             BindFlags bindFlags = BindFlags.None;
             ResourceOptionFlags optionFlags = ResourceOptionFlags.None;
 
@@ -66,7 +66,7 @@ namespace Veldrid.D3D11
             if ((description.Usage & TextureUsage.Staging) == TextureUsage.Staging)
             {
                 cpuFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
-                resourceUsage = Vortice.Direct3D11.Usage.Staging;
+                resourceUsage = ResourceUsage.Staging;
             }
 
             if ((description.Usage & TextureUsage.GenerateMipmaps) != 0)

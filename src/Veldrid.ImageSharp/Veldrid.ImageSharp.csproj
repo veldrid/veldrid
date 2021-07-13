@@ -11,9 +11,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-rc0002" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4-alpha.0.47" />
   </ItemGroup>
-
+  
   <PropertyGroup>
     <Description>ImageSharp integration for Veldrid. Provides functionality for loading GPU Textures with ImageSharp.</Description>
     <PackageTags>3D Graphics Direct3D DirectX Vulkan OpenGL Metal Core Standard Game ImageSharp</PackageTags>

@@ -10,14 +10,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Veldrid.SPIRV" Version="1.0.2" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(UseStableVersions)' == 'true'" >
+  <ItemGroup Condition="'$(UseStableVersions)' == 'true'">
     <PackageReference Include="Veldrid" Version="4.5.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(UseStableVersions)' != 'true'" >
+  <ItemGroup Condition="'$(UseStableVersions)' != 'true'">
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
   </ItemGroup>
 

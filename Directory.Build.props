@@ -10,11 +10,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VeldridSpirvVersion>1.0.9</VeldridSpirvVersion>
-    <NativeLibraryLoaderVersion>1.0.10</NativeLibraryLoaderVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <PackageLicenseUrl>https://raw.githubusercontent.com/mellinoe/veldrid/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Copyright>Copyright 2020 (c) Eric Mellino. All rights reserved.</Copyright>

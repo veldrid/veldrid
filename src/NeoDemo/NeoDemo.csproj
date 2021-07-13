@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Veldrid.SPIRV" Version="$(VeldridSpirvVersion)" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
     <ProjectReference Include="..\Veldrid.RenderDoc\Veldrid.RenderDoc.csproj" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />

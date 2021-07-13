@@ -535,13 +535,11 @@ namespace Veldrid.NeoDemo
         private void DrawIndexedMaterialMenu(MaterialPropsAndBuffer propsAndBuffer)
         {
             MaterialProperties props = propsAndBuffer.Properties;
-            float intensity = props.SpecularIntensity.X;
-            float reflectivity = props.Reflectivity;
-            if (ImGui.SliderFloat("Intensity", ref intensity, 0f, 10f, intensity.ToString(), 1f)
-                | ImGui.SliderFloat("Power", ref props.SpecularPower, 0f, 1000f, props.SpecularPower.ToString(), 1f)
-                | ImGui.SliderFloat("Reflectivity", ref props.Reflectivity, 0f, 1f, props.Reflectivity.ToString(), 1f))
+            if (ImGui.SliderFloat("Intensity", ref props.SpecularIntensity.X, 0f, 10f, props.SpecularIntensity.X.ToString())
+                | ImGui.SliderFloat("Power", ref props.SpecularPower, 0f, 1000f, props.SpecularPower.ToString())
+                | ImGui.SliderFloat("Reflectivity", ref props.Reflectivity, 0f, 1f, props.Reflectivity.ToString()))
             {
-                props.SpecularIntensity = new Vector3(intensity);
+                props.SpecularIntensity = new Vector3(props.SpecularIntensity.X);
                 propsAndBuffer.Properties = props;
             }
         }

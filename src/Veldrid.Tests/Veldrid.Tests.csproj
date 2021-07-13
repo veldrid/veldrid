@@ -12,11 +12,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Veldrid.SPIRV" Version="$(VeldridSpirvVersion)" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0-preview-20170628-02" />
-    <PackageReference Include="xunit" Version="2.3.1" />
-    <PackageReference Include="xunit.console" Version="2.3.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0-release-20210626-04" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.console" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <ProjectReference Include="..\Veldrid.RenderDoc\Veldrid.RenderDoc.csproj" />
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
     <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
@@ -44,6 +47,11 @@
     <None Remove="Shaders\FullScreenWriteDepth.vert" />
     <None Remove="Shaders\VertexLayoutTestShader.frag" />
     <None Remove="Shaders\VertexLayoutTestShader.vert" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="1.1.0-beta-20204-02" />
+    <PackageReference Update="Nerdbank.GitVersioning" Version="3.4.220" />
   </ItemGroup>
 
 </Project>

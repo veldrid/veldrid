@@ -173,9 +173,10 @@ namespace Veldrid.Tests
             else
             {
                 uint offset = srcBindingMultiple * GD.StructuredBufferMinOffsetAlignment;
-                cl.SetComputeResourceSet(0, sets[0], 1, ref offset);
+                ReadOnlySpan<uint> offsets = MemoryMarshal.CreateReadOnlySpan(ref offset, 1);
+                cl.SetComputeResourceSet(0, sets[0], offsets);
                 offset = dstBindingMultiple * GD.StructuredBufferMinOffsetAlignment;
-                cl.SetComputeResourceSet(1, sets[1], 1, ref offset);
+                cl.SetComputeResourceSet(1, sets[1], offsets);
             }
             cl.Dispatch(512, 1, 1);
             cl.End();

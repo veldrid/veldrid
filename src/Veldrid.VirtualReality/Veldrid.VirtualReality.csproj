@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -23,7 +23,7 @@
 
 
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)native\win-x64\openvr_api.dll">
+    <Content Include="$(MSBuildThisFileDirectory)runtimes\win-x64\native\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackagePath>runtimes/win-x64/native</PackagePath>
       <Pack>true</Pack>

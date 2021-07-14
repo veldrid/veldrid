@@ -323,7 +323,7 @@ namespace Veldrid.D3D11
             return true;
         }
 
-        protected override MappedResource MapCore(
+        private protected override MappedResource MapCore(
             MappableResource resource,
             uint offsetInBytes,
             uint sizeInBytes,

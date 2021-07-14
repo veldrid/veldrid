@@ -384,7 +384,7 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(lastCB.NativePtr);
         }
 
-        protected override MappedResource MapCore(
+        private protected override MappedResource MapCore(
             MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
         {
             if (resource is MTLBuffer buffer)

@@ -862,7 +862,7 @@ namespace Veldrid.OpenGL
             return true;
         }
 
-        protected override MappedResource MapCore(
+        private protected override MappedResource MapCore(
             MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
         {
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);

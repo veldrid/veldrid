@@ -933,7 +933,7 @@ namespace Veldrid.Vk
             CheckResult(result);
         }
 
-        protected override MappedResource MapCore(
+        private protected override MappedResource MapCore(
             MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
         {
             VkMemoryBlock memoryBlock;

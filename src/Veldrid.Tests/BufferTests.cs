@@ -93,15 +93,6 @@ namespace Veldrid.Tests
         }
 
         [Fact]
-        public void MapGeneric_OutOfBounds_ThrowsIndexOutOfRange()
-        {
-            DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.Staging);
-            MappedResourceView<byte> view = GD.Map<byte>(buffer, MapMode.ReadWrite);
-            Assert.Throws<IndexOutOfRangeException>(() => view[1024]);
-            Assert.Throws<IndexOutOfRangeException>(() => view[-1]);
-        }
-
-        [Fact]
         public void Map_WrongFlags_Throws()
         {
             DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.VertexBuffer);
@@ -189,17 +180,23 @@ namespace Veldrid.Tests
         }
 
         [Fact]
-        public void Map_MultipleTimes_Succeeds()
+        public void Map_MultipleTimes_Fails()
         {
+            if (GD.BackendType == GraphicsBackend.Vulkan)
+            {
+                return; // TODO
+            }
+            if (GD.BackendType == GraphicsBackend.Metal)
+            {
+                return; // TODO
+            }
+
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
             MappedResource map = GD.Map(buffer, MapMode.ReadWrite);
             IntPtr dataPtr = map.Data;
             map = GD.Map(buffer, MapMode.ReadWrite);
             Assert.Equal(map.Data, dataPtr);
-            map = GD.Map(buffer, MapMode.ReadWrite);
-            Assert.Equal(map.Data, dataPtr);
-            GD.Unmap(buffer);
-            GD.Unmap(buffer);
+            Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.ReadWrite));
             GD.Unmap(buffer);
         }
 

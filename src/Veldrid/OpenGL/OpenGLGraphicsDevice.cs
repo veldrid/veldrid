@@ -865,18 +865,10 @@ namespace Veldrid.OpenGL
         private protected override MappedResource MapCore(
             MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
         {
-            MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
-            lock (_mappedResourceLock)
-            {
-                if (_mappedResources.ContainsKey(key))
-                {
-                    throw new VeldridException("The given resource is already mapped.");
-                }
-            }
             return _executionThread.Map(resource, offsetInBytes, sizeInBytes, mode, subresource);
         }
 
-        protected override void UnmapCore(MappableResource resource, uint subresource)
+        private protected override void UnmapCore(MappableResource resource, uint subresource)
         {
             _executionThread.Unmap(resource, subresource);
         }
@@ -1330,7 +1322,13 @@ namespace Veldrid.OpenGL
                 {
                     lock (_gd._mappedResourceLock)
                     {
-                        Debug.Assert(!_gd._mappedResources.ContainsKey(key));
+                        if (_gd._mappedResources.ContainsKey(key))
+                        {
+                            throw new VeldridException("The given resource is already mapped.");
+                        }
+
+                        MappedResourceInfo info = new MappedResourceInfo();
+
                         if (resource is OpenGLBuffer buffer)
                         {
                             buffer.EnsureResourcesCreated();
@@ -1352,14 +1350,12 @@ namespace Veldrid.OpenGL
                                 CheckLastError();
                             }
 
-                            MappedResourceInfo info = new MappedResourceInfo();
                             info.MappedResource = new MappedResource(
                                 resource,
                                 mode,
                                 (IntPtr)mappedPtr,
                                 result->OffsetInBytes,
                                 result->SizeInBytes);
-                            _gd._mappedResources.Add(key, info);
 
                             result->Data = (IntPtr)mappedPtr;
                             result->RowPitch = 0;
@@ -1543,7 +1539,7 @@ namespace Veldrid.OpenGL
 
                             uint rowPitch = FormatHelpers.GetRowPitch(mipWidth, texture.Format);
                             uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, mipHeight, texture.Format);
-                            MappedResourceInfo info = new MappedResourceInfo();
+
                             info.MappedResource = new MappedResource(
                                 resource,
                                 mode,
@@ -1554,12 +1550,14 @@ namespace Veldrid.OpenGL
                                 rowPitch,
                                 depthPitch);
                             info.StagingBlock = block;
-                            _gd._mappedResources.Add(key, info);
+
                             result->Data = (IntPtr)block.Data;
                             result->RowPitch = rowPitch;
                             result->DepthPitch = depthPitch;
                             result->Succeeded = true;
                         }
+
+                        _gd._mappedResources.Add(key, info);
                     }
                 }
                 catch
@@ -1578,49 +1576,49 @@ namespace Veldrid.OpenGL
                 MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
                 lock (_gd._mappedResourceLock)
                 {
-                    if (_gd._mappedResources.TryGetValue(key, out MappedResourceInfo info))
+                    if (!_gd._mappedResources.Remove(key, out MappedResourceInfo info))
                     {
-                        if (resource is OpenGLBuffer buffer)
-                        {
-                            if (_gd.Extensions.ARB_DirectStateAccess)
-                            {
-                                glUnmapNamedBuffer(buffer.Buffer);
-                                CheckLastError();
-                            }
-                            else
-                            {
-                                glBindBuffer(BufferTarget.CopyWriteBuffer, buffer.Buffer);
-                                CheckLastError();
+                        throw new VeldridException($"The given resource ({resource}) is not mapped.");
+                    }
 
-                                glUnmapBuffer(BufferTarget.CopyWriteBuffer);
-                                CheckLastError();
-                            }
+                    if (resource is OpenGLBuffer buffer)
+                    {
+                        if (_gd.Extensions.ARB_DirectStateAccess)
+                        {
+                            glUnmapNamedBuffer(buffer.Buffer);
+                            CheckLastError();
                         }
                         else
                         {
-                            OpenGLTexture texture = Util.AssertSubtype<MappableResource, OpenGLTexture>(resource);
+                            glBindBuffer(BufferTarget.CopyWriteBuffer, buffer.Buffer);
+                            CheckLastError();
 
-                            if (info.MappedResource.Mode == MapMode.Write ||
-                                info.MappedResource.Mode == MapMode.ReadWrite)
-                            {
-                                Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
-                                Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
+                            glUnmapBuffer(BufferTarget.CopyWriteBuffer);
+                            CheckLastError();
+                        }
+                    }
+                    else
+                    {
+                        OpenGLTexture texture = Util.AssertSubtype<MappableResource, OpenGLTexture>(resource);
 
-                                IntPtr data = (IntPtr)info.StagingBlock.Data;
+                        if (info.MappedResource.Mode == MapMode.Write ||
+                            info.MappedResource.Mode == MapMode.ReadWrite)
+                        {
+                            Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
+                            Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
 
-                                _gd._commandExecutor.UpdateTexture(
-                                    texture,
-                                    data,
-                                    0, 0, 0,
-                                    width, height, depth,
-                                    mipLevel,
-                                    arrayLayer);
-                            }
+                            IntPtr data = (IntPtr)info.StagingBlock.Data;
 
-                            _gd.StagingMemoryPool.Free(info.StagingBlock);
+                            _gd._commandExecutor.UpdateTexture(
+                                texture,
+                                data,
+                                0, 0, 0,
+                                width, height, depth,
+                                mipLevel,
+                                arrayLayer);
                         }
 
-                        _gd._mappedResources.Remove(key);
+                        _gd.StagingMemoryPool.Free(info.StagingBlock);
                     }
                 }
             }

@@ -79,7 +79,7 @@ namespace Veldrid.OpenGL
             _storage.Add(stagingBlock);
         }
 
-        public void Free(StagingBlock block)
+        public void Free(in StagingBlock block)
         {
             lock (_lock)
             {
@@ -96,7 +96,7 @@ namespace Veldrid.OpenGL
             lock (_lock)
             {
                 _availableBlocks.Clear();
-                foreach (StagingBlock block in _storage)
+                foreach (ref StagingBlock block in CollectionsMarshal.AsSpan(_storage))
                 {
                     Marshal.FreeHGlobal((IntPtr)block.Data);
                 }

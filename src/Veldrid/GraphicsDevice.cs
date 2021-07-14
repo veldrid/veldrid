@@ -428,11 +428,7 @@ namespace Veldrid
             UnmapCore(resource, subresource);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="resource"></param>
-        /// <param name="subresource"></param>
-        protected abstract void UnmapCore(MappableResource resource, uint subresource);
+        private protected abstract void UnmapCore(MappableResource resource, uint subresource);
 
         /// <summary>
         /// Updates a portion of a <see cref="Texture"/> resource with new data.

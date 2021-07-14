@@ -385,7 +385,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        protected override void UnmapCore(MappableResource resource, uint subresource)
+        private protected override void UnmapCore(MappableResource resource, uint subresource)
         {
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
 
@@ -427,7 +427,7 @@ namespace Veldrid.D3D11
             bool isUniformBuffer = (buffer.Usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer;
             bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
             bool useUpdateSubresource = (!isDynamic && !isStaging) && (!isUniformBuffer || updateFullBuffer);
-            bool useMap = isDynamic || isStaging;
+            bool useMap = (isDynamic && updateFullBuffer) || isStaging;
 
             if (useUpdateSubresource)
             {

@@ -193,9 +193,6 @@ namespace Veldrid.Tests
 
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
             MappedResource map = GD.Map(buffer, MapMode.ReadWrite);
-            IntPtr dataPtr = map.Data;
-            map = GD.Map(buffer, MapMode.ReadWrite);
-            Assert.Equal(map.Data, dataPtr);
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.ReadWrite));
             GD.Unmap(buffer);
         }

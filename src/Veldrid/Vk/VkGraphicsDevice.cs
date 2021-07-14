@@ -981,7 +981,7 @@ namespace Veldrid.Vk
                 depthPitch);
         }
 
-        protected override void UnmapCore(MappableResource resource, uint subresource)
+        private protected override void UnmapCore(MappableResource resource, uint subresource)
         {
             VkMemoryBlock memoryBlock;
             if (resource is VkBuffer buffer)

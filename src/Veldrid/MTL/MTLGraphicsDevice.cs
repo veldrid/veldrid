@@ -451,7 +451,7 @@ namespace Veldrid.MTL
             return true;
         }
 
-        protected override void UnmapCore(MappableResource resource, uint subresource)
+        private protected override void UnmapCore(MappableResource resource, uint subresource)
         {
         }
 

@@ -265,10 +265,9 @@ namespace Veldrid.Vk
             }
         }
 
-        internal VkSubresourceLayout GetSubresourceLayout(uint subresource)
+        internal VkSubresourceLayout GetSubresourceLayout(uint mipLevel, uint arrayLevel)
         {
             bool staging = _stagingBuffer.Handle != 0;
-            Util.GetMipLevelAndArrayLayer(this, subresource, out uint mipLevel, out uint arrayLayer);
             if (!staging)
             {
                 VkImageAspectFlags aspect = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil
@@ -276,7 +275,7 @@ namespace Veldrid.Vk
                   : VkImageAspectFlags.Color;
                 VkImageSubresource imageSubresource = new VkImageSubresource
                 {
-                    arrayLayer = arrayLayer,
+                    arrayLayer = arrayLevel,
                     mipLevel = mipLevel,
                     aspectMask = aspect,
                 };
@@ -286,10 +285,7 @@ namespace Veldrid.Vk
             }
             else
             {
-                uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
-                Util.GetMipDimensions(this, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-                uint rowPitch = FormatHelpers.GetRowPitch(mipWidth, Format);
-                uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, mipHeight, Format);
+                base.GetSubresourceLayout(mipLevel, arrayLevel, out uint rowPitch, out uint depthPitch);
 
                 VkSubresourceLayout layout = new VkSubresourceLayout()
                 {
@@ -298,10 +294,24 @@ namespace Veldrid.Vk
                     arrayPitch = depthPitch,
                     size = depthPitch,
                 };
-                layout.offset = Util.ComputeSubresourceOffset(this, mipLevel, arrayLayer);
+                layout.offset = Util.ComputeSubresourceOffset(this, mipLevel, arrayLevel);
 
                 return layout;
             }
+        }
+
+        internal override void GetSubresourceLayout(uint mipLevel, uint arrayLevel, out uint rowPitch, out uint depthPitch)
+        {
+            VkSubresourceLayout layout = GetSubresourceLayout(mipLevel, arrayLevel);
+            rowPitch = (uint)layout.rowPitch;
+            depthPitch = (uint)layout.depthPitch;
+        }
+
+        public override uint GetSizeInBytes(uint subresource)
+        {
+            Util.GetMipLevelAndArrayLayer(this, subresource, out uint mipLevel, out uint arrayLayer);
+            VkSubresourceLayout layout = GetSubresourceLayout(mipLevel, arrayLayer);
+            return (uint)layout.size;
         }
 
         internal void TransitionImageLayout(

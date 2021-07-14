@@ -145,6 +145,12 @@ namespace Veldrid
             depth = GetDimension(tex.Depth, mipLevel);
         }
 
+        internal static void GetMipDimensions(Texture tex, uint mipLevel, out uint width, out uint height)
+        {
+            width = GetDimension(tex.Width, mipLevel);
+            height = GetDimension(tex.Height, mipLevel);
+        }
+
         internal static uint GetDimension(uint largestLevelDimension, uint mipLevel)
         {
             uint ret = largestLevelDimension;

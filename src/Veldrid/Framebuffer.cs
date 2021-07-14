@@ -75,10 +75,9 @@ namespace Veldrid
                 mipLevel = DepthTarget.Value.MipLevel;
             }
 
-            Util.GetMipDimensions(dimTex, mipLevel, out uint mipWidth, out uint mipHeight, out _);
+            Util.GetMipDimensions(dimTex, mipLevel, out uint mipWidth, out uint mipHeight);
             Width = mipWidth;
             Height = mipHeight;
-
 
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
         }

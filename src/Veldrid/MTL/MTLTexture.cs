@@ -118,28 +118,6 @@ namespace Veldrid.MTL
                     (Usage & TextureUsage.Cubemap) != 0);
         }
 
-        internal uint GetSubresourceSize(uint mipLevel, uint arrayLayer)
-        {
-            uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
-            Util.GetMipDimensions(this, mipLevel, out uint width, out uint height, out uint depth);
-            uint storageWidth = Math.Max(blockSize, width);
-            uint storageHeight = Math.Max(blockSize, height);
-            return depth * FormatHelpers.GetDepthPitch(
-                FormatHelpers.GetRowPitch(storageWidth, Format),
-                storageHeight,
-                Format);
-        }
-
-        internal void GetSubresourceLayout(uint mipLevel, uint arrayLayer, out uint rowPitch, out uint depthPitch)
-        {
-            uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
-            Util.GetMipDimensions(this, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-            uint storageWidth = Math.Max(blockSize, mipWidth);
-            uint storageHeight = Math.Max(blockSize, mipHeight);
-            rowPitch = FormatHelpers.GetRowPitch(storageWidth, Format);
-            depthPitch = FormatHelpers.GetDepthPitch(rowPitch, storageHeight, Format);
-        }
-
         private protected override void DisposeCore()
         {
             if (!_disposed)

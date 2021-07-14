@@ -228,8 +228,7 @@ namespace Veldrid.Vk
                 dimTex,
                 mipLevel,
                 out uint mipWidth,
-                out uint mipHeight,
-                out _);
+                out uint mipHeight);
 
             fbCI.width = mipWidth;
             fbCI.height = mipHeight;

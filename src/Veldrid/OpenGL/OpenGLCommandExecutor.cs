@@ -1166,7 +1166,9 @@ namespace Veldrid.OpenGL
             uint arrayLayer)
         {
             if (width == 0 || height == 0 || depth == 0)
-            { return; }
+            {
+                return;
+            }
 
             OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(texture);
             glTex.EnsureResourcesCreated();
@@ -1187,7 +1189,7 @@ namespace Veldrid.OpenGL
 
             // Compressed textures can specify regions that are larger than the dimensions.
             // We should only pass up to the dimensions to OpenGL, though.
-            Util.GetMipDimensions(glTex, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+            Util.GetMipDimensions(glTex, mipLevel, out uint mipWidth, out uint mipHeight);
             width = Math.Min(width, mipWidth);
             height = Math.Min(height, mipHeight);
 
@@ -1522,7 +1524,7 @@ namespace Veldrid.OpenGL
                 uint depthOrLayerCount = Math.Max(depth, layerCount);
                 // Copy width and height are allowed to be a full compressed block size, even if the mip level only contains a
                 // region smaller than the block size.
-                Util.GetMipDimensions(source, srcMipLevel, out uint mipWidth, out uint mipHeight, out _);
+                Util.GetMipDimensions(source, srcMipLevel, out uint mipWidth, out uint mipHeight);
                 width = Math.Min(width, mipWidth);
                 height = Math.Min(height, mipHeight);
                 glCopyImageSubData(

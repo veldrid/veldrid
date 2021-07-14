@@ -896,8 +896,7 @@ namespace Veldrid.Vk
             else if (sourceIsStaging && !destIsStaging)
             {
                 Vulkan.VkBuffer srcBuffer = srcVkTexture.StagingBuffer;
-                VkSubresourceLayout srcLayout = srcVkTexture.GetSubresourceLayout(
-                    srcVkTexture.CalculateSubresource(srcMipLevel, srcBaseArrayLayer));
+                VkSubresourceLayout srcLayout = srcVkTexture.GetSubresourceLayout(srcMipLevel, srcBaseArrayLayer);
                 VkImage dstImage = dstVkTexture.OptimalDeviceImage;
                 dstVkTexture.TransitionImageLayout(
                     cb,
@@ -968,8 +967,7 @@ namespace Veldrid.Vk
                     VkImageLayout.TransferSrcOptimal);
 
                 Vulkan.VkBuffer dstBuffer = dstVkTexture.StagingBuffer;
-                VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
-                    dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer));
+                VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(dstMipLevel, dstBaseArrayLayer);
 
                 VkImageAspectFlags aspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
                     ? VkImageAspectFlags.Depth
@@ -982,7 +980,7 @@ namespace Veldrid.Vk
                     baseArrayLayer = srcBaseArrayLayer
                 };
 
-                Util.GetMipDimensions(dstVkTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                Util.GetMipDimensions(dstVkTexture, dstMipLevel, out uint mipWidth, out uint mipHeight);
                 uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
                 uint bufferRowLength = Math.Max(mipWidth, blockSize);
                 uint bufferImageHeight = Math.Max(mipHeight, blockSize);
@@ -1024,11 +1022,9 @@ namespace Veldrid.Vk
             {
                 Debug.Assert(sourceIsStaging && destIsStaging);
                 Vulkan.VkBuffer srcBuffer = srcVkTexture.StagingBuffer;
-                VkSubresourceLayout srcLayout = srcVkTexture.GetSubresourceLayout(
-                    srcVkTexture.CalculateSubresource(srcMipLevel, srcBaseArrayLayer));
+                VkSubresourceLayout srcLayout = srcVkTexture.GetSubresourceLayout(srcMipLevel, srcBaseArrayLayer);
                 Vulkan.VkBuffer dstBuffer = dstVkTexture.StagingBuffer;
-                VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
-                    dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer));
+                VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(dstMipLevel, dstBaseArrayLayer);
 
                 uint zLimit = Math.Max(depth, layerCount);
                 if (!FormatHelpers.IsCompressedFormat(source.Format))

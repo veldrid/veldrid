@@ -34,5 +34,14 @@ namespace Veldrid
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
         public abstract void Dispose();
+
+        public uint GetSizeInBytes(uint subresource)
+        {
+            if (subresource != 0)
+            {
+                return 0;
+            }
+            return SizeInBytes;
+        }
     }
 }

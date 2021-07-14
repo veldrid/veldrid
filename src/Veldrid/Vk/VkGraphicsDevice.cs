@@ -933,14 +933,14 @@ namespace Veldrid.Vk
             CheckResult(result);
         }
 
-        protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
+        protected override MappedResource MapCore(
+            MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
         {
-            VkMemoryBlock memoryBlock = default(VkMemoryBlock);
+            VkMemoryBlock memoryBlock;
             IntPtr mappedPtr = IntPtr.Zero;
-            uint sizeInBytes;
-            uint offset = 0;
             uint rowPitch = 0;
             uint depthPitch = 0;
+
             if (resource is VkBuffer buffer)
             {
                 memoryBlock = buffer.Memory;
@@ -949,10 +949,10 @@ namespace Veldrid.Vk
             else
             {
                 VkTexture texture = Util.AssertSubtype<MappableResource, VkTexture>(resource);
-                VkSubresourceLayout layout = texture.GetSubresourceLayout(subresource);
+                Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
+                VkSubresourceLayout layout = texture.GetSubresourceLayout(mipLevel, arrayLayer);
                 memoryBlock = texture.Memory;
-                sizeInBytes = (uint)layout.size;
-                offset = (uint)layout.offset;
+                offsetInBytes += (uint)layout.offset;
                 rowPitch = (uint)layout.rowPitch;
                 depthPitch = (uint)layout.depthPitch;
             }
@@ -969,11 +969,12 @@ namespace Veldrid.Vk
                 }
             }
 
-            byte* dataPtr = (byte*)mappedPtr.ToPointer() + offset;
+            byte* dataPtr = (byte*)mappedPtr.ToPointer() + offsetInBytes;
             return new MappedResource(
                 resource,
                 mode,
                 (IntPtr)dataPtr,
+                offsetInBytes,
                 sizeInBytes,
                 subresource,
                 rowPitch,
@@ -982,7 +983,7 @@ namespace Veldrid.Vk
 
         protected override void UnmapCore(MappableResource resource, uint subresource)
         {
-            VkMemoryBlock memoryBlock = default(VkMemoryBlock);
+            VkMemoryBlock memoryBlock;
             if (resource is VkBuffer buffer)
             {
                 memoryBlock = buffer.Memory;
@@ -1250,10 +1251,8 @@ namespace Veldrid.Vk
             bool isStaging = (vkTex.Usage & TextureUsage.Staging) != 0;
             if (isStaging)
             {
-                VkMemoryBlock memBlock = vkTex.Memory;
-                uint subresource = texture.CalculateSubresource(mipLevel, arrayLayer);
-                VkSubresourceLayout layout = vkTex.GetSubresourceLayout(subresource);
-                byte* imageBasePtr = (byte*)memBlock.BlockMappedPointer + layout.offset;
+                VkSubresourceLayout layout = vkTex.GetSubresourceLayout(mipLevel, arrayLayer);
+                byte* imageBasePtr = (byte*)vkTex.Memory.BlockMappedPointer + layout.offset;
 
                 uint srcRowPitch = FormatHelpers.GetRowPitch(width, texture.Format);
                 uint srcDepthPitch = FormatHelpers.GetDepthPitch(srcRowPitch, height, texture.Format);

@@ -31,8 +31,8 @@ namespace Veldrid.D3D11
         private readonly BackendInfoD3D11 _d3d11Info;
 
         private readonly object _mappedResourceLock = new object();
-        private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
-            = new Dictionary<MappedResourceCacheKey, MappedResourceInfo>();
+        private readonly Dictionary<MappedResourceCacheKey, MappedResource> _mappedResources
+            = new Dictionary<MappedResourceCacheKey, MappedResource>();
 
         private readonly object _stagingResourcesLock = new object();
         private readonly List<D3D11Buffer> _availableStagingBuffers = new List<D3D11Buffer>();
@@ -300,12 +300,18 @@ namespace Veldrid.D3D11
             const uint MaxVolumeExtent = 2048;
 
             uint sampleCounts = 0;
-            if (CheckFormatMultisample(dxgiFormat, 1)) { sampleCounts |= (1 << 0); }
-            if (CheckFormatMultisample(dxgiFormat, 2)) { sampleCounts |= (1 << 1); }
-            if (CheckFormatMultisample(dxgiFormat, 4)) { sampleCounts |= (1 << 2); }
-            if (CheckFormatMultisample(dxgiFormat, 8)) { sampleCounts |= (1 << 3); }
-            if (CheckFormatMultisample(dxgiFormat, 16)) { sampleCounts |= (1 << 4); }
-            if (CheckFormatMultisample(dxgiFormat, 32)) { sampleCounts |= (1 << 5); }
+            if (CheckFormatMultisample(dxgiFormat, 1))
+            { sampleCounts |= (1 << 0); }
+            if (CheckFormatMultisample(dxgiFormat, 2))
+            { sampleCounts |= (1 << 1); }
+            if (CheckFormatMultisample(dxgiFormat, 4))
+            { sampleCounts |= (1 << 2); }
+            if (CheckFormatMultisample(dxgiFormat, 8))
+            { sampleCounts |= (1 << 3); }
+            if (CheckFormatMultisample(dxgiFormat, 16))
+            { sampleCounts |= (1 << 4); }
+            if (CheckFormatMultisample(dxgiFormat, 32))
+            { sampleCounts |= (1 << 5); }
 
             properties = new PixelFormatProperties(
                 MaxTextureDimension,
@@ -317,105 +323,93 @@ namespace Veldrid.D3D11
             return true;
         }
 
-        protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
+        protected override MappedResource MapCore(
+            MappableResource resource,
+            uint offsetInBytes,
+            uint sizeInBytes,
+            MapMode mode,
+            uint subresource)
         {
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
             lock (_mappedResourceLock)
             {
-                if (_mappedResources.TryGetValue(key, out MappedResourceInfo info))
+                if (_mappedResources.ContainsKey(key))
                 {
-                    if (info.Mode != mode)
-                    {
-                        throw new VeldridException("The given resource was already mapped with a different MapMode.");
-                    }
+                    throw new VeldridException("The given resource is already mapped.");
+                }
 
-                    info.RefCount += 1;
-                    _mappedResources[key] = info;
+                // No current mapping exists -- create one.
+
+                MappedResource mappedResource;
+                if (resource is D3D11Buffer buffer)
+                {
+                    lock (_immediateContextLock)
+                    {
+                        MappedSubresource msr = _immediateContext.Map(
+                            buffer.Buffer,
+                            0,
+                            D3D11Formats.VdToD3D11MapMode((buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic, mode),
+                            Vortice.Direct3D11.MapFlags.None);
+
+                        mappedResource = new MappedResource(resource, mode, msr.DataPointer + (nint)offsetInBytes, offsetInBytes, sizeInBytes);
+                        _mappedResources.Add(key, mappedResource);
+                    }
                 }
                 else
                 {
-                    // No current mapping exists -- create one.
-
-                    if (resource is D3D11Buffer buffer)
+                    D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
+                    lock (_immediateContextLock)
                     {
-                        lock (_immediateContextLock)
-                        {
-                            MappedSubresource msr = _immediateContext.Map(
-                                buffer.Buffer,
-                                0,
-                                D3D11Formats.VdToD3D11MapMode((buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic, mode),
-                                Vortice.Direct3D11.MapFlags.None);
+                        Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
+                        MappedSubresource msr = _immediateContext.Map(
+                            texture.DeviceTexture,
+                            (int)mipLevel,
+                            (int)arrayLayer,
+                            D3D11Formats.VdToD3D11MapMode(false, mode),
+                            Vortice.Direct3D11.MapFlags.None,
+                            out int mipSize);
 
-                            info.MappedResource = new MappedResource(resource, mode, msr.DataPointer, buffer.SizeInBytes);
-                            info.RefCount = 1;
-                            info.Mode = mode;
-                            _mappedResources.Add(key, info);
-                        }
-                    }
-                    else
-                    {
-                        D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
-                        lock (_immediateContextLock)
-                        {
-                            Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
-                            MappedSubresource msr = _immediateContext.Map(
-                                texture.DeviceTexture,
-                                (int)mipLevel,
-                                (int)arrayLayer,
-                                D3D11Formats.VdToD3D11MapMode(false, mode),
-                                Vortice.Direct3D11.MapFlags.None,
-                                out int mipSize);
-
-                            info.MappedResource = new MappedResource(
-                                resource,
-                                mode,
-                                msr.DataPointer,
-                                texture.Height * (uint)msr.RowPitch,
-                                subresource,
-                                (uint)msr.RowPitch,
-                                (uint)msr.DepthPitch);
-                            info.RefCount = 1;
-                            info.Mode = mode;
-                            _mappedResources.Add(key, info);
-                        }
+                        mappedResource = new MappedResource(
+                            resource,
+                            mode,
+                            msr.DataPointer + (nint)offsetInBytes,
+                            offsetInBytes,
+                            sizeInBytes,
+                            subresource,
+                            (uint)msr.RowPitch,
+                            (uint)msr.DepthPitch);
+                        _mappedResources.Add(key, mappedResource);
                     }
                 }
-
-                return info.MappedResource;
+                return mappedResource;
             }
         }
 
         protected override void UnmapCore(MappableResource resource, uint subresource)
         {
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
-            bool commitUnmap;
 
             lock (_mappedResourceLock)
             {
-                if (!_mappedResources.TryGetValue(key, out MappedResourceInfo info))
+                if (!_mappedResources.ContainsKey(key))
                 {
                     throw new VeldridException($"The given resource ({resource}) is not mapped.");
                 }
 
-                info.RefCount -= 1;
-                commitUnmap = info.RefCount == 0;
-                if (commitUnmap)
+                lock (_immediateContextLock)
                 {
-                    lock (_immediateContextLock)
+                    if (resource is D3D11Buffer buffer)
                     {
-                        if (resource is D3D11Buffer buffer)
-                        {
-                            _immediateContext.Unmap(buffer.Buffer, 0);
-                        }
-                        else
-                        {
-                            D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
-                            _immediateContext.Unmap(texture.DeviceTexture, (int)subresource);
-                        }
-
-                        bool result = _mappedResources.Remove(key);
-                        Debug.Assert(result);
+                        _immediateContext.Unmap(buffer.Buffer, 0);
                     }
+                    else
+                    {
+                        D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
+                        _immediateContext.Unmap(texture.DeviceTexture, (int)subresource);
+                    }
+
+                    bool result = _mappedResources.Remove(key);
+                    Debug.Assert(result);
                 }
             }
         }
@@ -433,7 +427,7 @@ namespace Veldrid.D3D11
             bool isUniformBuffer = (buffer.Usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer;
             bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
             bool useUpdateSubresource = (!isDynamic && !isStaging) && (!isUniformBuffer || updateFullBuffer);
-            bool useMap = (isDynamic && updateFullBuffer) || isStaging;
+            bool useMap = isDynamic || isStaging;
 
             if (useUpdateSubresource)
             {
@@ -451,19 +445,8 @@ namespace Veldrid.D3D11
             }
             else if (useMap)
             {
-                MappedResource mr = MapCore(buffer, MapMode.Write, 0);
-                if (sizeInBytes < 1024)
-                {
-                    Unsafe.CopyBlock((byte*)mr.Data + bufferOffsetInBytes, source.ToPointer(), sizeInBytes);
-                }
-                else
-                {
-                    Buffer.MemoryCopy(
-                        source.ToPointer(),
-                        (byte*)mr.Data + bufferOffsetInBytes,
-                        buffer.SizeInBytes,
-                        sizeInBytes);
-                }
+                MappedResource mr = MapCore(buffer, bufferOffsetInBytes, sizeInBytes, MapMode.Write, 0);
+                Unsafe.CopyBlock((byte*)mr.Data, source.ToPointer(), sizeInBytes);
                 UnmapCore(buffer, 0);
             }
             else
@@ -524,8 +507,7 @@ namespace Veldrid.D3D11
             if (useMap)
             {
                 uint subresource = texture.CalculateSubresource(mipLevel, arrayLayer);
-                MappedResourceCacheKey key = new MappedResourceCacheKey(texture, subresource);
-                MappedResource map = MapCore(texture, MapMode.Write, subresource);
+                MappedResource map = MapCore(texture, 0, texture.GetSizeInBytes(subresource), MapMode.Write, subresource);
 
                 uint denseRowSize = FormatHelpers.GetRowPitch(width, texture.Format);
                 uint denseSliceSize = FormatHelpers.GetDepthPitch(denseRowSize, height, texture.Format);

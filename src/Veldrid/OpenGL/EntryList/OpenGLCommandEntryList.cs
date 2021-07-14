@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.OpenGL.EntryList
 {
-    internal unsafe class OpenGLCommandEntryList : IDisposable
+    internal unsafe sealed class OpenGLCommandEntryList : IDisposable
     {
         private readonly StagingMemoryPool _memoryPool;
         private readonly List<EntryStorageBlock> _blocks = new List<EntryStorageBlock>();
@@ -167,26 +167,31 @@ namespace Veldrid.OpenGL.EntryList
                         executor.Begin();
                         currentOffset += (uint)Unsafe.SizeOf<BeginEntry>();
                         break;
+
                     case ClearColorTargetID:
                         ClearColorTargetEntry ccte = Unsafe.ReadUnaligned<ClearColorTargetEntry>(entryBasePtr);
                         executor.ClearColorTarget(ccte.Index, ccte.ClearColor);
                         currentOffset += (uint)Unsafe.SizeOf<ClearColorTargetEntry>();
                         break;
+
                     case ClearDepthTargetID:
                         ClearDepthTargetEntry cdte = Unsafe.ReadUnaligned<ClearDepthTargetEntry>(entryBasePtr);
                         executor.ClearDepthStencil(cdte.Depth, cdte.Stencil);
                         currentOffset += (uint)Unsafe.SizeOf<ClearDepthTargetEntry>();
                         break;
+
                     case DrawEntryID:
                         DrawEntry de = Unsafe.ReadUnaligned<DrawEntry>(entryBasePtr);
                         executor.Draw(de.VertexCount, de.InstanceCount, de.VertexStart, de.InstanceStart);
                         currentOffset += (uint)Unsafe.SizeOf<DrawEntry>();
                         break;
+
                     case DrawIndexedEntryID:
                         DrawIndexedEntry die = Unsafe.ReadUnaligned<DrawIndexedEntry>(entryBasePtr);
                         executor.DrawIndexed(die.IndexCount, die.InstanceCount, die.IndexStart, die.VertexOffset, die.InstanceStart);
                         currentOffset += (uint)Unsafe.SizeOf<DrawIndexedEntry>();
                         break;
+
                     case DrawIndirectEntryID:
                         DrawIndirectEntry drawIndirectEntry = Unsafe.ReadUnaligned<DrawIndirectEntry>(entryBasePtr);
                         executor.DrawIndirect(
@@ -196,40 +201,48 @@ namespace Veldrid.OpenGL.EntryList
                             drawIndirectEntry.Stride);
                         currentOffset += (uint)Unsafe.SizeOf<DrawIndirectEntry>();
                         break;
+
                     case DrawIndexedIndirectEntryID:
                         DrawIndexedIndirectEntry diie = Unsafe.ReadUnaligned<DrawIndexedIndirectEntry>(entryBasePtr);
                         executor.DrawIndexedIndirect(diie.IndirectBuffer.Get(_resourceList), diie.Offset, diie.DrawCount, diie.Stride);
                         currentOffset += (uint)Unsafe.SizeOf<DrawIndexedIndirectEntry>();
                         break;
+
                     case DispatchEntryID:
                         DispatchEntry dispatchEntry = Unsafe.ReadUnaligned<DispatchEntry>(entryBasePtr);
                         executor.Dispatch(dispatchEntry.GroupCountX, dispatchEntry.GroupCountY, dispatchEntry.GroupCountZ);
                         currentOffset += (uint)Unsafe.SizeOf<DispatchEntry>();
                         break;
+
                     case DispatchIndirectEntryID:
                         DispatchIndirectEntry dispatchIndir = Unsafe.ReadUnaligned<DispatchIndirectEntry>(entryBasePtr);
                         executor.DispatchIndirect(dispatchIndir.IndirectBuffer.Get(_resourceList), dispatchIndir.Offset);
                         currentOffset += (uint)Unsafe.SizeOf<DispatchIndirectEntry>();
                         break;
+
                     case EndEntryID:
                         executor.End();
                         currentOffset += (uint)Unsafe.SizeOf<EndEntry>();
                         break;
+
                     case SetFramebufferEntryID:
                         SetFramebufferEntry sfbe = Unsafe.ReadUnaligned<SetFramebufferEntry>(entryBasePtr);
                         executor.SetFramebuffer(sfbe.Framebuffer.Get(_resourceList));
                         currentOffset += (uint)Unsafe.SizeOf<SetFramebufferEntry>();
                         break;
+
                     case SetIndexBufferEntryID:
                         SetIndexBufferEntry sibe = Unsafe.ReadUnaligned<SetIndexBufferEntry>(entryBasePtr);
                         executor.SetIndexBuffer(sibe.Buffer.Get(_resourceList), sibe.Format, sibe.Offset);
                         currentOffset += (uint)Unsafe.SizeOf<SetIndexBufferEntry>();
                         break;
+
                     case SetPipelineEntryID:
                         SetPipelineEntry spe = Unsafe.ReadUnaligned<SetPipelineEntry>(entryBasePtr);
                         executor.SetPipeline(spe.Pipeline.Get(_resourceList));
                         currentOffset += (uint)Unsafe.SizeOf<SetPipelineEntry>();
                         break;
+
                     case SetResourceSetEntryID:
                         SetResourceSetEntry srse = Unsafe.ReadUnaligned<SetResourceSetEntry>(entryBasePtr);
                         ResourceSet rs = srse.ResourceSet.Get(_resourceList);
@@ -252,21 +265,25 @@ namespace Veldrid.OpenGL.EntryList
                         }
                         currentOffset += (uint)Unsafe.SizeOf<SetResourceSetEntry>();
                         break;
+
                     case SetScissorRectEntryID:
                         SetScissorRectEntry ssre = Unsafe.ReadUnaligned<SetScissorRectEntry>(entryBasePtr);
                         executor.SetScissorRect(ssre.Index, ssre.X, ssre.Y, ssre.Width, ssre.Height);
                         currentOffset += (uint)Unsafe.SizeOf<SetScissorRectEntry>();
                         break;
+
                     case SetVertexBufferEntryID:
                         SetVertexBufferEntry svbe = Unsafe.ReadUnaligned<SetVertexBufferEntry>(entryBasePtr);
                         executor.SetVertexBuffer(svbe.Index, svbe.Buffer.Get(_resourceList), svbe.Offset);
                         currentOffset += (uint)Unsafe.SizeOf<SetVertexBufferEntry>();
                         break;
+
                     case SetViewportEntryID:
                         SetViewportEntry svpe = Unsafe.ReadUnaligned<SetViewportEntry>(entryBasePtr);
                         executor.SetViewport(svpe.Index, ref svpe.Viewport);
                         currentOffset += (uint)Unsafe.SizeOf<SetViewportEntry>();
                         break;
+
                     case UpdateBufferEntryID:
                         UpdateBufferEntry ube = Unsafe.ReadUnaligned<UpdateBufferEntry>(entryBasePtr);
                         byte* dataPtr = (byte*)ube.StagingBlock.Data;
@@ -276,6 +293,7 @@ namespace Veldrid.OpenGL.EntryList
                             (IntPtr)dataPtr, ube.StagingBlockSize);
                         currentOffset += (uint)Unsafe.SizeOf<UpdateBufferEntry>();
                         break;
+
                     case CopyBufferEntryID:
                         CopyBufferEntry cbe = Unsafe.ReadUnaligned<CopyBufferEntry>(entryBasePtr);
                         executor.CopyBuffer(
@@ -286,6 +304,7 @@ namespace Veldrid.OpenGL.EntryList
                             cbe.SizeInBytes);
                         currentOffset += (uint)Unsafe.SizeOf<CopyBufferEntry>();
                         break;
+
                     case CopyTextureEntryID:
                         CopyTextureEntry cte = Unsafe.ReadUnaligned<CopyTextureEntry>(entryBasePtr);
                         executor.CopyTexture(
@@ -301,30 +320,36 @@ namespace Veldrid.OpenGL.EntryList
                             cte.LayerCount);
                         currentOffset += (uint)Unsafe.SizeOf<CopyTextureEntry>();
                         break;
+
                     case ResolveTextureEntryID:
                         ResolveTextureEntry rte = Unsafe.ReadUnaligned<ResolveTextureEntry>(entryBasePtr);
                         executor.ResolveTexture(rte.Source.Get(_resourceList), rte.Destination.Get(_resourceList));
                         currentOffset += (uint)Unsafe.SizeOf<ResolveTextureEntry>();
                         break;
+
                     case GenerateMipmapsEntryID:
                         GenerateMipmapsEntry gme = Unsafe.ReadUnaligned<GenerateMipmapsEntry>(entryBasePtr);
                         executor.GenerateMipmaps(gme.Texture.Get(_resourceList));
                         currentOffset += (uint)Unsafe.SizeOf<GenerateMipmapsEntry>();
                         break;
+
                     case PushDebugGroupEntryID:
                         PushDebugGroupEntry pdge = Unsafe.ReadUnaligned<PushDebugGroupEntry>(entryBasePtr);
                         executor.PushDebugGroup(pdge.Name.Get(_resourceList));
                         currentOffset += (uint)Unsafe.SizeOf<PushDebugGroupEntry>();
                         break;
+
                     case PopDebugGroupEntryID:
                         executor.PopDebugGroup();
                         currentOffset += (uint)Unsafe.SizeOf<PopDebugGroupEntry>();
                         break;
+
                     case InsertDebugMarkerEntryID:
                         InsertDebugMarkerEntry idme = Unsafe.ReadUnaligned<InsertDebugMarkerEntry>(entryBasePtr);
                         executor.InsertDebugMarker(idme.Name.Get(_resourceList));
                         currentOffset += (uint)Unsafe.SizeOf<InsertDebugMarkerEntry>();
                         break;
+
                     default:
                         throw new InvalidOperationException("Invalid entry ID: " + id);
                 }

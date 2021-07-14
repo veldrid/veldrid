@@ -6,34 +6,45 @@ namespace Veldrid
     /// <summary>
     /// A structure describing the layout of a mapped <see cref="MappableResource"/> object.
     /// </summary>
-    public struct MappedResource
+    public readonly struct MappedResource
     {
         /// <summary>
         /// The resource which has been mapped.
         /// </summary>
         public readonly MappableResource Resource;
+
         /// <summary>
         /// Identifies the <see cref="MapMode"/> that was used to map the resource.
         /// </summary>
         public readonly MapMode Mode;
+
         /// <summary>
         /// A pointer to the start of the mapped data region.
         /// </summary>
         public readonly IntPtr Data;
+
+        /// <summary>
+        /// The offset, in bytes, from the beginning of the mapped resource.
+        /// </summary>
+        public readonly uint OffsetInBytes;
+
         /// <summary>
         /// The total size, in bytes, of the mapped data region.
         /// </summary>
         public readonly uint SizeInBytes;
+
         /// <summary>
         /// For mapped <see cref="Texture"/> resources, this is the subresource which is mapped.
         /// For <see cref="DeviceBuffer"/> resources, this field has no meaning.
         /// </summary>
         public readonly uint Subresource;
+
         /// <summary>
         /// For mapped <see cref="Texture"/> resources, this is the number of bytes between each row of texels.
         /// For <see cref="DeviceBuffer"/> resources, this field has no meaning.
         /// </summary>
         public readonly uint RowPitch;
+
         /// <summary>
         /// For mapped <see cref="Texture"/> resources, this is the number of bytes between each depth slice of a 3D Texture.
         /// For <see cref="DeviceBuffer"/> resources or 2D Textures, this field has no meaning.
@@ -44,6 +55,7 @@ namespace Veldrid
             MappableResource resource,
             MapMode mode,
             IntPtr data,
+            uint offsetInBytes,
             uint sizeInBytes,
             uint subresource,
             uint rowPitch,
@@ -52,17 +64,19 @@ namespace Veldrid
             Resource = resource;
             Mode = mode;
             Data = data;
+            OffsetInBytes = offsetInBytes;
             SizeInBytes = sizeInBytes;
             Subresource = subresource;
             RowPitch = rowPitch;
             DepthPitch = depthPitch;
         }
 
-        internal MappedResource(MappableResource resource, MapMode mode, IntPtr data, uint sizeInBytes)
+        internal MappedResource(MappableResource resource, MapMode mode, IntPtr data, uint offsetInBytes, uint sizeInBytes)
         {
             Resource = resource;
             Mode = mode;
             Data = data;
+            OffsetInBytes = offsetInBytes;
             SizeInBytes = sizeInBytes;
 
             Subresource = 0;
@@ -76,7 +90,7 @@ namespace Veldrid
     /// mapped resource.
     /// </summary>
     /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
-    public unsafe struct MappedResourceView<T> where T : struct
+    public unsafe readonly struct MappedResourceView<T> where T : unmanaged
     {
         /// <summary>
         /// The <see cref="MappedResource"/> that this instance views.
@@ -85,7 +99,7 @@ namespace Veldrid
         /// <summary>
         /// The total size in bytes of the mapped resource.
         /// </summary>
-        public readonly uint SizeInBytes;
+        public readonly uint SizeInBytes => MappedResource.SizeInBytes;
         /// <summary>
         /// The total number of structures that is contained in the resource. This is effectively the total number of bytes
         /// divided by the size of the structure type.
@@ -99,8 +113,7 @@ namespace Veldrid
         public MappedResourceView(MappedResource rawResource)
         {
             MappedResource = rawResource;
-            SizeInBytes = rawResource.SizeInBytes;
-            Count = (int)(SizeInBytes / Unsafe.SizeOf<T>());
+            Count = (int)(MappedResource.SizeInBytes / (uint)Unsafe.SizeOf<T>());
         }
 
         /// <summary>
@@ -112,12 +125,6 @@ namespace Veldrid
         {
             get
             {
-                if (index >= Count || index < 0)
-                {
-                    throw new IndexOutOfRangeException(
-                        $"Given index ({index}) must be non-negative and less than Count ({Count}).");
-                }
-
                 byte* ptr = (byte*)MappedResource.Data + (index * Unsafe.SizeOf<T>());
                 return ref Unsafe.AsRef<T>(ptr);
             }
@@ -132,12 +139,6 @@ namespace Veldrid
         {
             get
             {
-                if (index >= Count)
-                {
-                    throw new IndexOutOfRangeException(
-                        $"Given index ({index}) must be less than Count ({Count}).");
-                }
-
                 byte* ptr = (byte*)MappedResource.Data + (index * Unsafe.SizeOf<T>());
                 return ref Unsafe.AsRef<T>(ptr);
             }

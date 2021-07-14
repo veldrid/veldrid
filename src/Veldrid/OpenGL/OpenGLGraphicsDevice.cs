@@ -51,7 +51,7 @@ namespace Veldrid.OpenGL
         private uint _minSsboOffsetAlignment;
 
         private readonly StagingMemoryPool _stagingMemoryPool = new StagingMemoryPool();
-        private BlockingCollection<ExecutionThreadWorkItem> _workItems;
+        private Queue<ExecutionThreadWorkItem> _workItems;
         private ExecutionThread _executionThread;
         private readonly object _commandListDisposalLock = new object();
         private readonly Dictionary<OpenGLCommandList, int> _submittedCommandListCounts
@@ -59,8 +59,8 @@ namespace Veldrid.OpenGL
         private readonly HashSet<OpenGLCommandList> _commandListsToDispose = new HashSet<OpenGLCommandList>();
 
         private readonly object _mappedResourceLock = new object();
-        private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfoWithStaging> _mappedResources
-            = new Dictionary<MappedResourceCacheKey, MappedResourceInfoWithStaging>();
+        private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
+            = new Dictionary<MappedResourceCacheKey, MappedResourceInfo>();
 
         private readonly object _resetEventsLock = new object();
         private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
@@ -317,7 +317,7 @@ namespace Veldrid.OpenGL
                 _swapchainFramebuffer,
                 platformInfo.ResizeSwapchain);
 
-            _workItems = new BlockingCollection<ExecutionThreadWorkItem>(new ConcurrentQueue<ExecutionThreadWorkItem>());
+            _workItems = new Queue<ExecutionThreadWorkItem>();
             platformInfo.ClearCurrentContext();
             _executionThread = new ExecutionThread(this, _workItems, _makeCurrent, _glContext);
             _openglInfo = new BackendInfoOpenGL(this);
@@ -862,25 +862,18 @@ namespace Veldrid.OpenGL
             return true;
         }
 
-        protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
+        protected override MappedResource MapCore(
+            MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
         {
             MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
             lock (_mappedResourceLock)
             {
-                if (_mappedResources.TryGetValue(key, out MappedResourceInfoWithStaging info))
+                if (_mappedResources.ContainsKey(key))
                 {
-                    if (info.Mode != mode)
-                    {
-                        throw new VeldridException("The given resource was already mapped with a different MapMode.");
-                    }
-
-                    info.RefCount += 1;
-                    _mappedResources[key] = info;
-                    return info.MappedResource;
+                    throw new VeldridException("The given resource is already mapped.");
                 }
             }
-
-            return _executionThread.Map(resource, mode, subresource);
+            return _executionThread.Map(resource, offsetInBytes, sizeInBytes, mode, subresource);
         }
 
         protected override void UnmapCore(MappableResource resource, uint subresource)
@@ -1125,7 +1118,7 @@ namespace Veldrid.OpenGL
         private class ExecutionThread
         {
             private readonly OpenGLGraphicsDevice _gd;
-            private readonly BlockingCollection<ExecutionThreadWorkItem> _workItems;
+            private readonly Queue<ExecutionThreadWorkItem> _workItems;
             private readonly Action<IntPtr> _makeCurrent;
             private readonly IntPtr _context;
             private bool _terminated;
@@ -1134,7 +1127,7 @@ namespace Veldrid.OpenGL
 
             public ExecutionThread(
                 OpenGLGraphicsDevice gd,
-                BlockingCollection<ExecutionThreadWorkItem> workItems,
+                Queue<ExecutionThreadWorkItem> workItems,
                 Action<IntPtr> makeCurrent,
                 IntPtr context)
             {
@@ -1152,12 +1145,21 @@ namespace Veldrid.OpenGL
                 _makeCurrent(_context);
                 while (!_terminated)
                 {
-                    ExecutionThreadWorkItem workItem = _workItems.Take();
-                    ExecuteWorkItem(workItem);
+                    bool hasItem;
+                    ExecutionThreadWorkItem workItem;
+                    lock (_workItems)
+                    {
+                        hasItem = _workItems.TryDequeue(out workItem);
+                    }
+
+                    if (hasItem)
+                    {
+                        ExecuteWorkItem(ref workItem);
+                    }
                 }
             }
 
-            private void ExecuteWorkItem(ExecutionThreadWorkItem workItem)
+            private void ExecuteWorkItem(ref ExecutionThreadWorkItem workItem)
             {
                 try
                 {
@@ -1165,7 +1167,7 @@ namespace Veldrid.OpenGL
                     {
                         case WorkItemType.ExecuteList:
                         {
-                            OpenGLCommandEntryList list = (OpenGLCommandEntryList)workItem.Object0;
+                            OpenGLCommandEntryList list = Unsafe.As<OpenGLCommandEntryList>(workItem.Object0);
                             try
                             {
                                 list.ExecuteAll(_gd._commandExecutor);
@@ -1179,29 +1181,33 @@ namespace Veldrid.OpenGL
                             }
                         }
                         break;
+
                         case WorkItemType.Map:
                         {
-                            MappableResource resourceToMap = (MappableResource)workItem.Object0;
-                            ManualResetEventSlim mre = (ManualResetEventSlim)workItem.Object1;
+                            MappableResource resourceToMap = Unsafe.As<MappableResource>(workItem.Object0);
+                            ManualResetEventSlim mre = Unsafe.As<ManualResetEventSlim>(workItem.Object1);
 
                             MapParams* resultPtr = (MapParams*)Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
 
-                            if (resultPtr->Map)
-                            {
-                                ExecuteMapResource(
-                                    resourceToMap,
-                                    mre,
-                                    resultPtr);
-                            }
-                            else
-                            {
-                                ExecuteUnmapResource(resourceToMap, resultPtr->Subresource, mre);
-                            }
+                            ExecuteMapResource(
+                                resourceToMap,
+                                mre,
+                                resultPtr);
                         }
                         break;
+
+                        case WorkItemType.Unmap:
+                        {
+                            MappableResource resourceToMap = Unsafe.As<MappableResource>(workItem.Object0);
+                            uint subresource = workItem.UInt0;
+
+                            ExecuteUnmapResource(resourceToMap, subresource);
+                        }
+                        break;
+
                         case WorkItemType.UpdateBuffer:
                         {
-                            DeviceBuffer updateBuffer = (DeviceBuffer)workItem.Object0;
+                            DeviceBuffer updateBuffer = Unsafe.As<DeviceBuffer>(workItem.Object0);
                             uint offsetInBytes = workItem.UInt0;
                             StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
 
@@ -1214,8 +1220,9 @@ namespace Veldrid.OpenGL
                             _gd.StagingMemoryPool.Free(stagingBlock);
                         }
                         break;
+
                         case WorkItemType.UpdateTexture:
-                            Texture texture = (Texture)workItem.Object0;
+                            Texture texture = Unsafe.As<Texture>(workItem.Object0);
                             StagingMemoryPool pool = _gd.StagingMemoryPool;
                             StagingBlock argBlock = pool.RetrieveById(workItem.UInt0);
                             StagingBlock textureData = pool.RetrieveById(workItem.UInt1);
@@ -1228,11 +1235,13 @@ namespace Veldrid.OpenGL
                             pool.Free(argBlock);
                             pool.Free(textureData);
                             break;
+
                         case WorkItemType.GenericAction:
                         {
-                            ((Action)workItem.Object0)();
+                            Unsafe.As<Action>(workItem.Object0).Invoke();
                         }
                         break;
+
                         case WorkItemType.TerminateAction:
                         {
                             // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
@@ -1249,18 +1258,21 @@ namespace Veldrid.OpenGL
                             _terminated = true;
                         }
                         break;
+
                         case WorkItemType.SetSyncToVerticalBlank:
                         {
                             bool value = workItem.UInt0 == 1 ? true : false;
                             _gd._setSyncToVBlank(value);
                         }
                         break;
+
                         case WorkItemType.SwapBuffers:
                         {
                             _gd._swapBuffers();
                             _gd.FlushDisposables();
                         }
                         break;
+
                         case WorkItemType.WaitForIdle:
                         {
                             _gd.FlushDisposables();
@@ -1270,12 +1282,13 @@ namespace Veldrid.OpenGL
                                 glFlush();
                                 glFinish();
                             }
-                            ((ManualResetEventSlim)workItem.Object0).Set();
+                            Unsafe.As<ManualResetEventSlim>(workItem.Object0).Set();
                         }
                         break;
+
                         case WorkItemType.InitializeResource:
                         {
-                            InitializeResourceInfo info = (InitializeResourceInfo)workItem.Object0;
+                            InitializeResourceInfo info = Unsafe.As<InitializeResourceInfo>(workItem.Object0);
                             try
                             {
                                 info.DeferredResource.EnsureResourcesCreated();
@@ -1290,6 +1303,7 @@ namespace Veldrid.OpenGL
                             }
                         }
                         break;
+
                         default:
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);
                     }
@@ -1324,7 +1338,8 @@ namespace Veldrid.OpenGL
                             BufferAccessMask accessMask = OpenGLFormats.VdToGLMapMode(mode);
                             if (_gd.Extensions.ARB_DirectStateAccess)
                             {
-                                mappedPtr = glMapNamedBufferRange(buffer.Buffer, IntPtr.Zero, buffer.SizeInBytes, accessMask);
+                                mappedPtr = glMapNamedBufferRange(
+                                    buffer.Buffer, (IntPtr)result->OffsetInBytes, result->SizeInBytes, accessMask);
                                 CheckLastError();
                             }
                             else
@@ -1332,21 +1347,21 @@ namespace Veldrid.OpenGL
                                 glBindBuffer(BufferTarget.CopyWriteBuffer, buffer.Buffer);
                                 CheckLastError();
 
-                                mappedPtr = glMapBufferRange(BufferTarget.CopyWriteBuffer, IntPtr.Zero, (IntPtr)buffer.SizeInBytes, accessMask);
+                                mappedPtr = glMapBufferRange(
+                                    BufferTarget.CopyWriteBuffer, (IntPtr)result->OffsetInBytes, (IntPtr)result->SizeInBytes, accessMask);
                                 CheckLastError();
                             }
 
-                            MappedResourceInfoWithStaging info = new MappedResourceInfoWithStaging();
+                            MappedResourceInfo info = new MappedResourceInfo();
                             info.MappedResource = new MappedResource(
                                 resource,
                                 mode,
                                 (IntPtr)mappedPtr,
-                                buffer.SizeInBytes);
-                            info.RefCount = 1;
-                            info.Mode = mode;
+                                result->OffsetInBytes,
+                                result->SizeInBytes);
                             _gd._mappedResources.Add(key, info);
+
                             result->Data = (IntPtr)mappedPtr;
-                            result->DataSize = buffer.SizeInBytes;
                             result->RowPitch = 0;
                             result->DepthPitch = 0;
                             result->Succeeded = true;
@@ -1493,8 +1508,8 @@ namespace Veldrid.OpenGL
                                             glGetCompressedTexImage(texture.TextureTarget, (int)mipLevel, fullBlock.Data);
                                             CheckLastError();
                                         }
-                                        byte* sliceStart = (byte*)fullBlock.Data + (arrayLayer * subresourceSize);
-                                        Buffer.MemoryCopy(sliceStart, block.Data, subresourceSize, subresourceSize);
+                                        byte* sliceStart = (byte*)fullBlock.Data + (arrayLayer * subresourceSize) + result->OffsetInBytes;
+                                        Buffer.MemoryCopy(sliceStart, block.Data, subresourceSize, result->SizeInBytes);
                                         _gd._stagingMemoryPool.Free(fullBlock);
                                     }
                                     else
@@ -1528,21 +1543,19 @@ namespace Veldrid.OpenGL
 
                             uint rowPitch = FormatHelpers.GetRowPitch(mipWidth, texture.Format);
                             uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, mipHeight, texture.Format);
-                            MappedResourceInfoWithStaging info = new MappedResourceInfoWithStaging();
+                            MappedResourceInfo info = new MappedResourceInfo();
                             info.MappedResource = new MappedResource(
                                 resource,
                                 mode,
                                 (IntPtr)block.Data,
-                                subresourceSize,
+                                result->OffsetInBytes,
+                                result->SizeInBytes,
                                 subresource,
                                 rowPitch,
                                 depthPitch);
-                            info.RefCount = 1;
-                            info.Mode = mode;
                             info.StagingBlock = block;
                             _gd._mappedResources.Add(key, info);
                             result->Data = (IntPtr)block.Data;
-                            result->DataSize = subresourceSize;
                             result->RowPitch = rowPitch;
                             result->DepthPitch = depthPitch;
                             result->Succeeded = true;
@@ -1560,13 +1573,12 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            private void ExecuteUnmapResource(MappableResource resource, uint subresource, ManualResetEventSlim mre)
+            private void ExecuteUnmapResource(MappableResource resource, uint subresource)
             {
                 MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
                 lock (_gd._mappedResourceLock)
                 {
-                    MappedResourceInfoWithStaging info = _gd._mappedResources[key];
-                    if (info.RefCount == 1)
+                    if (_gd._mappedResources.TryGetValue(key, out MappedResourceInfo info))
                     {
                         if (resource is OpenGLBuffer buffer)
                         {
@@ -1588,7 +1600,8 @@ namespace Veldrid.OpenGL
                         {
                             OpenGLTexture texture = Util.AssertSubtype<MappableResource, OpenGLTexture>(resource);
 
-                            if (info.Mode == MapMode.Write || info.Mode == MapMode.ReadWrite)
+                            if (info.MappedResource.Mode == MapMode.Write ||
+                                info.MappedResource.Mode == MapMode.ReadWrite)
                             {
                                 Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
                                 Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
@@ -1610,8 +1623,6 @@ namespace Veldrid.OpenGL
                         _gd._mappedResources.Remove(key);
                     }
                 }
-
-                mre.Set();
             }
 
             private void CheckExceptions()
@@ -1632,18 +1643,25 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            public MappedResource Map(MappableResource resource, MapMode mode, uint subresource)
+            public MappedResource Map(
+                MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
             {
                 CheckExceptions();
 
                 MapParams mrp = new MapParams();
-                mrp.Map = true;
+                mrp.OffsetInBytes = offsetInBytes;
+                mrp.SizeInBytes = sizeInBytes;
                 mrp.Subresource = subresource;
                 mrp.MapMode = mode;
 
                 ManualResetEventSlim mre = new ManualResetEventSlim(false);
-                _workItems.Add(new ExecutionThreadWorkItem(resource, &mrp, mre));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(resource, &mrp, mre);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
                 mre.Wait();
+
                 if (!mrp.Succeeded)
                 {
                     throw new VeldridException("Failed to map OpenGL resource.");
@@ -1651,62 +1669,85 @@ namespace Veldrid.OpenGL
 
                 mre.Dispose();
 
-                return new MappedResource(resource, mode, mrp.Data, mrp.DataSize, mrp.Subresource, mrp.RowPitch, mrp.DepthPitch);
+                return new MappedResource(
+                    resource, mode, mrp.Data, mrp.OffsetInBytes, mrp.SizeInBytes, mrp.Subresource, mrp.RowPitch, mrp.DepthPitch);
             }
 
             internal void Unmap(MappableResource resource, uint subresource)
             {
                 CheckExceptions();
 
-                MapParams mrp = new MapParams();
-                mrp.Map = false;
-                mrp.Subresource = subresource;
-
-                ManualResetEventSlim mre = new ManualResetEventSlim(false);
-                _workItems.Add(new ExecutionThreadWorkItem(resource, &mrp, mre));
-                mre.Wait();
-                mre.Dispose();
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(resource, subresource);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
             }
 
             public void ExecuteCommands(OpenGLCommandEntryList entryList)
             {
                 CheckExceptions();
+
                 entryList.Parent.OnSubmitted(entryList);
-                _workItems.Add(new ExecutionThreadWorkItem(entryList));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(entryList);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
             }
 
             internal void UpdateBuffer(DeviceBuffer buffer, uint offsetInBytes, StagingBlock stagingBlock)
             {
                 CheckExceptions();
 
-                _workItems.Add(new ExecutionThreadWorkItem(buffer, offsetInBytes, stagingBlock));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(buffer, offsetInBytes, stagingBlock);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
             }
 
             internal void UpdateTexture(Texture texture, uint argBlockId, uint dataBlockId)
             {
                 CheckExceptions();
 
-                _workItems.Add(new ExecutionThreadWorkItem(texture, argBlockId, dataBlockId));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(texture, argBlockId, dataBlockId);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
             }
 
             internal void Run(Action a)
             {
                 CheckExceptions();
 
-                _workItems.Add(new ExecutionThreadWorkItem(a));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(a);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
             }
 
             internal void Terminate()
             {
                 CheckExceptions();
 
-                _workItems.Add(new ExecutionThreadWorkItem(WorkItemType.TerminateAction));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(WorkItemType.TerminateAction);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
             }
 
             internal void WaitForIdle()
             {
                 ManualResetEventSlim mre = new ManualResetEventSlim();
-                _workItems.Add(new ExecutionThreadWorkItem(mre, isFullFlush: false));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(mre, isFullFlush: false);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
                 mre.Wait();
                 mre.Dispose();
 
@@ -1715,18 +1756,30 @@ namespace Veldrid.OpenGL
 
             internal void SetSyncToVerticalBlank(bool value)
             {
-                _workItems.Add(new ExecutionThreadWorkItem(value));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(value);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
             }
 
             internal void SwapBuffers()
             {
-                _workItems.Add(new ExecutionThreadWorkItem(WorkItemType.SwapBuffers));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(WorkItemType.SwapBuffers);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
             }
 
             internal void FlushAndFinish()
             {
                 ManualResetEventSlim mre = new ManualResetEventSlim();
-                _workItems.Add(new ExecutionThreadWorkItem(mre, isFullFlush: true));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(mre, isFullFlush: true);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
                 mre.Wait();
                 mre.Dispose();
 
@@ -1736,7 +1789,11 @@ namespace Veldrid.OpenGL
             internal void InitializeResource(OpenGLDeferredResource deferredResource)
             {
                 InitializeResourceInfo info = new InitializeResourceInfo(deferredResource, new ManualResetEventSlim());
-                _workItems.Add(new ExecutionThreadWorkItem(info));
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(info);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
                 info.ResetEvent.Wait();
                 info.ResetEvent.Dispose();
 
@@ -1781,6 +1838,17 @@ namespace Veldrid.OpenGL
                 Object1 = resetEvent;
 
                 Util.PackIntPtr((IntPtr)mapResult, out UInt0, out UInt1);
+                UInt2 = 0;
+            }
+
+            public ExecutionThreadWorkItem(MappableResource resource, uint subresource)
+            {
+                Type = WorkItemType.Unmap;
+                Object0 = resource;
+                Object1 = null;
+
+                UInt0 = subresource;
+                UInt1 = 0;
                 UInt2 = 0;
             }
 
@@ -1876,19 +1944,17 @@ namespace Veldrid.OpenGL
         private struct MapParams
         {
             public MapMode MapMode;
+            public uint OffsetInBytes;
+            public uint SizeInBytes;
             public uint Subresource;
-            public bool Map;
             public bool Succeeded;
             public IntPtr Data;
-            public uint DataSize;
             public uint RowPitch;
             public uint DepthPitch;
         }
 
-        internal struct MappedResourceInfoWithStaging
+        internal struct MappedResourceInfo
         {
-            public int RefCount;
-            public MapMode Mode;
             public MappedResource MappedResource;
             public StagingBlock StagingBlock;
         }

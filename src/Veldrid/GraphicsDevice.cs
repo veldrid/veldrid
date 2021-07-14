@@ -283,9 +283,14 @@ namespace Veldrid
         /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
-        public MappedResource Map(MappableResource resource, MapMode mode) => Map(resource, mode, 0);
+        public MappedResource Map(MappableResource resource, MapMode mode)
+        {
+            return Map(resource, mode, 0);
+        }
+
         /// <summary>
-        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region.
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region. For Texture resources, this
+        /// overload maps the first subresource.
         /// </summary>
         /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
@@ -293,6 +298,22 @@ namespace Veldrid
         /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.</param>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
         public MappedResource Map(MappableResource resource, MapMode mode, uint subresource)
+        {
+            return Map(resource, 0, resource.GetSizeInBytes(subresource), mode, subresource);
+        }
+
+        /// <summary>
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region.
+        /// </summary>
+        /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="offsetInBytes">An offset, in bytes, from the beginning of the <see cref="MappableResource"/>'s storage, at
+        /// which data will be mapped.</param>
+        /// <param name="sizeInBytes">The total size of the mapped data, in bytes.</param>
+        /// <param name="mode">The <see cref="MapMode"/> to use.</param>
+        /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.
+        /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.</param>
+        /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
+        public MappedResource Map(MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
         {
 #if VALIDATE_USAGE
             if (resource is DeviceBuffer buffer)
@@ -309,7 +330,8 @@ namespace Veldrid
                 if ((mode == MapMode.Read || mode == MapMode.ReadWrite) && (buffer.Usage & BufferUsage.Staging) == 0)
                 {
                     throw new VeldridException(
-                        $"{nameof(MapMode)}.{nameof(MapMode.Read)} and {nameof(MapMode)}.{nameof(MapMode.ReadWrite)} can only be used on buffers created with {nameof(BufferUsage)}.{nameof(BufferUsage.Staging)}.");
+                        $"{nameof(MapMode)}.{nameof(MapMode.Read)} and {nameof(MapMode)}.{nameof(MapMode.ReadWrite)} " +
+                        $"can only be used on buffers created with {nameof(BufferUsage)}.{nameof(BufferUsage.Staging)}.");
                 }
             }
             else if (resource is Texture tex)
@@ -324,18 +346,24 @@ namespace Veldrid
                         "Subresource must be less than the number of subresources in the Texture being mapped.");
                 }
             }
+
+            uint totalSizeInBytes = resource.GetSizeInBytes(subresource);
+            if (offsetInBytes + sizeInBytes > totalSizeInBytes)
+            {
+                throw new VeldridException(
+                    $"The given offset {offsetInBytes} and size {sizeInBytes} exceed the size of the subresource {totalSizeInBytes}.");
+            }
 #endif
 
-            return MapCore(resource, mode, subresource);
+            return MapCore(resource, offsetInBytes, sizeInBytes, mode, subresource);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="resource"></param>
-        /// <param name="mode"></param>
-        /// <param name="subresource"></param>
-        /// <returns></returns>
-        protected abstract MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource);
+        private protected abstract MappedResource MapCore(
+            MappableResource resource,
+            uint bufferOffsetInBytes,
+            uint sizeInBytes,
+            MapMode mode,
+            uint subresource);
 
         /// <summary>
         /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
@@ -346,7 +374,28 @@ namespace Veldrid
         /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
         public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode) where T : unmanaged
-            => Map<T>(resource, mode, 0);
+        {
+            return Map<T>(resource, mode, 0);
+        }
+
+        /// <summary>
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
+        /// view over that region.
+        /// </summary>
+        /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="offsetInBytes">An offset, in bytes, from the beginning of the <see cref="MappableResource"/>'s storage, at
+        /// which data will be mapped.</param>
+        /// <param name="elementCount">The size of the mapped data, in elements of size <typeparamref name="T"/>.</param>
+        /// <param name="mode">The <see cref="MapMode"/> to use.</param>
+        /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.</param>
+        /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
+        /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
+        public MappedResourceView<T> Map<T>(MappableResource resource, uint offsetInBytes, uint elementCount, MapMode mode, uint subresource) where T : unmanaged
+        {
+            MappedResource mappedResource = Map(resource, offsetInBytes, elementCount * (uint)Unsafe.SizeOf<T>(), mode, subresource);
+            return new MappedResourceView<T>(mappedResource);
+        }
+
         /// <summary>
         /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
         /// view over that region.
@@ -474,12 +523,12 @@ namespace Veldrid
             fixed (T* pin = source)
             {
                 UpdateTextureCore(
-                texture,
-                (IntPtr)pin,
-                sizeInBytes,
-                x, y, z,
-                width, height, depth,
-                mipLevel, arrayLayer);
+                    texture,
+                    (IntPtr)pin,
+                    sizeInBytes,
+                    x, y, z,
+                    width, height, depth,
+                    mipLevel, arrayLayer);
             }
         }
 
@@ -529,7 +578,7 @@ namespace Veldrid
             {
                 if (x % 4 != 0 || y % 4 != 0 || height % 4 != 0 || width % 4 != 0)
                 {
-                    Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out _);
+                    Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight);
                     if (width != mipWidth && height != mipHeight)
                     {
                         throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");

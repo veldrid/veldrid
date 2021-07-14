@@ -384,43 +384,43 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(lastCB.NativePtr);
         }
 
-        protected override MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource)
+        protected override MappedResource MapCore(
+            MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
         {
             if (resource is MTLBuffer buffer)
             {
-                return MapBuffer(buffer, mode);
+                return MapBuffer(buffer, offsetInBytes, sizeInBytes, mode);
             }
             else
             {
                 MTLTexture texture = Util.AssertSubtype<MappableResource, MTLTexture>(resource);
-                return MapTexture(texture, mode, subresource);
+                return MapTexture(texture, offsetInBytes, sizeInBytes, mode, subresource);
             }
         }
 
-        private MappedResource MapBuffer(MTLBuffer buffer, MapMode mode)
+        private MappedResource MapBuffer(MTLBuffer buffer, uint offsetInBytes, uint sizeInBytes, MapMode mode)
         {
-            void* data = buffer.DeviceBuffer.contents();
+            byte* data = (byte*)buffer.DeviceBuffer.contents() + offsetInBytes;
             return new MappedResource(
                 buffer,
                 mode,
                 (IntPtr)data,
-                buffer.SizeInBytes,
+                offsetInBytes,
+                sizeInBytes,
                 0,
-                buffer.SizeInBytes,
-                buffer.SizeInBytes);
+                0,
+                0);
         }
 
-        private MappedResource MapTexture(MTLTexture texture, MapMode mode, uint subresource)
+        private MappedResource MapTexture(MTLTexture texture, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
         {
             Debug.Assert(!texture.StagingBuffer.IsNull);
-            void* data = texture.StagingBuffer.contents();
+            byte* data = (byte*)texture.StagingBuffer.contents() + offsetInBytes;
             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
-            Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
-            uint subresourceSize = texture.GetSubresourceSize(mipLevel, arrayLayer);
             texture.GetSubresourceLayout(mipLevel, arrayLayer, out uint rowPitch, out uint depthPitch);
             ulong offset = Util.ComputeSubresourceOffset(texture, mipLevel, arrayLayer);
-            byte* offsetPtr = (byte*)data + offset;
-            return new MappedResource(texture, mode, (IntPtr)offsetPtr, subresourceSize, subresource, rowPitch, depthPitch);
+            byte* offsetPtr = data + offset;
+            return new MappedResource(texture, mode, (IntPtr)offsetPtr, offsetInBytes, sizeInBytes, subresource, rowPitch, depthPitch);
         }
 
         protected override void PlatformDispose()

@@ -186,12 +186,15 @@ namespace Veldrid.MTL
                     }
                 }
 
-                for (uint i = 0; i < _graphicsResourceSetCount; i++)
+                int graphicsSetCount = (int)_graphicsResourceSetCount;
+                Span<BoundResourceSetInfo> graphicsSets = _graphicsResourceSets.AsSpan(0, graphicsSetCount);
+                Span<bool> graphicsSetsActive = _graphicsResourceSetsActive.AsSpan(0, graphicsSetCount);
+                for (int i = 0; i < graphicsSetCount; i++)
                 {
-                    if (!_graphicsResourceSetsActive[i])
+                    if (!graphicsSetsActive[i])
                     {
-                        ActivateGraphicsResourceSet(i, _graphicsResourceSets[i]);
-                        _graphicsResourceSetsActive[i] = true;
+                        ActivateGraphicsResourceSet((uint)i, ref graphicsSets[i]);
+                        graphicsSetsActive[i] = true;
                     }
                 }
 
@@ -252,12 +255,15 @@ namespace Veldrid.MTL
                 _cce.setComputePipelineState(_computePipeline.ComputePipelineState);
             }
 
-            for (uint i = 0; i < _computeResourceSetCount; i++)
+            int computeSetCount = (int)_computeResourceSetCount;
+            Span<BoundResourceSetInfo> computeSets = _computeResourceSets.AsSpan(0, computeSetCount);
+            Span<bool> computeSetsActive = _computeResourceSetsActive.AsSpan(0, computeSetCount);
+            for (int i = 0; i < computeSetCount; i++)
             {
-                if (!_computeResourceSetsActive[i])
+                if (!computeSetsActive[i])
                 {
-                    ActivateComputeResourceSet(i, _computeResourceSets[i]);
-                    _computeResourceSetsActive[i] = true;
+                    ActivateComputeResourceSet((uint)i, ref computeSets[i]);
+                    computeSetsActive[i] = true;
                 }
             }
         }
@@ -673,12 +679,13 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(rpDesc.NativePtr);
         }
 
-        protected override void SetComputeResourceSetCore(uint slot, ResourceSet set, ReadOnlySpan<uint> dynamicOffsets)
+        protected override void SetComputeResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (!_computeResourceSets[slot].Equals(set, dynamicOffsets))
+            ref BoundResourceSetInfo set = ref _computeResourceSets[slot];
+            if (!set.Equals(rs, dynamicOffsets))
             {
-                _computeResourceSets[slot].Offsets.Dispose();
-                _computeResourceSets[slot] = new BoundResourceSetInfo(set, dynamicOffsets);
+                set.Offsets.Dispose();
+                set = new BoundResourceSetInfo(rs, dynamicOffsets);
                 _computeResourceSetsActive[slot] = false;
             }
         }
@@ -708,15 +715,16 @@ namespace Veldrid.MTL
 
         protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (!_graphicsResourceSets[slot].Equals(rs, dynamicOffsets))
+            ref BoundResourceSetInfo set = ref _graphicsResourceSets[slot];
+            if (!set.Equals(rs, dynamicOffsets))
             {
-                _graphicsResourceSets[slot].Offsets.Dispose();
-                _graphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
+                set.Offsets.Dispose();
+                set = new BoundResourceSetInfo(rs, dynamicOffsets);
                 _graphicsResourceSetsActive[slot] = false;
             }
         }
 
-        private void ActivateGraphicsResourceSet(uint slot, BoundResourceSetInfo brsi)
+        private void ActivateGraphicsResourceSet(uint slot, ref BoundResourceSetInfo brsi)
         {
             Debug.Assert(RenderEncoderActive);
             MTLResourceSet mtlRS = Util.AssertSubtype<ResourceSet, MTLResourceSet>(brsi.Set);
@@ -773,7 +781,7 @@ namespace Veldrid.MTL
             }
         }
 
-        private void ActivateComputeResourceSet(uint slot, BoundResourceSetInfo brsi)
+        private void ActivateComputeResourceSet(uint slot, ref BoundResourceSetInfo brsi)
         {
             Debug.Assert(ComputeEncoderActive);
             MTLResourceSet mtlRS = Util.AssertSubtype<ResourceSet, MTLResourceSet>(brsi.Set);

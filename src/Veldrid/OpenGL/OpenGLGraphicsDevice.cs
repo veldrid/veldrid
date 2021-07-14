@@ -629,30 +629,33 @@ namespace Veldrid.OpenGL
                 throw new VeldridException($"Failed to initialize EGL: {eglGetError()}");
             }
 
-            int[] attribs =
+            int* attribs = stackalloc int[]
             {
-                EGL_RED_SIZE, 8,
-                EGL_GREEN_SIZE, 8,
-                EGL_BLUE_SIZE, 8,
-                EGL_ALPHA_SIZE, 8,
+                EGL_RED_SIZE,
+                8,
+                EGL_GREEN_SIZE,
+                8,
+                EGL_BLUE_SIZE,
+                8,
+                EGL_ALPHA_SIZE,
+                8,
                 EGL_DEPTH_SIZE,
                 swapchainDescription.DepthFormat != null
                     ? GetDepthBits(swapchainDescription.DepthFormat.Value)
                     : 0,
-                EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-                EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+                EGL_SURFACE_TYPE,
+                EGL_WINDOW_BIT,
+                EGL_RENDERABLE_TYPE,
+                EGL_OPENGL_ES3_BIT,
                 EGL_NONE,
             };
 
             IntPtr* configs = stackalloc IntPtr[50];
 
-            fixed (int* attribsPtr = attribs)
+            int num_config;
+            if (eglChooseConfig(display, attribs, configs, 50, &num_config) == 0)
             {
-                int num_config;
-                if (eglChooseConfig(display, attribsPtr, configs, 50, &num_config) == 0)
-                {
-                    throw new VeldridException($"Failed to select a valid EGLConfig: {eglGetError()}");
-                }
+                throw new VeldridException($"Failed to select a valid EGLConfig: {eglGetError()}");
             }
 
             IntPtr bestConfig = configs[0];

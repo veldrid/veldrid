@@ -171,13 +171,13 @@ namespace Veldrid.D3D11
             _boundUAVs.Clear();
         }
 
-        private void ClearSets(BoundResourceSetInfo[] boundSets)
+        private void ClearSets(Span<BoundResourceSetInfo> boundSets)
         {
-            foreach (BoundResourceSetInfo boundSetInfo in boundSets)
+            foreach (ref BoundResourceSetInfo boundSetInfo in boundSets)
             {
                 boundSetInfo.Offsets.Dispose();
+                boundSetInfo = default;
             }
-            Util.ClearArray(boundSets);
         }
 
         public override void End()
@@ -332,29 +332,27 @@ namespace Veldrid.D3D11
 
         protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (_graphicsResourceSets[slot].Equals(rs, dynamicOffsets))
+            ref BoundResourceSetInfo set = ref _graphicsResourceSets[slot];
+            if (!set.Equals(rs, dynamicOffsets))
             {
-                return;
+                set.Offsets.Dispose();
+                set = new BoundResourceSetInfo(rs, dynamicOffsets);
+                ActivateResourceSet(slot, ref set, true);
             }
-
-            _graphicsResourceSets[slot].Offsets.Dispose();
-            _graphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
-            ActivateResourceSet(slot, _graphicsResourceSets[slot], true);
         }
 
-        protected override void SetComputeResourceSetCore(uint slot, ResourceSet set, ReadOnlySpan<uint> dynamicOffsets)
+        protected override void SetComputeResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (_computeResourceSets[slot].Equals(set, dynamicOffsets))
+            ref BoundResourceSetInfo set = ref _computeResourceSets[slot];
+            if (!set.Equals(rs, dynamicOffsets))
             {
-                return;
+                set.Offsets.Dispose();
+                set = new BoundResourceSetInfo(rs, dynamicOffsets);
+                ActivateResourceSet(slot, ref set, false);
             }
-
-            _computeResourceSets[slot].Offsets.Dispose();
-            _computeResourceSets[slot] = new BoundResourceSetInfo(set, dynamicOffsets);
-            ActivateResourceSet(slot, _computeResourceSets[slot], false);
         }
 
-        private void ActivateResourceSet(uint slot, BoundResourceSetInfo brsi, bool graphics)
+        private void ActivateResourceSet(uint slot, ref BoundResourceSetInfo brsi, bool graphics)
         {
             D3D11ResourceSet d3d11RS = Util.AssertSubtype<ResourceSet, D3D11ResourceSet>(brsi.Set);
 
@@ -621,12 +619,14 @@ namespace Veldrid.D3D11
             FlushVertexBindings();
 
             int graphicsResourceCount = _graphicsPipeline.ResourceLayouts.Length;
-            for (uint i = 0; i < graphicsResourceCount; i++)
+            Span<bool> invalidatedSets = _invalidatedGraphicsResourceSets.AsSpan(0, graphicsResourceCount);
+            Span<BoundResourceSetInfo> sets = _graphicsResourceSets.AsSpan(0, graphicsResourceCount);
+            for (int i = 0; i < graphicsResourceCount; i++)
             {
-                if (_invalidatedGraphicsResourceSets[i])
+                if (invalidatedSets[i])
                 {
-                    _invalidatedGraphicsResourceSets[i] = false;
-                    ActivateResourceSet(i, _graphicsResourceSets[i], true);
+                    invalidatedSets[i] = false;
+                    ActivateResourceSet((uint)i, ref sets[i], true);
                 }
             }
         }
@@ -648,12 +648,14 @@ namespace Veldrid.D3D11
         private void PreDispatchCommand()
         {
             int computeResourceCount = _computePipeline.ResourceLayouts.Length;
-            for (uint i = 0; i < computeResourceCount; i++)
+            Span<bool> invalidatedSets = _invalidatedComputeResourceSets.AsSpan(0, computeResourceCount);
+            Span<BoundResourceSetInfo> sets = _computeResourceSets.AsSpan(0, computeResourceCount);
+            for (int i = 0; i < computeResourceCount; i++)
             {
-                if (_invalidatedComputeResourceSets[i])
+                if (invalidatedSets[i])
                 {
-                    _invalidatedComputeResourceSets[i] = false;
-                    ActivateResourceSet(i, _computeResourceSets[i], false);
+                    invalidatedSets[i] = false;
+                    ActivateResourceSet((uint)i, ref sets[i], false);
                 }
             }
         }
@@ -973,9 +975,9 @@ namespace Veldrid.D3D11
         private void PackRangeParams(D3D11BufferRange range)
         {
             _cbOut[0] = range.Buffer.Buffer;
-            _firstConstRef[0] = (int)range.Offset / 16;
+            _firstConstRef[0] = (int)(range.Offset / 16);
             uint roundedSize = range.Size < 256 ? 256u : range.Size;
-            _numConstsRef[0] = (int)roundedSize / 16;
+            _numConstsRef[0] = (int)(roundedSize / 16);
         }
 
         private void BindUnorderedAccessView(
@@ -1353,11 +1355,11 @@ namespace Veldrid.D3D11
                 _context1?.Dispose();
                 _context.Dispose();
 
-                foreach (BoundResourceSetInfo boundGraphicsSet in _graphicsResourceSets)
+                foreach (ref BoundResourceSetInfo boundGraphicsSet in _graphicsResourceSets.AsSpan())
                 {
                     boundGraphicsSet.Offsets.Dispose();
                 }
-                foreach (BoundResourceSetInfo boundComputeSet in _computeResourceSets)
+                foreach (ref BoundResourceSetInfo boundComputeSet in _computeResourceSets.AsSpan())
                 {
                     boundComputeSet.Offsets.Dispose();
                 }

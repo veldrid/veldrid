@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 
 namespace Veldrid
 {
-    internal struct BoundResourceSetInfo : IEquatable<BoundResourceSetInfo>
+    internal struct BoundResourceSetInfo
     {
         public ResourceSet Set;
         public SmallFixedOrDynamicArray Offsets;
@@ -14,7 +13,7 @@ namespace Veldrid
             Offsets = new SmallFixedOrDynamicArray(offsets);
         }
 
-        public bool Equals(ResourceSet set, ReadOnlySpan<uint> offsets)
+        public unsafe bool Equals(ResourceSet set, ReadOnlySpan<uint> offsets)
         {
             if (set != Set || offsets.Length != Offsets.Count)
             {
@@ -24,24 +23,6 @@ namespace Veldrid
             for (uint i = 0; i < offsets.Length; i++)
             {
                 if (offsets[(int)i] != Offsets.Get(i))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        public bool Equals(BoundResourceSetInfo other)
-        {
-            if (Set != other.Set || Offsets.Count != other.Offsets.Count)
-            {
-                return false;
-            }
-
-            for (uint i = 0; i < Offsets.Count; i++)
-            {
-                if (Offsets.Get(i) != other.Offsets.Get(i))
                 {
                     return false;
                 }

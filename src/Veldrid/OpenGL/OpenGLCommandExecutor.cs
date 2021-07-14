@@ -262,20 +262,23 @@ namespace Veldrid.OpenGL
 
         private void FlushResourceSets(bool graphics)
         {
-            uint sets = graphics
-                ? (uint)_graphicsPipeline.ResourceLayouts.Length
-                : (uint)_computePipeline.ResourceLayouts.Length;
-            for (uint slot = 0; slot < sets; slot++)
+            int setCount = graphics
+                ? _graphicsPipeline.ResourceLayouts.Length
+                : _computePipeline.ResourceLayouts.Length;
+
+            Span<BoundResourceSetInfo> sets = (graphics ? _graphicsResourceSets : _computeResourceSets).AsSpan(0, setCount);
+            Span<bool> newSets = (graphics ? _newGraphicsResourceSets : _newComputeResourceSets).AsSpan(0, setCount);
+
+            for (int slot = 0; slot < setCount; slot++)
             {
-                BoundResourceSetInfo brsi = graphics ? _graphicsResourceSets[slot] : _computeResourceSets[slot];
+                ref BoundResourceSetInfo brsi = ref sets[slot];
                 OpenGLResourceSet glSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(brsi.Set);
                 ResourceLayoutElementDescription[] layoutElements = glSet.Layout.Elements;
-                bool isNew = graphics ? _newGraphicsResourceSets[slot] : _newComputeResourceSets[slot];
+                bool isNew = newSets[slot];
+                newSets[slot] = false;
 
-                ActivateResourceSet(slot, graphics, brsi, layoutElements, isNew);
+                ActivateResourceSet((uint)slot, graphics, ref brsi, layoutElements, isNew);
             }
-
-            Util.ClearArray(graphics ? _newGraphicsResourceSets : _newComputeResourceSets);
         }
 
         private void FlushVertexLayouts()
@@ -805,20 +808,22 @@ namespace Veldrid.OpenGL
 
         public void SetGraphicsResourceSet(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (!_graphicsResourceSets[slot].Equals(rs, dynamicOffsets))
+            ref BoundResourceSetInfo set = ref _graphicsResourceSets[slot];
+            if (!set.Equals(rs, dynamicOffsets))
             {
-                _graphicsResourceSets[slot].Offsets.Dispose();
-                _graphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
+                set.Offsets.Dispose();
+                set = new BoundResourceSetInfo(rs, dynamicOffsets);
                 _newGraphicsResourceSets[slot] = true;
             }
         }
 
         public void SetComputeResourceSet(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (!_computeResourceSets[slot].Equals(rs, dynamicOffsets))
+            ref BoundResourceSetInfo set = ref _computeResourceSets[slot];
+            if (!set.Equals(rs, dynamicOffsets))
             {
-                _computeResourceSets[slot].Offsets.Dispose();
-                _computeResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
+                set.Offsets.Dispose();
+                set = new BoundResourceSetInfo(rs, dynamicOffsets);
                 _newComputeResourceSets[slot] = true;
             }
         }
@@ -826,7 +831,7 @@ namespace Veldrid.OpenGL
         private void ActivateResourceSet(
             uint slot,
             bool graphics,
-            BoundResourceSetInfo brsi,
+            ref BoundResourceSetInfo brsi,
             ResourceLayoutElementDescription[] layoutElements,
             bool isNew)
         {
@@ -855,7 +860,9 @@ namespace Veldrid.OpenGL
                     case ResourceKind.UniformBuffer:
                     {
                         if (!isNew)
-                        { continue; }
+                        {
+                            continue;
+                        }
 
                         DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         OpenGLBuffer glUB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
@@ -884,11 +891,14 @@ namespace Veldrid.OpenGL
                         }
                         break;
                     }
+
                     case ResourceKind.StructuredBufferReadWrite:
                     case ResourceKind.StructuredBufferReadOnly:
                     {
                         if (!isNew)
-                        { continue; }
+                        {
+                            continue;
+                        }
 
                         DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
                         OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
@@ -926,6 +936,7 @@ namespace Veldrid.OpenGL
                         }
                         break;
                     }
+
                     case ResourceKind.TextureReadOnly:
                         TextureView texView = Util.GetTextureView(_gd, resource);
                         OpenGLTextureView glTexView = Util.AssertSubtype<TextureView, OpenGLTextureView>(texView);
@@ -937,6 +948,7 @@ namespace Veldrid.OpenGL
                             CheckLastError();
                         }
                         break;
+
                     case ResourceKind.TextureReadWrite:
                         TextureView texViewRW = Util.GetTextureView(_gd, resource);
                         OpenGLTextureView glTexViewRW = Util.AssertSubtype<TextureView, OpenGLTextureView>(texViewRW);
@@ -971,6 +983,7 @@ namespace Veldrid.OpenGL
                             }
                         }
                         break;
+
                     case ResourceKind.Sampler:
                         OpenGLSampler glSampler = Util.AssertSubtype<BindableResource, OpenGLSampler>(resource);
                         glSampler.EnsureResourcesCreated();
@@ -982,6 +995,7 @@ namespace Veldrid.OpenGL
                             }
                         }
                         break;
+
                     default:
                         throw Illegal.Value<ResourceKind>();
                 }

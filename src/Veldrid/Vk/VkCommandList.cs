@@ -279,7 +279,7 @@ namespace Veldrid.Vk
             FlushNewResourceSets(
                 _currentGraphicsResourceSets,
                 _graphicsResourceSetsChanged,
-                _currentGraphicsPipeline.ResourceSetCount,
+                (int)_currentGraphicsPipeline.ResourceSetCount,
                 VkPipelineBindPoint.Graphics,
                 _currentGraphicsPipeline.PipelineLayout);
         }
@@ -287,30 +287,34 @@ namespace Veldrid.Vk
         private void FlushNewResourceSets(
             BoundResourceSetInfo[] resourceSets,
             bool[] resourceSetsChanged,
-            uint resourceSetCount,
+            int resourceSetCount,
             VkPipelineBindPoint bindPoint,
             VkPipelineLayout pipelineLayout)
         {
             VkPipeline pipeline = bindPoint == VkPipelineBindPoint.Graphics ? _currentGraphicsPipeline : _currentComputePipeline;
 
-            VkDescriptorSet* descriptorSets = stackalloc VkDescriptorSet[(int)resourceSetCount];
+            VkDescriptorSet* descriptorSets = stackalloc VkDescriptorSet[resourceSetCount];
             uint* dynamicOffsets = stackalloc uint[pipeline.DynamicOffsetsCount];
             uint currentBatchCount = 0;
             uint currentBatchFirstSet = 0;
             uint currentBatchDynamicOffsetCount = 0;
 
-            for (uint currentSlot = 0; currentSlot < resourceSetCount; currentSlot++)
-            {   
-                bool batchEnded = !resourceSetsChanged[currentSlot] || currentSlot == resourceSetCount - 1;
+            Span<BoundResourceSetInfo> sets = resourceSets.AsSpan(0, resourceSetCount);
+            Span<bool> setsChanged = resourceSetsChanged.AsSpan(0, resourceSetCount);
 
-                if (resourceSetsChanged[currentSlot])
+            for (int currentSlot = 0; currentSlot < resourceSetCount; currentSlot++)
+            {
+                bool batchEnded = !setsChanged[currentSlot] || currentSlot == resourceSetCount - 1;
+
+                if (setsChanged[currentSlot])
                 {
-                    resourceSetsChanged[currentSlot] = false;
-                    VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(resourceSets[currentSlot].Set);
+                    setsChanged[currentSlot] = false;
+                    ref BoundResourceSetInfo resourceSet = ref sets[currentSlot];
+                    VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(resourceSet.Set);
                     descriptorSets[currentBatchCount] = vkSet.DescriptorSet;
                     currentBatchCount += 1;
 
-                    ref SmallFixedOrDynamicArray curSetOffsets = ref resourceSets[currentSlot].Offsets;
+                    ref SmallFixedOrDynamicArray curSetOffsets = ref resourceSet.Offsets;
                     for (uint i = 0; i < curSetOffsets.Count; i++)
                     {
                         dynamicOffsets[currentBatchDynamicOffsetCount] = curSetOffsets.Get(i);
@@ -342,7 +346,7 @@ namespace Veldrid.Vk
                     }
 
                     currentBatchCount = 0;
-                    currentBatchFirstSet = currentSlot + 1;
+                    currentBatchFirstSet = (uint)(currentSlot + 1);
                 }
             }
         }
@@ -387,7 +391,7 @@ namespace Veldrid.Vk
             FlushNewResourceSets(
                 _currentComputeResourceSets,
                 _computeResourceSetsChanged,
-                _currentComputePipeline.ResourceSetCount,
+                (int)_currentComputePipeline.ResourceSetCount,
                 VkPipelineBindPoint.Compute,
                 _currentComputePipeline.PipelineLayout);
         }
@@ -656,34 +660,36 @@ namespace Veldrid.Vk
             _currentStagingInfo.Resources.Add(vkPipeline.RefCount);
         }
 
-        private void ClearSets(BoundResourceSetInfo[] boundSets)
+        private void ClearSets(Span<BoundResourceSetInfo> boundSets)
         {
-            foreach (BoundResourceSetInfo boundSetInfo in boundSets)
+            foreach (ref BoundResourceSetInfo boundSetInfo in boundSets)
             {
                 boundSetInfo.Offsets.Dispose();
+                boundSetInfo = default;
             }
-            Util.ClearArray(boundSets);
         }
 
         protected override void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (!_currentGraphicsResourceSets[slot].Equals(rs, dynamicOffsets))
+            ref BoundResourceSetInfo set = ref _currentGraphicsResourceSets[slot];
+            if (!set.Equals(rs, dynamicOffsets))
             {
-                _currentGraphicsResourceSets[slot].Offsets.Dispose();
-                _currentGraphicsResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
+                set.Offsets.Dispose();
+                set = new BoundResourceSetInfo(rs, dynamicOffsets);
                 _graphicsResourceSetsChanged[slot] = true;
-                VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
+                Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
             }
         }
 
         protected override void SetComputeResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
-            if (!_currentComputeResourceSets[slot].Equals(rs, dynamicOffsets))
+            ref BoundResourceSetInfo set = ref _currentComputeResourceSets[slot];
+            if (!set.Equals(rs, dynamicOffsets))
             {
-                _currentComputeResourceSets[slot].Offsets.Dispose();
-                _currentComputeResourceSets[slot] = new BoundResourceSetInfo(rs, dynamicOffsets);
+                set.Offsets.Dispose();
+                set = new BoundResourceSetInfo(rs, dynamicOffsets);
                 _computeResourceSetsChanged[slot] = true;
-                VkResourceSet vkRS = Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
+                Util.AssertSubtype<ResourceSet, VkResourceSet>(rs);
             }
         }
 

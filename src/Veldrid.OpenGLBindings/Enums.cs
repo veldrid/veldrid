@@ -1884,6 +1884,17 @@ namespace Veldrid.OpenGLBinding
         Coherent = ((int)0x0080),
     }
 
+    [Flags]
+    public enum BufferStorageMask : int
+    {
+        DynamicStorage = 0x100,
+        ClientStorage = 0x200,
+        MapRead = 0x1,
+        MapWrite = 0x2,
+        MapPersistent = 0x40,
+        MapCoherent = 0x80,
+    }
+
     public enum StencilFunction : int
     {
         Never = ((int)0x0200),

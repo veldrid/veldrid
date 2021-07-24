@@ -624,16 +624,28 @@ namespace Veldrid.OpenGLBinding
             => p_glDebugMessageCallback(callback, userParam);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glBufferData_t(BufferTarget target, UIntPtr size, void* data, BufferUsageHint usage);
+        private delegate void glBufferData_t(BufferTarget target, nuint size, void* data, BufferUsageHint usage);
         private static glBufferData_t p_glBufferData;
-        public static void glBufferData(BufferTarget target, UIntPtr size, void* data, BufferUsageHint usage)
+        public static void glBufferData(BufferTarget target, nuint size, void* data, BufferUsageHint usage)
             => p_glBufferData(target, size, data, usage);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glNamedBufferData_t(uint buffer, uint size, void* data, BufferUsageHint usage);
+        private delegate void glNamedBufferData_t(uint buffer, nuint size, void* data, BufferUsageHint usage);
         private static glNamedBufferData_t p_glNamedBufferData;
-        public static void glNamedBufferData(uint buffer, uint size, void* data, BufferUsageHint usage)
+        public static void glNamedBufferData(uint buffer, nuint size, void* data, BufferUsageHint usage)
             => p_glNamedBufferData(buffer, size, data, usage);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glBufferStorage_t(BufferTarget target, nuint size, void* data, BufferStorageMask flags);
+        private static glBufferStorage_t p_glBufferStorage;
+        public static void glBufferStorage(BufferTarget target, nuint size, void* data, BufferStorageMask flags)
+            => p_glBufferStorage(target, size, data, flags);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glNamedBufferStorage_t(uint buffer, nuint size, void* data, BufferStorageMask flags);
+        private static glNamedBufferStorage_t p_glNamedBufferStorage;
+        public static void glNamedBufferStorage(uint buffer, nuint size, void* data, BufferStorageMask flags)
+            => p_glNamedBufferStorage(buffer, size, data, flags);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glTexImage1D_t(
@@ -1796,6 +1808,8 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glDebugMessageCallback", out p_glDebugMessageCallback);
             LoadFunction("glBufferData", out p_glBufferData);
             LoadFunction("glNamedBufferData", out p_glNamedBufferData);
+            LoadFunction("glBufferStorage", out p_glBufferStorage);
+            LoadFunction("glNamedBufferStorage", out p_glNamedBufferStorage);
             LoadFunction("glTexImage2D", out p_glTexImage2D);
             LoadFunction("glTexImage3D", out p_glTexImage3D);
             LoadFunction("glEnableVertexAttribArray", out p_glEnableVertexAttribArray);

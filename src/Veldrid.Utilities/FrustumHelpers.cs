@@ -6,18 +6,18 @@ namespace Veldrid.Utilities
     public static class FrustumHelpers
     {
         public static void ComputePerspectiveFrustumCorners(
-            ref Vector3 viewPosition,
-            ref Vector3 viewDirection,
-            ref Vector3 globalUpDirection,
+            Vector3 viewPosition,
+            Vector3 viewDirection,
+            Vector3 globalUpDirection,
             float fov,
             float nearDistance,
             float farDistance,
             float aspectRatio,
             out FrustumCorners corners)
         {
-            float nearHeight = (float)(2 * Math.Tan(fov / 2.0) * nearDistance);
+            float nearHeight = MathF.Tan(fov / 2f) * nearDistance;
             float nearWidth = nearHeight * aspectRatio;
-            float farHeight = (float)(2 * Math.Tan(fov / 2.0) * farDistance);
+            float farHeight = MathF.Tan(fov / 2f) * farDistance;
             float farWidth = farHeight * aspectRatio;
 
             Vector3 right = Vector3.Normalize(Vector3.Cross(viewDirection, globalUpDirection));
@@ -26,23 +26,29 @@ namespace Veldrid.Utilities
             Vector3 nearCenter = viewPosition + viewDirection * nearDistance;
             Vector3 farCenter = viewPosition + viewDirection * farDistance;
 
-            corners.NearTopLeft = nearCenter - ((nearWidth / 2f) * right) + ((nearHeight / 2) * up);
-            corners.NearTopRight = nearCenter + ((nearWidth / 2f) * right) + ((nearHeight / 2) * up);
-            corners.NearBottomLeft = nearCenter - ((nearWidth / 2f) * right) - ((nearHeight / 2) * up);
-            corners.NearBottomRight = nearCenter + ((nearWidth / 2f) * right) - ((nearHeight / 2) * up);
+            Vector3 nearWidthRight = nearWidth * right;
+            Vector3 nearHeightUp = nearHeight * up;
 
-            corners.FarTopLeft = farCenter - ((farWidth / 2f) * right) + ((farHeight / 2) * up);
-            corners.FarTopRight = farCenter + ((farWidth / 2f) * right) + ((farHeight / 2) * up);
-            corners.FarBottomLeft = farCenter - ((farWidth / 2f) * right) - ((farHeight / 2) * up);
-            corners.FarBottomRight = farCenter + ((farWidth / 2f) * right) - ((farHeight / 2) * up);
+            Vector3 farWidthRight = farWidth * right;
+            Vector3 farHeightUp = farHeight * up;
+
+            corners.NearTopLeft = nearCenter - nearWidthRight + nearHeightUp;
+            corners.NearTopRight = nearCenter + nearWidthRight + nearHeightUp;
+            corners.NearBottomLeft = nearCenter - nearWidthRight - nearHeightUp;
+            corners.NearBottomRight = nearCenter + nearWidthRight - nearHeightUp;
+
+            corners.FarTopLeft = farCenter - farWidthRight + farHeightUp;
+            corners.FarTopRight = farCenter + farWidthRight + farHeightUp;
+            corners.FarBottomLeft = farCenter - farWidthRight - farHeightUp;
+            corners.FarBottomRight = farCenter + farWidthRight - farHeightUp;
         }
 
         public static unsafe void ComputeOrthographicBoundsForPerpectiveFrustum(
-            ref FrustumCorners corners,
-            ref Vector3 lightDir,
+            in FrustumCorners corners,
+            Vector3 lightDir,
             float cameraFarDistance,
             out Matrix4x4 lightView,
-            out OrthographicBounds bounds)
+            out BoundingBox bounds)
         {
             float nearClipOffset = 40.0f;
             Vector3 centroid =
@@ -52,8 +58,7 @@ namespace Veldrid.Utilities
             Vector3 lightOrigin = centroid - (lightDir * (cameraFarDistance + nearClipOffset));
             lightView = Matrix4x4.CreateLookAt(lightOrigin, centroid, Vector3.UnitY);
 
-            float* lightSpaceCornerFloats = stackalloc float[3 * 8];
-            Vector3* lightSpaceCorners = (Vector3*)lightSpaceCornerFloats;
+            Vector3* lightSpaceCorners = stackalloc Vector3[8];
 
             // Light-view-space
             lightSpaceCorners[0] = Vector3.Transform(corners.NearTopLeft, lightView);
@@ -66,23 +71,14 @@ namespace Veldrid.Utilities
             lightSpaceCorners[6] = Vector3.Transform(corners.FarBottomLeft, lightView);
             lightSpaceCorners[7] = Vector3.Transform(corners.FarBottomRight, lightView);
 
-            bounds.MinX = lightSpaceCorners[0].X;
-            bounds.MaxX = lightSpaceCorners[0].X;
-            bounds.MinY = lightSpaceCorners[0].Y;
-            bounds.MaxY = lightSpaceCorners[0].Y;
-            bounds.MinZ = lightSpaceCorners[0].Z;
-            bounds.MaxZ = lightSpaceCorners[0].Z;
+            bounds.Min = lightSpaceCorners[0];
+            bounds.Max = lightSpaceCorners[0];
 
             for (int i = 1; i < 8; i++)
             {
-                if (lightSpaceCorners[i].X < bounds.MinX) bounds.MinX = lightSpaceCorners[i].X;
-                if (lightSpaceCorners[i].X > bounds.MaxX) bounds.MaxX = lightSpaceCorners[i].X;
-
-                if (lightSpaceCorners[i].Y < bounds.MinY) bounds.MinY = lightSpaceCorners[i].Y;
-                if (lightSpaceCorners[i].Y > bounds.MaxY) bounds.MaxY = lightSpaceCorners[i].Y;
-
-                if (lightSpaceCorners[i].Z < bounds.MinZ) bounds.MinZ = lightSpaceCorners[i].Z;
-                if (lightSpaceCorners[i].Z > bounds.MaxZ) bounds.MaxZ = lightSpaceCorners[i].Z;
+                Vector3 corner = lightSpaceCorners[i];
+                bounds.Min = Vector3.Min(bounds.Min, corner);
+                bounds.Max = Vector3.Max(bounds.Max, corner);
             }
         }
     }

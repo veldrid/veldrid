@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 
 namespace Veldrid.Utilities
 {
@@ -13,88 +14,59 @@ namespace Veldrid.Utilities
             Direction = direction;
         }
 
-        public bool Intersects(BoundingBox box)
+        public Vector3 GetPoint(float distance)
         {
-            return Intersects(ref box);
+            return Origin + Direction * distance;
         }
 
-        public bool Intersects(ref BoundingBox box)
+        public bool Intersects(BoundingBox box, out float distance)
         {
-            // http://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
+            Vector3 dirFactor = new Vector3(1f) / Direction;
+            Vector3 max = (box.Max - Origin) * dirFactor;
+            Vector3 min = (box.Min - Origin) * dirFactor;
+            Vector3 tminv = Vector3.Min(min, max);
+            Vector3 tmaxv = Vector3.Max(min, max);
 
-            float tmin = (box.Min.X - Origin.X) / Direction.X;
-            float tmax = (box.Max.X - Origin.X) / Direction.X;
+            float tmax = MathF.Min(MathF.Min(tmaxv.X, tmaxv.Y), tmaxv.Z);
+            distance = tmax;
 
+            // ray is intersecting AABB, but the whole AABB is behind us
+            if (tmax < 0)
+            {
+                return false;
+            }
+
+            float tmin = MathF.Max(MathF.Max(tminv.X, tminv.Y), tminv.Z);
+
+            // ray doesn't intersect AABB
             if (tmin > tmax)
             {
-                Swap(ref tmin, ref tmax);
-            }
-
-            float tymin = (box.Min.Y - Origin.Y) / Direction.Y;
-            float tymax = (box.Max.Y - Origin.Y) / Direction.Y;
-
-            if (tymin > tymax)
-            {
-                Swap(ref tymin, ref tymax);
-            }
-
-            if ((tmin > tymax) || (tymin > tmax))
-            {
                 return false;
             }
 
-            if (tymin > tmin)
-            {
-                tmin = tymin;
-            }
-
-            if (tymax < tmax)
-            {
-                tmax = tymax;
-            }
-
-            float tzmin = (box.Min.Z - Origin.Z) / Direction.Z;
-            float tzmax = (box.Max.Z - Origin.Z) / Direction.Z;
-
-            if (tzmin > tzmax)
-            {
-                Swap(ref tzmin, ref tzmax);
-            }
-
-            if ((tmin > tzmax) || (tzmin > tmax))
-            {
-                return false;
-            }
-
-            if (tzmin > tmin)
-            {
-                tmin = tzmin;
-            }
-
-            if (tzmax < tmax)
-            {
-                tmax = tzmax;
-            }
-
+            distance = tmin;
             return true;
         }
 
-        void Swap(ref float a, ref float b)
+        public bool Intersects(BoundingBox box)
         {
-            var temp = a;
-            a = b;
-            b = temp;
+            return Intersects(box, out _);
         }
 
         public static Ray Transform(Ray ray, Matrix4x4 mat)
         {
-            return new Ray(Vector3.Transform(ray.Origin, mat), Vector3.Normalize(Vector3.TransformNormal(ray.Direction, mat)));
+            return new Ray(
+                Vector3.Transform(ray.Origin, mat),
+                Vector3.Normalize(Vector3.TransformNormal(ray.Direction, mat)));
         }
 
-        // Ray-Triangle Intersection, using the Möller–Trumbore intersection algorithm.
-        // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-
-        public bool Intersects(ref Vector3 V1, ref Vector3 V2, ref Vector3 V3, out float distance)
+        /// <summary>
+        /// Ray-Triangle Intersection, using the Möller–Trumbore intersection algorithm.
+        /// </summary>
+        /// <remarks>
+        /// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+        /// </remarks>
+        public bool Intersects(Vector3 V1, Vector3 V2, Vector3 V3, out float distance)
         {
             const float EPSILON = 1E-6f;
 
@@ -146,7 +118,8 @@ namespace Veldrid.Utilities
             t = Vector3.Dot(e2, Q) * inv_det;
 
             if (t > EPSILON)
-            { //ray intersection
+            {
+                //ray intersection
                 distance = t;
                 return true;
             }

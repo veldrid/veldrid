@@ -69,6 +69,7 @@ namespace Veldrid.Utilities
             Vector3 offset,
             Vector3 scale)
             => CreateFromPoints(vertices, Unsafe.SizeOf<Vector3>(), numVertices, rotation, offset, scale);
+
         public static unsafe BoundingBox CreateFromPoints(
             Vector3* vertexPtr,
             int numVertices,

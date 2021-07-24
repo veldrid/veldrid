@@ -640,7 +640,7 @@ namespace Veldrid.Utilities
                 Vector3 v2 = Vertices[Indices[i + 2]].Position;
 
                 float newDistance;
-                if (ray.Intersects(ref v0, ref v1, ref v2, out newDistance))
+                if (ray.Intersects(v0, v1, v2, out newDistance))
                 {
                     if (newDistance < distance)
                     {
@@ -663,7 +663,7 @@ namespace Veldrid.Utilities
                 Vector3 v1 = Vertices[Indices[i + 1]].Position;
                 Vector3 v2 = Vertices[Indices[i + 2]].Position;
 
-                if (ray.Intersects(ref v0, ref v1, ref v2, out float newDistance))
+                if (ray.Intersects(v0, v1, v2, out float newDistance))
                 {
                     hits++;
                     distances.Add(newDistance);

@@ -251,7 +251,8 @@ namespace Veldrid.NeoDemo
 
             _resourceUpdateCL.Begin();
             CommandList[] cls = new CommandList[5];
-            for (int i = 0; i < cls.Length; i++) { cls[i] = gd.ResourceFactory.CreateCommandList(); cls[i].Begin(); }
+            for (int i = 0; i < cls.Length; i++)
+            { cls[i] = gd.ResourceFactory.CreateCommandList(); cls[i].Begin(); }
 
             _resourceUpdateCL.UpdateBuffer(sc.DepthLimitsBuffer, 0, new DepthCascadeLimits
             {
@@ -375,7 +376,8 @@ namespace Veldrid.NeoDemo
             _resourceUpdateCL.End();
             gd.SubmitCommands(_resourceUpdateCL);
 
-            for (int i = 0; i < cls.Length; i++) { cls[i].End(); gd.SubmitCommands(cls[i]); cls[i].Dispose(); }
+            for (int i = 0; i < cls.Length; i++)
+            { cls[i].End(); gd.SubmitCommands(cls[i]); cls[i].Dispose(); }
 
             if (sc.MainSceneColorTexture.SampleCount != TextureSampleCount.Count1)
             {
@@ -419,9 +421,9 @@ namespace Veldrid.NeoDemo
             if (gd.IsDepthRangeZeroToOne)
             {
                 FrustumHelpers.ComputePerspectiveFrustumCorners(
-                    ref viewPos,
-                    ref viewDir,
-                    ref unitY,
+                    viewPos,
+                    viewDir,
+                    unitY,
                     sc.Camera.FieldOfView,
                     far,
                     near,
@@ -431,9 +433,9 @@ namespace Veldrid.NeoDemo
             else
             {
                 FrustumHelpers.ComputePerspectiveFrustumCorners(
-                    ref viewPos,
-                    ref viewDir,
-                    ref unitY,
+                    viewPos,
+                    viewDir,
+                    unitY,
                     sc.Camera.FieldOfView,
                     near,
                     far,
@@ -531,14 +533,18 @@ namespace Veldrid.NeoDemo
             {
                 lock (_allPerFrameRenderablesSet)
                 {
-                    foreach (CullRenderable thing in cullRenderableList) { _allPerFrameRenderablesSet.Add(thing); }
-                    foreach (Renderable thing in renderableList) { _allPerFrameRenderablesSet.Add(thing); }
+                    foreach (CullRenderable thing in cullRenderableList)
+                    { _allPerFrameRenderablesSet.Add(thing); }
+                    foreach (Renderable thing in renderableList)
+                    { _allPerFrameRenderablesSet.Add(thing); }
                 }
             }
             else
             {
-                foreach (CullRenderable thing in cullRenderableList) { _allPerFrameRenderablesSet.Add(thing); }
-                foreach (Renderable thing in renderableList) { _allPerFrameRenderablesSet.Add(thing); }
+                foreach (CullRenderable thing in cullRenderableList)
+                { _allPerFrameRenderablesSet.Add(thing); }
+                foreach (Renderable thing in renderableList)
+                { _allPerFrameRenderablesSet.Add(thing); }
             }
         }
 

@@ -197,11 +197,11 @@ namespace Veldrid.NeoDemo
                 TextureUsage.RenderTarget | TextureUsage.Sampled,
                 sampleCount);
 
-            MainSceneColorTexture = factory.CreateTexture(ref mainColorDesc);
+            MainSceneColorTexture = factory.CreateTexture(mainColorDesc);
             if (sampleCount != TextureSampleCount.Count1)
             {
                 mainColorDesc.SampleCount = TextureSampleCount.Count1;
-                MainSceneResolvedColorTexture = factory.CreateTexture(ref mainColorDesc);
+                MainSceneResolvedColorTexture = factory.CreateTexture(mainColorDesc);
             }
             else
             {
@@ -226,15 +226,15 @@ namespace Veldrid.NeoDemo
                 1,
                 PixelFormat.R16_G16_B16_A16_Float,
                 TextureUsage.RenderTarget | TextureUsage.Sampled);
-            DuplicatorTarget0 = factory.CreateTexture(ref colorTargetDesc);
+            DuplicatorTarget0 = factory.CreateTexture(colorTargetDesc);
             DuplicatorTargetView0 = factory.CreateTextureView(DuplicatorTarget0);
-            DuplicatorTarget1 = factory.CreateTexture(ref colorTargetDesc);
+            DuplicatorTarget1 = factory.CreateTexture(colorTargetDesc);
             DuplicatorTargetView1 = factory.CreateTextureView(DuplicatorTarget1);
             DuplicatorTargetSet0 = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, DuplicatorTargetView0, gd.PointSampler));
             DuplicatorTargetSet1 = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, DuplicatorTargetView1, gd.PointSampler));
 
             FramebufferDescription fbDesc = new FramebufferDescription(null, DuplicatorTarget0, DuplicatorTarget1);
-            DuplicatorFramebuffer = factory.CreateFramebuffer(ref fbDesc);
+            DuplicatorFramebuffer = factory.CreateFramebuffer(fbDesc);
         }
     }
 

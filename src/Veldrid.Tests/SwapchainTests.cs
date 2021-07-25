@@ -18,7 +18,7 @@ namespace Veldrid.Tests
             Sdl2Window window = new Sdl2Window("SwapchainTestWindow", 0, 0, 100, 100, SDL_WindowFlags.Hidden, false);
             SwapchainSource source = VeldridStartup.GetSwapchainSource(window);
             SwapchainDescription swapchainDesc = new SwapchainDescription(source, 100, 100, depthFormat, syncToVerticalBlank);
-            Swapchain swapchain = RF.CreateSwapchain(ref swapchainDesc);
+            Swapchain swapchain = RF.CreateSwapchain(swapchainDesc);
 
             if (depthFormat == null)
             {

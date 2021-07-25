@@ -86,7 +86,7 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             uint colorNormalizationFactor = 2500;
 
@@ -219,7 +219,7 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             VertexCPU_UShortNorm[] vertices = new VertexCPU_UShortNorm[]
             {
@@ -363,7 +363,7 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             uint colorNormalizationFactor = 2500;
 
@@ -486,7 +486,7 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             uint colorNormalizationFactor = 2500;
 
@@ -660,7 +660,7 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             Vector2[] vertices = new Vector2[]
             {
@@ -865,7 +865,8 @@ namespace Veldrid.Tests
         [InlineData(true)]
         public void SampleTexture1D(bool arrayTexture)
         {
-            if (!GD.Features.Texture1D) { return; }
+            if (!GD.Features.Texture1D)
+            { return; }
 
             Texture target = RF.CreateTexture(TextureDescription.Texture2D(
                 50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
@@ -883,7 +884,8 @@ namespace Veldrid.Tests
             Texture tex1D = RF.CreateTexture(
                 TextureDescription.Texture1D(128, 1, layers, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
             RgbaFloat[] colors = new RgbaFloat[tex1D.Width];
-            for (int i = 0; i < colors.Length; i++) { colors[i] = RgbaFloat.Pink; }
+            for (int i = 0; i < colors.Length; i++)
+            { colors[i] = RgbaFloat.Pink; }
             GD.UpdateTexture(tex1D, colors, 0, 0, 0, tex1D.Width, 1, 1, 0, 0);
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -901,7 +903,7 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             CommandList cl = RF.CreateCommandList();
 
@@ -973,7 +975,8 @@ namespace Veldrid.Tests
 
             // Fill the second target with a known color
             RgbaFloat[] colors = new RgbaFloat[target2.Width * target2.Height];
-            for (int i = 0; i < colors.Length; i++) { colors[i] = RgbaFloat.Pink; }
+            for (int i = 0; i < colors.Length; i++)
+            { colors[i] = RgbaFloat.Pink; }
             GD.UpdateTexture(target2, colors, 0, 0, 0, target2.Width, target2.Height, 1, 0, 0);
 
             ResourceLayout textureLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -1068,7 +1071,10 @@ namespace Veldrid.Tests
             Texture tex2D = RF.CreateTexture(
                 TextureDescription.Texture2D(128, 128, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
             RgbaFloat[] colors = new RgbaFloat[tex2D.Width * tex2D.Height];
-            for (int i = 0; i < colors.Length; i++) { colors[i] = RgbaFloat.Pink; }
+            for (int i = 0; i < colors.Length; i++)
+            {
+                colors[i] = RgbaFloat.Pink;
+            }
             GD.UpdateTexture(tex2D, colors, 0, 0, 0, tex2D.Width, 1, 1, 0, 0);
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -1086,7 +1092,7 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             CommandList cl = RF.CreateCommandList();
 
@@ -1138,7 +1144,8 @@ namespace Veldrid.Tests
             Texture tex2D = RF.CreateTexture(
                 TextureDescription.Texture2D(128, 128, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
             RgbaFloat[] colors = new RgbaFloat[tex2D.Width * tex2D.Height];
-            for (int i = 0; i < colors.Length; i++) { colors[i] = RgbaFloat.Pink; }
+            for (int i = 0; i < colors.Length; i++)
+            { colors[i] = RgbaFloat.Pink; }
             GD.UpdateTexture(tex2D, colors, 0, 0, 0, tex2D.Width, 1, 1, 0, 0);
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -1156,7 +1163,7 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             CommandList cl = RF.CreateCommandList();
 
@@ -1209,7 +1216,7 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             CommandList cl = RF.CreateCommandList();
 

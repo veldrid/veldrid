@@ -73,9 +73,9 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayout[] { _layout },
                 sc.MainSceneFramebuffer.OutputDescription);
 
-            _pipeline = factory.CreateGraphicsPipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(pd);
             pd.Outputs = sc.ReflectionFramebuffer.OutputDescription;
-            _reflectionPipeline = factory.CreateGraphicsPipeline(ref pd);
+            _reflectionPipeline = factory.CreateGraphicsPipeline(pd);
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _layout,

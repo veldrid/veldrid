@@ -1993,13 +1993,6 @@ namespace Veldrid.OpenGL
             public uint DepthPitch;
         }
 
-        private struct CreateParams
-        {
-            public uint OffsetInBytes;
-            public uint SizeInBytes;
-            public IntPtr Data;
-        }
-
         internal struct MappedResourceInfo
         {
             public MappedResource MappedResource;

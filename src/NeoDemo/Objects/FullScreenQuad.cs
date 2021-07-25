@@ -41,7 +41,7 @@ namespace Veldrid.NeoDemo.Objects
                     ShaderHelper.GetSpecializations(gd)),
                 new ResourceLayout[] { resourceLayout },
                 gd.SwapchainFramebuffer.OutputDescription);
-            _pipeline = factory.CreateGraphicsPipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(pd);
 
             float[] verts = Util.GetFullScreenQuadVerts(gd);
 

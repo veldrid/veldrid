@@ -147,7 +147,7 @@ namespace Veldrid.Tests
                 layout,
                 new OutputDescription(null, new OutputAttachmentDescription(PixelFormat.B8_G8_R8_A8_UNorm)));
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             CommandList cl = RF.CreateCommandList();
             cl.Begin();
@@ -200,7 +200,7 @@ namespace Veldrid.Tests
                 layout,
                 new OutputDescription(null, new OutputAttachmentDescription(PixelFormat.B8_G8_R8_A8_UNorm)));
 
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
 
             CommandList cl = RF.CreateCommandList();
             cl.Begin();

@@ -226,7 +226,7 @@ namespace Veldrid.Tests
                     texture.MipLevels, layers,
                     texture.Format,
                     TextureUsage.Staging, texture.Type);
-                Texture readback = RF.CreateTexture(ref desc);
+                Texture readback = RF.CreateTexture(desc);
                 CommandList cl = RF.CreateCommandList();
                 cl.Begin();
                 cl.CopyTexture(texture, readback);

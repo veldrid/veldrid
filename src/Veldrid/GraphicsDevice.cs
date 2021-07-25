@@ -85,7 +85,8 @@ namespace Veldrid
             {
                 if (MainSwapchain == null)
                 {
-                    throw new VeldridException($"This GraphicsDevice was created without a main Swapchain. This property cannot be set.");
+                    throw new VeldridException(
+                        $"This GraphicsDevice was created without a main Swapchain. This property cannot be set.");
                 }
 
                 MainSwapchain.SyncToVerticalBlank = value;
@@ -198,7 +199,10 @@ namespace Veldrid
         /// <param name="fences">An array of <see cref="Fence"/> objects to wait on.</param>
         /// <param name="waitAll">If true, then this method blocks until all of the given Fences become signaled.
         /// If false, then this method only waits until one of the Fences become signaled.</param>
-        /// <param name="nanosecondTimeout">A value in nanoseconds, indicating the maximum time to wait on the Fence.  Pass ulong.MaxValue to wait indefinitely.</param>
+        /// <param name="nanosecondTimeout">
+        /// A value in nanoseconds, indicating the maximum time to wait on the Fence.
+        /// Pass ulong.MaxValue to wait indefinitely.
+        /// </param>
         /// <returns>True if the Fence was signaled. False if the timeout was reached instead.</returns>
         public abstract bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout);
 
@@ -217,7 +221,8 @@ namespace Veldrid
         {
             if (MainSwapchain == null)
             {
-                throw new VeldridException("This GraphicsDevice was created without a main Swapchain, so the requested operation cannot be performed.");
+                throw new VeldridException(
+                    "This GraphicsDevice was created without a main Swapchain, so the requested operation cannot be performed.");
             }
 
             SwapBuffers(MainSwapchain);
@@ -250,7 +255,8 @@ namespace Veldrid
         {
             if (MainSwapchain == null)
             {
-                throw new VeldridException("This GraphicsDevice was created without a main Swapchain, so the requested operation cannot be performed.");
+                throw new VeldridException(
+                    "This GraphicsDevice was created without a main Swapchain, so the requested operation cannot be performed.");
             }
 
             MainSwapchain.Resize(width, height);
@@ -351,7 +357,7 @@ namespace Veldrid
             if (offsetInBytes + sizeInBytes > totalSizeInBytes)
             {
                 throw new VeldridException(
-                    $"The given offset {offsetInBytes} and size {sizeInBytes} exceed the size of the subresource {totalSizeInBytes}.");
+                    $"The given offset {offsetInBytes} and size {sizeInBytes} exceed the subresource size {totalSizeInBytes}.");
             }
 #endif
 
@@ -390,7 +396,8 @@ namespace Veldrid
         /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.</param>
         /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
-        public MappedResourceView<T> Map<T>(MappableResource resource, uint offsetInBytes, uint elementCount, MapMode mode, uint subresource) where T : unmanaged
+        public MappedResourceView<T> Map<T>(
+            MappableResource resource, uint offsetInBytes, uint elementCount, MapMode mode, uint subresource) where T : unmanaged
         {
             MappedResource mappedResource = Map(resource, offsetInBytes, elementCount * (uint)Unsafe.SizeOf<T>(), mode, subresource);
             return new MappedResourceView<T>(mappedResource);
@@ -577,7 +584,8 @@ namespace Veldrid
                     Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight);
                     if (width != mipWidth && height != mipHeight)
                     {
-                        throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
+                        throw new VeldridException(
+                            $"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
                     }
                 }
             }
@@ -585,7 +593,8 @@ namespace Veldrid
             if (sizeInBytes < expectedSize)
             {
                 throw new VeldridException(
-                    $"The data size is less than expected for the given update region. At least {expectedSize} bytes must be provided, but only {sizeInBytes} were.");
+                    $"The data size is less than expected for the given update region. " +
+                    $"At least {expectedSize} bytes must be provided, but only {sizeInBytes} were.");
             }
 
             // Compressed textures don't necessarily need to have a Texture.Width and Texture.Height that are a multiple of 4.
@@ -621,7 +630,8 @@ namespace Veldrid
             if (arrayLayer >= effectiveArrayLayers)
             {
                 throw new VeldridException(
-                    $"{nameof(arrayLayer)} ({arrayLayer}) must be less than the Texture's effective array layer count ({effectiveArrayLayers}).");
+                    $"{nameof(arrayLayer)} ({arrayLayer}) must be less than " +
+                    $"the Texture's effective array layer count ({effectiveArrayLayers}).");
             }
         }
 
@@ -755,12 +765,15 @@ namespace Veldrid
             if (bufferOffsetInBytes + sizeInBytes > buffer.SizeInBytes)
             {
                 throw new VeldridException(
-                    $"The data size given to UpdateBuffer is too large. The given buffer can only hold {buffer.SizeInBytes} total bytes. The requested update would require {bufferOffsetInBytes + sizeInBytes} bytes.");
+                    $"The data size given to UpdateBuffer is too large. " +
+                    $"The given buffer can only hold {buffer.SizeInBytes} total bytes. " +
+                    $"The requested update would require {bufferOffsetInBytes + sizeInBytes} bytes.");
             }
             UpdateBufferCore(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }
 
-        private protected abstract void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
+        private protected abstract void UpdateBufferCore(
+            DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
 
         /// <summary>
         /// Gets whether or not the given <see cref="PixelFormat"/>, <see cref="TextureType"/>, and <see cref="TextureUsage"/>
@@ -1077,7 +1090,8 @@ namespace Veldrid
         /// <param name="d3d11Options">The Direct3D11-specific options used to create the device.</param>
         /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
-        public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, D3D11DeviceOptions d3d11Options, SwapchainDescription swapchainDescription)
+        public static GraphicsDevice CreateD3D11(
+            GraphicsDeviceOptions options, D3D11DeviceOptions d3d11Options, SwapchainDescription swapchainDescription)
         {
             return new D3D11.D3D11GraphicsDevice(options, d3d11Options, swapchainDescription);
         }

@@ -79,7 +79,7 @@ namespace Veldrid.Tests
                 shaderSet,
                 layout,
                 new OutputDescription(null, new OutputAttachmentDescription(PixelFormat.R32_G32_B32_A32_Float)));
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
             pipeline.Dispose();
             Assert.True(pipeline.IsDisposed);
             Assert.False(shaders[0].IsDisposed);

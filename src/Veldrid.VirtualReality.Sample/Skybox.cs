@@ -80,7 +80,7 @@ namespace Veldrid.VirtualReality.Sample
                 new ResourceLayout[] { _layout },
                 outputs);
 
-            _pipeline = factory.CreateGraphicsPipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(pd);
 
             _ubo = factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 

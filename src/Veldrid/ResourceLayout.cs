@@ -14,7 +14,7 @@ namespace Veldrid
         internal readonly uint DynamicBufferCount;
 #endif
 
-        internal ResourceLayout(ref ResourceLayoutDescription description)
+        internal ResourceLayout(in ResourceLayoutDescription description)
         {
 #if VALIDATE_USAGE
             Description = description;

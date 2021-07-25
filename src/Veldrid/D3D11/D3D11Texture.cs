@@ -24,7 +24,7 @@ namespace Veldrid.D3D11
         public Vortice.DXGI.Format DxgiFormat { get; }
         public Vortice.DXGI.Format TypelessDxgiFormat { get; }
 
-        public D3D11Texture(ID3D11Device device, ref TextureDescription description)
+        public D3D11Texture(ID3D11Device device, in TextureDescription description)
         {
             _device = device;
             Width = description.Width;
@@ -171,7 +171,7 @@ namespace Veldrid.D3D11
         {
             TextureViewDescription desc = new TextureViewDescription(this);
             D3D11GraphicsDevice d3d11GD = Util.AssertSubtype<GraphicsDevice, D3D11GraphicsDevice>(gd);
-            return new D3D11TextureView(d3d11GD, ref desc);
+            return new D3D11TextureView(d3d11GD, desc);
         }
 
         public override string Name

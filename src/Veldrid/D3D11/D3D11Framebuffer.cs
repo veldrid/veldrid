@@ -16,7 +16,7 @@ namespace Veldrid.D3D11
 
         public override bool IsDisposed => _disposed;
 
-        public D3D11Framebuffer(ID3D11Device device, ref FramebufferDescription description)
+        public D3D11Framebuffer(ID3D11Device device, in FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)
         {
             if (description.DepthTarget != null)

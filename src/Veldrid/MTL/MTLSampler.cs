@@ -9,7 +9,7 @@ namespace Veldrid.MTL
 
         public MTLSamplerState DeviceSampler { get; }
 
-        public MTLSampler(ref SamplerDescription description, MTLGraphicsDevice gd)
+        public MTLSampler(in SamplerDescription description, MTLGraphicsDevice gd)
         {
             MTLFormats.GetMinMagMipFilter(
                 description.Filter,

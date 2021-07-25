@@ -68,7 +68,7 @@ namespace Veldrid.D3D11
 
         public int SyncInterval => _syncInterval;
 
-        public D3D11Swapchain(D3D11GraphicsDevice gd, ref SwapchainDescription description)
+        public D3D11Swapchain(D3D11GraphicsDevice gd, in SwapchainDescription description)
         {
             _gd = gd;
             _depthFormat = description.DepthFormat;
@@ -187,7 +187,7 @@ namespace Veldrid.D3D11
                         _depthFormat.Value,
                         TextureUsage.DepthStencil,
                         TextureType.Texture2D);
-                    _depthTexture = new D3D11Texture(_gd.Device, ref depthDesc);
+                    _depthTexture = new D3D11Texture(_gd.Device, depthDesc);
                 }
 
                 D3D11Texture backBufferVdTexture = new D3D11Texture(
@@ -196,7 +196,7 @@ namespace Veldrid.D3D11
                     D3D11Formats.ToVdFormat(_colorFormat));
 
                 FramebufferDescription desc = new FramebufferDescription(_depthTexture, backBufferVdTexture);
-                _framebuffer = new D3D11Framebuffer(_gd.Device, ref desc)
+                _framebuffer = new D3D11Framebuffer(_gd.Device, desc)
                 {
                     Swapchain = this
                 };

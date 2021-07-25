@@ -10,7 +10,7 @@
 
         public override bool IsDisposed => _disposed;
 
-        public OpenGLResourceSet(ref ResourceSetDescription description) : base(ref description)
+        public OpenGLResourceSet(in ResourceSetDescription description) : base(description)
         {
             Layout = Util.AssertSubtype<ResourceLayout, OpenGLResourceLayout>(description.Layout);
             Resources = Util.ShallowClone(description.BoundResources);

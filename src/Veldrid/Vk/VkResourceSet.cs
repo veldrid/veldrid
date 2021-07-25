@@ -26,8 +26,8 @@ namespace Veldrid.Vk
 
         public override bool IsDisposed => _destroyed;
 
-        public VkResourceSet(VkGraphicsDevice gd, ref ResourceSetDescription description)
-            : base(ref description)
+        public VkResourceSet(VkGraphicsDevice gd, in ResourceSetDescription description)
+            : base(description)
         {
             _gd = gd;
             RefCount = new ResourceRefCount(DisposeCore);

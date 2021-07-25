@@ -49,8 +49,8 @@ namespace Veldrid.OpenGL
 
         public override bool IsDisposed => _disposeRequested;
 
-        public OpenGLPipeline(OpenGLGraphicsDevice gd, ref GraphicsPipelineDescription description)
-            : base(ref description)
+        public OpenGLPipeline(OpenGLGraphicsDevice gd, in GraphicsPipelineDescription description)
+            : base(description)
         {
             _gd = gd;
             GraphicsShaders = Util.ShallowClone(description.ShaderSet.Shaders);
@@ -72,8 +72,8 @@ namespace Veldrid.OpenGL
 #endif
         }
 
-        public OpenGLPipeline(OpenGLGraphicsDevice gd, ref ComputePipelineDescription description)
-            : base(ref description)
+        public OpenGLPipeline(OpenGLGraphicsDevice gd, in ComputePipelineDescription description)
+            : base(description)
         {
             _gd = gd;
             IsComputePipeline = true;

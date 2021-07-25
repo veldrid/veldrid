@@ -16,7 +16,7 @@ namespace Veldrid.Vk
 
         public override bool IsDisposed => _disposed;
 
-        public VkSampler(VkGraphicsDevice gd, ref SamplerDescription description)
+        public VkSampler(VkGraphicsDevice gd, in SamplerDescription description)
         {
             _gd = gd;
             VkFormats.GetFilterParams(description.Filter, out VkFilter minFilter, out VkFilter magFilter, out VkSamplerMipmapMode mipmapMode);

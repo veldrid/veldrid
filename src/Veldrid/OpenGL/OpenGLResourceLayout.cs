@@ -10,8 +10,8 @@
 
         public override bool IsDisposed => _disposed;
 
-        public OpenGLResourceLayout(ref ResourceLayoutDescription description)
-            : base(ref description)
+        public OpenGLResourceLayout(in ResourceLayoutDescription description)
+            : base(description)
         {
             Elements = Util.ShallowClone(description.Elements);
         }

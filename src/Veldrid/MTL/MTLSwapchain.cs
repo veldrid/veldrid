@@ -34,7 +34,7 @@ namespace Veldrid.MTL
 
         public CAMetalDrawable CurrentDrawable => _drawable;
 
-        public MTLSwapchain(MTLGraphicsDevice gd, ref SwapchainDescription description)
+        public MTLSwapchain(MTLGraphicsDevice gd, in SwapchainDescription description)
         {
             _gd = gd;
             _syncToVerticalBlank = description.SyncToVerticalBlank;

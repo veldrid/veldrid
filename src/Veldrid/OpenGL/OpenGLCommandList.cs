@@ -22,8 +22,8 @@ namespace Veldrid.OpenGL
 
         public override bool IsDisposed => _disposed;
 
-        public OpenGLCommandList(OpenGLGraphicsDevice gd, ref CommandListDescription description)
-            : base(ref description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
+        public OpenGLCommandList(OpenGLGraphicsDevice gd, in CommandListDescription description)
+            : base(description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
         {
             _gd = gd;
         }

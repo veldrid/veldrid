@@ -19,8 +19,8 @@ namespace Veldrid.Vk
 
         public override bool IsDisposed => _destroyed;
 
-        public VkTextureView(VkGraphicsDevice gd, ref TextureViewDescription description)
-            : base(ref description)
+        public VkTextureView(VkGraphicsDevice gd, in TextureViewDescription description)
+            : base(description)
         {
             _gd = gd;
             VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();

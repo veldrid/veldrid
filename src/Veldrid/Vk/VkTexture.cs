@@ -55,7 +55,7 @@ namespace Veldrid.Vk
         public ResourceRefCount RefCount { get; }
         public bool IsSwapchainTexture => _isSwapchainTexture;
 
-        internal VkTexture(VkGraphicsDevice gd, ref TextureDescription description)
+        internal VkTexture(VkGraphicsDevice gd, in TextureDescription description)
         {
             _gd = gd;
             _width = description.Width;

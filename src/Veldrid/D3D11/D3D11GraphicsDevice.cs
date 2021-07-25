@@ -168,7 +168,7 @@ namespace Veldrid.D3D11
             if (swapchainDesc != null)
             {
                 SwapchainDescription desc = swapchainDesc.Value;
-                _mainSwapchain = new D3D11Swapchain(this, ref desc);
+                _mainSwapchain = new D3D11Swapchain(this, desc);
             }
             _immediateContext = _device.ImmediateContext;
             _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);

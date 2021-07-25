@@ -873,6 +873,11 @@ namespace Veldrid.OpenGL
             _executionThread.Unmap(resource, subresource);
         }
 
+        internal void CreateBuffer(DeviceBuffer buffer, IntPtr initialData)
+        {
+            _executionThread.CreateBuffer(buffer, initialData);
+        }
+
         private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             lock (_mappedResourceLock)
@@ -883,7 +888,7 @@ namespace Veldrid.OpenGL
                 }
             }
             StagingBlock sb = _stagingMemoryPool.Stage(source, sizeInBytes);
-            _executionThread.UpdateBuffer(buffer, bufferOffsetInBytes, sb);
+            _executionThread.UpdateBuffer(buffer, bufferOffsetInBytes, sb.Id);
         }
 
         private protected override void UpdateTextureCore(
@@ -1210,6 +1215,17 @@ namespace Veldrid.OpenGL
                                 stagingBlock.SizeInBytes);
 
                             _gd.StagingMemoryPool.Free(stagingBlock);
+                        }
+                        break;
+
+                        case WorkItemType.CreateBuffer:
+                        {
+                            DeviceBuffer updateBuffer = Unsafe.As<DeviceBuffer>(workItem.Object0);
+                            ManualResetEventSlim mre = Unsafe.As<ManualResetEventSlim>(workItem.Object1);
+                            IntPtr resultPtr = Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
+
+                            OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(updateBuffer);
+                            glBuffer.CreateGLResources(resultPtr);
                         }
                         break;
 
@@ -1641,6 +1657,21 @@ namespace Veldrid.OpenGL
                 }
             }
 
+            public void CreateBuffer(DeviceBuffer buffer, IntPtr source)
+            {
+                CheckExceptions();
+
+                ManualResetEventSlim mre = new ManualResetEventSlim();
+
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(buffer, mre, source);
+                lock (_workItems)
+                {
+                    _workItems.Enqueue(workItem);
+                }
+                mre.Wait();
+                mre.Dispose();
+            }
+
             public MappedResource Map(
                 MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
             {
@@ -1694,11 +1725,11 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            internal void UpdateBuffer(DeviceBuffer buffer, uint offsetInBytes, StagingBlock stagingBlock)
+            internal void UpdateBuffer(DeviceBuffer buffer, uint offsetInBytes, uint dataBlockId)
             {
                 CheckExceptions();
 
-                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(buffer, offsetInBytes, stagingBlock);
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(buffer, offsetInBytes, dataBlockId);
                 lock (_workItems)
                 {
                     _workItems.Enqueue(workItem);
@@ -1808,6 +1839,7 @@ namespace Veldrid.OpenGL
             Unmap,
             ExecuteList,
             UpdateBuffer,
+            CreateBuffer,
             UpdateTexture,
             GenericAction,
             TerminateAction,
@@ -1861,14 +1893,24 @@ namespace Veldrid.OpenGL
                 UInt2 = 0;
             }
 
-            public ExecutionThreadWorkItem(DeviceBuffer updateBuffer, uint offsetInBytes, StagingBlock stagedSource)
+            public ExecutionThreadWorkItem(DeviceBuffer updateBuffer, uint offsetInBytes, uint dataBlockId)
             {
                 Type = WorkItemType.UpdateBuffer;
                 Object0 = updateBuffer;
                 Object1 = null;
 
                 UInt0 = offsetInBytes;
-                UInt1 = stagedSource.Id;
+                UInt1 = dataBlockId;
+                UInt2 = 0;
+            }
+
+            public ExecutionThreadWorkItem(DeviceBuffer createBuffer, ManualResetEventSlim mre, IntPtr initialData)
+            {
+                Type = WorkItemType.CreateBuffer;
+                Object0 = createBuffer;
+                Object1 = mre;
+
+                Util.PackIntPtr(initialData, out UInt0, out UInt1);
                 UInt2 = 0;
             }
 
@@ -1949,6 +1991,13 @@ namespace Veldrid.OpenGL
             public IntPtr Data;
             public uint RowPitch;
             public uint DepthPitch;
+        }
+
+        private struct CreateParams
+        {
+            public uint OffsetInBytes;
+            public uint SizeInBytes;
+            public IntPtr Data;
         }
 
         internal struct MappedResourceInfo

@@ -1,9 +1,8 @@
-﻿using Vulkan;
-using static Vulkan.VulkanNative;
-using static Veldrid.Vk.VulkanUtil;
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.Runtime.CompilerServices;
+using Vulkan;
+using static Veldrid.Vk.VulkanUtil;
+using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
@@ -30,8 +29,8 @@ namespace Veldrid.Vk
 
         public override bool IsDisposed => _destroyed;
 
-        public VkPipeline(VkGraphicsDevice gd, ref GraphicsPipelineDescription description)
-            : base(ref description)
+        public VkPipeline(VkGraphicsDevice gd, in GraphicsPipelineDescription description)
+            : base(description)
         {
             _gd = gd;
             IsComputePipeline = false;
@@ -343,8 +342,8 @@ namespace Veldrid.Vk
             }
         }
 
-        public VkPipeline(VkGraphicsDevice gd, ref ComputePipelineDescription description)
-            : base(ref description)
+        public VkPipeline(VkGraphicsDevice gd, in ComputePipelineDescription description)
+            : base(description)
         {
             _gd = gd;
             IsComputePipeline = true;

@@ -151,7 +151,7 @@ namespace Veldrid
                 new ResourceLayout[] { _layout, _textureLayout },
                 outputDescription,
                 ResourceBindingModel.Default);
-            _pipeline = factory.CreateGraphicsPipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(pd);
 
             _mainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,
                 _projMatrixBuffer,

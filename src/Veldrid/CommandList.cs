@@ -37,7 +37,7 @@ namespace Veldrid
 #endif
 
         internal CommandList(
-            ref CommandListDescription description,
+            in CommandListDescription description,
             GraphicsDeviceFeatures features,
             uint uniformAlignment,
             uint structuredAlignment)

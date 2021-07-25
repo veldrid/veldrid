@@ -21,7 +21,7 @@ namespace Veldrid.OpenGL
         public uint NoMipmapSampler => _noMipmapState.Sampler;
         public uint MipmapSampler => _mipmapState.Sampler;
 
-        public OpenGLSampler(OpenGLGraphicsDevice gd, ref SamplerDescription description)
+        public OpenGLSampler(OpenGLGraphicsDevice gd, in SamplerDescription description)
         {
             _gd = gd;
             _description = description;

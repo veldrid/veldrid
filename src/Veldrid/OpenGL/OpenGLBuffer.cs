@@ -26,18 +26,23 @@ namespace Veldrid.OpenGL
 
         public override bool IsDisposed => _disposeRequested;
 
-        public OpenGLBuffer(OpenGLGraphicsDevice gd, uint sizeInBytes, BufferUsage usage)
+        public OpenGLBuffer(OpenGLGraphicsDevice gd, uint sizeInBytes, BufferUsage usage, IntPtr initialData)
         {
             _gd = gd;
             SizeInBytes = sizeInBytes;
             Usage = usage;
+
+            if (initialData != IntPtr.Zero)
+            {
+                gd.CreateBuffer(this, initialData);
+            }
         }
 
         public void EnsureResourcesCreated()
         {
             if (!Created)
             {
-                CreateGLResources();
+                CreateGLResources(IntPtr.Zero);
             }
             if (_nameChanged)
             {
@@ -49,7 +54,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void CreateGLResources()
+        public void CreateGLResources(IntPtr initialData)
         {
             Debug.Assert(!Created);
 
@@ -77,7 +82,7 @@ namespace Veldrid.OpenGL
                 glNamedBufferData(
                     _buffer,
                     SizeInBytes,
-                    null,
+                    (void*)initialData,
                     hint);
                 CheckLastError();
             }
@@ -91,8 +96,8 @@ namespace Veldrid.OpenGL
 
                 glBufferData(
                     BufferTarget.CopyReadBuffer,
-                    (UIntPtr)SizeInBytes,
-                    null,
+                    SizeInBytes,
+                    (void*)initialData,
                     hint);
                 CheckLastError();
             }

@@ -9,7 +9,7 @@ namespace Veldrid
     /// </summary>
     public abstract class Pipeline : DeviceResource, IDisposable
     {
-        internal Pipeline(ref GraphicsPipelineDescription graphicsDescription)
+        internal Pipeline(in GraphicsPipelineDescription graphicsDescription)
             : this(graphicsDescription.ResourceLayouts)
         {
 #if VALIDATE_USAGE
@@ -17,9 +17,10 @@ namespace Veldrid
 #endif
         }
 
-        internal Pipeline(ref ComputePipelineDescription computeDescription)
+        internal Pipeline(in ComputePipelineDescription computeDescription)
             : this(computeDescription.ResourceLayouts)
-        { }
+        {
+        }
 
         internal Pipeline(ResourceLayout[] resourceLayouts)
         {

@@ -19,8 +19,8 @@ namespace Veldrid.Vk
 
         public override bool IsDisposed => _disposed;
 
-        public VkResourceLayout(VkGraphicsDevice gd, ref ResourceLayoutDescription description)
-            : base(ref description)
+        public VkResourceLayout(VkGraphicsDevice gd, in ResourceLayoutDescription description)
+            : base(description)
         {
             _gd = gd;
             VkDescriptorSetLayoutCreateInfo dslCI = VkDescriptorSetLayoutCreateInfo.New();

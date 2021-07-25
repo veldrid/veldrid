@@ -40,8 +40,8 @@ namespace Veldrid.OpenGL
 
         public bool Created { get; private set; }
 
-        public OpenGLTextureView(OpenGLGraphicsDevice gd, ref TextureViewDescription description)
-            : base(ref description)
+        public OpenGLTextureView(OpenGLGraphicsDevice gd, in TextureViewDescription description)
+            : base(description)
         {
             _gd = gd;
             Target = Util.AssertSubtype<Texture, OpenGLTexture>(description.Target);

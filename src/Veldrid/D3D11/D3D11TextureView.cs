@@ -11,8 +11,8 @@ namespace Veldrid.D3D11
         public ID3D11ShaderResourceView ShaderResourceView { get; }
         public ID3D11UnorderedAccessView UnorderedAccessView { get; }
 
-        public D3D11TextureView(D3D11GraphicsDevice gd, ref TextureViewDescription description)
-            : base(ref description)
+        public D3D11TextureView(D3D11GraphicsDevice gd, in TextureViewDescription description)
+            : base(description)
         {
             ID3D11Device device = gd.Device;
             D3D11Texture d3dTex = Util.AssertSubtype<Texture, D3D11Texture>(description.Target);

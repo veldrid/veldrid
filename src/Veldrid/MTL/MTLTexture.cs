@@ -38,7 +38,7 @@ namespace Veldrid.MTL
         public MTLPixelFormat MTLPixelFormat { get; }
         public MTLTextureType MTLTextureType { get; }
 
-        public MTLTexture(ref TextureDescription description, MTLGraphicsDevice _gd)
+        public MTLTexture(in TextureDescription description, MTLGraphicsDevice _gd)
         {
             Width = description.Width;
             Height = description.Height;
@@ -96,7 +96,7 @@ namespace Veldrid.MTL
             }
         }
 
-        public MTLTexture(ulong nativeTexture, ref TextureDescription description)
+        public MTLTexture(ulong nativeTexture, in TextureDescription description)
         {
             DeviceTexture = new MetalBindings.MTLTexture((IntPtr)nativeTexture);
             Width = description.Width;

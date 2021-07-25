@@ -30,7 +30,7 @@ namespace Veldrid.Vk
 
         public override bool IsDisposed => _destroyed;
 
-        public VkFramebuffer(VkGraphicsDevice gd, ref FramebufferDescription description, bool isPresented)
+        public VkFramebuffer(VkGraphicsDevice gd, in FramebufferDescription description, bool isPresented)
             : base(description.DepthTarget, description.ColorTargets)
         {
             _gd = gd;

@@ -11,8 +11,8 @@
         public int TextureCount { get; }
         public int SamplerCount { get; }
 
-        public D3D11ResourceLayout(ref ResourceLayoutDescription description)
-            : base(ref description)
+        public D3D11ResourceLayout(in ResourceLayoutDescription description)
+            : base(description)
         {
             ResourceLayoutElementDescription[] elements = description.Elements;
             _bindingInfosByVdIndex = new ResourceBindingInfo[elements.Length];
@@ -45,7 +45,8 @@
                     case ResourceKind.Sampler:
                         slot = samplerIndex++;
                         break;
-                    default: throw Illegal.Value<ResourceKind>();
+                    default:
+                        throw Illegal.Value<ResourceKind>();
                 }
 
                 _bindingInfosByVdIndex[i] = new ResourceBindingInfo(

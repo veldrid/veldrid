@@ -26,8 +26,8 @@ namespace Veldrid.D3D11
 
         public override bool IsComputePipeline { get; }
 
-        public D3D11Pipeline(D3D11ResourceCache cache, ref GraphicsPipelineDescription description)
-            : base(ref description)
+        public D3D11Pipeline(D3D11ResourceCache cache, in GraphicsPipelineDescription description)
+            : base(description)
         {
             byte[] vsBytecode = null;
             Shader[] stages = description.ShaderSet.Shaders;
@@ -62,9 +62,9 @@ namespace Veldrid.D3D11
             }
 
             cache.GetPipelineResources(
-                ref description.BlendState,
-                ref description.DepthStencilState,
-                ref description.RasterizerState,
+                description.BlendState,
+                description.DepthStencilState,
+                description.RasterizerState,
                 description.Outputs.SampleCount != TextureSampleCount.Count1,
                 description.ShaderSet.VertexLayouts,
                 vsBytecode,
@@ -103,8 +103,8 @@ namespace Veldrid.D3D11
             }
         }
 
-        public D3D11Pipeline(D3D11ResourceCache cache, ref ComputePipelineDescription description)
-            : base(ref description)
+        public D3D11Pipeline(D3D11ResourceCache cache, in ComputePipelineDescription description)
+            : base(description)
         {
             IsComputePipeline = true;
             ComputeShader = (ID3D11ComputeShader)((D3D11Shader)description.ComputeShader).DeviceShader;

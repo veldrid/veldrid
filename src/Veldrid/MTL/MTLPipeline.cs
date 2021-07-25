@@ -31,8 +31,8 @@ namespace Veldrid.MTL
         public RgbaFloat BlendColor { get; }
         public override bool IsDisposed => _disposed;
 
-        public MTLPipeline(ref GraphicsPipelineDescription description, MTLGraphicsDevice gd)
-            : base(ref description)
+        public MTLPipeline(in GraphicsPipelineDescription description, MTLGraphicsDevice gd)
+            : base(description)
         {
             PrimitiveType = MTLFormats.VdToMTLPrimitiveTopology(description.PrimitiveTopology);
             ResourceLayouts = new MTLResourceLayout[description.ResourceLayouts.Length];
@@ -202,8 +202,8 @@ namespace Veldrid.MTL
             DepthClipMode = description.DepthStencilState.DepthTestEnabled ? MTLDepthClipMode.Clip : MTLDepthClipMode.Clamp;
         }
 
-        public MTLPipeline(ref ComputePipelineDescription description, MTLGraphicsDevice gd)
-            : base(ref description)
+        public MTLPipeline(in ComputePipelineDescription description, MTLGraphicsDevice gd)
+            : base(description)
         {
             IsComputePipeline = true;
             ResourceLayouts = new MTLResourceLayout[description.ResourceLayouts.Length];

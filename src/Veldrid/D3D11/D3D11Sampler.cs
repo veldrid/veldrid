@@ -9,7 +9,7 @@ namespace Veldrid.D3D11
 
         public ID3D11SamplerState DeviceSampler { get; }
 
-        public D3D11Sampler(ID3D11Device device, ref SamplerDescription description)
+        public D3D11Sampler(ID3D11Device device, in SamplerDescription description)
         {
             ComparisonFunction comparision = description.ComparisonKind == null ? ComparisonFunction.Never : D3D11Formats.VdToD3D11ComparisonFunc(description.ComparisonKind.Value);
             Vortice.Direct3D11.SamplerDescription samplerStateDesc = new Vortice.Direct3D11.SamplerDescription

@@ -1,7 +1,4 @@
-﻿using static Veldrid.OpenGLBinding.OpenGLNative;
-using Veldrid.OpenGL;
-using Veldrid.OpenGLBinding;
-using System;
+﻿using System;
 
 namespace Veldrid.OpenGL
 {
@@ -19,73 +16,80 @@ namespace Veldrid.OpenGL
             _pool = gd.StagingMemoryPool;
         }
 
-        public override CommandList CreateCommandList(ref CommandListDescription description)
+        public override CommandList CreateCommandList(in CommandListDescription description)
         {
-            return new OpenGLCommandList(_gd, ref description);
+            return new OpenGLCommandList(_gd, description);
         }
 
-        public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)
+        public override Framebuffer CreateFramebuffer(in FramebufferDescription description)
         {
-            return new OpenGLFramebuffer(_gd, ref description);
+            return new OpenGLFramebuffer(_gd, description);
         }
 
-        protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
+        public override Pipeline CreateGraphicsPipeline(in GraphicsPipelineDescription description)
         {
-            return new OpenGLPipeline(_gd, ref description);
+            ValidateGraphicsPipeline(description);
+            return new OpenGLPipeline(_gd, description);
         }
 
-        public override Pipeline CreateComputePipeline(ref ComputePipelineDescription description)
+        public override Pipeline CreateComputePipeline(in ComputePipelineDescription description)
         {
-            OpenGLPipeline pipeline = new OpenGLPipeline(_gd, ref description);
+            OpenGLPipeline pipeline = new OpenGLPipeline(_gd, description);
             _gd.EnsureResourceInitialized(pipeline);
             return pipeline;
         }
 
-        public override ResourceLayout CreateResourceLayout(ref ResourceLayoutDescription description)
+        public override ResourceLayout CreateResourceLayout(in ResourceLayoutDescription description)
         {
-            return new OpenGLResourceLayout(ref description);
+            return new OpenGLResourceLayout(description);
         }
 
-        public override ResourceSet CreateResourceSet(ref ResourceSetDescription description)
+        public override ResourceSet CreateResourceSet(in ResourceSetDescription description)
         {
-            ValidationHelpers.ValidateResourceSet(_gd, ref description);
-            return new OpenGLResourceSet(ref description);
+            ValidationHelpers.ValidateResourceSet(_gd, description);
+            return new OpenGLResourceSet(description);
         }
 
-        protected override Sampler CreateSamplerCore(ref SamplerDescription description)
+        public override Sampler CreateSampler(in SamplerDescription description)
         {
-            return new OpenGLSampler(_gd, ref description);
+            ValidateSampler(description);
+            return new OpenGLSampler(_gd, description);
         }
 
-        protected override Shader CreateShaderCore(ref ShaderDescription description)
+        public override Shader CreateShader(in ShaderDescription description)
         {
+            ValidateShader(description);
             StagingBlock stagingBlock = _pool.Stage(description.ShaderBytes);
             OpenGLShader shader = new OpenGLShader(_gd, description.Stage, stagingBlock, description.EntryPoint);
             _gd.EnsureResourceInitialized(shader);
             return shader;
         }
 
-        protected override Texture CreateTextureCore(ref TextureDescription description)
+        public override Texture CreateTexture(in TextureDescription description)
         {
-            return new OpenGLTexture(_gd, ref description);
+            ValidateTexture(description);
+            return new OpenGLTexture(_gd, description);
         }
 
-        protected override Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description)
+        public override Texture CreateTexture(ulong nativeTexture, in TextureDescription description)
         {
-            return new OpenGLTexture(_gd, (uint)nativeTexture, ref description);
+            return new OpenGLTexture(_gd, (uint)nativeTexture, description);
         }
 
-        protected override TextureView CreateTextureViewCore(ref TextureViewDescription description)
+        public override TextureView CreateTextureView(in TextureViewDescription description)
         {
-            return new OpenGLTextureView(_gd, ref description);
+            ValidateTextureView(description);
+            return new OpenGLTextureView(_gd, description);
         }
 
-        protected override DeviceBuffer CreateBufferCore(ref BufferDescription description)
+        public override DeviceBuffer CreateBuffer(in BufferDescription description, IntPtr initialData)
         {
+            ValidateBuffer(description);
             return new OpenGLBuffer(
                 _gd,
                 description.SizeInBytes,
-                description.Usage);
+                description.Usage,
+                initialData);
         }
 
         public override Fence CreateFence(bool signaled)
@@ -93,7 +97,7 @@ namespace Veldrid.OpenGL
             return new OpenGLFence(signaled);
         }
 
-        public override Swapchain CreateSwapchain(ref SwapchainDescription description)
+        public override Swapchain CreateSwapchain(in SwapchainDescription description)
         {
             throw new NotSupportedException("OpenGL does not support creating Swapchain objects.");
         }

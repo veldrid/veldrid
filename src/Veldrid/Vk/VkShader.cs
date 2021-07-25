@@ -16,7 +16,7 @@ namespace Veldrid.Vk
 
         public override bool IsDisposed => _disposed;
 
-        public VkShader(VkGraphicsDevice gd, ref ShaderDescription description)
+        public VkShader(VkGraphicsDevice gd, in ShaderDescription description)
             : base(description.Stage, description.EntryPoint)
         {
             _gd = gd;

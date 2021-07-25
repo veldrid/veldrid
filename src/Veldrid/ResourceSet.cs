@@ -9,7 +9,7 @@ namespace Veldrid
     /// </summary>
     public abstract class ResourceSet : DeviceResource, IDisposable
     {
-        internal ResourceSet(ref ResourceSetDescription description)
+        internal ResourceSet(in ResourceSetDescription description)
         {
 #if VALIDATE_USAGE
             Layout = description.Layout;

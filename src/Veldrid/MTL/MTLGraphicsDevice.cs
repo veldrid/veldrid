@@ -132,7 +132,7 @@ namespace Veldrid.MTL
             if (swapchainDesc != null)
             {
                 SwapchainDescription desc = swapchainDesc.Value;
-                _mainSwapchain = new MTLSwapchain(this, ref desc);
+                _mainSwapchain = new MTLSwapchain(this, desc);
             }
 
             _metalInfo = new BackendInfoMetal(this);
@@ -581,7 +581,7 @@ namespace Veldrid.MTL
                         {
                             resourceStream.CopyTo(ms);
                             ShaderDescription shaderDesc = new ShaderDescription(ShaderStages.Compute, data, "copy_bytes");
-                            _unalignedBufferCopyShader = new MTLShader(ref shaderDesc, this);
+                            _unalignedBufferCopyShader = new MTLShader(shaderDesc, this);
                         }
                     }
 

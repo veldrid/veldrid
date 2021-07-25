@@ -82,8 +82,8 @@ namespace Veldrid.D3D11
 
         private readonly List<D3D11Swapchain> _referencedSwapchains = new List<D3D11Swapchain>();
 
-        public D3D11CommandList(D3D11GraphicsDevice gd, ref CommandListDescription description)
-            : base(ref description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
+        public D3D11CommandList(D3D11GraphicsDevice gd, in CommandListDescription description)
+            : base(description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
         {
             _gd = gd;
             _context = gd.Device.CreateDeferredContext();

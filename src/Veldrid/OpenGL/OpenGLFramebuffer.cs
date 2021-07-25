@@ -22,7 +22,7 @@ namespace Veldrid.OpenGL
 
         public override bool IsDisposed => _disposeRequested;
 
-        public OpenGLFramebuffer(OpenGLGraphicsDevice gd, ref FramebufferDescription description)
+        public OpenGLFramebuffer(OpenGLGraphicsDevice gd, in FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)
         {
             _gd = gd;

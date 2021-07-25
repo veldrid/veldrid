@@ -16,8 +16,8 @@ namespace Veldrid.MTL
         public ResourceLayoutDescription Description { get; }
 #endif
 
-        public MTLResourceLayout(ref ResourceLayoutDescription description, MTLGraphicsDevice gd)
-            : base(ref description)
+        public MTLResourceLayout(in ResourceLayoutDescription description, MTLGraphicsDevice gd)
+            : base(description)
         {
 #if !VALIDATE_USAGE
             Description = description;

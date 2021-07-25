@@ -14,8 +14,8 @@ namespace Veldrid.MTL
 
         public override bool IsDisposed => _disposed;
 
-        public MTLTextureView(ref TextureViewDescription description, MTLGraphicsDevice gd)
-            : base(ref description)
+        public MTLTextureView(in TextureViewDescription description, MTLGraphicsDevice gd)
+            : base(description)
         {
             MTLTexture targetMTLTexture = Util.AssertSubtype<Texture, MTLTexture>(description.Target);
             if (BaseMipLevel != 0 || MipLevels != Target.MipLevels

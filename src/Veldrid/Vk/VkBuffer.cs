@@ -24,7 +24,7 @@ namespace Veldrid.Vk
 
         public VkMemoryRequirements BufferMemoryRequirements => _bufferMemoryRequirements;
 
-        public VkBuffer(VkGraphicsDevice gd, uint sizeInBytes, BufferUsage usage, string callerMember = null)
+        public VkBuffer(VkGraphicsDevice gd, uint sizeInBytes, BufferUsage usage, IntPtr initialData)
         {
             _gd = gd;
             SizeInBytes = sizeInBytes;
@@ -77,8 +77,8 @@ namespace Veldrid.Vk
                 prefersDedicatedAllocation = false;
             }
 
-            var isStaging = (usage & BufferUsage.Staging) == BufferUsage.Staging;
-            var hostVisible = isStaging || (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
+            bool isStaging = (usage & BufferUsage.Staging) == BufferUsage.Staging;
+            bool hostVisible = isStaging || (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
 
             VkMemoryPropertyFlags memoryPropertyFlags =
                 hostVisible
@@ -87,11 +87,12 @@ namespace Veldrid.Vk
             if (isStaging)
             {
                 // Use "host cached" memory for staging when available, for better performance of GPU -> CPU transfers
-                var hostCachedAvailable = TryFindMemoryType(
+                bool hostCachedAvailable = TryFindMemoryType(
                     gd.PhysicalDeviceMemProperties,
                     _bufferMemoryRequirements.memoryTypeBits,
                     memoryPropertyFlags | VkMemoryPropertyFlags.HostCached,
                     out _);
+
                 if (hostCachedAvailable)
                 {
                     memoryPropertyFlags |= VkMemoryPropertyFlags.HostCached;
@@ -113,6 +114,11 @@ namespace Veldrid.Vk
             CheckResult(result);
 
             RefCount = new ResourceRefCount(DisposeCore);
+
+            if (initialData != IntPtr.Zero)
+            {
+                gd.UpdateBuffer(this, 0, initialData, sizeInBytes);
+            }
         }
 
         public override string Name

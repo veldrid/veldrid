@@ -8,8 +8,8 @@ namespace Veldrid.MTL
         public override bool IsRenderable => true;
         private bool _disposed;
 
-        public MTLFramebuffer(MTLGraphicsDevice gd, ref FramebufferDescription description)
-            : base(gd, ref description)
+        public MTLFramebuffer(MTLGraphicsDevice gd, in FramebufferDescription description)
+            : base(gd, description)
         {
         }
 

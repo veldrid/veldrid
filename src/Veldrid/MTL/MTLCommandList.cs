@@ -45,8 +45,8 @@ namespace Veldrid.MTL
 
         public MTLCommandBuffer CommandBuffer => _cb;
 
-        public MTLCommandList(ref CommandListDescription description, MTLGraphicsDevice gd)
-            : base(ref description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
+        public MTLCommandList(in CommandListDescription description, MTLGraphicsDevice gd)
+            : base(description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
         {
             _gd = gd;
         }

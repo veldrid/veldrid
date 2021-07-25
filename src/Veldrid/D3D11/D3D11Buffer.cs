@@ -3,6 +3,7 @@ using Vortice.Direct3D11;
 using System.Collections.Generic;
 using Vortice.DXGI;
 using Vortice.Direct3D;
+using System.Diagnostics;
 
 namespace Veldrid.D3D11
 {
@@ -27,7 +28,9 @@ namespace Veldrid.D3D11
 
         public ID3D11Buffer Buffer => _buffer;
 
-        public D3D11Buffer(ID3D11Device device, uint sizeInBytes, BufferUsage usage, uint structureByteStride, bool rawBuffer)
+        public unsafe D3D11Buffer(
+            ID3D11Device device, uint sizeInBytes, BufferUsage usage, uint structureByteStride, bool rawBuffer,
+            IntPtr initialData)
         {
             _device = device;
             SizeInBytes = sizeInBytes;
@@ -39,6 +42,7 @@ namespace Veldrid.D3D11
                 (int)sizeInBytes,
                 D3D11Formats.VdToD3D11BindFlags(usage),
                 ResourceUsage.Default);
+
             if ((usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
                 || (usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
             {
@@ -68,7 +72,14 @@ namespace Veldrid.D3D11
                 bd.CpuAccessFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
             }
 
-            _buffer = device.CreateBuffer(bd);
+            if (initialData == IntPtr.Zero)
+            {
+                _buffer = device.CreateBuffer(bd);
+            }
+            else
+            {
+                _buffer = device.CreateBuffer(bd, initialData);
+            }
         }
 
         public override string Name

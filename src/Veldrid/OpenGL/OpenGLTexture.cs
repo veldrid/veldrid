@@ -23,7 +23,7 @@ namespace Veldrid.OpenGL
 
         public uint Texture => _texture;
 
-        public OpenGLTexture(OpenGLGraphicsDevice gd, ref TextureDescription description)
+        public OpenGLTexture(OpenGLGraphicsDevice gd, in TextureDescription description)
         {
             _gd = gd;
 
@@ -86,7 +86,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public OpenGLTexture(OpenGLGraphicsDevice gd, uint nativeTexture, ref TextureDescription description)
+        public OpenGLTexture(OpenGLGraphicsDevice gd, uint nativeTexture, in TextureDescription description)
         {
             _gd = gd;
             _texture = nativeTexture;

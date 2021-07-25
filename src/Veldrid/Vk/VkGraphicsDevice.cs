@@ -168,7 +168,7 @@ namespace Veldrid.Vk
             if (scDesc != null)
             {
                 SwapchainDescription desc = scDesc.Value;
-                _mainSwapchain = new VkSwapchain(this, ref desc, surface);
+                _mainSwapchain = new VkSwapchain(this, desc, surface);
             }
 
             CreateDescriptorPool();

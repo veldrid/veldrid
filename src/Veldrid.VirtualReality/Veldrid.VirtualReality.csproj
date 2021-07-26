@@ -9,15 +9,13 @@
     <Compile Include="..\Veldrid\Vk\VkFormats.VdToVkPixelFormat.cs" Link="VkFormats.VdToVkPixelFormat.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
-  </ItemGroup>
-
   <ItemGroup Condition="'$(UseStableVersions)' == 'true'">
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
     <PackageReference Include="Veldrid" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseStableVersions)' != 'true'">
+    <ProjectReference Include="..\..\modules\veldrid-spirv\src\Veldrid.SPIRV\Veldrid.SPIRV.csproj" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
   </ItemGroup>
 

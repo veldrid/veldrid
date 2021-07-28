@@ -8,25 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)runtimes\win-x64\native\SDL2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackagePath>runtimes/win-x64/native</PackagePath>
-      <Pack>true</Pack>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)runtimes\win-x86\native\SDL2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackagePath>runtimes/win-x86/native</PackagePath>
-      <Pack>true</Pack>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)runtimes\osx-x64\native\libsdl2.dylib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackagePath>runtimes/osx-x64/native</PackagePath>
-      <Pack>true</Pack>
-    </Content>
-    <Content Include="build\net40\Veldrid.SDL2.targets">
-      <PackagePath>build/net40/Veldrid.SDL2.targets</PackagePath>
-      <Pack>true</Pack>
-    </Content>
+    <PackageReference Include="Ultz.Native.SDL" Version="2.0.14.1" />
   </ItemGroup>
 
   <PropertyGroup>

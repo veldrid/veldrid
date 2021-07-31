@@ -1254,14 +1254,13 @@ namespace Veldrid.OpenGL
                         {
                             // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
                             uint error = glGetError();
-                            if (error == (uint)ErrorCode.InvalidOperation)
+                            if (error != (uint)ErrorCode.InvalidOperation)
                             {
-                                return;
-                            }
-                            _makeCurrent(_gd._glContext);
+                                _makeCurrent(_gd._glContext);
 
-                            _gd.FlushDisposables();
-                            _gd._deleteContext(_gd._glContext);
+                                _gd.FlushDisposables();
+                                _gd._deleteContext(_gd._glContext);
+                            }
                             _gd.StagingMemoryPool.Dispose();
                             _terminated = true;
                         }

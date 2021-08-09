@@ -81,8 +81,11 @@ namespace Veldrid.Vk
 
                 if (dedicated || size >= minDedicatedAllocationSize)
                 {
-                    // Round up to the nearest multiple of bufferImageGranularity.
-                    size = ((size / _bufferImageGranularity) + 1) * _bufferImageGranularity;
+                    if (dedicatedImage == VkImage.Null && dedicatedBuffer == Vulkan.VkBuffer.Null)
+                    {
+                        // Round up to the nearest multiple of bufferImageGranularity.
+                        size = ((size + _bufferImageGranularity - 1) / _bufferImageGranularity) * _bufferImageGranularity;
+                    }
                     _totalAllocatedBytes += size;
 
                     VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.New();

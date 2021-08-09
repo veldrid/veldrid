@@ -48,6 +48,7 @@ namespace Veldrid.Vk
         private Stack<SharedCommandPool> _sharedGraphicsCommandPools = new Stack<SharedCommandPool>();
         private VkDescriptorPoolManager _descriptorPoolManager;
         private bool _standardValidationSupported;
+        private bool _khronosValidationSupported;
         private bool _standardClipYDirection;
         private vkGetBufferMemoryRequirements2_t _getBufferMemoryRequirements2;
         private vkGetImageMemoryRequirements2_t _getImageMemoryRequirements2;
@@ -552,6 +553,11 @@ namespace Veldrid.Vk
                     _standardValidationSupported = true;
                     instanceLayers.Add(CommonStrings.StandardValidationLayerName);
                 }
+                if (availableInstanceLayers.Contains(CommonStrings.KhronosValidationLayerName))
+                {
+                    _khronosValidationSupported = true;
+                    instanceLayers.Add(CommonStrings.KhronosValidationLayerName);
+                }
             }
 
             instanceCI.enabledExtensionCount = instanceExtensions.Count;
@@ -787,6 +793,10 @@ namespace Veldrid.Vk
             {
                 layerNames.Add(CommonStrings.StandardValidationLayerName);
             }
+            if (_khronosValidationSupported)
+            {
+                layerNames.Add(CommonStrings.KhronosValidationLayerName);
+            }
             deviceCreateInfo.enabledLayerCount = layerNames.Count;
             deviceCreateInfo.ppEnabledLayerNames = (byte**)layerNames.Data;
 
@@ -821,8 +831,11 @@ namespace Veldrid.Vk
             }
             if (_getPhysicalDeviceProperties2 != null && hasDriverProperties)
             {
+                VkPhysicalDeviceProperties2KHR deviceProps = VkPhysicalDeviceProperties2KHR.New();
                 VkPhysicalDeviceDriverProperties driverProps = VkPhysicalDeviceDriverProperties.New();
-                _getPhysicalDeviceProperties2(_physicalDevice, &driverProps);
+
+                deviceProps.pNext = &driverProps;
+                _getPhysicalDeviceProperties2(_physicalDevice, &deviceProps);
 
                 string driverName = Encoding.UTF8.GetString(
                     driverProps.driverName, VkPhysicalDeviceDriverProperties.DriverNameLength).TrimEnd('\0');

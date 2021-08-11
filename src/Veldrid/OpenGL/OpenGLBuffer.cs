@@ -58,6 +58,12 @@ namespace Veldrid.OpenGL
         {
             Debug.Assert(!Created);
 
+            BufferStorageMask storageMask =
+                BufferStorageMask.ClientStorage |
+                BufferStorageMask.DynamicStorage |
+                BufferStorageMask.MapWrite |
+                BufferStorageMask.MapRead;
+
             BufferUsageHint hint;
             if ((Usage & BufferUsage.Staging) == BufferUsage.Staging)
             {
@@ -79,11 +85,23 @@ namespace Veldrid.OpenGL
                 CheckLastError();
                 _buffer = buffer;
 
-                glNamedBufferData(
-                    _buffer,
-                    SizeInBytes,
-                    (void*)initialData,
-                    hint);
+                if (hint == BufferUsageHint.StreamCopy &&
+                    _gd.BackendType != GraphicsBackend.OpenGLES)
+                {
+                    glNamedBufferStorage(
+                        _buffer,
+                        SizeInBytes,
+                        (void*)initialData,
+                        storageMask);
+                }
+                else
+                {
+                    glNamedBufferData(
+                        _buffer,
+                        SizeInBytes,
+                        (void*)initialData,
+                        hint);
+                }
                 CheckLastError();
             }
             else
@@ -94,11 +112,23 @@ namespace Veldrid.OpenGL
                 glBindBuffer(BufferTarget.CopyReadBuffer, _buffer);
                 CheckLastError();
 
-                glBufferData(
-                    BufferTarget.CopyReadBuffer,
-                    SizeInBytes,
-                    (void*)initialData,
-                    hint);
+                if (hint == BufferUsageHint.StreamCopy &&
+                    _gd.BackendType != GraphicsBackend.OpenGLES )
+                {
+                    glBufferStorage(
+                        BufferTarget.CopyReadBuffer,
+                        SizeInBytes,
+                        (void*)initialData,
+                        storageMask);
+                }
+                else
+                {
+                    glBufferData(
+                        BufferTarget.CopyReadBuffer,
+                        SizeInBytes,
+                        (void*)initialData,
+                        hint);
+                }
                 CheckLastError();
             }
 

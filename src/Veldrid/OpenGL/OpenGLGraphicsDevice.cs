@@ -212,8 +212,10 @@ namespace Veldrid.OpenGL
 
             _resourceFactory = new OpenGLResourceFactory(this);
 
-            glGenVertexArrays(1, out _vao);
+            uint vao;
+            glGenVertexArrays(1, &vao);
             CheckLastError();
+            _vao = vao;
 
             glBindVertexArray(_vao);
             CheckLastError();
@@ -332,7 +334,8 @@ namespace Veldrid.OpenGL
                 return false;
             }
 
-            glGenTextures(1, out uint copySrc);
+            uint copySrc;
+            glGenTextures(1, &copySrc);
             CheckLastError();
 
             float* data = stackalloc float[4];
@@ -347,7 +350,8 @@ namespace Veldrid.OpenGL
             CheckLastError();
             glTexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, 1, 1, 0, GLPixelFormat.Rgba, GLPixelType.Float, data);
             CheckLastError();
-            glGenFramebuffers(1, out uint copySrcFb);
+            uint copySrcFb;
+            glGenFramebuffers(1, &copySrcFb);
             CheckLastError();
 
             glBindFramebuffer(FramebufferTarget.ReadFramebuffer, copySrcFb);
@@ -394,8 +398,8 @@ namespace Veldrid.OpenGL
                 CheckLastError();
             }
 
-            glDeleteFramebuffers(1, ref copySrcFb);
-            glDeleteTextures(1, ref copySrc);
+            glDeleteFramebuffers(1, &copySrcFb);
+            glDeleteTextures(1, &copySrc);
 
             return data[0] > 0.6f;
         }
@@ -446,12 +450,14 @@ namespace Veldrid.OpenGL
 
             LoadAllFunctions(eaglContext.NativePtr, getProcAddress, true);
 
-            glGenFramebuffers(1, out uint fb);
+            uint fb;
+            glGenFramebuffers(1, &fb);
             CheckLastError();
             glBindFramebuffer(FramebufferTarget.Framebuffer, fb);
             CheckLastError();
 
-            glGenRenderbuffers(1, out uint colorRB);
+            uint colorRB;
+            glGenRenderbuffers(1, &colorRB);
             CheckLastError();
 
             glBindRenderbuffer(RenderbufferTarget.Renderbuffer, colorRB);
@@ -463,16 +469,18 @@ namespace Veldrid.OpenGL
                 throw new VeldridException($"Failed to associate OpenGLES Renderbuffer with CAEAGLLayer.");
             }
 
+            int fbWidth;
             glGetRenderbufferParameteriv(
                 RenderbufferTarget.Renderbuffer,
                 RenderbufferPname.RenderbufferWidth,
-                out int fbWidth);
+                &fbWidth);
             CheckLastError();
 
+            int fbHeight;
             glGetRenderbufferParameteriv(
                 RenderbufferTarget.Renderbuffer,
                 RenderbufferPname.RenderbufferHeight,
-                out int fbHeight);
+                &fbHeight);
             CheckLastError();
 
             glFramebufferRenderbuffer(
@@ -486,7 +494,7 @@ namespace Veldrid.OpenGL
             bool hasDepth = options.SwapchainDepthFormat != null;
             if (hasDepth)
             {
-                glGenRenderbuffers(1, out depthRB);
+                glGenRenderbuffers(1, &depthRB);
                 CheckLastError();
 
                 glBindRenderbuffer(RenderbufferTarget.Renderbuffer, depthRB);
@@ -525,9 +533,10 @@ namespace Veldrid.OpenGL
                 }
             };
 
+            uint colorRenderBuffer = colorRB;
             Action swapBuffers = () =>
             {
-                glBindRenderbuffer(RenderbufferTarget.Renderbuffer, colorRB);
+                glBindRenderbuffer(RenderbufferTarget.Renderbuffer, colorRenderBuffer);
                 CheckLastError();
 
                 bool presentResult = eaglContext.presentRenderBuffer((UIntPtr)RenderbufferTarget.Renderbuffer);
@@ -538,19 +547,21 @@ namespace Veldrid.OpenGL
                 }
             };
 
+            uint framebuffer = fb;
             Action setSwapchainFramebuffer = () =>
             {
-                glBindFramebuffer(FramebufferTarget.Framebuffer, fb);
+                glBindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
                 CheckLastError();
             };
 
+            uint depthRenderbuffer = depthRB;
             Action<uint, uint> resizeSwapchain = (w, h) =>
             {
                 eaglLayer.frame = uiView.frame;
 
                 _executionThread.Run(() =>
                 {
-                    glBindRenderbuffer(RenderbufferTarget.Renderbuffer, colorRB);
+                    glBindRenderbuffer(RenderbufferTarget.Renderbuffer, colorRenderBuffer);
                     CheckLastError();
 
                     bool rbStorageResult = eaglContext.renderBufferStorage(
@@ -561,22 +572,24 @@ namespace Veldrid.OpenGL
                         throw new VeldridException($"Failed to associate OpenGLES Renderbuffer with CAEAGLLayer.");
                     }
 
+                    int newWidth;
                     glGetRenderbufferParameteriv(
                         RenderbufferTarget.Renderbuffer,
                         RenderbufferPname.RenderbufferWidth,
-                        out int newWidth);
+                        &newWidth);
                     CheckLastError();
 
+                    int newHeight;
                     glGetRenderbufferParameteriv(
                         RenderbufferTarget.Renderbuffer,
                         RenderbufferPname.RenderbufferHeight,
-                        out int newHeight);
+                        &newHeight);
                     CheckLastError();
 
                     if (hasDepth)
                     {
-                        Debug.Assert(depthRB != 0);
-                        glBindRenderbuffer(RenderbufferTarget.Renderbuffer, depthRB);
+                        Debug.Assert(depthRenderbuffer != 0);
+                        glBindRenderbuffer(RenderbufferTarget.Renderbuffer, depthRenderbuffer);
                         CheckLastError();
 
                         glRenderbufferStorage(
@@ -1442,7 +1455,8 @@ namespace Veldrid.OpenGL
                                         {
                                             uint curLayer = arrayLayer + layer;
                                             uint curOffset = depthSliceSize * layer;
-                                            glGenFramebuffers(1, out uint readFB);
+                                            uint readFB;
+                                            glGenFramebuffers(1, &readFB);
                                             CheckLastError();
                                             glBindFramebuffer(FramebufferTarget.ReadFramebuffer, readFB);
                                             CheckLastError();
@@ -1485,7 +1499,7 @@ namespace Veldrid.OpenGL
                                                 texture.GLPixelType,
                                                 (byte*)block.Data + curOffset);
                                             CheckLastError();
-                                            glDeleteFramebuffers(1, ref readFB);
+                                            glDeleteFramebuffers(1, &readFB);
                                             CheckLastError();
                                         }
                                     }

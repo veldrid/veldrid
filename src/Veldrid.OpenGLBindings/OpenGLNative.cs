@@ -15,9 +15,9 @@ namespace Veldrid.OpenGLBinding
         private const CallingConvention CallConv = CallingConvention.Winapi;
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glGenVertexArrays_t(uint n, out uint arrays);
+        private delegate void glGenVertexArrays_t(uint n, uint* arrays);
         private static glGenVertexArrays_t p_glGenVertexArrays;
-        public static void glGenVertexArrays(uint n, out uint arrays) => p_glGenVertexArrays(n, out arrays);
+        public static void glGenVertexArrays(uint n, uint* arrays) => p_glGenVertexArrays(n, arrays);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate uint glGetError_t();
@@ -164,19 +164,19 @@ namespace Veldrid.OpenGLBinding
             uint baseinstance) => p_glDrawArraysInstancedBaseInstance(mode, first, count, primcount, baseinstance);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glGenBuffers_t(uint n, out uint buffers);
+        private delegate void glGenBuffers_t(uint n, uint* buffers);
         private static glGenBuffers_t p_glGenBuffers;
-        public static void glGenBuffers(uint n, out uint buffers) => p_glGenBuffers(n, out buffers);
+        public static void glGenBuffers(uint n, uint* buffers) => p_glGenBuffers(n, buffers);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glDeleteBuffers_t(uint n, ref uint buffers);
+        private delegate void glDeleteBuffers_t(uint n, uint* buffers);
         private static glDeleteBuffers_t p_glDeleteBuffers;
-        public static void glDeleteBuffers(uint n, ref uint buffers) => p_glDeleteBuffers(n, ref buffers);
+        public static void glDeleteBuffers(uint n, uint* buffers) => p_glDeleteBuffers(n, buffers);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glGenFramebuffers_t(uint n, out uint ids);
+        private delegate void glGenFramebuffers_t(uint n, uint* ids);
         private static glGenFramebuffers_t p_glGenFramebuffers;
-        public static void glGenFramebuffers(uint n, out uint ids) => p_glGenFramebuffers(n, out ids);
+        public static void glGenFramebuffers(uint n, uint* ids) => p_glGenFramebuffers(n, ids);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glActiveTexture_t(TextureUnit texture);
@@ -225,19 +225,19 @@ namespace Veldrid.OpenGLBinding
             => p_glBindFramebuffer(target, framebuffer);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glDeleteFramebuffers_t(uint n, ref uint framebuffers);
+        private delegate void glDeleteFramebuffers_t(uint n, uint* framebuffers);
         private static glDeleteFramebuffers_t p_glDeleteFramebuffers;
-        public static void glDeleteFramebuffers(uint n, ref uint framebuffers) => p_glDeleteFramebuffers(n, ref framebuffers);
+        public static void glDeleteFramebuffers(uint n, uint* framebuffers) => p_glDeleteFramebuffers(n, framebuffers);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glGenTextures_t(uint n, out uint textures);
+        private delegate void glGenTextures_t(uint n, uint* textures);
         private static glGenTextures_t p_glGenTextures;
-        public static void glGenTextures(uint n, out uint textures) => p_glGenTextures(n, out textures);
+        public static void glGenTextures(uint n, uint* textures) => p_glGenTextures(n, textures);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glDeleteTextures_t(uint n, ref uint textures);
+        private delegate void glDeleteTextures_t(uint n, uint* textures);
         private static glDeleteTextures_t p_glDeleteTextures;
-        public static void glDeleteTextures(uint n, ref uint textures) => p_glDeleteTextures(n, ref textures);
+        public static void glDeleteTextures(uint n, uint* textures) => p_glDeleteTextures(n, textures);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate FramebufferErrorCode glCheckFramebufferStatus_t(FramebufferTarget target);
@@ -404,9 +404,9 @@ namespace Veldrid.OpenGLBinding
         public static void glDeleteShader(uint shader) => p_glDeleteShader(shader);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glGenSamplers_t(uint n, out uint samplers);
+        private delegate void glGenSamplers_t(uint n, uint* samplers);
         private static glGenSamplers_t p_glGenSamplers;
-        public static void glGenSamplers(uint n, out uint samplers) => p_glGenSamplers(n, out samplers);
+        public static void glGenSamplers(uint n, uint* samplers) => p_glGenSamplers(n, samplers);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glSamplerParameterf_t(uint sampler, SamplerParameterName pname, float param);
@@ -432,9 +432,9 @@ namespace Veldrid.OpenGLBinding
         public static void glBindSampler(uint unit, uint sampler) => p_glBindSampler(unit, sampler);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glDeleteSamplers_t(uint n, ref uint samplers);
+        private delegate void glDeleteSamplers_t(uint n, uint* samplers);
         private static glDeleteSamplers_t p_glDeleteSamplers;
-        public static void glDeleteSamplers(uint n, ref uint samplers) => p_glDeleteSamplers(n, ref samplers);
+        public static void glDeleteSamplers(uint n, uint* samplers) => p_glDeleteSamplers(n, samplers);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glBlendFuncSeparatei_t(
@@ -1581,18 +1581,18 @@ namespace Veldrid.OpenGLBinding
         private delegate void glGetRenderbufferParameteriv_t(
             RenderbufferTarget target,
             RenderbufferPname pname,
-            out int parameters);
+            int* parameters);
         private static glGetRenderbufferParameteriv_t p_glGetRenderbufferParameteriv;
         public static void glGetRenderbufferParameteriv(
             RenderbufferTarget target,
             RenderbufferPname pname,
-            out int parameters) => p_glGetRenderbufferParameteriv(target, pname, out parameters);
+            int* parameters) => p_glGetRenderbufferParameteriv(target, pname, parameters);
 
         [UnmanagedFunctionPointer(CallConv)]
-        private delegate void glGenRenderbuffers_t(uint count, out uint names);
+        private delegate void glGenRenderbuffers_t(uint count, uint* names);
         private static glGenRenderbuffers_t p_glGenRenderbuffers;
-        public static void glGenRenderbuffers(uint count, out uint names)
-            => p_glGenRenderbuffers(count, out names);
+        public static void glGenRenderbuffers(uint count, uint* names)
+            => p_glGenRenderbuffers(count, names);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glBindRenderbuffer_t(RenderbufferTarget bindPoint, uint name);
@@ -1920,14 +1920,6 @@ namespace Veldrid.OpenGLBinding
             {
                 field = default(T);
             }
-        }
-
-        private static void LoadFunction<T>(out T field)
-        {
-            // Slow version using reflection -- prefer above.
-            string name = typeof(T).Name;
-            name = name.Substring(0, name.Length - 2); // Remove _t
-            LoadFunction(name, out field);
         }
     }
 }

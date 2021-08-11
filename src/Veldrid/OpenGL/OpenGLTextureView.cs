@@ -195,7 +195,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        private void CreateGLResources()
+        private unsafe void CreateGLResources()
         {
             if (!_needsTextureView)
             {
@@ -203,8 +203,10 @@ namespace Veldrid.OpenGL
                 return;
             }
 
-            glGenTextures(1, out _textureView);
+            uint texView;
+            glGenTextures(1, &texView);
             CheckLastError();
+            _textureView = texView;
 
             TextureTarget originalTarget = Target.TextureTarget;
             if (originalTarget == TextureTarget.Texture1D)
@@ -286,15 +288,17 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void DestroyGLResources()
+        public unsafe void DestroyGLResources()
         {
             if (!_disposed)
             {
                 _disposed = true;
                 if (_textureView != 0)
                 {
-                    glDeleteTextures(1, ref _textureView);
+                    uint texView = _textureView;
+                    glDeleteTextures(1, &texView);
                     CheckLastError();
+                    _textureView = texView;
                 }
             }
         }

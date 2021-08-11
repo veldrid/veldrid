@@ -106,8 +106,10 @@ namespace Veldrid.OpenGL
             }
             else
             {
-                glGenBuffers(1, out _buffer);
+                uint buffer;
+                glGenBuffers(1, &buffer);
                 CheckLastError();
+                _buffer = buffer;
 
                 glBindBuffer(BufferTarget.CopyReadBuffer, _buffer);
                 CheckLastError();
@@ -147,8 +149,9 @@ namespace Veldrid.OpenGL
         public void DestroyGLResources()
         {
             uint buffer = _buffer;
-            glDeleteBuffers(1, ref buffer);
+            glDeleteBuffers(1, &buffer);
             CheckLastError();
+            _buffer = buffer;
         }
     }
 }

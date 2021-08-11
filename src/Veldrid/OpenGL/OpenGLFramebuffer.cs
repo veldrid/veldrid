@@ -46,8 +46,10 @@ namespace Veldrid.OpenGL
 
         public void CreateGLResources()
         {
-            glGenFramebuffers(1, out _framebuffer);
+            uint fb;
+            glGenFramebuffers(1, &fb);
             CheckLastError();
+            _framebuffer = fb;
 
             glBindFramebuffer(FramebufferTarget.Framebuffer, _framebuffer);
             CheckLastError();
@@ -167,8 +169,9 @@ namespace Veldrid.OpenGL
             {
                 _disposed = true;
                 uint framebuffer = _framebuffer;
-                glDeleteFramebuffers(1, ref framebuffer);
+                glDeleteFramebuffers(1, &framebuffer);
                 CheckLastError();
+                _framebuffer = framebuffer;
             }
         }
     }

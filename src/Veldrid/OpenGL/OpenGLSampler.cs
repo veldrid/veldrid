@@ -80,8 +80,10 @@ namespace Veldrid.OpenGL
 
             public void CreateGLResources(SamplerDescription description, bool mipmapped, GraphicsBackend backend)
             {
-                glGenSamplers(1, out _sampler);
+                uint sampler;
+                glGenSamplers(1, &sampler);
                 CheckLastError();
+                _sampler = sampler;
 
                 glSamplerParameteri(_sampler, SamplerParameterName.TextureWrapS, (int)OpenGLFormats.VdToGLTextureWrapMode(description.AddressModeU));
                 CheckLastError();
@@ -138,8 +140,10 @@ namespace Veldrid.OpenGL
 
             public void DestroyGLResources()
             {
-                glDeleteSamplers(1, ref _sampler);
+                uint sampler = _sampler;
+                glDeleteSamplers(1, &sampler);
                 CheckLastError();
+                _sampler = sampler;
             }
 
             private RgbaFloat ToRgbaFloat(SamplerBorderColor borderColor)

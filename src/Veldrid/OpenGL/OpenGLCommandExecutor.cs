@@ -1669,7 +1669,8 @@ namespace Veldrid.OpenGL
                     {
                         uint curLayer = srcZ + srcLayer + layer;
                         uint curOffset = depthSliceSize * layer;
-                        glGenFramebuffers(1, out uint readFB);
+                        uint readFB;
+                        glGenFramebuffers(1, &readFB);
                         CheckLastError();
                         glBindFramebuffer(FramebufferTarget.ReadFramebuffer, readFB);
                         CheckLastError();
@@ -1714,7 +1715,7 @@ namespace Veldrid.OpenGL
                             srcGLTexture.GLPixelType,
                             (byte*)block.Data + curOffset);
                         CheckLastError();
-                        glDeleteFramebuffers(1, ref readFB);
+                        glDeleteFramebuffers(1, &readFB);
                         CheckLastError();
                     }
                 }

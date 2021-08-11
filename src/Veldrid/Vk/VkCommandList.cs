@@ -104,13 +104,15 @@ namespace Veldrid.Vk
                 rrc.Increment();
             }
 
-            _submittedStagingInfos.Add(cb, _currentStagingInfo);
+            lock (_stagingLock)
+            {
+                _submittedStagingInfos.Add(cb, _currentStagingInfo);
+            }
             _currentStagingInfo = null;
         }
 
         public void CommandBufferCompleted(VkCommandBuffer completedCB)
         {
-
             lock (_commandBufferListLock)
             {
                 for (int i = 0; i < _submittedCommandBuffers.Count; i++)
@@ -127,10 +129,9 @@ namespace Veldrid.Vk
 
             lock (_stagingLock)
             {
-                if (_submittedStagingInfos.TryGetValue(completedCB, out StagingResourceInfo info))
+                if (_submittedStagingInfos.Remove(completedCB, out StagingResourceInfo info))
                 {
                     RecycleStagingInfo(info);
-                    _submittedStagingInfos.Remove(completedCB);
                 }
             }
 

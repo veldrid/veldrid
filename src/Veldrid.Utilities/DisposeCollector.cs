@@ -3,9 +3,10 @@ using System.Collections.Generic;
 
 namespace Veldrid.Utilities
 {
-    public class DisposeCollector
+    public class DisposeCollector : IDisposable
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
+        private bool disposed = false;
 
         public void Add(params IDisposable[] disposable)
         {
@@ -37,6 +38,14 @@ namespace Veldrid.Utilities
             }
 
             _disposables.Clear();
+        }
+        public void Dispose(){
+            if(disposed) return;
+            DisposeAll();
+            disposed = true;
+        }
+        ~DisposeCollector(){
+            Dispose();
         }
     }
 }

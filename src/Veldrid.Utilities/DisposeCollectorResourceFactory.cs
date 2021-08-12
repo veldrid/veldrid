@@ -1,10 +1,11 @@
+using System;
 namespace Veldrid.Utilities
 {
-    public class DisposeCollectorResourceFactory : ResourceFactory
+    public class DisposeCollectorResourceFactory : ResourceFactory, IDisposable
     {
         public ResourceFactory Factory { get; }
         public DisposeCollector DisposeCollector { get; }
-
+        private bool disposed = false;
         public DisposeCollectorResourceFactory(ResourceFactory factory)
             : this(factory, new DisposeCollector())
         {
@@ -115,6 +116,14 @@ namespace Veldrid.Utilities
             Texture tex = Factory.CreateTexture(nativeTexture, ref description);
             DisposeCollector.Add(tex);
             return tex;
+        }
+        public void Dispose(){
+            if(disposed) return;
+            DisposeCollector.DisposeAll();
+            disposed = true;
+        }
+        ~DisposeCollectorResourceFactory(){
+            Dispose();
         }
     }
 }

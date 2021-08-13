@@ -250,6 +250,7 @@ void main()
         public void FillBuffer_WithOffsets(uint srcSetMultiple, uint srcBindingMultiple, uint dstSetMultiple, uint dstBindingMultiple, bool combinedLayout)
         {
             if (!GD.Features.ComputeShader) { return; }
+            if (!GD.Features.BufferRangeBinding && (srcSetMultiple != 0 || srcBindingMultiple != 0 || dstSetMultiple != 0 || dstBindingMultiple != 0)) { return; }
             Debug.Assert((GD.StructuredBufferMinOffsetAlignment % sizeof(uint)) == 0);
 
             uint valueCount = 512;

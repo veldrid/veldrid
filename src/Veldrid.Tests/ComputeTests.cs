@@ -109,17 +109,7 @@ void main()
                 RgbaFloat expectedFillValue = new RgbaFloat(new System.Numerics.Vector4(FillValue * (depth + 1)));
                 int notFilledCount = CountTexelsNotFilledAtDepth(GD, computeTargetTexture, expectedFillValue, depth);
 
-                if (notFilledCount == 0)
-                {
-                    // Expected behavior:
-                    Console.WriteLine($"All texels were properly set at depth {depth}");
-                }
-                else
-                {
-                    // Unexpected behavior:
-                    uint totalTexels = computeTargetTexture.Width * computeTargetTexture.Height;
-                    throw new Exception($"{notFilledCount} of {totalTexels} texels were not properly set at depth {depth}");
-                }
+                Assert.Equal(0, notFilledCount);
             }
         }
 

@@ -18,9 +18,9 @@
       <PackagePath>runtimes/win-x86/native</PackagePath>
       <Pack>true</Pack>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)native\osx-x64\libsdl2.dylib">
+    <Content Include="$(MSBuildThisFileDirectory)native\osx-universal\libsdl2.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackagePath>runtimes/osx-x64/native</PackagePath>
+      <PackagePath>runtimes/osx-universal/native</PackagePath>
       <Pack>true</Pack>
     </Content>
     <Content Include="build\net40\Veldrid.SDL2.targets">

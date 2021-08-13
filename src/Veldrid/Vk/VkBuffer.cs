@@ -142,7 +142,7 @@ namespace Veldrid.Vk
             {
                 _destroyed = true;
                 vkDestroyBuffer(_gd.Device, _deviceBuffer, null);
-                _gd.MemoryManager.Free(Memory);
+                _gd.MemoryManager.Free(_memory);
             }
         }
     }

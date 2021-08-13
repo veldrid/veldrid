@@ -19,20 +19,20 @@ namespace Veldrid.Vk
             }
         }
 
-        public static bool TryFindMemoryType(VkPhysicalDeviceMemoryProperties memProperties, uint typeFilter, VkMemoryPropertyFlags properties, out uint typeIndex)
+        public static bool TryFindMemoryType(
+            VkPhysicalDeviceMemoryProperties memProperties, uint typeFilter, VkMemoryPropertyFlags properties, out uint typeIndex)
         {
-            typeIndex = 0;
-
-            for (int i = 0; i < memProperties.memoryTypeCount; i++)
+            for (uint i = 0; i < memProperties.memoryTypeCount; i++)
             {
-                if (((typeFilter & (1 << i)) != 0)
-                    && (memProperties.GetMemoryType((uint)i).propertyFlags & properties) == properties)
+                if (((typeFilter & (1u << (int)i)) != 0)
+                    && (memProperties.GetMemoryType(i).propertyFlags & properties) == properties)
                 {
-                    typeIndex = (uint)i;
+                    typeIndex = i;
                     return true;
                 }
             }
 
+            typeIndex = 0;
             return false;
         }
 

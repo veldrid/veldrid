@@ -277,9 +277,12 @@ namespace Veldrid.Vk
                 srcStageFlags = VkPipelineStageFlags.Transfer;
                 dstStageFlags = VkPipelineStageFlags.LateFragmentTests;
             }
-            else
+            else if (oldLayout == VkImageLayout.General && newLayout == VkImageLayout.TransferSrcOptimal)
             {
-                Debug.Fail("Invalid image layout transition.");
+                barrier.srcAccessMask = VkAccessFlags.ShaderWrite;
+                barrier.dstAccessMask = VkAccessFlags.TransferRead;
+                srcStageFlags = VkPipelineStageFlags.ComputeShader;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
             }
 
             vkCmdPipelineBarrier(

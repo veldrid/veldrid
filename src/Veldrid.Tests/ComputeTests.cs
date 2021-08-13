@@ -128,7 +128,7 @@ void main()
                 texture.Format, TextureUsage.Staging,
                 texture.Type, texture.SampleCount);
 
-            Texture staging = factory.CreateTexture(ref description);
+            Texture staging = factory.CreateTexture(description);
 
             using CommandList cl = factory.CreateCommandList();
             cl.Begin();

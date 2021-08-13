@@ -202,6 +202,10 @@ namespace Veldrid.Vk
             VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
             VkCommandBuffer vkCB = vkCL.CommandBuffer;
 
+            // A fence may complete before Veldrid gets notified of the
+            // corresponding VkCommandBuffer completion, so check fences here
+            CheckSubmittedFences();
+
             vkCL.CommandBufferSubmitted(vkCB);
             SubmitCommandBuffer(vkCL, vkCB, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
         }
@@ -215,8 +219,6 @@ namespace Veldrid.Vk
             VkSemaphore* signalSemaphoresPtr,
             Fence fence)
         {
-            CheckSubmittedFences();
-
             bool useExtraFence = fence != null;
             VkSubmitInfo si = VkSubmitInfo.New();
             si.commandBufferCount = 1;
@@ -272,10 +274,6 @@ namespace Veldrid.Vk
                         _submittedFences.RemoveAt(i);
                         i -= 1;
                     }
-                    else
-                    {
-                        break; // Submissions are in order; later submissions cannot complete if this one hasn't.
-                    }
                 }
             }
         }
@@ -290,14 +288,12 @@ namespace Veldrid.Vk
             ReturnSubmissionFence(fence);
             lock (_stagingResourcesLock)
             {
-                if (_submittedStagingTextures.TryGetValue(completedCB, out VkTexture stagingTex))
+                if (_submittedStagingTextures.Remove(completedCB, out VkTexture stagingTex))
                 {
-                    _submittedStagingTextures.Remove(completedCB);
                     _availableStagingTextures.Add(stagingTex);
                 }
-                if (_submittedStagingBuffers.TryGetValue(completedCB, out VkBuffer stagingBuffer))
+                if (_submittedStagingBuffers.Remove(completedCB, out VkBuffer stagingBuffer))
                 {
-                    _submittedStagingBuffers.Remove(completedCB);
                     if (stagingBuffer.SizeInBytes <= MaxStagingBufferSize)
                     {
                         _availableStagingBuffers.Add(stagingBuffer);
@@ -307,9 +303,8 @@ namespace Veldrid.Vk
                         stagingBuffer.Dispose();
                     }
                 }
-                if (_submittedSharedCommandPools.TryGetValue(completedCB, out SharedCommandPool sharedPool))
+                if (_submittedSharedCommandPools.Remove(completedCB, out SharedCommandPool sharedPool))
                 {
-                    _submittedSharedCommandPools.Remove(completedCB);
                     lock (_graphicsCommandPoolLock)
                     {
                         if (sharedPool.IsCached)
@@ -1136,7 +1131,7 @@ namespace Veldrid.Vk
 
             if (result == VkResult.ErrorFormatNotSupported)
             {
-                properties = default(PixelFormatProperties);
+                properties = default;
                 return false;
             }
             CheckResult(result);
@@ -1552,6 +1547,7 @@ namespace Veldrid.Vk
             {
                 VkResult result = vkEndCommandBuffer(cb);
                 CheckResult(result);
+                _gd.CheckSubmittedFences();
                 _gd.SubmitCommandBuffer(null, cb, 0, null, 0, null, null);
                 lock (_gd._stagingResourcesLock)
                 {
@@ -1570,6 +1566,7 @@ namespace Veldrid.Vk
             public Vulkan.VkFence Fence;
             public VkCommandList CommandList;
             public VkCommandBuffer CommandBuffer;
+
             public FenceSubmissionInfo(Vulkan.VkFence fence, VkCommandList commandList, VkCommandBuffer commandBuffer)
             {
                 Fence = fence;

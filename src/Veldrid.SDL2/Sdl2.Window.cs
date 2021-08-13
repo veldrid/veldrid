@@ -20,12 +20,20 @@ namespace Veldrid.Sdl2
             if (title != null)
             {
                 int byteCount = Encoding.UTF8.GetByteCount(title);
-                byte* utf8BytesAlloc = stackalloc byte[byteCount];
-                utf8Bytes = utf8BytesAlloc;
-                fixed (char* titlePtr = title)
+                if (byteCount == 0)
                 {
-                    int actualLength = Encoding.UTF8.GetBytes(titlePtr, title.Length, utf8Bytes, byteCount);
-                    utf8Bytes[actualLength - 1] = 0;
+                    byte zeroByte = 0;
+                    utf8Bytes = &zeroByte;
+                }
+                else
+                {
+                    byte* utf8BytesAlloc = stackalloc byte[byteCount];
+                    utf8Bytes = utf8BytesAlloc;
+                    fixed (char* titlePtr = title)
+                    {
+                        int actualLength = Encoding.UTF8.GetBytes(titlePtr, title.Length, utf8Bytes, byteCount);
+                        utf8Bytes[actualLength - 1] = 0;
+                    }
                 }
             }
             else
@@ -80,12 +88,20 @@ namespace Veldrid.Sdl2
             if (title != null)
             {
                 int byteCount = Encoding.UTF8.GetByteCount(title);
-                byte* utf8BytesAlloc = stackalloc byte[byteCount];
-                utf8Bytes = utf8BytesAlloc;
-                fixed (char* titlePtr = title)
+                if (byteCount == 0)
                 {
-                    int actualLength = Encoding.UTF8.GetBytes(titlePtr, title.Length, utf8Bytes, byteCount);
-                    utf8Bytes[actualLength - 1] = 0;
+                    byte zeroByte = 0;
+                    utf8Bytes = &zeroByte;
+                }
+                else
+                {
+                    byte* utf8BytesAlloc = stackalloc byte[byteCount];
+                    utf8Bytes = utf8BytesAlloc;
+                    fixed (char* titlePtr = title)
+                    {
+                        int actualLength = Encoding.UTF8.GetBytes(titlePtr, title.Length, utf8Bytes, byteCount);
+                        utf8Bytes[actualLength - 1] = 0;
+                    }
                 }
             }
             else
@@ -185,7 +201,7 @@ namespace Veldrid.Sdl2
         private delegate bool SDL_SetHint_t(string name, string value);
         private static SDL_SetHint_t s_sdl_setHint = LoadFunction<SDL_SetHint_t>("SDL_SetHint");
         public static bool SDL_SetHint(string name, string value) => s_sdl_setHint(name, value);
-        
+
     }
 
     [Flags]

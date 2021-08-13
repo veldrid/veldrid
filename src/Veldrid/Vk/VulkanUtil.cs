@@ -277,11 +277,12 @@ namespace Veldrid.Vk
                 srcStageFlags = VkPipelineStageFlags.Transfer;
                 dstStageFlags = VkPipelineStageFlags.LateFragmentTests;
             }
-            else
+            else if (oldLayout == VkImageLayout.General && newLayout == VkImageLayout.TransferSrcOptimal)
             {
-                // TODO: Seems like we're missing a case for General to TransferSrcOptimal
-                // TODO: I think this is happening because the texture I have is being used in a compute shader.
-                //Debug.Fail($"Invalid image layout transition from '{oldLayout}' to '{newLayout}'.");
+                barrier.srcAccessMask = VkAccessFlags.ShaderWrite;
+                barrier.dstAccessMask = VkAccessFlags.TransferRead;
+                srcStageFlags = VkPipelineStageFlags.ComputeShader;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
             }
 
             vkCmdPipelineBarrier(

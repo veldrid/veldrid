@@ -1918,7 +1918,7 @@ namespace Veldrid.OpenGLBinding
             }
             else
             {
-                field = default(T);
+                field = default;
             }
         }
     }

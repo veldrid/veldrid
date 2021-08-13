@@ -854,7 +854,7 @@ namespace Veldrid.OpenGL
             if (type == TextureType.Texture1D && !_features.Texture1D
                 || !OpenGLFormats.IsFormatSupported(_extensions, format, _backendType))
             {
-                properties = default(PixelFormatProperties);
+                properties = default;
                 return false;
             }
 

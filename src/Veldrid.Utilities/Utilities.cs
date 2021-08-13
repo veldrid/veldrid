@@ -28,7 +28,7 @@ namespace Veldrid.Utilities
         }
 
         // Code adapted from https://bitbucket.org/sinbad/ogre/src/9db75e3ba05c/OgreMain/include/OgreVector3.h
-        public static Quaternion FromToRotation(Vector3 from, Vector3 to, Vector3 fallbackAxis = default(Vector3))
+        public static Quaternion FromToRotation(Vector3 from, Vector3 to, Vector3 fallbackAxis = default)
         {
             // Based on Stan Melax's article in Game Programming Gems
             Quaternion q;

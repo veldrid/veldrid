@@ -56,7 +56,7 @@ namespace Veldrid.Sdl2
                 Debug.WriteLine(
                     $"Unable to load SDL2 function \"{name}\". " +
                     $"Attempting to call this function will cause an exception to be thrown.");
-                return default(T);
+                return default;
             }
         }
 

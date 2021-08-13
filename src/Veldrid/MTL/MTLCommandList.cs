@@ -59,7 +59,7 @@ namespace Veldrid.MTL
         {
             _cb.commit();
             MTLCommandBuffer ret = _cb;
-            _cb = default(MTLCommandBuffer);
+            _cb = default;
             return ret;
         }
 
@@ -1010,7 +1010,7 @@ namespace Veldrid.MTL
         {
             _rce.endEncoding();
             ObjectiveCRuntime.release(_rce.NativePtr);
-            _rce = default(MTLRenderCommandEncoder);
+            _rce = default;
             _graphicsPipelineChanged = true;
             Util.ClearArray(_graphicsResourceSetsActive);
             _viewportsChanged = true;
@@ -1041,7 +1041,7 @@ namespace Veldrid.MTL
             {
                 _bce.endEncoding();
                 ObjectiveCRuntime.release(_bce.NativePtr);
-                _bce = default(MTLBlitCommandEncoder);
+                _bce = default;
             }
 
             Debug.Assert(!BlitEncoderActive);
@@ -1072,7 +1072,7 @@ namespace Veldrid.MTL
             {
                 _cce.endEncoding();
                 ObjectiveCRuntime.release(_cce.NativePtr);
-                _cce = default(MTLComputeCommandEncoder);
+                _cce = default;
                 _computePipelineChanged = true;
                 Util.ClearArray(_computeResourceSetsActive);
             }

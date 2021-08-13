@@ -181,9 +181,8 @@ namespace Veldrid
 
         public void RemoveImGuiBinding(TextureView textureView)
         {
-            if (_setsByView.TryGetValue(textureView, out ResourceSetInfo rsi))
+            if (_setsByView.Remove(textureView, out ResourceSetInfo rsi))
             {
-                _setsByView.Remove(textureView);
                 _viewsById.Remove(rsi.ImGuiBinding);
                 _ownedResources.Remove(rsi.ResourceSet);
                 rsi.ResourceSet.Dispose();
@@ -214,9 +213,8 @@ namespace Veldrid
 
         public void RemoveImGuiBinding(Texture texture)
         {
-            if (_autoViewsByTexture.TryGetValue(texture, out TextureView textureView))
+            if (_autoViewsByTexture.Remove(texture, out TextureView textureView))
             {
-                _autoViewsByTexture.Remove(texture);
                 _ownedResources.Remove(textureView);
                 textureView.Dispose();
                 RemoveImGuiBinding(textureView);

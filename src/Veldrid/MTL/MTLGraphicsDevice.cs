@@ -164,15 +164,14 @@ namespace Veldrid.MTL
         {
             lock (_submittedCommandsLock)
             {
-                if (_submittedCBs.TryGetValue(cb, out MTLFence fence))
+                if (_submittedCBs.Remove(cb, out MTLFence fence))
                 {
                     fence.Set();
-                    _submittedCBs.Remove(cb);
                 }
 
                 if (_latestSubmittedCB.NativePtr == cb.NativePtr)
                 {
-                    _latestSubmittedCB = default(MTLCommandBuffer);
+                    _latestSubmittedCB = default;
                 }
             }
 
@@ -230,7 +229,7 @@ namespace Veldrid.MTL
         {
             if (!MTLFormats.IsFormatSupported(format, usage, MetalFeatures))
             {
-                properties = default(PixelFormatProperties);
+                properties = default;
                 return false;
             }
 
@@ -312,7 +311,7 @@ namespace Veldrid.MTL
 
         private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            var mtlBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
+            MTLBuffer mtlBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
             void* destPtr = mtlBuffer.DeviceBuffer.contents();
             byte* destOffsetPtr = (byte*)destPtr + bufferOffsetInBytes;
             Unsafe.CopyBlock(destOffsetPtr, source.ToPointer(), sizeInBytes);
@@ -369,7 +368,7 @@ namespace Veldrid.MTL
 
         private protected override void WaitForIdleCore()
         {
-            MTLCommandBuffer lastCB = default(MTLCommandBuffer);
+            MTLCommandBuffer lastCB = default;
             lock (_submittedCommandsLock)
             {
                 lastCB = _latestSubmittedCB;

@@ -438,7 +438,7 @@ namespace Veldrid.D3D11
 
         private void UnbindSRVTexture(Texture target)
         {
-            if (_boundSRVs.TryGetValue(target, out List<BoundTextureInfo> btis))
+            if (_boundSRVs.Remove(target, out List<BoundTextureInfo> btis))
             {
                 foreach (BoundTextureInfo bti in btis)
                 {
@@ -454,9 +454,6 @@ namespace Veldrid.D3D11
                     }
                 }
 
-                bool result = _boundSRVs.Remove(target);
-                Debug.Assert(result);
-
                 btis.Clear();
                 PoolBoundTextureList(btis);
             }
@@ -469,7 +466,7 @@ namespace Veldrid.D3D11
 
         private void UnbindUAVTexture(Texture target)
         {
-            if (_boundUAVs.TryGetValue(target, out List<BoundTextureInfo> btis))
+            if (_boundUAVs.Remove(target, out List<BoundTextureInfo> btis))
             {
                 foreach (BoundTextureInfo bti in btis)
                 {
@@ -483,9 +480,6 @@ namespace Veldrid.D3D11
                         _invalidatedGraphicsResourceSets[bti.ResourceSet] = true;
                     }
                 }
-
-                bool result = _boundUAVs.Remove(target);
-                Debug.Assert(result);
 
                 btis.Clear();
                 PoolBoundTextureList(btis);

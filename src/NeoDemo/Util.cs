@@ -15,7 +15,7 @@ namespace Veldrid.NeoDemo
         }
 
         // Code adapted from https://bitbucket.org/sinbad/ogre/src/9db75e3ba05c/OgreMain/include/OgreVector3.h
-        internal static Quaternion FromToRotation(Vector3 from, Vector3 to, Vector3 fallbackAxis = default(Vector3))
+        internal static Quaternion FromToRotation(Vector3 from, Vector3 to, Vector3 fallbackAxis = default)
         {
             // Based on Stan Melax's article in Game Programming Gems
             Quaternion q;

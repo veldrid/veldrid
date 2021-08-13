@@ -849,7 +849,7 @@ namespace Veldrid.Utilities
                     for (int i = 0; i < child._items.Count; i++)
                     {
                         OctreeItem<T> item = child._items[i];
-                        item.Item = default(T);
+                        item.Item = default;
                         item.Container = null;
                     }
                     child.Parent = null;
@@ -863,7 +863,7 @@ namespace Veldrid.Utilities
             {
                 if (_cachedItems.Count < MaxCachedItemCount)
                 {
-                    octreeItem.Item = default(T);
+                    octreeItem.Item = default;
                     octreeItem.Container = null;
                     _cachedItems.Push(octreeItem);
                 }

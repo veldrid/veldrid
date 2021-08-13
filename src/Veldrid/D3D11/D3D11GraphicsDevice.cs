@@ -76,7 +76,7 @@ namespace Veldrid.D3D11
 
         public D3D11GraphicsDevice(D3D11DeviceOptions options, SwapchainDescription? swapchainDesc)
         {
-            var flags = (DeviceCreationFlags)options.DeviceCreationFlags;
+            DeviceCreationFlags flags = (DeviceCreationFlags)options.DeviceCreationFlags;
 #if DEBUG
             flags |= DeviceCreationFlags.Debug;
 #endif
@@ -279,7 +279,7 @@ namespace Veldrid.D3D11
         {
             if (D3D11Formats.IsUnsupportedFormat(format))
             {
-                properties = default(PixelFormatProperties);
+                properties = default;
                 return false;
             }
 
@@ -292,7 +292,7 @@ namespace Veldrid.D3D11
                 || (usage & TextureUsage.Cubemap) != 0 && (fs & FormatSupport.TextureCube) == 0
                 || (usage & TextureUsage.Storage) != 0 && (fs & FormatSupport.TypedUnorderedAccessView) == 0)
             {
-                properties = default(PixelFormatProperties);
+                properties = default;
                 return false;
             }
 
@@ -352,7 +352,6 @@ namespace Veldrid.D3D11
                             Vortice.Direct3D11.MapFlags.None);
 
                         mappedResource = new MappedResource(resource, mode, msr.DataPointer + (nint)offsetInBytes, offsetInBytes, sizeInBytes);
-                        _mappedResources.Add(key, mappedResource);
                     }
                 }
                 else
@@ -378,9 +377,10 @@ namespace Veldrid.D3D11
                             subresource,
                             (uint)msr.RowPitch,
                             (uint)msr.DepthPitch);
-                        _mappedResources.Add(key, mappedResource);
                     }
                 }
+
+                _mappedResources.Add(key, mappedResource);
                 return mappedResource;
             }
         }
@@ -391,7 +391,7 @@ namespace Veldrid.D3D11
 
             lock (_mappedResourceLock)
             {
-                if (!_mappedResources.ContainsKey(key))
+                if (!_mappedResources.Remove(key))
                 {
                     throw new VeldridException($"The given resource ({resource}) is not mapped.");
                 }
@@ -407,9 +407,6 @@ namespace Veldrid.D3D11
                         D3D11Texture texture = Util.AssertSubtype<MappableResource, D3D11Texture>(resource);
                         _immediateContext.Unmap(texture.DeviceTexture, (int)subresource);
                     }
-
-                    bool result = _mappedResources.Remove(key);
-                    Debug.Assert(result);
                 }
             }
         }

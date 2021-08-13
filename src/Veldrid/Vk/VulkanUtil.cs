@@ -10,13 +10,30 @@ namespace Veldrid.Vk
         private static Lazy<bool> s_isVulkanLoaded = new Lazy<bool>(TryLoadVulkan);
         private static readonly Lazy<string[]> s_instanceExtensions = new Lazy<string[]>(EnumerateInstanceExtensions);
 
-        [Conditional("DEBUG")]
         public static void CheckResult(VkResult result)
         {
             if (result != VkResult.Success)
             {
-                throw new VeldridException("Unsuccessful VkResult: " + result);
+                ThrowResult(result);
             }
+        }
+
+        private static void ThrowResult(VkResult result)
+        {
+            if (result == VkResult.ErrorOutOfDeviceMemory ||
+                result == VkResult.ErrorOutOfHostMemory)
+            {
+                throw new VeldridOutOfMemoryException(GetExceptionMessage(result));
+            }
+            else
+            {
+                throw new VeldridException(GetExceptionMessage(result));
+            }
+        }
+
+        private static string GetExceptionMessage(VkResult result)
+        {
+            return "Unsuccessful VkResult: " + result;
         }
 
         public static bool TryFindMemoryType(

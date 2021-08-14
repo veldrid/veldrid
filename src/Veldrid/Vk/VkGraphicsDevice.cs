@@ -820,8 +820,11 @@ namespace Veldrid.Vk
             }
             if (_getPhysicalDeviceProperties2 != null && hasDriverProperties)
             {
+                VkPhysicalDeviceProperties2KHR deviceProps = VkPhysicalDeviceProperties2KHR.New();
                 VkPhysicalDeviceDriverProperties driverProps = VkPhysicalDeviceDriverProperties.New();
-                _getPhysicalDeviceProperties2(_physicalDevice, &driverProps);
+
+                deviceProps.pNext = &driverProps;
+                _getPhysicalDeviceProperties2(_physicalDevice, &deviceProps);
 
                 string driverName = Encoding.UTF8.GetString(
                     driverProps.driverName, VkPhysicalDeviceDriverProperties.DriverNameLength).TrimEnd('\0');

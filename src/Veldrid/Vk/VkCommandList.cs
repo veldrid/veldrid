@@ -300,7 +300,7 @@ namespace Veldrid.Vk
             uint currentBatchDynamicOffsetCount = 0;
 
             for (uint currentSlot = 0; currentSlot < resourceSetCount; currentSlot++)
-            {   
+            {
                 bool batchEnded = !resourceSetsChanged[currentSlot] || currentSlot == resourceSetCount - 1;
 
                 if (resourceSetsChanged[currentSlot])

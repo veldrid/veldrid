@@ -48,6 +48,31 @@ namespace Veldrid
         /// <param name="frontFace">Controls the winding order used to determine the front face of primitives.</param>
         /// <param name="depthClipEnabled">Controls whether depth clipping is enabled.</param>
         /// <param name="scissorTestEnabled">Controls whether the scissor test is enabled.</param>
+        public RasterizerStateDescription(
+            FaceCullMode cullMode,
+            PolygonFillMode fillMode,
+            FrontFace frontFace,
+            bool depthClipEnabled,
+            bool scissorTestEnabled)
+        {
+            CullMode = cullMode;
+            FillMode = fillMode;
+            FrontFace = frontFace;
+            DepthClipEnabled = depthClipEnabled;
+            ScissorTestEnabled = scissorTestEnabled;
+            DepthBiasEnabled = false;
+            DepthBiasSlopeScaled = 0f;
+            DepthBiasConstant = 0;
+        }
+
+        /// <summary>
+        /// Constructs a new RasterizerStateDescription.
+        /// </summary>
+        /// <param name="cullMode">Controls which face will be culled.</param>
+        /// <param name="fillMode">Controls how the rasterizer fills polygons.</param>
+        /// <param name="frontFace">Controls the winding order used to determine the front face of primitives.</param>
+        /// <param name="depthClipEnabled">Controls whether depth clipping is enabled.</param>
+        /// <param name="scissorTestEnabled">Controls whether the scissor test is enabled.</param>
         /// <param name="depthBiasEnabled">Controls whether depth bias is enabled.</param>
         /// <param name="depthBiasConstant">Controls how much constant depth bias to apply.</param>
         /// <param name="depthBiasSlope">Controls how much slope-scaled depth bias to apply.</param>
@@ -57,9 +82,9 @@ namespace Veldrid
             FrontFace frontFace,
             bool depthClipEnabled,
             bool scissorTestEnabled,
-            bool depthBiasEnabled = false,
-            int depthBiasConstant = 0,
-            float depthBiasSlope = 0)
+            bool depthBiasEnabled,
+            int depthBiasConstant,
+            float depthBiasSlope)
         {
             CullMode = cullMode;
             FillMode = fillMode;

@@ -15,6 +15,7 @@
         public static FixedUtf8String VK_EXT_DEBUG_REPORT_EXTENSION_NAME { get; } = "VK_EXT_debug_report";
         public static FixedUtf8String VK_EXT_DEBUG_MARKER_EXTENSION_NAME { get; } = "VK_EXT_debug_marker";
         public static FixedUtf8String StandardValidationLayerName { get; } = "VK_LAYER_LUNARG_standard_validation";
+        public static FixedUtf8String KhronosValidationLayerName { get; } = "VK_LAYER_KHRONOS_validation";
         public static FixedUtf8String main { get; } = "main";
         public static FixedUtf8String VK_KHR_get_physical_device_properties2 { get; } = "VK_KHR_get_physical_device_properties2";
     }

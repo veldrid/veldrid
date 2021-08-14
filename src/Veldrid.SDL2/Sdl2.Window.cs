@@ -27,12 +27,12 @@ namespace Veldrid.Sdl2
                 }
                 else
                 {
-                    byte* utf8BytesAlloc = stackalloc byte[byteCount];
+                    byte* utf8BytesAlloc = stackalloc byte[byteCount + 1];
                     utf8Bytes = utf8BytesAlloc;
                     fixed (char* titlePtr = title)
                     {
-                        int actualLength = Encoding.UTF8.GetBytes(titlePtr, title.Length, utf8Bytes, byteCount);
-                        utf8Bytes[actualLength - 1] = 0;
+                        int actualBytes = Encoding.UTF8.GetBytes(titlePtr, title.Length, utf8Bytes, byteCount);
+                        utf8Bytes[actualBytes] = 0;
                     }
                 }
             }
@@ -95,12 +95,12 @@ namespace Veldrid.Sdl2
                 }
                 else
                 {
-                    byte* utf8BytesAlloc = stackalloc byte[byteCount];
+                    byte* utf8BytesAlloc = stackalloc byte[byteCount + 1];
                     utf8Bytes = utf8BytesAlloc;
                     fixed (char* titlePtr = title)
                     {
-                        int actualLength = Encoding.UTF8.GetBytes(titlePtr, title.Length, utf8Bytes, byteCount);
-                        utf8Bytes[actualLength - 1] = 0;
+                        int actualBytes = Encoding.UTF8.GetBytes(titlePtr, title.Length, utf8Bytes, byteCount);
+                        utf8Bytes[actualBytes] = 0;
                     }
                 }
             }

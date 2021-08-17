@@ -32,7 +32,7 @@ namespace Veldrid.MTL
         private const string UnalignedBufferCopyPipelineMacOSName = "MTL_UnalignedBufferCopy_macOS";
         private const string UnalignedBufferCopyPipelineiOSName = "MTL_UnalignedBufferCopy_iOS";
         private readonly object _unalignedBufferCopyPipelineLock = new object();
-        private readonly NativeLibrary _libSystem;
+        private readonly NativeLibraryLoader.NativeLibrary _libSystem;
         private readonly IntPtr _concreteGlobalBlock;
         private MTLShader _unalignedBufferCopyShader;
         private MTLComputePipelineState _unalignedBufferCopyPipeline;
@@ -75,7 +75,7 @@ namespace Veldrid.MTL
                 shaderFloat64: false);
             ResourceBindingModel = options.ResourceBindingModel;
 
-            _libSystem = new NativeLibrary("libSystem.dylib");
+            _libSystem = new NativeLibraryLoader.NativeLibrary("libSystem.dylib");
             _concreteGlobalBlock = _libSystem.LoadFunction("_NSConcreteGlobalBlock");
             if (MetalFeatures.IsMacOS)
             {

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Veldrid.NeoDemo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssetsDir>$(MSBuildThisFileDirectory)Assets</AssetsDir>
@@ -33,7 +33,7 @@
     <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.SDL2\native\win-x64\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.SDL2\native\osx-x64\libsdl2.dylib">
+    <Content Include="$(MSBuildThisFileDirectory)..\Veldrid.SDL2\native\osx-universal\libsdl2.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

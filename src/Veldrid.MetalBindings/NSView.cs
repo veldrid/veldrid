@@ -22,7 +22,7 @@ namespace Veldrid.MetalBindings
 
         public CGRect frame
         {
-            get => objc_msgSend_stret<CGRect>(NativePtr, "frame");
+            get => System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64 ? CGRect_objc_msgSend(NativePtr, "frame") : objc_msgSend_stret<CGRect>(NativePtr, "frame");
         }
     }
 }

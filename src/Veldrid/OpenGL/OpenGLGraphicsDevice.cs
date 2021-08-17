@@ -422,7 +422,7 @@ namespace Veldrid.OpenGL
             eaglLayer.frame = uiView.frame;
             uiView.layer.addSublayer(eaglLayer.NativePtr);
 
-            NativeLibrary glesLibrary = new NativeLibrary("/System/Library/Frameworks/OpenGLES.framework/OpenGLES");
+            NativeLibraryLoader.NativeLibrary glesLibrary = new NativeLibraryLoader.NativeLibrary("/System/Library/Frameworks/OpenGLES.framework/OpenGLES");
 
             Func<string, IntPtr> getProcAddress = name => glesLibrary.LoadFunction(name);
 

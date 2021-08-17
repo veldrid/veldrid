@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VeldridSpirvVersion>1.0.9</VeldridSpirvVersion>
+    <VeldridSpirvVersion>1.0.14</VeldridSpirvVersion>
     <NativeLibraryLoaderVersion>1.0.10</NativeLibraryLoaderVersion>
   </PropertyGroup>
 
@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <NerdbankGitVersioningVersion>3.3.37</NerdbankGitVersioningVersion>
+    <NerdbankGitVersioningVersion>3.4.231</NerdbankGitVersioningVersion>
   </PropertyGroup>
 
   <ItemGroup>

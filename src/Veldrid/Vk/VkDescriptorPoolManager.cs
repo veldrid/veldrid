@@ -20,15 +20,18 @@ namespace Veldrid.Vk
 
         public unsafe DescriptorAllocationToken Allocate(DescriptorResourceCounts counts, VkDescriptorSetLayout setLayout)
         {
-            VkDescriptorPool pool = GetPool(counts);
-            VkDescriptorSetAllocateInfo dsAI = VkDescriptorSetAllocateInfo.New();
-            dsAI.descriptorSetCount = 1;
-            dsAI.pSetLayouts = &setLayout;
-            dsAI.descriptorPool = pool;
-            VkResult result = vkAllocateDescriptorSets(_gd.Device, ref dsAI, out VkDescriptorSet set);
-            VulkanUtil.CheckResult(result);
+            lock (_lock)
+            {
+                VkDescriptorPool pool = GetPool(counts);
+                VkDescriptorSetAllocateInfo dsAI = VkDescriptorSetAllocateInfo.New();
+                dsAI.descriptorSetCount = 1;
+                dsAI.pSetLayouts = &setLayout;
+                dsAI.descriptorPool = pool;
+                VkResult result = vkAllocateDescriptorSets(_gd.Device, ref dsAI, out VkDescriptorSet set);
+                VulkanUtil.CheckResult(result);
 
-            return new DescriptorAllocationToken(set, pool);
+                return new DescriptorAllocationToken(set, pool);
+            }
         }
 
         public void Free(DescriptorAllocationToken token, DescriptorResourceCounts counts)

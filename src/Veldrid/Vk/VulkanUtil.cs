@@ -291,6 +291,10 @@ namespace Veldrid.Vk
                 srcStageFlags = VkPipelineStageFlags.BottomOfPipe;
                 dstStageFlags = VkPipelineStageFlags.Transfer;
             }
+            else
+            {
+                Debug.Fail("Invalid image layout transition.");
+            }
 
             vkCmdPipelineBarrier(
                 cb,

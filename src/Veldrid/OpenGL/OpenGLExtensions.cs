@@ -1,16 +1,18 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace Veldrid.OpenGL
 {
-    internal class OpenGLExtensions
+    internal class OpenGLExtensions : IReadOnlyCollection<string>
     {
         private readonly HashSet<string> _extensions;
         private readonly GraphicsBackend _backend;
         private readonly int _major;
         private readonly int _minor;
 
-        public OpenGLExtensions(HashSet<string> extensions, GraphicsBackend backend, int major, int minor)
+        public int Count => _extensions.Count;
+
+        internal OpenGLExtensions(HashSet<string> extensions, GraphicsBackend backend, int major, int minor)
         {
             _extensions = extensions;
             _backend = backend;
@@ -132,6 +134,16 @@ namespace Veldrid.OpenGL
             }
 
             return false;
+        }
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            return _extensions.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

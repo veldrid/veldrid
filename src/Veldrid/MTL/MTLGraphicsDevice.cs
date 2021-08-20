@@ -66,8 +66,8 @@ namespace Veldrid.MTL
                 tessellationShaders: false,
                 multipleViewports: MetalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3),
                 samplerLodBias: false,
-                drawBaseVertex: true,   // TODO?: MetalFeatures.IsDrawBaseVertexInstanceSupported()
-                drawBaseInstance: true, // TODO?: MetalFeatures.IsDrawBaseVertexInstanceSupported()
+                drawBaseVertex: MetalFeatures.IsDrawBaseVertexInstanceSupported(),
+                drawBaseInstance: MetalFeatures.IsDrawBaseVertexInstanceSupported(),
                 drawIndirect: true,
                 drawIndirectBaseInstance: true,
                 fillModeWireframe: true,

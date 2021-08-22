@@ -1,5 +1,4 @@
 ﻿using Vulkan;
-using static Veldrid.Vk.VulkanUtil;
 using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
@@ -9,7 +8,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly VkImageView _imageView;
         private bool _destroyed;
-        private string _name;
+        private string? _name;
 
         public VkImageView ImageView => _imageView;
 
@@ -74,7 +73,7 @@ namespace Veldrid.Vk
             RefCount = new ResourceRefCount(DisposeCore);
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

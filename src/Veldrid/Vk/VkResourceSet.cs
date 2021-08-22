@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Vulkan;
 using static Vulkan.VulkanNative;
-using static Veldrid.Vk.VulkanUtil;
 
 namespace Veldrid.Vk
 {
@@ -12,7 +11,7 @@ namespace Veldrid.Vk
         private readonly DescriptorAllocationToken _descriptorAllocationToken;
         private readonly List<ResourceRefCount> _refCounts = new List<ResourceRefCount>();
         private bool _destroyed;
-        private string _name;
+        private string? _name;
 
         public VkDescriptorSet DescriptorSet => _descriptorAllocationToken.Set;
 
@@ -96,7 +95,7 @@ namespace Veldrid.Vk
             vkUpdateDescriptorSets(_gd.Device, descriptorWriteCount, descriptorWrites, 0, null);
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

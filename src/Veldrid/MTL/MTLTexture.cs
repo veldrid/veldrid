@@ -33,7 +33,7 @@ namespace Veldrid.MTL
         public override TextureType Type { get; }
 
         public override TextureSampleCount SampleCount { get; }
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public override bool IsDisposed => _disposed;
         public MTLPixelFormat MTLPixelFormat { get; }
         public MTLTextureType MTLTextureType { get; }

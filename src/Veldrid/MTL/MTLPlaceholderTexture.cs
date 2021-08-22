@@ -25,7 +25,7 @@ namespace Veldrid.MTL
 
         public override TextureSampleCount SampleCount => TextureSampleCount.Count1;
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposed;
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -13,9 +14,11 @@ namespace Veldrid
     {
         private readonly object _deferredDisposalLock = new object();
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
-        private Sampler _aniso4xSampler;
+        private Sampler _aniso4xSampler = null!;
 
-        internal GraphicsDevice() { }
+        internal GraphicsDevice()
+        {
+        }
 
         /// <summary>
         /// Gets the name of the device.
@@ -65,7 +68,7 @@ namespace Veldrid
         /// Retrieves the main Swapchain for this device. This property is only valid if the device was created with a main
         /// Swapchain, and will return null otherwise.
         /// </summary>
-        public abstract Swapchain MainSwapchain { get; }
+        public abstract Swapchain? MainSwapchain { get; }
 
         /// <summary>
         /// Gets a <see cref="GraphicsDeviceFeatures"/> which enumerates the optional features supported by this instance.
@@ -130,11 +133,11 @@ namespace Veldrid
         /// been previously called on this object.</param>
         /// <param name="fence">A <see cref="Fence"/> which will become signaled after this submission fully completes
         /// execution.</param>
-        public void SubmitCommands(CommandList commandList, Fence fence) => SubmitCommandsCore(commandList, fence);
+        public void SubmitCommands(CommandList commandList, Fence? fence) => SubmitCommandsCore(commandList, fence);
 
         private protected abstract void SubmitCommandsCore(
             CommandList commandList,
-            Fence fence);
+            Fence? fence);
 
         /// <summary>
         /// Blocks the calling thread until the given <see cref="Fence"/> becomes signaled.
@@ -241,7 +244,7 @@ namespace Veldrid
         /// This is equivalent to <see cref="MainSwapchain"/>.<see cref="Swapchain.Framebuffer"/>.
         /// If this GraphicsDevice was created without a main Swapchain, then this returns null.
         /// </summary>
-        public Framebuffer SwapchainFramebuffer => MainSwapchain?.Framebuffer;
+        public Framebuffer? SwapchainFramebuffer => MainSwapchain?.Framebuffer;
 
         /// <summary>
         /// Notifies this instance that the main window has been resized. This causes the <see cref="SwapchainFramebuffer"/> to
@@ -865,13 +868,13 @@ namespace Veldrid
         /// Gets a simple point-filtered <see cref="Sampler"/> object owned by this instance.
         /// This object is created with <see cref="SamplerDescription.Point"/>.
         /// </summary>
-        public Sampler PointSampler { get; private set; }
+        public Sampler PointSampler { get; private set; } = null!;
 
         /// <summary>
         /// Gets a simple linear-filtered <see cref="Sampler"/> object owned by this instance.
         /// This object is created with <see cref="SamplerDescription.Linear"/>.
         /// </summary>
-        public Sampler LinearSampler { get; private set; }
+        public Sampler LinearSampler { get; private set; } = null!;
 
         /// <summary>
         /// Gets a simple 4x anisotropic-filtered <see cref="Sampler"/> object owned by this instance.
@@ -913,7 +916,11 @@ namespace Veldrid
         /// </summary>
         /// <param name="info">If successful, this will contain the <see cref="BackendInfoD3D11"/> for this instance.</param>
         /// <returns>True if this is a D3D11 GraphicsDevice and the operation was successful. False otherwise.</returns>
-        public virtual bool GetD3D11Info(out BackendInfoD3D11 info) { info = null; return false; }
+        public virtual bool GetD3D11Info([MaybeNullWhen(false)] out BackendInfoD3D11 info)
+        {
+            info = null;
+            return false;
+        }
 
         /// <summary>
         /// Gets a <see cref="BackendInfoD3D11"/> for this instance. This method will only succeed if this is a D3D11
@@ -922,11 +929,10 @@ namespace Veldrid
         /// <returns>The <see cref="BackendInfoD3D11"/> for this instance.</returns>
         public BackendInfoD3D11 GetD3D11Info()
         {
-            if (!GetD3D11Info(out BackendInfoD3D11 info))
+            if (!GetD3D11Info(out BackendInfoD3D11? info))
             {
                 throw new VeldridException($"{nameof(GetD3D11Info)} can only be used on a D3D11 GraphicsDevice.");
             }
-
             return info;
         }
 #endif
@@ -938,7 +944,11 @@ namespace Veldrid
         /// </summary>
         /// <param name="info">If successful, this will contain the <see cref="BackendInfoVulkan"/> for this instance.</param>
         /// <returns>True if this is a Vulkan GraphicsDevice and the operation was successful. False otherwise.</returns>
-        public virtual bool GetVulkanInfo(out BackendInfoVulkan info) { info = null; return false; }
+        public virtual bool GetVulkanInfo([MaybeNullWhen(false)] out BackendInfoVulkan info)
+        {
+            info = null;
+            return false;
+        }
 
         /// <summary>
         /// Gets a <see cref="BackendInfoVulkan"/> for this instance. This method will only succeed if this is a Vulkan
@@ -947,11 +957,10 @@ namespace Veldrid
         /// <returns>The <see cref="BackendInfoVulkan"/> for this instance.</returns>
         public BackendInfoVulkan GetVulkanInfo()
         {
-            if (!GetVulkanInfo(out BackendInfoVulkan info))
+            if (!GetVulkanInfo(out BackendInfoVulkan? info))
             {
                 throw new VeldridException($"{nameof(GetVulkanInfo)} can only be used on a Vulkan GraphicsDevice.");
             }
-
             return info;
         }
 #endif
@@ -963,7 +972,11 @@ namespace Veldrid
         /// </summary>
         /// <param name="info">If successful, this will contain the <see cref="BackendInfoOpenGL"/> for this instance.</param>
         /// <returns>True if this is an OpenGL GraphicsDevice and the operation was successful. False otherwise.</returns>
-        public virtual bool GetOpenGLInfo(out BackendInfoOpenGL info) { info = null; return false; }
+        public virtual bool GetOpenGLInfo([MaybeNullWhen(false)] out BackendInfoOpenGL info)
+        {
+            info = null;
+            return false;
+        }
 
         /// <summary>
         /// Gets a <see cref="BackendInfoOpenGL"/> for this instance. This method will only succeed if this is an OpenGL
@@ -972,11 +985,10 @@ namespace Veldrid
         /// <returns>The <see cref="BackendInfoOpenGL"/> for this instance.</returns>
         public BackendInfoOpenGL GetOpenGLInfo()
         {
-            if (!GetOpenGLInfo(out BackendInfoOpenGL info))
+            if (!GetOpenGLInfo(out BackendInfoOpenGL? info))
             {
                 throw new VeldridException($"{nameof(GetOpenGLInfo)} can only be used on an OpenGL GraphicsDevice.");
             }
-
             return info;
         }
 #endif
@@ -988,7 +1000,11 @@ namespace Veldrid
         /// </summary>
         /// <param name="info">If successful, this will contain the <see cref="BackendInfoOpenGL"/> for this instance.</param>
         /// <returns>True if this is an Metal GraphicsDevice and the operation was successful. False otherwise.</returns>
-        public virtual bool GetMetalInfo(out BackendInfoMetal info) { info = null; return false; }
+        public virtual bool GetMetalInfo([MaybeNullWhen(false)] out BackendInfoMetal info)
+        {
+            info = null;
+            return false;
+        }
 
         /// <summary>
         /// Gets a <see cref="BackendInfoMetal"/> for this instance. This method will only succeed if this is an OpenGL
@@ -997,11 +1013,10 @@ namespace Veldrid
         /// <returns>The <see cref="BackendInfoMetal"/> for this instance.</returns>
         public BackendInfoMetal GetMetalInfo()
         {
-            if (!GetMetalInfo(out BackendInfoMetal info))
+            if (!GetMetalInfo(out BackendInfoMetal? info))
             {
                 throw new VeldridException($"{nameof(GetMetalInfo)} can only be used on a Metal GraphicsDevice.");
             }
-
             return info;
         }
 #endif

@@ -5,13 +5,16 @@ namespace Veldrid.D3D11
 {
     internal class D3D11Sampler : Sampler
     {
-        private string _name;
+        private string? _name;
 
         public ID3D11SamplerState DeviceSampler { get; }
 
         public D3D11Sampler(ID3D11Device device, in SamplerDescription description)
         {
-            ComparisonFunction comparision = description.ComparisonKind == null ? ComparisonFunction.Never : D3D11Formats.VdToD3D11ComparisonFunc(description.ComparisonKind.Value);
+            ComparisonFunction comparision = description.ComparisonKind == null
+                ? ComparisonFunction.Never
+                : D3D11Formats.VdToD3D11ComparisonFunc(description.ComparisonKind.Value);
+
             Vortice.Direct3D11.SamplerDescription samplerStateDesc = new Vortice.Direct3D11.SamplerDescription
             {
                 AddressU = D3D11Formats.VdToD3D11AddressMode(description.AddressModeU),
@@ -44,13 +47,13 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set
             {
                 _name = value;
-                DeviceSampler.DebugName = value;
+                DeviceSampler.DebugName = value!;
             }
         }
 

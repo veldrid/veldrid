@@ -154,7 +154,7 @@ namespace Veldrid.Vk
         {
             lock (_allocatorMutex)
             {
-                ChunkAllocatorSet ret;
+                ChunkAllocatorSet? ret;
 
                 if (persistentMapped)
                 {

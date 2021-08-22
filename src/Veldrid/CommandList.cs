@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Veldrid
 {
@@ -27,12 +26,12 @@ namespace Veldrid
         private readonly uint _uniformBufferAlignment;
         private readonly uint _structuredBufferAlignment;
 
-        private protected Framebuffer _framebuffer;
-        private protected Pipeline _graphicsPipeline;
-        private protected Pipeline _computePipeline;
+        private protected Framebuffer? _framebuffer;
+        private protected Pipeline? _graphicsPipeline;
+        private protected Pipeline? _computePipeline;
 
 #if VALIDATE_USAGE
-        private DeviceBuffer _indexBuffer;
+        private DeviceBuffer? _indexBuffer;
         private IndexFormat _indexFormat;
 #endif
 
@@ -374,7 +373,7 @@ namespace Veldrid
             {
                 throw new VeldridException($"Cannot use ClearColorTarget. There is no Framebuffer bound.");
             }
-            if (_framebuffer.ColorTargets.Count <= index)
+            if (_framebuffer.ColorTargets.Length <= index)
             {
                 throw new VeldridException(
                     "ClearColorTarget index must be less than the current Framebuffer's color target count.");
@@ -426,9 +425,10 @@ namespace Veldrid
         /// </summary>
         public void SetFullViewports()
         {
-            SetViewport(0, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
+            SetViewport(0, new Viewport(0, 0, _framebuffer!.Width, _framebuffer.Height, 0, 1));
 
-            for (uint index = 1; index < _framebuffer.ColorTargets.Count; index++)
+            int length = _framebuffer.ColorTargets.Length;
+            for (uint index = 1; index < length; index++)
             {
                 SetViewport(index, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
             }
@@ -440,7 +440,7 @@ namespace Veldrid
         /// <param name="index">The color target index.</param>
         public void SetFullViewport(uint index)
         {
-            SetViewport(index, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
+            SetViewport(index, new Viewport(0, 0, _framebuffer!.Width, _framebuffer.Height, 0, 1));
         }
 
         /// <summary>
@@ -464,9 +464,10 @@ namespace Veldrid
         /// </summary>
         public void SetFullScissorRects()
         {
-            SetScissorRect(0, 0, 0, _framebuffer.Width, _framebuffer.Height);
+            SetScissorRect(0, 0, 0, _framebuffer!.Width, _framebuffer.Height);
 
-            for (uint index = 1; index < _framebuffer.ColorTargets.Count; index++)
+            int length = _framebuffer.ColorTargets.Length;
+            for (uint index = 1; index < length; index++)
             {
                 SetScissorRect(index, 0, 0, _framebuffer.Width, _framebuffer.Height);
             }
@@ -478,7 +479,7 @@ namespace Veldrid
         /// <param name="index">The color target index.</param>
         public void SetFullScissorRect(uint index)
         {
-            SetScissorRect(index, 0, 0, _framebuffer.Width, _framebuffer.Height);
+            SetScissorRect(index, 0, 0, _framebuffer!.Width, _framebuffer.Height);
         }
 
         /// <summary>
@@ -1146,11 +1147,8 @@ namespace Veldrid
 
         private protected abstract void InsertDebugMarkerCore(string name);
 
-        /// <summary>
-        /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
-        /// tools.
-        /// </summary>
-        public abstract string Name { get; set; }
+        /// <inheritdoc/>
+        public abstract string? Name { get; set; }
 
         /// <summary>
         /// A bool indicating whether this instance has been disposed.
@@ -1165,7 +1163,6 @@ namespace Veldrid
         [Conditional("VALIDATE_USAGE")]
         private void ValidateIndexBuffer(uint indexCount)
         {
-#if VALIDATE_USAGE
             if (_indexBuffer == null)
             {
                 throw new VeldridException($"An index buffer must be bound before {nameof(CommandList)}.{nameof(DrawIndexed)} can be called.");
@@ -1178,14 +1175,11 @@ namespace Veldrid
                 throw new VeldridException(
                     $"The active index buffer does not contain enough data to satisfy the given draw command. {bytesNeeded} bytes are needed, but the buffer only contains {_indexBuffer.SizeInBytes}.");
             }
-#endif
         }
 
         [Conditional("VALIDATE_USAGE")]
         private void PreDrawValidation()
         {
-#if VALIDATE_USAGE
-
             if (_graphicsPipeline == null)
             {
                 throw new VeldridException($"A graphics {nameof(Pipeline)} must be set in order to issue draw commands.");
@@ -1198,7 +1192,6 @@ namespace Veldrid
             {
                 throw new VeldridException($"The {nameof(OutputDescription)} of the current graphics {nameof(Pipeline)} is not compatible with the current {nameof(Framebuffer)}.");
             }
-#endif
         }
     }
 }

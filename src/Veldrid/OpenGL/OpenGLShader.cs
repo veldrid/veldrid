@@ -2,7 +2,6 @@
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
 using System.Text;
-using System;
 
 namespace Veldrid.OpenGL
 {
@@ -14,9 +13,11 @@ namespace Veldrid.OpenGL
 
         private bool _disposeRequested;
         private bool _disposed;
-        private string _name;
+        private string? _name;
         private bool _nameChanged;
-        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
+
+        public override string? Name { get => _name; set { _name = value; _nameChanged = true; } }
+
         public override bool IsDisposed => _disposeRequested;
 
         private uint _shader;
@@ -29,7 +30,7 @@ namespace Veldrid.OpenGL
 #if VALIDATE_USAGE
             if (stage == ShaderStages.Compute && !gd.Extensions.ComputeShaders)
             {
-                if (_gd.BackendType == GraphicsBackend.OpenGLES)
+                if (gd.BackendType == GraphicsBackend.OpenGLES)
                 {
                     throw new VeldridException("Compute shaders require OpenGL ES 3.1.");
                 }

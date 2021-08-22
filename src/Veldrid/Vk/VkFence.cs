@@ -7,7 +7,7 @@ namespace Veldrid.Vk
     {
         private readonly VkGraphicsDevice _gd;
         private Vulkan.VkFence _fence;
-        private string _name;
+        private string? _name;
         private bool _destroyed;
 
         public Vulkan.VkFence DeviceFence => _fence;
@@ -29,12 +29,13 @@ namespace Veldrid.Vk
         public override bool Signaled => vkGetFenceStatus(_gd.Device, _fence) == VkResult.Success;
         public override bool IsDisposed => _destroyed;
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set
             {
-                _name = value; _gd.SetResourceName(this, value);
+                _name = value;
+                _gd.SetResourceName(this, value);
             }
         }
 

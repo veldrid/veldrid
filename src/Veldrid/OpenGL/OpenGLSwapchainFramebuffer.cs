@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Veldrid.OpenGL
 {
@@ -12,22 +11,20 @@ namespace Veldrid.OpenGL
         public override uint Height => _colorTexture.Height;
 
         public override OutputDescription OutputDescription { get; }
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public override bool IsDisposed => _disposed;
 
         private readonly OpenGLPlaceholderTexture _colorTexture;
-        private readonly OpenGLPlaceholderTexture _depthTexture;
+        private readonly OpenGLPlaceholderTexture? _depthTexture;
 
-        private readonly FramebufferAttachment[] _colorTargets;
-        private readonly FramebufferAttachment? _depthTarget;
-
-        public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
+        public override ReadOnlySpan<FramebufferAttachment> ColorTargets => _colorTargets;
         public override FramebufferAttachment? DepthTarget => _depthTarget;
 
         public bool DisableSrgbConversion { get; }
 
         internal OpenGLSwapchainFramebuffer(
-            uint width, uint height,
+            uint width,
+            uint height,
             PixelFormat colorFormat,
             PixelFormat? depthFormat,
             bool disableSrgbConversion)
@@ -36,7 +33,7 @@ namespace Veldrid.OpenGL
             // This is wrong, but it's not really used.
             OutputAttachmentDescription? depthDesc = _depthFormat != null
                 ? new OutputAttachmentDescription(_depthFormat.Value)
-                : (OutputAttachmentDescription?)null;
+                : null;
             OutputDescription = new OutputDescription(
                 depthDesc,
                 new OutputAttachmentDescription(colorFormat));
@@ -54,7 +51,7 @@ namespace Veldrid.OpenGL
                 _depthTexture = new OpenGLPlaceholderTexture(
                     width,
                     height,
-                    depthFormat.Value,
+                    _depthFormat.Value,
                     TextureUsage.DepthStencil,
                     TextureSampleCount.Count1);
                 _depthTarget = new FramebufferAttachment(_depthTexture, 0);

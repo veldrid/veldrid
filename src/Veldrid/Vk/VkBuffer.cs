@@ -13,7 +13,7 @@ namespace Veldrid.Vk
         private readonly VkMemoryRequirements _bufferMemoryRequirements;
         public ResourceRefCount RefCount { get; }
         private bool _destroyed;
-        private string _name;
+        private string? _name;
         public override bool IsDisposed => _destroyed;
 
         public override uint SizeInBytes { get; }
@@ -121,7 +121,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

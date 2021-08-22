@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using Vulkan;
 
 namespace Veldrid.Vk
@@ -7,7 +7,7 @@ namespace Veldrid.Vk
     {
         public VkFramebufferBase(
             FramebufferAttachmentDescription? depthTexture,
-            IReadOnlyList<FramebufferAttachmentDescription> colorTextures)
+            ReadOnlySpan<FramebufferAttachmentDescription> colorTextures)
             : base(depthTexture, colorTextures)
         {
             RefCount = new ResourceRefCount(DisposeCore);

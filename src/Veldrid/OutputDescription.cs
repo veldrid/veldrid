@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 
 namespace Veldrid
 {
@@ -12,10 +11,12 @@ namespace Veldrid
         /// A description of the depth attachment, or null if none exists.
         /// </summary>
         public OutputAttachmentDescription? DepthAttachment;
+
         /// <summary>
         /// An array of attachment descriptions, one for each color attachment. May be empty.
         /// </summary>
         public OutputAttachmentDescription[] ColorAttachments;
+
         /// <summary>
         /// The number of samples in each target attachment.
         /// </summary>
@@ -58,7 +59,7 @@ namespace Veldrid
                 depthAttachment = new OutputAttachmentDescription(fb.DepthTarget.Value.Target.Format);
                 sampleCount = fb.DepthTarget.Value.Target.SampleCount;
             }
-            OutputAttachmentDescription[] colorAttachments = new OutputAttachmentDescription[fb.ColorTargets.Count];
+            OutputAttachmentDescription[] colorAttachments = new OutputAttachmentDescription[fb.ColorTargets.Length];
             for (int i = 0; i < colorAttachments.Length; i++)
             {
                 colorAttachments[i] = new OutputAttachmentDescription(fb.ColorTargets[i].Target.Format);

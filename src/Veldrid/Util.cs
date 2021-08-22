@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Text;
+using System.Runtime.InteropServices;
 
 namespace Veldrid
 {
@@ -12,11 +13,6 @@ namespace Veldrid
         internal static TDerived AssertSubtype<TBase, TDerived>(TBase value) where TDerived : class, TBase where TBase : class
         {
 #if DEBUG
-            if (value == null)
-            {
-                throw new VeldridException($"Expected object of type {typeof(TDerived).FullName} but received null instead.");
-            }
-
             if (!(value is TDerived derived))
             {
                 throw new VeldridException($"object {value} must be derived type {typeof(TDerived).FullName} to be used in this context.");
@@ -43,13 +39,7 @@ namespace Veldrid
 
         internal static unsafe string GetString(byte* stringStart)
         {
-            int characters = 0;
-            while (stringStart[characters] != 0)
-            {
-                characters++;
-            }
-
-            return Encoding.UTF8.GetString(stringStart, characters);
+            return Marshal.PtrToStringUTF8((IntPtr)stringStart) ?? "";
         }
 
         internal static bool NullableEquals<T>(T? left, T? right) where T : struct, IEquatable<T>
@@ -62,7 +52,7 @@ namespace Veldrid
             return left.HasValue == right.HasValue;
         }
 
-        internal static bool ArrayEquals<T>(T[] left, T[] right) where T : class
+        internal static bool ArrayEquals<T>(T[]? left, T[]? right) where T : class
         {
             if (left == null || right == null)
             {
@@ -85,7 +75,7 @@ namespace Veldrid
             return true;
         }
 
-        internal static bool ArrayEqualsEquatable<T>(T[] left, T[] right) where T : struct, IEquatable<T>
+        internal static bool ArrayEqualsEquatable<T>(T[]? left, T[]? right) where T : struct, IEquatable<T>
         {
             if (left == null || right == null)
             {
@@ -273,7 +263,7 @@ namespace Veldrid
             }
         }
 
-        public static bool GetDeviceBuffer(BindableResource resource, out DeviceBuffer buffer)
+        public static bool GetDeviceBuffer(BindableResource resource, [MaybeNullWhen(false)] out DeviceBuffer buffer)
         {
             if (resource is DeviceBuffer db)
             {

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Text;
 using Veldrid.OpenGLBinding;
 using static Veldrid.OpenGLBinding.OpenGLNative;
@@ -25,7 +26,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        internal static unsafe void SetObjectLabel(ObjectLabelIdentifier identifier, uint target, string name)
+        internal static unsafe void SetObjectLabel(ObjectLabelIdentifier identifier, uint target, ReadOnlySpan<char> name)
         {
             if (HasGlObjectLabel)
             {
@@ -39,7 +40,7 @@ namespace Veldrid.OpenGL
                 }
                 if (byteCount >= MaxLabelLength)
                 {
-                    name = name.Substring(0, MaxLabelLength.Value - 4) + "...";
+                    name = name.Slice(0, MaxLabelLength.Value - 4).ToString() + "...";
                     byteCount = Encoding.UTF8.GetByteCount(name);
                 }
 

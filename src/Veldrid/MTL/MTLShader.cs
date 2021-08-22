@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Text;
 using Veldrid.MetalBindings;
 
@@ -12,7 +11,7 @@ namespace Veldrid.MTL
 
         public MTLLibrary Library { get; private set; }
         public MTLFunction Function { get; private set; }
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public bool HasFunctionConstants { get; }
         public override bool IsDisposed => _disposed;
 

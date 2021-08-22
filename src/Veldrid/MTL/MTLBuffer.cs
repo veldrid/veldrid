@@ -5,13 +5,13 @@ namespace Veldrid.MTL
 {
     internal class MTLBuffer : DeviceBuffer
     {
-        private string _name;
+        private string? _name;
         private bool _disposed;
 
         public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

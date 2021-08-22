@@ -2,7 +2,7 @@
 {
     internal class D3D11ResourceSet : ResourceSet
     {
-        private string _name;
+        private string? _name;
         private bool _disposed;
 
         public new BindableResource[] Resources { get; }
@@ -14,7 +14,7 @@
             Layout = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(description.Layout);
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set => _name = value;

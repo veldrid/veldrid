@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading;
 using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
@@ -51,7 +48,7 @@ namespace Veldrid.MTL
             _gd = gd;
         }
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposed;
 
@@ -178,7 +175,7 @@ namespace Veldrid.MTL
                     _rce.setTriangleFillMode(_graphicsPipeline.FillMode);
                     RgbaFloat blendColor = _graphicsPipeline.BlendColor;
                     _rce.setBlendColor(blendColor.R, blendColor.G, blendColor.B, blendColor.A);
-                    if (_framebuffer.DepthTarget != null)
+                    if (_framebuffer!.DepthTarget != null)
                     {
                         _rce.setDepthStencilState(_graphicsPipeline.DepthStencilState);
                         _rce.setDepthClipMode(_graphicsPipeline.DepthClipMode);
@@ -411,7 +408,7 @@ namespace Veldrid.MTL
                 MetalBindings.MTLBuffer srcBuffer = srcMTLTexture.StagingBuffer;
                 MetalBindings.MTLTexture dstTexture = dstMTLTexture.DeviceTexture;
 
-                Util.GetMipDimensions(srcMTLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                Util.GetMipDimensions(srcMTLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out _);
                 for (uint layer = 0; layer < layerCount; layer++)
                 {
                     uint blockSize = FormatHelpers.IsCompressedFormat(srcMTLTexture.Format) ? 4u : 1u;
@@ -664,7 +661,7 @@ namespace Veldrid.MTL
             MTLTexture mtlDst = Util.AssertSubtype<Texture, MTLTexture>(destination);
 
             MTLRenderPassDescriptor rpDesc = MTLRenderPassDescriptor.New();
-            var colorAttachment = rpDesc.colorAttachments[0];
+            MTLRenderPassColorAttachmentDescriptor colorAttachment = rpDesc.colorAttachments[0];
             colorAttachment.texture = mtlSrc.DeviceTexture;
             colorAttachment.loadAction = MTLLoadAction.Load;
             colorAttachment.storeAction = MTLStoreAction.MultisampleResolve;
@@ -703,12 +700,12 @@ namespace Veldrid.MTL
 
             EnsureNoRenderPass();
             _mtlFramebuffer = Util.AssertSubtype<Framebuffer, MTLFramebufferBase>(fb);
-            _viewportCount = Math.Max(1u, (uint)fb.ColorTargets.Count);
+            _viewportCount = Math.Max(1u, (uint)fb.ColorTargets.Length);
             Util.EnsureArrayMinimumSize(ref _viewports, _viewportCount);
             Util.ClearArray(_viewports);
             Util.EnsureArrayMinimumSize(ref _scissorRects, _viewportCount);
             Util.ClearArray(_scissorRects);
-            Util.EnsureArrayMinimumSize(ref _clearColors, (uint)fb.ColorTargets.Count);
+            Util.EnsureArrayMinimumSize(ref _clearColors, (uint)fb.ColorTargets.Length);
             Util.ClearArray(_clearColors);
             _currentFramebufferEverActive = false;
         }
@@ -958,11 +955,12 @@ namespace Veldrid.MTL
             MTLRenderPassDescriptor rpDesc = _mtlFramebuffer.CreateRenderPassDescriptor();
             for (uint i = 0; i < _clearColors.Length; i++)
             {
-                if (_clearColors[i] != null)
+                RgbaFloat? clearColor = _clearColors[i];
+                if (clearColor.HasValue)
                 {
-                    var attachment = rpDesc.colorAttachments[0];
+                    MTLRenderPassColorAttachmentDescriptor attachment = rpDesc.colorAttachments[0];
                     attachment.loadAction = MTLLoadAction.Clear;
-                    RgbaFloat c = _clearColors[i].Value;
+                    RgbaFloat c = clearColor.GetValueOrDefault();
                     attachment.clearColor = new MTLClearColor(c.R, c.G, c.B, c.A);
                     _clearColors[i] = null;
                 }
@@ -972,9 +970,9 @@ namespace Veldrid.MTL
             {
                 MTLRenderPassDepthAttachmentDescriptor depthAttachment = rpDesc.depthAttachment;
                 depthAttachment.loadAction = MTLLoadAction.Clear;
-                depthAttachment.clearDepth = _clearDepth.Value.depth;
+                depthAttachment.clearDepth = _clearDepth.GetValueOrDefault().depth;
 
-                if (FormatHelpers.IsStencilFormat(_mtlFramebuffer.DepthTarget.Value.Target.Format))
+                if (FormatHelpers.IsStencilFormat(_mtlFramebuffer.DepthTarget!.Value.Target.Format))
                 {
                     MTLRenderPassStencilAttachmentDescriptor stencilAttachment = rpDesc.stencilAttachment;
                     stencilAttachment.loadAction = MTLLoadAction.Clear;

@@ -1,4 +1,3 @@
-using System;
 using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
@@ -10,7 +9,7 @@ namespace Veldrid.MTL
 
         public MetalBindings.MTLTexture TargetDeviceTexture { get; }
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposed;
 

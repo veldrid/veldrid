@@ -1,6 +1,7 @@
 ﻿using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
+using System;
 
 namespace Veldrid.OpenGL
 {
@@ -9,12 +10,12 @@ namespace Veldrid.OpenGL
         private readonly OpenGLGraphicsDevice _gd;
         private uint _framebuffer;
 
-        private string _name;
+        private string? _name;
         private bool _nameChanged;
         private bool _disposeRequested;
         private bool _disposed;
 
-        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
+        public override string? Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public uint Framebuffer => _framebuffer;
 
@@ -54,13 +55,13 @@ namespace Veldrid.OpenGL
             glBindFramebuffer(FramebufferTarget.Framebuffer, _framebuffer);
             CheckLastError();
 
-            uint colorCount = (uint)ColorTargets.Count;
-
+            ReadOnlySpan<FramebufferAttachment> colorTargets = ColorTargets;
+            uint colorCount = (uint)colorTargets.Length;
             if (colorCount > 0)
             {
-                for (int i = 0; i < colorCount; i++)
+                for (int i = 0; i < colorTargets.Length; i++)
                 {
-                    FramebufferAttachment colorAttachment = ColorTargets[i];
+                    FramebufferAttachment colorAttachment = colorTargets[i];
                     OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(colorAttachment.Target);
                     glTex.EnsureResourcesCreated();
 
@@ -84,7 +85,7 @@ namespace Veldrid.OpenGL
                         glFramebufferTextureLayer(
                             FramebufferTarget.Framebuffer,
                             GLFramebufferAttachment.ColorAttachment0 + i,
-                            (uint)glTex.Texture,
+                            glTex.Texture,
                             (int)colorAttachment.MipLevel,
                             (int)colorAttachment.ArrayLayer);
                         CheckLastError();

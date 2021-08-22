@@ -21,7 +21,7 @@ namespace Veldrid.MTL
         private readonly string _deviceName;
         private readonly GraphicsApiVersion _apiVersion;
         private readonly MTLCommandQueue _commandQueue;
-        private readonly MTLSwapchain _mainSwapchain;
+        private readonly MTLSwapchain? _mainSwapchain;
         private readonly bool[] _supportedSampleCounts;
         private BackendInfoMetal _metalInfo;
 
@@ -37,7 +37,7 @@ namespace Veldrid.MTL
         private readonly object _unalignedBufferCopyPipelineLock = new object();
         private readonly NativeLibrary _libSystem;
         private readonly IntPtr _concreteGlobalBlock;
-        private MTLShader _unalignedBufferCopyShader;
+        private MTLShader? _unalignedBufferCopyShader;
         private MTLComputePipelineState _unalignedBufferCopyPipeline;
         private MTLCommandBufferHandler _completionHandler;
         private readonly IntPtr _completionHandlerFuncPtr;
@@ -156,7 +156,7 @@ namespace Veldrid.MTL
 
         public override ResourceFactory ResourceFactory { get; }
 
-        public override Swapchain MainSwapchain => _mainSwapchain;
+        public override Swapchain? MainSwapchain => _mainSwapchain;
 
         public override GraphicsDeviceFeatures Features { get; }
 
@@ -164,7 +164,7 @@ namespace Veldrid.MTL
         {
             lock (_submittedCommandsLock)
             {
-                if (_submittedCBs.Remove(cb, out MTLFence fence))
+                if (_submittedCBs.Remove(cb, out MTLFence? fence))
                 {
                     fence.Set();
                 }
@@ -184,14 +184,14 @@ namespace Veldrid.MTL
         {
             lock (s_aotRegisteredBlocks)
             {
-                if (s_aotRegisteredBlocks.TryGetValue(block, out MTLGraphicsDevice gd))
+                if (s_aotRegisteredBlocks.TryGetValue(block, out MTLGraphicsDevice? gd))
                 {
                     gd.OnCommandBufferCompleted(block, cb);
                 }
             }
         }
 
-        private protected override void SubmitCommandsCore(CommandList commandList, Fence fence)
+        private protected override void SubmitCommandsCore(CommandList commandList, Fence? fence)
         {
             MTLCommandList mtlCL = Util.AssertSubtype<CommandList, MTLCommandList>(commandList);
 
@@ -427,7 +427,7 @@ namespace Veldrid.MTL
             WaitForIdle();
             if (!_unalignedBufferCopyPipeline.IsNull)
             {
-                _unalignedBufferCopyShader.Dispose();
+                _unalignedBufferCopyShader?.Dispose();
                 ObjectiveCRuntime.release(_unalignedBufferCopyPipeline.NativePtr);
             }
             _mainSwapchain?.Dispose();
@@ -573,8 +573,13 @@ namespace Veldrid.MTL
 
                     Debug.Assert(_unalignedBufferCopyShader == null);
                     string name = MetalFeatures.IsMacOS ? UnalignedBufferCopyPipelineMacOSName : UnalignedBufferCopyPipelineiOSName;
-                    using (Stream resourceStream = typeof(MTLGraphicsDevice).Assembly.GetManifestResourceStream(name))
+                    using (Stream? resourceStream = typeof(MTLGraphicsDevice).Assembly.GetManifestResourceStream(name))
                     {
+                        if (resourceStream == null)
+                        {
+                            throw new Exception($"Missing required shader manifest resource \"{name}\".");
+                        }
+
                         byte[] data = new byte[resourceStream.Length];
                         using (MemoryStream ms = new MemoryStream(data))
                         {

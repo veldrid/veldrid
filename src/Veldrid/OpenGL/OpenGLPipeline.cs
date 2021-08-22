@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System;
 using System.Runtime.CompilerServices;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Veldrid.OpenGL
 {
@@ -21,8 +22,8 @@ namespace Veldrid.OpenGL
 #endif
 
         // Graphics Pipeline
-        public Shader[] GraphicsShaders { get; }
-        public VertexLayoutDescription[] VertexLayouts { get; }
+        public Shader[]? GraphicsShaders { get; }
+        public VertexLayoutDescription[]? VertexLayouts { get; }
         public BlendStateDescription BlendState { get; }
         public DepthStencilStateDescription DepthStencilState { get; }
         public RasterizerStateDescription RasterizerState { get; }
@@ -30,22 +31,22 @@ namespace Veldrid.OpenGL
 
         // Compute Pipeline
         public override bool IsComputePipeline { get; }
-        public Shader ComputeShader { get; }
+        public Shader? ComputeShader { get; }
 
         private uint _program;
         private bool _disposeRequested;
         private bool _disposed;
 
-        private SetBindingsInfo[] _setInfos;
+        private SetBindingsInfo[] _setInfos = Array.Empty<SetBindingsInfo>();
 
-        public int[] VertexStrides { get; }
+        public int[]? VertexStrides { get; }
 
         public uint Program => _program;
 
         public uint GetUniformBufferCount(uint setSlot) => _setInfos[setSlot].UniformBufferCount;
         public uint GetShaderStorageBufferCount(uint setSlot) => _setInfos[setSlot].ShaderStorageBufferCount;
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposeRequested;
 
@@ -108,7 +109,7 @@ namespace Veldrid.OpenGL
             Created = true;
         }
 
-        private static void GetNullTerminatedUtf8(string text, ref Span<byte> byteBuffer)
+        private static void GetNullTerminatedUtf8(ReadOnlySpan<char> text, ref Span<byte> byteBuffer)
         {
             int byteCount = UTF8.GetByteCount(text) + 1;
             if (byteBuffer.Length < byteCount)
@@ -125,7 +126,7 @@ namespace Veldrid.OpenGL
         {
             _program = glCreateProgram();
             CheckLastError();
-            foreach (Shader stage in GraphicsShaders)
+            foreach (Shader stage in GraphicsShaders!)
             {
                 OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(stage);
                 glShader.EnsureResourcesCreated();
@@ -136,7 +137,7 @@ namespace Veldrid.OpenGL
             Span<byte> byteBuffer = stackalloc byte[4096];
 
             uint slot = 0;
-            foreach (VertexLayoutDescription layoutDesc in VertexLayouts)
+            foreach (VertexLayoutDescription layoutDesc in VertexLayouts!)
             {
                 for (int i = 0; i < layoutDesc.Elements.Length; i++)
                 {
@@ -383,7 +384,7 @@ namespace Veldrid.OpenGL
         {
             _program = glCreateProgram();
             CheckLastError();
-            OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(ComputeShader);
+            OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(ComputeShader!);
             glShader.EnsureResourcesCreated();
             glAttachShader(_program, glShader.Shader);
             CheckLastError();
@@ -411,7 +412,7 @@ namespace Veldrid.OpenGL
             ProcessResourceSetLayouts(ResourceLayouts, byteBuffer);
         }
 
-        public bool GetUniformBindingForSlot(uint set, uint slot, out OpenGLUniformBinding binding)
+        public bool GetUniformBindingForSlot(uint set, uint slot, [MaybeNullWhen(false)] out OpenGLUniformBinding binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
@@ -432,12 +433,11 @@ namespace Veldrid.OpenGL
             return setInfo.GetSamplerBindingInfo(slot, out binding);
         }
 
-        public bool GetStorageBufferBindingForSlot(uint set, uint slot, out OpenGLShaderStorageBinding binding)
+        public bool GetStorageBufferBindingForSlot(uint set, uint slot, [MaybeNullWhen(false)] out OpenGLShaderStorageBinding binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
             return setInfo.GetStorageBufferBindingForSlot(slot, out binding);
-
         }
 
         public override void Dispose()
@@ -494,12 +494,12 @@ namespace Veldrid.OpenGL
             return _samplerBindings.TryGetValue(slot, out binding);
         }
 
-        public bool GetUniformBindingForSlot(uint slot, out OpenGLUniformBinding binding)
+        public bool GetUniformBindingForSlot(uint slot, [MaybeNullWhen(false)] out OpenGLUniformBinding binding)
         {
             return _uniformBindings.TryGetValue(slot, out binding);
         }
 
-        public bool GetStorageBufferBindingForSlot(uint slot, out OpenGLShaderStorageBinding binding)
+        public bool GetStorageBufferBindingForSlot(uint slot, [MaybeNullWhen(false)] out OpenGLShaderStorageBinding binding)
         {
             return _storageBufferBindings.TryGetValue(slot, out binding);
         }
@@ -512,6 +512,7 @@ namespace Veldrid.OpenGL
         /// Generally, this is the texture unit that the binding will be placed into.
         /// </summary>
         public int RelativeIndex;
+
         /// <summary>
         /// The uniform location of the binding in the shader program.
         /// </summary>

@@ -6,7 +6,7 @@
 
         public new OpenGLResourceLayout Layout { get; }
         public new BindableResource[] Resources { get; }
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposed;
 

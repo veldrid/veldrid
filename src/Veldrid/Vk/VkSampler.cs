@@ -8,7 +8,7 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkSampler _sampler;
         private bool _disposed;
-        private string _name;
+        private string? _name;
 
         public Vulkan.VkSampler DeviceSampler => _sampler;
 
@@ -46,7 +46,7 @@ namespace Veldrid.Vk
             RefCount = new ResourceRefCount(DisposeCore);
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

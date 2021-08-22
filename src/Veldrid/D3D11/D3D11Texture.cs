@@ -1,13 +1,11 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {
     internal class D3D11Texture : Texture
     {
-        private readonly ID3D11Device _device;
-        private string _name;
+        private string? _name;
 
         public override uint Width { get; }
         public override uint Height { get; }
@@ -26,7 +24,6 @@ namespace Veldrid.D3D11
 
         public D3D11Texture(ID3D11Device device, in TextureDescription description)
         {
-            _device = device;
             Width = description.Width;
             Height = description.Height;
             Depth = description.Depth;
@@ -146,7 +143,6 @@ namespace Veldrid.D3D11
 
         public D3D11Texture(ID3D11Texture2D existingTexture, TextureType type, PixelFormat format)
         {
-            _device = existingTexture.Device;
             DeviceTexture = existingTexture;
             Width = (uint)existingTexture.Description.Width;
             Height = (uint)existingTexture.Description.Height;
@@ -174,13 +170,13 @@ namespace Veldrid.D3D11
             return new D3D11TextureView(d3d11GD, desc);
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set
             {
                 _name = value;
-                DeviceTexture.DebugName = value;
+                DeviceTexture.DebugName = value!;
             }
         }
 

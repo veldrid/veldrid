@@ -34,11 +34,11 @@ namespace Veldrid.D3D11
             in RasterizerStateDescription rasterDesc,
             bool multisample,
             VertexLayoutDescription[] vertexLayouts,
-            byte[] vsBytecode,
+            byte[]? vsBytecode,
             out ID3D11BlendState blendState,
             out ID3D11DepthStencilState depthState,
             out ID3D11RasterizerState rasterState,
-            out ID3D11InputLayout inputLayout)
+            out ID3D11InputLayout? inputLayout)
         {
             lock (_lock)
             {
@@ -52,7 +52,7 @@ namespace Veldrid.D3D11
         private ID3D11BlendState GetBlendState(in BlendStateDescription description)
         {
             Debug.Assert(Monitor.IsEntered(_lock));
-            if (!_blendStates.TryGetValue(description, out ID3D11BlendState blendState))
+            if (!_blendStates.TryGetValue(description, out ID3D11BlendState? blendState))
             {
                 blendState = CreateNewBlendState(description);
                 BlendStateDescription key = description;
@@ -91,7 +91,7 @@ namespace Veldrid.D3D11
         private ID3D11DepthStencilState GetDepthStencilState(in DepthStencilStateDescription description)
         {
             Debug.Assert(Monitor.IsEntered(_lock));
-            if (!_depthStencilStates.TryGetValue(description, out ID3D11DepthStencilState dss))
+            if (!_depthStencilStates.TryGetValue(description, out ID3D11DepthStencilState? dss))
             {
                 dss = CreateNewDepthStencilState(description);
                 DepthStencilStateDescription key = description;
@@ -133,7 +133,7 @@ namespace Veldrid.D3D11
         {
             Debug.Assert(Monitor.IsEntered(_lock));
             D3D11RasterizerStateCacheKey key = new D3D11RasterizerStateCacheKey(description, multisample);
-            if (!_rasterizerStates.TryGetValue(key, out ID3D11RasterizerState rasterizerState))
+            if (!_rasterizerStates.TryGetValue(key, out ID3D11RasterizerState? rasterizerState))
             {
                 rasterizerState = CreateNewRasterizerState(key);
                 _rasterizerStates.Add(key, rasterizerState);
@@ -157,7 +157,7 @@ namespace Veldrid.D3D11
             return _device.CreateRasterizerState(rssDesc);
         }
 
-        private ID3D11InputLayout GetInputLayout(VertexLayoutDescription[] vertexLayouts, byte[] vsBytecode)
+        private ID3D11InputLayout? GetInputLayout(VertexLayoutDescription[]? vertexLayouts, byte[]? vsBytecode)
         {
             Debug.Assert(Monitor.IsEntered(_lock));
 
@@ -167,7 +167,7 @@ namespace Veldrid.D3D11
             }
 
             InputLayoutCacheKey tempKey = InputLayoutCacheKey.CreateTempKey(vertexLayouts);
-            if (!_inputLayouts.TryGetValue(tempKey, out ID3D11InputLayout inputLayout))
+            if (!_inputLayouts.TryGetValue(tempKey, out ID3D11InputLayout? inputLayout))
             {
                 inputLayout = CreateNewInputLayout(vertexLayouts, vsBytecode);
                 InputLayoutCacheKey permanentKey = InputLayoutCacheKey.CreatePermanentKey(vertexLayouts);

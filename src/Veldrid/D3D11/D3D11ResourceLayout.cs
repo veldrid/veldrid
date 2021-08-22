@@ -3,7 +3,7 @@
     internal class D3D11ResourceLayout : ResourceLayout
     {
         private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
-        private string _name;
+        private string? _name;
         private bool _disposed;
 
         public int UniformBufferCount { get; }
@@ -74,7 +74,7 @@
 
         public bool IsDynamicBuffer(int index) => _bindingInfosByVdIndex[index].DynamicBuffer;
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set => _name = value;

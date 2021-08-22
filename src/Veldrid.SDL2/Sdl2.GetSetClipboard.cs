@@ -9,6 +9,12 @@ namespace Veldrid.Sdl2
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate byte* SDL_GetClipboardText_t();
         private static SDL_GetClipboardText_t s_sdl_getClipboardText = LoadFunction<SDL_GetClipboardText_t>("SDL_GetClipboardText");
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// Pointer to UTF8 data. Has to be freed with <see cref="SDL_free(void*)"/>.
+        /// </returns>
         public static byte* SDL_GetClipboardTextUtf8() => s_sdl_getClipboardText();
 
         public static string? SDL_GetClipboardText()

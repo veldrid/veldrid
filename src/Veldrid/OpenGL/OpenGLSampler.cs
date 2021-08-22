@@ -12,9 +12,10 @@ namespace Veldrid.OpenGL
         private readonly InternalSamplerState _mipmapState;
         private bool _disposeRequested;
 
-        private string _name;
+        private string? _name;
         private bool _nameChanged;
-        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
+
+        public override string? Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public override bool IsDisposed => _disposeRequested;
 

@@ -24,7 +24,7 @@ namespace Veldrid.D3D11
         private readonly int _deviceId;
         private readonly ID3D11DeviceContext _immediateContext;
         private readonly D3D11ResourceFactory _d3d11ResourceFactory;
-        private readonly D3D11Swapchain _mainSwapchain;
+        private readonly D3D11Swapchain? _mainSwapchain;
         private readonly bool _supportsConcurrentResources;
         private readonly bool _supportsCommandLists;
         private readonly object _immediateContextLock = new object();
@@ -65,7 +65,7 @@ namespace Veldrid.D3D11
 
         public int DeviceId => _deviceId;
 
-        public override Swapchain MainSwapchain => _mainSwapchain;
+        public override Swapchain? MainSwapchain => _mainSwapchain;
 
         public override GraphicsDeviceFeatures Features { get; }
 
@@ -81,11 +81,12 @@ namespace Veldrid.D3D11
             flags |= DeviceCreationFlags.Debug;
 #endif
             // If debug flag set but SDK layers aren't available we can't enable debug.
-            if (0 != (flags & DeviceCreationFlags.Debug) && !Vortice.Direct3D11.D3D11.SdkLayersAvailable())
+            if (0 != (flags & DeviceCreationFlags.Debug) && !VorticeD3D11.SdkLayersAvailable())
             {
                 flags &= ~DeviceCreationFlags.Debug;
             }
 
+            ID3D11Device? device;
             try
             {
                 if (options.AdapterPtr != IntPtr.Zero)
@@ -98,7 +99,7 @@ namespace Veldrid.D3D11
                             Vortice.Direct3D.FeatureLevel.Level_11_1,
                             Vortice.Direct3D.FeatureLevel.Level_11_0,
                         },
-                        out _device).CheckError();
+                        out device).CheckError();
                 }
                 else
                 {
@@ -110,7 +111,7 @@ namespace Veldrid.D3D11
                             Vortice.Direct3D.FeatureLevel.Level_11_1,
                             Vortice.Direct3D.FeatureLevel.Level_11_0,
                         },
-                        out _device).CheckError();
+                        out device).CheckError();
                 }
             }
             catch
@@ -118,9 +119,11 @@ namespace Veldrid.D3D11
                 VorticeD3D11.D3D11CreateDevice(IntPtr.Zero,
                     Vortice.Direct3D.DriverType.Hardware,
                     flags,
-                    null,
-                    out _device).CheckError();
+                    null!,
+                    out device).CheckError();
             }
+
+            _device = device ?? throw new VeldridException("Failed to initialize D3D11Device.");
 
             using (IDXGIDevice dxgiDevice = _device.QueryInterface<IDXGIDevice>())
             {
@@ -212,14 +215,15 @@ namespace Veldrid.D3D11
             return d3D11DeviceOptions;
         }
 
-        private protected override void SubmitCommandsCore(CommandList cl, Fence fence)
+        private protected override void SubmitCommandsCore(CommandList cl, Fence? fence)
         {
             D3D11CommandList d3d11CL = Util.AssertSubtype<CommandList, D3D11CommandList>(cl);
             lock (_immediateContextLock)
             {
-                if (d3d11CL.DeviceCommandList != null) // CommandList may have been reset in the meantime (resized swapchain).
+                ID3D11CommandList? deviceCL = d3d11CL.DeviceCommandList;
+                if (deviceCL != null) // CommandList may have been reset in the meantime (resized swapchain).
                 {
-                    _immediateContext.ExecuteCommandList(d3d11CL.DeviceCommandList, false);
+                    _immediateContext.ExecuteCommandList(deviceCL, false);
                     d3d11CL.OnCompleted();
                 }
             }
@@ -642,7 +646,7 @@ namespace Veldrid.D3D11
                 uint refCount = _device.Release();
                 if (refCount > 0)
                 {
-                    ID3D11Debug deviceDebug = _device.QueryInterfaceOrNull<ID3D11Debug>();
+                    ID3D11Debug? deviceDebug = _device.QueryInterfaceOrNull<ID3D11Debug>();
                     if (deviceDebug != null)
                     {
                         deviceDebug.ReportLiveDeviceObjects(ReportLiveDeviceObjectFlags.Summary | ReportLiveDeviceObjectFlags.Detail | ReportLiveDeviceObjectFlags.IgnoreInternal);
@@ -653,7 +657,7 @@ namespace Veldrid.D3D11
                 _dxgiAdapter.Dispose();
 
                 // Report live objects using DXGI if available (DXGIGetDebugInterface1 will fail on pre Windows 8 OS).
-                if (VorticeDXGI.DXGIGetDebugInterface1(out IDXGIDebug1 dxgiDebug).Success)
+                if (VorticeDXGI.DXGIGetDebugInterface1(out IDXGIDebug1? dxgiDebug).Success && dxgiDebug != null)
                 {
                     dxgiDebug.ReportLiveObjects(VorticeDXGI.DebugAll, ReportLiveObjectFlags.Summary | ReportLiveObjectFlags.IgnoreInternal);
                     dxgiDebug.Dispose();

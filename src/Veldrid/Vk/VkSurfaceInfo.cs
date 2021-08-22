@@ -1,8 +1,6 @@
 ﻿using System;
 using Vulkan;
 using Vulkan.Xlib;
-using static Veldrid.Vk.VulkanUtil;
-using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
@@ -11,7 +9,9 @@ namespace Veldrid.Vk
     /// </summary>
     public abstract class VkSurfaceSource
     {
-        internal VkSurfaceSource() { }
+        internal VkSurfaceSource()
+        {
+        }
 
         /// <summary>
         /// Creates a new VkSurfaceKHR attached to this source.
@@ -27,6 +27,7 @@ namespace Veldrid.Vk
         /// <param name="hwnd">The Win32 window handle.</param>
         /// <returns>A new VkSurfaceSource.</returns>
         public static VkSurfaceSource CreateWin32(IntPtr hinstance, IntPtr hwnd) => new Win32VkSurfaceInfo(hinstance, hwnd);
+
         /// <summary>
         /// Creates a new VkSurfaceSource from the given Xlib information.
         /// </summary>

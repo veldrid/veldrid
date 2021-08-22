@@ -16,9 +16,10 @@ namespace Veldrid.MTL
         public override MTLRenderPassDescriptor CreateRenderPassDescriptor()
         {
             MTLRenderPassDescriptor ret = MTLRenderPassDescriptor.New();
-            for (int i = 0; i < ColorTargets.Count; i++)
+            ReadOnlySpan<FramebufferAttachment> colorTargets = ColorTargets;
+            for (int i = 0; i < colorTargets.Length; i++)
             {
-                FramebufferAttachment colorTarget = ColorTargets[i];
+                FramebufferAttachment colorTarget = colorTargets[i];
                 MTLTexture mtlTarget = Util.AssertSubtype<Texture, MTLTexture>(colorTarget.Target);
                 MTLRenderPassColorAttachmentDescriptor colorDescriptor = ret.colorAttachments[(uint)i];
                 colorDescriptor.texture = mtlTarget.DeviceTexture;

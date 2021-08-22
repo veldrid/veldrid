@@ -64,7 +64,7 @@ namespace Veldrid.OpenGL
 
         private readonly object _resetEventsLock = new object();
         private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
-        private Swapchain _mainSwapchain;
+        private Swapchain? _mainSwapchain;
 
         private bool _syncToVBlank;
 
@@ -86,7 +86,7 @@ namespace Veldrid.OpenGL
 
         public OpenGLExtensions Extensions => _extensions;
 
-        public override Swapchain MainSwapchain => _mainSwapchain;
+        public override Swapchain? MainSwapchain => _mainSwapchain;
 
         public override bool SyncToVerticalBlank
         {
@@ -491,8 +491,7 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
             uint depthRB = 0;
-            bool hasDepth = options.SwapchainDepthFormat != null;
-            if (hasDepth)
+            if (options.SwapchainDepthFormat != null)
             {
                 glGenRenderbuffers(1, &depthRB);
                 CheckLastError();
@@ -586,7 +585,7 @@ namespace Veldrid.OpenGL
                         &newHeight);
                     CheckLastError();
 
-                    if (hasDepth)
+                    if (options.SwapchainDepthFormat != null)
                     {
                         Debug.Assert(depthRenderbuffer != 0);
                         glBindRenderbuffer(RenderbufferTarget.Renderbuffer, depthRenderbuffer);
@@ -769,9 +768,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        private protected override void SubmitCommandsCore(
-            CommandList cl,
-            Fence fence)
+        private protected override void SubmitCommandsCore(CommandList cl, Fence? fence)
         {
             lock (_commandListDisposalLock)
             {
@@ -1059,7 +1056,7 @@ namespace Veldrid.OpenGL
 
         private void FlushDisposables()
         {
-            while (_resourcesToDispose.TryDequeue(out OpenGLDeferredResource resource))
+            while (_resourcesToDispose.TryDequeue(out OpenGLDeferredResource? resource))
             {
                 resource.DestroyGLResources();
             }
@@ -1177,7 +1174,9 @@ namespace Veldrid.OpenGL
                     {
                         case WorkItemType.ExecuteList:
                         {
-                            OpenGLCommandEntryList list = Unsafe.As<OpenGLCommandEntryList>(workItem.Object0);
+                            OpenGLCommandEntryList? list = Unsafe.As<OpenGLCommandEntryList>(workItem.Object0);
+                            Debug.Assert(list != null);
+
                             try
                             {
                                 list.ExecuteAll(_gd._commandExecutor);
@@ -1194,8 +1193,10 @@ namespace Veldrid.OpenGL
 
                         case WorkItemType.Map:
                         {
-                            MappableResource resourceToMap = Unsafe.As<MappableResource>(workItem.Object0);
-                            ManualResetEventSlim mre = Unsafe.As<ManualResetEventSlim>(workItem.Object1);
+                            MappableResource? resourceToMap = Unsafe.As<MappableResource>(workItem.Object0);
+                            ManualResetEventSlim? mre = Unsafe.As<ManualResetEventSlim>(workItem.Object1);
+                            Debug.Assert(resourceToMap != null);
+                            Debug.Assert(mre != null);
 
                             MapParams* resultPtr = (MapParams*)Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
 
@@ -1208,7 +1209,9 @@ namespace Veldrid.OpenGL
 
                         case WorkItemType.Unmap:
                         {
-                            MappableResource resourceToMap = Unsafe.As<MappableResource>(workItem.Object0);
+                            MappableResource? resourceToMap = Unsafe.As<MappableResource>(workItem.Object0);
+                            Debug.Assert(resourceToMap != null);
+
                             uint subresource = workItem.UInt0;
 
                             ExecuteUnmapResource(resourceToMap, subresource);
@@ -1217,7 +1220,9 @@ namespace Veldrid.OpenGL
 
                         case WorkItemType.UpdateBuffer:
                         {
-                            DeviceBuffer updateBuffer = Unsafe.As<DeviceBuffer>(workItem.Object0);
+                            DeviceBuffer? updateBuffer = Unsafe.As<DeviceBuffer>(workItem.Object0);
+                            Debug.Assert(updateBuffer != null);
+
                             uint offsetInBytes = workItem.UInt0;
                             StagingBlock stagingBlock = _gd.StagingMemoryPool.RetrieveById(workItem.UInt1);
 
@@ -1233,17 +1238,23 @@ namespace Veldrid.OpenGL
 
                         case WorkItemType.CreateBuffer:
                         {
-                            DeviceBuffer updateBuffer = Unsafe.As<DeviceBuffer>(workItem.Object0);
-                            ManualResetEventSlim mre = Unsafe.As<ManualResetEventSlim>(workItem.Object1);
-                            IntPtr resultPtr = Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
+                            DeviceBuffer? updateBuffer = Unsafe.As<DeviceBuffer>(workItem.Object0);
+                            ManualResetEventSlim? mre = Unsafe.As<ManualResetEventSlim>(workItem.Object1);
+                            Debug.Assert(updateBuffer != null);
+                            Debug.Assert(mre != null);
+
+                            IntPtr initialData = Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
 
                             OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(updateBuffer);
-                            glBuffer.CreateGLResources(resultPtr);
+                            glBuffer.CreateGLResources(initialData);
+                            mre.Set();
                         }
                         break;
 
                         case WorkItemType.UpdateTexture:
-                            Texture texture = Unsafe.As<Texture>(workItem.Object0);
+                            Texture? texture = Unsafe.As<Texture>(workItem.Object0);
+                            Debug.Assert(texture != null);
+
                             StagingMemoryPool pool = _gd.StagingMemoryPool;
                             StagingBlock argBlock = pool.RetrieveById(workItem.UInt0);
                             StagingBlock textureData = pool.RetrieveById(workItem.UInt1);
@@ -1259,7 +1270,9 @@ namespace Veldrid.OpenGL
 
                         case WorkItemType.GenericAction:
                         {
-                            Unsafe.As<Action>(workItem.Object0).Invoke();
+                            Action? action = Unsafe.As<Action>(workItem.Object0);
+                            Debug.Assert(action != null);
+                            action.Invoke();
                         }
                         break;
 
@@ -1302,13 +1315,16 @@ namespace Veldrid.OpenGL
                                 glFlush();
                                 glFinish();
                             }
-                            Unsafe.As<ManualResetEventSlim>(workItem.Object0).Set();
+                            ManualResetEventSlim? mre = Unsafe.As<ManualResetEventSlim>(workItem.Object0);
+                            Debug.Assert(mre != null);
+                            mre.Set();
                         }
                         break;
 
                         case WorkItemType.InitializeResource:
                         {
-                            InitializeResourceInfo info = Unsafe.As<InitializeResourceInfo>(workItem.Object0);
+                            InitializeResourceInfo? info = Unsafe.As<InitializeResourceInfo>(workItem.Object0);
+                            Debug.Assert(info != null);
                             try
                             {
                                 info.DeferredResource.EnsureResourcesCreated();
@@ -1865,8 +1881,8 @@ namespace Veldrid.OpenGL
         private unsafe struct ExecutionThreadWorkItem
         {
             public readonly WorkItemType Type;
-            public readonly object Object0;
-            public readonly object Object1;
+            public readonly object? Object0;
+            public readonly object? Object1;
             public readonly uint UInt0;
             public readonly uint UInt1;
             public readonly uint UInt2;
@@ -2016,7 +2032,7 @@ namespace Veldrid.OpenGL
         {
             public OpenGLDeferredResource DeferredResource;
             public ManualResetEventSlim ResetEvent;
-            public Exception Exception;
+            public Exception? Exception;
 
             public InitializeResourceInfo(OpenGLDeferredResource deferredResource, ManualResetEventSlim mre)
             {

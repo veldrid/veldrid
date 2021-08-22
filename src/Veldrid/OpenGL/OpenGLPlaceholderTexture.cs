@@ -44,7 +44,7 @@
 
         public override TextureType Type => TextureType.Texture2D;
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposed;
 

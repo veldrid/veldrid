@@ -3384,7 +3384,7 @@ namespace Valve.VR
         }
         internal EVRScreenshotError HookScreenshot(EVRScreenshotType[] pSupportedTypes)
         {
-            EVRScreenshotError result = FnTable.HookScreenshot(pSupportedTypes, (int)pSupportedTypes.Length);
+            EVRScreenshotError result = FnTable.HookScreenshot(pSupportedTypes, pSupportedTypes.Length);
             return result;
         }
         internal EVRScreenshotType GetScreenshotPropertyType(uint screenshotHandle, ref EVRScreenshotError pError)

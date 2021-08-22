@@ -13,11 +13,13 @@ namespace Veldrid
         /// <see cref="TextureUsage.DepthStencil"/> flag.
         /// </summary>
         public Texture Target;
+
         /// <summary>
         /// The array layer to render to. This value must be less than <see cref="Texture.ArrayLayers"/> in the target
         /// <see cref="Texture"/>.
         /// </summary>
         public uint ArrayLayer;
+
         /// <summary>
         /// The mip level to render to. This value must be less than <see cref="Texture.MipLevels"/> in the target
         /// <see cref="Texture"/>.
@@ -34,7 +36,8 @@ namespace Veldrid
         /// in the target <see cref="Texture"/>.</param>
         public FramebufferAttachmentDescription(Texture target, uint arrayLayer)
             : this(target, arrayLayer, 0)
-        { }
+        {
+        }
 
         /// <summary>
         /// Constructs a new FramebufferAttachmentDescription.

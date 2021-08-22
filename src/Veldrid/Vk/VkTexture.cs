@@ -50,7 +50,7 @@ namespace Veldrid.Vk
 
         private VkImageLayout[] _imageLayouts;
         private bool _isSwapchainTexture;
-        private string _name;
+        private string? _name;
 
         public ResourceRefCount RefCount { get; }
         public bool IsSwapchainTexture => _isSwapchainTexture;
@@ -204,6 +204,8 @@ namespace Veldrid.Vk
 
                 result = vkBindBufferMemory(_gd.Device, _stagingBuffer, _memoryBlock.DeviceMemory, _memoryBlock.Offset);
                 CheckResult(result);
+
+                _imageLayouts = Array.Empty<VkImageLayout>();
             }
 
             ClearIfRenderTarget();
@@ -429,7 +431,7 @@ namespace Veldrid.Vk
             return _imageLayouts[CalculateSubresource(mipLevel, arrayLayer)];
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

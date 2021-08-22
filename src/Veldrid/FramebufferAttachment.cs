@@ -9,10 +9,12 @@
         /// The target <see cref="Texture"/> which will be rendered to.
         /// </summary>
         public Texture Target { get; }
+
         /// <summary>
         /// The target array layer.
         /// </summary>
         public uint ArrayLayer { get; }
+
         /// <summary>
         /// The target mip level.
         /// </summary>

@@ -11,11 +11,11 @@ namespace Veldrid
 
         public readonly uint Count;
         private fixed uint FixedData[MaxFixedValues];
-        public uint[] Data;
+        public uint[]? Data;
 
         public uint Get(uint i)
         {
-            return Count > MaxFixedValues ? Data[i] : FixedData[i];
+            return Count > MaxFixedValues ? Data![i] : FixedData[i];
         }
 
         public SmallFixedOrDynamicArray(ReadOnlySpan<uint> offsets)

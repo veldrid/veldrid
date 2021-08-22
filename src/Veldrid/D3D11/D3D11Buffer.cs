@@ -3,7 +3,6 @@ using Vortice.Direct3D11;
 using System.Collections.Generic;
 using Vortice.DXGI;
 using Vortice.Direct3D;
-using System.Diagnostics;
 
 namespace Veldrid.D3D11
 {
@@ -18,7 +17,7 @@ namespace Veldrid.D3D11
             = new Dictionary<OffsetSizePair, ID3D11UnorderedAccessView>();
         private readonly uint _structureByteStride;
         private readonly bool _rawBuffer;
-        private string _name;
+        private string? _name;
 
         public override uint SizeInBytes { get; }
 
@@ -82,13 +81,13 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set
             {
                 _name = value;
-                Buffer.DebugName = value;
+                Buffer.DebugName = value!;
                 foreach (KeyValuePair<OffsetSizePair, ID3D11ShaderResourceView> kvp in _srvs)
                 {
                     kvp.Value.DebugName = value + "_SRV";
@@ -118,7 +117,7 @@ namespace Veldrid.D3D11
             lock (_accessViewLock)
             {
                 OffsetSizePair pair = new OffsetSizePair(offset, size);
-                if (!_srvs.TryGetValue(pair, out ID3D11ShaderResourceView srv))
+                if (!_srvs.TryGetValue(pair, out ID3D11ShaderResourceView? srv))
                 {
                     srv = CreateShaderResourceView(offset, size);
                     _srvs.Add(pair, srv);
@@ -133,7 +132,7 @@ namespace Veldrid.D3D11
             lock (_accessViewLock)
             {
                 OffsetSizePair pair = new OffsetSizePair(offset, size);
-                if (!_uavs.TryGetValue(pair, out ID3D11UnorderedAccessView uav))
+                if (!_uavs.TryGetValue(pair, out ID3D11UnorderedAccessView? uav))
                 {
                     uav = CreateUnorderedAccessView(offset, size);
                     _uavs.Add(pair, uav);

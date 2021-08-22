@@ -16,7 +16,7 @@ namespace Veldrid.Vk
         private readonly VkRenderPass _renderPassClear;
         private readonly List<VkImageView> _attachmentViews = new List<VkImageView>();
         private bool _destroyed;
-        private string _name;
+        private string? _name;
 
         public override Vulkan.VkFramebuffer CurrentFramebuffer => _deviceFramebuffer;
         public override VkRenderPass RenderPassNoClear_Init => _renderPassNoClear;
@@ -39,7 +39,7 @@ namespace Veldrid.Vk
 
             StackList<VkAttachmentDescription> attachments = new StackList<VkAttachmentDescription>();
 
-            uint colorAttachmentCount = (uint)ColorTargets.Count;
+            uint colorAttachmentCount = (uint)ColorTargets.Length;
             StackList<VkAttachmentReference> colorAttachmentRefs = new StackList<VkAttachmentReference>();
             for (int i = 0; i < colorAttachmentCount; i++)
             {
@@ -90,7 +90,7 @@ namespace Veldrid.Vk
 
             VkSubpassDescription subpass = new VkSubpassDescription();
             subpass.pipelineBindPoint = VkPipelineBindPoint.Graphics;
-            if (ColorTargets.Count > 0)
+            if (ColorTargets.Length > 0)
             {
                 subpass.colorAttachmentCount = colorAttachmentCount;
                 subpass.pColorAttachments = (VkAttachmentReference*)colorAttachmentRefs.Data;
@@ -212,7 +212,7 @@ namespace Veldrid.Vk
 
             Texture dimTex;
             uint mipLevel;
-            if (ColorTargets.Count > 0)
+            if (ColorTargets.Length > 0)
             {
                 dimTex = ColorTargets[0].Target;
                 mipLevel = ColorTargets[0].MipLevel;
@@ -245,14 +245,13 @@ namespace Veldrid.Vk
             {
                 AttachmentCount += 1;
             }
-            AttachmentCount += (uint)ColorTargets.Count;
+            AttachmentCount += (uint)ColorTargets.Length;
         }
 
         public override void TransitionToIntermediateLayout(VkCommandBuffer cb)
         {
-            for (int i = 0; i < ColorTargets.Count; i++)
+            foreach (ref readonly FramebufferAttachment ca in ColorTargets)
             {
-                FramebufferAttachment ca = ColorTargets[i];
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
                 vkTex.SetImageLayout(ca.MipLevel, ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
             }
@@ -268,9 +267,8 @@ namespace Veldrid.Vk
 
         public override void TransitionToFinalLayout(VkCommandBuffer cb)
         {
-            for (int i = 0; i < ColorTargets.Count; i++)
+            foreach (ref readonly FramebufferAttachment ca in ColorTargets)
             {
-                FramebufferAttachment ca = ColorTargets[i];
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
                 if ((vkTex.Usage & TextureUsage.Sampled) != 0)
                 {
@@ -295,7 +293,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

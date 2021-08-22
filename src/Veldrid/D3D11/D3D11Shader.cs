@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using Vortice.D3DCompiler;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
@@ -8,7 +7,7 @@ namespace Veldrid.D3D11
 {
     internal class D3D11Shader : Shader
     {
-        private string _name;
+        private string? _name;
 
         public ID3D11DeviceChild DeviceShader { get; }
         public byte[] Bytecode { get; internal set; }
@@ -83,7 +82,7 @@ namespace Veldrid.D3D11
 
             ShaderFlags flags = description.Debug ? ShaderFlags.Debug : ShaderFlags.OptimizationLevel3;
             Compiler.Compile(description.ShaderBytes,
-                             description.EntryPoint, null,
+                             description.EntryPoint, null!,
                              profile, out Blob result, out Blob error);
 
             if (result == null)
@@ -94,13 +93,13 @@ namespace Veldrid.D3D11
             return result.GetBytes();
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set
             {
                 _name = value;
-                DeviceShader.DebugName = value;
+                DeviceShader.DebugName = value!;
             }
         }
 

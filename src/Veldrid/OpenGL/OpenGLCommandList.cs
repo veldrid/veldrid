@@ -8,17 +8,17 @@ namespace Veldrid.OpenGL
     internal class OpenGLCommandList : CommandList
     {
         private readonly OpenGLGraphicsDevice _gd;
-        private OpenGLCommandEntryList _currentCommands;
+        private OpenGLCommandEntryList _currentCommands = null!;
         private bool _disposed;
 
         internal OpenGLCommandEntryList CurrentCommands => _currentCommands;
         internal OpenGLGraphicsDevice Device => _gd;
 
         private readonly object _lock = new object();
-        private readonly List<OpenGLCommandEntryList> _availableLists = new List<OpenGLCommandEntryList>();
+        private readonly Stack<OpenGLCommandEntryList> _availableLists = new Stack<OpenGLCommandEntryList>();
         private readonly List<OpenGLCommandEntryList> _submittedLists = new List<OpenGLCommandEntryList>();
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposed;
 
@@ -44,10 +44,8 @@ namespace Veldrid.OpenGL
         {
             lock (_lock)
             {
-                if (_availableLists.Count > 0)
+                if (_availableLists.TryPop(out OpenGLCommandEntryList? ret))
                 {
-                    OpenGLCommandEntryList ret = _availableLists[_availableLists.Count - 1];
-                    _availableLists.RemoveAt(_availableLists.Count - 1);
                     return ret;
                 }
                 else
@@ -199,7 +197,7 @@ namespace Veldrid.OpenGL
 
         public void OnSubmitted(OpenGLCommandEntryList entryList)
         {
-            _currentCommands = null;
+            _currentCommands = null!;
             lock (_lock)
             {
                 Debug.Assert(!_submittedLists.Contains(entryList));
@@ -216,7 +214,7 @@ namespace Veldrid.OpenGL
                 entryList.Reset();
 
                 Debug.Assert(!_availableLists.Contains(entryList));
-                _availableLists.Add(entryList);
+                _availableLists.Push(entryList);
 
                 Debug.Assert(_submittedLists.Contains(entryList));
                 _submittedLists.Remove(entryList);

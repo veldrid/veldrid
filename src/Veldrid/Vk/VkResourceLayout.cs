@@ -10,7 +10,7 @@ namespace Veldrid.Vk
         private readonly VkDescriptorSetLayout _dsl;
         private readonly VkDescriptorType[] _descriptorTypes;
         private bool _disposed;
-        private string _name;
+        private string? _name;
 
         public VkDescriptorSetLayout DescriptorSetLayout => _dsl;
         public VkDescriptorType[] DescriptorTypes => _descriptorTypes;
@@ -82,7 +82,7 @@ namespace Veldrid.Vk
             CheckResult(result);
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

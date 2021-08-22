@@ -13,7 +13,7 @@ namespace Veldrid.OpenGL
             _mre = new ManualResetEvent(signaled);
         }
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public ManualResetEvent ResetEvent => _mre;
 
         public void Set() => _mre.Set();

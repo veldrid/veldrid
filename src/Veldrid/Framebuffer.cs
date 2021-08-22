@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Veldrid
@@ -10,15 +9,18 @@ namespace Veldrid
     /// </summary>
     public abstract class Framebuffer : DeviceResource, IDisposable
     {
+        protected FramebufferAttachment? _depthTarget;
+        protected FramebufferAttachment[] _colorTargets = null!;
+
         /// <summary>
         /// Gets the depth attachment associated with this instance. May be null if no depth texture is used.
         /// </summary>
-        public virtual FramebufferAttachment? DepthTarget { get; }
+        public virtual FramebufferAttachment? DepthTarget => _depthTarget;
 
         /// <summary>
         /// Gets the collection of color attachments associated with this instance. May be empty.
         /// </summary>
-        public virtual IReadOnlyList<FramebufferAttachment> ColorTargets { get; }
+        public virtual ReadOnlySpan<FramebufferAttachment> ColorTargets => _colorTargets;
 
         /// <summary>
         /// Gets an <see cref="Veldrid.OutputDescription"/> which describes the number and formats of the depth and color targets
@@ -36,21 +38,24 @@ namespace Veldrid
         /// </summary>
         public virtual uint Height { get; }
 
-        internal Framebuffer() { }
+        internal Framebuffer()
+        {
+        }
 
         internal Framebuffer(
             FramebufferAttachmentDescription? depthTargetDesc,
-            IReadOnlyList<FramebufferAttachmentDescription> colorTargetDescs)
+            ReadOnlySpan<FramebufferAttachmentDescription> colorTargetDescs)
         {
             if (depthTargetDesc != null)
             {
                 FramebufferAttachmentDescription depthAttachment = depthTargetDesc.Value;
-                DepthTarget = new FramebufferAttachment(
+                _depthTarget = new FramebufferAttachment(
                     depthAttachment.Target,
                     depthAttachment.ArrayLayer,
                     depthAttachment.MipLevel);
             }
-            FramebufferAttachment[] colorTargets = new FramebufferAttachment[colorTargetDescs.Count];
+
+            FramebufferAttachment[] colorTargets = new FramebufferAttachment[colorTargetDescs.Length];
             for (int i = 0; i < colorTargets.Length; i++)
             {
                 colorTargets[i] = new FramebufferAttachment(
@@ -59,20 +64,20 @@ namespace Veldrid
                     colorTargetDescs[i].MipLevel);
             }
 
-            ColorTargets = colorTargets;
+            _colorTargets = colorTargets;
 
             Texture dimTex;
             uint mipLevel;
-            if (ColorTargets.Count > 0)
+            if (_colorTargets.Length > 0)
             {
-                dimTex = ColorTargets[0].Target;
-                mipLevel = ColorTargets[0].MipLevel;
+                dimTex = _colorTargets[0].Target;
+                mipLevel = _colorTargets[0].MipLevel;
             }
             else
             {
-                Debug.Assert(DepthTarget != null);
-                dimTex = DepthTarget.Value.Target;
-                mipLevel = DepthTarget.Value.MipLevel;
+                Debug.Assert(_depthTarget != null);
+                dimTex = _depthTarget.Value.Target;
+                mipLevel = _depthTarget.Value.MipLevel;
             }
 
             Util.GetMipDimensions(dimTex, mipLevel, out uint mipWidth, out uint mipHeight);
@@ -82,11 +87,7 @@ namespace Veldrid
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
         }
 
-        /// <summary>
-        /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
-        /// tools.
-        /// </summary>
-        public abstract string Name { get; set; }
+        public abstract string? Name { get; set; }
 
         /// <summary>
         /// A bool indicating whether this instance has been disposed.

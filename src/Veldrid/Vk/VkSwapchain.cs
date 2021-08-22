@@ -21,11 +21,13 @@ namespace Veldrid.Vk
         private readonly bool _colorSrgb;
         private bool? _newSyncToVBlank;
         private uint _currentImageIndex;
-        private string _name;
+        private string? _name;
         private bool _disposed;
 
-        public override string Name { get => _name; set { _name = value; _gd.SetResourceName(this, value); } }
+        public override string? Name { get => _name; set { _name = value; _gd.SetResourceName(this, value); } }
+
         public override Framebuffer Framebuffer => _framebuffer;
+
         public override bool SyncToVerticalBlank
         {
             get => _newSyncToVBlank ?? _syncToVBlank;

@@ -7,41 +7,42 @@ namespace Veldrid.Vk
 {
     internal unsafe class FixedUtf8String : IDisposable
     {
-        private GCHandle _handle;
-        private uint _numBytes;
+        public static Encoding UTF8 { get; } = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
-        public byte* StringPtr => (byte*)_handle.AddrOfPinnedObject().ToPointer();
+        private IntPtr _handle;
+        private int _numBytes;
 
-        public FixedUtf8String(string s)
+        public byte* StringPtr => (byte*)_handle;
+
+        public FixedUtf8String(ReadOnlySpan<char> span)
         {
-            if (s == null)
+            if (span.IsEmpty)
             {
-                throw new ArgumentNullException(nameof(s));
+                return;
             }
 
-            int byteCount = Encoding.UTF8.GetByteCount(s);
-            byte[] text = new byte[byteCount + 1];
-            _handle = GCHandle.Alloc(text, GCHandleType.Pinned);
-            _numBytes = (uint)text.Length - 1; // Includes null terminator
-            int encodedCount = Encoding.UTF8.GetBytes(s, 0, s.Length, text, 0);
+            int byteCount = UTF8.GetByteCount(span);
+            _handle = Marshal.AllocHGlobal(byteCount + 1);
+            _numBytes = byteCount + 1; // Includes null terminator
+            int encodedCount = Encoding.UTF8.GetBytes(span, new Span<byte>(StringPtr, _numBytes));
             Debug.Assert(encodedCount == byteCount);
-        }
-
-        private string GetString()
-        {
-            return Encoding.UTF8.GetString(StringPtr, (int)_numBytes);
+            StringPtr[encodedCount] = 0;
         }
 
         public void Dispose()
         {
-            _handle.Free();
+            if (_handle != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(_handle);
+                _handle = IntPtr.Zero;
+            }
         }
 
-        public override string ToString() => GetString();
+        public override string ToString() => UTF8.GetString(StringPtr, _numBytes);
 
-        public static implicit operator byte* (FixedUtf8String utf8String) => utf8String.StringPtr;
+        public static implicit operator byte*(FixedUtf8String utf8String) => utf8String.StringPtr;
         public static implicit operator IntPtr(FixedUtf8String utf8String) => new IntPtr(utf8String.StringPtr);
         public static implicit operator FixedUtf8String(string s) => new FixedUtf8String(s);
-        public static implicit operator string(FixedUtf8String utf8String) => utf8String.GetString();
+        public static implicit operator string(FixedUtf8String utf8String) => utf8String.ToString();
     }
 }

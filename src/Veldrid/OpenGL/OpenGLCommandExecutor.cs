@@ -16,9 +16,9 @@ namespace Veldrid.OpenGL
         private readonly OpenGLPlatformInfo _platformInfo;
         private readonly GraphicsDeviceFeatures _features;
 
-        private Framebuffer _fb;
+        private Framebuffer? _fb;
         private bool _isSwapchainFB;
-        private OpenGLPipeline _graphicsPipeline;
+        private OpenGLPipeline? _graphicsPipeline;
         private BoundResourceSetInfo[] _graphicsResourceSets = Array.Empty<BoundResourceSetInfo>();
         private bool[] _newGraphicsResourceSets = Array.Empty<bool>();
         private OpenGLBuffer[] _vertexBuffers = Array.Empty<OpenGLBuffer>();
@@ -30,7 +30,7 @@ namespace Veldrid.OpenGL
         private uint _ibOffset;
         private PrimitiveType _primitiveType;
 
-        private OpenGLPipeline _computePipeline;
+        private OpenGLPipeline? _computePipeline;
         private BoundResourceSetInfo[] _computeResourceSets = Array.Empty<BoundResourceSetInfo>();
         private bool[] _newComputeResourceSets = Array.Empty<bool>();
 
@@ -81,7 +81,7 @@ namespace Veldrid.OpenGL
 
             if (!_isSwapchainFB)
             {
-                int colorCount = _fb.ColorTargets.Count;
+                int colorCount = _fb!.ColorTargets.Length;
                 DrawBuffersEnum* bufs = stackalloc DrawBuffersEnum[colorCount];
                 for (int i = 0; i < colorCount; i++)
                 {
@@ -263,8 +263,8 @@ namespace Veldrid.OpenGL
         private void FlushResourceSets(bool graphics)
         {
             int setCount = graphics
-                ? _graphicsPipeline.ResourceLayouts.Length
-                : _computePipeline.ResourceLayouts.Length;
+                ? _graphicsPipeline!.ResourceLayouts.Length
+                : _computePipeline!.ResourceLayouts.Length;
 
             Span<BoundResourceSetInfo> sets = (graphics ? _graphicsResourceSets : _computeResourceSets).AsSpan(0, setCount);
             Span<bool> newSets = (graphics ? _newGraphicsResourceSets : _newComputeResourceSets).AsSpan(0, setCount);
@@ -284,7 +284,9 @@ namespace Veldrid.OpenGL
         private void FlushVertexLayouts()
         {
             uint totalSlotsBound = 0;
-            VertexLayoutDescription[] layouts = _graphicsPipeline.VertexLayouts;
+            VertexLayoutDescription[] layouts = _graphicsPipeline!.VertexLayouts!;
+            int[] strides = _graphicsPipeline.VertexStrides!;
+
             for (int i = 0; i < layouts.Length; i++)
             {
                 VertexLayoutDescription input = layouts[i];
@@ -314,7 +316,7 @@ namespace Veldrid.OpenGL
                             actualSlot,
                             FormatHelpers.GetElementCount(element.Format),
                             type,
-                            (uint)_graphicsPipeline.VertexStrides[i],
+                            (uint)strides[i],
                             (void*)actualOffset);
                         CheckLastError();
                     }
@@ -325,7 +327,7 @@ namespace Veldrid.OpenGL
                             FormatHelpers.GetElementCount(element.Format),
                             type,
                             normalized,
-                            (uint)_graphicsPipeline.VertexStrides[i],
+                            (uint)strides[i],
                             (void*)actualOffset);
                         CheckLastError();
                     }
@@ -478,7 +480,7 @@ namespace Veldrid.OpenGL
         private void ActivateGraphicsPipeline()
         {
             _graphicsPipelineActive = true;
-            _graphicsPipeline.EnsureResourcesCreated();
+            _graphicsPipeline!.EnsureResourcesCreated();
 
             Util.EnsureArrayMinimumSize(ref _graphicsResourceSets, (uint)_graphicsPipeline.ResourceLayouts.Length);
             Util.EnsureArrayMinimumSize(ref _newGraphicsResourceSets, (uint)_graphicsPipeline.ResourceLayouts.Length);
@@ -684,12 +686,12 @@ namespace Veldrid.OpenGL
             glUseProgram(_graphicsPipeline.Program);
             CheckLastError();
 
-            int vertexStridesCount = _graphicsPipeline.VertexStrides.Length;
+            int vertexStridesCount = _graphicsPipeline.VertexStrides!.Length;
             Util.EnsureArrayMinimumSize(ref _vertexBuffers, (uint)vertexStridesCount);
             Util.EnsureArrayMinimumSize(ref _vbOffsets, (uint)vertexStridesCount);
 
             uint totalVertexElements = 0;
-            for (int i = 0; i < _graphicsPipeline.VertexLayouts.Length; i++)
+            for (int i = 0; i < _graphicsPipeline.VertexLayouts!.Length; i++)
             {
                 totalVertexElements += (uint)_graphicsPipeline.VertexLayouts[i].Elements.Length;
             }
@@ -791,7 +793,7 @@ namespace Veldrid.OpenGL
         private void ActivateComputePipeline()
         {
             _graphicsPipelineActive = false;
-            _computePipeline.EnsureResourcesCreated();
+            _computePipeline!.EnsureResourcesCreated();
             Util.EnsureArrayMinimumSize(ref _computeResourceSets, (uint)_computePipeline.ResourceLayouts.Length);
             Util.EnsureArrayMinimumSize(ref _newComputeResourceSets, (uint)_computePipeline.ResourceLayouts.Length);
 
@@ -836,7 +838,7 @@ namespace Veldrid.OpenGL
             bool isNew)
         {
             OpenGLResourceSet glResourceSet = Util.AssertSubtype<ResourceSet, OpenGLResourceSet>(brsi.Set);
-            OpenGLPipeline pipeline = graphics ? _graphicsPipeline : _computePipeline;
+            OpenGLPipeline pipeline = graphics ? _graphicsPipeline! : _computePipeline!;
             uint ubBaseIndex = GetUniformBaseIndex(slot, graphics);
             uint ssboBaseIndex = GetShaderStorageBaseIndex(slot, graphics);
 
@@ -868,7 +870,7 @@ namespace Veldrid.OpenGL
                         OpenGLBuffer glUB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
 
                         glUB.EnsureResourcesCreated();
-                        if (pipeline.GetUniformBindingForSlot(slot, element, out OpenGLUniformBinding uniformBindingInfo))
+                        if (pipeline.GetUniformBindingForSlot(slot, element, out OpenGLUniformBinding? uniformBindingInfo))
                         {
                             if (range.SizeInBytes < uniformBindingInfo.BlockSize)
                             {
@@ -904,7 +906,7 @@ namespace Veldrid.OpenGL
                         OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(range.Buffer);
 
                         glBuffer.EnsureResourcesCreated();
-                        if (pipeline.GetStorageBufferBindingForSlot(slot, element, out OpenGLShaderStorageBinding shaderStorageBinding))
+                        if (pipeline.GetStorageBufferBindingForSlot(slot, element, out OpenGLShaderStorageBinding? shaderStorageBinding))
                         {
                             if (_backend == GraphicsBackend.OpenGL)
                             {
@@ -1037,7 +1039,7 @@ namespace Veldrid.OpenGL
 
         private uint GetUniformBaseIndex(uint slot, bool graphics)
         {
-            OpenGLPipeline pipeline = graphics ? _graphicsPipeline : _computePipeline;
+            OpenGLPipeline pipeline = graphics ? _graphicsPipeline! : _computePipeline!;
             uint ret = 0;
             for (uint i = 0; i < slot; i++)
             {
@@ -1049,7 +1051,7 @@ namespace Veldrid.OpenGL
 
         private uint GetShaderStorageBaseIndex(uint slot, bool graphics)
         {
-            OpenGLPipeline pipeline = graphics ? _graphicsPipeline : _computePipeline;
+            OpenGLPipeline pipeline = graphics ? _graphicsPipeline! : _computePipeline!;
             uint ret = 0;
             for (uint i = 0; i < slot; i++)
             {
@@ -1066,7 +1068,7 @@ namespace Veldrid.OpenGL
                 glScissorIndexed(
                     index,
                     (int)x,
-                    (int)(_fb.Height - (int)height - y),
+                    (int)(_fb!.Height - (int)height - y),
                     width,
                     height);
                 CheckLastError();
@@ -1077,7 +1079,7 @@ namespace Veldrid.OpenGL
                 {
                     glScissor(
                         (int)x,
-                        (int)(_fb.Height - (int)height - y),
+                        (int)(_fb!.Height - (int)height - y),
                         width,
                         height);
                     CheckLastError();
@@ -1104,7 +1106,7 @@ namespace Veldrid.OpenGL
             if (_backend == GraphicsBackend.OpenGL)
             {
                 float left = viewport.X;
-                float bottom = _fb.Height - (viewport.Y + viewport.Height);
+                float bottom = _fb!.Height - (viewport.Y + viewport.Height);
 
                 glViewportIndexed(index, left, bottom, viewport.Width, viewport.Height);
                 CheckLastError();

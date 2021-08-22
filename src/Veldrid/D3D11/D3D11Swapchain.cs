@@ -15,8 +15,8 @@ namespace Veldrid.D3D11
         private readonly IDXGISwapChain _dxgiSwapChain;
         private bool _vsync;
         private int _syncInterval;
-        private D3D11Framebuffer _framebuffer;
-        private D3D11Texture _depthTexture;
+        private D3D11Framebuffer _framebuffer = null!;
+        private D3D11Texture? _depthTexture;
         private float _pixelScale = 1f;
         private bool _disposed;
 
@@ -25,7 +25,7 @@ namespace Veldrid.D3D11
 
         public override Framebuffer Framebuffer => _framebuffer;
 
-        public override string Name
+        public override string? Name
         {
             get
             {
@@ -46,7 +46,7 @@ namespace Veldrid.D3D11
                 }
                 else
                 {
-                    var namePtr = Marshal.StringToHGlobalAnsi(value);
+                    IntPtr namePtr = Marshal.StringToHGlobalAnsi(value);
                     _dxgiSwapChain.SetPrivateData(CommonGuid.DebugObjectName, value.Length, namePtr);
                     Marshal.FreeHGlobal(namePtr);
                 }
@@ -92,7 +92,7 @@ namespace Veldrid.D3D11
                     Usage = Vortice.DXGI.Usage.RenderTargetOutput
                 };
 
-                using (IDXGIFactory dxgiFactory = _gd.Adapter.GetParent<IDXGIFactory>())
+                using (IDXGIFactory dxgiFactory = _gd.Adapter.GetParent<IDXGIFactory>()!)
                 {
                     _dxgiSwapChain = dxgiFactory.CreateSwapChain(_gd.Device, dxgiSCDesc);
                     dxgiFactory.MakeWindowAssociation(win32Source.Hwnd, WindowAssociationFlags.IgnoreAltEnter);
@@ -116,10 +116,10 @@ namespace Veldrid.D3D11
                 };
 
                 // Get the Vortice.DXGI factory automatically created when initializing the Direct3D device.
-                using (IDXGIFactory2 dxgiFactory = _gd.Adapter.GetParent<IDXGIFactory2>())
+                using (IDXGIFactory2 dxgiFactory = _gd.Adapter.GetParent<IDXGIFactory2>()!)
                 {
                     // Create the swap chain and get the highest version available.
-                    using (IDXGISwapChain1 swapChain1 = dxgiFactory.CreateSwapChainForComposition(_gd.Device, swapChainDescription))
+                    using (IDXGISwapChain1 swapChain1 = dxgiFactory.CreateSwapChainForComposition(_gd.Device, swapChainDescription)!)
                     {
                         _dxgiSwapChain = swapChain1.QueryInterface<IDXGISwapChain2>();
                     }
@@ -140,6 +140,11 @@ namespace Veldrid.D3D11
                         bgPanelNative.SetSwapChain(_dxgiSwapChain);
                     }
                 }
+            }
+
+            if(_dxgiSwapChain == null)
+            {
+                throw new VeldridException("Failed to create DXGI swapchain.");
             }
 
             Resize(description.Width, description.Height);

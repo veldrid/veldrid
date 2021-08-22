@@ -8,7 +8,7 @@ namespace Veldrid.MTL
     internal class MTLPipeline : Pipeline
     {
         private bool _disposed;
-        private List<MTLFunction> _specializedFunctions;
+        private List<MTLFunction> _specializedFunctions = new List<MTLFunction>();
 
         public MTLRenderPipelineState RenderPipelineState { get; }
         public MTLComputePipelineState ComputePipelineState { get; }
@@ -26,7 +26,7 @@ namespace Veldrid.MTL
         public bool ScissorTestEnabled { get; }
         public MTLSize ThreadsPerThreadgroup { get; } = new MTLSize(1, 1, 1);
         public bool HasStencil { get; }
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public uint StencilReference { get; }
         public RgbaFloat BlendColor { get; }
         public override bool IsDisposed => _disposed;
@@ -265,7 +265,7 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(mtlDesc.NativePtr);
         }
 
-        private unsafe MTLFunctionConstantValues CreateConstantValues(SpecializationConstant[] specializations)
+        private static unsafe MTLFunctionConstantValues CreateConstantValues(SpecializationConstant[]? specializations)
         {
             MTLFunctionConstantValues ret = MTLFunctionConstantValues.New();
             if (specializations != null)
@@ -282,7 +282,6 @@ namespace Veldrid.MTL
 
         private void AddSpecializedFunction(MTLFunction function)
         {
-            if (_specializedFunctions == null) { _specializedFunctions = new List<MTLFunction>(); }
             _specializedFunctions.Add(function);
         }
 

@@ -13,7 +13,7 @@ namespace Veldrid.Vk
         private readonly VkPipelineLayout _pipelineLayout;
         private readonly VkRenderPass _renderPass;
         private bool _destroyed;
-        private string _name;
+        private string? _name;
 
         public Vulkan.VkPipeline DevicePipeline => _devicePipeline;
 
@@ -186,7 +186,7 @@ namespace Veldrid.Vk
             // Shader Stage
 
             VkSpecializationInfo specializationInfo;
-            SpecializationConstant[] specDescs = description.ShaderSet.Specializations;
+            SpecializationConstant[]? specDescs = description.ShaderSet.Specializations;
             if (specDescs != null)
             {
                 uint specDataSize = 0;
@@ -223,8 +223,7 @@ namespace Veldrid.Vk
                 VkPipelineShaderStageCreateInfo stageCI = VkPipelineShaderStageCreateInfo.New();
                 stageCI.module = vkShader.ShaderModule;
                 stageCI.stage = VkFormats.VdToVkShaderStages(shader.Stage);
-                // stageCI.pName = CommonStrings.main; // Meh
-                stageCI.pName = new FixedUtf8String(shader.EntryPoint); // TODO: DONT ALLOCATE HERE
+                stageCI.pName = shader.EntryPoint == "main" ? CommonStrings.main : new FixedUtf8String(shader.EntryPoint);
                 stageCI.pSpecializationInfo = &specializationInfo;
                 stages.Add(stageCI);
             }
@@ -368,7 +367,7 @@ namespace Veldrid.Vk
             // Shader Stage
 
             VkSpecializationInfo specializationInfo;
-            SpecializationConstant[] specDescs = description.Specializations;
+            SpecializationConstant[]? specDescs = description.Specializations;
             if (specDescs != null)
             {
                 uint specDataSize = 0;
@@ -402,7 +401,7 @@ namespace Veldrid.Vk
             VkPipelineShaderStageCreateInfo stageCI = VkPipelineShaderStageCreateInfo.New();
             stageCI.module = vkShader.ShaderModule;
             stageCI.stage = VkFormats.VdToVkShaderStages(shader.Stage);
-            stageCI.pName = CommonStrings.main; // Meh
+            stageCI.pName = shader.EntryPoint == "main" ? CommonStrings.main : new FixedUtf8String(shader.EntryPoint);
             stageCI.pSpecializationInfo = &specializationInfo;
             pipelineCI.stage = stageCI;
 
@@ -423,7 +422,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

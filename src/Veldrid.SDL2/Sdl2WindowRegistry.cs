@@ -71,7 +71,7 @@ namespace Veldrid.Sdl2
             }
 
 
-            if (handled && _eventsByWindowID.TryGetValue(windowID, out Sdl2Window window))
+            if (handled && _eventsByWindowID.TryGetValue(windowID, out Sdl2Window? window))
             {
                 window.AddEvent(ev);
             }

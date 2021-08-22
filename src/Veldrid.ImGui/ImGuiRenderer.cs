@@ -6,6 +6,7 @@ using System.Reflection;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Text;
 
 namespace Veldrid
 {
@@ -258,19 +259,22 @@ namespace Veldrid
             {
                 case GraphicsBackend.Direct3D11:
                 {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
+                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy)
+                    { name += "-legacy"; }
                     string resourceName = name + ".hlsl.bytes";
                     return GetEmbeddedResourceBytes(resourceName);
                 }
                 case GraphicsBackend.OpenGL:
                 {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
+                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy)
+                    { name += "-legacy"; }
                     string resourceName = name + ".glsl";
                     return GetEmbeddedResourceBytes(resourceName);
                 }
                 case GraphicsBackend.OpenGLES:
                 {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy) { name += "-legacy"; }
+                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy)
+                    { name += "-legacy"; }
                     string resourceName = name + ".glsles";
                     return GetEmbeddedResourceBytes(resourceName);
                 }
@@ -286,14 +290,6 @@ namespace Veldrid
                 }
                 default:
                     throw new NotImplementedException();
-            }
-        }
-
-        private string GetEmbeddedResourceText(string resourceName)
-        {
-            using (StreamReader sr = new StreamReader(_assembly.GetManifestResourceStream(resourceName)))
-            {
-                return sr.ReadToEnd();
             }
         }
 
@@ -421,9 +417,9 @@ namespace Veldrid
             bool leftPressed = false;
             bool middlePressed = false;
             bool rightPressed = false;
-            for (int i = 0; i < snapshot.MouseEvents.Count; i++)
+            for (int i = 0; i < snapshot.MouseEvents.Length; i++)
             {
-                MouseEvent me = snapshot.MouseEvents[i];
+                MouseButtonEvent me = snapshot.MouseEvents[i];
                 if (me.Down)
                 {
                     switch (me.MouseButton)
@@ -441,33 +437,32 @@ namespace Veldrid
                 }
             }
 
-            io.MouseDown[0] = leftPressed || snapshot.IsMouseDown(MouseButton.Left);
-            io.MouseDown[1] = rightPressed || snapshot.IsMouseDown(MouseButton.Right);
-            io.MouseDown[2] = middlePressed || snapshot.IsMouseDown(MouseButton.Middle);
+            io.MouseDown[0] = leftPressed || (snapshot.MouseDown & MouseButton.Left) != 0;
+            io.MouseDown[1] = rightPressed || (snapshot.MouseDown & MouseButton.Right) != 0;
+            io.MouseDown[2] = middlePressed || (snapshot.MouseDown & MouseButton.Middle) != 0;
             io.MousePos = snapshot.MousePosition;
-            io.MouseWheel = snapshot.WheelDelta;
+            io.MouseWheel = snapshot.WheelDelta.Y;
+            io.MouseWheelH = snapshot.WheelDelta.X;
 
-            IReadOnlyList<char> keyCharPresses = snapshot.KeyCharPresses;
-            for (int i = 0; i < keyCharPresses.Count; i++)
+            for (int i = 0; i < snapshot.InputEvents.Length; i++)
             {
-                char c = keyCharPresses[i];
-                ImGui.GetIO().AddInputCharacter(c);
+                Rune rune = snapshot.InputEvents[i];
+                ImGui.GetIO().AddInputCharacter((uint)rune.Value);
             }
 
-            IReadOnlyList<KeyEvent> keyEvents = snapshot.KeyEvents;
-            for (int i = 0; i < keyEvents.Count; i++)
+            for (int i = 0; i < snapshot.KeyEvents.Length; i++)
             {
-                KeyEvent keyEvent = keyEvents[i];
-                io.KeysDown[(int)keyEvent.Key] = keyEvent.Down;
-                if (keyEvent.Key == Key.ControlLeft)
+                KeyEvent keyEvent = snapshot.KeyEvents[i];
+                io.KeysDown[(int)keyEvent.Physical] = keyEvent.Down;
+                if (keyEvent.Physical == Key.LeftControl)
                 {
                     _controlDown = keyEvent.Down;
                 }
-                if (keyEvent.Key == Key.ShiftLeft)
+                if (keyEvent.Physical == Key.LeftShift)
                 {
                     _shiftDown = keyEvent.Down;
                 }
-                if (keyEvent.Key == Key.AltLeft)
+                if (keyEvent.Physical == Key.LeftAlt)
                 {
                     _altDown = keyEvent.Down;
                 }
@@ -491,8 +486,8 @@ namespace Veldrid
             io.KeyMap[(int)ImGuiKey.Home] = (int)Key.Home;
             io.KeyMap[(int)ImGuiKey.End] = (int)Key.End;
             io.KeyMap[(int)ImGuiKey.Delete] = (int)Key.Delete;
-            io.KeyMap[(int)ImGuiKey.Backspace] = (int)Key.BackSpace;
-            io.KeyMap[(int)ImGuiKey.Enter] = (int)Key.Enter;
+            io.KeyMap[(int)ImGuiKey.Backspace] = (int)Key.Backspace;
+            io.KeyMap[(int)ImGuiKey.Enter] = (int)Key.Return;
             io.KeyMap[(int)ImGuiKey.Escape] = (int)Key.Escape;
             io.KeyMap[(int)ImGuiKey.Space] = (int)Key.Space;
             io.KeyMap[(int)ImGuiKey.A] = (int)Key.A;

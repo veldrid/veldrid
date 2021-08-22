@@ -42,22 +42,10 @@ namespace Veldrid.Sdl2
         /// <typeparam name="T">The delegate type of the function to load.</typeparam>
         /// <param name="name">The name of the exported native function.</param>
         /// <returns>A delegate which can be used to invoke the native function.</returns>
-        /// <exception cref="System.InvalidOperationException">Thrown when no function with the given name is exported by SDL2.
-        /// </exception>
         public static T LoadFunction<T>(string name)
         {
-            try
-            {
-                IntPtr export = NativeLibrary.GetExport(s_sdl2Lib, name);
-                return Marshal.GetDelegateForFunctionPointer<T>(export);
-            }
-            catch
-            {
-                Debug.WriteLine(
-                    $"Unable to load SDL2 function \"{name}\". " +
-                    $"Attempting to call this function will cause an exception to be thrown.");
-                return default;
-            }
+            IntPtr export = NativeLibrary.GetExport(s_sdl2Lib, name);
+            return Marshal.GetDelegateForFunctionPointer<T>(export);
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

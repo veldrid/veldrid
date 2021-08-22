@@ -76,9 +76,9 @@ namespace Veldrid.NeoDemo
 
         public void Update(float deltaSeconds)
         {
-            float sprintFactor = InputTracker.GetKey(Key.ControlLeft)
+            float sprintFactor = InputTracker.GetKey(Key.LeftControl)
                 ? 0.1f
-                : InputTracker.GetKey(Key.ShiftLeft)
+                : InputTracker.GetKey(Key.LeftShift)
                     ? 2.5f
                     : 1f;
             Vector3 motionDir = Vector3.Zero;

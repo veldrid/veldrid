@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -467,48 +467,9 @@ namespace Veldrid.Vk
                 _surfaceExtensions.Add(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME);
             }
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME))
-                {
-                    _surfaceExtensions.Add(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-                }
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME))
-                {
-                    _surfaceExtensions.Add(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
-                }
-                if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME))
-                {
-                    _surfaceExtensions.Add(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
-                }
-                if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME))
-                {
-                    _surfaceExtensions.Add(CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
-                }
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                if (availableInstanceExtensions.Contains(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME))
-                {
-                    _surfaceExtensions.Add(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME);
-                }
-                else // Legacy MoltenVK extensions
-                {
-                    if (availableInstanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
-                    {
-                        _surfaceExtensions.Add(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
-                    }
-                    if (availableInstanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME))
-                    {
-                        _surfaceExtensions.Add(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME);
-                    }
-                }
-            }
+            _surfaceExtensions.AddRange(GetSurfaceExtensions(availableInstanceExtensions));
 
-            foreach (var ext in _surfaceExtensions)
+            foreach (FixedUtf8String? ext in _surfaceExtensions)
             {
                 instanceExtensions.Add(ext);
             }
@@ -521,69 +482,108 @@ namespace Veldrid.Vk
 
             string[] requestedInstanceExtensions = options.InstanceExtensions ?? Array.Empty<string>();
             List<FixedUtf8String> tempStrings = new List<FixedUtf8String>();
-            foreach (string requiredExt in requestedInstanceExtensions)
+            try
             {
-                if (!availableInstanceExtensions.Contains(requiredExt))
+                foreach (string requiredExt in requestedInstanceExtensions)
                 {
-                    throw new VeldridException($"The required instance extension was not available: {requiredExt}");
+                    if (!availableInstanceExtensions.Contains(requiredExt))
+                    {
+                        throw new VeldridException($"The required instance extension was not available: {requiredExt}");
+                    }
+
+                    FixedUtf8String utf8Str = new FixedUtf8String(requiredExt);
+                    instanceExtensions.Add(utf8Str);
+                    tempStrings.Add(utf8Str);
                 }
 
-                FixedUtf8String utf8Str = new FixedUtf8String(requiredExt);
-                instanceExtensions.Add(utf8Str);
-                tempStrings.Add(utf8Str);
-            }
-
-            bool debugReportExtensionAvailable = false;
-            if (debug)
-            {
-                if (availableInstanceExtensions.Contains(CommonStrings.VK_EXT_DEBUG_REPORT_EXTENSION_NAME))
+                bool debugReportExtensionAvailable = false;
+                if (debug)
                 {
-                    debugReportExtensionAvailable = true;
-                    instanceExtensions.Add(CommonStrings.VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+                    if (availableInstanceExtensions.Contains(CommonStrings.VK_EXT_DEBUG_REPORT_EXTENSION_NAME))
+                    {
+                        debugReportExtensionAvailable = true;
+                        instanceExtensions.Add(CommonStrings.VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+                    }
+                    if (availableInstanceLayers.Contains(CommonStrings.StandardValidationLayerName))
+                    {
+                        _standardValidationSupported = true;
+                        instanceLayers.Add(CommonStrings.StandardValidationLayerName);
+                    }
+                    if (availableInstanceLayers.Contains(CommonStrings.KhronosValidationLayerName))
+                    {
+                        _khronosValidationSupported = true;
+                        instanceLayers.Add(CommonStrings.KhronosValidationLayerName);
+                    }
                 }
-                if (availableInstanceLayers.Contains(CommonStrings.StandardValidationLayerName))
+
+                instanceCI.enabledExtensionCount = instanceExtensions.Count;
+                instanceCI.ppEnabledExtensionNames = (byte**)instanceExtensions.Data;
+
+                instanceCI.enabledLayerCount = instanceLayers.Count;
+                if (instanceLayers.Count > 0)
                 {
-                    _standardValidationSupported = true;
-                    instanceLayers.Add(CommonStrings.StandardValidationLayerName);
+                    instanceCI.ppEnabledLayerNames = (byte**)instanceLayers.Data;
                 }
-                if (availableInstanceLayers.Contains(CommonStrings.KhronosValidationLayerName))
+
+                VkResult result = vkCreateInstance(ref instanceCI, null, out _instance);
+                CheckResult(result);
+
+                if (HasSurfaceExtension(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME))
                 {
-                    _khronosValidationSupported = true;
-                    instanceLayers.Add(CommonStrings.KhronosValidationLayerName);
+                    _createMetalSurfaceEXT = GetInstanceProcAddr<vkCreateMetalSurfaceEXT_t>("vkCreateMetalSurfaceEXT");
+                }
+
+                if (debug && debugReportExtensionAvailable)
+                {
+                    EnableDebugCallback();
+                }
+
+                if (hasDeviceProperties2)
+                {
+                    _getPhysicalDeviceProperties2 = GetInstanceProcAddr<vkGetPhysicalDeviceProperties2_t>("vkGetPhysicalDeviceProperties2")
+                        ?? GetInstanceProcAddr<vkGetPhysicalDeviceProperties2_t>("vkGetPhysicalDeviceProperties2KHR");
                 }
             }
-
-            instanceCI.enabledExtensionCount = instanceExtensions.Count;
-            instanceCI.ppEnabledExtensionNames = (byte**)instanceExtensions.Data;
-
-            instanceCI.enabledLayerCount = instanceLayers.Count;
-            if (instanceLayers.Count > 0)
+            finally
             {
-                instanceCI.ppEnabledLayerNames = (byte**)instanceLayers.Data;
+                foreach (FixedUtf8String tempStr in tempStrings)
+                {
+                    tempStr.Dispose();
+                }
+            }
+        }
+
+        private static IEnumerable<FixedUtf8String> GetSurfaceExtensions(HashSet<string> instanceExtensions)
+        {
+            if (instanceExtensions.Contains(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME))
+            {
+                yield return CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
+            }
+            if (instanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME))
+            {
+                yield return (CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+            }
+            if (instanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME))
+            {
+                yield return (CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+            }
+            if (instanceExtensions.Contains(CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME))
+            {
+                yield return (CommonStrings.VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
+            }
+            if (instanceExtensions.Contains(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME))
+            {
+                yield return (CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME);
             }
 
-            VkResult result = vkCreateInstance(ref instanceCI, null, out _instance);
-            CheckResult(result);
-
-            if (HasSurfaceExtension(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME))
+            // Legacy MoltenVK extensions
+            if (instanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
             {
-                _createMetalSurfaceEXT = GetInstanceProcAddr<vkCreateMetalSurfaceEXT_t>("vkCreateMetalSurfaceEXT");
+                yield return (CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
             }
-
-            if (debug && debugReportExtensionAvailable)
+            if (instanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME))
             {
-                EnableDebugCallback();
-            }
-
-            if (hasDeviceProperties2)
-            {
-                _getPhysicalDeviceProperties2 = GetInstanceProcAddr<vkGetPhysicalDeviceProperties2_t>("vkGetPhysicalDeviceProperties2")
-                    ?? GetInstanceProcAddr<vkGetPhysicalDeviceProperties2_t>("vkGetPhysicalDeviceProperties2KHR");
-            }
-
-            foreach (FixedUtf8String tempStr in tempStrings)
-            {
-                tempStr.Dispose();
+                yield return (CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME);
             }
         }
 
@@ -1408,30 +1408,12 @@ namespace Veldrid.Vk
             {
                 return false;
             }
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+
+            foreach (FixedUtf8String surfaceExtension in GetSurfaceExtensions(instanceExtensions))
             {
-                return instanceExtensions.Contains(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                if (RuntimeInformation.OSDescription.Contains("Unix")) // Android
+                if (instanceExtensions.Contains(surfaceExtension))
                 {
-                    return instanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
-                }
-                else
-                {
-                    return instanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
-                }
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                if (RuntimeInformation.OSDescription.Contains("Darwin")) // macOS
-                {
-                    return instanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
-                }
-                else // iOS
-                {
-                    return instanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME);
+                    return true;
                 }
             }
 

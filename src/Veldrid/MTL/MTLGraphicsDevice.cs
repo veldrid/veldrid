@@ -5,7 +5,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-using NativeLibraryLoader;
 using Veldrid.MetalBindings;
 using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 
@@ -67,8 +66,8 @@ namespace Veldrid.MTL
                 tessellationShaders: false,
                 multipleViewports: MetalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3),
                 samplerLodBias: false,
-                drawBaseVertex: true,   // TODO?: MetalFeatures.IsDrawBaseVertexInstanceSupported()
-                drawBaseInstance: true, // TODO?: MetalFeatures.IsDrawBaseVertexInstanceSupported()
+                drawBaseVertex: MetalFeatures.IsDrawBaseVertexInstanceSupported(),
+                drawBaseInstance: MetalFeatures.IsDrawBaseVertexInstanceSupported(),
                 drawIndirect: true,
                 drawIndirectBaseInstance: true,
                 fillModeWireframe: true,

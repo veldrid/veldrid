@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Threading;
 using Veldrid.OpenGL.EAGL;
 using static Veldrid.OpenGL.EGL.EGLNative;
-using NativeLibraryLoader;
 using System.Runtime.CompilerServices;
 using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 using Veldrid.OpenGL.EntryList;

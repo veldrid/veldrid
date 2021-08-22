@@ -24,7 +24,7 @@ namespace Veldrid.Vk
             int byteCount = UTF8.GetByteCount(span);
             _handle = Marshal.AllocHGlobal(byteCount + 1);
             _numBytes = byteCount + 1; // Includes null terminator
-            int encodedCount = Encoding.UTF8.GetBytes(span, new Span<byte>(StringPtr, _numBytes));
+            int encodedCount = UTF8.GetBytes(span, new Span<byte>(StringPtr, _numBytes));
             Debug.Assert(encodedCount == byteCount);
             StringPtr[encodedCount] = 0;
         }
@@ -38,7 +38,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public override string ToString() => UTF8.GetString(StringPtr, _numBytes);
+        public override string ToString() => UTF8.GetString(StringPtr, _numBytes - 1); // Exclude null terminator
 
         public static implicit operator byte*(FixedUtf8String utf8String) => utf8String.StringPtr;
         public static implicit operator IntPtr(FixedUtf8String utf8String) => new IntPtr(utf8String.StringPtr);

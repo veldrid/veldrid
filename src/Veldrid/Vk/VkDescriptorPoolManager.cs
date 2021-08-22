@@ -20,15 +20,18 @@ namespace Veldrid.Vk
 
         public unsafe DescriptorAllocationToken Allocate(DescriptorResourceCounts counts, VkDescriptorSetLayout setLayout)
         {
-            VkDescriptorPool pool = GetPool(counts);
-            VkDescriptorSetAllocateInfo dsAI = VkDescriptorSetAllocateInfo.New();
-            dsAI.descriptorSetCount = 1;
-            dsAI.pSetLayouts = &setLayout;
-            dsAI.descriptorPool = pool;
-            VkResult result = vkAllocateDescriptorSets(_gd.Device, ref dsAI, out VkDescriptorSet set);
-            VulkanUtil.CheckResult(result);
+            lock (_lock)
+            {
+                VkDescriptorPool pool = GetPool(counts);
+                VkDescriptorSetAllocateInfo dsAI = VkDescriptorSetAllocateInfo.New();
+                dsAI.descriptorSetCount = 1;
+                dsAI.pSetLayouts = &setLayout;
+                dsAI.descriptorPool = pool;
+                VkResult result = vkAllocateDescriptorSets(_gd.Device, ref dsAI, out VkDescriptorSet set);
+                VulkanUtil.CheckResult(result);
 
-            return new DescriptorAllocationToken(set, pool);
+                return new DescriptorAllocationToken(set, pool);
+            }
         }
 
         public void Free(DescriptorAllocationToken token, DescriptorResourceCounts counts)
@@ -47,22 +50,19 @@ namespace Veldrid.Vk
 
         private VkDescriptorPool GetPool(DescriptorResourceCounts counts)
         {
-            lock (_lock)
+            foreach (PoolInfo poolInfo in _pools)
             {
-                foreach (PoolInfo poolInfo in _pools)
+                if (poolInfo.Allocate(counts))
                 {
-                    if (poolInfo.Allocate(counts))
-                    {
-                        return poolInfo.Pool;
-                    }
+                    return poolInfo.Pool;
                 }
-
-                PoolInfo newPool = CreateNewPool();
-                _pools.Add(newPool);
-                bool result = newPool.Allocate(counts);
-                Debug.Assert(result);
-                return newPool.Pool;
             }
+
+            PoolInfo newPool = CreateNewPool();
+            _pools.Add(newPool);
+            bool result = newPool.Allocate(counts);
+            Debug.Assert(result);
+            return newPool.Pool;
         }
 
         private unsafe PoolInfo CreateNewPool()

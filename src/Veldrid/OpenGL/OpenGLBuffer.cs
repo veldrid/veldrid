@@ -86,7 +86,7 @@ namespace Veldrid.OpenGL
                 _buffer = buffer;
 
                 if (hint == BufferUsageHint.StreamCopy &&
-                    _gd.BackendType != GraphicsBackend.OpenGLES)
+                    _gd.Extensions.ARB_buffer_storage)
                 {
                     glNamedBufferStorage(
                         _buffer,
@@ -115,7 +115,7 @@ namespace Veldrid.OpenGL
                 CheckLastError();
 
                 if (hint == BufferUsageHint.StreamCopy &&
-                    _gd.BackendType != GraphicsBackend.OpenGLES )
+                    _gd.Extensions.ARB_buffer_storage)
                 {
                     glBufferStorage(
                         BufferTarget.CopyReadBuffer,

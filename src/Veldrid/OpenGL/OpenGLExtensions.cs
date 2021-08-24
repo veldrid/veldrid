@@ -32,6 +32,7 @@ namespace Veldrid.OpenGL
                 || IsExtensionSupported("GL_EXT_copy_image");
             ARB_DebugOutput = IsExtensionSupported("GL_ARB_debug_output");
             KHR_Debug = IsExtensionSupported("GL_KHR_debug");
+            ARB_buffer_storage = IsExtensionSupported("GL_ARB_buffer_storage") || GLVersion(4, 4);
 
             ComputeShaders = IsExtensionSupported("GL_ARB_compute_shader") || GLESVersion(3, 1);
 
@@ -76,6 +77,7 @@ namespace Veldrid.OpenGL
         public readonly bool EXT_DebugMarker;
         public readonly bool ARB_GpuShaderFp64;
         public readonly bool ARB_uniform_buffer_object;
+        public readonly bool ARB_buffer_storage;
 
         // Differs between GL / GLES
         public readonly bool TextureStorage;

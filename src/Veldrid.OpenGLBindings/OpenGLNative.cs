@@ -1809,7 +1809,13 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glBufferData", out p_glBufferData);
             LoadFunction("glNamedBufferData", out p_glNamedBufferData);
             LoadFunction("glBufferStorage", out p_glBufferStorage);
+
             LoadFunction("glNamedBufferStorage", out p_glNamedBufferStorage);
+            if (p_glNamedBufferStorage == null)
+            {
+                LoadFunction("glNamedBufferStorageEXT", out p_glNamedBufferStorage);
+            }
+
             LoadFunction("glTexImage2D", out p_glTexImage2D);
             LoadFunction("glTexImage3D", out p_glTexImage3D);
             LoadFunction("glEnableVertexAttribArray", out p_glEnableVertexAttribArray);

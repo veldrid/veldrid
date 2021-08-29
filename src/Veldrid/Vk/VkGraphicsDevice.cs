@@ -354,12 +354,17 @@ namespace Veldrid.Vk
             object presentLock = vkSC.PresentQueueIndex == _graphicsQueueIndex ? _graphicsQueueLock : vkSC;
             lock (presentLock)
             {
-                vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
-                if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, vkSC.ImageAvailableFence))
+                VkResult presentResult = vkQueuePresentKHR(vkSC.PresentQueue, &presentInfo);
+                CheckResult(presentResult);
+
+                Vulkan.VkFence fence = vkSC.ImageAvailableFence;
+                if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, fence))
                 {
-                    Vulkan.VkFence fence = vkSC.ImageAvailableFence;
-                    vkWaitForFences(_device, 1, ref fence, true, ulong.MaxValue);
-                    vkResetFences(_device, 1, ref fence);
+                    VkResult waitResult = vkWaitForFences(_device, 1, &fence, true, ulong.MaxValue);
+                    CheckResult(waitResult);
+
+                    VkResult resetResult = vkResetFences(_device, 1, &fence);
+                    CheckResult(resetResult);
                 }
             }
         }

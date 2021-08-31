@@ -461,15 +461,15 @@ namespace Veldrid
             {
                 KeyEvent keyEvent = keyEvents[i];
                 io.KeysDown[(int)keyEvent.Key] = keyEvent.Down;
-                if (keyEvent.Key == Key.ControlLeft)
+                if (keyEvent.Key == Key.ControlLeft || keyEvent.Key == Key.ControlRight)
                 {
                     _controlDown = keyEvent.Down;
                 }
-                if (keyEvent.Key == Key.ShiftLeft)
+                if (keyEvent.Key == Key.ShiftLeft || keyEvent.Key == Key.ShiftRight)
                 {
                     _shiftDown = keyEvent.Down;
                 }
-                if (keyEvent.Key == Key.AltLeft)
+                if (keyEvent.Key == Key.AltLeft || keyEvent.Key == Key.AltRight)
                 {
                     _altDown = keyEvent.Down;
                 }

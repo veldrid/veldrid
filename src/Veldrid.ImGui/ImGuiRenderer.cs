@@ -104,6 +104,7 @@ namespace Veldrid
 
         public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription)
             => CreateDeviceResources(gd, outputDescription, _colorSpaceHandling);
+
         public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription, ColorSpaceHandling colorSpaceHandling)
         {
             _gd = gd;
@@ -511,15 +512,19 @@ namespace Veldrid
             uint totalVBSize = (uint)(draw_data.TotalVtxCount * sizeof(ImDrawVert));
             if (totalVBSize > _vertexBuffer.SizeInBytes)
             {
+                string name = _vertexBuffer.Name;
                 _vertexBuffer.Dispose();
                 _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+                _vertexBuffer.Name = name;
             }
 
             uint totalIBSize = (uint)(draw_data.TotalIdxCount * sizeof(ushort));
             if (totalIBSize > _indexBuffer.SizeInBytes)
             {
+                string name = _indexBuffer.Name;
                 _indexBuffer.Dispose();
                 _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
+                _indexBuffer.Name = name;
             }
 
             for (int i = 0; i < draw_data.CmdListsCount; i++)

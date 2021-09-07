@@ -12,7 +12,7 @@ namespace Veldrid.Tests
         public void CreateBuffer_Succeeds()
         {
             uint expectedSize = 64;
-            BufferUsage expectedUsage = BufferUsage.Dynamic | BufferUsage.UniformBuffer;
+            BufferUsage expectedUsage = BufferUsage.DynamicWrite | BufferUsage.UniformBuffer;
 
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(expectedSize, expectedUsage));
 
@@ -40,7 +40,7 @@ namespace Veldrid.Tests
         [Fact]
         public void UpdateBuffer_ThenMapRead_Succeeds()
         {
-            DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.StagingRead);
             int[] data = Enumerable.Range(0, 256).Select(i => 2 * i).ToArray();
             GD.UpdateBuffer(buffer, 0, data);
 
@@ -54,7 +54,7 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void Staging_Map_WriteThenRead()
         {
-            DeviceBuffer buffer = CreateBuffer(256, BufferUsage.Staging);
+            DeviceBuffer buffer = CreateBuffer(256, BufferUsage.StagingRead);
             MappedResource map = GD.Map(buffer, MapMode.Write);
             byte* dataPtr = (byte*)map.Data.ToPointer();
             for (int i = 0; i < map.SizeInBytes; i++)
@@ -74,7 +74,7 @@ namespace Veldrid.Tests
         [Fact]
         public void Staging_MapGeneric_WriteThenRead()
         {
-            DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer buffer = CreateBuffer(1024, BufferUsage.StagingReadWrite);
             MappedResourceView<int> view = GD.Map<int>(buffer, MapMode.Write);
             Assert.Equal(256, view.Count);
             for (int i = 0; i < view.Count; i++)
@@ -104,11 +104,11 @@ namespace Veldrid.Tests
         [Fact]
         public void CopyBuffer_Succeeds()
         {
-            DeviceBuffer src = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer src = CreateBuffer(1024, BufferUsage.StagingWrite);
             int[] data = Enumerable.Range(0, 256).Select(i => 2 * i).ToArray();
             GD.UpdateBuffer(src, 0, data);
 
-            DeviceBuffer dst = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer dst = CreateBuffer(1024, BufferUsage.StagingRead);
 
             CommandList copyCL = RF.CreateCommandList();
             copyCL.Begin();
@@ -128,11 +128,11 @@ namespace Veldrid.Tests
         [Fact]
         public void CopyBuffer_Chain_Succeeds()
         {
-            DeviceBuffer src = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer src = CreateBuffer(1024, BufferUsage.StagingWrite);
             int[] data = Enumerable.Range(0, 256).Select(i => 2 * i).ToArray();
             GD.UpdateBuffer(src, 0, data);
 
-            DeviceBuffer finalDst = CreateBuffer(1024, BufferUsage.Staging);
+            DeviceBuffer finalDst = CreateBuffer(1024, BufferUsage.StagingRead);
 
             for (int chainLength = 2; chainLength <= 10; chainLength += 4)
             {
@@ -173,7 +173,7 @@ namespace Veldrid.Tests
                 return; // TODO
             }
 
-            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
+            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StagingReadWrite));
             MappedResourceView<int> view = GD.Map<int>(buffer, MapMode.ReadWrite);
             int[] data = Enumerable.Range(0, 256).Select(i => 2 * i).ToArray();
             Assert.Throws<VeldridException>(() => GD.UpdateBuffer(buffer, 0, data));
@@ -182,16 +182,12 @@ namespace Veldrid.Tests
         [Fact]
         public void Map_MultipleTimes_Fails()
         {
-            if (GD.BackendType == GraphicsBackend.Vulkan)
-            {
-                return; // TODO
-            }
             if (GD.BackendType == GraphicsBackend.Metal)
             {
                 return; // TODO
             }
 
-            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
+            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StagingReadWrite));
             MappedResource map = GD.Map(buffer, MapMode.ReadWrite);
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.ReadWrite));
             GD.Unmap(buffer);
@@ -200,16 +196,12 @@ namespace Veldrid.Tests
         [Fact]
         public void Map_DifferentMode_Fails()
         {
-            if (GD.BackendType == GraphicsBackend.Vulkan)
-            {
-                return; // TODO
-            }
             if (GD.BackendType == GraphicsBackend.Metal)
             {
                 return; // TODO
             }
 
-            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
+            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StagingRead));
             MappedResource map = GD.Map(buffer, MapMode.Read);
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.Write));
         }
@@ -220,7 +212,7 @@ namespace Veldrid.Tests
             DeviceBuffer src = RF.CreateBuffer(
                 new BufferDescription(208, BufferUsage.UniformBuffer));
             DeviceBuffer dst = RF.CreateBuffer(
-                new BufferDescription(208, BufferUsage.Staging));
+                new BufferDescription(208, BufferUsage.StagingRead));
 
             byte[] data = Enumerable.Range(0, 208).Select(i => (byte)(i * 150)).ToArray();
             GD.UpdateBuffer(src, 0, data);
@@ -242,7 +234,7 @@ namespace Veldrid.Tests
         public void Update_Dynamic_NonZeroOffset()
         {
             DeviceBuffer dynamic = RF.CreateBuffer(
-                new BufferDescription(1024, BufferUsage.Dynamic | BufferUsage.UniformBuffer));
+                new BufferDescription(1024, BufferUsage.DynamicWrite | BufferUsage.UniformBuffer));
 
             byte[] initialData = Enumerable.Range(0, 1024).Select(i => (byte)i).ToArray();
             GD.UpdateBuffer(dynamic, 0, initialData);
@@ -256,7 +248,7 @@ namespace Veldrid.Tests
             GD.WaitForIdle();
 
             DeviceBuffer dst = RF.CreateBuffer(
-                new BufferDescription(1024, BufferUsage.Staging));
+                new BufferDescription(1024, BufferUsage.StagingRead));
 
             cl.Begin();
             cl.CopyBuffer(dynamic, 0, dst, 0, dynamic.SizeInBytes);
@@ -280,7 +272,7 @@ namespace Veldrid.Tests
         public void Dynamic_MapRead_Fails()
         {
             DeviceBuffer dynamic = RF.CreateBuffer(
-                new BufferDescription(1024, BufferUsage.Dynamic | BufferUsage.UniformBuffer));
+                new BufferDescription(1024, BufferUsage.DynamicRead | BufferUsage.UniformBuffer));
             Assert.Throws<VeldridException>(() => GD.Map(dynamic, MapMode.Read));
             Assert.Throws<VeldridException>(() => GD.Map(dynamic, MapMode.ReadWrite));
         }
@@ -289,7 +281,7 @@ namespace Veldrid.Tests
         public void CommandList_Update_Staging()
         {
             DeviceBuffer staging = RF.CreateBuffer(
-                new BufferDescription(1024, BufferUsage.Staging));
+                new BufferDescription(1024, BufferUsage.StagingRead));
             byte[] data = Enumerable.Range(0, 1024).Select(i => (byte)i).ToArray();
 
             CommandList cl = RF.CreateCommandList();
@@ -312,16 +304,16 @@ namespace Veldrid.Tests
             70, BufferUsage.VertexBuffer, 13,
             11)]
         [InlineData(
-            60, BufferUsage.Staging, 1,
+            60, BufferUsage.StagingWrite, 1,
             70, BufferUsage.VertexBuffer, 13,
             11)]
         [InlineData(
             60, BufferUsage.VertexBuffer, 1,
-            70, BufferUsage.Staging, 13,
+            70, BufferUsage.StagingWrite, 13,
             11)]
         [InlineData(
-            60, BufferUsage.Staging, 1,
-            70, BufferUsage.Staging, 13,
+            60, BufferUsage.StagingWrite, 1,
+            70, BufferUsage.StagingWrite, 13,
             11)]
         [InlineData(
             5, BufferUsage.VertexBuffer, 3,
@@ -360,7 +352,7 @@ namespace Veldrid.Tests
 
         [Theory]
         [InlineData(BufferUsage.VertexBuffer, 13, 5, 1)]
-        [InlineData(BufferUsage.Staging, 13, 5, 1)]
+        [InlineData(BufferUsage.StagingWrite, 13, 5, 1)]
         public void CommandList_UpdateNonStaging_Unaligned(BufferUsage usage, uint bufferSize, uint dataSize, uint offset)
         {
             DeviceBuffer buffer = CreateBuffer(bufferSize, usage);
@@ -384,9 +376,9 @@ namespace Veldrid.Tests
         }
 
         [Theory]
-        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.UniformBuffer)]
-        [InlineData(BufferUsage.Staging)]
+        [InlineData(BufferUsage.StagingWrite)]
         public void UpdateUniform_Offset_GraphicsDevice(BufferUsage usage)
         {
             DeviceBuffer buffer = CreateBuffer(128, usage);
@@ -403,9 +395,9 @@ namespace Veldrid.Tests
         }
 
         [Theory]
-        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.UniformBuffer)]
-        [InlineData(BufferUsage.Staging)]
+        [InlineData(BufferUsage.StagingWrite)]
         public void UpdateUniform_Offset_CommandList(BufferUsage usage)
         {
             DeviceBuffer buffer = CreateBuffer(128, usage);
@@ -428,20 +420,20 @@ namespace Veldrid.Tests
 
         [Theory]
         [InlineData(BufferUsage.UniformBuffer)]
-        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.VertexBuffer)]
-        [InlineData(BufferUsage.VertexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.IndexBuffer)]
-        [InlineData(BufferUsage.IndexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.IndexBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.IndirectBuffer)]
         [InlineData(BufferUsage.StructuredBufferReadOnly)]
-        [InlineData(BufferUsage.StructuredBufferReadOnly | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.StructuredBufferReadOnly | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.StructuredBufferReadWrite)]
         [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer)]
-        [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer | BufferUsage.IndirectBuffer)]
         [InlineData(BufferUsage.IndexBuffer | BufferUsage.IndirectBuffer)]
-        [InlineData(BufferUsage.Staging)]
+        [InlineData(BufferUsage.StagingWrite)]
         public void CreateBuffer_UsageFlagsCoverage(BufferUsage usage)
         {
             if ((usage & BufferUsage.StructuredBufferReadOnly) != 0
@@ -462,17 +454,17 @@ namespace Veldrid.Tests
 
         [Theory]
         [InlineData(BufferUsage.UniformBuffer)]
-        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.VertexBuffer)]
-        [InlineData(BufferUsage.VertexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.IndexBuffer)]
-        [InlineData(BufferUsage.IndexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.IndexBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.IndirectBuffer)]
         [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer)]
-        [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer | BufferUsage.Dynamic)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.VertexBuffer | BufferUsage.IndexBuffer | BufferUsage.IndirectBuffer)]
         [InlineData(BufferUsage.IndexBuffer | BufferUsage.IndirectBuffer)]
-        [InlineData(BufferUsage.Staging)]
+        [InlineData(BufferUsage.StagingWrite)]
         public unsafe void CopyBuffer_ZeroSize(BufferUsage usage)
         {
             DeviceBuffer src = CreateBuffer(1024, usage);
@@ -503,18 +495,18 @@ namespace Veldrid.Tests
         [Theory]
         [InlineData(BufferUsage.UniformBuffer, false)]
         [InlineData(BufferUsage.UniformBuffer, true)]
-        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic, false)]
-        [InlineData(BufferUsage.UniformBuffer | BufferUsage.Dynamic, true)]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.DynamicWrite, false)]
+        [InlineData(BufferUsage.UniformBuffer | BufferUsage.DynamicWrite, true)]
         [InlineData(BufferUsage.VertexBuffer, false)]
         [InlineData(BufferUsage.VertexBuffer, true)]
-        [InlineData(BufferUsage.VertexBuffer | BufferUsage.Dynamic, false)]
-        [InlineData(BufferUsage.VertexBuffer | BufferUsage.Dynamic, true)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.DynamicWrite, false)]
+        [InlineData(BufferUsage.VertexBuffer | BufferUsage.DynamicWrite, true)]
         [InlineData(BufferUsage.IndexBuffer, false)]
         [InlineData(BufferUsage.IndexBuffer, true)]
         [InlineData(BufferUsage.IndirectBuffer, false)]
         [InlineData(BufferUsage.IndirectBuffer, true)]
-        [InlineData(BufferUsage.Staging, false)]
-        [InlineData(BufferUsage.Staging, true)]
+        [InlineData(BufferUsage.StagingWrite, false)]
+        [InlineData(BufferUsage.StagingWrite, true)]
         public unsafe void UpdateBuffer_ZeroSize(BufferUsage usage, bool useCommandListUpdate)
         {
             DeviceBuffer buffer = CreateBuffer(1024, usage);

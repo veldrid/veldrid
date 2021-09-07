@@ -327,8 +327,8 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (resource is DeviceBuffer buffer)
             {
-                if ((buffer.Usage & BufferUsage.Dynamic) != BufferUsage.Dynamic
-                    && (buffer.Usage & BufferUsage.Staging) != BufferUsage.Staging)
+                if ((buffer.Usage & BufferUsage.DynamicReadWrite) != 0
+                    && (buffer.Usage & BufferUsage.StagingReadWrite) != 0)
                 {
                     throw new VeldridException("Buffers must have the Staging or Dynamic usage flag to be mapped.");
                 }
@@ -336,11 +336,27 @@ namespace Veldrid
                 {
                     throw new VeldridException("Subresource must be 0 for Buffer resources.");
                 }
-                if ((mode == MapMode.Read || mode == MapMode.ReadWrite) && (buffer.Usage & BufferUsage.Staging) == 0)
+                if ((mode & MapMode.Read) != 0)
                 {
-                    throw new VeldridException(
-                        $"{nameof(MapMode)}.{nameof(MapMode.Read)} and {nameof(MapMode)}.{nameof(MapMode.ReadWrite)} " +
-                        $"can only be used on buffers created with {nameof(BufferUsage)}.{nameof(BufferUsage.Staging)}.");
+                    if ((buffer.Usage & BufferUsage.DynamicRead) == 0 &&
+                        (buffer.Usage & BufferUsage.StagingRead) == 0)
+                    {
+                        throw new VeldridException(
+                            $"{nameof(MapMode)}.{nameof(MapMode.Read)} can only be used on buffers created with " +
+                            $"{nameof(BufferUsage)}.{nameof(BufferUsage.StagingRead)} or" +
+                            $"{nameof(BufferUsage)}.{nameof(BufferUsage.DynamicRead)} .");
+                    }
+                }
+                if ((mode & MapMode.Write) != 0)
+                {
+                    if ((buffer.Usage & BufferUsage.DynamicWrite) == 0 &&
+                        (buffer.Usage & BufferUsage.StagingWrite) == 0)
+                    {
+                        throw new VeldridException(
+                            $"{nameof(MapMode)}.{nameof(MapMode.Write)} can only be used on buffers created with " +
+                            $"{nameof(BufferUsage)}.{nameof(BufferUsage.StagingWrite)} or " +
+                            $"{nameof(BufferUsage)}.{nameof(BufferUsage.DynamicWrite)}.");
+                    }
                 }
             }
             else if (resource is Texture tex)

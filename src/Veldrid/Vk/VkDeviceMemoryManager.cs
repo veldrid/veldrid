@@ -528,14 +528,6 @@ namespace Veldrid.Vk
                 kvp.Value.Dispose();
             }
         }
-
-        internal IntPtr Map(in VkMemoryBlock memoryBlock)
-        {
-            void* ret;
-            VkResult result = vkMapMemory(_device, memoryBlock.DeviceMemory, memoryBlock.Offset, memoryBlock.Size, 0, &ret);
-            CheckResult(result);
-            return (IntPtr)ret;
-        }
     }
 
     [DebuggerDisplay("[Mem:{DeviceMemory.Handle}] Off:{Offset}, Size:{Size} End:{Offset+Size}")]

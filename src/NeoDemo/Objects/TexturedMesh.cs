@@ -79,7 +79,7 @@ namespace Veldrid.NeoDemo.Objects
             if (s_useUniformOffset)
             { bufferSize += _uniformOffset * 2; }
 
-            _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(bufferSize, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(bufferSize, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             if (_materialPropsOwned)
             {
                 _materialProps.CreateDeviceObjects(gd, cl, sc);

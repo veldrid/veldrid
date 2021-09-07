@@ -60,15 +60,23 @@ namespace Veldrid.D3D11
                 bd.OptionFlags = ResourceOptionFlags.DrawIndirectArguments;
             }
 
-            if ((usage & BufferUsage.Dynamic) == BufferUsage.Dynamic)
+            if ((usage & BufferUsage.DynamicReadWrite) != 0)
             {
                 bd.Usage = ResourceUsage.Dynamic;
-                bd.CpuAccessFlags = CpuAccessFlags.Write;
+
+                if ((usage & BufferUsage.DynamicWrite) != 0)
+                    bd.CpuAccessFlags |= CpuAccessFlags.Write;
+                if ((usage & BufferUsage.DynamicRead) != 0)
+                    bd.CpuAccessFlags |= CpuAccessFlags.Read;
             }
-            else if ((usage & BufferUsage.Staging) == BufferUsage.Staging)
+            else if ((usage & BufferUsage.StagingReadWrite) != 0)
             {
                 bd.Usage = ResourceUsage.Staging;
-                bd.CpuAccessFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
+
+                if ((usage & BufferUsage.StagingWrite) != 0)
+                    bd.CpuAccessFlags |= CpuAccessFlags.Write;
+                if ((usage & BufferUsage.StagingRead) != 0)
+                    bd.CpuAccessFlags |= CpuAccessFlags.Read;
             }
 
             if (initialData == IntPtr.Zero)

@@ -977,7 +977,12 @@ namespace Veldrid.Vk
                 }
                 else
                 {
-                    mappedPtr = _memoryManager.Map(memoryBlock);
+                    void* ret;
+                    VkResult result = vkMapMemory(
+                        _device, memoryBlock.DeviceMemory, memoryBlock.Offset, memoryBlock.Size, 0, &ret);
+                    CheckResult(result);
+
+                    mappedPtr = (IntPtr)ret;
                 }
             }
 
@@ -1340,7 +1345,7 @@ namespace Veldrid.Vk
 
             uint newBufferSize = Math.Max(MinStagingBufferSize, size);
             VkBuffer newBuffer = (VkBuffer)ResourceFactory.CreateBuffer(
-                new BufferDescription(newBufferSize, BufferUsage.Staging));
+                new BufferDescription(newBufferSize, BufferUsage.StagingWrite));
             return newBuffer;
         }
 

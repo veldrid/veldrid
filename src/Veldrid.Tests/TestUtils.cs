@@ -190,13 +190,13 @@ namespace Veldrid.Tests
         protected DeviceBuffer GetReadback(DeviceBuffer buffer)
         {
             DeviceBuffer readback;
-            if ((buffer.Usage & BufferUsage.Staging) != 0)
+            if ((buffer.Usage & BufferUsage.StagingRead) != 0)
             {
                 readback = buffer;
             }
             else
             {
-                readback = RF.CreateBuffer(new BufferDescription(buffer.SizeInBytes, BufferUsage.Staging));
+                readback = RF.CreateBuffer(new BufferDescription(buffer.SizeInBytes, BufferUsage.StagingRead));
                 CommandList cl = RF.CreateCommandList();
                 cl.Begin();
                 cl.CopyBuffer(buffer, 0, readback, 0, buffer.SizeInBytes);

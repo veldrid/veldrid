@@ -1144,8 +1144,8 @@ namespace Veldrid.D3D11
                 return;
             }
 
-            bool isDynamic = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
-            bool isStaging = (buffer.Usage & BufferUsage.Staging) == BufferUsage.Staging;
+            bool isDynamic = (buffer.Usage & BufferUsage.DynamicWrite) != 0;
+            bool isStaging = (buffer.Usage & BufferUsage.StagingWrite) != 0;
             bool isUniformBuffer = (buffer.Usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer;
             bool useMap = isDynamic;
             bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
@@ -1224,7 +1224,7 @@ namespace Veldrid.D3D11
             }
 
             DeviceBuffer staging = _gd.ResourceFactory.CreateBuffer(
-                new BufferDescription(sizeInBytes, BufferUsage.Staging));
+                new BufferDescription(sizeInBytes, BufferUsage.StagingWrite));
 
             return Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(staging);
         }

@@ -58,18 +58,40 @@ namespace Veldrid.OpenGL
         {
             Debug.Assert(!Created);
 
-            BufferStorageMask storageMask =
-                BufferStorageMask.ClientStorage |
-                BufferStorageMask.DynamicStorage |
-                BufferStorageMask.MapWrite |
-                BufferStorageMask.MapRead;
+            BufferStorageMask storageMask = 0;
+            if ((Usage & BufferUsage.StagingReadWrite) == 0)
+            {
+                storageMask |= BufferStorageMask.DynamicStorage;
+            }
+
+            if ((Usage & BufferUsage.StagingRead) != 0 ||
+                (Usage & BufferUsage.DynamicRead) != 0)
+            {
+                storageMask |= BufferStorageMask.MapRead;
+                storageMask |= BufferStorageMask.ClientStorage;
+            }
+
+            if ((Usage & BufferUsage.StagingWrite) != 0 ||
+                (Usage & BufferUsage.DynamicWrite) != 0)
+            {
+                storageMask |= BufferStorageMask.MapWrite;
+                storageMask |= BufferStorageMask.ClientStorage;
+            }
 
             BufferUsageHint hint;
-            if ((Usage & BufferUsage.Staging) == BufferUsage.Staging)
+            if ((Usage & BufferUsage.StagingRead) != 0)
+            {
+                hint = BufferUsageHint.StreamRead;
+            }
+            else if ((Usage & BufferUsage.StagingWrite) != 0)
             {
                 hint = BufferUsageHint.StreamCopy;
             }
-            else if ((Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic)
+            else if ((Usage & BufferUsage.DynamicRead) != 0)
+            {
+                hint = BufferUsageHint.DynamicRead;
+            }
+            else if ((Usage & BufferUsage.DynamicWrite) != 0)
             {
                 hint = BufferUsageHint.DynamicDraw;
             }
@@ -85,8 +107,7 @@ namespace Veldrid.OpenGL
                 CheckLastError();
                 _buffer = buffer;
 
-                if (hint == BufferUsageHint.StreamCopy &&
-                    _gd.Extensions.ARB_buffer_storage)
+                if (_gd.Extensions.ARB_buffer_storage)
                 {
                     glNamedBufferStorage(
                         _buffer,
@@ -114,8 +135,7 @@ namespace Veldrid.OpenGL
                 glBindBuffer(BufferTarget.CopyReadBuffer, _buffer);
                 CheckLastError();
 
-                if (hint == BufferUsageHint.StreamCopy &&
-                    _gd.Extensions.ARB_buffer_storage)
+                if (_gd.Extensions.ARB_buffer_storage)
                 {
                     glBufferStorage(
                         BufferTarget.CopyReadBuffer,

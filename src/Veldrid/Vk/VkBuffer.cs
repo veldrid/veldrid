@@ -77,13 +77,17 @@ namespace Veldrid.Vk
                 prefersDedicatedAllocation = false;
             }
 
-            bool isStaging = (usage & BufferUsage.Staging) == BufferUsage.Staging;
-            bool hostVisible = isStaging || (usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
+            bool isStaging = (usage & BufferUsage.StagingReadWrite) != 0;
+            bool isDynamic = (usage & BufferUsage.DynamicReadWrite) != 0;
+            bool hostVisible = isStaging || isDynamic;
 
-            VkMemoryPropertyFlags memoryPropertyFlags =
-                hostVisible
-                ? VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent
+            VkMemoryPropertyFlags memoryPropertyFlags = hostVisible
+                ? VkMemoryPropertyFlags.HostVisible
                 : VkMemoryPropertyFlags.DeviceLocal;
+
+            if (isDynamic)
+                memoryPropertyFlags |= VkMemoryPropertyFlags.HostCoherent;
+
             if (isStaging)
             {
                 // Use "host cached" memory for staging when available, for better performance of GPU -> CPU transfers

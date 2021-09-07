@@ -1221,7 +1221,8 @@ namespace Veldrid.Vk
                 }
                 if (ret == null)
                 {
-                    ret = (VkBuffer)_gd.ResourceFactory.CreateBuffer(new BufferDescription(size, BufferUsage.Staging));
+                    ret = (VkBuffer)_gd.ResourceFactory.CreateBuffer(
+                        new BufferDescription(size, BufferUsage.StagingWrite));
                     ret.Name = $"Staging Buffer (CommandList {_name})";
                 }
 

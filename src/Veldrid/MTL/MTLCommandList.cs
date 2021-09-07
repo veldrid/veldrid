@@ -334,7 +334,7 @@ namespace Veldrid.MTL
             MTLBuffer dstMTLBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
             // TODO: Cache these, and rely on the command buffer's completion callback to add them back to a shared pool.
             MTLBuffer copySrc = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(
-                _gd.ResourceFactory.CreateBuffer(new BufferDescription(sizeInBytes, BufferUsage.Staging)));
+                _gd.ResourceFactory.CreateBuffer(new BufferDescription(sizeInBytes, BufferUsage.StagingWrite)));
             _gd.UpdateBuffer(copySrc, 0, source, sizeInBytes);
 
             if (useComputeCopy)

@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Text;
 
 namespace Veldrid
@@ -110,12 +108,12 @@ namespace Veldrid
             _gd = gd;
             _colorSpaceHandling = colorSpaceHandling;
             ResourceFactory factory = gd.ResourceFactory;
-            _vertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+            _vertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer | BufferUsage.DynamicWrite));
             _vertexBuffer.Name = "ImGui.NET Vertex Buffer";
-            _indexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer | BufferUsage.Dynamic));
+            _indexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer | BufferUsage.DynamicWrite));
             _indexBuffer.Name = "ImGui.NET Index Buffer";
 
-            _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _projMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             _projMatrixBuffer.Name = "ImGui.NET Projection Buffer";
 
             byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex, _colorSpaceHandling);
@@ -514,7 +512,7 @@ namespace Veldrid
             {
                 string name = _vertexBuffer.Name;
                 _vertexBuffer.Dispose();
-                _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+                _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.DynamicWrite));
                 _vertexBuffer.Name = name;
             }
 
@@ -523,7 +521,7 @@ namespace Veldrid
             {
                 string name = _indexBuffer.Name;
                 _indexBuffer.Dispose();
-                _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
+                _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.DynamicWrite));
                 _indexBuffer.Name = name;
             }
 

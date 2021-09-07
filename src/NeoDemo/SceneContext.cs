@@ -60,17 +60,17 @@ namespace Veldrid.NeoDemo
         public virtual void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             ResourceFactory factory = gd.ResourceFactory;
-            ProjectionMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            ViewMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            LightViewProjectionBuffer0 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            ProjectionMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
+            ViewMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
+            LightViewProjectionBuffer0 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             LightViewProjectionBuffer0.Name = "LightViewProjectionBuffer0";
-            LightViewProjectionBuffer1 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            LightViewProjectionBuffer1 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             LightViewProjectionBuffer1.Name = "LightViewProjectionBuffer1";
-            LightViewProjectionBuffer2 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            LightViewProjectionBuffer2 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             LightViewProjectionBuffer2.Name = "LightViewProjectionBuffer2";
-            DepthLimitsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DepthCascadeLimits>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            LightInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DirectionalLightInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            CameraInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            DepthLimitsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DepthCascadeLimits>(), BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
+            LightInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DirectionalLightInfo>(), BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
+            CameraInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             if (Camera != null)
             {
                 UpdateCameraBuffers(cl);
@@ -99,7 +99,7 @@ namespace Veldrid.NeoDemo
             ReflectionDepthTexture = factory.CreateTexture(TextureDescription.Texture2D(ReflectionMapSize, ReflectionMapSize, 1, 1, PixelFormat.R32_Float, TextureUsage.DepthStencil));
             ReflectionColorView = factory.CreateTextureView(ReflectionColorTexture);
             ReflectionFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(ReflectionDepthTexture, ReflectionColorTexture));
-            ReflectionViewProjBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            ReflectionViewProjBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
 
             MirrorClipPlaneBuffer = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer));
             gd.UpdateBuffer(MirrorClipPlaneBuffer, 0, new ClipPlaneInfo(MirrorMesh.Plane, true));

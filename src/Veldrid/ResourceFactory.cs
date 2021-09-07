@@ -277,7 +277,7 @@ namespace Veldrid
             {
                 throw new VeldridException("Non-structured Buffers must have a StructureByteStride of zero.");
             }
-            if ((usage & BufferUsage.Staging) != 0 && usage != BufferUsage.Staging)
+            if ((usage & BufferUsage.StagingReadWrite) != 0 && (usage & ~BufferUsage.StagingReadWrite) != 0)
             {
                 throw new VeldridException("Buffers with Staging Usage must not specify any other Usage flags.");
             }

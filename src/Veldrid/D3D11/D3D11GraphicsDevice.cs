@@ -352,10 +352,11 @@ namespace Veldrid.D3D11
                         MappedSubresource msr = _immediateContext.Map(
                             buffer.Buffer,
                             0,
-                            D3D11Formats.VdToD3D11MapMode((buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic, mode),
+                            D3D11Formats.VdToD3D11MapMode((buffer.Usage & BufferUsage.DynamicReadWrite) != 0, mode),
                             Vortice.Direct3D11.MapFlags.None);
 
-                        mappedResource = new MappedResource(resource, mode, msr.DataPointer + (nint)offsetInBytes, offsetInBytes, sizeInBytes);
+                        mappedResource = new MappedResource(
+                            resource, mode, msr.DataPointer + (nint)offsetInBytes, offsetInBytes, sizeInBytes);
                     }
                 }
                 else
@@ -423,8 +424,8 @@ namespace Veldrid.D3D11
                 return;
             }
 
-            bool isDynamic = (buffer.Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
-            bool isStaging = (buffer.Usage & BufferUsage.Staging) == BufferUsage.Staging;
+            bool isDynamic = (buffer.Usage & BufferUsage.DynamicWrite) != 0;
+            bool isStaging = (buffer.Usage & BufferUsage.StagingWrite) != 0;
             bool isUniformBuffer = (buffer.Usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer;
             bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
             bool useUpdateSubresource = (!isDynamic && !isStaging) && (!isUniformBuffer || updateFullBuffer);
@@ -485,7 +486,7 @@ namespace Veldrid.D3D11
             }
 
             DeviceBuffer staging = ResourceFactory.CreateBuffer(
-                new BufferDescription(sizeInBytes, BufferUsage.Staging));
+                new BufferDescription(sizeInBytes, BufferUsage.StagingWrite));
 
             return Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(staging);
         }

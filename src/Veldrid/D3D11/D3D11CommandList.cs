@@ -1175,7 +1175,7 @@ namespace Veldrid.D3D11
                     UpdateSubresource_Workaround(d3dBuffer.Buffer, 0, subregion!.Value, source);
                 }
             }
-            else if (useMap && !(!isFullBuffer && isDynamic)) // Can only update full buffer with WriteDiscard.
+            else if (useMap && isFullBuffer) // Can only update full buffer with WriteDiscard.
             {
                 MappedSubresource msb = _context.Map(
                      d3dBuffer.Buffer,

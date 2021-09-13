@@ -464,8 +464,8 @@ namespace Veldrid.Vk
 
             instanceCI.pApplicationInfo = &applicationInfo;
 
-            StackList<IntPtr, Size64Bytes> instanceExtensions = new StackList<IntPtr, Size64Bytes>();
-            StackList<IntPtr, Size64Bytes> instanceLayers = new StackList<IntPtr, Size64Bytes>();
+            List<IntPtr> instanceExtensions = new();
+            List<IntPtr> instanceLayers = new();
 
             if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
             {
@@ -521,17 +521,41 @@ namespace Veldrid.Vk
                     }
                 }
 
-                instanceCI.enabledExtensionCount = instanceExtensions.Count;
-                instanceCI.ppEnabledExtensionNames = (byte**)instanceExtensions.Data;
-
-                instanceCI.enabledLayerCount = instanceLayers.Count;
-                if (instanceLayers.Count > 0)
+                fixed (IntPtr* ppInstanceExtensions = CollectionsMarshal.AsSpan(instanceExtensions))
+                fixed (IntPtr* ppInstanceLayers = CollectionsMarshal.AsSpan(instanceLayers))
                 {
-                    instanceCI.ppEnabledLayerNames = (byte**)instanceLayers.Data;
-                }
+                    instanceCI.enabledExtensionCount = (uint)instanceExtensions.Count;
+                    instanceCI.ppEnabledExtensionNames = (byte**)ppInstanceExtensions;
 
-                VkResult result = vkCreateInstance(ref instanceCI, null, out _instance);
-                CheckResult(result);
+                    instanceCI.enabledLayerCount = (uint)instanceLayers.Count;
+                    if (instanceLayers.Count > 0)
+                    {
+                        instanceCI.ppEnabledLayerNames = (byte**)ppInstanceLayers;
+                    }
+
+                    VkResult result = vkCreateInstance(ref instanceCI, null, out _instance);
+                    CheckResult(result);
+
+                    vkEnumerateInstanceVersion? instanceVersion =
+                        GetInstanceProcAddr<vkEnumerateInstanceVersion>("vkEnumerateInstanceVersion");
+
+                    if (instanceVersion != null)
+                    {
+                        VkVersion version;
+                        instanceVersion(&version.value);
+
+                        VkVersion currentVersion = new(instanceCI.pApplicationInfo->apiVersion);
+                        if (version.Minor > currentVersion.Minor)
+                        {
+                            vkDestroyInstance(_instance, null);
+
+                            instanceCI.pApplicationInfo->apiVersion = version;
+
+                            result = vkCreateInstance(ref instanceCI, null, out _instance);
+                            CheckResult(result);
+                        }
+                    }
+                }
 
                 if (HasSurfaceExtension(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME))
                 {
@@ -1576,6 +1600,8 @@ namespace Veldrid.Vk
         VkInstance instance,
         VkDebugReportCallbackEXT callback,
         VkAllocationCallbacks* pAllocator);
+
+    internal unsafe delegate VkResult vkEnumerateInstanceVersion(uint* pApiVersion);
 
     internal unsafe delegate VkResult vkDebugMarkerSetObjectNameEXT_t(VkDevice device, VkDebugMarkerObjectNameInfoEXT* pNameInfo);
     internal unsafe delegate void vkCmdDebugMarkerBeginEXT_t(VkCommandBuffer commandBuffer, VkDebugMarkerMarkerInfoEXT* pMarkerInfo);

@@ -62,7 +62,7 @@ namespace Veldrid.VirtualReality.Sample
                 outputs));
             _disposables.Add(_pipeline);
 
-            _wvpBuffer = factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _wvpBuffer = factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             _disposables.Add(_wvpBuffer);
 
             _texture = new ImageSharpTexture(texturePath, true, true).CreateDeviceTexture(gd, factory);

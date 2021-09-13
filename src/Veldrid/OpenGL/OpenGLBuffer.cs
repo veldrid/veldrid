@@ -58,11 +58,7 @@ namespace Veldrid.OpenGL
         {
             Debug.Assert(!Created);
 
-            BufferStorageMask storageMask = 0;
-            if ((Usage & BufferUsage.StagingReadWrite) == 0)
-            {
-                storageMask |= BufferStorageMask.DynamicStorage;
-            }
+            BufferStorageMask storageMask = BufferStorageMask.DynamicStorage;
 
             if ((Usage & BufferUsage.StagingRead) != 0 ||
                 (Usage & BufferUsage.DynamicRead) != 0)

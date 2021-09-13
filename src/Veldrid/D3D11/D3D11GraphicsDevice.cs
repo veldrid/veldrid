@@ -424,12 +424,19 @@ namespace Veldrid.D3D11
                 return;
             }
 
-            bool isDynamic = (buffer.Usage & BufferUsage.DynamicWrite) != 0;
-            bool isStaging = (buffer.Usage & BufferUsage.StagingWrite) != 0;
-            bool isUniformBuffer = (buffer.Usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer;
-            bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
-            bool useUpdateSubresource = (!isDynamic && !isStaging) && (!isUniformBuffer || updateFullBuffer);
-            bool useMap = (isDynamic && updateFullBuffer) || isStaging;
+            BufferUsage usage = buffer.Usage;
+            bool isDynamic = (usage & BufferUsage.DynamicReadWrite) == 0;
+            bool isStaging = (usage & BufferUsage.StagingReadWrite) == 0;
+            bool isUniformBuffer = (usage & BufferUsage.UniformBuffer) != 0;
+            bool isFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
+
+            bool useUpdateSubresource =
+                (!isDynamic && !isStaging) &&
+                (!isUniformBuffer || isFullBuffer);
+
+            bool useMap =
+                ((usage & BufferUsage.DynamicWrite) != 0 && isFullBuffer) ||
+                (usage & BufferUsage.StagingWrite) != 0;
 
             if (useUpdateSubresource)
             {

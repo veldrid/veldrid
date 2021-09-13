@@ -11,8 +11,12 @@ namespace Veldrid.OpenGL
         private static int? MaxLabelLength;
 
         [Conditional("DEBUG")]
-        [DebuggerNonUserCode]
         internal static void CheckLastError()
+        {
+            VerifyLastError();
+        }
+
+        internal static void VerifyLastError()
         {
             uint error = glGetError();
             if (error != 0)
@@ -21,8 +25,7 @@ namespace Veldrid.OpenGL
                 {
                     Debugger.Break();
                 }
-
-                throw new VeldridException("glGetError indicated an error: " + (ErrorCode)error);
+                throw new VeldridException("glGetError: " + (ErrorCode)error);
             }
         }
 

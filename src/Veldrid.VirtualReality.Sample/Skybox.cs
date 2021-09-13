@@ -82,7 +82,7 @@ namespace Veldrid.VirtualReality.Sample
 
             _pipeline = factory.CreateGraphicsPipeline(pd);
 
-            _ubo = factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _ubo = factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _layout,

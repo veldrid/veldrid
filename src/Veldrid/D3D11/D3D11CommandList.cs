@@ -1144,12 +1144,19 @@ namespace Veldrid.D3D11
                 return;
             }
 
-            bool isDynamic = (buffer.Usage & BufferUsage.DynamicWrite) != 0;
-            bool isStaging = (buffer.Usage & BufferUsage.StagingWrite) != 0;
-            bool isUniformBuffer = (buffer.Usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer;
-            bool useMap = isDynamic;
-            bool updateFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
-            bool useUpdateSubresource = !isDynamic && !isStaging && (!isUniformBuffer || updateFullBuffer);
+            BufferUsage usage = buffer.Usage;
+            bool isDynamic = (usage & BufferUsage.DynamicReadWrite) != 0;
+            bool isStaging = (usage & BufferUsage.StagingReadWrite) != 0;
+            bool isUniformBuffer = (usage & BufferUsage.UniformBuffer) != 0;
+            bool isFullBuffer = bufferOffsetInBytes == 0 && sizeInBytes == buffer.SizeInBytes;
+
+            bool useUpdateSubresource =
+                (!isDynamic && !isStaging) &&
+                (!isUniformBuffer || isFullBuffer);
+
+            bool useMap =
+                ((usage & BufferUsage.DynamicWrite) != 0 && isFullBuffer) ||
+                (usage & BufferUsage.StagingWrite) != 0;
 
             if (useUpdateSubresource)
             {
@@ -1168,21 +1175,16 @@ namespace Veldrid.D3D11
                     UpdateSubresource_Workaround(d3dBuffer.Buffer, 0, subregion!.Value, source);
                 }
             }
-            else if (useMap && updateFullBuffer) // Can only update full buffer with WriteDiscard.
+            else if (useMap && !(!isFullBuffer && isDynamic)) // Can only update full buffer with WriteDiscard.
             {
                 MappedSubresource msb = _context.Map(
                      d3dBuffer.Buffer,
                      0,
                      D3D11Formats.VdToD3D11MapMode(isDynamic, MapMode.Write),
                      MapFlags.None);
-                if (sizeInBytes < 1024)
-                {
-                    Unsafe.CopyBlock(msb.DataPointer.ToPointer(), source.ToPointer(), sizeInBytes);
-                }
-                else
-                {
-                    Buffer.MemoryCopy(source.ToPointer(), msb.DataPointer.ToPointer(), buffer.SizeInBytes, sizeInBytes);
-                }
+
+                Unsafe.CopyBlock(msb.DataPointer.ToPointer(), source.ToPointer(), sizeInBytes);
+
                 _context.Unmap(d3dBuffer.Buffer, 0);
             }
             else

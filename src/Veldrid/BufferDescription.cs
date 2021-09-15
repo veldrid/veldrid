@@ -30,6 +30,9 @@ namespace Veldrid
         /// <summary>
         /// Constructs a new <see cref="BufferDescription"/> describing a non-dynamic <see cref="DeviceBuffer"/>.
         /// </summary>
+        /// <remarks>
+        /// <see cref="RawBuffer"/> is set to <see langword="true"/>.
+        /// </remarks>
         /// <param name="sizeInBytes">The desired capacity, in bytes.</param>
         /// <param name="usage">Indicates how the <see cref="DeviceBuffer"/> will be used.</param>
         public BufferDescription(uint sizeInBytes, BufferUsage usage)
@@ -37,7 +40,7 @@ namespace Veldrid
             SizeInBytes = sizeInBytes;
             Usage = usage;
             StructureByteStride = 0;
-            RawBuffer = false;
+            RawBuffer = true;
         }
 
         /// <summary>
@@ -47,6 +50,9 @@ namespace Veldrid
         /// <param name="usage">Indicates how the <see cref="DeviceBuffer"/> will be used.</param>
         /// <param name="structureByteStride">For structured buffers, this value indicates the size in bytes of a single
         /// structure element, and must be non-zero. For all other buffer types, this value must be zero.</param>
+        /// <remarks>
+        /// <see cref="RawBuffer"/> is set to <see langword="false"/>.
+        /// </remarks>
         public BufferDescription(uint sizeInBytes, BufferUsage usage, uint structureByteStride)
         {
             SizeInBytes = sizeInBytes;

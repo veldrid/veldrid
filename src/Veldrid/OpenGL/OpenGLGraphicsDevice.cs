@@ -1149,6 +1149,9 @@ namespace Veldrid.OpenGL
             private void Run()
             {
                 _makeCurrent(_context);
+
+                SpinWait waiter = new();
+
                 while (!_terminated)
                 {
                     bool hasItem;
@@ -1161,6 +1164,11 @@ namespace Veldrid.OpenGL
                     if (hasItem)
                     {
                         ExecuteWorkItem(ref workItem);
+                        waiter.Reset();
+                    }
+                    else
+                    {
+                        waiter.SpinOnce();
                     }
                 }
             }
@@ -1623,6 +1631,7 @@ namespace Veldrid.OpenGL
             private void ExecuteUnmapResource(MappableResource resource, uint subresource)
             {
                 MappedResourceCacheKey key = new MappedResourceCacheKey(resource, subresource);
+
                 lock (_gd._mappedResourceLock)
                 {
                     if (!_gd._mappedResources.Remove(key, out MappedResourceInfo info))

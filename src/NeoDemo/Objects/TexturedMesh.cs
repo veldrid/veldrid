@@ -318,7 +318,9 @@ namespace Veldrid.NeoDemo.Objects
         {
             WorldAndInverse wai;
             wai.World = _transform.GetTransformMatrix();
-            wai.InverseWorld = VdUtilities.CalculateInverseTranspose(ref wai.World);
+
+            Matrix4x4.Invert(wai.World, out Matrix4x4 invertedWorld);
+            wai.InverseWorld = Matrix4x4.Transpose(invertedWorld);
             gd.UpdateBuffer(_worldAndInverseBuffer, _uniformOffset * 2, ref wai);
         }
 

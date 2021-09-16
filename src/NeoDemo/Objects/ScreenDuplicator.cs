@@ -44,11 +44,11 @@ namespace Veldrid.NeoDemo.Objects
 
             float[] verts = Util.GetFullScreenQuadVerts(gd);
 
-            _vb = factory.CreateBuffer(new BufferDescription(verts.SizeInBytes() * sizeof(float), BufferUsage.VertexBuffer));
+            _vb = factory.CreateBuffer(new BufferDescription(verts.SizeInBytes(), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(_vb, 0, verts);
 
             _ib = factory.CreateBuffer(
-                new BufferDescription((uint)s_quadIndices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
+                new BufferDescription(s_quadIndices.SizeInBytes(), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, s_quadIndices);
         }
 

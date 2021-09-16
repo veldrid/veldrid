@@ -1113,7 +1113,7 @@ namespace Veldrid
         /// <summary>
         /// Pushes a debug group at the current position in the <see cref="CommandList"/>. This allows subsequent commands to be
         /// categorized and filtered when viewed in external debugging tools. This method can be called multiple times in order
-        /// to create nested debug groupings. Each call to PushDebugGroup must be followed by a matching call to
+        /// to create nested debug groupings. Each call to <see cref="PushDebugGroup"/> must be followed by a matching call to
         /// <see cref="PopDebugGroup"/>.
         /// </summary>
         /// <param name="name">The name of the group. This is an opaque identifier used for display by graphics debuggers.</param>

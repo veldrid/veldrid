@@ -1,5 +1,5 @@
 using System;
-using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.MetalBindings
 {
@@ -12,13 +12,15 @@ namespace Veldrid.MetalBindings
             NativePtr = ptr;
         }
 
+        [SkipLocalsInit]
         public Selector(string name)
         {
-            int byteCount = Encoding.UTF8.GetMaxByteCount(name.Length);
-            byte* utf8BytesPtr = stackalloc byte[byteCount];
+            int byteCount = MTLUtil.UTF8.GetMaxByteCount(name.Length);
+            byte* utf8BytesPtr = stackalloc byte[byteCount + 1];
             fixed (char* namePtr = name)
             {
-                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8BytesPtr, byteCount);
+                int actualByteCount = MTLUtil.UTF8.GetBytes(namePtr, name.Length, utf8BytesPtr, byteCount);
+                utf8BytesPtr[actualByteCount] = 0;
             }
 
             NativePtr = ObjectiveCRuntime.sel_registerName(utf8BytesPtr);

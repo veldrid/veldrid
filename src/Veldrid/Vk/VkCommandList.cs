@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Text;
 
 using static Vulkan.RawConstants;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.Vk
 {
@@ -1231,55 +1232,57 @@ namespace Veldrid.Vk
             }
         }
 
+        [SkipLocalsInit]
         private protected override void PushDebugGroupCore(string name)
         {
+            Span<byte> byteBuffer = stackalloc byte[1024];
+
             vkCmdDebugMarkerBeginEXT_t func = _gd.MarkerBegin;
             if (func == null)
-            { return; }
-
-            VkDebugMarkerMarkerInfoEXT markerInfo = VkDebugMarkerMarkerInfoEXT.New();
-
-            int byteCount = Encoding.UTF8.GetByteCount(name);
-            byte* utf8Ptr = stackalloc byte[byteCount + 1];
-            fixed (char* namePtr = name)
             {
-                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                return;
             }
-            utf8Ptr[byteCount] = 0;
 
-            markerInfo.pMarkerName = utf8Ptr;
+            Util.GetNullTerminatedUtf8(name, ref byteBuffer);
+            fixed (byte* utf8Ptr = byteBuffer)
+            {
+                VkDebugMarkerMarkerInfoEXT markerInfo = VkDebugMarkerMarkerInfoEXT.New();
+                markerInfo.pMarkerName = utf8Ptr;
 
-            func(_cb, &markerInfo);
+                func(_cb, &markerInfo);
+            }
         }
 
         private protected override void PopDebugGroupCore()
         {
             vkCmdDebugMarkerEndEXT_t func = _gd.MarkerEnd;
             if (func == null)
-            { return; }
+            {
+                return;
+            }
 
             func(_cb);
         }
 
+        [SkipLocalsInit]
         private protected override void InsertDebugMarkerCore(string name)
         {
+            Span<byte> byteBuffer = stackalloc byte[1024];
+
             vkCmdDebugMarkerInsertEXT_t func = _gd.MarkerInsert;
             if (func == null)
-            { return; }
-
-            VkDebugMarkerMarkerInfoEXT markerInfo = VkDebugMarkerMarkerInfoEXT.New();
-
-            int byteCount = Encoding.UTF8.GetByteCount(name);
-            byte* utf8Ptr = stackalloc byte[byteCount + 1];
-            fixed (char* namePtr = name)
             {
-                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                return;
             }
-            utf8Ptr[byteCount] = 0;
 
-            markerInfo.pMarkerName = utf8Ptr;
+            Util.GetNullTerminatedUtf8(name, ref byteBuffer);
+            fixed (byte* utf8Ptr = byteBuffer)
+            {
+                VkDebugMarkerMarkerInfoEXT markerInfo = VkDebugMarkerMarkerInfoEXT.New();
+                markerInfo.pMarkerName = utf8Ptr;
 
-            func(_cb, &markerInfo);
+                func(_cb, &markerInfo);
+            }
         }
 
         public override void Dispose()

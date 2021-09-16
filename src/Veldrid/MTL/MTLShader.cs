@@ -46,7 +46,7 @@ namespace Veldrid.MTL
             }
             else
             {
-                string source = Encoding.UTF8.GetString(description.ShaderBytes);
+                string source = MTLUtil.UTF8.GetString(description.ShaderBytes);
                 MTLCompileOptions compileOptions = MTLCompileOptions.New();
                 Library = gd.Device.newLibraryWithSource(source, compileOptions);
                 ObjectiveCRuntime.release(compileOptions);

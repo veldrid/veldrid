@@ -33,7 +33,7 @@ namespace Veldrid.OpenGL
         {
             if (HasGlObjectLabel)
             {
-                int byteCount = Encoding.UTF8.GetByteCount(name);
+                int byteCount = Util.UTF8.GetByteCount(name);
                 if (MaxLabelLength == null)
                 {
                     int maxLabelLength = -1;
@@ -44,13 +44,13 @@ namespace Veldrid.OpenGL
                 if (byteCount >= MaxLabelLength)
                 {
                     name = name.Slice(0, MaxLabelLength.Value - 4).ToString() + "...";
-                    byteCount = Encoding.UTF8.GetByteCount(name);
+                    byteCount = Util.UTF8.GetByteCount(name);
                 }
 
                 byte* utf8Ptr = stackalloc byte[byteCount];
                 fixed (char* namePtr = name)
                 {
-                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                    Util.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
                     glObjectLabel(identifier, target, (uint)byteCount, utf8Ptr);
                     CheckLastError();
                 }

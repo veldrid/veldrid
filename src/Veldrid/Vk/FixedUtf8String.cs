@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Veldrid.Vk
 {
     internal unsafe class FixedUtf8String : IDisposable
     {
-        public static Encoding UTF8 { get; } = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-
         private IntPtr _handle;
         private int _numBytes;
 
@@ -21,10 +18,10 @@ namespace Veldrid.Vk
                 return;
             }
 
-            int byteCount = UTF8.GetByteCount(span);
+            int byteCount = Util.UTF8.GetByteCount(span);
             _handle = Marshal.AllocHGlobal(byteCount + 1);
             _numBytes = byteCount + 1; // Includes null terminator
-            int encodedCount = UTF8.GetBytes(span, new Span<byte>(StringPtr, _numBytes));
+            int encodedCount = Util.UTF8.GetBytes(span, new Span<byte>(StringPtr, _numBytes));
             Debug.Assert(encodedCount == byteCount);
             StringPtr[encodedCount] = 0;
         }
@@ -38,7 +35,7 @@ namespace Veldrid.Vk
             }
         }
 
-        public override string ToString() => UTF8.GetString(StringPtr, _numBytes - 1); // Exclude null terminator
+        public override string ToString() => Util.UTF8.GetString(StringPtr, _numBytes - 1); // Exclude null terminator
 
         public static implicit operator byte*(FixedUtf8String utf8String) => utf8String.StringPtr;
         public static implicit operator IntPtr(FixedUtf8String utf8String) => new IntPtr(utf8String.StringPtr);

@@ -431,22 +431,23 @@ namespace Veldrid.Vk
             }
         }
 
+        [SkipLocalsInit]
         private void SetDebugMarkerName(VkDebugReportObjectTypeEXT type, ulong target, ReadOnlySpan<char> name)
         {
+            Span<byte> byteBuffer = stackalloc byte[1024];
             Debug.Assert(_setObjectNameDelegate != null);
 
-            VkDebugMarkerObjectNameInfoEXT nameInfo = VkDebugMarkerObjectNameInfoEXT.New();
-            nameInfo.objectType = type;
-            nameInfo.@object = target;
+            Util.GetNullTerminatedUtf8(name, ref byteBuffer);
+            fixed (byte* utf8Ptr = byteBuffer)
+            {
+                VkDebugMarkerObjectNameInfoEXT nameInfo = VkDebugMarkerObjectNameInfoEXT.New();
+                nameInfo.objectType = type;
+                nameInfo.@object = target;
+                nameInfo.pObjectName = utf8Ptr;
 
-            int byteCount = FixedUtf8String.UTF8.GetByteCount(name);
-            byte* utf8Ptr = stackalloc byte[byteCount + 1];
-            Encoding.UTF8.GetBytes(name, new Span<byte>(utf8Ptr, byteCount));
-            utf8Ptr[byteCount] = 0;
-
-            nameInfo.pObjectName = utf8Ptr;
-            VkResult result = _setObjectNameDelegate(_device, &nameInfo);
-            CheckResult(result);
+                VkResult result = _setObjectNameDelegate(_device, &nameInfo);
+                CheckResult(result);
+            }
         }
 
         private void CreateInstance(bool debug, VulkanDeviceOptions options)
@@ -692,7 +693,7 @@ namespace Veldrid.Vk
             vkGetPhysicalDeviceProperties(_physicalDevice, out _physicalDeviceProperties);
             fixed (byte* utf8NamePtr = _physicalDeviceProperties.deviceName)
             {
-                _deviceName = Encoding.UTF8.GetString(utf8NamePtr, (int)MaxPhysicalDeviceNameSize).TrimEnd('\0');
+                _deviceName = Util.UTF8.GetString(utf8NamePtr, (int)MaxPhysicalDeviceNameSize).TrimEnd('\0');
             }
 
             _vendorName = "id:" + _physicalDeviceProperties.vendorID.ToString("x8");
@@ -859,10 +860,10 @@ namespace Veldrid.Vk
                 deviceProps.pNext = &driverProps;
                 _getPhysicalDeviceProperties2(_physicalDevice, &deviceProps);
 
-                string driverName = Encoding.UTF8.GetString(
+                string driverName = Util.UTF8.GetString(
                     driverProps.driverName, VkPhysicalDeviceDriverProperties.DriverNameLength).TrimEnd('\0');
 
-                string driverInfo = Encoding.UTF8.GetString(
+                string driverInfo = Util.UTF8.GetString(
                     driverProps.driverInfo, VkPhysicalDeviceDriverProperties.DriverInfoLength).TrimEnd('\0');
 
                 VkConformanceVersion conforming = driverProps.conformanceVersion;
@@ -874,16 +875,13 @@ namespace Veldrid.Vk
 
         private IntPtr GetInstanceProcAddr(string name)
         {
-            int byteCount = Encoding.UTF8.GetByteCount(name);
-            byte* utf8Ptr = stackalloc byte[byteCount + 1];
+            Span<byte> byteBuffer = stackalloc byte[1024];
 
-            fixed (char* namePtr = name)
+            Util.GetNullTerminatedUtf8(name, ref byteBuffer);
+            fixed (byte* utf8Ptr = byteBuffer)
             {
-                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                return vkGetInstanceProcAddr(_instance, utf8Ptr);
             }
-            utf8Ptr[byteCount] = 0;
-
-            return vkGetInstanceProcAddr(_instance, utf8Ptr);
         }
 
         private T GetInstanceProcAddr<T>(string name)
@@ -896,18 +894,16 @@ namespace Veldrid.Vk
             throw new EntryPointNotFoundException(name);
         }
 
-        private IntPtr GetDeviceProcAddr(string name)
+        [SkipLocalsInit]
+        private IntPtr GetDeviceProcAddr(ReadOnlySpan<char> name)
         {
-            int byteCount = Encoding.UTF8.GetByteCount(name);
-            byte* utf8Ptr = stackalloc byte[byteCount + 1];
+            Span<byte> byteBuffer = stackalloc byte[1024];
 
-            fixed (char* namePtr = name)
+            Util.GetNullTerminatedUtf8(name, ref byteBuffer);
+            fixed (byte* utf8Ptr = byteBuffer)
             {
-                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                return vkGetDeviceProcAddr(_device, utf8Ptr);
             }
-            utf8Ptr[byteCount] = 0;
-
-            return vkGetDeviceProcAddr(_device, utf8Ptr);
         }
 
         private T GetDeviceProcAddr<T>(string name)

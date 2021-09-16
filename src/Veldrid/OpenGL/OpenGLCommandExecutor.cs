@@ -3,6 +3,7 @@ using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
 using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.OpenGL
 {
@@ -716,28 +717,27 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void PushDebugGroup(string name)
+        [SkipLocalsInit]
+        public void PushDebugGroup(ReadOnlySpan<char> name)
         {
-            if (_extensions.KHR_Debug)
+            Span<byte> byteBuffer = stackalloc byte[1024];
+            bool khr_debug = _extensions.KHR_Debug;
+            bool ext_debugMarker = _extensions.EXT_DebugMarker;
+
+            if (!khr_debug && !ext_debugMarker)
+                return;
+
+            int length = Util.GetNullTerminatedUtf8(name, ref byteBuffer);
+            fixed (byte* utf8Ptr = byteBuffer)
             {
-                int byteCount = Encoding.UTF8.GetByteCount(name);
-                byte* utf8Ptr = stackalloc byte[byteCount];
-                fixed (char* namePtr = name)
+                if (khr_debug)
                 {
-                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                    glPushDebugGroup(DebugSource.DebugSourceApplication, 0, (uint)length, utf8Ptr);
                 }
-                glPushDebugGroup(DebugSource.DebugSourceApplication, 0, (uint)byteCount, utf8Ptr);
-                CheckLastError();
-            }
-            else if (_extensions.EXT_DebugMarker)
-            {
-                int byteCount = Encoding.UTF8.GetByteCount(name);
-                byte* utf8Ptr = stackalloc byte[byteCount];
-                fixed (char* namePtr = name)
+                else if (ext_debugMarker)
                 {
-                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
+                    glPushGroupMarker((uint)length, utf8Ptr);
                 }
-                glPushGroupMarker((uint)byteCount, utf8Ptr);
                 CheckLastError();
             }
         }
@@ -756,36 +756,33 @@ namespace Veldrid.OpenGL
             }
         }
 
+        [SkipLocalsInit]
         public void InsertDebugMarker(string name)
         {
-            if (_extensions.KHR_Debug)
-            {
-                int byteCount = Encoding.UTF8.GetByteCount(name);
-                byte* utf8Ptr = stackalloc byte[byteCount];
-                fixed (char* namePtr = name)
-                {
-                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
-                }
+            Span<byte> byteBuffer = stackalloc byte[1024];
+            bool khr_debug = _extensions.KHR_Debug;
+            bool ext_debugMarker = _extensions.EXT_DebugMarker;
 
-                glDebugMessageInsert(
-                    DebugSource.DebugSourceApplication,
-                    DebugType.DebugTypeMarker,
-                    0,
-                    DebugSeverity.DebugSeverityNotification,
-                    (uint)byteCount,
-                    utf8Ptr);
-                CheckLastError();
-            }
-            else if (_extensions.EXT_DebugMarker)
-            {
-                int byteCount = Encoding.UTF8.GetByteCount(name);
-                byte* utf8Ptr = stackalloc byte[byteCount];
-                fixed (char* namePtr = name)
-                {
-                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
-                }
+            if (!khr_debug && !ext_debugMarker)
+                return;
 
-                glInsertEventMarker((uint)byteCount, utf8Ptr);
+            int length = Util.GetNullTerminatedUtf8(name, ref byteBuffer);
+            fixed (byte* utf8Ptr = byteBuffer)
+            {
+                if (khr_debug)
+                {
+                    glDebugMessageInsert(
+                        DebugSource.DebugSourceApplication,
+                        DebugType.DebugTypeMarker,
+                        0,
+                        DebugSeverity.DebugSeverityNotification,
+                        (uint)length,
+                        utf8Ptr);
+                }
+                else if (ext_debugMarker)
+                {
+                    glInsertEventMarker((uint)length, utf8Ptr);
+                }
                 CheckLastError();
             }
         }

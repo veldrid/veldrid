@@ -12,8 +12,6 @@ namespace Veldrid.OpenGL
 {
     internal unsafe class OpenGLPipeline : Pipeline, OpenGLDeferredResource
     {
-        private static Encoding UTF8 { get; } = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-
         private const uint GL_INVALID_INDEX = 0xFFFFFFFF;
         private readonly OpenGLGraphicsDevice _gd;
 
@@ -109,18 +107,6 @@ namespace Veldrid.OpenGL
             Created = true;
         }
 
-        private static void GetNullTerminatedUtf8(ReadOnlySpan<char> text, ref Span<byte> byteBuffer)
-        {
-            int byteCount = UTF8.GetByteCount(text) + 1;
-            if (byteBuffer.Length < byteCount)
-                byteBuffer = new byte[byteCount];
-
-            int bytesWritten = UTF8.GetBytes(text, byteBuffer);
-            Debug.Assert(bytesWritten == byteCount - 1);
-
-            byteBuffer[byteCount - 1] = 0; // Add null terminator.
-        }
-
         [SkipLocalsInit]
         private void CreateGraphicsGLResources()
         {
@@ -142,7 +128,7 @@ namespace Veldrid.OpenGL
                 for (int i = 0; i < layoutDesc.Elements.Length; i++)
                 {
                     string elementName = layoutDesc.Elements[i].Name;
-                    GetNullTerminatedUtf8(elementName, ref byteBuffer);
+                    Util.GetNullTerminatedUtf8(elementName, ref byteBuffer);
 
                     fixed (byte* byteBufferPtr = byteBuffer)
                     {
@@ -190,7 +176,7 @@ namespace Veldrid.OpenGL
                     glGetProgramInfoLog(_program, (uint)byteBuffer.Length, &bytesWritten, infoLogPtr);
                     CheckLastError();
                 }
-                string log = UTF8.GetString(byteBuffer.Slice(0, (int)bytesWritten));
+                string log = Util.UTF8.GetString(byteBuffer.Slice(0, (int)bytesWritten));
                 throw new VeldridException($"Error linking GL program: {log}");
             }
 
@@ -224,7 +210,7 @@ namespace Veldrid.OpenGL
                     if (resource.Kind == ResourceKind.UniformBuffer)
                     {
                         string resourceName = resource.Name;
-                        GetNullTerminatedUtf8(resourceName, ref byteBuffer);
+                        Util.GetNullTerminatedUtf8(resourceName, ref byteBuffer);
 
                         uint blockIndex;
                         fixed (byte* byteBufferPtr = byteBuffer)
@@ -268,7 +254,7 @@ namespace Veldrid.OpenGL
                     else if (resource.Kind == ResourceKind.TextureReadOnly)
                     {
                         string resourceName = resource.Name;
-                        GetNullTerminatedUtf8(resourceName, ref byteBuffer);
+                        Util.GetNullTerminatedUtf8(resourceName, ref byteBuffer);
 
                         int location;
                         fixed (byte* byteBufferPtr = byteBuffer)
@@ -289,7 +275,7 @@ namespace Veldrid.OpenGL
                     else if (resource.Kind == ResourceKind.TextureReadWrite)
                     {
                         string resourceName = resource.Name;
-                        GetNullTerminatedUtf8(resourceName, ref byteBuffer);
+                        Util.GetNullTerminatedUtf8(resourceName, ref byteBuffer);
 
                         int location;
                         fixed (byte* byteBufferPtr = byteBuffer)
@@ -312,7 +298,7 @@ namespace Veldrid.OpenGL
                         if (_gd.BackendType == GraphicsBackend.OpenGL)
                         {
                             string resourceName = resource.Name;
-                            GetNullTerminatedUtf8(resourceName, ref byteBuffer);
+                            Util.GetNullTerminatedUtf8(resourceName, ref byteBuffer);
 
                             fixed (byte* byteBufferPtr = byteBuffer)
                             {
@@ -405,7 +391,7 @@ namespace Veldrid.OpenGL
                     glGetProgramInfoLog(_program, (uint)byteBuffer.Length, &bytesWritten, infoLog);
                     CheckLastError();
                 }
-                string log = UTF8.GetString(byteBuffer.Slice(0, (int)bytesWritten));
+                string log = Util.UTF8.GetString(byteBuffer.Slice(0, (int)bytesWritten));
                 throw new VeldridException($"Error linking GL program: {log}");
             }
 

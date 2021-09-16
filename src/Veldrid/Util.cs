@@ -3,11 +3,14 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Veldrid
 {
     internal static class Util
     {
+        public static Encoding UTF8 { get; } = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
         [DebuggerNonUserCode]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static TDerived AssertSubtype<TBase, TDerived>(TBase value) where TDerived : class, TBase where TBase : class
@@ -308,6 +311,19 @@ namespace Veldrid
         {
             ulong src64 = low | ((ulong)high << 32);
             return (IntPtr)src64;
+        }
+
+        internal static int GetNullTerminatedUtf8(ReadOnlySpan<char> text, ref Span<byte> byteBuffer)
+        {
+            int byteCount = UTF8.GetByteCount(text) + 1;
+            if (byteBuffer.Length < byteCount)
+                byteBuffer = new byte[byteCount];
+
+            int bytesWritten = UTF8.GetBytes(text, byteBuffer);
+            Debug.Assert(bytesWritten == byteCount - 1);
+
+            byteBuffer[byteCount - 1] = 0; // Add null terminator.
+            return bytesWritten;
         }
     }
 }

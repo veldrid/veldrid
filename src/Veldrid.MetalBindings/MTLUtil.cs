@@ -4,6 +4,8 @@ namespace Veldrid.MetalBindings
 {
     public static class MTLUtil
     {
+        public static Encoding UTF8 { get; } = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
         public static unsafe string GetUtf8String(byte* stringStart)
         {
             int characters = 0;
@@ -12,7 +14,7 @@ namespace Veldrid.MetalBindings
                 characters++;
             }
 
-            return Encoding.UTF8.GetString(stringStart, characters);
+            return UTF8.GetString(stringStart, characters);
         }
 
         public static T AllocInit<T>(string typeName) where T : struct

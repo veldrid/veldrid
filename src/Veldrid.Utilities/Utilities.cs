@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Numerics;
-using System.Text;
 
 namespace Veldrid.Utilities
 {
@@ -13,18 +11,6 @@ namespace Veldrid.Utilities
             Matrix4x4 inverted;
             Matrix4x4.Invert(m, out inverted);
             return Matrix4x4.Transpose(inverted);
-        }
-
-
-        public static unsafe string GetString(byte* stringStart)
-        {
-            int characters = 0;
-            while (stringStart[characters] != 0)
-            {
-                characters++;
-            }
-
-            return Encoding.UTF8.GetString(stringStart, characters);
         }
 
         // Code adapted from https://bitbucket.org/sinbad/ogre/src/9db75e3ba05c/OgreMain/include/OgreVector3.h

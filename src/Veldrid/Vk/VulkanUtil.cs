@@ -18,7 +18,7 @@ namespace Veldrid.Vk
             }
         }
 
-        private static void ThrowResult(VkResult result)
+        public static void ThrowResult(VkResult result)
         {
             if (result == VkResult.ErrorOutOfDeviceMemory ||
                 result == VkResult.ErrorOutOfHostMemory)

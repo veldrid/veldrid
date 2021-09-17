@@ -355,7 +355,11 @@ namespace Veldrid.Vk
             lock (presentLock)
             {
                 VkResult presentResult = vkQueuePresentKHR(vkSC.PresentQueue, &presentInfo);
-                CheckResult(presentResult);
+                if (presentResult != VkResult.Success &&
+                    presentResult != VkResult.SuboptimalKHR)
+                {
+                    ThrowResult(presentResult);
+                }
 
                 Vulkan.VkFence fence = vkSC.ImageAvailableFence;
                 if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, fence))

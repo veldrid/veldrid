@@ -4,9 +4,6 @@ using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-
 using static Vulkan.RawConstants;
 using System.Runtime.CompilerServices;
 
@@ -45,7 +42,7 @@ namespace Veldrid.Vk
         private string? _name;
 
         private readonly object _commandBufferListLock = new object();
-        private readonly Queue<VkCommandBuffer> _availableCommandBuffers = new Queue<VkCommandBuffer>();
+        private readonly Stack<VkCommandBuffer> _availableCommandBuffers = new Stack<VkCommandBuffer>();
         private readonly List<VkCommandBuffer> _submittedCommandBuffers = new List<VkCommandBuffer>();
 
         private StagingResourceInfo _currentStagingInfo = null!;
@@ -55,7 +52,6 @@ namespace Veldrid.Vk
         private readonly List<VkBuffer> _availableStagingBuffers = new List<VkBuffer>();
 
         public VkCommandPool CommandPool => _pool;
-        public VkCommandBuffer CommandBuffer => _cb;
 
         public ResourceRefCount RefCount { get; }
 
@@ -79,9 +75,8 @@ namespace Veldrid.Vk
         {
             lock (_commandBufferListLock)
             {
-                if (_availableCommandBuffers.Count > 0)
+                if (_availableCommandBuffers.TryPop(out VkCommandBuffer cachedCB))
                 {
-                    VkCommandBuffer cachedCB = _availableCommandBuffers.Dequeue();
                     VkResult resetResult = vkResetCommandBuffer(cachedCB, VkCommandBufferResetFlags.None);
                     CheckResult(resetResult);
                     return cachedCB;
@@ -97,15 +92,26 @@ namespace Veldrid.Vk
             return cb;
         }
 
-        public void CommandBufferSubmitted(VkCommandBuffer cb)
+        public VkCommandBuffer CommandBufferSubmitted()
         {
             RefCount.Increment();
+
+            VkCommandBuffer cb = _cb;
 
             lock (_stagingLock)
             {
                 _submittedStagingInfos.Add(cb, _currentStagingInfo);
             }
+
+            lock (_commandBufferListLock)
+            {
+                _submittedCommandBuffers.Add(cb);
+            }
+
             _currentStagingInfo = null!;
+            _cb = VkCommandBuffer.Null;
+
+            return cb;
         }
 
         public void CommandBufferCompleted(VkCommandBuffer completedCB)
@@ -117,7 +123,7 @@ namespace Veldrid.Vk
                     VkCommandBuffer submittedCB = _submittedCommandBuffers[i];
                     if (submittedCB == completedCB)
                     {
-                        _availableCommandBuffers.Enqueue(completedCB);
+                        _availableCommandBuffers.Push(completedCB);
                         _submittedCommandBuffers.RemoveAt(i);
                         i -= 1;
                     }
@@ -145,7 +151,17 @@ namespace Veldrid.Vk
             if (_commandBufferEnded)
             {
                 _commandBufferEnded = false;
-                _cb = GetNextCommandBuffer();
+
+                if (_cb == VkCommandBuffer.Null)
+                {
+                    _cb = GetNextCommandBuffer();
+                }
+                else
+                {
+                    VkResult resetResult = vkResetCommandBuffer(_cb, VkCommandBufferResetFlags.None);
+                    CheckResult(resetResult);
+                }
+
                 if (_currentStagingInfo != null)
                 {
                     RecycleStagingInfo(_currentStagingInfo);
@@ -156,7 +172,8 @@ namespace Veldrid.Vk
 
             VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
             beginInfo.flags = VkCommandBufferUsageFlags.OneTimeSubmit;
-            CheckResult(vkBeginCommandBuffer(_cb, ref beginInfo));
+            VkResult result = vkBeginCommandBuffer(_cb, ref beginInfo);
+            CheckResult(result);
             _commandBufferBegun = true;
 
             ClearCachedState();
@@ -462,8 +479,8 @@ namespace Veldrid.Vk
                 _currentFramebuffer!.TransitionToFinalLayout(_cb);
             }
 
-            CheckResult(vkEndCommandBuffer(_cb));
-            _submittedCommandBuffers.Add(_cb);
+            VkResult result = vkEndCommandBuffer(_cb);
+            CheckResult(result);
         }
 
         protected override void SetFramebufferCore(Framebuffer fb)
@@ -1202,8 +1219,50 @@ namespace Veldrid.Vk
             set
             {
                 _name = value;
-                _gd.SetResourceName(this, value);
+
+                if (_gd.DebugMarkerEnabled)
+                {
+                    SetDebugMarkerName(_name);
+                }
             }
+        }
+
+        [SkipLocalsInit]
+        private void SetDebugMarkerName(string? name)
+        {
+            void SetName(VkCommandBuffer cb, ReadOnlySpan<byte> nameUtf8)
+            {
+                _gd.SetDebugMarkerName(
+                    VkDebugReportObjectTypeEXT.CommandBufferEXT,
+                    (ulong)cb.Handle,
+                    nameUtf8);
+            }
+
+            Span<byte> utf8Buffer = stackalloc byte[1024];
+            Util.GetNullTerminatedUtf8(name, ref utf8Buffer);
+
+            lock (_commandBufferListLock)
+            {
+                foreach (VkCommandBuffer cb in _submittedCommandBuffers)
+                {
+                    SetName(cb, utf8Buffer);
+                }
+                foreach (VkCommandBuffer cb in _availableCommandBuffers)
+                {
+                    SetName(cb, utf8Buffer);
+                }
+            }
+
+            VkCommandBuffer currentCb = _cb;
+            if (currentCb != VkCommandBuffer.Null)
+            {
+                SetName(currentCb, utf8Buffer);
+            }
+
+            _gd.SetDebugMarkerName(
+                VkDebugReportObjectTypeEXT.CommandPoolEXT,
+                CommandPool.Handle,
+                utf8Buffer);
         }
 
         private VkBuffer GetStagingBuffer(uint size)

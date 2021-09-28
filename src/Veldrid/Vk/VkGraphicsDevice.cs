@@ -101,6 +101,7 @@ namespace Veldrid.Vk
         public VkQueue GraphicsQueue => _graphicsQueue;
         public uint GraphicsQueueIndex => _graphicsQueueIndex;
         public uint PresentQueueIndex => _presentQueueIndex;
+        public bool DebugMarkerEnabled => _debugMarkerEnabled;
         public string DriverName => _driverName;
         public string DriverInfo => _driverInfo;
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
@@ -202,14 +203,15 @@ namespace Veldrid.Vk
             Fence? fence)
         {
             VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
-            VkCommandBuffer vkCB = vkCL.CommandBuffer;
 
             // A fence may complete before Veldrid gets notified of the
             // corresponding VkCommandBuffer completion, so check fences here
             CheckSubmittedFences();
 
-            vkCL.CommandBufferSubmitted(vkCB);
-            SubmitCommandBuffer(vkCL, vkCB, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
+            VkCommandBuffer cb = vkCL.CommandBufferSubmitted();
+
+            SubmitCommandBuffer(
+                vkCL, cb, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
         }
 
         private void SubmitCommandBuffer(
@@ -377,72 +379,83 @@ namespace Veldrid.Vk
         {
             if (_debugMarkerEnabled)
             {
-                switch (resource)
-                {
-                    case VkBuffer buffer:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.BufferEXT, buffer.DeviceBuffer.Handle, name);
-                        break;
-                    case VkCommandList commandList:
-                        SetDebugMarkerName(
-                            VkDebugReportObjectTypeEXT.CommandBufferEXT,
-                            (ulong)commandList.CommandBuffer.Handle,
-                            string.Format("{0}_CommandBuffer", name));
-                        SetDebugMarkerName(
-                            VkDebugReportObjectTypeEXT.CommandPoolEXT,
-                            commandList.CommandPool.Handle,
-                            string.Format("{0}_CommandPool", name));
-                        break;
-                    case VkFramebuffer framebuffer:
-                        SetDebugMarkerName(
-                            VkDebugReportObjectTypeEXT.FramebufferEXT,
-                            framebuffer.CurrentFramebuffer.Handle,
-                            name);
-                        break;
-                    case VkPipeline pipeline:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.PipelineEXT, pipeline.DevicePipeline.Handle, name);
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.PipelineLayoutEXT, pipeline.PipelineLayout.Handle, name);
-                        break;
-                    case VkResourceLayout resourceLayout:
-                        SetDebugMarkerName(
-                            VkDebugReportObjectTypeEXT.DescriptorSetLayoutEXT,
-                            resourceLayout.DescriptorSetLayout.Handle,
-                            name);
-                        break;
-                    case VkResourceSet resourceSet:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.DescriptorSetEXT, resourceSet.DescriptorSet.Handle, name);
-                        break;
-                    case VkSampler sampler:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.SamplerEXT, sampler.DeviceSampler.Handle, name);
-                        break;
-                    case VkShader shader:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ShaderModuleEXT, shader.ShaderModule.Handle, name);
-                        break;
-                    case VkTexture tex:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageEXT, tex.OptimalDeviceImage.Handle, name);
-                        break;
-                    case VkTextureView texView:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageViewEXT, texView.ImageView.Handle, name);
-                        break;
-                    case VkFence fence:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.FenceEXT, fence.DeviceFence.Handle, name);
-                        break;
-                    case VkSwapchain sc:
-                        SetDebugMarkerName(VkDebugReportObjectTypeEXT.SwapchainKHREXT, sc.DeviceSwapchain.Handle, name);
-                        break;
-                    default:
-                        break;
-                }
+                SetResourceName(resource, name);
+            }
+        }
+
+        private void SetResourceName(DeviceResource resource, ReadOnlySpan<char> name)
+        {
+            switch (resource)
+            {
+                case VkBuffer buffer:
+                    SetDebugMarkerName(VkDebugReportObjectTypeEXT.BufferEXT, buffer.DeviceBuffer.Handle, name);
+                    break;
+
+                case VkFramebuffer framebuffer:
+                    SetDebugMarkerName(
+                        VkDebugReportObjectTypeEXT.FramebufferEXT,
+                        framebuffer.CurrentFramebuffer.Handle,
+                        name);
+                    break;
+
+                case VkPipeline pipeline:
+                    SetDebugMarkerName(VkDebugReportObjectTypeEXT.PipelineEXT, pipeline.DevicePipeline.Handle, name);
+                    SetDebugMarkerName(VkDebugReportObjectTypeEXT.PipelineLayoutEXT, pipeline.PipelineLayout.Handle, name);
+                    break;
+
+                case VkResourceLayout resourceLayout:
+                    SetDebugMarkerName(
+                        VkDebugReportObjectTypeEXT.DescriptorSetLayoutEXT,
+                        resourceLayout.DescriptorSetLayout.Handle,
+                        name);
+                    break;
+
+                case VkResourceSet resourceSet:
+                    SetDebugMarkerName(VkDebugReportObjectTypeEXT.DescriptorSetEXT, resourceSet.DescriptorSet.Handle, name);
+                    break;
+
+                case VkSampler sampler:
+                    SetDebugMarkerName(VkDebugReportObjectTypeEXT.SamplerEXT, sampler.DeviceSampler.Handle, name);
+                    break;
+
+                case VkShader shader:
+                    SetDebugMarkerName(VkDebugReportObjectTypeEXT.ShaderModuleEXT, shader.ShaderModule.Handle, name);
+                    break;
+
+                case VkTexture tex:
+                    SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageEXT, tex.OptimalDeviceImage.Handle, name);
+                    break;
+
+                case VkTextureView texView:
+                    SetDebugMarkerName(VkDebugReportObjectTypeEXT.ImageViewEXT, texView.ImageView.Handle, name);
+                    break;
+
+                case VkFence fence:
+                    SetDebugMarkerName(VkDebugReportObjectTypeEXT.FenceEXT, fence.DeviceFence.Handle, name);
+                    break;
+
+                case VkSwapchain sc:
+                    SetDebugMarkerName(VkDebugReportObjectTypeEXT.SwapchainKHREXT, sc.DeviceSwapchain.Handle, name);
+                    break;
+
+                default:
+                    break;
             }
         }
 
         [SkipLocalsInit]
-        private void SetDebugMarkerName(VkDebugReportObjectTypeEXT type, ulong target, ReadOnlySpan<char> name)
+        internal void SetDebugMarkerName(VkDebugReportObjectTypeEXT type, ulong target, ReadOnlySpan<char> name)
         {
-            Span<byte> byteBuffer = stackalloc byte[1024];
+            Span<byte> utf8Buffer = stackalloc byte[1024];
+            Util.GetNullTerminatedUtf8(name, ref utf8Buffer);
+            SetDebugMarkerName(type, target, utf8Buffer);
+        }
+
+        internal void SetDebugMarkerName(VkDebugReportObjectTypeEXT type, ulong target, ReadOnlySpan<byte> nameUtf8)
+        {
             Debug.Assert(_setObjectNameDelegate != null);
 
-            Util.GetNullTerminatedUtf8(name, ref byteBuffer);
-            fixed (byte* utf8Ptr = byteBuffer)
+            fixed (byte* utf8Ptr = nameUtf8)
             {
                 VkDebugMarkerObjectNameInfoEXT nameInfo = VkDebugMarkerObjectNameInfoEXT.New();
                 nameInfo.objectType = type;
@@ -755,6 +768,8 @@ namespace Veldrid.Vk
             IntPtr[] activeExtensions = new IntPtr[props.Length];
             uint activeExtensionCount = 0;
 
+            List<string> bro = new List<string>();
+
             fixed (VkExtensionProperties* properties = props)
             {
                 for (int property = 0; property < props.Length; property++)
@@ -763,6 +778,12 @@ namespace Veldrid.Vk
                     if (extensionName == "VK_EXT_debug_marker")
                     {
                         activeExtensions[activeExtensionCount++] = CommonStrings.VK_EXT_DEBUG_MARKER_EXTENSION_NAME;
+                        requiredInstanceExtensions.Remove(extensionName);
+                        _debugMarkerEnabled = true;
+                    }
+                    else if (extensionName == "VK_EXT_debug_utils")
+                    {
+                        activeExtensions[activeExtensionCount++] = CommonStrings.VK_EXT_DEBUG_UTILS;
                         requiredInstanceExtensions.Remove(extensionName);
                         _debugMarkerEnabled = true;
                     }
@@ -799,6 +820,8 @@ namespace Veldrid.Vk
                     {
                         activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                     }
+
+                    bro.Add(extensionName);
                 }
             }
 

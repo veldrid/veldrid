@@ -3,7 +3,6 @@ using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
 using System.Diagnostics;
-using System.Threading;
 
 namespace Veldrid.OpenGL
 {
@@ -12,9 +11,6 @@ namespace Veldrid.OpenGL
         private readonly OpenGLGraphicsDevice _gd;
         private uint _buffer;
         private bool _disposeRequested;
-
-        public int DestructionCount = 0;
-        public int ConstructionCount = 0;
 
         private string? _name;
         private bool _nameChanged;
@@ -155,8 +151,6 @@ namespace Veldrid.OpenGL
             }
 
             Created = true;
-
-            Interlocked.Increment(ref ConstructionCount);
         }
 
         public override void Dispose()
@@ -174,8 +168,6 @@ namespace Veldrid.OpenGL
             glDeleteBuffers(1, &buffer);
             CheckLastError();
             _buffer = buffer;
-
-            Interlocked.Increment(ref DestructionCount);
         }
     }
 }

@@ -768,8 +768,6 @@ namespace Veldrid.Vk
             IntPtr[] activeExtensions = new IntPtr[props.Length];
             uint activeExtensionCount = 0;
 
-            List<string> bro = new List<string>();
-
             fixed (VkExtensionProperties* properties = props)
             {
                 for (int property = 0; property < props.Length; property++)
@@ -820,8 +818,6 @@ namespace Veldrid.Vk
                     {
                         activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                     }
-
-                    bro.Add(extensionName);
                 }
             }
 

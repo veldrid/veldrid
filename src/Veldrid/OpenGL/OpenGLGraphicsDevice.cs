@@ -599,7 +599,7 @@ namespace Veldrid.OpenGL
                             (uint)newHeight);
                         CheckLastError();
                     }
-                });
+                }, null);
             };
 
             Action<IntPtr> destroyContext = ctx =>
@@ -1102,10 +1102,13 @@ namespace Veldrid.OpenGL
             return true;
         }
 
-        internal void ExecuteOnGLThread(Action action)
+        internal void ExecuteOnGLThread(Action action, bool wait)
         {
-            _executionThread.Run(action);
-            _executionThread.WaitForIdle();
+            ManualResetEventSlim? mre = null;
+            if (wait)
+                mre = new ManualResetEventSlim();
+            _executionThread.Run(action, mre);
+            mre?.Dispose();
         }
 
         internal void FlushAndFinish()
@@ -1129,6 +1132,7 @@ namespace Veldrid.OpenGL
             private readonly AutoResetEvent _workResetEvent;
             private readonly Action<IntPtr> _makeCurrent;
             private readonly IntPtr _context;
+            private readonly Thread _thread;
             private bool _terminated;
             private readonly List<Exception> _exceptions = new List<Exception>();
             private readonly object _exceptionsLock = new object();
@@ -1145,9 +1149,13 @@ namespace Veldrid.OpenGL
                 _workResetEvent = workResetEvent;
                 _makeCurrent = makeCurrent;
                 _context = context;
-                Thread thread = new Thread(Run);
-                thread.IsBackground = true;
-                thread.Start();
+
+                _thread = new Thread(Run)
+                {
+                    IsBackground = true,
+                    Name = "OpenGL Worker",
+                };
+                _thread.Start();
             }
 
             private void Run()
@@ -1776,11 +1784,11 @@ namespace Veldrid.OpenGL
                 EnqueueWork(ref workItem);
             }
 
-            internal void Run(Action a)
+            internal void Run(Action a, ManualResetEventSlim? resetEvent)
             {
                 CheckExceptions();
 
-                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(a);
+                ExecutionThreadWorkItem workItem = new ExecutionThreadWorkItem(a, resetEvent, false);
                 EnqueueWork(ref workItem);
             }
 
@@ -1933,11 +1941,11 @@ namespace Veldrid.OpenGL
                 UInt2 = 0;
             }
 
-            public ExecutionThreadWorkItem(Action a, bool isTermination = false)
+            public ExecutionThreadWorkItem(Action a, ManualResetEventSlim? mre, bool isTermination)
             {
                 Type = isTermination ? WorkItemType.TerminateAction : WorkItemType.GenericAction;
                 Object0 = a;
-                Object1 = null;
+                Object1 = mre;
 
                 UInt0 = 0;
                 UInt1 = 0;

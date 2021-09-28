@@ -69,10 +69,17 @@ namespace Veldrid
         public ReadOnlyCollection<string> Extensions => _extensions;
 
         /// <summary>
-        /// Executes the given delegate in the OpenGL device's main execution thread. In the delegate, OpenGL commands can be
-        /// executed directly. This method does not return until the delegate's execution is fully completed.
+        /// Executes the given delegate in the OpenGL device's main execution thread.
+        /// In the delegate, OpenGL commands can be executed directly.
+        /// This method does not return until the delegate's execution is fully completed.
         /// </summary>
-        public void ExecuteOnGLThread(Action action) => _gd.ExecuteOnGLThread(action);
+        public void ExecuteOnGLThread(Action action) => ExecuteOnGLThread(action, true);
+
+        /// <summary>
+        /// Executes the given delegate in the OpenGL device's main execution thread.
+        /// In the delegate, OpenGL commands can be executed directly.
+        /// </summary>
+        public void ExecuteOnGLThread(Action action, bool wait) => _gd.ExecuteOnGLThread(action, wait);
 
         /// <summary>
         /// Executes a glFlush and a glFinish command, and waits for their completion.

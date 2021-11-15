@@ -10,6 +10,7 @@ namespace Veldrid.D3D11
         private bool _disposed;
 
         public ID3D11BlendState? BlendState { get; }
+        public RgbaFloat BlendFactor { get; }
         public ID3D11DepthStencilState? DepthStencilState { get; }
         public uint StencilReference { get; }
         public ID3D11RasterizerState? RasterizerState { get; }
@@ -74,6 +75,7 @@ namespace Veldrid.D3D11
                 out ID3D11InputLayout? inputLayout);
 
             BlendState = blendState;
+            BlendFactor = description.BlendState.BlendFactor;
             DepthStencilState = depthStencilState;
             StencilReference = description.DepthStencilState.StencilReference;
             RasterizerState = rasterizerState;

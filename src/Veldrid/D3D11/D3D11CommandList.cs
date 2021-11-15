@@ -32,6 +32,7 @@ namespace Veldrid.D3D11
         private DeviceBuffer? _ib;
         private uint _ibOffset;
         private ID3D11BlendState? _blendState;
+        private RgbaFloat _blendFactor;
         private ID3D11DepthStencilState? _depthStencilState;
         private uint _stencilReference;
         private ID3D11RasterizerState? _rasterizerState;
@@ -131,6 +132,7 @@ namespace Veldrid.D3D11
             _ib = null;
             _graphicsPipeline = null;
             _blendState = null;
+            _blendFactor = default;
             _depthStencilState = null;
             _rasterizerState = null;
             _primitiveTopology = Vortice.Direct3D.PrimitiveTopology.Undefined;
@@ -234,10 +236,15 @@ namespace Veldrid.D3D11
                 Util.ClearArray(_invalidatedGraphicsResourceSets);
 
                 ID3D11BlendState? blendState = d3dPipeline.BlendState;
-                if (_blendState != blendState)
+                RgbaFloat blendFactor = d3dPipeline.BlendFactor;
+                if (_blendState != blendState || _blendFactor != blendFactor)
                 {
                     _blendState = blendState;
-                    _context.OMSetBlendState(blendState!);
+                    _blendFactor = blendFactor;
+
+                    _context.OMSetBlendState(
+                        blendState!,
+                        new Color4(blendFactor.R, blendFactor.G, blendFactor.B, blendFactor.A));
                 }
 
                 ID3D11DepthStencilState? depthStencilState = d3dPipeline.DepthStencilState;

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageVersion>$(AssemblyVersion)</PackageVersion>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 

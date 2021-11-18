@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using Vulkan;
 using static Veldrid.Vk.VulkanUtil;
 using static Vulkan.VulkanNative;
@@ -37,6 +36,7 @@ namespace Veldrid.Vk
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private PFN_vkDebugReportCallbackEXT? _debugCallbackFunc;
         private bool _debugMarkerEnabled;
+        private bool _driverDebug;
         private vkDebugMarkerSetObjectNameEXT_t _setObjectNameDelegate;
         private vkCmdDebugMarkerBeginEXT_t _markerBegin;
         private vkCmdDebugMarkerEndEXT_t _markerEnd;
@@ -84,6 +84,8 @@ namespace Veldrid.Vk
 
         public override bool IsClipSpaceYInverted => !_standardClipYDirection;
 
+        public override bool IsDriverDebug => _driverDebug;
+
         public override Swapchain? MainSwapchain => _mainSwapchain;
 
         public override GraphicsDeviceFeatures Features { get; }
@@ -128,6 +130,7 @@ namespace Veldrid.Vk
         public VkGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? scDesc, VulkanDeviceOptions vkOptions)
         {
             CreateInstance(options.Debug, vkOptions);
+            IsDebug = options.Debug;
 
             VkSurfaceKHR surface = VkSurfaceKHR.Null;
             if (scDesc != null)
@@ -524,6 +527,7 @@ namespace Veldrid.Vk
                 {
                     if (availableInstanceExtensions.Contains(CommonStrings.VK_EXT_DEBUG_REPORT_EXTENSION_NAME))
                     {
+                        _driverDebug = true;
                         debugReportExtensionAvailable = true;
                         instanceExtensions.Add(CommonStrings.VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
                     }
@@ -641,12 +645,6 @@ namespace Veldrid.Vk
 
         public void EnableDebugCallback(VkDebugReportFlagsEXT flags = VkDebugReportFlagsEXT.WarningEXT | VkDebugReportFlagsEXT.ErrorEXT)
         {
-            Debug.WriteLine("Enabling Vulkan Debug callbacks.");
-            _debugCallbackFunc = DebugCallback;
-            IntPtr debugFunctionPtr = Marshal.GetFunctionPointerForDelegate(_debugCallbackFunc);
-            VkDebugReportCallbackCreateInfoEXT debugCallbackCI = VkDebugReportCallbackCreateInfoEXT.New();
-            debugCallbackCI.flags = flags;
-            debugCallbackCI.pfnCallback = debugFunctionPtr;
             IntPtr createFnPtr;
             using (FixedUtf8String debugExtFnName = "vkCreateDebugReportCallbackEXT")
             {
@@ -656,6 +654,12 @@ namespace Veldrid.Vk
             {
                 return;
             }
+
+            _debugCallbackFunc = DebugCallback;
+            IntPtr debugFunctionPtr = Marshal.GetFunctionPointerForDelegate(_debugCallbackFunc);
+            VkDebugReportCallbackCreateInfoEXT debugCallbackCI = VkDebugReportCallbackCreateInfoEXT.New();
+            debugCallbackCI.flags = flags;
+            debugCallbackCI.pfnCallback = debugFunctionPtr;
 
             vkCreateDebugReportCallbackEXT_d createDelegate = Marshal.GetDelegateForFunctionPointer<vkCreateDebugReportCallbackEXT_d>(createFnPtr);
             VkResult result = createDelegate(_instance, &debugCallbackCI, IntPtr.Zero, out _debugCallbackHandle);
@@ -760,7 +764,7 @@ namespace Veldrid.Vk
 
             VkExtensionProperties[] props = GetDeviceExtensionProperties();
 
-            HashSet<string> requiredInstanceExtensions = new HashSet<string>(options.DeviceExtensions ?? Array.Empty<string>());
+            HashSet<string> requiredDeviceExtensions = new HashSet<string>(options.DeviceExtensions ?? Array.Empty<string>());
 
             bool hasMemReqs2 = false;
             bool hasDedicatedAllocation = false;
@@ -776,54 +780,56 @@ namespace Veldrid.Vk
                     if (extensionName == "VK_EXT_debug_marker")
                     {
                         activeExtensions[activeExtensionCount++] = CommonStrings.VK_EXT_DEBUG_MARKER_EXTENSION_NAME;
-                        requiredInstanceExtensions.Remove(extensionName);
+                        requiredDeviceExtensions.Remove(extensionName);
                         _debugMarkerEnabled = true;
                     }
                     else if (extensionName == "VK_EXT_debug_utils")
                     {
+                        // TODO: debug_utils are obsolete on AMD, modern replacement required
+
                         activeExtensions[activeExtensionCount++] = CommonStrings.VK_EXT_DEBUG_UTILS;
-                        requiredInstanceExtensions.Remove(extensionName);
+                        requiredDeviceExtensions.Remove(extensionName);
                         _debugMarkerEnabled = true;
                     }
                     else if (extensionName == "VK_KHR_swapchain")
                     {
                         activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
-                        requiredInstanceExtensions.Remove(extensionName);
+                        requiredDeviceExtensions.Remove(extensionName);
                     }
                     else if (preferStandardClipY && extensionName == "VK_KHR_maintenance1")
                     {
                         activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
-                        requiredInstanceExtensions.Remove(extensionName);
+                        requiredDeviceExtensions.Remove(extensionName);
                         _standardClipYDirection = true;
                     }
                     else if (extensionName == "VK_KHR_get_memory_requirements2")
                     {
                         activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
-                        requiredInstanceExtensions.Remove(extensionName);
+                        requiredDeviceExtensions.Remove(extensionName);
                         hasMemReqs2 = true;
                     }
                     else if (extensionName == "VK_KHR_dedicated_allocation")
                     {
                         activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
-                        requiredInstanceExtensions.Remove(extensionName);
+                        requiredDeviceExtensions.Remove(extensionName);
                         hasDedicatedAllocation = true;
                     }
                     else if (extensionName == "VK_KHR_driver_properties")
                     {
                         activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
-                        requiredInstanceExtensions.Remove(extensionName);
+                        requiredDeviceExtensions.Remove(extensionName);
                         hasDriverProperties = true;
                     }
-                    else if (requiredInstanceExtensions.Remove(extensionName))
+                    else if (requiredDeviceExtensions.Remove(extensionName))
                     {
                         activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                     }
                 }
             }
 
-            if (requiredInstanceExtensions.Count != 0)
+            if (requiredDeviceExtensions.Count != 0)
             {
-                string missingList = string.Join(", ", requiredInstanceExtensions);
+                string missingList = string.Join(", ", requiredDeviceExtensions);
                 throw new VeldridException(
                     $"The following Vulkan device extensions were not available: {missingList}");
             }

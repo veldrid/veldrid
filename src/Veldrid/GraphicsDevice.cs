@@ -60,6 +60,17 @@ namespace Veldrid
         public abstract bool IsClipSpaceYInverted { get; }
 
         /// <summary>
+        /// Gets whether debug was enabled when creating the device.
+        /// </summary>
+        public bool IsDebug { get; protected set; }
+
+        /// <summary>
+        /// Gets whether driver-level debug is enabled.
+        /// Depends on a combination of graphics API, driver and installed SDKs.
+        /// </summary>
+        public abstract bool IsDriverDebug { get; }
+
+        /// <summary>
         /// Gets the <see cref="ResourceFactory"/> controlled by this instance.
         /// </summary>
         public abstract ResourceFactory ResourceFactory { get; }

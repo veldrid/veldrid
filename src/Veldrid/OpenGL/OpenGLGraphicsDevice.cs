@@ -40,6 +40,7 @@ namespace Veldrid.OpenGL
         private DebugProc _debugMessageCallback;
         private OpenGLExtensions _extensions;
         private bool _isDepthRangeZeroToOne;
+        private bool _driverDebug;
         private BackendInfoOpenGL _openglInfo;
 
         private TextureSampleCount _maxColorTextureSamples;
@@ -81,6 +82,8 @@ namespace Veldrid.OpenGL
         public override bool IsDepthRangeZeroToOne => _isDepthRangeZeroToOne;
 
         public override bool IsClipSpaceYInverted => false;
+
+        public override bool IsDriverDebug => _driverDebug;
 
         public override ResourceFactory ResourceFactory => _resourceFactory;
 
@@ -127,6 +130,7 @@ namespace Veldrid.OpenGL
             uint height,
             bool loadFunctions)
         {
+            IsDebug = options.Debug;
             _syncToVBlank = options.SyncToVerticalBlank;
             _glContext = platformInfo.OpenGLContextHandle;
             _makeCurrent = platformInfo.MakeCurrent;
@@ -220,7 +224,8 @@ namespace Veldrid.OpenGL
             glBindVertexArray(_vao);
             CheckLastError();
 
-            if (options.Debug && (_extensions.KHR_Debug || _extensions.ARB_DebugOutput))
+            _driverDebug = _extensions.KHR_Debug || _extensions.ARB_DebugOutput;
+            if (options.Debug && _driverDebug)
             {
                 EnableDebugCallback();
             }

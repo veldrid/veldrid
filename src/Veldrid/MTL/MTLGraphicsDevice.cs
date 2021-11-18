@@ -52,6 +52,7 @@ namespace Veldrid.MTL
             GraphicsDeviceOptions options,
             SwapchainDescription? swapchainDesc)
         {
+            IsDebug = options.Debug;
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
             _deviceName = _device.name;
             MetalFeatures = new MTLFeatureSupport(_device);
@@ -152,6 +153,8 @@ namespace Veldrid.MTL
         public override bool IsDepthRangeZeroToOne => true;
 
         public override bool IsClipSpaceYInverted => false;
+
+        public override bool IsDriverDebug => true;
 
         public override ResourceFactory ResourceFactory { get; }
 

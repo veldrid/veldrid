@@ -27,6 +27,7 @@ namespace Veldrid.D3D11
         private readonly D3D11Swapchain? _mainSwapchain;
         private readonly bool _supportsConcurrentResources;
         private readonly bool _supportsCommandLists;
+        private readonly bool _driverDebug;
         private readonly object _immediateContextLock = new object();
         private readonly BackendInfoD3D11 _d3d11Info;
 
@@ -51,13 +52,13 @@ namespace Veldrid.D3D11
 
         public override bool IsClipSpaceYInverted => false;
 
+        public override bool IsDriverDebug => _driverDebug;
+
         public override ResourceFactory ResourceFactory => _d3d11ResourceFactory;
 
         public ID3D11Device Device => _device;
 
         public IDXGIAdapter Adapter => _dxgiAdapter;
-
-        public bool IsDebugEnabled { get; }
 
         public bool SupportsConcurrentResources => _supportsConcurrentResources;
 
@@ -77,6 +78,8 @@ namespace Veldrid.D3D11
         public D3D11GraphicsDevice(D3D11DeviceOptions options, SwapchainDescription? swapchainDesc)
         {
             DeviceCreationFlags flags = (DeviceCreationFlags)options.DeviceCreationFlags;
+            IsDebug = (flags & DeviceCreationFlags.Debug) != 0;
+
 #if DEBUG
             flags |= DeviceCreationFlags.Debug;
 #endif
@@ -176,7 +179,7 @@ namespace Veldrid.D3D11
             _immediateContext = _device.ImmediateContext;
             _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
 
-            IsDebugEnabled = (flags & DeviceCreationFlags.Debug) != 0;
+            _driverDebug = (flags & DeviceCreationFlags.Debug) != 0;
 
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
@@ -649,7 +652,7 @@ namespace Veldrid.D3D11
             _mainSwapchain?.Dispose();
             _immediateContext.Dispose();
 
-            if (IsDebugEnabled)
+            if (_driverDebug)
             {
                 uint refCount = _device.Release();
                 if (refCount > 0)

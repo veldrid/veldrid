@@ -34,6 +34,18 @@ namespace Veldrid
             => new UwpSwapchainSource(swapChainPanel, logicalDpi);
 
         /// <summary>
+        /// Creates a new SwapchainSource for a WinUI 3 SwapChain panel.
+        /// </summary>
+        /// <param name="swapChainPanel">A COM object which must implement the <see cref="Vortice.DXGI.ISwapChainPanelNative"/>
+        /// or <see cref="Vortice.DXGI.ISwapChainBackgroundPanelNative"/> interface. Generally, this should be a SwapChainPanel
+        /// or SwapChainBackgroundPanel contained in your application window.</param>
+        /// <param name="logicalDpi">The logical DPI of the swapchain panel.</param>
+        /// <returns>A new SwapchainSource which can be used to create a <see cref="Swapchain"/> for the given WinUI 3 panel.
+        /// </returns>
+        public static SwapchainSource CreateWinUI(object swapChainPanel, float logicalDpi)
+                => new WinUISwapchainSource(swapChainPanel, logicalDpi);
+
+        /// <summary>
         /// Creates a new SwapchainSource from the given Xlib information.
         /// </summary>
         /// <param name="display">An Xlib Display.</param>
@@ -107,6 +119,18 @@ namespace Veldrid
         public float LogicalDpi { get; }
 
         public UwpSwapchainSource(object swapChainPanelNative, float logicalDpi)
+        {
+            SwapChainPanelNative = swapChainPanelNative;
+            LogicalDpi = logicalDpi;
+        }
+    }
+
+    internal class WinUISwapchainSource : SwapchainSource
+    {
+        public object SwapChainPanelNative { get; }
+        public float LogicalDpi { get; }
+
+        public WinUISwapchainSource(object swapChainPanelNative, float logicalDpi)
         {
             SwapChainPanelNative = swapChainPanelNative;
             LogicalDpi = logicalDpi;

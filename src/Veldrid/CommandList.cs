@@ -977,14 +977,13 @@ namespace Veldrid
             uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
                 ? destination.ArrayLayers * 6
                 : destination.ArrayLayers;
-            if (effectiveSrcArrayLayers != effectiveDstArrayLayers || source.MipLevels != destination.MipLevels
-                || source.SampleCount != destination.SampleCount || source.Width != destination.Width
+            if (source.SampleCount != destination.SampleCount || source.Width != destination.Width
                 || source.Height != destination.Height || source.Depth != destination.Depth
                 || source.Format != destination.Format)
             {
                 throw new VeldridException("Source and destination Textures are not compatible to be copied.");
             }
-            if (mipLevel >= source.MipLevels || arrayLayer >= effectiveSrcArrayLayers)
+            if (mipLevel >= source.MipLevels || mipLevel >= destination.MipLevels || arrayLayer >= effectiveSrcArrayLayers || arrayLayer >= effectiveDstArrayLayers)
             {
                 throw new VeldridException(
                     $"{nameof(mipLevel)} and {nameof(arrayLayer)} must be less than the given Textures' mip level count and array layer count.");

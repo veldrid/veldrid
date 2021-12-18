@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Veldrid
 {
-    internal static class FormatHelpers
+    public static class FormatHelpers 
     {
         public static uint GetSizeInBytes(PixelFormat format)
         {

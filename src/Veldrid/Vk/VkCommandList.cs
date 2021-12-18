@@ -352,7 +352,7 @@ namespace Veldrid.Vk
             for (int i = 0; i < sampledTextures.Count; i++)
             {
                 VkTexture tex = sampledTextures[i];
-                tex.TransitionImageLayout(_cb, 0, tex.MipLevels, 0, tex.ArrayLayers, layout);
+                tex.TransitionImageLayout(_cb, 0, tex.MipLevels, 0, tex.ActualArrayLayers, layout);
             }
         }
 

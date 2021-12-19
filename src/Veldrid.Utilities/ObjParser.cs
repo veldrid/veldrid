@@ -147,8 +147,10 @@ namespace Veldrid.Utilities
                         ProcessFaceLine(pieces);
                         break;
                     case "mtllib":
-                        ExpectExactly(pieces, 1, "mtllib");
-                        DiscoverMaterialLib(pieces[1]);
+                        // file paths/file names can contain spaces, blender will not put quotation marks arround the file path. for example:
+                        // mtllib Space Station Scene.mtl
+                        string mtlLibFile = string.Join(" ", pieces.Skip(1));
+                        DiscoverMaterialLib(mtlLibFile);
                         break;
                     default:
                         throw new ObjParseException(

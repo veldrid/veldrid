@@ -941,14 +941,20 @@ namespace Veldrid.OpenGL
                         glTexViewRW.EnsureResourcesCreated();
                         if (pipeline.GetTextureBindingInfo(slot, element, out OpenGLTextureBindingSlotInfo imageBindingInfo))
                         {
+                            var layered = texViewRW.Target.Usage.HasFlag(TextureUsage.Cubemap);
+
+                            //todo: validate and test binding subsets of cubemap arrays
+                            if (layered && texViewRW.BaseArrayLayer > 0)
+                                throw new VeldridException("Cannot bind cubemap with BaseArrayLayer > 0.  All layers must be bound for cubemaps.");
+
                             if (_backend == GraphicsBackend.OpenGL)
                             {
                                 glBindImageTexture(
                                     (uint)imageBindingInfo.RelativeIndex,
                                     glTexViewRW.Target.Texture,
-                                    0,
-                                    false,
-                                    0,
+                                    (int)texViewRW.BaseMipLevel,
+                                    layered,
+                                    (int)texViewRW.BaseArrayLayer,
                                     TextureAccess.ReadWrite,
                                     glTexViewRW.GetReadWriteSizedInternalFormat());
                                 CheckLastError();
@@ -960,9 +966,9 @@ namespace Veldrid.OpenGL
                                 glBindImageTexture(
                                     (uint)imageBindingInfo.UniformLocation,
                                     glTexViewRW.Target.Texture,
-                                    0,
-                                    false,
-                                    0,
+                                    (int)texViewRW.BaseMipLevel,
+                                    layered,
+                                    (int)texViewRW.BaseArrayLayer,
                                     TextureAccess.ReadWrite,
                                     glTexViewRW.GetReadWriteSizedInternalFormat());
                                 CheckLastError();

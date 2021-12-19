@@ -135,6 +135,282 @@ namespace Veldrid.Tests
             }
         }
 
+        [Fact]
+        public unsafe void CubeMap_Copy_OneMip()
+        {
+            const uint TexSize = 2;
+
+            TextureDescription srcDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, 1, 1, PixelFormat.R8_UNorm, TextureUsage.Cubemap);
+            TextureDescription dstDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, 1, 6, PixelFormat.R8_UNorm, TextureUsage.Staging);
+            Texture src = RF.CreateTexture(srcDesc);
+            Texture dst = RF.CreateTexture(dstDesc);
+
+            for (uint face = 0; face < 6; face++)
+            {
+                byte[] data = Enumerable.Repeat(face * 42, 2 * 2).Select(n => (byte)n).ToArray();
+                GD.UpdateTexture(src, data, 0, 0, 0, 2, 2, 1, 0, face);
+            }
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyTexture(src, dst);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            for (uint face = 0; face < 6; face++)
+            {
+                var subresource = dst.CalculateSubresource(0, face);
+                byte expectedColor = (byte)(face * 42);
+                var map = GD.Map<byte>(dst, MapMode.Read, subresource);
+                for (int dataIdx = 0; dataIdx < map.SizeInBytes; dataIdx++)
+                    Assert.Equal(expectedColor, map[dataIdx]);
+                GD.Unmap(dst, subresource);
+            }
+        }
+
+        [Fact]
+        public unsafe void CubeMap_Copy_MultipleMip_CopySingleMipFaces()
+        {
+            const uint TexSize = 4;
+            const uint MipLevels = 3;
+            const uint CopiedMip = 1;
+
+            TextureDescription srcDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, MipLevels, 1, PixelFormat.R8_UNorm, TextureUsage.Cubemap);
+            TextureDescription dstDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, MipLevels, 6, PixelFormat.R8_UNorm, TextureUsage.Staging);
+            Texture src = RF.CreateTexture(srcDesc);
+            Texture dst = RF.CreateTexture(dstDesc);
+
+            for (uint mip = 0; mip < MipLevels; mip++)
+            {
+                var mipSize = (uint)(TexSize / (1 << (int)mip));
+                for (uint face = 0; face < 6; face++)
+                {
+                    byte[] data = Enumerable.Repeat(face * 42, (int)(mipSize * mipSize)).Select(n => (byte)n).ToArray();
+                    GD.UpdateTexture(src, data, 0, 0, 0, mipSize, mipSize, 1, mip, face);
+                }
+            }
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            for (uint face = 0; face < 6; face++)
+                cl.CopyTexture(src, dst, CopiedMip, face);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            for (uint mip = 0; mip < MipLevels; mip++)
+            {
+                for (uint face = 0; face < 6; face++)
+                {
+                    var subresource = dst.CalculateSubresource(mip, face);
+                    byte expectedColor = mip == CopiedMip ? (byte)(face * 42) : (byte)0;
+                    var map = GD.Map<byte>(dst, MapMode.Read, subresource);
+                    for (int dataIdx = 0; dataIdx < map.SizeInBytes; dataIdx++)
+                        Assert.Equal(expectedColor, map[dataIdx]);
+                    GD.Unmap(dst, subresource);
+                }
+            }
+        }
+
+        [Fact]
+        public unsafe void CubeMap_Copy_MultipleMip_AllAtOnce()
+        {
+            const uint TexSize = 2;
+            const uint MipLevels = 2;
+
+            TextureDescription srcDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, MipLevels, 1, PixelFormat.R8_UNorm, TextureUsage.Cubemap);
+            TextureDescription dstDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, MipLevels, 6, PixelFormat.R8_UNorm, TextureUsage.Staging);
+            Texture src = RF.CreateTexture(srcDesc);
+            Texture dst = RF.CreateTexture(dstDesc);
+
+            for (uint mip = 0; mip < MipLevels; mip++)
+            {
+                var mipSize = (uint)(TexSize / (1 << (int)mip));
+                for (uint face = 0; face < 6; face++)
+                {
+                    byte[] data = Enumerable.Repeat(face * 42, (int)(mipSize * mipSize)).Select(n => (byte)n).ToArray();
+                    GD.UpdateTexture(src, data, 0, 0, 0, mipSize, mipSize, 1, mip, face);
+                }
+            }
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyTexture(src, dst);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            for (uint mip = 0; mip < MipLevels; mip++)
+            {
+                for (uint face = 0; face < 6; face++)
+                {
+                    var subresource = dst.CalculateSubresource(mip, face);
+                    byte expectedColor = (byte)(face * 42);
+                    var map = GD.Map<byte>(dst, MapMode.Read, subresource);
+                    Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
+                    GD.Unmap(dst, subresource);
+                }
+            }
+        }
+
+        [Fact]
+        public void CubeMap_Copy_MultipleMip_SpecificArrayLayer()
+        {
+            const uint TexSize = 2;
+            const uint MipLevels = 2;
+            const uint CopiedArrayLayer = 3;
+
+            TextureDescription srcDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, MipLevels, 1, PixelFormat.R8_UNorm, TextureUsage.Cubemap);
+            TextureDescription dstDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, MipLevels, CopiedArrayLayer + 1, PixelFormat.R8_UNorm, TextureUsage.Staging);
+            Texture src = RF.CreateTexture(srcDesc);
+            Texture dst = RF.CreateTexture(dstDesc);
+
+            for (uint mip = 0; mip < MipLevels; mip++)
+            {
+                var mipSize = (uint)(TexSize / (1 << (int)mip));
+                for (uint face = 0; face < 6; face++)
+                {
+                    byte[] data = Enumerable.Repeat(face * 42, (int)(mipSize * mipSize)).Select(n => (byte)n).ToArray();
+                    GD.UpdateTexture(src, data, 0, 0, 0, mipSize, mipSize, 1, mip, face);
+                }
+            }
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            for (uint mip = 0; mip < MipLevels; mip++)
+                cl.CopyTexture(src, dst, mip, CopiedArrayLayer);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            for (uint mip = 0; mip < MipLevels; mip++)
+            {
+                for (uint face = 0; face <= CopiedArrayLayer; face++)
+                {
+                    var subresource = dst.CalculateSubresource(mip, face);
+                    byte expectedColor = face == CopiedArrayLayer ? (byte)(face * 42) : (byte)0;
+                    var map = GD.Map<byte>(dst, MapMode.Read, subresource);
+                    for (int dataIdx = 0; dataIdx < map.SizeInBytes; dataIdx++)
+                        Assert.Equal(expectedColor, map[dataIdx]);
+                    GD.Unmap(dst, subresource);
+                }
+            }
+        }
+
+
+        [Fact]
+        public void CubeMap_GenerateMipmaps()
+        {
+            const uint TexSize = 1024;
+            const uint MipLevels = 10;
+
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, MipLevels, 1, PixelFormat.R8_UNorm, TextureUsage.Cubemap | TextureUsage.GenerateMipmaps);
+            Texture tex = RF.CreateTexture(texDesc);
+            texDesc.ArrayLayers *= 6;
+            texDesc.Usage = TextureUsage.Staging;
+
+            for (uint face = 0; face < 6; face++)
+            {
+                byte[] data = Enumerable.Repeat(face * 42, (int)(TexSize * TexSize)).Select(n => (byte)n).ToArray();
+                GD.UpdateTexture(tex, data, 0, 0, 0, TexSize, TexSize, 1, 0, face);
+            }
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.GenerateMipmaps(tex);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            Texture readback = GetReadback(tex);
+            for (uint mip = 0; mip < MipLevels; mip++)
+            {
+                for (uint face = 0; face < 6; face++)
+                {
+                    var subresource = readback.CalculateSubresource(mip, face);
+                    byte expectedColor = (byte)(face * 42);
+                    var map = GD.Map<byte>(readback, MapMode.Read, subresource);
+                    Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
+                    GD.Unmap(readback, subresource);
+                }
+            }
+        }
+
+        [Fact]
+        public void ArrayLayers_StagingWriteAndRead()
+        {
+            const uint TexSize = 2;
+            const uint ArrayLayers = 6;
+            const uint ArrayColorDelta = 255 / ArrayLayers;
+
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, 1, ArrayLayers, PixelFormat.R8_UNorm, TextureUsage.Staging);
+            Texture tex = RF.CreateTexture(texDesc);
+
+            for (uint layer = 0; layer < ArrayLayers; layer++)
+            {
+                byte[] data = Enumerable.Repeat(layer * ArrayColorDelta, (int)(TexSize * TexSize)).Select(n => (byte)n).ToArray();
+                GD.UpdateTexture(tex, data, 0, 0, 0, TexSize, TexSize, 1, 0, layer);
+            }
+
+            for (uint layer = 0; layer < ArrayLayers; layer++)
+            {
+                var subresource = tex.CalculateSubresource(0, layer);
+                byte expectedColor = (byte)(layer * ArrayColorDelta);
+                var map = GD.Map<byte>(tex, MapMode.Read, subresource);
+                for (int dataIdx = 0; dataIdx < map.SizeInBytes; dataIdx++)
+                    Assert.Equal(expectedColor, map[dataIdx]);
+                GD.Unmap(tex, subresource);
+            }
+        }
+
+        [Fact]
+        public void ArrayLayers_WriteAndCopyAndRead()
+        {
+            const uint TexSize = 2;
+            const uint ArrayLayers = 6;
+            const uint ArrayColorDelta = 255 / ArrayLayers;
+
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, 1, ArrayLayers, PixelFormat.R8_UNorm, TextureUsage.Sampled);
+            Texture tex = RF.CreateTexture(texDesc);
+            texDesc.Usage = TextureUsage.Staging;
+            Texture readback = RF.CreateTexture(texDesc);
+
+            for (uint layer = 0; layer < ArrayLayers; layer++)
+            {
+                byte[] data = Enumerable.Repeat(layer * ArrayColorDelta, (int)(TexSize * TexSize)).Select(n => (byte)n).ToArray();
+                GD.UpdateTexture(tex, data, 0, 0, 0, TexSize, TexSize, 1, 0, layer);
+            }
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.CopyTexture(tex, readback);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            for (uint layer = 0; layer < ArrayLayers; layer++)
+            {
+                var subresource = readback.CalculateSubresource(0, layer);
+                byte expectedColor = (byte)(layer * ArrayColorDelta);
+                var map = GD.Map<byte>(readback, MapMode.Read, subresource);
+                for (int dataIdx = 0; dataIdx < map.SizeInBytes; dataIdx++)
+                    Assert.Equal(expectedColor, map[dataIdx]);
+                GD.Unmap(readback, subresource);
+            }
+        }
+
         [Theory]
         [InlineData(PixelFormat.BC1_Rgb_UNorm, 8, 0, 0, 64, 64)]
         [InlineData(PixelFormat.BC1_Rgb_UNorm, 8, 8, 4, 16, 16)]

@@ -165,8 +165,7 @@ namespace Veldrid.Tests
                 var subresource = dst.CalculateSubresource(0, face);
                 byte expectedColor = (byte)(face * 42);
                 var map = GD.Map<byte>(dst, MapMode.Read, subresource);
-                for (int dataIdx = 0; dataIdx < map.SizeInBytes; dataIdx++)
-                    Assert.Equal(expectedColor, map[dataIdx]);
+                Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
                 GD.Unmap(dst, subresource);
             }
         }
@@ -210,8 +209,7 @@ namespace Veldrid.Tests
                     var subresource = dst.CalculateSubresource(mip, face);
                     byte expectedColor = mip == CopiedMip ? (byte)(face * 42) : (byte)0;
                     var map = GD.Map<byte>(dst, MapMode.Read, subresource);
-                    for (int dataIdx = 0; dataIdx < map.SizeInBytes; dataIdx++)
-                        Assert.Equal(expectedColor, map[dataIdx]);
+                    Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
                     GD.Unmap(dst, subresource);
                 }
             }
@@ -299,8 +297,7 @@ namespace Veldrid.Tests
                     var subresource = dst.CalculateSubresource(mip, face);
                     byte expectedColor = face == CopiedArrayLayer ? (byte)(face * 42) : (byte)0;
                     var map = GD.Map<byte>(dst, MapMode.Read, subresource);
-                    for (int dataIdx = 0; dataIdx < map.SizeInBytes; dataIdx++)
-                        Assert.Equal(expectedColor, map[dataIdx]);
+                    Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
                     GD.Unmap(dst, subresource);
                 }
             }
@@ -368,8 +365,7 @@ namespace Veldrid.Tests
                 var subresource = tex.CalculateSubresource(0, layer);
                 byte expectedColor = (byte)(layer * ArrayColorDelta);
                 var map = GD.Map<byte>(tex, MapMode.Read, subresource);
-                for (int dataIdx = 0; dataIdx < map.SizeInBytes; dataIdx++)
-                    Assert.Equal(expectedColor, map[dataIdx]);
+                Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
                 GD.Unmap(tex, subresource);
             }
         }
@@ -405,8 +401,7 @@ namespace Veldrid.Tests
                 var subresource = readback.CalculateSubresource(0, layer);
                 byte expectedColor = (byte)(layer * ArrayColorDelta);
                 var map = GD.Map<byte>(readback, MapMode.Read, subresource);
-                for (int dataIdx = 0; dataIdx < map.SizeInBytes; dataIdx++)
-                    Assert.Equal(expectedColor, map[dataIdx]);
+                Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
                 GD.Unmap(readback, subresource);
             }
         }

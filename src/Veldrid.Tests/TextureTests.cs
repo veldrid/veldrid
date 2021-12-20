@@ -138,19 +138,20 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void CubeMap_Copy_OneMip()
         {
-            const uint TexSize = 2;
+            const uint TexSize = 64;
+            const uint MipLevels = 1;
 
             TextureDescription srcDesc = TextureDescription.Texture2D(
-                TexSize, TexSize, 1, 1, PixelFormat.R8_UNorm, TextureUsage.Cubemap);
+                TexSize, TexSize, MipLevels, 1, PixelFormat.R8_UNorm, TextureUsage.Cubemap);
             TextureDescription dstDesc = TextureDescription.Texture2D(
-                TexSize, TexSize, 1, 6, PixelFormat.R8_UNorm, TextureUsage.Staging);
+                TexSize, TexSize, MipLevels, 6, PixelFormat.R8_UNorm, TextureUsage.Staging);
             Texture src = RF.CreateTexture(srcDesc);
             Texture dst = RF.CreateTexture(dstDesc);
 
             for (uint face = 0; face < 6; face++)
             {
-                byte[] data = Enumerable.Repeat(face * 42, 2 * 2).Select(n => (byte)n).ToArray();
-                GD.UpdateTexture(src, data, 0, 0, 0, 2, 2, 1, 0, face);
+                byte[] data = Enumerable.Repeat(face * 42, (int)(TexSize * TexSize)).Select(n => (byte)n).ToArray();
+                GD.UpdateTexture(src, data, 0, 0, 0, TexSize, TexSize, 1, 0, face);
             }
 
             CommandList cl = RF.CreateCommandList();
@@ -165,7 +166,11 @@ namespace Veldrid.Tests
                 var subresource = dst.CalculateSubresource(0, face);
                 byte expectedColor = (byte)(face * 42);
                 var map = GD.Map<byte>(dst, MapMode.Read, subresource);
-                Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
+                for (int y = 0; y < TexSize; y++)
+                    for (int x = 0; x < TexSize; x++)
+                    {
+                        Assert.Equal(expectedColor, map[x, y]);
+                    }
                 GD.Unmap(dst, subresource);
             }
         }
@@ -173,7 +178,7 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void CubeMap_Copy_MultipleMip_CopySingleMipFaces()
         {
-            const uint TexSize = 4;
+            const uint TexSize = 64;
             const uint MipLevels = 3;
             const uint CopiedMip = 1;
 
@@ -207,9 +212,14 @@ namespace Veldrid.Tests
                 for (uint face = 0; face < 6; face++)
                 {
                     var subresource = dst.CalculateSubresource(mip, face);
+                    var mipSize = (uint)(TexSize / (1 << (int)mip));
                     byte expectedColor = mip == CopiedMip ? (byte)(face * 42) : (byte)0;
                     var map = GD.Map<byte>(dst, MapMode.Read, subresource);
-                    Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
+                    for (int y = 0; y < mipSize; y++)
+                        for (int x = 0; x < mipSize; x++)
+                        {
+                            Assert.Equal(expectedColor, map[x, y]);
+                        }
                     GD.Unmap(dst, subresource);
                 }
             }
@@ -218,7 +228,7 @@ namespace Veldrid.Tests
         [Fact]
         public unsafe void CubeMap_Copy_MultipleMip_AllAtOnce()
         {
-            const uint TexSize = 2;
+            const uint TexSize = 64;
             const uint MipLevels = 2;
 
             TextureDescription srcDesc = TextureDescription.Texture2D(
@@ -250,9 +260,14 @@ namespace Veldrid.Tests
                 for (uint face = 0; face < 6; face++)
                 {
                     var subresource = dst.CalculateSubresource(mip, face);
+                    var mipSize = (uint)(TexSize / (1 << (int)mip));
                     byte expectedColor = (byte)(face * 42);
                     var map = GD.Map<byte>(dst, MapMode.Read, subresource);
-                    Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
+                    for (int y = 0; y < mipSize; y++)
+                        for (int x = 0; x < mipSize; x++)
+                        {
+                            Assert.Equal(expectedColor, map[x, y]);
+                        }
                     GD.Unmap(dst, subresource);
                 }
             }
@@ -261,7 +276,7 @@ namespace Veldrid.Tests
         [Fact]
         public void CubeMap_Copy_MultipleMip_SpecificArrayLayer()
         {
-            const uint TexSize = 2;
+            const uint TexSize = 64;
             const uint MipLevels = 2;
             const uint CopiedArrayLayer = 3;
 
@@ -295,32 +310,60 @@ namespace Veldrid.Tests
                 for (uint face = 0; face <= CopiedArrayLayer; face++)
                 {
                     var subresource = dst.CalculateSubresource(mip, face);
+                    var mipSize = (uint)(TexSize / (1 << (int)mip));
                     byte expectedColor = face == CopiedArrayLayer ? (byte)(face * 42) : (byte)0;
                     var map = GD.Map<byte>(dst, MapMode.Read, subresource);
-                    Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
+                    for (int y = 0; y < mipSize; y++)
+                        for (int x = 0; x < mipSize; x++)
+                        {
+                            Assert.Equal(expectedColor, map[x, y]);
+                        }
                     GD.Unmap(dst, subresource);
                 }
             }
         }
 
-
         [Fact]
         public void CubeMap_GenerateMipmaps()
         {
-            const uint TexSize = 1024;
-            const uint MipLevels = 10;
+            const uint TexSize = 64;
+            const uint MipLevels = 7;
 
             TextureDescription texDesc = TextureDescription.Texture2D(
                 TexSize, TexSize, MipLevels, 1, PixelFormat.R8_UNorm, TextureUsage.Cubemap | TextureUsage.GenerateMipmaps);
             Texture tex = RF.CreateTexture(texDesc);
-            texDesc.ArrayLayers *= 6;
-            texDesc.Usage = TextureUsage.Staging;
 
             for (uint face = 0; face < 6; face++)
             {
                 byte[] data = Enumerable.Repeat(face * 42, (int)(TexSize * TexSize)).Select(n => (byte)n).ToArray();
                 GD.UpdateTexture(tex, data, 0, 0, 0, TexSize, TexSize, 1, 0, face);
             }
+
+            Texture readback = GetReadback(tex);
+            Assert.All
+            (
+                from face in Enumerable.Range(0, 6)
+                select face,
+                (face) =>
+                {
+                    var subresource = readback.CalculateSubresource(0, (uint)face);
+                    var mipSize = TexSize;
+                    byte expectedColor = (byte)(face * 42);
+                    var map = GD.Map<byte>(readback, MapMode.Read, subresource);
+
+                    Assert.All(
+                        from x in Enumerable.Range(0, (int)mipSize)
+                        from y in Enumerable.Range(0, (int)mipSize)
+                        select (X: x, Y: y),
+                        (xy) =>
+                        {
+                            Assert.Equal(expectedColor, map[xy.X, xy.Y]);
+                        }
+                    );
+
+                    GD.Unmap(readback, subresource);
+                }
+            );
 
             CommandList cl = RF.CreateCommandList();
             cl.Begin();
@@ -329,24 +372,42 @@ namespace Veldrid.Tests
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
-            Texture readback = GetReadback(tex);
-            for (uint mip = 0; mip < MipLevels; mip++)
-            {
-                for (uint face = 0; face < 6; face++)
+            readback = GetReadback(tex);
+            Assert.All
+            (
+                from mip in Enumerable.Range(0, (int)MipLevels)
+                from face in Enumerable.Range(0, 6)
+                select (mip, face),
+                (t) =>
                 {
-                    var subresource = readback.CalculateSubresource(mip, face);
-                    byte expectedColor = (byte)(face * 42);
+                    var subresource = readback.CalculateSubresource((uint)t.mip, (uint)t.face);
+                    var mipSize = (uint)(TexSize / (1 << t.mip));
+                    byte expectedColor = (byte)(t.face * 42);
                     var map = GD.Map<byte>(readback, MapMode.Read, subresource);
-                    Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
+
+                    Assert.All(
+                        from x in Enumerable.Range(0, (int)mipSize)
+                        from y in Enumerable.Range(0, (int)mipSize)
+                        select (X: x, Y: y),
+                        (xy) =>
+                        {
+                            Assert.Equal(expectedColor, map[xy.X, xy.Y]);
+                        }
+                    );
+
                     GD.Unmap(readback, subresource);
                 }
-            }
+            );
         }
 
-        [Fact]
-        public void ArrayLayers_StagingWriteAndRead()
+        [Theory]
+        [InlineData(2)]
+        [InlineData(4)]
+        [InlineData(8)]
+        [InlineData(16)]
+        [InlineData(32)]
+        public void ArrayLayers_StagingWriteAndRead_SmallTextures(uint TexSize)
         {
-            const uint TexSize = 2;
             const uint ArrayLayers = 6;
             const uint ArrayColorDelta = 255 / ArrayLayers;
 
@@ -365,7 +426,42 @@ namespace Veldrid.Tests
                 var subresource = tex.CalculateSubresource(0, layer);
                 byte expectedColor = (byte)(layer * ArrayColorDelta);
                 var map = GD.Map<byte>(tex, MapMode.Read, subresource);
-                Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
+                for (int y = 0; y < TexSize; y++)
+                    for (int x = 0; x < TexSize; x++)
+                    {
+                        Assert.Equal(expectedColor, map[x, y]);
+                    }
+                GD.Unmap(tex, subresource);
+            }
+        }
+
+        [Fact]
+        public void ArrayLayers_StagingWriteAndRead()
+        {
+            const uint TexSize = 64;
+            const uint ArrayLayers = 6;
+            const uint ArrayColorDelta = 255 / ArrayLayers;
+
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, 1, ArrayLayers, PixelFormat.R8_UNorm, TextureUsage.Staging);
+            Texture tex = RF.CreateTexture(texDesc);
+
+            for (uint layer = 0; layer < ArrayLayers; layer++)
+            {
+                byte[] data = Enumerable.Repeat(layer * ArrayColorDelta, (int)(TexSize * TexSize)).Select(n => (byte)n).ToArray();
+                GD.UpdateTexture(tex, data, 0, 0, 0, TexSize, TexSize, 1, 0, layer);
+            }
+
+            for (uint layer = 0; layer < ArrayLayers; layer++)
+            {
+                var subresource = tex.CalculateSubresource(0, layer);
+                byte expectedColor = (byte)(layer * ArrayColorDelta);
+                var map = GD.Map<byte>(tex, MapMode.Read, subresource);
+                for (int y = 0; y < TexSize; y++)
+                    for (int x = 0; x < TexSize; x++)
+                    {
+                        Assert.Equal(expectedColor, map[x, y]);
+                    }
                 GD.Unmap(tex, subresource);
             }
         }
@@ -373,7 +469,7 @@ namespace Veldrid.Tests
         [Fact]
         public void ArrayLayers_WriteAndCopyAndRead()
         {
-            const uint TexSize = 2;
+            const uint TexSize = 64;
             const uint ArrayLayers = 6;
             const uint ArrayColorDelta = 255 / ArrayLayers;
 
@@ -401,7 +497,11 @@ namespace Veldrid.Tests
                 var subresource = readback.CalculateSubresource(0, layer);
                 byte expectedColor = (byte)(layer * ArrayColorDelta);
                 var map = GD.Map<byte>(readback, MapMode.Read, subresource);
-                Assert.All(map.AsEnumerable(), b => Assert.Equal(expectedColor, b));
+                for (int y = 0; y < TexSize; y++)
+                    for (int x = 0; x < TexSize; x++)
+                    {
+                        Assert.Equal(expectedColor, map[x, y]);
+                    }
                 GD.Unmap(readback, subresource);
             }
         }

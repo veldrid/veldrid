@@ -292,9 +292,14 @@ void main()
                     for (uint face = 0; face < 6; face++)
                     {
                         var subresource = readback.CalculateSubresource(mip, face);
+                        var mipSize = (TexSize >> (int)mip);
                         var expectedColor = new RgbaByte((byte)faceColors[face].X, (byte)faceColors[face].Y, (byte)faceColors[face].Z, (byte)faceColors[face].Z);
                         MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(readback, MapMode.Read, subresource);
-                        Assert.All(readView.AsEnumerable(), c => Assert.Equal(expectedColor, c));
+                        for (int y = 0; y < mipSize; y++)
+                            for (int x = 0; x < mipSize; x++)
+                            {
+                                Assert.Equal(expectedColor, readView[x, y]);
+                            }
                         GD.Unmap(readback, subresource);
                     }
                 }
@@ -347,9 +352,14 @@ void main()
                     for (uint face = 0; face < 6; face++)
                     {
                         var subresource = readback.CalculateSubresource(mip, face);
+                        var mipSize = (uint)(TexSize / (1 << (int)mip));
                         var expectedColor = RgbaByte.Clear;
                         MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(readback, MapMode.Read, subresource);
-                        Assert.All(readView.AsEnumerable(), c => Assert.Equal(expectedColor, c));
+                        for (int y = 0; y < mipSize; y++)
+                            for (int x = 0; x < mipSize; x++)
+                            {
+                                Assert.Equal(expectedColor, readView[x, y]);
+                            }
                         GD.Unmap(readback, subresource);
                     }
                 }
@@ -371,9 +381,14 @@ void main()
                     for (uint face = 0; face < 6; face++)
                     {
                         var subresource = readback.CalculateSubresource(mip, face);
+                        var mipSize = (uint)(TexSize / (1 << (int)mip));
                         var expectedColor = mip == BoundMipLevel ? new RgbaByte((byte)faceColors[face].X, (byte)faceColors[face].Y, (byte)faceColors[face].Z, (byte)faceColors[face].Z) : RgbaByte.Clear;
                         MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(readback, MapMode.Read, subresource);
-                        Assert.All(readView.AsEnumerable(), c => Assert.Equal(expectedColor, c));
+                        for (int y = 0; y < mipSize; y++)
+                            for (int x = 0; x < mipSize; x++)
+                            {
+                                Assert.Equal(expectedColor, readView[x, y]);
+                            }
                         GD.Unmap(readback, subresource);
                     }
                 }

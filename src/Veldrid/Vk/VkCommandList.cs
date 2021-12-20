@@ -962,20 +962,11 @@ namespace Veldrid.Vk
                     VkImageLayout.TransferSrcOptimal);
 
                 Vulkan.VkBuffer dstBuffer = dstVkTexture.StagingBuffer;
-                VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
-                    dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer));
 
                 VkImageAspectFlags aspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
                     ? VkImageAspectFlags.Depth
                     : VkImageAspectFlags.Color;
-                VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
-                {
-                    aspectMask = aspect,
-                    layerCount = layerCount,
-                    mipLevel = srcMipLevel,
-                    baseArrayLayer = srcBaseArrayLayer
-                };
-
+                
                 Util.GetMipDimensions(dstVkTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                 uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
                 uint bufferRowLength = Math.Max(mipWidth, blockSize);
@@ -988,20 +979,37 @@ namespace Veldrid.Vk
                 uint rowPitch = FormatHelpers.GetRowPitch(bufferRowLength, dstVkTexture.Format);
                 uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, dstVkTexture.Format);
 
-                VkBufferImageCopy region = new VkBufferImageCopy
+                var layers = stackalloc VkBufferImageCopy[(int)layerCount];
+                for(uint layer = 0; layer < layerCount; layer++)
                 {
-                    bufferRowLength = mipWidth,
-                    bufferImageHeight = mipHeight,
-                    bufferOffset = dstLayout.offset
-                        + (dstZ * depthPitch)
-                        + (compressedDstY * rowPitch)
-                        + (compressedDstX * blockSizeInBytes),
-                    imageExtent = new VkExtent3D { width = width, height = height, depth = depth },
-                    imageOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
-                    imageSubresource = srcSubresource
-                };
+                    VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
+                        dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer + layer));
 
-                vkCmdCopyImageToBuffer(cb, srcImage, VkImageLayout.TransferSrcOptimal, dstBuffer, 1, ref region);
+                    VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
+                    {
+                        aspectMask = aspect,
+                        layerCount = 1,
+                        mipLevel = srcMipLevel,
+                        baseArrayLayer = srcBaseArrayLayer + layer
+                    };
+
+                    VkBufferImageCopy region = new VkBufferImageCopy
+                    {
+                        bufferRowLength = bufferRowLength,
+                        bufferImageHeight = bufferImageHeight,
+                        bufferOffset = dstLayout.offset
+                            + (dstZ * depthPitch)
+                            + (compressedDstY * rowPitch)
+                            + (compressedDstX * blockSizeInBytes),
+                        imageExtent = new VkExtent3D { width = width, height = height, depth = depth },
+                        imageOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
+                        imageSubresource = srcSubresource
+                    };
+
+                    layers[layer] = region;
+                }
+
+                vkCmdCopyImageToBuffer(cb, srcImage, VkImageLayout.TransferSrcOptimal, dstBuffer, layerCount, layers);
 
                 if ((srcVkTexture.Usage & TextureUsage.Sampled) != 0)
                 {

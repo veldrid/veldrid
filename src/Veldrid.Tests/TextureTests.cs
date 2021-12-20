@@ -546,19 +546,24 @@ namespace Veldrid.Tests
         public void ArrayLayers_WriteAndCopyAndRead()
         {
             const uint TexSize = 64;
+            const uint MipLevels = 2;
             const uint ArrayLayers = 6;
             const uint ArrayColorDelta = 255 / ArrayLayers;
 
             TextureDescription texDesc = TextureDescription.Texture2D(
-                TexSize, TexSize, 1, ArrayLayers, PixelFormat.R8_UNorm, TextureUsage.Sampled);
+                TexSize, TexSize, MipLevels, ArrayLayers, PixelFormat.R8_UNorm, TextureUsage.Sampled);
             Texture tex = RF.CreateTexture(texDesc);
             texDesc.Usage = TextureUsage.Staging;
             Texture readback = RF.CreateTexture(texDesc);
 
-            for (uint layer = 0; layer < ArrayLayers; layer++)
+            for (uint mip = 0; mip < MipLevels; mip++)
             {
-                byte[] data = Enumerable.Repeat(layer * ArrayColorDelta, (int)(TexSize * TexSize)).Select(n => (byte)n).ToArray();
-                GD.UpdateTexture(tex, data, 0, 0, 0, TexSize, TexSize, 1, 0, layer);
+                for (uint layer = 0; layer < ArrayLayers; layer++)
+                {
+                    var mipSize = MipLevels >> (int)mip;
+                    byte[] data = Enumerable.Repeat(layer * ArrayColorDelta, (int)(mipSize * mipSize)).Select(n => (byte)n).ToArray();
+                    GD.UpdateTexture(tex, data, 0, 0, 0, mipSize, mipSize, 1, mip, layer);
+                }
             }
 
             CommandList cl = RF.CreateCommandList();
@@ -568,17 +573,21 @@ namespace Veldrid.Tests
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
-            for (uint layer = 0; layer < ArrayLayers; layer++)
+            for (uint mip = 0; mip < MipLevels; mip++)
             {
-                var subresource = readback.CalculateSubresource(0, layer);
-                byte expectedColor = (byte)(layer * ArrayColorDelta);
-                var map = GD.Map<byte>(readback, MapMode.Read, subresource);
-                for (int y = 0; y < TexSize; y++)
-                    for (int x = 0; x < TexSize; x++)
-                    {
-                        Assert.Equal(expectedColor, map[x, y]);
-                    }
-                GD.Unmap(readback, subresource);
+                for (uint layer = 0; layer < ArrayLayers; layer++)
+                {
+                    var mipSize = MipLevels >> (int)mip;
+                    var subresource = readback.CalculateSubresource(0, layer);
+                    byte expectedColor = (byte)(layer * ArrayColorDelta);
+                    var map = GD.Map<byte>(readback, MapMode.Read, subresource);
+                    for (int y = 0; y < mipSize; y++)
+                        for (int x = 0; x < mipSize; x++)
+                        {
+                            Assert.Equal(expectedColor, map[x, y]);
+                        }
+                    GD.Unmap(readback, subresource);
+                }
             }
         }
 

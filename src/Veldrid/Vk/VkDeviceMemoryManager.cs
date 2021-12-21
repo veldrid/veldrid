@@ -67,8 +67,30 @@ namespace Veldrid.Vk
             VkImage dedicatedImage,
             Vulkan.VkBuffer dedicatedBuffer)
         {
-            // Round up to the nearest multiple of bufferImageGranularity.
-            size = ((size / _bufferImageGranularity) + 1) * _bufferImageGranularity;
+            if (dedicated)
+            {
+                if (dedicatedImage != VkImage.Null && _getImageMemoryRequirements2 != null)
+                {
+                    VkImageMemoryRequirementsInfo2KHR requirementsInfo = VkImageMemoryRequirementsInfo2KHR.New();
+                    requirementsInfo.image = dedicatedImage;
+                    VkMemoryRequirements2KHR requirements = VkMemoryRequirements2KHR.New();
+                    _getImageMemoryRequirements2(_device, &requirementsInfo, &requirements);
+                    size = requirements.memoryRequirements.size;
+                }
+                else if(dedicatedBuffer != Vulkan.VkBuffer.Null && _getBufferMemoryRequirements2 != null)
+                {
+                    VkBufferMemoryRequirementsInfo2KHR requirementsInfo = VkBufferMemoryRequirementsInfo2KHR.New();
+                    requirementsInfo.buffer = dedicatedBuffer;
+                    VkMemoryRequirements2KHR requirements = VkMemoryRequirements2KHR.New();
+                    _getBufferMemoryRequirements2(_device, &requirementsInfo, &requirements);
+                    size = requirements.memoryRequirements.size;
+                }
+            }
+            else
+            {
+                // Round up to the nearest multiple of bufferImageGranularity.
+                size = ((size / _bufferImageGranularity) + 1) * _bufferImageGranularity;
+            }
             _totalAllocatedBytes += size;
 
             lock (_lock)

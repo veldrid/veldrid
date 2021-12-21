@@ -40,6 +40,7 @@
 
   <ItemGroup>
     <None Remove="Shaders\ComputeCubemapGenerator.comp" />
+    <None Remove="Shaders\ComputeImage2DArrayGenerator.comp" />
     <None Remove="Shaders\ComputeTextureGenerator.comp" />
     <None Remove="Shaders\F16VertexAttribs.frag" />
     <None Remove="Shaders\F16VertexAttribs.vert" />

@@ -941,11 +941,11 @@ namespace Veldrid.OpenGL
                         glTexViewRW.EnsureResourcesCreated();
                         if (pipeline.GetTextureBindingInfo(slot, element, out OpenGLTextureBindingSlotInfo imageBindingInfo))
                         {
-                            var layered = texViewRW.Target.Usage.HasFlag(TextureUsage.Cubemap);
+                            var layered = texViewRW.Target.Usage.HasFlag(TextureUsage.Cubemap) || texViewRW.ArrayLayers > 1;
 
                             //todo: validate and test binding subsets of cubemap arrays
                             if (layered && texViewRW.BaseArrayLayer > 0)
-                                throw new VeldridException("Cannot bind cubemap with BaseArrayLayer > 0.  All layers must be bound for cubemaps.");
+                                throw new VeldridException("Cannot bind texture with BaseArrayLayer > 0 and ArrayLayers > 1 (cubemaps have ArrayLayers == 6 implicitly).");
 
                             if (_backend == GraphicsBackend.OpenGL)
                             {

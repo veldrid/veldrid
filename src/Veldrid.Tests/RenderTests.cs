@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -791,13 +792,10 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
-        [Fact]
+        [SkippableFact]
         public void ComputeGeneratedTexture()
         {
-            if (!GD.Features.ComputeShader)
-            {
-                return;
-            }
+            Skip.IfNot(GD.Features.ComputeShader);
 
             uint width = 4;
             uint height = 1;
@@ -858,6 +856,70 @@ namespace Veldrid.Tests
             Assert.Equal(RgbaFloat.Blue, readView[2, 0]);
             Assert.Equal(RgbaFloat.White, readView[3, 0]);
             GD.Unmap(readback);
+        }
+
+        [SkippableTheory]
+        [InlineData(2)]
+        [InlineData(6)]
+        public void ComputeBindTextureWithArrayLayersAsWriteable(uint ArrayLayers)
+        {
+            Skip.IfNot(GD.Features.ComputeShader);
+
+            uint TexSize = 32;
+            uint MipLevels = 1;
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                TexSize, TexSize,
+                MipLevels,
+                ArrayLayers,
+                PixelFormat.R8_G8_B8_A8_UNorm,
+                TextureUsage.Sampled | TextureUsage.Storage);
+            Texture computeOutput = RF.CreateTexture(texDesc);
+            
+            ResourceLayout computeLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("ComputeOutput", ResourceKind.TextureReadWrite, ShaderStages.Compute)));
+            ResourceSet computeSet = RF.CreateResourceSet(new ResourceSetDescription(computeLayout, computeOutput));
+
+            Pipeline computePipeline = RF.CreateComputePipeline(new ComputePipelineDescription(
+                TestShaders.LoadCompute(RF, "ComputeImage2DArrayGenerator"),
+                computeLayout,
+                32, 32, 1));
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetPipeline(computePipeline);
+            cl.SetComputeResourceSet(0, computeSet);
+            cl.Dispatch(TexSize / 32, TexSize / 32, ArrayLayers);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            float sideColorStep = 1.0f / ArrayLayers;
+            Texture readback = GetReadback(computeOutput);
+            Assert.All
+            (
+                from mip in Enumerable.Range(0, (int)MipLevels)
+                from layer in Enumerable.Range(0, (int)ArrayLayers)
+                select (mip, layer),
+                (t) =>
+                {
+                    var subresource = readback.CalculateSubresource((uint)t.mip, (uint)t.layer);
+                    var mipSize = TexSize >> t.mip;
+                    var expectedColor = (byte)255.0f * ((t.layer + 1) * sideColorStep);
+                    var map = GD.Map<byte>(readback, MapMode.Read, subresource);
+
+                    Assert.All(
+                        from x in Enumerable.Range(0, (int)mipSize)
+                        from y in Enumerable.Range(0, (int)mipSize)
+                        select (X: x, Y: y),
+                        (xy) =>
+                        {
+                            Assert.InRange(map[xy.X, xy.Y], expectedColor - 1, expectedColor + 1);
+                        }
+                    );
+
+                    GD.Unmap(readback, subresource);
+                }
+            );
         }
 
         [Theory]

@@ -183,6 +183,31 @@ namespace Veldrid.Tests
             );
         }
 
+
+        [Fact]
+        public void CubeMap_CreateViewWithSingleMipLevel()
+        {
+            const uint TexSize = 4;
+            const uint MipLevels = 3;
+
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                TexSize, TexSize, MipLevels, 1, PixelFormat.R8_UNorm, TextureUsage.Cubemap | TextureUsage.Storage);
+            Texture tex = RF.CreateTexture(texDesc);
+
+            for (uint mip = 0; mip < MipLevels; mip++)
+            {
+                for (uint face = 0; face < 6; face++)
+                {
+                    var mipSize = TexSize >> (int)mip;
+                    byte[] data = Enumerable.Repeat((face + 1) * 42, (int)(mipSize * mipSize)).Select(n => (byte)n).ToArray();
+                    GD.UpdateTexture(tex, data, 0, 0, 0, mipSize, mipSize, 1, mip, face);
+                }
+            }
+
+            var view = RF.CreateTextureView(new TextureViewDescription(tex, 0, 1, 0, 1));
+            Assert.NotNull(view);
+        }
+
         [Fact]
         public unsafe void CubeMap_Copy_OneMip()
         {
@@ -237,7 +262,7 @@ namespace Veldrid.Tests
         }
 
         [Fact]
-        public unsafe void CubeMap_Copy_MultipleMip_CopySingleMipFaces()
+        public void CubeMap_Copy_MultipleMip_CopySingleMipFaces()
         {
             const uint TexSize = 64;
             const uint MipLevels = 3;
@@ -287,7 +312,7 @@ namespace Veldrid.Tests
         }
 
         [Fact]
-        public unsafe void CubeMap_Copy_MultipleMip_AllAtOnce()
+        public void CubeMap_Copy_MultipleMip_AllAtOnce()
         {
             const uint TexSize = 64;
             const uint MipLevels = 2;

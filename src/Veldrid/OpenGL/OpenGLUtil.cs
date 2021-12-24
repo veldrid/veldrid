@@ -29,6 +29,7 @@ namespace Veldrid.OpenGL
         internal unsafe static void ValidateProgram(uint program)
         {
             glValidateProgram(program);
+            CheckLastError();
 
             int validateStatus;
             glGetProgramiv(program, GetProgramParameterName.ValidateStatus, &validateStatus);

@@ -23,6 +23,7 @@ namespace Veldrid.OpenGL
         private string _shadingLanguageVersion;
         private GraphicsApiVersion _apiVersion;
         private GraphicsBackend _backendType;
+        private bool _debugGL;
         private GraphicsDeviceFeatures _features;
         private uint _vao;
         private readonly ConcurrentQueue<OpenGLDeferredResource> _resourcesToDispose
@@ -73,6 +74,8 @@ namespace Veldrid.OpenGL
         public override GraphicsApiVersion ApiVersion => _apiVersion;
 
         public override GraphicsBackend BackendType => _backendType;
+
+        public bool DebugGL { get => _debugGL; internal set => _debugGL = value; }
 
         public override bool IsUvOriginTopLeft => false;
 
@@ -220,6 +223,7 @@ namespace Veldrid.OpenGL
             {
                 EnableDebugCallback();
             }
+            DebugGL = options.Debug;
 
             bool backbufferIsSrgb = ManualSrgbBackbufferQuery();
 

@@ -17,7 +17,6 @@ namespace Veldrid.Vk
         private readonly ulong _bufferImageGranularity;
         private readonly ulong _chunkGranularity;
         private readonly object _allocatorMutex = new object();
-        private ulong _totalAllocatedBytes;
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryTypeUnmapped = new Dictionary<uint, ChunkAllocatorSet>();
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryType = new Dictionary<uint, ChunkAllocatorSet>();
 
@@ -87,7 +86,6 @@ namespace Veldrid.Vk
                     // Round up to the nearest multiple of bufferImageGranularity.
                     size = ((size + _bufferImageGranularity - 1) / _bufferImageGranularity) * _bufferImageGranularity;
                 }
-                Interlocked.Add(ref _totalAllocatedBytes, size);
 
                 VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.New();
                 allocateInfo.allocationSize = size;
@@ -122,8 +120,7 @@ namespace Veldrid.Vk
             }
             else
             {
-                size = ((size / _chunkGranularity) + 1) * _chunkGranularity;
-                Interlocked.Add(ref _totalAllocatedBytes, size);
+                size = ((size + _chunkGranularity - 1) / _chunkGranularity) * _chunkGranularity;
 
                 ChunkAllocatorSet allocator = GetAllocator(memoryTypeIndex, persistentMapped);
                 bool result = allocator.Allocate((uint)size, (uint)alignment, out VkMemoryBlock ret);
@@ -138,8 +135,6 @@ namespace Veldrid.Vk
 
         public void Free(VkMemoryBlock block)
         {
-            Interlocked.Add(ref _totalAllocatedBytes, (ulong)-(long)block.Size);
-
             if (block.DedicatedAllocation)
             {
                 vkFreeMemory(_device, block.DeviceMemory, null);

@@ -372,6 +372,9 @@ namespace Veldrid.Utilities
         public MeshGroup[] MeshGroups { get; }
         public string MaterialLibName { get; }
 
+        public static ObjFile Parse(string[] lines) => new ObjParser().Parse(lines);
+        public static ObjFile Parse(Stream s) => new ObjParser().Parse(s);
+
         public ObjFile(Vector3[] positions, Vector3[] normals, Vector2[] texCoords, MeshGroup[] meshGroups, string materialLibName)
         {
             Positions = positions;

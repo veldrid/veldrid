@@ -10,7 +10,8 @@ namespace Veldrid.Tests
         [InlineData("space station.mtl")]
         public void CanParseMtllib(string mtllib)
         {
-            var objFile = new ObjParser().Parse(new string[] { $"mtllib {mtllib}" });
+            var content = new string[] { $"mtllib {mtllib}" };
+            var objFile = ObjFile.Parse(content);
             Assert.Equal(mtllib, objFile.MaterialLibName);
         }
     }

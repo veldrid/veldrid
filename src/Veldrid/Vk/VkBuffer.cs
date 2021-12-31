@@ -86,9 +86,11 @@ namespace Veldrid.Vk
                 : VkMemoryPropertyFlags.DeviceLocal;
 
             if (isDynamic)
+            {
                 memoryPropertyFlags |= VkMemoryPropertyFlags.HostCoherent;
+            }
 
-            if (isStaging)
+            if ((usage & BufferUsage.StagingRead) != 0)
             {
                 // Use "host cached" memory for staging when available, for better performance of GPU -> CPU transfers
                 bool hostCachedAvailable = TryFindMemoryType(

@@ -1,16 +1,15 @@
-using System;
 using System.Threading;
 
 namespace Veldrid.Vk
 {
     internal class ResourceRefCount
     {
-        private readonly Action _disposeAction;
+        private readonly IResourceRefCountTarget _target;
         private int _refCount;
 
-        public ResourceRefCount(Action disposeAction)
+        public ResourceRefCount(IResourceRefCountTarget target)
         {
-            _disposeAction = disposeAction;
+            _target = target;
             _refCount = 1;
         }
 
@@ -31,7 +30,7 @@ namespace Veldrid.Vk
             int ret = Interlocked.Decrement(ref _refCount);
             if (ret == 0)
             {
-                _disposeAction();
+                _target.RefZeroed();
             }
 
             return ret;

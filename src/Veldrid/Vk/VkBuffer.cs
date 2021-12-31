@@ -5,7 +5,7 @@ using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkBuffer : DeviceBuffer
+    internal unsafe class VkBuffer : DeviceBuffer, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkBuffer _deviceBuffer;
@@ -117,7 +117,7 @@ namespace Veldrid.Vk
             result = vkBindBufferMemory(gd.Device, _deviceBuffer, _memory.DeviceMemory, _memory.Offset);
             CheckResult(result);
 
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
 
             if (initialData != IntPtr.Zero)
             {
@@ -148,6 +148,11 @@ namespace Veldrid.Vk
                 vkDestroyBuffer(_gd.Device, _deviceBuffer, null);
                 _gd.MemoryManager.Free(_memory);
             }
+        }
+
+        void IResourceRefCountTarget.RefZeroed()
+        {
+            DisposeCore();
         }
     }
 }

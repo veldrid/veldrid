@@ -4,7 +4,7 @@ using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkResourceSet : ResourceSet
+    internal unsafe class VkResourceSet : ResourceSet, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly DescriptorResourceCounts _descriptorCounts;
@@ -29,7 +29,7 @@ namespace Veldrid.Vk
             : base(description)
         {
             _gd = gd;
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
             VkResourceLayout vkLayout = Util.AssertSubtype<ResourceLayout, VkResourceLayout>(description.Layout);
 
             VkDescriptorSetLayout dsl = vkLayout.DescriptorSetLayout;
@@ -110,7 +110,7 @@ namespace Veldrid.Vk
             RefCount.Decrement();
         }
 
-        private void DisposeCore()
+        void IResourceRefCountTarget.RefZeroed()
         {
             if (!_destroyed)
             {

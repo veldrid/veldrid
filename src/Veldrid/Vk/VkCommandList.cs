@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkCommandList : CommandList
+    internal unsafe class VkCommandList : CommandList, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private VkCommandPool _pool;
@@ -68,7 +68,7 @@ namespace Veldrid.Vk
             CheckResult(result);
 
             _cb = GetNextCommandBuffer();
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
         }
 
         private VkCommandBuffer GetNextCommandBuffer()
@@ -1349,7 +1349,7 @@ namespace Veldrid.Vk
             RefCount.Decrement();
         }
 
-        private void DisposeCore()
+        void IResourceRefCountTarget.RefZeroed()
         {
             if (!_destroyed)
             {

@@ -6,7 +6,7 @@ using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkPipeline : Pipeline
+    internal unsafe class VkPipeline : Pipeline, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkPipeline _devicePipeline;
@@ -34,7 +34,7 @@ namespace Veldrid.Vk
         {
             _gd = gd;
             IsComputePipeline = false;
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
 
             VkGraphicsPipelineCreateInfo pipelineCI = VkGraphicsPipelineCreateInfo.New();
 
@@ -346,7 +346,7 @@ namespace Veldrid.Vk
         {
             _gd = gd;
             IsComputePipeline = true;
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
 
             VkComputePipelineCreateInfo pipelineCI = VkComputePipelineCreateInfo.New();
 
@@ -437,7 +437,7 @@ namespace Veldrid.Vk
             RefCount.Decrement();
         }
 
-        private void DisposeCore()
+        void IResourceRefCountTarget.RefZeroed()
         {
             if (!_destroyed)
             {

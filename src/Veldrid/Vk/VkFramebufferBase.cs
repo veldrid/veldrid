@@ -3,19 +3,19 @@ using Vulkan;
 
 namespace Veldrid.Vk
 {
-    internal abstract class VkFramebufferBase : Framebuffer
+    internal abstract class VkFramebufferBase : Framebuffer, IResourceRefCountTarget
     {
         public VkFramebufferBase(
             FramebufferAttachmentDescription? depthTexture,
             ReadOnlySpan<FramebufferAttachmentDescription> colorTextures)
             : base(depthTexture, colorTextures)
         {
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
         }
 
         public VkFramebufferBase()
         {
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
         }
 
         public ResourceRefCount RefCount { get; }
@@ -37,5 +37,10 @@ namespace Veldrid.Vk
         public abstract uint AttachmentCount { get; }
         public abstract void TransitionToIntermediateLayout(VkCommandBuffer cb);
         public abstract void TransitionToFinalLayout(VkCommandBuffer cb);
+
+        void IResourceRefCountTarget.RefZeroed()
+        {
+            DisposeCore();
+        }
     }
 }

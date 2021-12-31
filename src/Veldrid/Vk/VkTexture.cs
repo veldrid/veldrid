@@ -6,7 +6,7 @@ using System;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkTexture : Texture
+    internal unsafe class VkTexture : Texture, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImage _optimalImage;
@@ -210,7 +210,7 @@ namespace Veldrid.Vk
 
             ClearIfRenderTarget();
             TransitionIfSampled();
-            RefCount = new ResourceRefCount(RefCountedDispose);
+            RefCount = new ResourceRefCount(this);
         }
 
         // Used to construct Swapchain textures.
@@ -243,7 +243,7 @@ namespace Veldrid.Vk
             _isSwapchainTexture = true;
 
             ClearIfRenderTarget();
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
         }
 
         private void ClearIfRenderTarget()
@@ -456,7 +456,7 @@ namespace Veldrid.Vk
             RefCount.Decrement();
         }
 
-        private void RefCountedDispose()
+        void IResourceRefCountTarget.RefZeroed()
         {
             if (!_destroyed)
             {

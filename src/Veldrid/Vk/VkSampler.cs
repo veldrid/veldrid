@@ -3,7 +3,7 @@ using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkSampler : Sampler
+    internal unsafe class VkSampler : Sampler, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly Vulkan.VkSampler _sampler;
@@ -43,7 +43,7 @@ namespace Veldrid.Vk
             };
 
             vkCreateSampler(_gd.Device, ref samplerCI, null, out _sampler);
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
         }
 
         public override string? Name
@@ -61,7 +61,7 @@ namespace Veldrid.Vk
             RefCount.Decrement();
         }
 
-        private void DisposeCore()
+        void IResourceRefCountTarget.RefZeroed()
         {
             if (!_disposed)
             {

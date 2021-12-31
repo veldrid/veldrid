@@ -3,11 +3,10 @@ using Vulkan;
 using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System;
-using System.Runtime.InteropServices;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkSwapchain : Swapchain
+    internal unsafe class VkSwapchain : Swapchain, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkSurfaceKHR _surface;
@@ -88,7 +87,7 @@ namespace Veldrid.Vk
             vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
             vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
 
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
         }
 
         public override void Resize(uint width, uint height)
@@ -308,14 +307,16 @@ namespace Veldrid.Vk
             RefCount.Decrement();
         }
 
-        private void DisposeCore()
+        void IResourceRefCountTarget.RefZeroed()
         {
-            vkDestroyFence(_gd.Device, _imageAvailableFence, null);
-            _framebuffer.Dispose();
-            vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
-            vkDestroySurfaceKHR(_gd.Instance, _surface, null);
-
-            _disposed = true;
+            if (!_disposed)
+            {
+                _disposed = true;
+                vkDestroyFence(_gd.Device, _imageAvailableFence, null);
+                _framebuffer.Dispose();
+                vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
+                vkDestroySurfaceKHR(_gd.Instance, _surface, null);
+            }
         }
     }
 }

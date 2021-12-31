@@ -3,7 +3,7 @@ using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
-    internal unsafe class VkTextureView : TextureView
+    internal unsafe class VkTextureView : TextureView, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImageView _imageView;
@@ -70,7 +70,7 @@ namespace Veldrid.Vk
             }
 
             vkCreateImageView(_gd.Device, ref imageViewCI, null, out _imageView);
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
         }
 
         public override string? Name
@@ -88,7 +88,7 @@ namespace Veldrid.Vk
             RefCount.Decrement();
         }
 
-        private void DisposeCore()
+        void IResourceRefCountTarget.RefZeroed()
         {
             if (!_destroyed)
             {

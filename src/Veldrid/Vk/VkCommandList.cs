@@ -916,7 +916,7 @@ namespace Veldrid.Vk
                 uint compressedX = srcX / blockSize;
                 uint compressedY = srcY / blockSize;
                 uint blockSizeInBytes = blockSize == 1
-                    ? FormatHelpers.GetSizeInBytes(srcVkTexture.Format)
+                    ? FormatSizeHelpers.GetSizeInBytes(srcVkTexture.Format)
                     : FormatHelpers.GetBlockSizeInBytes(srcVkTexture.Format);
                 uint rowPitch = FormatHelpers.GetRowPitch(bufferRowLength, srcVkTexture.Format);
                 uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, srcVkTexture.Format);
@@ -974,7 +974,7 @@ namespace Veldrid.Vk
                 uint compressedDstX = dstX / blockSize;
                 uint compressedDstY = dstY / blockSize;
                 uint blockSizeInBytes = blockSize == 1
-                    ? FormatHelpers.GetSizeInBytes(dstVkTexture.Format)
+                    ? FormatSizeHelpers.GetSizeInBytes(dstVkTexture.Format)
                     : FormatHelpers.GetBlockSizeInBytes(dstVkTexture.Format);
                 uint rowPitch = FormatHelpers.GetRowPitch(bufferRowLength, dstVkTexture.Format);
                 uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, dstVkTexture.Format);
@@ -1035,7 +1035,7 @@ namespace Veldrid.Vk
                 uint zLimit = Math.Max(depth, layerCount);
                 if (!FormatHelpers.IsCompressedFormat(source.Format))
                 {
-                    uint pixelSize = FormatHelpers.GetSizeInBytes(srcVkTexture.Format);
+                    uint pixelSize = FormatSizeHelpers.GetSizeInBytes(srcVkTexture.Format);
                     for (uint zz = 0; zz < zLimit; zz++)
                     {
                         for (uint yy = 0; yy < height; yy++)

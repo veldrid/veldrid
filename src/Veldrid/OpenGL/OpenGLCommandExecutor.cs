@@ -334,7 +334,7 @@ namespace Veldrid.OpenGL
                         _vertexAttribDivisors[actualSlot] = stepRate;
                     }
 
-                    offset += FormatHelpers.GetSizeInBytes(element.Format);
+                    offset += FormatSizeHelpers.GetSizeInBytes(element.Format);
                 }
 
                 totalSlotsBound += (uint)input.Elements.Length;
@@ -1182,7 +1182,7 @@ namespace Veldrid.OpenGL
             uint unpackAlignment = 4;
             if (!isCompressed)
             {
-                unpackAlignment = FormatHelpers.GetSizeInBytes(glTex.Format);
+                unpackAlignment = FormatSizeHelpers.GetSizeInBytes(glTex.Format);
             }
             if (unpackAlignment < 4)
             {
@@ -1566,7 +1566,7 @@ namespace Veldrid.OpenGL
             }
             else
             {
-                uint pixelSize = FormatHelpers.GetSizeInBytes(srcGLTexture.Format);
+                uint pixelSize = FormatSizeHelpers.GetSizeInBytes(srcGLTexture.Format);
                 packAlignment = pixelSize;
                 depthSliceSize = width * height * pixelSize;
                 sizeInBytes = depthSliceSize * depth;

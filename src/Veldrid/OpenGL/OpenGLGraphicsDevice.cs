@@ -1377,7 +1377,7 @@ namespace Veldrid.OpenGL
                             uint packAlignment = 4;
                             if (!isCompressed)
                             {
-                                packAlignment = FormatHelpers.GetSizeInBytes(texture.Format);
+                                packAlignment = FormatSizeHelpers.GetSizeInBytes(texture.Format);
                             }
 
                             if (packAlignment < 4)

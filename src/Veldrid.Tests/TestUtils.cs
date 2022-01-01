@@ -229,13 +229,7 @@ namespace Veldrid.Tests
                 Texture readback = RF.CreateTexture(ref desc);
                 CommandList cl = RF.CreateCommandList();
                 cl.Begin();
-
-                //todo: temporary workaround due to cl.CopyTexture(texture, readback) not copying data properly for cubemaps in vulkan {
-                for (uint mip = 0; mip < texture.MipLevels; mip++)
-                for (uint layer = 0; layer < layers; layer++)
-                    cl.CopyTexture(texture, readback, mip, layer);
-                // }
-
+                cl.CopyTexture(texture, readback);
                 cl.End();
                 GD.SubmitCommands(cl);
                 GD.WaitForIdle();

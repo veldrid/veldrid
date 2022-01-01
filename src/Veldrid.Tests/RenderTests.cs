@@ -893,7 +893,7 @@ namespace Veldrid.Tests
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
-            float sideColorStep = 1.0f / ArrayLayers;
+            float sideColorStep = (float)Math.Floor(1.0f / ArrayLayers);
             Texture readback = GetReadback(computeOutput);
             Assert.All
             (
@@ -913,7 +913,7 @@ namespace Veldrid.Tests
                         select (X: x, Y: y),
                         (xy) =>
                         {
-                            Assert.InRange(map[xy.X, xy.Y], expectedColor - 1, expectedColor + 1);
+                            Assert.Equal(map[xy.X, xy.Y], expectedColor);
                         }
                     );
 

@@ -361,7 +361,8 @@ namespace Veldrid.Vk
             {
                 VkResult presentResult = vkQueuePresentKHR(vkSC.PresentQueue, &presentInfo);
                 if (presentResult != VkResult.Success &&
-                    presentResult != VkResult.SuboptimalKHR)
+                    presentResult != VkResult.SuboptimalKHR &&
+                    presentResult != VkResult.ErrorOutOfDateKHR)
                 {
                     ThrowResult(presentResult);
                 }

@@ -182,33 +182,29 @@ namespace Veldrid.Tests
             }
 
             Texture readback = GetReadback(tex);
-            Assert.All
-            (
-                from mip in Enumerable.Range(0, (int)MipLevels)
-                from face in Enumerable.Range(0, 6)
-                select (mip, face),
-                (t) =>
+
+            foreach (var mip in Enumerable.Range(0, (int)MipLevels))
+            {
+                foreach (var face in Enumerable.Range(0, 6))
                 {
-                    var subresource = readback.CalculateSubresource((uint)t.mip, (uint)t.face);
-                    var mipSize = TexSize >> t.mip;
-                    byte expectedColor = (byte)((t.face + 1) * 42);
+                    var subresource = readback.CalculateSubresource((uint)mip, (uint)face);
+                    var mipSize = TexSize >> mip;
+                    byte expectedColor = (byte)((face + 1) * 42);
                     var map = GD.Map<byte>(readback, MapMode.Read, subresource);
 
-                    Assert.All(
-                        from x in Enumerable.Range(0, (int)mipSize)
-                        from y in Enumerable.Range(0, (int)mipSize)
-                        select (X: x, Y: y),
-                        (xy) =>
+                    foreach (var x in Enumerable.Range(0, (int)mipSize))
+                    {
+                        foreach (var y in Enumerable.Range(0, (int)mipSize))
                         {
-                            Assert.Equal(expectedColor, map[xy.X, xy.Y]);
+                            Assert.Equal(expectedColor, map[x, y]);
                         }
-                    );
+                    }
 
                     GD.Unmap(readback, subresource);
                 }
-            );
+            }
         }
-        
+
         [Fact]
         public void CubeMap_CreateViewWithSingleMipLevel()
         {
@@ -259,31 +255,26 @@ namespace Veldrid.Tests
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
-            Assert.All
-            (
-                from mip in Enumerable.Range(0, (int)MipLevels)
-                from face in Enumerable.Range(0, 6)
-                select (mip, face),
-                (t) =>
+            foreach (var mip in Enumerable.Range(0, (int)MipLevels))
+            {
+                foreach (var face in Enumerable.Range(0, 6))
                 {
-                    var subresource = dst.CalculateSubresource((uint)t.mip, (uint)t.face);
-                    var mipSize = (uint)(TexSize / (1 << t.mip));
-                    byte expectedColor = (byte)((t.face + 1) * 42);
+                    var subresource = dst.CalculateSubresource((uint)mip, (uint)face);
+                    var mipSize = (uint)(TexSize / (1 << mip));
+                    byte expectedColor = (byte)((face + 1) * 42);
                     var map = GD.Map<byte>(dst, MapMode.Read, subresource);
 
-                    Assert.All(
-                        from x in Enumerable.Range(0, (int)mipSize)
-                        from y in Enumerable.Range(0, (int)mipSize)
-                        select (X: x, Y: y),
-                        (xy) =>
+                    foreach (var x in Enumerable.Range(0, (int)mipSize))
+                    {
+                        foreach (var y in Enumerable.Range(0, (int)mipSize))
                         {
-                            Assert.Equal(expectedColor, map[xy.X, xy.Y]);
+                            Assert.Equal(expectedColor, map[x, y]);
                         }
-                    );
+                    }
 
                     GD.Unmap(dst, subresource);
                 }
-            );
+            }
         }
 
         [Fact]
@@ -315,31 +306,26 @@ namespace Veldrid.Tests
 
             var readback = GetReadback(dst);
 
-            Assert.All
-            (
-                from mip in Enumerable.Range(0, (int)MipLevels)
-                from face in Enumerable.Range(0, 6)
-                select (mip, face),
-                (t) =>
+            foreach (var mip in Enumerable.Range(0, (int)MipLevels))
+            {
+                foreach (var face in Enumerable.Range(0, 6))
                 {
-                    var subresource = readback.CalculateSubresource((uint)t.mip, (uint)t.face);
-                    var mipSize = (uint)(TexSize / (1 << t.mip));
-                    byte expectedColor = (byte)((t.face + 1) * 42);
+                    var subresource = readback.CalculateSubresource((uint)mip, (uint)face);
+                    var mipSize = (uint)(TexSize / (1 << mip));
+                    byte expectedColor = (byte)((face + 1) * 42);
                     var map = GD.Map<byte>(readback, MapMode.Read, subresource);
 
-                    Assert.All(
-                        from x in Enumerable.Range(0, (int)mipSize)
-                        from y in Enumerable.Range(0, (int)mipSize)
-                        select (X: x, Y: y),
-                        (xy) =>
+                    foreach (var x in Enumerable.Range(0, (int)mipSize))
+                    {
+                        foreach (var y in Enumerable.Range(0, (int)mipSize))
                         {
-                            Assert.Equal(expectedColor, map[xy.X, xy.Y]);
+                            Assert.Equal(expectedColor, map[x, y]);
                         }
-                    );
+                    }
 
                     GD.Unmap(readback, subresource);
                 }
-            );
+            }
         }
 
         [Fact]
@@ -422,31 +408,26 @@ namespace Veldrid.Tests
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
-            Assert.All
-            (
-                from mip in Enumerable.Range(0, (int)MipLevels)
-                from face in Enumerable.Range(0, 6)
-                select (mip, face),
-                (t) =>
+            foreach (var mip in Enumerable.Range(0, (int)MipLevels))
+            {
+                foreach (var face in Enumerable.Range(0, 6))
                 {
-                    var subresource = dst.CalculateSubresource((uint)t.mip, (uint)t.face);
-                    var mipSize = (uint)(TexSize / (1 << t.mip));
-                    byte expectedColor = (byte)((t.face + 1) * 42);
+                    var subresource = dst.CalculateSubresource((uint)mip, (uint)face);
+                    var mipSize = (uint)(TexSize / (1 << mip));
+                    byte expectedColor = (byte)((face + 1) * 42);
                     var map = GD.Map<byte>(dst, MapMode.Read, subresource);
 
-                    Assert.All(
-                        from x in Enumerable.Range(0, (int)mipSize)
-                        from y in Enumerable.Range(0, (int)mipSize)
-                        select (X: x, Y: y),
-                        (xy) =>
+                    foreach (var x in Enumerable.Range(0, (int)mipSize))
+                    {
+                        foreach (var y in Enumerable.Range(0, (int)mipSize))
                         {
-                            Assert.Equal(expectedColor, map[xy.X, xy.Y]);
+                            Assert.Equal(expectedColor, map[x, y]);
                         }
-                    );
+                    }
 
                     GD.Unmap(dst, subresource);
                 }
-            );
+            }
         }
 
         [Fact]
@@ -522,30 +503,23 @@ namespace Veldrid.Tests
             }
 
             Texture readback = GetReadback(tex);
-            Assert.All
-            (
-                from face in Enumerable.Range(0, 6)
-                select face,
-                (face) =>
+            foreach (var face in Enumerable.Range(0, 6))
+            {
+                var subresource = readback.CalculateSubresource(0, (uint)face);
+                var mipSize = TexSize;
+                byte expectedColor = (byte)((face + 1) * 42);
+                var map = GD.Map<byte>(readback, MapMode.Read, subresource);
+
+                foreach (var x in Enumerable.Range(0, (int)mipSize))
                 {
-                    var subresource = readback.CalculateSubresource(0, (uint)face);
-                    var mipSize = TexSize;
-                    byte expectedColor = (byte)((face + 1) * 42);
-                    var map = GD.Map<byte>(readback, MapMode.Read, subresource);
-
-                    Assert.All(
-                        from x in Enumerable.Range(0, (int)mipSize)
-                        from y in Enumerable.Range(0, (int)mipSize)
-                        select (X: x, Y: y),
-                        (xy) =>
-                        {
-                            Assert.Equal(expectedColor, map[xy.X, xy.Y]);
-                        }
-                    );
-
-                    GD.Unmap(readback, subresource);
+                    foreach (var y in Enumerable.Range(0, (int)mipSize))
+                    {
+                        Assert.Equal(expectedColor, map[x, y]);
+                    }
                 }
-            );
+
+                GD.Unmap(readback, subresource);
+            }
 
             CommandList cl = RF.CreateCommandList();
             cl.Begin();
@@ -555,31 +529,26 @@ namespace Veldrid.Tests
             GD.WaitForIdle();
 
             readback = GetReadback(tex);
-            Assert.All
-            (
-                from mip in Enumerable.Range(0, (int)MipLevels)
-                from face in Enumerable.Range(0, 6)
-                select (mip, face),
-                (t) =>
+            foreach (var mip in Enumerable.Range(0, (int)MipLevels))
+            {
+                foreach (var face in Enumerable.Range(0, 6))
                 {
-                    var subresource = readback.CalculateSubresource((uint)t.mip, (uint)t.face);
-                    var mipSize = (uint)(TexSize / (1 << t.mip));
-                    byte expectedColor = (byte)((t.face + 1) * 42);
+                    var subresource = readback.CalculateSubresource((uint)mip, (uint)face);
+                    var mipSize = (uint)(TexSize / (1 << mip));
+                    byte expectedColor = (byte)((face + 1) * 42);
                     var map = GD.Map<byte>(readback, MapMode.Read, subresource);
 
-                    Assert.All(
-                        from x in Enumerable.Range(0, (int)mipSize)
-                        from y in Enumerable.Range(0, (int)mipSize)
-                        select (X: x, Y: y),
-                        (xy) =>
+                    foreach (var x in Enumerable.Range(0, (int)mipSize))
+                    {
+                        foreach (var y in Enumerable.Range(0, (int)mipSize))
                         {
-                            Assert.Equal(expectedColor, map[xy.X, xy.Y]);
+                            Assert.Equal(expectedColor, map[x, y]);
                         }
-                    );
+                    }
 
                     GD.Unmap(readback, subresource);
                 }
-            );
+            }
         }
 
         [Theory]

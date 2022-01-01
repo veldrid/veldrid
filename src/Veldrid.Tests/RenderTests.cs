@@ -895,16 +895,14 @@ namespace Veldrid.Tests
 
             float sideColorStep = (float)Math.Floor(1.0f / ArrayLayers);
             Texture readback = GetReadback(computeOutput);
-            Assert.All
-            (
-                from mip in Enumerable.Range(0, (int)MipLevels)
-                from layer in Enumerable.Range(0, (int)ArrayLayers)
-                select (mip, layer),
-                (t) =>
+
+            foreach (var mip in Enumerable.Range(0, (int)MipLevels))
+            {
+                foreach (var layer in Enumerable.Range(0, (int)ArrayLayers))
                 {
-                    var subresource = readback.CalculateSubresource((uint)t.mip, (uint)t.layer);
-                    var mipSize = TexSize >> t.mip;
-                    var expectedColor = (byte)255.0f * ((t.layer + 1) * sideColorStep);
+                    var subresource = readback.CalculateSubresource((uint)mip, (uint)layer);
+                    var mipSize = TexSize >> mip;
+                    var expectedColor = (byte)255.0f * ((layer + 1) * sideColorStep);
                     var map = GD.Map<byte>(readback, MapMode.Read, subresource);
 
                     Assert.All(
@@ -919,7 +917,7 @@ namespace Veldrid.Tests
 
                     GD.Unmap(readback, subresource);
                 }
-            );
+            }
         }
 
         [Theory]

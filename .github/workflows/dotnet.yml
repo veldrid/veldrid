@@ -8,7 +8,6 @@ on:
 
 jobs:
   build_windows:
-
     runs-on: windows-latest
 
     steps:
@@ -25,6 +24,12 @@ jobs:
       run: dotnet build --no-restore src
     - name: Test
       run: dotnet test --no-build --verbosity normal src --filter "Backend=D3D11"
+
+  publish_windows:
+    runs-on: windows-latest
+    needs: build_windows
+    if: success() && github.ref == 'refs/heads/master'
+    steps:
     - name: Build Packages
       run: dotnet pack src -c Release
     - name: Publish to MyGet

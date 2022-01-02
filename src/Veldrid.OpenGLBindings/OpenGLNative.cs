@@ -1833,7 +1833,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTextureStorage3DMultisample", out p_glTextureStorage3DMultisample);
             LoadFunction("glTexStorage2DMultisample", out p_glTexStorage2DMultisample);
             LoadFunction("glTexStorage3DMultisample", out p_glTexStorage3DMultisample);
-            LoadFunction("glTextureView", out p_glTextureView);
+            
             LoadFunction("glMapBuffer", out p_glMapBuffer);
             LoadFunction("glMapNamedBuffer", out p_glMapNamedBuffer);
             LoadFunction("glUnmapBuffer", out p_glUnmapBuffer);
@@ -1865,6 +1865,7 @@ namespace Veldrid.OpenGLBinding
                 LoadFunction("glPolygonMode", out p_glPolygonMode);
                 LoadFunction("glViewportIndexedf", out p_glViewportIndexedf);
                 LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
+                LoadFunction("glTextureView", out p_glTextureView);
                 LoadFunction("glGenerateTextureMipmap", out p_glGenerateTextureMipmap);
                 LoadFunction("glClipControl", out p_glClipControl);
                 LoadFunction("glDrawElementsInstancedBaseVertexBaseInstance", out p_glDrawElementsInstancedBaseVertexBaseInstance);
@@ -1882,6 +1883,12 @@ namespace Veldrid.OpenGLBinding
                 if (p_glCopyImageSubData == null)
                 {
                     LoadFunction("glCopyImageSubDataEXT", out p_glCopyImageSubData);
+                }
+
+                LoadFunction("glTextureView", out p_glTextureView);
+                if(p_glTextureView == null)
+                {
+                    LoadFunction("glTextureViewOES", out p_glTextureView);
                 }
 
                 LoadFunction("glRenderbufferStorage", out p_glRenderbufferStorage);

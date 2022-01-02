@@ -61,9 +61,12 @@ namespace Veldrid.OpenGL
                 }
                 else
                 {
-                    throw new VeldridException(
-                        "TextureView objects covering a subset of a Texture's dimensions or using a different PixelFormat are " +
-                        "not supported on OpenGL ES.");
+                    if (!_gd.Extensions.ARB_TextureView)
+                    {
+                        throw new VeldridException(
+                            "TextureView objects covering a subset of a Texture's dimensions or using a different PixelFormat are " +
+                            "not supported on OpenGL ES.");
+                    }
                 }
                 _needsTextureView = true;
             }

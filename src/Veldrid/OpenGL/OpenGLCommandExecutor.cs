@@ -964,13 +964,15 @@ namespace Veldrid.OpenGL
                             else
                             {
                                 glBindImageTexture(
-                                    (uint)imageBindingInfo.UniformLocation,
+                                    (uint)imageBindingInfo.RelativeIndex,
                                     glTexViewRW.Target.Texture,
                                     (int)texViewRW.BaseMipLevel,
                                     layered,
                                     (int)texViewRW.BaseArrayLayer,
                                     TextureAccess.ReadWrite,
                                     glTexViewRW.GetReadWriteSizedInternalFormat());
+                                CheckLastError();
+                                glUniform1i(imageBindingInfo.UniformLocation, imageBindingInfo.RelativeIndex);
                                 CheckLastError();
                             }
                         }

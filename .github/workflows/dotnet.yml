@@ -25,3 +25,7 @@ jobs:
       run: dotnet build --no-restore src
     - name: Test
       run: dotnet test --no-build --verbosity normal src --filter "Backend=D3D11"
+    - name: Build Packages
+      run: dotnet pack src -c Release
+    - name: Publish to MyGet
+      run: dotnet nuget push bin\Packages\Release\*.nupkg -s https://www.myget.org/F/mellinoe/api/v3/index.json --api-key ${{secrets.MYGET_KEY}}

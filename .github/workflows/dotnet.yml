@@ -24,13 +24,9 @@ jobs:
       run: dotnet build --no-restore src
     - name: Test
       run: dotnet test --no-build --verbosity normal src --filter "Backend=D3D11"
-
-  publish_windows:
-    runs-on: windows-latest
-    needs: build_windows
-    if: success() && github.ref == 'refs/heads/master'
-    steps:
     - name: Build Packages
+      if: github.ref == 'refs/heads/master'
       run: dotnet pack src -c Release
     - name: Publish to MyGet
+      if: github.ref == 'refs/heads/master'
       run: dotnet nuget push bin\Packages\Release\*.nupkg -s https://www.myget.org/F/mellinoe/api/v3/index.json --api-key ${{secrets.MYGET_KEY}}

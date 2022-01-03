@@ -972,8 +972,6 @@ namespace Veldrid.OpenGL
                                     TextureAccess.ReadWrite,
                                     glTexViewRW.GetReadWriteSizedInternalFormat());
                                 CheckLastError();
-                                glUniform1i(imageBindingInfo.UniformLocation, imageBindingInfo.RelativeIndex);
-                                CheckLastError();
                             }
                         }
                         break;

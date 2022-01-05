@@ -369,7 +369,7 @@ namespace Veldrid.D3D11
                 case BlendFactor.BlendFactor:
                     return Blend.BlendFactor;
                 case BlendFactor.InverseBlendFactor:
-                    return Blend.BlendFactor;
+                    return Blend.InverseBlendFactor;
                 default:
                     throw Illegal.Value<BlendFactor>();
             }

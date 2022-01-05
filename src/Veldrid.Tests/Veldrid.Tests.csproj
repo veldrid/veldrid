@@ -17,6 +17,7 @@
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.console" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.3.6" />
     <ProjectReference Include="..\Veldrid.RenderDoc\Veldrid.RenderDoc.csproj" />
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
     <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
@@ -50,6 +51,38 @@
     <None Remove="Shaders\FullScreenWriteDepth.vert" />
     <None Remove="Shaders\VertexLayoutTestShader.frag" />
     <None Remove="Shaders\VertexLayoutTestShader.vert" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Shaders\BasicComputeTest.comp" />
+    <EmbeddedResource Include="Shaders\ColoredQuadRenderer.frag" />
+    <EmbeddedResource Include="Shaders\ColoredQuadRenderer.vert" />
+    <EmbeddedResource Include="Shaders\ComputeColoredQuadGenerator.comp" />
+    <EmbeddedResource Include="Shaders\ComputeTextureGenerator.comp" />
+    <EmbeddedResource Include="Shaders\F16VertexAttribs.frag" />
+    <EmbeddedResource Include="Shaders\F16VertexAttribs.vert" />
+    <EmbeddedResource Include="Shaders\FillBuffer.comp" />
+    <EmbeddedResource Include="Shaders\FillBuffer_SeparateLayout.comp" />
+    <EmbeddedResource Include="Shaders\FullScreenBlit.frag" />
+    <EmbeddedResource Include="Shaders\FullScreenBlit.vert" />
+    <EmbeddedResource Include="Shaders\FullScreenTriSampleTexture.frag" />
+    <EmbeddedResource Include="Shaders\FullScreenTriSampleTexture.vert" />
+    <EmbeddedResource Include="Shaders\FullScreenTriSampleTexture2D.frag" />
+    <EmbeddedResource Include="Shaders\FullScreenTriSampleTexture2D.vert" />
+    <EmbeddedResource Include="Shaders\FullScreenTriSampleTextureArray.frag" />
+    <EmbeddedResource Include="Shaders\FullScreenTriSampleTextureArray.vert" />
+    <EmbeddedResource Include="Shaders\FullScreenWriteDepth.frag" />
+    <EmbeddedResource Include="Shaders\FullScreenWriteDepth.vert" />
+    <EmbeddedResource Include="Shaders\TexturedPoints.frag" />
+    <EmbeddedResource Include="Shaders\TexturedPoints.vert" />
+    <EmbeddedResource Include="Shaders\U16NormVertexAttribs.frag" />
+    <EmbeddedResource Include="Shaders\U16NormVertexAttribs.vert" />
+    <EmbeddedResource Include="Shaders\U16VertexAttribs.frag" />
+    <EmbeddedResource Include="Shaders\U16VertexAttribs.vert" />
+    <EmbeddedResource Include="Shaders\UIntVertexAttribs.frag" />
+    <EmbeddedResource Include="Shaders\UIntVertexAttribs.vert" />
+    <EmbeddedResource Include="Shaders\VertexLayoutTestShader.frag" />
+    <EmbeddedResource Include="Shaders\VertexLayoutTestShader.vert" />
   </ItemGroup>
 
 </Project>

@@ -5,7 +5,7 @@ namespace Veldrid.Tests
 {
     public abstract class ResourceSetTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Fact]
+        [SkippableFact]
         public void ResourceSet_BufferInsteadOfTextureView_Fails()
         {
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -20,7 +20,7 @@ namespace Veldrid.Tests
             });
         }
 
-        [Fact]
+        [SkippableFact]
         public void ResourceSet_IncorrectTextureUsage_Fails()
         {
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -35,7 +35,7 @@ namespace Veldrid.Tests
             });
         }
 
-        [Fact]
+        [SkippableFact]
         public void ResourceSet_IncorrectBufferUsage_Fails()
         {
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -49,7 +49,7 @@ namespace Veldrid.Tests
             });
         }
 
-        [Fact]
+        [SkippableFact]
         public void ResourceSet_TooFewOrTooManyElements_Fails()
         {
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -80,7 +80,7 @@ namespace Veldrid.Tests
             });
         }
 
-        [Fact]
+        [SkippableFact]
         public void ResourceSet_InvalidUniformOffset_Fails()
         {
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -101,7 +101,7 @@ namespace Veldrid.Tests
             });
         }
 
-        [Fact]
+        [SkippableFact]
         public void ResourceSet_NoPipelineBound_Fails()
         {
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -117,7 +117,7 @@ namespace Veldrid.Tests
             cl.End();
         }
 
-        [Fact]
+        [SkippableFact]
         public void ResourceSet_InvalidSlot_Fails()
         {
             DeviceBuffer infoBuffer = RF.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
@@ -158,7 +158,7 @@ namespace Veldrid.Tests
             cl.End();
         }
 
-        [Fact]
+        [SkippableFact]
         public void ResourceSet_IncompatibleSet_Fails()
         {
             DeviceBuffer infoBuffer = RF.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));

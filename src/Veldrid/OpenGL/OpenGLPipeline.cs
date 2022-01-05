@@ -439,8 +439,11 @@ namespace Veldrid.OpenGL
             if (!_disposed)
             {
                 _disposed = true;
-                glDeleteProgram(_program);
-                CheckLastError();
+                if (Created)
+                {
+                    glDeleteProgram(_program);
+                    CheckLastError();
+                }
             }
         }
     }

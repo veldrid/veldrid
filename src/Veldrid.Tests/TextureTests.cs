@@ -8,7 +8,7 @@ namespace Veldrid.Tests
 {
     public abstract class TextureTestBase<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Fact]
+        [SkippableFact]
         public void Map_Succeeds()
         {
             Texture texture = RF.CreateTexture(
@@ -18,7 +18,7 @@ namespace Veldrid.Tests
             GD.Unmap(texture, 0);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Map_Succeeds_R32_G32_B32_A32_UInt()
         {
             Texture texture = RF.CreateTexture(
@@ -28,7 +28,7 @@ namespace Veldrid.Tests
             GD.Unmap(texture, 0);
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(false)]
         [InlineData(true)]
         public unsafe void Update_ThenMapRead_Succeeds_R32Float(bool useArrayOverload)
@@ -63,7 +63,7 @@ namespace Veldrid.Tests
             }
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(false)]
         [InlineData(true)]
         public unsafe void Update_ThenMapRead_SingleMip_Succeeds_R16UNorm(bool useArrayOverload)
@@ -99,7 +99,7 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Update_ThenCopySingleMip_Succeeds_R16UNorm()
         {
             TextureDescription desc = TextureDescription.Texture2D(
@@ -135,7 +135,7 @@ namespace Veldrid.Tests
             }
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(PixelFormat.BC1_Rgb_UNorm, 8, 0, 0, 64, 64)]
         [InlineData(PixelFormat.BC1_Rgb_UNorm, 8, 8, 4, 16, 16)]
         [InlineData(PixelFormat.BC1_Rgb_UNorm_SRgb, 8, 0, 0, 64, 64)]
@@ -214,7 +214,7 @@ namespace Veldrid.Tests
 
         // [InlineData(true)]
         [InlineData(false)]
-        [Theory]
+        [SkippableTheory]
         public unsafe void Copy_Compressed_Array(bool separateLayerCopies)
         {
             PixelFormat format = PixelFormat.BC3_UNorm;
@@ -285,7 +285,7 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Update_ThenMapRead_3D()
         {
             Texture tex3D = RF.CreateTexture(TextureDescription.Texture3D(
@@ -318,7 +318,7 @@ namespace Veldrid.Tests
             GD.Unmap(tex3D);
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void MapWrite_ThenMapRead_3D()
         {
             Texture tex3D = RF.CreateTexture(TextureDescription.Texture3D(
@@ -343,7 +343,7 @@ namespace Veldrid.Tests
             GD.Unmap(tex3D);
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Update_ThenMapRead_1D()
         {
             if (!GD.Features.Texture1D) { return; }
@@ -364,7 +364,7 @@ namespace Veldrid.Tests
             GD.Unmap(tex1D);
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void MapWrite_ThenMapRead_1D()
         {
             if (!GD.Features.Texture1D) { return; }
@@ -387,7 +387,7 @@ namespace Veldrid.Tests
             GD.Unmap(tex1D);
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Copy_1DTo2D()
         {
             if (!GD.Features.Texture1D) { return; }
@@ -423,7 +423,7 @@ namespace Veldrid.Tests
             GD.Unmap(tex2D);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Update_MultipleMips_1D()
         {
             if (!GD.Features.Texture1D) { return; }
@@ -452,7 +452,7 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public void Copy_DifferentMip_1DTo2D()
         {
             if (!GD.Features.Texture1D) { return; }
@@ -492,7 +492,7 @@ namespace Veldrid.Tests
         [InlineData(TextureUsage.Staging, TextureUsage.Sampled)]
         [InlineData(TextureUsage.Sampled, TextureUsage.Staging)]
         [InlineData(TextureUsage.Sampled, TextureUsage.Sampled)]
-        [Theory]
+        [SkippableTheory]
         public void Copy_WithOffsets_2D(TextureUsage srcUsage, TextureUsage dstUsage)
         {
             Texture src = RF.CreateTexture(TextureDescription.Texture2D(
@@ -532,7 +532,7 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Copy_ArrayToNonArray()
         {
             Texture src = RF.CreateTexture(TextureDescription.Texture2D(
@@ -567,7 +567,7 @@ namespace Veldrid.Tests
             GD.Unmap(dst);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Map_ThenRead_MultipleArrayLayers()
         {
             Texture src = RF.CreateTexture(TextureDescription.Texture2D(
@@ -596,7 +596,7 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Update_WithOffset_2D()
         {
             Texture tex2D = RF.CreateTexture(TextureDescription.Texture2D(
@@ -626,7 +626,7 @@ namespace Veldrid.Tests
                 }
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Update_NonMultipleOfFourWithCompressedTexture_2D()
         {
             Texture tex2D = RF.CreateTexture(TextureDescription.Texture2D(
@@ -644,7 +644,7 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Map_NonZeroMip_3D()
         {
             Texture tex3D = RF.CreateTexture(TextureDescription.Texture3D(
@@ -669,7 +669,7 @@ namespace Veldrid.Tests
             GD.Unmap(tex3D, 2);
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Update_NonStaging_3D()
         {
             Texture tex3D = RF.CreateTexture(TextureDescription.Texture3D(
@@ -711,7 +711,7 @@ namespace Veldrid.Tests
             GD.Unmap(staging);
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Copy_NonSquareTexture()
         {
             Texture src = RF.CreateTexture(
@@ -753,7 +753,7 @@ namespace Veldrid.Tests
             GD.Unmap(dst);
         }
 
-        [Theory]
+        [SkippableTheory]
         [MemberData(nameof(FormatCoverageData))]
         public unsafe void FormatCoverage_CopyThenRead(
             PixelFormat format, int rBits, int gBits, int bBits, int aBits,
@@ -856,7 +856,7 @@ namespace Veldrid.Tests
             }
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(TextureUsage.Sampled | TextureUsage.GenerateMipmaps)]
         [InlineData(TextureUsage.RenderTarget | TextureUsage.GenerateMipmaps)]
         [InlineData(TextureUsage.Storage | TextureUsage.GenerateMipmaps)]
@@ -896,7 +896,7 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public void CopyTexture_SmallCompressed()
         {
             Texture src = RF.CreateTexture(TextureDescription.Texture2D(16, 16, 4, 1, PixelFormat.BC3_UNorm, TextureUsage.Staging));
@@ -913,7 +913,7 @@ namespace Veldrid.Tests
             GD.WaitForIdle();
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(PixelFormat.BC1_Rgb_UNorm)]
         [InlineData(PixelFormat.BC1_Rgb_UNorm_SRgb)]
         [InlineData(PixelFormat.BC1_Rgba_UNorm)]

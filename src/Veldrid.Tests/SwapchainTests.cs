@@ -6,7 +6,7 @@ namespace Veldrid.Tests
 {
     public abstract class SwapchainTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Theory]
+        [SkippableTheory]
         [InlineData(PixelFormat.R16_UNorm, false)]
         [InlineData(PixelFormat.R16_UNorm, true)]
         [InlineData(PixelFormat.R32_Float, false)]
@@ -38,7 +38,7 @@ namespace Veldrid.Tests
 
     public abstract class MainSwapchainTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Fact]
+        [SkippableFact]
         public void Textures_Properties_Correct()
         {
             Texture colorTarget = GD.MainSwapchain.Framebuffer.ColorTargets[0].Target;

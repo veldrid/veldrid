@@ -9,7 +9,7 @@ namespace Veldrid.Tests
 {
     public abstract class PipelineTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Fact]
+        [SkippableFact]
         public void CreatePipelines_DifferentInstanceStepRate_Succeeds()
         {
             Texture colorTex = RF.CreateTexture(TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.RenderTarget));

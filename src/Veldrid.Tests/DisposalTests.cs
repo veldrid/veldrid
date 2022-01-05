@@ -4,7 +4,7 @@ namespace Veldrid.Tests
 {
     public abstract class DisposalTestBase<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Fact]
+        [SkippableFact]
         public void Dispose_Buffer()
         {
             DeviceBuffer b = RF.CreateBuffer(new BufferDescription(256, BufferUsage.VertexBuffer));
@@ -12,7 +12,7 @@ namespace Veldrid.Tests
             Assert.True(b.IsDisposed);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Dispose_Texture()
         {
             Texture t = RF.CreateTexture(TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
@@ -25,7 +25,7 @@ namespace Veldrid.Tests
             Assert.True(t.IsDisposed);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Dispose_Framebuffer()
         {
             Texture t = RF.CreateTexture(TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
@@ -38,7 +38,7 @@ namespace Veldrid.Tests
             Assert.True(t.IsDisposed);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Dispose_CommandList()
         {
             CommandList cl = RF.CreateCommandList();
@@ -46,7 +46,7 @@ namespace Veldrid.Tests
             Assert.True(cl.IsDisposed);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Dispose_Sampler()
         {
             Sampler s = RF.CreateSampler(SamplerDescription.Point);
@@ -54,7 +54,7 @@ namespace Veldrid.Tests
             Assert.True(s.IsDisposed);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Dispose_Pipeline()
         {
             Shader[] shaders = TestShaders.LoadVertexFragment(RF, "UIntVertexAttribs");
@@ -95,7 +95,7 @@ namespace Veldrid.Tests
             Assert.True(shaders[1].IsDisposed);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Dispose_ResourceSet()
         {
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(

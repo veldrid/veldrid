@@ -95,6 +95,10 @@
         /// Indicates whether 64-bit floating point integers can be used in shaders.
         /// </summary>
         public bool ShaderFloat64 { get; }
+        /// <summary>
+        /// Indicates whether cube map array textures are supported.
+        /// </summary>
+        public bool CubeMapArrayTextures { get; }
 
         internal GraphicsDeviceFeatures(
             bool computeShader,
@@ -115,7 +119,8 @@
             bool subsetTextureView,
             bool commandListDebugMarkers,
             bool bufferRangeBinding,
-            bool shaderFloat64)
+            bool shaderFloat64,
+            bool cubeMapArrayTextures)
         {
             ComputeShader = computeShader;
             GeometryShader = geometryShader;
@@ -136,6 +141,7 @@
             CommandListDebugMarkers = commandListDebugMarkers;
             BufferRangeBinding = bufferRangeBinding;
             ShaderFloat64 = shaderFloat64;
+            CubeMapArrayTextures = cubeMapArrayTextures;
         }
     }
 }

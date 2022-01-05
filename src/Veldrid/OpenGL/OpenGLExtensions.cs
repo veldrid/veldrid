@@ -54,6 +54,8 @@ namespace Veldrid.OpenGL
             StorageBuffers = GLVersion(4, 3) || IsExtensionSupported("GL_ARB_shader_storage_buffer_object")
                 || GLESVersion(3, 1);
 
+            CubeMapArrayTexture = GLVersion(1, 3) || GLESVersion(3, 2);
+
             ARB_ClipControl = GLVersion(4, 5) || IsExtensionSupported("GL_ARB_clip_control");
             EXT_sRGBWriteControl = _backend == GraphicsBackend.OpenGLES && IsExtensionSupported("GL_EXT_sRGB_write_control");
             EXT_DebugMarker = _backend == GraphicsBackend.OpenGLES && IsExtensionSupported("GL_EXT_debug_marker");
@@ -91,6 +93,7 @@ namespace Veldrid.OpenGL
         public readonly bool MultiDrawIndirect;
         public readonly bool StorageBuffers;
         public readonly bool AnisotropicFilter;
+        public readonly bool CubeMapArrayTexture;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.

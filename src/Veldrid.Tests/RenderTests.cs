@@ -41,7 +41,7 @@ namespace Veldrid.Tests
 
     public abstract class RenderTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Fact]
+        [SkippableFact]
         public void Points_WithUIntColor()
         {
             Texture target = RF.CreateTexture(TextureDescription.Texture2D(
@@ -176,7 +176,7 @@ namespace Veldrid.Tests
             GD.Unmap(staging);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Points_WithUShortNormColor()
         {
             Texture target = RF.CreateTexture(TextureDescription.Texture2D(
@@ -318,7 +318,7 @@ namespace Veldrid.Tests
             return (ushort)(normalizedValue * ushort.MaxValue);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Points_WithUShortColor()
         {
             Texture target = RF.CreateTexture(TextureDescription.Texture2D(
@@ -441,7 +441,7 @@ namespace Veldrid.Tests
             GD.Unmap(staging);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Points_WithFloat16Color()
         {
             Texture target = RF.CreateTexture(TextureDescription.Texture2D(
@@ -594,7 +594,7 @@ namespace Veldrid.Tests
 
         [InlineData(false)]
         [InlineData(true)]
-        [Theory]
+        [SkippableTheory]
         public unsafe void Points_WithTexture_UpdateUnrelated(bool useTextureView)
         {
             // This is a regression test for the case where a user modifies an unrelated texture
@@ -722,7 +722,7 @@ namespace Veldrid.Tests
             GD.Unmap(staging);
         }
 
-        [Fact]
+        [SkippableFact]
         public void ComputeGeneratedVertices()
         {
             if (!GD.Features.ComputeShader)
@@ -791,13 +791,10 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
-        [Fact]
+        [SkippableFact]
         public void ComputeGeneratedTexture()
         {
-            if (!GD.Features.ComputeShader)
-            {
-                return;
-            }
+            Skip.IfNot(GD.Features.ComputeShader);
 
             uint width = 4;
             uint height = 1;
@@ -860,7 +857,7 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(false)]
         [InlineData(true)]
         public void SampleTexture1D(bool arrayTexture)
@@ -926,7 +923,7 @@ namespace Veldrid.Tests
             GD.Unmap(staging);
         }
 
-        [Fact]
+        [SkippableFact]
         public void BindTextureAcrossMultipleDrawCalls()
         {
             Texture target1 = RF.CreateTexture(TextureDescription.Texture2D(
@@ -1047,7 +1044,7 @@ namespace Veldrid.Tests
             GD.Unmap(staging3);
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(2, 0)]
         [InlineData(5, 3)]
         [InlineData(32, 31)]
@@ -1111,7 +1108,7 @@ namespace Veldrid.Tests
             GD.Unmap(staging, targetLayer);
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(1, 0, 0)]
         [InlineData(1, 0, 3)]
         [InlineData(1, 0, 5)]
@@ -1120,6 +1117,8 @@ namespace Veldrid.Tests
         [InlineData(4, 2, 5)]
         public void RenderToCubemapFace(uint layerCount, uint targetLayer, uint targetFace)
         {
+            if (layerCount > 1)
+                Skip.IfNot(GD.Features.CubeMapArrayTextures);
             Texture target = RF.CreateTexture(TextureDescription.Texture2D(
                 16, 16,
                 1, layerCount,
@@ -1174,6 +1173,7 @@ namespace Veldrid.Tests
 
             Texture staging = GetReadback(target);
             MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read, (targetLayer * 6) + targetFace);
+
             for (int x = 0; x < staging.Width; x++)
             {
                 Assert.Equal(RgbaFloat.Pink, readView[x, 0]);
@@ -1181,7 +1181,7 @@ namespace Veldrid.Tests
             GD.Unmap(staging, (targetLayer * 6) + targetFace);
         }
 
-        [Fact]
+        [SkippableFact]
         public void WriteFragmentDepth()
         {
             Texture depthTarget = RF.CreateTexture(

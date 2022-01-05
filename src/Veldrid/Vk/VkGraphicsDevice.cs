@@ -161,7 +161,8 @@ namespace Veldrid.Vk
                 subsetTextureView: true,
                 commandListDebugMarkers: _debugMarkerEnabled,
                 bufferRangeBinding: true,
-                shaderFloat64: _physicalDeviceFeatures.shaderFloat64);
+                shaderFloat64: _physicalDeviceFeatures.shaderFloat64,
+                cubeMapArrayTextures: true);
 
             ResourceFactory = new VkResourceFactory(this);
 

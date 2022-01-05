@@ -6,7 +6,7 @@ namespace Veldrid.Tests
 
     public abstract class VertexLayoutTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Theory]
+        [SkippableTheory]
         [InlineData(0, 0, 0, 0, -1, true)]
         [InlineData(0, 12, 28, 36, -1, true)]
         [InlineData(0, 16, 32, 48, -1, true)]

@@ -51,6 +51,10 @@ namespace Veldrid.OpenGL.EGL
             IntPtr native_window,
             int* attrib_list);
         [DllImport(LibName)]
+        public static extern int eglDestroySurface(
+            IntPtr display,
+            IntPtr surface);
+        [DllImport(LibName)]
         public static extern IntPtr eglCreateContext(IntPtr display,
             IntPtr config,
             IntPtr share_context,

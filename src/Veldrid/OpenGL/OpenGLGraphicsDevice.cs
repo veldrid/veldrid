@@ -720,10 +720,16 @@ namespace Veldrid.OpenGL
 
             Action<IntPtr> destroyContext = ctx =>
             {
+                clearContext();
+                if(eglDestroySurface(display, eglWindowSurface) == 0)
+                {
+                    throw new VeldridException($"Failed to destroy EGLSurface {eglWindowSurface}: {eglGetError()}");
+                }
                 if (eglDestroyContext(display, ctx) == 0)
                 {
                     throw new VeldridException($"Failed to destroy EGLContext {ctx}: {eglGetError()}");
                 }
+                var err = eglGetError();
             };
 
             OpenGLPlatformInfo platformInfo = new OpenGLPlatformInfo(

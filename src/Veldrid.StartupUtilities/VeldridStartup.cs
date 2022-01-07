@@ -41,7 +41,17 @@ namespace Veldrid.StartupUtilities
             }
 
             window = CreateWindow(ref windowCI);
-            gd = CreateGraphicsDevice(window, deviceOptions, preferredBackend);
+
+            try
+            {
+                gd = CreateGraphicsDevice(window, deviceOptions, preferredBackend);
+            }
+            catch (Exception)
+            {
+                window.Close();
+                window = null;
+                throw;
+            }
         }
 
 

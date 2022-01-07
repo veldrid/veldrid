@@ -1,5 +1,4 @@
-﻿using Android.Views;
-using Xunit;
+﻿using Xunit;
 
 namespace Veldrid.Tests.Android
 {
@@ -14,30 +13,27 @@ namespace Veldrid.Tests.Android
         public AndroidDeviceCreator(GraphicsBackend backend)
         {
             Skip.If(!GraphicsDevice.IsBackendSupported(backend));
+
             SurfaceView = new VeldridSurfaceView(Activity, backend);
-            var layoutParams = new ViewGroup.LayoutParams(200, 200);
-            ManualResetEventSlim mre = new ManualResetEventSlim(false);
-            SurfaceView.DeviceCreated += mre.Set;
-            Activity.RunOnUiThread(() =>
+            Activity.Paused += SurfaceView.OnPause;
+            Activity.Resumed += SurfaceView.OnResume;
+            var layoutParams = new RelativeLayout.LayoutParams(10, 10);
+            try
             {
-                Activity.AddContentView(SurfaceView, layoutParams);
-            });
-            mre.Wait();
-            SurfaceView.DeviceCreated -= mre.Set;
-            SurfaceView.RunContinuousRenderLoop();
+                SurfaceView.AddViewToActivity(Activity, layoutParams);
+            }
+            catch (Exception)
+            {
+                Dispose();
+                throw;
+            }
         }
 
         public void Dispose()
         {
-            ManualResetEventSlim mre = new ManualResetEventSlim(false);
-            SurfaceView.DeviceDisposed += mre.Set;
-            Activity.RunOnUiThread(() =>
-            {
-                ((ViewGroup)SurfaceView.Parent).RemoveView(SurfaceView);
-            });
-            mre.Wait();
-            SurfaceView.DeviceDisposed -= mre.Set;
-            SurfaceView.Disable();
+            SurfaceView.RemoveViewFromActivity(Activity);
+            Activity.Paused -= SurfaceView.OnPause;
+            Activity.Resumed -= SurfaceView.OnResume;
         }
     }
 

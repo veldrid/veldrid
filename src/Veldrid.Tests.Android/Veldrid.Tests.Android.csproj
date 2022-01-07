@@ -12,6 +12,9 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Veldrid.Tests\Veldrid.Tests.csproj" />
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
@@ -26,7 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
-    <PackageReference Include="Veldrid.SPIRV" Version="$(VeldridSpirvVersion)" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.15-g0381cb1d3b" />
     <PackageReference Include="Vk" Version="1.0.25" />
     <PackageReference Include="xunit.runner.devices" Version="2.5.25" />
   </ItemGroup>

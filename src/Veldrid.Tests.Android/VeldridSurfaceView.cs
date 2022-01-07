@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Android.Content;
+﻿using Android.Content;
 using Android.Graphics;
 using Android.Runtime;
 using Android.Views;
@@ -10,18 +9,16 @@ namespace Veldrid.Tests.Android
     {
         private readonly GraphicsBackend _backend;
         protected GraphicsDeviceOptions DeviceOptions { get; }
-        private bool _surfaceDestroyed;
-        private bool _paused;
-        private bool _enabled;
-        private bool _needsResize;
-        private bool _surfaceCreated;
 
-        public GraphicsDevice GraphicsDevice { get; protected set; }
-        public Swapchain MainSwapchain { get; protected set; }
+        public GraphicsDevice? GraphicsDevice { get; protected set; }
+        public Swapchain? MainSwapchain { get; protected set; }
 
         public event Action DeviceCreated;
         public event Action DeviceDisposed;
         public event Action Resized;
+
+        private ManualResetEventSlim _surfaceCreated = new ManualResetEventSlim();
+        private ManualResetEventSlim _surfaceDestroyed = new ManualResetEventSlim();
 
         public VeldridSurfaceView(Context context, GraphicsBackend backend)
             : this(context, backend, new GraphicsDeviceOptions())
@@ -37,16 +34,16 @@ namespace Veldrid.Tests.Android
 
             _backend = backend;
             DeviceOptions = deviceOptions;
-            Holder.AddCallback(this);
         }
 
-        public void Disable()
+        public void AddViewToActivity(Activity activity, ViewGroup.LayoutParams layoutParams)
         {
-            _enabled = false;
-        }
-
-        public void SurfaceCreated(ISurfaceHolder holder)
-        {
+            activity.RunOnUiThread(() =>
+            {
+                OnResume();
+                activity.AddContentView(this, layoutParams);
+            });
+            _surfaceCreated.Wait();
             bool deviceCreated = false;
             if (_backend == GraphicsBackend.Vulkan)
             {
@@ -56,8 +53,8 @@ namespace Veldrid.Tests.Android
                     deviceCreated = true;
                 }
 
-                Debug.Assert(MainSwapchain == null);
-                SwapchainSource ss = SwapchainSource.CreateAndroidSurface(holder.Surface.Handle, JNIEnv.Handle);
+                System.Diagnostics.Debug.Assert(MainSwapchain == null);
+                SwapchainSource ss = SwapchainSource.CreateAndroidSurface(Holder.Surface.Handle, JNIEnv.Handle);
                 SwapchainDescription sd = new SwapchainDescription(
                     ss,
                     (uint)Width,
@@ -68,8 +65,8 @@ namespace Veldrid.Tests.Android
             }
             else
             {
-                Debug.Assert(GraphicsDevice == null && MainSwapchain == null);
-                SwapchainSource ss = SwapchainSource.CreateAndroidSurface(holder.Surface.Handle, JNIEnv.Handle);
+                System.Diagnostics.Debug.Assert(GraphicsDevice == null && MainSwapchain == null);
+                SwapchainSource ss = SwapchainSource.CreateAndroidSurface(Holder.Surface.Handle, JNIEnv.Handle);
                 SwapchainDescription sd = new SwapchainDescription(
                     ss,
                     (uint)Width,
@@ -85,57 +82,18 @@ namespace Veldrid.Tests.Android
             {
                 DeviceCreated?.Invoke();
             }
-
-            _surfaceCreated = true;
         }
 
-        public void RunContinuousRenderLoop()
+        public void RemoveViewFromActivity(Activity activity)
         {
-            Task.Factory.StartNew(() => RenderLoop(), TaskCreationOptions.LongRunning);
-        }
-
-        public void SurfaceDestroyed(ISurfaceHolder holder)
-        {
-            _surfaceDestroyed = true;
-        }
-
-        public void SurfaceChanged(ISurfaceHolder holder, [GeneratedEnum] Format format, int width, int height)
-        {
-            _needsResize = true;
-        }
-
-        private void RenderLoop()
-        {
-            _enabled = true;
-            while (_enabled)
+            activity.RunOnUiThread(() =>
             {
-                try
-                {
-                    if (_paused || !_surfaceCreated) { continue; }
+                ((ViewGroup)Parent).RemoveView(this);
+            });
 
-                    if (_surfaceDestroyed)
-                    {
-                        HandleSurfaceDestroyed();
-                        continue;
-                    }
+            _surfaceDestroyed.Wait();
 
-                    if (_needsResize)
-                    {
-                        _needsResize = false;
-                        MainSwapchain.Resize((uint)Width, (uint)Height);
-                        Resized?.Invoke();
-                    }
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine("Encountered an error while rendering: " + e);
-                    //throw;
-                }
-            }
-        }
-
-        private void HandleSurfaceDestroyed()
-        {
+            GraphicsDevice?.WaitForIdle();
             MainSwapchain?.Dispose();
             MainSwapchain = null;
             GraphicsDevice?.Dispose();
@@ -143,14 +101,32 @@ namespace Veldrid.Tests.Android
             DeviceDisposed?.Invoke();
         }
 
-        public void OnPause()
+        public void SurfaceCreated(ISurfaceHolder holder)
         {
-            _paused = true;
+            _surfaceCreated.Set();
+            _surfaceDestroyed.Reset();
+        }
+
+        public void SurfaceDestroyed(ISurfaceHolder holder)
+        {
+            _surfaceDestroyed.Set();
+            _surfaceCreated.Reset();
+        }
+
+        public void SurfaceChanged(ISurfaceHolder holder, [GeneratedEnum] Format format, int width, int height)
+        {
+            //MainSwapchain?.Resize((uint)Width, (uint)Height);
+            //Resized?.Invoke();
         }
 
         public void OnResume()
         {
-            _paused = false;
+            Holder.AddCallback(this);
+        }
+
+        public void OnPause()
+        {
+            Holder.RemoveCallback(this);
         }
     }
 }

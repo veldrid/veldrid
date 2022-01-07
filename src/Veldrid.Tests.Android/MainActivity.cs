@@ -16,6 +16,10 @@ namespace Veldrid.Tests.Android
     )]
     public class MainActivity : RunnerActivity
     {
+        public delegate void LifecycleHandler();
+        public event LifecycleHandler Paused;
+        public event LifecycleHandler Resumed;
+
         public MainActivity()
         {
             AndroidDeviceCreator.Activity = this;
@@ -42,6 +46,18 @@ namespace Veldrid.Tests.Android
 #endif
             // you cannot add more assemblies once calling base
             base.OnCreate(bundle);
+        }
+
+        protected override void OnPause()
+        {
+            base.OnPause();
+            Paused?.Invoke();
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+            Resumed?.Invoke();
         }
     }
 }

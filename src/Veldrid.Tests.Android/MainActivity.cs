@@ -17,8 +17,8 @@ namespace Veldrid.Tests.Android
     public class MainActivity : RunnerActivity
     {
         public delegate void LifecycleHandler();
-        public event LifecycleHandler Paused;
-        public event LifecycleHandler Resumed;
+        public event LifecycleHandler? Paused;
+        public event LifecycleHandler? Resumed;
 
         public MainActivity()
         {

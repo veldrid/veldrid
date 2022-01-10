@@ -13,17 +13,12 @@ namespace Veldrid.Tests.Android
         public GraphicsDevice? GraphicsDevice { get; protected set; }
         public Swapchain? MainSwapchain { get; protected set; }
 
-        public event Action DeviceCreated;
-        public event Action DeviceDisposed;
-        public event Action Resized;
+        public event Action? DeviceCreated;
+        public event Action? DeviceDisposed;
+        public event Action? Resized;
 
         private ManualResetEventSlim _surfaceCreated = new ManualResetEventSlim();
         private ManualResetEventSlim _surfaceDestroyed = new ManualResetEventSlim();
-
-        public VeldridSurfaceView(Context context, GraphicsBackend backend)
-            : this(context, backend, new GraphicsDeviceOptions())
-        {
-        }
 
         public VeldridSurfaceView(Context context, GraphicsBackend backend, GraphicsDeviceOptions deviceOptions) : base(context)
         {
@@ -45,28 +40,29 @@ namespace Veldrid.Tests.Android
             });
             _surfaceCreated.Wait();
             bool deviceCreated = false;
+            var surfaceHandle = Holder!.Surface!.Handle;
             if (_backend == GraphicsBackend.Vulkan)
             {
-                if (GraphicsDevice == null)
-                {
-                    GraphicsDevice = GraphicsDevice.CreateVulkan(DeviceOptions);
-                    deviceCreated = true;
-                }
-
                 System.Diagnostics.Debug.Assert(MainSwapchain == null);
-                SwapchainSource ss = SwapchainSource.CreateAndroidSurface(Holder.Surface.Handle, JNIEnv.Handle);
+                SwapchainSource ss = SwapchainSource.CreateAndroidSurface(surfaceHandle, JNIEnv.Handle);
                 SwapchainDescription sd = new SwapchainDescription(
                     ss,
                     (uint)Width,
                     (uint)Height,
                     DeviceOptions.SwapchainDepthFormat,
                     DeviceOptions.SyncToVerticalBlank);
-                MainSwapchain = GraphicsDevice.ResourceFactory.CreateSwapchain(sd);
+
+                if (GraphicsDevice == null)
+                {
+                    GraphicsDevice = GraphicsDevice.CreateVulkan(DeviceOptions, sd);
+                    deviceCreated = true;
+                }
+                MainSwapchain = GraphicsDevice.MainSwapchain;
             }
             else
             {
                 System.Diagnostics.Debug.Assert(GraphicsDevice == null && MainSwapchain == null);
-                SwapchainSource ss = SwapchainSource.CreateAndroidSurface(Holder.Surface.Handle, JNIEnv.Handle);
+                SwapchainSource ss = SwapchainSource.CreateAndroidSurface(surfaceHandle, JNIEnv.Handle);
                 SwapchainDescription sd = new SwapchainDescription(
                     ss,
                     (uint)Width,
@@ -88,7 +84,10 @@ namespace Veldrid.Tests.Android
         {
             activity.RunOnUiThread(() =>
             {
-                ((ViewGroup)Parent).RemoveView(this);
+                var parent = Parent as ViewGroup;
+                if (parent is null)
+                    throw new NullReferenceException($"Could not get {nameof(VeldridSurfaceView)}'s parent in {nameof(RemoveViewFromActivity)}");
+                parent?.RemoveView(this);
             });
 
             _surfaceDestroyed.Wait();
@@ -116,17 +115,17 @@ namespace Veldrid.Tests.Android
         public void SurfaceChanged(ISurfaceHolder holder, [GeneratedEnum] Format format, int width, int height)
         {
             //MainSwapchain?.Resize((uint)Width, (uint)Height);
-            //Resized?.Invoke();
+            Resized?.Invoke();
         }
 
         public void OnResume()
         {
-            Holder.AddCallback(this);
+            Holder?.AddCallback(this);
         }
 
         public void OnPause()
         {
-            Holder.RemoveCallback(this);
+            Holder?.RemoveCallback(this);
         }
     }
 }

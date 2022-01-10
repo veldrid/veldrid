@@ -6,15 +6,16 @@ namespace Veldrid.Tests.Android
     {
         public static MainActivity? Activity { get; set; }
 
-        public VeldridSurfaceView SurfaceView { get; private set; }
+        public VeldridSurfaceView SurfaceView { get; }
 
-        public GraphicsDevice GraphicsDevice => SurfaceView.GraphicsDevice;
+        public GraphicsDevice? GraphicsDevice => SurfaceView?.GraphicsDevice;
 
         public AndroidDeviceCreator(GraphicsBackend backend)
         {
             Skip.If(!GraphicsDevice.IsBackendSupported(backend));
-
-            SurfaceView = new VeldridSurfaceView(Activity, backend);
+            if(Activity is null)
+                throw new NullReferenceException(nameof(Activity));
+            SurfaceView = new VeldridSurfaceView(Activity, backend, new GraphicsDeviceOptions() { SwapchainDepthFormat = PixelFormat.R16_UNorm });
             Activity.Paused += SurfaceView.OnPause;
             Activity.Resumed += SurfaceView.OnResume;
             var layoutParams = new RelativeLayout.LayoutParams(10, 10);
@@ -31,9 +32,10 @@ namespace Veldrid.Tests.Android
 
         public void Dispose()
         {
-            SurfaceView.RemoveViewFromActivity(Activity);
-            Activity.Paused -= SurfaceView.OnPause;
-            Activity.Resumed -= SurfaceView.OnResume;
+            var activity = Activity ?? throw new NullReferenceException(nameof(Activity));
+            SurfaceView.RemoveViewFromActivity(activity);
+            activity.Paused -= SurfaceView.OnPause;
+            activity.Resumed -= SurfaceView.OnResume;
         }
     }
 

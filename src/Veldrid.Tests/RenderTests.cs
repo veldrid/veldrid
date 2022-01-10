@@ -725,10 +725,7 @@ namespace Veldrid.Tests
         [SkippableFact]
         public void ComputeGeneratedVertices()
         {
-            if (!GD.Features.ComputeShader)
-            {
-                return;
-            }
+            Skip.IfNot(GD.Features.ComputeShader);
 
             uint width = 512;
             uint height = 512;
@@ -862,7 +859,7 @@ namespace Veldrid.Tests
         [InlineData(true)]
         public void SampleTexture1D(bool arrayTexture)
         {
-            if (!GD.Features.Texture1D) { return; }
+            Skip.IfNot(GD.Features.Texture1D);
 
             Texture target = RF.CreateTexture(TextureDescription.Texture2D(
                 50, 50, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));

@@ -1,7 +1,13 @@
 ﻿using Xunit;
+using Xunit.Abstractions;
 
 namespace Veldrid.Tests.Android
 {
+    [Trait("Backend", "OpenGLES")]
+    public class OpenGLESDeviceCapabilities : DeviceCapabilitiesBase<AndroidOpenGLESDeviceCreator>
+    {
+        public OpenGLESDeviceCapabilities(ITestOutputHelper output) : base(output) { }
+    }
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESBufferTests : BufferTestBase<AndroidOpenGLESDeviceCreator> { }
     [Trait("Backend", "OpenGLES")]
@@ -24,6 +30,11 @@ namespace Veldrid.Tests.Android
     public class OpenGLESVertexLayoutTests : VertexLayoutTests<AndroidOpenGLESDeviceCreator> { }
 
 
+    [Trait("Backend", "Vulkan")]
+    public class VulkanDeviceCapabilities : DeviceCapabilitiesBase<AndroidVulkanDeviceCreator>
+    {
+        public VulkanDeviceCapabilities(ITestOutputHelper output) : base(output) { }
+    }
     [Trait("Backend", "Vulkan")]
     public class VulkanBufferTests : BufferTestBase<AndroidVulkanDeviceCreator> { }
     [Trait("Backend", "Vulkan")]

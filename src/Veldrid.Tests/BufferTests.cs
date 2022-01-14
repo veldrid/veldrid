@@ -173,14 +173,8 @@ namespace Veldrid.Tests
         [SkippableFact]
         public void MapThenUpdate_Fails()
         {
-            if (GD.BackendType == GraphicsBackend.Vulkan)
-            {
-                return; // TODO
-            }
-            if (GD.BackendType == GraphicsBackend.Metal)
-            {
-                return; // TODO
-            }
+            Skip.If(GD.BackendType == GraphicsBackend.Vulkan); // TODO
+            Skip.If(GD.BackendType == GraphicsBackend.Metal); // TODO
 
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
             MappedResourceView<int> view = GD.Map<int>(buffer, MapMode.ReadWrite);
@@ -206,14 +200,8 @@ namespace Veldrid.Tests
         [SkippableFact]
         public void Map_DifferentMode_Fails()
         {
-            if (GD.BackendType == GraphicsBackend.Vulkan)
-            {
-                return; // TODO
-            }
-            if (GD.BackendType == GraphicsBackend.Metal)
-            {
-                return; // TODO
-            }
+            Skip.If(GD.BackendType == GraphicsBackend.Vulkan); // TODO
+            Skip.If(GD.BackendType == GraphicsBackend.Metal); // TODO
 
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.Staging));
             MappedResource map = GD.Map(buffer, MapMode.Read);
@@ -450,11 +438,8 @@ namespace Veldrid.Tests
         [InlineData(BufferUsage.Staging)]
         public void CreateBuffer_UsageFlagsCoverage(BufferUsage usage)
         {
-            if ((usage & BufferUsage.StructuredBufferReadOnly) != 0
-                || (usage & BufferUsage.StructuredBufferReadWrite) != 0)
-            {
-                return;
-            }
+            Skip.If((usage & BufferUsage.StructuredBufferReadOnly) != 0
+                || (usage & BufferUsage.StructuredBufferReadWrite) != 0);
 
             BufferDescription description = new BufferDescription(64, usage);
             if ((usage & BufferUsage.StructuredBufferReadOnly) != 0 || (usage & BufferUsage.StructuredBufferReadWrite) != 0)

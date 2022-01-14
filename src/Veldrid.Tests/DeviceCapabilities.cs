@@ -11,7 +11,7 @@ namespace Veldrid.Tests
             _output = outputHelper;
         }
 
-        [Fact]
+        [SkippableFact]
         public void DeviceInfo()
         {
             _output.WriteLine($"Backend: {GD.BackendType}");
@@ -67,39 +67,33 @@ namespace Veldrid.Tests
         }
     }
 
-#if TEST_OPENGL
     [Trait("Backend", "OpenGL")]
     public class OpenGLDeviceCapabilities : DeviceCapabilitiesBase<OpenGLDeviceCreator>
     {
         public OpenGLDeviceCapabilities(ITestOutputHelper output) : base(output) { }
     }
-#endif
-#if TEST_OPENGLES
+
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESDeviceCapabilities : DeviceCapabilitiesBase<OpenGLESDeviceCreator>
     {
         public OpenGLESDeviceCapabilities(ITestOutputHelper output) : base(output) { }
     }
-#endif
-#if TEST_VULKAN
+
     [Trait("Backend", "Vulkan")]
     public class VulkanDeviceCapabilities : DeviceCapabilitiesBase<VulkanDeviceCreator>
     {
         public VulkanDeviceCapabilities(ITestOutputHelper output) : base(output) { }
     }
-#endif
-#if TEST_D3D11
+
     [Trait("Backend", "D3D11")]
     public class D3D11DeviceCapabilities : DeviceCapabilitiesBase<D3D11DeviceCreator>
     {
         public D3D11DeviceCapabilities(ITestOutputHelper output) : base(output) { }
     }
-#endif
-#if TEST_METAL
+
     [Trait("Backend", "Metal")]
     public class MetalDeviceCapabilities : DeviceCapabilitiesBase<MetalDeviceCreator>
     {
         public MetalDeviceCapabilities(ITestOutputHelper output) : base(output) { }
     }
-#endif
 }

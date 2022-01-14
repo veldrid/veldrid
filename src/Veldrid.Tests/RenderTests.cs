@@ -1240,24 +1240,18 @@ namespace Veldrid.Tests
         }
     }
 
-#if TEST_OPENGL
     [Trait("Backend", "OpenGL")]
     public class OpenGLRenderTests : RenderTests<OpenGLDeviceCreator> { }
-#endif
-#if TEST_OPENGLES
+
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESRenderTests : RenderTests<OpenGLESDeviceCreator> { }
-#endif
-#if TEST_VULKAN
+
     [Trait("Backend", "Vulkan")]
     public class VulkanRenderTests : RenderTests<VulkanDeviceCreator> { }
-#endif
-#if TEST_D3D11
+
     [Trait("Backend", "D3D11")]
     public class D3D11RenderTests : RenderTests<D3D11DeviceCreator> { }
-#endif
-#if TEST_METAL
+
     [Trait("Backend", "Metal")]
     public class MetalRenderTests : RenderTests<MetalDeviceCreator> { }
-#endif
 }

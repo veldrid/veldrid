@@ -148,34 +148,28 @@ namespace Veldrid.Tests
         }
     }
 
-#if TEST_OPENGL
     [Trait("Backend", "OpenGL")]
     public class OpenGLFramebufferTests : FramebufferTests<OpenGLDeviceCreator> { }
     [Trait("Backend", "OpenGL")]
     public class OpenGLSwapchainFramebufferTests : SwapchainFramebufferTests<OpenGLDeviceCreator> { }
-#endif
-#if TEST_OPENGLES
+
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESFramebufferTests : FramebufferTests<OpenGLESDeviceCreator> { }
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESSwapchainFramebufferTests : SwapchainFramebufferTests<OpenGLESDeviceCreator> { }
-#endif
-#if TEST_VULKAN
+
     [Trait("Backend", "Vulkan")]
     public class VulkanFramebufferTests : FramebufferTests<VulkanDeviceCreator> { }
     [Trait("Backend", "Vulkan")]
     public class VulkanSwapchainFramebufferTests : SwapchainFramebufferTests<VulkanDeviceCreatorWithMainSwapchain> { }
-#endif
-#if TEST_D3D11
+
     [Trait("Backend", "D3D11")]
     public class D3D11FramebufferTests : FramebufferTests<D3D11DeviceCreator> { }
     [Trait("Backend", "D3D11")]
     public class D3D11SwapchainFramebufferTests : SwapchainFramebufferTests<D3D11DeviceCreatorWithMainSwapchain> { }
-#endif
-#if TEST_METAL
+
     [Trait("Backend", "Metal")]
     public class MetalFramebufferTests : FramebufferTests<MetalDeviceCreator> { }
     [Trait("Backend", "Metal")]
     public class MetalSwapchainFramebufferTests : SwapchainFramebufferTests<MetalDeviceCreatorWithMainSwapchain> { }
-#endif
 }

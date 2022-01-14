@@ -5,9 +5,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>false</IsPackable>
     <OutputType>exe</OutputType>
-    <DefineConstants Condition="'$(IsWindows)' == 'true'">$(DefineConstants);TEST_D3D11;TEST_VULKAN;TEST_OPENGL;TEST_OPENGLES</DefineConstants>
-    <DefineConstants Condition="'$(IsLinux)' == 'true'">$(DefineConstants);TEST_VULKAN;TEST_OPENGL;TEST_OPENGLES</DefineConstants>
-    <DefineConstants Condition="'$(IsMacOS)' == 'true'">$(DefineConstants);TEST_METAL;TEST_OPENGL</DefineConstants>
     <StartupObject>Program</StartupObject>
   </PropertyGroup>
 

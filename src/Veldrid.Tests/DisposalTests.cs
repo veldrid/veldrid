@@ -122,24 +122,18 @@ namespace Veldrid.Tests
         }
     }
 
-#if TEST_VULKAN
     [Trait("Backend", "Vulkan")]
     public class VulkanDisposalTests : DisposalTestBase<VulkanDeviceCreator> { }
-#endif
-#if TEST_D3D11
+
     [Trait("Backend", "D3D11")]
     public class D3D11DisposalTests : DisposalTestBase<D3D11DeviceCreator> { }
-#endif
-#if TEST_METAL
+
     [Trait("Backend", "Metal")]
     public class MetalDisposalTests : DisposalTestBase<MetalDeviceCreator> { }
-#endif
-#if TEST_OPENGL
+
     [Trait("Backend", "OpenGL")]
     public class OpenGLDisposalTests : DisposalTestBase<OpenGLDeviceCreator> { }
-#endif
-#if TEST_OPENGLES
+
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESDisposalTests : DisposalTestBase<OpenGLESDeviceCreator> { }
-#endif
 }

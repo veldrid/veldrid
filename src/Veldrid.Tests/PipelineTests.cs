@@ -50,24 +50,18 @@ namespace Veldrid.Tests
         }
     }
 
-#if TEST_OPENGL
     [Trait("Backend", "OpenGL")]
     public class OpenGLPipelineTests : PipelineTests<OpenGLDeviceCreator> { }
-#endif
-#if TEST_OPENGLES
+
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESPipelineTests : PipelineTests<OpenGLESDeviceCreator> { }
-#endif
-#if TEST_VULKAN
+
     [Trait("Backend", "Vulkan")]
     public class VulkanPipelineTests : PipelineTests<VulkanDeviceCreator> { }
-#endif
-#if TEST_D3D11
+
     [Trait("Backend", "D3D11")]
     public class D3D11PipelineTests : PipelineTests<D3D11DeviceCreator> { }
-#endif
-#if TEST_METAL
+
     [Trait("Backend", "Metal")]
     public class MetalPipelineTests : PipelineTests<MetalDeviceCreator> { }
-#endif
 }

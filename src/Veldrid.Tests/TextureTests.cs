@@ -1001,24 +1001,18 @@ namespace Veldrid.Tests
         }
     }
 
-#if TEST_VULKAN
     [Trait("Backend", "Vulkan")]
     public class VulkanTextureTests : TextureTestBase<VulkanDeviceCreator> { }
-#endif
-#if TEST_D3D11
+
     [Trait("Backend", "D3D11")]
     public class D3D11TextureTests : TextureTestBase<D3D11DeviceCreator> { }
-#endif
-#if TEST_METAL
+
     [Trait("Backend", "Metal")]
     public class MetalTextureTests : TextureTestBase<MetalDeviceCreator> { }
-#endif
-#if TEST_OPENGL
+
     [Trait("Backend", "OpenGL")]
     public class OpenGLTextureTests : TextureTestBase<OpenGLDeviceCreator> { }
-#endif
-#if TEST_OPENGLES
+
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESTextureTests : TextureTestBase<OpenGLESDeviceCreator> { }
-#endif
 }

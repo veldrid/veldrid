@@ -379,15 +379,15 @@ namespace Veldrid.Vk
             }
         }
 
-        internal void SetResourceName(DeviceResource resource, string? name)
+        internal void SetResourceName(DeviceResource resource, ReadOnlySpan<char> name)
         {
             if (_debugMarkerEnabled)
             {
-                SetResourceName(resource, name);
+                SetResourceNameCore(resource, name);
             }
         }
 
-        private void SetResourceName(DeviceResource resource, ReadOnlySpan<char> name)
+        private void SetResourceNameCore(DeviceResource resource, ReadOnlySpan<char> name)
         {
             switch (resource)
             {

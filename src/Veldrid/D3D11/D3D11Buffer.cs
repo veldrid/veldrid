@@ -38,7 +38,7 @@ namespace Veldrid.D3D11
             Vortice.Direct3D11.BufferDescription bd = new Vortice.Direct3D11.BufferDescription(
                 (int)sizeInBytes,
                 D3D11Formats.VdToD3D11BindFlags(usage),
-                Vortice.Direct3D11.Usage.Default);
+                Vortice.Direct3D11.ResourceUsage.Default);
             if ((usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
                 || (usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
             {
@@ -59,12 +59,12 @@ namespace Veldrid.D3D11
 
             if ((usage & BufferUsage.Dynamic) == BufferUsage.Dynamic)
             {
-                bd.Usage = Vortice.Direct3D11.Usage.Dynamic;
+                bd.Usage = Vortice.Direct3D11.ResourceUsage.Dynamic;
                 bd.CpuAccessFlags = CpuAccessFlags.Write;
             }
             else if ((usage & BufferUsage.Staging) == BufferUsage.Staging)
             {
-                bd.Usage = Vortice.Direct3D11.Usage.Staging;
+                bd.Usage = Vortice.Direct3D11.ResourceUsage.Staging;
                 bd.CpuAccessFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
             }
 

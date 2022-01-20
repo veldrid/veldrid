@@ -10,6 +10,7 @@ using Vortice.Mathematics;
 using Vortice.Direct3D11.Debug;
 using VorticeDXGI = Vortice.DXGI.DXGI;
 using VorticeD3D11 = Vortice.Direct3D11.D3D11;
+using Vortice.DXGI.Debug;
 
 namespace Veldrid.D3D11
 {
@@ -679,7 +680,7 @@ namespace Veldrid.D3D11
                 // Report live objects using DXGI if available (DXGIGetDebugInterface1 will fail on pre Windows 8 OS).
                 if (VorticeDXGI.DXGIGetDebugInterface1(out IDXGIDebug1 dxgiDebug).Success)
                 {
-                    dxgiDebug.ReportLiveObjects(VorticeDXGI.All, ReportLiveObjectFlags.Summary | ReportLiveObjectFlags.IgnoreInternal);
+                    dxgiDebug.ReportLiveObjects(VorticeDXGI.DebugAll, ReportLiveObjectFlags.Summary | ReportLiveObjectFlags.IgnoreInternal);
                     dxgiDebug.Dispose();
                 }
             }

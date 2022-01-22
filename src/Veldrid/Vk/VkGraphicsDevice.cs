@@ -780,7 +780,6 @@ namespace Veldrid.Vk
                     string extensionName = Util.GetString(properties[property].extensionName);
                     if (extensionName == "VK_EXT_debug_marker")
                     {
-                        activeExtensions[activeExtensionCount++] = CommonStrings.VK_EXT_DEBUG_MARKER_EXTENSION_NAME;
                         requiredDeviceExtensions.Remove(extensionName);
                         _debugMarkerEnabled = true;
                     }
@@ -788,43 +787,41 @@ namespace Veldrid.Vk
                     {
                         // TODO: debug_utils are obsolete on AMD, modern replacement required
 
-                        activeExtensions[activeExtensionCount++] = CommonStrings.VK_EXT_DEBUG_UTILS;
                         requiredDeviceExtensions.Remove(extensionName);
                         _debugMarkerEnabled = true;
                     }
                     else if (extensionName == "VK_KHR_swapchain")
                     {
-                        activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                         requiredDeviceExtensions.Remove(extensionName);
                     }
                     else if (preferStandardClipY && extensionName == "VK_KHR_maintenance1")
                     {
-                        activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                         requiredDeviceExtensions.Remove(extensionName);
                         _standardClipYDirection = true;
                     }
                     else if (extensionName == "VK_KHR_get_memory_requirements2")
                     {
-                        activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                         requiredDeviceExtensions.Remove(extensionName);
                         hasMemReqs2 = true;
                     }
                     else if (extensionName == "VK_KHR_dedicated_allocation")
                     {
-                        activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                         requiredDeviceExtensions.Remove(extensionName);
                         hasDedicatedAllocation = true;
                     }
                     else if (extensionName == "VK_KHR_driver_properties")
                     {
-                        activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                         requiredDeviceExtensions.Remove(extensionName);
                         hasDriverProperties = true;
                     }
                     else if (requiredDeviceExtensions.Remove(extensionName))
                     {
-                        activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                     }
+                    else
+                    {
+                        continue;
+                    }
+                    activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                 }
             }
 

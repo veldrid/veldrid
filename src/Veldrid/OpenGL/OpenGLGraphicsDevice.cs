@@ -1473,23 +1473,6 @@ namespace Veldrid.OpenGL
                         {
                             if (!isCompressed)
                             {
-                                //float* bro = stackalloc float[] { 1, 2, 3, 4 };
-                                //
-                                //glBindTexture(TextureTarget.Texture2D, texture.Texture);
-                                //CheckLastError();
-                                //
-                                //glTexSubImage2D(
-                                //    TextureTarget.Texture2D,
-                                //    (int)0,
-                                //    (int)0,
-                                //    (int)0,
-                                //    1,
-                                //    1,
-                                //    texture.GLPixelFormat,
-                                //    texture.GLPixelType,
-                                //    bro);
-                                //CheckLastError();
-
                                 // Read data into buffer.
                                 if (_gd.Extensions.ARB_DirectStateAccess)
                                 {

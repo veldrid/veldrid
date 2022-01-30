@@ -15,7 +15,7 @@ namespace Veldrid.D3D11
                 ? ComparisonFunction.Never
                 : D3D11Formats.VdToD3D11ComparisonFunc(description.ComparisonKind.Value);
 
-            Vortice.Direct3D11.SamplerDescription samplerStateDesc = new Vortice.Direct3D11.SamplerDescription
+            Vortice.Direct3D11.SamplerDescription samplerStateDesc = new()
             {
                 AddressU = D3D11Formats.VdToD3D11AddressMode(description.AddressModeU),
                 AddressV = D3D11Formats.VdToD3D11AddressMode(description.AddressModeV),

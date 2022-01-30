@@ -15,10 +15,10 @@ namespace Veldrid.NeoDemo.Objects
         private uint _uniformOffset = 0;
 
         private readonly string _name;
-        private readonly MeshData _meshData;
+        private readonly ConstructedMesh _meshData;
         private readonly ImageSharpTexture _textureData;
         private readonly ImageSharpTexture _alphaTextureData;
-        private readonly Transform _transform = new Transform();
+        private readonly Transform _transform = new();
 
         private BoundingBox _centeredBounds;
         private DeviceBuffer _vb;
@@ -40,7 +40,7 @@ namespace Veldrid.NeoDemo.Objects
 
         private DeviceBuffer _worldAndInverseBuffer;
 
-        private readonly DisposeCollector _disposeCollector = new DisposeCollector();
+        private readonly DisposeCollector _disposeCollector = new();
 
         private readonly MaterialPropsAndBuffer _materialProps;
         private readonly Vector3 _objectCenter;
@@ -50,7 +50,7 @@ namespace Veldrid.NeoDemo.Objects
 
         public Transform Transform => _transform;
 
-        public TexturedMesh(string name, MeshData meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
+        public TexturedMesh(string name, ConstructedMesh meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
         {
             _name = name;
             _meshData = meshData;
@@ -72,7 +72,8 @@ namespace Veldrid.NeoDemo.Objects
             ResourceFactory disposeFactory = new DisposeCollectorResourceFactory(gd.ResourceFactory, _disposeCollector);
             _vb = _meshData.CreateVertexBuffer(disposeFactory, cl);
             _vb.Name = _name + "_VB";
-            _ib = _meshData.CreateIndexBuffer(disposeFactory, cl, out _indexCount);
+            _ib = _meshData.CreateIndexBuffer(disposeFactory, cl);
+            _indexCount = _meshData.IndexCount;
             _ib.Name = _name + "_IB";
 
             uint bufferSize = 128;
@@ -124,7 +125,7 @@ namespace Veldrid.NeoDemo.Objects
             ResourceLayout worldLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("WorldAndInverse", ResourceKind.UniformBuffer, ShaderStages.Vertex, ResourceLayoutElementOptions.DynamicBinding)));
 
-            GraphicsPipelineDescription depthPD = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription depthPD = new(
                 BlendStateDescription.Empty,
                 gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
@@ -183,7 +184,7 @@ namespace Veldrid.NeoDemo.Objects
             BlendStateDescription alphaBlendDesc = BlendStateDescription.SingleAlphaBlend;
             alphaBlendDesc.AlphaToCoverageEnabled = true;
 
-            GraphicsPipelineDescription mainPD = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription mainPD = new(
                 _alphamapTexture != null ? alphaBlendDesc : BlendStateDescription.SingleOverrideBlend,
                 gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,

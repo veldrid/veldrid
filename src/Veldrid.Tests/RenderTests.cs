@@ -62,7 +62,7 @@ namespace Veldrid.Tests
                 1);
             GD.UpdateBuffer(orthoBuffer, 0, ref orthoMatrix);
 
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
@@ -77,7 +77,7 @@ namespace Veldrid.Tests
 
             ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, infoBuffer, orthoBuffer));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.Default,
@@ -166,7 +166,7 @@ namespace Veldrid.Tests
                     y = framebuffer.Height - y - 1;
                 }
 
-                RgbaFloat expectedColor = new RgbaFloat(
+                RgbaFloat expectedColor = new(
                     vertex.Color_Int.X / (float)colorNormalizationFactor,
                     vertex.Color_Int.Y / (float)colorNormalizationFactor,
                     vertex.Color_Int.Z / (float)colorNormalizationFactor,
@@ -196,7 +196,7 @@ namespace Veldrid.Tests
                 1);
             GD.UpdateBuffer(orthoBuffer, 0, ref orthoMatrix);
 
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
@@ -210,7 +210,7 @@ namespace Veldrid.Tests
 
             ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, orthoBuffer));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.Default,
@@ -284,7 +284,7 @@ namespace Veldrid.Tests
                     y = framebuffer.Height - y - 1;
                 }
 
-                RgbaFloat expectedColor = new RgbaFloat(
+                RgbaFloat expectedColor = new(
                     vertex.R / (float)ushort.MaxValue,
                     vertex.G / (float)ushort.MaxValue,
                     vertex.B / (float)ushort.MaxValue,
@@ -339,7 +339,7 @@ namespace Veldrid.Tests
                 1);
             GD.UpdateBuffer(orthoBuffer, 0, ref orthoMatrix);
 
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
@@ -354,7 +354,7 @@ namespace Veldrid.Tests
 
             ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, infoBuffer, orthoBuffer));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.Default,
@@ -431,7 +431,7 @@ namespace Veldrid.Tests
                     y = framebuffer.Height - y - 1;
                 }
 
-                RgbaFloat expectedColor = new RgbaFloat(
+                RgbaFloat expectedColor = new(
                     vertex.R / (float)colorNormalizationFactor,
                     vertex.G / (float)colorNormalizationFactor,
                     vertex.B / (float)colorNormalizationFactor,
@@ -462,7 +462,7 @@ namespace Veldrid.Tests
                 1);
             GD.UpdateBuffer(orthoBuffer, 0, ref orthoMatrix);
 
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
@@ -477,7 +477,7 @@ namespace Veldrid.Tests
 
             ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, infoBuffer, orthoBuffer));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.Default,
@@ -627,7 +627,7 @@ namespace Veldrid.Tests
             Texture shouldntBeSampledTexture = RF.CreateTexture(
                 TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
 
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
@@ -651,7 +651,7 @@ namespace Veldrid.Tests
                 set = RF.CreateResourceSet(new ResourceSetDescription(layout, orthoBuffer, sampledTexture, GD.PointSampler));
             }
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.Default,
@@ -876,7 +876,7 @@ namespace Veldrid.Tests
             Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, target));
 
             string SetName = arrayTexture ? "FullScreenTriSampleTextureArray" : "FullScreenTriSampleTexture";
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 Array.Empty<VertexLayoutDescription>(),
                 TestShaders.LoadVertexFragment(RF, SetName));
 
@@ -894,7 +894,7 @@ namespace Veldrid.Tests
 
             ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, tex1D, GD.PointSampler));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.CullNone,
@@ -949,10 +949,10 @@ namespace Veldrid.Tests
 
             // This shader doesn't really matter, just as long as it is different to the first
             // and third render pass and also doesn't use any texture bindings
-            ShaderSetDescription textureShaderSet = new ShaderSetDescription(
+            ShaderSetDescription textureShaderSet = new(
                 Array.Empty<VertexLayoutDescription>(),
                 TestShaders.LoadVertexFragment(RF, "FullScreenTriSampleTexture2D"));
-            ShaderSetDescription quadShaderSet = new ShaderSetDescription(
+            ShaderSetDescription quadShaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
@@ -1064,7 +1064,7 @@ namespace Veldrid.Tests
                     new[] { new FramebufferAttachmentDescription(target, targetLayer) }));
 
             string setName = "FullScreenTriSampleTexture2D";
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 Array.Empty<VertexLayoutDescription>(),
                 TestShaders.LoadVertexFragment(RF, setName));
 
@@ -1083,7 +1083,7 @@ namespace Veldrid.Tests
 
             ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, tex2D, GD.PointSampler));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.CullNone,
@@ -1137,7 +1137,7 @@ namespace Veldrid.Tests
                     new[] { new FramebufferAttachmentDescription(target, (targetLayer * 6) + targetFace) }));
 
             string setName = "FullScreenTriSampleTexture2D";
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 Array.Empty<VertexLayoutDescription>(),
                 TestShaders.LoadVertexFragment(RF, setName));
 
@@ -1154,7 +1154,7 @@ namespace Veldrid.Tests
 
             ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, tex2D, GD.PointSampler));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.CullNone,
@@ -1196,7 +1196,7 @@ namespace Veldrid.Tests
             Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(depthTarget));
 
             string setName = "FullScreenWriteDepth";
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 Array.Empty<VertexLayoutDescription>(),
                 TestShaders.LoadVertexFragment(RF, setName));
 
@@ -1207,7 +1207,7 @@ namespace Veldrid.Tests
             GD.UpdateBuffer(ub, 0, new Vector4(depthTarget.Width, depthTarget.Height, 0, 0));
             ResourceSet rs = RF.CreateResourceSet(new ResourceSetDescription(layout, ub));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 new DepthStencilStateDescription(true, true, ComparisonKind.Always),
                 RasterizerStateDescription.CullNone,

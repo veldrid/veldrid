@@ -198,12 +198,12 @@ namespace Veldrid.OpenGL
                 OpenGLResourceLayout glSetLayout = Util.AssertSubtype<ResourceLayout, OpenGLResourceLayout>(setLayout);
                 ResourceLayoutElementDescription[] resources = glSetLayout.Elements;
 
-                Dictionary<uint, OpenGLUniformBinding> uniformBindings = new Dictionary<uint, OpenGLUniformBinding>();
-                Dictionary<uint, OpenGLTextureBindingSlotInfo> textureBindings = new Dictionary<uint, OpenGLTextureBindingSlotInfo>();
-                Dictionary<uint, OpenGLSamplerBindingSlotInfo> samplerBindings = new Dictionary<uint, OpenGLSamplerBindingSlotInfo>();
-                Dictionary<uint, OpenGLShaderStorageBinding> storageBufferBindings = new Dictionary<uint, OpenGLShaderStorageBinding>();
+                Dictionary<uint, OpenGLUniformBinding> uniformBindings = new();
+                Dictionary<uint, OpenGLTextureBindingSlotInfo> textureBindings = new();
+                Dictionary<uint, OpenGLSamplerBindingSlotInfo> samplerBindings = new();
+                Dictionary<uint, OpenGLShaderStorageBinding> storageBufferBindings = new();
 
-                List<int> samplerTrackedRelativeTextureIndices = new List<int>();
+                List<int> samplerTrackedRelativeTextureIndices = new();
                 for (uint i = 0; i < resources.Length; i++)
                 {
                     ResourceLayoutElementDescription resource = resources[i];

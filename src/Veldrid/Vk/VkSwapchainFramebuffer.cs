@@ -141,7 +141,7 @@ namespace Veldrid.Vk
 
             for (uint i = 0; i < _scImages.Length; i++)
             {
-                VkTexture colorTex = new VkTexture(
+                VkTexture colorTex = new(
                     _gd,
                     Math.Max(1, _scExtent.width),
                     Math.Max(1, _scExtent.height),
@@ -151,8 +151,8 @@ namespace Veldrid.Vk
                     TextureUsage.RenderTarget,
                     TextureSampleCount.Count1,
                     _scImages[i]);
-                FramebufferDescription desc = new FramebufferDescription(_depthTarget?.Target, colorTex);
-                VkFramebuffer fb = new VkFramebuffer(_gd, desc, true);
+                FramebufferDescription desc = new(_depthTarget?.Target, colorTex);
+                VkFramebuffer fb = new(_gd, desc, true);
                 _scFramebuffers[i] = fb;
                 _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
             }

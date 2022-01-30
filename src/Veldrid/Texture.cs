@@ -8,7 +8,7 @@ namespace Veldrid
     /// </summary>
     public abstract class Texture : DeviceResource, MappableResource, IDisposable, BindableResource
     {
-        private readonly object _fullTextureViewLock = new object();
+        private readonly object _fullTextureViewLock = new();
         private TextureView? _fullTextureView;
 
         /// <summary>

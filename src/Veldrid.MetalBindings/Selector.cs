@@ -35,6 +35,6 @@ namespace Veldrid.MetalBindings
             }
         }
 
-        public static implicit operator Selector(string s) => new Selector(s);
+        public static implicit operator Selector(string s) => new(s);
     }
 }

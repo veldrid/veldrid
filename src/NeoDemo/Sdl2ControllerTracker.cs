@@ -14,8 +14,8 @@ namespace Veldrid.NeoDemo
 
         public string ControllerName { get; }
 
-        private readonly Dictionary<SDL_GameControllerAxis, float> _axisValues = new Dictionary<SDL_GameControllerAxis, float>();
-        private readonly Dictionary<SDL_GameControllerButton, bool> _buttons = new Dictionary<SDL_GameControllerButton, bool>();
+        private readonly Dictionary<SDL_GameControllerAxis, float> _axisValues = new();
+        private readonly Dictionary<SDL_GameControllerButton, bool> _buttons = new();
 
         public unsafe Sdl2ControllerTracker(int index)
         {

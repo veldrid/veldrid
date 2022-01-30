@@ -16,9 +16,9 @@ namespace Veldrid.Vk
         private readonly VkPhysicalDevice _physicalDevice;
         private readonly ulong _bufferImageGranularity;
         private readonly ulong _chunkGranularity;
-        private readonly object _allocatorMutex = new object();
-        private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryTypeUnmapped = new Dictionary<uint, ChunkAllocatorSet>();
-        private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryType = new Dictionary<uint, ChunkAllocatorSet>();
+        private readonly object _allocatorMutex = new();
+        private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryTypeUnmapped = new();
+        private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryType = new();
 
         private readonly vkGetBufferMemoryRequirements2_t _getBufferMemoryRequirements2;
         private readonly vkGetImageMemoryRequirements2_t _getImageMemoryRequirements2;
@@ -177,8 +177,8 @@ namespace Veldrid.Vk
             private readonly VkDevice _device;
             private readonly uint _memoryTypeIndex;
             private readonly bool _persistentMapped;
-            private readonly object _mutex = new object();
-            private readonly List<ChunkAllocator> _allocators = new List<ChunkAllocator>();
+            private readonly object _mutex = new();
+            private readonly List<ChunkAllocator> _allocators = new();
 
             public ChunkAllocatorSet(VkDevice device, uint memoryTypeIndex, bool persistentMapped)
             {
@@ -211,7 +211,7 @@ namespace Veldrid.Vk
                         }
                     }
 
-                    ChunkAllocator newAllocator = new ChunkAllocator(_device, _memoryTypeIndex, _persistentMapped);
+                    ChunkAllocator newAllocator = new(_device, _memoryTypeIndex, _persistentMapped);
                     allocators.Add(newAllocator);
                     return newAllocator.Allocate(size, alignment, out block);
                 }
@@ -255,7 +255,7 @@ namespace Veldrid.Vk
             private readonly VkDevice _device;
             private readonly uint _memoryTypeIndex;
             private readonly bool _persistentMapped;
-            private readonly List<VkMemoryBlock> _freeBlocks = new List<VkMemoryBlock>();
+            private readonly List<VkMemoryBlock> _freeBlocks = new();
             private readonly void* _mappedPtr;
             private readonly ulong _totalMemorySize;
 
@@ -282,7 +282,7 @@ namespace Veldrid.Vk
                 }
                 _mappedPtr = mappedPtr;
 
-                VkMemoryBlock initialBlock = new VkMemoryBlock(
+                VkMemoryBlock initialBlock = new(
                     Memory,
                     0,
                     _totalMemorySize,
@@ -345,7 +345,7 @@ namespace Veldrid.Vk
 
                             if (alignedBlockSize != size)
                             {
-                                VkMemoryBlock splitBlock = new VkMemoryBlock(
+                                VkMemoryBlock splitBlock = new(
                                     block.DeviceMemory,
                                     block.Offset + size,
                                     block.Size - size,
@@ -441,7 +441,7 @@ namespace Veldrid.Vk
                         ulong blockEnd = freeBlocks[i + contiguousLength - 1].End;
                         freeBlocks.RemoveRange(i, contiguousLength);
 
-                        VkMemoryBlock mergedBlock = new VkMemoryBlock(
+                        VkMemoryBlock mergedBlock = new(
                             Memory,
                             blockStart,
                             blockEnd - blockStart,
@@ -458,7 +458,7 @@ namespace Veldrid.Vk
             }
 
 #if DEBUG
-            private HashSet<VkMemoryBlock> _allocatedBlocks = new HashSet<VkMemoryBlock>();
+            private HashSet<VkMemoryBlock> _allocatedBlocks = new();
 
             private void CheckAllocatedBlock(VkMemoryBlock block)
             {

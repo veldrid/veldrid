@@ -13,7 +13,7 @@ namespace Veldrid.Vk
     internal unsafe class VkGraphicsDevice : GraphicsDevice
     {
         private static readonly FixedUtf8String s_name = "Veldrid-VkGraphicsDevice";
-        private static readonly Lazy<bool> s_isSupported = new Lazy<bool>(CheckIsSupported, isThreadSafe: true);
+        private static readonly Lazy<bool> s_isSupported = new(CheckIsSupported, isThreadSafe: true);
 
         private VkInstance _instance;
         private VkPhysicalDevice _physicalDevice;
@@ -30,9 +30,9 @@ namespace Veldrid.Vk
         private uint _graphicsQueueIndex;
         private uint _presentQueueIndex;
         private VkCommandPool _graphicsCommandPool;
-        private readonly object _graphicsCommandPoolLock = new object();
+        private readonly object _graphicsCommandPoolLock = new();
         private VkQueue _graphicsQueue;
-        private readonly object _graphicsQueueLock = new object();
+        private readonly object _graphicsQueueLock = new();
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private PFN_vkDebugReportCallbackEXT? _debugCallbackFunc;
         private bool _debugMarkerEnabled;
@@ -41,11 +41,11 @@ namespace Veldrid.Vk
         private vkCmdDebugMarkerBeginEXT_t _markerBegin;
         private vkCmdDebugMarkerEndEXT_t _markerEnd;
         private vkCmdDebugMarkerInsertEXT_t _markerInsert;
-        private readonly ConcurrentDictionary<VkFormat, VkFilter> _filters = new ConcurrentDictionary<VkFormat, VkFilter>();
+        private readonly ConcurrentDictionary<VkFormat, VkFilter> _filters = new();
         private readonly BackendInfoVulkan _vulkanInfo;
 
         private const int SharedCommandPoolCount = 4;
-        private Stack<SharedCommandPool> _sharedGraphicsCommandPools = new Stack<SharedCommandPool>();
+        private Stack<SharedCommandPool> _sharedGraphicsCommandPools = new();
         private VkDescriptorPoolManager _descriptorPoolManager;
         private bool _standardValidationSupported;
         private bool _khronosValidationSupported;
@@ -59,16 +59,13 @@ namespace Veldrid.Vk
         private const uint MinStagingBufferSize = 64;
         private const uint MaxStagingBufferSize = 512;
 
-        private readonly object _stagingResourcesLock = new object();
-        private readonly List<VkTexture> _availableStagingTextures = new List<VkTexture>();
-        private readonly List<VkBuffer> _availableStagingBuffers = new List<VkBuffer>();
+        private readonly object _stagingResourcesLock = new();
+        private readonly List<VkTexture> _availableStagingTextures = new();
+        private readonly List<VkBuffer> _availableStagingBuffers = new();
 
-        private readonly Dictionary<VkCommandBuffer, VkTexture> _submittedStagingTextures
-            = new Dictionary<VkCommandBuffer, VkTexture>();
-        private readonly Dictionary<VkCommandBuffer, VkBuffer> _submittedStagingBuffers
-            = new Dictionary<VkCommandBuffer, VkBuffer>();
-        private readonly Dictionary<VkCommandBuffer, SharedCommandPool> _submittedSharedCommandPools
-            = new Dictionary<VkCommandBuffer, SharedCommandPool>();
+        private readonly Dictionary<VkCommandBuffer, VkTexture> _submittedStagingTextures = new();
+        private readonly Dictionary<VkCommandBuffer, VkBuffer> _submittedStagingBuffers = new();
+        private readonly Dictionary<VkCommandBuffer, SharedCommandPool> _submittedSharedCommandPools = new();
 
         public override string DeviceName => _deviceName;
 
@@ -115,12 +112,12 @@ namespace Veldrid.Vk
         public vkGetImageMemoryRequirements2_t GetImageMemoryRequirements2 => _getImageMemoryRequirements2;
         public vkCreateMetalSurfaceEXT_t CreateMetalSurfaceEXT => _createMetalSurfaceEXT;
 
-        private readonly object _submittedFencesLock = new object();
-        private readonly ConcurrentQueue<Vulkan.VkFence> _availableSubmissionFences = new ConcurrentQueue<Vulkan.VkFence>();
-        private readonly List<FenceSubmissionInfo> _submittedFences = new List<FenceSubmissionInfo>();
+        private readonly object _submittedFencesLock = new();
+        private readonly ConcurrentQueue<Vulkan.VkFence> _availableSubmissionFences = new();
+        private readonly List<FenceSubmissionInfo> _submittedFences = new();
         private readonly VkSwapchain? _mainSwapchain;
 
-        private readonly List<FixedUtf8String> _surfaceExtensions = new List<FixedUtf8String>();
+        private readonly List<FixedUtf8String> _surfaceExtensions = new();
 
         public VkGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? scDesc)
             : this(options, scDesc, new VulkanDeviceOptions())
@@ -473,11 +470,11 @@ namespace Veldrid.Vk
 
         private void CreateInstance(bool debug, VulkanDeviceOptions options)
         {
-            HashSet<string> availableInstanceLayers = new HashSet<string>(EnumerateInstanceLayers());
-            HashSet<string> availableInstanceExtensions = new HashSet<string>(GetInstanceExtensions());
+            HashSet<string> availableInstanceLayers = new(EnumerateInstanceLayers());
+            HashSet<string> availableInstanceExtensions = new(GetInstanceExtensions());
 
             VkInstanceCreateInfo instanceCI = VkInstanceCreateInfo.New();
-            VkApplicationInfo applicationInfo = new VkApplicationInfo();
+            VkApplicationInfo applicationInfo = new();
             applicationInfo.apiVersion = new VkVersion(1, 0, 0);
             applicationInfo.applicationVersion = new VkVersion(1, 0, 0);
             applicationInfo.engineVersion = new VkVersion(1, 0, 0);
@@ -508,7 +505,7 @@ namespace Veldrid.Vk
             }
 
             string[] requestedInstanceExtensions = options.InstanceExtensions ?? Array.Empty<string>();
-            List<FixedUtf8String> tempStrings = new List<FixedUtf8String>();
+            List<FixedUtf8String> tempStrings = new();
             try
             {
                 foreach (string requiredExt in requestedInstanceExtensions)
@@ -518,7 +515,7 @@ namespace Veldrid.Vk
                         throw new VeldridException($"The required instance extension was not available: {requiredExt}");
                     }
 
-                    FixedUtf8String utf8Str = new FixedUtf8String(requiredExt);
+                    FixedUtf8String utf8Str = new(requiredExt);
                     instanceExtensions.Add(utf8Str);
                     tempStrings.Add(utf8Str);
                 }
@@ -745,7 +742,7 @@ namespace Veldrid.Vk
         {
             GetQueueFamilyIndices(surface);
 
-            HashSet<uint> familyIndices = new HashSet<uint> { _graphicsQueueIndex, _presentQueueIndex };
+            HashSet<uint> familyIndices = new() { _graphicsQueueIndex, _presentQueueIndex };
             VkDeviceQueueCreateInfo* queueCreateInfos = stackalloc VkDeviceQueueCreateInfo[familyIndices.Count];
             uint queueCreateInfosCount = (uint)familyIndices.Count;
 
@@ -765,7 +762,7 @@ namespace Veldrid.Vk
 
             VkExtensionProperties[] props = GetDeviceExtensionProperties();
 
-            HashSet<string> requiredDeviceExtensions = new HashSet<string>(options.DeviceExtensions ?? Array.Empty<string>());
+            HashSet<string> requiredDeviceExtensions = new(options.DeviceExtensions ?? Array.Empty<string>());
 
             bool hasMemReqs2 = false;
             bool hasDedicatedAllocation = false;
@@ -838,7 +835,7 @@ namespace Veldrid.Vk
 
             deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
 
-            StackList<IntPtr> layerNames = new StackList<IntPtr>();
+            StackList<IntPtr> layerNames = new();
             if (_standardValidationSupported)
             {
                 layerNames.Add(CommonStrings.StandardValidationLayerName);
@@ -1241,7 +1238,7 @@ namespace Veldrid.Vk
                 SharedCommandPool pool = GetFreeCommandPool();
                 VkCommandBuffer cb = pool.BeginNewCommandBuffer();
 
-                VkBufferCopy copyRegion = new VkBufferCopy
+                VkBufferCopy copyRegion = new()
                 {
                     dstOffset = bufferOffsetInBytes,
                     size = sizeInBytes
@@ -1435,7 +1432,7 @@ namespace Veldrid.Vk
             }
 
             VkInstanceCreateInfo instanceCI = VkInstanceCreateInfo.New();
-            VkApplicationInfo applicationInfo = new VkApplicationInfo();
+            VkApplicationInfo applicationInfo = new();
             applicationInfo.apiVersion = new VkVersion(1, 0, 0);
             applicationInfo.applicationVersion = new VkVersion(1, 0, 0);
             applicationInfo.engineVersion = new VkVersion(1, 0, 0);
@@ -1460,7 +1457,7 @@ namespace Veldrid.Vk
 
             vkDestroyInstance(testInstance, null);
 
-            HashSet<string> instanceExtensions = new HashSet<string>(GetInstanceExtensions());
+            HashSet<string> instanceExtensions = new(GetInstanceExtensions());
             if (!instanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
             {
                 return false;
@@ -1484,7 +1481,7 @@ namespace Veldrid.Vk
             {
                 effectiveLayers *= 6;
             }
-            VkImageSubresourceRange range = new VkImageSubresourceRange(
+            VkImageSubresourceRange range = new(
                  VkImageAspectFlags.Color,
                  0,
                  texture.MipLevels,
@@ -1509,7 +1506,7 @@ namespace Veldrid.Vk
             VkImageAspectFlags aspect = FormatHelpers.IsStencilFormat(texture.Format)
                 ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
                 : VkImageAspectFlags.Depth;
-            VkImageSubresourceRange range = new VkImageSubresourceRange(
+            VkImageSubresourceRange range = new(
                 aspect,
                 0,
                 texture.MipLevels,

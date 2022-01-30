@@ -9,15 +9,15 @@ namespace Veldrid.Vk
         private readonly VkGraphicsDevice _gd;
         private readonly DescriptorResourceCounts _descriptorCounts;
         private readonly DescriptorAllocationToken _descriptorAllocationToken;
-        private readonly List<ResourceRefCount> _refCounts = new List<ResourceRefCount>();
+        private readonly List<ResourceRefCount> _refCounts = new();
         private bool _destroyed;
         private string? _name;
 
         public VkDescriptorSet DescriptorSet => _descriptorAllocationToken.Set;
 
-        private readonly List<VkTexture> _sampledTextures = new List<VkTexture>();
+        private readonly List<VkTexture> _sampledTextures = new();
         public List<VkTexture> SampledTextures => _sampledTextures;
-        private readonly List<VkTexture> _storageImages = new List<VkTexture>();
+        private readonly List<VkTexture> _storageImages = new();
         public List<VkTexture> StorageTextures => _storageImages;
 
         public ResourceRefCount RefCount { get; }

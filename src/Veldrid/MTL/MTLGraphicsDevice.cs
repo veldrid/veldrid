@@ -12,9 +12,9 @@ namespace Veldrid.MTL
 {
     internal unsafe class MTLGraphicsDevice : GraphicsDevice
     {
-        private static readonly Lazy<bool> s_isSupported = new Lazy<bool>(GetIsSupported);
+        private static readonly Lazy<bool> s_isSupported = new(GetIsSupported);
         private static readonly Dictionary<IntPtr, MTLGraphicsDevice> s_aotRegisteredBlocks
-            = new Dictionary<IntPtr, MTLGraphicsDevice>();
+            = new();
 
         private readonly MTLDevice _device;
         private readonly string _deviceName;
@@ -24,16 +24,16 @@ namespace Veldrid.MTL
         private readonly bool[] _supportedSampleCounts;
         private BackendInfoMetal _metalInfo;
 
-        private readonly object _submittedCommandsLock = new object();
-        private readonly Dictionary<MTLCommandBuffer, MTLFence> _submittedCBs = new Dictionary<MTLCommandBuffer, MTLFence>();
+        private readonly object _submittedCommandsLock = new();
+        private readonly Dictionary<MTLCommandBuffer, MTLFence> _submittedCBs = new();
         private MTLCommandBuffer _latestSubmittedCB;
 
-        private readonly object _resetEventsLock = new object();
-        private readonly List<ManualResetEvent[]> _resetEvents = new List<ManualResetEvent[]>();
+        private readonly object _resetEventsLock = new();
+        private readonly List<ManualResetEvent[]> _resetEvents = new();
 
         private const string UnalignedBufferCopyPipelineMacOSName = "MTL_UnalignedBufferCopy_macOS";
         private const string UnalignedBufferCopyPipelineiOSName = "MTL_UnalignedBufferCopy_iOS";
-        private readonly object _unalignedBufferCopyPipelineLock = new object();
+        private readonly object _unalignedBufferCopyPipelineLock = new();
         private readonly NativeLibrary _libSystem;
         private readonly IntPtr _concreteGlobalBlock;
         private MTLShader? _unalignedBufferCopyShader;
@@ -583,10 +583,10 @@ namespace Veldrid.MTL
                         }
 
                         byte[] data = new byte[resourceStream.Length];
-                        using (MemoryStream ms = new MemoryStream(data))
+                        using (MemoryStream ms = new(data))
                         {
                             resourceStream.CopyTo(ms);
-                            ShaderDescription shaderDesc = new ShaderDescription(ShaderStages.Compute, data, "copy_bytes");
+                            ShaderDescription shaderDesc = new(ShaderStages.Compute, data, "copy_bytes");
                             _unalignedBufferCopyShader = new MTLShader(shaderDesc, this);
                         }
                     }

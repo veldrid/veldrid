@@ -1,5 +1,7 @@
 ﻿using System;
 
+#pragma warning disable CA1069 // Enums values should not be duplicated
+
 namespace Veldrid.OpenGLBinding
 {
     public enum DrawBufferMode

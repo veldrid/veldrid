@@ -16,7 +16,8 @@ namespace Veldrid.MetalBindings
             ObjectiveCRuntime.objc_msgSend(NativePtr, sel_setConstantValuetypeatIndex, value, (uint)type, index);
         }
 
-        private static readonly ObjCClass s_class = new ObjCClass(nameof(MTLFunctionConstantValues));
+        private static readonly ObjCClass s_class = new(nameof(MTLFunctionConstantValues));
+
         private static readonly Selector sel_setConstantValuetypeatIndex = "setConstantValue:type:atIndex:";
     }
 }

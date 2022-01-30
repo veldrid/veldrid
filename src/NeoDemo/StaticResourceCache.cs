@@ -7,26 +7,16 @@ namespace Veldrid.NeoDemo
     // Non-thread-safe cache for resources.
     internal static class StaticResourceCache
     {
-        private static readonly Dictionary<GraphicsPipelineDescription, Pipeline> s_pipelines
-            = new Dictionary<GraphicsPipelineDescription, Pipeline>();
-
-        private static readonly Dictionary<ResourceLayoutDescription, ResourceLayout> s_layouts
-            = new Dictionary<ResourceLayoutDescription, ResourceLayout>();
-
-        private static readonly Dictionary<ShaderSetCacheKey, (Shader, Shader)> s_shaderSets
-            = new Dictionary<ShaderSetCacheKey, (Shader, Shader)>();
-
-        private static readonly Dictionary<ImageSharpTexture, Texture> s_textures
-            = new Dictionary<ImageSharpTexture, Texture>();
-
-        private static readonly Dictionary<Texture, TextureView> s_textureViews = new Dictionary<Texture, TextureView>();
-
-        private static readonly Dictionary<ResourceSetDescription, ResourceSet> s_resourceSets
-            = new Dictionary<ResourceSetDescription, ResourceSet>();
+        private static readonly Dictionary<GraphicsPipelineDescription, Pipeline> s_pipelines = new();
+        private static readonly Dictionary<ResourceLayoutDescription, ResourceLayout> s_layouts = new();
+        private static readonly Dictionary<ShaderSetCacheKey, (Shader, Shader)> s_shaderSets = new();
+        private static readonly Dictionary<ImageSharpTexture, Texture> s_textures = new();
+        private static readonly Dictionary<Texture, TextureView> s_textureViews = new();
+        private static readonly Dictionary<ResourceSetDescription, ResourceSet> s_resourceSets = new();
 
         private static Texture _pinkTex;
 
-        public static readonly ResourceLayoutDescription ProjViewLayoutDescription = new ResourceLayoutDescription(
+        public static readonly ResourceLayoutDescription ProjViewLayoutDescription = new(
             new ResourceLayoutElementDescription("Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
             new ResourceLayoutElementDescription("View", ResourceKind.UniformBuffer, ShaderStages.Vertex));
 
@@ -58,7 +48,7 @@ namespace Veldrid.NeoDemo
             string name)
         {
             SpecializationConstant[] constants = ShaderHelper.GetSpecializations(gd);
-            ShaderSetCacheKey cacheKey = new ShaderSetCacheKey(name, constants);
+            ShaderSetCacheKey cacheKey = new(name, constants);
             if (!s_shaderSets.TryGetValue(cacheKey, out (Shader vs, Shader fs) set))
             {
                 set = ShaderHelper.LoadSPIRV(gd, factory, name);

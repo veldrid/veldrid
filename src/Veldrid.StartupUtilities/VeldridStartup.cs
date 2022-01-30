@@ -49,13 +49,17 @@ namespace Veldrid.StartupUtilities
 
         public static Sdl2Window CreateWindow(ref WindowCreateInfo windowCI)
         {
-            SDL_WindowFlags flags = SDL_WindowFlags.OpenGL | SDL_WindowFlags.Resizable
-                    | GetWindowFlags(windowCI.WindowInitialState);
+            SDL_WindowFlags flags =
+                SDL_WindowFlags.OpenGL |
+                SDL_WindowFlags.Resizable |
+                GetWindowFlags(windowCI.WindowInitialState);
+
             if (windowCI.WindowInitialState != WindowState.Hidden)
             {
                 flags |= SDL_WindowFlags.Shown;
             }
-            Sdl2Window window = new Sdl2Window(
+
+            Sdl2Window window = new(
                 windowCI.WindowTitle,
                 windowCI.X,
                 windowCI.Y,
@@ -90,10 +94,13 @@ namespace Veldrid.StartupUtilities
 
         public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window)
             => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), GetPlatformDefaultBackend());
+
         public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsDeviceOptions options)
             => CreateGraphicsDevice(window, options, GetPlatformDefaultBackend());
+
         public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsBackend preferredBackend)
             => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), preferredBackend);
+
         public static GraphicsDevice CreateGraphicsDevice(
             Sdl2Window window,
             GraphicsDeviceOptions options,
@@ -167,13 +174,14 @@ namespace Veldrid.StartupUtilities
 #if !EXCLUDE_METAL_BACKEND
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
             => CreateMetalGraphicsDevice(options, window, options.SwapchainSrgbFormat);
+
         private static unsafe GraphicsDevice CreateMetalGraphicsDevice(
             GraphicsDeviceOptions options,
             Sdl2Window window,
             bool colorSrgb)
         {
             SwapchainSource source = GetSwapchainSource(window);
-            SwapchainDescription swapchainDesc = new SwapchainDescription(
+            SwapchainDescription swapchainDesc = new(
                 source,
                 (uint)window.Width, (uint)window.Height,
                 options.SwapchainDepthFormat,
@@ -207,12 +215,13 @@ namespace Veldrid.StartupUtilities
 #if !EXCLUDE_VULKAN_BACKEND
         public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(GraphicsDeviceOptions options, Sdl2Window window)
             => CreateVulkanGraphicsDevice(options, window, false);
+
         public static unsafe GraphicsDevice CreateVulkanGraphicsDevice(
             GraphicsDeviceOptions options,
             Sdl2Window window,
             bool colorSrgb)
         {
-            SwapchainDescription scDesc = new SwapchainDescription(
+            SwapchainDescription scDesc = new(
                 GetSwapchainSource(window),
                 (uint)window.Width,
                 (uint)window.Height,
@@ -276,7 +285,7 @@ namespace Veldrid.StartupUtilities
 
             result = Sdl2Native.SDL_GL_SetSwapInterval(options.SyncToVerticalBlank ? 1 : 0);
 
-            OpenGL.OpenGLPlatformInfo platformInfo = new OpenGL.OpenGLPlatformInfo(
+            OpenGL.OpenGLPlatformInfo platformInfo = new(
                 contextHandle,
                 Sdl2Native.SDL_GL_GetProcAddress,
                 context => Sdl2Native.SDL_GL_MakeCurrent(sdlHandle, context),
@@ -347,8 +356,8 @@ namespace Veldrid.StartupUtilities
                 }
             }
 
-            int result = Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.DepthSize, depthBits);
-            result = Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.StencilSize, stencilBits);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.DepthSize, depthBits);
+            Sdl2Native.SDL_GL_SetAttribute(SDL_GLAttribute.StencilSize, stencilBits);
 
             if (options.SwapchainSrgbFormat)
             {
@@ -367,7 +376,7 @@ namespace Veldrid.StartupUtilities
             Sdl2Window window)
         {
             SwapchainSource source = GetSwapchainSource(window);
-            SwapchainDescription swapchainDesc = new SwapchainDescription(
+            SwapchainDescription swapchainDesc = new(
                 source,
                 (uint)window.Width, (uint)window.Height,
                 options.SwapchainDepthFormat,
@@ -390,7 +399,7 @@ namespace Veldrid.StartupUtilities
         }
 
 #if !EXCLUDE_OPENGL_BACKEND
-        private static readonly object s_glVersionLock = new object();
+        private static readonly object s_glVersionLock = new();
         private static (int Major, int Minor)? s_maxSupportedGLVersion;
         private static (int Major, int Minor)? s_maxSupportedGLESVersion;
 

@@ -23,7 +23,7 @@ namespace Veldrid.Vk
         private VkClearValue[] _clearValues = Array.Empty<VkClearValue>();
         private bool[] _validColorClearValues = Array.Empty<bool>();
         private VkClearValue? _depthClearValue;
-        private readonly List<VkTexture> _preDrawSampledImages = new List<VkTexture>();
+        private readonly List<VkTexture> _preDrawSampledImages = new();
 
         // Graphics State
         private VkFramebufferBase? _currentFramebuffer;
@@ -41,15 +41,15 @@ namespace Veldrid.Vk
         private bool[] _computeResourceSetsChanged = Array.Empty<bool>();
         private string? _name;
 
-        private readonly object _commandBufferListLock = new object();
-        private readonly Stack<VkCommandBuffer> _availableCommandBuffers = new Stack<VkCommandBuffer>();
-        private readonly List<VkCommandBuffer> _submittedCommandBuffers = new List<VkCommandBuffer>();
+        private readonly object _commandBufferListLock = new();
+        private readonly Stack<VkCommandBuffer> _availableCommandBuffers = new();
+        private readonly List<VkCommandBuffer> _submittedCommandBuffers = new();
 
         private StagingResourceInfo _currentStagingInfo = null!;
-        private readonly object _stagingLock = new object();
-        private readonly Dictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new Dictionary<VkCommandBuffer, StagingResourceInfo>();
-        private readonly List<StagingResourceInfo> _availableStagingInfos = new List<StagingResourceInfo>();
-        private readonly List<VkBuffer> _availableStagingBuffers = new List<VkBuffer>();
+        private readonly object _stagingLock = new();
+        private readonly Dictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new();
+        private readonly List<StagingResourceInfo> _availableStagingInfos = new();
+        private readonly List<VkBuffer> _availableStagingBuffers = new();
 
         public VkCommandPool CommandPool => _pool;
 
@@ -188,14 +188,14 @@ namespace Veldrid.Vk
 
         private protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)
         {
-            VkClearValue clearValue = new VkClearValue
+            VkClearValue clearValue = new()
             {
                 color = new VkClearColorValue(clearColor.R, clearColor.G, clearColor.B, clearColor.A)
             };
 
             if (_activeRenderPass != VkRenderPass.Null)
             {
-                VkClearAttachment clearAttachment = new VkClearAttachment
+                VkClearAttachment clearAttachment = new()
                 {
                     colorAttachment = index,
                     aspectMask = VkImageAspectFlags.Color,
@@ -203,7 +203,7 @@ namespace Veldrid.Vk
                 };
 
                 Texture colorTex = _currentFramebuffer!.ColorTargets[(int)index].Target;
-                VkClearRect clearRect = new VkClearRect
+                VkClearRect clearRect = new()
                 {
                     baseArrayLayer = 0,
                     layerCount = 1,
@@ -222,14 +222,14 @@ namespace Veldrid.Vk
 
         private protected override void ClearDepthStencilCore(float depth, byte stencil)
         {
-            VkClearValue clearValue = new VkClearValue { depthStencil = new VkClearDepthStencilValue(depth, stencil) };
+            VkClearValue clearValue = new() { depthStencil = new VkClearDepthStencilValue(depth, stencil) };
 
             if (_activeRenderPass != VkRenderPass.Null)
             {
                 VkImageAspectFlags aspect = FormatHelpers.IsStencilFormat(_currentFramebuffer!.DepthTarget!.Value.Target.Format)
                     ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
                     : VkImageAspectFlags.Depth;
-                VkClearAttachment clearAttachment = new VkClearAttachment
+                VkClearAttachment clearAttachment = new()
                 {
                     aspectMask = aspect,
                     clearValue = clearValue
@@ -239,7 +239,7 @@ namespace Veldrid.Vk
                 uint renderableHeight = _currentFramebuffer.RenderableHeight;
                 if (renderableWidth > 0 && renderableHeight > 0)
                 {
-                    VkClearRect clearRect = new VkClearRect
+                    VkClearRect clearRect = new()
                     {
                         baseArrayLayer = 0,
                         layerCount = 1,
@@ -434,7 +434,7 @@ namespace Veldrid.Vk
             VkImageAspectFlags aspectFlags = ((source.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
                 ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
                 : VkImageAspectFlags.Color;
-            VkImageResolve region = new VkImageResolve
+            VkImageResolve region = new()
             {
                 extent = new VkExtent3D { width = source.Width, height = source.Height, depth = source.Depth },
                 srcSubresource = new VkImageSubresourceLayers { layerCount = 1, aspectMask = aspectFlags },
@@ -583,7 +583,7 @@ namespace Veldrid.Vk
                         {
                             _validColorClearValues[i] = false;
                             VkClearValue vkClearValue = _clearValues[i];
-                            RgbaFloat clearColor = new RgbaFloat(
+                            RgbaFloat clearColor = new(
                                 vkClearValue.color.float32_0,
                                 vkClearValue.color.float32_1,
                                 vkClearValue.color.float32_2,
@@ -713,7 +713,7 @@ namespace Veldrid.Vk
         {
             if (index == 0 || _gd.Features.MultipleViewports)
             {
-                VkRect2D scissor = new VkRect2D((int)x, (int)y, (int)width, (int)height);
+                VkRect2D scissor = new((int)x, (int)y, (int)width, (int)height);
                 if (_scissorRects[index] != scissor)
                 {
                     _scissorRects[index] = scissor;
@@ -733,7 +733,7 @@ namespace Veldrid.Vk
                     ? viewport.Height
                     : -viewport.Height;
 
-                VkViewport vkViewport = new VkViewport
+                VkViewport vkViewport = new()
                 {
                     x = viewport.X,
                     y = vpY,
@@ -768,7 +768,7 @@ namespace Veldrid.Vk
             VkBuffer dstVkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(destination);
             _currentStagingInfo.AddResource(dstVkBuffer.RefCount);
 
-            VkBufferCopy region = new VkBufferCopy
+            VkBufferCopy region = new()
             {
                 srcOffset = sourceOffset,
                 dstOffset = destinationOffset,
@@ -837,7 +837,7 @@ namespace Veldrid.Vk
 
             if (!sourceIsStaging && !destIsStaging)
             {
-                VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
+                VkImageSubresourceLayers srcSubresource = new()
                 {
                     aspectMask = VkImageAspectFlags.Color,
                     layerCount = layerCount,
@@ -845,7 +845,7 @@ namespace Veldrid.Vk
                     baseArrayLayer = srcBaseArrayLayer
                 };
 
-                VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
+                VkImageSubresourceLayers dstSubresource = new()
                 {
                     aspectMask = VkImageAspectFlags.Color,
                     layerCount = layerCount,
@@ -853,7 +853,7 @@ namespace Veldrid.Vk
                     baseArrayLayer = dstBaseArrayLayer
                 };
 
-                VkImageCopy region = new VkImageCopy
+                VkImageCopy region = new()
                 {
                     srcOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
                     dstOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY, z = (int)dstZ },
@@ -922,7 +922,7 @@ namespace Veldrid.Vk
                     layerCount,
                     VkImageLayout.TransferDstOptimal);
 
-                VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
+                VkImageSubresourceLayers dstSubresource = new()
                 {
                     aspectMask = VkImageAspectFlags.Color,
                     layerCount = layerCount,
@@ -945,7 +945,7 @@ namespace Veldrid.Vk
                 uint copyWidth = Math.Min(width, mipWidth);
                 uint copyheight = Math.Min(height, mipHeight);
 
-                VkBufferImageCopy regions = new VkBufferImageCopy
+                VkBufferImageCopy regions = new()
                 {
                     bufferOffset = srcLayout.offset
                         + (srcZ * depthPitch)
@@ -988,7 +988,7 @@ namespace Veldrid.Vk
                 VkImageAspectFlags aspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
                     ? VkImageAspectFlags.Depth
                     : VkImageAspectFlags.Color;
-                VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
+                VkImageSubresourceLayers srcSubresource = new()
                 {
                     aspectMask = aspect,
                     layerCount = layerCount,
@@ -1008,7 +1008,7 @@ namespace Veldrid.Vk
                 uint rowPitch = FormatHelpers.GetRowPitch(bufferRowLength, dstVkTexture.Format);
                 uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, dstVkTexture.Format);
 
-                VkBufferImageCopy region = new VkBufferImageCopy
+                VkBufferImageCopy region = new()
                 {
                     bufferRowLength = mipWidth,
                     bufferImageHeight = mipHeight,
@@ -1050,7 +1050,7 @@ namespace Veldrid.Vk
                     {
                         for (uint yy = 0; yy < height; yy++)
                         {
-                            VkBufferCopy region = new VkBufferCopy
+                            VkBufferCopy region = new()
                             {
                                 srcOffset = srcLayout.offset
                                     + srcLayout.depthPitch * (zz + srcZ)
@@ -1081,7 +1081,7 @@ namespace Veldrid.Vk
                     {
                         for (uint row = 0; row < numRows; row++)
                         {
-                            VkBufferCopy region = new VkBufferCopy
+                            VkBufferCopy region = new()
                             {
                                 srcOffset = srcLayout.offset
                                     + srcLayout.depthPitch * (zz + srcZ)

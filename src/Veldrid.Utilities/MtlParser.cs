@@ -12,9 +12,7 @@ namespace Veldrid.Utilities
     /// </summary>
     public class MtlParser
     {
-        private static readonly string[] s_newline = new string[] { "\n" };
-
-        private readonly ParseContext _pc = new ParseContext();
+        private readonly ParseContext _pc = new();
 
         /// <summary>
         /// Parses a <see cref="MtlFile"/> from the given array of text lines.
@@ -40,13 +38,13 @@ namespace Veldrid.Utilities
         public MtlFile Parse(Stream s)
         {
             string text;
-            using (StreamReader sr = new StreamReader(s))
+            using (StreamReader sr = new(s))
             {
                 text = sr.ReadToEnd();
             }
 
             int lineStart = 0;
-            int lineEnd = -1;
+            int lineEnd;
             while ((lineEnd = text.IndexOf('\n', lineStart)) != -1)
             {
                 string line;
@@ -57,7 +55,7 @@ namespace Veldrid.Utilities
                 }
                 else
                 {
-                    line = text.Substring(lineStart, lineEnd - lineStart);
+                    line = text[lineStart..lineEnd];
                 }
 
                 _pc.Process(line);
@@ -72,7 +70,7 @@ namespace Veldrid.Utilities
         {
             private static readonly char[] s_whitespaceChars = new char[] { ' ' };
 
-            private readonly List<MaterialDefinition> _definitions = new List<MaterialDefinition>();
+            private readonly List<MaterialDefinition> _definitions = new();
             private MaterialDefinition _currentDefinition;
 
             private int _currentLine;

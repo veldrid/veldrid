@@ -9,19 +9,12 @@ namespace Veldrid.D3D11
     internal class D3D11ResourceCache : IDisposable
     {
         private readonly ID3D11Device _device;
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
 
-        private readonly Dictionary<BlendStateDescription, ID3D11BlendState> _blendStates
-            = new Dictionary<BlendStateDescription, ID3D11BlendState>();
-
-        private readonly Dictionary<DepthStencilStateDescription, ID3D11DepthStencilState> _depthStencilStates
-            = new Dictionary<DepthStencilStateDescription, ID3D11DepthStencilState>();
-
-        private readonly Dictionary<D3D11RasterizerStateCacheKey, ID3D11RasterizerState> _rasterizerStates
-            = new Dictionary<D3D11RasterizerStateCacheKey, ID3D11RasterizerState>();
-
-        private readonly Dictionary<InputLayoutCacheKey, ID3D11InputLayout> _inputLayouts
-            = new Dictionary<InputLayoutCacheKey, ID3D11InputLayout>();
+        private readonly Dictionary<BlendStateDescription, ID3D11BlendState> _blendStates = new();
+        private readonly Dictionary<DepthStencilStateDescription, ID3D11DepthStencilState> _depthStencilStates = new();
+        private readonly Dictionary<D3D11RasterizerStateCacheKey, ID3D11RasterizerState> _rasterizerStates = new();
+        private readonly Dictionary<InputLayoutCacheKey, ID3D11InputLayout> _inputLayouts = new();
 
         public D3D11ResourceCache(ID3D11Device device)
         {
@@ -66,7 +59,7 @@ namespace Veldrid.D3D11
         private ID3D11BlendState CreateNewBlendState(in BlendStateDescription description)
         {
             BlendAttachmentDescription[] attachmentStates = description.AttachmentStates;
-            BlendDescription d3dBlendStateDesc = new BlendDescription();
+            BlendDescription d3dBlendStateDesc = new();
 
             for (int i = 0; i < attachmentStates.Length; i++)
             {
@@ -103,7 +96,7 @@ namespace Veldrid.D3D11
 
         private ID3D11DepthStencilState CreateNewDepthStencilState(in DepthStencilStateDescription description)
         {
-            DepthStencilDescription dssDesc = new DepthStencilDescription
+            DepthStencilDescription dssDesc = new()
             {
                 DepthFunc = D3D11Formats.VdToD3D11ComparisonFunc(description.DepthComparison),
                 DepthEnable = description.DepthTestEnabled,
@@ -132,7 +125,7 @@ namespace Veldrid.D3D11
         private ID3D11RasterizerState GetRasterizerState(in RasterizerStateDescription description, bool multisample)
         {
             Debug.Assert(Monitor.IsEntered(_lock));
-            D3D11RasterizerStateCacheKey key = new D3D11RasterizerStateCacheKey(description, multisample);
+            D3D11RasterizerStateCacheKey key = new(description, multisample);
             if (!_rasterizerStates.TryGetValue(key, out ID3D11RasterizerState? rasterizerState))
             {
                 rasterizerState = CreateNewRasterizerState(key);
@@ -144,7 +137,7 @@ namespace Veldrid.D3D11
 
         private ID3D11RasterizerState CreateNewRasterizerState(in D3D11RasterizerStateCacheKey key)
         {
-            RasterizerDescription rssDesc = new RasterizerDescription
+            RasterizerDescription rssDesc = new()
             {
                 CullMode = D3D11Formats.VdToD3D11CullMode(key.VeldridDescription.CullMode),
                 FillMode = D3D11Formats.VdToD3D11FillMode(key.VeldridDescription.FillMode),
@@ -187,7 +180,7 @@ namespace Veldrid.D3D11
 
             int element = 0; // Total element index across slots.
             InputElementDescription[] elements = new InputElementDescription[totalCount];
-            SemanticIndices si = new SemanticIndices();
+            SemanticIndices si = new();
             for (int slot = 0; slot < vertexLayouts.Length; slot++)
             {
                 VertexElementDescription[] elementDescs = vertexLayouts[slot].Elements;
@@ -280,7 +273,9 @@ namespace Veldrid.D3D11
             public VertexLayoutDescription[] VertexLayouts;
 
             public static InputLayoutCacheKey CreateTempKey(VertexLayoutDescription[] original)
-                => new InputLayoutCacheKey { VertexLayouts = original };
+            {
+                return new() { VertexLayouts = original };
+            }
 
             public static InputLayoutCacheKey CreatePermanentKey(VertexLayoutDescription[] original)
             {

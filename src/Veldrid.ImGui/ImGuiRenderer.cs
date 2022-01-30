@@ -40,14 +40,13 @@ namespace Veldrid
         private Vector2 _scaleFactor = Vector2.One;
 
         // Image trackers
-        private readonly Dictionary<TextureView, ResourceSetInfo> _setsByView
-            = new Dictionary<TextureView, ResourceSetInfo>();
-        private readonly Dictionary<Texture, TextureView> _autoViewsByTexture
-            = new Dictionary<Texture, TextureView>();
-        private readonly Dictionary<IntPtr, ResourceSetInfo> _viewsById = new Dictionary<IntPtr, ResourceSetInfo>();
-        private readonly List<IDisposable> _ownedResources = new List<IDisposable>();
+        private readonly Dictionary<TextureView, ResourceSetInfo> _setsByView = new();
+        private readonly Dictionary<Texture, TextureView> _autoViewsByTexture = new();
+        private readonly Dictionary<IntPtr, ResourceSetInfo> _viewsById = new();
+        private readonly List<IDisposable> _ownedResources = new();
         private int _lastAssignedID = 100;
         private bool _frameBegun;
+        private bool _disposed;
 
         /// <summary>
         /// Constructs a new ImGuiRenderer.
@@ -57,7 +56,9 @@ namespace Veldrid
         /// <param name="width">The initial width of the rendering target. Can be resized.</param>
         /// <param name="height">The initial height of the rendering target. Can be resized.</param>
         public ImGuiRenderer(GraphicsDevice gd, OutputDescription outputDescription, int width, int height)
-            : this(gd, outputDescription, width, height, ColorSpaceHandling.Legacy) { }
+            : this(gd, outputDescription, width, height, ColorSpaceHandling.Legacy)
+        {
+        }
 
         /// <summary>
         /// Constructs a new ImGuiRenderer.
@@ -101,7 +102,9 @@ namespace Veldrid
         }
 
         public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription)
-            => CreateDeviceResources(gd, outputDescription, _colorSpaceHandling);
+        {
+            CreateDeviceResources(gd, outputDescription, _colorSpaceHandling);
+        }
 
         public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription, ColorSpaceHandling colorSpaceHandling)
         {
@@ -135,7 +138,7 @@ namespace Veldrid
             _textureLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("MainTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)));
 
-            GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription pd = new(
                 BlendStateDescription.SingleAlphaBlend,
                 new DepthStencilStateDescription(false, false, ComparisonKind.Always),
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, true),
@@ -257,36 +260,36 @@ namespace Veldrid
             switch (factory.BackendType)
             {
                 case GraphicsBackend.Direct3D11:
-                {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy)
-                    { name += "-legacy"; }
-                    string resourceName = name + ".hlsl.bytes";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy)
+                        { name += "-legacy"; }
+                        string resourceName = name + ".hlsl.bytes";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.OpenGL:
-                {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy)
-                    { name += "-legacy"; }
-                    string resourceName = name + ".glsl";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy)
+                        { name += "-legacy"; }
+                        string resourceName = name + ".glsl";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.OpenGLES:
-                {
-                    if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy)
-                    { name += "-legacy"; }
-                    string resourceName = name + ".glsles";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        if (stage == ShaderStages.Vertex && colorSpaceHandling == ColorSpaceHandling.Legacy)
+                        { name += "-legacy"; }
+                        string resourceName = name + ".glsles";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.Vulkan:
-                {
-                    string resourceName = name + ".spv";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        string resourceName = name + ".spv";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 case GraphicsBackend.Metal:
-                {
-                    string resourceName = name + ".metallib";
-                    return GetEmbeddedResourceBytes(resourceName);
-                }
+                    {
+                        string resourceName = name + ".metallib";
+                        return GetEmbeddedResourceBytes(resourceName);
+                    }
                 default:
                     throw new NotImplementedException();
             }
@@ -294,12 +297,23 @@ namespace Veldrid
 
         private byte[] GetEmbeddedResourceBytes(string resourceName)
         {
-            using (Stream s = _assembly.GetManifestResourceStream(resourceName))
+            using Stream s = _assembly.GetManifestResourceStream(resourceName);
+            byte[] ret = new byte[s.Length];
+            int offset = 0;
+            do
             {
-                byte[] ret = new byte[s.Length];
-                s.Read(ret, 0, (int)s.Length);
-                return ret;
+                int read = s.Read(ret, offset, ret.Length - offset);
+                offset += read;
+                if (read == 0)
+                    break;
             }
+            while (offset < ret.Length);
+
+            if (offset != ret.Length)
+            {
+                throw new EndOfStreamException();
+            }
+            return ret;
         }
 
         /// <summary>
@@ -550,7 +564,7 @@ namespace Veldrid
 
             // Setup orthographic projection matrix into our constant buffer
             {
-                var io = ImGui.GetIO();
+                ImGuiIOPtr io = ImGui.GetIO();
 
                 Matrix4x4 mvp = Matrix4x4.CreateOrthographicOffCenter(
                     0f,
@@ -613,28 +627,6 @@ namespace Veldrid
             }
         }
 
-        /// <summary>
-        /// Frees all graphics resources used by the renderer.
-        /// </summary>
-        public void Dispose()
-        {
-            _vertexBuffer.Dispose();
-            _indexBuffer.Dispose();
-            _projMatrixBuffer.Dispose();
-            _fontTexture.Dispose();
-            _vertexShader.Dispose();
-            _fragmentShader.Dispose();
-            _layout.Dispose();
-            _textureLayout.Dispose();
-            _pipeline.Dispose();
-            _mainResourceSet.Dispose();
-            _fontTextureResourceSet.Dispose();
-
-            foreach (IDisposable resource in _ownedResources)
-            {
-                resource.Dispose();
-            }
-        }
 
         private struct ResourceSetInfo
         {
@@ -646,6 +638,43 @@ namespace Veldrid
                 ImGuiBinding = imGuiBinding;
                 ResourceSet = resourceSet;
             }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _vertexBuffer.Dispose();
+                    _indexBuffer.Dispose();
+                    _projMatrixBuffer.Dispose();
+                    _fontTexture.Dispose();
+                    _vertexShader.Dispose();
+                    _fragmentShader.Dispose();
+                    _layout.Dispose();
+                    _textureLayout.Dispose();
+                    _pipeline.Dispose();
+                    _mainResourceSet.Dispose();
+                    _fontTextureResourceSet.Dispose();
+
+                    foreach (IDisposable resource in _ownedResources)
+                    {
+                        resource.Dispose();
+                    }
+                }
+
+                _disposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Frees all graphics resources used by the renderer.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

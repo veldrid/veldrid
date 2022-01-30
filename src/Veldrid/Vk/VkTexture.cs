@@ -186,7 +186,7 @@ namespace Veldrid.Vk
                 }
 
                 // Use "host cached" memory when available, for better performance of GPU -> CPU transfers
-                var propertyFlags = VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent | VkMemoryPropertyFlags.HostCached;
+                VkMemoryPropertyFlags propertyFlags = VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent | VkMemoryPropertyFlags.HostCached;
                 if (!TryFindMemoryType(_gd.PhysicalDeviceMemProperties, bufferMemReqs.memoryTypeBits, propertyFlags, out _))
                 {
                     propertyFlags ^= VkMemoryPropertyFlags.HostCached;
@@ -275,7 +275,7 @@ namespace Veldrid.Vk
                 VkImageAspectFlags aspect = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil
                   ? (VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil)
                   : VkImageAspectFlags.Color;
-                VkImageSubresource imageSubresource = new VkImageSubresource
+                VkImageSubresource imageSubresource = new()
                 {
                     arrayLayer = arrayLevel,
                     mipLevel = mipLevel,
@@ -289,7 +289,7 @@ namespace Veldrid.Vk
             {
                 base.GetSubresourceLayout(mipLevel, arrayLevel, out uint rowPitch, out uint depthPitch);
 
-                VkSubresourceLayout layout = new VkSubresourceLayout()
+                VkSubresourceLayout layout = new()
                 {
                     rowPitch = rowPitch,
                     depthPitch = depthPitch,

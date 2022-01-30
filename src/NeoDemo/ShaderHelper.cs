@@ -47,7 +47,7 @@ namespace Veldrid.NeoDemo
         {
             bool glOrGles = gd.BackendType == GraphicsBackend.OpenGL || gd.BackendType == GraphicsBackend.OpenGLES;
 
-            List<SpecializationConstant> specializations = new List<SpecializationConstant>();
+            List<SpecializationConstant> specializations = new();
             specializations.Add(new SpecializationConstant(100, gd.IsClipSpaceYInverted));
             specializations.Add(new SpecializationConstant(101, glOrGles)); // TextureCoordinatesInvertedY
             specializations.Add(new SpecializationConstant(102, gd.IsDepthRangeZeroToOne));

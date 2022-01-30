@@ -22,7 +22,7 @@ namespace Veldrid.D3D11
             if (description.DepthTarget != null)
             {
                 D3D11Texture d3dDepthTarget = Util.AssertSubtype<Texture, D3D11Texture>(description.DepthTarget.Value.Target);
-                DepthStencilViewDescription dsvDesc = new DepthStencilViewDescription()
+                DepthStencilViewDescription dsvDesc = new()
                 {
                     Format = D3D11Formats.GetDepthFormat(d3dDepthTarget.Format),
                 };
@@ -64,7 +64,7 @@ namespace Veldrid.D3D11
                 for (int i = 0; i < RenderTargetViews.Length; i++)
                 {
                     D3D11Texture d3dColorTarget = Util.AssertSubtype<Texture, D3D11Texture>(description.ColorTargets[i].Target);
-                    RenderTargetViewDescription rtvDesc = new RenderTargetViewDescription
+                    RenderTargetViewDescription rtvDesc = new()
                     {
                         Format = D3D11Formats.ToDxgiFormat(d3dColorTarget.Format, false),
                     };

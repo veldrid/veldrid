@@ -11,7 +11,7 @@ namespace Veldrid.MetalBindings
 
         public static CAMetalLayer New()
         {
-            var cls = new ObjCClass("CAMetalLayer");
+            ObjCClass cls = new("CAMetalLayer");
             return cls.AllocInit<CAMetalLayer>();
         }
 

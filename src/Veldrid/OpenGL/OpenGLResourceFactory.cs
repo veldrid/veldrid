@@ -34,7 +34,7 @@ namespace Veldrid.OpenGL
 
         public override Pipeline CreateComputePipeline(in ComputePipelineDescription description)
         {
-            OpenGLPipeline pipeline = new OpenGLPipeline(_gd, description);
+            OpenGLPipeline pipeline = new(_gd, description);
             _gd.EnsureResourceInitialized(pipeline);
             return pipeline;
         }
@@ -60,7 +60,7 @@ namespace Veldrid.OpenGL
         {
             ValidateShader(description);
             StagingBlock stagingBlock = _pool.Stage(description.ShaderBytes);
-            OpenGLShader shader = new OpenGLShader(_gd, description.Stage, stagingBlock, description.EntryPoint);
+            OpenGLShader shader = new(_gd, description.Stage, stagingBlock, description.EntryPoint);
             _gd.EnsureResourceInitialized(shader);
             return shader;
         }

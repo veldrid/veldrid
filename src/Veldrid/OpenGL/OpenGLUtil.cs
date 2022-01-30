@@ -44,7 +44,7 @@ namespace Veldrid.OpenGL
                 }
                 if (byteCount >= MaxLabelLength)
                 {
-                    name = name.Slice(0, MaxLabelLength.Value - 4).ToString() + "...";
+                    name = name[..(MaxLabelLength.Value - 4)].ToString() + "...";
                     byteCount = Util.UTF8.GetByteCount(name);
                 }
 

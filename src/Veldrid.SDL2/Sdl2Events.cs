@@ -6,8 +6,8 @@ namespace Veldrid.Sdl2
 {
     public static class Sdl2Events
     {
-        private static readonly object s_lock = new object();
-        private static readonly List<SDLEventHandler> s_processors = new List<SDLEventHandler>();
+        private static readonly object s_lock = new();
+        private static readonly List<SDLEventHandler> s_processors = new();
 
         public static void Subscribe(SDLEventHandler processor)
         {

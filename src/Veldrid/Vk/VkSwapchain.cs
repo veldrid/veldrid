@@ -170,7 +170,7 @@ namespace Veldrid.Vk
                 ? VkFormat.B8g8r8a8Srgb
                 : VkFormat.B8g8r8a8Unorm;
 
-            VkSurfaceFormatKHR surfaceFormat = new VkSurfaceFormatKHR();
+            VkSurfaceFormatKHR surfaceFormat = new();
             if (formats.Length == 1 && formats[0].format == VkFormat.Undefined)
             {
                 surfaceFormat = new VkSurfaceFormatKHR { colorSpace = VkColorSpaceKHR.SrgbNonlinearKHR, format = desiredFormat };
@@ -239,7 +239,7 @@ namespace Veldrid.Vk
             swapchainCI.imageArrayLayers = 1;
             swapchainCI.imageUsage = VkImageUsageFlags.ColorAttachment | VkImageUsageFlags.TransferDst;
 
-            FixedArray2<uint> queueFamilyIndices = new FixedArray2<uint>(_gd.GraphicsQueueIndex, _gd.PresentQueueIndex);
+            FixedArray2<uint> queueFamilyIndices = new(_gd.GraphicsQueueIndex, _gd.PresentQueueIndex);
 
             if (_gd.GraphicsQueueIndex != _gd.PresentQueueIndex)
             {

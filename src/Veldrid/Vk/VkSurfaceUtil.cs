@@ -131,14 +131,14 @@ namespace Veldrid.Vk
             VkGraphicsDevice? gd, VkInstance instance, NSWindowSwapchainSource nsWindowSource, bool hasExtMetalSurface)
         {
             CAMetalLayer metalLayer = CAMetalLayer.New();
-            NSWindow nswindow = new NSWindow(nsWindowSource.NSWindow);
+            NSWindow nswindow = new(nsWindowSource.NSWindow);
             NSView contentView = nswindow.contentView;
             contentView.wantsLayer = true;
             contentView.layer = metalLayer.NativePtr;
 
             if (hasExtMetalSurface)
             {
-                VkMetalSurfaceCreateInfoEXT surfaceCI = new VkMetalSurfaceCreateInfoEXT();
+                VkMetalSurfaceCreateInfoEXT surfaceCI = new();
                 surfaceCI.sType = VkMetalSurfaceCreateInfoEXT.VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
                 surfaceCI.pLayer = metalLayer.NativePtr.ToPointer();
                 VkSurfaceKHR surface;
@@ -160,14 +160,14 @@ namespace Veldrid.Vk
             VkGraphicsDevice? gd, VkInstance instance, UIViewSwapchainSource uiViewSource, bool hasExtMetalSurface)
         {
             CAMetalLayer metalLayer = CAMetalLayer.New();
-            UIView uiView = new UIView(uiViewSource.UIView);
+            UIView uiView = new(uiViewSource.UIView);
             metalLayer.frame = uiView.frame;
             metalLayer.opaque = true;
             uiView.layer.addSublayer(metalLayer.NativePtr);
 
             if (hasExtMetalSurface)
             {
-                VkMetalSurfaceCreateInfoEXT surfaceCI = new VkMetalSurfaceCreateInfoEXT();
+                VkMetalSurfaceCreateInfoEXT surfaceCI = new();
                 surfaceCI.sType = VkMetalSurfaceCreateInfoEXT.VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
                 surfaceCI.pLayer = metalLayer.NativePtr.ToPointer();
                 VkSurfaceKHR surface;

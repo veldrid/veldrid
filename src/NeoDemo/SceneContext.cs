@@ -78,7 +78,7 @@ namespace Veldrid.NeoDemo
 
             PointLightsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<PointLightsInfo.Blittable>(), BufferUsage.UniformBuffer));
 
-            PointLightsInfo pli = new PointLightsInfo();
+            PointLightsInfo pli = new();
             pli.NumActiveLights = 4;
             pli.PointLights = new PointLightInfo[4]
             {
@@ -185,7 +185,7 @@ namespace Veldrid.NeoDemo
             TextureSampleCount sampleCount = MainSceneSampleCount;
             while (!properties.IsSampleCountSupported(sampleCount))
             {
-                sampleCount = sampleCount - 1;
+                sampleCount--;
             }
 
             TextureDescription mainColorDesc = TextureDescription.Texture2D(
@@ -233,7 +233,7 @@ namespace Veldrid.NeoDemo
             DuplicatorTargetSet0 = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, DuplicatorTargetView0, gd.PointSampler));
             DuplicatorTargetSet1 = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, DuplicatorTargetView1, gd.PointSampler));
 
-            FramebufferDescription fbDesc = new FramebufferDescription(null, DuplicatorTarget0, DuplicatorTarget1);
+            FramebufferDescription fbDesc = new(null, DuplicatorTarget0, DuplicatorTarget1);
             DuplicatorFramebuffer = factory.CreateFramebuffer(fbDesc);
         }
     }
@@ -254,7 +254,7 @@ namespace Veldrid.NeoDemo
 
         public void CreateDeviceResources(GraphicsDevice gd)
         {
-            var factory = gd.ResourceFactory;
+            ResourceFactory factory = gd.ResourceFactory;
             TextureDescription desc = TextureDescription.Texture2D(2048, 2048, 1, 1, PixelFormat.D32_Float_S8_UInt, TextureUsage.DepthStencil | TextureUsage.Sampled);
             NearShadowMap = factory.CreateTexture(desc);
             NearShadowMap.Name = "Near Shadow Map";

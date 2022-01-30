@@ -11,26 +11,32 @@ namespace Veldrid
         /// Controls whether blending is enabled for the color attachment.
         /// </summary>
         public bool BlendEnabled;
+
         /// <summary>
         /// Controls the source color's influence on the blend result.
         /// </summary>
         public BlendFactor SourceColorFactor;
+
         /// <summary>
         /// Controls the destination color's influence on the blend result.
         /// </summary>
         public BlendFactor DestinationColorFactor;
+
         /// <summary>
         /// Controls the function used to combine the source and destination color factors.
         /// </summary>
         public BlendFunction ColorFunction;
+
         /// <summary>
         /// Controls the source alpha's influence on the blend result.
         /// </summary>
         public BlendFactor SourceAlphaFactor;
+
         /// <summary>
         /// Controls the destination alpha's influence on the blend result.
         /// </summary>
         public BlendFactor DestinationAlphaFactor;
+
         /// <summary>
         /// Controls the function used to combine the source and destination alpha factors.
         /// </summary>
@@ -75,7 +81,7 @@ namespace Veldrid
         ///     DestinationAlphaFactor = BlendFactor.Zero
         ///     AlphaFunction = BlendFunction.Add
         /// </summary>
-        public static readonly BlendAttachmentDescription OverrideBlend = new BlendAttachmentDescription
+        public static readonly BlendAttachmentDescription OverrideBlend = new()
         {
             BlendEnabled = true,
             SourceColorFactor = BlendFactor.One,
@@ -97,7 +103,7 @@ namespace Veldrid
         ///     DestinationAlphaFactor = BlendFactor.InverseSourceAlpha
         ///     AlphaFunction = BlendFunction.Add
         /// </summary>
-        public static readonly BlendAttachmentDescription AlphaBlend = new BlendAttachmentDescription
+        public static readonly BlendAttachmentDescription AlphaBlend = new()
         {
             BlendEnabled = true,
             SourceColorFactor = BlendFactor.SourceAlpha,
@@ -119,7 +125,7 @@ namespace Veldrid
         ///     DestinationAlphaFactor = BlendFactor.One
         ///     AlphaFunction = BlendFunction.Add
         /// </summary>
-        public static readonly BlendAttachmentDescription AdditiveBlend = new BlendAttachmentDescription
+        public static readonly BlendAttachmentDescription AdditiveBlend = new()
         {
             BlendEnabled = true,
             SourceColorFactor = BlendFactor.SourceAlpha,
@@ -141,7 +147,7 @@ namespace Veldrid
         ///     DestinationAlphaFactor = BlendFactor.Zero
         ///     AlphaFunction = BlendFunction.Add
         /// </summary>
-        public static readonly BlendAttachmentDescription Disabled = new BlendAttachmentDescription
+        public static readonly BlendAttachmentDescription Disabled = new()
         {
             BlendEnabled = false,
             SourceColorFactor = BlendFactor.One,

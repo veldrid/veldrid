@@ -64,7 +64,7 @@ namespace Veldrid.VirtualReality
 
         public void Render(CommandList cl, ResourceSet rs, Vector2 minUV, Vector2 maxUV)
         {
-            Vector4 newVal = new Vector4(minUV.X, minUV.Y, maxUV.X, maxUV.Y);
+            Vector4 newVal = new(minUV.X, minUV.Y, maxUV.X, maxUV.Y);
             if (_lastMinMaxUV != newVal)
             {
                 _lastMinMaxUV = newVal;

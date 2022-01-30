@@ -9,8 +9,8 @@ namespace Veldrid.Vk
     internal class VkDescriptorPoolManager
     {
         private readonly VkGraphicsDevice _gd;
-        private readonly List<PoolInfo> _pools = new List<PoolInfo>();
-        private readonly object _lock = new object();
+        private readonly List<PoolInfo> _pools = new();
+        private readonly object _lock = new();
 
         public VkDescriptorPoolManager(VkGraphicsDevice gd)
         {

@@ -21,7 +21,7 @@ namespace Veldrid.Vk
             _gd = gd;
             VkFormats.GetFilterParams(description.Filter, out VkFilter minFilter, out VkFilter magFilter, out VkSamplerMipmapMode mipmapMode);
 
-            VkSamplerCreateInfo samplerCI = new VkSamplerCreateInfo
+            VkSamplerCreateInfo samplerCI = new()
             {
                 sType = VkStructureType.SamplerCreateInfo,
                 addressModeU = VkFormats.VdToVkSamplerAddressMode(description.AddressModeU),

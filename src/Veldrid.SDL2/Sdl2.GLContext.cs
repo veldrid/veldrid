@@ -23,7 +23,7 @@ namespace Veldrid.Sdl2
         private static SDL_GL_GetCurrentContext_t s_gl_getCurrentContext = LoadFunction<SDL_GL_GetCurrentContext_t>("SDL_GL_GetCurrentContext");
         public static IntPtr SDL_GL_GetCurrentContext()
         {
-            var ret = s_gl_getCurrentContext();
+            IntPtr ret = s_gl_getCurrentContext();
             return ret;
         }
 

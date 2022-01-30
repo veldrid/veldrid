@@ -19,7 +19,8 @@ namespace Veldrid.Sdl2
         }
 
         public static implicit operator IntPtr(SDL_GameController controller) => controller.NativePointer;
-        public static implicit operator SDL_GameController(IntPtr pointer) => new SDL_GameController(pointer);
+
+        public static implicit operator SDL_GameController(IntPtr pointer) => new(pointer);
     }
 
     [StructLayout(LayoutKind.Sequential)]

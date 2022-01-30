@@ -7,8 +7,8 @@ namespace Veldrid.Vk
 {
     internal unsafe static class VulkanUtil
     {
-        private static Lazy<bool> s_isVulkanLoaded = new Lazy<bool>(TryLoadVulkan);
-        private static readonly Lazy<string[]> s_instanceExtensions = new Lazy<string[]>(EnumerateInstanceExtensions);
+        private static Lazy<bool> s_isVulkanLoaded = new(TryLoadVulkan);
+        private static readonly Lazy<string[]> s_instanceExtensions = new(EnumerateInstanceExtensions);
 
         public static void CheckResult(VkResult result)
         {

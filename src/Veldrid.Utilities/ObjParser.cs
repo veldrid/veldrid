@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Veldrid.Utilities
 {
@@ -12,58 +12,115 @@ namespace Veldrid.Utilities
     /// </summary>
     public class ObjParser
     {
-        private static readonly string[] s_newline = new string[] { "\n" };
-        private static readonly char[] s_whitespaceChars = new char[] { ' ' };
-        private static readonly char[] s_slashChar = new char[] { '/' };
+        private const int InitialReadBufferSize = 2048;
 
-        private readonly ParseContext _pc = new ParseContext();
+        private static readonly char[] _whitespaceChar = new[] { ' ' };
+        private static readonly char _slashChar = '/';
+
+        private readonly ParseContext _pc = new();
+        private char[]? _readBuffer;
 
         /// <summary>
         /// Parses an <see cref="ObjFile"/> from the given raw text lines.
         /// </summary>
         /// <param name="lines">The text lines of the OBJ file.</param>
         /// <returns>A new <see cref="ObjFile"/>.</returns>
-        public ObjFile Parse(string[] lines)
+        public ObjFile Parse(IEnumerable<string> lines)
         {
             foreach (string line in lines)
-            {
                 _pc.Process(line);
-            }
-            _pc.EndOfFileReached();
 
+            _pc.EndOfFileReached();
+            return _pc.FinalizeFile();
+        }
+
+        /// <summary>
+        /// Parses an <see cref="ObjFile"/> from the given raw text lines.
+        /// </summary>
+        /// <param name="lines">The text lines of the OBJ file.</param>
+        /// <returns>A new <see cref="ObjFile"/>.</returns>
+        public ObjFile Parse(IEnumerable<ReadOnlyMemory<char>> lines)
+        {
+            foreach (ReadOnlyMemory<char> line in lines)
+                _pc.Process(line.Span);
+
+            _pc.EndOfFileReached();
             return _pc.FinalizeFile();
         }
 
         /// <summary>
         /// Parses an <see cref="ObjFile"/> from the given text stream.
         /// </summary>
-        /// <param name="s">The <see cref="Stream"/> to read from.</param>
+        /// <param name="reader">The <see cref="Stream"/> to read from.</param>
         /// <returns>A new <see cref="ObjFile"/>.</returns>
-        public ObjFile Parse(Stream s)
+        public ObjFile Parse(Stream stream)
         {
-            string text;
-            using (StreamReader sr = new StreamReader(s))
+            using StreamReader reader = new(stream);
+            return Parse(reader);
+        }
+
+        /// <summary>
+        /// Parses an <see cref="ObjFile"/> from the given text stream.
+        /// </summary>
+        /// <param name="reader">The <see cref="TextReader"/> to read from.</param>
+        /// <returns>A new <see cref="ObjFile"/>.</returns>
+        public ObjFile Parse(TextReader reader)
+        {
+            if (_readBuffer == null)
+                _readBuffer = new char[InitialReadBufferSize];
+
+            int readIndex = 0;
+
+            // Tries to process one or more lines inside the read buffer.
+            void TryProcessLines()
             {
-                text = sr.ReadToEnd();
+                Span<char> text = _readBuffer.AsSpan(0, readIndex);
+                int lineEnd;
+                while ((lineEnd = text.IndexOf('\n')) != -1)
+                {
+                    Span<char> line = text[..lineEnd];
+                    if (line.IsEmpty)
+                    {
+                        lineEnd++;
+                    }
+                    else if (line[^1] == '\r')
+                    {
+                        lineEnd++;
+                        line = line[..^1];
+                    }
+
+                    _pc.Process(line);
+                    text = text[lineEnd..];
+                }
+
+                // Shift back remaining data.
+                int consumed = readIndex - text.Length;
+                readIndex -= consumed;
+                Array.Copy(_readBuffer, consumed, _readBuffer, 0, readIndex);
             }
 
-            int lineStart = 0;
-            int lineEnd = -1;
-            while ((lineEnd = text.IndexOf('\n', lineStart)) != -1)
+            TryRead:
+            int read;
+            while ((read = reader.ReadBlock(_readBuffer, readIndex, _readBuffer.Length - readIndex)) > 0)
             {
-                string line;
+                readIndex += read;
+                TryProcessLines();
+            }
 
-                if (lineEnd != 0 && text[lineEnd - 1] == '\r')
+            if (readIndex > 0)
+            {
+                if (readIndex == _readBuffer.Length)
                 {
-                    line = text.Substring(lineStart, lineEnd - lineStart - 1);
-                }
-                else
-                {
-                    line = text.Substring(lineStart, lineEnd - lineStart);
+                    // The buffer couldn't contain a whole line so resize it.
+                    Array.Resize(ref _readBuffer, _readBuffer.Length * 2);
+                    goto TryRead;
                 }
 
-                _pc.Process(line);
-                lineStart = lineEnd + 1;
+                TryProcessLines();
+
+                // Try to parse the rest that doesn't have a line ending.
+                if (readIndex > 0)
+                    _pc.Process(_readBuffer.AsSpan(0, readIndex));
             }
 
             _pc.EndOfFileReached();
@@ -72,152 +129,165 @@ namespace Veldrid.Utilities
 
         private class ParseContext
         {
-            private List<Vector3> _positions = new List<Vector3>();
-            private List<Vector3> _normals = new List<Vector3>();
-            private List<Vector2> _texCoords = new List<Vector2>();
+            private List<Vector3> _positions = new();
+            private List<Vector3> _normals = new();
+            private List<Vector2> _texCoords = new();
 
-            private List<ObjFile.MeshGroup> _groups = new List<ObjFile.MeshGroup>();
+            private List<ObjFile.MeshGroup> _groups = new();
 
-            private string _currentGroupName;
-            private string _currentMaterial;
+            private string? _currentGroupName;
+            private string? _currentMaterial;
             private int _currentSmoothingGroup;
-            private List<ObjFile.Face> _currentGroupFaces = new List<ObjFile.Face>();
+            private List<ObjFile.Face> _currentGroupFaces = new();
 
             private int _currentLine;
-            private string _currentLineText;
+            private string? _materialLibName;
 
-            private string _materialLibName;
-
-            public void Process(string line)
+            public void Process(ReadOnlySpan<char> line)
             {
                 _currentLine++;
-                _currentLineText = line;
 
-                string[] pieces = line.Split(s_whitespaceChars, StringSplitOptions.RemoveEmptyEntries);
-                if (pieces.Length == 0 || pieces[0].StartsWith("#"))
-                {
+                ReadOnlySpanSplitter<char> splitter = new(line, _whitespaceChar, StringSplitOptions.RemoveEmptyEntries);
+                if (!splitter.MoveNext())
                     return;
-                }
-                switch (pieces[0])
-                {
-                    case "v":
-                        ExpectExactly(pieces, 3, "v");
-                        DiscoverPosition(ParseVector3(pieces[1], pieces[2], pieces[3], "position data"));
-                        break;
-                    case "vn":
-                        ExpectExactly(pieces, 3, "vn");
-                        DiscoverNormal(ParseVector3(pieces[1], pieces[2], pieces[3], "normal data"));
-                        break;
-                    case "vt":
-                        ExpectAtLeast(pieces, 1, "vt");
-                        Vector2 texCoord = ParseVector2(pieces[1], pieces[2], "texture coordinate data");
-                        // Flip v coordinate
-                        texCoord.Y = 1f - texCoord.Y;
-                        DiscoverTexCoord(texCoord);
-                        break;
-                    case "g":
-                        ExpectAtLeast(pieces, 1, "g");
-                        FinalizeGroup();
-                        _currentGroupName = line.Substring(1, line.Length - 1).Trim();
-                        break;
-                    case "usemtl":
-                        ExpectExactly(pieces, 1, "usematl");
-                        if (_currentMaterial != null)
-                        {
-                            string nextGroupName = _currentGroupName + "_Next";
-                            FinalizeGroup();
-                            _currentGroupName = nextGroupName;
-                        }
 
-                        _currentMaterial = pieces[1];
-                        break;
-                    case "s":
-                        ExpectExactly(pieces, 1, "s");
-                        if (pieces[1] == "off")
-                        {
-                            _currentSmoothingGroup = 0;
-                        }
-                        else
-                        {
-                            _currentSmoothingGroup = ParseInt(pieces[1], "smoothing group");
-                        }
-                        break;
-                    case "f":
-                        ExpectAtLeast(pieces, 3, "f");
-                        ProcessFaceLine(pieces);
-                        break;
-                    case "mtllib":
-                        ExpectExactly(pieces, 1, "mtllib");
-                        DiscoverMaterialLib(pieces[1]);
-                        break;
-                    default:
-                        throw new ObjParseException(
-                            string.Format("An unsupported line-type specifier, '{0}', was used on line {1}, \"{2}\"",
-                            pieces[0],
-                            _currentLine,
-                            _currentLineText));
+                ReadOnlySpan<char> piece0 = splitter.Current;
+                if (piece0.StartsWith("#"))
+                    return;
+
+                if (piece0.SequenceEqual("v"))
+                {
+                    ExpectPieces(ref splitter, "v", true, out ReadOnlySpan<char> piece1, out ReadOnlySpan<char> piece2, out ReadOnlySpan<char> piece3);
+                    DiscoverPosition(ParseVector3(piece1, piece2, piece3, "position data"));
+                }
+                else if (piece0.SequenceEqual("vn"))
+                {
+                    ExpectPieces(ref splitter, "vn", true, out ReadOnlySpan<char> piece1, out ReadOnlySpan<char> piece2, out ReadOnlySpan<char> piece3);
+                    DiscoverNormal(ParseVector3(piece1, piece2, piece3, "normal data"));
+                }
+                else if (piece0.SequenceEqual("vt"))
+                {
+                    const string pieceName = "texture coordinate data";
+
+                    ReadOnlySpan<char> x;
+                    ReadOnlySpan<char> y = "0";
+
+                    if (!splitter.MoveNext())
+                        throw CreateExpectPiecesException("one", pieceName, false);
+                    x = splitter.Current;
+
+                    if (splitter.MoveNext())
+                        y = splitter.Current;
+
+                    Vector2 texCoord = ParseVector2(x, y, pieceName);
+                    // Flip v coordinate
+                    texCoord.Y = 1f - texCoord.Y;
+                    DiscoverTexCoord(texCoord);
+                }
+                else if (piece0.SequenceEqual("g"))
+                {
+                    ExpectPieces(ref splitter, "g", false, out ReadOnlySpan<char> piece1);
+                    FinalizeGroup();
+                    _currentGroupName = piece1.ToString();
+                }
+                else if (piece0.SequenceEqual("usemtl"))
+                {
+                    ExpectPieces(ref splitter, "usematl", true, out ReadOnlySpan<char> piece1);
+                    if (_currentMaterial != null)
+                    {
+                        string nextGroupName = _currentGroupName + "_Next";
+                        FinalizeGroup();
+                        _currentGroupName = nextGroupName;
+                    }
+                    _currentMaterial = piece1.ToString();
+                }
+                else if (piece0.SequenceEqual("s"))
+                {
+                    ExpectPieces(ref splitter, "s", true, out ReadOnlySpan<char> piece1);
+                    if (piece1.SequenceEqual("off"))
+                        _currentSmoothingGroup = 0;
+                    else
+                        _currentSmoothingGroup = ParseInt(piece1, "smoothing group");
+                }
+                else if (piece0.SequenceEqual("f"))
+                {
+                    ExpectPieces(ref splitter, "f", false, out ReadOnlySpan<char> piece1, out ReadOnlySpan<char> piece2);
+                    ProcessFaceLine(ref splitter, piece1, piece2);
+                }
+                else if (piece0.SequenceEqual("mtllib"))
+                {
+                    ExpectPieces(ref splitter, "mtllib", true, out ReadOnlySpan<char> piece1);
+                    DiscoverMaterialLib(piece1);
+                }
+                else
+                {
+                    throw new ObjParseException(string.Format(
+                        "An unsupported line-type specifier, '{0}', was used on line {1}.",
+                        piece0.ToString(),
+                        _currentLine));
                 }
             }
 
-            private void DiscoverMaterialLib(string libName)
+            private void DiscoverMaterialLib(ReadOnlySpan<char> libName)
             {
                 if (_materialLibName != null)
                 {
                     throw new ObjParseException(
-                        string.Format("mtllib appeared again in the file. It should only appear once. Line {0}, \"{1}\"", _currentLine, _currentLineText));
+                        $"mtllib appeared again in the file. It should only appear once. Line {_currentLine}.");
                 }
 
-                _materialLibName = libName;
+                _materialLibName = libName.ToString();
             }
 
-            private void ProcessFaceLine(string[] pieces)
+            private void ProcessFaceLine(
+                ref ReadOnlySpanSplitter<char> splitter,
+                ReadOnlySpan<char> piece1, ReadOnlySpan<char> piece2)
             {
-                string first = pieces[1];
-                ObjFile.FaceVertex faceVertex0 = ParseFaceVertex(first);
+                ObjFile.FaceVertex faceVertex0 = ParseFaceVertex(piece1);
 
-                for (int i = 0; i < pieces.Length - 3; i++)
+                while (splitter.MoveNext())
                 {
-                    string second = pieces[i + 2];
-                    ObjFile.FaceVertex faceVertex1 = ParseFaceVertex(second);
-                    string third = pieces[i + 3];
-                    ObjFile.FaceVertex faceVertex2 = ParseFaceVertex(third);
+                    ReadOnlySpan<char> piece3 = splitter.Current;
+                    ObjFile.FaceVertex faceVertex1 = ParseFaceVertex(piece2);
+                    ObjFile.FaceVertex faceVertex2 = ParseFaceVertex(piece3);
 
                     DiscoverFace(new ObjFile.Face(faceVertex0, faceVertex1, faceVertex2, _currentSmoothingGroup));
+                    piece2 = piece3;
                 }
             }
 
-            private ObjFile.FaceVertex ParseFaceVertex(string faceComponents)
+            private ObjFile.FaceVertex ParseFaceVertex(ReadOnlySpan<char> faceComponents)
             {
-                string[] slashSplit = faceComponents.Split(s_slashChar, StringSplitOptions.None);
-                if (slashSplit.Length != 1 && slashSplit.Length != 2 && slashSplit.Length != 3)
-                {
-                    throw CreateExceptionForWrongFaceCount(slashSplit.Length);
-                }
+                if (faceComponents.IsEmpty)
+                    throw CreateExceptionForWrongFaceCount("There must be at least one face component");
 
-                int pos = ParseInt(slashSplit[0], "the first face position index");
+                int firstSlash = faceComponents.IndexOf(_slashChar);
+                ReadOnlySpan<char> firstSlice = firstSlash == -1
+                    ? faceComponents
+                    : faceComponents[..firstSlash];
 
-                int texCoord = -1;
-                if (slashSplit.Length >= 2 && !string.IsNullOrEmpty(slashSplit[1]))
-                {
-                    texCoord = ParseInt(slashSplit[1], "the first face texture coordinate index");
-                }
+                ReadOnlySpan<char> afterFirstSlash = faceComponents[(firstSlash + 1)..];
+                int secondSlash = afterFirstSlash.IndexOf(_slashChar);
+                ReadOnlySpan<char> secondSlice = secondSlash == -1
+                    ? afterFirstSlash
+                    : afterFirstSlash[..secondSlash];
 
-                int normal = -1;
-                if (slashSplit.Length == 3)
-                {
-                    normal = ParseInt(slashSplit[2], "the first face normal index");
-                }
+                ReadOnlySpan<char> afterSecondSlash = afterFirstSlash[(secondSlash + 1)..];
+                int thirdSlash = afterSecondSlash.IndexOf(_slashChar);
+                ReadOnlySpan<char> thirdSlice = thirdSlash == -1
+                    ? afterSecondSlash
+                    : throw CreateExceptionForWrongFaceCount("No more than three face components are allowed");
 
-                return new ObjFile.FaceVertex() { PositionIndex = pos, NormalIndex = normal, TexCoordIndex = texCoord };
+                int position = ParseInt(firstSlice, "the first face position index");
+                int texCoord = firstSlash == -1 ? -1 : ParseInt(secondSlice, "the first face texture coordinate index");
+                int normal = secondSlash == -1 ? -1 : ParseInt(thirdSlice, "the first face normal index");
+
+                return new ObjFile.FaceVertex(position, normal, texCoord);
             }
 
-            private ObjParseException CreateExceptionForWrongFaceCount(int count)
+            private ObjParseException CreateExceptionForWrongFaceCount(string message)
             {
-                return new ObjParseException(
-                    string.Format("Expected 1, 2, or 3 face components, but got {0}, on line {1}, \"{2}\"",
-                    count,
-                    _currentLine,
-                    _currentLineText));
+                return new ObjParseException($"{message}, on line {_currentLine}.");
             }
 
             public void DiscoverPosition(Vector3 position)
@@ -240,11 +310,38 @@ namespace Veldrid.Utilities
                 _currentGroupFaces.Add(face);
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void FinalizeFaceVertex(
+                int positionOffset, int normalOffset, int texCoordOffset,
+                ref ObjFile.FaceVertex vertex)
+            {
+                if (vertex.PositionIndex < 0)
+                    vertex.PositionIndex += positionOffset;
+
+                if (vertex.NormalIndex < 0)
+                    vertex.NormalIndex += normalOffset;
+
+                if (vertex.TexCoordIndex < 0)
+                    vertex.TexCoordIndex += texCoordOffset;
+            }
+
             public void FinalizeGroup()
             {
                 if (_currentGroupName != null)
                 {
+                    int positionOffset = _positions.Count + 1;
+                    int normalOffset = _normals.Count + 1;
+                    int texCoordOffset = _texCoords.Count + 1;
+
                     ObjFile.Face[] faces = _currentGroupFaces.ToArray();
+                    for (int i = 0; i < faces.Length; i++)
+                    {
+                        ref ObjFile.Face face = ref faces[i];
+                        FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, ref face.Vertex0);
+                        FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, ref face.Vertex1);
+                        FinalizeFaceVertex(positionOffset, normalOffset, texCoordOffset, ref face.Vertex2);
+                    }
+
                     _groups.Add(new ObjFile.MeshGroup(_currentGroupName, _currentMaterial, faces));
 
                     _currentGroupName = null;
@@ -256,7 +353,7 @@ namespace Veldrid.Utilities
 
             public void EndOfFileReached()
             {
-                _currentGroupName = _currentGroupName ?? "GlobalFileGroup";
+                _currentGroupName ??= "GlobalFileGroup";
                 _groups.Add(new ObjFile.MeshGroup(_currentGroupName, _currentMaterial, _currentGroupFaces.ToArray()));
             }
 
@@ -265,422 +362,106 @@ namespace Veldrid.Utilities
                 return new ObjFile(_positions.ToArray(), _normals.ToArray(), _texCoords.ToArray(), _groups.ToArray(), _materialLibName);
             }
 
-            private Vector3 ParseVector3(string xStr, string yStr, string zStr, string location)
+            private Vector3 ParseVector3(ReadOnlySpan<char> xStr, ReadOnlySpan<char> yStr, ReadOnlySpan<char> zStr, string location)
             {
-                try
-                {
-                    float x = float.Parse(xStr, CultureInfo.InvariantCulture);
-                    float y = float.Parse(yStr, CultureInfo.InvariantCulture);
-                    float z = float.Parse(zStr, CultureInfo.InvariantCulture);
+                if (FastParse.TryParseDouble(xStr, out double x) &&
+                    FastParse.TryParseDouble(yStr, out double y) &&
+                    FastParse.TryParseDouble(zStr, out double z))
+                    return new Vector3((float)x, (float)y, (float)z);
 
-                    return new Vector3(x, y, z);
-                }
-                catch (FormatException fe)
-                {
-                    throw CreateParseException(location, fe);
-                }
+                throw CreateParseException(location, new FormatException());
             }
 
-            private Vector2 ParseVector2(string xStr, string yStr, string location)
+            private Vector2 ParseVector2(ReadOnlySpan<char> xStr, ReadOnlySpan<char> yStr, string location)
             {
-                try
-                {
-                    float x = float.Parse(xStr, CultureInfo.InvariantCulture);
-                    float y = float.Parse(yStr, CultureInfo.InvariantCulture);
+                if (FastParse.TryParseDouble(xStr, out double x) &&
+                    FastParse.TryParseDouble(yStr, out double y))
+                    return new Vector2((float)x, (float)y);
 
-                    return new Vector2(x, y);
-                }
-                catch (FormatException fe)
-                {
-                    throw CreateParseException(location, fe);
-                }
+                throw CreateParseException(location, new FormatException());
             }
 
-            private int ParseInt(string intStr, string location)
+            private int ParseInt(ReadOnlySpan<char> intStr, string location)
             {
-                try
-                {
-                    int i = int.Parse(intStr, CultureInfo.InvariantCulture);
-                    return i;
-                }
-                catch (FormatException fe)
-                {
-                    throw CreateParseException(location, fe);
-                }
+                if (FastParse.TryParseInt(intStr, out int result))
+                    return result;
+
+                throw CreateParseException(location, new FormatException());
             }
 
-            private void ExpectExactly(string[] pieces, int count, string name)
+            private void ExpectPieces(
+                ref ReadOnlySpanSplitter<char> pieces, string name, bool exact,
+                out ReadOnlySpan<char> piece0, out ReadOnlySpan<char> piece1, out ReadOnlySpan<char> piece2)
             {
-                if (pieces.Length != count + 1)
-                {
-                    string message = string.Format(
-                        "Expected exactly {0} components to a line starting with {1}, on line {2}, \"{3}\".",
-                        count,
-                        name,
-                        _currentLine,
-                        _currentLineText);
-                    throw new ObjParseException(message);
-                }
+                if (!pieces.MoveNext())
+                    goto Fail;
+                piece0 = pieces.Current;
+
+                if (!pieces.MoveNext())
+                    goto Fail;
+                piece1 = pieces.Current;
+
+                if (!pieces.MoveNext())
+                    goto Fail;
+                piece2 = pieces.Current;
+
+                if (!exact || !pieces.MoveNext())
+                    return;
+
+                Fail:
+                throw CreateExpectPiecesException("three", name, exact);
             }
 
-            private void ExpectAtLeast(string[] pieces, int count, string name)
+            private void ExpectPieces(
+                ref ReadOnlySpanSplitter<char> pieces, string name, bool exact,
+                out ReadOnlySpan<char> piece0, out ReadOnlySpan<char> piece1)
             {
-                if (pieces.Length < count + 1)
-                {
-                    string message = string.Format(
-                        "Expected at least {0} components to a line starting with {1}, on line {2}, \"{3}\".",
-                        count,
-                        name,
-                        _currentLine,
-                        _currentLineText);
-                    throw new ObjParseException(message);
-                }
+                if (!pieces.MoveNext())
+                    goto Fail;
+                piece0 = pieces.Current;
+
+                if (!pieces.MoveNext())
+                    goto Fail;
+                piece1 = pieces.Current;
+
+                if (!exact || !pieces.MoveNext())
+                    return;
+
+                Fail:
+                throw CreateExpectPiecesException("three", name, exact);
             }
 
-            private ObjParseException CreateParseException(string location, FormatException fe)
+            private void ExpectPieces(
+                ref ReadOnlySpanSplitter<char> pieces, string name, bool exact,
+                out ReadOnlySpan<char> piece)
             {
-                string message = string.Format("An error ocurred while parsing {0} on line {1}, \"{2}\"", location, _currentLine, _currentLineText);
-                return new ObjParseException(message, fe);
-            }
-        }
-    }
+                if (!pieces.MoveNext())
+                    goto Fail;
+                piece = pieces.Current;
 
-    /// <summary>
-    /// An parsing error for Wavefront OBJ files.
-    /// </summary>
-    public class ObjParseException : Exception
-    {
-        public ObjParseException(string message) : base(message)
-        {
-        }
+                if (!exact || !pieces.MoveNext())
+                    return;
 
-        public ObjParseException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-    }
-
-    /// <summary>
-    /// Represents a parset Wavefront OBJ file.
-    /// </summary>
-    public class ObjFile
-    {
-        public Vector3[] Positions { get; }
-        public Vector3[] Normals { get; }
-        public Vector2[] TexCoords { get; }
-        public MeshGroup[] MeshGroups { get; }
-        public string MaterialLibName { get; }
-
-        public ObjFile(Vector3[] positions, Vector3[] normals, Vector2[] texCoords, MeshGroup[] meshGroups, string materialLibName)
-        {
-            Positions = positions;
-            Normals = normals;
-            TexCoords = texCoords;
-            MeshGroups = meshGroups;
-            MaterialLibName = materialLibName;
-        }
-
-        /// <summary>
-        /// Gets a <see cref="ConstructedMeshInfo"/> for the given OBJ <see cref="MeshGroup"/>.
-        /// </summary>
-        /// <param name="group">The OBJ <see cref="MeshGroup"/> to construct.</param>
-        /// <returns>A new <see cref="ConstructedMeshInfo"/>.</returns>
-        public ConstructedMeshInfo GetMesh(MeshGroup group)
-        {
-            Dictionary<FaceVertex, ushort> vertexMap = new Dictionary<FaceVertex, ushort>();
-            ushort[] indices = new ushort[group.Faces.Length * 3];
-            List<VertexPositionNormalTexture> vertices = new List<VertexPositionNormalTexture>();
-
-            for (int i = 0; i < group.Faces.Length; i++)
-            {
-                Face face = group.Faces[i];
-                ushort index0 = GetOrCreate(vertexMap, vertices, face.Vertex0, face.Vertex1, face.Vertex2);
-                ushort index1 = GetOrCreate(vertexMap, vertices, face.Vertex1, face.Vertex2, face.Vertex0);
-                ushort index2 = GetOrCreate(vertexMap, vertices, face.Vertex2, face.Vertex0, face.Vertex1);
-
-                // Reverse winding order here.
-                indices[(i * 3)] = index0;
-                indices[(i * 3) + 2] = index1;
-                indices[(i * 3) + 1] = index2;
+                Fail:
+                throw CreateExpectPiecesException("one", name, exact);
             }
 
-            return new ConstructedMeshInfo(vertices.ToArray(), indices, group.Material);
-        }
-
-        /// <summary>
-        /// Constructs the first <see cref="MeshGroup"/> in this file.
-        /// </summary>
-        /// <returns>A new <see cref="ConstructedMeshInfo"/>.</returns>
-        public ConstructedMeshInfo GetFirstMesh()
-        {
-            return GetMesh(MeshGroups[0]);
-        }
-
-        private ushort GetOrCreate(
-            Dictionary<FaceVertex, ushort> vertexMap,
-            List<VertexPositionNormalTexture> vertices,
-            FaceVertex key,
-            FaceVertex adjacent1,
-            FaceVertex adjacent2)
-        {
-            ushort index;
-            if (!vertexMap.TryGetValue(key, out index))
+            private Exception CreateExpectPiecesException(string amount, string name, bool exact)
             {
-                VertexPositionNormalTexture vertex = ConstructVertex(key, adjacent1, adjacent2);
-                vertices.Add(vertex);
-                index = checked((ushort)(vertices.Count - 1));
-                vertexMap.Add(key, index);
+                string message = string.Format(
+                    "Expected {0} {1} components to a line starting with {2}, on line {3}.",
+                    exact ? "exact" : "at least",
+                    amount,
+                    name,
+                    _currentLine);
+                throw new ObjParseException(message);
             }
 
-            return index;
-        }
-
-        private VertexPositionNormalTexture ConstructVertex(FaceVertex key, FaceVertex adjacent1, FaceVertex adjacent2)
-        {
-            Vector3 position = Positions[key.PositionIndex - 1];
-            Vector3 normal;
-            if (key.NormalIndex == -1)
+            private ObjParseException CreateParseException(string location, Exception inner)
             {
-                normal = ComputeNormal(key, adjacent1, adjacent2);
+                string message = string.Format("An error ocurred while parsing {0} on line {1}", location, _currentLine);
+                return new ObjParseException(message, inner);
             }
-            else
-            {
-                normal = Normals[key.NormalIndex - 1];
-            }
-
-
-            Vector2 texCoord = key.TexCoordIndex == -1 ? Vector2.Zero : TexCoords[key.TexCoordIndex - 1];
-
-            return new VertexPositionNormalTexture(position, normal, texCoord);
-        }
-
-        private Vector3 ComputeNormal(FaceVertex v1, FaceVertex v2, FaceVertex v3)
-        {
-            Vector3 pos1 = Positions[v1.PositionIndex - 1];
-            Vector3 pos2 = Positions[v2.PositionIndex - 1];
-            Vector3 pos3 = Positions[v3.PositionIndex - 1];
-
-            return Vector3.Normalize(Vector3.Cross(pos1 - pos2, pos1 - pos3));
-        }
-
-        /// <summary>
-        /// An OBJ file construct describing an individual mesh group.
-        /// </summary>
-        public struct MeshGroup
-        {
-            /// <summary>
-            /// The name.
-            /// </summary>
-            public readonly string Name;
-
-            /// <summary>
-            /// The name of the associated <see cref="MaterialDefinition"/>.
-            /// </summary>
-            public readonly string Material;
-
-            /// <summary>
-            /// The set of <see cref="Face"/>s comprising this mesh group.
-            /// </summary>
-            public readonly Face[] Faces;
-
-            /// <summary>
-            /// Constructs a new <see cref="MeshGroup"/>.
-            /// </summary>
-            /// <param name="name">The name.</param>
-            /// <param name="material">The name of the associated <see cref="MaterialDefinition"/>.</param>
-            /// <param name="faces">The faces.</param>
-            public MeshGroup(string name, string material, Face[] faces)
-            {
-                Name = name;
-                Material = material;
-                Faces = faces;
-            }
-        }
-
-        /// <summary>
-        /// An OBJ file construct describing the indices of vertex components.
-        /// </summary>
-        public struct FaceVertex
-        {
-            /// <summary>
-            /// The index of the position component.
-            /// </summary>
-            public int PositionIndex;
-
-            /// <summary>
-            /// The index of the normal component.
-            /// </summary>
-            public int NormalIndex;
-
-            /// <summary>
-            /// The index of the texture coordinate component.
-            /// </summary>
-            public int TexCoordIndex;
-
-            public override string ToString()
-            {
-                return string.Format("Pos:{0}, Normal:{1}, TexCoord:{2}", PositionIndex, NormalIndex, TexCoordIndex);
-            }
-        }
-
-        /// <summary>
-        /// An OBJ file construct describing an individual mesh face.
-        /// </summary>
-        public struct Face
-        {
-            /// <summary>
-            /// The first vertex.
-            /// </summary>
-            public readonly FaceVertex Vertex0;
-
-            /// <summary>
-            /// The second vertex.
-            /// </summary>
-            public readonly FaceVertex Vertex1;
-
-            /// <summary>
-            /// The third vertex.
-            /// </summary>
-            public readonly FaceVertex Vertex2;
-
-            /// <summary>
-            /// The smoothing group. Describes which kind of vertex smoothing should be applied.
-            /// </summary>
-            public readonly int SmoothingGroup;
-
-            public Face(FaceVertex v0, FaceVertex v1, FaceVertex v2, int smoothingGroup = -1)
-            {
-                Vertex0 = v0;
-                Vertex1 = v1;
-                Vertex2 = v2;
-
-                SmoothingGroup = smoothingGroup;
-            }
-        }
-    }
-
-    /// <summary>
-    /// A standalone <see cref="MeshData"/> created from information from an <see cref="ObjFile"/>.
-    /// </summary>
-    public class ConstructedMeshInfo : MeshData
-    {
-        /// <summary>
-        /// The vertices of the mesh.
-        /// </summary>
-        public VertexPositionNormalTexture[] Vertices { get; }
-
-        /// <summary>
-        /// The indices of the mesh.
-        /// </summary>
-        public ushort[] Indices { get; }
-
-        /// <summary>
-        /// The name of the <see cref="MaterialDefinition"/> associated with this mesh.
-        /// </summary>
-        public string MaterialName { get; }
-
-        /// <summary>
-        /// Constructs a new <see cref="ConstructedMeshInfo"/>.
-        /// </summary>
-        /// <param name="vertices">The vertices.</param>
-        /// <param name="indices">The indices.</param>
-        /// <param name="materialName">The name of the associated MTL <see cref="MaterialDefinition"/>.</param>
-        public ConstructedMeshInfo(VertexPositionNormalTexture[] vertices, ushort[] indices, string materialName)
-        {
-            Vertices = vertices;
-            Indices = indices;
-            MaterialName = materialName;
-        }
-
-        public DeviceBuffer CreateVertexBuffer(ResourceFactory factory, CommandList cl)
-        {
-            DeviceBuffer vb = factory.CreateBuffer(
-                new BufferDescription((uint)(Vertices.Length * VertexPositionNormalTexture.SizeInBytes), BufferUsage.VertexBuffer));
-            cl.UpdateBuffer(vb, 0, Vertices);
-            return vb;
-        }
-
-        public DeviceBuffer CreateIndexBuffer(ResourceFactory factory, CommandList cl, out int indexCount)
-        {
-            DeviceBuffer ib = factory.CreateBuffer(new BufferDescription((uint)(Indices.Length * sizeof(int)), BufferUsage.IndexBuffer));
-            cl.UpdateBuffer(ib, 0, Indices);
-            indexCount = Indices.Length;
-            return ib;
-        }
-
-        public unsafe BoundingSphere GetBoundingSphere()
-        {
-            fixed (VertexPositionNormalTexture* ptr = Vertices)
-            {
-                return BoundingSphere.CreateFromPoints((Vector3*)ptr, Vertices.Length, VertexPositionNormalTexture.SizeInBytes);
-            }
-        }
-
-        public unsafe BoundingBox GetBoundingBox()
-        {
-            fixed (VertexPositionNormalTexture* ptr = Vertices)
-            {
-                return BoundingBox.CreateFromPoints(
-                    (Vector3*)ptr,
-                    Vertices.Length,
-                    VertexPositionNormalTexture.SizeInBytes,
-                    Quaternion.Identity,
-                    Vector3.Zero,
-                    Vector3.One);
-            }
-        }
-
-        public bool RayCast(Ray ray, out float distance)
-        {
-            distance = float.MaxValue;
-            bool result = false;
-            for (int i = 0; i < Indices.Length - 2; i += 3)
-            {
-                Vector3 v0 = Vertices[Indices[i + 0]].Position;
-                Vector3 v1 = Vertices[Indices[i + 1]].Position;
-                Vector3 v2 = Vertices[Indices[i + 2]].Position;
-
-                float newDistance;
-                if (ray.Intersects(v0, v1, v2, out newDistance))
-                {
-                    if (newDistance < distance)
-                    {
-                        distance = newDistance;
-                    }
-
-                    result = true;
-                }
-            }
-
-            return result;
-        }
-
-        public int RayCast(Ray ray, List<float> distances)
-        {
-            int hits = 0;
-            for (int i = 0; i < Indices.Length - 2; i += 3)
-            {
-                Vector3 v0 = Vertices[Indices[i + 0]].Position;
-                Vector3 v1 = Vertices[Indices[i + 1]].Position;
-                Vector3 v2 = Vertices[Indices[i + 2]].Position;
-
-                if (ray.Intersects(v0, v1, v2, out float newDistance))
-                {
-                    hits++;
-                    distances.Add(newDistance);
-                }
-            }
-
-            return hits;
-        }
-
-        public Vector3[] GetVertexPositions()
-        {
-            return Vertices.Select(vpnt => vpnt.Position).ToArray();
-        }
-
-        public ushort[] GetIndices()
-        {
-            return Indices;
         }
     }
 }

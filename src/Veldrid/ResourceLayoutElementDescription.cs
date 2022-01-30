@@ -11,14 +11,17 @@ namespace Veldrid
         /// The name of the element.
         /// </summary>
         public string Name;
+
         /// <summary>
         /// The kind of resource.
         /// </summary>
         public ResourceKind Kind;
+
         /// <summary>
         /// The <see cref="ShaderStages"/> in which this element is used.
         /// </summary>
         public ShaderStages Stages;
+
         /// <summary>
         /// Miscellaneous resource options for this element.
         /// </summary>

@@ -98,7 +98,22 @@ namespace Veldrid
 
         public void DestroyDeviceObjects()
         {
-            Dispose();
+            _vertexBuffer.Dispose();
+            _indexBuffer.Dispose();
+            _projMatrixBuffer.Dispose();
+            _fontTexture.Dispose();
+            _vertexShader.Dispose();
+            _fragmentShader.Dispose();
+            _layout.Dispose();
+            _textureLayout.Dispose();
+            _pipeline.Dispose();
+            _mainResourceSet.Dispose();
+            _fontTextureResourceSet.Dispose();
+
+            foreach (IDisposable resource in _ownedResources)
+            {
+                resource.Dispose();
+            }
         }
 
         public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription)
@@ -646,22 +661,7 @@ namespace Veldrid
             {
                 if (disposing)
                 {
-                    _vertexBuffer.Dispose();
-                    _indexBuffer.Dispose();
-                    _projMatrixBuffer.Dispose();
-                    _fontTexture.Dispose();
-                    _vertexShader.Dispose();
-                    _fragmentShader.Dispose();
-                    _layout.Dispose();
-                    _textureLayout.Dispose();
-                    _pipeline.Dispose();
-                    _mainResourceSet.Dispose();
-                    _fontTextureResourceSet.Dispose();
-
-                    foreach (IDisposable resource in _ownedResources)
-                    {
-                        resource.Dispose();
-                    }
+                    DestroyDeviceObjects();
                 }
 
                 _disposed = true;

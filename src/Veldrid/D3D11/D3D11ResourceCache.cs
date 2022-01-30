@@ -208,19 +208,14 @@ namespace Veldrid.D3D11
 
         private string GetSemanticString(VertexElementSemantic semantic)
         {
-            switch (semantic)
+            return semantic switch
             {
-                case VertexElementSemantic.Position:
-                    return "POSITION";
-                case VertexElementSemantic.Normal:
-                    return "NORMAL";
-                case VertexElementSemantic.TextureCoordinate:
-                    return "TEXCOORD";
-                case VertexElementSemantic.Color:
-                    return "COLOR";
-                default:
-                    throw Illegal.Value<VertexElementSemantic>();
-            }
+                VertexElementSemantic.Position => "POSITION",
+                VertexElementSemantic.Normal => "NORMAL",
+                VertexElementSemantic.TextureCoordinate => "TEXCOORD",
+                VertexElementSemantic.Color => "COLOR",
+                _ => throw Illegal.Value<VertexElementSemantic>(),
+            };
         }
 
         public void Dispose()
@@ -252,19 +247,14 @@ namespace Veldrid.D3D11
 
             public static int GetAndIncrement(ref SemanticIndices si, VertexElementSemantic type)
             {
-                switch (type)
+                return type switch
                 {
-                    case VertexElementSemantic.Position:
-                        return si._position++;
-                    case VertexElementSemantic.TextureCoordinate:
-                        return si._texCoord++;
-                    case VertexElementSemantic.Normal:
-                        return si._normal++;
-                    case VertexElementSemantic.Color:
-                        return si._color++;
-                    default:
-                        throw Illegal.Value<VertexElementSemantic>();
-                }
+                    VertexElementSemantic.Position => si._position++,
+                    VertexElementSemantic.TextureCoordinate => si._texCoord++,
+                    VertexElementSemantic.Normal => si._normal++,
+                    VertexElementSemantic.Color => si._color++,
+                    _ => throw Illegal.Value<VertexElementSemantic>(),
+                };
             }
         }
 

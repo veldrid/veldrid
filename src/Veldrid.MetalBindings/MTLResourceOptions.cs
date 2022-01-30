@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Veldrid.MetalBindings
 {
+    [SuppressMessage("Design", "CA1069:Enums values should not be duplicated", Justification = "Bindings")]
     public enum MTLResourceOptions : uint
     {
         CPUCacheModeDefaultCache = MTLCPUCacheMode.DefaultCache,

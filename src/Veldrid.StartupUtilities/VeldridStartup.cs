@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -73,23 +74,16 @@ namespace Veldrid.StartupUtilities
 
         private static SDL_WindowFlags GetWindowFlags(WindowState state)
         {
-            switch (state)
+            return state switch
             {
-                case WindowState.Normal:
-                    return 0;
-                case WindowState.FullScreen:
-                    return SDL_WindowFlags.Fullscreen;
-                case WindowState.Maximized:
-                    return SDL_WindowFlags.Maximized;
-                case WindowState.Minimized:
-                    return SDL_WindowFlags.Minimized;
-                case WindowState.BorderlessFullScreen:
-                    return SDL_WindowFlags.FullScreenDesktop;
-                case WindowState.Hidden:
-                    return SDL_WindowFlags.Hidden;
-                default:
-                    throw new VeldridException("Invalid WindowState: " + state);
-            }
+                WindowState.Normal => 0,
+                WindowState.FullScreen => SDL_WindowFlags.Fullscreen,
+                WindowState.Maximized => SDL_WindowFlags.Maximized,
+                WindowState.Minimized => SDL_WindowFlags.Minimized,
+                WindowState.BorderlessFullScreen => SDL_WindowFlags.FullScreenDesktop,
+                WindowState.Hidden => SDL_WindowFlags.Hidden,
+                _ => throw new VeldridException("Invalid WindowState: " + state),
+            };
         }
 
         public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window)
@@ -101,6 +95,7 @@ namespace Veldrid.StartupUtilities
         public static GraphicsDevice CreateGraphicsDevice(Sdl2Window window, GraphicsBackend preferredBackend)
             => CreateGraphicsDevice(window, new GraphicsDeviceOptions(), preferredBackend);
 
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         public static GraphicsDevice CreateGraphicsDevice(
             Sdl2Window window,
             GraphicsDeviceOptions options,
@@ -233,7 +228,7 @@ namespace Veldrid.StartupUtilities
             return gd;
         }
 
-        private static unsafe Veldrid.Vk.VkSurfaceSource GetSurfaceSource(SDL_SysWMinfo sysWmInfo)
+        private static unsafe Vk.VkSurfaceSource GetSurfaceSource(SDL_SysWMinfo sysWmInfo)
         {
             switch (sysWmInfo.subsystem)
             {

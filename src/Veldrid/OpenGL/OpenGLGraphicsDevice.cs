@@ -1,17 +1,17 @@
-﻿using static Veldrid.OpenGLBinding.OpenGLNative;
-using static Veldrid.OpenGL.OpenGLUtil;
-using System;
-using Veldrid.OpenGLBinding;
+﻿using System;
 using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Veldrid.OpenGL.EAGL;
-using static Veldrid.OpenGL.EGL.EGLNative;
-using System.Runtime.CompilerServices;
-using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 using Veldrid.OpenGL.EntryList;
+using Veldrid.OpenGLBinding;
+using static Veldrid.OpenGL.EGL.EGLNative;
+using static Veldrid.OpenGL.OpenGLUtil;
+using static Veldrid.OpenGLBinding.OpenGLNative;
+using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 
 namespace Veldrid.OpenGL
 {
@@ -55,13 +55,11 @@ namespace Veldrid.OpenGL
         private AutoResetEvent _workResetEvent;
         private ExecutionThread _executionThread;
         private readonly object _commandListDisposalLock = new();
-        private readonly Dictionary<OpenGLCommandList, int> _submittedCommandListCounts
-            = new();
+        private readonly Dictionary<OpenGLCommandList, int> _submittedCommandListCounts = new();
         private readonly HashSet<OpenGLCommandList> _commandListsToDispose = new();
 
         private readonly object _mappedResourceLock = new();
-        private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources
-            = new();
+        private readonly Dictionary<MappedResourceCacheKey, MappedResourceInfo> _mappedResources = new();
 
         private readonly object _resetEventsLock = new();
         private readonly List<ManualResetEvent[]> _resetEvents = new();
@@ -767,15 +765,12 @@ namespace Veldrid.OpenGL
 
         private static int GetDepthBits(PixelFormat value)
         {
-            switch (value)
+            return value switch
             {
-                case PixelFormat.R16_UNorm:
-                    return 16;
-                case PixelFormat.R32_Float:
-                    return 32;
-                default:
-                    throw new VeldridException($"Unsupported depth format: {value}");
-            }
+                PixelFormat.R16_UNorm => 16,
+                PixelFormat.R32_Float => 32,
+                _ => throw new VeldridException($"Unsupported depth format: {value}"),
+            };
         }
 
         private protected override void SubmitCommandsCore(CommandList cl, Fence? fence)
@@ -1099,8 +1094,10 @@ namespace Veldrid.OpenGL
             };
         }
 
-        protected override void PlatformDispose()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             FlushAndFinish();
             _executionThread.Terminate();
         }

@@ -176,7 +176,7 @@ namespace Veldrid.OpenGL
                     glGetProgramInfoLog(_program, (uint)byteBuffer.Length, &bytesWritten, infoLogPtr);
                     CheckLastError();
                 }
-                string log = Util.UTF8.GetString(byteBuffer.Slice(0, (int)bytesWritten));
+                string log = Util.UTF8.GetString(byteBuffer[..(int)bytesWritten]);
                 throw new VeldridException($"Error linking GL program: {log}");
             }
 
@@ -391,7 +391,7 @@ namespace Veldrid.OpenGL
                     glGetProgramInfoLog(_program, (uint)byteBuffer.Length, &bytesWritten, infoLog);
                     CheckLastError();
                 }
-                string log = Util.UTF8.GetString(byteBuffer.Slice(0, (int)bytesWritten));
+                string log = Util.UTF8.GetString(byteBuffer[..(int)bytesWritten]);
                 throw new VeldridException($"Error linking GL program: {log}");
             }
 

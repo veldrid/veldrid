@@ -58,7 +58,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="depthTestEnabled">Controls whether depth testing is enabled.</param>
         /// <param name="depthWriteEnabled">Controls whether new depth values are written to the depth buffer.</param>
-        /// <param name="comparisonKind">The <see cref="Veldrid.ComparisonKind"/> used when considering new depth values.</param>
+        /// <param name="comparisonKind">The <see cref="ComparisonKind"/> used when considering new depth values.</param>
         public DepthStencilStateDescription(bool depthTestEnabled, bool depthWriteEnabled, ComparisonKind comparisonKind)
         {
             DepthTestEnabled = depthTestEnabled;

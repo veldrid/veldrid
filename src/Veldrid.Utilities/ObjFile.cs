@@ -249,7 +249,9 @@ namespace Veldrid.Utilities
                 return obj is FaceVertex value && Equals(value);
             }
 
+#pragma warning disable IDE0070 // Use 'System.HashCode'
             public override readonly int GetHashCode()
+#pragma warning restore IDE0070 // Use 'System.HashCode'
             {
                 unchecked
                 {

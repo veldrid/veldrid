@@ -1061,8 +1061,10 @@ namespace Veldrid.Vk
             }
         }
 
-        protected override void PlatformDispose()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             Debug.Assert(_submittedFences.Count == 0);
             foreach (Vulkan.VkFence fence in _availableSubmissionFences)
             {

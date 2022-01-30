@@ -72,111 +72,49 @@ namespace Veldrid.OpenGL
 
         public SizedInternalFormat GetReadWriteSizedInternalFormat()
         {
-            switch (Target.Format)
+            return Target.Format switch
             {
-                case PixelFormat.R8_UNorm:
-                    return SizedInternalFormat.R8;
-                case PixelFormat.R8_SNorm:
-                    return (SizedInternalFormat)PixelInternalFormat.R8Snorm;
-                case PixelFormat.R8_UInt:
-                    return SizedInternalFormat.R8ui;
-                case PixelFormat.R8_SInt:
-                    return SizedInternalFormat.R8i;
-
-                case PixelFormat.R16_UNorm:
-                    return SizedInternalFormat.R16;
-                case PixelFormat.R16_SNorm:
-                    return (SizedInternalFormat)PixelInternalFormat.R16Snorm;
-                case PixelFormat.R16_UInt:
-                    return SizedInternalFormat.R16ui;
-                case PixelFormat.R16_SInt:
-                    return SizedInternalFormat.R16i;
-                case PixelFormat.R16_Float:
-                    return SizedInternalFormat.R16f;
-
-                case PixelFormat.R32_UInt:
-                    return SizedInternalFormat.R32ui;
-                case PixelFormat.R32_SInt:
-                    return SizedInternalFormat.R32i;
-                case PixelFormat.R32_Float:
-                    return SizedInternalFormat.R32f;
-
-                case PixelFormat.R8_G8_UNorm:
-                    return SizedInternalFormat.R8;
-                case PixelFormat.R8_G8_SNorm:
-                    return (SizedInternalFormat)PixelInternalFormat.Rg8Snorm;
-                case PixelFormat.R8_G8_UInt:
-                    return SizedInternalFormat.Rg8ui;
-                case PixelFormat.R8_G8_SInt:
-                    return SizedInternalFormat.Rg8i;
-
-                case PixelFormat.R16_G16_UNorm:
-                    return SizedInternalFormat.R16;
-                case PixelFormat.R16_G16_SNorm:
-                    return (SizedInternalFormat)PixelInternalFormat.Rg16Snorm;
-                case PixelFormat.R16_G16_UInt:
-                    return SizedInternalFormat.Rg16ui;
-                case PixelFormat.R16_G16_SInt:
-                    return SizedInternalFormat.Rg16i;
-                case PixelFormat.R16_G16_Float:
-                    return SizedInternalFormat.Rg16f;
-
-                case PixelFormat.R32_G32_UInt:
-                    return SizedInternalFormat.Rg32ui;
-                case PixelFormat.R32_G32_SInt:
-                    return SizedInternalFormat.Rg32i;
-                case PixelFormat.R32_G32_Float:
-                    return SizedInternalFormat.Rg32f;
-
-                case PixelFormat.R8_G8_B8_A8_UNorm:
-                case PixelFormat.B8_G8_R8_A8_UNorm:
-                    return SizedInternalFormat.Rgba8;
-                case PixelFormat.R8_G8_B8_A8_SNorm:
-                    return (SizedInternalFormat)PixelInternalFormat.Rgba8Snorm;
-                case PixelFormat.R8_G8_B8_A8_UInt:
-                    return SizedInternalFormat.Rgba8ui;
-                case PixelFormat.R8_G8_B8_A8_SInt:
-                    return SizedInternalFormat.Rgba16i;
-
-                case PixelFormat.R16_G16_B16_A16_UNorm:
-                    return SizedInternalFormat.Rgba16;
-                case PixelFormat.R16_G16_B16_A16_SNorm:
-                    return (SizedInternalFormat)PixelInternalFormat.Rgba16Snorm;
-                case PixelFormat.R16_G16_B16_A16_UInt:
-                    return SizedInternalFormat.Rgba16ui;
-                case PixelFormat.R16_G16_B16_A16_SInt:
-                    return SizedInternalFormat.Rgba16i;
-                case PixelFormat.R16_G16_B16_A16_Float:
-                    return SizedInternalFormat.Rgba16f;
-
-                case PixelFormat.R32_G32_B32_A32_UInt:
-                    return SizedInternalFormat.Rgba32ui;
-                case PixelFormat.R32_G32_B32_A32_SInt:
-                    return SizedInternalFormat.Rgba32i;
-                case PixelFormat.R32_G32_B32_A32_Float:
-                    return SizedInternalFormat.Rgba32f;
-
-                case PixelFormat.R10_G10_B10_A2_UNorm:
-                    return (SizedInternalFormat)PixelInternalFormat.Rgb10A2;
-                case PixelFormat.R10_G10_B10_A2_UInt:
-                    return (SizedInternalFormat)PixelInternalFormat.Rgb10A2ui;
-                case PixelFormat.R11_G11_B10_Float:
-                    return (SizedInternalFormat)PixelInternalFormat.R11fG11fB10f;
-
-                case PixelFormat.D24_UNorm_S8_UInt:
-                case PixelFormat.D32_Float_S8_UInt:
-                case PixelFormat.BC1_Rgb_UNorm:
-                case PixelFormat.BC1_Rgba_UNorm:
-                case PixelFormat.BC2_UNorm:
-                case PixelFormat.BC3_UNorm:
-                case PixelFormat.BC4_UNorm:
-                case PixelFormat.BC4_SNorm:
-                case PixelFormat.BC5_UNorm:
-                case PixelFormat.BC5_SNorm:
-                case PixelFormat.BC7_UNorm:
-                default:
-                    throw Illegal.Value<PixelFormat>();
-            }
+                PixelFormat.R8_UNorm => SizedInternalFormat.R8,
+                PixelFormat.R8_SNorm => (SizedInternalFormat)PixelInternalFormat.R8Snorm,
+                PixelFormat.R8_UInt => SizedInternalFormat.R8ui,
+                PixelFormat.R8_SInt => SizedInternalFormat.R8i,
+                PixelFormat.R16_UNorm => SizedInternalFormat.R16,
+                PixelFormat.R16_SNorm => (SizedInternalFormat)PixelInternalFormat.R16Snorm,
+                PixelFormat.R16_UInt => SizedInternalFormat.R16ui,
+                PixelFormat.R16_SInt => SizedInternalFormat.R16i,
+                PixelFormat.R16_Float => SizedInternalFormat.R16f,
+                PixelFormat.R32_UInt => SizedInternalFormat.R32ui,
+                PixelFormat.R32_SInt => SizedInternalFormat.R32i,
+                PixelFormat.R32_Float => SizedInternalFormat.R32f,
+                PixelFormat.R8_G8_UNorm => SizedInternalFormat.R8,
+                PixelFormat.R8_G8_SNorm => (SizedInternalFormat)PixelInternalFormat.Rg8Snorm,
+                PixelFormat.R8_G8_UInt => SizedInternalFormat.Rg8ui,
+                PixelFormat.R8_G8_SInt => SizedInternalFormat.Rg8i,
+                PixelFormat.R16_G16_UNorm => SizedInternalFormat.R16,
+                PixelFormat.R16_G16_SNorm => (SizedInternalFormat)PixelInternalFormat.Rg16Snorm,
+                PixelFormat.R16_G16_UInt => SizedInternalFormat.Rg16ui,
+                PixelFormat.R16_G16_SInt => SizedInternalFormat.Rg16i,
+                PixelFormat.R16_G16_Float => SizedInternalFormat.Rg16f,
+                PixelFormat.R32_G32_UInt => SizedInternalFormat.Rg32ui,
+                PixelFormat.R32_G32_SInt => SizedInternalFormat.Rg32i,
+                PixelFormat.R32_G32_Float => SizedInternalFormat.Rg32f,
+                PixelFormat.R8_G8_B8_A8_UNorm or PixelFormat.B8_G8_R8_A8_UNorm => SizedInternalFormat.Rgba8,
+                PixelFormat.R8_G8_B8_A8_SNorm => (SizedInternalFormat)PixelInternalFormat.Rgba8Snorm,
+                PixelFormat.R8_G8_B8_A8_UInt => SizedInternalFormat.Rgba8ui,
+                PixelFormat.R8_G8_B8_A8_SInt => SizedInternalFormat.Rgba16i,
+                PixelFormat.R16_G16_B16_A16_UNorm => SizedInternalFormat.Rgba16,
+                PixelFormat.R16_G16_B16_A16_SNorm => (SizedInternalFormat)PixelInternalFormat.Rgba16Snorm,
+                PixelFormat.R16_G16_B16_A16_UInt => SizedInternalFormat.Rgba16ui,
+                PixelFormat.R16_G16_B16_A16_SInt => SizedInternalFormat.Rgba16i,
+                PixelFormat.R16_G16_B16_A16_Float => SizedInternalFormat.Rgba16f,
+                PixelFormat.R32_G32_B32_A32_UInt => SizedInternalFormat.Rgba32ui,
+                PixelFormat.R32_G32_B32_A32_SInt => SizedInternalFormat.Rgba32i,
+                PixelFormat.R32_G32_B32_A32_Float => SizedInternalFormat.Rgba32f,
+                PixelFormat.R10_G10_B10_A2_UNorm => (SizedInternalFormat)PixelInternalFormat.Rgb10A2,
+                PixelFormat.R10_G10_B10_A2_UInt => (SizedInternalFormat)PixelInternalFormat.Rgb10A2ui,
+                PixelFormat.R11_G11_B10_Float => (SizedInternalFormat)PixelInternalFormat.R11fG11fB10f,
+                _ => throw Illegal.Value<PixelFormat>(),
+            };
         }
 
         public void EnsureResourcesCreated()

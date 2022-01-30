@@ -17,37 +17,30 @@ namespace Veldrid.VirtualReality
 
         internal static TextureSampleCount GetSampleCount(int sampleCount)
         {
-            switch (sampleCount)
+            return sampleCount switch
             {
-                case 1:
-                    return TextureSampleCount.Count1;
-                case 2:
-                    return TextureSampleCount.Count2;
-                case 4:
-                    return TextureSampleCount.Count4;
-                case 8:
-                    return TextureSampleCount.Count8;
-                case 16:
-                    return TextureSampleCount.Count16;
-                case 32:
-                    return TextureSampleCount.Count32;
-                default:
-                    throw new VeldridException($"Unsupported sample count: {sampleCount}");
-            }
+                1 => TextureSampleCount.Count1,
+                2 => TextureSampleCount.Count2,
+                4 => TextureSampleCount.Count4,
+                8 => TextureSampleCount.Count8,
+                16 => TextureSampleCount.Count16,
+                32 => TextureSampleCount.Count32,
+                _ => throw new VeldridException($"Unsupported sample count: {sampleCount}"),
+            };
         }
 
         internal static int GetSampleCount(TextureSampleCount sampleCount)
         {
-            switch (sampleCount)
+            return sampleCount switch
             {
-                case TextureSampleCount.Count1: return 1;
-                case TextureSampleCount.Count2: return 2;
-                case TextureSampleCount.Count4: return 4;
-                case TextureSampleCount.Count8: return 8;
-                case TextureSampleCount.Count16: return 16;
-                case TextureSampleCount.Count32: return 32;
-                default: throw new VeldridException($"Invalid TextureSampleCount: {sampleCount}.");
-            }
+                TextureSampleCount.Count1 => 1,
+                TextureSampleCount.Count2 => 2,
+                TextureSampleCount.Count4 => 4,
+                TextureSampleCount.Count8 => 8,
+                TextureSampleCount.Count16 => 16,
+                TextureSampleCount.Count32 => 32,
+                _ => throw new VeldridException($"Invalid TextureSampleCount: {sampleCount}."),
+            };
         }
     }
 }

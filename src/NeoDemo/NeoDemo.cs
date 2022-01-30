@@ -37,7 +37,7 @@ namespace Veldrid.NeoDemo
         private Sdl2ControllerTracker _controllerTracker;
         private bool _colorSrgb = true;
         private FullScreenQuad _fsq;
-        public static RenderDoc _renderDoc;
+        private static RenderDoc _renderDoc;
         private bool _controllerDebugMenu;
 
         public NeoDemo()

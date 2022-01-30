@@ -40,30 +40,16 @@ namespace Veldrid.MTL
 
             for (int i = 0; i < _bindingInfosByVdIndex.Length; i++)
             {
-                uint slot;
-                switch (elements[i].Kind)
+                uint slot = elements[i].Kind switch
                 {
-                    case ResourceKind.UniformBuffer:
-                        slot = bufferIndex++;
-                        break;
-                    case ResourceKind.StructuredBufferReadOnly:
-                        slot = bufferIndex++;
-                        break;
-                    case ResourceKind.StructuredBufferReadWrite:
-                        slot = bufferIndex++;
-                        break;
-                    case ResourceKind.TextureReadOnly:
-                        slot = texIndex++;
-                        break;
-                    case ResourceKind.TextureReadWrite:
-                        slot = texIndex++;
-                        break;
-                    case ResourceKind.Sampler:
-                        slot = samplerIndex++;
-                        break;
-                    default: throw Illegal.Value<ResourceKind>();
-                }
-
+                    ResourceKind.UniformBuffer => bufferIndex++,
+                    ResourceKind.StructuredBufferReadOnly => bufferIndex++,
+                    ResourceKind.StructuredBufferReadWrite => bufferIndex++,
+                    ResourceKind.TextureReadOnly => texIndex++,
+                    ResourceKind.TextureReadWrite => texIndex++,
+                    ResourceKind.Sampler => samplerIndex++,
+                    _ => throw Illegal.Value<ResourceKind>(),
+                };
                 _bindingInfosByVdIndex[i] = new ResourceBindingInfo(
                     slot,
                     elements[i].Stages,

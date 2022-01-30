@@ -621,21 +621,15 @@ namespace Veldrid.Sdl2
 
         private static MouseButton MapMouseButton(SDL_MouseButton button)
         {
-            switch (button)
+            return button switch
             {
-                case SDL_MouseButton.Left:
-                    return MouseButton.Left;
-                case SDL_MouseButton.Middle:
-                    return MouseButton.Middle;
-                case SDL_MouseButton.Right:
-                    return MouseButton.Right;
-                case SDL_MouseButton.X1:
-                    return MouseButton.Button1;
-                case SDL_MouseButton.X2:
-                    return MouseButton.Button2;
-                default:
-                    return MouseButton.Left;
-            }
+                SDL_MouseButton.Left => MouseButton.Left,
+                SDL_MouseButton.Middle => MouseButton.Middle,
+                SDL_MouseButton.Right => MouseButton.Right,
+                SDL_MouseButton.X1 => MouseButton.Button1,
+                SDL_MouseButton.X2 => MouseButton.Button2,
+                _ => MouseButton.Left,
+            };
         }
 
         private void HandleMouseMotionEvent(SDL_MouseMotionEvent mouseMotionEvent)

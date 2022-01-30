@@ -18,10 +18,9 @@ namespace Veldrid.Sdl2
         public WindowInfo info;
     }
 
+    [StructLayout(LayoutKind.Sequential, Size = 100)]
     public unsafe struct WindowInfo
     {
-        public const int WindowInfoSizeInBytes = 100;
-        private fixed byte bytes[WindowInfoSizeInBytes];
     }
 
     public struct Win32WindowInfo
@@ -30,10 +29,12 @@ namespace Veldrid.Sdl2
         /// The Sdl2Window handle.
         /// </summary>
         public IntPtr Sdl2Window;
+
         /// <summary>
         /// The Sdl2Window device context.
         /// </summary>
         public IntPtr hdc;
+
         /// <summary>
         /// The instance handle.
         /// </summary>

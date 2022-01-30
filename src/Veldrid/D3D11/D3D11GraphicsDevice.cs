@@ -638,8 +638,10 @@ namespace Veldrid.D3D11
 
         internal override uint GetStructuredBufferMinOffsetAlignmentCore() => 16;
 
-        protected override void PlatformDispose()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             // Dispose staging buffers
             foreach (DeviceBuffer buffer in _availableStagingBuffers)
             {

@@ -93,7 +93,7 @@ namespace Veldrid.MTL
             {
                 _completionHandler = OnCommandBufferCompleted_Static;
             }
-            _completionHandlerFuncPtr = Marshal.GetFunctionPointerForDelegate<MTLCommandBufferHandler>(_completionHandler);
+            _completionHandlerFuncPtr = Marshal.GetFunctionPointerForDelegate(_completionHandler);
             _completionBlockDescriptor = Marshal.AllocHGlobal(Unsafe.SizeOf<BlockDescriptor>());
             BlockDescriptor* descriptorPtr = (BlockDescriptor*)_completionBlockDescriptor;
             descriptorPtr->reserved = 0;
@@ -424,9 +424,10 @@ namespace Veldrid.MTL
             return new MappedResource(texture, mode, (IntPtr)offsetPtr, offsetInBytes, sizeInBytes, subresource, rowPitch, depthPitch);
         }
 
-        protected override void PlatformDispose()
+        protected override void Dispose(bool disposing)
         {
-            WaitForIdle();
+            base.Dispose(disposing);
+
             if (!_unalignedBufferCopyPipeline.IsNull)
             {
                 _unalignedBufferCopyShader?.Dispose();
@@ -583,12 +584,10 @@ namespace Veldrid.MTL
                         }
 
                         byte[] data = new byte[resourceStream.Length];
-                        using (MemoryStream ms = new(data))
-                        {
-                            resourceStream.CopyTo(ms);
-                            ShaderDescription shaderDesc = new(ShaderStages.Compute, data, "copy_bytes");
-                            _unalignedBufferCopyShader = new MTLShader(shaderDesc, this);
-                        }
+                        using MemoryStream ms = new(data);
+                        resourceStream.CopyTo(ms);
+                        ShaderDescription shaderDesc = new(ShaderStages.Compute, data, "copy_bytes");
+                        _unalignedBufferCopyShader = new MTLShader(shaderDesc, this);
                     }
 
                     descriptor.computeFunction = _unalignedBufferCopyShader.Function;
@@ -604,6 +603,7 @@ namespace Veldrid.MTL
         internal override uint GetStructuredBufferMinOffsetAlignmentCore() => 16u;
     }
 
+    [AttributeUsage(AttributeTargets.Method)]
     internal sealed class MonoPInvokeCallbackAttribute : Attribute
     {
         public MonoPInvokeCallbackAttribute(Type t) { }

@@ -39,14 +39,14 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline1 = RF.CreateGraphicsPipeline(gpd);
-            Pipeline pipeline2 = RF.CreateGraphicsPipeline(gpd);
+            _ = RF.CreateGraphicsPipeline(gpd);
+            _ = RF.CreateGraphicsPipeline(gpd);
 
             gpd.ShaderSet.VertexLayouts[0].InstanceStepRate = 4;
-            Pipeline pipeline3 = RF.CreateGraphicsPipeline(gpd);
+            _ = RF.CreateGraphicsPipeline(gpd);
 
             gpd.ShaderSet.VertexLayouts[0].InstanceStepRate = 5;
-            Pipeline pipeline4 = RF.CreateGraphicsPipeline(gpd);
+            _ = RF.CreateGraphicsPipeline(gpd);
         }
     }
 

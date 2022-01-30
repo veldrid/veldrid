@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Bindings")]
+[assembly: SuppressMessage("Interoperability", "CA1401:P/Invokes should not be visible", Justification = "Bindings")]

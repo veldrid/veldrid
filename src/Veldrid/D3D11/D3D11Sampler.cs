@@ -34,17 +34,13 @@ namespace Veldrid.D3D11
 
         private static Color4 ToRawColor4(SamplerBorderColor borderColor)
         {
-            switch (borderColor)
+            return borderColor switch
             {
-                case SamplerBorderColor.TransparentBlack:
-                    return new Color4(0, 0, 0, 0);
-                case SamplerBorderColor.OpaqueBlack:
-                    return new Color4(0, 0, 0, 1);
-                case SamplerBorderColor.OpaqueWhite:
-                    return new Color4(1, 1, 1, 1);
-                default:
-                    throw Illegal.Value<SamplerBorderColor>();
-            }
+                SamplerBorderColor.TransparentBlack => new Color4(0, 0, 0, 0),
+                SamplerBorderColor.OpaqueBlack => new Color4(0, 0, 0, 1),
+                SamplerBorderColor.OpaqueWhite => new Color4(1, 1, 1, 1),
+                _ => throw Illegal.Value<SamplerBorderColor>(),
+            };
         }
 
         public override string? Name

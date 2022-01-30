@@ -82,30 +82,26 @@ namespace Veldrid.NeoDemo
 
         private static string GetBytecodeExtension(GraphicsBackend backend)
         {
-            switch (backend)
+            return backend switch
             {
-                case GraphicsBackend.Direct3D11: return ".hlsl.bytes";
-                case GraphicsBackend.Vulkan: return ".spv";
-                case GraphicsBackend.OpenGL:
-                    throw new InvalidOperationException("OpenGL and OpenGLES do not support shader bytecode.");
-                default: throw new InvalidOperationException("Invalid Graphics backend: " + backend);
-            }
+                GraphicsBackend.Direct3D11 => ".hlsl.bytes",
+                GraphicsBackend.Vulkan => ".spv",
+                GraphicsBackend.OpenGL => throw new InvalidOperationException("OpenGL and OpenGLES do not support shader bytecode."),
+                _ => throw new InvalidOperationException("Invalid Graphics backend: " + backend),
+            };
         }
 
         private static string GetSourceExtension(GraphicsBackend backend)
         {
-            switch (backend)
+            return backend switch
             {
-                case GraphicsBackend.Direct3D11: return ".hlsl";
-                case GraphicsBackend.Vulkan: return ".450.glsl";
-                case GraphicsBackend.OpenGL:
-                    return ".330.glsl";
-                case GraphicsBackend.OpenGLES:
-                    return ".300.glsles";
-                case GraphicsBackend.Metal:
-                    return ".metallib";
-                default: throw new InvalidOperationException("Invalid Graphics backend: " + backend);
-            }
+                GraphicsBackend.Direct3D11 => ".hlsl",
+                GraphicsBackend.Vulkan => ".450.glsl",
+                GraphicsBackend.OpenGL => ".330.glsl",
+                GraphicsBackend.OpenGLES => ".300.glsles",
+                GraphicsBackend.Metal => ".metallib",
+                _ => throw new InvalidOperationException("Invalid Graphics backend: " + backend),
+            };
         }
     }
 }

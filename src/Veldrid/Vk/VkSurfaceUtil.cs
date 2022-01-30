@@ -180,6 +180,7 @@ namespace Veldrid.Vk
                 VkIOSSurfaceCreateInfoMVK surfaceCI = VkIOSSurfaceCreateInfoMVK.New();
                 surfaceCI.pView = uiView.NativePtr.ToPointer();
                 VkResult result = vkCreateIOSSurfaceMVK(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
+                CheckResult(result);
                 return surface;
             }
         }

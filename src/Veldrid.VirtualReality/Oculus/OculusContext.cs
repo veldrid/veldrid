@@ -374,20 +374,14 @@ namespace Veldrid.VirtualReality.Oculus
             GraphicsDevice gd,
             ovrTextureSwapChainDesc desc)
         {
-            switch (gd.BackendType)
+            return gd.BackendType switch
             {
-                case GraphicsBackend.Direct3D11:
-                    return CreateSwapchainD3D11(session, gd, desc);
-                case GraphicsBackend.OpenGL:
-                case GraphicsBackend.OpenGLES:
-                    return CreateSwapchainGL(session, gd, desc);
-                case GraphicsBackend.Vulkan:
-                    return CreateSwapchainVk(session, gd, desc);
-                case GraphicsBackend.Metal:
-                    throw new PlatformNotSupportedException("Using Oculus with the Metal backend is not supported.");
-                default:
-                    throw new NotImplementedException();
-            }
+                GraphicsBackend.Direct3D11 => CreateSwapchainD3D11(session, gd, desc),
+                GraphicsBackend.OpenGL or GraphicsBackend.OpenGLES => CreateSwapchainGL(session, gd, desc),
+                GraphicsBackend.Vulkan => CreateSwapchainVk(session, gd, desc),
+                GraphicsBackend.Metal => throw new PlatformNotSupportedException("Using Oculus with the Metal backend is not supported."),
+                _ => throw new NotImplementedException(),
+            };
         }
 
         private (ovrTextureSwapChain, Texture[]) CreateSwapchainVk(ovrSession session, GraphicsDevice gd, ovrTextureSwapChainDesc desc)

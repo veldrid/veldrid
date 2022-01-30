@@ -7,7 +7,6 @@ namespace Veldrid.VirtualReality
 {
     internal class TextureBlitter : IDisposable
     {
-        private readonly GraphicsDevice _gd;
         private readonly ResourceLayout _rl;
         private readonly ResourceLayout _sampleRegionLayout;
         private readonly Pipeline _pipeline;
@@ -23,8 +22,6 @@ namespace Veldrid.VirtualReality
             OutputDescription outputDesc,
             bool srgbOutput)
         {
-            _gd = gd;
-
             SpecializationConstant[] specConstants = new[]
             {
                 new SpecializationConstant(0, srgbOutput),

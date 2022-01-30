@@ -553,7 +553,7 @@ namespace Veldrid.MTL
                         out uint dstBytesPerRow,
                         out uint dstBytesPerImage);
 
-                    Util.GetMipDimensions(srcMTLTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                    Util.GetMipDimensions(srcMTLTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out _);
                     uint blockSize = FormatHelpers.IsCompressedFormat(srcMTLTexture.Format) ? 4u : 1u;
                     uint bufferRowLength = Math.Max(mipWidth, blockSize);
                     uint bufferImageHeight = Math.Max(mipHeight, blockSize);

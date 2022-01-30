@@ -1,7 +1,12 @@
 ﻿using Veldrid.Sdl2;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 namespace Veldrid
 {
+    /// <summary>
+    /// Represents virtual key codes.
+    /// </summary>
     public enum VKey
     {
         Unknown = 0,
@@ -200,7 +205,7 @@ namespace Veldrid
         KeypadDoubleVerticalBar = SDL_Scancode.SDL_SCANCODE_KP_DBLVERTICALBAR | (1 << 30),
         KeypadColon = SDL_Scancode.SDL_SCANCODE_KP_COLON | (1 << 30),
         KeypadHash = SDL_Scancode.SDL_SCANCODE_KP_HASH | (1 << 30),
-        KeypadSpace  = SDL_Scancode.SDL_SCANCODE_KP_SPACE | (1 << 30),
+        KeypadSpace = SDL_Scancode.SDL_SCANCODE_KP_SPACE | (1 << 30),
         KeypadAt = SDL_Scancode.SDL_SCANCODE_KP_AT | (1 << 30),
         KeypadExclamation = SDL_Scancode.SDL_SCANCODE_KP_EXCLAM | (1 << 30),
         KeypadMemoryStore = SDL_Scancode.SDL_SCANCODE_KP_MEMSTORE | (1 << 30),

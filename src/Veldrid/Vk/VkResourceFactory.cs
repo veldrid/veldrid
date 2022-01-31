@@ -8,7 +8,7 @@ namespace Veldrid.Vk
         private readonly VkDevice _device;
 
         public VkResourceFactory(VkGraphicsDevice vkGraphicsDevice)
-            : base (vkGraphicsDevice.Features)
+            : base(vkGraphicsDevice.Features)
         {
             _gd = vkGraphicsDevice;
             _device = vkGraphicsDevice.Device;

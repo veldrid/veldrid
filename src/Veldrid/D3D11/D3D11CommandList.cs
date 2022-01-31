@@ -385,24 +385,24 @@ namespace Veldrid.D3D11
                 switch (rbi.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                        {
-                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                            BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
-                            break;
-                        }
+                    {
+                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                        BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
+                        break;
+                    }
                     case ResourceKind.StructuredBufferReadOnly:
-                        {
-                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                            BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
-                            break;
-                        }
+                    {
+                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                        BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
+                        break;
+                    }
                     case ResourceKind.StructuredBufferReadWrite:
-                        {
-                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                            ID3D11UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
-                            BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
-                            break;
-                        }
+                    {
+                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                        ID3D11UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
+                        BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
+                        break;
+                    }
                     case ResourceKind.TextureReadOnly:
                         TextureView texView = Util.GetTextureView(_gd, resource);
                         D3D11TextureView d3d11TexView = Util.AssertSubtype<TextureView, D3D11TextureView>(texView);

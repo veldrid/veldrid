@@ -6,7 +6,7 @@ namespace Veldrid.Tests
 {
     public abstract class SwapchainTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Theory]
+        [SkippableTheory]
         [InlineData(PixelFormat.R16_UNorm, false)]
         [InlineData(PixelFormat.R16_UNorm, true)]
         [InlineData(PixelFormat.R32_Float, false)]
@@ -38,7 +38,7 @@ namespace Veldrid.Tests
 
     public abstract class MainSwapchainTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Fact]
+        [SkippableFact]
         public void Textures_Properties_Correct()
         {
             Texture colorTarget = GD.MainSwapchain.Framebuffer.ColorTargets[0].Target;
@@ -63,26 +63,21 @@ namespace Veldrid.Tests
         }
     }
 
-#if TEST_VULKAN
     [Trait("Backend", "Vulkan")]
     public class VulkanSwapchainTests : SwapchainTests<VulkanDeviceCreator> { }
     [Trait("Backend", "Vulkan")]
     public class VulkanMainSwapchainTests : MainSwapchainTests<VulkanDeviceCreatorWithMainSwapchain> { }
-#endif
-#if TEST_D3D11
+
     [Trait("Backend", "D3D11")]
     public class D3D11SwapchainTests : SwapchainTests<D3D11DeviceCreator> { }
     [Trait("Backend", "D3D11")]
     public class D3D11MainSwapchainTests : MainSwapchainTests<D3D11DeviceCreatorWithMainSwapchain> { }
-#endif
-#if TEST_METAL
+
     [Trait("Backend", "Metal")]
     public class MetalSwapchainTests : SwapchainTests<MetalDeviceCreator> { }
     [Trait("Backend", "Metal")]
     public class MetalMainSwapchainTests : SwapchainTests<MetalDeviceCreatorWithMainSwapchain> { }
-#endif
-#if TEST_OPENGL
+
     [Trait("Backend", "OpenGL")]
     public class OpenGLMainSwapchainTests : MainSwapchainTests<OpenGLDeviceCreator> { }
-#endif
 }

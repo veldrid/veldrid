@@ -28,11 +28,13 @@ namespace Veldrid.Tests
 
         public static GraphicsDevice CreateVulkanDevice()
         {
+            Xunit.Skip.IfNot(GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan), "Vulkan is not supported on this system.");
             return GraphicsDevice.CreateVulkan(new GraphicsDeviceOptions(true));
         }
 
         public static void CreateVulkanDeviceWithSwapchain(out Sdl2Window window, out GraphicsDevice gd)
         {
+            Xunit.Skip.IfNot(GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan), "Vulkan is not supported on this system.");
             if (!InitializedSdl2)
             {
                 window = null;
@@ -54,11 +56,13 @@ namespace Veldrid.Tests
 
         public static GraphicsDevice CreateD3D11Device()
         {
+            Xunit.Skip.IfNot(GraphicsDevice.IsBackendSupported(GraphicsBackend.Direct3D11), "Direct3D11 is not supported on this system.");
             return GraphicsDevice.CreateD3D11(new GraphicsDeviceOptions(true));
         }
 
         public static void CreateD3D11DeviceWithSwapchain(out Sdl2Window window, out GraphicsDevice gd)
         {
+            Xunit.Skip.IfNot(GraphicsDevice.IsBackendSupported(GraphicsBackend.Direct3D11), "Direct3D11 is not supported on this system.");
             if (!InitializedSdl2)
             {
                 window = null;
@@ -80,6 +84,7 @@ namespace Veldrid.Tests
 
         internal static void CreateOpenGLDevice(out Sdl2Window window, out GraphicsDevice gd)
         {
+            Xunit.Skip.IfNot(GraphicsDevice.IsBackendSupported(GraphicsBackend.OpenGL), "OpenGL is not supported on this system.");
             if (!InitializedSdl2)
             {
                 window = null;
@@ -101,6 +106,7 @@ namespace Veldrid.Tests
 
         internal static void CreateOpenGLESDevice(out Sdl2Window window, out GraphicsDevice gd)
         {
+            Xunit.Skip.IfNot(GraphicsDevice.IsBackendSupported(GraphicsBackend.OpenGLES), "OpenGLES is not supported on this system.");
             if (!InitializedSdl2)
             {
                 window = null;
@@ -122,16 +128,13 @@ namespace Veldrid.Tests
 
         public static GraphicsDevice CreateMetalDevice()
         {
-            if (!GraphicsDevice.IsBackendSupported(GraphicsBackend.Metal))
-            {
-                Console.WriteLine("Metal is not supported on this system.");
-                return null;
-            }
+            Xunit.Skip.IfNot(GraphicsDevice.IsBackendSupported(GraphicsBackend.Metal), "Metal is not supported on this system.");
             return GraphicsDevice.CreateMetal(new GraphicsDeviceOptions(true, null, false, ResourceBindingModel.Improved));
         }
 
         public static void CreateMetalDeviceWithSwapchain(out Sdl2Window window, out GraphicsDevice gd)
         {
+            Xunit.Skip.IfNot(GraphicsDevice.IsBackendSupported(GraphicsBackend.Metal), "Metal is not supported on this system.");
             if (!InitializedSdl2)
             {
                 window = null;
@@ -165,14 +168,13 @@ namespace Veldrid.Tests
 
     public abstract class GraphicsDeviceTestBase<T> : IDisposable where T : GraphicsDeviceCreator
     {
-        private readonly Sdl2Window _window;
-        private readonly GraphicsDevice _gd;
         private readonly DisposeCollectorResourceFactory _factory;
         private readonly RenderDoc _renderDoc;
 
-        public GraphicsDevice GD => _gd;
+        private T _graphiceDeviceCreator;
+
+        public GraphicsDevice GD => _graphiceDeviceCreator.GraphicsDevice;
         public ResourceFactory RF => _factory;
-        public Sdl2Window Window => _window;
         public RenderDoc RenderDoc => _renderDoc;
 
         public GraphicsDeviceTestBase()
@@ -183,8 +185,8 @@ namespace Veldrid.Tests
                 _renderDoc.APIValidation = true;
                 _renderDoc.DebugOutputMute = false;
             }
-            Activator.CreateInstance<T>().CreateGraphicsDevice(out _window, out _gd);
-            _factory = new DisposeCollectorResourceFactory(_gd.ResourceFactory);
+            _graphiceDeviceCreator = Activator.CreateInstance<T>();
+            _factory = new DisposeCollectorResourceFactory(GD.ResourceFactory);
         }
 
         protected DeviceBuffer GetReadback(DeviceBuffer buffer)
@@ -241,80 +243,88 @@ namespace Veldrid.Tests
         {
             GD.WaitForIdle();
             _factory.DisposeCollector.DisposeAll();
-            GD.Dispose();
-            _window?.Close();
+            _graphiceDeviceCreator.Dispose();
         }
     }
 
-    public interface GraphicsDeviceCreator
+    public interface GraphicsDeviceCreator : IDisposable
     {
-        void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd);
+        public GraphicsDevice GraphicsDevice { get; }
+    }
+
+    public abstract class WindowedDeviceCreator : GraphicsDeviceCreator
+    {
+        public Sdl2Window Sdl2Window { get; private set; }
+        public GraphicsDevice GraphicsDevice { get; private set; }
+
+        protected delegate void WindowAndGraphicsDeviceCreationDelegate(out Sdl2Window window, out GraphicsDevice graphicsDevice);
+
+        protected WindowedDeviceCreator(WindowAndGraphicsDeviceCreationDelegate creationDelegate)
+        {
+            creationDelegate(out var window, out var graphicsDevice);
+            Sdl2Window = window;
+            GraphicsDevice = graphicsDevice;
+        }
+
+        public void Dispose()
+        {
+            GraphicsDevice.Dispose();
+            Sdl2Window.Close();
+        }
     }
 
     public class VulkanDeviceCreator : GraphicsDeviceCreator
     {
-        public void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public GraphicsDevice GraphicsDevice { get; } = TestUtils.CreateVulkanDevice();
+
+        public void Dispose()
         {
-            window = null;
-            gd = TestUtils.CreateVulkanDevice();
+            GraphicsDevice.Dispose();
         }
     }
 
-    public class VulkanDeviceCreatorWithMainSwapchain : GraphicsDeviceCreator
+    public class VulkanDeviceCreatorWithMainSwapchain : WindowedDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
-        {
-            TestUtils.CreateVulkanDeviceWithSwapchain(out window, out gd);
-        }
+        public VulkanDeviceCreatorWithMainSwapchain() : base(TestUtils.CreateVulkanDeviceWithSwapchain) { }
     }
 
     public class D3D11DeviceCreator : GraphicsDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public GraphicsDevice GraphicsDevice { get; } = TestUtils.CreateD3D11Device();
+
+        public void Dispose()
         {
-            window = null;
-            gd = TestUtils.CreateD3D11Device();
+            GraphicsDevice.Dispose();
         }
     }
 
-    public class D3D11DeviceCreatorWithMainSwapchain : GraphicsDeviceCreator
+    public class D3D11DeviceCreatorWithMainSwapchain : WindowedDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
-        {
-            TestUtils.CreateD3D11DeviceWithSwapchain(out window, out gd);
-        }
+        public D3D11DeviceCreatorWithMainSwapchain() : base(TestUtils.CreateD3D11DeviceWithSwapchain) { }
     }
 
-    public class OpenGLDeviceCreator : GraphicsDeviceCreator
+    public class OpenGLDeviceCreator : WindowedDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
-        {
-            TestUtils.CreateOpenGLDevice(out window, out gd);
-        }
+        public OpenGLDeviceCreator() : base(TestUtils.CreateOpenGLDevice) { }
     }
 
-    public class OpenGLESDeviceCreator : GraphicsDeviceCreator
+    public class OpenGLESDeviceCreator : WindowedDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
-        {
-            TestUtils.CreateOpenGLESDevice(out window, out gd);
-        }
+        public OpenGLESDeviceCreator() : base(TestUtils.CreateOpenGLESDevice) { }
     }
 
     public class MetalDeviceCreator : GraphicsDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public GraphicsDevice GraphicsDevice { get; } = TestUtils.CreateMetalDevice();
+
+        public void Dispose()
         {
-            window = null;
-            gd = TestUtils.CreateMetalDevice();
+            GraphicsDevice.Dispose();
         }
     }
 
-    public class MetalDeviceCreatorWithMainSwapchain : GraphicsDeviceCreator
+    public class MetalDeviceCreatorWithMainSwapchain : WindowedDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
-        {
-            TestUtils.CreateMetalDeviceWithSwapchain(out window, out gd);
-        }
+        public MetalDeviceCreatorWithMainSwapchain() : base(TestUtils.CreateMetalDeviceWithSwapchain) { }
     }
 }

@@ -29,9 +29,11 @@ namespace Veldrid.Tests
 
     public abstract class ComputeTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Fact]
+        [SkippableFact]
         public void ComputeShader3dTexture()
         {
+            Skip.IfNot(GD.Features.ComputeShader);
+
             // Just a dumb compute shader that fills a 3D texture with the same value from a uniform multiplied by the depth.
             string shaderText = @"
 #version 450
@@ -182,13 +184,10 @@ void main()
         }
 
 
-        [Fact]
+        [SkippableFact]
         public void BasicCompute()
         {
-            if (!GD.Features.ComputeShader)
-            {
-                return;
-            }
+            Skip.IfNot(GD.Features.ComputeShader);
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Params", ResourceKind.UniformBuffer, ShaderStages.Compute),
@@ -245,12 +244,12 @@ void main()
             GD.Unmap(destinationReadback);
         }
 
-        [Theory]
+        [SkippableTheory]
         [MemberData(nameof(FillBuffer_WithOffsetsData))]
         public void FillBuffer_WithOffsets(uint srcSetMultiple, uint srcBindingMultiple, uint dstSetMultiple, uint dstBindingMultiple, bool combinedLayout)
         {
-            if (!GD.Features.ComputeShader) { return; }
-            if (!GD.Features.BufferRangeBinding && (srcSetMultiple != 0 || srcBindingMultiple != 0 || dstSetMultiple != 0 || dstBindingMultiple != 0)) { return; }
+            Skip.IfNot(GD.Features.ComputeShader);
+            Skip.If(!GD.Features.BufferRangeBinding && (srcSetMultiple != 0 || srcBindingMultiple != 0 || dstSetMultiple != 0 || dstBindingMultiple != 0));
             Debug.Assert((GD.StructuredBufferMinOffsetAlignment % sizeof(uint)) == 0);
 
             uint valueCount = 512;
@@ -375,24 +374,18 @@ void main()
         }
     }
 
-#if TEST_OPENGL
     [Trait("Backend", "OpenGL")]
     public class OpenGLComputeTests : ComputeTests<OpenGLDeviceCreator> { }
-#endif
-#if TEST_OPENGLES
+
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESComputeTests : ComputeTests<OpenGLESDeviceCreator> { }
-#endif
-#if TEST_VULKAN
+
     [Trait("Backend", "Vulkan")]
     public class VulkanComputeTests : ComputeTests<VulkanDeviceCreatorWithMainSwapchain> { }
-#endif
-#if TEST_D3D11
+
     [Trait("Backend", "D3D11")]
     public class D3D11ComputeTests : ComputeTests<D3D11DeviceCreatorWithMainSwapchain> { }
-#endif
-#if TEST_METAL
+
     [Trait("Backend", "Metal")]
     public class MetalComputeTests : RenderTests<MetalDeviceCreator> { }
-#endif
 }

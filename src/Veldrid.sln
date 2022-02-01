@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.31911.260
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid", "Veldrid\Veldrid.csproj", "{60D56E4A-FA7A-4664-BEF0-0A29F41518BF}"
 EndProject
@@ -29,10 +29,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.VirtualReality.Samp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.RenderDoc", "Veldrid.RenderDoc\Veldrid.RenderDoc.csproj", "{AFAEF056-CAD3-4C32-AEC3-AAC35A251295}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.Tests.Android", "Veldrid.Tests.Android\Veldrid.Tests.Android.csproj", "{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}"
+EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|ARM = Debug|ARM
@@ -252,12 +251,39 @@ Global
 		{AFAEF056-CAD3-4C32-AEC3-AAC35A251295}.Release|x64.Build.0 = Release|Any CPU
 		{AFAEF056-CAD3-4C32-AEC3-AAC35A251295}.Release|x86.ActiveCfg = Release|Any CPU
 		{AFAEF056-CAD3-4C32-AEC3-AAC35A251295}.Release|x86.Build.0 = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|ARM.Build.0 = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|ARM.Deploy.0 = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|x64.Build.0 = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|x64.Deploy.0 = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|x86.Build.0 = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Debug|x86.Deploy.0 = Debug|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|ARM.ActiveCfg = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|ARM.Build.0 = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|ARM.Deploy.0 = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|x64.ActiveCfg = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|x64.Build.0 = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|x64.Deploy.0 = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|x86.ActiveCfg = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|x86.Build.0 = Release|Any CPU
+		{B2EE8C28-75E3-4039-8A7C-51CE10BA021D}.Release|x86.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {212564A4-FE40-45A2-8AE6-A466B277810C}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

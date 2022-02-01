@@ -193,7 +193,8 @@ namespace Veldrid.OpenGL
                 subsetTextureView: _extensions.ARB_TextureView,
                 commandListDebugMarkers: _extensions.KHR_Debug || _extensions.EXT_DebugMarker,
                 bufferRangeBinding: _extensions.ARB_uniform_buffer_object,
-                shaderFloat64: _extensions.ARB_GpuShaderFp64);
+                shaderFloat64: _extensions.ARB_GpuShaderFp64,
+                cubeMapArrayTextures: _extensions.CubeMapArrayTexture);
 
             int uboAlignment;
             glGetIntegerv(GetPName.UniformBufferOffsetAlignment, &uboAlignment);
@@ -719,10 +720,16 @@ namespace Veldrid.OpenGL
 
             Action<IntPtr> destroyContext = ctx =>
             {
+                clearContext();
+                if(eglDestroySurface(display, eglWindowSurface) == 0)
+                {
+                    throw new VeldridException($"Failed to destroy EGLSurface {eglWindowSurface}: {eglGetError()}");
+                }
                 if (eglDestroyContext(display, ctx) == 0)
                 {
                     throw new VeldridException($"Failed to destroy EGLContext {ctx}: {eglGetError()}");
                 }
+                var err = eglGetError();
             };
 
             OpenGLPlatformInfo platformInfo = new OpenGLPlatformInfo(

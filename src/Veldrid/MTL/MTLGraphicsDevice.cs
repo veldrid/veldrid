@@ -79,7 +79,8 @@ namespace Veldrid.MTL
                 subsetTextureView: true,
                 commandListDebugMarkers: true,
                 bufferRangeBinding: true,
-                shaderFloat64: false);
+                shaderFloat64: false,
+                cubeMapArrayTextures: true);
             ResourceBindingModel = options.ResourceBindingModel;
 
             _libSystem = new NativeLibrary("libSystem.dylib");

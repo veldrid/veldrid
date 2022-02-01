@@ -5,7 +5,7 @@ namespace Veldrid.Tests
 {
     public abstract class FramebufferTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Fact]
+        [SkippableFact]
         public void NoDepthTarget_ClearAllColors_Succeeds()
         {
             Texture colorTarget = RF.CreateTexture(
@@ -40,7 +40,7 @@ namespace Veldrid.Tests
             GD.Unmap(staging);
         }
 
-        [Fact]
+        [SkippableFact]
         public void NoDepthTarget_ClearDepth_Fails()
         {
             Texture colorTarget = RF.CreateTexture(
@@ -53,7 +53,7 @@ namespace Veldrid.Tests
             Assert.Throws<VeldridException>(() => cl.ClearDepthStencil(1f));
         }
 
-        [Fact]
+        [SkippableFact]
         public void NoColorTarget_ClearColor_Fails()
         {
             Texture depthTarget = RF.CreateTexture(
@@ -66,7 +66,7 @@ namespace Veldrid.Tests
             Assert.Throws<VeldridException>(() => cl.ClearColorTarget(0, RgbaFloat.Red));
         }
 
-        [Fact]
+        [SkippableFact]
         public void ClearColorTarget_OutOfRange_Fails()
         {
             TextureDescription desc = TextureDescription.Texture2D(
@@ -84,7 +84,7 @@ namespace Veldrid.Tests
             Assert.Throws<VeldridException>(() => cl.ClearColorTarget(3, RgbaFloat.Red));
         }
 
-        [Fact]
+        [SkippableFact]
         public void NonZeroMipLevel_ClearColor_Succeeds()
         {
             Texture testTex = RF.CreateTexture(
@@ -136,7 +136,7 @@ namespace Veldrid.Tests
 
     public abstract class SwapchainFramebufferTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
     {
-        [Fact]
+        [SkippableFact]
         public void ClearSwapchainFramebuffer_Succeeds()
         {
             CommandList cl = RF.CreateCommandList();
@@ -148,34 +148,28 @@ namespace Veldrid.Tests
         }
     }
 
-#if TEST_OPENGL
     [Trait("Backend", "OpenGL")]
     public class OpenGLFramebufferTests : FramebufferTests<OpenGLDeviceCreator> { }
     [Trait("Backend", "OpenGL")]
     public class OpenGLSwapchainFramebufferTests : SwapchainFramebufferTests<OpenGLDeviceCreator> { }
-#endif
-#if TEST_OPENGLES
+
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESFramebufferTests : FramebufferTests<OpenGLESDeviceCreator> { }
     [Trait("Backend", "OpenGLES")]
     public class OpenGLESSwapchainFramebufferTests : SwapchainFramebufferTests<OpenGLESDeviceCreator> { }
-#endif
-#if TEST_VULKAN
+
     [Trait("Backend", "Vulkan")]
     public class VulkanFramebufferTests : FramebufferTests<VulkanDeviceCreator> { }
     [Trait("Backend", "Vulkan")]
     public class VulkanSwapchainFramebufferTests : SwapchainFramebufferTests<VulkanDeviceCreatorWithMainSwapchain> { }
-#endif
-#if TEST_D3D11
+
     [Trait("Backend", "D3D11")]
     public class D3D11FramebufferTests : FramebufferTests<D3D11DeviceCreator> { }
     [Trait("Backend", "D3D11")]
     public class D3D11SwapchainFramebufferTests : SwapchainFramebufferTests<D3D11DeviceCreatorWithMainSwapchain> { }
-#endif
-#if TEST_METAL
+
     [Trait("Backend", "Metal")]
     public class MetalFramebufferTests : FramebufferTests<MetalDeviceCreator> { }
     [Trait("Backend", "Metal")]
     public class MetalSwapchainFramebufferTests : SwapchainFramebufferTests<MetalDeviceCreatorWithMainSwapchain> { }
-#endif
 }

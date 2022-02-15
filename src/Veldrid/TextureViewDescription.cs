@@ -12,6 +12,10 @@ namespace Veldrid
         /// </summary>
         public Texture Target;
         /// <summary>
+        /// The view type to create.
+        /// </summary>
+        public TextureViewType ViewType;
+        /// <summary>
         /// The base mip level visible in the view. Must be less than <see cref="Texture.MipLevels"/>.
         /// </summary>
         public uint BaseMipLevel;
@@ -41,9 +45,14 @@ namespace Veldrid
         /// </summary>
         /// <param name="target">The desired target <see cref="Texture"/>. This <see cref="Texture"/> must have been created
         /// with the <see cref="TextureUsage.Sampled"/> usage flag.</param>
-        public TextureViewDescription(Texture target)
+        /// <param name="viewType">The view type to create or <see cref="TextureViewType.Undefined"/> to detect from texture.</param>
+        public TextureViewDescription(Texture target, TextureViewType viewType = TextureViewType.Undefined)
         {
             Target = target;
+            if (viewType == TextureViewType.Undefined)
+                ViewType = GetFromTexture(target, target.Usage);
+            else
+                ViewType = viewType;
             BaseMipLevel = 0;
             MipLevels = target.MipLevels;
             BaseArrayLayer = 0;
@@ -60,9 +69,14 @@ namespace Veldrid
         /// This format must be "compatible" with the target Texture's. For uncompressed formats, the overall size and number of
         /// components in this format must be equal to the underlying format. For compressed formats, it is only possible to use
         /// the same PixelFormat or its sRGB/non-sRGB counterpart.</param>
-        public TextureViewDescription(Texture target, PixelFormat format)
+        /// <param name="viewType">The view type to create or <see cref="TextureViewType.Undefined"/> to detect from texture.</param>
+        public TextureViewDescription(Texture target, PixelFormat format, TextureViewType viewType = TextureViewType.Undefined)
         {
             Target = target;
+            if (viewType == TextureViewType.Undefined)
+                ViewType = GetFromTexture(target, target.Usage);
+            else
+                ViewType = viewType;
             BaseMipLevel = 0;
             MipLevels = target.MipLevels;
             BaseArrayLayer = 0;
@@ -79,9 +93,14 @@ namespace Veldrid
         /// <param name="mipLevels">The number of mip levels visible in the view.</param>
         /// <param name="baseArrayLayer">The base array layer visible in the view.</param>
         /// <param name="arrayLayers">The number of array layers visible in the view.</param>
-        public TextureViewDescription(Texture target, uint baseMipLevel, uint mipLevels, uint baseArrayLayer, uint arrayLayers)
+        /// <param name="viewType">The view type to create or <see cref="TextureViewType.Undefined"/> to detect from texture.</param>
+        public TextureViewDescription(Texture target, uint baseMipLevel, uint mipLevels, uint baseArrayLayer, uint arrayLayers, TextureViewType viewType = TextureViewType.Undefined)
         {
             Target = target;
+            if (viewType == TextureViewType.Undefined)
+                ViewType = GetFromTexture(target, target.Usage);
+            else
+                ViewType = viewType;
             BaseMipLevel = baseMipLevel;
             MipLevels = mipLevels;
             BaseArrayLayer = baseArrayLayer;
@@ -102,14 +121,54 @@ namespace Veldrid
         /// <param name="mipLevels">The number of mip levels visible in the view.</param>
         /// <param name="baseArrayLayer">The base array layer visible in the view.</param>
         /// <param name="arrayLayers">The number of array layers visible in the view.</param>
-        public TextureViewDescription(Texture target, PixelFormat format, uint baseMipLevel, uint mipLevels, uint baseArrayLayer, uint arrayLayers)
+        /// <param name="viewType">The view type to create or <see cref="TextureViewType.Undefined"/> to detect from texture.</param>
+        public TextureViewDescription(Texture target, PixelFormat format, uint baseMipLevel, uint mipLevels, uint baseArrayLayer, uint arrayLayers, TextureViewType viewType = TextureViewType.Undefined)
         {
             Target = target;
+            if (viewType == TextureViewType.Undefined)
+                ViewType = GetFromTexture(target, target.Usage);
+            else
+                ViewType = viewType;
             BaseMipLevel = baseMipLevel;
             MipLevels = mipLevels;
             BaseArrayLayer = baseArrayLayer;
             ArrayLayers = arrayLayers;
-            Format = target.Format;
+            Format = format;
+        }
+
+        private static TextureViewType GetFromTexture(Texture target, TextureUsage usage)
+        {
+            switch (target.Type)
+            {
+                case TextureType.Texture1D:
+                    if (target.ArrayLayers > 1)
+                    {
+                        return TextureViewType.View1DArray;
+                    }
+
+                    return TextureViewType.View1D;
+                case TextureType.Texture2D:
+                    if ((usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+                    {
+                        if (target.ArrayLayers > 1)
+                        {
+                            return TextureViewType.ViewCubeArray;
+                        }
+
+                        return TextureViewType.ViewCube;
+                    }
+
+                    if (target.ArrayLayers > 1)
+                    {
+                        return TextureViewType.View2DArray;
+                    }
+
+                    return TextureViewType.View2D;
+                case TextureType.Texture3D:
+                    return TextureViewType.View3D;
+            }
+
+            return TextureViewType.Undefined;
         }
 
         /// <summary>
@@ -120,6 +179,7 @@ namespace Veldrid
         public bool Equals(TextureViewDescription other)
         {
             return Target.Equals(other.Target)
+                && ViewType.Equals(other.ViewType)
                 && BaseMipLevel.Equals(other.BaseMipLevel)
                 && MipLevels.Equals(other.MipLevels)
                 && BaseArrayLayer.Equals(other.BaseArrayLayer)
@@ -135,6 +195,7 @@ namespace Veldrid
         {
             return HashHelper.Combine(
                 Target.GetHashCode(),
+                ViewType.GetHashCode(),
                 BaseMipLevel.GetHashCode(),
                 MipLevels.GetHashCode(),
                 BaseArrayLayer.GetHashCode(),

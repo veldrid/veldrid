@@ -26,6 +26,12 @@ namespace Veldrid.MetalBindings
             set => objc_msgSend(NativePtr, Selectors.setStoreAction, (uint)value);
         }
 
+        public MTLStoreActionOptions storeActionOptions
+        {
+            get => (MTLStoreActionOptions)uint_objc_msgSend(NativePtr, Selectors.storeActionOptions);
+            set => objc_msgSend(NativePtr, Selectors.setStoreActionOptions, (uint)value);
+        }
+
         public MTLTexture resolveTexture
         {
             get => objc_msgSend<MTLTexture>(NativePtr, Selectors.resolveTexture);

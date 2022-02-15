@@ -23,9 +23,15 @@ namespace Veldrid.MTL
                 || Format != Target.Format)
             {
                 _hasTextureView = true;
+
+                MTLTextureType textureViewType = MTLFormats.VdToMTLTextureViewType(
+                    description.ViewType,
+                    targetMTLTexture.SampleCount != TextureSampleCount.Count1
+                    );
+
                 TargetDeviceTexture = targetMTLTexture.DeviceTexture.newTextureView(
                     MTLFormats.VdToMTLPixelFormat(Format, (description.Target.Usage & TextureUsage.DepthStencil) != 0),
-                    targetMTLTexture.MTLTextureType,
+                    textureViewType,
                     new NSRange(BaseMipLevel, MipLevels),
                     new NSRange(BaseArrayLayer, ArrayLayers));
             }

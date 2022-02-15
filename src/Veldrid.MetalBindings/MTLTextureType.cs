@@ -10,5 +10,7 @@ namespace Veldrid.MetalBindings
         TypeCube,
         TypeCubeArray,
         Type3D,
+        Type2DMultisampleArray,
+        TypeTextureBuffer
     }
 }

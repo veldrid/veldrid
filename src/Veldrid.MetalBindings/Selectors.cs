@@ -8,6 +8,8 @@ namespace Veldrid.MetalBindings
         internal static readonly Selector setLoadAction = "setLoadAction:";
         internal static readonly Selector storeAction = "storeAction";
         internal static readonly Selector setStoreAction = "setStoreAction:";
+        internal static readonly Selector storeActionOptions = "storeActionOptions";
+        internal static readonly Selector setStoreActionOptions = "setStoreActionOptions:";
         internal static readonly Selector resolveTexture = "resolveTexture";
         internal static readonly Selector setResolveTexture = "setResolveTexture:";
         internal static readonly Selector slice = "slice";

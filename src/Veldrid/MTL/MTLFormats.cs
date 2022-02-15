@@ -292,6 +292,29 @@ namespace Veldrid.MTL
             }
         }
 
+        internal static MTLTextureType VdToMTLTextureViewType(TextureViewType type, bool multiSampled)
+        {
+            switch (type)
+            {
+                case TextureViewType.View1D:
+                    return MTLTextureType.Type1D;
+                case TextureViewType.View1DArray:
+                    return MTLTextureType.Type1DArray;
+                case TextureViewType.View2D:
+                    return multiSampled ? MTLTextureType.Type2DMultisample : MTLTextureType.Type2D;
+                case TextureViewType.View2DArray:
+                    return multiSampled ? MTLTextureType.Type2DMultisampleArray : MTLTextureType.Type2DArray;
+                case TextureViewType.View3D:
+                    return MTLTextureType.Type3D;
+                case TextureViewType.ViewCube:
+                    return MTLTextureType.TypeCube;
+                case TextureViewType.ViewCubeArray:
+                    return MTLTextureType.TypeCubeArray;
+                default:
+                    throw Illegal.Value<TextureType>();
+            }
+        }
+
         internal static MTLBlendFactor VdToMTLBlendFactor(BlendFactor vdFactor)
         {
             switch (vdFactor)

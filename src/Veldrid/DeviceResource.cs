@@ -10,6 +10,6 @@
         /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
         /// tools.
         /// </summary>
-        string? Name { get; set; }
+        string Name { get; set; }
     }
 }

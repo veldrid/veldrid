@@ -49,10 +49,7 @@ namespace Veldrid
         public TextureViewDescription(Texture target, TextureViewType viewType = TextureViewType.Undefined)
         {
             Target = target;
-            if (viewType == TextureViewType.Undefined)
-                ViewType = GetFromTexture(target, target.Usage);
-            else
-                ViewType = viewType;
+            ViewType = GetFromTexture(viewType, target, target.Usage);
             BaseMipLevel = 0;
             MipLevels = target.MipLevels;
             BaseArrayLayer = 0;
@@ -73,10 +70,7 @@ namespace Veldrid
         public TextureViewDescription(Texture target, PixelFormat format, TextureViewType viewType = TextureViewType.Undefined)
         {
             Target = target;
-            if (viewType == TextureViewType.Undefined)
-                ViewType = GetFromTexture(target, target.Usage);
-            else
-                ViewType = viewType;
+            ViewType = GetFromTexture(viewType, target, target.Usage);
             BaseMipLevel = 0;
             MipLevels = target.MipLevels;
             BaseArrayLayer = 0;
@@ -97,10 +91,7 @@ namespace Veldrid
         public TextureViewDescription(Texture target, uint baseMipLevel, uint mipLevels, uint baseArrayLayer, uint arrayLayers, TextureViewType viewType = TextureViewType.Undefined)
         {
             Target = target;
-            if (viewType == TextureViewType.Undefined)
-                ViewType = GetFromTexture(target, target.Usage);
-            else
-                ViewType = viewType;
+            ViewType = GetFromTexture(viewType, target, target.Usage);
             BaseMipLevel = baseMipLevel;
             MipLevels = mipLevels;
             BaseArrayLayer = baseArrayLayer;
@@ -125,10 +116,7 @@ namespace Veldrid
         public TextureViewDescription(Texture target, PixelFormat format, uint baseMipLevel, uint mipLevels, uint baseArrayLayer, uint arrayLayers, TextureViewType viewType = TextureViewType.Undefined)
         {
             Target = target;
-            if (viewType == TextureViewType.Undefined)
-                ViewType = GetFromTexture(target, target.Usage);
-            else
-                ViewType = viewType;
+            ViewType = GetFromTexture(viewType, target, target.Usage);
             BaseMipLevel = baseMipLevel;
             MipLevels = mipLevels;
             BaseArrayLayer = baseArrayLayer;
@@ -136,34 +124,24 @@ namespace Veldrid
             Format = format;
         }
 
-        private static TextureViewType GetFromTexture(Texture target, TextureUsage usage)
+        private static TextureViewType GetFromTexture(TextureViewType viewType, Texture target, TextureUsage usage)
         {
+            if (viewType != TextureViewType.Undefined)
+            {
+                return viewType;
+            }
+
             switch (target.Type)
             {
                 case TextureType.Texture1D:
-                    if (target.ArrayLayers > 1)
-                    {
-                        return TextureViewType.View1DArray;
-                    }
-
-                    return TextureViewType.View1D;
+                    return target.ArrayLayers > 1 ? TextureViewType.View1DArray : TextureViewType.View1D;
                 case TextureType.Texture2D:
                     if ((usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
                     {
-                        if (target.ArrayLayers > 1)
-                        {
-                            return TextureViewType.ViewCubeArray;
-                        }
-
-                        return TextureViewType.ViewCube;
+                        return target.ArrayLayers > 1 ? TextureViewType.ViewCubeArray : TextureViewType.ViewCube;
                     }
 
-                    if (target.ArrayLayers > 1)
-                    {
-                        return TextureViewType.View2DArray;
-                    }
-
-                    return TextureViewType.View2D;
+                    return target.ArrayLayers > 1 ? TextureViewType.View2DArray : TextureViewType.View2D;
                 case TextureType.Texture3D:
                     return TextureViewType.View3D;
             }

@@ -14,9 +14,9 @@ namespace Veldrid.OpenGL
         private bool _disposed;
         public override bool IsDisposed => _disposeRequested;
 
-        private string? _name;
+        private string _name;
         private bool _nameChanged;
-        public override string? Name { get => _name; set { _name = value; _nameChanged = true; } }
+        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public new OpenGLTexture Target { get; }
         public TextureTarget TextureTarget { get; private set; }

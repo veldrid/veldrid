@@ -5,7 +5,7 @@ namespace Veldrid.D3D11
 {
     internal class D3D11TextureView : TextureView
     {
-        private string? _name;
+        private string _name;
         private bool _disposed;
 
         public ID3D11ShaderResourceView ShaderResourceView { get; }
@@ -71,7 +71,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override string? Name
+        public override string Name
         {
             get => _name;
             set

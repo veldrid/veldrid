@@ -25,7 +25,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        internal static unsafe void SetObjectLabel(ObjectLabelIdentifier identifier, uint target, string? name)
+        internal static unsafe void SetObjectLabel(ObjectLabelIdentifier identifier, uint target, string name)
         {
             if (HasGlObjectLabel)
             {

@@ -13,6 +13,10 @@ namespace Veldrid
         /// </summary>
         public Texture Target { get; }
         /// <summary>
+        /// The view type.
+        /// </summary>
+        public TextureViewType ViewType { get; }
+        /// <summary>
         /// The base mip level visible in the view.
         /// </summary>
         public uint BaseMipLevel { get; }
@@ -37,6 +41,7 @@ namespace Veldrid
         internal TextureView(ref TextureViewDescription description)
         {
             Target = description.Target;
+            ViewType = description.ViewType;
             BaseMipLevel = description.BaseMipLevel;
             MipLevels = description.MipLevels;
             BaseArrayLayer = description.BaseArrayLayer;

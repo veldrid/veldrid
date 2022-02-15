@@ -14,9 +14,9 @@ namespace Veldrid.OpenGL
         private bool _disposed;
         public override bool IsDisposed => _disposeRequested;
 
-        private string _name;
+        private string? _name;
         private bool _nameChanged;
-        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
+        public override string? Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public new OpenGLTexture Target { get; }
         public TextureTarget TextureTarget { get; private set; }
@@ -206,59 +206,34 @@ namespace Veldrid.OpenGL
             glGenTextures(1, out _textureView);
             CheckLastError();
 
-            TextureTarget originalTarget = Target.TextureTarget;
-            if (originalTarget == TextureTarget.Texture1D)
+            bool multisampled = Target.SampleCount != TextureSampleCount.Count1;
+            switch (ViewType)
             {
-                TextureTarget = TextureTarget.Texture1D;
-            }
-            else if (originalTarget == TextureTarget.Texture1DArray)
-            {
-                if (ArrayLayers > 1)
-                {
-                    TextureTarget = TextureTarget.Texture1DArray;
-                }
-                else
-                {
+                case TextureViewType.View1D:
                     TextureTarget = TextureTarget.Texture1D;
-                }
-            }
-            else if (originalTarget == TextureTarget.Texture2D)
-            {
-                TextureTarget = TextureTarget.Texture2D;
-            }
-            else if (originalTarget == TextureTarget.Texture2DArray)
-            {
-                if (ArrayLayers > 1)
-                {
-                    TextureTarget = TextureTarget.Texture2DArray;
-                }
-                else
-                {
-                    TextureTarget = TextureTarget.Texture2D;
-                }
-            }
-            else if (originalTarget == TextureTarget.Texture2DMultisample)
-            {
-                TextureTarget = TextureTarget.Texture2DMultisample;
-            }
-            else if (originalTarget == TextureTarget.Texture2DMultisampleArray)
-            {
-                if (ArrayLayers > 1)
-                {
-                    TextureTarget = TextureTarget.Texture2DMultisampleArray;
-                }
-                else
-                {
-                    TextureTarget = TextureTarget.Texture2DMultisample;
-                }
-            }
-            else if (originalTarget == TextureTarget.Texture3D)
-            {
-                TextureTarget = TextureTarget.Texture3D;
-            }
-            else
-            {
-                throw new VeldridException("The given TextureView parameters are not supported with the OpenGL backend.");
+                    break;
+                case TextureViewType.View1DArray:
+                    TextureTarget = TextureTarget.Texture1DArray;
+                    break;
+                case TextureViewType.View2D:
+                    TextureTarget = multisampled ? TextureTarget.Texture2DMultisample : TextureTarget.Texture2D;
+                    break;
+                case TextureViewType.View2DArray:
+                    TextureTarget = multisampled ? TextureTarget.Texture2DMultisampleArray : TextureTarget.Texture2DArray;
+                    break;
+                case TextureViewType.View3D:
+                    TextureTarget = TextureTarget.Texture3D;
+                    break;
+
+                case TextureViewType.ViewCube:
+                    TextureTarget = TextureTarget.TextureCubeMap;
+                    break;
+                case TextureViewType.ViewCubeArray:
+                    TextureTarget = TextureTarget.TextureCubeMapArray;
+                    break;
+                default:
+                    TextureTarget = Target.TextureTarget;
+                    break;
             }
 
             PixelInternalFormat internalFormat = (PixelInternalFormat)OpenGLFormats.VdToGLSizedInternalFormat(

@@ -25,10 +25,17 @@ namespace Veldrid.OpenGL
             }
         }
 
-        internal static unsafe void SetObjectLabel(ObjectLabelIdentifier identifier, uint target, string name)
+        internal static unsafe void SetObjectLabel(ObjectLabelIdentifier identifier, uint target, string? name)
         {
             if (HasGlObjectLabel)
             {
+                if (string.IsNullOrEmpty(name))
+                {
+                    glObjectLabel(identifier, target, 0, null);
+                    CheckLastError();
+                    return;
+                }
+
                 int byteCount = Encoding.UTF8.GetByteCount(name);
                 if (MaxLabelLength == null)
                 {

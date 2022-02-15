@@ -124,6 +124,11 @@ namespace Veldrid
             Format = format;
         }
 
+        public static TextureViewType GetFromTexture(Texture target)
+        {
+            return GetFromTexture(TextureViewType.Undefined, target, target.Usage);
+        }
+
         private static TextureViewType GetFromTexture(TextureViewType viewType, Texture target, TextureUsage usage)
         {
             if (viewType != TextureViewType.Undefined)

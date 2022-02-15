@@ -18,8 +18,11 @@ namespace Veldrid.MTL
             : base(ref description)
         {
             MTLTexture targetMTLTexture = Util.AssertSubtype<Texture, MTLTexture>(description.Target);
-            if (BaseMipLevel != 0 || MipLevels != Target.MipLevels
-                || BaseArrayLayer != 0 || ArrayLayers != Target.ArrayLayers
+            if (ViewType != TextureViewDescription.GetFromTexture(Target)
+                || BaseMipLevel != 0
+                || MipLevels != Target.MipLevels
+                || BaseArrayLayer != 0
+                || ArrayLayers != Target.ArrayLayers
                 || Format != Target.Format)
             {
                 _hasTextureView = true;

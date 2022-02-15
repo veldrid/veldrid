@@ -230,8 +230,12 @@ namespace Veldrid
         /// Creates a new <see cref="TextureView"/>.
         /// </summary>
         /// <param name="target">The target <see cref="Texture"/> used in the new view.</param>
+        /// <param name="viewType">The view type to create or <see cref="TextureViewType.Undefined"/> to detect from texture.</param>
         /// <returns>A new <see cref="TextureView"/>.</returns>
-        public TextureView CreateTextureView(Texture target) => CreateTextureView(new TextureViewDescription(target));
+        public TextureView CreateTextureView(Texture target, TextureViewType viewType = TextureViewType.Undefined)
+        {
+            return CreateTextureView(new TextureViewDescription(target, viewType));
+        }
         /// <summary>
         /// Creates a new <see cref="TextureView"/>.
         /// </summary>

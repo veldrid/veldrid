@@ -46,8 +46,11 @@ namespace Veldrid.OpenGL
             _gd = gd;
             Target = Util.AssertSubtype<Texture, OpenGLTexture>(description.Target);
 
-            if (BaseMipLevel != 0 || MipLevels != Target.MipLevels
-                || BaseArrayLayer != 0 || ArrayLayers != Target.ArrayLayers
+            if (ViewType != TextureViewDescription.GetFromTexture(Target)
+                || BaseMipLevel != 0
+                || MipLevels != Target.MipLevels
+                || BaseArrayLayer != 0
+                || ArrayLayers != Target.ArrayLayers
                 || Format != Target.Format)
             {
                 if (_gd.BackendType == GraphicsBackend.OpenGL)

@@ -236,6 +236,22 @@ namespace Veldrid.Vk
             }
         }
 
+        internal static VkColorComponentFlags VdToVkColorWriteMask(ColorWriteMask mask)
+        {
+            VkColorComponentFlags flags = VkColorComponentFlags.None;
+
+            if ((mask & ColorWriteMask.Red) == ColorWriteMask.Red)
+                flags |= VkColorComponentFlags.R;
+            if ((mask & ColorWriteMask.Green) == ColorWriteMask.Green)
+                flags |= VkColorComponentFlags.G;
+            if ((mask & ColorWriteMask.Blue) == ColorWriteMask.Blue)
+                flags |= VkColorComponentFlags.B;
+            if ((mask & ColorWriteMask.Alpha) == ColorWriteMask.Alpha)
+                flags |= VkColorComponentFlags.A;
+
+            return flags;
+        }
+
         internal static VkPrimitiveTopology VdToVkPrimitiveTopology(PrimitiveTopology topology)
         {
             switch (topology)

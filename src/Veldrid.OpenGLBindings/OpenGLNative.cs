@@ -437,6 +437,34 @@ namespace Veldrid.OpenGLBinding
         public static void glDeleteSamplers(uint n, ref uint samplers) => p_glDeleteSamplers(n, ref samplers);
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glColorMask_t(
+            GLboolean red,
+            GLboolean green,
+            GLboolean blue,
+            GLboolean alpha);
+        private static glColorMask_t p_glColorMask;
+        public static void glColorMask(
+            GLboolean red,
+            GLboolean green,
+            GLboolean blue,
+            GLboolean alpha) => p_glColorMask(red, green, blue, alpha);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glColorMaski_t(
+            uint buf,
+            GLboolean red,
+            GLboolean green,
+            GLboolean blue,
+            GLboolean alpha);
+        private static glColorMaski_t p_glColorMaski;
+        public static void glColorMaski(
+            uint buf,
+            GLboolean red,
+            GLboolean green,
+            GLboolean blue,
+            GLboolean alpha) => p_glColorMaski(buf, red, green, blue, alpha);
+
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate void glBlendFuncSeparatei_t(
             uint buf,
             BlendingFactorSrc srcRGB,
@@ -1767,6 +1795,8 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glSamplerParameterfv", out p_glSamplerParameterfv);
             LoadFunction("glBindSampler", out p_glBindSampler);
             LoadFunction("glDeleteSamplers", out p_glDeleteSamplers);
+            LoadFunction("glColorMaski", out p_glColorMaski);
+            LoadFunction("glColorMask", out p_glColorMask);
             LoadFunction("glBlendFuncSeparatei", out p_glBlendFuncSeparatei);
             LoadFunction("glBlendFuncSeparate", out p_glBlendFuncSeparate);
             LoadFunction("glEnable", out p_glEnable);

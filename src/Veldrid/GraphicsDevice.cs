@@ -1083,7 +1083,7 @@ namespace Veldrid
             {
                 case GraphicsBackend.Direct3D11:
 #if !EXCLUDE_D3D11_BACKEND
-                    return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                    return OperatingSystem.IsWindows();
 #else
                     return false;
 #endif

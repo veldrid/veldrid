@@ -190,22 +190,19 @@ namespace Veldrid.StartupUtilities
 
         public static GraphicsBackend GetPlatformDefaultBackend()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (GraphicsDevice.IsBackendSupported(GraphicsBackend.Direct3D11))
             {
                 return GraphicsBackend.Direct3D11;
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (GraphicsDevice.IsBackendSupported(GraphicsBackend.Metal))
             {
-                return GraphicsDevice.IsBackendSupported(GraphicsBackend.Metal)
-                    ? GraphicsBackend.Metal
-                    : GraphicsBackend.OpenGL;
+                return GraphicsBackend.Metal;
             }
-            else
+            if (GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan))
             {
-                return GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)
-                    ? GraphicsBackend.Vulkan
-                    : GraphicsBackend.OpenGL;
+                return GraphicsBackend.Vulkan;
             }
+            return GraphicsBackend.OpenGL;
         }
 
 #if !EXCLUDE_VULKAN_BACKEND

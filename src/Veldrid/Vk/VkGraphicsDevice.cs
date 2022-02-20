@@ -481,6 +481,7 @@ namespace Veldrid.Vulkan
 
             VkInstanceCreateInfo instanceCI = new();
             instanceCI.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+
             VkApplicationInfo applicationInfo = new();
             applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
             applicationInfo.apiVersion = new VkVersion(1, 0, 0);
@@ -1086,8 +1087,10 @@ namespace Veldrid.Vulkan
             }
         }
 
-        protected override void PlatformDispose()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             Debug.Assert(_submittedFences.Count == 0);
             foreach (VulkanFence fence in _availableSubmissionFences)
             {

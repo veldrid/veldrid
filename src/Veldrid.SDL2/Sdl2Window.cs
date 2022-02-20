@@ -21,14 +21,14 @@ namespace Veldrid.Sdl2
         public delegate void TextInputAction(TextInputEvent textInput);
         public delegate void TextEditingAction(TextEditingEvent textEditing);
 
-        private readonly List<SDL_Event> _events = new List<SDL_Event>();
+        private readonly List<SDL_Event> _events = new();
         private IntPtr _window;
         public uint WindowID { get; private set; }
         private bool _exists;
 
-        private SimpleInputSnapshot _publicSnapshot = new SimpleInputSnapshot();
-        private SimpleInputSnapshot _privateSnapshot = new SimpleInputSnapshot();
-        private SimpleInputSnapshot _privateBackbuffer = new SimpleInputSnapshot();
+        private SimpleInputSnapshot _publicSnapshot = new();
+        private SimpleInputSnapshot _privateSnapshot = new();
+        private SimpleInputSnapshot _privateBackbuffer = new();
 
         // Threaded Sdl2Window flags
         private readonly bool _threadedProcessing;
@@ -44,8 +44,8 @@ namespace Veldrid.Sdl2
         private Vector2 _currentMouseDelta;
 
         // Cached Sdl2Window state (for threaded processing)
-        private BufferedValue<Point> _cachedPosition = new BufferedValue<Point>();
-        private BufferedValue<Point> _cachedSize = new BufferedValue<Point>();
+        private BufferedValue<Point> _cachedPosition = new();
+        private BufferedValue<Point> _cachedSize = new();
         private string? _cachedWindowTitle;
         private bool _newWindowTitleReceived;
         private bool _firstMouseEvent = true;
@@ -57,22 +57,20 @@ namespace Veldrid.Sdl2
             _threadedProcessing = threadedProcessing;
             if (threadedProcessing)
             {
-                using (ManualResetEvent mre = new ManualResetEvent(false))
+                using ManualResetEvent mre = new(false);
+                WindowParams wp = new()
                 {
-                    WindowParams wp = new WindowParams()
-                    {
-                        Title = title,
-                        X = x,
-                        Y = y,
-                        Width = width,
-                        Height = height,
-                        WindowFlags = flags,
-                        ResetEvent = mre
-                    };
+                    Title = title,
+                    X = x,
+                    Y = y,
+                    Width = width,
+                    Height = height,
+                    WindowFlags = flags,
+                    ResetEvent = mre
+                };
 
-                    Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
-                    mre.WaitOne();
-                }
+                Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
+                mre.WaitOne();
             }
             else
             {
@@ -88,18 +86,16 @@ namespace Veldrid.Sdl2
             _threadedProcessing = threadedProcessing;
             if (threadedProcessing)
             {
-                using (ManualResetEvent mre = new ManualResetEvent(false))
+                using ManualResetEvent mre = new(false);
+                WindowParams wp = new()
                 {
-                    WindowParams wp = new WindowParams()
-                    {
-                        WindowHandle = windowHandle,
-                        WindowFlags = 0,
-                        ResetEvent = mre
-                    };
+                    WindowHandle = windowHandle,
+                    WindowFlags = 0,
+                    ResetEvent = mre
+                };
 
-                    Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
-                    mre.WaitOne();
-                }
+                Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
+                mre.WaitOne();
             }
             else
             {
@@ -203,7 +199,7 @@ namespace Veldrid.Sdl2
 
         public Vector2 ScaleFactor => Vector2.One;
 
-        public Rectangle Bounds => new Rectangle(_cachedPosition, GetWindowSize());
+        public Rectangle Bounds => new(_cachedPosition, GetWindowSize());
 
         public bool CursorVisible
         {
@@ -339,7 +335,7 @@ namespace Veldrid.Sdl2
             wp.ResetEvent!.Set();
 
             double previousPollTimeMs = 0;
-            Stopwatch sw = new Stopwatch();
+            Stopwatch sw = new();
             sw.Start();
 
             while (_exists)
@@ -499,13 +495,13 @@ namespace Veldrid.Sdl2
         {
             int byteCount = utf8.IndexOf((byte)0);
             if (byteCount != -1)
-                utf8 = utf8.Slice(0, byteCount);
+                utf8 = utf8[..byteCount];
 
             int runeCount = 0;
             while (Rune.DecodeFromUtf8(utf8, out Rune rune, out int consumed) == OperationStatus.Done)
             {
                 runes[runeCount++] = rune;
-                utf8 = utf8.Slice(consumed);
+                utf8 = utf8[consumed..];
             }
 
             return runeCount;
@@ -515,7 +511,7 @@ namespace Veldrid.Sdl2
         {
             ReadOnlySpan<byte> utf8 = new(textInputEvent.text, SDL_TextInputEvent.MaxTextSize);
             Span<Rune> runes = stackalloc Rune[SDL_TextInputEvent.MaxTextSize];
-            runes = runes.Slice(0, ParseTextEvent(utf8, runes));
+            runes = runes[..ParseTextEvent(utf8, runes)];
 
             SimpleInputSnapshot snapshot = _privateSnapshot;
             for (int i = 0; i < runes.Length; i++)
@@ -523,7 +519,7 @@ namespace Veldrid.Sdl2
                 snapshot.InputEvents.Add(runes[i]);
             }
 
-            TextInputEvent inputEvent = new TextInputEvent(
+            TextInputEvent inputEvent = new(
                 textInputEvent.timestamp,
                 textInputEvent.windowID,
                 runes);
@@ -534,9 +530,9 @@ namespace Veldrid.Sdl2
         {
             ReadOnlySpan<byte> utf8 = new(textEditingEvent.text, SDL_TextEditingEvent.MaxTextSize);
             Span<Rune> runes = stackalloc Rune[SDL_TextEditingEvent.MaxTextSize];
-            runes = runes.Slice(0, ParseTextEvent(utf8, runes));
+            runes = runes[..ParseTextEvent(utf8, runes)];
 
-            TextEditingEvent editingEvent = new TextEditingEvent(
+            TextEditingEvent editingEvent = new(
                 textEditingEvent.timestamp,
                 textEditingEvent.windowID,
                 runes,
@@ -547,12 +543,12 @@ namespace Veldrid.Sdl2
 
         private void HandleMouseWheelEvent(SDL_MouseWheelEvent mouseWheelEvent)
         {
-            Vector2 delta = new Vector2(mouseWheelEvent.x, mouseWheelEvent.y);
+            Vector2 delta = new(mouseWheelEvent.x, mouseWheelEvent.y);
 
             SimpleInputSnapshot snapshot = _privateSnapshot;
             snapshot.WheelDelta += delta;
 
-            MouseWheelEvent wheelEvent = new MouseWheelEvent(
+            MouseWheelEvent wheelEvent = new(
                 mouseWheelEvent.timestamp,
                 mouseWheelEvent.windowID,
                 delta);
@@ -569,7 +565,7 @@ namespace Veldrid.Sdl2
                     characters++;
                 }
 
-                ReadOnlySpan<byte> utf8 = new ReadOnlySpan<byte>(dropEvent.file, characters);
+                ReadOnlySpan<byte> utf8 = new(dropEvent.file, characters);
                 try
                 {
                     if (dropEvent.type == SDL_EventType.DropFile)
@@ -605,7 +601,7 @@ namespace Veldrid.Sdl2
                 snapshot.MouseDown &= ~button;
             }
 
-            MouseButtonEvent mouseEvent = new MouseButtonEvent(
+            MouseButtonEvent mouseEvent = new(
                 mouseButtonEvent.timestamp,
                 mouseButtonEvent.windowID,
                 button,
@@ -625,27 +621,21 @@ namespace Veldrid.Sdl2
 
         private static MouseButton MapMouseButton(SDL_MouseButton button)
         {
-            switch (button)
+            return button switch
             {
-                case SDL_MouseButton.Left:
-                    return MouseButton.Left;
-                case SDL_MouseButton.Middle:
-                    return MouseButton.Middle;
-                case SDL_MouseButton.Right:
-                    return MouseButton.Right;
-                case SDL_MouseButton.X1:
-                    return MouseButton.Button1;
-                case SDL_MouseButton.X2:
-                    return MouseButton.Button2;
-                default:
-                    return MouseButton.Left;
-            }
+                SDL_MouseButton.Left => MouseButton.Left,
+                SDL_MouseButton.Middle => MouseButton.Middle,
+                SDL_MouseButton.Right => MouseButton.Right,
+                SDL_MouseButton.X1 => MouseButton.Button1,
+                SDL_MouseButton.X2 => MouseButton.Button2,
+                _ => MouseButton.Left,
+            };
         }
 
         private void HandleMouseMotionEvent(SDL_MouseMotionEvent mouseMotionEvent)
         {
-            Vector2 mousePos = new Vector2(mouseMotionEvent.x, mouseMotionEvent.y);
-            Vector2 delta = new Vector2(mouseMotionEvent.xrel, mouseMotionEvent.yrel);
+            Vector2 mousePos = new(mouseMotionEvent.x, mouseMotionEvent.y);
+            Vector2 delta = new(mouseMotionEvent.xrel, mouseMotionEvent.yrel);
             _currentMouseX = (int)mousePos.X;
             _currentMouseY = (int)mousePos.Y;
             _privateSnapshot.MousePosition = mousePos;
@@ -654,7 +644,7 @@ namespace Veldrid.Sdl2
             {
                 _currentMouseDelta += delta;
 
-                MouseMoveEvent motionEvent = new MouseMoveEvent(
+                MouseMoveEvent motionEvent = new(
                     mouseMotionEvent.timestamp,
                     mouseMotionEvent.windowID,
                     mousePos,
@@ -666,7 +656,7 @@ namespace Veldrid.Sdl2
 
         private void HandleKeyboardEvent(SDL_KeyboardEvent keyboardEvent)
         {
-            KeyEvent keyEvent = new KeyEvent(
+            KeyEvent keyEvent = new(
                 keyboardEvent.timestamp,
                 keyboardEvent.windowID,
                 keyboardEvent.state == 1,
@@ -887,8 +877,8 @@ namespace Veldrid.Sdl2
             }
         }
 
-        private ValueHolder Current = new ValueHolder();
-        private ValueHolder Back = new ValueHolder();
+        private ValueHolder Current = new();
+        private ValueHolder Back = new();
 
         public static implicit operator T(BufferedValue<T> bv) => bv.Value;
 

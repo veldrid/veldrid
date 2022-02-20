@@ -84,7 +84,7 @@ namespace Veldrid.Utilities
 
             for (int i = 1; i < numVertices; i++)
             {
-                bytePtr = bytePtr + vertexStride;
+                bytePtr += vertexStride;
                 vertexPtr = (Vector3*)bytePtr;
                 Vector3 pos = Vector3.Transform(*vertexPtr, rotation);
 
@@ -157,7 +157,7 @@ namespace Veldrid.Utilities
 
         public override bool Equals(object obj)
         {
-            return obj is BoundingBox && ((BoundingBox)obj).Equals(this);
+            return obj is BoundingBox box && Equals(box);
         }
 
         public override int GetHashCode()

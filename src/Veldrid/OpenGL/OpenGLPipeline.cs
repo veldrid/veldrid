@@ -176,7 +176,7 @@ namespace Veldrid.OpenGL
                     glGetProgramInfoLog(_program, (uint)byteBuffer.Length, &bytesWritten, infoLogPtr);
                     CheckLastError();
                 }
-                string log = Util.UTF8.GetString(byteBuffer.Slice(0, (int)bytesWritten));
+                string log = Util.UTF8.GetString(byteBuffer[..(int)bytesWritten]);
                 throw new VeldridException($"Error linking GL program: {log}");
             }
 
@@ -198,12 +198,12 @@ namespace Veldrid.OpenGL
                 OpenGLResourceLayout glSetLayout = Util.AssertSubtype<ResourceLayout, OpenGLResourceLayout>(setLayout);
                 ResourceLayoutElementDescription[] resources = glSetLayout.Elements;
 
-                Dictionary<uint, OpenGLUniformBinding> uniformBindings = new Dictionary<uint, OpenGLUniformBinding>();
-                Dictionary<uint, OpenGLTextureBindingSlotInfo> textureBindings = new Dictionary<uint, OpenGLTextureBindingSlotInfo>();
-                Dictionary<uint, OpenGLSamplerBindingSlotInfo> samplerBindings = new Dictionary<uint, OpenGLSamplerBindingSlotInfo>();
-                Dictionary<uint, OpenGLShaderStorageBinding> storageBufferBindings = new Dictionary<uint, OpenGLShaderStorageBinding>();
+                Dictionary<uint, OpenGLUniformBinding> uniformBindings = new();
+                Dictionary<uint, OpenGLTextureBindingSlotInfo> textureBindings = new();
+                Dictionary<uint, OpenGLSamplerBindingSlotInfo> samplerBindings = new();
+                Dictionary<uint, OpenGLShaderStorageBinding> storageBufferBindings = new();
 
-                List<int> samplerTrackedRelativeTextureIndices = new List<int>();
+                List<int> samplerTrackedRelativeTextureIndices = new();
                 for (uint i = 0; i < resources.Length; i++)
                 {
                     ResourceLayoutElementDescription resource = resources[i];
@@ -391,7 +391,7 @@ namespace Veldrid.OpenGL
                     glGetProgramInfoLog(_program, (uint)byteBuffer.Length, &bytesWritten, infoLog);
                     CheckLastError();
                 }
-                string log = Util.UTF8.GetString(byteBuffer.Slice(0, (int)bytesWritten));
+                string log = Util.UTF8.GetString(byteBuffer[..(int)bytesWritten]);
                 throw new VeldridException($"Error linking GL program: {log}");
             }
 

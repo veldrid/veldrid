@@ -121,7 +121,7 @@ namespace Veldrid
 
                 case ResourceKind.Sampler:
                 {
-                    if (!(resource is Sampler s))
+                    if (resource is not Sampler s)
                     {
                         throw new VeldridException(
                             $"Resource in slot {slot} does not match {nameof(ResourceKind)}.{kind} specified in the {nameof(ResourceLayout)}. " +

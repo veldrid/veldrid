@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Veldrid.Sdl2
@@ -36,18 +34,12 @@ namespace Veldrid.Sdl2
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate int SDL_EventFilter(void* userdata, SDL_Event* @event);
 
-    [StructLayout(LayoutKind.Explicit)]
+    [StructLayout(LayoutKind.Sequential, Size = 56)]
     public struct SDL_Event
     {
-        [FieldOffset(0)]
         public SDL_EventType type;
-        [FieldOffset(4)]
         public uint timestamp;
-        [FieldOffset(8)]
         public uint windowID;
-        [FieldOffset(0)]
-        private Bytex56 __padding;
-        private unsafe struct Bytex56 { private fixed byte bytes[56]; }
     }
 
     [StructLayout(LayoutKind.Sequential)]

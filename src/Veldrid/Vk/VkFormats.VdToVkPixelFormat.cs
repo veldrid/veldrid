@@ -5,6 +5,7 @@ namespace Veldrid.Vulkan
 {
     internal static partial class VkFormats
     {
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         internal static VkFormat VdToVkPixelFormat(PixelFormat format, bool toDepthFormat = false)
         {
             switch (format)

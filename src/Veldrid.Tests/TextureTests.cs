@@ -776,7 +776,7 @@ namespace Veldrid.Tests
                 srcWidth, srcHeight, srcDepth, srcMipLevels, srcArrayLayers,
                 format, TextureUsage.Staging, srcType));
 
-            TextureDataReaderWriter tdrw = new TextureDataReaderWriter(rBits, gBits, bBits, aBits);
+            TextureDataReaderWriter tdrw = new(rBits, gBits, bBits, aBits);
             byte[] dataArray = tdrw.GetDataArray(srcWidth, srcHeight, srcDepth);
             long rowPitch = srcWidth * tdrw.PixelBytes;
             long depthPitch = rowPitch * srcHeight;

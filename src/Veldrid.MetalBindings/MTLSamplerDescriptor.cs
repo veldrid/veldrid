@@ -5,8 +5,10 @@ namespace Veldrid.MetalBindings
 {
     public struct MTLSamplerDescriptor
     {
-        private static readonly ObjCClass s_class = new ObjCClass(nameof(MTLSamplerDescriptor));
+        private static readonly ObjCClass s_class = new(nameof(MTLSamplerDescriptor));
+
         public readonly IntPtr NativePtr;
+
         public static MTLSamplerDescriptor New() => s_class.AllocInit<MTLSamplerDescriptor>();
 
         public MTLSamplerAddressMode rAddressMode

@@ -66,7 +66,7 @@ namespace Veldrid.VirtualReality.OpenVR
         {
             _gd = gd;
 
-            StringBuilder sb = new StringBuilder(512);
+            StringBuilder sb = new(512);
             ETrackedPropertyError error = ETrackedPropertyError.TrackedProp_Success;
             uint ret = _vrSystem.GetStringTrackedDeviceProperty(
                 OVR.k_unTrackedDeviceIndex_Hmd,
@@ -102,7 +102,7 @@ namespace Veldrid.VirtualReality.OpenVR
 
         public override (string[] instance, string[] device) GetRequiredVulkanExtensions()
         {
-            StringBuilder sb = new StringBuilder(1024);
+            StringBuilder sb = new(1024);
             uint ret = _compositor.GetVulkanInstanceExtensionsRequired(sb, 1024);
             string[] instance = sb.ToString().Split(' ');
             sb.Clear();
@@ -274,17 +274,16 @@ namespace Veldrid.VirtualReality.OpenVR
 
         private static uint GetSampleCount(TextureSampleCount sampleCount)
         {
-            switch (sampleCount)
+            return sampleCount switch
             {
-                case TextureSampleCount.Count1: return 1;
-                case TextureSampleCount.Count2: return 2;
-                case TextureSampleCount.Count4: return 4;
-                case TextureSampleCount.Count8: return 8;
-                case TextureSampleCount.Count16: return 16;
-                case TextureSampleCount.Count32: return 32;
-                default:
-                    throw new InvalidOperationException();
-            }
+                TextureSampleCount.Count1 => 1,
+                TextureSampleCount.Count2 => 2,
+                TextureSampleCount.Count4 => 4,
+                TextureSampleCount.Count8 => 8,
+                TextureSampleCount.Count16 => 16,
+                TextureSampleCount.Count32 => 32,
+                _ => throw new InvalidOperationException(),
+            };
         }
     }
 }

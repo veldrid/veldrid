@@ -1443,23 +1443,16 @@ namespace Veldrid.OpenGL
 
         private TextureTarget GetCubeTarget(uint arrayLayer)
         {
-            switch (arrayLayer)
+            return arrayLayer switch
             {
-                case 0:
-                    return TextureTarget.TextureCubeMapPositiveX;
-                case 1:
-                    return TextureTarget.TextureCubeMapNegativeX;
-                case 2:
-                    return TextureTarget.TextureCubeMapPositiveY;
-                case 3:
-                    return TextureTarget.TextureCubeMapNegativeY;
-                case 4:
-                    return TextureTarget.TextureCubeMapPositiveZ;
-                case 5:
-                    return TextureTarget.TextureCubeMapNegativeZ;
-                default:
-                    throw new VeldridException("Unexpected array layer in UpdateTexture called on a cubemap texture.");
-            }
+                0 => TextureTarget.TextureCubeMapPositiveX,
+                1 => TextureTarget.TextureCubeMapNegativeX,
+                2 => TextureTarget.TextureCubeMapPositiveY,
+                3 => TextureTarget.TextureCubeMapNegativeY,
+                4 => TextureTarget.TextureCubeMapPositiveZ,
+                5 => TextureTarget.TextureCubeMapNegativeZ,
+                _ => throw new VeldridException("Unexpected array layer in UpdateTexture called on a cubemap texture."),
+            };
         }
 
         public void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
@@ -1617,7 +1610,7 @@ namespace Veldrid.OpenGL
                 _textureSamplerManager.SetTextureTransient(dstTarget, dstGLTexture.Texture);
                 CheckLastError();
 
-                Util.GetMipDimensions(srcGLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                Util.GetMipDimensions(srcGLTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out _);
                 uint fullRowPitch = FormatHelpers.GetRowPitch(mipWidth, srcGLTexture.Format);
                 uint fullDepthPitch = FormatHelpers.GetDepthPitch(
                     fullRowPitch,

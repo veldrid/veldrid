@@ -16,7 +16,7 @@ namespace Veldrid
         internal static TDerived AssertSubtype<TBase, TDerived>(TBase value) where TDerived : class, TBase where TBase : class
         {
 #if DEBUG
-            if (!(value is TDerived derived))
+            if (value is not TDerived derived)
             {
                 throw new VeldridException($"object {value} must be derived type {typeof(TDerived).FullName} to be used in this context.");
             }

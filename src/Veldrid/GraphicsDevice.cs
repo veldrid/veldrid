@@ -13,9 +13,10 @@ namespace Veldrid
     /// </summary>
     public abstract class GraphicsDevice : IDisposable
     {
-        private readonly object _deferredDisposalLock = new object();
-        private readonly List<IDisposable> _disposables = new List<IDisposable>();
+        private readonly object _deferredDisposalLock = new();
+        private readonly List<IDisposable> _disposables = new();
         private Sampler _aniso4xSampler = null!;
+        private bool _disposed;
 
         internal GraphicsDevice()
         {
@@ -880,11 +881,6 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Performs API-specific disposal of resources controlled by this instance.
-        /// </summary>
-        protected abstract void PlatformDispose();
-
-        /// <summary>
         /// Creates and caches common device resources after device creation completes.
         /// </summary>
         protected void PostDeviceCreated()
@@ -930,16 +926,37 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// Performs API-specific disposal of resources controlled by this instance.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    WaitForIdle();
+                    PointSampler.Dispose();
+                    LinearSampler.Dispose();
+                    Aniso4xSampler.Dispose();
+                }
+
+                _disposed = true;
+            }
+        }
+
+        ~GraphicsDevice()
+        {
+            Dispose(disposing: false);
+        }
+
+        /// <summary>
         /// Frees unmanaged resources controlled by this device.
         /// All created child resources must be Disposed prior to calling this method.
         /// </summary>
         public void Dispose()
         {
-            WaitForIdle();
-            PointSampler.Dispose();
-            LinearSampler.Dispose();
-            Aniso4xSampler.Dispose();
-            PlatformDispose();
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
 #if !EXCLUDE_D3D11_BACKEND
@@ -1059,6 +1076,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="backend">The GraphicsBackend to check.</param>
         /// <returns>True if the GraphicsBackend is supported; false otherwise.</returns>
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         public static bool IsBackendSupported(GraphicsBackend backend)
         {
             switch (backend)
@@ -1154,7 +1172,7 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, IntPtr hwnd, uint width, uint height)
         {
-            SwapchainDescription swapchainDescription = new SwapchainDescription(
+            SwapchainDescription swapchainDescription = new(
                 SwapchainSource.CreateWin32(hwnd, IntPtr.Zero),
                 width, height,
                 options.SwapchainDepthFormat,
@@ -1182,7 +1200,7 @@ namespace Veldrid
             double renderHeight,
             float logicalDpi)
         {
-            SwapchainDescription swapchainDescription = new SwapchainDescription(
+            SwapchainDescription swapchainDescription = new(
                 SwapchainSource.CreateUwp(swapChainPanel, logicalDpi),
                 (uint)renderWidth,
                 (uint)renderHeight,
@@ -1252,7 +1270,7 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
         public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, VkSurfaceSource surfaceSource, uint width, uint height)
         {
-            SwapchainDescription scDesc = new SwapchainDescription(
+            SwapchainDescription scDesc = new(
                 surfaceSource.GetSurfaceSource(),
                 width, height,
                 options.SwapchainDepthFormat,
@@ -1329,7 +1347,7 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
         public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options, IntPtr nsWindow)
         {
-            SwapchainDescription swapchainDesc = new SwapchainDescription(
+            SwapchainDescription swapchainDesc = new(
                 new NSWindowSwapchainSource(nsWindow),
                 0, 0,
                 options.SwapchainDepthFormat,

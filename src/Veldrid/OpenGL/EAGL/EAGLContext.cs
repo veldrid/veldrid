@@ -8,7 +8,7 @@ namespace Veldrid.OpenGL.EAGL
     [StructLayout(LayoutKind.Sequential)]
     internal struct EAGLContext
     {
-        private static ObjCClass s_class = new ObjCClass("EAGLContext");
+        private static ObjCClass s_class = new("EAGLContext");
 
         public readonly IntPtr NativePtr;
 

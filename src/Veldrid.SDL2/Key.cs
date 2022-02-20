@@ -1,5 +1,7 @@
 ﻿using Veldrid.Sdl2;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 namespace Veldrid
 {
     /// <summary>
@@ -228,8 +230,8 @@ namespace Veldrid
         Mute = SDL_Scancode.SDL_SCANCODE_MUTE,
         VolumeUp = SDL_Scancode.SDL_SCANCODE_VOLUMEUP,
         VolumeDown = SDL_Scancode.SDL_SCANCODE_VOLUMEDOWN,
-        LockingCapsLock = SDL_Scancode.SDL_SCANCODE_LOCKINGCAPSLOCK,  
-        LockingNumLock = SDL_Scancode.SDL_SCANCODE_LOCKINGNUMLOCK, 
+        LockingCapsLock = SDL_Scancode.SDL_SCANCODE_LOCKINGCAPSLOCK,
+        LockingNumLock = SDL_Scancode.SDL_SCANCODE_LOCKINGNUMLOCK,
         LockingScrollLock = SDL_Scancode.SDL_SCANCODE_LOCKINGSCROLLLOCK,
         KeypadComma = SDL_Scancode.SDL_SCANCODE_KP_COMMA,
         KeypadEqualsAs400 = SDL_Scancode.SDL_SCANCODE_KP_EQUALSAS400,

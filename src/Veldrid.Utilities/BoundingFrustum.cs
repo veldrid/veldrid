@@ -140,8 +140,8 @@ namespace Veldrid.Utilities
 
                 // Approach: http://zach.in.tu-clausthal.de/teaching/cg_literatur/lighthouse3d_view_frustum_culling/index.html
 
-                Vector3 positive = new Vector3(box.Min.X, box.Min.Y, box.Min.Z);
-                Vector3 negative = new Vector3(box.Max.X, box.Max.Y, box.Max.Z);
+                Vector3 positive = new(box.Min.X, box.Min.Y, box.Min.Z);
+                Vector3 negative = new(box.Max.X, box.Max.Y, box.Max.Z);
 
                 if (plane.Normal.X >= 0)
                 {
@@ -209,8 +209,7 @@ namespace Veldrid.Utilities
 
         public FrustumCorners GetCorners()
         {
-            FrustumCorners corners;
-            GetCorners(out corners);
+            GetCorners(out FrustumCorners corners);
             return corners;
         }
 

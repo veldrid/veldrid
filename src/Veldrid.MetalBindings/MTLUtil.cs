@@ -19,7 +19,7 @@ namespace Veldrid.MetalBindings
 
         public static T AllocInit<T>(string typeName) where T : struct
         {
-            var cls = new ObjCClass(typeName);
+            ObjCClass cls = new(typeName);
             return cls.AllocInit<T>();
         }
     }

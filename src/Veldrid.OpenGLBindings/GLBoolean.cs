@@ -24,12 +24,12 @@ namespace Veldrid.OpenGLBinding
         /// <summary>
         /// Represents the boolean "true" value. Has a raw value of 1.
         /// </summary>
-        public static readonly GLboolean True = new GLboolean(1);
+        public static readonly GLboolean True = new(1);
 
         /// <summary>
         /// Represents the boolean "true" value. Has a raw value of 0.
         /// </summary>
-        public static readonly GLboolean False = new GLboolean(0);
+        public static readonly GLboolean False = new(0);
 
         /// <summary>
         /// Returns whether another <see cref="GLboolean"/> value is considered equal to this one.
@@ -58,11 +58,15 @@ namespace Veldrid.OpenGLBinding
         }
 
         public static implicit operator bool(GLboolean b) => b.Value != 0;
+
         public static implicit operator uint(GLboolean b) => b.Value;
+
         public static implicit operator GLboolean(bool b) => b ? True : False;
-        public static implicit operator GLboolean(byte value) => new GLboolean(value);
+
+        public static implicit operator GLboolean(byte value) => new(value);
 
         public static bool operator ==(GLboolean left, GLboolean right) => left.Value == right.Value;
+
         public static bool operator !=(GLboolean left, GLboolean right) => left.Value != right.Value;
     }
 }

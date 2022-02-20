@@ -149,17 +149,13 @@ namespace Veldrid.OpenGL
 
             private RgbaFloat ToRgbaFloat(SamplerBorderColor borderColor)
             {
-                switch (borderColor)
+                return borderColor switch
                 {
-                    case SamplerBorderColor.TransparentBlack:
-                        return new RgbaFloat(0, 0, 0, 0);
-                    case SamplerBorderColor.OpaqueBlack:
-                        return new RgbaFloat(0, 0, 0, 1);
-                    case SamplerBorderColor.OpaqueWhite:
-                        return new RgbaFloat(1, 1, 1, 1);
-                    default:
-                        throw Illegal.Value<SamplerBorderColor>();
-                }
+                    SamplerBorderColor.TransparentBlack => new RgbaFloat(0, 0, 0, 0),
+                    SamplerBorderColor.OpaqueBlack => new RgbaFloat(0, 0, 0, 1),
+                    SamplerBorderColor.OpaqueWhite => new RgbaFloat(1, 1, 1, 1),
+                    _ => throw Illegal.Value<SamplerBorderColor>(),
+                };
             }
         }
     }

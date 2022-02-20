@@ -1,4 +1,4 @@
-﻿using NativeLibraryLoader;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace Veldrid
@@ -70,7 +70,9 @@ namespace Veldrid
         //     the capture, which is matched up with events on replay
         // 0 - no API debugging is forcibly enabled
         APIValidation = 2,
+#pragma warning disable CA1069 // Enums values should not be duplicated
         DebugDeviceMode = 2,    // deprecated name of this enum
+#pragma warning restore CA1069 // Enums values should not be duplicated
 
         // Capture CPU callstacks for API events
         //

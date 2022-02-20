@@ -32,7 +32,7 @@ namespace Veldrid.Tests
             return Path.Combine(
                 AppContext.BaseDirectory,
                 "Shaders",
-                $"{setName}.{stage.ToString().ToLowerInvariant().Substring(0, 4)}");
+                $"{setName}.{stage.ToString().ToLowerInvariant()[..4]}");
         }
     }
 }

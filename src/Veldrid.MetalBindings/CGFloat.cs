@@ -1,5 +1,3 @@
-using System;
-using System.Runtime.CompilerServices;
 
 namespace Veldrid.MetalBindings
 {
@@ -19,7 +17,8 @@ namespace Veldrid.MetalBindings
             get => _value;
         }
 
-        public static implicit operator CGFloat(double value) => new CGFloat(value);
+        public static implicit operator CGFloat(double value) => new(value);
+
         public static implicit operator double(CGFloat cgf) => cgf.Value;
 
         public override string ToString() => _value.ToString();

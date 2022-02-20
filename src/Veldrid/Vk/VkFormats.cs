@@ -24,7 +24,7 @@ namespace Veldrid.Vulkan
     {
         internal static VkSamplerAddressMode VdToVkSamplerAddressMode(SamplerAddressMode mode)
         {
-            switch (mode)
+            return mode switch
             {
                 case SamplerAddressMode.Wrap:
                     return VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -123,7 +123,7 @@ namespace Veldrid.Vulkan
 
         internal static VkImageType VdToVkTextureType(TextureType type)
         {
-            switch (type)
+            return type switch
             {
                 case TextureType.Texture1D:
                     return VK_IMAGE_TYPE_1D;
@@ -136,6 +136,7 @@ namespace Veldrid.Vulkan
             }
         }
 
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         internal static VkDescriptorType VdToVkDescriptorType(ResourceKind kind, ResourceLayoutElementOptions options)
         {
             bool dynamicBinding = (options & ResourceLayoutElementOptions.DynamicBinding) != 0;
@@ -159,7 +160,7 @@ namespace Veldrid.Vulkan
 
         internal static VkSampleCountFlags VdToVkSampleCount(TextureSampleCount sampleCount)
         {
-            switch (sampleCount)
+            return sampleCount switch
             {
                 case TextureSampleCount.Count1:
                     return VK_SAMPLE_COUNT_1_BIT;
@@ -180,7 +181,7 @@ namespace Veldrid.Vulkan
 
         internal static VkStencilOp VdToVkStencilOp(StencilOperation op)
         {
-            switch (op)
+            return op switch
             {
                 case StencilOperation.Keep:
                     return VK_STENCIL_OP_KEEP;
@@ -205,7 +206,7 @@ namespace Veldrid.Vulkan
 
         internal static VkPolygonMode VdToVkPolygonMode(PolygonFillMode fillMode)
         {
-            switch (fillMode)
+            return fillMode switch
             {
                 case PolygonFillMode.Solid:
                     return VK_POLYGON_MODE_FILL;
@@ -218,7 +219,7 @@ namespace Veldrid.Vulkan
 
         internal static VkCullModeFlags VdToVkCullMode(FaceCullMode cullMode)
         {
-            switch (cullMode)
+            return cullMode switch
             {
                 case FaceCullMode.Back:
                     return VK_CULL_MODE_BACK_BIT;
@@ -233,7 +234,7 @@ namespace Veldrid.Vulkan
 
         internal static VkBlendOp VdToVkBlendOp(BlendFunction func)
         {
-            switch (func)
+            return func switch
             {
                 case BlendFunction.Add:
                     return VK_BLEND_OP_ADD;
@@ -252,7 +253,7 @@ namespace Veldrid.Vulkan
 
         internal static VkPrimitiveTopology VdToVkPrimitiveTopology(PrimitiveTopology topology)
         {
-            switch (topology)
+            return topology switch
             {
                 case PrimitiveTopology.TriangleList:
                     return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -271,34 +272,24 @@ namespace Veldrid.Vulkan
 
         internal static uint GetSpecializationConstantSize(ShaderConstantType type)
         {
-            switch (type)
+            return type switch
             {
-                case ShaderConstantType.Bool:
-                    return 4;
-                case ShaderConstantType.UInt16:
-                    return 2;
-                case ShaderConstantType.Int16:
-                    return 2;
-                case ShaderConstantType.UInt32:
-                    return 4;
-                case ShaderConstantType.Int32:
-                    return 4;
-                case ShaderConstantType.UInt64:
-                    return 8;
-                case ShaderConstantType.Int64:
-                    return 8;
-                case ShaderConstantType.Float:
-                    return 4;
-                case ShaderConstantType.Double:
-                    return 8;
-                default:
-                    throw Illegal.Value<ShaderConstantType>();
-            }
+                ShaderConstantType.Bool => 4,
+                ShaderConstantType.UInt16 => 2,
+                ShaderConstantType.Int16 => 2,
+                ShaderConstantType.UInt32 => 4,
+                ShaderConstantType.Int32 => 4,
+                ShaderConstantType.UInt64 => 8,
+                ShaderConstantType.Int64 => 8,
+                ShaderConstantType.Float => 4,
+                ShaderConstantType.Double => 8,
+                _ => throw Illegal.Value<ShaderConstantType>(),
+            };
         }
 
         internal static VkBlendFactor VdToVkBlendFactor(BlendFactor factor)
         {
-            switch (factor)
+            return factor switch
             {
                 case BlendFactor.Zero:
                     return VK_BLEND_FACTOR_ZERO;
@@ -331,7 +322,7 @@ namespace Veldrid.Vulkan
 
         internal static VkFormat VdToVkVertexElementFormat(VertexElementFormat format)
         {
-            switch (format)
+            return format switch
             {
                 case VertexElementFormat.Float1:
                     return VK_FORMAT_R32_SFLOAT;
@@ -427,7 +418,7 @@ namespace Veldrid.Vulkan
 
         internal static VkBorderColor VdToVkSamplerBorderColor(SamplerBorderColor borderColor)
         {
-            switch (borderColor)
+            return borderColor switch
             {
                 case SamplerBorderColor.TransparentBlack:
                     return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
@@ -442,7 +433,7 @@ namespace Veldrid.Vulkan
 
         internal static VkIndexType VdToVkIndexFormat(IndexFormat format)
         {
-            switch (format)
+            return format switch
             {
                 case IndexFormat.UInt16:
                     return VK_INDEX_TYPE_UINT16;
@@ -455,7 +446,7 @@ namespace Veldrid.Vulkan
 
         internal static VkCompareOp VdToVkCompareOp(ComparisonKind comparisonKind)
         {
-            switch (comparisonKind)
+            return comparisonKind switch
             {
                 case ComparisonKind.Never:
                     return VK_COMPARE_OP_NEVER;
@@ -480,7 +471,7 @@ namespace Veldrid.Vulkan
 
         internal static PixelFormat VkToVdPixelFormat(VkFormat vkFormat)
         {
-            switch (vkFormat)
+            return vkFormat switch
             {
                 case VK_FORMAT_R8_UNORM:
                     return PixelFormat.R8_UNorm;

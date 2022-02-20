@@ -15,7 +15,7 @@ namespace Veldrid.D3D11
                 ? ComparisonFunction.Never
                 : D3D11Formats.VdToD3D11ComparisonFunc(description.ComparisonKind.Value);
 
-            Vortice.Direct3D11.SamplerDescription samplerStateDesc = new Vortice.Direct3D11.SamplerDescription
+            Vortice.Direct3D11.SamplerDescription samplerStateDesc = new()
             {
                 AddressU = D3D11Formats.VdToD3D11AddressMode(description.AddressModeU),
                 AddressV = D3D11Formats.VdToD3D11AddressMode(description.AddressModeV),
@@ -34,17 +34,13 @@ namespace Veldrid.D3D11
 
         private static Color4 ToRawColor4(SamplerBorderColor borderColor)
         {
-            switch (borderColor)
+            return borderColor switch
             {
-                case SamplerBorderColor.TransparentBlack:
-                    return new Color4(0, 0, 0, 0);
-                case SamplerBorderColor.OpaqueBlack:
-                    return new Color4(0, 0, 0, 1);
-                case SamplerBorderColor.OpaqueWhite:
-                    return new Color4(1, 1, 1, 1);
-                default:
-                    throw Illegal.Value<SamplerBorderColor>();
-            }
+                SamplerBorderColor.TransparentBlack => new Color4(0, 0, 0, 0),
+                SamplerBorderColor.OpaqueBlack => new Color4(0, 0, 0, 1),
+                SamplerBorderColor.OpaqueWhite => new Color4(1, 1, 1, 1),
+                _ => throw Illegal.Value<SamplerBorderColor>(),
+            };
         }
 
         public override string? Name

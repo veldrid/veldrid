@@ -440,7 +440,7 @@ namespace Veldrid.MTL
                         ? mipHeight
                         : height;
 
-                    MTLSize sourceSize = new MTLSize(copyWidth, copyHeight, depth);
+                    MTLSize sourceSize = new(copyWidth, copyHeight, depth);
                     if (dstMTLTexture.Type != TextureType.Texture3D)
                     {
                         srcDepthPitch = 0;
@@ -543,8 +543,8 @@ namespace Veldrid.MTL
             else if (!srcIsStaging && dstIsStaging)
             {
                 // Normal -> Staging
-                MTLOrigin srcOrigin = new MTLOrigin(srcX, srcY, srcZ);
-                MTLSize srcSize = new MTLSize(width, height, depth);
+                MTLOrigin srcOrigin = new(srcX, srcY, srcZ);
+                MTLSize srcSize = new(width, height, depth);
                 for (uint layer = 0; layer < layerCount; layer++)
                 {
                     dstMTLTexture.GetSubresourceLayout(
@@ -553,7 +553,7 @@ namespace Veldrid.MTL
                         out uint dstBytesPerRow,
                         out uint dstBytesPerImage);
 
-                    Util.GetMipDimensions(srcMTLTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
+                    Util.GetMipDimensions(srcMTLTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out _);
                     uint blockSize = FormatHelpers.IsCompressedFormat(srcMTLTexture.Format) ? 4u : 1u;
                     uint bufferRowLength = Math.Max(mipWidth, blockSize);
                     uint bufferImageHeight = Math.Max(mipHeight, blockSize);

@@ -14,7 +14,7 @@ namespace Veldrid.NeoDemo.Objects
 
         public override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
-            DisposeCollectorResourceFactory factory = new DisposeCollectorResourceFactory(gd.ResourceFactory);
+            DisposeCollectorResourceFactory factory = new(gd.ResourceFactory);
             _disposeCollector = factory.DisposeCollector;
 
             ResourceLayout resourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
@@ -23,7 +23,7 @@ namespace Veldrid.NeoDemo.Objects
 
             (Shader vs, Shader fs) = StaticResourceCache.GetShaders(gd, gd.ResourceFactory, "FullScreenQuad");
 
-            GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription pd = new(
                 new BlendStateDescription(
                     RgbaFloat.Black,
                     BlendAttachmentDescription.OverrideBlend),

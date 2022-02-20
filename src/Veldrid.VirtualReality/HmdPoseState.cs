@@ -29,22 +29,22 @@ namespace Veldrid.VirtualReality
 
         public Vector3 GetEyePosition(VREye eye)
         {
-            switch (eye)
+            return eye switch
             {
-                case VREye.Left: return LeftEyePosition;
-                case VREye.Right: return RightEyePosition;
-                default: throw new VeldridException($"Invalid {nameof(VREye)}: {eye}.");
-            }
+                VREye.Left => LeftEyePosition,
+                VREye.Right => RightEyePosition,
+                _ => throw new VeldridException($"Invalid {nameof(VREye)}: {eye}."),
+            };
         }
 
         public Quaternion GetEyeRotation(VREye eye)
         {
-            switch (eye)
+            return eye switch
             {
-                case VREye.Left: return LeftEyeRotation;
-                case VREye.Right: return RightEyeRotation;
-                default: throw new VeldridException($"Invalid {nameof(VREye)}: {eye}.");
-            }
+                VREye.Left => LeftEyeRotation,
+                VREye.Right => RightEyeRotation,
+                _ => throw new VeldridException($"Invalid {nameof(VREye)}: {eye}."),
+            };
         }
 
         public Matrix4x4 CreateView(VREye eye, Vector3 positionOffset, Vector3 forward, Vector3 up)

@@ -1,7 +1,8 @@
 ﻿
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 namespace Veldrid.Sdl2
 {
-
     /// <summary>
     /// The SDL keyboard scancode representation.
     /// Values of this type are used to represent keyboard keys, among other places

@@ -51,7 +51,7 @@ namespace Veldrid.Utilities
         public static unsafe BoundingSphere CreateFromPoints(Vector3* pointPtr, int numPoints, int stride)
         {
             Vector3 center = Vector3.Zero;
-            StrideHelper<Vector3> helper = new StrideHelper<Vector3>(pointPtr, numPoints, stride);
+            StrideHelper<Vector3> helper = new(pointPtr, numPoints, stride);
             foreach (Vector3 pos in helper)
             {
                 center += pos;

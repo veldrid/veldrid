@@ -25,12 +25,12 @@ namespace Veldrid.VirtualReality.Oculus
         private Vector3[] _positions = new Vector3[2];
         private Matrix4x4[] _projections = new Matrix4x4[2];
 
-        private static Lazy<bool> s_isSupported = new Lazy<bool>(CheckSupport);
+        private static Lazy<bool> s_isSupported = new(CheckSupport);
         private static bool CheckSupport()
         {
             try
             {
-                ovrInitParams initParams = new ovrInitParams();
+                ovrInitParams initParams = new();
                 initParams.Flags = ovrInitFlags.RequestVersion | ovrInitFlags.FocusAware | ovrInitFlags.Debug;
                 initParams.RequestedMinorVersion = 30;
 
@@ -73,7 +73,7 @@ namespace Veldrid.VirtualReality.Oculus
         {
             _options = options;
 
-            ovrInitParams initParams = new ovrInitParams();
+            ovrInitParams initParams = new();
             initParams.Flags = ovrInitFlags.RequestVersion | ovrInitFlags.FocusAware | ovrInitFlags.Debug;
             initParams.RequestedMinorVersion = 30;
 
@@ -158,7 +158,7 @@ namespace Veldrid.VirtualReality.Oculus
             }
 
             // Initialize our single full screen Fov layer.
-            ovrLayerEyeFovDepth ld = new ovrLayerEyeFovDepth();
+            ovrLayerEyeFovDepth ld = new();
             ld.Header.Type = ovrLayerType.EyeFovDepth;
             ld.Header.Flags = _gd.BackendType == GraphicsBackend.OpenGL || _gd.BackendType == GraphicsBackend.OpenGLES
                 ? ovrLayerFlags.TextureOriginAtBottomLeft
@@ -188,7 +188,7 @@ namespace Veldrid.VirtualReality.Oculus
         public unsafe override HmdPoseState WaitForPoses()
         {
             ovrSessionStatus sessionStatus;
-            var result = ovr_GetSessionStatus(_session, &sessionStatus);
+            ovrResult result = ovr_GetSessionStatus(_session, &sessionStatus);
             if (result != ovrResult.Success)
             {
                 throw new VeldridException($"Failed to retrieve Oculus session status: {result}");
@@ -205,7 +205,7 @@ namespace Veldrid.VirtualReality.Oculus
             eyeRenderDescs[1] = ovr_GetRenderDesc2(_session, ovrEyeType.Right, _hmdDesc.DefaultEyeFov[1]);
 
             // Get both eye poses simultaneously, with IPD offset already included. 
-            EyePair_ovrPosef hmdToEyePoses = new EyePair_ovrPosef(
+            EyePair_ovrPosef hmdToEyePoses = new(
                 eyeRenderDescs[0].HmdToEyePose,
                 eyeRenderDescs[1].HmdToEyePose);
 
@@ -214,7 +214,7 @@ namespace Veldrid.VirtualReality.Oculus
             ovrTrackingState trackingState = ovr_GetTrackingState(_session, predictedTime, true);
 
             double sensorSampleTime;    // sensorSampleTime is fed into the layer later
-            EyePair_Vector3 hmdToEyeOffset = new EyePair_Vector3(
+            EyePair_Vector3 hmdToEyeOffset = new(
                 hmdToEyePoses.Left.Position,
                 hmdToEyePoses.Right.Position);
             ovr_GetEyePoses(_session, _frameIndex, true, &hmdToEyeOffset, out _eyeRenderPoses, &sensorSampleTime);
@@ -293,7 +293,7 @@ namespace Veldrid.VirtualReality.Oculus
 
         private static string[] GetStringArray(byte[] utf8Data)
         {
-            List<string> ret = new List<string>();
+            List<string> ret = new();
             int start = 0;
             for (int i = 0; i < utf8Data.Length; i++)
             {
@@ -312,7 +312,7 @@ namespace Veldrid.VirtualReality.Oculus
 
     internal unsafe class OculusSwapchain
     {
-        private static readonly Guid s_d3d11Tex2DGuid = new Guid("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
+        private static readonly Guid s_d3d11Tex2DGuid = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
 
         private readonly ovrSession _session;
         public readonly ovrTextureSwapChain ColorChain;
@@ -326,7 +326,7 @@ namespace Veldrid.VirtualReality.Oculus
             Texture[] colorTextures;
             Texture[] depthTextures = null;
 
-            ovrTextureSwapChainDesc colorDesc = new ovrTextureSwapChainDesc();
+            ovrTextureSwapChainDesc colorDesc = new();
             colorDesc.Type = ovrTextureType.Texture2D;
             colorDesc.ArraySize = 1;
             colorDesc.Width = sizeW;
@@ -343,7 +343,7 @@ namespace Veldrid.VirtualReality.Oculus
             // if requested, then create depth swap chain
             if (createDepth)
             {
-                ovrTextureSwapChainDesc depthDesc = new ovrTextureSwapChainDesc();
+                ovrTextureSwapChainDesc depthDesc = new();
                 depthDesc.Type = ovrTextureType.Texture2D;
                 depthDesc.ArraySize = 1;
                 depthDesc.Width = sizeW;
@@ -374,20 +374,14 @@ namespace Veldrid.VirtualReality.Oculus
             GraphicsDevice gd,
             ovrTextureSwapChainDesc desc)
         {
-            switch (gd.BackendType)
+            return gd.BackendType switch
             {
-                case GraphicsBackend.Direct3D11:
-                    return CreateSwapchainD3D11(session, gd, desc);
-                case GraphicsBackend.OpenGL:
-                case GraphicsBackend.OpenGLES:
-                    return CreateSwapchainGL(session, gd, desc);
-                case GraphicsBackend.Vulkan:
-                    return CreateSwapchainVk(session, gd, desc);
-                case GraphicsBackend.Metal:
-                    throw new PlatformNotSupportedException("Using Oculus with the Metal backend is not supported.");
-                default:
-                    throw new NotImplementedException();
-            }
+                GraphicsBackend.Direct3D11 => CreateSwapchainD3D11(session, gd, desc),
+                GraphicsBackend.OpenGL or GraphicsBackend.OpenGLES => CreateSwapchainGL(session, gd, desc),
+                GraphicsBackend.Vulkan => CreateSwapchainVk(session, gd, desc),
+                GraphicsBackend.Metal => throw new PlatformNotSupportedException("Using Oculus with the Metal backend is not supported."),
+                _ => throw new NotImplementedException(),
+            };
         }
 
         private (ovrTextureSwapChain, Texture[]) CreateSwapchainVk(ovrSession session, GraphicsDevice gd, ovrTextureSwapChainDesc desc)
@@ -457,7 +451,7 @@ namespace Veldrid.VirtualReality.Oculus
             gd.GetOpenGLInfo().ExecuteOnGLThread(() =>
             {
                 ovrTextureSwapChainDesc localDesc = desc;
-                localDesc.MiscFlags = localDesc.MiscFlags & ~(ovrTextureMiscFlags.DX_Typeless | ovrTextureMiscFlags.AllowGenerateMips);
+                localDesc.MiscFlags &= ~(ovrTextureMiscFlags.DX_Typeless | ovrTextureMiscFlags.AllowGenerateMips);
                 localDesc.BindFlags = ovrTextureBindFlags.None;
 
                 ovrTextureSwapChain sc;
@@ -520,7 +514,7 @@ namespace Veldrid.VirtualReality.Oculus
 
         public void Commit()
         {
-            var result = ovr_CommitTextureSwapChain(_session, ColorChain);
+            ovrResult result = ovr_CommitTextureSwapChain(_session, ColorChain);
             if (result != ovrResult.Success) { throw new InvalidOperationException(); }
 
             result = ovr_CommitTextureSwapChain(_session, DepthChain);

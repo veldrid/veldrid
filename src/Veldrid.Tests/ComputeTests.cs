@@ -106,7 +106,7 @@ void main()
             // Read back from our texture and make sure it has been properly filled.
             for (uint depth = 0; depth < computeTargetTexture.Depth; depth++)
             {
-                RgbaFloat expectedFillValue = new RgbaFloat(new System.Numerics.Vector4(FillValue * (depth + 1)));
+                RgbaFloat expectedFillValue = new(new System.Numerics.Vector4(FillValue * (depth + 1)));
                 int notFilledCount = CountTexelsNotFilledAtDepth(GD, computeTargetTexture, expectedFillValue, depth);
 
                 Assert.Equal(0, notFilledCount);
@@ -123,7 +123,7 @@ void main()
             ResourceFactory factory = device.ResourceFactory;
 
             // We need to create a staging texture and copy into it.
-            TextureDescription description = new TextureDescription(texture.Width, texture.Height, depth: 1,
+            TextureDescription description = new(texture.Width, texture.Height, depth: 1,
                 texture.MipLevels, texture.ArrayLayers,
                 texture.Format, TextureUsage.Staging,
                 texture.Type, texture.SampleCount);
@@ -266,8 +266,8 @@ void main()
             ResourceLayout[] layouts;
             ResourceSet[] sets;
 
-            DeviceBufferRange srcRange = new DeviceBufferRange(copySrc, srcSetMultiple * GD.StructuredBufferMinOffsetAlignment, dataSize);
-            DeviceBufferRange dstRange = new DeviceBufferRange(copyDst, dstSetMultiple * GD.StructuredBufferMinOffsetAlignment, dataSize);
+            DeviceBufferRange srcRange = new(copySrc, srcSetMultiple * GD.StructuredBufferMinOffsetAlignment, dataSize);
+            DeviceBufferRange dstRange = new(copyDst, dstSetMultiple * GD.StructuredBufferMinOffsetAlignment, dataSize);
 
             if (combinedLayout)
             {

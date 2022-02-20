@@ -31,8 +31,8 @@ namespace Veldrid
         public readonly int Top => Y;
         public readonly int Bottom => Y + Height;
 
-        public readonly Vector2 Position => new Vector2(X, Y);
-        public readonly Vector2 Size => new Vector2(Width, Height);
+        public readonly Vector2 Position => new(X, Y);
+        public readonly Vector2 Size => new(Width, Height);
 
         public readonly bool Contains(Point p) => Contains(p.X, p.Y);
 

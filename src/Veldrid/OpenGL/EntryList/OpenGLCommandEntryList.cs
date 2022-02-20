@@ -9,12 +9,12 @@ namespace Veldrid.OpenGL.EntryList
     internal unsafe sealed class OpenGLCommandEntryList : IDisposable
     {
         private readonly StagingMemoryPool _memoryPool;
-        private readonly List<EntryStorageBlock> _blocks = new List<EntryStorageBlock>();
+        private readonly List<EntryStorageBlock> _blocks = new();
         private EntryStorageBlock _currentBlock;
         private int _currentBlockIndex;
         private uint _totalEntries;
-        private readonly List<object> _resourceList = new List<object>();
-        private readonly List<StagingBlock> _stagingBlocks = new List<StagingBlock>();
+        private readonly List<object> _resourceList = new();
+        private readonly List<StagingBlock> _stagingBlocks = new();
 
         // Entry IDs
         private const byte BeginEntryID = 1;
@@ -358,79 +358,79 @@ namespace Veldrid.OpenGL.EntryList
 
         public void Begin()
         {
-            BeginEntry entry = new BeginEntry();
+            BeginEntry entry = new();
             AddEntry(BeginEntryID, ref entry);
         }
 
         public void ClearColorTarget(uint index, RgbaFloat clearColor)
         {
-            ClearColorTargetEntry entry = new ClearColorTargetEntry(index, clearColor);
+            ClearColorTargetEntry entry = new(index, clearColor);
             AddEntry(ClearColorTargetID, ref entry);
         }
 
         public void ClearDepthTarget(float depth, byte stencil)
         {
-            ClearDepthTargetEntry entry = new ClearDepthTargetEntry(depth, stencil);
+            ClearDepthTargetEntry entry = new(depth, stencil);
             AddEntry(ClearDepthTargetID, ref entry);
         }
 
         public void Draw(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
-            DrawEntry entry = new DrawEntry(vertexCount, instanceCount, vertexStart, instanceStart);
+            DrawEntry entry = new(vertexCount, instanceCount, vertexStart, instanceStart);
             AddEntry(DrawEntryID, ref entry);
         }
 
         public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
-            DrawIndexedEntry entry = new DrawIndexedEntry(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
+            DrawIndexedEntry entry = new(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
             AddEntry(DrawIndexedEntryID, ref entry);
         }
 
         public void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
-            DrawIndirectEntry entry = new DrawIndirectEntry(Track(indirectBuffer), offset, drawCount, stride);
+            DrawIndirectEntry entry = new(Track(indirectBuffer), offset, drawCount, stride);
             AddEntry(DrawIndirectEntryID, ref entry);
         }
 
         public void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
-            DrawIndexedIndirectEntry entry = new DrawIndexedIndirectEntry(Track(indirectBuffer), offset, drawCount, stride);
+            DrawIndexedIndirectEntry entry = new(Track(indirectBuffer), offset, drawCount, stride);
             AddEntry(DrawIndexedIndirectEntryID, ref entry);
         }
 
         public void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
         {
-            DispatchEntry entry = new DispatchEntry(groupCountX, groupCountY, groupCountZ);
+            DispatchEntry entry = new(groupCountX, groupCountY, groupCountZ);
             AddEntry(DispatchEntryID, ref entry);
         }
 
         public void DispatchIndirect(DeviceBuffer indirectBuffer, uint offset)
         {
-            DispatchIndirectEntry entry = new DispatchIndirectEntry(Track(indirectBuffer), offset);
+            DispatchIndirectEntry entry = new(Track(indirectBuffer), offset);
             AddEntry(DispatchIndirectEntryID, ref entry);
         }
 
         public void End()
         {
-            EndEntry entry = new EndEntry();
+            EndEntry entry = new();
             AddEntry(EndEntryID, ref entry);
         }
 
         public void SetFramebuffer(Framebuffer fb)
         {
-            SetFramebufferEntry entry = new SetFramebufferEntry(Track(fb));
+            SetFramebufferEntry entry = new(Track(fb));
             AddEntry(SetFramebufferEntryID, ref entry);
         }
 
         public void SetIndexBuffer(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
-            SetIndexBufferEntry entry = new SetIndexBufferEntry(Track(buffer), format, offset);
+            SetIndexBufferEntry entry = new(Track(buffer), format, offset);
             AddEntry(SetIndexBufferEntryID, ref entry);
         }
 
         public void SetPipeline(Pipeline pipeline)
         {
-            SetPipelineEntry entry = new SetPipelineEntry(Track(pipeline));
+            SetPipelineEntry entry = new(Track(pipeline));
             AddEntry(SetPipelineEntryID, ref entry);
         }
 
@@ -469,25 +469,25 @@ namespace Veldrid.OpenGL.EntryList
 
         public void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
-            SetScissorRectEntry entry = new SetScissorRectEntry(index, x, y, width, height);
+            SetScissorRectEntry entry = new(index, x, y, width, height);
             AddEntry(SetScissorRectEntryID, ref entry);
         }
 
         public void SetVertexBuffer(uint index, DeviceBuffer buffer, uint offset)
         {
-            SetVertexBufferEntry entry = new SetVertexBufferEntry(index, Track(buffer), offset);
+            SetVertexBufferEntry entry = new(index, Track(buffer), offset);
             AddEntry(SetVertexBufferEntryID, ref entry);
         }
 
         public void SetViewport(uint index, ref Viewport viewport)
         {
-            SetViewportEntry entry = new SetViewportEntry(index, ref viewport);
+            SetViewportEntry entry = new(index, ref viewport);
             AddEntry(SetViewportEntryID, ref entry);
         }
 
         public void ResolveTexture(Texture source, Texture destination)
         {
-            ResolveTextureEntry entry = new ResolveTextureEntry(Track(source), Track(destination));
+            ResolveTextureEntry entry = new(Track(source), Track(destination));
             AddEntry(ResolveTextureEntryID, ref entry);
         }
 
@@ -495,13 +495,13 @@ namespace Veldrid.OpenGL.EntryList
         {
             StagingBlock stagingBlock = _memoryPool.Stage(source, sizeInBytes);
             _stagingBlocks.Add(stagingBlock);
-            UpdateBufferEntry entry = new UpdateBufferEntry(Track(buffer), bufferOffsetInBytes, stagingBlock, sizeInBytes);
+            UpdateBufferEntry entry = new(Track(buffer), bufferOffsetInBytes, stagingBlock, sizeInBytes);
             AddEntry(UpdateBufferEntryID, ref entry);
         }
 
         public void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
         {
-            CopyBufferEntry entry = new CopyBufferEntry(
+            CopyBufferEntry entry = new(
                 Track(source),
                 sourceOffset,
                 Track(destination),
@@ -522,7 +522,7 @@ namespace Veldrid.OpenGL.EntryList
             uint width, uint height, uint depth,
             uint layerCount)
         {
-            CopyTextureEntry entry = new CopyTextureEntry(
+            CopyTextureEntry entry = new(
                 Track(source),
                 srcX, srcY, srcZ,
                 srcMipLevel,
@@ -538,25 +538,25 @@ namespace Veldrid.OpenGL.EntryList
 
         public void GenerateMipmaps(Texture texture)
         {
-            GenerateMipmapsEntry entry = new GenerateMipmapsEntry(Track(texture));
+            GenerateMipmapsEntry entry = new(Track(texture));
             AddEntry(GenerateMipmapsEntryID, ref entry);
         }
 
         public void PushDebugGroup(string name)
         {
-            PushDebugGroupEntry entry = new PushDebugGroupEntry(Track(name));
+            PushDebugGroupEntry entry = new(Track(name));
             AddEntry(PushDebugGroupEntryID, ref entry);
         }
 
         public void PopDebugGroup()
         {
-            PopDebugGroupEntry entry = new PopDebugGroupEntry();
+            PopDebugGroupEntry entry = new();
             AddEntry(PopDebugGroupEntryID, ref entry);
         }
 
         public void InsertDebugMarker(string name)
         {
-            InsertDebugMarkerEntry entry = new InsertDebugMarkerEntry(Track(name));
+            InsertDebugMarkerEntry entry = new(Track(name));
             AddEntry(InsertDebugMarkerEntryID, ref entry);
         }
 

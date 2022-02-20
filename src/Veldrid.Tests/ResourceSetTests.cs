@@ -123,7 +123,7 @@ namespace Veldrid.Tests
             DeviceBuffer infoBuffer = RF.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
             DeviceBuffer orthoBuffer = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
@@ -138,7 +138,7 @@ namespace Veldrid.Tests
 
             ResourceSet set = RF.CreateResourceSet(new ResourceSetDescription(layout, infoBuffer, orthoBuffer));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.Default,
@@ -164,7 +164,7 @@ namespace Veldrid.Tests
             DeviceBuffer infoBuffer = RF.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
             DeviceBuffer orthoBuffer = RF.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
@@ -191,7 +191,7 @@ namespace Veldrid.Tests
             ResourceSet set2 = RF.CreateResourceSet(new ResourceSetDescription(layout2, infoBuffer, texView));
             ResourceSet set3 = RF.CreateResourceSet(new ResourceSetDescription(layout3, infoBuffer));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.Default,

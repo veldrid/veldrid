@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 namespace Veldrid.Sdl2
 {
     /// <summary>
@@ -19,7 +21,8 @@ namespace Veldrid.Sdl2
         }
 
         public static implicit operator IntPtr(SDL_GameController controller) => controller.NativePointer;
-        public static implicit operator SDL_GameController(IntPtr pointer) => new SDL_GameController(pointer);
+
+        public static implicit operator SDL_GameController(IntPtr pointer) => new(pointer);
     }
 
     [StructLayout(LayoutKind.Sequential)]

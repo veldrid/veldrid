@@ -24,31 +24,16 @@
 
             for (int i = 0; i < _bindingInfosByVdIndex.Length; i++)
             {
-                int slot;
-                switch (elements[i].Kind)
+                int slot = elements[i].Kind switch
                 {
-                    case ResourceKind.UniformBuffer:
-                        slot = cbIndex++;
-                        break;
-                    case ResourceKind.StructuredBufferReadOnly:
-                        slot = texIndex++;
-                        break;
-                    case ResourceKind.StructuredBufferReadWrite:
-                        slot = unorderedAccessIndex++;
-                        break;
-                    case ResourceKind.TextureReadOnly:
-                        slot = texIndex++;
-                        break;
-                    case ResourceKind.TextureReadWrite:
-                        slot = unorderedAccessIndex++;
-                        break;
-                    case ResourceKind.Sampler:
-                        slot = samplerIndex++;
-                        break;
-                    default:
-                        throw Illegal.Value<ResourceKind>();
-                }
-
+                    ResourceKind.UniformBuffer => cbIndex++,
+                    ResourceKind.StructuredBufferReadOnly => texIndex++,
+                    ResourceKind.StructuredBufferReadWrite => unorderedAccessIndex++,
+                    ResourceKind.TextureReadOnly => texIndex++,
+                    ResourceKind.TextureReadWrite => unorderedAccessIndex++,
+                    ResourceKind.Sampler => samplerIndex++,
+                    _ => throw Illegal.Value<ResourceKind>(),
+                };
                 _bindingInfosByVdIndex[i] = new ResourceBindingInfo(
                     slot,
                     elements[i].Stages,

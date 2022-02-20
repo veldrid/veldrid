@@ -15,8 +15,8 @@ namespace Veldrid.NeoDemo
         private Matrix4x4 _viewMatrix;
         private Matrix4x4 _projectionMatrix;
 
-        private Vector3 _position = new Vector3(0, 3, 0);
-        private Vector3 _lookDirection = new Vector3(0, -.3f, -1f);
+        private Vector3 _position = new(0, 3, 0);
+        private Vector3 _lookDirection = new(0, -.3f, -1f);
         private float _moveSpeed = 10.0f;
 
         private float _yaw;
@@ -208,7 +208,7 @@ namespace Veldrid.NeoDemo
             ViewChanged?.Invoke(_viewMatrix);
         }
 
-        public CameraInfo GetCameraInfo() => new CameraInfo
+        public CameraInfo GetCameraInfo() => new()
         {
             CameraPosition_WorldSpace = _position,
             CameraLookDirection = _lookDirection

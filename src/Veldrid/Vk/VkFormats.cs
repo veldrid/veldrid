@@ -1,4 +1,5 @@
-﻿using TerraFX.Interop.Vulkan;
+﻿using System.Diagnostics.CodeAnalysis;
+using TerraFX.Interop.Vulkan;
 using static TerraFX.Interop.Vulkan.VkBlendFactor;
 using static TerraFX.Interop.Vulkan.VkBlendOp;
 using static TerraFX.Interop.Vulkan.VkBorderColor;
@@ -26,17 +27,12 @@ namespace Veldrid.Vulkan
         {
             return mode switch
             {
-                case SamplerAddressMode.Wrap:
-                    return VK_SAMPLER_ADDRESS_MODE_REPEAT;
-                case SamplerAddressMode.Mirror:
-                    return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-                case SamplerAddressMode.Clamp:
-                    return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-                case SamplerAddressMode.Border:
-                    return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-                default:
-                    throw Illegal.Value<SamplerAddressMode>();
-            }
+                SamplerAddressMode.Wrap => VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                SamplerAddressMode.Mirror => VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+                SamplerAddressMode.Clamp => VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                SamplerAddressMode.Border => VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+                _ => throw Illegal.Value<SamplerAddressMode>(),
+            };
         }
 
         internal static void GetFilterParams(
@@ -125,15 +121,11 @@ namespace Veldrid.Vulkan
         {
             return type switch
             {
-                case TextureType.Texture1D:
-                    return VK_IMAGE_TYPE_1D;
-                case TextureType.Texture2D:
-                    return VK_IMAGE_TYPE_2D;
-                case TextureType.Texture3D:
-                    return VK_IMAGE_TYPE_3D;
-                default:
-                    throw Illegal.Value<TextureType>();
-            }
+                TextureType.Texture1D => VK_IMAGE_TYPE_1D,
+                TextureType.Texture2D => VK_IMAGE_TYPE_2D,
+                TextureType.Texture3D => VK_IMAGE_TYPE_3D,
+                _ => throw Illegal.Value<TextureType>(),
+            };
         }
 
         [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
@@ -162,112 +154,77 @@ namespace Veldrid.Vulkan
         {
             return sampleCount switch
             {
-                case TextureSampleCount.Count1:
-                    return VK_SAMPLE_COUNT_1_BIT;
-                case TextureSampleCount.Count2:
-                    return VK_SAMPLE_COUNT_2_BIT;
-                case TextureSampleCount.Count4:
-                    return VK_SAMPLE_COUNT_4_BIT;
-                case TextureSampleCount.Count8:
-                    return VK_SAMPLE_COUNT_8_BIT;
-                case TextureSampleCount.Count16:
-                    return VK_SAMPLE_COUNT_16_BIT;
-                case TextureSampleCount.Count32:
-                    return VK_SAMPLE_COUNT_32_BIT;
-                default:
-                    throw Illegal.Value<TextureSampleCount>();
-            }
+                TextureSampleCount.Count1 => VK_SAMPLE_COUNT_1_BIT,
+                TextureSampleCount.Count2 => VK_SAMPLE_COUNT_2_BIT,
+                TextureSampleCount.Count4 => VK_SAMPLE_COUNT_4_BIT,
+                TextureSampleCount.Count8 => VK_SAMPLE_COUNT_8_BIT,
+                TextureSampleCount.Count16 => VK_SAMPLE_COUNT_16_BIT,
+                TextureSampleCount.Count32 => VK_SAMPLE_COUNT_32_BIT,
+                _ => throw Illegal.Value<TextureSampleCount>(),
+            };
         }
 
         internal static VkStencilOp VdToVkStencilOp(StencilOperation op)
         {
             return op switch
             {
-                case StencilOperation.Keep:
-                    return VK_STENCIL_OP_KEEP;
-                case StencilOperation.Zero:
-                    return VK_STENCIL_OP_ZERO;
-                case StencilOperation.Replace:
-                    return VK_STENCIL_OP_REPLACE;
-                case StencilOperation.IncrementAndClamp:
-                    return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
-                case StencilOperation.DecrementAndClamp:
-                    return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
-                case StencilOperation.Invert:
-                    return VK_STENCIL_OP_INVERT;
-                case StencilOperation.IncrementAndWrap:
-                    return VK_STENCIL_OP_INCREMENT_AND_WRAP;
-                case StencilOperation.DecrementAndWrap:
-                    return VK_STENCIL_OP_DECREMENT_AND_WRAP;
-                default:
-                    throw Illegal.Value<StencilOperation>();
-            }
+                StencilOperation.Keep => VK_STENCIL_OP_KEEP,
+                StencilOperation.Zero => VK_STENCIL_OP_ZERO,
+                StencilOperation.Replace => VK_STENCIL_OP_REPLACE,
+                StencilOperation.IncrementAndClamp => VK_STENCIL_OP_INCREMENT_AND_CLAMP,
+                StencilOperation.DecrementAndClamp => VK_STENCIL_OP_DECREMENT_AND_CLAMP,
+                StencilOperation.Invert => VK_STENCIL_OP_INVERT,
+                StencilOperation.IncrementAndWrap => VK_STENCIL_OP_INCREMENT_AND_WRAP,
+                StencilOperation.DecrementAndWrap => VK_STENCIL_OP_DECREMENT_AND_WRAP,
+                _ => throw Illegal.Value<StencilOperation>(),
+            };
         }
 
         internal static VkPolygonMode VdToVkPolygonMode(PolygonFillMode fillMode)
         {
             return fillMode switch
             {
-                case PolygonFillMode.Solid:
-                    return VK_POLYGON_MODE_FILL;
-                case PolygonFillMode.Wireframe:
-                    return VK_POLYGON_MODE_LINE;
-                default:
-                    throw Illegal.Value<PolygonFillMode>();
-            }
+                PolygonFillMode.Solid => VK_POLYGON_MODE_FILL,
+                PolygonFillMode.Wireframe => VK_POLYGON_MODE_LINE,
+                _ => throw Illegal.Value<PolygonFillMode>(),
+            };
         }
 
         internal static VkCullModeFlags VdToVkCullMode(FaceCullMode cullMode)
         {
             return cullMode switch
             {
-                case FaceCullMode.Back:
-                    return VK_CULL_MODE_BACK_BIT;
-                case FaceCullMode.Front:
-                    return VK_CULL_MODE_FRONT_BIT;
-                case FaceCullMode.None:
-                    return VK_CULL_MODE_NONE;
-                default:
-                    throw Illegal.Value<FaceCullMode>();
-            }
+                FaceCullMode.Back => VK_CULL_MODE_BACK_BIT,
+                FaceCullMode.Front => VK_CULL_MODE_FRONT_BIT,
+                FaceCullMode.None => VK_CULL_MODE_NONE,
+                _ => throw Illegal.Value<FaceCullMode>(),
+            };
         }
 
         internal static VkBlendOp VdToVkBlendOp(BlendFunction func)
         {
             return func switch
             {
-                case BlendFunction.Add:
-                    return VK_BLEND_OP_ADD;
-                case BlendFunction.Subtract:
-                    return VK_BLEND_OP_SUBTRACT;
-                case BlendFunction.ReverseSubtract:
-                    return VK_BLEND_OP_REVERSE_SUBTRACT;
-                case BlendFunction.Minimum:
-                    return VK_BLEND_OP_MIN;
-                case BlendFunction.Maximum:
-                    return VK_BLEND_OP_MAX;
-                default:
-                    throw Illegal.Value<BlendFunction>();
-            }
+                BlendFunction.Add => VK_BLEND_OP_ADD,
+                BlendFunction.Subtract => VK_BLEND_OP_SUBTRACT,
+                BlendFunction.ReverseSubtract => VK_BLEND_OP_REVERSE_SUBTRACT,
+                BlendFunction.Minimum => VK_BLEND_OP_MIN,
+                BlendFunction.Maximum => VK_BLEND_OP_MAX,
+                _ => throw Illegal.Value<BlendFunction>(),
+            };
         }
 
         internal static VkPrimitiveTopology VdToVkPrimitiveTopology(PrimitiveTopology topology)
         {
             return topology switch
             {
-                case PrimitiveTopology.TriangleList:
-                    return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-                case PrimitiveTopology.TriangleStrip:
-                    return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-                case PrimitiveTopology.LineList:
-                    return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-                case PrimitiveTopology.LineStrip:
-                    return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
-                case PrimitiveTopology.PointList:
-                    return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
-                default:
-                    throw Illegal.Value<PrimitiveTopology>();
-            }
+                PrimitiveTopology.TriangleList => VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+                PrimitiveTopology.TriangleStrip => VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+                PrimitiveTopology.LineList => VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+                PrimitiveTopology.LineStrip => VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
+                PrimitiveTopology.PointList => VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
+                _ => throw Illegal.Value<PrimitiveTopology>(),
+            };
         }
 
         internal static uint GetSpecializationConstantSize(ShaderConstantType type)
@@ -291,104 +248,59 @@ namespace Veldrid.Vulkan
         {
             return factor switch
             {
-                case BlendFactor.Zero:
-                    return VK_BLEND_FACTOR_ZERO;
-                case BlendFactor.One:
-                    return VK_BLEND_FACTOR_ONE;
-                case BlendFactor.SourceAlpha:
-                    return VK_BLEND_FACTOR_SRC_ALPHA;
-                case BlendFactor.InverseSourceAlpha:
-                    return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-                case BlendFactor.DestinationAlpha:
-                    return VK_BLEND_FACTOR_DST_ALPHA;
-                case BlendFactor.InverseDestinationAlpha:
-                    return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
-                case BlendFactor.SourceColor:
-                    return VK_BLEND_FACTOR_SRC_COLOR;
-                case BlendFactor.InverseSourceColor:
-                    return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
-                case BlendFactor.DestinationColor:
-                    return VK_BLEND_FACTOR_DST_COLOR;
-                case BlendFactor.InverseDestinationColor:
-                    return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
-                case BlendFactor.BlendFactor:
-                    return VK_BLEND_FACTOR_CONSTANT_COLOR;
-                case BlendFactor.InverseBlendFactor:
-                    return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
-                default:
-                    throw Illegal.Value<BlendFactor>();
-            }
+                BlendFactor.Zero => VK_BLEND_FACTOR_ZERO,
+                BlendFactor.One => VK_BLEND_FACTOR_ONE,
+                BlendFactor.SourceAlpha => VK_BLEND_FACTOR_SRC_ALPHA,
+                BlendFactor.InverseSourceAlpha => VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                BlendFactor.DestinationAlpha => VK_BLEND_FACTOR_DST_ALPHA,
+                BlendFactor.InverseDestinationAlpha => VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+                BlendFactor.SourceColor => VK_BLEND_FACTOR_SRC_COLOR,
+                BlendFactor.InverseSourceColor => VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+                BlendFactor.DestinationColor => VK_BLEND_FACTOR_DST_COLOR,
+                BlendFactor.InverseDestinationColor => VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR,
+                BlendFactor.BlendFactor => VK_BLEND_FACTOR_CONSTANT_COLOR,
+                BlendFactor.InverseBlendFactor => VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR,
+                _ => throw Illegal.Value<BlendFactor>(),
+            };
         }
 
         internal static VkFormat VdToVkVertexElementFormat(VertexElementFormat format)
         {
             return format switch
             {
-                case VertexElementFormat.Float1:
-                    return VK_FORMAT_R32_SFLOAT;
-                case VertexElementFormat.Float2:
-                    return VK_FORMAT_R32G32_SFLOAT;
-                case VertexElementFormat.Float3:
-                    return VK_FORMAT_R32G32B32_SFLOAT;
-                case VertexElementFormat.Float4:
-                    return VK_FORMAT_R32G32B32A32_SFLOAT;
-                case VertexElementFormat.Byte2_Norm:
-                    return VK_FORMAT_R8G8_UNORM;
-                case VertexElementFormat.Byte2:
-                    return VK_FORMAT_R8G8_UINT;
-                case VertexElementFormat.Byte4_Norm:
-                    return VK_FORMAT_R8G8B8A8_UNORM;
-                case VertexElementFormat.Byte4:
-                    return VK_FORMAT_R8G8B8A8_UINT;
-                case VertexElementFormat.SByte2_Norm:
-                    return VK_FORMAT_R8G8_SNORM;
-                case VertexElementFormat.SByte2:
-                    return VK_FORMAT_R8G8_SINT;
-                case VertexElementFormat.SByte4_Norm:
-                    return VK_FORMAT_R8G8B8A8_SNORM;
-                case VertexElementFormat.SByte4:
-                    return VK_FORMAT_R8G8B8A8_SINT;
-                case VertexElementFormat.UShort2_Norm:
-                    return VK_FORMAT_R16G16_UNORM;
-                case VertexElementFormat.UShort2:
-                    return VK_FORMAT_R16G16_UINT;
-                case VertexElementFormat.UShort4_Norm:
-                    return VK_FORMAT_R16G16B16A16_UNORM;
-                case VertexElementFormat.UShort4:
-                    return VK_FORMAT_R16G16B16A16_UINT;
-                case VertexElementFormat.Short2_Norm:
-                    return VK_FORMAT_R16G16_SNORM;
-                case VertexElementFormat.Short2:
-                    return VK_FORMAT_R16G16_SINT;
-                case VertexElementFormat.Short4_Norm:
-                    return VK_FORMAT_R16G16B16A16_SNORM;
-                case VertexElementFormat.Short4:
-                    return VK_FORMAT_R16G16B16A16_SINT;
-                case VertexElementFormat.UInt1:
-                    return VK_FORMAT_R32_UINT;
-                case VertexElementFormat.UInt2:
-                    return VK_FORMAT_R32G32_UINT;
-                case VertexElementFormat.UInt3:
-                    return VK_FORMAT_R32G32B32_UINT;
-                case VertexElementFormat.UInt4:
-                    return VK_FORMAT_R32G32B32A32_UINT;
-                case VertexElementFormat.Int1:
-                    return VK_FORMAT_R32_SINT;
-                case VertexElementFormat.Int2:
-                    return VK_FORMAT_R32G32_SINT;
-                case VertexElementFormat.Int3:
-                    return VK_FORMAT_R32G32B32_SINT;
-                case VertexElementFormat.Int4:
-                    return VK_FORMAT_R32G32B32A32_SINT;
-                case VertexElementFormat.Half1:
-                    return VK_FORMAT_R16_SFLOAT;
-                case VertexElementFormat.Half2:
-                    return VK_FORMAT_R16G16_SFLOAT;
-                case VertexElementFormat.Half4:
-                    return VK_FORMAT_R16G16B16A16_SFLOAT;
-                default:
-                    throw Illegal.Value<VertexElementFormat>();
-            }
+                VertexElementFormat.Float1 => VK_FORMAT_R32_SFLOAT,
+                VertexElementFormat.Float2 => VK_FORMAT_R32G32_SFLOAT,
+                VertexElementFormat.Float3 => VK_FORMAT_R32G32B32_SFLOAT,
+                VertexElementFormat.Float4 => VK_FORMAT_R32G32B32A32_SFLOAT,
+                VertexElementFormat.Byte2_Norm => VK_FORMAT_R8G8_UNORM,
+                VertexElementFormat.Byte2 => VK_FORMAT_R8G8_UINT,
+                VertexElementFormat.Byte4_Norm => VK_FORMAT_R8G8B8A8_UNORM,
+                VertexElementFormat.Byte4 => VK_FORMAT_R8G8B8A8_UINT,
+                VertexElementFormat.SByte2_Norm => VK_FORMAT_R8G8_SNORM,
+                VertexElementFormat.SByte2 => VK_FORMAT_R8G8_SINT,
+                VertexElementFormat.SByte4_Norm => VK_FORMAT_R8G8B8A8_SNORM,
+                VertexElementFormat.SByte4 => VK_FORMAT_R8G8B8A8_SINT,
+                VertexElementFormat.UShort2_Norm => VK_FORMAT_R16G16_UNORM,
+                VertexElementFormat.UShort2 => VK_FORMAT_R16G16_UINT,
+                VertexElementFormat.UShort4_Norm => VK_FORMAT_R16G16B16A16_UNORM,
+                VertexElementFormat.UShort4 => VK_FORMAT_R16G16B16A16_UINT,
+                VertexElementFormat.Short2_Norm => VK_FORMAT_R16G16_SNORM,
+                VertexElementFormat.Short2 => VK_FORMAT_R16G16_SINT,
+                VertexElementFormat.Short4_Norm => VK_FORMAT_R16G16B16A16_SNORM,
+                VertexElementFormat.Short4 => VK_FORMAT_R16G16B16A16_SINT,
+                VertexElementFormat.UInt1 => VK_FORMAT_R32_UINT,
+                VertexElementFormat.UInt2 => VK_FORMAT_R32G32_UINT,
+                VertexElementFormat.UInt3 => VK_FORMAT_R32G32B32_UINT,
+                VertexElementFormat.UInt4 => VK_FORMAT_R32G32B32A32_UINT,
+                VertexElementFormat.Int1 => VK_FORMAT_R32_SINT,
+                VertexElementFormat.Int2 => VK_FORMAT_R32G32_SINT,
+                VertexElementFormat.Int3 => VK_FORMAT_R32G32B32_SINT,
+                VertexElementFormat.Int4 => VK_FORMAT_R32G32B32A32_SINT,
+                VertexElementFormat.Half1 => VK_FORMAT_R16_SFLOAT,
+                VertexElementFormat.Half2 => VK_FORMAT_R16G16_SFLOAT,
+                VertexElementFormat.Half4 => VK_FORMAT_R16G16B16A16_SFLOAT,
+                _ => throw Illegal.Value<VertexElementFormat>(),
+            };
         }
 
         internal static VkShaderStageFlags VdToVkShaderStages(ShaderStages stage)
@@ -420,186 +332,101 @@ namespace Veldrid.Vulkan
         {
             return borderColor switch
             {
-                case SamplerBorderColor.TransparentBlack:
-                    return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
-                case SamplerBorderColor.OpaqueBlack:
-                    return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
-                case SamplerBorderColor.OpaqueWhite:
-                    return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-                default:
-                    throw Illegal.Value<SamplerBorderColor>();
-            }
+                SamplerBorderColor.TransparentBlack => VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
+                SamplerBorderColor.OpaqueBlack => VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK,
+                SamplerBorderColor.OpaqueWhite => VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+                _ => throw Illegal.Value<SamplerBorderColor>(),
+            };
         }
 
         internal static VkIndexType VdToVkIndexFormat(IndexFormat format)
         {
             return format switch
             {
-                case IndexFormat.UInt16:
-                    return VK_INDEX_TYPE_UINT16;
-                case IndexFormat.UInt32:
-                    return VK_INDEX_TYPE_UINT32;
-                default:
-                    throw Illegal.Value<IndexFormat>();
-            }
+                IndexFormat.UInt16 => VK_INDEX_TYPE_UINT16,
+                IndexFormat.UInt32 => VK_INDEX_TYPE_UINT32,
+                _ => throw Illegal.Value<IndexFormat>(),
+            };
         }
 
         internal static VkCompareOp VdToVkCompareOp(ComparisonKind comparisonKind)
         {
             return comparisonKind switch
             {
-                case ComparisonKind.Never:
-                    return VK_COMPARE_OP_NEVER;
-                case ComparisonKind.Less:
-                    return VK_COMPARE_OP_LESS;
-                case ComparisonKind.Equal:
-                    return VK_COMPARE_OP_EQUAL;
-                case ComparisonKind.LessEqual:
-                    return VK_COMPARE_OP_LESS_OR_EQUAL;
-                case ComparisonKind.Greater:
-                    return VK_COMPARE_OP_GREATER;
-                case ComparisonKind.NotEqual:
-                    return VK_COMPARE_OP_NOT_EQUAL;
-                case ComparisonKind.GreaterEqual:
-                    return VK_COMPARE_OP_GREATER_OR_EQUAL;
-                case ComparisonKind.Always:
-                    return VK_COMPARE_OP_ALWAYS;
-                default:
-                    throw Illegal.Value<ComparisonKind>();
-            }
+                ComparisonKind.Never => VK_COMPARE_OP_NEVER,
+                ComparisonKind.Less => VK_COMPARE_OP_LESS,
+                ComparisonKind.Equal => VK_COMPARE_OP_EQUAL,
+                ComparisonKind.LessEqual => VK_COMPARE_OP_LESS_OR_EQUAL,
+                ComparisonKind.Greater => VK_COMPARE_OP_GREATER,
+                ComparisonKind.NotEqual => VK_COMPARE_OP_NOT_EQUAL,
+                ComparisonKind.GreaterEqual => VK_COMPARE_OP_GREATER_OR_EQUAL,
+                ComparisonKind.Always => VK_COMPARE_OP_ALWAYS,
+                _ => throw Illegal.Value<ComparisonKind>(),
+            };
         }
 
         internal static PixelFormat VkToVdPixelFormat(VkFormat vkFormat)
         {
             return vkFormat switch
             {
-                case VK_FORMAT_R8_UNORM:
-                    return PixelFormat.R8_UNorm;
-                case VK_FORMAT_R8_SNORM:
-                    return PixelFormat.R8_SNorm;
-                case VK_FORMAT_R8_UINT:
-                    return PixelFormat.R8_UInt;
-                case VK_FORMAT_R8_SINT:
-                    return PixelFormat.R8_SInt;
-
-                case VK_FORMAT_R16_UNORM:
-                    return PixelFormat.R16_UNorm;
-                case VK_FORMAT_R16_SNORM:
-                    return PixelFormat.R16_SNorm;
-                case VK_FORMAT_R16_UINT:
-                    return PixelFormat.R16_UInt;
-                case VK_FORMAT_R16_SINT:
-                    return PixelFormat.R16_SInt;
-                case VK_FORMAT_R16_SFLOAT:
-                    return PixelFormat.R16_Float;
-
-                case VK_FORMAT_R32_UINT:
-                    return PixelFormat.R32_UInt;
-                case VK_FORMAT_R32_SINT:
-                    return PixelFormat.R32_SInt;
-                case VK_FORMAT_R32_SFLOAT:
-                case VK_FORMAT_D32_SFLOAT:
-                    return PixelFormat.R32_Float;
-
-                case VK_FORMAT_R8G8_UNORM:
-                    return PixelFormat.R8_G8_UNorm;
-                case VK_FORMAT_R8G8_SNORM:
-                    return PixelFormat.R8_G8_SNorm;
-                case VK_FORMAT_R8G8_UINT:
-                    return PixelFormat.R8_G8_UInt;
-                case VK_FORMAT_R8G8_SINT:
-                    return PixelFormat.R8_G8_SInt;
-
-                case VK_FORMAT_R16G16_UNORM:
-                    return PixelFormat.R16_G16_UNorm;
-                case VK_FORMAT_R16G16_SNORM:
-                    return PixelFormat.R16_G16_SNorm;
-                case VK_FORMAT_R16G16_UINT:
-                    return PixelFormat.R16_G16_UInt;
-                case VK_FORMAT_R16G16_SINT:
-                    return PixelFormat.R16_G16_SInt;
-                case VK_FORMAT_R16G16_SFLOAT:
-                    return PixelFormat.R16_G16_Float;
-
-                case VK_FORMAT_R32G32_UINT:
-                    return PixelFormat.R32_G32_UInt;
-                case VK_FORMAT_R32G32_SINT:
-                    return PixelFormat.R32_G32_SInt;
-                case VK_FORMAT_R32G32_SFLOAT:
-                    return PixelFormat.R32_G32_Float;
-
-                case VK_FORMAT_R8G8B8A8_UNORM:
-                    return PixelFormat.R8_G8_B8_A8_UNorm;
-                case VK_FORMAT_R8G8B8A8_SRGB:
-                    return PixelFormat.R8_G8_B8_A8_UNorm_SRgb;
-                case VK_FORMAT_B8G8R8A8_UNORM:
-                    return PixelFormat.B8_G8_R8_A8_UNorm;
-                case VK_FORMAT_B8G8R8A8_SRGB:
-                    return PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
-                case VK_FORMAT_R8G8B8A8_SNORM:
-                    return PixelFormat.R8_G8_B8_A8_SNorm;
-                case VK_FORMAT_R8G8B8A8_UINT:
-                    return PixelFormat.R8_G8_B8_A8_UInt;
-                case VK_FORMAT_R8G8B8A8_SINT:
-                    return PixelFormat.R8_G8_B8_A8_SInt;
-
-                case VK_FORMAT_R16G16B16A16_UNORM:
-                    return PixelFormat.R16_G16_B16_A16_UNorm;
-                case VK_FORMAT_R16G16B16A16_SNORM:
-                    return PixelFormat.R16_G16_B16_A16_SNorm;
-                case VK_FORMAT_R16G16B16A16_UINT:
-                    return PixelFormat.R16_G16_B16_A16_UInt;
-                case VK_FORMAT_R16G16B16A16_SINT:
-                    return PixelFormat.R16_G16_B16_A16_SInt;
-                case VK_FORMAT_R16G16B16A16_SFLOAT:
-                    return PixelFormat.R16_G16_B16_A16_Float;
-
-                case VK_FORMAT_R32G32B32A32_UINT:
-                    return PixelFormat.R32_G32_B32_A32_UInt;
-                case VK_FORMAT_R32G32B32A32_SINT:
-                    return PixelFormat.R32_G32_B32_A32_SInt;
-                case VK_FORMAT_R32G32B32A32_SFLOAT:
-                    return PixelFormat.R32_G32_B32_A32_Float;
-
-                case VK_FORMAT_BC1_RGB_UNORM_BLOCK:
-                    return PixelFormat.BC1_Rgb_UNorm;
-                case VK_FORMAT_BC1_RGB_SRGB_BLOCK:
-                    return PixelFormat.BC1_Rgb_UNorm_SRgb;
-                case VK_FORMAT_BC1_RGBA_UNORM_BLOCK:
-                    return PixelFormat.BC1_Rgba_UNorm;
-                case VK_FORMAT_BC1_RGBA_SRGB_BLOCK:
-                    return PixelFormat.BC1_Rgba_UNorm_SRgb;
-                case VK_FORMAT_BC2_UNORM_BLOCK:
-                    return PixelFormat.BC2_UNorm;
-                case VK_FORMAT_BC2_SRGB_BLOCK:
-                    return PixelFormat.BC2_UNorm_SRgb;
-                case VK_FORMAT_BC3_UNORM_BLOCK:
-                    return PixelFormat.BC3_UNorm;
-                case VK_FORMAT_BC3_SRGB_BLOCK:
-                    return PixelFormat.BC3_UNorm_SRgb;
-                case VK_FORMAT_BC4_UNORM_BLOCK:
-                    return PixelFormat.BC4_UNorm;
-                case VK_FORMAT_BC4_SNORM_BLOCK:
-                    return PixelFormat.BC4_SNorm;
-                case VK_FORMAT_BC5_UNORM_BLOCK:
-                    return PixelFormat.BC5_UNorm;
-                case VK_FORMAT_BC5_SNORM_BLOCK:
-                    return PixelFormat.BC5_SNorm;
-                case VK_FORMAT_BC7_UNORM_BLOCK:
-                    return PixelFormat.BC7_UNorm;
-                case VK_FORMAT_BC7_SRGB_BLOCK:
-                    return PixelFormat.BC7_UNorm_SRgb;
-
-                case VK_FORMAT_A2B10G10R10_UNORM_PACK32:
-                    return PixelFormat.R10_G10_B10_A2_UNorm;
-                case VK_FORMAT_A2B10G10R10_UINT_PACK32:
-                    return PixelFormat.R10_G10_B10_A2_UInt;
-                case VK_FORMAT_B10G11R11_UFLOAT_PACK32:
-                    return PixelFormat.R11_G11_B10_Float;
-
-                default:
-                    throw Illegal.Value<VkFormat>();
-            }
+                VK_FORMAT_R8_UNORM => PixelFormat.R8_UNorm,
+                VK_FORMAT_R8_SNORM => PixelFormat.R8_SNorm,
+                VK_FORMAT_R8_UINT => PixelFormat.R8_UInt,
+                VK_FORMAT_R8_SINT => PixelFormat.R8_SInt,
+                VK_FORMAT_R16_UNORM => PixelFormat.R16_UNorm,
+                VK_FORMAT_R16_SNORM => PixelFormat.R16_SNorm,
+                VK_FORMAT_R16_UINT => PixelFormat.R16_UInt,
+                VK_FORMAT_R16_SINT => PixelFormat.R16_SInt,
+                VK_FORMAT_R16_SFLOAT => PixelFormat.R16_Float,
+                VK_FORMAT_R32_UINT => PixelFormat.R32_UInt,
+                VK_FORMAT_R32_SINT => PixelFormat.R32_SInt,
+                VK_FORMAT_R32_SFLOAT or VK_FORMAT_D32_SFLOAT => PixelFormat.R32_Float,
+                VK_FORMAT_R8G8_UNORM => PixelFormat.R8_G8_UNorm,
+                VK_FORMAT_R8G8_SNORM => PixelFormat.R8_G8_SNorm,
+                VK_FORMAT_R8G8_UINT => PixelFormat.R8_G8_UInt,
+                VK_FORMAT_R8G8_SINT => PixelFormat.R8_G8_SInt,
+                VK_FORMAT_R16G16_UNORM => PixelFormat.R16_G16_UNorm,
+                VK_FORMAT_R16G16_SNORM => PixelFormat.R16_G16_SNorm,
+                VK_FORMAT_R16G16_UINT => PixelFormat.R16_G16_UInt,
+                VK_FORMAT_R16G16_SINT => PixelFormat.R16_G16_SInt,
+                VK_FORMAT_R16G16_SFLOAT => PixelFormat.R16_G16_Float,
+                VK_FORMAT_R32G32_UINT => PixelFormat.R32_G32_UInt,
+                VK_FORMAT_R32G32_SINT => PixelFormat.R32_G32_SInt,
+                VK_FORMAT_R32G32_SFLOAT => PixelFormat.R32_G32_Float,
+                VK_FORMAT_R8G8B8A8_UNORM => PixelFormat.R8_G8_B8_A8_UNorm,
+                VK_FORMAT_R8G8B8A8_SRGB => PixelFormat.R8_G8_B8_A8_UNorm_SRgb,
+                VK_FORMAT_B8G8R8A8_UNORM => PixelFormat.B8_G8_R8_A8_UNorm,
+                VK_FORMAT_B8G8R8A8_SRGB => PixelFormat.B8_G8_R8_A8_UNorm_SRgb,
+                VK_FORMAT_R8G8B8A8_SNORM => PixelFormat.R8_G8_B8_A8_SNorm,
+                VK_FORMAT_R8G8B8A8_UINT => PixelFormat.R8_G8_B8_A8_UInt,
+                VK_FORMAT_R8G8B8A8_SINT => PixelFormat.R8_G8_B8_A8_SInt,
+                VK_FORMAT_R16G16B16A16_UNORM => PixelFormat.R16_G16_B16_A16_UNorm,
+                VK_FORMAT_R16G16B16A16_SNORM => PixelFormat.R16_G16_B16_A16_SNorm,
+                VK_FORMAT_R16G16B16A16_UINT => PixelFormat.R16_G16_B16_A16_UInt,
+                VK_FORMAT_R16G16B16A16_SINT => PixelFormat.R16_G16_B16_A16_SInt,
+                VK_FORMAT_R16G16B16A16_SFLOAT => PixelFormat.R16_G16_B16_A16_Float,
+                VK_FORMAT_R32G32B32A32_UINT => PixelFormat.R32_G32_B32_A32_UInt,
+                VK_FORMAT_R32G32B32A32_SINT => PixelFormat.R32_G32_B32_A32_SInt,
+                VK_FORMAT_R32G32B32A32_SFLOAT => PixelFormat.R32_G32_B32_A32_Float,
+                VK_FORMAT_BC1_RGB_UNORM_BLOCK => PixelFormat.BC1_Rgb_UNorm,
+                VK_FORMAT_BC1_RGB_SRGB_BLOCK => PixelFormat.BC1_Rgb_UNorm_SRgb,
+                VK_FORMAT_BC1_RGBA_UNORM_BLOCK => PixelFormat.BC1_Rgba_UNorm,
+                VK_FORMAT_BC1_RGBA_SRGB_BLOCK => PixelFormat.BC1_Rgba_UNorm_SRgb,
+                VK_FORMAT_BC2_UNORM_BLOCK => PixelFormat.BC2_UNorm,
+                VK_FORMAT_BC2_SRGB_BLOCK => PixelFormat.BC2_UNorm_SRgb,
+                VK_FORMAT_BC3_UNORM_BLOCK => PixelFormat.BC3_UNorm,
+                VK_FORMAT_BC3_SRGB_BLOCK => PixelFormat.BC3_UNorm_SRgb,
+                VK_FORMAT_BC4_UNORM_BLOCK => PixelFormat.BC4_UNorm,
+                VK_FORMAT_BC4_SNORM_BLOCK => PixelFormat.BC4_SNorm,
+                VK_FORMAT_BC5_UNORM_BLOCK => PixelFormat.BC5_UNorm,
+                VK_FORMAT_BC5_SNORM_BLOCK => PixelFormat.BC5_SNorm,
+                VK_FORMAT_BC7_UNORM_BLOCK => PixelFormat.BC7_UNorm,
+                VK_FORMAT_BC7_SRGB_BLOCK => PixelFormat.BC7_UNorm_SRgb,
+                VK_FORMAT_A2B10G10R10_UNORM_PACK32 => PixelFormat.R10_G10_B10_A2_UNorm,
+                VK_FORMAT_A2B10G10R10_UINT_PACK32 => PixelFormat.R10_G10_B10_A2_UInt,
+                VK_FORMAT_B10G11R11_UFLOAT_PACK32 => PixelFormat.R11_G11_B10_Float,
+                _ => throw Illegal.Value<VkFormat>(),
+            };
         }
     }
 }

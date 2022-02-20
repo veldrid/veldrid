@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Numerics;
 using System.Text;
+using TerraFX.Interop.Vulkan;
 using Valve.VR;
-using Veldrid.Vk;
+using Veldrid.Vulkan;
 using OVR = Valve.VR.OpenVR;
 
 namespace Veldrid.VirtualReality.OpenVR
@@ -168,7 +169,7 @@ namespace Veldrid.VirtualReality.OpenVR
             }
             else if (_gd.GetVulkanInfo(out BackendInfoVulkan vkInfo))
             {
-                vkInfo.TransitionImageLayout(colorTex, (uint)Vulkan.VkImageLayout.TransferSrcOptimal);
+                vkInfo.TransitionImageLayout(colorTex, (uint)VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
                 VRVulkanTextureData_t vkTexData;
                 vkTexData.m_nImage = vkInfo.GetVkImage(colorTex);

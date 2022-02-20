@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-
+using TerraFX.Interop.Vulkan;
 using static Veldrid.VirtualReality.Oculus.LibOvrNative;
 
 namespace Veldrid.VirtualReality.Oculus
@@ -148,7 +148,7 @@ namespace Veldrid.VirtualReality.Oculus
                 OculusUtil.GetVeldridTextureDescription(desc));
             gd.GetVulkanInfo().OverrideImageLayout(
                 _vkTrueMirrorTex,
-                (uint)Vulkan.VkImageLayout.TransferSrcOptimal);
+                (uint)VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
             _vdMirrorTex = gd.ResourceFactory.CreateTexture(
                 TextureDescription.Texture2D(

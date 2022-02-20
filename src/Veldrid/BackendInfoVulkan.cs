@@ -1,8 +1,8 @@
 ﻿#if !EXCLUDE_VULKAN_BACKEND
 using System;
 using System.Collections.ObjectModel;
-using Veldrid.Vk;
-using Vulkan;
+using TerraFX.Interop.Vulkan;
+using Veldrid.Vulkan;
 
 namespace Veldrid
 {
@@ -11,40 +11,40 @@ namespace Veldrid
     /// useful for interoperating with native components which interface directly with Vulkan.
     /// Can only be used on <see cref="GraphicsBackend.Vulkan"/>.
     /// </summary>
-    public class BackendInfoVulkan
+    public unsafe class BackendInfoVulkan
     {
         private readonly VkGraphicsDevice _gd;
-        private readonly Lazy<ReadOnlyCollection<string>> _instanceLayers;
+        private readonly ReadOnlyCollection<string> _instanceLayers;
         private readonly ReadOnlyCollection<string> _instanceExtensions;
         private readonly Lazy<ReadOnlyCollection<ExtensionProperties>> _deviceExtensions;
 
         internal BackendInfoVulkan(VkGraphicsDevice gd)
         {
             _gd = gd;
-            _instanceLayers = new Lazy<ReadOnlyCollection<string>>(() => new ReadOnlyCollection<string>(VulkanUtil.EnumerateInstanceLayers()));
-            _instanceExtensions = new ReadOnlyCollection<string>(VulkanUtil.GetInstanceExtensions());
+            _instanceLayers = new ReadOnlyCollection<string>(VulkanUtil.EnumerateInstanceLayers());
+            _instanceExtensions = new ReadOnlyCollection<string>(VulkanUtil.EnumerateInstanceExtensions());
             _deviceExtensions = new Lazy<ReadOnlyCollection<ExtensionProperties>>(EnumerateDeviceExtensions);
         }
 
         /// <summary>
         /// Gets the underlying VkInstance used by the GraphicsDevice.
         /// </summary>
-        public IntPtr Instance => _gd.Instance.Handle;
+        public IntPtr Instance => (IntPtr)_gd.Instance.Value;
 
         /// <summary>
         /// Gets the underlying VkDevice used by the GraphicsDevice.
         /// </summary>
-        public IntPtr Device => _gd.Device.Handle;
+        public IntPtr Device => (IntPtr)_gd.Device.Value;
 
         /// <summary>
         /// Gets the underlying VkPhysicalDevice used by the GraphicsDevice.
         /// </summary>
-        public IntPtr PhysicalDevice => _gd.PhysicalDevice.Handle;
+        public IntPtr PhysicalDevice => (IntPtr)_gd.PhysicalDevice.Value;
 
         /// <summary>
         /// Gets the VkQueue which is used by the GraphicsDevice to submit graphics work.
         /// </summary>
-        public IntPtr GraphicsQueue => _gd.GraphicsQueue.Handle;
+        public IntPtr GraphicsQueue => (IntPtr)_gd.GraphicsQueue.Value;
 
         /// <summary>
         /// Gets the queue family index of the graphics VkQueue.
@@ -61,7 +61,7 @@ namespace Veldrid
         /// </summary>
         public string DriverInfo => _gd.DriverInfo;
 
-        public ReadOnlyCollection<string> AvailableInstanceLayers => _instanceLayers.Value;
+        public ReadOnlyCollection<string> AvailableInstanceLayers => _instanceLayers;
 
         public ReadOnlyCollection<string> AvailableInstanceExtensions => _instanceExtensions;
 
@@ -101,7 +101,7 @@ namespace Veldrid
                     $"has {nameof(TextureUsage)}.{nameof(TextureUsage.Staging)}.");
             }
 
-            return vkTexture.OptimalDeviceImage.Handle;
+            return vkTexture.OptimalDeviceImage.Value;
         }
 
         /// <summary>

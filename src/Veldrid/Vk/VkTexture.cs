@@ -1,17 +1,17 @@
-﻿using Vulkan;
-using static Vulkan.VulkanNative;
-using static Veldrid.Vk.VulkanUtil;
+﻿using System;
 using System.Diagnostics;
-using System;
+using TerraFX.Interop.Vulkan;
+using static TerraFX.Interop.Vulkan.Vulkan;
+using static Veldrid.Vulkan.VulkanUtil;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
     internal unsafe class VkTexture : Texture, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImage _optimalImage;
         private readonly VkMemoryBlock _memoryBlock;
-        private readonly Vulkan.VkBuffer _stagingBuffer;
+        private readonly TerraFX.Interop.Vulkan.VkBuffer _stagingBuffer;
         private PixelFormat _format; // Static for regular images -- may change for shared staging images
         private readonly uint _actualImageArrayLayers;
         private bool _destroyed;
@@ -42,7 +42,7 @@ namespace Veldrid.Vk
         public override bool IsDisposed => _destroyed;
 
         public VkImage OptimalDeviceImage => _optimalImage;
-        public Vulkan.VkBuffer StagingBuffer => _stagingBuffer;
+        public TerraFX.Interop.Vulkan.VkBuffer StagingBuffer => _stagingBuffer;
         public VkMemoryBlock Memory => _memoryBlock;
 
         public VkFormat VkFormat { get; }
@@ -78,58 +78,75 @@ namespace Veldrid.Vk
 
             if (!isStaging)
             {
-                VkImageCreateInfo imageCI = VkImageCreateInfo.New();
-                imageCI.mipLevels = MipLevels;
-                imageCI.arrayLayers = _actualImageArrayLayers;
-                imageCI.imageType = VkFormats.VdToVkTextureType(Type);
-                imageCI.extent.width = Width;
-                imageCI.extent.height = Height;
-                imageCI.extent.depth = Depth;
-                imageCI.initialLayout = VkImageLayout.Preinitialized;
-                imageCI.usage = VkFormats.VdToVkTextureUsage(Usage);
-                imageCI.tiling = isStaging ? VkImageTiling.Linear : VkImageTiling.Optimal;
-                imageCI.format = VkFormat;
-                imageCI.flags = VkImageCreateFlags.MutableFormat;
+                VkImageCreateInfo imageCI = new()
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+                    mipLevels = MipLevels,
+                    arrayLayers = _actualImageArrayLayers,
+                    imageType = VkFormats.VdToVkTextureType(Type),
+                    extent = new VkExtent3D()
+                    {
+                        width = Width,
+                        height = Height,
+                        depth = Depth
+                    },
+                    initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_PREINITIALIZED,
+                    usage = VkFormats.VdToVkTextureUsage(Usage),
+                    tiling = isStaging ? VkImageTiling.VK_IMAGE_TILING_LINEAR : VkImageTiling.VK_IMAGE_TILING_OPTIMAL,
+                    format = VkFormat,
+                    flags = VkImageCreateFlags.VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
+                    samples = VkSampleCount
+                };
 
-                imageCI.samples = VkSampleCount;
                 if (isCubemap)
                 {
-                    imageCI.flags |= VkImageCreateFlags.CubeCompatible;
+                    imageCI.flags |= VkImageCreateFlags.VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
                 }
 
                 uint subresourceCount = MipLevels * _actualImageArrayLayers * Depth;
-                VkResult result = vkCreateImage(gd.Device, ref imageCI, null, out _optimalImage);
+                VkImage optimalImage;
+                VkResult result = vkCreateImage(gd.Device, &imageCI, null, &optimalImage);
                 CheckResult(result);
+                _optimalImage = optimalImage;
 
                 VkMemoryRequirements memoryRequirements;
                 bool prefersDedicatedAllocation;
                 if (_gd.GetImageMemoryRequirements2 != null)
                 {
-                    VkImageMemoryRequirementsInfo2KHR memReqsInfo2 = VkImageMemoryRequirementsInfo2KHR.New();
-                    memReqsInfo2.image = _optimalImage;
-                    VkMemoryRequirements2KHR memReqs2 = VkMemoryRequirements2KHR.New();
-                    VkMemoryDedicatedRequirementsKHR dedicatedReqs = VkMemoryDedicatedRequirementsKHR.New();
-                    memReqs2.pNext = &dedicatedReqs;
+                    VkImageMemoryRequirementsInfo2 memReqsInfo2 = new()
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2,
+                        image = _optimalImage
+                    };
+                    VkMemoryDedicatedRequirements dedicatedReqs = new()
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS
+                    };
+                    VkMemoryRequirements2 memReqs2 = new()
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
+                        pNext = &dedicatedReqs
+                    };
                     _gd.GetImageMemoryRequirements2(_gd.Device, &memReqsInfo2, &memReqs2);
                     memoryRequirements = memReqs2.memoryRequirements;
                     prefersDedicatedAllocation = dedicatedReqs.prefersDedicatedAllocation || dedicatedReqs.requiresDedicatedAllocation;
                 }
                 else
                 {
-                    vkGetImageMemoryRequirements(gd.Device, _optimalImage, out memoryRequirements);
+                    vkGetImageMemoryRequirements(gd.Device, _optimalImage, &memoryRequirements);
                     prefersDedicatedAllocation = false;
                 }
 
                 VkMemoryBlock memoryToken = gd.MemoryManager.Allocate(
                     gd.PhysicalDeviceMemProperties,
                     memoryRequirements.memoryTypeBits,
-                    VkMemoryPropertyFlags.DeviceLocal,
+                    VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                     false,
                     memoryRequirements.size,
                     memoryRequirements.alignment,
                     prefersDedicatedAllocation,
                     _optimalImage,
-                    Vulkan.VkBuffer.Null);
+                    default);
                 _memoryBlock = memoryToken;
                 result = vkBindImageMemory(gd.Device, _optimalImage, _memoryBlock.DeviceMemory, _memoryBlock.Offset);
                 CheckResult(result);
@@ -137,7 +154,7 @@ namespace Veldrid.Vk
                 _imageLayouts = new VkImageLayout[subresourceCount];
                 for (int i = 0; i < _imageLayouts.Length; i++)
                 {
-                    _imageLayouts[i] = VkImageLayout.Preinitialized;
+                    _imageLayouts[i] = VkImageLayout.VK_IMAGE_LAYOUT_PREINITIALIZED;
                 }
             }
             else // isStaging
@@ -160,37 +177,56 @@ namespace Veldrid.Vk
                 }
                 stagingSize *= ArrayLayers;
 
-                VkBufferCreateInfo bufferCI = VkBufferCreateInfo.New();
-                bufferCI.usage = VkBufferUsageFlags.TransferSrc | VkBufferUsageFlags.TransferDst;
-                bufferCI.size = stagingSize;
-                VkResult result = vkCreateBuffer(_gd.Device, ref bufferCI, null, out _stagingBuffer);
+                VkBufferCreateInfo bufferCI = new()
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                    usage = VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                    size = stagingSize
+                };
+                TerraFX.Interop.Vulkan.VkBuffer stagingBuffer;
+                VkResult result = vkCreateBuffer(_gd.Device, &bufferCI, null, &stagingBuffer);
                 CheckResult(result);
+                _stagingBuffer = stagingBuffer;
 
                 VkMemoryRequirements bufferMemReqs;
                 bool prefersDedicatedAllocation;
                 if (_gd.GetBufferMemoryRequirements2 != null)
                 {
-                    VkBufferMemoryRequirementsInfo2KHR memReqInfo2 = VkBufferMemoryRequirementsInfo2KHR.New();
-                    memReqInfo2.buffer = _stagingBuffer;
-                    VkMemoryRequirements2KHR memReqs2 = VkMemoryRequirements2KHR.New();
-                    VkMemoryDedicatedRequirementsKHR dedicatedReqs = VkMemoryDedicatedRequirementsKHR.New();
-                    memReqs2.pNext = &dedicatedReqs;
+                    VkBufferMemoryRequirementsInfo2 memReqInfo2 = new()
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2,
+                        buffer = _stagingBuffer
+                    };
+                    VkMemoryDedicatedRequirements dedicatedReqs = new()
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS
+                    };
+                    VkMemoryRequirements2 memReqs2 = new()
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
+                        pNext = &dedicatedReqs
+                    };
                     _gd.GetBufferMemoryRequirements2(_gd.Device, &memReqInfo2, &memReqs2);
                     bufferMemReqs = memReqs2.memoryRequirements;
                     prefersDedicatedAllocation = dedicatedReqs.prefersDedicatedAllocation || dedicatedReqs.requiresDedicatedAllocation;
                 }
                 else
                 {
-                    vkGetBufferMemoryRequirements(gd.Device, _stagingBuffer, out bufferMemReqs);
+                    vkGetBufferMemoryRequirements(gd.Device, _stagingBuffer, &bufferMemReqs);
                     prefersDedicatedAllocation = false;
                 }
 
                 // Use "host cached" memory when available, for better performance of GPU -> CPU transfers
-                var propertyFlags = VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent | VkMemoryPropertyFlags.HostCached;
+                VkMemoryPropertyFlags propertyFlags =
+                    VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                    VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT |
+                    VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+
                 if (!TryFindMemoryType(_gd.PhysicalDeviceMemProperties, bufferMemReqs.memoryTypeBits, propertyFlags, out _))
                 {
-                    propertyFlags ^= VkMemoryPropertyFlags.HostCached;
+                    propertyFlags ^= VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
                 }
+
                 _memoryBlock = _gd.MemoryManager.Allocate(
                     _gd.PhysicalDeviceMemProperties,
                     bufferMemReqs.memoryTypeBits,
@@ -199,7 +235,7 @@ namespace Veldrid.Vk
                     bufferMemReqs.size,
                     bufferMemReqs.alignment,
                     prefersDedicatedAllocation,
-                    VkImage.Null,
+                    default,
                     _stagingBuffer);
 
                 result = vkBindBufferMemory(_gd.Device, _stagingBuffer, _memoryBlock.DeviceMemory, _memoryBlock.Offset);
@@ -239,7 +275,7 @@ namespace Veldrid.Vk
             SampleCount = sampleCount;
             VkSampleCount = VkFormats.VdToVkSampleCount(sampleCount);
             _optimalImage = existingImage;
-            _imageLayouts = new[] { VkImageLayout.Undefined };
+            _imageLayouts = new[] { VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED };
             _isSwapchainTexture = true;
 
             ClearIfRenderTarget();
@@ -251,11 +287,11 @@ namespace Veldrid.Vk
             // If the image is going to be used as a render target, we need to clear the data before its first use.
             if ((Usage & TextureUsage.RenderTarget) != 0)
             {
-                _gd.ClearColorTexture(this, new VkClearColorValue(0, 0, 0, 0));
+                _gd.ClearColorTexture(this, new VkClearColorValue());
             }
             else if ((Usage & TextureUsage.DepthStencil) != 0)
             {
-                _gd.ClearDepthTexture(this, new VkClearDepthStencilValue(0, 0));
+                _gd.ClearDepthTexture(this, new VkClearDepthStencilValue());
             }
         }
 
@@ -263,43 +299,39 @@ namespace Veldrid.Vk
         {
             if ((Usage & TextureUsage.Sampled) != 0)
             {
-                _gd.TransitionImageLayout(this, VkImageLayout.ShaderReadOnlyOptimal);
+                _gd.TransitionImageLayout(this, VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
         }
 
         internal VkSubresourceLayout GetSubresourceLayout(uint mipLevel, uint arrayLevel)
         {
-            bool staging = _stagingBuffer.Handle != 0;
+            VkSubresourceLayout layout;
+            bool staging = _stagingBuffer != TerraFX.Interop.Vulkan.VkBuffer.NULL;
             if (!staging)
             {
                 VkImageAspectFlags aspect = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil
-                  ? (VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil)
-                  : VkImageAspectFlags.Color;
-                VkImageSubresource imageSubresource = new VkImageSubresource
+                  ? (VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT)
+                  : VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
+                VkImageSubresource imageSubresource = new()
                 {
                     arrayLayer = arrayLevel,
                     mipLevel = mipLevel,
-                    aspectMask = aspect,
+                    aspectMask = aspect
                 };
 
-                vkGetImageSubresourceLayout(_gd.Device, _optimalImage, ref imageSubresource, out VkSubresourceLayout layout);
-                return layout;
+                vkGetImageSubresourceLayout(_gd.Device, _optimalImage, &imageSubresource, &layout);
             }
             else
             {
                 base.GetSubresourceLayout(mipLevel, arrayLevel, out uint rowPitch, out uint depthPitch);
 
-                VkSubresourceLayout layout = new VkSubresourceLayout()
-                {
-                    rowPitch = rowPitch,
-                    depthPitch = depthPitch,
-                    arrayPitch = depthPitch,
-                    size = depthPitch,
-                };
                 layout.offset = Util.ComputeSubresourceOffset(this, mipLevel, arrayLevel);
-
-                return layout;
+                layout.rowPitch = rowPitch;
+                layout.depthPitch = depthPitch;
+                layout.arrayPitch = depthPitch;
+                layout.size = depthPitch;
             }
+            return layout;
         }
 
         internal override void GetSubresourceLayout(uint mipLevel, uint arrayLevel, out uint rowPitch, out uint depthPitch)
@@ -324,7 +356,7 @@ namespace Veldrid.Vk
             uint layerCount,
             VkImageLayout newLayout)
         {
-            if (_stagingBuffer != Vulkan.VkBuffer.Null)
+            if (_stagingBuffer != TerraFX.Interop.Vulkan.VkBuffer.NULL)
             {
                 return;
             }
@@ -348,12 +380,12 @@ namespace Veldrid.Vk
                 if ((Usage & TextureUsage.DepthStencil) != 0)
                 {
                     aspectMask = FormatHelpers.IsStencilFormat(Format)
-                        ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
-                        : VkImageAspectFlags.Depth;
+                        ? VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT
+                        : VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT;
                 }
                 else
                 {
-                    aspectMask = VkImageAspectFlags.Color;
+                    aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
                 }
                 VulkanUtil.TransitionImageLayout(
                     cb,
@@ -384,7 +416,7 @@ namespace Veldrid.Vk
             uint layerCount,
             VkImageLayout newLayout)
         {
-            if (_stagingBuffer != Vulkan.VkBuffer.Null)
+            if (_stagingBuffer != TerraFX.Interop.Vulkan.VkBuffer.NULL)
             {
                 return;
             }
@@ -402,13 +434,14 @@ namespace Veldrid.Vk
                         if ((Usage & TextureUsage.DepthStencil) != 0)
                         {
                             aspectMask = FormatHelpers.IsStencilFormat(Format)
-                                ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
-                                : VkImageAspectFlags.Depth;
+                                ? VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT
+                                : VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT;
                         }
                         else
                         {
-                            aspectMask = VkImageAspectFlags.Color;
+                            aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
                         }
+
                         VulkanUtil.TransitionImageLayout(
                             cb,
                             OptimalDeviceImage,
@@ -443,7 +476,7 @@ namespace Veldrid.Vk
 
         internal void SetStagingDimensions(uint width, uint height, uint depth, PixelFormat format)
         {
-            Debug.Assert(_stagingBuffer != Vulkan.VkBuffer.Null);
+            Debug.Assert(_stagingBuffer != TerraFX.Interop.Vulkan.VkBuffer.NULL);
             Debug.Assert(Usage == TextureUsage.Staging);
             _width = width;
             _height = height;
@@ -474,7 +507,7 @@ namespace Veldrid.Vk
                     vkDestroyImage(_gd.Device, _optimalImage, null);
                 }
 
-                if (_memoryBlock.DeviceMemory.Handle != 0)
+                if (_memoryBlock.DeviceMemory != VkDeviceMemory.NULL)
                 {
                     _gd.MemoryManager.Free(_memoryBlock);
                 }

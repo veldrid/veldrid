@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
     internal unsafe class FixedUtf8String : IDisposable
     {
@@ -26,7 +26,15 @@ namespace Veldrid.Vk
             StringPtr[encodedCount] = 0;
         }
 
-        public void Dispose()
+        public override string ToString() => Util.UTF8.GetString(StringPtr, _numBytes - 1); // Exclude null terminator
+
+        public static implicit operator byte*(FixedUtf8String utf8String) => utf8String.StringPtr;
+        public static implicit operator sbyte*(FixedUtf8String utf8String) => (sbyte*)utf8String.StringPtr;
+        public static implicit operator IntPtr(FixedUtf8String utf8String) => new(utf8String.StringPtr);
+        public static implicit operator FixedUtf8String(string s) => new(s);
+        public static implicit operator string(FixedUtf8String utf8String) => utf8String.ToString();
+
+        protected virtual void Dispose(bool disposing)
         {
             if (_handle != IntPtr.Zero)
             {
@@ -35,11 +43,15 @@ namespace Veldrid.Vk
             }
         }
 
-        public override string ToString() => Util.UTF8.GetString(StringPtr, _numBytes - 1); // Exclude null terminator
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
 
-        public static implicit operator byte*(FixedUtf8String utf8String) => utf8String.StringPtr;
-        public static implicit operator IntPtr(FixedUtf8String utf8String) => new IntPtr(utf8String.StringPtr);
-        public static implicit operator FixedUtf8String(string s) => new FixedUtf8String(s);
-        public static implicit operator string(FixedUtf8String utf8String) => utf8String.ToString();
+        ~FixedUtf8String()
+        {
+            Dispose(disposing: false);
+        }
     }
 }

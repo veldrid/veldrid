@@ -1,8 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using Vulkan;
+﻿using TerraFX.Interop.Vulkan;
+using static TerraFX.Interop.Vulkan.VkBlendFactor;
+using static TerraFX.Interop.Vulkan.VkBlendOp;
+using static TerraFX.Interop.Vulkan.VkBorderColor;
+using static TerraFX.Interop.Vulkan.VkCompareOp;
+using static TerraFX.Interop.Vulkan.VkCullModeFlags;
+using static TerraFX.Interop.Vulkan.VkDescriptorType;
+using static TerraFX.Interop.Vulkan.VkFilter;
+using static TerraFX.Interop.Vulkan.VkFormat;
+using static TerraFX.Interop.Vulkan.VkImageType;
+using static TerraFX.Interop.Vulkan.VkImageUsageFlags;
+using static TerraFX.Interop.Vulkan.VkIndexType;
+using static TerraFX.Interop.Vulkan.VkPolygonMode;
+using static TerraFX.Interop.Vulkan.VkPrimitiveTopology;
+using static TerraFX.Interop.Vulkan.VkSampleCountFlags;
+using static TerraFX.Interop.Vulkan.VkSamplerAddressMode;
+using static TerraFX.Interop.Vulkan.VkSamplerMipmapMode;
+using static TerraFX.Interop.Vulkan.VkShaderStageFlags;
+using static TerraFX.Interop.Vulkan.VkStencilOp;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
     internal static partial class VkFormats
     {
@@ -11,13 +27,13 @@ namespace Veldrid.Vk
             switch (mode)
             {
                 case SamplerAddressMode.Wrap:
-                    return VkSamplerAddressMode.Repeat;
+                    return VK_SAMPLER_ADDRESS_MODE_REPEAT;
                 case SamplerAddressMode.Mirror:
-                    return VkSamplerAddressMode.MirroredRepeat;
+                    return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
                 case SamplerAddressMode.Clamp:
-                    return VkSamplerAddressMode.ClampToEdge;
+                    return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
                 case SamplerAddressMode.Border:
-                    return VkSamplerAddressMode.ClampToBorder;
+                    return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
                 default:
                     throw Illegal.Value<SamplerAddressMode>();
             }
@@ -32,49 +48,49 @@ namespace Veldrid.Vk
             switch (filter)
             {
                 case SamplerFilter.Anisotropic:
-                    minFilter = VkFilter.Linear;
-                    magFilter = VkFilter.Linear;
-                    mipmapMode = VkSamplerMipmapMode.Linear;
+                    minFilter = VK_FILTER_LINEAR;
+                    magFilter = VK_FILTER_LINEAR;
+                    mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
                     break;
                 case SamplerFilter.MinPoint_MagPoint_MipPoint:
-                    minFilter = VkFilter.Nearest;
-                    magFilter = VkFilter.Nearest;
-                    mipmapMode = VkSamplerMipmapMode.Nearest;
+                    minFilter = VK_FILTER_NEAREST;
+                    magFilter = VK_FILTER_NEAREST;
+                    mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
                     break;
                 case SamplerFilter.MinPoint_MagPoint_MipLinear:
-                    minFilter = VkFilter.Nearest;
-                    magFilter = VkFilter.Nearest;
-                    mipmapMode = VkSamplerMipmapMode.Linear;
+                    minFilter = VK_FILTER_NEAREST;
+                    magFilter = VK_FILTER_NEAREST;
+                    mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
                     break;
                 case SamplerFilter.MinPoint_MagLinear_MipPoint:
-                    minFilter = VkFilter.Nearest;
-                    magFilter = VkFilter.Linear;
-                    mipmapMode = VkSamplerMipmapMode.Nearest;
+                    minFilter = VK_FILTER_NEAREST;
+                    magFilter = VK_FILTER_LINEAR;
+                    mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
                     break;
                 case SamplerFilter.MinPoint_MagLinear_MipLinear:
-                    minFilter = VkFilter.Nearest;
-                    magFilter = VkFilter.Linear;
-                    mipmapMode = VkSamplerMipmapMode.Linear;
+                    minFilter = VK_FILTER_NEAREST;
+                    magFilter = VK_FILTER_LINEAR;
+                    mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
                     break;
                 case SamplerFilter.MinLinear_MagPoint_MipPoint:
-                    minFilter = VkFilter.Linear;
-                    magFilter = VkFilter.Nearest;
-                    mipmapMode = VkSamplerMipmapMode.Nearest;
+                    minFilter = VK_FILTER_LINEAR;
+                    magFilter = VK_FILTER_NEAREST;
+                    mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
                     break;
                 case SamplerFilter.MinLinear_MagPoint_MipLinear:
-                    minFilter = VkFilter.Linear;
-                    magFilter = VkFilter.Nearest;
-                    mipmapMode = VkSamplerMipmapMode.Linear;
+                    minFilter = VK_FILTER_LINEAR;
+                    magFilter = VK_FILTER_NEAREST;
+                    mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
                     break;
                 case SamplerFilter.MinLinear_MagLinear_MipPoint:
-                    minFilter = VkFilter.Linear;
-                    magFilter = VkFilter.Linear;
-                    mipmapMode = VkSamplerMipmapMode.Nearest;
+                    minFilter = VK_FILTER_LINEAR;
+                    magFilter = VK_FILTER_LINEAR;
+                    mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
                     break;
                 case SamplerFilter.MinLinear_MagLinear_MipLinear:
-                    minFilter = VkFilter.Linear;
-                    magFilter = VkFilter.Linear;
-                    mipmapMode = VkSamplerMipmapMode.Linear;
+                    minFilter = VK_FILTER_LINEAR;
+                    magFilter = VK_FILTER_LINEAR;
+                    mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
                     break;
                 default:
                     throw Illegal.Value<SamplerFilter>();
@@ -83,25 +99,23 @@ namespace Veldrid.Vk
 
         internal static VkImageUsageFlags VdToVkTextureUsage(TextureUsage vdUsage)
         {
-            VkImageUsageFlags vkUsage = VkImageUsageFlags.None;
-
-            vkUsage = VkImageUsageFlags.TransferDst | VkImageUsageFlags.TransferSrc;
+            VkImageUsageFlags vkUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
             bool isDepthStencil = (vdUsage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
             if ((vdUsage & TextureUsage.Sampled) == TextureUsage.Sampled)
             {
-                vkUsage |= VkImageUsageFlags.Sampled;
+                vkUsage |= VK_IMAGE_USAGE_SAMPLED_BIT;
             }
             if (isDepthStencil)
             {
-                vkUsage |= VkImageUsageFlags.DepthStencilAttachment;
+                vkUsage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
             }
             if ((vdUsage & TextureUsage.RenderTarget) == TextureUsage.RenderTarget)
             {
-                vkUsage |= VkImageUsageFlags.ColorAttachment;
+                vkUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
             }
             if ((vdUsage & TextureUsage.Storage) == TextureUsage.Storage)
             {
-                vkUsage |= VkImageUsageFlags.Storage;
+                vkUsage |= VK_IMAGE_USAGE_STORAGE_BIT;
             }
 
             return vkUsage;
@@ -112,11 +126,11 @@ namespace Veldrid.Vk
             switch (type)
             {
                 case TextureType.Texture1D:
-                    return VkImageType.Image1D;
+                    return VK_IMAGE_TYPE_1D;
                 case TextureType.Texture2D:
-                    return VkImageType.Image2D;
+                    return VK_IMAGE_TYPE_2D;
                 case TextureType.Texture3D:
-                    return VkImageType.Image3D;
+                    return VK_IMAGE_TYPE_3D;
                 default:
                     throw Illegal.Value<TextureType>();
             }
@@ -128,16 +142,16 @@ namespace Veldrid.Vk
             switch (kind)
             {
                 case ResourceKind.UniformBuffer:
-                    return dynamicBinding ? VkDescriptorType.UniformBufferDynamic : VkDescriptorType.UniformBuffer;
+                    return dynamicBinding ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 case ResourceKind.StructuredBufferReadWrite:
                 case ResourceKind.StructuredBufferReadOnly:
-                    return dynamicBinding ? VkDescriptorType.StorageBufferDynamic : VkDescriptorType.StorageBuffer;
+                    return dynamicBinding ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 case ResourceKind.TextureReadOnly:
-                    return VkDescriptorType.SampledImage;
+                    return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
                 case ResourceKind.TextureReadWrite:
-                    return VkDescriptorType.StorageImage;
+                    return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
                 case ResourceKind.Sampler:
-                    return VkDescriptorType.Sampler;
+                    return VK_DESCRIPTOR_TYPE_SAMPLER;
                 default:
                     throw Illegal.Value<ResourceKind>();
             }
@@ -148,17 +162,17 @@ namespace Veldrid.Vk
             switch (sampleCount)
             {
                 case TextureSampleCount.Count1:
-                    return VkSampleCountFlags.Count1;
+                    return VK_SAMPLE_COUNT_1_BIT;
                 case TextureSampleCount.Count2:
-                    return VkSampleCountFlags.Count2;
+                    return VK_SAMPLE_COUNT_2_BIT;
                 case TextureSampleCount.Count4:
-                    return VkSampleCountFlags.Count4;
+                    return VK_SAMPLE_COUNT_4_BIT;
                 case TextureSampleCount.Count8:
-                    return VkSampleCountFlags.Count8;
+                    return VK_SAMPLE_COUNT_8_BIT;
                 case TextureSampleCount.Count16:
-                    return VkSampleCountFlags.Count16;
+                    return VK_SAMPLE_COUNT_16_BIT;
                 case TextureSampleCount.Count32:
-                    return VkSampleCountFlags.Count32;
+                    return VK_SAMPLE_COUNT_32_BIT;
                 default:
                     throw Illegal.Value<TextureSampleCount>();
             }
@@ -169,21 +183,21 @@ namespace Veldrid.Vk
             switch (op)
             {
                 case StencilOperation.Keep:
-                    return VkStencilOp.Keep;
+                    return VK_STENCIL_OP_KEEP;
                 case StencilOperation.Zero:
-                    return VkStencilOp.Zero;
+                    return VK_STENCIL_OP_ZERO;
                 case StencilOperation.Replace:
-                    return VkStencilOp.Replace;
+                    return VK_STENCIL_OP_REPLACE;
                 case StencilOperation.IncrementAndClamp:
-                    return VkStencilOp.IncrementAndClamp;
+                    return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
                 case StencilOperation.DecrementAndClamp:
-                    return VkStencilOp.DecrementAndClamp;
+                    return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
                 case StencilOperation.Invert:
-                    return VkStencilOp.Invert;
+                    return VK_STENCIL_OP_INVERT;
                 case StencilOperation.IncrementAndWrap:
-                    return VkStencilOp.IncrementAndWrap;
+                    return VK_STENCIL_OP_INCREMENT_AND_WRAP;
                 case StencilOperation.DecrementAndWrap:
-                    return VkStencilOp.DecrementAndWrap;
+                    return VK_STENCIL_OP_DECREMENT_AND_WRAP;
                 default:
                     throw Illegal.Value<StencilOperation>();
             }
@@ -194,9 +208,9 @@ namespace Veldrid.Vk
             switch (fillMode)
             {
                 case PolygonFillMode.Solid:
-                    return VkPolygonMode.Fill;
+                    return VK_POLYGON_MODE_FILL;
                 case PolygonFillMode.Wireframe:
-                    return VkPolygonMode.Line;
+                    return VK_POLYGON_MODE_LINE;
                 default:
                     throw Illegal.Value<PolygonFillMode>();
             }
@@ -207,11 +221,11 @@ namespace Veldrid.Vk
             switch (cullMode)
             {
                 case FaceCullMode.Back:
-                    return VkCullModeFlags.Back;
+                    return VK_CULL_MODE_BACK_BIT;
                 case FaceCullMode.Front:
-                    return VkCullModeFlags.Front;
+                    return VK_CULL_MODE_FRONT_BIT;
                 case FaceCullMode.None:
-                    return VkCullModeFlags.None;
+                    return VK_CULL_MODE_NONE;
                 default:
                     throw Illegal.Value<FaceCullMode>();
             }
@@ -222,15 +236,15 @@ namespace Veldrid.Vk
             switch (func)
             {
                 case BlendFunction.Add:
-                    return VkBlendOp.Add;
+                    return VK_BLEND_OP_ADD;
                 case BlendFunction.Subtract:
-                    return VkBlendOp.Subtract;
+                    return VK_BLEND_OP_SUBTRACT;
                 case BlendFunction.ReverseSubtract:
-                    return VkBlendOp.ReverseSubtract;
+                    return VK_BLEND_OP_REVERSE_SUBTRACT;
                 case BlendFunction.Minimum:
-                    return VkBlendOp.Min;
+                    return VK_BLEND_OP_MIN;
                 case BlendFunction.Maximum:
-                    return VkBlendOp.Max;
+                    return VK_BLEND_OP_MAX;
                 default:
                     throw Illegal.Value<BlendFunction>();
             }
@@ -241,15 +255,15 @@ namespace Veldrid.Vk
             switch (topology)
             {
                 case PrimitiveTopology.TriangleList:
-                    return VkPrimitiveTopology.TriangleList;
+                    return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
                 case PrimitiveTopology.TriangleStrip:
-                    return VkPrimitiveTopology.TriangleStrip;
+                    return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
                 case PrimitiveTopology.LineList:
-                    return VkPrimitiveTopology.LineList;
+                    return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
                 case PrimitiveTopology.LineStrip:
-                    return VkPrimitiveTopology.LineStrip;
+                    return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
                 case PrimitiveTopology.PointList:
-                    return VkPrimitiveTopology.PointList;
+                    return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
                 default:
                     throw Illegal.Value<PrimitiveTopology>();
             }
@@ -287,29 +301,29 @@ namespace Veldrid.Vk
             switch (factor)
             {
                 case BlendFactor.Zero:
-                    return VkBlendFactor.Zero;
+                    return VK_BLEND_FACTOR_ZERO;
                 case BlendFactor.One:
-                    return VkBlendFactor.One;
+                    return VK_BLEND_FACTOR_ONE;
                 case BlendFactor.SourceAlpha:
-                    return VkBlendFactor.SrcAlpha;
+                    return VK_BLEND_FACTOR_SRC_ALPHA;
                 case BlendFactor.InverseSourceAlpha:
-                    return VkBlendFactor.OneMinusSrcAlpha;
+                    return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
                 case BlendFactor.DestinationAlpha:
-                    return VkBlendFactor.DstAlpha;
+                    return VK_BLEND_FACTOR_DST_ALPHA;
                 case BlendFactor.InverseDestinationAlpha:
-                    return VkBlendFactor.OneMinusDstAlpha;
+                    return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
                 case BlendFactor.SourceColor:
-                    return VkBlendFactor.SrcColor;
+                    return VK_BLEND_FACTOR_SRC_COLOR;
                 case BlendFactor.InverseSourceColor:
-                    return VkBlendFactor.OneMinusSrcColor;
+                    return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
                 case BlendFactor.DestinationColor:
-                    return VkBlendFactor.DstColor;
+                    return VK_BLEND_FACTOR_DST_COLOR;
                 case BlendFactor.InverseDestinationColor:
-                    return VkBlendFactor.OneMinusDstColor;
+                    return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
                 case BlendFactor.BlendFactor:
-                    return VkBlendFactor.ConstantColor;
+                    return VK_BLEND_FACTOR_CONSTANT_COLOR;
                 case BlendFactor.InverseBlendFactor:
-                    return VkBlendFactor.OneMinusConstantColor;
+                    return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
                 default:
                     throw Illegal.Value<BlendFactor>();
             }
@@ -320,67 +334,67 @@ namespace Veldrid.Vk
             switch (format)
             {
                 case VertexElementFormat.Float1:
-                    return VkFormat.R32Sfloat;
+                    return VK_FORMAT_R32_SFLOAT;
                 case VertexElementFormat.Float2:
-                    return VkFormat.R32g32Sfloat;
+                    return VK_FORMAT_R32G32_SFLOAT;
                 case VertexElementFormat.Float3:
-                    return VkFormat.R32g32b32Sfloat;
+                    return VK_FORMAT_R32G32B32_SFLOAT;
                 case VertexElementFormat.Float4:
-                    return VkFormat.R32g32b32a32Sfloat;
+                    return VK_FORMAT_R32G32B32A32_SFLOAT;
                 case VertexElementFormat.Byte2_Norm:
-                    return VkFormat.R8g8Unorm;
+                    return VK_FORMAT_R8G8_UNORM;
                 case VertexElementFormat.Byte2:
-                    return VkFormat.R8g8Uint;
+                    return VK_FORMAT_R8G8_UINT;
                 case VertexElementFormat.Byte4_Norm:
-                    return VkFormat.R8g8b8a8Unorm;
+                    return VK_FORMAT_R8G8B8A8_UNORM;
                 case VertexElementFormat.Byte4:
-                    return VkFormat.R8g8b8a8Uint;
+                    return VK_FORMAT_R8G8B8A8_UINT;
                 case VertexElementFormat.SByte2_Norm:
-                    return VkFormat.R8g8Snorm;
+                    return VK_FORMAT_R8G8_SNORM;
                 case VertexElementFormat.SByte2:
-                    return VkFormat.R8g8Sint;
+                    return VK_FORMAT_R8G8_SINT;
                 case VertexElementFormat.SByte4_Norm:
-                    return VkFormat.R8g8b8a8Snorm;
+                    return VK_FORMAT_R8G8B8A8_SNORM;
                 case VertexElementFormat.SByte4:
-                    return VkFormat.R8g8b8a8Sint;
+                    return VK_FORMAT_R8G8B8A8_SINT;
                 case VertexElementFormat.UShort2_Norm:
-                    return VkFormat.R16g16Unorm;
+                    return VK_FORMAT_R16G16_UNORM;
                 case VertexElementFormat.UShort2:
-                    return VkFormat.R16g16Uint;
+                    return VK_FORMAT_R16G16_UINT;
                 case VertexElementFormat.UShort4_Norm:
-                    return VkFormat.R16g16b16a16Unorm;
+                    return VK_FORMAT_R16G16B16A16_UNORM;
                 case VertexElementFormat.UShort4:
-                    return VkFormat.R16g16b16a16Uint;
+                    return VK_FORMAT_R16G16B16A16_UINT;
                 case VertexElementFormat.Short2_Norm:
-                    return VkFormat.R16g16Snorm;
+                    return VK_FORMAT_R16G16_SNORM;
                 case VertexElementFormat.Short2:
-                    return VkFormat.R16g16Sint;
+                    return VK_FORMAT_R16G16_SINT;
                 case VertexElementFormat.Short4_Norm:
-                    return VkFormat.R16g16b16a16Snorm;
+                    return VK_FORMAT_R16G16B16A16_SNORM;
                 case VertexElementFormat.Short4:
-                    return VkFormat.R16g16b16a16Sint;
+                    return VK_FORMAT_R16G16B16A16_SINT;
                 case VertexElementFormat.UInt1:
-                    return VkFormat.R32Uint;
+                    return VK_FORMAT_R32_UINT;
                 case VertexElementFormat.UInt2:
-                    return VkFormat.R32g32Uint;
+                    return VK_FORMAT_R32G32_UINT;
                 case VertexElementFormat.UInt3:
-                    return VkFormat.R32g32b32Uint;
+                    return VK_FORMAT_R32G32B32_UINT;
                 case VertexElementFormat.UInt4:
-                    return VkFormat.R32g32b32a32Uint;
+                    return VK_FORMAT_R32G32B32A32_UINT;
                 case VertexElementFormat.Int1:
-                    return VkFormat.R32Sint;
+                    return VK_FORMAT_R32_SINT;
                 case VertexElementFormat.Int2:
-                    return VkFormat.R32g32Sint;
+                    return VK_FORMAT_R32G32_SINT;
                 case VertexElementFormat.Int3:
-                    return VkFormat.R32g32b32Sint;
+                    return VK_FORMAT_R32G32B32_SINT;
                 case VertexElementFormat.Int4:
-                    return VkFormat.R32g32b32a32Sint;
+                    return VK_FORMAT_R32G32B32A32_SINT;
                 case VertexElementFormat.Half1:
-                    return VkFormat.R16Sfloat;
+                    return VK_FORMAT_R16_SFLOAT;
                 case VertexElementFormat.Half2:
-                    return VkFormat.R16g16Sfloat;
+                    return VK_FORMAT_R16G16_SFLOAT;
                 case VertexElementFormat.Half4:
-                    return VkFormat.R16g16b16a16Sfloat;
+                    return VK_FORMAT_R16G16B16A16_SFLOAT;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }
@@ -388,25 +402,25 @@ namespace Veldrid.Vk
 
         internal static VkShaderStageFlags VdToVkShaderStages(ShaderStages stage)
         {
-            VkShaderStageFlags ret = VkShaderStageFlags.None;
+            VkShaderStageFlags ret = 0;
 
             if ((stage & ShaderStages.Vertex) == ShaderStages.Vertex)
-                ret |= VkShaderStageFlags.Vertex;
+                ret |= VK_SHADER_STAGE_VERTEX_BIT;
 
             if ((stage & ShaderStages.Geometry) == ShaderStages.Geometry)
-                ret |= VkShaderStageFlags.Geometry;
+                ret |= VK_SHADER_STAGE_GEOMETRY_BIT;
 
             if ((stage & ShaderStages.TessellationControl) == ShaderStages.TessellationControl)
-                ret |= VkShaderStageFlags.TessellationControl;
+                ret |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
             if ((stage & ShaderStages.TessellationEvaluation) == ShaderStages.TessellationEvaluation)
-                ret |= VkShaderStageFlags.TessellationEvaluation;
+                ret |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 
             if ((stage & ShaderStages.Fragment) == ShaderStages.Fragment)
-                ret |= VkShaderStageFlags.Fragment;
+                ret |= VK_SHADER_STAGE_FRAGMENT_BIT;
 
             if ((stage & ShaderStages.Compute) == ShaderStages.Compute)
-                ret |= VkShaderStageFlags.Compute;
+                ret |= VK_SHADER_STAGE_COMPUTE_BIT;
 
             return ret;
         }
@@ -416,11 +430,11 @@ namespace Veldrid.Vk
             switch (borderColor)
             {
                 case SamplerBorderColor.TransparentBlack:
-                    return VkBorderColor.FloatTransparentBlack;
+                    return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
                 case SamplerBorderColor.OpaqueBlack:
-                    return VkBorderColor.FloatOpaqueBlack;
+                    return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
                 case SamplerBorderColor.OpaqueWhite:
-                    return VkBorderColor.FloatOpaqueWhite;
+                    return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
                 default:
                     throw Illegal.Value<SamplerBorderColor>();
             }
@@ -431,9 +445,9 @@ namespace Veldrid.Vk
             switch (format)
             {
                 case IndexFormat.UInt16:
-                    return VkIndexType.Uint16;
+                    return VK_INDEX_TYPE_UINT16;
                 case IndexFormat.UInt32:
-                    return VkIndexType.Uint32;
+                    return VK_INDEX_TYPE_UINT32;
                 default:
                     throw Illegal.Value<IndexFormat>();
             }
@@ -444,21 +458,21 @@ namespace Veldrid.Vk
             switch (comparisonKind)
             {
                 case ComparisonKind.Never:
-                    return VkCompareOp.Never;
+                    return VK_COMPARE_OP_NEVER;
                 case ComparisonKind.Less:
-                    return VkCompareOp.Less;
+                    return VK_COMPARE_OP_LESS;
                 case ComparisonKind.Equal:
-                    return VkCompareOp.Equal;
+                    return VK_COMPARE_OP_EQUAL;
                 case ComparisonKind.LessEqual:
-                    return VkCompareOp.LessOrEqual;
+                    return VK_COMPARE_OP_LESS_OR_EQUAL;
                 case ComparisonKind.Greater:
-                    return VkCompareOp.Greater;
+                    return VK_COMPARE_OP_GREATER;
                 case ComparisonKind.NotEqual:
-                    return VkCompareOp.NotEqual;
+                    return VK_COMPARE_OP_NOT_EQUAL;
                 case ComparisonKind.GreaterEqual:
-                    return VkCompareOp.GreaterOrEqual;
+                    return VK_COMPARE_OP_GREATER_OR_EQUAL;
                 case ComparisonKind.Always:
-                    return VkCompareOp.Always;
+                    return VK_COMPARE_OP_ALWAYS;
                 default:
                     throw Illegal.Value<ComparisonKind>();
             }
@@ -468,128 +482,128 @@ namespace Veldrid.Vk
         {
             switch (vkFormat)
             {
-                case VkFormat.R8Unorm:
+                case VK_FORMAT_R8_UNORM:
                     return PixelFormat.R8_UNorm;
-                case VkFormat.R8Snorm:
+                case VK_FORMAT_R8_SNORM:
                     return PixelFormat.R8_SNorm;
-                case VkFormat.R8Uint:
+                case VK_FORMAT_R8_UINT:
                     return PixelFormat.R8_UInt;
-                case VkFormat.R8Sint:
+                case VK_FORMAT_R8_SINT:
                     return PixelFormat.R8_SInt;
 
-                case VkFormat.R16Unorm:
+                case VK_FORMAT_R16_UNORM:
                     return PixelFormat.R16_UNorm;
-                case VkFormat.R16Snorm:
+                case VK_FORMAT_R16_SNORM:
                     return PixelFormat.R16_SNorm;
-                case VkFormat.R16Uint:
+                case VK_FORMAT_R16_UINT:
                     return PixelFormat.R16_UInt;
-                case VkFormat.R16Sint:
+                case VK_FORMAT_R16_SINT:
                     return PixelFormat.R16_SInt;
-                case VkFormat.R16Sfloat:
+                case VK_FORMAT_R16_SFLOAT:
                     return PixelFormat.R16_Float;
 
-                case VkFormat.R32Uint:
+                case VK_FORMAT_R32_UINT:
                     return PixelFormat.R32_UInt;
-                case VkFormat.R32Sint:
+                case VK_FORMAT_R32_SINT:
                     return PixelFormat.R32_SInt;
-                case VkFormat.R32Sfloat:
-                case VkFormat.D32Sfloat:
+                case VK_FORMAT_R32_SFLOAT:
+                case VK_FORMAT_D32_SFLOAT:
                     return PixelFormat.R32_Float;
 
-                case VkFormat.R8g8Unorm:
+                case VK_FORMAT_R8G8_UNORM:
                     return PixelFormat.R8_G8_UNorm;
-                case VkFormat.R8g8Snorm:
+                case VK_FORMAT_R8G8_SNORM:
                     return PixelFormat.R8_G8_SNorm;
-                case VkFormat.R8g8Uint:
+                case VK_FORMAT_R8G8_UINT:
                     return PixelFormat.R8_G8_UInt;
-                case VkFormat.R8g8Sint:
+                case VK_FORMAT_R8G8_SINT:
                     return PixelFormat.R8_G8_SInt;
 
-                case VkFormat.R16g16Unorm:
+                case VK_FORMAT_R16G16_UNORM:
                     return PixelFormat.R16_G16_UNorm;
-                case VkFormat.R16g16Snorm:
+                case VK_FORMAT_R16G16_SNORM:
                     return PixelFormat.R16_G16_SNorm;
-                case VkFormat.R16g16Uint:
+                case VK_FORMAT_R16G16_UINT:
                     return PixelFormat.R16_G16_UInt;
-                case VkFormat.R16g16Sint:
+                case VK_FORMAT_R16G16_SINT:
                     return PixelFormat.R16_G16_SInt;
-                case VkFormat.R16g16Sfloat:
+                case VK_FORMAT_R16G16_SFLOAT:
                     return PixelFormat.R16_G16_Float;
 
-                case VkFormat.R32g32Uint:
+                case VK_FORMAT_R32G32_UINT:
                     return PixelFormat.R32_G32_UInt;
-                case VkFormat.R32g32Sint:
+                case VK_FORMAT_R32G32_SINT:
                     return PixelFormat.R32_G32_SInt;
-                case VkFormat.R32g32Sfloat:
+                case VK_FORMAT_R32G32_SFLOAT:
                     return PixelFormat.R32_G32_Float;
 
-                case VkFormat.R8g8b8a8Unorm:
+                case VK_FORMAT_R8G8B8A8_UNORM:
                     return PixelFormat.R8_G8_B8_A8_UNorm;
-                case VkFormat.R8g8b8a8Srgb:
+                case VK_FORMAT_R8G8B8A8_SRGB:
                     return PixelFormat.R8_G8_B8_A8_UNorm_SRgb;
-                case VkFormat.B8g8r8a8Unorm:
+                case VK_FORMAT_B8G8R8A8_UNORM:
                     return PixelFormat.B8_G8_R8_A8_UNorm;
-                case VkFormat.B8g8r8a8Srgb:
+                case VK_FORMAT_B8G8R8A8_SRGB:
                     return PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
-                case VkFormat.R8g8b8a8Snorm:
+                case VK_FORMAT_R8G8B8A8_SNORM:
                     return PixelFormat.R8_G8_B8_A8_SNorm;
-                case VkFormat.R8g8b8a8Uint:
+                case VK_FORMAT_R8G8B8A8_UINT:
                     return PixelFormat.R8_G8_B8_A8_UInt;
-                case VkFormat.R8g8b8a8Sint:
+                case VK_FORMAT_R8G8B8A8_SINT:
                     return PixelFormat.R8_G8_B8_A8_SInt;
 
-                case VkFormat.R16g16b16a16Unorm:
+                case VK_FORMAT_R16G16B16A16_UNORM:
                     return PixelFormat.R16_G16_B16_A16_UNorm;
-                case VkFormat.R16g16b16a16Snorm:
+                case VK_FORMAT_R16G16B16A16_SNORM:
                     return PixelFormat.R16_G16_B16_A16_SNorm;
-                case VkFormat.R16g16b16a16Uint:
+                case VK_FORMAT_R16G16B16A16_UINT:
                     return PixelFormat.R16_G16_B16_A16_UInt;
-                case VkFormat.R16g16b16a16Sint:
+                case VK_FORMAT_R16G16B16A16_SINT:
                     return PixelFormat.R16_G16_B16_A16_SInt;
-                case VkFormat.R16g16b16a16Sfloat:
+                case VK_FORMAT_R16G16B16A16_SFLOAT:
                     return PixelFormat.R16_G16_B16_A16_Float;
 
-                case VkFormat.R32g32b32a32Uint:
+                case VK_FORMAT_R32G32B32A32_UINT:
                     return PixelFormat.R32_G32_B32_A32_UInt;
-                case VkFormat.R32g32b32a32Sint:
+                case VK_FORMAT_R32G32B32A32_SINT:
                     return PixelFormat.R32_G32_B32_A32_SInt;
-                case VkFormat.R32g32b32a32Sfloat:
+                case VK_FORMAT_R32G32B32A32_SFLOAT:
                     return PixelFormat.R32_G32_B32_A32_Float;
 
-                case VkFormat.Bc1RgbUnormBlock:
+                case VK_FORMAT_BC1_RGB_UNORM_BLOCK:
                     return PixelFormat.BC1_Rgb_UNorm;
-                case VkFormat.Bc1RgbSrgbBlock:
+                case VK_FORMAT_BC1_RGB_SRGB_BLOCK:
                     return PixelFormat.BC1_Rgb_UNorm_SRgb;
-                case VkFormat.Bc1RgbaUnormBlock:
+                case VK_FORMAT_BC1_RGBA_UNORM_BLOCK:
                     return PixelFormat.BC1_Rgba_UNorm;
-                case VkFormat.Bc1RgbaSrgbBlock:
+                case VK_FORMAT_BC1_RGBA_SRGB_BLOCK:
                     return PixelFormat.BC1_Rgba_UNorm_SRgb;
-                case VkFormat.Bc2UnormBlock:
+                case VK_FORMAT_BC2_UNORM_BLOCK:
                     return PixelFormat.BC2_UNorm;
-                case VkFormat.Bc2SrgbBlock:
+                case VK_FORMAT_BC2_SRGB_BLOCK:
                     return PixelFormat.BC2_UNorm_SRgb;
-                case VkFormat.Bc3UnormBlock:
+                case VK_FORMAT_BC3_UNORM_BLOCK:
                     return PixelFormat.BC3_UNorm;
-                case VkFormat.Bc3SrgbBlock:
+                case VK_FORMAT_BC3_SRGB_BLOCK:
                     return PixelFormat.BC3_UNorm_SRgb;
-                case VkFormat.Bc4UnormBlock:
+                case VK_FORMAT_BC4_UNORM_BLOCK:
                     return PixelFormat.BC4_UNorm;
-                case VkFormat.Bc4SnormBlock:
+                case VK_FORMAT_BC4_SNORM_BLOCK:
                     return PixelFormat.BC4_SNorm;
-                case VkFormat.Bc5UnormBlock:
+                case VK_FORMAT_BC5_UNORM_BLOCK:
                     return PixelFormat.BC5_UNorm;
-                case VkFormat.Bc5SnormBlock:
+                case VK_FORMAT_BC5_SNORM_BLOCK:
                     return PixelFormat.BC5_SNorm;
-                case VkFormat.Bc7UnormBlock:
+                case VK_FORMAT_BC7_UNORM_BLOCK:
                     return PixelFormat.BC7_UNorm;
-                case VkFormat.Bc7SrgbBlock:
+                case VK_FORMAT_BC7_SRGB_BLOCK:
                     return PixelFormat.BC7_UNorm_SRgb;
 
-                case VkFormat.A2b10g10r10UnormPack32:
+                case VK_FORMAT_A2B10G10R10_UNORM_PACK32:
                     return PixelFormat.R10_G10_B10_A2_UNorm;
-                case VkFormat.A2b10g10r10UintPack32:
+                case VK_FORMAT_A2B10G10R10_UINT_PACK32:
                     return PixelFormat.R10_G10_B10_A2_UInt;
-                case VkFormat.B10g11r11UfloatPack32:
+                case VK_FORMAT_B10G11R11_UFLOAT_PACK32:
                     return PixelFormat.R11_G11_B10_Float;
 
                 default:

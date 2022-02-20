@@ -1,8 +1,8 @@
-﻿using Vulkan;
-using static Vulkan.VulkanNative;
-using static Veldrid.Vk.VulkanUtil;
+﻿using TerraFX.Interop.Vulkan;
+using static TerraFX.Interop.Vulkan.Vulkan;
+using static Veldrid.Vulkan.VulkanUtil;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
     internal unsafe class VkResourceLayout : ResourceLayout
     {
@@ -23,7 +23,6 @@ namespace Veldrid.Vk
             : base(description)
         {
             _gd = gd;
-            VkDescriptorSetLayoutCreateInfo dslCI = VkDescriptorSetLayoutCreateInfo.New();
             ResourceLayoutElementDescription[] elements = description.Elements;
             _descriptorTypes = new VkDescriptorType[elements.Length];
             VkDescriptorSetLayoutBinding* bindings = stackalloc VkDescriptorSetLayoutBinding[elements.Length];
@@ -50,19 +49,19 @@ namespace Veldrid.Vk
 
                 switch (descriptorType)
                 {
-                    case VkDescriptorType.Sampler:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_SAMPLER:
                         samplerCount += 1;
                         break;
-                    case VkDescriptorType.SampledImage:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
                         sampledImageCount += 1;
                         break;
-                    case VkDescriptorType.StorageImage:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
                         storageImageCount += 1;
                         break;
-                    case VkDescriptorType.UniformBuffer:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
                         uniformBufferCount += 1;
                         break;
-                    case VkDescriptorType.StorageBuffer:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
                         storageBufferCount += 1;
                         break;
                 }
@@ -75,11 +74,17 @@ namespace Veldrid.Vk
                 storageBufferCount,
                 storageImageCount);
 
-            dslCI.bindingCount = (uint)elements.Length;
-            dslCI.pBindings = bindings;
+            VkDescriptorSetLayoutCreateInfo dslCI = new()
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                bindingCount = (uint)elements.Length,
+                pBindings = bindings
+            };
 
-            VkResult result = vkCreateDescriptorSetLayout(_gd.Device, ref dslCI, null, out _dsl);
+            VkDescriptorSetLayout dsl;
+            VkResult result = vkCreateDescriptorSetLayout(_gd.Device, &dslCI, null, &dsl);
             CheckResult(result);
+            _dsl = dsl;
         }
 
         public override string? Name

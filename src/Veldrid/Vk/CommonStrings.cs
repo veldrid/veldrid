@@ -1,4 +1,4 @@
-﻿namespace Veldrid.Vk
+﻿namespace Veldrid.Vulkan
 {
     internal static class CommonStrings
     {

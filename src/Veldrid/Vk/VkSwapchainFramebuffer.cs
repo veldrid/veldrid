@@ -1,9 +1,9 @@
-﻿using Vulkan;
-using static Vulkan.VulkanNative;
-using static Veldrid.Vk.VulkanUtil;
-using System;
+﻿using System;
+using TerraFX.Interop.Vulkan;
+using static TerraFX.Interop.Vulkan.Vulkan;
+using static Veldrid.Vulkan.VulkanUtil;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
     internal unsafe class VkSwapchainFramebuffer : VkFramebufferBase
     {
@@ -25,7 +25,7 @@ namespace Veldrid.Vk
         private string? _name;
         private OutputDescription _outputDescription;
 
-        public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex]!.CurrentFramebuffer;
+        public override TerraFX.Interop.Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex]!.CurrentFramebuffer;
 
         public override VkRenderPass RenderPassNoClear_Init => _scFramebuffers[0]!.RenderPassNoClear_Init;
         public override VkRenderPass RenderPassNoClear_Load => _scFramebuffers[0]!.RenderPassNoClear_Load;
@@ -83,14 +83,17 @@ namespace Veldrid.Vk
 
             // Get the images
             uint scImageCount = 0;
-            VkResult result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, ref scImageCount, null);
+           VkResult result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, &scImageCount, null);
             CheckResult(result);
             if (_scImages.Length < scImageCount)
             {
                 _scImages = new VkImage[(int)scImageCount];
             }
-            result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, ref scImageCount, out _scImages[0]);
-            CheckResult(result);
+            fixed (VkImage* scImagesPtr = _scImages)
+            {
+                result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, &scImageCount, scImagesPtr);
+                CheckResult(result);
+            }
 
             _scImageFormat = surfaceFormat.format;
             _scExtent = swapchainExtent;
@@ -141,7 +144,7 @@ namespace Veldrid.Vk
 
             for (uint i = 0; i < _scImages.Length; i++)
             {
-                VkTexture colorTex = new VkTexture(
+                VkTexture colorTex = new(
                     _gd,
                     Math.Max(1, _scExtent.width),
                     Math.Max(1, _scExtent.height),
@@ -151,8 +154,8 @@ namespace Veldrid.Vk
                     TextureUsage.RenderTarget,
                     TextureSampleCount.Count1,
                     _scImages[i]);
-                FramebufferDescription desc = new FramebufferDescription(_depthTarget?.Target, colorTex);
-                VkFramebuffer fb = new VkFramebuffer(_gd, desc, true);
+                FramebufferDescription desc = new(_depthTarget?.Target, colorTex);
+                VkFramebuffer fb = new(_gd, desc, true);
                 _scFramebuffers[i] = fb;
                 _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
             }
@@ -166,7 +169,7 @@ namespace Veldrid.Vk
             {
                 FramebufferAttachment ca = colorTargets[i];
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
-                vkTex.SetImageLayout(0, ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
+                vkTex.SetImageLayout(0, ca.ArrayLayer, VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
             }
         }
 
@@ -178,7 +181,7 @@ namespace Veldrid.Vk
             {
                 FramebufferAttachment ca = colorTargets[i];
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
-                vkTex.TransitionImageLayout(cb, 0, 1, ca.ArrayLayer, 1, VkImageLayout.PresentSrcKHR);
+                vkTex.TransitionImageLayout(cb, 0, 1, ca.ArrayLayer, 1, VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
             }
         }
 

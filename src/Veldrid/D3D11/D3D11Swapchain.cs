@@ -89,7 +89,7 @@ namespace Veldrid.D3D11
                     OutputWindow = win32Source.Hwnd,
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.Discard,
-                    Usage = Vortice.DXGI.Usage.RenderTargetOutput
+                    Usage = Usage.RenderTargetOutput
                 };
 
                 using (IDXGIFactory dxgiFactory = _gd.Adapter.GetParent<IDXGIFactory>()!)
@@ -112,7 +112,7 @@ namespace Veldrid.D3D11
                     Width = (int)(description.Width * _pixelScale),
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.FlipSequential,
-                    Usage = Vortice.DXGI.Usage.RenderTargetOutput,
+                    Usage = Usage.RenderTargetOutput,
                 };
 
                 // Get the Vortice.DXGI factory automatically created when initializing the Direct3D device.

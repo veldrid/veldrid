@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Veldrid.Vulkan;
 
 namespace Veldrid
 {
@@ -1070,7 +1071,7 @@ namespace Veldrid
 #endif
                 case GraphicsBackend.Vulkan:
 #if !EXCLUDE_VULKAN_BACKEND
-                    return Vk.VkGraphicsDevice.IsSupported();
+                    return VkGraphicsDevice.IsSupported();
 #else
                     return false;
 #endif
@@ -1201,7 +1202,7 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
         public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options)
         {
-            return new Vk.VkGraphicsDevice(options, null);
+            return new VkGraphicsDevice(options, null);
         }
 
         /// <summary>
@@ -1212,7 +1213,7 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
         public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, VulkanDeviceOptions vkOptions)
         {
-            return new Vk.VkGraphicsDevice(options, null, vkOptions);
+            return new VkGraphicsDevice(options, null, vkOptions);
         }
 
         /// <summary>
@@ -1223,7 +1224,7 @@ namespace Veldrid
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
         public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
-            return new Vk.VkGraphicsDevice(options, swapchainDescription);
+            return new VkGraphicsDevice(options, swapchainDescription);
         }
 
         /// <summary>
@@ -1238,7 +1239,7 @@ namespace Veldrid
             SwapchainDescription swapchainDescription,
             VulkanDeviceOptions vkOptions)
         {
-            return new Vk.VkGraphicsDevice(options, swapchainDescription, vkOptions);
+            return new VkGraphicsDevice(options, swapchainDescription, vkOptions);
         }
 
         /// <summary>
@@ -1249,7 +1250,7 @@ namespace Veldrid
         /// <param name="width">The initial width of the window.</param>
         /// <param name="height">The initial height of the window.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
-        public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, Vk.VkSurfaceSource surfaceSource, uint width, uint height)
+        public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, VkSurfaceSource surfaceSource, uint width, uint height)
         {
             SwapchainDescription scDesc = new SwapchainDescription(
                 surfaceSource.GetSurfaceSource(),
@@ -1258,7 +1259,7 @@ namespace Veldrid
                 options.SyncToVerticalBlank,
                 options.SwapchainSrgbFormat);
 
-            return new Vk.VkGraphicsDevice(options, scDesc);
+            return new VkGraphicsDevice(options, scDesc);
         }
 #endif
 

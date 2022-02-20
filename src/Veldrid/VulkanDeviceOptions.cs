@@ -1,4 +1,4 @@
-﻿using Vulkan;
+﻿using TerraFX.Interop.Vulkan;
 
 namespace Veldrid
 {

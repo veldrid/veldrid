@@ -45,6 +45,11 @@ namespace Veldrid
             return Marshal.PtrToStringUTF8((IntPtr)stringStart) ?? "";
         }
 
+        internal static unsafe string GetString(sbyte* stringStart)
+        {
+            return GetString((byte*)stringStart);
+        }
+
         internal static bool NullableEquals<T>(T? left, T? right) where T : struct, IEquatable<T>
         {
             if (left.HasValue && right.HasValue)

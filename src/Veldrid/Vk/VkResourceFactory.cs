@@ -1,7 +1,7 @@
 ﻿using System;
-using Vulkan;
+using TerraFX.Interop.Vulkan;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
     internal class VkResourceFactory : ResourceFactory
     {
@@ -76,7 +76,7 @@ namespace Veldrid.Vk
                 VkFormats.VdToVkPixelFormat(description.Format, (description.Usage & TextureUsage.DepthStencil) != 0),
                 description.Usage,
                 description.SampleCount,
-                nativeTexture);
+                new VkImage(nativeTexture));
         }
 
         public override TextureView CreateTextureView(in TextureViewDescription description)

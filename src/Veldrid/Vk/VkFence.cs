@@ -1,24 +1,30 @@
-﻿using Vulkan;
-using static Vulkan.VulkanNative;
+﻿using TerraFX.Interop.Vulkan;
+using static TerraFX.Interop.Vulkan.Vulkan;
+using VulkanFence = TerraFX.Interop.Vulkan.VkFence;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
     internal unsafe class VkFence : Fence
     {
         private readonly VkGraphicsDevice _gd;
-        private Vulkan.VkFence _fence;
+        private VulkanFence _fence;
         private string? _name;
         private bool _destroyed;
 
-        public Vulkan.VkFence DeviceFence => _fence;
+        public VulkanFence DeviceFence => _fence;
 
         public VkFence(VkGraphicsDevice gd, bool signaled)
         {
             _gd = gd;
-            VkFenceCreateInfo fenceCI = VkFenceCreateInfo.New();
-            fenceCI.flags = signaled ? VkFenceCreateFlags.Signaled : VkFenceCreateFlags.None;
-            VkResult result = vkCreateFence(_gd.Device, ref fenceCI, null, out _fence);
+            VkFenceCreateInfo fenceCI = new()
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+                flags = signaled ? VkFenceCreateFlags.VK_FENCE_CREATE_SIGNALED_BIT : 0
+            };
+            VulkanFence fence;
+            VkResult result = vkCreateFence(_gd.Device, &fenceCI, null, &fence);
             VulkanUtil.CheckResult(result);
+            _fence = fence;
         }
 
         public override void Reset()
@@ -26,7 +32,7 @@ namespace Veldrid.Vk
             _gd.ResetFence(this);
         }
 
-        public override bool Signaled => vkGetFenceStatus(_gd.Device, _fence) == VkResult.Success;
+        public override bool Signaled => vkGetFenceStatus(_gd.Device, _fence) == VkResult.VK_SUCCESS;
         public override bool IsDisposed => _destroyed;
 
         public override string? Name

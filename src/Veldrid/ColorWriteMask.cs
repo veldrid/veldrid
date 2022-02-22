@@ -36,6 +36,6 @@ namespace Veldrid
         /// <summary>
         /// All color components will be written to.
         /// </summary>
-        All = Red | Green | Blue,
+        All = Red | Green | Blue | Alpha,
     }
 }

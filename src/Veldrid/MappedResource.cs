@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Veldrid
 {
@@ -83,23 +84,34 @@ namespace Veldrid
             RowPitch = 0;
             DepthPitch = 0;
         }
+
+        /// <summary>
+        /// Creates a span of bytes over the mapped data region.
+        /// </summary>
+        /// <returns>The span of bytes.</returns>
+        public readonly unsafe Span<byte> AsBytes()
+        {
+            return new Span<byte>((void*)Data, (int)SizeInBytes);
+        }
     }
 
     /// <summary>
-    /// A typed view of a <see cref="MappedResource"/>. Provides by-reference structured access to individual elements in the
+    /// A typed view of a <see cref="Veldrid.MappedResource"/>. Provides by-reference structured access to individual elements in the
     /// mapped resource.
     /// </summary>
     /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
     public unsafe readonly struct MappedResourceView<T> where T : unmanaged
     {
         /// <summary>
-        /// The <see cref="MappedResource"/> that this instance views.
+        /// The <see cref="Veldrid.MappedResource"/> that this instance views.
         /// </summary>
         public readonly MappedResource MappedResource;
+
         /// <summary>
         /// The total size in bytes of the mapped resource.
         /// </summary>
         public readonly uint SizeInBytes => MappedResource.SizeInBytes;
+
         /// <summary>
         /// The total number of structures that is contained in the resource. This is effectively the total number of bytes
         /// divided by the size of the structure type.
@@ -107,7 +119,7 @@ namespace Veldrid
         public readonly int Count;
 
         /// <summary>
-        /// Constructs a new MappedResourceView which wraps the given <see cref="MappedResource"/>.
+        /// Constructs a new <see cref="MappedResourceView{T}"/> which wraps the given <see cref="Veldrid.MappedResource"/>.
         /// </summary>
         /// <param name="rawResource">The raw resource which has been mapped.</param>
         public MappedResourceView(MappedResource rawResource)
@@ -210,6 +222,24 @@ namespace Veldrid
                     + (x * Unsafe.SizeOf<T>());
                 return ref Unsafe.AsRef<T>(ptr);
             }
+        }
+
+        /// <summary>
+        /// Creates a span of bytes over the mapped data region.
+        /// </summary>
+        /// <returns></returns>
+        public readonly unsafe Span<byte> AsBytes()
+        {
+            return MappedResource.AsBytes();
+        }
+
+        /// <summary>
+        /// Creates a span of structures over the mapped data region.
+        /// </summary>
+        /// <returns>The span of structures.</returns>
+        public readonly unsafe Span<T> AsSpan()
+        {
+            return MemoryMarshal.Cast<byte, T>(MappedResource.AsBytes());
         }
     }
 }

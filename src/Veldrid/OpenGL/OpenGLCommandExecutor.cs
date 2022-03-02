@@ -1486,8 +1486,8 @@ namespace Veldrid.OpenGL
                     (IntPtr)sourceOffset,
                     (IntPtr)destinationOffset,
                     (IntPtr)sizeInBytes);
-                CheckLastError();
             }
+            CheckLastError();
         }
 
         public void CopyTexture(

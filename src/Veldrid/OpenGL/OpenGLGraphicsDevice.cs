@@ -1168,11 +1168,12 @@ namespace Veldrid.OpenGL
             {
                 _makeCurrent(_context);
 
-
                 while (!_terminated)
                 {
                     if (!_workResetEvent.WaitOne(100))
+                    {
                         continue;
+                    }
 
                     bool hasItem;
                     ExecutionThreadWorkItem workItem;

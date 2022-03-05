@@ -121,8 +121,8 @@ namespace Veldrid.OpenGL
             Action<IntPtr> deleteContext,
             Action swapBuffers,
             Action<bool> setSyncToVerticalBlank,
-            Action setSwapchainFramebuffer,
-            Action<uint, uint> resizeSwapchain)
+            Action? setSwapchainFramebuffer,
+            Action<uint, uint>? resizeSwapchain)
         {
             OpenGLContextHandle = openGLContextHandle;
             GetProcAddress = getProcAddress;

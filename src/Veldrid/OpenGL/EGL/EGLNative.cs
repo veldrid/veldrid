@@ -23,6 +23,7 @@ namespace Veldrid.OpenGL.EGL
         public const int EGL_NONE = 0x3038;
         public const int EGL_NATIVE_VISUAL_ID = 0x302E;
         public const int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+        public const int EGL_CONTEXT_OPENGL_DEBUG = 0x31B0;
 
         [DllImport(LibName)]
         public static extern EGLError eglGetError();

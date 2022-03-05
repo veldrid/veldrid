@@ -7,6 +7,15 @@ using Veldrid.OpenGLBinding;
 
 namespace Veldrid
 {
+    public unsafe delegate void OpenGLDebugMessageCallback(
+        uint source,
+        uint type,
+        uint id,
+        uint severity,
+        uint length,
+        byte* message,
+        void* userParam);
+
     /// <summary>
     /// Exposes OpenGL-specific functionality,
     /// useful for interoperating with native components which interface directly with OpenGL.
@@ -69,6 +78,14 @@ namespace Veldrid
         public ReadOnlyCollection<string> Extensions => _extensions;
 
         /// <summary>
+        /// An event which is invoked when the OpenGL implementation reports a debug message.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="GraphicsDeviceOptions.Debug"/> must have been true to enable this.
+        /// </remarks>
+        public event OpenGLDebugMessageCallback? DebugProc;
+
+        /// <summary>
         /// Executes the given delegate in the OpenGL device's main execution thread.
         /// In the delegate, OpenGL commands can be executed directly.
         /// This method does not return until the delegate's execution is fully completed.
@@ -90,13 +107,44 @@ namespace Veldrid
         /// Gets the name of the OpenGL texture object wrapped by the given Veldrid Texture.
         /// </summary>
         /// <returns>The Veldrid Texture's underlying OpenGL texture name.</returns>
-        public uint GetTextureName(Texture texture) => Util.AssertSubtype<Texture, OpenGLTexture>(texture).Texture;
+        public uint GetTextureName(Texture texture)
+        {
+            return Util.AssertSubtype<Texture, OpenGLTexture>(texture).Texture;
+        }
 
         /// <summary>
         /// Sets the texture target of the OpenGL texture object wrapped by the given Veldrid Texture to to a custom value.
         /// This could be used to set platform specific texture target values like Veldrid.OpenGLBinding.TextureTarget.TextureExternalOes.
         /// </summary>
-        public void SetTextureTarget(Texture texture, uint textureTarget) => Util.AssertSubtype<Texture, OpenGLTexture>(texture).TextureTarget = (TextureTarget)textureTarget;
+        public void SetTextureTarget(Texture texture, uint textureTarget)
+        {
+            Util.AssertSubtype<Texture, OpenGLTexture>(texture).TextureTarget = (TextureTarget)textureTarget;
+        }
+
+        internal unsafe bool InvokeDebugProc(
+            DebugSource source,
+            DebugType type,
+            uint id,
+            DebugSeverity severity,
+            uint length,
+            byte* message,
+            void* userParam)
+        {
+            OpenGLDebugMessageCallback? debugProc = DebugProc;
+            if (debugProc != null)
+            {
+                debugProc.Invoke(
+                    (uint)source,
+                    (uint)type,
+                    id,
+                    (uint)severity,
+                    length,
+                    message,
+                    userParam);
+                return true;
+            }
+            return false;
+        }
     }
 }
 #endif

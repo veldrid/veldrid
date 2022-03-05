@@ -26,8 +26,7 @@ namespace Veldrid.OpenGL
         private GraphicsBackend _backendType;
         private GraphicsDeviceFeatures _features;
         private uint _vao;
-        private readonly ConcurrentQueue<OpenGLDeferredResource> _resourcesToDispose
-            = new();
+        private readonly ConcurrentQueue<OpenGLDeferredResource> _resourcesToDispose = new();
         private IntPtr _glContext;
         private Action<IntPtr> _makeCurrent;
         private Func<IntPtr> _getCurrentContext;
@@ -695,10 +694,18 @@ namespace Veldrid.OpenGL
                     $"Failed to create an EGL surface from the Android native window: {eglGetError()}");
             }
 
-            int* contextAttribs = stackalloc int[3];
+            int* contextAttribs = stackalloc int[5];
             contextAttribs[0] = EGL_CONTEXT_CLIENT_VERSION;
             contextAttribs[1] = 2;
             contextAttribs[2] = EGL_NONE;
+            contextAttribs[3] = EGL_NONE;
+            contextAttribs[4] = EGL_NONE;
+            if (options.Debug)
+            {
+                contextAttribs[2] = EGL_CONTEXT_OPENGL_DEBUG;
+                contextAttribs[3] = 1;
+            }
+
             IntPtr context = eglCreateContext(display, bestConfig, IntPtr.Zero, contextAttribs);
             if (context == IntPtr.Zero)
             {
@@ -1066,8 +1073,8 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void EnableDebugCallback() => EnableDebugCallback(DebugSeverity.DebugSeverityNotification);
-        public void EnableDebugCallback(DebugSeverity minimumSeverity) => EnableDebugCallback(DefaultDebugCallback(minimumSeverity));
+        public void EnableDebugCallback() => EnableDebugCallback(DefaultDebugCallback);
+
         public void EnableDebugCallback(DebugProc callback)
         {
             glEnable(EnableCap.DebugOutput);
@@ -1079,19 +1086,25 @@ namespace Veldrid.OpenGL
             CheckLastError();
         }
 
-        private static DebugProc DefaultDebugCallback(DebugSeverity minimumSeverity)
+        private void DefaultDebugCallback(
+            DebugSource source,
+            DebugType type,
+            uint id,
+            DebugSeverity severity,
+            uint length,
+            byte* message,
+            void* userParam)
         {
-            return (source, type, id, severity, length, message, userParam) =>
+            if (!_openglInfo.InvokeDebugProc(source, type, id, severity, length, message, userParam))
             {
-                if (severity >= minimumSeverity
-                    && type != DebugType.DebugTypeMarker
-                    && type != DebugType.DebugTypePushGroup
-                    && type != DebugType.DebugTypePopGroup)
+                if (type != DebugType.DebugTypeMarker &&
+                    type != DebugType.DebugTypePushGroup &&
+                    type != DebugType.DebugTypePopGroup)
                 {
                     string messageString = Marshal.PtrToStringAnsi((IntPtr)message, (int)length);
-                    Debug.WriteLine($"GL DEBUG MESSAGE: {source}, {type}, {id}. {severity}: {messageString}");
+                    Debug.WriteLine($"GL {source}:, {type}, {id}. {severity}: {messageString}");
                 }
-            };
+            }
         }
 
         protected override void Dispose(bool disposing)

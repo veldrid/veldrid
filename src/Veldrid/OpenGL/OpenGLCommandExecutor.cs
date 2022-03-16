@@ -334,7 +334,7 @@ namespace Veldrid.OpenGL
                         _vertexAttribDivisors[actualSlot] = stepRate;
                     }
 
-                    offset += FormatHelpers.GetSizeInBytes(element.Format);
+                    offset += FormatSizeHelpers.GetSizeInBytes(element.Format);
                 }
 
                 totalSlotsBound += (uint)input.Elements.Length;
@@ -941,14 +941,23 @@ namespace Veldrid.OpenGL
                         glTexViewRW.EnsureResourcesCreated();
                         if (pipeline.GetTextureBindingInfo(slot, element, out OpenGLTextureBindingSlotInfo imageBindingInfo))
                         {
+                            var layered = texViewRW.Target.Usage.HasFlag(TextureUsage.Cubemap) || texViewRW.ArrayLayers > 1;
+
+                            if (layered && (texViewRW.BaseArrayLayer > 0
+                                || (texViewRW.ArrayLayers > 1 && texViewRW.ArrayLayers < texViewRW.Target.ArrayLayers)))
+                            {
+                                throw new VeldridException(
+                                    "Cannot bind texture with BaseArrayLayer > 0 and ArrayLayers > 1, or with an incomplete set of array layers (cubemaps have ArrayLayers == 6 implicitly).");
+                            }
+
                             if (_backend == GraphicsBackend.OpenGL)
                             {
                                 glBindImageTexture(
                                     (uint)imageBindingInfo.RelativeIndex,
                                     glTexViewRW.Target.Texture,
-                                    0,
-                                    false,
-                                    0,
+                                    (int)texViewRW.BaseMipLevel,
+                                    layered,
+                                    (int)texViewRW.BaseArrayLayer,
                                     TextureAccess.ReadWrite,
                                     glTexViewRW.GetReadWriteSizedInternalFormat());
                                 CheckLastError();
@@ -958,11 +967,11 @@ namespace Veldrid.OpenGL
                             else
                             {
                                 glBindImageTexture(
-                                    (uint)imageBindingInfo.UniformLocation,
+                                    (uint)imageBindingInfo.RelativeIndex,
                                     glTexViewRW.Target.Texture,
-                                    0,
-                                    false,
-                                    0,
+                                    (int)texViewRW.BaseMipLevel,
+                                    layered,
+                                    (int)texViewRW.BaseArrayLayer,
                                     TextureAccess.ReadWrite,
                                     glTexViewRW.GetReadWriteSizedInternalFormat());
                                 CheckLastError();
@@ -1176,7 +1185,7 @@ namespace Veldrid.OpenGL
             uint unpackAlignment = 4;
             if (!isCompressed)
             {
-                unpackAlignment = FormatHelpers.GetSizeInBytes(glTex.Format);
+                unpackAlignment = FormatSizeHelpers.GetSizeInBytes(glTex.Format);
             }
             if (unpackAlignment < 4)
             {
@@ -1560,7 +1569,7 @@ namespace Veldrid.OpenGL
             }
             else
             {
-                uint pixelSize = FormatHelpers.GetSizeInBytes(srcGLTexture.Format);
+                uint pixelSize = FormatSizeHelpers.GetSizeInBytes(srcGLTexture.Format);
                 packAlignment = pixelSize;
                 depthSliceSize = width * height * pixelSize;
                 sizeInBytes = depthSliceSize * depth;

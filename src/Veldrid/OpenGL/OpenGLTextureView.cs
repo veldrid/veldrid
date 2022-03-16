@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Veldrid.OpenGLBinding;
-using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
+using static Veldrid.OpenGLBinding.OpenGLNative;
 
 namespace Veldrid.OpenGL
 {
@@ -61,9 +61,12 @@ namespace Veldrid.OpenGL
                 }
                 else
                 {
-                    throw new VeldridException(
-                        "TextureView objects covering a subset of a Texture's dimensions or using a different PixelFormat are " +
-                        "not supported on OpenGL ES.");
+                    if (!_gd.Extensions.ARB_TextureView)
+                    {
+                        throw new VeldridException(
+                            "TextureView objects covering a subset of a Texture's dimensions or using a different PixelFormat are " +
+                            "not supported on OpenGL ES.");
+                    }
                 }
                 _needsTextureView = true;
             }
@@ -207,6 +210,7 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
             TextureTarget originalTarget = Target.TextureTarget;
+            var effectiveArrayLayers = ArrayLayers;
             if (originalTarget == TextureTarget.Texture1D)
             {
                 TextureTarget = TextureTarget.Texture1D;
@@ -256,6 +260,19 @@ namespace Veldrid.OpenGL
             {
                 TextureTarget = TextureTarget.Texture3D;
             }
+            else if (originalTarget == TextureTarget.TextureCubeMap)
+            {
+                if (ArrayLayers > 1)
+                {
+                    TextureTarget = TextureTarget.TextureCubeMap;
+                    effectiveArrayLayers *= 6;
+                }
+                else
+                {
+                    TextureTarget = TextureTarget.TextureCubeMapArray;
+                    effectiveArrayLayers *= 6;
+                }
+            }
             else
             {
                 throw new VeldridException("The given TextureView parameters are not supported with the OpenGL backend.");
@@ -273,7 +290,7 @@ namespace Veldrid.OpenGL
                 BaseMipLevel,
                 MipLevels,
                 BaseArrayLayer,
-                ArrayLayers);
+                effectiveArrayLayers);
             CheckLastError();
         }
 

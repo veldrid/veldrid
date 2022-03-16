@@ -1301,6 +1301,118 @@ namespace Veldrid.Tests
             }
             GD.Unmap(readback);
         }
+
+        [Fact]
+        public void UseBlendFactor()
+        {
+            const uint width = 512;
+            const uint height = 512;
+            using var output = RF.CreateTexture(
+                TextureDescription.Texture2D(width, height, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            using var framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, output));
+
+            var yMod = GD.IsClipSpaceYInverted ? -1.0f : 1.0f;
+            var vertices = new[]
+            {
+                new ColoredVertex { Position = new Vector2(-1, 1 * yMod), Color = Vector4.One },
+                new ColoredVertex { Position = new Vector2(1, 1 * yMod), Color = Vector4.One },
+                new ColoredVertex { Position = new Vector2(-1, -1 * yMod), Color = Vector4.One },
+                new ColoredVertex { Position = new Vector2(1, -1 * yMod), Color = Vector4.One }
+            };
+            uint vertexSize = (uint)Unsafe.SizeOf<ColoredVertex>();
+            using var buffer = RF.CreateBuffer(new BufferDescription(
+                vertexSize * (uint)vertices.Length,
+                BufferUsage.StructuredBufferReadOnly,
+                vertexSize,
+                true));
+            GD.UpdateBuffer(buffer, 0, vertices);
+
+            using var graphicsLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("InputVertices", ResourceKind.StructuredBufferReadOnly, ShaderStages.Vertex)));
+            using var graphicsSet = RF.CreateResourceSet(new ResourceSetDescription(graphicsLayout, buffer));
+
+            var blendDesc = new BlendStateDescription
+            {
+                BlendFactor = new RgbaFloat(0.25f, 0.5f, 0.75f, 1),
+                AttachmentStates = new[]
+                {
+                    new BlendAttachmentDescription
+                    {
+                        BlendEnabled = true,
+                        SourceColorFactor = BlendFactor.BlendFactor,
+                        DestinationColorFactor = BlendFactor.Zero,
+                        ColorFunction = BlendFunction.Add,
+                        SourceAlphaFactor = BlendFactor.BlendFactor,
+                        DestinationAlphaFactor = BlendFactor.Zero,
+                        AlphaFunction = BlendFunction.Add
+                    }
+                }
+            };
+            var pipelineDesc = new GraphicsPipelineDescription(
+                blendDesc,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.Default,
+                PrimitiveTopology.TriangleStrip,
+                new ShaderSetDescription(
+                    Array.Empty<VertexLayoutDescription>(),
+                    TestShaders.LoadVertexFragment(RF, "ColoredQuadRenderer")),
+                graphicsLayout,
+                framebuffer.OutputDescription);
+
+            using (var pipeline1 = RF.CreateGraphicsPipeline(pipelineDesc))
+            using (var cl = RF.CreateCommandList())
+            {
+                cl.Begin();
+                cl.SetFramebuffer(framebuffer);
+                cl.ClearColorTarget(0, RgbaFloat.Clear);
+                cl.SetPipeline(pipeline1);
+                cl.SetGraphicsResourceSet(0, graphicsSet);
+                cl.Draw((uint)vertices.Length);
+                cl.End();
+                GD.SubmitCommands(cl);
+                GD.WaitForIdle();
+            }
+
+            using (var readback = GetReadback(output))
+            {
+                var readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
+                for (uint y = 0; y < height; y++)
+                    for (uint x = 0; x < width; x++)
+                    {
+                        Assert.Equal(new RgbaFloat(0.25f, 0.5f, 0.75f, 1), readView[x, y]);
+                    }
+                GD.Unmap(readback);
+            }
+
+            blendDesc.BlendFactor = new RgbaFloat(0, 1, 0.5f, 0);
+            blendDesc.AttachmentStates[0].DestinationColorFactor = BlendFactor.InverseBlendFactor;
+            blendDesc.AttachmentStates[0].DestinationAlphaFactor = BlendFactor.InverseBlendFactor;
+            pipelineDesc.BlendState = blendDesc;
+
+            using (var pipeline2 = RF.CreateGraphicsPipeline(pipelineDesc))
+            using (var cl = RF.CreateCommandList())
+            {
+                cl.Begin();
+                cl.SetFramebuffer(framebuffer);
+                cl.SetPipeline(pipeline2);
+                cl.SetGraphicsResourceSet(0, graphicsSet);
+                cl.Draw((uint)vertices.Length);
+                cl.End();
+                GD.SubmitCommands(cl);
+                GD.WaitForIdle();
+            }
+
+            using (var readback = GetReadback(output))
+            {
+                var readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
+                for (uint y = 0; y < height; y++)
+                    for (uint x = 0; x < width; x++)
+                    {
+                        Assert.Equal(new RgbaFloat(0.25f, 1, 0.875f, 1), readView[x, y]);
+                    }
+                GD.Unmap(readback);
+            }
+        }
     }
 
 #if TEST_OPENGL

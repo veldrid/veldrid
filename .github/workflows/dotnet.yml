@@ -8,7 +8,6 @@ on:
 
 jobs:
   build_windows:
-
     runs-on: windows-latest
 
     steps:
@@ -18,10 +17,16 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: v5.0.400
+        dotnet-version: 6.0.x
     - name: Restore dependencies
       run: dotnet restore src
     - name: Build
       run: dotnet build --no-restore src
     - name: Test
       run: dotnet test --no-build --verbosity normal src --filter "Backend=D3D11"
+    - name: Build Packages
+      if: github.ref == 'refs/heads/master'
+      run: dotnet pack src -c Release
+    - name: Publish to MyGet
+      if: github.ref == 'refs/heads/master'
+      run: dotnet nuget push bin\Packages\Release\*.nupkg -s https://www.myget.org/F/mellinoe/api/v3/index.json --api-key ${{secrets.MYGET_KEY}}

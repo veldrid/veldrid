@@ -18,14 +18,23 @@ namespace Veldrid.MTL
             : base(ref description)
         {
             MTLTexture targetMTLTexture = Util.AssertSubtype<Texture, MTLTexture>(description.Target);
-            if (BaseMipLevel != 0 || MipLevels != Target.MipLevels
-                || BaseArrayLayer != 0 || ArrayLayers != Target.ArrayLayers
+            if (ViewType != TextureViewDescription.GetFromTexture(Target)
+                || BaseMipLevel != 0
+                || MipLevels != Target.MipLevels
+                || BaseArrayLayer != 0
+                || ArrayLayers != Target.ArrayLayers
                 || Format != Target.Format)
             {
                 _hasTextureView = true;
+
+                MTLTextureType textureViewType = MTLFormats.VdToMTLTextureViewType(
+                    description.ViewType,
+                    targetMTLTexture.SampleCount != TextureSampleCount.Count1
+                    );
+
                 TargetDeviceTexture = targetMTLTexture.DeviceTexture.newTextureView(
                     MTLFormats.VdToMTLPixelFormat(Format, (description.Target.Usage & TextureUsage.DepthStencil) != 0),
-                    targetMTLTexture.MTLTextureType,
+                    textureViewType,
                     new NSRange(BaseMipLevel, MipLevels),
                     new NSRange(BaseArrayLayer, ArrayLayers));
             }

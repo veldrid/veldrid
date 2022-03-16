@@ -935,6 +935,16 @@ namespace Veldrid.Tests
             Assert.Equal(1u, tex.Height);
         }
 
+        [Fact]
+        public void CreateTextureView2DArray()
+        {
+            Texture texture = RF.CreateTexture(TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+            TextureView view = RF.CreateTextureView(texture, TextureViewType.View2DArray);
+            Assert.Equal(TextureType.Texture2D, texture.Type);
+            Assert.Equal(TextureViewType.View2DArray, view.ViewType);
+        }
+
+
         private static readonly FormatProps[] s_allFormatProps =
         {
             new FormatProps(PixelFormat.R8_UNorm, 8, 0, 0, 0),

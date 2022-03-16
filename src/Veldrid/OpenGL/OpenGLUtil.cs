@@ -29,6 +29,13 @@ namespace Veldrid.OpenGL
         {
             if (HasGlObjectLabel)
             {
+                if (string.IsNullOrEmpty(name))
+                {
+                    glObjectLabel(identifier, target, 0, null);
+                    CheckLastError();
+                    return;
+                }
+
                 int byteCount = Encoding.UTF8.GetByteCount(name);
                 if (MaxLabelLength == null)
                 {

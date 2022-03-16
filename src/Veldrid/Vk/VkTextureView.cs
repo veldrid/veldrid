@@ -45,29 +45,32 @@ namespace Veldrid.Vk
                 description.BaseArrayLayer,
                 description.ArrayLayers);
 
-            if ((tex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
+            switch (description.ViewType)
             {
-                imageViewCI.viewType = description.ArrayLayers == 1 ? VkImageViewType.ImageCube : VkImageViewType.ImageCubeArray;
-                imageViewCI.subresourceRange.layerCount *= 6;
-            }
-            else
-            {
-                switch (tex.Type)
-                {
-                    case TextureType.Texture1D:
-                        imageViewCI.viewType = description.ArrayLayers == 1
-                            ? VkImageViewType.Image1D
-                            : VkImageViewType.Image1DArray;
-                        break;
-                    case TextureType.Texture2D:
-                        imageViewCI.viewType = description.ArrayLayers == 1
-                            ? VkImageViewType.Image2D
-                            : VkImageViewType.Image2DArray;
-                        break;
-                    case TextureType.Texture3D:
-                        imageViewCI.viewType = VkImageViewType.Image3D;
-                        break;
-                }
+                case TextureViewType.View1D:
+                    imageViewCI.viewType = VkImageViewType.Image1D;
+                    break;
+                case TextureViewType.View1DArray:
+                    imageViewCI.viewType = VkImageViewType.Image1DArray;
+                    break;
+                case TextureViewType.View2D:
+                    imageViewCI.viewType = VkImageViewType.Image2D;
+                    break;
+                case TextureViewType.View2DArray:
+                    imageViewCI.viewType = VkImageViewType.Image2DArray;
+                    break;
+                case TextureViewType.View3D:
+                    imageViewCI.viewType = VkImageViewType.Image3D;
+                    break;
+                case TextureViewType.ViewCube:
+                    imageViewCI.viewType = VkImageViewType.ImageCube;
+                    imageViewCI.subresourceRange.layerCount *= 6;
+                    break;
+                
+                case TextureViewType.ViewCubeArray:
+                    imageViewCI.viewType = VkImageViewType.ImageCubeArray;
+                    imageViewCI.subresourceRange.layerCount *= 6;
+                    break;
             }
 
             vkCreateImageView(_gd.Device, ref imageViewCI, null, out _imageView);

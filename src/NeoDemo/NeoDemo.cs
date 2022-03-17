@@ -9,7 +9,6 @@ using Veldrid.NeoDemo.Objects;
 using Veldrid.StartupUtilities;
 using Veldrid.Utilities;
 using Veldrid.Sdl2;
-using System.Runtime.CompilerServices;
 
 namespace Veldrid.NeoDemo
 {
@@ -41,6 +40,7 @@ namespace Veldrid.NeoDemo
         private FullScreenQuad _fsq;
         public static RenderDoc _renderDoc;
         private bool _controllerDebugMenu;
+        private bool _showImguiDemo;
 
         public NeoDemo()
         {
@@ -382,6 +382,10 @@ namespace Veldrid.NeoDemo
                             _scene.Camera.Controller = _controllerTracker;
                         }
                     }
+                    if (ImGui.MenuItem("Show ImGui Demo", string.Empty, _showImguiDemo, true))
+                    {
+                        _showImguiDemo = !_showImguiDemo;
+                    }
 
                     ImGui.EndMenu();
                 }
@@ -512,6 +516,11 @@ namespace Veldrid.NeoDemo
             }
 
             _window.Title = $"NeoDemo ({_gd.DeviceName}, {_gd.BackendType.ToString()})";
+
+            if (_showImguiDemo)
+            {
+                ImGui.ShowDemoWindow(ref _showImguiDemo);
+            }
         }
 
         private void ChangeMsaa(int msaaOption)

@@ -1,6 +1,7 @@
 ﻿using Vortice.Direct3D11;
 using System.Diagnostics;
 using System;
+using Vortice.Mathematics;
 
 namespace Veldrid.D3D11
 {
@@ -10,6 +11,7 @@ namespace Veldrid.D3D11
         private bool _disposed;
 
         public ID3D11BlendState BlendState { get; }
+        public Color4 BlendFactor { get; }
         public ID3D11DepthStencilState DepthStencilState { get; }
         public uint StencilReference { get; }
         public ID3D11RasterizerState RasterizerState { get; }
@@ -74,6 +76,7 @@ namespace Veldrid.D3D11
                 out ID3D11InputLayout inputLayout);
 
             BlendState = blendState;
+            BlendFactor = new Color4(description.BlendState.BlendFactor.ToVector4());
             DepthStencilState = depthStencilState;
             StencilReference = description.DepthStencilState.StencilReference;
             RasterizerState = rasterizerState;

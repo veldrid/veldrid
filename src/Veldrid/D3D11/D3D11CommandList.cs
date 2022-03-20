@@ -35,6 +35,7 @@ namespace Veldrid.D3D11
         private DeviceBuffer _ib;
         private uint _ibOffset;
         private ID3D11BlendState _blendState;
+        private Color4 _blendFactor;
         private ID3D11DepthStencilState _depthStencilState;
         private uint _stencilReference;
         private ID3D11RasterizerState _rasterizerState;
@@ -237,10 +238,12 @@ namespace Veldrid.D3D11
                 Util.ClearArray(_invalidatedGraphicsResourceSets);
 
                 ID3D11BlendState blendState = d3dPipeline.BlendState;
-                if (_blendState != blendState)
+                Color4 blendFactor = d3dPipeline.BlendFactor;
+                if (_blendState != blendState || _blendFactor != blendFactor)
                 {
                     _blendState = blendState;
-                    _context.OMSetBlendState(blendState);
+                    _blendFactor = blendFactor;
+                    _context.OMSetBlendState(blendState, blendFactor);
                 }
 
                 ID3D11DepthStencilState depthStencilState = d3dPipeline.DepthStencilState;
@@ -1112,6 +1115,10 @@ namespace Veldrid.D3D11
                 {
                     _context.PSSetSampler(slot, sampler.DeviceSampler);
                 }
+            }
+            if((stages & ShaderStages.Compute) == ShaderStages.Compute)
+            {
+                _context.CSSetSampler(slot, sampler.DeviceSampler);
             }
         }
 

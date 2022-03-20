@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -791,13 +792,10 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
-        [Fact]
+        [SkippableFact]
         public void ComputeGeneratedTexture()
         {
-            if (!GD.Features.ComputeShader)
-            {
-                return;
-            }
+            Skip.IfNot(GD.Features.ComputeShader);
 
             uint width = 4;
             uint height = 1;
@@ -858,6 +856,68 @@ namespace Veldrid.Tests
             Assert.Equal(RgbaFloat.Blue, readView[2, 0]);
             Assert.Equal(RgbaFloat.White, readView[3, 0]);
             GD.Unmap(readback);
+        }
+
+        [SkippableTheory]
+        [InlineData(2)]
+        [InlineData(6)]
+        public void ComputeBindTextureWithArrayLayersAsWriteable(uint ArrayLayers)
+        {
+            Skip.IfNot(GD.Features.ComputeShader);
+
+            uint TexSize = 32;
+            uint MipLevels = 1;
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                TexSize, TexSize,
+                MipLevels,
+                ArrayLayers,
+                PixelFormat.R8_G8_B8_A8_UNorm,
+                TextureUsage.Sampled | TextureUsage.Storage);
+            Texture computeOutput = RF.CreateTexture(texDesc);
+            
+            ResourceLayout computeLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("ComputeOutput", ResourceKind.TextureReadWrite, ShaderStages.Compute)));
+            ResourceSet computeSet = RF.CreateResourceSet(new ResourceSetDescription(computeLayout, computeOutput));
+
+            Pipeline computePipeline = RF.CreateComputePipeline(new ComputePipelineDescription(
+                TestShaders.LoadCompute(RF, "ComputeImage2DArrayGenerator"),
+                computeLayout,
+                32, 32, 1));
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetPipeline(computePipeline);
+            cl.SetComputeResourceSet(0, computeSet);
+            cl.Dispatch(TexSize / 32, TexSize / 32, ArrayLayers);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            float sideColorStep = (float)Math.Floor(1.0f / ArrayLayers);
+            Texture readback = GetReadback(computeOutput);
+
+            foreach (var mip in Enumerable.Range(0, (int)MipLevels))
+            {
+                foreach (var layer in Enumerable.Range(0, (int)ArrayLayers))
+                {
+                    var subresource = readback.CalculateSubresource((uint)mip, (uint)layer);
+                    var mipSize = TexSize >> mip;
+                    var expectedColor = (byte)255.0f * ((layer + 1) * sideColorStep);
+                    var map = GD.Map<byte>(readback, MapMode.Read, subresource);
+
+                    Assert.All(
+                        from x in Enumerable.Range(0, (int)mipSize)
+                        from y in Enumerable.Range(0, (int)mipSize)
+                        select (X: x, Y: y),
+                        (xy) =>
+                        {
+                            Assert.Equal(map[xy.X, xy.Y], expectedColor);
+                        }
+                    );
+
+                    GD.Unmap(readback, subresource);
+                }
+            }
         }
 
         [Theory]
@@ -1240,6 +1300,118 @@ namespace Veldrid.Tests
                 }
             }
             GD.Unmap(readback);
+        }
+
+        [Fact]
+        public void UseBlendFactor()
+        {
+            const uint width = 512;
+            const uint height = 512;
+            using var output = RF.CreateTexture(
+                TextureDescription.Texture2D(width, height, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            using var framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, output));
+
+            var yMod = GD.IsClipSpaceYInverted ? -1.0f : 1.0f;
+            var vertices = new[]
+            {
+                new ColoredVertex { Position = new Vector2(-1, 1 * yMod), Color = Vector4.One },
+                new ColoredVertex { Position = new Vector2(1, 1 * yMod), Color = Vector4.One },
+                new ColoredVertex { Position = new Vector2(-1, -1 * yMod), Color = Vector4.One },
+                new ColoredVertex { Position = new Vector2(1, -1 * yMod), Color = Vector4.One }
+            };
+            uint vertexSize = (uint)Unsafe.SizeOf<ColoredVertex>();
+            using var buffer = RF.CreateBuffer(new BufferDescription(
+                vertexSize * (uint)vertices.Length,
+                BufferUsage.StructuredBufferReadOnly,
+                vertexSize,
+                true));
+            GD.UpdateBuffer(buffer, 0, vertices);
+
+            using var graphicsLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("InputVertices", ResourceKind.StructuredBufferReadOnly, ShaderStages.Vertex)));
+            using var graphicsSet = RF.CreateResourceSet(new ResourceSetDescription(graphicsLayout, buffer));
+
+            var blendDesc = new BlendStateDescription
+            {
+                BlendFactor = new RgbaFloat(0.25f, 0.5f, 0.75f, 1),
+                AttachmentStates = new[]
+                {
+                    new BlendAttachmentDescription
+                    {
+                        BlendEnabled = true,
+                        SourceColorFactor = BlendFactor.BlendFactor,
+                        DestinationColorFactor = BlendFactor.Zero,
+                        ColorFunction = BlendFunction.Add,
+                        SourceAlphaFactor = BlendFactor.BlendFactor,
+                        DestinationAlphaFactor = BlendFactor.Zero,
+                        AlphaFunction = BlendFunction.Add
+                    }
+                }
+            };
+            var pipelineDesc = new GraphicsPipelineDescription(
+                blendDesc,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.Default,
+                PrimitiveTopology.TriangleStrip,
+                new ShaderSetDescription(
+                    Array.Empty<VertexLayoutDescription>(),
+                    TestShaders.LoadVertexFragment(RF, "ColoredQuadRenderer")),
+                graphicsLayout,
+                framebuffer.OutputDescription);
+
+            using (var pipeline1 = RF.CreateGraphicsPipeline(pipelineDesc))
+            using (var cl = RF.CreateCommandList())
+            {
+                cl.Begin();
+                cl.SetFramebuffer(framebuffer);
+                cl.ClearColorTarget(0, RgbaFloat.Clear);
+                cl.SetPipeline(pipeline1);
+                cl.SetGraphicsResourceSet(0, graphicsSet);
+                cl.Draw((uint)vertices.Length);
+                cl.End();
+                GD.SubmitCommands(cl);
+                GD.WaitForIdle();
+            }
+
+            using (var readback = GetReadback(output))
+            {
+                var readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
+                for (uint y = 0; y < height; y++)
+                    for (uint x = 0; x < width; x++)
+                    {
+                        Assert.Equal(new RgbaFloat(0.25f, 0.5f, 0.75f, 1), readView[x, y]);
+                    }
+                GD.Unmap(readback);
+            }
+
+            blendDesc.BlendFactor = new RgbaFloat(0, 1, 0.5f, 0);
+            blendDesc.AttachmentStates[0].DestinationColorFactor = BlendFactor.InverseBlendFactor;
+            blendDesc.AttachmentStates[0].DestinationAlphaFactor = BlendFactor.InverseBlendFactor;
+            pipelineDesc.BlendState = blendDesc;
+
+            using (var pipeline2 = RF.CreateGraphicsPipeline(pipelineDesc))
+            using (var cl = RF.CreateCommandList())
+            {
+                cl.Begin();
+                cl.SetFramebuffer(framebuffer);
+                cl.SetPipeline(pipeline2);
+                cl.SetGraphicsResourceSet(0, graphicsSet);
+                cl.Draw((uint)vertices.Length);
+                cl.End();
+                GD.SubmitCommands(cl);
+                GD.WaitForIdle();
+            }
+
+            using (var readback = GetReadback(output))
+            {
+                var readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
+                for (uint y = 0; y < height; y++)
+                    for (uint x = 0; x < width; x++)
+                    {
+                        Assert.Equal(new RgbaFloat(0.25f, 1, 0.875f, 1), readView[x, y]);
+                    }
+                GD.Unmap(readback);
+            }
         }
     }
 

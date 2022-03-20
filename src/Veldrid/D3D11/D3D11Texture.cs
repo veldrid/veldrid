@@ -18,7 +18,7 @@ namespace Veldrid.D3D11
         public override TextureUsage Usage { get; }
         public override TextureType Type { get; }
         public override TextureSampleCount SampleCount { get; }
-        public override bool IsDisposed => DeviceTexture.IsDisposed;
+        public override bool IsDisposed => DeviceTexture.NativePointer == IntPtr.Zero;
 
         public ID3D11Resource DeviceTexture { get; }
         public Vortice.DXGI.Format DxgiFormat { get; }
@@ -43,7 +43,7 @@ namespace Veldrid.D3D11
             TypelessDxgiFormat = D3D11Formats.GetTypelessFormat(DxgiFormat);
 
             CpuAccessFlags cpuFlags = CpuAccessFlags.None;
-            Usage resourceUsage = Vortice.Direct3D11.Usage.Default;
+            ResourceUsage resourceUsage = ResourceUsage.Default;
             BindFlags bindFlags = BindFlags.None;
             ResourceOptionFlags optionFlags = ResourceOptionFlags.None;
 
@@ -66,7 +66,7 @@ namespace Veldrid.D3D11
             if ((description.Usage & TextureUsage.Staging) == TextureUsage.Staging)
             {
                 cpuFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
-                resourceUsage = Vortice.Direct3D11.Usage.Staging;
+                resourceUsage = ResourceUsage.Staging;
             }
 
             if ((description.Usage & TextureUsage.GenerateMipmaps) != 0)
@@ -78,7 +78,7 @@ namespace Veldrid.D3D11
             int arraySize = (int)description.ArrayLayers;
             if ((description.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
             {
-                optionFlags = ResourceOptionFlags.TextureCube;
+                optionFlags |= ResourceOptionFlags.TextureCube;
                 arraySize *= 6;
             }
 

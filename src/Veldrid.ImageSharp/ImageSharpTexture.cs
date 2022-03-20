@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.ImageSharp
 {
@@ -125,15 +126,12 @@ namespace Veldrid.ImageSharp
             for (int level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                if (!image.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixelMemory))
-                {
-                    throw new VeldridException("Unable to get image pixelspan. Make sure to initialize MemoryAllocator.Default!");
-                }
-                using (MemoryHandle pin = pixelMemory.Pin())
+                var pixelSpan = image.GetPixelSpan();
+                fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
                 {
                     gd.UpdateTexture(
                         tex,
-                        (IntPtr)pin.Pointer,
+                        (IntPtr)pin,
                         (uint)(PixelSizeInBytes * image.Width * image.Height),
                         0,
                         0,

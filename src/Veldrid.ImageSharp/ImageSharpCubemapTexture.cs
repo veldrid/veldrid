@@ -1,9 +1,8 @@
 ﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
+using System.Buffers;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace Veldrid.ImageSharp
 {
@@ -171,47 +170,47 @@ namespace Veldrid.ImageSharp
 
             for (int level = 0; level < MipLevels; level++)
             {
-                if (!CubemapTextures[PositiveXArrayLayer][level].TryGetSinglePixelSpan(out Span<Rgba32> pixelSpanPosX))
+                if (!CubemapTextures[PositiveXArrayLayer][level].DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixelMemoryPosX))
                 {
-                    throw new VeldridException("Unable to get positive x pixelspan.");
+                    throw new VeldridException("Unable to get positive x pixelspan. Make sure to initialize MemoryAllocator.Default!");
                 }
-                if (!CubemapTextures[NegativeXArrayLayer][level].TryGetSinglePixelSpan(out Span<Rgba32> pixelSpanNegX))
+                if (!CubemapTextures[NegativeXArrayLayer][level].DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixelMemoryNegX))
                 {
-                    throw new VeldridException("Unable to get negatve x pixelspan.");
+                    throw new VeldridException("Unable to get negatve x pixelspan. Make sure to initialize MemoryAllocator.Default!");
                 }
-                if (!CubemapTextures[PositiveYArrayLayer][level].TryGetSinglePixelSpan(out Span<Rgba32> pixelSpanPosY))
+                if (!CubemapTextures[PositiveYArrayLayer][level].DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixelMemoryPosY))
                 {
-                    throw new VeldridException("Unable to get positive y pixelspan.");
+                    throw new VeldridException("Unable to get positive y pixelspan. Make sure to initialize MemoryAllocator.Default!");
                 }
-                if (!CubemapTextures[NegativeYArrayLayer][level].TryGetSinglePixelSpan(out Span<Rgba32> pixelSpanNegY))
+                if (!CubemapTextures[NegativeYArrayLayer][level].DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixelMemoryNegY))
                 {
-                    throw new VeldridException("Unable to get negatve y pixelspan.");
+                    throw new VeldridException("Unable to get negatve y pixelspan. Make sure to initialize MemoryAllocator.Default!");
                 }
-                if (!CubemapTextures[PositiveZArrayLayer][level].TryGetSinglePixelSpan(out Span<Rgba32> pixelSpanPosZ))
+                if (!CubemapTextures[PositiveZArrayLayer][level].DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixelMemoryPosZ))
                 {
-                    throw new VeldridException("Unable to get positive z pixelspan."); 
+                    throw new VeldridException("Unable to get positive z pixelspan. Make sure to initialize MemoryAllocator.Default!"); 
                 }
-                if (!CubemapTextures[NegativeZArrayLayer][level].TryGetSinglePixelSpan(out Span<Rgba32> pixelSpanNegZ))
+                if (!CubemapTextures[NegativeZArrayLayer][level].DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixelMemoryNegZ))
                 {
-                    throw new VeldridException("Unable to get negatve z pixelspan.");
+                    throw new VeldridException("Unable to get negatve z pixelspan. Make sure to initialize MemoryAllocator.Default!");
                 }
-                fixed (Rgba32* positiveXPin = &MemoryMarshal.GetReference(pixelSpanPosX))
-                fixed (Rgba32* negativeXPin = &MemoryMarshal.GetReference(pixelSpanNegX))
-                fixed (Rgba32* positiveYPin = &MemoryMarshal.GetReference(pixelSpanPosY))
-                fixed (Rgba32* negativeYPin = &MemoryMarshal.GetReference(pixelSpanNegY))
-                fixed (Rgba32* positiveZPin = &MemoryMarshal.GetReference(pixelSpanPosZ))
-                fixed (Rgba32* negativeZPin = &MemoryMarshal.GetReference(pixelSpanNegZ))
+                using (MemoryHandle positiveXPin = pixelMemoryPosX.Pin())
+                using (MemoryHandle negativeXPin = pixelMemoryNegX.Pin())
+                using (MemoryHandle positiveYPin = pixelMemoryPosY.Pin())
+                using (MemoryHandle negativeYPin = pixelMemoryNegY.Pin())
+                using (MemoryHandle positiveZPin = pixelMemoryPosZ.Pin())
+                using (MemoryHandle negativeZPin = pixelMemoryNegZ.Pin())
                 {
                     Image<Rgba32> image = CubemapTextures[0][level];
                     uint width = (uint)image.Width;
                     uint height = (uint)image.Height;
                     uint faceSize = width * height * PixelSizeInBytes;
-                    gd.UpdateTexture(cubemapTexture, (IntPtr)positiveXPin, faceSize, 0, 0, 0, width, height, 1, (uint)level, PositiveXArrayLayer);
-                    gd.UpdateTexture(cubemapTexture, (IntPtr)negativeXPin, faceSize, 0, 0, 0, width, height, 1, (uint)level, NegativeXArrayLayer);
-                    gd.UpdateTexture(cubemapTexture, (IntPtr)positiveYPin, faceSize, 0, 0, 0, width, height, 1, (uint)level, PositiveYArrayLayer);
-                    gd.UpdateTexture(cubemapTexture, (IntPtr)negativeYPin, faceSize, 0, 0, 0, width, height, 1, (uint)level, NegativeYArrayLayer);
-                    gd.UpdateTexture(cubemapTexture, (IntPtr)positiveZPin, faceSize, 0, 0, 0, width, height, 1, (uint)level, PositiveZArrayLayer);
-                    gd.UpdateTexture(cubemapTexture, (IntPtr)negativeZPin, faceSize, 0, 0, 0, width, height, 1, (uint)level, NegativeZArrayLayer);
+                    gd.UpdateTexture(cubemapTexture, (IntPtr)positiveXPin.Pointer, faceSize, 0, 0, 0, width, height, 1, (uint)level, PositiveXArrayLayer);
+                    gd.UpdateTexture(cubemapTexture, (IntPtr)negativeXPin.Pointer, faceSize, 0, 0, 0, width, height, 1, (uint)level, NegativeXArrayLayer);
+                    gd.UpdateTexture(cubemapTexture, (IntPtr)positiveYPin.Pointer, faceSize, 0, 0, 0, width, height, 1, (uint)level, PositiveYArrayLayer);
+                    gd.UpdateTexture(cubemapTexture, (IntPtr)negativeYPin.Pointer, faceSize, 0, 0, 0, width, height, 1, (uint)level, NegativeYArrayLayer);
+                    gd.UpdateTexture(cubemapTexture, (IntPtr)positiveZPin.Pointer, faceSize, 0, 0, 0, width, height, 1, (uint)level, PositiveZArrayLayer);
+                    gd.UpdateTexture(cubemapTexture, (IntPtr)negativeZPin.Pointer, faceSize, 0, 0, 0, width, height, 1, (uint)level, NegativeZArrayLayer);
                 }
             }
             return cubemapTexture;

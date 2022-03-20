@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using System;
+using System.Windows;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,6 +11,8 @@ using Veldrid.StartupUtilities;
 using Veldrid.Utilities;
 using Veldrid.Sdl2;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Veldrid.NeoDemo
 {
@@ -24,7 +27,7 @@ namespace Veldrid.NeoDemo
         private RenderOrderKeyComparer _renderOrderKeyComparer = new RenderOrderKeyComparer();
         private bool _recreateWindow = true;
 
-        private static double _desiredFrameLengthSeconds = 1.0 / 60.0;
+        private static double _desiredFrameLengthSeconds = 1.0 / 120.0;
         private static bool _limitFrameRate = false;
         private static FrameTimeAverager _fta = new FrameTimeAverager(0.666);
         private CommandList _frameCommands;
@@ -42,37 +45,49 @@ namespace Veldrid.NeoDemo
         public static RenderDoc _renderDoc;
         private bool _controllerDebugMenu;
 
-        public NeoDemo()
+        public NeoDemo(Sdl2Window activewindow = null)
         {
-            WindowCreateInfo windowCI = new WindowCreateInfo
-            {
-                X = 50,
-                Y = 50,
-                WindowWidth = 960,
-                WindowHeight = 540,
-                WindowInitialState = WindowState.Normal,
-                WindowTitle = "Veldrid NeoDemo"
-            };
             GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true, _colorSrgb);
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            VeldridStartup.CreateWindowAndGraphicsDevice(
-                windowCI,
-                gdOptions,
-                 //VeldridStartup.GetPlatformDefaultBackend(),
-                 //GraphicsBackend.Metal,
-                 //GraphicsBackend.Vulkan,
-                //GraphicsBackend.OpenGL,
-                //GraphicsBackend.OpenGLES,
-                out _window,
-                out _gd);
+            if (activewindow != null)
+            {
+                VeldridStartup.CreateWindowAndGraphicsDevice(
+                    gdOptions,
+                     GraphicsBackend.Direct3D11,
+                     activewindow,
+                     out _gd);
+                _window = activewindow;
+            }
+            else
+            {
+                WindowCreateInfo windowCI = new WindowCreateInfo
+                {
+                    X = 0,
+                    Y = 0,
+                    WindowWidth = 1920,
+                    WindowHeight = 1080,
+                    WindowInitialState = WindowState.Normal,
+                    WindowTitle = "Zealous Sanity"
+                };
+                VeldridStartup.CreateWindowAndGraphicsDevice(
+                    windowCI,
+                    gdOptions,
+                     //VeldridStartup.GetPlatformDefaultBackend(),
+                     //GraphicsBackend.Metal,
+                     //GraphicsBackend.Vulkan,
+                    //GraphicsBackend.OpenGL,
+                    //GraphicsBackend.OpenGLES,
+                    out _window,
+                    out _gd);
+            }
             _window.Resized += () => _windowResized = true;
 
             Sdl2Native.SDL_Init(SDLInitFlags.GameController);
             Sdl2ControllerTracker.CreateDefault(out _controllerTracker);
 
-            _scene = new Scene(_gd, _window, _controllerTracker);
+            _scene = new Scene(_gd, _window, _controllerTracker) { ThreadedRendering = true };
 
             _sc.SetCurrentScene(_scene);
 
@@ -203,7 +218,7 @@ namespace Veldrid.NeoDemo
             _scene.AddRenderable(mesh);
         }
 
-        public void Run()
+        public async Task Run()
         {
             long previousFrameTicks = 0;
             Stopwatch sw = new Stopwatch();
@@ -225,20 +240,20 @@ namespace Veldrid.NeoDemo
                 Sdl2Events.ProcessEvents();
                 snapshot = _window.PumpEvents();
                 InputTracker.UpdateFrameInput(snapshot, _window);
-                Update((float)deltaSeconds);
+                await Update((float)deltaSeconds);
                 if (!_window.Exists)
                 {
                     break;
                 }
 
-                Draw();
+                await Draw();
             }
 
             DestroyAllObjects();
             _gd.Dispose();
         }
 
-        private void Update(float deltaSeconds)
+        private async Task Update(float deltaSeconds)
         {
             _fta.AddTime(deltaSeconds);
             _scene.Update(deltaSeconds);
@@ -552,7 +567,7 @@ namespace Veldrid.NeoDemo
             _window.WindowState = isFullscreen ? WindowState.Normal : WindowState.BorderlessFullScreen;
         }
 
-        private void Draw()
+        private async Task Draw()
         {
             Debug.Assert(_window.Exists);
             int width = _window.Width;
@@ -585,7 +600,7 @@ namespace Veldrid.NeoDemo
 
             CommonMaterials.FlushAll(_frameCommands);
 
-            _scene.RenderAllStages(_gd, _frameCommands, _sc);
+            await _scene.RenderAllStages(_gd, _frameCommands, _sc);
             _gd.SwapBuffers();
         }
 

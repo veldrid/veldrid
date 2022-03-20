@@ -1,5 +1,8 @@
 #version 450
 
+// uniform sampler2D u_buffer0;
+// uniform sampler2D u_buffer1;
+
 layout(set = 0, binding = 0) uniform texture2D SourceTexture;
 layout(set = 0, binding = 1) uniform sampler SourceSampler;
 

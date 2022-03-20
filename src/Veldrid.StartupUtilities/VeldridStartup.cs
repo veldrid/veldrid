@@ -43,6 +43,20 @@ namespace Veldrid.StartupUtilities
             window = CreateWindow(ref windowCI);
             gd = CreateGraphicsDevice(window, deviceOptions, preferredBackend);
         }
+        public static void CreateWindowAndGraphicsDevice(
+            GraphicsDeviceOptions deviceOptions,
+            GraphicsBackend preferredBackend,
+            Sdl2Window window,
+            out GraphicsDevice gd)
+        {
+            Sdl2Native.SDL_Init(SDLInitFlags.Video);
+            if (preferredBackend == GraphicsBackend.OpenGL || preferredBackend == GraphicsBackend.OpenGLES)
+            {
+                SetSDLGLContextAttributes(deviceOptions, preferredBackend);
+            }
+
+            gd = CreateGraphicsDevice(window, deviceOptions, preferredBackend);
+        }
 
 
         public static Sdl2Window CreateWindow(WindowCreateInfo windowCI) => CreateWindow(ref windowCI);
@@ -62,7 +76,7 @@ namespace Veldrid.StartupUtilities
                 windowCI.WindowWidth,
                 windowCI.WindowHeight,
                 flags,
-                false);
+                true);
 
             return window;
         }
@@ -378,7 +392,7 @@ namespace Veldrid.StartupUtilities
         }
 #endif
 
-        private static unsafe string GetString(byte* stringStart)
+        public static unsafe string GetString(byte* stringStart)
         {
             int characters = 0;
             while (stringStart[characters] != 0)

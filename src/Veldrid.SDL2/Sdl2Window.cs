@@ -87,7 +87,7 @@ namespace Veldrid.Sdl2
                     WindowParams wp = new WindowParams()
                     {
                         WindowHandle = windowHandle,
-                        WindowFlags = 0,
+                        WindowFlags = SDL_WindowFlags.OpenGL | SDL_WindowFlags.Resizable | SDL_WindowFlags.Shown,
                         ResetEvent = mre
                     };
 
@@ -98,6 +98,10 @@ namespace Veldrid.Sdl2
             else
             {
                 _window = SDL_CreateWindowFrom(windowHandle);
+                if(_window == IntPtr.Zero)
+                {
+                    return;
+                }
                 WindowID = SDL_GetWindowID(_window);
                 Sdl2WindowRegistry.RegisterWindow(this);
                 PostWindowCreated(0);
@@ -390,7 +394,7 @@ namespace Veldrid.Sdl2
 
         private void ProcessEvents(SDLEventHandler eventHandler)
         {
-            CheckNewWindowTitle();
+            //CheckNewWindowTitle();
 
             Sdl2Events.ProcessEvents();
             for (int i = 0; i < _events.Count; i++)

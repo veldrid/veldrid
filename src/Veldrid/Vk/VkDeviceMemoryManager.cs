@@ -68,7 +68,7 @@ namespace Veldrid.Vk
             Vulkan.VkBuffer dedicatedBuffer)
         {
             // Round up to the nearest multiple of bufferImageGranularity.
-            size = ((size / _bufferImageGranularity) + 1) * _bufferImageGranularity;
+            //size = ((size / _bufferImageGranularity) + 1) * _bufferImageGranularity;
             _totalAllocatedBytes += size;
 
             lock (_lock)

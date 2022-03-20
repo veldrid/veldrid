@@ -38,8 +38,8 @@ namespace Veldrid.NeoDemo
         float _nScale = 4f;
         float _fScale = 4f;
 
-        float _nearCascadeLimit = 100;
-        float _midCascadeLimit = 300;
+        float _nearCascadeLimit = 10000;
+        float _midCascadeLimit = 30000;
         float _farCascadeLimit;
 
         public Scene(GraphicsDevice gd, Sdl2Window window, Sdl2ControllerTracker controller)
@@ -77,11 +77,11 @@ namespace Veldrid.NeoDemo
 
         private readonly Task[] _tasks = new Task[4];
 
-        public void RenderAllStages(GraphicsDevice gd, CommandList cl, SceneContext sc)
+        public async Task RenderAllStages(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             if (ThreadedRendering)
             {
-                RenderAllMultiThreaded(gd, cl, sc);
+                await RenderAllMultiThreaded(gd, cl, sc);
             }
             else
             {
@@ -240,7 +240,7 @@ namespace Veldrid.NeoDemo
             gd.SubmitCommands(cl);
         }
 
-        private void RenderAllMultiThreaded(GraphicsDevice gd, CommandList cl, SceneContext sc)
+        private async Task RenderAllMultiThreaded(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             float depthClear = gd.IsDepthRangeZeroToOne ? 0f : 1f;
             Matrix4x4 cameraProj = Camera.ProjectionMatrix;
@@ -323,9 +323,10 @@ namespace Veldrid.NeoDemo
             _tasks[3] = Task.Run(() =>
             {
                 // Reflections
-                cls[4].SetFramebuffer(sc.ReflectionFramebuffer);
                 float scWidth = sc.ReflectionFramebuffer.Width;
                 float scHeight = sc.ReflectionFramebuffer.Height;
+
+                cls[4].SetFramebuffer(sc.ReflectionFramebuffer);
                 cls[4].SetViewport(0, new Viewport(0, 0, scWidth, scHeight, 0, 1));
                 cls[4].SetFullViewports();
                 cls[4].SetFullScissorRects();
@@ -347,7 +348,10 @@ namespace Veldrid.NeoDemo
                 cls[4].UpdateBuffer(sc.ReflectionViewProjBuffer, 0, view * projection);
 
                 BoundingFrustum cameraFrustum = new BoundingFrustum(view * projection);
-                Render(gd, cls[4], sc, RenderPasses.ReflectionMap, cameraFrustum, _camera.Position, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
+                if (true)
+                {
+                    Render(gd, cls[4], sc, RenderPasses.ReflectionMap, cameraFrustum, _camera.Position, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
+                }
 
                 cl.GenerateMipmaps(sc.ReflectionColorTexture);
 
@@ -366,7 +370,8 @@ namespace Veldrid.NeoDemo
                 Render(gd, cls[4], sc, RenderPasses.Overlay, cameraFrustum, _camera.Position, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
             });
 
-            Task.WaitAll(_tasks);
+            var Tasks = _tasks.Where(T => T != null).ToArray();
+            await Task.WhenAll(Tasks);
 
             foreach (Renderable renderable in _allPerFrameRenderablesSet)
             {

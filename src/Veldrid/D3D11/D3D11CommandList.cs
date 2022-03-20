@@ -1116,6 +1116,10 @@ namespace Veldrid.D3D11
                     _context.PSSetSampler(slot, sampler.DeviceSampler);
                 }
             }
+            if((stages & ShaderStages.Compute) == ShaderStages.Compute)
+            {
+                _context.CSSetSampler(slot, sampler.DeviceSampler);
+            }
         }
 
         protected override void SetFramebufferCore(Framebuffer fb)

@@ -468,6 +468,11 @@ namespace Veldrid.Vk
             StackList<IntPtr, Size64Bytes> instanceExtensions = new StackList<IntPtr, Size64Bytes>();
             StackList<IntPtr, Size64Bytes> instanceLayers = new StackList<IntPtr, Size64Bytes>();
 
+            if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_portability_subset))
+            {
+                _surfaceExtensions.Add(CommonStrings.VK_KHR_portability_subset);
+            }
+
             if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
             {
                 _surfaceExtensions.Add(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME);
@@ -770,6 +775,11 @@ namespace Veldrid.Vk
                         activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
                         requiredInstanceExtensions.Remove(extensionName);
                         hasDriverProperties = true;
+                    }
+                    else if (extensionName == CommonStrings.VK_KHR_portability_subset)
+                    {
+                        activeExtensions[activeExtensionCount++] = (IntPtr)properties[property].extensionName;
+                        requiredInstanceExtensions.Remove(extensionName);
                     }
                     else if (requiredInstanceExtensions.Remove(extensionName))
                     {
@@ -1513,7 +1523,7 @@ namespace Veldrid.Vk
         {
             SharedCommandPool pool = GetFreeCommandPool();
             VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, layout);
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ActualArrayLayers, layout);
             pool.EndAndSubmit(cb);
         }
 

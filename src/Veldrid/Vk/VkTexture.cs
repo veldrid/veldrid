@@ -32,6 +32,7 @@ namespace Veldrid.Vk
         public override uint MipLevels { get; }
 
         public override uint ArrayLayers { get; }
+        public uint ActualArrayLayers => _actualImageArrayLayers;
 
         public override TextureUsage Usage { get; }
 

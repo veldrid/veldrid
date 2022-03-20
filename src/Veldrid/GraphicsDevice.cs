@@ -850,7 +850,7 @@ namespace Veldrid
             WaitForIdle();
             PointSampler.Dispose();
             LinearSampler.Dispose();
-            Aniso4xSampler.Dispose();
+            _aniso4xSampler?.Dispose();
             PlatformDispose();
         }
 

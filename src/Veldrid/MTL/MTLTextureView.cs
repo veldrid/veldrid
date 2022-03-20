@@ -23,11 +23,12 @@ namespace Veldrid.MTL
                 || Format != Target.Format)
             {
                 _hasTextureView = true;
+                var effectiveArrayLayers = Target.Usage.HasFlag(TextureUsage.Cubemap) ? ArrayLayers * 6 : ArrayLayers;
                 TargetDeviceTexture = targetMTLTexture.DeviceTexture.newTextureView(
                     MTLFormats.VdToMTLPixelFormat(Format, (description.Target.Usage & TextureUsage.DepthStencil) != 0),
                     targetMTLTexture.MTLTextureType,
                     new NSRange(BaseMipLevel, MipLevels),
-                    new NSRange(BaseArrayLayer, ArrayLayers));
+                    new NSRange(BaseArrayLayer, effectiveArrayLayers));
             }
             else
             {

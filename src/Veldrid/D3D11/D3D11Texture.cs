@@ -78,7 +78,7 @@ namespace Veldrid.D3D11
             int arraySize = (int)description.ArrayLayers;
             if ((description.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
             {
-                optionFlags = ResourceOptionFlags.TextureCube;
+                optionFlags |= ResourceOptionFlags.TextureCube;
                 arraySize *= 6;
             }
 

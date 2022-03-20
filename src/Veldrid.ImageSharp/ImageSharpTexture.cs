@@ -80,24 +80,21 @@ namespace Veldrid.ImageSharp
             for (uint level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                if (!image.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixelMemory))
-                {
-                    throw new VeldridException("Unable to get image pixelspan. Make sure to initialize MemoryAllocator.Default!");
-                }
-                using(MemoryHandle pin = pixelMemory.Pin())
+                var pixelSpan = image.GetPixelSpan();
+                fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
                 {
                     MappedResource map = gd.Map(staging, MapMode.Write, level);
                     uint rowWidth = (uint)(image.Width * 4);
                     if (rowWidth == map.RowPitch)
                     {
-                        Unsafe.CopyBlock(map.Data.ToPointer(), pin.Pointer, (uint)(image.Width * image.Height * 4));
+                        Unsafe.CopyBlock(map.Data.ToPointer(), pin, (uint)(image.Width * image.Height * 4));
                     }
                     else
                     {
                         for (uint y = 0; y < image.Height; y++)
                         {
                             byte* dstStart = (byte*)map.Data.ToPointer() + y * map.RowPitch;
-                            byte* srcStart = (byte*)pin.Pointer + y * rowWidth;
+                            byte* srcStart = (byte*)pin + y * rowWidth;
                             Unsafe.CopyBlock(dstStart, srcStart, rowWidth);
                         }
                     }

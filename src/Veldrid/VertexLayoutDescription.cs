@@ -64,7 +64,7 @@ namespace Veldrid
             uint computedStride = 0;
             for (int i = 0; i < elements.Length; i++)
             {
-                uint elementSize = FormatHelpers.GetSizeInBytes(elements[i].Format);
+                uint elementSize = FormatSizeHelpers.GetSizeInBytes(elements[i].Format);
                 if (elements[i].Offset != 0)
                 {
                     computedStride = elements[i].Offset + elementSize;

@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace Veldrid
 {
@@ -413,7 +411,33 @@ namespace Veldrid
 
         private bool TryMapKey(Key key, out ImGuiKey result)
         {
-            result = ImGuiKey.A;
+            ImGuiKey keyToImGuiKeyShortcut(Key keyToConvert, Key startKey1, ImGuiKey startKey2)
+            {
+                int changeFromStart1 = (int)keyToConvert - (int)startKey1;
+                return startKey2 + changeFromStart1;
+            }
+
+            if (key >= Key.F1 && key <= Key.F12)
+            {
+                result = keyToImGuiKeyShortcut(key, Key.F1, ImGuiKey.F1);
+                return true;
+            }
+            else if (key >= Key.Keypad0 && key <= Key.Keypad9)
+            {
+                result = keyToImGuiKeyShortcut(key, Key.Keypad0, ImGuiKey.Keypad0);
+                return true;
+            }
+            else if (key >= Key.A && key <= Key.Z)
+            {
+                result = keyToImGuiKeyShortcut(key, Key.A, ImGuiKey.A);
+                return true;
+            }
+            else if (key >= Key.Number0 && key <= Key.Number9)
+            {
+                result = keyToImGuiKeyShortcut(key, Key.Number0, ImGuiKey._0);
+                return true;
+            }
+
             switch (key)
             {
                 case Key.ShiftLeft:
@@ -434,42 +458,6 @@ namespace Veldrid
                     return true;
                 case Key.Menu:
                     result = ImGuiKey.Menu;
-                    return true;
-                case Key.F1:
-                    result = ImGuiKey.F1;
-                    return true;
-                case Key.F2:
-                    result = ImGuiKey.F2;
-                    return true;
-                case Key.F3:
-                    result = ImGuiKey.F3;
-                    return true;
-                case Key.F4:
-                    result = ImGuiKey.F4;
-                    return true;
-                case Key.F5:
-                    result = ImGuiKey.F5;
-                    return true;
-                case Key.F6:
-                    result = ImGuiKey.F6;
-                    return true;
-                case Key.F7:
-                    result = ImGuiKey.F7;
-                    return true;
-                case Key.F8:
-                    result = ImGuiKey.F8;
-                    return true;
-                case Key.F9:
-                    result = ImGuiKey.F9;
-                    return true;
-                case Key.F10:
-                    result = ImGuiKey.F10;
-                    return true;
-                case Key.F11:
-                    result = ImGuiKey.F11;
-                    return true;
-                case Key.F12:
-                    result = ImGuiKey.F12;
                     return true;
                 case Key.Up:
                     result = ImGuiKey.UpArrow;
@@ -531,36 +519,6 @@ namespace Veldrid
                 case Key.NumLock:
                     result = ImGuiKey.NumLock;
                     return true;
-                case Key.Keypad0:
-                    result = ImGuiKey.Keypad0;
-                    return true;
-                case Key.Keypad1:
-                    result = ImGuiKey.Keypad1;
-                    return true;
-                case Key.Keypad2:
-                    result = ImGuiKey.Keypad2;
-                    return true;
-                case Key.Keypad3:
-                    result = ImGuiKey.Keypad3;
-                    return true;
-                case Key.Keypad4:
-                    result = ImGuiKey.Keypad4;
-                    return true;
-                case Key.Keypad5:
-                    result = ImGuiKey.Keypad5;
-                    return true;
-                case Key.Keypad6:
-                    result = ImGuiKey.Keypad6;
-                    return true;
-                case Key.Keypad7:
-                    result = ImGuiKey.Keypad7;
-                    return true;
-                case Key.Keypad8:
-                    result = ImGuiKey.Keypad8;
-                    return true;
-                case Key.Keypad9:
-                    result = ImGuiKey.Keypad9;
-                    return true;
                 case Key.KeypadDivide:
                     result = ImGuiKey.KeypadDivide;
                     return true;
@@ -578,114 +536,6 @@ namespace Veldrid
                     return true;
                 case Key.KeypadEnter:
                     result = ImGuiKey.KeypadEnter;
-                    return true;
-                case Key.A:
-                    result = ImGuiKey.A;
-                    return true;
-                case Key.B:
-                    result = ImGuiKey.B;
-                    return true;
-                case Key.C:
-                    result = ImGuiKey.C;
-                    return true;
-                case Key.D:
-                    result = ImGuiKey.D;
-                    return true;
-                case Key.E:
-                    result = ImGuiKey.E;
-                    return true;
-                case Key.F:
-                    result = ImGuiKey.F;
-                    return true;
-                case Key.G:
-                    result = ImGuiKey.G;
-                    return true;
-                case Key.H:
-                    result = ImGuiKey.H;
-                    return true;
-                case Key.I:
-                    result = ImGuiKey.I;
-                    return true;
-                case Key.J:
-                    result = ImGuiKey.J;
-                    return true;
-                case Key.K:
-                    result = ImGuiKey.K;
-                    return true;
-                case Key.L:
-                    result = ImGuiKey.L;
-                    return true;
-                case Key.M:
-                    result = ImGuiKey.M;
-                    return true;
-                case Key.N:
-                    result = ImGuiKey.N;
-                    return true;
-                case Key.O:
-                    result = ImGuiKey.O;
-                    return true;
-                case Key.P:
-                    result = ImGuiKey.P;
-                    return true;
-                case Key.Q:
-                    result = ImGuiKey.Q;
-                    return true;
-                case Key.R:
-                    result = ImGuiKey.R;
-                    return true;
-                case Key.S:
-                    result = ImGuiKey.S;
-                    return true;
-                case Key.T:
-                    result = ImGuiKey.T;
-                    return true;
-                case Key.U:
-                    result = ImGuiKey.U;
-                    return true;
-                case Key.V:
-                    result = ImGuiKey.V;
-                    return true;
-                case Key.W:
-                    result = ImGuiKey.W;
-                    return true;
-                case Key.X:
-                    result = ImGuiKey.X;
-                    return true;
-                case Key.Y:
-                    result = ImGuiKey.Y;
-                    return true;
-                case Key.Z:
-                    result = ImGuiKey.Z;
-                    return true;
-                case Key.Number0:
-                    result = ImGuiKey._0;
-                    return true;
-                case Key.Number1:
-                    result = ImGuiKey._1;
-                    return true;
-                case Key.Number2:
-                    result = ImGuiKey._2;
-                    return true;
-                case Key.Number3:
-                    result = ImGuiKey._3;
-                    return true;
-                case Key.Number4:
-                    result = ImGuiKey._4;
-                    return true;
-                case Key.Number5:
-                    result = ImGuiKey._5;
-                    return true;
-                case Key.Number6:
-                    result = ImGuiKey._6;
-                    return true;
-                case Key.Number7:
-                    result = ImGuiKey._7;
-                    return true;
-                case Key.Number8:
-                    result = ImGuiKey._8;
-                    return true;
-                case Key.Number9:
-                    result = ImGuiKey._9;
                     return true;
                 case Key.Tilde:
                     result = ImGuiKey.GraveAccent;
@@ -722,6 +572,7 @@ namespace Veldrid
                     result = ImGuiKey.Backslash;
                     return true;
                 default:
+                    result = ImGuiKey.GamepadBack;
                     return false;
             }
         }

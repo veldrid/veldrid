@@ -11,8 +11,9 @@ namespace Veldrid.Tests
         [Fact]
         public void CreateDeviceResource_ThenRead()
         {
-            using var image = new Image<Rgba32>(10, 10);
-            for(var x = 0; x < image.Width; x++)
+            const int imageSize = 10;
+            using var image = new Image<Rgba32>(imageSize, imageSize);
+            for (var x = 0; x < image.Width; x++)
             {
                 for (var y = 0; y < image.Height; y++)
                 {
@@ -24,33 +25,21 @@ namespace Veldrid.Tests
             var texture = new ImageSharpTexture(image, mipmap: false);
             using var deviceTexture = texture.CreateDeviceTexture(GD, RF);
 
-
-            var staging = RF.CreateTexture(TextureDescription.Texture2D(
-                (uint)image.Width, (uint) image.Height, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
-
-            var cl = RF.CreateCommandList();
-            cl.Begin();
-            cl.CopyTexture(
-                deviceTexture, 0, 0, 0, 0, 0,
-                staging, 0, 0, 0, 0, 0,
-                (uint) image.Width, (uint)image.Height, 1, 1);
-            cl.End();
-            GD.SubmitCommands(cl);
-            GD.WaitForIdle();
-
-            for (uint layer = 0; layer < staging.ArrayLayers; layer++)
-            {
-                MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(staging, MapMode.Read, layer);
-                for (int x = 0; x < staging.Width; x++)
-                { 
-                    for (int y = 0; y < staging.Height; y++)
-                    {
-                        var byteValue = (byte)Math.Ceiling(byte.MaxValue * 1f / staging.Width * x);
-                        Assert.Equal(new RgbaByte(byteValue, byteValue, (byte)layer, 255), readView[x, y]);
-                    }
+            Assert.Equal(1u, deviceTexture.ArrayLayers);
+            Assert.Equal(1u, deviceTexture.MipLevels);
+            Assert.Equal((uint)imageSize, deviceTexture.Width);
+            Assert.Equal((uint)imageSize, deviceTexture.Height);
+            using var staging = GetReadback(deviceTexture);
+            var readView = GD.Map<Rgba32>(staging, MapMode.Read);
+            for (var x = 0; x < staging.Width; x++)
+            { 
+                for (var y = 0; y < staging.Height; y++)
+                {
+                    var byteValue = (byte)Math.Ceiling(byte.MaxValue * 1f / staging.Width * x);
+                    Assert.Equal(new Rgba32(byteValue, byteValue, 0, byte.MaxValue), readView[x, y]);
                 }
-                GD.Unmap(staging, layer);
             }
+            GD.Unmap(staging);
         }
     }
 

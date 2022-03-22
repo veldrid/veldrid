@@ -12,13 +12,15 @@ namespace Veldrid.Tests
         public void CreateDeviceResource_ThenRead()
         {
             const int imageSize = 10;
+            byte GetExpectedPixelColor(int xy) => (byte)Math.Ceiling(byte.MaxValue * 1f / imageSize * xy);
+
             using var image = new Image<Rgba32>(imageSize, imageSize);
             for (var x = 0; x < image.Width; x++)
             {
                 for (var y = 0; y < image.Height; y++)
                 {
-                    var flaotValue = x * 1f / image.Width;
-                    image[x, y] = new Rgba32(flaotValue, flaotValue, 0, 1);
+                    var color = GetExpectedPixelColor(x);
+                    image[x, y] = new Rgba32(color, color, 0, byte.MaxValue);
                 }
             }
 
@@ -35,8 +37,8 @@ namespace Veldrid.Tests
             { 
                 for (var y = 0; y < staging.Height; y++)
                 {
-                    var byteValue = (byte)Math.Ceiling(byte.MaxValue * 1f / staging.Width * x);
-                    Assert.Equal(new Rgba32(byteValue, byteValue, 0, byte.MaxValue), readView[x, y]);
+                    var color = GetExpectedPixelColor(x);
+                    Assert.Equal(new Rgba32(color, color, 0, byte.MaxValue), readView[x, y]);
                 }
             }
             GD.Unmap(staging);

@@ -1,6 +1,5 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System;
 using Veldrid.ImageSharp;
 using Xunit;
 
@@ -12,17 +11,15 @@ namespace Veldrid.Tests
         public void CreateDeviceResource_ThenRead()
         {
             const int imageSize = 10;
-            byte GetExpectedPixelColor(int xy) => (byte)Math.Ceiling(byte.MaxValue * 1f / imageSize * xy);
-
-            using var image = new Image<Rgba32>(imageSize, imageSize);
-            for (var x = 0; x < image.Width; x++)
+            var pixels = new Rgba32[imageSize * imageSize];
+            for (byte x = 0; x < imageSize; x++)
             {
-                for (var y = 0; y < image.Height; y++)
+                for (byte y = 0; y < imageSize; y++)
                 {
-                    var color = GetExpectedPixelColor(x);
-                    image[x, y] = new Rgba32(color, color, 0, byte.MaxValue);
+                    pixels[x + y * imageSize] = new Rgba32(x, y, 0, byte.MaxValue);
                 }
             }
+            using var image = Image.LoadPixelData(pixels, imageSize, imageSize);
 
             var texture = new ImageSharpTexture(image, mipmap: false);
             using var deviceTexture = texture.CreateDeviceTexture(GD, RF);
@@ -37,8 +34,7 @@ namespace Veldrid.Tests
             { 
                 for (var y = 0; y < staging.Height; y++)
                 {
-                    var color = GetExpectedPixelColor(x);
-                    Assert.Equal(new Rgba32(color, color, 0, byte.MaxValue), readView[x, y]);
+                    Assert.Equal(pixels[x + y * imageSize], readView[x, y]);
                 }
             }
             GD.Unmap(staging);

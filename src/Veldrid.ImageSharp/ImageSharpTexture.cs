@@ -34,7 +34,7 @@ namespace Veldrid.ImageSharp
         /// <summary>
         /// The size of each pixel, in bytes.
         /// </summary>
-        public uint PixelSizeInBytes => sizeof(byte) * 4;
+        public uint PixelSizeInBytes { get; }
 
         /// <summary>
         /// The number of levels in the mipmap chain. This is equal to the length of the Images array.
@@ -50,6 +50,7 @@ namespace Veldrid.ImageSharp
         public ImageSharpTexture(Image<Rgba32> image, bool mipmap = true) : this(image, mipmap, false) { }
         public ImageSharpTexture(Image<Rgba32> image, bool mipmap, bool srgb)
         {
+            PixelSizeInBytes = (uint)image.PixelType.BitsPerPixel / 8;
             Format = srgb ? PixelFormat.R8_G8_B8_A8_UNorm_SRgb : PixelFormat.R8_G8_B8_A8_UNorm;
             if (mipmap)
             {

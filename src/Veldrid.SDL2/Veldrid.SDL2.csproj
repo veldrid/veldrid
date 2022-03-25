@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile Condition="'$(ProduceDocumentation)' == 'true' Or '$(Configuration)' == 'Release'">$(BinDir)\$(AssemblyName).xml</DocumentationFile>
     <NoPackageAnalysis>true</NoPackageAnalysis>
@@ -14,12 +14,12 @@
       <Pack>true</Pack>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)native\win-x86\SDL2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <PackagePath>runtimes/win-x86/native</PackagePath>
       <Pack>true</Pack>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)native\osx-x64\libsdl2.dylib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <PackagePath>runtimes/osx-x64/native</PackagePath>
       <Pack>true</Pack>
     </Content>
@@ -31,7 +31,7 @@
 
   <ItemGroup>
     <PackageReference Include="NativeLibraryLoader" Version="$(NativeLibraryLoaderVersion)" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
   </ItemGroup>
 

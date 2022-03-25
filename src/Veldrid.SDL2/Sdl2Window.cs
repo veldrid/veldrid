@@ -321,7 +321,7 @@ namespace Veldrid.Sdl2
             return true;
         }
 
-        private void WindowOwnerRoutine(object state)
+        private async void WindowOwnerRoutine(object state)
         {
             WindowParams wp = (WindowParams)state;
             _window = wp.Create();

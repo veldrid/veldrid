@@ -1,5 +1,4 @@
 ﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.IO;
@@ -35,7 +34,7 @@ namespace Veldrid.ImageSharp
         /// <summary>
         /// The size of each pixel, in bytes.
         /// </summary>
-        public uint PixelSizeInBytes => sizeof(byte) * 4;
+        public uint PixelSizeInBytes { get; }
 
         /// <summary>
         /// The number of levels in the mipmap chain. This is equal to the length of the Images array.
@@ -51,6 +50,7 @@ namespace Veldrid.ImageSharp
         public ImageSharpTexture(Image<Rgba32> image, bool mipmap = true) : this(image, mipmap, false) { }
         public ImageSharpTexture(Image<Rgba32> image, bool mipmap, bool srgb)
         {
+            PixelSizeInBytes = (uint)image.PixelType.BitsPerPixel / 8;
             Format = srgb ? PixelFormat.R8_G8_B8_A8_UNorm_SRgb : PixelFormat.R8_G8_B8_A8_UNorm;
             if (mipmap)
             {
@@ -80,10 +80,7 @@ namespace Veldrid.ImageSharp
             for (uint level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                if (!image.TryGetSinglePixelSpan(out Span<Rgba32> pixelSpan))
-                {
-                    throw new VeldridException("Unable to get image pixelspan.");
-                }
+                var pixelSpan = image.GetPixelSpan();
                 fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
                 {
                     MappedResource map = gd.Map(staging, MapMode.Write, level);
@@ -126,10 +123,7 @@ namespace Veldrid.ImageSharp
             for (int level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                if (!image.TryGetSinglePixelSpan(out Span<Rgba32> pixelSpan))
-                {
-                    throw new VeldridException("Unable to get image pixelspan.");
-                }
+                var pixelSpan = image.GetPixelSpan();
                 fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
                 {
                     gd.UpdateTexture(

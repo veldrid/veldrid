@@ -155,7 +155,7 @@ namespace Veldrid
 
             _mainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,
                 _projMatrixBuffer,
-                gd.PointSampler));
+                gd.LinearSampler));
 
             RecreateFontDeviceTexture(gd);
         }

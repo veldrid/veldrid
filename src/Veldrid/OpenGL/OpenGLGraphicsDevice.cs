@@ -694,21 +694,35 @@ namespace Veldrid.OpenGL
                     $"Failed to create an EGL surface from the Android native window: {eglGetError()}");
             }
 
+            bool debug = options.Debug;
             int* contextAttribs = stackalloc int[5];
             contextAttribs[0] = EGL_CONTEXT_CLIENT_VERSION;
             contextAttribs[1] = 2;
             contextAttribs[2] = EGL_NONE;
             contextAttribs[3] = EGL_NONE;
             contextAttribs[4] = EGL_NONE;
-            if (options.Debug)
+
+            TryCreateContext:
+            if (debug)
             {
                 contextAttribs[2] = EGL_CONTEXT_OPENGL_DEBUG;
                 contextAttribs[3] = 1;
+            }
+            else
+            {
+                contextAttribs[2] = EGL_NONE;
+                contextAttribs[3] = EGL_NONE;
             }
 
             IntPtr context = eglCreateContext(display, bestConfig, IntPtr.Zero, contextAttribs);
             if (context == IntPtr.Zero)
             {
+                if (debug)
+                {
+                    // Android emulator throws EGL_BAD_ATTRIBUTE when DEBUG bit is present.
+                    debug = false;
+                    goto TryCreateContext;
+                }
                 throw new VeldridException($"Failed to create an EGLContext: " + eglGetError());
             }
 

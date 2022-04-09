@@ -80,6 +80,7 @@ namespace Veldrid
             ImGui.SetCurrentContext(context);
 
             ImGui.GetIO().Fonts.AddFontDefault();
+            ImGui.GetIO().Fonts.Flags |= ImFontAtlasFlags.NoBakedLines;
 
             CreateDeviceResources(gd, outputDescription);
             SetOpenTKKeyMappings();
@@ -155,7 +156,7 @@ namespace Veldrid
 
             _mainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,
                 _projMatrixBuffer,
-                gd.LinearSampler));
+                gd.PointSampler));
 
             RecreateFontDeviceTexture(gd);
         }

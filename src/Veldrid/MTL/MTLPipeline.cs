@@ -110,7 +110,7 @@ namespace Veldrid.MTL
                         : i);
                     mtlAttribute.format = MTLFormats.VdToMTLVertexFormat(elementDesc.Format);
                     mtlAttribute.offset = elementDesc.Offset != 0 ? (UIntPtr)elementDesc.Offset : (UIntPtr)offset;
-                    offset += FormatHelpers.GetSizeInBytes(elementDesc.Format);
+                    offset += FormatSizeHelpers.GetSizeInBytes(elementDesc.Format);
                     element += 1;
                 }
             }

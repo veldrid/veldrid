@@ -201,7 +201,7 @@ namespace Veldrid.D3D11
                         stepRate == 0 ? InputClassification.PerVertexData : InputClassification.PerInstanceData,
                         (int)stepRate);
 
-                    currentOffset += (int)FormatHelpers.GetSizeInBytes(desc.Format);
+                    currentOffset += (int)FormatSizeHelpers.GetSizeInBytes(desc.Format);
                     element += 1;
                 }
             }

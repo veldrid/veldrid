@@ -171,7 +171,7 @@ namespace Veldrid.Vk
                     };
 
                     targetIndex += 1;
-                    currentOffset += FormatHelpers.GetSizeInBytes(inputElement.Format);
+                    currentOffset += FormatSizeHelpers.GetSizeInBytes(inputElement.Format);
                 }
 
                 targetLocation += inputDesc.Elements.Length;

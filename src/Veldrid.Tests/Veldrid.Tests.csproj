@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>false</IsPackable>
     <OutputType>exe</OutputType>
@@ -17,6 +17,7 @@
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.console" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.3.6" />
     <ProjectReference Include="..\Veldrid.RenderDoc\Veldrid.RenderDoc.csproj" />
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
     <ProjectReference Include="..\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
@@ -38,6 +39,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Shaders\ComputeCubemapGenerator.comp" />
+    <None Remove="Shaders\ComputeImage2DArrayGenerator.comp" />
     <None Remove="Shaders\ComputeTextureGenerator.comp" />
     <None Remove="Shaders\F16VertexAttribs.frag" />
     <None Remove="Shaders\F16VertexAttribs.vert" />

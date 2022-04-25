@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -47,9 +48,8 @@ namespace Veldrid.Vulkan
         private readonly List<VkCommandBuffer> _submittedCommandBuffers = new();
 
         private StagingResourceInfo _currentStagingInfo = null!;
-        private readonly object _stagingLock = new();
-        private readonly Dictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new();
-        private readonly List<StagingResourceInfo> _availableStagingInfos = new();
+        private readonly ConcurrentDictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new();
+        private readonly ConcurrentStack<StagingResourceInfo> _availableStagingInfos = new();
         private readonly List<VkBuffer> _availableStagingBuffers = new();
 
         public VkCommandPool CommandPool => _pool;
@@ -109,9 +109,9 @@ namespace Veldrid.Vulkan
 
             VkCommandBuffer cb = _cb;
 
-            lock (_stagingLock)
+            if (!_submittedStagingInfos.TryAdd(cb, _currentStagingInfo))
             {
-                _submittedStagingInfos.Add(cb, _currentStagingInfo);
+                throw new InvalidOperationException();
             }
 
             lock (_commandBufferListLock)
@@ -141,12 +141,9 @@ namespace Veldrid.Vulkan
                 }
             }
 
-            lock (_stagingLock)
+            if (_submittedStagingInfos.TryRemove(completedCB, out StagingResourceInfo? info))
             {
-                if (_submittedStagingInfos.Remove(completedCB, out StagingResourceInfo? info))
-                {
-                    RecycleStagingInfo(info);
-                }
+                RecycleStagingInfo(info);
             }
 
             RefCount.Decrement();
@@ -1327,9 +1324,10 @@ namespace Veldrid.Vulkan
 
         private VkBuffer GetStagingBuffer(uint size)
         {
-            lock (_stagingLock)
+            VkBuffer? ret = null;
+
+            lock (_availableStagingBuffers)
             {
-                VkBuffer? ret = null;
                 foreach (VkBuffer buffer in _availableStagingBuffers)
                 {
                     if (buffer.SizeInBytes >= size)
@@ -1339,16 +1337,16 @@ namespace Veldrid.Vulkan
                         break;
                     }
                 }
-                if (ret == null)
-                {
-                    ret = (VkBuffer)_gd.ResourceFactory.CreateBuffer(
-                        new BufferDescription(size, BufferUsage.StagingWrite));
-                    ret.Name = $"Staging Buffer (CommandList {_name})";
-                }
-
-                _currentStagingInfo.BuffersUsed.Add(ret);
-                return ret;
             }
+            if (ret == null)
+            {
+                ret = (VkBuffer)_gd.ResourceFactory.CreateBuffer(
+                    new BufferDescription(size, BufferUsage.StagingWrite));
+                ret.Name = $"Staging Buffer (CommandList {_name})";
+            }
+
+            _currentStagingInfo.BuffersUsed.Add(ret);
+            return ret;
         }
 
         [SkipLocalsInit]
@@ -1451,42 +1449,31 @@ namespace Veldrid.Vulkan
 
         private StagingResourceInfo GetStagingResourceInfo()
         {
-            lock (_stagingLock)
+            if (!_availableStagingInfos.TryPop(out StagingResourceInfo? ret))
             {
-                StagingResourceInfo ret;
-                int availableCount = _availableStagingInfos.Count;
-                if (availableCount > 0)
-                {
-                    ret = _availableStagingInfos[availableCount - 1];
-                    _availableStagingInfos.RemoveAt(availableCount - 1);
-                }
-                else
-                {
-                    ret = new StagingResourceInfo();
-                }
-
-                return ret;
+                ret = new StagingResourceInfo();
             }
+            return ret;
         }
 
         private void RecycleStagingInfo(StagingResourceInfo info)
         {
-            lock (_stagingLock)
+            lock (_availableStagingBuffers)
             {
                 foreach (VkBuffer buffer in info.BuffersUsed)
                 {
                     _availableStagingBuffers.Add(buffer);
                 }
-
-                foreach (ResourceRefCount rrc in info.Resources)
-                {
-                    rrc.Decrement();
-                }
-
-                info.Clear();
-
-                _availableStagingInfos.Add(info);
             }
+
+            foreach (ResourceRefCount rrc in info.Resources)
+            {
+                rrc.Decrement();
+            }
+
+            info.Clear();
+
+            _availableStagingInfos.Push(info);
         }
     }
 }

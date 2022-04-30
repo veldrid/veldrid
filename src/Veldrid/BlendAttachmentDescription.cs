@@ -13,8 +13,9 @@ namespace Veldrid
         public bool BlendEnabled;
         /// <summary>
         /// Controls which components of the color will be written to the framebuffer.
+        /// If <c>null</c>, the mask will be set to <see cref="Veldrid.ColorWriteMask.All"/>.
         /// </summary>
-        public ColorWriteMask ColorWriteMask;
+        public ColorWriteMask? ColorWriteMask;
         /// <summary>
         /// Controls the source color's influence on the blend result.
         /// </summary>
@@ -66,7 +67,7 @@ namespace Veldrid
             SourceAlphaFactor = sourceAlphaFactor;
             DestinationAlphaFactor = destinationAlphaFactor;
             AlphaFunction = alphaFunction;
-            ColorWriteMask = ColorWriteMask.All;
+            ColorWriteMask = null;
         }
 
         /// <summary>
@@ -104,7 +105,7 @@ namespace Veldrid
         /// Describes a blend attachment state in which the source completely overrides the destination.
         /// Settings:
         ///     BlendEnabled = true
-        ///     ColorWriteMask = ColorWriteMask.All
+        ///     ColorWriteMask = null
         ///     SourceColorFactor = BlendFactor.One
         ///     DestinationColorFactor = BlendFactor.Zero
         ///     ColorFunction = BlendFunction.Add
@@ -115,7 +116,6 @@ namespace Veldrid
         public static readonly BlendAttachmentDescription OverrideBlend = new BlendAttachmentDescription
         {
             BlendEnabled = true,
-            ColorWriteMask = ColorWriteMask.All,
             SourceColorFactor = BlendFactor.One,
             DestinationColorFactor = BlendFactor.Zero,
             ColorFunction = BlendFunction.Add,
@@ -128,7 +128,7 @@ namespace Veldrid
         /// Describes a blend attachment state in which the source and destination are blended in an inverse relationship.
         /// Settings:
         ///     BlendEnabled = true
-        ///     ColorWriteMask = ColorWriteMask.All
+        ///     ColorWriteMask = null
         ///     SourceColorFactor = BlendFactor.SourceAlpha
         ///     DestinationColorFactor = BlendFactor.InverseSourceAlpha
         ///     ColorFunction = BlendFunction.Add
@@ -139,7 +139,6 @@ namespace Veldrid
         public static readonly BlendAttachmentDescription AlphaBlend = new BlendAttachmentDescription
         {
             BlendEnabled = true,
-            ColorWriteMask = ColorWriteMask.All,
             SourceColorFactor = BlendFactor.SourceAlpha,
             DestinationColorFactor = BlendFactor.InverseSourceAlpha,
             ColorFunction = BlendFunction.Add,
@@ -152,7 +151,7 @@ namespace Veldrid
         /// Describes a blend attachment state in which the source is added to the destination based on its alpha channel.
         /// Settings:
         ///     BlendEnabled = true
-        ///     ColorWriteMask = ColorWriteMask.All
+        ///     ColorWriteMask = null
         ///     SourceColorFactor = BlendFactor.SourceAlpha
         ///     DestinationColorFactor = BlendFactor.One
         ///     ColorFunction = BlendFunction.Add
@@ -163,7 +162,6 @@ namespace Veldrid
         public static readonly BlendAttachmentDescription AdditiveBlend = new BlendAttachmentDescription
         {
             BlendEnabled = true,
-            ColorWriteMask = ColorWriteMask.All,
             SourceColorFactor = BlendFactor.SourceAlpha,
             DestinationColorFactor = BlendFactor.One,
             ColorFunction = BlendFunction.Add,
@@ -176,7 +174,7 @@ namespace Veldrid
         /// Describes a blend attachment state in which blending is disabled.
         /// Settings:
         ///     BlendEnabled = false
-        ///     ColorWriteMask = ColorWriteMask.All
+        ///     ColorWriteMask = null
         ///     SourceColorFactor = BlendFactor.One
         ///     DestinationColorFactor = BlendFactor.Zero
         ///     ColorFunction = BlendFunction.Add
@@ -187,7 +185,6 @@ namespace Veldrid
         public static readonly BlendAttachmentDescription Disabled = new BlendAttachmentDescription
         {
             BlendEnabled = false,
-            ColorWriteMask = ColorWriteMask.All,
             SourceColorFactor = BlendFactor.One,
             DestinationColorFactor = BlendFactor.Zero,
             ColorFunction = BlendFunction.Add,
@@ -219,7 +216,7 @@ namespace Veldrid
         {
             return HashHelper.Combine(
                 BlendEnabled.GetHashCode(),
-                (int)ColorWriteMask,
+                ColorWriteMask.GetHashCode(),
                 (int)SourceColorFactor,
                 (int)DestinationColorFactor,
                 (int)ColorFunction,

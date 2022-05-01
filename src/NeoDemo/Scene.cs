@@ -194,6 +194,7 @@ namespace Veldrid.NeoDemo
             cl.SetViewport(0, new Viewport(0, 0, fbWidth, fbHeight, 0, 1));
             cl.SetFullViewports();
             cl.SetFullScissorRects();
+            cl.ClearColorTarget(0, RgbaFloat.Black);
             cl.ClearDepthStencil(depthClear);
             sc.UpdateCameraBuffers(cl); // Re-set because reflection step changed it.
             cameraFrustum = new BoundingFrustum(_camera.ViewMatrix * _camera.ProjectionMatrix);

@@ -17,6 +17,12 @@ namespace Veldrid.MetalBindings
             set => objc_msgSend(NativePtr, Selectors.setPixelFormat, (uint)value);
         }
 
+        public MTLColorWriteMask writeMask
+        {
+            get => (MTLColorWriteMask)uint_objc_msgSend(NativePtr, sel_writeMask);
+            set => objc_msgSend(NativePtr, sel_setWriteMask, (uint)value);
+        }
+
         public Bool8 blendingEnabled
         {
             get => bool8_objc_msgSend(NativePtr, sel_isBlendingEnabled);
@@ -61,6 +67,8 @@ namespace Veldrid.MetalBindings
 
         private static readonly Selector sel_isBlendingEnabled = "isBlendingEnabled";
         private static readonly Selector sel_setBlendingEnabled = "setBlendingEnabled:";
+        private static readonly Selector sel_writeMask = "writeMask";
+        private static readonly Selector sel_setWriteMask = "setWriteMask:";
         private static readonly Selector sel_alphaBlendOperation = "alphaBlendOperation";
         private static readonly Selector sel_setAlphaBlendOperation = "setAlphaBlendOperation:";
         private static readonly Selector sel_rgbBlendOperation = "rgbBlendOperation";

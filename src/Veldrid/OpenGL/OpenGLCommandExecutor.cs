@@ -508,6 +508,16 @@ namespace Veldrid.OpenGL
                 for (uint i = 0; i < blendState.AttachmentStates.Length; i++)
                 {
                     BlendAttachmentDescription attachment = blendState.AttachmentStates[i];
+                    ColorWriteMask colorMask = attachment.ColorWriteMask.GetOrDefault();
+
+                    glColorMaski(
+                        i,
+                        (colorMask & ColorWriteMask.Red) == ColorWriteMask.Red,
+                        (colorMask & ColorWriteMask.Green) == ColorWriteMask.Green,
+                        (colorMask & ColorWriteMask.Blue) == ColorWriteMask.Blue,
+                        (colorMask & ColorWriteMask.Alpha) == ColorWriteMask.Alpha);
+                    CheckLastError();
+
                     if (!attachment.BlendEnabled)
                     {
                         glDisablei(EnableCap.Blend, i);
@@ -537,6 +547,15 @@ namespace Veldrid.OpenGL
             else if (blendState.AttachmentStates.Length > 0)
             {
                 BlendAttachmentDescription attachment = blendState.AttachmentStates[0];
+                ColorWriteMask colorMask = attachment.ColorWriteMask.GetOrDefault();
+
+                glColorMask(
+                    (colorMask & ColorWriteMask.Red) == ColorWriteMask.Red,
+                    (colorMask & ColorWriteMask.Green) == ColorWriteMask.Green,
+                    (colorMask & ColorWriteMask.Blue) == ColorWriteMask.Blue,
+                    (colorMask & ColorWriteMask.Alpha) == ColorWriteMask.Alpha);
+                CheckLastError();
+
                 if (!attachment.BlendEnabled)
                 {
                     glDisable(EnableCap.Blend);

@@ -589,7 +589,7 @@ namespace Veldrid
                     -1.0f,
                     1.0f);
 
-                _gd.UpdateBuffer(_projMatrixBuffer, 0, ref mvp);
+                cl.UpdateBuffer(_projMatrixBuffer, 0, ref mvp);
             }
 
             cl.SetVertexBuffer(0, _vertexBuffer);

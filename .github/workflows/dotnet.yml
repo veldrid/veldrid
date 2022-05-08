@@ -25,7 +25,6 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal src --filter "Backend=D3D11"
     - name: Build Packages
-      if: github.ref == 'refs/heads/master'
       run: |
         echo "version_suffix=$(date -u +%Y%m%d%H%M%S)-$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
         dotnet pack src -c Release --version-suffix ${{ env.version_suffix }}

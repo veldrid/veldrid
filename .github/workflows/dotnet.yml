@@ -24,6 +24,18 @@ jobs:
       run: dotnet build --no-restore src
     - name: Test
       run: dotnet test --no-build --verbosity normal src --filter "Backend=D3D11"
+  publish:
+    needs: build_windows
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
     - name: Build Packages
       run: dotnet pack src -c Release --version-suffix $(date -u +%Y%m%d%H%M%S)-$(git rev-parse --short ${{ github.sha }})
     - name: Publish to MyGet

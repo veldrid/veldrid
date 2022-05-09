@@ -25,7 +25,7 @@ namespace Veldrid.NeoDemo.Objects
 
             GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
                 new BlendStateDescription(
-                    RgbaFloat.Black,
+                    RgbaFloat.White,
                     BlendAttachmentDescription.OverrideBlend),
                 DepthStencilStateDescription.Disabled,
                 new RasterizerStateDescription(FaceCullMode.Back, PolygonFillMode.Solid, FrontFace.Clockwise, true, false),

@@ -21,7 +21,7 @@ namespace Veldrid.NeoDemo
         private Sdl2Window _window;
         private GraphicsDevice _gd;
         private Scene _scene;
-        private readonly ImGuiRenderable _igRenderable;
+        private readonly ImGuiRenderable _imgRenderable;
         private readonly SceneContext _sc = new SceneContext();
         private bool _windowResized;
         private RenderOrderKeyComparer _renderOrderKeyComparer = new RenderOrderKeyComparer();
@@ -41,7 +41,7 @@ namespace Veldrid.NeoDemo
         private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
         private Sdl2ControllerTracker _controllerTracker;
         private bool _colorSrgb = true;
-        private FullScreenQuad _fsq;
+        private FullScreenQuad _fsq { get; set; }
         public static RenderDoc _renderDoc;
         private bool _controllerDebugMenu;
 
@@ -87,14 +87,14 @@ namespace Veldrid.NeoDemo
             Sdl2Native.SDL_Init(SDLInitFlags.GameController);
             Sdl2ControllerTracker.CreateDefault(out _controllerTracker);
 
-            _scene = new Scene(_gd, _window, _controllerTracker) { ThreadedRendering = true };
+            _scene = new Scene(_gd, _window, _controllerTracker);
 
             _sc.SetCurrentScene(_scene);
 
-            _igRenderable = new ImGuiRenderable(_window.Width, _window.Height);
-            _resizeHandled += (w, h) => _igRenderable.WindowResized(w, h);
-            _scene.AddRenderable(_igRenderable);
-            _scene.AddUpdateable(_igRenderable);
+            _imgRenderable = new ImGuiRenderable(_window.Width, _window.Height);
+            _resizeHandled += (w, h) => _imgRenderable.WindowResized(w, h);
+            _scene.AddRenderable(_imgRenderable);
+            _scene.AddUpdateable(_imgRenderable);
 
             Skybox skybox = Skybox.LoadDefaultSkybox();
             _scene.AddRenderable(skybox);
@@ -295,11 +295,6 @@ namespace Veldrid.NeoDemo
                         }
 
                         ImGui.EndMenu();
-                    }
-                    bool threadedRendering = _scene.ThreadedRendering;
-                    if (ImGui.MenuItem("Render with multiple threads", string.Empty, threadedRendering, true))
-                    {
-                        _scene.ThreadedRendering = !_scene.ThreadedRendering;
                     }
                     bool tinted = _fsq.UseTintedTexture;
                     if (ImGui.MenuItem("Tinted output", string.Empty, tinted, true))
@@ -600,7 +595,7 @@ namespace Veldrid.NeoDemo
 
             CommonMaterials.FlushAll(_frameCommands);
 
-            await _scene.RenderAllStages(_gd, _frameCommands, _sc);
+            await _scene.RenderAllMultiThreaded(_gd, _frameCommands, _sc);
             _gd.SwapBuffers();
         }
 

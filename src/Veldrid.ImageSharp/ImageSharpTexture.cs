@@ -14,7 +14,7 @@ namespace Veldrid.ImageSharp
         /// The first element is the largest, most detailed level, and each subsequent element
         /// is half its size, down to 1x1 pixel.
         /// </summary>
-        public Image<Rgba32>[] Images { get; }
+        public Image<Rgba32>[] Images { get; protected set; }
 
         /// <summary>
         /// The width of the largest image in the chain.
@@ -51,7 +51,10 @@ namespace Veldrid.ImageSharp
         public ImageSharpTexture(Image<Rgba32> image, bool mipmap, bool srgb)
         {
             PixelSizeInBytes = (uint)image.PixelType.BitsPerPixel / 8;
-            Format = srgb ? PixelFormat.R8_G8_B8_A8_UNorm_SRgb : PixelFormat.R8_G8_B8_A8_UNorm;
+            Format = srgb ? PixelFormat.R8_G8_B8_A8_UNorm_SRgb :
+                //PixelFormat.R8_G8_B8_A8_UNorm;
+                PixelFormat.B8_G8_R8_A8_UNorm;
+
             if (mipmap)
             {
                 Images = MipmapHelper.GenerateMipmaps(image);
@@ -119,11 +122,11 @@ namespace Veldrid.ImageSharp
         private unsafe Texture CreateTextureViaUpdate(GraphicsDevice gd, ResourceFactory factory)
         {
             Texture tex = factory.CreateTexture(TextureDescription.Texture2D(
-                Width, Height, MipLevels, 1, Format, TextureUsage.Sampled));
+                Width, Height, MipLevels, 1, Format, TextureUsage.RenderTarget | TextureUsage.Sampled));
             for (int level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                var pixelSpan = image.GetPixelSpan();
+                Span<Rgba32> pixelSpan = image.GetPixelSpan();
                 fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
                 {
                     gd.UpdateTexture(
@@ -142,6 +145,59 @@ namespace Veldrid.ImageSharp
             }
 
             return tex;
+        }
+
+        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, in byte[] newData, bool MipMaps)
+        {
+            Image<Rgba32> img = null;
+            img = Image.Load<Rgba32>(newData);
+            if (MipMaps == true)
+            {
+                Images = MipmapHelper.GenerateMipmaps(img);
+            }
+            else
+            {
+                Images = new Image<Rgba32>[] { img };
+            }
+            for (int level = 0; level < MipLevels; level++)
+            {
+                Image<Rgba32> image = Images[level];
+                Span<Rgba32> pixelSpan = image.GetPixelSpan();
+                fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
+                {
+                    gd.UpdateTexture(
+                        tex,
+                        (IntPtr)pin,
+                        (uint)(PixelSizeInBytes * image.Width * image.Height),
+                        0,
+                        0,
+                        0,
+                        (uint)image.Width,
+                        (uint)image.Height,
+                        1,
+                        (uint)level,
+                        0);
+                }
+            }
+        }
+        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, IntPtr newdata, bool MipMaps)
+        {
+            for (int level = 0; level < MipLevels; level++)
+            {
+                Image<Rgba32> image = Images[level];
+                gd.UpdateTexture(
+                    tex,
+                    newdata,
+                    (uint)(PixelSizeInBytes * image.Width * image.Height),
+                    0,
+                    0,
+                    0,
+                    (uint)image.Width,
+                    (uint)image.Height,
+                    1,
+                    (uint)level,
+                    0);
+            }
         }
     }
 }

@@ -8,6 +8,7 @@
     <IsPackable>false</IsPackable>
     <AssetsDir>$(MSBuildThisFileDirectory)Assets</AssetsDir>
     <StartupObject>Veldrid.NeoDemo.Program</StartupObject>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

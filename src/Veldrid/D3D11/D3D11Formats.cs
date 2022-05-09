@@ -560,6 +560,22 @@ namespace Veldrid.D3D11
             }
         }
 
+        internal static ColorWriteEnable VdToD3D11ColorWriteEnable(ColorWriteMask mask)
+        {
+            ColorWriteEnable enable = ColorWriteEnable.None;
+
+            if ((mask & ColorWriteMask.Red) == ColorWriteMask.Red)
+                enable |= ColorWriteEnable.Red;
+            if ((mask & ColorWriteMask.Green) == ColorWriteMask.Green)
+                enable |= ColorWriteEnable.Green;
+            if ((mask & ColorWriteMask.Blue) == ColorWriteMask.Blue)
+                enable |= ColorWriteEnable.Blue;
+            if ((mask & ColorWriteMask.Alpha) == ColorWriteMask.Alpha)
+                enable |= ColorWriteEnable.Alpha;
+
+            return enable;
+        }
+
         internal static Filter ToD3D11Filter(SamplerFilter filter, bool isComparison)
         {
             switch (filter)

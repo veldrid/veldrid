@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Vortice.Mathematics;
 using Xunit;
 
 namespace Veldrid.Tests
@@ -874,7 +875,7 @@ namespace Veldrid.Tests
                 PixelFormat.R8_G8_B8_A8_UNorm,
                 TextureUsage.Sampled | TextureUsage.Storage);
             Texture computeOutput = RF.CreateTexture(texDesc);
-            
+
             ResourceLayout computeLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("ComputeOutput", ResourceKind.TextureReadWrite, ShaderStages.Compute)));
             ResourceSet computeSet = RF.CreateResourceSet(new ResourceSetDescription(computeLayout, computeOutput));
@@ -1411,6 +1412,122 @@ namespace Veldrid.Tests
                         Assert.Equal(new RgbaFloat(0.25f, 1, 0.875f, 1), readView[x, y]);
                     }
                 GD.Unmap(readback);
+            }
+        }
+
+        [Fact]
+        public void UseColorWriteMask()
+        {
+            Texture output = RF.CreateTexture(
+                TextureDescription.Texture2D(64, 64, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
+            using var framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, output));
+
+            var yMod = GD.IsClipSpaceYInverted ? -1.0f : 1.0f;
+            var vertices = new[]
+            {
+                new ColoredVertex { Position = new Vector2(-1, 1 * yMod), Color = Vector4.One },
+                new ColoredVertex { Position = new Vector2(1, 1 * yMod), Color = Vector4.One },
+                new ColoredVertex { Position = new Vector2(-1, -1 * yMod), Color = Vector4.One },
+                new ColoredVertex { Position = new Vector2(1, -1 * yMod), Color = Vector4.One }
+            };
+            uint vertexSize = (uint)Unsafe.SizeOf<ColoredVertex>();
+            using var buffer = RF.CreateBuffer(new BufferDescription(
+                vertexSize * (uint)vertices.Length,
+                BufferUsage.StructuredBufferReadOnly,
+                vertexSize,
+                true));
+            GD.UpdateBuffer(buffer, 0, vertices);
+
+            using var graphicsLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("InputVertices", ResourceKind.StructuredBufferReadOnly, ShaderStages.Vertex)));
+            using var graphicsSet = RF.CreateResourceSet(new ResourceSetDescription(graphicsLayout, buffer));
+
+            var blendDesc = new BlendStateDescription
+            {
+                AttachmentStates = new[]
+                {
+                    new BlendAttachmentDescription
+                    {
+                        BlendEnabled = true,
+                        SourceColorFactor = BlendFactor.One,
+                        DestinationColorFactor = BlendFactor.Zero,
+                        ColorFunction = BlendFunction.Add,
+                        SourceAlphaFactor = BlendFactor.One,
+                        DestinationAlphaFactor = BlendFactor.Zero,
+                        AlphaFunction = BlendFunction.Add,
+                    }
+                },
+            };
+
+            var pipelineDesc = new GraphicsPipelineDescription(
+                blendDesc,
+                DepthStencilStateDescription.Disabled,
+                RasterizerStateDescription.Default,
+                PrimitiveTopology.TriangleStrip,
+                new ShaderSetDescription(
+                    Array.Empty<VertexLayoutDescription>(),
+                    TestShaders.LoadVertexFragment(RF, "ColoredQuadRenderer")),
+                graphicsLayout,
+                framebuffer.OutputDescription);
+
+            using (var pipeline1 = RF.CreateGraphicsPipeline(pipelineDesc))
+            using (var cl = RF.CreateCommandList())
+            {
+                cl.Begin();
+                cl.SetFramebuffer(framebuffer);
+                cl.ClearColorTarget(0, RgbaFloat.Clear);
+                cl.SetPipeline(pipeline1);
+                cl.SetGraphicsResourceSet(0, graphicsSet);
+                cl.Draw((uint)vertices.Length);
+                cl.End();
+                GD.SubmitCommands(cl);
+                GD.WaitForIdle();
+            }
+
+            using (var readback = GetReadback(output))
+            {
+                var readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
+                for (uint y = 0; y < output.Height; y++)
+                    for (uint x = 0; x < output.Width; x++)
+                    {
+                        Assert.Equal(RgbaFloat.White, readView[x, y]);
+                    }
+
+                GD.Unmap(readback);
+            }
+
+            foreach (var mask in Enum.GetValues<ColorWriteMask>())
+            {
+                blendDesc.AttachmentStates[0].ColorWriteMask = mask;
+                pipelineDesc.BlendState = blendDesc;
+
+                using (var maskedPipeline = RF.CreateGraphicsPipeline(pipelineDesc))
+                using (var cl = RF.CreateCommandList())
+                {
+                    cl.Begin();
+                    cl.SetFramebuffer(framebuffer);
+                    cl.ClearColorTarget(0, new RgbaFloat(0.25f, 0.25f, 0.25f, 0.25f));
+                    cl.SetPipeline(maskedPipeline);
+                    cl.SetGraphicsResourceSet(0, graphicsSet);
+                    cl.Draw((uint)vertices.Length);
+                    cl.End();
+                    GD.SubmitCommands(cl);
+                    GD.WaitForIdle();
+                }
+
+                using (var readback = GetReadback(output))
+                {
+                    var readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
+                    for (uint y = 0; y < output.Height; y++)
+                        for (uint x = 0; x < output.Width; x++)
+                        {
+                            Assert.Equal(mask.HasFlag(ColorWriteMask.Red) ? 1 : 0.25f, readView[x, y].R);
+                            Assert.Equal(mask.HasFlag(ColorWriteMask.Green) ? 1 : 0.25f, readView[x, y].G);
+                            Assert.Equal(mask.HasFlag(ColorWriteMask.Blue) ? 1 : 0.25f, readView[x, y].B);
+                            Assert.Equal(mask.HasFlag(ColorWriteMask.Alpha) ? 1 : 0.25f, readView[x, y].A);
+                        }
+                    GD.Unmap(readback);
+                }
             }
         }
     }

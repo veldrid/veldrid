@@ -1,6 +1,5 @@
 ﻿using ImGuiNET;
 using System;
-using System.Windows;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,8 +10,6 @@ using Veldrid.StartupUtilities;
 using Veldrid.Utilities;
 using Veldrid.Sdl2;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Veldrid.NeoDemo
 {
@@ -21,13 +18,13 @@ namespace Veldrid.NeoDemo
         private Sdl2Window _window;
         private GraphicsDevice _gd;
         private Scene _scene;
-        private readonly ImGuiRenderable _imgRenderable;
+        private readonly ImGuiRenderable _igRenderable;
         private readonly SceneContext _sc = new SceneContext();
         private bool _windowResized;
         private RenderOrderKeyComparer _renderOrderKeyComparer = new RenderOrderKeyComparer();
         private bool _recreateWindow = true;
 
-        private static double _desiredFrameLengthSeconds = 1.0 / 120.0;
+        private static double _desiredFrameLengthSeconds = 1.0 / 60.0;
         private static bool _limitFrameRate = false;
         private static FrameTimeAverager _fta = new FrameTimeAverager(0.666);
         private CommandList _frameCommands;
@@ -36,52 +33,45 @@ namespace Veldrid.NeoDemo
 
         private readonly string[] _msaaOptions = new string[] { "Off", "2x", "4x", "8x", "16x", "32x" };
         private int _msaaOption = 0;
+        private bool _colorRedMask = true;
+        private bool _colorGreenMask = true;
+        private bool _colorBlueMask = true;
+        private bool _colorAlphaMask = true;
         private TextureSampleCount? _newSampleCount;
+        private ColorWriteMask? _newMask;
 
         private readonly Dictionary<string, ImageSharpTexture> _textures = new Dictionary<string, ImageSharpTexture>();
         private Sdl2ControllerTracker _controllerTracker;
         private bool _colorSrgb = true;
-        private FullScreenQuad _fsq { get; set; }
+        private FullScreenQuad _fsq;
         public static RenderDoc _renderDoc;
         private bool _controllerDebugMenu;
 
-        public NeoDemo(Sdl2Window activewindow = null)
+        public NeoDemo()
         {
+            WindowCreateInfo windowCI = new WindowCreateInfo
+            {
+                X = 50,
+                Y = 50,
+                WindowWidth = 960,
+                WindowHeight = 540,
+                WindowInitialState = WindowState.Normal,
+                WindowTitle = "Veldrid NeoDemo"
+            };
             GraphicsDeviceOptions gdOptions = new GraphicsDeviceOptions(false, null, false, ResourceBindingModel.Improved, true, true, _colorSrgb);
 #if DEBUG
             gdOptions.Debug = true;
 #endif
-            if (activewindow != null)
-            {
-                VeldridStartup.CreateWindowAndGraphicsDevice(
-                    gdOptions,
-                     GraphicsBackend.Direct3D11,
-                     activewindow,
-                     out _gd);
-                _window = activewindow;
-            }
-            else
-            {
-                WindowCreateInfo windowCI = new WindowCreateInfo
-                {
-                    X = 0,
-                    Y = 0,
-                    WindowWidth = 1920,
-                    WindowHeight = 1080,
-                    WindowInitialState = WindowState.Normal,
-                    WindowTitle = "Zealous Sanity"
-                };
-                VeldridStartup.CreateWindowAndGraphicsDevice(
-                    windowCI,
-                    gdOptions,
-                     //VeldridStartup.GetPlatformDefaultBackend(),
-                     //GraphicsBackend.Metal,
-                     //GraphicsBackend.Vulkan,
-                    //GraphicsBackend.OpenGL,
-                    //GraphicsBackend.OpenGLES,
-                    out _window,
-                    out _gd);
-            }
+            VeldridStartup.CreateWindowAndGraphicsDevice(
+                windowCI,
+                gdOptions,
+                 //VeldridStartup.GetPlatformDefaultBackend(),
+                 //GraphicsBackend.Metal,
+                 //GraphicsBackend.Vulkan,
+                //GraphicsBackend.OpenGL,
+                //GraphicsBackend.OpenGLES,
+                out _window,
+                out _gd);
             _window.Resized += () => _windowResized = true;
 
             Sdl2Native.SDL_Init(SDLInitFlags.GameController);
@@ -91,10 +81,10 @@ namespace Veldrid.NeoDemo
 
             _sc.SetCurrentScene(_scene);
 
-            _imgRenderable = new ImGuiRenderable(_window.Width, _window.Height);
-            _resizeHandled += (w, h) => _imgRenderable.WindowResized(w, h);
-            _scene.AddRenderable(_imgRenderable);
-            _scene.AddUpdateable(_imgRenderable);
+            _igRenderable = new ImGuiRenderable(_window.Width, _window.Height);
+            _resizeHandled += (w, h) => _igRenderable.WindowResized(w, h);
+            _scene.AddRenderable(_igRenderable);
+            _scene.AddUpdateable(_igRenderable);
 
             Skybox skybox = Skybox.LoadDefaultSkybox();
             _scene.AddRenderable(skybox);
@@ -218,7 +208,7 @@ namespace Veldrid.NeoDemo
             _scene.AddRenderable(mesh);
         }
 
-        public async Task Run()
+        public void Run()
         {
             long previousFrameTicks = 0;
             Stopwatch sw = new Stopwatch();
@@ -240,20 +230,20 @@ namespace Veldrid.NeoDemo
                 Sdl2Events.ProcessEvents();
                 snapshot = _window.PumpEvents();
                 InputTracker.UpdateFrameInput(snapshot, _window);
-                await Update((float)deltaSeconds);
+                Update((float)deltaSeconds);
                 if (!_window.Exists)
                 {
                     break;
                 }
 
-                await Draw();
+                Draw();
             }
 
             DestroyAllObjects();
             _gd.Dispose();
         }
 
-        private async Task Update(float deltaSeconds)
+        private void Update(float deltaSeconds)
         {
             _fta.AddTime(deltaSeconds);
             _scene.Update(deltaSeconds);
@@ -296,10 +286,24 @@ namespace Veldrid.NeoDemo
 
                         ImGui.EndMenu();
                     }
-                    bool tinted = _fsq.UseTintedTexture;
+                    if (ImGui.BeginMenu("Color mask"))
+                    {
+                        if (ImGui.Checkbox("Red", ref _colorRedMask)) UpdateColorMask();
+                        if (ImGui.Checkbox("Green", ref _colorGreenMask)) UpdateColorMask();
+                        if (ImGui.Checkbox("Blue", ref _colorBlueMask)) UpdateColorMask();
+                        if (ImGui.Checkbox("Alpha", ref _colorAlphaMask)) UpdateColorMask();
+
+                        ImGui.EndMenu();
+                    }
+                    bool threadedRendering = _scene.ThreadedRendering;
+                    if (ImGui.MenuItem("Render with multiple threads", string.Empty, threadedRendering, true))
+                    {
+                        _scene.ThreadedRendering = !_scene.ThreadedRendering;
+                    }
+                    bool tinted = _fsq.UseMultipleRenderTargets;
                     if (ImGui.MenuItem("Tinted output", string.Empty, tinted, true))
                     {
-                        _fsq.UseTintedTexture = !tinted;
+                        _fsq.UseMultipleRenderTargets = !tinted;
                     }
 
                     ImGui.EndMenu();
@@ -530,6 +534,18 @@ namespace Veldrid.NeoDemo
             _newSampleCount = sampleCount;
         }
 
+        private void UpdateColorMask()
+        {
+            ColorWriteMask mask = ColorWriteMask.None;
+
+            if (_colorRedMask) mask |= ColorWriteMask.Red;
+            if (_colorGreenMask) mask |= ColorWriteMask.Green;
+            if (_colorBlueMask) mask |= ColorWriteMask.Blue;
+            if (_colorAlphaMask) mask |= ColorWriteMask.Alpha;
+
+            _newMask = mask;
+        }
+
         private void RefreshDeviceObjects(int numTimes)
         {
             Stopwatch sw = Stopwatch.StartNew();
@@ -562,7 +578,7 @@ namespace Veldrid.NeoDemo
             _window.WindowState = isFullscreen ? WindowState.Normal : WindowState.BorderlessFullScreen;
         }
 
-        private async Task Draw()
+        private void Draw()
         {
             Debug.Assert(_window.Exists);
             int width = _window.Width;
@@ -591,11 +607,19 @@ namespace Veldrid.NeoDemo
                 CreateAllObjects();
             }
 
+            if (_newMask != null)
+            {
+                _sc.MainSceneMask = _newMask.Value;
+                _newMask = null;
+                DestroyAllObjects();
+                CreateAllObjects();
+            }
+
             _frameCommands.Begin();
 
             CommonMaterials.FlushAll(_frameCommands);
 
-            await _scene.RenderAllMultiThreaded(_gd, _frameCommands, _sc);
+            _scene.RenderAllStages(_gd, _frameCommands, _sc);
             _gd.SwapBuffers();
         }
 

@@ -62,6 +62,22 @@ namespace Veldrid.Vk
                     }
 
                     return CreateNSWindowSurface(gd, instance, nsWindowSource, false);
+                case NSViewSwapchainSource nsViewSource:
+                    if (doCheck)
+                    {
+                        bool hasMetalExtension = gd.HasSurfaceExtension(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME);
+                        if (hasMetalExtension || gd.HasSurfaceExtension(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME))
+                        {
+                            return CreateNSViewSurface(gd, instance, nsViewSource, hasMetalExtension);
+                        }
+                        else
+                        {
+                            throw new VeldridException($"Neither macOS surface extension was available: " +
+                                $"{CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME}, {CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME}");
+                        }
+                    }
+
+                    return CreateNSViewSurface(gd, instance, nsViewSource, false);
                 case UIViewSwapchainSource uiViewSource:
                     if (doCheck)
                     {
@@ -126,11 +142,20 @@ namespace Veldrid.Vk
 
         private static unsafe VkSurfaceKHR CreateNSWindowSurface(VkGraphicsDevice gd, VkInstance instance, NSWindowSwapchainSource nsWindowSource, bool hasExtMetalSurface)
         {
-            CAMetalLayer metalLayer = CAMetalLayer.New();
             NSWindow nswindow = new NSWindow(nsWindowSource.NSWindow);
-            NSView contentView = nswindow.contentView;
-            contentView.wantsLayer = true;
-            contentView.layer = metalLayer.NativePtr;
+            return CreateNSViewSurface(gd, instance, new NSViewSwapchainSource(nswindow.contentView), hasExtMetalSurface);
+        }
+
+        private static unsafe VkSurfaceKHR CreateNSViewSurface(VkGraphicsDevice gd, VkInstance instance, NSViewSwapchainSource nsViewSource, bool hasExtMetalSurface)
+        {
+            NSView contentView = new NSView(nsViewSource.NSView);
+
+            if (!CAMetalLayer.TryCast(contentView.layer, out var metalLayer))
+            {
+                metalLayer = CAMetalLayer.New();
+                contentView.wantsLayer = true;
+                contentView.layer = metalLayer.NativePtr;
+            }
 
             if (hasExtMetalSurface)
             {
@@ -154,11 +179,15 @@ namespace Veldrid.Vk
 
         private static VkSurfaceKHR CreateUIViewSurface(VkGraphicsDevice gd, VkInstance instance, UIViewSwapchainSource uiViewSource, bool hasExtMetalSurface)
         {
-            CAMetalLayer metalLayer = CAMetalLayer.New();
             UIView uiView = new UIView(uiViewSource.UIView);
-            metalLayer.frame = uiView.frame;
-            metalLayer.opaque = true;
-            uiView.layer.addSublayer(metalLayer.NativePtr);
+
+            if (!CAMetalLayer.TryCast(uiView.layer, out var metalLayer))
+            {
+                metalLayer = CAMetalLayer.New();
+                metalLayer.frame = uiView.frame;
+                metalLayer.opaque = true;
+                uiView.layer.addSublayer(metalLayer.NativePtr);
+            }
 
             if (hasExtMetalSurface)
             {
